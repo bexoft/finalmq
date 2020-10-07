@@ -1,0 +1,132 @@
+syntax = "proto3";
+
+package test;
+
+
+enum Foo
+{
+    FOO_WORLD = 0;
+    FOO_HELLO = -2;
+    FOO_WORLD2 = 1;
+}
+
+message TestMessageBool
+{
+    bool value = 1;
+}
+
+message TestMessageInt32
+{
+    sfixed32 value = 1;
+}
+
+message TestMessageUInt32
+{
+    fixed32 value = 1;
+}
+
+message TestMessageInt64
+{
+    sfixed64 value = 1;
+}
+
+message TestMessageUInt64
+{
+    fixed64 value = 1;
+}
+
+message TestMessageFloat
+{
+    float value = 1;
+}
+
+message TestMessageDouble
+{
+    double value = 1;
+}
+
+message TestMessageString
+{
+    string value = 1;
+}
+
+message TestMessageBytes
+{
+    bytes value = 1;
+}
+
+message TestMessageStruct
+{
+    TestMessageInt32 struct_int32 = 1;
+    TestMessageString struct_string = 2;
+    fixed32 last_value = 3;
+}
+
+message TestMessageStructBlockSize
+{
+    TestMessageInt32 struct_int32 = 1;
+    TestMessageString struct_string = 2;
+    uint32 last_value = 3;
+}
+
+message TestMessageEnum
+{
+    Foo value = 1;
+}
+
+message TestMessageArrayBool
+{
+    repeated bool value = 1;
+}
+
+message TestMessageArrayInt32
+{
+    repeated sfixed32 value = 1;
+}
+
+message TestMessageArrayUInt32
+{
+    repeated fixed32 value = 1;
+}
+
+message TestMessageArrayInt64
+{
+    repeated sfixed64 value = 1;
+}
+
+message TestMessageArrayUInt64
+{
+    repeated fixed64 value = 1;
+}
+
+message TestMessageArrayFloat
+{
+    repeated float value = 1;
+}
+
+message TestMessageArrayDouble
+{
+    repeated double value = 1;
+}
+
+message TestMessageArrayString
+{
+    repeated string value = 1;
+}
+
+message TestMessageArrayBytes
+{
+    repeated bytes value = 1;
+}
+
+message TestMessageArrayStruct
+{
+    repeated TestMessageStruct value = 1;
+}
+
+message TestMessageArrayEnum
+{
+    repeated Foo value = 1;
+}
+
+
