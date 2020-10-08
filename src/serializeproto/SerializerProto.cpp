@@ -583,10 +583,10 @@ void SerializerProto::enterBytes(const MetaField& field, Bytes&& value)
     int id = field.index + INDEX2ID;
     serializeString<true>(id, reinterpret_cast<const char*>(value.data()), value.size());
 }
-void SerializerProto::enterBytes(const MetaField& field, const unsigned char* value, int size)
+void SerializerProto::enterBytes(const MetaField& field, const BytesElement* value, int size)
 {
     int id = field.index + INDEX2ID;
-    serializeString<true>(id, reinterpret_cast<const char*>(value), size);
+    serializeString<true>(id, value, size);
 }
 void SerializerProto::enterEnum(const MetaField& field, std::int32_t value)
 {

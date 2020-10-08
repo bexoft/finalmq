@@ -28,7 +28,7 @@ public:
     MOCK_METHOD(void, enterString, (const MetaField& field, std::string&& value));
     MOCK_METHOD(void, enterString, (const MetaField& field, const char* value, int size));
     MOCK_METHOD(void, enterBytes, (const MetaField& field, Bytes&& value));
-    MOCK_METHOD(void, enterBytes, (const MetaField& field, const unsigned char* value, int size));
+    MOCK_METHOD(void, enterBytes, (const MetaField& field, const BytesElement* value, int size));
     MOCK_METHOD(void, enterEnum, (const MetaField& field, std::int32_t value), (override));
     MOCK_METHOD(void, enterEnum, (const MetaField& field, std::string&& value));
     MOCK_METHOD(void, enterEnum, (const MetaField& field, const char* value, int size));

@@ -119,7 +119,7 @@ void ParserProcessDefaultValues::processDefaultValues(const MetaStruct& stru, co
                     break;
                 case MetaType::TYPE_BYTES:
                     {
-                        static const unsigned char dummy[] = {};
+                        static const BytesElement dummy[] = {};
                         m_visitor->enterBytes(*field, dummy, 0);
                     }
                     break;
@@ -290,7 +290,7 @@ void ParserProcessDefaultValues::enterBytes(const MetaField& field, Bytes&& valu
         m_visitor->enterBytes(field, std::move(value));
     }
 }
-void ParserProcessDefaultValues::enterBytes(const MetaField& field, const unsigned char* value, int size)
+void ParserProcessDefaultValues::enterBytes(const MetaField& field, const BytesElement* value, int size)
 {
     markAsDone(field);
     if (size > 0 || !m_skipDefaultValues)

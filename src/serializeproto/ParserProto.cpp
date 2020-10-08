@@ -295,53 +295,8 @@ bool ParserProto::parseArrayVarint(std::vector<T>& array)
 
 
 
-bool ParserProto::parseArrayString(std::vector<std::string>& array)
-{
-    bool ok = true;
-    WireType wireType = static_cast<WireType>(m_tag & 0x7);
-    std::uint32_t tag = m_tag;
-    m_tag = 0;
-    if (wireType == WIRETYPE_LENGTH_DELIMITED)
-    {
-        do
-        {
-            int sizeBuffer = static_cast<std::int32_t>(parseVarint());
-            if (m_ptr)
-            {
-                if (sizeBuffer >= 0 && sizeBuffer <= m_size)
-                {
-                    array.emplace_back(m_ptr, sizeBuffer);
-                    m_ptr += sizeBuffer;
-                    m_size -= sizeBuffer;
-                    if (m_size > 0)
-                    {
-                        m_tag = parseVarint();
-                    }
-                    else
-                    {
-                        m_tag = 0;
-                        break;
-                    }
-                }
-                else
-                {
-                    m_ptr = nullptr;
-                    m_size = 0;
-                }
-            }
-        } while ((m_tag == tag) && m_ptr);
-    }
-    else
-    {
-        skip(wireType);
-        ok = false;
-    }
-
-    return ok;
-}
-
-
-bool ParserProto::parseArrayBytes(std::vector<Bytes>& array)
+template<class T>
+bool ParserProto::parseArrayString(std::vector<T>& array)
 {
     bool ok = true;
     WireType wireType = static_cast<WireType>(m_tag & 0x7);
@@ -385,6 +340,52 @@ bool ParserProto::parseArrayBytes(std::vector<Bytes>& array)
 
     return ok;
 }
+
+
+//bool ParserProto::parseArrayBytes(std::vector<Bytes>& array)
+//{
+//    bool ok = true;
+//    WireType wireType = static_cast<WireType>(m_tag & 0x7);
+//    std::uint32_t tag = m_tag;
+//    m_tag = 0;
+//    if (wireType == WIRETYPE_LENGTH_DELIMITED)
+//    {
+//        do
+//        {
+//            int sizeBuffer = static_cast<std::int32_t>(parseVarint());
+//            if (m_ptr)
+//            {
+//                if (sizeBuffer >= 0 && sizeBuffer <= m_size)
+//                {
+//                    array.emplace_back(m_ptr, m_ptr + sizeBuffer);
+//                    m_ptr += sizeBuffer;
+//                    m_size -= sizeBuffer;
+//                    if (m_size > 0)
+//                    {
+//                        m_tag = parseVarint();
+//                    }
+//                    else
+//                    {
+//                        m_tag = 0;
+//                        break;
+//                    }
+//                }
+//                else
+//                {
+//                    m_ptr = nullptr;
+//                    m_size = 0;
+//                }
+//            }
+//        } while ((m_tag == tag) && m_ptr);
+//    }
+//    else
+//    {
+//        skip(wireType);
+//        ok = false;
+//    }
+
+//    return ok;
+//}
 
 
 
@@ -632,7 +633,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         bool ok = parseString(buffer, size);
                         if (ok && m_ptr)
                         {
-                            m_visitor.enterBytes(*field, reinterpret_cast<const unsigned char*>(buffer), size);
+                            m_visitor.enterBytes(*field, buffer, size);
                         }
                     }
                     break;
@@ -780,7 +781,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                 case MetaType::TYPE_ARRAY_BYTES:
                     {
                         std::vector<Bytes> array;
-                        bool ok = parseArrayBytes(array);
+                        bool ok = parseArrayString(array);
                         if (ok && m_ptr)
                         {
                             m_visitor.enterArrayBytes(*field, std::move(array));

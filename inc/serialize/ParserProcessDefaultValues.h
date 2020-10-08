@@ -32,7 +32,7 @@ private:
     virtual void enterString(const MetaField& field, std::string&& value) override;
     virtual void enterString(const MetaField& field, const char* value, int size) override;
     virtual void enterBytes(const MetaField& field, Bytes&& value) override;
-    virtual void enterBytes(const MetaField& field, const unsigned char* value, int size) override;
+    virtual void enterBytes(const MetaField& field, const BytesElement* value, int size) override;
     virtual void enterEnum(const MetaField& field, std::int32_t value) override;
     virtual void enterEnum(const MetaField& field, std::string&& value) override;
     virtual void enterEnum(const MetaField& field, const char* value, int size) override;

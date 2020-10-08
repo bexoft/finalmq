@@ -230,7 +230,7 @@ void ParserJson::enterString(const char* value, int size)
         break;
     case MetaType::TYPE_BYTES:
         // todo: convert from base64
-        m_visitor.enterBytes(*m_fieldCurrent, reinterpret_cast<const unsigned char*>(value), size);
+        m_visitor.enterBytes(*m_fieldCurrent, value, size);
         break;
     case MetaType::TYPE_ENUM:
         m_visitor.enterEnum(*m_fieldCurrent, value, size);
@@ -283,8 +283,7 @@ void ParserJson::enterString(const char* value, int size)
     case MetaType::TYPE_ARRAY_BYTES:
         {
             // todo: convert from base64
-            const unsigned char* v = reinterpret_cast<const unsigned char*>(value);
-            m_arrayBytes.emplace_back(v, v + size);
+            m_arrayBytes.emplace_back(value, value + size);
         }
         break;
     case MetaType::TYPE_ARRAY_ENUM:
@@ -361,7 +360,7 @@ void ParserJson::enterString(std::string&& value)
         break;
     case MetaType::TYPE_BYTES:
         // todo: convert from base64
-        m_visitor.enterBytes(*m_fieldCurrent, reinterpret_cast<const unsigned char*>(value.data()), value.size());
+        m_visitor.enterBytes(*m_fieldCurrent, value.data(), value.size());
         break;
     case MetaType::TYPE_ENUM:
         m_visitor.enterEnum(*m_fieldCurrent, std::move(value));
@@ -414,8 +413,7 @@ void ParserJson::enterString(std::string&& value)
     case MetaType::TYPE_ARRAY_BYTES:
         {
             // todo: convert from base64
-            const unsigned char* v = reinterpret_cast<const unsigned char*>(value.data());
-            m_arrayBytes.emplace_back(v, v + value.size());
+            m_arrayBytes.emplace_back(value.data(), value.data() + value.size());
         }
         break;
     case MetaType::TYPE_ARRAY_ENUM:

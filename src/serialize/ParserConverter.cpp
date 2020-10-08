@@ -178,7 +178,7 @@ void ParserConverter::enterBytes(const MetaField& field, Bytes&& value)
         std::cout << "bytes not expected" << std::endl;
     }
 }
-void ParserConverter::enterBytes(const MetaField& field, const unsigned char* value, int size)
+void ParserConverter::enterBytes(const MetaField& field, const BytesElement* value, int size)
 {
     if (field.type == MetaType::TYPE_BYTES)
     {

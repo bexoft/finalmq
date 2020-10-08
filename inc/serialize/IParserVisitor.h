@@ -2,7 +2,8 @@
 
 #include "metadata/MetaStruct.h"
 
-typedef std::vector<unsigned char>  Bytes;
+typedef char                       BytesElement;
+typedef std::vector<BytesElement>  Bytes;
 
 
 struct IParserVisitor
@@ -28,7 +29,7 @@ struct IParserVisitor
     virtual void enterString(const MetaField& field, std::string&& value) = 0;
     virtual void enterString(const MetaField& field, const char* value, int size) = 0;
     virtual void enterBytes(const MetaField& field, Bytes&& value) = 0;
-    virtual void enterBytes(const MetaField& field, const unsigned char* value, int size) = 0;
+    virtual void enterBytes(const MetaField& field, const BytesElement* value, int size) = 0;
     virtual void enterEnum(const MetaField& field, std::int32_t value) = 0;
     virtual void enterEnum(const MetaField& field, std::string&& value) = 0;
     virtual void enterEnum(const MetaField& field, const char* value, int size) = 0;

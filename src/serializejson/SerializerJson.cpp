@@ -144,12 +144,12 @@ void SerializerJson::Internal::enterBytes(const MetaField& field, Bytes&& value)
     m_jsonBuilder.enterString(reinterpret_cast<const char*>(value.data()), value.size());
 }
 
-void SerializerJson::Internal::enterBytes(const MetaField& field, const unsigned char* value, int size)
+void SerializerJson::Internal::enterBytes(const MetaField& field, const BytesElement* value, int size)
 {
     assert(field.type == MetaType::TYPE_BYTES);
     setKey(field);
     // todo: convert to base64
-    m_jsonBuilder.enterString(reinterpret_cast<const char*>(value), size);
+    m_jsonBuilder.enterString(value, size);
 }
 
 void SerializerJson::Internal::enterEnum(const MetaField& field, std::int32_t value)

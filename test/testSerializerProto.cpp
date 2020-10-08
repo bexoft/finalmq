@@ -190,8 +190,7 @@ TEST_F(TestSerializerProto, testBytes)
     test::TestMessageBytes message;
     bool res = message.ParseFromString(m_data);
     EXPECT_EQ(res, true);
-    const unsigned char* v = reinterpret_cast<const unsigned char*>(message.value().data());
-    Bytes result(v, v + message.value().size());
+    Bytes result(message.value().data(), message.value().data() + message.value().size());
     EXPECT_EQ(result, VALUE);
 }
 
@@ -370,8 +369,7 @@ TEST_F(TestSerializerProto, testArrayBytes)
 
     std::vector<Bytes> result;
     std::for_each(message.value().begin(), message.value().end(), [&result] (const std::string& entry) {
-        const unsigned char* v = reinterpret_cast<const unsigned char*>(entry.data());
-        result.emplace_back(v, v + entry.size());
+        result.emplace_back(entry.data(), entry.data() + entry.size());
     });
     EXPECT_EQ(result, VALUE);
 }
