@@ -69,7 +69,7 @@ void ParserJson::enterNumber(T value)
         // unknown key
         return;
     }
-    switch (m_fieldCurrent->type)
+    switch (m_fieldCurrent->typeId)
     {
     case MetaTypeId::TYPE_BOOL:
         m_visitor.enterBool(*m_fieldCurrent, value);
@@ -181,7 +181,7 @@ void ParserJson::enterString(const char* value, int size)
         // unknown key
         return;
     }
-    switch (m_fieldCurrent->type)
+    switch (m_fieldCurrent->typeId)
     {
     case MetaTypeId::TYPE_BOOL:
         {
@@ -311,7 +311,7 @@ void ParserJson::enterString(std::string&& value)
         // unknown key
         return;
     }
-    switch (m_fieldCurrent->type)
+    switch (m_fieldCurrent->typeId)
     {
     case MetaTypeId::TYPE_BOOL:
         {
@@ -435,9 +435,9 @@ void ParserJson::enterString(std::string&& value)
 
 void ParserJson::enterArray()
 {
-    if (m_fieldCurrent && ((int)m_fieldCurrent->type & (int)MetaTypeId::TYPE_ARRAY_FLAG))
+    if (m_fieldCurrent && ((int)m_fieldCurrent->typeId & (int)MetaTypeId::TYPE_ARRAY_FLAG))
     {
-        switch (m_fieldCurrent->type)
+        switch (m_fieldCurrent->typeId)
         {
         case MetaTypeId::TYPE_ARRAY_BOOL:
             m_arrayBool.clear();
@@ -492,9 +492,9 @@ void ParserJson::exitArray()
         return;
     }
 
-    if ((int)m_fieldCurrent->type & (int)MetaTypeId::TYPE_ARRAY_FLAG)
+    if ((int)m_fieldCurrent->typeId & (int)MetaTypeId::TYPE_ARRAY_FLAG)
     {
-        switch (m_fieldCurrent->type)
+        switch (m_fieldCurrent->typeId)
         {
         case MetaTypeId::TYPE_ARRAY_BOOL:
             m_visitor.enterArrayBoolMove(*m_fieldCurrent, std::move(m_arrayBool));
@@ -552,7 +552,7 @@ void ParserJson::exitArray()
             break;
         }
     }
-    else if (m_fieldCurrent->type == MetaTypeId::TYPE_STRUCT)
+    else if (m_fieldCurrent->typeId == MetaTypeId::TYPE_STRUCT)
     {
         m_structCurrent = nullptr;
         m_fieldCurrent = nullptr;
@@ -570,7 +570,7 @@ void ParserJson::enterObject()
 {
     m_stack.emplace_back(m_fieldCurrent);
     m_structCurrent = nullptr;
-    if (m_fieldCurrent && m_fieldCurrent->type == MetaTypeId::TYPE_STRUCT)
+    if (m_fieldCurrent && m_fieldCurrent->typeId == MetaTypeId::TYPE_STRUCT)
     {
         const MetaStruct* stru = MetaDataGlobal::instance().getStruct(*m_fieldCurrent);
         if (stru)

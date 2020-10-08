@@ -17,7 +17,7 @@ using ::testing::ElementsAreArray;
 
 MATCHER_P(MatcherMetaField, metaField, "")
 {
-    return (arg.type == metaField.type &&
+    return (arg.typeId == metaField.typeId &&
             arg.typeName == metaField.typeName &&
             arg.name == metaField.name);
 }

@@ -501,7 +501,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
             const MetaField* field = stru.getFieldByIndex(index);
             if (field)
             {
-                switch (field->type)
+                switch (field->typeId)
                 {
                 case MetaTypeId::TYPE_NONE:
                     break;
