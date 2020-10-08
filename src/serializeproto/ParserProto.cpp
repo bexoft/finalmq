@@ -467,7 +467,7 @@ bool ParserProto::parseStruct(const std::string& typeName)
         return false;
     }
 
-    MetaField field = {MetaType::TYPE_STRUCT, typeName};
+    MetaField field = {MetaTypeId::TYPE_STRUCT, typeName};
     field.metaStruct = stru;
     m_visitor.enterStruct(field);
     bool res = parseStructIntern(*stru);
@@ -503,9 +503,9 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
             {
                 switch (field->type)
                 {
-                case MetaType::TYPE_NONE:
+                case MetaTypeId::TYPE_NONE:
                     break;
-                case MetaType::TYPE_BOOL:
+                case MetaTypeId::TYPE_BOOL:
                     {
                         bool value = 0;
                         bool ok = parseVarint(value);
@@ -515,7 +515,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaType::TYPE_INT32:
+                case MetaTypeId::TYPE_INT32:
                     {
                         std::int32_t value = 0;
                         bool ok = false;
@@ -537,7 +537,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaType::TYPE_UINT32:
+                case MetaTypeId::TYPE_UINT32:
                     {
                         std::uint32_t value = 0;
                         bool ok = false;
@@ -555,7 +555,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaType::TYPE_INT64:
+                case MetaTypeId::TYPE_INT64:
                     {
                         std::int64_t value = 0;
                         bool ok = false;
@@ -577,7 +577,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaType::TYPE_UINT64:
+                case MetaTypeId::TYPE_UINT64:
                     {
                         std::uint64_t value = 0;
                         bool ok = false;
@@ -595,7 +595,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaType::TYPE_FLOAT:
+                case MetaTypeId::TYPE_FLOAT:
                     {
                         float value = 0.0;
                         bool ok = parseFixedValue<float, WIRETYPE_FIXED32>(value);
@@ -605,7 +605,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaType::TYPE_DOUBLE:
+                case MetaTypeId::TYPE_DOUBLE:
                     {
                         double value = 0.0;
                         bool ok = parseFixedValue<double, WIRETYPE_FIXED64>(value);
@@ -615,7 +615,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaType::TYPE_STRING:
+                case MetaTypeId::TYPE_STRING:
                     {
                         const char* buffer = nullptr;
                         int size = 0;
@@ -626,7 +626,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaType::TYPE_BYTES:
+                case MetaTypeId::TYPE_BYTES:
                     {
                         const char* buffer = nullptr;
                         int size = 0;
@@ -637,10 +637,10 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaType::TYPE_STRUCT:
+                case MetaTypeId::TYPE_STRUCT:
                     parseStructWire(*field);
                     break;
-                case MetaType::TYPE_ENUM:
+                case MetaTypeId::TYPE_ENUM:
                     {
                         std::int32_t value = 0;
                         bool ok = parseVarint(value);
@@ -658,7 +658,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaType::TYPE_ARRAY_BOOL:
+                case MetaTypeId::TYPE_ARRAY_BOOL:
                     {
                         std::vector<bool> array;
                         bool ok = parseArrayVarint(array);
@@ -668,7 +668,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaType::TYPE_ARRAY_INT32:
+                case MetaTypeId::TYPE_ARRAY_INT32:
                     {
                         std::vector<std::int32_t> array;
                         bool ok = false;
@@ -690,7 +690,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaType::TYPE_ARRAY_UINT32:
+                case MetaTypeId::TYPE_ARRAY_UINT32:
                     {
                         std::vector<std::uint32_t> array;
                         bool ok = false;
@@ -708,7 +708,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaType::TYPE_ARRAY_INT64:
+                case MetaTypeId::TYPE_ARRAY_INT64:
                     {
                         std::vector<std::int64_t> array;
                         bool ok = false;
@@ -730,7 +730,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaType::TYPE_ARRAY_UINT64:
+                case MetaTypeId::TYPE_ARRAY_UINT64:
                     {
                         std::vector<std::uint64_t> array;
                         bool ok = false;
@@ -748,7 +748,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaType::TYPE_ARRAY_FLOAT:
+                case MetaTypeId::TYPE_ARRAY_FLOAT:
                     {
                         std::vector<float> array;
                         bool ok = parseArrayFixed<float, WIRETYPE_FIXED32>(array);
@@ -758,7 +758,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaType::TYPE_ARRAY_DOUBLE:
+                case MetaTypeId::TYPE_ARRAY_DOUBLE:
                     {
                         std::vector<double> array;
                         bool ok = parseArrayFixed<double, WIRETYPE_FIXED64>(array);
@@ -768,7 +768,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaType::TYPE_ARRAY_STRING:
+                case MetaTypeId::TYPE_ARRAY_STRING:
                     {
                         std::vector<std::string> array;
                         bool ok = parseArrayString(array);
@@ -778,7 +778,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaType::TYPE_ARRAY_BYTES:
+                case MetaTypeId::TYPE_ARRAY_BYTES:
                     {
                         std::vector<Bytes> array;
                         bool ok = parseArrayString(array);
@@ -788,10 +788,10 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaType::TYPE_ARRAY_STRUCT:
+                case MetaTypeId::TYPE_ARRAY_STRUCT:
                     parseArrayStruct(*field);
                     break;
-                case MetaType::TYPE_ARRAY_ENUM:
+                case MetaTypeId::TYPE_ARRAY_ENUM:
                     {
                         std::vector<std::int32_t> array;
                         bool ok = parseArrayVarint(array);
@@ -812,7 +812,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaType::TYPE_ARRAY_FLAG:
+                case MetaTypeId::TYPE_ARRAY_FLAG:
                     assert(false);
                     break;
                 default:

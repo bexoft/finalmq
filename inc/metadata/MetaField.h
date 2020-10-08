@@ -23,7 +23,7 @@ enum MetaFieldFlags
 class MetaField
 {
 public:
-    MetaType        type;                                   ///< type of the parameter
+    MetaTypeId        type;                                   ///< type of the parameter
     std::string     typeName;                               ///< is needed for struct and enum
     std::string     name;                                   ///< parameter name
     std::string     description;                            ///< description of the parameter

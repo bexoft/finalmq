@@ -91,39 +91,39 @@ void ParserProcessDefaultValues::processDefaultValues(const MetaStruct& stru, co
             {
                 switch (field->type)
                 {
-                case MetaType::TYPE_NONE:
+                case MetaTypeId::TYPE_NONE:
                     break;
-                case MetaType::TYPE_BOOL:
+                case MetaTypeId::TYPE_BOOL:
                     m_visitor->enterBool(*field, false);
                     break;
-                case MetaType::TYPE_INT32:
+                case MetaTypeId::TYPE_INT32:
                     m_visitor->enterInt32(*field, 0);
                     break;
-                case MetaType::TYPE_UINT32:
+                case MetaTypeId::TYPE_UINT32:
                     m_visitor->enterUInt32(*field, 0);
                     break;
-                case MetaType::TYPE_INT64:
+                case MetaTypeId::TYPE_INT64:
                     m_visitor->enterInt64(*field, 0);
                     break;
-                case MetaType::TYPE_UINT64:
+                case MetaTypeId::TYPE_UINT64:
                     m_visitor->enterUInt64(*field, 0);
                     break;
-                case MetaType::TYPE_FLOAT:
+                case MetaTypeId::TYPE_FLOAT:
                     m_visitor->enterFloat(*field, 0.0);
                     break;
-                case MetaType::TYPE_DOUBLE:
+                case MetaTypeId::TYPE_DOUBLE:
                     m_visitor->enterDouble(*field, 0.0);
                     break;
-                case MetaType::TYPE_STRING:
+                case MetaTypeId::TYPE_STRING:
                     m_visitor->enterString(*field, "", 0);
                     break;
-                case MetaType::TYPE_BYTES:
+                case MetaTypeId::TYPE_BYTES:
                     {
                         static const BytesElement dummy[] = {};
                         m_visitor->enterBytes(*field, dummy, 0);
                     }
                     break;
-                case MetaType::TYPE_STRUCT:
+                case MetaTypeId::TYPE_STRUCT:
                     {
                         m_visitor->enterStruct(*field);
                         const MetaStruct* substru = MetaDataGlobal::instance().getStruct(*field);
@@ -135,44 +135,44 @@ void ParserProcessDefaultValues::processDefaultValues(const MetaStruct& stru, co
                         m_visitor->exitStruct(*field);
                     }
                     break;
-                case MetaType::TYPE_ENUM:
+                case MetaTypeId::TYPE_ENUM:
                     m_visitor->enterEnum(*field, 0);
                     break;
-                case MetaType::TYPE_ARRAY_BOOL:
+                case MetaTypeId::TYPE_ARRAY_BOOL:
                     m_visitor->enterArrayBoolMove(*field, {});
                     break;
-                case MetaType::TYPE_ARRAY_INT32:
+                case MetaTypeId::TYPE_ARRAY_INT32:
                     m_visitor->enterArrayInt32(*field, {});
                     break;
-                case MetaType::TYPE_ARRAY_UINT32:
+                case MetaTypeId::TYPE_ARRAY_UINT32:
                     m_visitor->enterArrayUInt32(*field, {});
                     break;
-                case MetaType::TYPE_ARRAY_INT64:
+                case MetaTypeId::TYPE_ARRAY_INT64:
                     m_visitor->enterArrayInt64(*field, {});
                     break;
-                case MetaType::TYPE_ARRAY_UINT64:
+                case MetaTypeId::TYPE_ARRAY_UINT64:
                     m_visitor->enterArrayUInt64(*field, {});
                     break;
-                case MetaType::TYPE_ARRAY_FLOAT:
+                case MetaTypeId::TYPE_ARRAY_FLOAT:
                     m_visitor->enterArrayFloat(*field, {});
                     break;
-                case MetaType::TYPE_ARRAY_DOUBLE:
+                case MetaTypeId::TYPE_ARRAY_DOUBLE:
                     m_visitor->enterArrayDouble(*field, {});
                     break;
-                case MetaType::TYPE_ARRAY_STRING:
+                case MetaTypeId::TYPE_ARRAY_STRING:
                     m_visitor->enterArrayStringMove(*field, {});
                     break;
-                case MetaType::TYPE_ARRAY_BYTES:
+                case MetaTypeId::TYPE_ARRAY_BYTES:
                     m_visitor->enterArrayBytesMove(*field, {});
                     break;
-                case MetaType::TYPE_ARRAY_STRUCT:
+                case MetaTypeId::TYPE_ARRAY_STRUCT:
                     m_visitor->enterArrayStruct(*field);
                     m_visitor->exitArrayStruct(*field);
                     break;
-                case MetaType::TYPE_ARRAY_ENUM:
+                case MetaTypeId::TYPE_ARRAY_ENUM:
                     m_visitor->enterArrayEnum(*field, std::vector<std::int32_t>());
                     break;
-                case MetaType::TYPE_ARRAY_FLAG:
+                case MetaTypeId::TYPE_ARRAY_FLAG:
                     assert(false);
                     break;
                 default:

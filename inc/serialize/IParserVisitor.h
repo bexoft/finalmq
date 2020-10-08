@@ -2,9 +2,6 @@
 
 #include "metadata/MetaStruct.h"
 
-typedef char                       BytesElement;
-typedef std::vector<BytesElement>  Bytes;
-
 
 struct IParserVisitor
 {

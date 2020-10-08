@@ -2,8 +2,9 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
-enum MetaType
+enum MetaTypeId
 {
     TYPE_NONE       = 0,
 
@@ -34,71 +35,240 @@ enum MetaType
     TYPE_ARRAY_ENUM       = 32 + 11,
 };
 
-template <int TYPE>
+
+typedef char                       BytesElement;
+typedef std::vector<BytesElement>  Bytes;
+
+
+
+template <int TYPEID>
+class MetaTypeIdInfo
+{
+};
+
+template <>
+class MetaTypeIdInfo<MetaTypeId::TYPE_BOOL>
+{
+public:
+    typedef bool Type;
+};
+template <>
+class MetaTypeIdInfo<MetaTypeId::TYPE_INT32>
+{
+public:
+    typedef std::int32_t Type;
+};
+template <>
+class MetaTypeIdInfo<MetaTypeId::TYPE_UINT32>
+{
+public:
+    typedef std::uint32_t Type;
+};
+template <>
+class MetaTypeIdInfo<MetaTypeId::TYPE_INT64>
+{
+public:
+    typedef std::int64_t Type;
+};
+template <>
+class MetaTypeIdInfo<MetaTypeId::TYPE_UINT64>
+{
+public:
+    typedef std::uint64_t Type;
+};
+template <>
+class MetaTypeIdInfo<MetaTypeId::TYPE_FLOAT>
+{
+public:
+    typedef float Type;
+};
+template <>
+class MetaTypeIdInfo<MetaTypeId::TYPE_DOUBLE>
+{
+public:
+    typedef double Type;
+};
+template <>
+class MetaTypeIdInfo<MetaTypeId::TYPE_STRING>
+{
+public:
+    typedef std::string Type;
+};
+template <>
+class MetaTypeIdInfo<MetaTypeId::TYPE_BYTES>
+{
+public:
+    typedef Bytes Type;
+};
+
+template <>
+class MetaTypeIdInfo<MetaTypeId::TYPE_ARRAY_BOOL>
+{
+public:
+    typedef std::vector<bool> Type;
+};
+template <>
+class MetaTypeIdInfo<MetaTypeId::TYPE_ARRAY_INT32>
+{
+public:
+    typedef std::vector<std::int32_t> Type;
+};
+template <>
+class MetaTypeIdInfo<MetaTypeId::TYPE_ARRAY_UINT32>
+{
+public:
+    typedef std::vector<std::uint32_t> Type;
+};
+template <>
+class MetaTypeIdInfo<MetaTypeId::TYPE_ARRAY_INT64>
+{
+public:
+    typedef std::vector<std::int64_t> Type;
+};
+template <>
+class MetaTypeIdInfo<MetaTypeId::TYPE_ARRAY_UINT64>
+{
+public:
+    typedef std::vector<std::uint64_t> Type;
+};
+template <>
+class MetaTypeIdInfo<MetaTypeId::TYPE_ARRAY_FLOAT>
+{
+public:
+    typedef std::vector<float> Type;
+};
+template <>
+class MetaTypeIdInfo<MetaTypeId::TYPE_ARRAY_DOUBLE>
+{
+public:
+    typedef std::vector<double> Type;
+};
+template <>
+class MetaTypeIdInfo<MetaTypeId::TYPE_ARRAY_STRING>
+{
+public:
+    typedef std::vector<std::string> Type;
+};
+template <>
+class MetaTypeIdInfo<MetaTypeId::TYPE_ARRAY_BYTES>
+{
+public:
+    typedef std::vector<Bytes> Type;
+};
+
+////////////////////////////////////////////////////
+
+template <class TYPE>
 class MetaTypeInfo
 {
 };
 
 template <>
-class MetaTypeInfo<MetaType::TYPE_BOOL>
+class MetaTypeInfo<bool>
 {
 public:
-    typedef bool Type;
+    static const int TypeId = MetaTypeId::TYPE_BOOL;
+};
+template <>
+class MetaTypeInfo<std::int32_t>
+{
+public:
+    static const int TypeId = MetaTypeId::TYPE_INT32;
+};
+template <>
+class MetaTypeInfo<std::uint32_t>
+{
+public:
+    static const int TypeId = MetaTypeId::TYPE_UINT32;
+};
+template <>
+class MetaTypeInfo<std::int64_t>
+{
+public:
+    static const int TypeId = MetaTypeId::TYPE_INT64;
+};
+template <>
+class MetaTypeInfo<std::uint64_t>
+{
+public:
+    static const int TypeId = MetaTypeId::TYPE_UINT64;
+};
+template <>
+class MetaTypeInfo<float>
+{
+public:
+    static const int TypeId = MetaTypeId::TYPE_FLOAT;
+};
+template <>
+class MetaTypeInfo<double>
+{
+public:
+    static const int TypeId = MetaTypeId::TYPE_DOUBLE;
+};
+template <>
+class MetaTypeInfo<std::string>
+{
+public:
+    static const int TypeId = MetaTypeId::TYPE_STRING;
+};
+template <>
+class MetaTypeInfo<Bytes>
+{
+public:
+    static const int TypeId = MetaTypeId::TYPE_BYTES;
 };
 
 template <>
-class MetaTypeInfo<MetaType::TYPE_INT32>
+class MetaTypeInfo<std::vector<bool>>
 {
 public:
-    typedef std::int32_t Type;
+    static const int TypeId = MetaTypeId::TYPE_ARRAY_BOOL;
 };
-
 template <>
-class MetaTypeInfo<MetaType::TYPE_UINT32>
+class MetaTypeInfo<std::vector<std::int32_t>>
 {
 public:
-    typedef std::uint32_t Type;
+    static const int TypeId = MetaTypeId::TYPE_ARRAY_INT32;
 };
-
 template <>
-class MetaTypeInfo<MetaType::TYPE_INT64>
+class MetaTypeInfo<std::vector<std::uint32_t>>
 {
 public:
-    typedef std::int64_t Type;
+    static const int TypeId = MetaTypeId::TYPE_ARRAY_UINT32;
 };
-
 template <>
-class MetaTypeInfo<MetaType::TYPE_UINT64>
+class MetaTypeInfo<std::vector<std::int64_t>>
 {
 public:
-    typedef std::uint64_t Type;
+    static const int TypeId = MetaTypeId::TYPE_ARRAY_INT64;
 };
-
 template <>
-class MetaTypeInfo<MetaType::TYPE_FLOAT>
+class MetaTypeInfo<std::vector<std::uint64_t>>
 {
 public:
-    typedef float Type;
+    static const int TypeId = MetaTypeId::TYPE_ARRAY_UINT64;
 };
-
 template <>
-class MetaTypeInfo<MetaType::TYPE_DOUBLE>
+class MetaTypeInfo<std::vector<float>>
 {
 public:
-    typedef double Type;
+    static const int TypeId = MetaTypeId::TYPE_ARRAY_FLOAT;
 };
-
 template <>
-class MetaTypeInfo<MetaType::TYPE_STRING>
+class MetaTypeInfo<std::vector<double>>
 {
 public:
-    typedef std::string Type;
+    static const int TypeId = MetaTypeId::TYPE_ARRAY_DOUBLE;
 };
-
 template <>
-class MetaTypeInfo<MetaType::TYPE_BYTES>
+class MetaTypeInfo<std::vector<std::string>>
 {
 public:
-    typedef std::string Type;
+    static const int TypeId = MetaTypeId::TYPE_ARRAY_STRING;
 };
-
+template <>
+class MetaTypeInfo<std::vector<Bytes>>
+{
+public:
+    static const int TypeId = MetaTypeId::TYPE_ARRAY_BYTES;
+};
