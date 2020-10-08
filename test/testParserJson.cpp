@@ -341,7 +341,7 @@ TEST_F(TestParserJson, testStdString)
 
 TEST_F(TestParserJson, testBytes)
 {
-    std::string VALUE = {'H', 'e', 12, 0, 'A'};
+    Bytes VALUE = {'H', 'e', 12, 0, 'A'};
     MetaStruct structTest;
     structTest.setTypeName("test.TestBytes");
     MetaField fieldValue = {MetaType::TYPE_BYTES, "", "value", "description"};
@@ -355,7 +355,7 @@ TEST_F(TestParserJson, testBytes)
     {
         testing::InSequence seq;
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(rootStruct))).Times(1);
-        EXPECT_CALL(mockVisitor, enterBytes(MatcherMetaField(fieldValue), std::move(VALUE))).Times(1);
+        EXPECT_CALL(mockVisitor, enterBytes(MatcherMetaField(fieldValue), ArrayEq(VALUE.data(), VALUE.size()), VALUE.size())).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(rootStruct))).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
@@ -913,10 +913,10 @@ TEST_F(TestParserJson, testArrayString)
 
 TEST_F(TestParserJson, testArrayBytes)
 {
-    static const std::string VALUE1 = {'H', 'e', '\0', 'l', 'o'};
-    static const std::string VALUE2 = {};
-    static const std::string VALUE3 = {'W', 'o', '\n', '\0', 'd'};
-    static const std::string VALUE4 = {'F', '\t', '\0', 123, 12};
+    static const Bytes VALUE1 = {'H', 'e', '\0', 'l', 'o'};
+    static const Bytes VALUE2 = {};
+    static const Bytes VALUE3 = {'W', 'o', '\n', '\0', 'd'};
+    static const Bytes VALUE4 = {'F', '\t', '\0', 123, 12};
     MetaStruct structTest;
     structTest.setTypeName("test.TestArrayBytes");
     MetaField fieldValue = {MetaType::TYPE_ARRAY_BYTES, "", "value", "description"};
@@ -930,7 +930,7 @@ TEST_F(TestParserJson, testArrayBytes)
     {
         testing::InSequence seq;
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(rootStruct))).Times(1);
-        EXPECT_CALL(mockVisitor, enterArrayBytesMove(MatcherMetaField(fieldValue), std::vector<std::string>({VALUE1, VALUE2, VALUE3, VALUE4}))).Times(1);
+        EXPECT_CALL(mockVisitor, enterArrayBytesMove(MatcherMetaField(fieldValue), std::vector<Bytes>({VALUE1, VALUE2, VALUE3, VALUE4}))).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(rootStruct))).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }

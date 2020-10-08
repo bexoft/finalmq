@@ -165,7 +165,7 @@ TEST_F(TestSerializerJson, testString)
 
 TEST_F(TestSerializerJson, testBytes)
 {
-    static const std::string VALUE = {'H','e','l',0,13,'l','o'};
+    static const Bytes VALUE = {'H','e','l',0,13,'l','o'};
 
     m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageBytes", ""});
     m_serializer->enterBytes({MetaType::TYPE_BYTES, "", "value", "", 0}, VALUE.data(), VALUE.size());
@@ -345,10 +345,10 @@ TEST_F(TestSerializerJson, testArrayString)
 
 TEST_F(TestSerializerJson, testArrayBytes)
 {
-    static const std::string VALUE1 = "Hello";
-    static const std::string VALUE2 = "";
-    static const std::string VALUE3 = "World";
-    static const std::vector<std::string> VALUE = {VALUE1, VALUE2, VALUE3};
+    static const Bytes VALUE1 = {'H', 'e', 'l', 'l', 'o'};
+    static const Bytes VALUE2 = {};
+    static const Bytes VALUE3 = {'W', 'o', 'r', 'l', 'd'};
+    static const std::vector<Bytes> VALUE = {VALUE1, VALUE2, VALUE3};
 
     m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageArrayBytes", ""});
     m_serializer->enterArrayBytes({MetaType::TYPE_ARRAY_BYTES, "", "value", "", 0}, VALUE);

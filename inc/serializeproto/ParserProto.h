@@ -32,6 +32,7 @@ private:
     void parseStructWire(const MetaField& field);
     bool parseStructIntern(const MetaStruct& stru);
     bool parseArrayString(std::vector<std::string>& array);
+    bool parseArrayBytes(std::vector<Bytes>& array);
     void parseArrayStruct(const MetaField& field);
 
     template<class T, int WIRETYPE>
@@ -58,9 +59,6 @@ private:
     inline std::int64_t zigzag(std::uint64_t value);
 
     void skip(WireType wireType);
-
-    void processDefaultValues(const MetaStruct& stru, const std::vector<bool>& fieldsDone);
-
 
     const char*         m_ptr = nullptr;
     int                 m_size = 0;

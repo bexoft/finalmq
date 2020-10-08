@@ -67,4 +67,5 @@ private:
     std::vector<float>          m_arrayFloat;
     std::vector<double>         m_arrayDouble;
     std::vector<std::string>    m_arrayString;
+    std::vector<Bytes>          m_arrayBytes;
 };

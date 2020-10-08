@@ -118,7 +118,10 @@ void ParserProcessDefaultValues::processDefaultValues(const MetaStruct& stru, co
                     m_visitor->enterString(*field, "", 0);
                     break;
                 case MetaType::TYPE_BYTES:
-                    m_visitor->enterBytes(*field, "", 0);
+                    {
+                        static const unsigned char dummy[] = {};
+                        m_visitor->enterBytes(*field, dummy, 0);
+                    }
                     break;
                 case MetaType::TYPE_STRUCT:
                     {
@@ -279,7 +282,7 @@ void ParserProcessDefaultValues::enterString(const MetaField& field, const char*
         m_visitor->enterString(field, value, size);
     }
 }
-void ParserProcessDefaultValues::enterBytes(const MetaField& field, std::string&& value)
+void ParserProcessDefaultValues::enterBytes(const MetaField& field, Bytes&& value)
 {
     markAsDone(field);
     if (!value.empty() || !m_skipDefaultValues)
@@ -287,7 +290,7 @@ void ParserProcessDefaultValues::enterBytes(const MetaField& field, std::string&
         m_visitor->enterBytes(field, std::move(value));
     }
 }
-void ParserProcessDefaultValues::enterBytes(const MetaField& field, const char* value, int size)
+void ParserProcessDefaultValues::enterBytes(const MetaField& field, const unsigned char* value, int size)
 {
     markAsDone(field);
     if (size > 0 || !m_skipDefaultValues)
@@ -445,7 +448,7 @@ void ParserProcessDefaultValues::enterArrayString(const MetaField& field, const 
         m_visitor->enterArrayString(field, value);
     }
 }
-void ParserProcessDefaultValues::enterArrayBytesMove(const MetaField& field, std::vector<std::string>&& value)
+void ParserProcessDefaultValues::enterArrayBytesMove(const MetaField& field, std::vector<Bytes>&& value)
 {
     markAsDone(field);
     if (!value.empty() || !m_skipDefaultValues)
@@ -453,7 +456,7 @@ void ParserProcessDefaultValues::enterArrayBytesMove(const MetaField& field, std
         m_visitor->enterArrayBytesMove(field, std::move(value));
     }
 }
-void ParserProcessDefaultValues::enterArrayBytes(const MetaField& field, const std::vector<std::string>& value)
+void ParserProcessDefaultValues::enterArrayBytes(const MetaField& field, const std::vector<Bytes>& value)
 {
     markAsDone(field);
     if (!value.empty() || !m_skipDefaultValues)

@@ -181,7 +181,7 @@ TEST_F(TestSerializerProto, testString)
 
 TEST_F(TestSerializerProto, testBytes)
 {
-    static const std::string VALUE = {'H','e','l',0,13,'l','o'};
+    static const Bytes VALUE = {'H','e','l',0,13,'l','o'};
 
     m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageBytes", ""});
     m_serializer->enterBytes({MetaType::TYPE_BYTES, "", "value", "", 0}, VALUE.data(), VALUE.size());
@@ -190,7 +190,9 @@ TEST_F(TestSerializerProto, testBytes)
     test::TestMessageBytes message;
     bool res = message.ParseFromString(m_data);
     EXPECT_EQ(res, true);
-    EXPECT_EQ(message.value(), VALUE);
+    const unsigned char* v = reinterpret_cast<const unsigned char*>(message.value().data());
+    Bytes result(v, v + message.value().size());
+    EXPECT_EQ(result, VALUE);
 }
 
 
@@ -353,10 +355,10 @@ TEST_F(TestSerializerProto, testArrayString)
 
 TEST_F(TestSerializerProto, testArrayBytes)
 {
-    static const std::string VALUE1 = "Hello";
-    static const std::string VALUE2 = "";
-    static const std::string VALUE3 = "World";
-    static const std::vector<std::string> VALUE = {VALUE1, VALUE2, VALUE3};
+    static const Bytes VALUE1 = {'H', 'e', 'l', 'l', 'o'};
+    static const Bytes VALUE2 = {};
+    static const Bytes VALUE3 = {'W', 'o', 'r', 'l', 'd'};
+    static const std::vector<Bytes> VALUE = {VALUE1, VALUE2, VALUE3};
 
     m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageArrayBytes", ""});
     m_serializer->enterArrayBytes({MetaType::TYPE_ARRAY_BYTES, "", "value", "", 0}, VALUE);
@@ -365,7 +367,13 @@ TEST_F(TestSerializerProto, testArrayBytes)
     test::TestMessageArrayBytes message;
     bool res = message.ParseFromString(m_data);
     EXPECT_EQ(res, true);
-    EXPECT_EQ(std::vector<std::string>(message.value().begin(), message.value().end()), VALUE);
+
+    std::vector<Bytes> result;
+    std::for_each(message.value().begin(), message.value().end(), [&result] (const std::string& entry) {
+        const unsigned char* v = reinterpret_cast<const unsigned char*>(entry.data());
+        result.emplace_back(v, v + entry.size());
+    });
+    EXPECT_EQ(result, VALUE);
 }
 
 TEST_F(TestSerializerProto, testArrayStruct)

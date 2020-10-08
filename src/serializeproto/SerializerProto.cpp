@@ -194,6 +194,22 @@ void SerializerProto::serializeArrayString(int id, const std::vector<std::string
 }
 
 
+void SerializerProto::serializeArrayBytes(int id, const std::vector<Bytes>& value)
+{
+    int size = value.size();
+    if (size <= 0)
+    {
+        return;
+    }
+
+    for (int i = 0; i < size; i++)
+    {
+        const Bytes& bytes = value[i];
+        serializeString<false>(id, reinterpret_cast<const char*>(bytes.data()), bytes.size());
+    }
+}
+
+
 
 template<class T>
 void SerializerProto::serializeArrayVarint(int id, const T* value, int size)
@@ -562,15 +578,15 @@ void SerializerProto::enterString(const MetaField& field, const char* value, int
     int id = field.index + INDEX2ID;
     serializeString<true>(id, value, size);
 }
-void SerializerProto::enterBytes(const MetaField& field, std::string&& value)
+void SerializerProto::enterBytes(const MetaField& field, Bytes&& value)
 {
     int id = field.index + INDEX2ID;
-    serializeString<true>(id, value.data(), value.size());
+    serializeString<true>(id, reinterpret_cast<const char*>(value.data()), value.size());
 }
-void SerializerProto::enterBytes(const MetaField& field, const char* value, int size)
+void SerializerProto::enterBytes(const MetaField& field, const unsigned char* value, int size)
 {
     int id = field.index + INDEX2ID;
-    serializeString<true>(id, value, size);
+    serializeString<true>(id, reinterpret_cast<const char*>(value), size);
 }
 void SerializerProto::enterEnum(const MetaField& field, std::int32_t value)
 {
@@ -703,15 +719,15 @@ void SerializerProto::enterArrayString(const MetaField& field, const std::vector
     int id = field.index + INDEX2ID;
     serializeArrayString(id, value);
 }
-void SerializerProto::enterArrayBytesMove(const MetaField& field, std::vector<std::string>&& value)
+void SerializerProto::enterArrayBytesMove(const MetaField& field, std::vector<Bytes>&& value)
 {
     int id = field.index + INDEX2ID;
-    serializeArrayString(id, value);
+    serializeArrayBytes(id, value);
 }
-void SerializerProto::enterArrayBytes(const MetaField& field, const std::vector<std::string>& value)
+void SerializerProto::enterArrayBytes(const MetaField& field, const std::vector<Bytes>& value)
 {
     int id = field.index + INDEX2ID;
-    serializeArrayString(id, value);
+    serializeArrayBytes(id, value);
 }
 void SerializerProto::enterArrayEnum(const MetaField& field, std::vector<std::int32_t>&& value)
 {

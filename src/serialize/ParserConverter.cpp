@@ -167,7 +167,7 @@ void ParserConverter::enterString(const MetaField& field, const char* value, int
         convertString(field, value, size);
     }
 }
-void ParserConverter::enterBytes(const MetaField& field, std::string&& value)
+void ParserConverter::enterBytes(const MetaField& field, Bytes&& value)
 {
     if (field.type == MetaType::TYPE_BYTES)
     {
@@ -175,10 +175,10 @@ void ParserConverter::enterBytes(const MetaField& field, std::string&& value)
     }
     else
     {
-        convertString(field, value.data(), value.size());
+        std::cout << "bytes not expected" << std::endl;
     }
 }
-void ParserConverter::enterBytes(const MetaField& field, const char* value, int size)
+void ParserConverter::enterBytes(const MetaField& field, const unsigned char* value, int size)
 {
     if (field.type == MetaType::TYPE_BYTES)
     {
@@ -186,7 +186,7 @@ void ParserConverter::enterBytes(const MetaField& field, const char* value, int 
     }
     else
     {
-        convertString(field, value, size);
+        std::cout << "bytes not expected" << std::endl;
     }
 }
 void ParserConverter::enterEnum(const MetaField& field, std::int32_t value)
@@ -399,7 +399,7 @@ void ParserConverter::enterArrayString(const MetaField& field, const std::vector
         convertArraytString(field, value);
     }
 }
-void ParserConverter::enterArrayBytesMove(const MetaField& field, std::vector<std::string>&& value)
+void ParserConverter::enterArrayBytesMove(const MetaField& field, std::vector<Bytes>&& value)
 {
     if (field.type == MetaType::TYPE_ARRAY_BYTES)
     {
@@ -407,10 +407,10 @@ void ParserConverter::enterArrayBytesMove(const MetaField& field, std::vector<st
     }
     else
     {
-        convertArraytString(field, value);
+        std::cout << "bytes array not expected" << std::endl;
     }
 }
-void ParserConverter::enterArrayBytes(const MetaField& field, const std::vector<std::string>& value)
+void ParserConverter::enterArrayBytes(const MetaField& field, const std::vector<Bytes>& value)
 {
     if (field.type == MetaType::TYPE_ARRAY_BYTES)
     {
@@ -418,7 +418,7 @@ void ParserConverter::enterArrayBytes(const MetaField& field, const std::vector<
     }
     else
     {
-        convertArraytString(field, value);
+        std::cout << "bytes array not expected" << std::endl;
     }
 }
 void ParserConverter::enterArrayEnum(const MetaField& field, std::vector<std::int32_t>&& value)
@@ -500,9 +500,6 @@ void ParserConverter::convertNumber(const MetaField& field, T value)
         break;
     case MetaType::TYPE_STRING:
         m_visitor->enterString(field, std::to_string(value));
-        break;
-    case MetaType::TYPE_BYTES:
-        m_visitor->enterBytes(field, std::to_string(value));
         break;
     case MetaType::TYPE_ENUM:
         m_visitor->enterEnum(field, value);
@@ -621,9 +618,6 @@ void ParserConverter::convertString(const MetaField& field, const char* value, i
     case MetaType::TYPE_STRING:
         m_visitor->enterString(field, value, size);
         break;
-    case MetaType::TYPE_BYTES:
-        m_visitor->enterBytes(field, value, size);
-        break;
     case MetaType::TYPE_ENUM:
         m_visitor->enterEnum(field, value, size);
         break;
@@ -671,12 +665,6 @@ void ParserConverter::convertString(const MetaField& field, const char* value, i
         break;
     case MetaType::TYPE_ARRAY_STRING:
         {
-            m_visitor->enterArrayString(field, {std::string(value, size)});
-        }
-        break;
-    case MetaType::TYPE_ARRAY_BYTES:
-        {
-            std::string v(value, size);
             m_visitor->enterArrayString(field, {std::string(value, size)});
         }
         break;
@@ -775,16 +763,6 @@ void ParserConverter::convertArraytNumber(const MetaField& field, const T* value
                 v.push_back(std::to_string(entry));
             });
             m_visitor->enterArrayString(field, std::move(v));
-        }
-        break;
-    case MetaType::TYPE_ARRAY_BYTES:
-        {
-            std::vector<std::string> v;
-            v.reserve(size);
-            std::for_each(value, value + size, [&v] (const T& entry) {
-                v.push_back(std::to_string(entry));
-            });
-            m_visitor->enterArrayBytes(field, std::move(v));
         }
         break;
     case MetaType::TYPE_ARRAY_ENUM:
@@ -889,16 +867,6 @@ void ParserConverter::convertArraytNumber(const MetaField& field, const std::vec
             m_visitor->enterArrayString(field, std::move(v));
         }
         break;
-    case MetaType::TYPE_ARRAY_BYTES:
-        {
-            std::vector<std::string> v;
-            v.reserve(size);
-            std::for_each(value.begin(), value.end(), [&v] (const T& entry) {
-                v.push_back(std::to_string(entry));
-            });
-            m_visitor->enterArrayBytes(field, std::move(v));
-        }
-        break;
     case MetaType::TYPE_ARRAY_ENUM:
         {
             std::vector<std::int32_t> v;
@@ -994,9 +962,6 @@ void ParserConverter::convertArraytString(const MetaField& field, const std::vec
     case MetaType::TYPE_ARRAY_STRING:
         m_visitor->enterArrayString(field, value);
         break;
-    case MetaType::TYPE_ARRAY_BYTES:
-        m_visitor->enterArrayString(field, value);
-        break;
     case MetaType::TYPE_ARRAY_ENUM:
         {
             std::vector<std::string> v;
@@ -1012,3 +977,4 @@ void ParserConverter::convertArraytString(const MetaField& field, const std::vec
         break;
     }
 }
+

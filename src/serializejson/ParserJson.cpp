@@ -95,9 +95,6 @@ void ParserJson::enterNumber(T value)
     case MetaType::TYPE_STRING:
         m_visitor.enterString(*m_fieldCurrent, std::to_string(value));
         break;
-    case MetaType::TYPE_BYTES:
-        m_visitor.enterBytes(*m_fieldCurrent, std::to_string(value));
-        break;
     case MetaType::TYPE_ENUM:
         m_visitor.enterEnum(*m_fieldCurrent, value);
         break;
@@ -232,7 +229,8 @@ void ParserJson::enterString(const char* value, int size)
         m_visitor.enterString(*m_fieldCurrent, value, size);
         break;
     case MetaType::TYPE_BYTES:
-        m_visitor.enterBytes(*m_fieldCurrent, value, size);
+        // todo: convert from base64
+        m_visitor.enterBytes(*m_fieldCurrent, reinterpret_cast<const unsigned char*>(value), size);
         break;
     case MetaType::TYPE_ENUM:
         m_visitor.enterEnum(*m_fieldCurrent, value, size);
@@ -283,7 +281,11 @@ void ParserJson::enterString(const char* value, int size)
         m_arrayString.emplace_back(value, size);
         break;
     case MetaType::TYPE_ARRAY_BYTES:
-        m_arrayString.emplace_back(value, size);
+        {
+            // todo: convert from base64
+            const unsigned char* v = reinterpret_cast<const unsigned char*>(value);
+            m_arrayBytes.emplace_back(v, v + size);
+        }
         break;
     case MetaType::TYPE_ARRAY_ENUM:
         if (!m_arrayString.empty() || m_arrayInt32.empty())
@@ -358,7 +360,8 @@ void ParserJson::enterString(std::string&& value)
         m_visitor.enterString(*m_fieldCurrent, std::move(value));
         break;
     case MetaType::TYPE_BYTES:
-        m_visitor.enterBytes(*m_fieldCurrent, std::move(value));
+        // todo: convert from base64
+        m_visitor.enterBytes(*m_fieldCurrent, reinterpret_cast<const unsigned char*>(value.data()), value.size());
         break;
     case MetaType::TYPE_ENUM:
         m_visitor.enterEnum(*m_fieldCurrent, std::move(value));
@@ -409,7 +412,11 @@ void ParserJson::enterString(std::string&& value)
         m_arrayString.push_back(std::move(value));
         break;
     case MetaType::TYPE_ARRAY_BYTES:
-        m_arrayString.push_back(std::move(value));
+        {
+            // todo: convert from base64
+            const unsigned char* v = reinterpret_cast<const unsigned char*>(value.data());
+            m_arrayBytes.emplace_back(v, v + value.size());
+        }
         break;
     case MetaType::TYPE_ARRAY_ENUM:
         if (!m_arrayString.empty() || m_arrayInt32.empty())
@@ -524,8 +531,8 @@ void ParserJson::exitArray()
             m_arrayString.clear();
             break;
         case MetaType::TYPE_ARRAY_BYTES:
-            m_visitor.enterArrayBytesMove(*m_fieldCurrent, std::move(m_arrayString));
-            m_arrayString.clear();
+            m_visitor.enterArrayBytesMove(*m_fieldCurrent, std::move(m_arrayBytes));
+            m_arrayBytes.clear();
             break;
         case MetaType::TYPE_ARRAY_ENUM:
             if (!m_arrayString.empty())

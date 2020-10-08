@@ -834,10 +834,10 @@ TEST_F(TestParserProto, testArrayString)
 
 TEST_F(TestParserProto, testArrayBytes)
 {
-    static const std::string VALUE1 = {'H', 'e', '\0', 'l', 'o'};
-    static const std::string VALUE2 = {};
-    static const std::string VALUE3 = {'W', 'o', '\n', '\0', 'd'};
-    static const std::string VALUE4 = {'F', '\t', '\0', 123, 12};
+    static const Bytes VALUE1 = {'H', 'e', '\0', 'l', 'o'};
+    static const Bytes VALUE2 = {};
+    static const Bytes VALUE3 = {'W', 'o', '\n', '\0', 'd'};
+    static const Bytes VALUE4 = {'F', '\t', '\0', 123, 12};
     MetaStruct structTest;
     structTest.setTypeName("test.TestArrayBytes");
     MetaField fieldValue = {MetaType::TYPE_ARRAY_BYTES, "", "value", "description"};
@@ -849,10 +849,10 @@ TEST_F(TestParserProto, testArrayBytes)
 
     test::TestMessageArrayBytes message;
     auto* value = message.mutable_value();
-    *value->Add() = VALUE1;
-    *value->Add() = VALUE2;
-    *value->Add() = VALUE3;
-    *value->Add() = VALUE4;
+    *value->Add() = std::string(reinterpret_cast<const char*>(VALUE1.data()), VALUE1.size());
+    *value->Add() = std::string(reinterpret_cast<const char*>(VALUE2.data()), VALUE2.size());
+    *value->Add() = std::string(reinterpret_cast<const char*>(VALUE3.data()), VALUE3.size());
+    *value->Add() = std::string(reinterpret_cast<const char*>(VALUE4.data()), VALUE4.size());
     message.SerializeToString(&data);
 
     MockIParserVisitor mockVisitor;
@@ -861,7 +861,7 @@ TEST_F(TestParserProto, testArrayBytes)
     {
         testing::InSequence seq;
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(rootStruct))).Times(1);
-        EXPECT_CALL(mockVisitor, enterArrayBytes(MatcherMetaField(fieldValue), std::vector<std::string>({VALUE1, VALUE2, VALUE3, VALUE4}))).Times(1);
+        EXPECT_CALL(mockVisitor, enterArrayBytes(MatcherMetaField(fieldValue), std::vector<Bytes>({VALUE1, VALUE2, VALUE3, VALUE4}))).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(rootStruct))).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }

@@ -27,8 +27,8 @@ public:
     MOCK_METHOD(void, enterDouble, (const MetaField& field, double value), (override));
     MOCK_METHOD(void, enterString, (const MetaField& field, std::string&& value));
     MOCK_METHOD(void, enterString, (const MetaField& field, const char* value, int size));
-    MOCK_METHOD(void, enterBytes, (const MetaField& field, std::string&& value));
-    MOCK_METHOD(void, enterBytes, (const MetaField& field, const char* value, int size));
+    MOCK_METHOD(void, enterBytes, (const MetaField& field, Bytes&& value));
+    MOCK_METHOD(void, enterBytes, (const MetaField& field, const unsigned char* value, int size));
     MOCK_METHOD(void, enterEnum, (const MetaField& field, std::int32_t value), (override));
     MOCK_METHOD(void, enterEnum, (const MetaField& field, std::string&& value));
     MOCK_METHOD(void, enterEnum, (const MetaField& field, const char* value, int size));
@@ -49,8 +49,8 @@ public:
     MOCK_METHOD(void, enterArrayDouble, (const MetaField& field, const double* value, int size), (override));
     MOCK_METHOD(void, enterArrayStringMove, (const MetaField& field, std::vector<std::string>&& value), (override));
     MOCK_METHOD(void, enterArrayString, (const MetaField& field, const std::vector<std::string>& value), (override));
-    MOCK_METHOD(void, enterArrayBytesMove, (const MetaField& field, std::vector<std::string>&& value), (override));
-    MOCK_METHOD(void, enterArrayBytes, (const MetaField& field, const std::vector<std::string>& value), (override));
+    MOCK_METHOD(void, enterArrayBytesMove, (const MetaField& field, std::vector<Bytes>&& value), (override));
+    MOCK_METHOD(void, enterArrayBytes, (const MetaField& field, const std::vector<Bytes>& value), (override));
     MOCK_METHOD(void, enterArrayEnum, (const MetaField& field, std::vector<std::int32_t>&& value), (override));
     MOCK_METHOD(void, enterArrayEnum, (const MetaField& field, const std::int32_t* value, int size), (override));
     MOCK_METHOD(void, enterArrayEnumMove, (const MetaField& field, std::vector<std::string>&& value), (override));

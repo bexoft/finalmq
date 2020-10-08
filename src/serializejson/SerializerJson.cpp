@@ -136,18 +136,20 @@ void SerializerJson::Internal::enterString(const MetaField& field, const char* v
     m_jsonBuilder.enterString(value, size);
 }
 
-void SerializerJson::Internal::enterBytes(const MetaField& field, std::string&& value)
+void SerializerJson::Internal::enterBytes(const MetaField& field, Bytes&& value)
 {
     assert(field.type == MetaType::TYPE_BYTES);
     setKey(field);
-    m_jsonBuilder.enterString(value.c_str(), value.size());
+    // todo: convert to base64
+    m_jsonBuilder.enterString(reinterpret_cast<const char*>(value.data()), value.size());
 }
 
-void SerializerJson::Internal::enterBytes(const MetaField& field, const char* value, int size)
+void SerializerJson::Internal::enterBytes(const MetaField& field, const unsigned char* value, int size)
 {
     assert(field.type == MetaType::TYPE_BYTES);
     setKey(field);
-    m_jsonBuilder.enterString(value, size);
+    // todo: convert to base64
+    m_jsonBuilder.enterString(reinterpret_cast<const char*>(value), size);
 }
 
 void SerializerJson::Internal::enterEnum(const MetaField& field, std::int32_t value)
@@ -330,18 +332,19 @@ void SerializerJson::Internal::enterArrayString(const MetaField& field, const st
     m_jsonBuilder.exitArray();
 }
 
-void SerializerJson::Internal::enterArrayBytesMove(const MetaField& field, std::vector<std::string>&& value)
+void SerializerJson::Internal::enterArrayBytesMove(const MetaField& field, std::vector<Bytes>&& value)
 {
     enterArrayBytes(field, value);
 }
 
-void SerializerJson::Internal::enterArrayBytes(const MetaField& field, const std::vector<std::string>& value)
+void SerializerJson::Internal::enterArrayBytes(const MetaField& field, const std::vector<Bytes>& value)
 {
     assert(field.type == MetaType::TYPE_ARRAY_BYTES);
     setKey(field);
     m_jsonBuilder.enterArray();
-    std::for_each(value.begin(), value.end(), [this] (const std::string& entry) {
-        m_jsonBuilder.enterString(entry.c_str(), entry.size());
+    std::for_each(value.begin(), value.end(), [this] (const Bytes& entry) {
+        // todo: convert to base64
+        m_jsonBuilder.enterString(reinterpret_cast<const char*>(entry.data()), entry.size());
     });
     m_jsonBuilder.exitArray();
 }
