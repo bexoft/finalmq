@@ -18,7 +18,7 @@ using ::testing::ElementsAreArray;
 
 MATCHER_P(MatcherMetaField, metaField, "")
 {
-    return (arg.type == metaField.type &&
+    return (arg.typeId == metaField.typeId &&
             arg.typeName == metaField.typeName &&
             arg.name == metaField.name);
 }
@@ -78,7 +78,7 @@ TEST_F(TestParserProto, testBool)
     static const bool VALUE = true;
     MetaStruct structTest;
     structTest.setTypeName("test.TestBool");
-    MetaField fieldValue = {MetaType::TYPE_BOOL, "", "value", "description"};
+    MetaField fieldValue = {MetaTypeId::TYPE_BOOL, "", "value", "description"};
     structTest.addField(fieldValue);
 
     MetaDataGlobal::instance().addStruct(structTest);
@@ -90,7 +90,7 @@ TEST_F(TestParserProto, testBool)
     message.SerializeToString(&data);
 
     MockIParserVisitor mockVisitor;
-    MetaField rootStruct = {MetaType::TYPE_STRUCT, "test.TestBool", ""};
+    MetaField rootStruct = {MetaTypeId::TYPE_STRUCT, "test.TestBool", ""};
 
     {
         testing::InSequence seq;
@@ -111,7 +111,7 @@ TEST_F(TestParserProto, testInt32)
     static const int VALUE = -2;
     MetaStruct structTest;
     structTest.setTypeName("test.TestInt32");
-    MetaField fieldValue = {MetaType::TYPE_INT32, "", "value", "description"};
+    MetaField fieldValue = {MetaTypeId::TYPE_INT32, "", "value", "description"};
     structTest.addField(fieldValue);
 
     MetaDataGlobal::instance().addStruct(structTest);
@@ -123,7 +123,7 @@ TEST_F(TestParserProto, testInt32)
     message.SerializeToString(&data);
 
     MockIParserVisitor mockVisitor;
-    MetaField rootStruct = {MetaType::TYPE_STRUCT, "test.TestInt32", ""};
+    MetaField rootStruct = {MetaTypeId::TYPE_STRUCT, "test.TestInt32", ""};
 
     {
         testing::InSequence seq;
@@ -144,7 +144,7 @@ TEST_F(TestParserProto, testUInt32)
     static const int VALUE = 130;
     MetaStruct structTest;
     structTest.setTypeName("test.TestUInt32");
-    MetaField fieldValue = {MetaType::TYPE_UINT32, "", "value", "description"};
+    MetaField fieldValue = {MetaTypeId::TYPE_UINT32, "", "value", "description"};
     structTest.addField(fieldValue);
 
     MetaDataGlobal::instance().addStruct(structTest);
@@ -156,7 +156,7 @@ TEST_F(TestParserProto, testUInt32)
     message.SerializeToString(&data);
 
     MockIParserVisitor mockVisitor;
-    MetaField rootStruct = {MetaType::TYPE_STRUCT, "test.TestUInt32", ""};
+    MetaField rootStruct = {MetaTypeId::TYPE_STRUCT, "test.TestUInt32", ""};
 
     {
         testing::InSequence seq;
@@ -177,7 +177,7 @@ TEST_F(TestParserProto, testInt64)
     static const std::int64_t VALUE = -2;
     MetaStruct structTest;
     structTest.setTypeName("test.TestInt64");
-    MetaField fieldValue = {MetaType::TYPE_INT64, "", "value", "description"};
+    MetaField fieldValue = {MetaTypeId::TYPE_INT64, "", "value", "description"};
     structTest.addField(fieldValue);
 
     MetaDataGlobal::instance().addStruct(structTest);
@@ -189,7 +189,7 @@ TEST_F(TestParserProto, testInt64)
     message.SerializeToString(&data);
 
     MockIParserVisitor mockVisitor;
-    MetaField rootStruct = {MetaType::TYPE_STRUCT, "test.TestInt64", ""};
+    MetaField rootStruct = {MetaTypeId::TYPE_STRUCT, "test.TestInt64", ""};
 
     {
         testing::InSequence seq;
@@ -210,7 +210,7 @@ TEST_F(TestParserProto, testUInt64)
     static const std::uint64_t VALUE = 130;
     MetaStruct structTest;
     structTest.setTypeName("test.TestUInt64");
-    MetaField fieldValue = {MetaType::TYPE_UINT64, "", "value", "description"};
+    MetaField fieldValue = {MetaTypeId::TYPE_UINT64, "", "value", "description"};
     structTest.addField(fieldValue);
 
     MetaDataGlobal::instance().addStruct(structTest);
@@ -222,7 +222,7 @@ TEST_F(TestParserProto, testUInt64)
     message.SerializeToString(&data);
 
     MockIParserVisitor mockVisitor;
-    MetaField rootStruct = {MetaType::TYPE_STRUCT, "test.TestUInt64", ""};
+    MetaField rootStruct = {MetaTypeId::TYPE_STRUCT, "test.TestUInt64", ""};
 
     {
         testing::InSequence seq;
@@ -244,7 +244,7 @@ TEST_F(TestParserProto, testFloat)
     static const float VALUE = -1.1;
     MetaStruct structTest;
     structTest.setTypeName("test.TestFloat");
-    MetaField fieldValue = {MetaType::TYPE_FLOAT, "", "value", "description"};
+    MetaField fieldValue = {MetaTypeId::TYPE_FLOAT, "", "value", "description"};
     structTest.addField(fieldValue);
 
     MetaDataGlobal::instance().addStruct(structTest);
@@ -256,7 +256,7 @@ TEST_F(TestParserProto, testFloat)
     message.SerializeToString(&data);
 
     MockIParserVisitor mockVisitor;
-    MetaField rootStruct = {MetaType::TYPE_STRUCT, "test.TestFloat", ""};
+    MetaField rootStruct = {MetaTypeId::TYPE_STRUCT, "test.TestFloat", ""};
 
     {
         testing::InSequence seq;
@@ -277,7 +277,7 @@ TEST_F(TestParserProto, testDouble)
     static const double VALUE = -1.1;
     MetaStruct structTest;
     structTest.setTypeName("test.TestDouble");
-    MetaField fieldValue = {MetaType::TYPE_DOUBLE, "", "value", "description"};
+    MetaField fieldValue = {MetaTypeId::TYPE_DOUBLE, "", "value", "description"};
     structTest.addField(fieldValue);
 
     MetaDataGlobal::instance().addStruct(structTest);
@@ -289,7 +289,7 @@ TEST_F(TestParserProto, testDouble)
     message.SerializeToString(&data);
 
     MockIParserVisitor mockVisitor;
-    MetaField rootStruct = {MetaType::TYPE_STRUCT, "test.TestDouble", ""};
+    MetaField rootStruct = {MetaTypeId::TYPE_STRUCT, "test.TestDouble", ""};
 
     {
         testing::InSequence seq;
@@ -310,7 +310,7 @@ TEST_F(TestParserProto, testString)
     static const std::string VALUE = "Hello World";
     MetaStruct structTest;
     structTest.setTypeName("test.TestString");
-    MetaField fieldValue = {MetaType::TYPE_STRING, "", "value", "description"};
+    MetaField fieldValue = {MetaTypeId::TYPE_STRING, "", "value", "description"};
     structTest.addField(fieldValue);
 
     MetaDataGlobal::instance().addStruct(structTest);
@@ -322,7 +322,7 @@ TEST_F(TestParserProto, testString)
     message.SerializeToString(&data);
 
     MockIParserVisitor mockVisitor;
-    MetaField rootStruct = {MetaType::TYPE_STRUCT, "test.TestString", ""};
+    MetaField rootStruct = {MetaTypeId::TYPE_STRUCT, "test.TestString", ""};
 
     {
         testing::InSequence seq;
@@ -343,7 +343,7 @@ TEST_F(TestParserProto, testBytes)
     static const std::string VALUE = {'H', 'e', 12, 0, 'A'};
     MetaStruct structTest;
     structTest.setTypeName("test.TestBytes");
-    MetaField fieldValue = {MetaType::TYPE_BYTES, "", "value", "description"};
+    MetaField fieldValue = {MetaTypeId::TYPE_BYTES, "", "value", "description"};
     structTest.addField(fieldValue);
 
     MetaDataGlobal::instance().addStruct(structTest);
@@ -355,7 +355,7 @@ TEST_F(TestParserProto, testBytes)
     message.SerializeToString(&data);
 
     MockIParserVisitor mockVisitor;
-    MetaField rootStruct = {MetaType::TYPE_STRUCT, "test.TestBytes", ""};
+    MetaField rootStruct = {MetaTypeId::TYPE_STRUCT, "test.TestBytes", ""};
 
     {
         testing::InSequence seq;
@@ -379,16 +379,16 @@ TEST_F(TestParserProto, testStruct)
     MetaStruct structString;
     structInt32.setTypeName("test.StructInt32");
     structString.setTypeName("test.StructString");
-    MetaField fieldInt32 = {MetaType::TYPE_INT32, "", "value", "description"};
+    MetaField fieldInt32 = {MetaTypeId::TYPE_INT32, "", "value", "description"};
     structInt32.addField(fieldInt32);
-    MetaField fieldString = {MetaType::TYPE_STRING, "", "value", "description"};
+    MetaField fieldString = {MetaTypeId::TYPE_STRING, "", "value", "description"};
     structString.addField(fieldString);
 
     MetaStruct structTest;
     structTest.setTypeName("test.TestStruct");
-    MetaField fieldStructInt32 = {MetaType::TYPE_STRUCT, "test.StructInt32", "structInt32", "description"};
+    MetaField fieldStructInt32 = {MetaTypeId::TYPE_STRUCT, "test.StructInt32", "structInt32", "description"};
     structTest.addField(fieldStructInt32);
-    MetaField fieldStructString = {MetaType::TYPE_STRUCT, "test.StructString", "structString", "description"};
+    MetaField fieldStructString = {MetaTypeId::TYPE_STRUCT, "test.StructString", "structString", "description"};
     structTest.addField(fieldStructString);
 
     MetaDataGlobal::instance().addStruct(structInt32);
@@ -403,7 +403,7 @@ TEST_F(TestParserProto, testStruct)
     message.SerializeToString(&data);
 
     MockIParserVisitor mockVisitor;
-    MetaField rootStruct = {MetaType::TYPE_STRUCT, "test.TestStruct", ""};
+    MetaField rootStruct = {MetaTypeId::TYPE_STRUCT, "test.TestStruct", ""};
 
     {
         testing::InSequence seq;
@@ -430,7 +430,7 @@ TEST_F(TestParserProto, testEnum)
     static const test::Foo VALUE = test::Foo::FOO_HELLO;
     MetaStruct structTest;
     structTest.setTypeName("test.TestEnum");
-    MetaField fieldValue = {MetaType::TYPE_ENUM, "test.Foo", "value", "description"};
+    MetaField fieldValue = {MetaTypeId::TYPE_ENUM, "test.Foo", "value", "description"};
     structTest.addField(fieldValue);
 
     MetaDataGlobal::instance().addStruct(structTest);
@@ -449,7 +449,7 @@ TEST_F(TestParserProto, testEnum)
     message.SerializeToString(&data);
 
     MockIParserVisitor mockVisitor;
-    MetaField rootStruct = {MetaType::TYPE_STRUCT, "test.TestEnum", ""};
+    MetaField rootStruct = {MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""};
 
     {
         testing::InSequence seq;
@@ -471,7 +471,7 @@ TEST_F(TestParserProto, testEnumNotAvailable)
     static const test::Foo VALUE = (test::Foo)123;
     MetaStruct structTest;
     structTest.setTypeName("test.TestEnum");
-    MetaField fieldValue = {MetaType::TYPE_ENUM, "test.Foo", "value", "description"};
+    MetaField fieldValue = {MetaTypeId::TYPE_ENUM, "test.Foo", "value", "description"};
     structTest.addField(fieldValue);
 
     MetaDataGlobal::instance().addStruct(structTest);
@@ -490,7 +490,7 @@ TEST_F(TestParserProto, testEnumNotAvailable)
     message.SerializeToString(&data);
 
     MockIParserVisitor mockVisitor;
-    MetaField rootStruct = {MetaType::TYPE_STRUCT, "test.TestEnum", ""};
+    MetaField rootStruct = {MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""};
 
     {
         testing::InSequence seq;
@@ -515,7 +515,7 @@ TEST_F(TestParserProto, testArrayBool)
     static const bool VALUE4 = true;
     MetaStruct structTest;
     structTest.setTypeName("test.TestArrayBool");
-    MetaField fieldValue = {MetaType::TYPE_ARRAY_BOOL, "", "value", "description"};
+    MetaField fieldValue = {MetaTypeId::TYPE_ARRAY_BOOL, "", "value", "description"};
     structTest.addField(fieldValue);
 
     MetaDataGlobal::instance().addStruct(structTest);
@@ -531,7 +531,7 @@ TEST_F(TestParserProto, testArrayBool)
     message.SerializeToString(&data);
 
     MockIParserVisitor mockVisitor;
-    MetaField rootStruct = {MetaType::TYPE_STRUCT, "test.TestArrayBool", ""};
+    MetaField rootStruct = {MetaTypeId::TYPE_STRUCT, "test.TestArrayBool", ""};
 
     {
         testing::InSequence seq;
@@ -556,7 +556,7 @@ TEST_F(TestParserProto, testArrayInt32)
     static const std::int32_t VALUE4 = 222;
     MetaStruct structTest;
     structTest.setTypeName("test.TestArrayInt32");
-    MetaField fieldValue = {MetaType::TYPE_ARRAY_INT32, "", "value", "description"};
+    MetaField fieldValue = {MetaTypeId::TYPE_ARRAY_INT32, "", "value", "description"};
     structTest.addField(fieldValue);
 
     MetaDataGlobal::instance().addStruct(structTest);
@@ -572,7 +572,7 @@ TEST_F(TestParserProto, testArrayInt32)
     message.SerializeToString(&data);
 
     MockIParserVisitor mockVisitor;
-    MetaField rootStruct = {MetaType::TYPE_STRUCT, "test.TestArrayInt32", ""};
+    MetaField rootStruct = {MetaTypeId::TYPE_STRUCT, "test.TestArrayInt32", ""};
 
     {
         testing::InSequence seq;
@@ -596,7 +596,7 @@ TEST_F(TestParserProto, testArrayUInt32)
     static const std::uint32_t VALUE4 = 222;
     MetaStruct structTest;
     structTest.setTypeName("test.TestArrayUInt32");
-    MetaField fieldValue = {MetaType::TYPE_ARRAY_UINT32, "", "value", "description"};
+    MetaField fieldValue = {MetaTypeId::TYPE_ARRAY_UINT32, "", "value", "description"};
     structTest.addField(fieldValue);
 
     MetaDataGlobal::instance().addStruct(structTest);
@@ -612,7 +612,7 @@ TEST_F(TestParserProto, testArrayUInt32)
     message.SerializeToString(&data);
 
     MockIParserVisitor mockVisitor;
-    MetaField rootStruct = {MetaType::TYPE_STRUCT, "test.TestArrayUInt32", ""};
+    MetaField rootStruct = {MetaTypeId::TYPE_STRUCT, "test.TestArrayUInt32", ""};
 
     {
         testing::InSequence seq;
@@ -637,7 +637,7 @@ TEST_F(TestParserProto, testArrayInt64)
     static const std::int64_t VALUE4 = 222;
     MetaStruct structTest;
     structTest.setTypeName("test.TestArrayInt64");
-    MetaField fieldValue = {MetaType::TYPE_ARRAY_INT64, "", "value", "description"};
+    MetaField fieldValue = {MetaTypeId::TYPE_ARRAY_INT64, "", "value", "description"};
     structTest.addField(fieldValue);
 
     MetaDataGlobal::instance().addStruct(structTest);
@@ -653,7 +653,7 @@ TEST_F(TestParserProto, testArrayInt64)
     message.SerializeToString(&data);
 
     MockIParserVisitor mockVisitor;
-    MetaField rootStruct = {MetaType::TYPE_STRUCT, "test.TestArrayInt64", ""};
+    MetaField rootStruct = {MetaTypeId::TYPE_STRUCT, "test.TestArrayInt64", ""};
 
     {
         testing::InSequence seq;
@@ -677,7 +677,7 @@ TEST_F(TestParserProto, testArrayUInt64)
     static const std::uint64_t VALUE4 = 222;
     MetaStruct structTest;
     structTest.setTypeName("test.TestArrayUInt64");
-    MetaField fieldValue = {MetaType::TYPE_ARRAY_UINT64, "", "value", "description"};
+    MetaField fieldValue = {MetaTypeId::TYPE_ARRAY_UINT64, "", "value", "description"};
     structTest.addField(fieldValue);
 
     MetaDataGlobal::instance().addStruct(structTest);
@@ -693,7 +693,7 @@ TEST_F(TestParserProto, testArrayUInt64)
     message.SerializeToString(&data);
 
     MockIParserVisitor mockVisitor;
-    MetaField rootStruct = {MetaType::TYPE_STRUCT, "test.TestArrayUInt64", ""};
+    MetaField rootStruct = {MetaTypeId::TYPE_STRUCT, "test.TestArrayUInt64", ""};
 
     {
         testing::InSequence seq;
@@ -718,7 +718,7 @@ TEST_F(TestParserProto, testArrayFloat)
     static const float VALUE4 = 222.1;
     MetaStruct structTest;
     structTest.setTypeName("test.TestArrayFloat");
-    MetaField fieldValue = {MetaType::TYPE_ARRAY_FLOAT, "", "value", "description"};
+    MetaField fieldValue = {MetaTypeId::TYPE_ARRAY_FLOAT, "", "value", "description"};
     structTest.addField(fieldValue);
 
     MetaDataGlobal::instance().addStruct(structTest);
@@ -734,7 +734,7 @@ TEST_F(TestParserProto, testArrayFloat)
     message.SerializeToString(&data);
 
     MockIParserVisitor mockVisitor;
-    MetaField rootStruct = {MetaType::TYPE_STRUCT, "test.TestArrayFloat", ""};
+    MetaField rootStruct = {MetaTypeId::TYPE_STRUCT, "test.TestArrayFloat", ""};
 
     {
         testing::InSequence seq;
@@ -758,7 +758,7 @@ TEST_F(TestParserProto, testArrayDouble)
     static const double VALUE4 = 222.1;
     MetaStruct structTest;
     structTest.setTypeName("test.TestArrayDouble");
-    MetaField fieldValue = {MetaType::TYPE_ARRAY_DOUBLE, "", "value", "description"};
+    MetaField fieldValue = {MetaTypeId::TYPE_ARRAY_DOUBLE, "", "value", "description"};
     structTest.addField(fieldValue);
 
     MetaDataGlobal::instance().addStruct(structTest);
@@ -774,7 +774,7 @@ TEST_F(TestParserProto, testArrayDouble)
     message.SerializeToString(&data);
 
     MockIParserVisitor mockVisitor;
-    MetaField rootStruct = {MetaType::TYPE_STRUCT, "test.TestArrayDouble", ""};
+    MetaField rootStruct = {MetaTypeId::TYPE_STRUCT, "test.TestArrayDouble", ""};
 
     {
         testing::InSequence seq;
@@ -799,7 +799,7 @@ TEST_F(TestParserProto, testArrayString)
     static const std::string VALUE4 = "Foo";
     MetaStruct structTest;
     structTest.setTypeName("test.TestArrayString");
-    MetaField fieldValue = {MetaType::TYPE_ARRAY_STRING, "", "value", "description"};
+    MetaField fieldValue = {MetaTypeId::TYPE_ARRAY_STRING, "", "value", "description"};
     structTest.addField(fieldValue);
 
     MetaDataGlobal::instance().addStruct(structTest);
@@ -815,7 +815,7 @@ TEST_F(TestParserProto, testArrayString)
     message.SerializeToString(&data);
 
     MockIParserVisitor mockVisitor;
-    MetaField rootStruct = {MetaType::TYPE_STRUCT, "test.TestArrayString", ""};
+    MetaField rootStruct = {MetaTypeId::TYPE_STRUCT, "test.TestArrayString", ""};
 
     {
         testing::InSequence seq;
@@ -834,13 +834,13 @@ TEST_F(TestParserProto, testArrayString)
 
 TEST_F(TestParserProto, testArrayBytes)
 {
-    static const std::string VALUE1 = {'H', 'e', '\0', 'l', 'o'};
-    static const std::string VALUE2 = {};
-    static const std::string VALUE3 = {'W', 'o', '\n', '\0', 'd'};
-    static const std::string VALUE4 = {'F', '\t', '\0', 123, 12};
+    static const Bytes VALUE1 = {'H', 'e', '\0', 'l', 'o'};
+    static const Bytes VALUE2 = {};
+    static const Bytes VALUE3 = {'W', 'o', '\n', '\0', 'd'};
+    static const Bytes VALUE4 = {'F', '\t', '\0', 123, 12};
     MetaStruct structTest;
     structTest.setTypeName("test.TestArrayBytes");
-    MetaField fieldValue = {MetaType::TYPE_ARRAY_BYTES, "", "value", "description"};
+    MetaField fieldValue = {MetaTypeId::TYPE_ARRAY_BYTES, "", "value", "description"};
     structTest.addField(fieldValue);
 
     MetaDataGlobal::instance().addStruct(structTest);
@@ -849,19 +849,19 @@ TEST_F(TestParserProto, testArrayBytes)
 
     test::TestMessageArrayBytes message;
     auto* value = message.mutable_value();
-    *value->Add() = VALUE1;
-    *value->Add() = VALUE2;
-    *value->Add() = VALUE3;
-    *value->Add() = VALUE4;
+    *value->Add() = std::string(reinterpret_cast<const char*>(VALUE1.data()), VALUE1.size());
+    *value->Add() = std::string(reinterpret_cast<const char*>(VALUE2.data()), VALUE2.size());
+    *value->Add() = std::string(reinterpret_cast<const char*>(VALUE3.data()), VALUE3.size());
+    *value->Add() = std::string(reinterpret_cast<const char*>(VALUE4.data()), VALUE4.size());
     message.SerializeToString(&data);
 
     MockIParserVisitor mockVisitor;
-    MetaField rootStruct = {MetaType::TYPE_STRUCT, "test.TestArrayBytes", ""};
+    MetaField rootStruct = {MetaTypeId::TYPE_STRUCT, "test.TestArrayBytes", ""};
 
     {
         testing::InSequence seq;
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(rootStruct))).Times(1);
-        EXPECT_CALL(mockVisitor, enterArrayBytes(MatcherMetaField(fieldValue), std::vector<std::string>({VALUE1, VALUE2, VALUE3, VALUE4}))).Times(1);
+        EXPECT_CALL(mockVisitor, enterArrayBytes(MatcherMetaField(fieldValue), std::vector<Bytes>({VALUE1, VALUE2, VALUE3, VALUE4}))).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(rootStruct))).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
@@ -883,23 +883,23 @@ TEST_F(TestParserProto, testArrayStruct)
     MetaStruct structString;
     structInt32.setTypeName("test.StructInt32");
     structString.setTypeName("test.StructString");
-    MetaField fieldInt32 = {MetaType::TYPE_INT32, "", "value", "description"};
+    MetaField fieldInt32 = {MetaTypeId::TYPE_INT32, "", "value", "description"};
     structInt32.addField(fieldInt32);
-    MetaField fieldString = {MetaType::TYPE_STRING, "", "value", "description"};
+    MetaField fieldString = {MetaTypeId::TYPE_STRING, "", "value", "description"};
     structString.addField(fieldString);
 
     MetaStruct structTest;
     structTest.setTypeName("test.TestStruct");
-    MetaField fieldStructInt32 = {MetaType::TYPE_STRUCT, "test.StructInt32", "structInt32", "description"};
+    MetaField fieldStructInt32 = {MetaTypeId::TYPE_STRUCT, "test.StructInt32", "structInt32", "description"};
     structTest.addField(fieldStructInt32);
-    MetaField fieldStructString = {MetaType::TYPE_STRUCT, "test.StructString", "structString", "description"};
+    MetaField fieldStructString = {MetaTypeId::TYPE_STRUCT, "test.StructString", "structString", "description"};
     structTest.addField(fieldStructString);
 
     MetaStruct structArrayTest;
     structArrayTest.setTypeName("test.TestArrayStruct");
-    MetaField fieldStruct = {MetaType::TYPE_ARRAY_STRUCT, "test.TestStruct", "value", "description"};
+    MetaField fieldStruct = {MetaTypeId::TYPE_ARRAY_STRUCT, "test.TestStruct", "value", "description"};
     structArrayTest.addField(fieldStruct);
-    MetaField fieldStructWithoutArray = {MetaType::TYPE_STRUCT, "test.TestStruct", "", "description"};
+    MetaField fieldStructWithoutArray = {MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "description"};
 
     MetaDataGlobal::instance().addStruct(structInt32);
     MetaDataGlobal::instance().addStruct(structString);
@@ -920,7 +920,7 @@ TEST_F(TestParserProto, testArrayStruct)
     message.SerializeToString(&data);
 
     MockIParserVisitor mockVisitor;
-    MetaField rootStruct = {MetaType::TYPE_STRUCT, "test.TestArrayStruct", ""};
+    MetaField rootStruct = {MetaTypeId::TYPE_STRUCT, "test.TestArrayStruct", ""};
 
     {
         testing::InSequence seq;
@@ -967,7 +967,7 @@ TEST_F(TestParserProto, testArrayEnum)
     static const test::Foo VALUE4 = (test::Foo)123;
     MetaStruct structTest;
     structTest.setTypeName("test.TestArrayEnum");
-    MetaField fieldValue = {MetaType::TYPE_ARRAY_ENUM, "test.Foo", "value", "description"};
+    MetaField fieldValue = {MetaTypeId::TYPE_ARRAY_ENUM, "test.Foo", "value", "description"};
     structTest.addField(fieldValue);
 
     MetaDataGlobal::instance().addStruct(structTest);
@@ -990,7 +990,7 @@ TEST_F(TestParserProto, testArrayEnum)
     message.SerializeToString(&data);
 
     MockIParserVisitor mockVisitor;
-    MetaField rootStruct = {MetaType::TYPE_STRUCT, "test.TestArrayEnum", ""};
+    MetaField rootStruct = {MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""};
 
     {
         testing::InSequence seq;

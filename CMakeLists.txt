@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(bexmq)
+project(finalmq)
 
 
 SET(CMAKE_BUILD_TYPE Debug)
@@ -21,7 +21,7 @@ SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAG
 set(CMAKE_CXX_STANDARD 14)
 
 # this target needs to be set before digging into subdirectories
-add_custom_target( verify ${CMAKE_CURRENT_BINARY_DIR}/test/testbexmq)
+add_custom_target( verify ${CMAKE_CURRENT_BINARY_DIR}/test/testfinalmq)
 
 message(${CMAKE_CURRENT_BINARY_DIR})
 
@@ -33,7 +33,7 @@ if ( IS_ABSOLUTE ${GCOVR} )
     # compute the test coverage to html
 
     add_custom_target(coverage
-        COMMAND echo " ========== COVERAGE bexmq ==========="
+        COMMAND echo " ========== COVERAGE finalmq ==========="
         COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/coverage
         COMMAND rm -f ${CMAKE_CURRENT_BINARY_DIR}/coverage/*.html
         COMMAND ${GCOVR} -r ${CMAKE_CURRENT_SOURCE_DIR}
@@ -67,15 +67,16 @@ file(GLOB SOURCES "src/*.cpp" "inc/*.h"
                   "src/serialize/*.cpp" "inc/serialize/*.h"
                   "src/serializeproto/*.cpp" "inc/serializeproto/*.h"
                   "src/serializejson/*.cpp" "inc/serializejson/*.h"
+                  "src/variant/*.cpp" "inc/variant/*.h"
                   "inc/conversions/*.h"
                   "mock/*.h")
 
 #Generate the shared library from the sources
-add_library(bexmq SHARED ${SOURCES})
+add_library(finalmq SHARED ${SOURCES})
  
 #Set the location for library installation -- i.e., /usr/lib in this case
 # not really necessary in this example. Use "sudo make install" to apply
-install(TARGETS bexmq DESTINATION /usr/lib)
+install(TARGETS finalmq DESTINATION /usr/lib)
 
 
 add_subdirectory(test)
@@ -87,10 +88,10 @@ find_package(Doxygen
              OPTIONAL_COMPONENTS mscgen dia)
 if(DOXYGEN_FOUND)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
-  add_custom_target(bexmqdoc
+  add_custom_target(finalmqdoc
     ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMENT "Generating API documentation with Doxygen (bexmq)" VERBATIM)
+    COMMENT "Generating API documentation with Doxygen (finalmq)" VERBATIM)
 endif(DOXYGEN_FOUND)
 
 

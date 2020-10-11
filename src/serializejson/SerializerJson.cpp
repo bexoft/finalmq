@@ -75,84 +75,86 @@ void SerializerJson::Internal::exitArrayStruct(const MetaField& field)
 
 void SerializerJson::Internal::enterBool(const MetaField& field, bool value)
 {
-    assert(field.type == MetaType::TYPE_BOOL);
+    assert(field.typeId == MetaTypeId::TYPE_BOOL);
     setKey(field);
     m_jsonBuilder.enterBool(value);
 }
 
 void SerializerJson::Internal::enterInt32(const MetaField& field, std::int32_t value)
 {
-    assert(field.type == MetaType::TYPE_INT32);
+    assert(field.typeId == MetaTypeId::TYPE_INT32);
     setKey(field);
     m_jsonBuilder.enterInt32(value);
 }
 
 void SerializerJson::Internal::enterUInt32(const MetaField& field, std::uint32_t value)
 {
-    assert(field.type == MetaType::TYPE_UINT32);
+    assert(field.typeId == MetaTypeId::TYPE_UINT32);
     setKey(field);
     m_jsonBuilder.enterUInt32(value);
 }
 
 void SerializerJson::Internal::enterInt64(const MetaField& field, std::int64_t value)
 {
-    assert(field.type == MetaType::TYPE_INT64);
+    assert(field.typeId == MetaTypeId::TYPE_INT64);
     setKey(field);
     m_jsonBuilder.enterInt64(value);
 }
 
 void SerializerJson::Internal::enterUInt64(const MetaField& field, std::uint64_t value)
 {
-    assert(field.type == MetaType::TYPE_UINT64);
+    assert(field.typeId == MetaTypeId::TYPE_UINT64);
     setKey(field);
     m_jsonBuilder.enterString(std::to_string(value));
 }
 
 void SerializerJson::Internal::enterFloat(const MetaField& field, float value)
 {
-    assert(field.type == MetaType::TYPE_FLOAT);
+    assert(field.typeId == MetaTypeId::TYPE_FLOAT);
     setKey(field);
     m_jsonBuilder.enterDouble(value);
 }
 
 void SerializerJson::Internal::enterDouble(const MetaField& field, double value)
 {
-    assert(field.type == MetaType::TYPE_DOUBLE);
+    assert(field.typeId == MetaTypeId::TYPE_DOUBLE);
     setKey(field);
     m_jsonBuilder.enterDouble(value);
 }
 
 void SerializerJson::Internal::enterString(const MetaField& field, std::string&& value)
 {
-    assert(field.type == MetaType::TYPE_STRING);
+    assert(field.typeId == MetaTypeId::TYPE_STRING);
     setKey(field);
     m_jsonBuilder.enterString(value.c_str(), value.size());
 }
 
 void SerializerJson::Internal::enterString(const MetaField& field, const char* value, int size)
 {
-    assert(field.type == MetaType::TYPE_STRING);
+    assert(field.typeId == MetaTypeId::TYPE_STRING);
     setKey(field);
     m_jsonBuilder.enterString(value, size);
 }
 
-void SerializerJson::Internal::enterBytes(const MetaField& field, std::string&& value)
+void SerializerJson::Internal::enterBytes(const MetaField& field, Bytes&& value)
 {
-    assert(field.type == MetaType::TYPE_BYTES);
+    assert(field.typeId == MetaTypeId::TYPE_BYTES);
     setKey(field);
-    m_jsonBuilder.enterString(value.c_str(), value.size());
+    // todo: convert to base64
+    m_jsonBuilder.enterString(reinterpret_cast<const char*>(value.data()), value.size());
 }
 
-void SerializerJson::Internal::enterBytes(const MetaField& field, const char* value, int size)
+void SerializerJson::Internal::enterBytes(const MetaField& field, const BytesElement* value, int size)
 {
-    assert(field.type == MetaType::TYPE_BYTES);
+    assert(field.typeId == MetaTypeId::TYPE_BYTES);
     setKey(field);
+    // todo: convert to base64
     m_jsonBuilder.enterString(value, size);
 }
 
 void SerializerJson::Internal::enterEnum(const MetaField& field, std::int32_t value)
 {
-    assert(field.type == MetaType::TYPE_ENUM);
+    assert(field.typeId == MetaTypeId::TYPE_ENUM);
     setKey(field);
     if (m_enumAsString)
     {
@@ -168,7 +170,7 @@ void SerializerJson::Internal::enterEnum(const MetaField& field, std::int32_t va
 
 void SerializerJson::Internal::enterEnum(const MetaField& field, std::string&& value)
 {
-    assert(field.type == MetaType::TYPE_ENUM);
+    assert(field.typeId == MetaTypeId::TYPE_ENUM);
     setKey(field);
     if (m_enumAsString)
     {
@@ -183,7 +185,7 @@ void SerializerJson::Internal::enterEnum(const MetaField& field, std::string&& v
 
 void SerializerJson::Internal::enterEnum(const MetaField& field, const char* value, int size)
 {
-    assert(field.type == MetaType::TYPE_ENUM);
+    assert(field.typeId == MetaTypeId::TYPE_ENUM);
     setKey(field);
     if (m_enumAsString)
     {
@@ -198,7 +200,7 @@ void SerializerJson::Internal::enterEnum(const MetaField& field, const char* val
 
 void SerializerJson::Internal::enterArrayBoolMove(const MetaField& field, std::vector<bool>&& value)
 {
-    assert(field.type == MetaType::TYPE_ARRAY_BOOL);
+    assert(field.typeId == MetaTypeId::TYPE_ARRAY_BOOL);
     setKey(field);
     m_jsonBuilder.enterArray();
     std::for_each(value.begin(), value.end(), [this] (bool entry) {
@@ -209,7 +211,7 @@ void SerializerJson::Internal::enterArrayBoolMove(const MetaField& field, std::v
 
 void SerializerJson::Internal::enterArrayBool(const MetaField& field, const std::vector<bool>& value)
 {
-    assert(field.type == MetaType::TYPE_ARRAY_BOOL);
+    assert(field.typeId == MetaTypeId::TYPE_ARRAY_BOOL);
     setKey(field);
     m_jsonBuilder.enterArray();
     std::for_each(value.begin(), value.end(), [this] (bool entry) {
@@ -225,7 +227,7 @@ void SerializerJson::Internal::enterArrayInt32(const MetaField& field, std::vect
 
 void SerializerJson::Internal::enterArrayInt32(const MetaField& field, const std::int32_t* value, int size)
 {
-    assert(field.type == MetaType::TYPE_ARRAY_INT32);
+    assert(field.typeId == MetaTypeId::TYPE_ARRAY_INT32);
     setKey(field);
     m_jsonBuilder.enterArray();
     std::for_each(value, value + size, [this] (std::int32_t entry) {
@@ -241,7 +243,7 @@ void SerializerJson::Internal::enterArrayUInt32(const MetaField& field, std::vec
 
 void SerializerJson::Internal::enterArrayUInt32(const MetaField& field, const std::uint32_t* value, int size)
 {
-    assert(field.type == MetaType::TYPE_ARRAY_UINT32);
+    assert(field.typeId == MetaTypeId::TYPE_ARRAY_UINT32);
     setKey(field);
     m_jsonBuilder.enterArray();
     std::for_each(value, value + size, [this] (std::uint32_t entry) {
@@ -257,7 +259,7 @@ void SerializerJson::Internal::enterArrayInt64(const MetaField& field, std::vect
 
 void SerializerJson::Internal::enterArrayInt64(const MetaField& field, const std::int64_t* value, int size)
 {
-    assert(field.type == MetaType::TYPE_ARRAY_INT64);
+    assert(field.typeId == MetaTypeId::TYPE_ARRAY_INT64);
     setKey(field);
     m_jsonBuilder.enterArray();
     std::for_each(value, value + size, [this] (std::int64_t entry) {
@@ -273,7 +275,7 @@ void SerializerJson::Internal::enterArrayUInt64(const MetaField& field, std::vec
 
 void SerializerJson::Internal::enterArrayUInt64(const MetaField& field, const std::uint64_t* value, int size)
 {
-    assert(field.type == MetaType::TYPE_ARRAY_UINT64);
+    assert(field.typeId == MetaTypeId::TYPE_ARRAY_UINT64);
     setKey(field);
     m_jsonBuilder.enterArray();
     std::for_each(value, value + size, [this] (std::uint64_t entry) {
@@ -289,7 +291,7 @@ void SerializerJson::Internal::enterArrayFloat(const MetaField& field, std::vect
 
 void SerializerJson::Internal::enterArrayFloat(const MetaField& field, const float* value, int size)
 {
-    assert(field.type == MetaType::TYPE_ARRAY_FLOAT);
+    assert(field.typeId == MetaTypeId::TYPE_ARRAY_FLOAT);
     setKey(field);
     m_jsonBuilder.enterArray();
     std::for_each(value, value + size, [this] (float entry) {
@@ -305,7 +307,7 @@ void SerializerJson::Internal::enterArrayDouble(const MetaField& field, std::vec
 
 void SerializerJson::Internal::enterArrayDouble(const MetaField& field, const double* value, int size)
 {
-    assert(field.type == MetaType::TYPE_ARRAY_DOUBLE);
+    assert(field.typeId == MetaTypeId::TYPE_ARRAY_DOUBLE);
     setKey(field);
     m_jsonBuilder.enterArray();
     std::for_each(value, value + size, [this] (double entry) {
@@ -321,7 +323,7 @@ void SerializerJson::Internal::enterArrayStringMove(const MetaField& field, std:
 
 void SerializerJson::Internal::enterArrayString(const MetaField& field, const std::vector<std::string>& value)
 {
-    assert(field.type == MetaType::TYPE_ARRAY_STRING);
+    assert(field.typeId == MetaTypeId::TYPE_ARRAY_STRING);
     setKey(field);
     m_jsonBuilder.enterArray();
     std::for_each(value.begin(), value.end(), [this] (const std::string& entry) {
@@ -330,18 +332,19 @@ void SerializerJson::Internal::enterArrayString(const MetaField& field, const st
     m_jsonBuilder.exitArray();
 }
 
-void SerializerJson::Internal::enterArrayBytesMove(const MetaField& field, std::vector<std::string>&& value)
+void SerializerJson::Internal::enterArrayBytesMove(const MetaField& field, std::vector<Bytes>&& value)
 {
     enterArrayBytes(field, value);
 }
 
-void SerializerJson::Internal::enterArrayBytes(const MetaField& field, const std::vector<std::string>& value)
+void SerializerJson::Internal::enterArrayBytes(const MetaField& field, const std::vector<Bytes>& value)
 {
-    assert(field.type == MetaType::TYPE_ARRAY_BYTES);
+    assert(field.typeId == MetaTypeId::TYPE_ARRAY_BYTES);
     setKey(field);
     m_jsonBuilder.enterArray();
-    std::for_each(value.begin(), value.end(), [this] (const std::string& entry) {
-        m_jsonBuilder.enterString(entry.c_str(), entry.size());
+    std::for_each(value.begin(), value.end(), [this] (const Bytes& entry) {
+        // todo: convert to base64
+        m_jsonBuilder.enterString(reinterpret_cast<const char*>(entry.data()), entry.size());
     });
     m_jsonBuilder.exitArray();
 }
@@ -353,7 +356,7 @@ void SerializerJson::Internal::enterArrayEnum(const MetaField& field, std::vecto
 
 void SerializerJson::Internal::enterArrayEnum(const MetaField& field, const std::int32_t* value, int size)
 {
-    assert(field.type == MetaType::TYPE_ARRAY_ENUM);
+    assert(field.typeId == MetaTypeId::TYPE_ARRAY_ENUM);
     setKey(field);
     m_jsonBuilder.enterArray();
 
@@ -381,7 +384,7 @@ void SerializerJson::Internal::enterArrayEnumMove(const MetaField& field, std::v
 
 void SerializerJson::Internal::enterArrayEnum(const MetaField& field, const std::vector<std::string>& value)
 {
-    assert(field.type == MetaType::TYPE_ARRAY_ENUM);
+    assert(field.typeId == MetaTypeId::TYPE_ARRAY_ENUM);
     setKey(field);
     m_jsonBuilder.enterArray();
 

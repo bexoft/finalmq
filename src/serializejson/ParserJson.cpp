@@ -38,7 +38,7 @@ bool ParserJson::parseStruct(const std::string& typeName)
         return false;
     }
 
-    MetaField field = {MetaType::TYPE_STRUCT, typeName};
+    MetaField field = {MetaTypeId::TYPE_STRUCT, typeName};
     field.metaStruct = stru;
     m_fieldCurrent = &field;
 
@@ -69,66 +69,63 @@ void ParserJson::enterNumber(T value)
         // unknown key
         return;
     }
-    switch (m_fieldCurrent->type)
+    switch (m_fieldCurrent->typeId)
     {
-    case MetaType::TYPE_BOOL:
+    case MetaTypeId::TYPE_BOOL:
         m_visitor.enterBool(*m_fieldCurrent, value);
         break;
-    case MetaType::TYPE_INT32:
+    case MetaTypeId::TYPE_INT32:
         m_visitor.enterInt32(*m_fieldCurrent, value);
         break;
-    case MetaType::TYPE_UINT32:
+    case MetaTypeId::TYPE_UINT32:
         m_visitor.enterUInt32(*m_fieldCurrent, value);
         break;
-    case MetaType::TYPE_INT64:
+    case MetaTypeId::TYPE_INT64:
         m_visitor.enterInt64(*m_fieldCurrent, value);
         break;
-    case MetaType::TYPE_UINT64:
+    case MetaTypeId::TYPE_UINT64:
         m_visitor.enterUInt64(*m_fieldCurrent, value);
         break;
-    case MetaType::TYPE_FLOAT:
+    case MetaTypeId::TYPE_FLOAT:
         m_visitor.enterFloat(*m_fieldCurrent, value);
         break;
-    case MetaType::TYPE_DOUBLE:
+    case MetaTypeId::TYPE_DOUBLE:
         m_visitor.enterDouble(*m_fieldCurrent, value);
         break;
-    case MetaType::TYPE_STRING:
+    case MetaTypeId::TYPE_STRING:
         m_visitor.enterString(*m_fieldCurrent, std::to_string(value));
         break;
-    case MetaType::TYPE_BYTES:
-        m_visitor.enterBytes(*m_fieldCurrent, std::to_string(value));
-        break;
-    case MetaType::TYPE_ENUM:
+    case MetaTypeId::TYPE_ENUM:
         m_visitor.enterEnum(*m_fieldCurrent, value);
         break;
-    case MetaType::TYPE_ARRAY_BOOL:
+    case MetaTypeId::TYPE_ARRAY_BOOL:
         m_arrayBool.push_back(value);
         break;
-    case MetaType::TYPE_ARRAY_INT32:
+    case MetaTypeId::TYPE_ARRAY_INT32:
         m_arrayInt32.push_back(value);
         break;
-    case MetaType::TYPE_ARRAY_UINT32:
+    case MetaTypeId::TYPE_ARRAY_UINT32:
         m_arrayUInt32.push_back(value);
         break;
-    case MetaType::TYPE_ARRAY_INT64:
+    case MetaTypeId::TYPE_ARRAY_INT64:
         m_arrayInt64.push_back(value);
         break;
-    case MetaType::TYPE_ARRAY_UINT64:
+    case MetaTypeId::TYPE_ARRAY_UINT64:
         m_arrayUInt64.push_back(value);
         break;
-    case MetaType::TYPE_ARRAY_FLOAT:
+    case MetaTypeId::TYPE_ARRAY_FLOAT:
         m_arrayFloat.push_back(value);
         break;
-    case MetaType::TYPE_ARRAY_DOUBLE:
+    case MetaTypeId::TYPE_ARRAY_DOUBLE:
         m_arrayDouble.push_back(value);
         break;
-    case MetaType::TYPE_ARRAY_STRING:
+    case MetaTypeId::TYPE_ARRAY_STRING:
         m_arrayString.push_back(std::to_string(value));
         break;
-    case MetaType::TYPE_ARRAY_BYTES:
+    case MetaTypeId::TYPE_ARRAY_BYTES:
         m_arrayString.push_back(std::to_string(value));
         break;
-    case MetaType::TYPE_ARRAY_ENUM:
+    case MetaTypeId::TYPE_ARRAY_ENUM:
         if (m_arrayString.empty() || !m_arrayInt32.empty())
         {
             m_arrayInt32.push_back(value);
@@ -184,108 +181,112 @@ void ParserJson::enterString(const char* value, int size)
         // unknown key
         return;
     }
-    switch (m_fieldCurrent->type)
+    switch (m_fieldCurrent->typeId)
     {
-    case MetaType::TYPE_BOOL:
+    case MetaTypeId::TYPE_BOOL:
         {
             bool v = (size == 4 && (memcmp(value, "true", 4) == 0));
             m_visitor.enterBool(*m_fieldCurrent, v);
         }
         break;
-    case MetaType::TYPE_INT32:
+    case MetaTypeId::TYPE_INT32:
         {
             std::int32_t v = strtol(value, nullptr, 10);
             m_visitor.enterInt32(*m_fieldCurrent, v);
         }
         break;
-    case MetaType::TYPE_UINT32:
+    case MetaTypeId::TYPE_UINT32:
         {
             std::uint32_t v = strtoul(value, nullptr, 10);
             m_visitor.enterUInt32(*m_fieldCurrent, v);
         }
         break;
-    case MetaType::TYPE_INT64:
+    case MetaTypeId::TYPE_INT64:
         {
             std::int64_t v = strtoll(value, nullptr, 10);
             m_visitor.enterInt64(*m_fieldCurrent, v);
         }
         break;
-    case MetaType::TYPE_UINT64:
+    case MetaTypeId::TYPE_UINT64:
         {
             std::uint64_t v = strtoull(value, nullptr, 10);
             m_visitor.enterUInt64(*m_fieldCurrent, v);
         }
         break;
-    case MetaType::TYPE_FLOAT:
+    case MetaTypeId::TYPE_FLOAT:
         {
             float v = strtof32(value, nullptr);
             m_visitor.enterFloat(*m_fieldCurrent, v);
         }
         break;
-    case MetaType::TYPE_DOUBLE:
+    case MetaTypeId::TYPE_DOUBLE:
         {
             double v = strtof64(value, nullptr);
             m_visitor.enterDouble(*m_fieldCurrent, v);
         }
         break;
-    case MetaType::TYPE_STRING:
+    case MetaTypeId::TYPE_STRING:
         m_visitor.enterString(*m_fieldCurrent, value, size);
         break;
-    case MetaType::TYPE_BYTES:
+    case MetaTypeId::TYPE_BYTES:
+        // todo: convert from base64
         m_visitor.enterBytes(*m_fieldCurrent, value, size);
         break;
-    case MetaType::TYPE_ENUM:
+    case MetaTypeId::TYPE_ENUM:
         m_visitor.enterEnum(*m_fieldCurrent, value, size);
         break;
-    case MetaType::TYPE_ARRAY_BOOL:
+    case MetaTypeId::TYPE_ARRAY_BOOL:
         {
             bool v = (size == 4 && (memcmp(value, "true", 4) == 0));
             m_arrayBool.push_back(v);
         }
         break;
-    case MetaType::TYPE_ARRAY_INT32:
+    case MetaTypeId::TYPE_ARRAY_INT32:
         {
             std::int32_t v = strtol(value, nullptr, 10);
             m_arrayInt32.push_back(v);
         }
         break;
-    case MetaType::TYPE_ARRAY_UINT32:
+    case MetaTypeId::TYPE_ARRAY_UINT32:
         {
             std::uint32_t v = strtoull(value, nullptr, 10);
             m_arrayUInt32.push_back(v);
         }
         break;
-    case MetaType::TYPE_ARRAY_INT64:
+    case MetaTypeId::TYPE_ARRAY_INT64:
         {
             std::int64_t v = strtoll(value, nullptr, 10);
             m_arrayInt64.push_back(v);
         }
         break;
-    case MetaType::TYPE_ARRAY_UINT64:
+    case MetaTypeId::TYPE_ARRAY_UINT64:
         {
             std::uint64_t v = strtoull(value, nullptr, 10);
             m_arrayUInt64.push_back(v);
         }
         break;
-    case MetaType::TYPE_ARRAY_FLOAT:
+    case MetaTypeId::TYPE_ARRAY_FLOAT:
         {
             float v = strtof32(value, nullptr);
             m_arrayFloat.push_back(v);
         }
         break;
-    case MetaType::TYPE_ARRAY_DOUBLE:
+    case MetaTypeId::TYPE_ARRAY_DOUBLE:
         {
             double v = strtof64(value, nullptr);
             m_arrayDouble.push_back(v);
         }
         break;
-    case MetaType::TYPE_ARRAY_STRING:
+    case MetaTypeId::TYPE_ARRAY_STRING:
         m_arrayString.emplace_back(value, size);
         break;
-    case MetaType::TYPE_ARRAY_BYTES:
-        m_arrayString.emplace_back(value, size);
+    case MetaTypeId::TYPE_ARRAY_BYTES:
+        {
+            // todo: convert from base64
+            m_arrayBytes.emplace_back(value, value + size);
+        }
         break;
-    case MetaType::TYPE_ARRAY_ENUM:
+    case MetaTypeId::TYPE_ARRAY_ENUM:
         if (!m_arrayString.empty() || m_arrayInt32.empty())
         {
             m_arrayString.emplace_back(value, size);
@@ -310,108 +311,112 @@ void ParserJson::enterString(std::string&& value)
         // unknown key
         return;
     }
-    switch (m_fieldCurrent->type)
+    switch (m_fieldCurrent->typeId)
     {
-    case MetaType::TYPE_BOOL:
+    case MetaTypeId::TYPE_BOOL:
         {
             bool v = (value.size() == 4 && (memcmp(value.c_str(), "true", 4) == 0));
             m_visitor.enterBool(*m_fieldCurrent, v);
         }
         break;
-    case MetaType::TYPE_INT32:
+    case MetaTypeId::TYPE_INT32:
         {
             std::int32_t v = strtol(value.c_str(), nullptr, 10);
             m_visitor.enterInt32(*m_fieldCurrent, v);
         }
         break;
-    case MetaType::TYPE_UINT32:
+    case MetaTypeId::TYPE_UINT32:
         {
             std::uint32_t v = strtoul(value.c_str(), nullptr, 10);
             m_visitor.enterUInt32(*m_fieldCurrent, v);
         }
         break;
-    case MetaType::TYPE_INT64:
+    case MetaTypeId::TYPE_INT64:
         {
             std::int64_t v = strtoll(value.c_str(), nullptr, 10);
             m_visitor.enterInt64(*m_fieldCurrent, v);
         }
         break;
-    case MetaType::TYPE_UINT64:
+    case MetaTypeId::TYPE_UINT64:
         {
             std::uint64_t v = strtoull(value.c_str(), nullptr, 10);
             m_visitor.enterUInt64(*m_fieldCurrent, v);
         }
         break;
-    case MetaType::TYPE_FLOAT:
+    case MetaTypeId::TYPE_FLOAT:
         {
             float v = strtof32(value.c_str(), nullptr);
             m_visitor.enterFloat(*m_fieldCurrent, v);
         }
         break;
-    case MetaType::TYPE_DOUBLE:
+    case MetaTypeId::TYPE_DOUBLE:
         {
             double v = strtof64(value.c_str(), nullptr);
             m_visitor.enterDouble(*m_fieldCurrent, v);
         }
         break;
-    case MetaType::TYPE_STRING:
+    case MetaTypeId::TYPE_STRING:
         m_visitor.enterString(*m_fieldCurrent, std::move(value));
         break;
-    case MetaType::TYPE_BYTES:
-        m_visitor.enterBytes(*m_fieldCurrent, std::move(value));
+    case MetaTypeId::TYPE_BYTES:
+        // todo: convert from base64
+        m_visitor.enterBytes(*m_fieldCurrent, value.data(), value.size());
         break;
-    case MetaType::TYPE_ENUM:
+    case MetaTypeId::TYPE_ENUM:
         m_visitor.enterEnum(*m_fieldCurrent, std::move(value));
         break;
-    case MetaType::TYPE_ARRAY_BOOL:
+    case MetaTypeId::TYPE_ARRAY_BOOL:
         {
             bool v = (value.size() == 4 && (memcmp(value.c_str(), "true", 4) == 0));
             m_arrayBool.push_back(v);
         }
         break;
-    case MetaType::TYPE_ARRAY_INT32:
+    case MetaTypeId::TYPE_ARRAY_INT32:
         {
             std::int32_t v = strtol(value.c_str(), nullptr, 10);
             m_arrayInt32.push_back(v);
         }
         break;
-    case MetaType::TYPE_ARRAY_UINT32:
+    case MetaTypeId::TYPE_ARRAY_UINT32:
         {
             std::uint32_t v = strtoul(value.c_str(), nullptr, 10);
             m_arrayUInt32.push_back(v);
         }
         break;
-    case MetaType::TYPE_ARRAY_INT64:
+    case MetaTypeId::TYPE_ARRAY_INT64:
         {
             std::int64_t v = strtoll(value.c_str(), nullptr, 10);
             m_arrayInt64.push_back(v);
         }
         break;
-    case MetaType::TYPE_ARRAY_UINT64:
+    case MetaTypeId::TYPE_ARRAY_UINT64:
         {
             std::uint64_t v = strtoull(value.c_str(), nullptr, 10);
             m_arrayUInt64.push_back(v);
         }
         break;
-    case MetaType::TYPE_ARRAY_FLOAT:
+    case MetaTypeId::TYPE_ARRAY_FLOAT:
         {
             float v = strtof32(value.c_str(), nullptr);
             m_arrayFloat.push_back(v);
         }
         break;
-    case MetaType::TYPE_ARRAY_DOUBLE:
+    case MetaTypeId::TYPE_ARRAY_DOUBLE:
         {
             double v = strtof64(value.c_str(), nullptr);
             m_arrayDouble.push_back(v);
         }
         break;
-    case MetaType::TYPE_ARRAY_STRING:
+    case MetaTypeId::TYPE_ARRAY_STRING:
         m_arrayString.push_back(std::move(value));
         break;
-    case MetaType::TYPE_ARRAY_BYTES:
-        m_arrayString.push_back(std::move(value));
+    case MetaTypeId::TYPE_ARRAY_BYTES:
+        {
+            // todo: convert from base64
+            m_arrayBytes.emplace_back(value.data(), value.data() + value.size());
+        }
         break;
-    case MetaType::TYPE_ARRAY_ENUM:
+    case MetaTypeId::TYPE_ARRAY_ENUM:
         if (!m_arrayString.empty() || m_arrayInt32.empty())
         {
             m_arrayString.push_back(std::move(value));
@@ -430,42 +435,42 @@ void ParserJson::enterString(std::string&& value)
 
 void ParserJson::enterArray()
 {
-    if (m_fieldCurrent && ((int)m_fieldCurrent->type & (int)MetaType::TYPE_ARRAY_FLAG))
+    if (m_fieldCurrent && ((int)m_fieldCurrent->typeId & (int)MetaTypeId::TYPE_ARRAY_FLAG))
     {
-        switch (m_fieldCurrent->type)
+        switch (m_fieldCurrent->typeId)
         {
-        case MetaType::TYPE_ARRAY_BOOL:
+        case MetaTypeId::TYPE_ARRAY_BOOL:
             m_arrayBool.clear();
             break;
-        case MetaType::TYPE_ARRAY_INT32:
+        case MetaTypeId::TYPE_ARRAY_INT32:
             m_arrayInt32.clear();
             break;
-        case MetaType::TYPE_ARRAY_UINT32:
+        case MetaTypeId::TYPE_ARRAY_UINT32:
             m_arrayUInt32.clear();
             break;
-        case MetaType::TYPE_ARRAY_INT64:
+        case MetaTypeId::TYPE_ARRAY_INT64:
             m_arrayInt64.clear();
             break;
-        case MetaType::TYPE_ARRAY_UINT64:
+        case MetaTypeId::TYPE_ARRAY_UINT64:
             m_arrayUInt64.clear();
             break;
-        case MetaType::TYPE_ARRAY_FLOAT:
+        case MetaTypeId::TYPE_ARRAY_FLOAT:
             m_arrayFloat.clear();
             break;
-        case MetaType::TYPE_ARRAY_DOUBLE:
+        case MetaTypeId::TYPE_ARRAY_DOUBLE:
             m_arrayDouble.clear();
             break;
-        case MetaType::TYPE_ARRAY_STRING:
+        case MetaTypeId::TYPE_ARRAY_STRING:
             m_arrayString.clear();
             break;
-        case MetaType::TYPE_ARRAY_BYTES:
+        case MetaTypeId::TYPE_ARRAY_BYTES:
             m_arrayString.clear();
             break;
-        case MetaType::TYPE_ARRAY_ENUM:
+        case MetaTypeId::TYPE_ARRAY_ENUM:
             m_arrayInt32.clear();
             m_arrayString.clear();
             break;
-        case MetaType::TYPE_ARRAY_STRUCT:
+        case MetaTypeId::TYPE_ARRAY_STRUCT:
             m_visitor.enterArrayStruct(*m_fieldCurrent);
             m_stack.emplace_back(m_fieldCurrent);
             m_fieldCurrent = MetaDataGlobal::instance().getArrayField(*m_fieldCurrent);
@@ -487,47 +492,47 @@ void ParserJson::exitArray()
         return;
     }
 
-    if ((int)m_fieldCurrent->type & (int)MetaType::TYPE_ARRAY_FLAG)
+    if ((int)m_fieldCurrent->typeId & (int)MetaTypeId::TYPE_ARRAY_FLAG)
     {
-        switch (m_fieldCurrent->type)
+        switch (m_fieldCurrent->typeId)
         {
-        case MetaType::TYPE_ARRAY_BOOL:
+        case MetaTypeId::TYPE_ARRAY_BOOL:
             m_visitor.enterArrayBoolMove(*m_fieldCurrent, std::move(m_arrayBool));
             m_arrayBool.clear();
             break;
-        case MetaType::TYPE_ARRAY_INT32:
+        case MetaTypeId::TYPE_ARRAY_INT32:
             m_visitor.enterArrayInt32(*m_fieldCurrent, std::move(m_arrayInt32));
             m_arrayInt32.clear();
             break;
-        case MetaType::TYPE_ARRAY_UINT32:
+        case MetaTypeId::TYPE_ARRAY_UINT32:
             m_visitor.enterArrayUInt32(*m_fieldCurrent, std::move(m_arrayUInt32));
             m_arrayUInt32.clear();
             break;
-        case MetaType::TYPE_ARRAY_INT64:
+        case MetaTypeId::TYPE_ARRAY_INT64:
             m_visitor.enterArrayInt64(*m_fieldCurrent, std::move(m_arrayInt64));
             m_arrayInt64.clear();
             break;
-        case MetaType::TYPE_ARRAY_UINT64:
+        case MetaTypeId::TYPE_ARRAY_UINT64:
             m_visitor.enterArrayUInt64(*m_fieldCurrent, std::move(m_arrayUInt64));
             m_arrayUInt64.clear();
             break;
-        case MetaType::TYPE_ARRAY_FLOAT:
+        case MetaTypeId::TYPE_ARRAY_FLOAT:
             m_visitor.enterArrayFloat(*m_fieldCurrent, std::move(m_arrayFloat));
             m_arrayFloat.clear();
             break;
-        case MetaType::TYPE_ARRAY_DOUBLE:
+        case MetaTypeId::TYPE_ARRAY_DOUBLE:
             m_visitor.enterArrayDouble(*m_fieldCurrent, std::move(m_arrayDouble));
             m_arrayDouble.clear();
             break;
-        case MetaType::TYPE_ARRAY_STRING:
+        case MetaTypeId::TYPE_ARRAY_STRING:
             m_visitor.enterArrayStringMove(*m_fieldCurrent, std::move(m_arrayString));
             m_arrayString.clear();
             break;
-        case MetaType::TYPE_ARRAY_BYTES:
-            m_visitor.enterArrayBytesMove(*m_fieldCurrent, std::move(m_arrayString));
-            m_arrayString.clear();
+        case MetaTypeId::TYPE_ARRAY_BYTES:
+            m_visitor.enterArrayBytesMove(*m_fieldCurrent, std::move(m_arrayBytes));
+            m_arrayBytes.clear();
             break;
-        case MetaType::TYPE_ARRAY_ENUM:
+        case MetaTypeId::TYPE_ARRAY_ENUM:
             if (!m_arrayString.empty())
             {
                 m_visitor.enterArrayEnum(*m_fieldCurrent, std::move(m_arrayString));
@@ -539,7 +544,7 @@ void ParserJson::exitArray()
             m_arrayInt32.clear();
             m_arrayString.clear();
             break;
-        case MetaType::TYPE_ARRAY_STRUCT:
+        case MetaTypeId::TYPE_ARRAY_STRUCT:
             assert(false);
             break;
         default:
@@ -547,7 +552,7 @@ void ParserJson::exitArray()
             break;
         }
     }
-    else if (m_fieldCurrent->type == MetaType::TYPE_STRUCT)
+    else if (m_fieldCurrent->typeId == MetaTypeId::TYPE_STRUCT)
     {
         m_structCurrent = nullptr;
         m_fieldCurrent = nullptr;
@@ -565,7 +570,7 @@ void ParserJson::enterObject()
 {
     m_stack.emplace_back(m_fieldCurrent);
     m_structCurrent = nullptr;
-    if (m_fieldCurrent && m_fieldCurrent->type == MetaType::TYPE_STRUCT)
+    if (m_fieldCurrent && m_fieldCurrent->typeId == MetaTypeId::TYPE_STRUCT)
     {
         const MetaStruct* stru = MetaDataGlobal::instance().getStruct(*m_fieldCurrent);
         if (stru)

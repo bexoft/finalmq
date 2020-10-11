@@ -3,8 +3,6 @@
 #include "metadata/MetaStruct.h"
 
 
-
-
 struct IParserVisitor
 {
     virtual ~IParserVisitor() {}
@@ -27,8 +25,8 @@ struct IParserVisitor
     virtual void enterDouble(const MetaField& field, double value) = 0;
     virtual void enterString(const MetaField& field, std::string&& value) = 0;
     virtual void enterString(const MetaField& field, const char* value, int size) = 0;
-    virtual void enterBytes(const MetaField& field, std::string&& value) = 0;
-    virtual void enterBytes(const MetaField& field, const char* value, int size) = 0;
+    virtual void enterBytes(const MetaField& field, Bytes&& value) = 0;
+    virtual void enterBytes(const MetaField& field, const BytesElement* value, int size) = 0;
     virtual void enterEnum(const MetaField& field, std::int32_t value) = 0;
     virtual void enterEnum(const MetaField& field, std::string&& value) = 0;
     virtual void enterEnum(const MetaField& field, const char* value, int size) = 0;
@@ -49,8 +47,8 @@ struct IParserVisitor
     virtual void enterArrayDouble(const MetaField& field, const double* value, int size) = 0;
     virtual void enterArrayStringMove(const MetaField& field, std::vector<std::string>&& value) = 0;
     virtual void enterArrayString(const MetaField& field, const std::vector<std::string>& value) = 0;
-    virtual void enterArrayBytesMove(const MetaField& field, std::vector<std::string>&& value) = 0;
-    virtual void enterArrayBytes(const MetaField& field, const std::vector<std::string>& value) = 0;
+    virtual void enterArrayBytesMove(const MetaField& field, std::vector<Bytes>&& value) = 0;
+    virtual void enterArrayBytes(const MetaField& field, const std::vector<Bytes>& value) = 0;
     virtual void enterArrayEnum(const MetaField& field, std::vector<std::int32_t>&& value) = 0;
     virtual void enterArrayEnum(const MetaField& field, const std::int32_t* value, int size) = 0;
     virtual void enterArrayEnumMove(const MetaField& field, std::vector<std::string>&& value) = 0;

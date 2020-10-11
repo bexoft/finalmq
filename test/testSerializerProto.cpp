@@ -66,9 +66,9 @@ TEST_F(TestSerializerProto, testBool)
 {
     static const bool VALUE = true;
 
-    m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageBool", ""});
-    m_serializer->enterBool({MetaType::TYPE_BOOL, "", "value", "", 0}, VALUE);
-    m_serializer->exitStruct({MetaType::TYPE_STRUCT, "test.TestMessageBool", ""});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageBool", ""});
+    m_serializer->enterBool({MetaTypeId::TYPE_BOOL, "", "value", "", 0}, VALUE);
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageBool", ""});
 
     test::TestMessageBool message;
     bool res = message.ParseFromString(m_data);
@@ -81,9 +81,9 @@ TEST_F(TestSerializerProto, testInt32)
 {
     static const std::int32_t VALUE = -2;
 
-    m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageInt32", ""});
-    m_serializer->enterInt32({MetaType::TYPE_INT32, "", "value", "", 0}, VALUE);
-    m_serializer->exitStruct({MetaType::TYPE_STRUCT, "test.TestMessageInt32", ""});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageInt32", ""});
+    m_serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "", 0}, VALUE);
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageInt32", ""});
 
     test::TestMessageInt32 message;
     bool res = message.ParseFromString(m_data);
@@ -95,9 +95,9 @@ TEST_F(TestSerializerProto, testUInt32)
 {
     static const std::uint32_t VALUE = 0xFFFFFFFE;
 
-    m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageUInt32", ""});
-    m_serializer->enterUInt32({MetaType::TYPE_UINT32, "", "value", "", 0}, VALUE);
-    m_serializer->exitStruct({MetaType::TYPE_STRUCT, "test.TestMessageUInt32", ""});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageUInt32", ""});
+    m_serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "value", "", 0}, VALUE);
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageUInt32", ""});
 
     test::TestMessageUInt32 message;
     bool res = message.ParseFromString(m_data);
@@ -109,9 +109,9 @@ TEST_F(TestSerializerProto, testInt64)
 {
     static const std::int64_t VALUE = -2;
 
-    m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageInt64", ""});
-    m_serializer->enterInt64({MetaType::TYPE_INT64, "", "value", "", 0}, VALUE);
-    m_serializer->exitStruct({MetaType::TYPE_STRUCT, "test.TestMessageInt64", ""});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageInt64", ""});
+    m_serializer->enterInt64({MetaTypeId::TYPE_INT64, "", "value", "", 0}, VALUE);
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageInt64", ""});
 
     test::TestMessageInt64 message;
     bool res = message.ParseFromString(m_data);
@@ -123,9 +123,9 @@ TEST_F(TestSerializerProto, testUInt64)
 {
     static const std::uint64_t VALUE = 0xFFFFFFFFFFFFFFFE;
 
-    m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageUInt64", ""});
-    m_serializer->enterUInt64({MetaType::TYPE_UINT64, "", "value", "", 0}, VALUE);
-    m_serializer->exitStruct({MetaType::TYPE_STRUCT, "test.TestMessageUInt64", ""});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageUInt64", ""});
+    m_serializer->enterUInt64({MetaTypeId::TYPE_UINT64, "", "value", "", 0}, VALUE);
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageUInt64", ""});
 
     test::TestMessageUInt64 message;
     bool res = message.ParseFromString(m_data);
@@ -139,9 +139,9 @@ TEST_F(TestSerializerProto, testFloat)
 {
     static const float VALUE = -2.1;
 
-    m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageFloat", ""});
-    m_serializer->enterFloat({MetaType::TYPE_FLOAT, "", "value", "", 0}, VALUE);
-    m_serializer->exitStruct({MetaType::TYPE_STRUCT, "test.TestMessageFloat", ""});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageFloat", ""});
+    m_serializer->enterFloat({MetaTypeId::TYPE_FLOAT, "", "value", "", 0}, VALUE);
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageFloat", ""});
 
     test::TestMessageFloat message;
     bool res = message.ParseFromString(m_data);
@@ -154,9 +154,9 @@ TEST_F(TestSerializerProto, testDouble)
 {
     static const double VALUE = -2.1;
 
-    m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageDouble", ""});
-    m_serializer->enterDouble({MetaType::TYPE_DOUBLE, "", "value", "", 0}, VALUE);
-    m_serializer->exitStruct({MetaType::TYPE_STRUCT, "test.TestMessageDouble", ""});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageDouble", ""});
+    m_serializer->enterDouble({MetaTypeId::TYPE_DOUBLE, "", "value", "", 0}, VALUE);
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageDouble", ""});
 
     test::TestMessageDouble message;
     bool res = message.ParseFromString(m_data);
@@ -169,9 +169,9 @@ TEST_F(TestSerializerProto, testString)
 {
     static const std::string VALUE = "Hello World";
 
-    m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageString", ""});
-    m_serializer->enterString({MetaType::TYPE_STRING, "", "value", "", 0}, VALUE.data(), VALUE.size());
-    m_serializer->exitStruct({MetaType::TYPE_STRUCT, "test.TestMessageString", ""});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageString", ""});
+    m_serializer->enterString({MetaTypeId::TYPE_STRING, "", "value", "", 0}, VALUE.data(), VALUE.size());
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageString", ""});
 
     test::TestMessageString message;
     bool res = message.ParseFromString(m_data);
@@ -181,16 +181,17 @@ TEST_F(TestSerializerProto, testString)
 
 TEST_F(TestSerializerProto, testBytes)
 {
-    static const std::string VALUE = {'H','e','l',0,13,'l','o'};
+    static const Bytes VALUE = {'H','e','l',0,13,'l','o'};
 
-    m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageBytes", ""});
-    m_serializer->enterBytes({MetaType::TYPE_BYTES, "", "value", "", 0}, VALUE.data(), VALUE.size());
-    m_serializer->exitStruct({MetaType::TYPE_STRUCT, "test.TestMessageBytes", ""});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageBytes", ""});
+    m_serializer->enterBytes({MetaTypeId::TYPE_BYTES, "", "value", "", 0}, VALUE.data(), VALUE.size());
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageBytes", ""});
 
     test::TestMessageBytes message;
     bool res = message.ParseFromString(m_data);
     EXPECT_EQ(res, true);
-    EXPECT_EQ(message.value(), VALUE);
+    Bytes result(message.value().data(), message.value().data() + message.value().size());
+    EXPECT_EQ(result, VALUE);
 }
 
 
@@ -199,9 +200,9 @@ TEST_F(TestSerializerProto, testEnum)
 {
     static const test::Foo VALUE = test::Foo::FOO_HELLO;
 
-    m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageEnum", ""});
-    m_serializer->enterEnum({MetaType::TYPE_ENUM, "", "value", "", 0}, VALUE);
-    m_serializer->exitStruct({MetaType::TYPE_STRUCT, "test.TestMessageEnum", ""});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageEnum", ""});
+    m_serializer->enterEnum({MetaTypeId::TYPE_ENUM, "", "value", "", 0}, VALUE);
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageEnum", ""});
 
     test::TestMessageEnum message;
     bool res = message.ParseFromString(m_data);
@@ -217,9 +218,9 @@ TEST_F(TestSerializerProto, testArrayBool)
     static const bool VALUE3 = true;
     static const std::vector<bool> VALUE = {VALUE1, VALUE2, VALUE3};
 
-    m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageArrayBool", ""});
-    m_serializer->enterArrayBool({MetaType::TYPE_ARRAY_BOOL, "", "value", "", 0}, VALUE);
-    m_serializer->exitStruct({MetaType::TYPE_STRUCT, "test.TestMessageArrayBool", ""});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageArrayBool", ""});
+    m_serializer->enterArrayBool({MetaTypeId::TYPE_ARRAY_BOOL, "", "value", "", 0}, VALUE);
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageArrayBool", ""});
 
     test::TestMessageArrayBool message;
     bool res = message.ParseFromString(m_data);
@@ -237,9 +238,9 @@ TEST_F(TestSerializerProto, testArrayInt32)
     static const std::int32_t VALUE3 = 1;
     static const std::vector<std::int32_t> VALUE = {VALUE1, VALUE2, VALUE3};
 
-    m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageArrayInt32", ""});
-    m_serializer->enterArrayInt32({MetaType::TYPE_ARRAY_INT32, "", "value", "", 0}, VALUE.data(), VALUE.size());
-    m_serializer->exitStruct({MetaType::TYPE_STRUCT, "test.TestMessageArrayInt32", ""});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageArrayInt32", ""});
+    m_serializer->enterArrayInt32({MetaTypeId::TYPE_ARRAY_INT32, "", "value", "", 0}, VALUE.data(), VALUE.size());
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageArrayInt32", ""});
 
     test::TestMessageArrayInt32 message;
     bool res = message.ParseFromString(m_data);
@@ -254,9 +255,9 @@ TEST_F(TestSerializerProto, testArrayUInt32)
     static const std::uint32_t VALUE3 = 1;
     static const std::vector<std::uint32_t> VALUE = {VALUE1, VALUE2, VALUE3};
 
-    m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageArrayUInt32", ""});
-    m_serializer->enterArrayUInt32({MetaType::TYPE_ARRAY_UINT32, "", "value", "", 0}, VALUE.data(), VALUE.size());
-    m_serializer->exitStruct({MetaType::TYPE_STRUCT, "test.TestMessageArrayUInt32", ""});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageArrayUInt32", ""});
+    m_serializer->enterArrayUInt32({MetaTypeId::TYPE_ARRAY_UINT32, "", "value", "", 0}, VALUE.data(), VALUE.size());
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageArrayUInt32", ""});
 
     test::TestMessageArrayUInt32 message;
     bool res = message.ParseFromString(m_data);
@@ -271,9 +272,9 @@ TEST_F(TestSerializerProto, testArrayInt64)
     static const std::int64_t VALUE3 = 1;
     static const std::vector<std::int64_t> VALUE = {VALUE1, VALUE2, VALUE3};
 
-    m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageArrayInt64", ""});
-    m_serializer->enterArrayInt64({MetaType::TYPE_ARRAY_INT64, "", "value", "", 0}, VALUE.data(), VALUE.size());
-    m_serializer->exitStruct({MetaType::TYPE_STRUCT, "test.TestMessageArrayInt64", ""});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageArrayInt64", ""});
+    m_serializer->enterArrayInt64({MetaTypeId::TYPE_ARRAY_INT64, "", "value", "", 0}, VALUE.data(), VALUE.size());
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageArrayInt64", ""});
 
     test::TestMessageArrayInt64 message;
     bool res = message.ParseFromString(m_data);
@@ -288,9 +289,9 @@ TEST_F(TestSerializerProto, testArrayUInt64)
     static const std::uint64_t VALUE3 = 1;
     static const std::vector<std::uint64_t> VALUE = {VALUE1, VALUE2, VALUE3};
 
-    m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageArrayUInt64", ""});
-    m_serializer->enterArrayUInt64({MetaType::TYPE_ARRAY_UINT64, "", "value", "", 0}, VALUE.data(), VALUE.size());
-    m_serializer->exitStruct({MetaType::TYPE_STRUCT, "test.TestMessageArrayUInt64", ""});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageArrayUInt64", ""});
+    m_serializer->enterArrayUInt64({MetaTypeId::TYPE_ARRAY_UINT64, "", "value", "", 0}, VALUE.data(), VALUE.size());
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageArrayUInt64", ""});
 
     test::TestMessageArrayUInt64 message;
     bool res = message.ParseFromString(m_data);
@@ -305,9 +306,9 @@ TEST_F(TestSerializerProto, testArrayFloat)
     static const float VALUE3 = 1.1;
     static const std::vector<float> VALUE = {VALUE1, VALUE2, VALUE3};
 
-    m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageArrayFloat", ""});
-    m_serializer->enterArrayFloat({MetaType::TYPE_ARRAY_FLOAT, "", "value", "", 0}, VALUE.data(), VALUE.size());
-    m_serializer->exitStruct({MetaType::TYPE_STRUCT, "test.TestMessageArrayFloat", ""});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageArrayFloat", ""});
+    m_serializer->enterArrayFloat({MetaTypeId::TYPE_ARRAY_FLOAT, "", "value", "", 0}, VALUE.data(), VALUE.size());
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageArrayFloat", ""});
 
     test::TestMessageArrayFloat message;
     bool res = message.ParseFromString(m_data);
@@ -322,9 +323,9 @@ TEST_F(TestSerializerProto, testArrayDouble)
     static const double VALUE3 = 1.1;
     static const std::vector<double> VALUE = {VALUE1, VALUE2, VALUE3};
 
-    m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageArrayDouble", ""});
-    m_serializer->enterArrayDouble({MetaType::TYPE_ARRAY_DOUBLE, "", "value", "", 0}, VALUE.data(), VALUE.size());
-    m_serializer->exitStruct({MetaType::TYPE_STRUCT, "test.TestMessageArrayDouble", ""});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageArrayDouble", ""});
+    m_serializer->enterArrayDouble({MetaTypeId::TYPE_ARRAY_DOUBLE, "", "value", "", 0}, VALUE.data(), VALUE.size());
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageArrayDouble", ""});
 
     test::TestMessageArrayDouble message;
     bool res = message.ParseFromString(m_data);
@@ -340,9 +341,9 @@ TEST_F(TestSerializerProto, testArrayString)
     static const std::string VALUE3 = "World";
     static const std::vector<std::string> VALUE = {VALUE1, VALUE2, VALUE3};
 
-    m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageArrayString", ""});
-    m_serializer->enterArrayString({MetaType::TYPE_ARRAY_STRING, "", "value", "", 0}, VALUE);
-    m_serializer->exitStruct({MetaType::TYPE_STRUCT, "test.TestMessageArrayString", ""});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageArrayString", ""});
+    m_serializer->enterArrayString({MetaTypeId::TYPE_ARRAY_STRING, "", "value", "", 0}, VALUE);
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageArrayString", ""});
 
     test::TestMessageArrayString message;
     bool res = message.ParseFromString(m_data);
@@ -353,19 +354,24 @@ TEST_F(TestSerializerProto, testArrayString)
 
 TEST_F(TestSerializerProto, testArrayBytes)
 {
-    static const std::string VALUE1 = "Hello";
-    static const std::string VALUE2 = "";
-    static const std::string VALUE3 = "World";
-    static const std::vector<std::string> VALUE = {VALUE1, VALUE2, VALUE3};
+    static const Bytes VALUE1 = {'H', 'e', 'l', 'l', 'o'};
+    static const Bytes VALUE2 = {};
+    static const Bytes VALUE3 = {'W', 'o', 'r', 'l', 'd'};
+    static const std::vector<Bytes> VALUE = {VALUE1, VALUE2, VALUE3};
 
-    m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageArrayBytes", ""});
-    m_serializer->enterArrayBytes({MetaType::TYPE_ARRAY_BYTES, "", "value", "", 0}, VALUE);
-    m_serializer->exitStruct({MetaType::TYPE_STRUCT, "test.TestMessageArrayBytes", ""});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageArrayBytes", ""});
+    m_serializer->enterArrayBytes({MetaTypeId::TYPE_ARRAY_BYTES, "", "value", "", 0}, VALUE);
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageArrayBytes", ""});
 
     test::TestMessageArrayBytes message;
     bool res = message.ParseFromString(m_data);
     EXPECT_EQ(res, true);
-    EXPECT_EQ(std::vector<std::string>(message.value().begin(), message.value().end()), VALUE);
+
+    std::vector<Bytes> result;
+    std::for_each(message.value().begin(), message.value().end(), [&result] (const std::string& entry) {
+        result.emplace_back(entry.data(), entry.data() + entry.size());
+    });
+    EXPECT_EQ(result, VALUE);
 }
 
 TEST_F(TestSerializerProto, testArrayStruct)
@@ -378,34 +384,34 @@ TEST_F(TestSerializerProto, testArrayStruct)
     static const std::uint32_t VALUE2_UINT32 = 12345678;
 
 
-    m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageArrayStruct", "", "desc"});
-    m_serializer->enterArrayStruct({MetaType::TYPE_ARRAY_STRUCT, "test.TestMessageStruct", "value", "desc"});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageArrayStruct", "", "desc"});
+    m_serializer->enterArrayStruct({MetaTypeId::TYPE_ARRAY_STRUCT, "test.TestMessageStruct", "value", "desc"});
 
-    m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageStruct", "", "desc", 0});
-    m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageInt32", "struct_int32", "desc", 0});
-    m_serializer->enterInt32({MetaType::TYPE_INT32, "", "value", "desc", 0}, VALUE1_INT32);
-    m_serializer->exitStruct({MetaType::TYPE_STRUCT, "test.TestMessageInt32", "struct_int32", "desc", 0});
-    m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageString", "struct_string", "desc", 1});
-    m_serializer->enterString({MetaType::TYPE_STRING, "", "value", "desc", 0}, VALUE1_STRING.data(), VALUE1_STRING.size());
-    m_serializer->exitStruct({MetaType::TYPE_STRUCT, "test.TestMessageString", "struct_string", "desc", 1});
-    m_serializer->enterUInt32({MetaType::TYPE_UINT32, "", "last_value", "desc", 2}, VALUE1_UINT32);
-    m_serializer->exitStruct({MetaType::TYPE_STRUCT, "test.TestMessageStruct", "", "desc", 0});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageStruct", "", "desc", 0});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageInt32", "struct_int32", "desc", 0});
+    m_serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "desc", 0}, VALUE1_INT32);
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageInt32", "struct_int32", "desc", 0});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageString", "struct_string", "desc", 1});
+    m_serializer->enterString({MetaTypeId::TYPE_STRING, "", "value", "desc", 0}, VALUE1_STRING.data(), VALUE1_STRING.size());
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageString", "struct_string", "desc", 1});
+    m_serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "desc", 2}, VALUE1_UINT32);
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageStruct", "", "desc", 0});
 
-    m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageStruct", "", "desc", 0});
-    m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageInt32", "struct_int32", "desc", 0});
-    m_serializer->enterInt32({MetaType::TYPE_INT32, "", "value", "desc", 0}, VALUE2_INT32);
-    m_serializer->exitStruct({MetaType::TYPE_STRUCT, "test.TestMessageInt32", "struct_int32", "desc", 0});
-    m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageString", "struct_string", "desc", 1});
-    m_serializer->enterString({MetaType::TYPE_STRING, "", "value", "desc", 0}, VALUE2_STRING.data(), VALUE2_STRING.size());
-    m_serializer->exitStruct({MetaType::TYPE_STRUCT, "test.TestMessageString", "struct_string", "desc", 1});
-    m_serializer->enterUInt32({MetaType::TYPE_UINT32, "", "last_value", "desc", 2}, VALUE2_UINT32);
-    m_serializer->exitStruct({MetaType::TYPE_STRUCT, "test.TestMessageStruct", "", "desc", 0});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageStruct", "", "desc", 0});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageInt32", "struct_int32", "desc", 0});
+    m_serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "desc", 0}, VALUE2_INT32);
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageInt32", "struct_int32", "desc", 0});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageString", "struct_string", "desc", 1});
+    m_serializer->enterString({MetaTypeId::TYPE_STRING, "", "value", "desc", 0}, VALUE2_STRING.data(), VALUE2_STRING.size());
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageString", "struct_string", "desc", 1});
+    m_serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "desc", 2}, VALUE2_UINT32);
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageStruct", "", "desc", 0});
 
-    m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageStruct", "", "desc", 0});
-    m_serializer->exitStruct({MetaType::TYPE_STRUCT, "test.TestMessageStruct", "", "desc", 0});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageStruct", "", "desc", 0});
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageStruct", "", "desc", 0});
 
-    m_serializer->exitArrayStruct({MetaType::TYPE_ARRAY_STRUCT, "test.TestMessageStruct", "value", "desc"});
-    m_serializer->exitStruct({MetaType::TYPE_STRUCT, "test.TestMessageArrayStruct", "", "desc"});
+    m_serializer->exitArrayStruct({MetaTypeId::TYPE_ARRAY_STRUCT, "test.TestMessageStruct", "value", "desc"});
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageArrayStruct", "", "desc"});
 
     test::TestMessageArrayStruct message;
     bool res = message.ParseFromString(m_data);
@@ -430,9 +436,9 @@ TEST_F(TestSerializerProto, testArrayEnum)
     static const test::Foo VALUE4 = (test::Foo)123;
     static const std::vector<std::int32_t> VALUE = {VALUE1, VALUE2, VALUE3, VALUE4};
 
-    m_serializer->enterStruct({MetaType::TYPE_STRUCT, "test.TestMessageArrayEnum", ""});
-    m_serializer->enterArrayEnum({MetaType::TYPE_ARRAY_ENUM, "", "value", "", 0}, VALUE.data(), VALUE.size());
-    m_serializer->exitStruct({MetaType::TYPE_STRUCT, "test.TestMessageArrayEnum", ""});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageArrayEnum", ""});
+    m_serializer->enterArrayEnum({MetaTypeId::TYPE_ARRAY_ENUM, "", "value", "", 0}, VALUE.data(), VALUE.size());
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageArrayEnum", ""});
 
     test::TestMessageArrayEnum message;
     bool res = message.ParseFromString(m_data);

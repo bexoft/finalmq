@@ -6,6 +6,7 @@
 
 #include <deque>
 
+
 //TODO: derive from ParserConverter, see SerializerJson
 class SerializerProto : public IParserVisitor
 {
@@ -32,8 +33,8 @@ private:
     virtual void enterDouble(const MetaField& field, double value) override;
     virtual void enterString(const MetaField& field, std::string&& value) override;
     virtual void enterString(const MetaField& field, const char* value, int size) override;
-    virtual void enterBytes(const MetaField& field, std::string&& value) override;
-    virtual void enterBytes(const MetaField& field, const char* value, int size) override;
+    virtual void enterBytes(const MetaField& field, Bytes&& value) override;
+    virtual void enterBytes(const MetaField& field, const BytesElement* value, int size) override;
     virtual void enterEnum(const MetaField& field, std::int32_t value) override;
     virtual void enterEnum(const MetaField& field, std::string&& value) override;
     virtual void enterEnum(const MetaField& field, const char* value, int size) override;
@@ -54,8 +55,8 @@ private:
     virtual void enterArrayDouble(const MetaField& field, const double* value, int size) override;
     virtual void enterArrayStringMove(const MetaField& field, std::vector<std::string>&& value) override;
     virtual void enterArrayString(const MetaField& field, const std::vector<std::string>& value) override;
-    virtual void enterArrayBytesMove(const MetaField& field, std::vector<std::string>&& value) override;
-    virtual void enterArrayBytes(const MetaField& field, const std::vector<std::string>& value) override;
+    virtual void enterArrayBytesMove(const MetaField& field, std::vector<Bytes>&& value) override;
+    virtual void enterArrayBytes(const MetaField& field, const std::vector<Bytes>& value) override;
     virtual void enterArrayEnum(const MetaField& field, std::vector<std::int32_t>&& value) override;
     virtual void enterArrayEnum(const MetaField& field, const std::int32_t* value, int size) override;
     virtual void enterArrayEnumMove(const MetaField& field, std::vector<std::string>&& value) override;
@@ -85,6 +86,7 @@ private:
 
     void serializeArrayBool(int id, const std::vector<bool>& value);
     void serializeArrayString(int id, const std::vector<std::string>& value);
+    void serializeArrayBytes(int id, const std::vector<Bytes>& value);
 
     template<class T>
     void serializeArrayVarint(int id, const T* value, int size);

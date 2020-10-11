@@ -31,7 +31,7 @@ const MetaEnum* MetaData::getEnum(const std::string& typeName) const
 
 const MetaStruct* MetaData::getStruct(const MetaField& field) const
 {
-    assert(field.type == MetaType::TYPE_STRUCT || field.type == MetaType::TYPE_ARRAY_STRUCT);
+    assert(field.typeId == MetaTypeId::TYPE_STRUCT || field.typeId == MetaTypeId::TYPE_ARRAY_STRUCT);
     if (!field.metaEnum)
     {
         const MetaStruct* stru = getStruct(field.typeName);
@@ -48,7 +48,7 @@ const MetaStruct* MetaData::getStruct(const MetaField& field) const
 
 const MetaEnum* MetaData::getEnum(const MetaField& field) const
 {
-    assert(field.type == MetaType::TYPE_ENUM || field.type == MetaType::TYPE_ARRAY_ENUM);
+    assert(field.typeId == MetaTypeId::TYPE_ENUM || field.typeId == MetaTypeId::TYPE_ARRAY_ENUM);
     if (!field.metaEnum)
     {
         const MetaEnum* en = getEnum(field.typeName);
@@ -67,11 +67,11 @@ const MetaEnum* MetaData::getEnum(const MetaField& field) const
 const MetaField* MetaData::getArrayField(const MetaField& field) const
 {
 
-    assert((int)field.type & (int)MetaType::TYPE_ARRAY_FLAG);
+    assert((int)field.typeId & (int)MetaTypeId::TYPE_ARRAY_FLAG);
     if (!field.fieldWithoutArray)
     {
         field.fieldWithoutArray = std::make_shared<MetaField>(field);
-        field.fieldWithoutArray->type = (MetaType)((int)field.type & ~(int)MetaType::TYPE_ARRAY_FLAG);
+        field.fieldWithoutArray->typeId = (MetaTypeId)((int)field.typeId & ~(int)MetaTypeId::TYPE_ARRAY_FLAG);
         field.fieldWithoutArray->name.clear();
     }
     return field.fieldWithoutArray.get();
