@@ -6,7 +6,6 @@
 #include <assert.h>
 
 #include "IVariantValue.h"
-#include "metadata/MetaType.h"
 
 
 
@@ -70,28 +69,15 @@ public:
     template<class T>
     T* getData(const std::string& name)
     {
-        std::string nameRemaining;
-        Variant* variant = getVariant(name, nameRemaining);
+        Variant* variant = getVariant(name);
         if (variant)
         {
             std::shared_ptr<IVariantValue>& value = variant->m_value;
             if (value)
             {
-                if (!nameRemaining.empty())
+                if (m_value->getType() == VariantValueTypeInfo<T>::VARTYPE)
                 {
-                    int type = value->getType();
-                    type &= ~TYPE_ARRAY_FLAG;
-                    if (type == VariantValueTypeInfo<T>::VARTYPE)
-                    {
-                        return static_cast<T*>(value->getData(nameRemaining));
-                    }
-                }
-                else
-                {
-                    if (m_value->getType() == VariantValueTypeInfo<T>::VARTYPE)
-                    {
-                        return static_cast<T*>(m_value->getData());
-                    }
+                    return static_cast<T*>(m_value->getData());
                 }
             }
         }
@@ -121,9 +107,6 @@ public:
     bool add(const Variant& variant);
     bool add(Variant&& variant);
     int size() const;
-
-    Variant* getVariant(const std::string& name, std::string& nameRemaining);
-    const Variant* getVariant(const std::string& name, std::string& nameRemaining) const;
 
 private:
 

@@ -88,21 +88,10 @@ int Variant::getType() const
 //    return m_value->getValue(name);
 //}
 
+
+
+
 Variant* Variant::getVariant(const std::string& name)
-{
-    std::string nameRemaining;
-    return getVariant(name, nameRemaining);
-}
-
-const Variant* Variant::getVariant(const std::string& name) const
-{
-    std::string nameRemaining;
-    return getVariant(name, nameRemaining);
-}
-
-
-
-Variant* Variant::getVariant(const std::string& name, std::string& nameRemaining)
 {
     if (name.empty())
     {
@@ -113,23 +102,13 @@ Variant* Variant::getVariant(const std::string& name, std::string& nameRemaining
         return nullptr;
     }
 
-    bool found = false;
-    Variant* result = m_value->getVariant(name, found, nameRemaining);
-    if (result)
-    {
-        return result;
-    }
-    if (found)
-    {
-        return this;
-    }
-    return nullptr;
+    return m_value->getVariant(name);
 }
 
 
-const Variant* Variant::getVariant(const std::string& name, std::string& nameRemaining) const
+const Variant* Variant::getVariant(const std::string& name) const
 {
-    return const_cast<Variant*>(this)->getVariant(name, nameRemaining);
+    return const_cast<Variant*>(this)->getVariant(name);
 }
 
 

@@ -38,14 +38,6 @@ void* VariantValueList::getData()
     return m_value.get();
 }
 
-void* VariantValueList::getData(const std::string& name)
-{
-    if (name.empty())
-    {
-        return m_value.get();
-    }
-    return nullptr;
-}
 
 
 List::iterator VariantValueList::find(const std::string& name)
@@ -91,9 +83,8 @@ List::iterator VariantValueList::find(const std::string& name)
 //}
 
 
-Variant* VariantValueList::getVariant(const std::string& name, bool& found, std::string& nameRemaining)
+Variant* VariantValueList::getVariant(const std::string& name)
 {
-    found = false;
     if (name.empty())
     {
         return nullptr;
@@ -123,7 +114,7 @@ Variant* VariantValueList::getVariant(const std::string& name, bool& found, std:
     }
 
     // m_value[name].getValue( with remaining name )
-    return it->getVariant(restname, nameRemaining);
+    return it->getVariant(restname);
 }
 
 

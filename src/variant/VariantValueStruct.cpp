@@ -39,15 +39,6 @@ void* VariantValueStruct::getData()
 }
 
 
-void* VariantValueStruct::getData(const std::string& name)
-{
-    if (name.empty())
-    {
-        return m_value.get();
-    }
-    return nullptr;
-}
-
 
 Struct::iterator VariantValueStruct::find(const std::string& name)
 {
@@ -94,9 +85,8 @@ Struct::iterator VariantValueStruct::find(const std::string& name)
 //}
 
 
-Variant* VariantValueStruct::getVariant(const std::string& name, bool& found, std::string& nameRemaining)
+Variant* VariantValueStruct::getVariant(const std::string& name)
 {
-    found = false;
     if (name.empty())
     {
         return nullptr;
@@ -126,7 +116,7 @@ Variant* VariantValueStruct::getVariant(const std::string& name, bool& found, st
     }
 
     // m_value[name].getValue( with remaining name )
-    return it->second.getVariant(restname, nameRemaining);
+    return it->second.getVariant(restname);
 }
 
 

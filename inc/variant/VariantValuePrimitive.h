@@ -53,10 +53,8 @@ private:
 //        return nullptr;
 //    }
 
-    virtual Variant* getVariant(const std::string& name, bool& found, std::string& nameRemaining) override
+    virtual Variant* getVariant(const std::string& name) override
     {
-        found = false;
-        nameRemaining = name;
         return nullptr;
     }
 
