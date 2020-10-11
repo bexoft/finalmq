@@ -98,7 +98,6 @@ public:
     void visit(IVariantVisitor& visitor, int index = 0, int level = 0, int size = 0, const std::string& name = "");
 
     int getType() const;
-//    std::shared_ptr<IVariantValue> getValue(const std::string& name = "");
     Variant* getVariant(const std::string& name);
     const Variant* getVariant(const std::string& name) const;
 

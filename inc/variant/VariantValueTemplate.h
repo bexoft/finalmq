@@ -47,12 +47,6 @@ private:
         return nullptr;
     }
 
-//    virtual std::shared_ptr<IVariantValue> getValue(const std::string& name) override
-//    {
-//        assert(!(name.empty()));
-//        return nullptr;
-//    }
-
     virtual Variant* getVariant(const std::string& name) override
     {
         return nullptr;

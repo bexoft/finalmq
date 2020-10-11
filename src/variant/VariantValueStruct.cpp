@@ -53,37 +53,6 @@ Struct::iterator VariantValueStruct::find(const std::string& name)
 }
 
 
-//std::shared_ptr<IVariantValue> VariantValueStruct::getValue(const std::string& name)
-//{
-//    assert(!(name.empty()));
-
-//    std::string partname;
-//    std::string restname;
-
-//    //sperate first key ansd second key
-//    size_t cntp = name.find('.');
-//    if (cntp != std::string::npos)
-//    {
-//        partname = name.substr(0, cntp);
-//        cntp++;
-//        restname = name.substr(cntp);
-//    }
-//    else
-//    {
-//        partname = name;
-//    }
-
-//    // check if next key is in map (if not -> nullptr)
-//    auto it = find(partname);   // auto: std::unordered_map<std::string, Variant>::iterator
-//    if (it == m_value->end())
-//    {
-//        return nullptr;
-//    }
-
-//    // m_value[name].getValue( with remaining name )
-//    return it->second.getValue(restname);
-//}
-
 
 Variant* VariantValueStruct::getVariant(const std::string& name)
 {

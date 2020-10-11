@@ -79,16 +79,6 @@ int Variant::getType() const
 }
 
 
-//std::shared_ptr<IVariantValue> Variant::getValue(const std::string& name)
-//{
-//    if (name.empty() || m_value == nullptr)
-//    {
-//        return m_value;
-//    }
-//    return m_value->getValue(name);
-//}
-
-
 
 
 Variant* Variant::getVariant(const std::string& name)

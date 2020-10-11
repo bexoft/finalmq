@@ -24,7 +24,6 @@ struct IVariantValue
     virtual ~IVariantValue() {}
     virtual int getType() const = 0;
     virtual void* getData() = 0;
-//    virtual std::shared_ptr<IVariantValue> getValue(const std::string& name) = 0;
     virtual Variant* getVariant(const std::string& name) = 0;
     virtual std::shared_ptr<IVariantValue> clone() = 0;
     virtual bool add(const std::string& name, const Variant& variant) = 0;

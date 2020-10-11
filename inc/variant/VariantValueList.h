@@ -21,7 +21,6 @@ public:
 private:
     virtual int getType() const override;
     virtual void* getData() override;
-    //virtual std::shared_ptr<IVariantValue> getValue(const std::string& name) override;
     virtual Variant* getVariant(const std::string& name) override;
     virtual std::shared_ptr<IVariantValue> clone() override;
     virtual bool add(const std::string& name, const Variant& variant) override;
