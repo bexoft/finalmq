@@ -46,7 +46,7 @@ std::vector<IMessagePtr> ProtocolFixHeaderHelper::receive(const SocketPtr& socke
         }
     }
 
-    return std::move(messages);
+    return messages;
 }
 
 
