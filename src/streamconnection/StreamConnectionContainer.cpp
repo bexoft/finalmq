@@ -32,7 +32,7 @@ StreamConnectionContainer::StreamConnectionContainer()
 
 StreamConnectionContainer::~StreamConnectionContainer()
 {
-    waitForTerminationOfPollerLoop(10);
+    terminatePollerLoop(10);
 }
 
 
@@ -253,7 +253,7 @@ void StreamConnectionContainer::threadEntry()
 }
 
 
-bool StreamConnectionContainer::waitForTerminationOfPollerLoop(int timeout)
+bool StreamConnectionContainer::terminatePollerLoop(int timeout)
 {
     terminatePollerLoop();
     return m_pollerLoopTerminated.wait(timeout);

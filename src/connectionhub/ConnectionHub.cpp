@@ -51,7 +51,7 @@ void ConnectionHub::threadEntry()
 
 bool ConnectionHub::waitForTerminationOfPollerLoop(int timeout)
 {
-    return m_protocolSessionContainer->waitForTerminationOfPollerLoop(timeout);
+    return m_protocolSessionContainer->terminatePollerLoop(timeout);
 }
 
 

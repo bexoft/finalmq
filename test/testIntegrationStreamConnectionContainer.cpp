@@ -50,7 +50,7 @@ protected:
 
     virtual void TearDown()
     {
-        EXPECT_EQ(m_connectionContainer->waitForTerminationOfPollerLoop(100), true);
+        EXPECT_EQ(m_connectionContainer->terminatePollerLoop(100), true);
         m_connectionContainer = nullptr;
         m_thread->join();
     }

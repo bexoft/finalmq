@@ -42,7 +42,7 @@ protected:
 
     virtual void TearDown()
     {
-        EXPECT_EQ(m_sessionContainer->waitForTerminationOfPollerLoop(100), true);
+        EXPECT_EQ(m_sessionContainer->terminatePollerLoop(100), true);
         m_sessionContainer = nullptr;
         m_thread->join();
     }
