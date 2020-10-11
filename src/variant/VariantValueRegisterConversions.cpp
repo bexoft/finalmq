@@ -89,20 +89,20 @@ VariantValueRegisterConversions::VariantValueRegisterConversions()
     registerConversionsTo<float>();
     registerConversionsTo<double>();
 
-    FunctionConvertNumberToString<bool>();
-    FunctionConvertNumberToString<std::int32_t>();
-    FunctionConvertNumberToString<std::uint32_t>();
-    FunctionConvertNumberToString<std::int64_t>();
-    FunctionConvertNumberToString<std::uint64_t>();
-    FunctionConvertNumberToString<float>();
-    FunctionConvertNumberToString<double>();
+    Convert<std::string>::registerConversion(MetaTypeId::TYPE_BOOL,     FunctionConvertNumberToString<bool>());
+    Convert<std::string>::registerConversion(MetaTypeId::TYPE_INT32,    FunctionConvertNumberToString<std::int32_t>());
+    Convert<std::string>::registerConversion(MetaTypeId::TYPE_UINT32,   FunctionConvertNumberToString<std::uint32_t>());
+    Convert<std::string>::registerConversion(MetaTypeId::TYPE_INT64,    FunctionConvertNumberToString<std::int64_t>());
+    Convert<std::string>::registerConversion(MetaTypeId::TYPE_UINT64,   FunctionConvertNumberToString<std::uint64_t>());
+    Convert<std::string>::registerConversion(MetaTypeId::TYPE_FLOAT,    FunctionConvertNumberToString<float>());
+    Convert<std::string>::registerConversion(MetaTypeId::TYPE_DOUBLE,   FunctionConvertNumberToString<double>());
 
-    FunctionConvertStringToNumber<bool>();
-    FunctionConvertStringToNumber<std::int32_t>();
-    FunctionConvertStringToNumber<std::uint32_t>();
-    FunctionConvertStringToNumber<std::int64_t>();
-    FunctionConvertStringToNumber<std::uint64_t>();
-    FunctionConvertStringToNumber<float>();
-    FunctionConvertStringToNumber<double>();
+    Convert<bool>::registerConversion(MetaTypeId::TYPE_STRING,          FunctionConvertStringToNumber<bool>());
+    Convert<std::int32_t>::registerConversion(MetaTypeId::TYPE_STRING,  FunctionConvertStringToNumber<std::int32_t>());
+    Convert<std::uint32_t>::registerConversion(MetaTypeId::TYPE_STRING, FunctionConvertStringToNumber<std::uint32_t>());
+    Convert<std::int64_t>::registerConversion(MetaTypeId::TYPE_STRING,  FunctionConvertStringToNumber<std::int64_t>());
+    Convert<std::uint64_t>::registerConversion(MetaTypeId::TYPE_STRING, FunctionConvertStringToNumber<std::uint64_t>());
+    Convert<float>::registerConversion(MetaTypeId::TYPE_STRING,         FunctionConvertStringToNumber<float>());
+    Convert<double>::registerConversion(MetaTypeId::TYPE_STRING,        FunctionConvertStringToNumber<double>());
 }
 
