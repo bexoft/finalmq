@@ -2,7 +2,7 @@
 
 #include "variant/VariantValueRegisterConversions.h"
 
-#include "variant/VariantValuePrimitives.h"
+#include "variant/VariantValues.h"
 #include "conversions/Conversions.h"
 
 

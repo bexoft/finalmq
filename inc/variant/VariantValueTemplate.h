@@ -9,20 +9,20 @@
 #include <unordered_map>
 
 template<int VARTYPE>
-class VariantValuePrimitive : public IVariantValue
+class VariantValueTemplate : public IVariantValue
 {
 public:
-    VariantValuePrimitive()
+    VariantValueTemplate()
         : m_value()
     {
     }
 
-    VariantValuePrimitive(const typename MetaTypeIdInfo<VARTYPE>::Type& value)
+    VariantValueTemplate(const typename MetaTypeIdInfo<VARTYPE>::Type& value)
         : m_value(value)
     {
     }
 
-    VariantValuePrimitive(typename MetaTypeIdInfo<VARTYPE>::Type&& value)
+    VariantValueTemplate(typename MetaTypeIdInfo<VARTYPE>::Type&& value)
         : m_value(std::move(value))
     {
     }
@@ -60,7 +60,7 @@ private:
 
     virtual std::shared_ptr<IVariantValue> clone() override
     {
-        return std::make_shared<VariantValuePrimitive>(*this);
+        return std::make_shared<VariantValueTemplate>(*this);
     }
 
     virtual bool add(const std::string& name, const Variant& variant) override
