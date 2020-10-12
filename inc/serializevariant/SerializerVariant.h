@@ -1,22 +1,22 @@
 #pragma once
 
 #include "metadata/MetaStruct.h"
-#include "helpers/IZeroCopyBuffer.h"
-#include "serialize/IParserVisitor.h"
 #include "serialize/ParserConverter.h"
-#include "json/JsonBuilder.h"
+#include "variant/Variant.h"
+
+#include <deque>
 
 
-class SerializerJson : public ParserConverter
+class SerializerVariant : public ParserConverter
 {
 public:
-    SerializerJson(IZeroCopyBuffer& buffer, int maxBlockSize = 1024, bool enumAsString = true, bool skipDefaultValues = true);
+    SerializerVariant(Variant& root, bool enumAsString = true, bool skipDefaultValues = true);
 
 private:
     class Internal : public IParserVisitor
     {
     public:
-        Internal(IZeroCopyBuffer& buffer, int maxBlockSize, bool enumAsString);
+        Internal(Variant& root, bool enumAsString);
     private:
         // IParserVisitor
         virtual void notifyError(const char* str, const char* message) override;
@@ -66,11 +66,13 @@ private:
         virtual void enterArrayEnumMove(const MetaField& field, std::vector<std::string>&& value) override;
         virtual void enterArrayEnum(const MetaField& field, const std::vector<std::string>& value) override;
 
-        void setKey(const MetaField& field);
+        template <class T>
+        inline void add(const MetaField& field, T value);
 
-        std::unique_ptr<IJsonParserVisitor> m_uniqueJsonBuilder;
-        IJsonParserVisitor&                 m_jsonBuilder;
-        bool                                m_enumAsString = true;
+        Variant&                        m_root;
+        Variant*                        m_current = nullptr;
+        std::deque<Variant*>            m_stack;
+        bool                            m_enumAsString = true;
     };
 
     IParserVisitor& getIParserVisitorForParserConverter(bool skipDefaultValues);
