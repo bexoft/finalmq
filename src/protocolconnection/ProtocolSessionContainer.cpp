@@ -111,9 +111,9 @@ void ProtocolSessionContainer::threadEntry()
 }
 
 
-bool ProtocolSessionContainer::waitForTerminationOfPollerLoop(int timeout)
+bool ProtocolSessionContainer::terminatePollerLoop(int timeout)
 {
-    return m_streamConnectionContainer->waitForTerminationOfPollerLoop(timeout);
+    return m_streamConnectionContainer->terminatePollerLoop(timeout);
 }
 
 

@@ -13,14 +13,15 @@ template <>
 void string2Number(const std::string& str, bool& number)
 {
     static const std::string STR_TRUE = "true";
-    if (str == STR_TRUE)
+    if (str != STR_TRUE)
     {
-        number = true;
+        double number = strtof64(str.c_str(), nullptr);
+        if (number == 0)
+        {
+            number = false;
+        }
     }
-    else
-    {
-        number = false;
-    }
+    number = true;
 }
 
 template <>

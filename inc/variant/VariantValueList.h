@@ -1,14 +1,16 @@
 #pragma once
 
 #include "IVariantValue.h"
+#include "metadata/MetaType.h"
+#include "VariantValueConvert.h"
+
 #include <deque>
 
 class Variant;
 
-// todo: change type to std::vector<std::pair<std::string, Variant>>
 typedef std::deque<Variant> List;
 
-const static int VARTYPE_LIST = 2;
+const static int VARTYPE_LIST = TYPE_ARRAY_STRUCT;
 class VariantValueList : public IVariantValue
 {
 public:
@@ -21,8 +23,11 @@ public:
 private:
     virtual int getType() const override;
     virtual void* getData() override;
+    virtual const void* getData() const override;
     virtual Variant* getVariant(const std::string& name) override;
-    virtual std::shared_ptr<IVariantValue> clone() override;
+    virtual const Variant* getVariant(const std::string& name) const override;
+    virtual std::shared_ptr<IVariantValue> clone() const override;
+    virtual bool operator ==(const IVariantValue& rhs) const override;
     virtual bool add(const std::string& name, const Variant& variant) override;
     virtual bool add(const std::string& name, Variant&& variant) override;
     virtual bool add(const Variant& variant) override;
@@ -37,19 +42,30 @@ private:
 };
 
 
+
+template <>
+class MetaTypeInfo<List>
+{
+public:
+    static const int TypeId = MetaTypeId::TYPE_ARRAY_STRUCT;
+};
+
+
 template<>
 class VariantValueTypeInfo<List&>
 {
 public:
-    typedef VariantValueList Type;
+    typedef VariantValueList VariantValueType;
     const static int VARTYPE = VARTYPE_LIST;
+    typedef Convert<List> ConvertType;
 };
 
 template<>
 class VariantValueTypeInfo<List>
 {
 public:
-    typedef VariantValueList Type;
+    typedef VariantValueList VariantValueType;
     const static int VARTYPE = VARTYPE_LIST;
+    typedef Convert<List> ConvertType;
 };
 

@@ -189,7 +189,8 @@ bool StreamConnection::doReconnect()
 {
     bool reconnecting = false;
     if (!m_connectionData.incomingConnection &&
-        m_connectionData.connectionState == CONNECTIONSTATE_CONNECTING_FAILED)
+        m_connectionData.connectionState == CONNECTIONSTATE_CONNECTING_FAILED &&
+        m_connectionData.reconnectInterval >= 0)
     {
         std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
         std::chrono::duration<double> dur = now - m_lastReconnectTime;

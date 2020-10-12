@@ -1,6 +1,7 @@
 #pragma once
 
 #include "VariantValueTemplate.h"
+#include "VariantValueConvert.h"
 #include "metadata/MetaType.h"
 
 
@@ -23,7 +24,7 @@ class VariantValueTypeInfo<std::int32_t>
 {
 public:
     typedef std::int32_t T;
-    typedef VariantValueBool VariantValueType;
+    typedef VariantValueInt32 VariantValueType;
     const static int VARTYPE = MetaTypeInfo<T>::TypeId;
     typedef Convert<T> ConvertType;
 };
@@ -34,7 +35,7 @@ class VariantValueTypeInfo<std::uint32_t>
 {
 public:
     typedef std::uint32_t T;
-    typedef VariantValueBool VariantValueType;
+    typedef VariantValueUInt32 VariantValueType;
     const static int VARTYPE = MetaTypeInfo<T>::TypeId;
     typedef Convert<T> ConvertType;
 };
@@ -45,7 +46,7 @@ class VariantValueTypeInfo<std::int64_t>
 {
 public:
     typedef std::int64_t T;
-    typedef VariantValueBool VariantValueType;
+    typedef VariantValueInt64 VariantValueType;
     const static int VARTYPE = MetaTypeInfo<T>::TypeId;
     typedef Convert<T> ConvertType;
 };
@@ -56,7 +57,7 @@ class VariantValueTypeInfo<std::uint64_t>
 {
 public:
     typedef std::uint64_t T;
-    typedef VariantValueBool VariantValueType;
+    typedef VariantValueUInt64 VariantValueType;
     const static int VARTYPE = MetaTypeInfo<T>::TypeId;
     typedef Convert<T> ConvertType;
 };
@@ -67,7 +68,7 @@ class VariantValueTypeInfo<float>
 {
 public:
     typedef float T;
-    typedef VariantValueBool VariantValueType;
+    typedef VariantValueFloat VariantValueType;
     const static int VARTYPE = MetaTypeInfo<T>::TypeId;
     typedef Convert<T> ConvertType;
 };
@@ -78,7 +79,7 @@ class VariantValueTypeInfo<double>
 {
 public:
     typedef double T;
-    typedef VariantValueBool VariantValueType;
+    typedef VariantValueDouble VariantValueType;
     const static int VARTYPE = MetaTypeInfo<T>::TypeId;
     typedef Convert<T> ConvertType;
 };
@@ -89,7 +90,7 @@ class VariantValueTypeInfo<std::string>
 {
 public:
     typedef std::string T;
-    typedef VariantValueBool VariantValueType;
+    typedef VariantValueString VariantValueType;
     const static int VARTYPE = MetaTypeInfo<T>::TypeId;
     typedef Convert<T> ConvertType;
 };
@@ -100,7 +101,7 @@ class VariantValueTypeInfo<Bytes>
 {
 public:
     typedef Bytes T;
-    typedef VariantValueBool VariantValueType;
+    typedef VariantValueBytes VariantValueType;
     const static int VARTYPE = MetaTypeInfo<T>::TypeId;
     typedef Convert<T> ConvertType;
 };
@@ -112,7 +113,7 @@ class VariantValueTypeInfo<std::vector<bool>>
 {
 public:
     typedef std::vector<bool> T;
-    typedef VariantValueBool VariantValueType;
+    typedef VariantValueArrayBool VariantValueType;
     const static int VARTYPE = MetaTypeInfo<T>::TypeId;
     typedef Convert<T> ConvertType;
 };
@@ -123,7 +124,7 @@ class VariantValueTypeInfo<std::vector<std::int32_t>>
 {
 public:
     typedef std::vector<std::int32_t> T;
-    typedef VariantValueBool VariantValueType;
+    typedef VariantValueArrayInt32 VariantValueType;
     const static int VARTYPE = MetaTypeInfo<T>::TypeId;
     typedef Convert<T> ConvertType;
 };
@@ -134,7 +135,7 @@ class VariantValueTypeInfo<std::vector<std::uint32_t>>
 {
 public:
     typedef std::vector<std::uint32_t> T;
-    typedef VariantValueBool VariantValueType;
+    typedef VariantValueArrayUInt32 VariantValueType;
     const static int VARTYPE = MetaTypeInfo<T>::TypeId;
     typedef Convert<T> ConvertType;
 };
@@ -145,7 +146,7 @@ class VariantValueTypeInfo<std::vector<std::int64_t>>
 {
 public:
     typedef std::vector<std::int64_t> T;
-    typedef VariantValueBool VariantValueType;
+    typedef VariantValueArrayInt64 VariantValueType;
     const static int VARTYPE = MetaTypeInfo<T>::TypeId;
     typedef Convert<T> ConvertType;
 };
@@ -156,7 +157,7 @@ class VariantValueTypeInfo<std::vector<std::uint64_t>>
 {
 public:
     typedef std::vector<std::uint64_t> T;
-    typedef VariantValueBool VariantValueType;
+    typedef VariantValueArrayUInt64 VariantValueType;
     const static int VARTYPE = MetaTypeInfo<T>::TypeId;
     typedef Convert<T> ConvertType;
 };
@@ -167,7 +168,7 @@ class VariantValueTypeInfo<std::vector<float>>
 {
 public:
     typedef std::vector<float> T;
-    typedef VariantValueBool VariantValueType;
+    typedef VariantValueArrayFloat VariantValueType;
     const static int VARTYPE = MetaTypeInfo<T>::TypeId;
     typedef Convert<T> ConvertType;
 };
@@ -178,7 +179,7 @@ class VariantValueTypeInfo<std::vector<double>>
 {
 public:
     typedef std::vector<double> T;
-    typedef VariantValueBool VariantValueType;
+    typedef VariantValueArrayDouble VariantValueType;
     const static int VARTYPE = MetaTypeInfo<T>::TypeId;
     typedef Convert<T> ConvertType;
 };
@@ -189,7 +190,7 @@ class VariantValueTypeInfo<std::vector<std::string>>
 {
 public:
     typedef std::vector<std::string> T;
-    typedef VariantValueBool VariantValueType;
+    typedef VariantValueArrayString VariantValueType;
     const static int VARTYPE = MetaTypeInfo<T>::TypeId;
     typedef Convert<T> ConvertType;
 };
@@ -200,7 +201,7 @@ class VariantValueTypeInfo<std::vector<Bytes>>
 {
 public:
     typedef std::vector<Bytes> T;
-    typedef VariantValueBool VariantValueType;
+    typedef VariantValueArrayBytes VariantValueType;
     const static int VARTYPE = MetaTypeInfo<T>::TypeId;
     typedef Convert<T> ConvertType;
 };

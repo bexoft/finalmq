@@ -1,14 +1,16 @@
 #pragma once
 
 #include "IVariantValue.h"
-#include <list>
+#include "metadata/MetaType.h"
+#include "VariantValueConvert.h"
+
+#include <deque>
 
 class Variant;
 
-// todo: change type to std::vector<std::pair<std::string, Variant>>
-typedef std::list<std::pair<std::string, Variant>> Struct;
+typedef std::deque<std::pair<std::string, Variant>> Struct;
 
-const static int VARTYPE_STRUCT = 1;
+const static int VARTYPE_STRUCT = TYPE_STRUCT;
 class VariantValueStruct : public IVariantValue
 {
 public:
@@ -21,8 +23,11 @@ public:
 private:
     virtual int getType() const override;
     virtual void* getData() override;
+    virtual const void* getData() const override;
     virtual Variant* getVariant(const std::string& name) override;
-    virtual std::shared_ptr<IVariantValue> clone() override;
+    virtual const Variant* getVariant(const std::string& name) const override;
+    virtual std::shared_ptr<IVariantValue> clone() const override;
+    virtual bool operator ==(const IVariantValue& rhs) const override;
     virtual bool add(const std::string& name, const Variant& variant) override;
     virtual bool add(const std::string& name, Variant&& variant) override;
     virtual bool add(const Variant& variant) override;
@@ -37,19 +42,30 @@ private:
 };
 
 
+
+template <>
+class MetaTypeInfo<Struct>
+{
+public:
+    static const int TypeId = MetaTypeId::TYPE_STRUCT;
+};
+
+
 template<>
 class VariantValueTypeInfo<Struct&>
 {
 public:
-    typedef VariantValueStruct Type;
+    typedef VariantValueStruct VariantValueType;
     const static int VARTYPE = VARTYPE_STRUCT;
+    typedef Convert<Struct> ConvertType;
 };
 
 template<>
 class VariantValueTypeInfo<Struct>
 {
 public:
-    typedef VariantValueStruct Type;
+    typedef VariantValueStruct VariantValueType;
     const static int VARTYPE = VARTYPE_STRUCT;
+    typedef Convert<Struct> ConvertType;
 };
 

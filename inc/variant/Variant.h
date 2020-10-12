@@ -90,6 +90,18 @@ public:
         return const_cast<Variant*>(this)->getData<T>(name);
     }
 
+    template<class T>
+    T getDataValue(const std::string& name) const
+    {
+        const Variant* variant = getVariant(name);
+        if (variant)
+        {
+            return VariantValueTypeInfo<T>::ConvertType::convert(*variant);
+        }
+        return T();
+    }
+
+
     Variant(const Variant& rhs);
     const Variant& operator =(const Variant& rhs);
     Variant(Variant&& rhs);
@@ -100,6 +112,8 @@ public:
     int getType() const;
     Variant* getVariant(const std::string& name);
     const Variant* getVariant(const std::string& name) const;
+
+    bool operator ==(const Variant& rhs) const;
 
     bool add(const std::string& name, const Variant& variant);
     bool add(const std::string& name, Variant&& variant);

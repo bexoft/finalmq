@@ -27,7 +27,7 @@ struct IStreamConnectionContainer
     virtual std::vector< IStreamConnectionPtr > getAllConnections() const = 0;
     virtual IStreamConnectionPtr getConnection(std::int64_t connectionId) const = 0;
     virtual void threadEntry() = 0;
-    virtual bool waitForTerminationOfPollerLoop(int timeout) = 0;
+    virtual bool terminatePollerLoop(int timeout) = 0;
 
 #ifdef USE_OPENSSL
     virtual int bindSsl(const std::string& endpoint, bex::hybrid_ptr<IStreamConnectionCallback> callback, const CertificateData& certificateData) = 0;
@@ -52,7 +52,7 @@ private:
     virtual std::vector< IStreamConnectionPtr > getAllConnections() const override;
     virtual IStreamConnectionPtr getConnection(std::int64_t connectionId) const override;
     virtual void threadEntry() override;
-    virtual bool waitForTerminationOfPollerLoop(int timeout) override;
+    virtual bool terminatePollerLoop(int timeout) override;
 
 #ifdef USE_OPENSSL
     virtual int bindSsl(const std::string& endpoint, bex::hybrid_ptr<IStreamConnectionCallback> callback, const CertificateData& certificateData) override;

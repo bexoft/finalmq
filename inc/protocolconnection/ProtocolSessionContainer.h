@@ -19,7 +19,7 @@ struct IProtocolSessionContainer
     virtual std::vector< IProtocolSessionPtr > getAllSessions() const = 0;
     virtual IProtocolSessionPtr getSession(std::int64_t sessionId) const = 0;
     virtual void threadEntry() = 0;
-    virtual bool waitForTerminationOfPollerLoop(int timeout) = 0;
+    virtual bool terminatePollerLoop(int timeout) = 0;
 
 #ifdef USE_OPENSSL
     virtual int bindSsl(const std::string& endpoint, bex::hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const CertificateData& certificateData) = 0;
@@ -71,7 +71,7 @@ private:
     virtual std::vector< IProtocolSessionPtr > getAllSessions() const override;
     virtual IProtocolSessionPtr getSession(std::int64_t sessionId) const override;
     virtual void threadEntry() override;
-    virtual bool waitForTerminationOfPollerLoop(int timeout) override;
+    virtual bool terminatePollerLoop(int timeout) override;
 
 #ifdef USE_OPENSSL
     virtual int bindSsl(const std::string& endpoint, bex::hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const CertificateData& certificateData) override;
