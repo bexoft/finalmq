@@ -1,6 +1,7 @@
 #pragma once
 
 #include "VariantValueTemplate.h"
+#include "VariantValueConvert.h"
 #include "metadata/MetaType.h"
 
 

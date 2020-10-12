@@ -38,6 +38,10 @@ void* VariantValueStruct::getData()
     return m_value.get();
 }
 
+const void* VariantValueStruct::getData() const
+{
+    return const_cast<VariantValueStruct*>(this)->getData();
+}
 
 
 Struct::iterator VariantValueStruct::find(const std::string& name)
@@ -89,11 +93,39 @@ Variant* VariantValueStruct::getVariant(const std::string& name)
 }
 
 
+const Variant* VariantValueStruct::getVariant(const std::string& name) const
+{
+    return const_cast<VariantValueStruct*>(this)->getVariant(name);
+}
 
-std::shared_ptr<IVariantValue> VariantValueStruct::clone()
+
+std::shared_ptr<IVariantValue> VariantValueStruct::clone() const
 {
     return std::make_shared<VariantValueStruct>(*this);
 }
+
+
+bool VariantValueStruct::operator ==(const IVariantValue& rhs) const
+{
+    if (this == &rhs)
+    {
+        return true;
+    }
+
+    if (getType() != rhs.getType())
+    {
+        return false;
+    }
+
+    const Struct* rhsData = static_cast<const Struct*>(rhs.getData());
+    assert(rhsData);
+
+    assert(m_value);
+
+    return *m_value == *rhsData;
+}
+
+
 
 bool VariantValueStruct::add(const std::string& name, const Variant& variant)
 {

@@ -102,6 +102,28 @@ const Variant* Variant::getVariant(const std::string& name) const
 }
 
 
+bool Variant::operator ==(const Variant& rhs) const
+{
+    if (this == &rhs)
+    {
+        return true;
+    }
+
+    if (m_value == rhs.m_value)
+    {
+        return true;
+    }
+
+    if (m_value == nullptr || rhs.m_value == nullptr)
+    {
+        return false;
+    }
+
+    return *m_value == *rhs.m_value;
+}
+
+
+
 bool Variant::add(const std::string& name, const Variant& variant)
 {
     if (m_value)

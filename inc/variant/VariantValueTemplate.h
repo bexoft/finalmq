@@ -38,13 +38,9 @@ private:
         return &m_value;
     }
 
-    void* getData(const std::string& name)
+    virtual const void* getData() const override
     {
-        if (name.empty())
-        {
-            return &m_value;
-        }
-        return nullptr;
+        return &m_value;
     }
 
     virtual Variant* getVariant(const std::string& name) override
@@ -52,9 +48,32 @@ private:
         return nullptr;
     }
 
-    virtual std::shared_ptr<IVariantValue> clone() override
+    virtual const Variant* getVariant(const std::string& name) const override
+    {
+        return nullptr;
+    }
+
+    virtual std::shared_ptr<IVariantValue> clone() const override
     {
         return std::make_shared<VariantValueTemplate>(*this);
+    }
+
+    virtual bool operator ==(const IVariantValue& rhs) const override
+    {
+        if (this == &rhs)
+        {
+            return true;
+        }
+
+        if (getType() != rhs.getType())
+        {
+            return false;
+        }
+
+        const typename MetaTypeIdInfo<VARTYPE>::Type* rhsData = static_cast<const typename MetaTypeIdInfo<VARTYPE>::Type*>(rhs.getData());
+        assert(rhsData);
+
+        return m_value == *rhsData;
     }
 
     virtual bool add(const std::string& name, const Variant& variant) override
@@ -84,47 +103,6 @@ private:
     }
 
     typename MetaTypeIdInfo<VARTYPE>::Type m_value;
-};
-
-
-template<class T>
-class Convert
-{
-public:
-    typedef std::function<T(const Variant& variant)> FuncConvert;
-
-    static void registerConversion(int varType, FuncConvert funcConvert)
-    {
-        std::unordered_map<int, FuncConvert>& registry = getRegistry();
-        registry[varType] = funcConvert;
-    }
-    static T convert(const Variant& variant)
-    {
-        if (MetaTypeInfo<T>::TypeId == variant.getType())
-        {
-            const T* data = variant;
-            assert(data);
-            return *data;
-        }
-        const std::unordered_map<int, FuncConvert>& registry = getRegistry();
-        auto it = registry.find(variant.getType());
-        if (it != registry.end())
-        {
-            auto& funcConvert = it->second;
-            if (funcConvert)
-            {
-                return funcConvert(variant);
-            }
-        }
-        return T();
-    }
-
-private:
-    static std::unordered_map<int, FuncConvert>& getRegistry()
-    {
-        static std::unordered_map<int, FuncConvert> conversions;
-        return conversions;
-    }
 };
 
 

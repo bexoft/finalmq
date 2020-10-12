@@ -39,6 +39,11 @@ void* VariantValueList::getData()
 }
 
 
+const void* VariantValueList::getData() const
+{
+    return const_cast<VariantValueList*>(this)->getData();
+}
+
 
 List::iterator VariantValueList::find(const std::string& name)
 {
@@ -88,10 +93,39 @@ Variant* VariantValueList::getVariant(const std::string& name)
 }
 
 
-std::shared_ptr<IVariantValue> VariantValueList::clone()
+const Variant* VariantValueList::getVariant(const std::string& name) const
+{
+    return const_cast<VariantValueList*>(this)->getVariant(name);
+}
+
+
+
+std::shared_ptr<IVariantValue> VariantValueList::clone() const
 {
     return std::make_shared<VariantValueList>(*this);
 }
+
+
+bool VariantValueList::operator ==(const IVariantValue& rhs) const
+{
+    if (this == &rhs)
+    {
+        return true;
+    }
+
+    if (getType() != rhs.getType())
+    {
+        return false;
+    }
+
+    const List* rhsData = static_cast<const List*>(rhs.getData());
+    assert(rhsData);
+
+    assert(m_value);
+
+    return *m_value == *rhsData;
+}
+
 
 bool VariantValueList::add(const std::string& name, const Variant& variant)
 {
