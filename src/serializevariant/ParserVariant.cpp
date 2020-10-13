@@ -28,8 +28,9 @@ bool ParserVariant::parseStruct(const std::string& typeName)
         MetaField field = {MetaTypeId::TYPE_STRUCT, typeName};
         field.metaStruct = stru;
         m_visitor.enterStruct(field);
-        ok = parseStruct(*stru, m_root);
+        parseStruct(*stru, m_root);
         m_visitor.exitStruct(field);
+        ok = true;
     }
     else
     {
@@ -69,10 +70,30 @@ void ParserVariant::processField(const Variant* sub, const MetaField* field)
         m_visitor.enterDouble(*field, *sub);
         break;
     case TYPE_STRING:
-        m_visitor.enterString(*field, *sub);
+        {
+            const std::string* str = *sub;
+            if (str)
+            {
+                m_visitor.enterString(*field, str->c_str(), str->size());
+            }
+            else
+            {
+                m_visitor.enterString(*field, *sub);
+            }
+        }
         break;
     case TYPE_BYTES:
-        m_visitor.enterBytes(*field, *sub);
+    {
+        const Bytes* bytes = *sub;
+        if (bytes)
+        {
+            m_visitor.enterBytes(*field, bytes->data(), bytes->size());
+        }
+        else
+        {
+            m_visitor.enterBytes(*field, *sub);
+        }
+    }
         break;
     case TYPE_STRUCT:
         {
@@ -91,10 +112,10 @@ void ParserVariant::processField(const Variant* sub, const MetaField* field)
         break;
     case TYPE_ENUM:
         {
-            if (sub->getType() == TYPE_STRING)
+            const std::string* str = *sub;
+            if (str)
             {
-                std::string value = *sub;
-                m_visitor.enterEnum(*field, std::move(value));
+                m_visitor.enterEnum(*field, str->c_str(), str->size());
             }
             else
             {
@@ -104,31 +125,121 @@ void ParserVariant::processField(const Variant* sub, const MetaField* field)
         }
         break;
     case TYPE_ARRAY_BOOL:
-        m_visitor.enterArrayBool(*field, *sub);
+        {
+            const std::vector<bool>* value = *sub;
+            if (value)
+            {
+                m_visitor.enterArrayBool(*field, *value);
+            }
+            else
+            {
+                m_visitor.enterArrayBool(*field, *sub);
+            }
+        }
         break;
     case TYPE_ARRAY_INT32:
-        m_visitor.enterArrayInt32(*field, *sub);
+        {
+            const std::vector<std::int32_t>* value = *sub;
+            if (value)
+            {
+                m_visitor.enterArrayInt32(*field, value->data(), value->size());
+            }
+            else
+            {
+                m_visitor.enterArrayInt32(*field, *sub);
+            }
+        }
         break;
     case TYPE_ARRAY_UINT32:
-        m_visitor.enterArrayUInt32(*field, *sub);
+        {
+            const std::vector<std::uint32_t>* value = *sub;
+            if (value)
+            {
+                m_visitor.enterArrayUInt32(*field, value->data(), value->size());
+            }
+            else
+            {
+                m_visitor.enterArrayUInt32(*field, *sub);
+            }
+        }
         break;
     case TYPE_ARRAY_INT64:
-        m_visitor.enterArrayInt64(*field, *sub);
+        {
+            const std::vector<std::int64_t>* value = *sub;
+            if (value)
+            {
+                m_visitor.enterArrayInt64(*field, value->data(), value->size());
+            }
+            else
+            {
+                m_visitor.enterArrayInt64(*field, *sub);
+            }
+        }
         break;
     case TYPE_ARRAY_UINT64:
-        m_visitor.enterArrayUInt64(*field, *sub);
+        {
+            const std::vector<std::uint64_t>* value = *sub;
+            if (value)
+            {
+                m_visitor.enterArrayUInt64(*field, value->data(), value->size());
+            }
+            else
+            {
+                m_visitor.enterArrayUInt64(*field, *sub);
+            }
+        }
         break;
     case TYPE_ARRAY_FLOAT:
-        m_visitor.enterArrayFloat(*field, *sub);
+        {
+            const std::vector<float>* value = *sub;
+            if (value)
+            {
+                m_visitor.enterArrayFloat(*field, value->data(), value->size());
+            }
+            else
+            {
+                m_visitor.enterArrayFloat(*field, *sub);
+            }
+        }
         break;
     case TYPE_ARRAY_DOUBLE:
-        m_visitor.enterArrayDouble(*field, *sub);
+        {
+            const std::vector<double>* value = *sub;
+            if (value)
+            {
+                m_visitor.enterArrayDouble(*field, value->data(), value->size());
+            }
+            else
+            {
+                m_visitor.enterArrayDouble(*field, *sub);
+            }
+        }
         break;
     case TYPE_ARRAY_STRING:
-        m_visitor.enterArrayString(*field, *sub);
+        {
+            const std::vector<std::string>* value = *sub;
+            if (value)
+            {
+                m_visitor.enterArrayString(*field, *value);
+            }
+            else
+            {
+                m_visitor.enterArrayString(*field, *sub);
+            }
+        }
         break;
     case TYPE_ARRAY_BYTES:
-        m_visitor.enterArrayBytes(*field, *sub);
+        {
+            const std::vector<Bytes>* value = *sub;
+            if (value)
+            {
+                m_visitor.enterArrayBytes(*field, *value);
+            }
+            else
+            {
+                m_visitor.enterArrayBytes(*field, *sub);
+            }
+        }
         break;
     case TYPE_ARRAY_STRUCT:
         {
@@ -156,15 +267,25 @@ void ParserVariant::processField(const Variant* sub, const MetaField* field)
         break;
     case TYPE_ARRAY_ENUM:
         {
-            if (sub->getType() == TYPE_ARRAY_STRING)
+            bool done = false;
+            const std::vector<std::string>* value = *sub;
+            if (value)
             {
-                std::vector<std::string> value = *sub;
-                m_visitor.enterArrayEnum(*field, std::move(value));
+                m_visitor.enterArrayEnum(*field, *value);
+                done = true;
             }
             else
             {
-                std::vector<std::int32_t> value = *sub;
-                m_visitor.enterArrayEnum(*field, std::move(value));
+                const std::vector<std::int32_t>* value = *sub;
+                if (value)
+                {
+                    m_visitor.enterArrayEnum(*field, value->data(), value->size());
+                    done = true;
+                }
+            }
+            if (!done)
+            {
+                m_visitor.enterArrayEnum(*field, std::vector<std::int32_t>());
             }
         }
         break;
@@ -256,9 +377,8 @@ void ParserVariant::processEmptyField(const MetaField* field)
 }
 
 
-bool ParserVariant::parseStruct(const MetaStruct& stru, const Variant& variant)
+void ParserVariant::parseStruct(const MetaStruct& stru, const Variant& variant)
 {
-    bool ok = false;
     int size = stru.getFieldsSize();
     for (int i = 0; i < size; ++i)
     {
@@ -274,5 +394,4 @@ bool ParserVariant::parseStruct(const MetaStruct& stru, const Variant& variant)
             processEmptyField(field);
         }
     }
-    return ok;
 }

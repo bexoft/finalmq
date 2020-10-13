@@ -55,21 +55,28 @@ void SerializerVariant::Internal::enterStruct(const MetaField& field)
         if (m_current->getType() == TYPE_STRUCT)
         {
             m_current->add(field.name, VariantStruct());
+            VariantStruct* stru = *m_current;
+            assert(stru);
+            m_stack.push_back(&stru->back().second);
         }
         else
         {
             assert(m_current->getType() == TYPE_ARRAY_STRUCT);
             m_current->add(VariantStruct());
+            VariantList* list = *m_current;
+            assert(list);
+            m_stack.push_back(&list->back());
         }
+        m_current = m_stack.back();
     }
 }
 
 void SerializerVariant::Internal::exitStruct(const MetaField& field)
 {
-    if (m_stack.empty())
+    if (!m_stack.empty())
     {
         m_stack.pop_back();
-        if (m_stack.empty())
+        if (!m_stack.empty())
         {
             m_current = m_stack.back();
         }
@@ -89,21 +96,28 @@ void SerializerVariant::Internal::enterArrayStruct(const MetaField& field)
         if (m_current->getType() == TYPE_STRUCT)
         {
             m_current->add(field.name, VariantList());
+            VariantStruct* stru = *m_current;
+            assert(stru);
+            m_stack.push_back(&stru->back().second);
         }
         else
         {
             assert(m_current->getType() == TYPE_ARRAY_STRUCT);
             m_current->add(VariantList());
+            VariantList* list = *m_current;
+            assert(list);
+            m_stack.push_back(&list->back());
         }
+        m_current = m_stack.back();
     }
 }
 
 void SerializerVariant::Internal::exitArrayStruct(const MetaField& field)
 {
-    if (m_stack.empty())
+    if (!m_stack.empty())
     {
         m_stack.pop_back();
-        if (m_stack.empty())
+        if (!m_stack.empty())
         {
             m_current = m_stack.back();
         }

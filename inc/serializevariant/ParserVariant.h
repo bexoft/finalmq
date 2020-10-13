@@ -18,7 +18,7 @@ public:
     bool parseStruct(const std::string& typeName);
 
 private:
-    bool parseStruct(const MetaStruct& stru, const Variant& variant);
+    void parseStruct(const MetaStruct& stru, const Variant& variant);
     void processField(const Variant* sub, const MetaField* field);
     void processEmptyField(const MetaField* field);
 
