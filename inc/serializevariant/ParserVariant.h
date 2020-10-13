@@ -19,6 +19,7 @@ public:
 
 private:
     void parseStruct(const MetaStruct& stru, const Variant& variant);
+    void parseStruct(const MetaStruct& stru);
     void processField(const Variant* sub, const MetaField* field);
     void processEmptyField(const MetaField* field);
 

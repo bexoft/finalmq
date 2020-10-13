@@ -247,17 +247,18 @@ void ParserVariant::processField(const Variant* sub, const MetaField* field)
             const VariantList* list = *sub;
             if (list)
             {
-                assert(field->fieldWithoutArray);
-                const MetaStruct* stru = MetaDataGlobal::instance().getStruct(*field->fieldWithoutArray);
+                const MetaField* fieldWithoutArray = MetaDataGlobal::instance().getArrayField(*field);
+                assert(fieldWithoutArray);
+                const MetaStruct* stru = MetaDataGlobal::instance().getStruct(*fieldWithoutArray);
                 if (stru)
                 {
                     int size = list->size();
                     for (int i = 0; i < size; ++i)
                     {
                         const Variant& element = list->at(i);
-                        m_visitor.enterStruct(*field->fieldWithoutArray);
+                        m_visitor.enterStruct(*fieldWithoutArray);
                         parseStruct(*stru, element);
-                        m_visitor.exitStruct(*field->fieldWithoutArray);
+                        m_visitor.exitStruct(*fieldWithoutArray);
 
                     }
                 }
@@ -330,8 +331,19 @@ void ParserVariant::processEmptyField(const MetaField* field)
         m_visitor.enterBytes(*field, Bytes());
         break;
     case TYPE_STRUCT:
-        m_visitor.enterStruct(*field);
-        m_visitor.exitStruct(*field);
+        {
+            m_visitor.enterStruct(*field);
+            const MetaStruct* stru = MetaDataGlobal::instance().getStruct(*field);
+            if (stru)
+            {
+                parseStruct(*stru);
+            }
+            else
+            {
+                m_visitor.notifyError(nullptr, "typename not found");
+            }
+            m_visitor.exitStruct(*field);
+        }
         break;
     case TYPE_ENUM:
         m_visitor.enterEnum(*field, std::int32_t());
@@ -393,5 +405,17 @@ void ParserVariant::parseStruct(const MetaStruct& stru, const Variant& variant)
         {
             processEmptyField(field);
         }
+    }
+}
+
+
+void ParserVariant::parseStruct(const MetaStruct& stru)
+{
+    int size = stru.getFieldsSize();
+    for (int i = 0; i < size; ++i)
+    {
+        const MetaField* field = stru.getFieldByIndex(i);
+        assert(field);
+        processEmptyField(field);
     }
 }
