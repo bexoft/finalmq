@@ -1008,42 +1008,82 @@ TEST_F(TestParserVariant, testArrayStruct)
 
 
 
-//TEST_F(TestParserVariant, testArrayEnum)
-//{
-//    static const std::string VALUE1 = "FOO_HELLO";
-//    static const std::string VALUE2 = "FOO_WORLD";
-//    static const std::string VALUE3 = "FOO_WORLD2";
-//    static const std::string VALUE4 = "blabla";
-//    MetaStruct structTest;
-//    structTest.setTypeName("test.TestArrayEnum");
-//    MetaField fieldValue = {MetaTypeId::TYPE_ARRAY_ENUM, "test.Foo", "value", "description"};
-//    structTest.addField(fieldValue);
+TEST_F(TestParserVariant, testArrayEnumString)
+{
+    static const std::string VALUE1 = "FOO_HELLO";
+    static const std::string VALUE2 = "FOO_WORLD";
+    static const std::string VALUE3 = "FOO_WORLD2";
+    static const std::string VALUE4 = "blabla";
+    std::vector<std::string> VALUE = {VALUE1, VALUE2, VALUE3, VALUE4};
+    MetaStruct structTest;
+    structTest.setTypeName("test.TestArrayEnum");
+    MetaField fieldValue = {MetaTypeId::TYPE_ARRAY_ENUM, "test.Foo", "value", "description"};
+    structTest.addField(fieldValue);
 
-//    MetaDataGlobal::instance().addStruct(structTest);
+    MetaDataGlobal::instance().addStruct(structTest);
 
-//    MetaEnum metaEnum;
-//    metaEnum.setTypeName("test.Foo");
-//    metaEnum.addEntry({"FOO_WORLD", 0 ,""});
-//    metaEnum.addEntry({"FOO_HELLO", -2 ,""});
-//    metaEnum.addEntry({"FOO_WORLD2", 1 ,""});
-//    MetaDataGlobal::instance().addEnum(std::move(metaEnum));
+    MetaEnum metaEnum;
+    metaEnum.setTypeName("test.Foo");
+    metaEnum.addEntry({"FOO_WORLD", 0 ,""});
+    metaEnum.addEntry({"FOO_HELLO", -2 ,""});
+    metaEnum.addEntry({"FOO_WORLD2", 1 ,""});
+    MetaDataGlobal::instance().addEnum(std::move(metaEnum));
 
-//    MockIParserVisitor mockVisitor;
-//    MetaField rootStruct = {MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""};
+    MockIParserVisitor mockVisitor;
+    MetaField rootStruct = {MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""};
 
-//    {
-//        testing::InSequence seq;
-//        EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(rootStruct))).Times(1);
-//        EXPECT_CALL(mockVisitor, enterArrayEnum(MatcherMetaField(fieldValue), std::vector<std::string>({VALUE1, VALUE2, VALUE3, VALUE4}))).Times(1);
-//        EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(rootStruct))).Times(1);
-//        EXPECT_CALL(mockVisitor, finished()).Times(1);
-//    }
+    {
+        testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(rootStruct))).Times(1);
+        EXPECT_CALL(mockVisitor, enterArrayEnum(MatcherMetaField(fieldValue), VALUE)).Times(1);
+        EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(rootStruct))).Times(1);
+        EXPECT_CALL(mockVisitor, finished()).Times(1);
+    }
 
-//    std::string data = "{\"value\":[\"FOO_HELLO\",\"FOO_WORLD\",\"FOO_WORLD2\",\"blabla\"]}";
-//    ParserJson parser(mockVisitor, data.data(), data.size());
-//    bool res = parser.parseStruct("test.TestArrayEnum");
-//    EXPECT_EQ(res, true);
-//}
+    Variant root = VariantStruct({{"value", VALUE}});
+    ParserVariant parser(mockVisitor, root);
+    bool res = parser.parseStruct("test.TestArrayEnum");
+    EXPECT_EQ(res, true);
+}
+
+
+TEST_F(TestParserVariant, testArrayEnumInt32)
+{
+    static const std::int32_t VALUE1 = -2;
+    static const std::int32_t VALUE2 = 0;
+    static const std::int32_t VALUE3 = 1;
+    static const std::int32_t VALUE4 = 123;
+    std::vector<std::int32_t> VALUE = {VALUE1, VALUE2, VALUE3, VALUE4};
+    MetaStruct structTest;
+    structTest.setTypeName("test.TestArrayEnum");
+    MetaField fieldValue = {MetaTypeId::TYPE_ARRAY_ENUM, "test.Foo", "value", "description"};
+    structTest.addField(fieldValue);
+
+    MetaDataGlobal::instance().addStruct(structTest);
+
+    MetaEnum metaEnum;
+    metaEnum.setTypeName("test.Foo");
+    metaEnum.addEntry({"FOO_WORLD", 0 ,""});
+    metaEnum.addEntry({"FOO_HELLO", -2 ,""});
+    metaEnum.addEntry({"FOO_WORLD2", 1 ,""});
+    MetaDataGlobal::instance().addEnum(std::move(metaEnum));
+
+    MockIParserVisitor mockVisitor;
+    MetaField rootStruct = {MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""};
+
+    {
+        testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(rootStruct))).Times(1);
+        EXPECT_CALL(mockVisitor, enterArrayEnum(MatcherMetaField(fieldValue), ArrayEq(VALUE.data(), VALUE.size()), VALUE.size())).Times(1);
+        EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(rootStruct))).Times(1);
+        EXPECT_CALL(mockVisitor, finished()).Times(1);
+    }
+
+    Variant root = VariantStruct({{"value", VALUE}});
+    ParserVariant parser(mockVisitor, root);
+    bool res = parser.parseStruct("test.TestArrayEnum");
+    EXPECT_EQ(res, true);
+}
 
 
 
