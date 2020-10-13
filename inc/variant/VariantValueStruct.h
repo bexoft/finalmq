@@ -8,7 +8,7 @@
 
 class Variant;
 
-typedef std::deque<std::pair<std::string, Variant>> Struct;
+typedef std::deque<std::pair<std::string, Variant>> VariantStruct;
 
 const static int VARTYPE_STRUCT = TYPE_STRUCT;
 class VariantValueStruct : public IVariantValue
@@ -17,8 +17,8 @@ public:
     VariantValueStruct();
     VariantValueStruct(const VariantValueStruct& rhs);
     VariantValueStruct(VariantValueStruct&& rhs);
-    VariantValueStruct(const Struct& value);
-    VariantValueStruct(Struct&& value);
+    VariantValueStruct(const VariantStruct& value);
+    VariantValueStruct(VariantStruct&& value);
 
 private:
     virtual int getType() const override;
@@ -36,15 +36,15 @@ private:
     virtual void visit(IVariantVisitor& visitor, Variant& variant, int index, int level, int size, const std::string& name) override;
 
 
-    Struct::iterator find(const std::string& name);
+    VariantStruct::iterator find(const std::string& name);
 
-    std::unique_ptr<Struct>     m_value;
+    std::unique_ptr<VariantStruct>     m_value;
 };
 
 
 
 template <>
-class MetaTypeInfo<Struct>
+class MetaTypeInfo<VariantStruct>
 {
 public:
     static const int TypeId = MetaTypeId::TYPE_STRUCT;
@@ -52,20 +52,20 @@ public:
 
 
 template<>
-class VariantValueTypeInfo<Struct&>
+class VariantValueTypeInfo<VariantStruct&>
 {
 public:
     typedef VariantValueStruct VariantValueType;
     const static int VARTYPE = VARTYPE_STRUCT;
-    typedef Convert<Struct> ConvertType;
+    typedef Convert<VariantStruct> ConvertType;
 };
 
 template<>
-class VariantValueTypeInfo<Struct>
+class VariantValueTypeInfo<VariantStruct>
 {
 public:
     typedef VariantValueStruct VariantValueType;
     const static int VARTYPE = VARTYPE_STRUCT;
-    typedef Convert<Struct> ConvertType;
+    typedef Convert<VariantStruct> ConvertType;
 };
 

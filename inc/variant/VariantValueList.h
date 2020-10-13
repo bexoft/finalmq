@@ -8,7 +8,7 @@
 
 class Variant;
 
-typedef std::deque<Variant> List;
+typedef std::deque<Variant> VariantList;
 
 const static int VARTYPE_LIST = TYPE_ARRAY_STRUCT;
 class VariantValueList : public IVariantValue
@@ -17,8 +17,8 @@ public:
     VariantValueList();
     VariantValueList(const VariantValueList& rhs);
     VariantValueList(VariantValueList&& rhs);
-    VariantValueList(const List& value);
-    VariantValueList(List&& value);
+    VariantValueList(const VariantList& value);
+    VariantValueList(VariantList&& value);
 
 private:
     virtual int getType() const override;
@@ -36,15 +36,15 @@ private:
     virtual void visit(IVariantVisitor& visitor, Variant& variant, int index, int level, int size, const std::string& name) override;
 
 
-    List::iterator find(const std::string& name);
+    VariantList::iterator find(const std::string& name);
 
-    std::unique_ptr<List>     m_value;
+    std::unique_ptr<VariantList>     m_value;
 };
 
 
 
 template <>
-class MetaTypeInfo<List>
+class MetaTypeInfo<VariantList>
 {
 public:
     static const int TypeId = MetaTypeId::TYPE_ARRAY_STRUCT;
@@ -52,20 +52,20 @@ public:
 
 
 template<>
-class VariantValueTypeInfo<List&>
+class VariantValueTypeInfo<VariantList&>
 {
 public:
     typedef VariantValueList VariantValueType;
     const static int VARTYPE = VARTYPE_LIST;
-    typedef Convert<List> ConvertType;
+    typedef Convert<VariantList> ConvertType;
 };
 
 template<>
-class VariantValueTypeInfo<List>
+class VariantValueTypeInfo<VariantList>
 {
 public:
     typedef VariantValueList VariantValueType;
     const static int VARTYPE = VARTYPE_LIST;
-    typedef Convert<List> ConvertType;
+    typedef Convert<VariantList> ConvertType;
 };
 

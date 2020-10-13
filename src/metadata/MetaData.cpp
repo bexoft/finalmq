@@ -32,7 +32,7 @@ const MetaEnum* MetaData::getEnum(const std::string& typeName) const
 const MetaStruct* MetaData::getStruct(const MetaField& field) const
 {
     assert(field.typeId == MetaTypeId::TYPE_STRUCT || field.typeId == MetaTypeId::TYPE_ARRAY_STRUCT);
-    if (!field.metaEnum)
+    if (!field.metaStruct)
     {
         const MetaStruct* stru = getStruct(field.typeName);
         field.metaStruct = stru;

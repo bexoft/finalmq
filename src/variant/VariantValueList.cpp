@@ -9,7 +9,7 @@ VariantValueList::VariantValueList()
 }
 
 VariantValueList::VariantValueList(const VariantValueList& rhs)
-    : m_value(std::make_unique<List>(*rhs.m_value))
+    : m_value(std::make_unique<VariantList>(*rhs.m_value))
 {
 }
 
@@ -18,13 +18,13 @@ VariantValueList::VariantValueList(VariantValueList&& rhs)
 {
 }
 
-VariantValueList::VariantValueList(const List& value)
-    : m_value(std::make_unique<List>(value))
+VariantValueList::VariantValueList(const VariantList& value)
+    : m_value(std::make_unique<VariantList>(value))
 {
 }
 
-VariantValueList::VariantValueList(List&& value)
-    : m_value(std::make_unique<List>(std::move(value)))
+VariantValueList::VariantValueList(VariantList&& value)
+    : m_value(std::make_unique<VariantList>(std::move(value)))
 {
 }
 
@@ -45,7 +45,7 @@ const void* VariantValueList::getData() const
 }
 
 
-List::iterator VariantValueList::find(const std::string& name)
+VariantList::iterator VariantValueList::find(const std::string& name)
 {
     int index = std::atoi(name.c_str());
     if (index >= 0 && index < static_cast<int>(m_value->size()))
@@ -118,7 +118,7 @@ bool VariantValueList::operator ==(const IVariantValue& rhs) const
         return false;
     }
 
-    const List* rhsData = static_cast<const List*>(rhs.getData());
+    const VariantList* rhsData = static_cast<const VariantList*>(rhs.getData());
     assert(rhsData);
 
     assert(m_value);

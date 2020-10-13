@@ -11,7 +11,7 @@
 
 SerializerJson::SerializerJson(IZeroCopyBuffer& buffer, int maxBlockSize, bool enumAsString, bool skipDefaultValues)
     : ParserConverter()
-    , m_internal(buffer, maxBlockSize, enumAsString, skipDefaultValues)
+    , m_internal(buffer, maxBlockSize, enumAsString)
     , m_parserProcessDefaultValues()
 {
     m_parserProcessDefaultValues = std::make_unique<ParserProcessDefaultValues>(skipDefaultValues, &m_internal);
@@ -20,7 +20,7 @@ SerializerJson::SerializerJson(IZeroCopyBuffer& buffer, int maxBlockSize, bool e
 
 
 
-SerializerJson::Internal::Internal(IZeroCopyBuffer& buffer, int maxBlockSize, bool enumAsString, bool skipDefaultValues)
+SerializerJson::Internal::Internal(IZeroCopyBuffer& buffer, int maxBlockSize, bool enumAsString)
     : m_uniqueJsonBuilder(std::make_unique<JsonBuilder>(buffer, maxBlockSize))
     , m_jsonBuilder(*m_uniqueJsonBuilder.get())
     , m_enumAsString(enumAsString)
