@@ -9,7 +9,7 @@ VariantValueStruct::VariantValueStruct()
 }
 
 VariantValueStruct::VariantValueStruct(const VariantValueStruct& rhs)
-    : m_value(std::make_unique<Struct>(*rhs.m_value))
+    : m_value(std::make_unique<VariantStruct>(*rhs.m_value))
 {
 }
 
@@ -18,13 +18,13 @@ VariantValueStruct::VariantValueStruct(VariantValueStruct&& rhs)
 {
 }
 
-VariantValueStruct::VariantValueStruct(const Struct& value)
-    : m_value(std::make_unique<Struct>(value))
+VariantValueStruct::VariantValueStruct(const VariantStruct& value)
+    : m_value(std::make_unique<VariantStruct>(value))
 {
 }
 
-VariantValueStruct::VariantValueStruct(Struct&& value)
-    : m_value(std::make_unique<Struct>(std::move(value)))
+VariantValueStruct::VariantValueStruct(VariantStruct&& value)
+    : m_value(std::make_unique<VariantStruct>(std::move(value)))
 {
 }
 
@@ -44,7 +44,7 @@ const void* VariantValueStruct::getData() const
 }
 
 
-Struct::iterator VariantValueStruct::find(const std::string& name)
+VariantStruct::iterator VariantValueStruct::find(const std::string& name)
 {
     for (auto it = m_value->begin(); it != m_value->end(); ++it)
     {
@@ -117,7 +117,7 @@ bool VariantValueStruct::operator ==(const IVariantValue& rhs) const
         return false;
     }
 
-    const Struct* rhsData = static_cast<const Struct*>(rhs.getData());
+    const VariantStruct* rhsData = static_cast<const VariantStruct*>(rhs.getData());
     assert(rhsData);
 
     assert(m_value);

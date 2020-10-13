@@ -31,7 +31,6 @@ private:
     bool parseString(const char*& buffer, int& size);
     void parseStructWire(const MetaField& field);
     bool parseStructIntern(const MetaStruct& stru);
-//    bool parseArrayBytes(std::vector<Bytes>& array);
     void parseArrayStruct(const MetaField& field);
 
     template<class T>

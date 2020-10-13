@@ -45,7 +45,7 @@ void SerializerVariant::Internal::enterStruct(const MetaField& field)
 {
     if (m_stack.empty())
     {
-        m_root = Struct();
+        m_root = VariantStruct();
         m_stack.push_back(&m_root);
         m_current = m_stack.back();
     }
@@ -54,12 +54,12 @@ void SerializerVariant::Internal::enterStruct(const MetaField& field)
         assert(m_current);
         if (m_current->getType() == TYPE_STRUCT)
         {
-            m_current->add(field.name, Struct());
+            m_current->add(field.name, VariantStruct());
         }
         else
         {
             assert(m_current->getType() == TYPE_ARRAY_STRUCT);
-            m_current->add(Struct());
+            m_current->add(VariantStruct());
         }
     }
 }
@@ -88,12 +88,12 @@ void SerializerVariant::Internal::enterArrayStruct(const MetaField& field)
         assert(m_current);
         if (m_current->getType() == TYPE_STRUCT)
         {
-            m_current->add(field.name, List());
+            m_current->add(field.name, VariantList());
         }
         else
         {
             assert(m_current->getType() == TYPE_ARRAY_STRUCT);
-            m_current->add(List());
+            m_current->add(VariantList());
         }
     }
 }

@@ -439,13 +439,13 @@ TEST_F(TestVariant, testArrayBytes)
 
 TEST_F(TestVariant, testStruct)
 {
-    Variant variant = Struct();
+    Variant variant = VariantStruct();
     variant.add("hello", -123);
     variant.add("world", std::string("200.5"));
 
-    Struct* pval = variant;
+    VariantStruct* pval = variant;
     ASSERT_NE(pval, nullptr);
-    Struct s = {{"hello", -123},{"world", std::string("200.5")}};
+    VariantStruct s = {{"hello", -123},{"world", std::string("200.5")}};
     ASSERT_EQ(*pval == s, true);
 
     const Variant* var = variant.getVariant("hello");
@@ -462,10 +462,10 @@ TEST_F(TestVariant, testStruct)
 
 TEST_F(TestVariant, testStructSub)
 {
-    Variant variant = Struct();
+    Variant variant = VariantStruct();
     variant.add("hello", -123);
     variant.add("world", std::string("200.5"));
-    variant.add("sub", Struct());
+    variant.add("sub", VariantStruct());
 
     Variant* sub = variant.getVariant("sub");
     ASSERT_NE(sub, nullptr);
@@ -473,7 +473,7 @@ TEST_F(TestVariant, testStructSub)
     sub->add("a", 100);
     sub->add("b", 200);
 
-    Struct s = {{"hello", -123},{"world", std::string("200.5")},{"sub", Struct({{"a", 100}, {"b", 200}})}};
+    VariantStruct s = {{"hello", -123},{"world", std::string("200.5")},{"sub", VariantStruct({{"a", 100}, {"b", 200}})}};
     ASSERT_EQ(variant == s, true);
 
     const Variant* var = variant.getVariant("sub.b");
@@ -491,13 +491,13 @@ TEST_F(TestVariant, testStructSub)
 
 TEST_F(TestVariant, testList)
 {
-    Variant variant = List();
+    Variant variant = VariantList();
     variant.add(-123);
     variant.add(std::string("200.5"));
 
-    List* pval = variant;
+    VariantList* pval = variant;
     ASSERT_NE(pval, nullptr);
-    List l = {-123, std::string("200.5")};
+    VariantList l = {-123, std::string("200.5")};
     ASSERT_EQ(*pval == l, true);
 
     const Variant* var = variant.getVariant("0");
@@ -517,10 +517,10 @@ TEST_F(TestVariant, testList)
 
 TEST_F(TestVariant, testListSub)
 {
-    Variant variant = List();
+    Variant variant = VariantList();
     variant.add(-123);
     variant.add(std::string("200.5"));
-    variant.add(Struct());
+    variant.add(VariantStruct());
 
     Variant* sub = variant.getVariant("2");
     ASSERT_NE(sub, nullptr);
@@ -528,7 +528,7 @@ TEST_F(TestVariant, testListSub)
     sub->add("a", 100);
     sub->add("b", 200);
 
-    List l = {-123,std::string("200.5"),Struct({{"a", 100}, {"b", 200}})};
+    VariantList l = {-123,std::string("200.5"),VariantStruct({{"a", 100}, {"b", 200}})};
     ASSERT_EQ(variant == l, true);
 
     const Variant* var = variant.getVariant("2.b");
