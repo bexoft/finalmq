@@ -196,6 +196,34 @@ TEST_F(TestSerializerProto, testBytes)
 
 
 
+TEST_F(TestSerializerProto, testStruct)
+{
+    static const std::int32_t VALUE_INT32 = -2;
+    static const std::string VALUE_STRING = "Hello World";
+    static const std::uint32_t VALUE_UINT32 = 123;
+
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageStruct", "", "desc", 0});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageInt32", "struct_int32", "desc", 0});
+    m_serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "desc", 0}, VALUE_INT32);
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageInt32", "struct_int32", "desc", 0});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageString", "struct_string", "desc", 1});
+    m_serializer->enterString({MetaTypeId::TYPE_STRING, "", "value", "desc", 0}, VALUE_STRING.data(), VALUE_STRING.size());
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageString", "struct_string", "desc", 1});
+    m_serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "desc", 2}, VALUE_UINT32);
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageStruct", "", "desc", 0});
+
+    m_serializer->finished();
+
+    test::TestMessageStruct message;
+    bool res = message.ParseFromString(m_data);
+    EXPECT_EQ(res, true);
+    EXPECT_EQ(message.struct_int32().value(), VALUE_INT32);
+    EXPECT_EQ(message.struct_string().value(), VALUE_STRING);
+    EXPECT_EQ(message.last_value(), VALUE_UINT32);
+}
+
+
+
 TEST_F(TestSerializerProto, testEnum)
 {
     static const test::Foo VALUE = test::Foo::FOO_HELLO;
