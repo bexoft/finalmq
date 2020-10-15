@@ -52,7 +52,7 @@ TEST_F(TestParserProto, testUnknownStruct)
 {
     std::string data;
 
-    test::TestMessageBool message;
+    test::TestBool message;
     message.SerializeToString(&data);
 
     MockIParserVisitor mockVisitor;
@@ -81,7 +81,7 @@ TEST_F(TestParserProto, testBool)
 
     std::string data;
 
-    test::TestMessageBool message;
+    test::TestBool message;
     message.set_value(VALUE);
     message.SerializeToString(&data);
 
@@ -111,7 +111,7 @@ TEST_F(TestParserProto, testInt32)
 
     std::string data;
 
-    test::TestMessageInt32 message;
+    test::TestInt32 message;
     message.set_value(VALUE);
     message.SerializeToString(&data);
 
@@ -141,7 +141,7 @@ TEST_F(TestParserProto, testUInt32)
 
     std::string data;
 
-    test::TestMessageUInt32 message;
+    test::TestUInt32 message;
     message.set_value(VALUE);
     message.SerializeToString(&data);
 
@@ -171,7 +171,7 @@ TEST_F(TestParserProto, testInt64)
 
     std::string data;
 
-    test::TestMessageInt64 message;
+    test::TestInt64 message;
     message.set_value(VALUE);
     message.SerializeToString(&data);
 
@@ -201,7 +201,7 @@ TEST_F(TestParserProto, testUInt64)
 
     std::string data;
 
-    test::TestMessageUInt64 message;
+    test::TestUInt64 message;
     message.set_value(VALUE);
     message.SerializeToString(&data);
 
@@ -232,7 +232,7 @@ TEST_F(TestParserProto, testFloat)
 
     std::string data;
 
-    test::TestMessageFloat message;
+    test::TestFloat message;
     message.set_value(VALUE);
     message.SerializeToString(&data);
 
@@ -262,7 +262,7 @@ TEST_F(TestParserProto, testDouble)
 
     std::string data;
 
-    test::TestMessageDouble message;
+    test::TestDouble message;
     message.set_value(VALUE);
     message.SerializeToString(&data);
 
@@ -292,7 +292,7 @@ TEST_F(TestParserProto, testString)
 
     std::string data;
 
-    test::TestMessageString message;
+    test::TestString message;
     message.set_value(VALUE);
     message.SerializeToString(&data);
 
@@ -322,7 +322,7 @@ TEST_F(TestParserProto, testBytes)
 
     std::string data;
 
-    test::TestMessageBytes message;
+    test::TestBytes message;
     message.set_value(VALUE);
     message.SerializeToString(&data);
 
@@ -359,7 +359,7 @@ TEST_F(TestParserProto, testStruct)
 
     std::string data;
 
-    test::TestMessageStruct message;
+    test::TestStruct message;
     message.mutable_struct_int32()->set_value(VALUE_INT32);
     message.mutable_struct_string()->set_value(VALUE_STRING);
     message.SerializeToString(&data);
@@ -396,7 +396,7 @@ TEST_F(TestParserProto, testEnum)
 
     std::string data;
 
-    test::TestMessageEnum message;
+    test::TestEnum message;
     message.set_value(VALUE);
     message.SerializeToString(&data);
 
@@ -427,7 +427,7 @@ TEST_F(TestParserProto, testEnumNotAvailable)
 
     std::string data;
 
-    test::TestMessageEnum message;
+    test::TestEnum message;
     message.set_value(VALUE);
     message.SerializeToString(&data);
 
@@ -461,7 +461,7 @@ TEST_F(TestParserProto, testArrayBool)
 
     std::string data;
 
-    test::TestMessageArrayBool message;
+    test::TestArrayBool message;
     auto* value = message.mutable_value();
     value->Add(VALUE1);
     value->Add(VALUE2);
@@ -499,7 +499,7 @@ TEST_F(TestParserProto, testArrayInt32)
 
     std::string data;
 
-    test::TestMessageArrayInt32 message;
+    test::TestArrayInt32 message;
     auto* value = message.mutable_value();
     value->Add(VALUE1);
     value->Add(VALUE2);
@@ -536,7 +536,7 @@ TEST_F(TestParserProto, testArrayUInt32)
 
     std::string data;
 
-    test::TestMessageArrayUInt32 message;
+    test::TestArrayUInt32 message;
     auto* value = message.mutable_value();
     value->Add(VALUE1);
     value->Add(VALUE2);
@@ -574,7 +574,7 @@ TEST_F(TestParserProto, testArrayInt64)
 
     std::string data;
 
-    test::TestMessageArrayInt64 message;
+    test::TestArrayInt64 message;
     auto* value = message.mutable_value();
     value->Add(VALUE1);
     value->Add(VALUE2);
@@ -611,7 +611,7 @@ TEST_F(TestParserProto, testArrayUInt64)
 
     std::string data;
 
-    test::TestMessageArrayUInt64 message;
+    test::TestArrayUInt64 message;
     auto* value = message.mutable_value();
     value->Add(VALUE1);
     value->Add(VALUE2);
@@ -649,7 +649,7 @@ TEST_F(TestParserProto, testArrayFloat)
 
     std::string data;
 
-    test::TestMessageArrayFloat message;
+    test::TestArrayFloat message;
     auto* value = message.mutable_value();
     value->Add(VALUE1);
     value->Add(VALUE2);
@@ -686,7 +686,7 @@ TEST_F(TestParserProto, testArrayDouble)
 
     std::string data;
 
-    test::TestMessageArrayDouble message;
+    test::TestArrayDouble message;
     auto* value = message.mutable_value();
     value->Add(VALUE1);
     value->Add(VALUE2);
@@ -724,7 +724,7 @@ TEST_F(TestParserProto, testArrayString)
 
     std::string data;
 
-    test::TestMessageArrayString message;
+    test::TestArrayString message;
     auto* value = message.mutable_value();
     *value->Add() = VALUE1;
     *value->Add() = VALUE2;
@@ -762,7 +762,7 @@ TEST_F(TestParserProto, testArrayBytes)
 
     std::string data;
 
-    test::TestMessageArrayBytes message;
+    test::TestArrayBytes message;
     auto* value = message.mutable_value();
     *value->Add() = std::string(reinterpret_cast<const char*>(VALUE1.data()), VALUE1.size());
     *value->Add() = std::string(reinterpret_cast<const char*>(VALUE2.data()), VALUE2.size());
@@ -810,7 +810,7 @@ TEST_F(TestParserProto, testArrayStruct)
 
     std::string data;
 
-    test::TestMessageArrayStruct message;
+    test::TestArrayStruct message;
     auto* value = message.mutable_value();
     auto* message1 = value->Add();
     message1->mutable_struct_int32()->set_value(VALUE1_INT32);
@@ -873,7 +873,7 @@ TEST_F(TestParserProto, testArrayEnum)
 
     std::string data;
 
-    test::TestMessageArrayEnum message;
+    test::TestArrayEnum message;
     auto* value = message.mutable_value();
     value->Add(VALUE1);
     value->Add(VALUE2);
