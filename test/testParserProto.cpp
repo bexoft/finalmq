@@ -718,12 +718,9 @@ TEST_F(TestParserProto, testArrayString)
     static const std::string VALUE2 = "";
     static const std::string VALUE3 = "World";
     static const std::string VALUE4 = "Foo";
-    MetaStruct structTest;
-    structTest.setTypeName("test.TestArrayString");
-    MetaField fieldValue = {MetaTypeId::TYPE_ARRAY_STRING, "", "value", "description"};
-    structTest.addField(fieldValue);
 
-    MetaDataGlobal::instance().addStruct(structTest);
+    const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestArrayString", "value");
+    ASSERT_NE(fieldValue, nullptr);
 
     std::string data;
 
@@ -741,7 +738,7 @@ TEST_F(TestParserProto, testArrayString)
     {
         testing::InSequence seq;
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(rootStruct))).Times(1);
-        EXPECT_CALL(mockVisitor, enterArrayString(MatcherMetaField(fieldValue), std::vector<std::string>({VALUE1, VALUE2, VALUE3, VALUE4}))).Times(1);
+        EXPECT_CALL(mockVisitor, enterArrayString(MatcherMetaField(*fieldValue), std::vector<std::string>({VALUE1, VALUE2, VALUE3, VALUE4}))).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(rootStruct))).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
@@ -759,12 +756,9 @@ TEST_F(TestParserProto, testArrayBytes)
     static const Bytes VALUE2 = {};
     static const Bytes VALUE3 = {'W', 'o', '\n', '\0', 'd'};
     static const Bytes VALUE4 = {'F', '\t', '\0', 123, 12};
-    MetaStruct structTest;
-    structTest.setTypeName("test.TestArrayBytes");
-    MetaField fieldValue = {MetaTypeId::TYPE_ARRAY_BYTES, "", "value", "description"};
-    structTest.addField(fieldValue);
 
-    MetaDataGlobal::instance().addStruct(structTest);
+    const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestArrayBytes", "value");
+    ASSERT_NE(fieldValue, nullptr);
 
     std::string data;
 
@@ -782,7 +776,7 @@ TEST_F(TestParserProto, testArrayBytes)
     {
         testing::InSequence seq;
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(rootStruct))).Times(1);
-        EXPECT_CALL(mockVisitor, enterArrayBytes(MatcherMetaField(fieldValue), std::vector<Bytes>({VALUE1, VALUE2, VALUE3, VALUE4}))).Times(1);
+        EXPECT_CALL(mockVisitor, enterArrayBytes(MatcherMetaField(*fieldValue), std::vector<Bytes>({VALUE1, VALUE2, VALUE3, VALUE4}))).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(rootStruct))).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
