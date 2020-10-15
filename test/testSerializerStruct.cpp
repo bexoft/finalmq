@@ -32,7 +32,7 @@ public:
 protected:
     virtual void SetUp()
     {
-//        m_serializer = std::make_unique<SerializerVariant>(m_root);
+        //m_serializer = std::make_unique<SerializerStruct>(m_root);
     }
 
     virtual void TearDown()

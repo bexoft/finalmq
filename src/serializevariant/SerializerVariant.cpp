@@ -130,7 +130,24 @@ void SerializerVariant::Internal::exitArrayStruct(const MetaField& field)
 
 
 template <class T>
-void SerializerVariant::Internal::add(const MetaField& field, T value)
+void SerializerVariant::Internal::add(const MetaField& field, const T& value)
+{
+    if (m_current)
+    {
+        if (m_current->getType() == TYPE_STRUCT)
+        {
+            m_current->add(field.name, value);
+        }
+        else
+        {
+            assert(m_current->getType() == TYPE_ARRAY_STRUCT);
+            m_current->add(value);
+        }
+    }
+}
+
+template <class T>
+void SerializerVariant::Internal::add(const MetaField& field, T&& value)
 {
     if (m_current)
     {
@@ -145,7 +162,6 @@ void SerializerVariant::Internal::add(const MetaField& field, T value)
         }
     }
 }
-
 
 
 void SerializerVariant::Internal::enterBool(const MetaField& field, bool value)

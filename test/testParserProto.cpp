@@ -38,6 +38,7 @@ public:
 protected:
     virtual void SetUp()
     {
+        MetaDataGlobal::setInstance(nullptr);
     }
 
     virtual void TearDown()

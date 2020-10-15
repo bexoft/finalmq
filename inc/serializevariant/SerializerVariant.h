@@ -67,7 +67,9 @@ private:
         virtual void enterArrayEnum(const MetaField& field, const std::vector<std::string>& value) override;
 
         template <class T>
-        inline void add(const MetaField& field, T value);
+        inline void add(const MetaField& field, const T& value);
+        template <class T>
+        void add(const MetaField& field, T&& value);
 
         Variant&                        m_root;
         Variant*                        m_current = nullptr;

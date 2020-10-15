@@ -8,7 +8,7 @@
 #include <iostream>
 
 
-static const int INDEX2ID = 1;
+static constexpr int INDEX2ID = 1;
 
 
 ParserProto::ParserProto(IParserVisitor& visitor, const char* ptr, int size)

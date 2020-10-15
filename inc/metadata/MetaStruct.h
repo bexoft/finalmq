@@ -10,6 +10,10 @@
 class MetaStruct
 {
 public:
+    MetaStruct();
+    MetaStruct(const std::string& typeName, const std::vector<MetaField>& fields);
+    MetaStruct(const std::string& typeName, std::vector<MetaField>&& fields);
+
     void setTypeName(const std::string& typeName);
     const std::string& getTypeName() const;
 

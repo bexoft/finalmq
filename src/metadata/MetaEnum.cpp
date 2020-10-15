@@ -3,6 +3,32 @@
 
 
 
+MetaEnum::MetaEnum()
+{
+
+}
+
+MetaEnum::MetaEnum(const std::string& typeName, const std::vector<MetaEnumEntry>& entries)
+    : m_typeName(typeName)
+{
+    for (size_t i = 0 ; i < entries.size(); ++i)
+    {
+        addEntry(entries[i]);
+    }
+}
+
+MetaEnum::MetaEnum(const std::string& typeName, std::vector<MetaEnumEntry>&& entries)
+    : m_typeName(typeName)
+{
+    for (size_t i = 0 ; i < entries.size(); ++i)
+    {
+        addEntry(std::move(entries[i]));
+    }
+}
+
+
+
+
 void MetaEnum::setTypeName(const std::string& typeName)
 {
     m_typeName = typeName;
