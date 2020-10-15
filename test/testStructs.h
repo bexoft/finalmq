@@ -2,6 +2,7 @@
 #include "serializestruct/StructBase.h"
 
 
+namespace fmq {
 namespace test {
 class Foo
 {
@@ -23,206 +24,228 @@ private:
     Enum m_value = FOO_WORLD;
     static const EnumInfo _enumInfo;
 };
-}
+}}
 
 
+namespace fmq {
 namespace test {
-struct TestStructBool : public StructBase
+struct TestBool : public StructBase
 {
     bool value = false;
 
 private:
     static const StructInfo _structInfo;
 };
-}
+}}
 
+namespace fmq {
 namespace test {
-struct TestStructInt32
+struct TestInt32
 {
     std::int32_t value = 0;
 
     static const StructInfo _structInfo;
 };
-}
+}}
 
+namespace fmq {
 namespace test {
-struct TestStructUInt32
+struct TestUInt32
 {
     std::uint32_t value = 0;
 
     static const StructInfo _structInfo;
 };
-}
+}}
 
+namespace fmq {
 namespace test {
-struct TestStructInt64
+struct TestInt64
 {
     std::int64_t value = 0;
 
     static const StructInfo _structInfo;
 };
-}
+}}
 
+namespace fmq {
 namespace test {
-struct TestStructUInt64
+struct TestUInt64
 {
     std::uint64_t value = 0;
 
     static const StructInfo _structInfo;
 };
-}
+}}
 
+namespace fmq {
 namespace test {
-struct TestStructFloat
+struct TestFloat
 {
     float value = 0;
 
     static const StructInfo _structInfo;
 };
-}
+}}
 
+namespace fmq {
 namespace test {
-struct TestStructDouble
+struct TestDouble
 {
     double value = 0;
 
     static const StructInfo _structInfo;
 };
-}
+}}
 
+namespace fmq {
 namespace test {
-struct TestStructString
+struct TestString
 {
     std::string value;
 
     static const StructInfo _structInfo;
 };
-}
+}}
 
+namespace fmq {
 namespace test {
-struct TestStructBytes
+struct TestBytes
 {
     Bytes value;
 
     static const StructInfo _structInfo;
 };
-}
+}}
 
+namespace fmq {
 namespace test {
-struct TestStructStruct
+struct TestStruct
 {
-    TestStructInt32 struct_int32;
-    TestStructString struct_string;
+    TestInt32 struct_int32;
+    TestString struct_string;
     std::int32_t last_value = 0;
 
     static const StructInfo _structInfo;
 };
-}
+}}
 
+namespace fmq {
 namespace test {
-struct TestStructEnum
+struct TestEnum
 {
     Foo::Enum value = Foo::FOO_WORLD;
 
     static const StructInfo _structInfo;
 };
-}
+}}
 
+namespace fmq {
 namespace test {
-struct TestStructArrayBool
+struct TestArrayBool
 {
     std::vector<bool> value;
 
     static const StructInfo _structInfo;
 };
-}
+}}
 
+namespace fmq {
 namespace test {
-struct TestStructArrayInt32
+struct TestArrayInt32
 {
     std::vector<std::int32_t> value;
 
     static const StructInfo _structInfo;
 };
-}
+}}
 
+namespace fmq {
 namespace test {
-struct TestStructArrayUInt32
+struct TestArrayUInt32
 {
     std::vector<std::uint32_t> value;
 
     static const StructInfo _structInfo;
 };
-}
+}}
 
+namespace fmq {
 namespace test {
-struct TestStructArrayInt64
+struct TestArrayInt64
 {
     std::vector<std::int64_t> value;
 
     static const StructInfo _structInfo;
 };
-}
+}}
 
+namespace fmq {
 namespace test {
-struct TestStructArrayUInt64
+struct TestArrayUInt64
 {
     std::vector<std::uint64_t> value;
 
     static const StructInfo _structInfo;
 };
-}
+}}
 
+namespace fmq {
 namespace test {
-struct TestStructArrayFloat
+struct TestArrayFloat
 {
     std::vector<float> value;
 
     static const StructInfo _structInfo;
 };
-}
+}}
 
+namespace fmq {
 namespace test {
-struct TestStructArrayDouble
+struct TestArrayDouble
 {
     std::vector<double> value;
 
     static const StructInfo _structInfo;
 };
-}
+}}
 
+namespace fmq {
 namespace test {
-struct TestStructArrayString
+struct TestArrayString
 {
     std::vector<std::string> value;
 
     static const StructInfo _structInfo;
 };
-}
+}}
 
+namespace fmq {
 namespace test {
-struct TestStructArrayBytes
+struct TestArrayBytes
 {
     std::vector<Bytes> value;
 
     static const StructInfo _structInfo;
 };
-}
+}}
 
+namespace fmq {
 namespace test {
-struct TestStructArrayStruct
+struct TestArrayStruct
 {
-    std::vector<TestStructStruct> value;
+    std::vector<TestStruct> value;
 
     static const StructInfo _structInfo;
 };
-}
+}}
 
+namespace fmq {
 namespace test {
-struct TestStructArrayEnum
+struct TestArrayEnum
 {
     std::vector<Foo> value;
 
     static const StructInfo _structInfo;
 };
-}
+}}

@@ -12,8 +12,10 @@ struct IMetaData
     virtual const MetaStruct* getStruct(const std::string& typeName) const = 0;
     virtual const MetaEnum* getEnum(const std::string& typeName) const = 0;
     virtual const MetaStruct* getStruct(const MetaField& field) const = 0;
+    virtual const MetaField* getField(const std::string& typeName, const std::string& fieldName) const = 0;
     virtual const MetaEnum* getEnum(const MetaField& field) const = 0;
     virtual const MetaField* getArrayField(const MetaField& field) const = 0;
+    virtual const MetaField* getArrayField(const std::string& typeName, const std::string& fieldName) const = 0;
     virtual std::int32_t getEnumValueByName(const MetaField& field, const std::string& name) const = 0;
     virtual const std::string& getEnumNameByValue(const MetaField& field, std::int32_t value) const = 0;
     virtual const MetaStruct& addStruct(const MetaStruct& stru) = 0;
@@ -32,8 +34,10 @@ private:
     virtual const MetaStruct* getStruct(const std::string& typeName) const override;
     virtual const MetaEnum* getEnum(const std::string& typeName) const override;
     virtual const MetaStruct* getStruct(const MetaField& field) const override;
+    virtual const MetaField* getField(const std::string& typeName, const std::string& fieldName) const override;
     virtual const MetaEnum* getEnum(const MetaField& field) const override;
     virtual const MetaField* getArrayField(const MetaField& field) const override;
+    virtual const MetaField* getArrayField(const std::string& typeName, const std::string& fieldName) const override;
     virtual std::int32_t getEnumValueByName(const MetaField& field, const std::string& name) const override;
     virtual const std::string& getEnumNameByValue(const MetaField& field, std::int32_t value) const override;
     virtual const MetaStruct& addStruct(const MetaStruct& stru) override;

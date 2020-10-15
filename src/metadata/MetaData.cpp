@@ -46,6 +46,19 @@ const MetaStruct* MetaData::getStruct(const MetaField& field) const
 }
 
 
+const MetaField* MetaData::getField(const std::string& typeName, const std::string& fieldName) const
+{
+    const MetaStruct* stru = getStruct(typeName);
+    if (stru)
+    {
+        const MetaField* fieldValue = stru->getFieldByName(fieldName);
+        return fieldValue;
+    }
+    return nullptr;
+}
+
+
+
 const MetaEnum* MetaData::getEnum(const MetaField& field) const
 {
     assert(field.typeId == MetaTypeId::TYPE_ENUM || field.typeId == MetaTypeId::TYPE_ARRAY_ENUM);
@@ -75,6 +88,17 @@ const MetaField* MetaData::getArrayField(const MetaField& field) const
         field.fieldWithoutArray->name.clear();
     }
     return field.fieldWithoutArray.get();
+}
+
+
+const MetaField* MetaData::getArrayField(const std::string& typeName, const std::string& fieldName) const
+{
+    const MetaField* field = getField(typeName, fieldName);
+    if (field)
+    {
+        return getArrayField(*field);
+    }
+    return nullptr;
 }
 
 
