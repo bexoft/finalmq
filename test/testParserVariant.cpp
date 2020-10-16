@@ -327,7 +327,7 @@ TEST_F(TestParserVariant, testStruct)
 {
     static const std::int32_t VALUE_INT32 = -2;
     static const std::string VALUE_STRING = "Hello World";
-    static const std::int32_t VALUE_LAST = 12;
+    static const std::uint32_t VALUE_LAST = 12;
 
     const MetaField* fieldStructInt32 = MetaDataGlobal::instance().getField("test.TestStruct", "struct_int32");
     const MetaField* fieldStructString = MetaDataGlobal::instance().getField("test.TestStruct", "struct_string");
@@ -352,7 +352,7 @@ TEST_F(TestParserVariant, testStruct)
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldStructString))).Times(1);
         EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*fieldString), ArrayEq(VALUE_STRING.data(), VALUE_STRING.size()), VALUE_STRING.size())).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldStructString))).Times(1);
-        EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*fieldStructLastValue), VALUE_LAST)).Times(1);
+        EXPECT_CALL(mockVisitor, enterUInt32(MatcherMetaField(*fieldStructLastValue), VALUE_LAST)).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(rootStruct))).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
@@ -374,7 +374,7 @@ TEST_F(TestParserVariant, testUndefinedStructs)
 {
     static const std::int32_t VALUE_INT32 = -2;
     static const std::string VALUE_STRING = "Hello World";
-    static const std::int32_t VALUE_LAST = 12;
+    static const std::uint32_t VALUE_LAST = 12;
 
     const MetaField* fieldStructInt32 = MetaDataGlobal::instance().getField("test.TestStruct", "struct_int32");
     const MetaField* fieldStructString = MetaDataGlobal::instance().getField("test.TestStruct", "struct_string");
@@ -399,7 +399,7 @@ TEST_F(TestParserVariant, testUndefinedStructs)
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldStructString))).Times(1);
         EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*fieldString), ArrayEq(VALUE_STRING.data(), VALUE_STRING.size()), VALUE_STRING.size())).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldStructString))).Times(1);
-        EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*fieldStructLastValue), VALUE_LAST)).Times(1);
+        EXPECT_CALL(mockVisitor, enterUInt32(MatcherMetaField(*fieldStructLastValue), VALUE_LAST)).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(rootStruct))).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
@@ -840,10 +840,10 @@ TEST_F(TestParserVariant, testArrayStruct)
 {
     static const std::int32_t VALUE1_INT32 = -2;
     static const std::string VALUE1_STRING = "Hello World";
-    static const std::int32_t VALUE1_LAST_VALUE = 12;
+    static const std::uint32_t VALUE1_LAST_VALUE = 12;
     static const std::int32_t VALUE2_INT32 = 345;
     static const std::string VALUE2_STRING = "foo";
-    static const std::int32_t VALUE2_LAST_VALUE = 120;
+    static const std::uint32_t VALUE2_LAST_VALUE = 120;
 
     const MetaField* fieldStruct = MetaDataGlobal::instance().getField("test.TestArrayStruct", "value");
     const MetaField* fieldStructWithoutArray = MetaDataGlobal::instance().getArrayField("test.TestArrayStruct", "value");
@@ -875,7 +875,7 @@ TEST_F(TestParserVariant, testArrayStruct)
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldStructString))).Times(1);
         EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*fieldString), ArrayEq(VALUE1_STRING.data(), VALUE1_STRING.size()), VALUE1_STRING.size())).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldStructString))).Times(1);
-        EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*fieldStructLastValue), VALUE1_LAST_VALUE)).Times(1);
+        EXPECT_CALL(mockVisitor, enterUInt32(MatcherMetaField(*fieldStructLastValue), VALUE1_LAST_VALUE)).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldStructWithoutArray))).Times(1);
 
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldStructWithoutArray))).Times(1);
@@ -885,7 +885,7 @@ TEST_F(TestParserVariant, testArrayStruct)
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldStructString))).Times(1);
         EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*fieldString), ArrayEq(VALUE2_STRING.data(), VALUE2_STRING.size()), VALUE2_STRING.size())).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldStructString))).Times(1);
-        EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*fieldStructLastValue), VALUE2_LAST_VALUE)).Times(1);
+        EXPECT_CALL(mockVisitor, enterUInt32(MatcherMetaField(*fieldStructLastValue), VALUE2_LAST_VALUE)).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldStructWithoutArray))).Times(1);
 
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldStructWithoutArray))).Times(1);
@@ -895,7 +895,7 @@ TEST_F(TestParserVariant, testArrayStruct)
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldStructString))).Times(1);
         EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*fieldString), std::string())).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldStructString))).Times(1);
-        EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*fieldStructLastValue), 0)).Times(1);
+        EXPECT_CALL(mockVisitor, enterUInt32(MatcherMetaField(*fieldStructLastValue), 0)).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldStructWithoutArray))).Times(1);
 
         EXPECT_CALL(mockVisitor, exitArrayStruct(MatcherMetaField(*fieldStruct))).Times(1);

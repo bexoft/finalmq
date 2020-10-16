@@ -291,76 +291,32 @@ void SerializerStruct::Internal::enterArrayBytes(const MetaField& field, const s
 
 void SerializerStruct::Internal::enterArrayEnum(const MetaField& field, std::vector<std::int32_t>&& value)
 {
-//    assert(field.typeId == MetaTypeId::TYPE_ARRAY_ENUM);
-
-//    if (m_enumAsString)
-//    {
-//        std::vector<std::string> enums;
-//        enums.reserve(value.size());
-//        std::for_each(value.begin(), value.end(), [this, &field, &enums] (std::int32_t entry) {
-//            const std::string& name = MetaDataGlobal::instance().getEnumNameByValue(field, entry);
-//            enums.push_back(name);
-//        });
-//        add(field, std::move(enums));
-//    }
-//    else
-//    {
-//        add(field, std::move(value));
-//    }
+    enterArrayEnum(field, value.data(), value.size());
 }
 
 void SerializerStruct::Internal::enterArrayEnum(const MetaField& field, const std::int32_t* value, int size)
 {
-//    assert(field.typeId == MetaTypeId::TYPE_ARRAY_ENUM);
-
-//    if (m_enumAsString)
-//    {
-//        std::vector<std::string> enums;
-//        enums.reserve(size);
-//        std::for_each(value, value + size, [this, &field, &enums] (std::int32_t entry) {
-//            const std::string& name = MetaDataGlobal::instance().getEnumNameByValue(field, entry);
-//            enums.push_back(name);
-//        });
-//        add(field, std::move(enums));
-//    }
-//    else
-//    {
-//        add(field, std::vector<std::int32_t>(value, value + size));
-//    }
+    std::vector<std::int32_t> enums;
+    enums.reserve(size);
+    std::for_each(value, value + size, [this, &field, &enums] (const std::int32_t& entry) {
+        bool validEnum = MetaDataGlobal::instance().isEnumValue(field, entry);
+        enums.push_back(validEnum ? entry : 0);
+    });
+    setValue(field, std::move(enums));
 }
 
 void SerializerStruct::Internal::enterArrayEnumMove(const MetaField& field, std::vector<std::string>&& value)
 {
-//    if (m_enumAsString)
-//    {
-//        add(field, std::move(value));
-//    }
-//    else
-//    {
-//        std::vector<std::int32_t> enums;
-//        enums.reserve(value.size());
-//        std::for_each(value.begin(), value.end(), [this, &field, &enums] (const std::string& entry) {
-//            std::int32_t v = MetaDataGlobal::instance().getEnumValueByName(field, entry);
-//            enums.push_back(v);
-//        });
-//    }
+    enterArrayEnum(field, value);
 }
 
 void SerializerStruct::Internal::enterArrayEnum(const MetaField& field, const std::vector<std::string>& value)
 {
-//    assert(field.typeId == MetaTypeId::TYPE_ARRAY_ENUM);
-
-//    if (m_enumAsString)
-//    {
-//        add(field, value);
-//    }
-//    else
-//    {
-//        std::vector<std::int32_t> enums;
-//        enums.reserve(value.size());
-//        std::for_each(value.begin(), value.end(), [this, &field, &enums] (const std::string& entry) {
-//            std::int32_t v = MetaDataGlobal::instance().getEnumValueByName(field, entry);
-//            enums.push_back(v);
-//        });
-//    }
+    std::vector<std::int32_t> enums;
+    enums.reserve(value.size());
+    std::for_each(value.begin(), value.end(), [this, &field, &enums] (const std::string& entry) {
+        std::int32_t v = MetaDataGlobal::instance().getEnumValueByName(field, entry);
+        enums.push_back(v);
+    });
+    setValue(field, std::move(enums));
 }

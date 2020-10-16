@@ -524,39 +524,45 @@ TEST_F(TestSerializerStruct, testArrayStruct)
 }
 
 
-//TEST_F(TestSerializerVariant, testArrayEnum)
-//{
-//    static const std::int32_t VALUE1 = -2;
-//    static const std::int32_t VALUE2 = 0;
-//    static const std::int32_t VALUE3 = 1;
-//    static const std::int32_t VALUE4 = 123;
-//    static const std::vector<std::int32_t> VALUE = {VALUE1, VALUE2, VALUE3, VALUE4};
+TEST_F(TestSerializerStruct, testArrayEnum)
+{
+    static const fmq::test::Foo VALUE1 = fmq::test::Foo::FOO_HELLO;
+    static const fmq::test::Foo VALUE2 = fmq::test::Foo::FOO_WORLD;
+    static const fmq::test::Foo VALUE3 = fmq::test::Foo::FOO_WORLD2;
+    static const fmq::test::Foo VALUE4 = (fmq::test::Foo::Enum)123;
+    static const std::vector<std::int32_t> VALUE = {VALUE1, VALUE2, VALUE3, VALUE4};
 
-//    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""});
-//    m_serializer->enterArrayEnum({MetaTypeId::TYPE_ARRAY_ENUM, "test.Foo", "value", "", 0}, VALUE.data(), VALUE.size());
-//    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""});
-//    m_serializer->finished();
+    fmq::test::TestArrayEnum root;
+    std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-//    Variant cmp = VariantStruct({{"value", std::vector<std::string>({"FOO_HELLO","FOO_WORLD","FOO_WORLD2","FOO_WORLD"})}});
-//    ASSERT_EQ(m_root == cmp, true);
-//}
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""});
+    serializer->enterArrayEnum({MetaTypeId::TYPE_ARRAY_ENUM, "test.Foo", "value", "", 0}, VALUE.data(), VALUE.size());
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""});
+    serializer->finished();
+
+    fmq::test::TestArrayEnum cmp = {{VALUE1, VALUE2, VALUE3, VALUE2}};
+    ASSERT_EQ(root, cmp);
+}
 
 
-//TEST_F(TestSerializerVariant, testArrayEnumAsInt)
-//{
-//    static const std::int32_t VALUE1 = -2;
-//    static const std::int32_t VALUE2 = 0;
-//    static const std::int32_t VALUE3 = 1;
-//    static const std::int32_t VALUE4 = 123;
-//    static const std::vector<std::int32_t> VALUE = {VALUE1, VALUE2, VALUE3, VALUE4};
+TEST_F(TestSerializerStruct, testArrayEnumString)
+{
+    static const fmq::test::Foo VALUE1 = fmq::test::Foo::FOO_HELLO;
+    static const fmq::test::Foo VALUE2 = fmq::test::Foo::FOO_WORLD;
+    static const fmq::test::Foo VALUE3 = fmq::test::Foo::FOO_WORLD2;
+    static const fmq::test::Foo VALUE4 = (fmq::test::Foo::Enum)123;
+    static const std::vector<std::string> VALUEString = {VALUE1.toString(), VALUE2.toString(), VALUE3.toString(), VALUE4.toString()};
 
-//    m_serializerEnumAsInt->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""});
-//    m_serializerEnumAsInt->enterArrayEnum({MetaTypeId::TYPE_ARRAY_ENUM, "test.Foo", "value", "", 0}, VALUE.data(), VALUE.size());
-//    m_serializerEnumAsInt->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""});
-//    m_serializerEnumAsInt->finished();
+    fmq::test::TestArrayEnum root;
+    std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-//    Variant cmp = VariantStruct({{"value", VALUE}});
-//    ASSERT_EQ(m_root == cmp, true);
-//}
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""});
+    serializer->enterArrayEnum({MetaTypeId::TYPE_ARRAY_ENUM, "test.Foo", "value", "", 0}, VALUEString);
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""});
+    serializer->finished();
+
+    fmq::test::TestArrayEnum cmp = {{VALUE1, VALUE2, VALUE3, VALUE2}};
+    ASSERT_EQ(root, cmp);
+}
 
 

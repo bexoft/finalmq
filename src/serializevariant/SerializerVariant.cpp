@@ -403,6 +403,7 @@ void SerializerVariant::Internal::enterArrayEnumMove(const MetaField& field, std
             std::int32_t v = MetaDataGlobal::instance().getEnumValueByName(field, entry);
             enums.push_back(v);
         });
+        add(field, std::move(enums));
     }
 }
 
@@ -422,5 +423,6 @@ void SerializerVariant::Internal::enterArrayEnum(const MetaField& field, const s
             std::int32_t v = MetaDataGlobal::instance().getEnumValueByName(field, entry);
             enums.push_back(v);
         });
+        add(field, std::move(enums));
     }
 }
