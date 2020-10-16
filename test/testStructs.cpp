@@ -40,6 +40,13 @@ const EnumInfo fmq::test::Foo::_enumInfo = {
 
 
 
+fmq::test::TestBool::TestBool()
+{
+}
+fmq::test::TestBool::TestBool(bool value_)
+    : value(value_)
+{
+}
 void fmq::test::TestBool::clear()
 {
     *this = fmq::test::TestBool();
@@ -64,6 +71,13 @@ const StructInfo fmq::test::TestBool::_structInfo = {
      }
 };
 
+fmq::test::TestInt32::TestInt32()
+{
+}
+fmq::test::TestInt32::TestInt32(decltype(value) value_)
+    : value(value_)
+{
+}
 void fmq::test::TestInt32::clear()
 {
     *this = fmq::test::TestInt32();
@@ -88,6 +102,13 @@ const StructInfo fmq::test::TestInt32::_structInfo = {
      }
 };
 
+fmq::test::TestUInt32::TestUInt32()
+{
+}
+fmq::test::TestUInt32::TestUInt32(decltype(value) value_)
+    : value(value_)
+{
+}
 void fmq::test::TestUInt32::clear()
 {
     *this = fmq::test::TestUInt32();
@@ -112,6 +133,13 @@ const StructInfo fmq::test::TestUInt32::_structInfo = {
      }
 };
 
+fmq::test::TestInt64::TestInt64()
+{
+}
+fmq::test::TestInt64::TestInt64(decltype(value) value_)
+    : value(value_)
+{
+}
 void fmq::test::TestInt64::clear()
 {
     *this = fmq::test::TestInt64();
@@ -136,6 +164,13 @@ const StructInfo fmq::test::TestInt64::_structInfo = {
      }
 };
 
+fmq::test::TestUInt64::TestUInt64()
+{
+}
+fmq::test::TestUInt64::TestUInt64(decltype(value) value_)
+    : value(value_)
+{
+}
 void fmq::test::TestUInt64::clear()
 {
     *this = fmq::test::TestUInt64();
@@ -160,6 +195,13 @@ const StructInfo fmq::test::TestUInt64::_structInfo = {
      }
 };
 
+fmq::test::TestFloat::TestFloat()
+{
+}
+fmq::test::TestFloat::TestFloat(decltype(value) value_)
+    : value(value_)
+{
+}
 void fmq::test::TestFloat::clear()
 {
     *this = fmq::test::TestFloat();
@@ -184,6 +226,13 @@ const StructInfo fmq::test::TestFloat::_structInfo = {
      }
 };
 
+fmq::test::TestDouble::TestDouble()
+{
+}
+fmq::test::TestDouble::TestDouble(decltype(value) value_)
+    : value(value_)
+{
+}
 void fmq::test::TestDouble::clear()
 {
     *this = fmq::test::TestDouble();
@@ -208,6 +257,13 @@ const StructInfo fmq::test::TestDouble::_structInfo = {
      }
 };
 
+fmq::test::TestString::TestString()
+{
+}
+fmq::test::TestString::TestString(decltype(value) value_)
+    : value(value_)
+{
+}
 void fmq::test::TestString::clear()
 {
     *this = fmq::test::TestString();
@@ -232,6 +288,13 @@ const StructInfo fmq::test::TestString::_structInfo = {
      }
 };
 
+fmq::test::TestBytes::TestBytes()
+{
+}
+fmq::test::TestBytes::TestBytes(decltype(value) value_)
+    : value(value_)
+{
+}
 void fmq::test::TestBytes::clear()
 {
     *this = fmq::test::TestBytes();
@@ -256,6 +319,15 @@ const StructInfo fmq::test::TestBytes::_structInfo = {
      }
 };
 
+fmq::test::TestStruct::TestStruct()
+{
+}
+fmq::test::TestStruct::TestStruct(decltype(struct_int32) struct_int32_, decltype(struct_string) struct_string_, decltype(last_value) last_value_)
+    : struct_int32(struct_int32_)
+    , struct_string(struct_string_)
+    , last_value(last_value_)
+{
+}
 void fmq::test::TestStruct::clear()
 {
     *this = fmq::test::TestStruct();
@@ -288,6 +360,13 @@ const StructInfo fmq::test::TestStruct::_structInfo = {
 
 
 
+fmq::test::TestEnum::TestEnum()
+{
+}
+fmq::test::TestEnum::TestEnum(decltype(value) value_)
+    : value(value_)
+{
+}
 void fmq::test::TestEnum::clear()
 {
     *this = fmq::test::TestEnum();
@@ -313,6 +392,13 @@ const StructInfo fmq::test::TestEnum::_structInfo = {
 };
 
 
+fmq::test::TestArrayBool::TestArrayBool()
+{
+}
+fmq::test::TestArrayBool::TestArrayBool(decltype(value) value_)
+    : value(value_)
+{
+}
 void fmq::test::TestArrayBool::clear()
 {
     *this = fmq::test::TestArrayBool();
@@ -337,6 +423,13 @@ const StructInfo fmq::test::TestArrayBool::_structInfo = {
      }
 };
 
+fmq::test::TestArrayInt32::TestArrayInt32()
+{
+}
+fmq::test::TestArrayInt32::TestArrayInt32(decltype(value) value_)
+    : value(value_)
+{
+}
 void fmq::test::TestArrayInt32::clear()
 {
     *this = fmq::test::TestArrayInt32();
@@ -361,6 +454,13 @@ const StructInfo fmq::test::TestArrayInt32::_structInfo = {
      }
 };
 
+fmq::test::TestArrayUInt32::TestArrayUInt32()
+{
+}
+fmq::test::TestArrayUInt32::TestArrayUInt32(decltype(value) value_)
+    : value(value_)
+{
+}
 void fmq::test::TestArrayUInt32::clear()
 {
     *this = fmq::test::TestArrayUInt32();
@@ -385,6 +485,13 @@ const StructInfo fmq::test::TestArrayUInt32::_structInfo = {
      }
 };
 
+fmq::test::TestArrayInt64::TestArrayInt64()
+{
+}
+fmq::test::TestArrayInt64::TestArrayInt64(decltype(value) value_)
+    : value(value_)
+{
+}
 void fmq::test::TestArrayInt64::clear()
 {
     *this = fmq::test::TestArrayInt64();
@@ -409,6 +516,13 @@ const StructInfo fmq::test::TestArrayInt64::_structInfo = {
      }
 };
 
+fmq::test::TestArrayUInt64::TestArrayUInt64()
+{
+}
+fmq::test::TestArrayUInt64::TestArrayUInt64(decltype(value) value_)
+    : value(value_)
+{
+}
 void fmq::test::TestArrayUInt64::clear()
 {
     *this = fmq::test::TestArrayUInt64();
@@ -433,6 +547,13 @@ const StructInfo fmq::test::TestArrayUInt64::_structInfo = {
      }
 };
 
+fmq::test::TestArrayFloat::TestArrayFloat()
+{
+}
+fmq::test::TestArrayFloat::TestArrayFloat(decltype(value) value_)
+    : value(value_)
+{
+}
 void fmq::test::TestArrayFloat::clear()
 {
     *this = fmq::test::TestArrayFloat();
@@ -457,6 +578,13 @@ const StructInfo fmq::test::TestArrayFloat::_structInfo = {
      }
 };
 
+fmq::test::TestArrayDouble::TestArrayDouble()
+{
+}
+fmq::test::TestArrayDouble::TestArrayDouble(decltype(value) value_)
+    : value(value_)
+{
+}
 void fmq::test::TestArrayDouble::clear()
 {
     *this = fmq::test::TestArrayDouble();
@@ -481,6 +609,13 @@ const StructInfo fmq::test::TestArrayDouble::_structInfo = {
      }
 };
 
+fmq::test::TestArrayString::TestArrayString()
+{
+}
+fmq::test::TestArrayString::TestArrayString(decltype(value) value_)
+    : value(value_)
+{
+}
 void fmq::test::TestArrayString::clear()
 {
     *this = fmq::test::TestArrayString();
@@ -505,6 +640,13 @@ const StructInfo fmq::test::TestArrayString::_structInfo = {
      }
 };
 
+fmq::test::TestArrayBytes::TestArrayBytes()
+{
+}
+fmq::test::TestArrayBytes::TestArrayBytes(decltype(value) value_)
+    : value(value_)
+{
+}
 void fmq::test::TestArrayBytes::clear()
 {
     *this = fmq::test::TestArrayBytes();
@@ -529,9 +671,30 @@ const StructInfo fmq::test::TestArrayBytes::_structInfo = {
      }
 };
 
+fmq::test::TestArrayStruct::TestArrayStruct()
+{
+}
+fmq::test::TestArrayStruct::TestArrayStruct(decltype(value) value_)
+    : value(std::move(value_))
+{
+}
 void fmq::test::TestArrayStruct::clear()
 {
     *this = fmq::test::TestArrayStruct();
+}
+StructBase* fmq::test::TestArrayStruct::add(int index)
+{
+    StructBase* structBase = nullptr;
+    switch (index)
+    {
+    case 0:
+        value.resize(value.size() + 1);
+        structBase = &value.back();
+        break;
+    default:
+        break;
+    }
+    return structBase;
 }
 const StructInfo& fmq::test::TestArrayStruct::getStructInfo() const
 {
@@ -553,6 +716,13 @@ const StructInfo fmq::test::TestArrayStruct::_structInfo = {
      }
 };
 
+fmq::test::TestArrayEnum::TestArrayEnum()
+{
+}
+fmq::test::TestArrayEnum::TestArrayEnum(decltype(value) value_)
+    : value(value_)
+{
+}
 void fmq::test::TestArrayEnum::clear()
 {
     *this = fmq::test::TestArrayEnum();

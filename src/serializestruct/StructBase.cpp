@@ -43,3 +43,10 @@ const MetaEnum& EnumInfo::getMetaEnum() const
     return m_metaEnum;
 }
 
+
+StructBase* StructBase::add(int index)
+{
+    return nullptr;
+}
+
+

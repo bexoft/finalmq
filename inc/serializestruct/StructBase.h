@@ -64,6 +64,7 @@ class StructBase
 {
 public:
     virtual void clear() = 0;
+    virtual StructBase* add(int index);
 
     template<class T>
     T* getValue(int index, int typeId)

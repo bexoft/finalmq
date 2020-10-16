@@ -72,10 +72,15 @@ private:
         template <class T>
         void setValue(const MetaField& field, T&& value);
 
+        struct StackEntry
+        {
+            StructBase* structBase = nullptr;
+            int         structArrayIndex = -1;
+        };
 
         StructBase&                     m_root;
-        StructBase*                     m_current = nullptr;
-        std::deque<StructBase*>         m_stack;
+        StackEntry*                     m_current = nullptr;
+        std::deque<StackEntry>          m_stack;
     };
 
     Internal                            m_internal;
