@@ -3,10 +3,8 @@
 
 
 #include "serializestruct/SerializerStruct.h"
-#include "variant/VariantValues.h"
-#include "variant/VariantValueList.h"
-#include "variant/VariantValueStruct.h"
-#include "metadata/MetaData.h"
+#include "metadata/MetaField.h"
+#include "testStructs.h"
 
 
 using ::testing::_;
@@ -32,35 +30,36 @@ public:
 protected:
     virtual void SetUp()
     {
-        //m_serializer = std::make_unique<SerializerStruct>(m_root);
     }
 
     virtual void TearDown()
     {
     }
 
-//    Variant                         m_root;
-    std::unique_ptr<IParserVisitor> m_serializer;
 };
 
 
 
 
-//TEST_F(TestSerializerStruct, testBool)
-//{
-//    static const bool VALUE = true;
+TEST_F(TestSerializerStruct, testBool)
+{
+    static const bool VALUE = true;
 
-//    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestBool", ""});
-//    m_serializer->enterBool({MetaTypeId::TYPE_BOOL, "", "value", "", 0}, VALUE);
-//    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestBool", ""});
-//    m_serializer->finished();
+    fmq::test::TestBool root;
+    std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-//    Variant cmp = VariantStruct({{"value", VALUE}});
-//    ASSERT_EQ(m_root == cmp, true);
-//}
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestBool", ""});
+    serializer->enterBool({MetaTypeId::TYPE_BOOL, "", "value", "", 0}, VALUE);
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestBool", ""});
+    serializer->finished();
+
+    fmq::test::TestBool cmp;
+    cmp.value = VALUE;
+    ASSERT_EQ(root, cmp);
+}
 
 
-//TEST_F(TestSerializerStruct, testInt32)
+//TEST_F(TestSerializerVariant, testInt32)
 //{
 //    static const std::int32_t VALUE = -2;
 
@@ -73,7 +72,7 @@ protected:
 //    ASSERT_EQ(m_root == cmp, true);
 //}
 
-//TEST_F(TestSerializerStruct, testUInt32)
+//TEST_F(TestSerializerVariant, testUInt32)
 //{
 //    static const std::uint32_t VALUE = 0xFFFFFFFE;
 
@@ -86,7 +85,7 @@ protected:
 //    ASSERT_EQ(m_root == cmp, true);
 //}
 
-//TEST_F(TestSerializerStruct, testInt64)
+//TEST_F(TestSerializerVariant, testInt64)
 //{
 //    static const std::int64_t VALUE = -2;
 
@@ -99,7 +98,7 @@ protected:
 //    ASSERT_EQ(m_root == cmp, true);
 //}
 
-//TEST_F(TestSerializerStruct, testUInt64)
+//TEST_F(TestSerializerVariant, testUInt64)
 //{
 //    static const std::uint64_t VALUE = 0xFFFFFFFFFFFFFFFE;
 
@@ -114,7 +113,7 @@ protected:
 
 
 
-//TEST_F(TestSerializerStruct, testFloat)
+//TEST_F(TestSerializerVariant, testFloat)
 //{
 //    static const float VALUE = -2;
 
@@ -128,7 +127,7 @@ protected:
 //}
 
 
-//TEST_F(TestSerializerStruct, testDouble)
+//TEST_F(TestSerializerVariant, testDouble)
 //{
 //    static const double VALUE = -2.1;
 
@@ -142,7 +141,7 @@ protected:
 //}
 
 
-//TEST_F(TestSerializerStruct, testString)
+//TEST_F(TestSerializerVariant, testString)
 //{
 //    static const std::string VALUE = "Hello World";
 
@@ -155,7 +154,7 @@ protected:
 //    ASSERT_EQ(m_root == cmp, true);
 //}
 
-//TEST_F(TestSerializerStruct, testBytes)
+//TEST_F(TestSerializerVariant, testBytes)
 //{
 //    static const Bytes VALUE = {'H','e','l',0,13,'l','o'};
 
@@ -169,74 +168,74 @@ protected:
 //}
 
 
-//TEST_F(TestSerializerStruct, testStruct)
-//{
-//    static const std::int32_t VALUE_INT32 = -2;
-//    static const std::string VALUE_STRING = "Hello World";
-//    static const std::uint32_t VALUE_UINT32 = 123;
+TEST_F(TestSerializerStruct, testStruct)
+{
+    static const std::int32_t VALUE_INT32 = -2;
+    static const std::string VALUE_STRING = "Hello World";
+    static const std::uint32_t VALUE_UINT32 = 123;
 
-//    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0});
-//    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0});
-//    m_serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "desc", 0}, VALUE_INT32);
-//    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0});
-//    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "desc", 1});
-//    m_serializer->enterString({MetaTypeId::TYPE_STRING, "", "value", "desc", 0}, VALUE_STRING.data(), VALUE_STRING.size());
-//    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "desc", 1});
-//    m_serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "desc", 2}, VALUE_UINT32);
-//    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0});
+    fmq::test::TestStruct root;
+    std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-//    m_serializer->finished();
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0});
+    serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "desc", 0}, VALUE_INT32);
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "desc", 1});
+    serializer->enterString({MetaTypeId::TYPE_STRING, "", "value", "desc", 0}, VALUE_STRING.data(), VALUE_STRING.size());
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "desc", 1});
+    serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "desc", 2}, VALUE_UINT32);
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0});
 
-//    Variant VALUE = VariantStruct({ {"struct_int32", VariantStruct({ {"value", VALUE_INT32} })}, {"struct_string", VariantStruct({ {"value", VALUE_STRING} })},  {"last_value", VALUE_UINT32} });
-//    ASSERT_EQ(m_root == VALUE, true);
-//}
+    serializer->finished();
 
-
-//TEST_F(TestSerializerStruct, testEnum)
-//{
-//    static const std::int32_t VALUE = -2;
-
-//    MetaEnum metaEnum;
-//    metaEnum.setTypeName("test.Foo");
-//    metaEnum.addEntry({"FOO_WORLD", 0 ,""});
-//    metaEnum.addEntry({"FOO_HELLO", -2 ,""});
-//    metaEnum.addEntry({"FOO_WORLD2", 1 ,""});
-//    MetaDataGlobal::instance().addEnum(std::move(metaEnum));
-
-//    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""});
-//    m_serializer->enterEnum({MetaTypeId::TYPE_ENUM, "test.Foo", "value", "", 0}, VALUE);
-//    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""});
-//    m_serializer->finished();
-
-//    Variant cmp = VariantStruct({{"value", std::string("FOO_HELLO")}});
-//    ASSERT_EQ(m_root == cmp, true);
-//}
+    fmq::test::TestStruct cmp;
+    cmp.struct_int32.value = VALUE_INT32;
+    cmp.struct_string.value = VALUE_STRING;
+    cmp.last_value = VALUE_UINT32;
+    ASSERT_EQ(root, cmp);
+}
 
 
-//TEST_F(TestSerializerStruct, testEnumAsInt)
-//{
-//    static const std::int32_t VALUE = -2;
+TEST_F(TestSerializerStruct, testEnum)
+{
+    static const fmq::test::Foo VALUE = fmq::test::Foo::FOO_HELLO;
 
-//    MetaEnum metaEnum;
-//    metaEnum.setTypeName("test.Foo");
-//    metaEnum.addEntry({"FOO_WORLD", 0 ,""});
-//    metaEnum.addEntry({"FOO_HELLO", -2 ,""});
-//    metaEnum.addEntry({"FOO_WORLD2", 1 ,""});
-//    MetaDataGlobal::instance().addEnum(std::move(metaEnum));
+    fmq::test::TestEnum root;
+    std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-//    m_serializerEnumAsInt->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""});
-//    m_serializerEnumAsInt->enterEnum({MetaTypeId::TYPE_ENUM, "test.Foo", "value", "", 0}, VALUE);
-//    m_serializerEnumAsInt->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""});
-//    m_serializerEnumAsInt->finished();
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""});
+    serializer->enterEnum({MetaTypeId::TYPE_ENUM, "test.Foo", "value", "", 0}, VALUE);
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""});
+    serializer->finished();
 
-//    Variant cmp = VariantStruct({{"value", VALUE}});
-//    ASSERT_EQ(m_root == cmp, true);
-//}
+    fmq::test::TestEnum cmp;
+    cmp.value = VALUE;
+    ASSERT_EQ(root, cmp);
+}
 
 
+TEST_F(TestSerializerStruct, testEnumString)
+{
+    static const fmq::test::Foo VALUE = fmq::test::Foo::FOO_HELLO;
+
+    fmq::test::TestEnum root;
+    std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
+
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""});
+    serializer->enterEnum({MetaTypeId::TYPE_ENUM, "test.Foo", "value", "", 0}, std::string(VALUE.toString()));
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""});
+    serializer->finished();
+
+    fmq::test::TestEnum cmp;
+    cmp.value = VALUE;
+    ASSERT_EQ(root, cmp);
+}
 
 
-//TEST_F(TestSerializerStruct, testArrayBool)
+
+
+//TEST_F(TestSerializerVariant, testArrayBool)
 //{
 //    static const bool VALUE1 = true;
 //    static const bool VALUE2 = false;
@@ -255,7 +254,7 @@ protected:
 
 
 
-//TEST_F(TestSerializerStruct, testArrayInt32)
+//TEST_F(TestSerializerVariant, testArrayInt32)
 //{
 //    static const std::int32_t VALUE1 = -1;
 //    static const std::int32_t VALUE2 = 0;
@@ -271,7 +270,7 @@ protected:
 //    ASSERT_EQ(m_root == cmp, true);
 //}
 
-//TEST_F(TestSerializerStruct, testArrayUInt32)
+//TEST_F(TestSerializerVariant, testArrayUInt32)
 //{
 //    static const std::uint32_t VALUE1 = 0xfffffffe;
 //    static const std::uint32_t VALUE2 = 0;
@@ -287,7 +286,7 @@ protected:
 //    ASSERT_EQ(m_root == cmp, true);
 //}
 
-//TEST_F(TestSerializerStruct, testArrayInt64)
+//TEST_F(TestSerializerVariant, testArrayInt64)
 //{
 //    static const std::int64_t VALUE1 = -1;
 //    static const std::int64_t VALUE2 = 0;
@@ -303,7 +302,7 @@ protected:
 //    ASSERT_EQ(m_root == cmp, true);
 //}
 
-//TEST_F(TestSerializerStruct, testArrayUInt64)
+//TEST_F(TestSerializerVariant, testArrayUInt64)
 //{
 //    static const std::uint64_t VALUE1 = 0xfffffffffffffffe;
 //    static const std::uint64_t VALUE2 = 0;
@@ -319,7 +318,7 @@ protected:
 //    ASSERT_EQ(m_root == cmp, true);
 //}
 
-//TEST_F(TestSerializerStruct, testArrayFloat)
+//TEST_F(TestSerializerVariant, testArrayFloat)
 //{
 //    static const float VALUE1 = -1;
 //    static const float VALUE2 = 0;
@@ -335,7 +334,7 @@ protected:
 //    ASSERT_EQ(m_root == cmp, true);
 //}
 
-//TEST_F(TestSerializerStruct, testArrayDouble)
+//TEST_F(TestSerializerVariant, testArrayDouble)
 //{
 //    static const double VALUE1 = -1.1;
 //    static const double VALUE2 = 0;
@@ -352,7 +351,7 @@ protected:
 //}
 
 
-//TEST_F(TestSerializerStruct, testArrayString)
+//TEST_F(TestSerializerVariant, testArrayString)
 //{
 //    static const std::string VALUE1 = "Hello";
 //    static const std::string VALUE2 = "";
@@ -368,7 +367,7 @@ protected:
 //    ASSERT_EQ(m_root == cmp, true);
 //}
 
-//TEST_F(TestSerializerStruct, testArrayBytes)
+//TEST_F(TestSerializerVariant, testArrayBytes)
 //{
 //    static const Bytes VALUE1 = {'H', 'e', 'l', 'l', 'o'};
 //    static const Bytes VALUE2 = {};
@@ -384,7 +383,7 @@ protected:
 //    ASSERT_EQ(m_root == cmp, true);
 //}
 
-//TEST_F(TestSerializerStruct, testArrayStruct)
+//TEST_F(TestSerializerVariant, testArrayStruct)
 //{
 //    static const std::int32_t VALUE1_INT32 = -2;
 //    static const std::string VALUE1_STRING = "Hello World";
@@ -433,20 +432,13 @@ protected:
 //    ASSERT_EQ(m_root == VALUE, true);
 //}
 
-//TEST_F(TestSerializerStruct, testArrayEnum)
+//TEST_F(TestSerializerVariant, testArrayEnum)
 //{
 //    static const std::int32_t VALUE1 = -2;
 //    static const std::int32_t VALUE2 = 0;
 //    static const std::int32_t VALUE3 = 1;
 //    static const std::int32_t VALUE4 = 123;
 //    static const std::vector<std::int32_t> VALUE = {VALUE1, VALUE2, VALUE3, VALUE4};
-
-//    MetaEnum metaEnum;
-//    metaEnum.setTypeName("test.Foo");
-//    metaEnum.addEntry({"FOO_WORLD", 0 ,""});
-//    metaEnum.addEntry({"FOO_HELLO", -2 ,""});
-//    metaEnum.addEntry({"FOO_WORLD2", 1 ,""});
-//    MetaDataGlobal::instance().addEnum(std::move(metaEnum));
 
 //    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""});
 //    m_serializer->enterArrayEnum({MetaTypeId::TYPE_ARRAY_ENUM, "test.Foo", "value", "", 0}, VALUE.data(), VALUE.size());
@@ -458,20 +450,13 @@ protected:
 //}
 
 
-//TEST_F(TestSerializerStruct, testArrayEnumAsInt)
+//TEST_F(TestSerializerVariant, testArrayEnumAsInt)
 //{
 //    static const std::int32_t VALUE1 = -2;
 //    static const std::int32_t VALUE2 = 0;
 //    static const std::int32_t VALUE3 = 1;
 //    static const std::int32_t VALUE4 = 123;
 //    static const std::vector<std::int32_t> VALUE = {VALUE1, VALUE2, VALUE3, VALUE4};
-
-//    MetaEnum metaEnum;
-//    metaEnum.setTypeName("test.Foo");
-//    metaEnum.addEntry({"FOO_WORLD", 0 ,""});
-//    metaEnum.addEntry({"FOO_HELLO", -2 ,""});
-//    metaEnum.addEntry({"FOO_WORLD2", 1 ,""});
-//    MetaDataGlobal::instance().addEnum(std::move(metaEnum));
 
 //    m_serializerEnumAsInt->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""});
 //    m_serializerEnumAsInt->enterArrayEnum({MetaTypeId::TYPE_ARRAY_ENUM, "test.Foo", "value", "", 0}, VALUE.data(), VALUE.size());

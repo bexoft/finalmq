@@ -16,10 +16,6 @@ void FieldInfo::setField(const MetaField* field)
     m_field = field;
 }
 
-const MetaField* FieldInfo::getField() const
-{
-    return m_field;
-}
 
 
 StructInfo::StructInfo(const std::string& typeName, std::vector<MetaField>&& fields, std::vector<FieldInfo>&& fieldInfos)
@@ -33,6 +29,8 @@ StructInfo::StructInfo(const std::string& typeName, std::vector<MetaField>&& fie
         m_fieldInfos[i].setField(stru.getFieldByIndex(i));
     }
 }
+
+
 
 
 EnumInfo::EnumInfo(const std::string& typeName, std::vector<MetaEnumEntry>&& entries)

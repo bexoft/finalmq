@@ -101,6 +101,15 @@ const MetaField* MetaData::getArrayField(const std::string& typeName, const std:
     return nullptr;
 }
 
+bool MetaData::isEnumValue(const MetaField& field, std::int32_t value) const
+{
+    const MetaEnum* en = getEnum(field);
+    if (en)
+    {
+        return en->isId(value);
+    }
+    return false;
+}
 
 std::int32_t MetaData::getEnumValueByName(const MetaField& field, const std::string& name) const
 {

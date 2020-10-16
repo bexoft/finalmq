@@ -206,13 +206,6 @@ TEST_F(TestSerializerJson, testEnum)
 {
     static const test::Foo VALUE = test::Foo::FOO_HELLO;
 
-    MetaEnum metaEnum;
-    metaEnum.setTypeName("test.Foo");
-    metaEnum.addEntry({"FOO_WORLD", 0 ,""});
-    metaEnum.addEntry({"FOO_HELLO", -2 ,""});
-    metaEnum.addEntry({"FOO_WORLD2", 1 ,""});
-    MetaDataGlobal::instance().addEnum(std::move(metaEnum));
-
     m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""});
     m_serializer->enterEnum({MetaTypeId::TYPE_ENUM, "test.Foo", "value", "", 0}, VALUE);
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""});
@@ -225,13 +218,6 @@ TEST_F(TestSerializerJson, testEnum)
 TEST_F(TestSerializerJson, testEnumAsInt)
 {
     static const test::Foo VALUE = test::Foo::FOO_HELLO;
-
-    MetaEnum metaEnum;
-    metaEnum.setTypeName("test.Foo");
-    metaEnum.addEntry({"FOO_WORLD", 0 ,""});
-    metaEnum.addEntry({"FOO_HELLO", -2 ,""});
-    metaEnum.addEntry({"FOO_WORLD2", 1 ,""});
-    MetaDataGlobal::instance().addEnum(std::move(metaEnum));
 
     m_serializerEnumAsInt->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""});
     m_serializerEnumAsInt->enterEnum({MetaTypeId::TYPE_ENUM, "test.Foo", "value", "", 0}, VALUE);
@@ -435,13 +421,6 @@ TEST_F(TestSerializerJson, testArrayEnum)
     static const test::Foo VALUE4 = (test::Foo)123;
     static const std::vector<std::int32_t> VALUE = {VALUE1, VALUE2, VALUE3, VALUE4};
 
-    MetaEnum metaEnum;
-    metaEnum.setTypeName("test.Foo");
-    metaEnum.addEntry({"FOO_WORLD", 0 ,""});
-    metaEnum.addEntry({"FOO_HELLO", -2 ,""});
-    metaEnum.addEntry({"FOO_WORLD2", 1 ,""});
-    MetaDataGlobal::instance().addEnum(std::move(metaEnum));
-
     m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""});
     m_serializer->enterArrayEnum({MetaTypeId::TYPE_ARRAY_ENUM, "test.Foo", "value", "", 0}, VALUE.data(), VALUE.size());
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""});
@@ -458,13 +437,6 @@ TEST_F(TestSerializerJson, testArrayEnumAsInt)
     static const test::Foo VALUE3 = test::Foo::FOO_WORLD2;
     static const test::Foo VALUE4 = (test::Foo)123;
     static const std::vector<std::int32_t> VALUE = {VALUE1, VALUE2, VALUE3, VALUE4};
-
-    MetaEnum metaEnum;
-    metaEnum.setTypeName("test.Foo");
-    metaEnum.addEntry({"FOO_WORLD", 0 ,""});
-    metaEnum.addEntry({"FOO_HELLO", -2 ,""});
-    metaEnum.addEntry({"FOO_WORLD2", 1 ,""});
-    MetaDataGlobal::instance().addEnum(std::move(metaEnum));
 
     m_serializerEnumAsInt->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""});
     m_serializerEnumAsInt->enterArrayEnum({MetaTypeId::TYPE_ARRAY_ENUM, "test.Foo", "value", "", 0}, VALUE.data(), VALUE.size());

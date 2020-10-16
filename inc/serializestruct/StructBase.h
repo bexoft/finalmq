@@ -13,7 +13,15 @@ class FieldInfo
 public:
     FieldInfo(int offset);
     void setField(const MetaField* field);
-    const MetaField* getField() const;
+
+    inline const MetaField* getField() const
+    {
+        return m_field;
+    }
+    inline int getOffset() const
+    {
+        return m_offset;
+    }
 
 private:
     const MetaField*    m_field = nullptr;
@@ -26,6 +34,15 @@ class StructInfo
 {
 public:
     StructInfo(const std::string& typeName, std::vector<MetaField>&& fields, std::vector<FieldInfo>&& fieldInfos);
+
+    inline const FieldInfo* getField(int index) const
+    {
+        if (0 <= index && index < static_cast<int>(m_fieldInfos.size()))
+        {
+            return &m_fieldInfos[index];
+        }
+        return nullptr;
+    }
 
 private:
     std::vector<FieldInfo> m_fieldInfos;
@@ -46,8 +63,35 @@ private:
 class StructBase
 {
 public:
+    virtual void clear() = 0;
 
+    template<class T>
+    T* getValue(int index, int typeId)
+    {
+        const StructInfo& structInfo = getStructInfo();
+        const FieldInfo* fieldInfo = structInfo.getField(index);
+        if (fieldInfo)
+        {
+            const MetaField* field = fieldInfo->getField();
+            if (field)
+            {
+                if (field->typeId == typeId)
+                {
+                    int offset = fieldInfo->getOffset();
+                    return reinterpret_cast<T*>(reinterpret_cast<char*>(this) + offset);
+                }
+            }
+        }
+        return nullptr;
+    }
+
+    template<class T>
+    const T* getValue(int index, int typeId) const
+    {
+        return const_cast<StructBase*>(this)->getValue<T>(index, typeId);
+    }
 private:
+    virtual const StructInfo& getStructInfo() const = 0;
 };
 
 

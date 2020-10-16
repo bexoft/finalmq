@@ -2,7 +2,7 @@
 
 #include "metadata/MetaStruct.h"
 #include "serialize/ParserConverter.h"
-#include "variant/Variant.h"
+#include "StructBase.h"
 
 #include <deque>
 
@@ -10,13 +10,13 @@
 class SerializerStruct : public ParserConverter
 {
 public:
-    SerializerStruct(Variant& root, bool enumAsString = true, bool skipDefaultValues = true);
+    SerializerStruct(StructBase& root);
 
 private:
     class Internal : public IParserVisitor
     {
     public:
-        Internal(Variant& root, bool enumAsString);
+        Internal(StructBase& root);
     private:
         // IParserVisitor
         virtual void notifyError(const char* str, const char* message) override;
@@ -67,16 +67,16 @@ private:
         virtual void enterArrayEnum(const MetaField& field, const std::vector<std::string>& value) override;
 
         template <class T>
-        inline void add(const MetaField& field, T value);
+        void setValue(const MetaField& field, const T& value);
 
-        Variant&                        m_root;
-        Variant*                        m_current = nullptr;
-        std::deque<Variant*>            m_stack;
-        bool                            m_enumAsString = true;
+        template <class T>
+        void setValue(const MetaField& field, T&& value);
+
+
+        StructBase&                     m_root;
+        StructBase*                     m_current = nullptr;
+        std::deque<StructBase*>         m_stack;
     };
 
-    IParserVisitor& getIParserVisitorForParserConverter(bool skipDefaultValues);
-
     Internal                            m_internal;
-    std::unique_ptr<IParserVisitor>     m_parserProcessDefaultValues;
 };
