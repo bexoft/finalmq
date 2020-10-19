@@ -20,7 +20,17 @@ jobs:
       shell: bash
       run: |
         sudo apt update
-        sudo apt install -y libssl-dev doxygen graphviz protobuf-compiler gcovr libprotobuf-dev
+         git clone https://github.com/protocolbuffers/protobuf.git
+         cd protobuf
+         git submodule update --init --recursive
+         ./autogen.sh
+         ./autogen.sh  # run autogen twice, see below
+         ./configure
+         make
+         make check
+         sudo make install
+         sudo ldconfig
+        sudo apt install -y libssl-dev doxygen graphviz gcovr
 
     - name: Create Build Environment
       # Some projects don't allow in-source building, so create a separate build directory
