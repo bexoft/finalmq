@@ -20,7 +20,8 @@ void FieldInfo::setField(const MetaField* field)
 
 
 StructInfo::StructInfo(const std::string& typeName, std::vector<MetaField>&& fields, std::vector<FieldInfo>&& fieldInfos)
-    : m_fieldInfos(std::move(fieldInfos))
+    : m_typeName(typeName)
+    , m_fieldInfos(std::move(fieldInfos))
 {
     const MetaStruct& stru = MetaDataGlobal::instance().addStruct({typeName, std::move(fields)});
 
@@ -62,8 +63,8 @@ StructBase* StructBase::add(int index)
                 if (arrayStructAdapter)
                 {
                     int offset = fieldInfo->getOffset();
-                    void* data = reinterpret_cast<void*>(reinterpret_cast<char*>(this) + offset);
-                    return arrayStructAdapter->add(data);
+                    void* array = reinterpret_cast<void*>(reinterpret_cast<char*>(this) + offset);
+                    return arrayStructAdapter->add(array);
                 }
             }
         }

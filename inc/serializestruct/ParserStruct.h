@@ -2,7 +2,7 @@
 
 #include "metadata/MetaStruct.h"
 #include "serialize/IParserVisitor.h"
-#include "variant/Variant.h"
+#include "StructBase.h"
 
 
 #include <string>
@@ -13,16 +13,14 @@
 class ParserStruct
 {
 public:
-    ParserStruct(IParserVisitor& visitor, const Variant& variant);
+    ParserStruct(IParserVisitor& visitor, const StructBase& structBase);
 
-    bool parseStruct(const std::string& typeName);
+    bool parseStruct();
 
 private:
-    void parseStruct(const MetaStruct& stru, const Variant& variant);
-    void parseStruct(const MetaStruct& stru);
-    void processField(const Variant* sub, const MetaField* field);
-    void processEmptyField(const MetaField* field);
+    void parseStruct(const StructBase& structBase);
+    void processField(const StructBase& structBase, const FieldInfo& fieldInfo);
 
     IParserVisitor&     m_visitor;
-    const Variant&      m_root;
+    const StructBase&   m_root;
 };

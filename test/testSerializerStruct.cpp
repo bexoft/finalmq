@@ -48,9 +48,9 @@ TEST_F(TestSerializerStruct, testBool)
     test::TestBool root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestBool", ""});
-    serializer->enterBool({MetaTypeId::TYPE_BOOL, "", "value", "", 0}, VALUE);
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestBool", ""});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestBool", "", "", 0});
+    serializer->enterBool({MetaTypeId::TYPE_BOOL, "", "value", "", 0, 0}, VALUE);
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestBool", "", "", 0});
     serializer->finished();
 
     test::TestBool cmp;
@@ -66,9 +66,9 @@ TEST_F(TestSerializerStruct, testInt32)
     test::TestInt32 root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", ""});
-    serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "", 0}, VALUE);
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", ""});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "", "", 0});
+    serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "", 0, 0}, VALUE);
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "", "", 0});
     serializer->finished();
 
     test::TestInt32 cmp;
@@ -83,9 +83,9 @@ TEST_F(TestSerializerStruct, testUInt32)
     test::TestUInt32 root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestUInt32", ""});
-    serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "value", "", 0}, VALUE);
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestUInt32", ""});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestUInt32", "", "", 0});
+    serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "value", "", 0, 0}, VALUE);
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestUInt32", "", "", 0});
     serializer->finished();
 
     test::TestUInt32 cmp;
@@ -100,9 +100,9 @@ TEST_F(TestSerializerStruct, testInt64)
     test::TestInt64 root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt64", ""});
-    serializer->enterInt64({MetaTypeId::TYPE_INT64, "", "value", "", 0}, VALUE);
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt64", ""});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt64", "", "", 0});
+    serializer->enterInt64({MetaTypeId::TYPE_INT64, "", "value", "", 0, 0}, VALUE);
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt64", "", "", 0});
     serializer->finished();
 
     test::TestInt64 cmp;
@@ -117,9 +117,9 @@ TEST_F(TestSerializerStruct, testUInt64)
     test::TestUInt64 root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestUInt64", ""});
-    serializer->enterUInt64({MetaTypeId::TYPE_UINT64, "", "value", "", 0}, VALUE);
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestUInt64", ""});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestUInt64", "", "", 0});
+    serializer->enterUInt64({MetaTypeId::TYPE_UINT64, "", "value", "", 0, 0}, VALUE);
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestUInt64", "", "", 0});
     serializer->finished();
 
     test::TestUInt64 cmp;
@@ -136,9 +136,9 @@ TEST_F(TestSerializerStruct, testFloat)
     test::TestFloat root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestFloat", ""});
-    serializer->enterFloat({MetaTypeId::TYPE_FLOAT, "", "value", "", 0}, VALUE);
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestFloat", ""});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestFloat", "", "", 0});
+    serializer->enterFloat({MetaTypeId::TYPE_FLOAT, "", "value", "", 0, 0}, VALUE);
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestFloat", "", "", 0});
     serializer->finished();
 
     test::TestFloat cmp;
@@ -154,9 +154,9 @@ TEST_F(TestSerializerStruct, testDouble)
     test::TestDouble root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestDouble", ""});
-    serializer->enterDouble({MetaTypeId::TYPE_DOUBLE, "", "value", "", 0}, VALUE);
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestDouble", ""});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestDouble", "", "", 0});
+    serializer->enterDouble({MetaTypeId::TYPE_DOUBLE, "", "value", "", 0, 0}, VALUE);
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestDouble", "", "", 0});
     serializer->finished();
 
     test::TestDouble cmp;
@@ -172,9 +172,9 @@ TEST_F(TestSerializerStruct, testString)
     test::TestString root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", ""});
-    serializer->enterString({MetaTypeId::TYPE_STRING, "", "value", "", 0}, VALUE.data(), VALUE.size());
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", ""});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "", "", 0});
+    serializer->enterString({MetaTypeId::TYPE_STRING, "", "value", "", 0, 0}, VALUE.data(), VALUE.size());
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "", "", 0});
     serializer->finished();
 
     test::TestString cmp;
@@ -189,9 +189,9 @@ TEST_F(TestSerializerStruct, testBytes)
     test::TestBytes root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestBytes", ""});
-    serializer->enterBytes({MetaTypeId::TYPE_BYTES, "", "value", "", 0}, VALUE.data(), VALUE.size());
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestBytes", ""});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestBytes", "", "", 0});
+    serializer->enterBytes({MetaTypeId::TYPE_BYTES, "", "value", "", 0, 0}, VALUE.data(), VALUE.size());
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestBytes", "", "", 0});
     serializer->finished();
 
     test::TestBytes cmp;
@@ -209,15 +209,15 @@ TEST_F(TestSerializerStruct, testStruct)
     test::TestStruct root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0});
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0});
-    serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "desc", 0}, VALUE_INT32);
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0});
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "desc", 1});
-    serializer->enterString({MetaTypeId::TYPE_STRING, "", "value", "desc", 0}, VALUE_STRING.data(), VALUE_STRING.size());
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "desc", 1});
-    serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "desc", 2}, VALUE_UINT32);
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0, 0});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0, 0});
+    serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "desc", 0, 0}, VALUE_INT32);
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0, 0});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "desc", 0, 1});
+    serializer->enterString({MetaTypeId::TYPE_STRING, "", "value", "desc", 0, 0}, VALUE_STRING.data(), VALUE_STRING.size());
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "desc", 0, 1});
+    serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "desc", 0, 2}, VALUE_UINT32);
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0, 0});
 
     serializer->finished();
 
@@ -236,9 +236,9 @@ TEST_F(TestSerializerStruct, testEnum)
     test::TestEnum root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""});
-    serializer->enterEnum({MetaTypeId::TYPE_ENUM, "test.Foo", "value", "", 0}, VALUE);
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", "", "", 0});
+    serializer->enterEnum({MetaTypeId::TYPE_ENUM, "test.Foo", "value", "", 0, 0}, VALUE);
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", "", "", 0});
     serializer->finished();
 
     test::TestEnum cmp;
@@ -254,9 +254,9 @@ TEST_F(TestSerializerStruct, testEnumStdString)
     test::TestEnum root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""});
-    serializer->enterEnum({MetaTypeId::TYPE_ENUM, "test.Foo", "value", "", 0}, std::string(VALUE.toString()));
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", "", "", 0});
+    serializer->enterEnum({MetaTypeId::TYPE_ENUM, "test.Foo", "value", "", 0, 0}, std::string(VALUE.toString()));
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", "", "", 0});
     serializer->finished();
 
     test::TestEnum cmp;
@@ -272,9 +272,9 @@ TEST_F(TestSerializerStruct, testEnumString)
     test::TestEnum root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""});
-    serializer->enterEnum({MetaTypeId::TYPE_ENUM, "test.Foo", "value", "", 0}, VALUE.toString().c_str(), VALUE.toString().size());
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", "", "", 0});
+    serializer->enterEnum({MetaTypeId::TYPE_ENUM, "test.Foo", "value", "", 0, 0}, VALUE.toString().c_str(), VALUE.toString().size());
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", "", "", 0});
     serializer->finished();
 
     test::TestEnum cmp;
@@ -295,9 +295,9 @@ TEST_F(TestSerializerStruct, testArrayBool)
     test::TestArrayBool root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayBool", ""});
-    serializer->enterArrayBool({MetaTypeId::TYPE_ARRAY_BOOL, "", "value", "", 0}, VALUE);
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayBool", ""});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayBool", "", "", 0});
+    serializer->enterArrayBool({MetaTypeId::TYPE_ARRAY_BOOL, "", "value", "", 0, 0}, VALUE);
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayBool", "", "", 0});
     serializer->finished();
 
     test::TestArrayBool cmp;
@@ -318,9 +318,9 @@ TEST_F(TestSerializerStruct, testArrayInt32)
     test::TestArrayInt32 root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayInt32", ""});
-    serializer->enterArrayInt32({MetaTypeId::TYPE_ARRAY_INT32, "", "value", "", 0}, VALUE.data(), VALUE.size());
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayInt32", ""});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayInt32", "", "", 0});
+    serializer->enterArrayInt32({MetaTypeId::TYPE_ARRAY_INT32, "", "value", "", 0, 0}, VALUE.data(), VALUE.size());
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayInt32", "", "", 0});
     serializer->finished();
 
     test::TestArrayInt32 cmp;
@@ -338,9 +338,9 @@ TEST_F(TestSerializerStruct, testArrayUInt32)
     test::TestArrayUInt32 root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayUInt32", ""});
-    serializer->enterArrayUInt32({MetaTypeId::TYPE_ARRAY_UINT32, "", "value", "", 0}, VALUE.data(), VALUE.size());
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayUInt32", ""});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayUInt32", "", "", 0});
+    serializer->enterArrayUInt32({MetaTypeId::TYPE_ARRAY_UINT32, "", "value", "", 0, 0}, VALUE.data(), VALUE.size());
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayUInt32", "", "", 0});
     serializer->finished();
 
     test::TestArrayUInt32 cmp;
@@ -358,9 +358,9 @@ TEST_F(TestSerializerStruct, testArrayInt64)
     test::TestArrayInt64 root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayInt64", ""});
-    serializer->enterArrayInt64({MetaTypeId::TYPE_ARRAY_INT64, "", "value", "", 0}, VALUE.data(), VALUE.size());
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayInt64", ""});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayInt64", "", "", 0});
+    serializer->enterArrayInt64({MetaTypeId::TYPE_ARRAY_INT64, "", "value", "", 0, 0}, VALUE.data(), VALUE.size());
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayInt64", "", "", 0});
     serializer->finished();
 
     test::TestArrayInt64 cmp;
@@ -378,9 +378,9 @@ TEST_F(TestSerializerStruct, testArrayUInt64)
     test::TestArrayUInt64 root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayUInt64", ""});
-    serializer->enterArrayUInt64({MetaTypeId::TYPE_ARRAY_UINT64, "", "value", "", 0}, VALUE.data(), VALUE.size());
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayUInt64", ""});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayUInt64", "", "", 0});
+    serializer->enterArrayUInt64({MetaTypeId::TYPE_ARRAY_UINT64, "", "value", "", 0, 0}, VALUE.data(), VALUE.size());
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayUInt64", "", "", 0});
     serializer->finished();
 
     test::TestArrayUInt64 cmp;
@@ -398,9 +398,9 @@ TEST_F(TestSerializerStruct, testArrayFloat)
     test::TestArrayFloat root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayFloat", ""});
-    serializer->enterArrayFloat({MetaTypeId::TYPE_ARRAY_FLOAT, "", "value", "", 0}, VALUE.data(), VALUE.size());
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayFloat", ""});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayFloat", "", "", 0});
+    serializer->enterArrayFloat({MetaTypeId::TYPE_ARRAY_FLOAT, "", "value", "", 0, 0}, VALUE.data(), VALUE.size());
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayFloat", "", "", 0});
     serializer->finished();
 
     test::TestArrayFloat cmp;
@@ -418,9 +418,9 @@ TEST_F(TestSerializerStruct, testArrayDouble)
     test::TestArrayDouble root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayDouble", ""});
-    serializer->enterArrayDouble({MetaTypeId::TYPE_ARRAY_DOUBLE, "", "value", "", 0}, VALUE.data(), VALUE.size());
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayDouble", ""});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayDouble", "", "", 0});
+    serializer->enterArrayDouble({MetaTypeId::TYPE_ARRAY_DOUBLE, "", "value", "", 0, 0}, VALUE.data(), VALUE.size());
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayDouble", "", "", 0});
     serializer->finished();
 
     test::TestArrayDouble cmp;
@@ -439,9 +439,9 @@ TEST_F(TestSerializerStruct, testArrayString)
     test::TestArrayString root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayString", ""});
-    serializer->enterArrayString({MetaTypeId::TYPE_ARRAY_STRING, "", "value", "", 0}, VALUE);
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayString", ""});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayString", "", "", 0});
+    serializer->enterArrayString({MetaTypeId::TYPE_ARRAY_STRING, "", "value", "", 0, 0}, VALUE);
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayString", "", "", 0});
     serializer->finished();
 
     test::TestArrayString cmp;
@@ -459,9 +459,9 @@ TEST_F(TestSerializerStruct, testArrayBytes)
     test::TestArrayBytes root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayBytes", ""});
-    serializer->enterArrayBytes({MetaTypeId::TYPE_ARRAY_BYTES, "", "value", "", 0}, VALUE);
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayBytes", ""});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayBytes", "", "", 0});
+    serializer->enterArrayBytes({MetaTypeId::TYPE_ARRAY_BYTES, "", "value", "", 0, 0}, VALUE);
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayBytes", "", "", 0});
     serializer->finished();
 
     test::TestArrayBytes cmp;
@@ -484,34 +484,34 @@ TEST_F(TestSerializerStruct, testArrayStruct)
     test::TestArrayStruct root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayStruct", "", "desc"});
-    serializer->enterArrayStruct({MetaTypeId::TYPE_ARRAY_STRUCT, "test.TestStruct", "value", "desc", 0});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayStruct", "", "desc", 0, 0});
+    serializer->enterArrayStruct({MetaTypeId::TYPE_ARRAY_STRUCT, "test.TestStruct", "value", "desc", 0, 0});
 
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0});
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0});
-    serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "desc", 0}, VALUE1_INT32);
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0});
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "desc", 1});
-    serializer->enterString({MetaTypeId::TYPE_STRING, "", "value", "desc", 0}, VALUE1_STRING.data(), VALUE1_STRING.size());
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "desc", 1});
-    serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "desc", 2}, VALUE1_UINT32);
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0, 0});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0, 0});
+    serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "desc", 0, 0}, VALUE1_INT32);
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0, 0});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "desc", 0, 1});
+    serializer->enterString({MetaTypeId::TYPE_STRING, "", "value", "desc", 0, 0}, VALUE1_STRING.data(), VALUE1_STRING.size());
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "desc", 0, 1});
+    serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "desc", 0, 2}, VALUE1_UINT32);
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0, 0});
 
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0});
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0});
-    serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "desc", 0}, VALUE2_INT32);
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0});
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "desc", 1});
-    serializer->enterString({MetaTypeId::TYPE_STRING, "", "value", "desc", 0}, VALUE2_STRING.data(), VALUE2_STRING.size());
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "desc", 1});
-    serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "desc", 2}, VALUE2_UINT32);
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0, 0});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0, 0});
+    serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "desc", 0, 0}, VALUE2_INT32);
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0, 0});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "desc", 0, 1});
+    serializer->enterString({MetaTypeId::TYPE_STRING, "", "value", "desc", 0, 0}, VALUE2_STRING.data(), VALUE2_STRING.size());
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "desc", 0, 1});
+    serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "desc", 0, 2}, VALUE2_UINT32);
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0, 0});
 
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0});
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0, 0});
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0, 0});
 
-    serializer->exitArrayStruct({MetaTypeId::TYPE_ARRAY_STRUCT, "test.TestStruct", "value", "desc", 0});
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayStruct", "", "desc"});
+    serializer->exitArrayStruct({MetaTypeId::TYPE_ARRAY_STRUCT, "test.TestStruct", "value", "desc", 0, 0});
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayStruct", "", "desc", 0, 0});
 
     serializer->finished();
 
@@ -535,9 +535,9 @@ TEST_F(TestSerializerStruct, testArrayEnum)
     test::TestArrayEnum root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""});
-    serializer->enterArrayEnum({MetaTypeId::TYPE_ARRAY_ENUM, "test.Foo", "value", "", 0}, VALUE.data(), VALUE.size());
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", "", "", 0});
+    serializer->enterArrayEnum({MetaTypeId::TYPE_ARRAY_ENUM, "test.Foo", "value", "", 0, 0}, VALUE.data(), VALUE.size());
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", "", "", 0});
     serializer->finished();
 
     test::TestArrayEnum cmp = {{VALUE1, VALUE2, VALUE3, VALUE2}};
@@ -556,9 +556,9 @@ TEST_F(TestSerializerStruct, testArrayEnumString)
     test::TestArrayEnum root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""});
-    serializer->enterArrayEnum({MetaTypeId::TYPE_ARRAY_ENUM, "test.Foo", "value", "", 0}, VALUEString);
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""});
+    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", "", "", 0});
+    serializer->enterArrayEnum({MetaTypeId::TYPE_ARRAY_ENUM, "test.Foo", "value", "", 0, 0}, VALUEString);
+    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", "", "", 0});
     serializer->finished();
 
     test::TestArrayEnum cmp = {{VALUE1, VALUE2, VALUE3, VALUE2}};
