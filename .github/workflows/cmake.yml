@@ -19,7 +19,6 @@ jobs:
     - name: install pre-requisites 
       run: |
         sudo apt update
-        sudo apt upgrade -y
         sudo apt install -y libssl-dev doxygen graphviz protobuf-compiler gcovr libprotobuf-dev
 
     - name: Create Build Environment
