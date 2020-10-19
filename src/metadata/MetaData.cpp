@@ -11,7 +11,7 @@ const MetaStruct* MetaData::getStruct(const std::string& typeName) const
 {
     auto it = m_name2Struct.find(typeName);
     if (it != m_name2Struct.end())
-    {
+    {sadfasdfasdfasdf
         return &it->second;
     }
     return nullptr;
