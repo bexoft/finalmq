@@ -9,7 +9,6 @@ file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/ssltest.key.pem DESTINATION ${CMAKE_BINARY
 # settings on Windows
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
-
 # The gtest/gtest_main targets carry header search path
 # dependencies automatically when using CMake 2.8.11 or
 # later. Otherwise we have to add them here ourselves.
@@ -19,7 +18,7 @@ endif()
 
 
 find_package(Protobuf REQUIRED)
-
+set(PROTOBUF_UPDATE_FILES ON)
 
 # Download and unpack googletest at configure time
 configure_file(cmake/gtest-download.txt googletest-download/CMakeLists.txt)
