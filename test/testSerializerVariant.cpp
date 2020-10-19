@@ -177,15 +177,15 @@ TEST_F(TestSerializerVariant, testStruct)
     static const std::string VALUE_STRING = "Hello World";
     static const std::uint32_t VALUE_UINT32 = 123;
 
-    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageStruct", "", "desc", 0});
-    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageInt32", "struct_int32", "desc", 0});
-    m_serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "desc", 0}, VALUE_INT32);
-    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageInt32", "struct_int32", "desc", 0});
-    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageString", "struct_string", "desc", 1});
-    m_serializer->enterString({MetaTypeId::TYPE_STRING, "", "value", "desc", 0}, VALUE_STRING.data(), VALUE_STRING.size());
-    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageString", "struct_string", "desc", 1});
-    m_serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "desc", 2}, VALUE_UINT32);
-    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageStruct", "", "desc", 0});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageStruct", "", "desc", 0, 0});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageInt32", "struct_int32", "desc", 0, 0});
+    m_serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "desc", 0, 0}, VALUE_INT32);
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageInt32", "struct_int32", "desc", 0, 0});
+    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageString", "struct_string", "desc", 0, 1});
+    m_serializer->enterString({MetaTypeId::TYPE_STRING, "", "value", "desc", 0, 0}, VALUE_STRING.data(), VALUE_STRING.size());
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageString", "struct_string", "desc", 0, 1});
+    m_serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "desc", 0, 2}, VALUE_UINT32);
+    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageStruct", "", "desc", 0, 0});
 
     m_serializer->finished();
 

@@ -349,8 +349,8 @@ bool test::TestStruct::operator !=(const TestStruct& rhs) const
 const StructInfo test::TestStruct::_structInfo = {
     "test.TestStruct", {
          {TYPE_STRUCT,  "test.TestInt32",     "struct_int32", "description", 0, 0},
-         {TYPE_STRUCT,  "test.TestString",    "struct_string","description", 1, 0},
-         {TYPE_UINT32,  "",                   "last_value",   "description", 2, 0}
+         {TYPE_STRUCT,  "test.TestString",    "struct_string","description", 0, 1},
+         {TYPE_UINT32,  "",                   "last_value",   "description", 0, 2}
      },{
         {OFFSET_STRUCTBASE_TO_STRUCTBASE(TestStruct, struct_int32)},
         {OFFSET_STRUCTBASE_TO_STRUCTBASE(TestStruct, struct_string)},

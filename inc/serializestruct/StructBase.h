@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <assert.h>
 
 
 class StructBase;
@@ -13,7 +14,37 @@ struct IArrayStructAdapter
 {
     virtual ~IArrayStructAdapter() {}
     virtual StructBase* add(void* array) = 0;
+    virtual int size(const void* array) const = 0;
+    virtual const StructBase& at(const void* array, int index) const = 0;
 };
+
+
+template<class T>
+class ArrayStructAdapter : public IArrayStructAdapter
+{
+private:
+    // IArrayStructAdapter
+    virtual StructBase* add(void* array) override
+    {
+        std::vector<T>& vect = *reinterpret_cast<std::vector<T>*>(array);
+        vect.resize(vect.size() + 1);
+        return &vect.back();
+    }
+
+    virtual int size(const void* array) const override
+    {
+        const std::vector<T>& vect = *reinterpret_cast<const std::vector<T>*>(array);
+        return vect.size();
+    }
+
+    virtual const StructBase& at(const void* array, int index) const override
+    {
+        const std::vector<T>& vect = *reinterpret_cast<const std::vector<T>*>(array);
+        assert(index >= 0 && index < static_cast<int>(vect.size()));
+        return vect[index];
+    }
+};
+
 
 
 class FieldInfo
@@ -48,6 +79,11 @@ class StructInfo
 public:
     StructInfo(const std::string& typeName, std::vector<MetaField>&& fields, std::vector<FieldInfo>&& fieldInfos);
 
+    inline const std::string& getTypeName() const
+    {
+        return m_typeName;
+    }
+
     inline const FieldInfo* getField(int index) const
     {
         if (0 <= index && index < static_cast<int>(m_fieldInfos.size()))
@@ -57,8 +93,14 @@ public:
         return nullptr;
     }
 
+    inline const std::vector<FieldInfo>& getFields() const
+    {
+        return m_fieldInfos;
+    }
+
 private:
-    std::vector<FieldInfo> m_fieldInfos;
+    std::string             m_typeName;
+    std::vector<FieldInfo>  m_fieldInfos;
 };
 
 
@@ -77,11 +119,13 @@ class StructBase
 {
 public:
     StructBase* add(int index);
+//    int size(int index) const = 0;
+//    const StructBase& at(int index, int index) const = 0;
 
     virtual void clear() = 0;
 
     template<class T>
-    T* getValue(int index, int typeId)
+    T* getData(int index, int typeId)
     {
         const StructInfo& structInfo = getStructInfo();
         const FieldInfo* fieldInfo = structInfo.getField(index);
@@ -101,11 +145,23 @@ public:
     }
 
     template<class T>
-    const T* getValue(int index, int typeId) const
+    const T* getData(int index, int typeId) const
     {
-        return const_cast<StructBase*>(this)->getValue<T>(index, typeId);
+        return const_cast<StructBase*>(this)->getData<T>(index, typeId);
     }
-private:
+
+    template<class T>
+    const T& getValue(int index, int typeId) const
+    {
+        const T* data = getData<T>(index, typeId);
+        if (data)
+        {
+            return *data;
+        }
+        static const T defaultValue = T();
+        return defaultValue;
+    }
+
     virtual const StructInfo& getStructInfo() const = 0;
 };
 
@@ -118,16 +174,3 @@ private:
 
 
 
-template<class T>
-class ArrayStructAdapter : public IArrayStructAdapter
-{
-private:
-    // IArrayStructAdapter
-    virtual StructBase* add(void* array) override
-    {
-        std::vector<T>& vect = *reinterpret_cast<std::vector<T>*>(array);
-        vect.resize(vect.size() + 1);
-        return &vect.back();
-    }
-
-};

@@ -53,7 +53,7 @@ void SerializerStruct::Internal::enterStruct(const MetaField& field)
         {
             if (m_current->structArrayIndex == -1)
             {
-                sub = m_current->structBase->getValue<StructBase>(field.index, field.typeId);
+                sub = m_current->structBase->getData<StructBase>(field.index, field.typeId);
             }
             else
             {
@@ -102,7 +102,7 @@ void SerializerStruct::Internal::setValue(const MetaField& field, const T& value
     assert(m_current);
     if (m_current->structBase)
     {
-        T* pval = m_current->structBase->getValue<T>(field.index, field.typeId);
+        T* pval = m_current->structBase->getData<T>(field.index, field.typeId);
         if (pval)
         {
             *pval = value;
@@ -116,7 +116,7 @@ void SerializerStruct::Internal::setValue(const MetaField& field, T&& value)
     assert(m_current);
     if (m_current->structBase)
     {
-        T* pval = m_current->structBase->getValue<T>(field.index, field.typeId);
+        T* pval = m_current->structBase->getData<T>(field.index, field.typeId);
         if (pval)
         {
             *pval = std::move(value);
