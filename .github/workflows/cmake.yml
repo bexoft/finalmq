@@ -17,6 +17,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: install pre-requisites 
+      shell: bash
       run: |
         sudo apt update
         sudo apt install -y libssl-dev doxygen graphviz protobuf-compiler gcovr libprotobuf-dev
