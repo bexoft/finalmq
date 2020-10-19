@@ -1,2 +1,2 @@
 # finalmq
-![[FinalMQ Actions Status](https://github.com/bexoft/finalmq/workflows/Build/badge.svg)](https://github.com/bexoft/finalmq/workflows/Build/badge.svg)
+[![FinalMQ Actions Status](https://github.com/bexoft/finalmq/workflows/Build/badge.svg)](https://github.com/bexoft/finalmq/actions)
