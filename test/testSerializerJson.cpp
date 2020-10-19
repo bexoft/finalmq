@@ -204,7 +204,7 @@ TEST_F(TestSerializerJson, testStruct)
 
 TEST_F(TestSerializerJson, testEnum)
 {
-    static const test::Foo VALUE = test::Foo::FOO_HELLO;
+    static const fmq::test::Foo VALUE = fmq::test::Foo::FOO_HELLO;
 
     m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""});
     m_serializer->enterEnum({MetaTypeId::TYPE_ENUM, "test.Foo", "value", "", 0}, VALUE);
@@ -217,7 +217,7 @@ TEST_F(TestSerializerJson, testEnum)
 
 TEST_F(TestSerializerJson, testEnumAsInt)
 {
-    static const test::Foo VALUE = test::Foo::FOO_HELLO;
+    static const fmq::test::Foo VALUE = fmq::test::Foo::FOO_HELLO;
 
     m_serializerEnumAsInt->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""});
     m_serializerEnumAsInt->enterEnum({MetaTypeId::TYPE_ENUM, "test.Foo", "value", "", 0}, VALUE);
@@ -415,10 +415,10 @@ TEST_F(TestSerializerJson, testArrayStruct)
 
 TEST_F(TestSerializerJson, testArrayEnum)
 {
-    static const test::Foo VALUE1 = test::Foo::FOO_HELLO;
-    static const test::Foo VALUE2 = test::Foo::FOO_WORLD;
-    static const test::Foo VALUE3 = test::Foo::FOO_WORLD2;
-    static const test::Foo VALUE4 = (test::Foo)123;
+    static const fmq::test::Foo VALUE1 = fmq::test::Foo::FOO_HELLO;
+    static const fmq::test::Foo VALUE2 = fmq::test::Foo::FOO_WORLD;
+    static const fmq::test::Foo VALUE3 = fmq::test::Foo::FOO_WORLD2;
+    static const fmq::test::Foo VALUE4 = (fmq::test::Foo)123;
     static const std::vector<std::int32_t> VALUE = {VALUE1, VALUE2, VALUE3, VALUE4};
 
     m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""});
@@ -432,10 +432,10 @@ TEST_F(TestSerializerJson, testArrayEnum)
 
 TEST_F(TestSerializerJson, testArrayEnumAsInt)
 {
-    static const test::Foo VALUE1 = test::Foo::FOO_HELLO;
-    static const test::Foo VALUE2 = test::Foo::FOO_WORLD;
-    static const test::Foo VALUE3 = test::Foo::FOO_WORLD2;
-    static const test::Foo VALUE4 = (test::Foo)123;
+    static const fmq::test::Foo VALUE1 = fmq::test::Foo::FOO_HELLO;
+    static const fmq::test::Foo VALUE2 = fmq::test::Foo::FOO_WORLD;
+    static const fmq::test::Foo VALUE3 = fmq::test::Foo::FOO_WORLD2;
+    static const fmq::test::Foo VALUE4 = (fmq::test::Foo)123;
     static const std::vector<std::int32_t> VALUE = {VALUE1, VALUE2, VALUE3, VALUE4};
 
     m_serializerEnumAsInt->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""});

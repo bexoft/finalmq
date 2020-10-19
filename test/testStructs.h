@@ -2,7 +2,7 @@
 #include "serializestruct/StructBase.h"
 
 
-namespace fmq {
+
 namespace test {
 class Foo
 {
@@ -25,10 +25,10 @@ private:
     Enum m_value = Enum::FOO_WORLD;
     static const EnumInfo _enumInfo;
 };
-}}
+}
 
 
-namespace fmq {
+
 namespace test {
 struct TestBool : public StructBase
 {
@@ -44,9 +44,9 @@ private:
     virtual const StructInfo& getStructInfo() const override;
     static const StructInfo _structInfo;
 };
-}}
+}
 
-namespace fmq {
+
 namespace test {
 struct TestInt32 : public StructBase
 {
@@ -62,9 +62,9 @@ private:
     virtual const StructInfo& getStructInfo() const override;
     static const StructInfo _structInfo;
 };
-}}
+}
 
-namespace fmq {
+
 namespace test {
 struct TestUInt32 : public StructBase
 {
@@ -80,9 +80,9 @@ private:
     virtual const StructInfo& getStructInfo() const override;
     static const StructInfo _structInfo;
 };
-}}
+}
 
-namespace fmq {
+
 namespace test {
 struct TestInt64 : public StructBase
 {
@@ -98,9 +98,9 @@ private:
     virtual const StructInfo& getStructInfo() const override;
     static const StructInfo _structInfo;
 };
-}}
+}
 
-namespace fmq {
+
 namespace test {
 struct TestUInt64 : public StructBase
 {
@@ -116,9 +116,9 @@ private:
     virtual const StructInfo& getStructInfo() const override;
     static const StructInfo _structInfo;
 };
-}}
+}
 
-namespace fmq {
+
 namespace test {
 struct TestFloat : public StructBase
 {
@@ -134,9 +134,9 @@ private:
     virtual const StructInfo& getStructInfo() const override;
     static const StructInfo _structInfo;
 };
-}}
+}
 
-namespace fmq {
+
 namespace test {
 struct TestDouble : public StructBase
 {
@@ -152,9 +152,9 @@ private:
     virtual const StructInfo& getStructInfo() const override;
     static const StructInfo _structInfo;
 };
-}}
+}
 
-namespace fmq {
+
 namespace test {
 struct TestString : public StructBase
 {
@@ -170,9 +170,9 @@ private:
     virtual const StructInfo& getStructInfo() const override;
     static const StructInfo _structInfo;
 };
-}}
+}
 
-namespace fmq {
+
 namespace test {
 struct TestBytes : public StructBase
 {
@@ -188,9 +188,9 @@ private:
     virtual const StructInfo& getStructInfo() const override;
     static const StructInfo _structInfo;
 };
-}}
+}
 
-namespace fmq {
+
 namespace test {
 struct TestStruct : public StructBase
 {
@@ -208,9 +208,9 @@ private:
     virtual const StructInfo& getStructInfo() const override;
     static const StructInfo _structInfo;
 };
-}}
+}
 
-namespace fmq {
+
 namespace test {
 struct TestEnum : public StructBase
 {
@@ -226,9 +226,9 @@ private:
     virtual const StructInfo& getStructInfo() const override;
     static const StructInfo _structInfo;
 };
-}}
+}
 
-namespace fmq {
+
 namespace test {
 struct TestArrayBool : public StructBase
 {
@@ -244,9 +244,9 @@ private:
     virtual const StructInfo& getStructInfo() const override;
     static const StructInfo _structInfo;
 };
-}}
+}
 
-namespace fmq {
+
 namespace test {
 struct TestArrayInt32 : public StructBase
 {
@@ -262,9 +262,9 @@ private:
     virtual const StructInfo& getStructInfo() const override;
     static const StructInfo _structInfo;
 };
-}}
+}
 
-namespace fmq {
+
 namespace test {
 struct TestArrayUInt32 : public StructBase
 {
@@ -280,9 +280,9 @@ private:
     virtual const StructInfo& getStructInfo() const override;
     static const StructInfo _structInfo;
 };
-}}
+}
 
-namespace fmq {
+
 namespace test {
 struct TestArrayInt64 : public StructBase
 {
@@ -298,9 +298,9 @@ private:
     virtual const StructInfo& getStructInfo() const override;
     static const StructInfo _structInfo;
 };
-}}
+}
 
-namespace fmq {
+
 namespace test {
 struct TestArrayUInt64 : public StructBase
 {
@@ -316,9 +316,9 @@ private:
     virtual const StructInfo& getStructInfo() const override;
     static const StructInfo _structInfo;
 };
-}}
+}
 
-namespace fmq {
+
 namespace test {
 struct TestArrayFloat : public StructBase
 {
@@ -334,9 +334,9 @@ private:
     virtual const StructInfo& getStructInfo() const override;
     static const StructInfo _structInfo;
 };
-}}
+}
 
-namespace fmq {
+
 namespace test {
 struct TestArrayDouble : public StructBase
 {
@@ -352,9 +352,9 @@ private:
     virtual const StructInfo& getStructInfo() const override;
     static const StructInfo _structInfo;
 };
-}}
+}
 
-namespace fmq {
+
 namespace test {
 struct TestArrayString : public StructBase
 {
@@ -370,9 +370,9 @@ private:
     virtual const StructInfo& getStructInfo() const override;
     static const StructInfo _structInfo;
 };
-}}
+}
 
-namespace fmq {
+
 namespace test {
 struct TestArrayBytes : public StructBase
 {
@@ -388,9 +388,9 @@ private:
     virtual const StructInfo& getStructInfo() const override;
     static const StructInfo _structInfo;
 };
-}}
+}
 
-namespace fmq {
+
 namespace test {
 struct TestArrayStruct : public StructBase
 {
@@ -406,9 +406,9 @@ private:
     virtual const StructInfo& getStructInfo() const override;
     static const StructInfo _structInfo;
 };
-}}
+}
 
-namespace fmq {
+
 namespace test {
 struct TestArrayEnum : public StructBase
 {
@@ -424,4 +424,4 @@ private:
     virtual const StructInfo& getStructInfo() const override;
     static const StructInfo _structInfo;
 };
-}}
+}

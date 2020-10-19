@@ -62,7 +62,7 @@ TEST(TestSerializerProtoStruct, test0Data)
     serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "value", "", 2}, VALUE3);
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", ""});
 
-    test::TestStruct message;
+    fmq::test::TestStruct message;
     bool res = message.ParseFromString(data);
     EXPECT_EQ(res, true);
     EXPECT_EQ(message.struct_int32().value(), VALUE1);
@@ -98,7 +98,7 @@ void helperTestStructSize(int size)
     serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "value", "", 2}, VALUE3);
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", ""});
 
-    test::TestStruct message;
+    fmq::test::TestStruct message;
     bool res = message.ParseFromString(data);
     EXPECT_EQ(res, true);
     EXPECT_EQ(message.struct_int32().value(), VALUE1);
@@ -217,7 +217,7 @@ TEST(TestSerializerProtoStruct, test0DataBlockSize1)
     serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "", 2, METAFLAG_PROTO_VARINT}, VALUE3);
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestStructBlockSize", ""});
 
-    test::TestStructBlockSize message;
+    fmq::test::TestStructBlockSize message;
     bool res = message.ParseFromString(data1 + data2);
     EXPECT_EQ(res, true);
     EXPECT_EQ(message.struct_int32().value(), VALUE1);
@@ -264,7 +264,7 @@ TEST(TestSerializerProtoStruct, test32DataBlockSize1)
     serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "", 2, METAFLAG_PROTO_VARINT}, VALUE3);
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestStructBlockSize", ""});
 
-    test::TestStructBlockSize message;
+    fmq::test::TestStructBlockSize message;
     bool res = message.ParseFromString(data1 + data2 + data3);
     EXPECT_EQ(res, true);
     EXPECT_EQ(message.struct_int32().value(), VALUE1);
@@ -309,7 +309,7 @@ TEST(TestSerializerProtoStruct, test33DataBlockSize1)
     serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "", 2, METAFLAG_PROTO_VARINT}, VALUE3);
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestStructBlockSize", ""});
 
-    test::TestStructBlockSize message;
+    fmq::test::TestStructBlockSize message;
     bool res = message.ParseFromString(data1 + data2 + data3);
     EXPECT_EQ(res, true);
     EXPECT_EQ(message.struct_int32().value(), VALUE1);
@@ -355,7 +355,7 @@ TEST(TestSerializerProtoStruct, test121DataBlockSize1)
     serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "", 2, METAFLAG_PROTO_VARINT}, VALUE3);
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestStructBlockSize", ""});
 
-    test::TestStructBlockSize message;
+    fmq::test::TestStructBlockSize message;
     bool res = message.ParseFromString(data1 + data2 + data3);
     EXPECT_EQ(res, true);
     EXPECT_EQ(message.struct_int32().value(), VALUE1);
@@ -401,7 +401,7 @@ TEST(TestSerializerProtoStruct, test122DataBlockSize1)
     serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "", 2, METAFLAG_PROTO_VARINT}, VALUE3);
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestStructBlockSize", ""});
 
-    test::TestStructBlockSize message;
+    fmq::test::TestStructBlockSize message;
     bool res = message.ParseFromString(data1 + data2 + data3);
     EXPECT_EQ(res, true);
     EXPECT_EQ(message.struct_int32().value(), VALUE1);

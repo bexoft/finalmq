@@ -45,7 +45,7 @@ TEST_F(TestSerializerStruct, testBool)
 {
     static const bool VALUE = true;
 
-    fmq::test::TestBool root;
+    test::TestBool root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestBool", ""});
@@ -53,7 +53,7 @@ TEST_F(TestSerializerStruct, testBool)
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestBool", ""});
     serializer->finished();
 
-    fmq::test::TestBool cmp;
+    test::TestBool cmp;
     cmp.value = VALUE;
     ASSERT_EQ(root, cmp);
 }
@@ -63,7 +63,7 @@ TEST_F(TestSerializerStruct, testInt32)
 {
     static const std::int32_t VALUE = -2;
 
-    fmq::test::TestInt32 root;
+    test::TestInt32 root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", ""});
@@ -71,7 +71,7 @@ TEST_F(TestSerializerStruct, testInt32)
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", ""});
     serializer->finished();
 
-    fmq::test::TestInt32 cmp;
+    test::TestInt32 cmp;
     cmp.value = VALUE;
     ASSERT_EQ(root, cmp);
 }
@@ -80,7 +80,7 @@ TEST_F(TestSerializerStruct, testUInt32)
 {
     static const std::uint32_t VALUE = 0xFFFFFFFE;
 
-    fmq::test::TestUInt32 root;
+    test::TestUInt32 root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestUInt32", ""});
@@ -88,7 +88,7 @@ TEST_F(TestSerializerStruct, testUInt32)
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestUInt32", ""});
     serializer->finished();
 
-    fmq::test::TestUInt32 cmp;
+    test::TestUInt32 cmp;
     cmp.value = VALUE;
     ASSERT_EQ(root, cmp);
 }
@@ -97,7 +97,7 @@ TEST_F(TestSerializerStruct, testInt64)
 {
     static const std::int64_t VALUE = -2;
 
-    fmq::test::TestInt64 root;
+    test::TestInt64 root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt64", ""});
@@ -105,7 +105,7 @@ TEST_F(TestSerializerStruct, testInt64)
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt64", ""});
     serializer->finished();
 
-    fmq::test::TestInt64 cmp;
+    test::TestInt64 cmp;
     cmp.value = VALUE;
     ASSERT_EQ(root, cmp);
 }
@@ -114,7 +114,7 @@ TEST_F(TestSerializerStruct, testUInt64)
 {
     static const std::uint64_t VALUE = 0xFFFFFFFFFFFFFFFE;
 
-    fmq::test::TestUInt64 root;
+    test::TestUInt64 root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestUInt64", ""});
@@ -122,7 +122,7 @@ TEST_F(TestSerializerStruct, testUInt64)
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestUInt64", ""});
     serializer->finished();
 
-    fmq::test::TestUInt64 cmp;
+    test::TestUInt64 cmp;
     cmp.value = VALUE;
     ASSERT_EQ(root, cmp);
 }
@@ -133,7 +133,7 @@ TEST_F(TestSerializerStruct, testFloat)
 {
     static const float VALUE = -2;
 
-    fmq::test::TestFloat root;
+    test::TestFloat root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestFloat", ""});
@@ -141,7 +141,7 @@ TEST_F(TestSerializerStruct, testFloat)
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestFloat", ""});
     serializer->finished();
 
-    fmq::test::TestFloat cmp;
+    test::TestFloat cmp;
     cmp.value = VALUE;
     ASSERT_EQ(root, cmp);
 }
@@ -151,7 +151,7 @@ TEST_F(TestSerializerStruct, testDouble)
 {
     static const double VALUE = -2.1;
 
-    fmq::test::TestDouble root;
+    test::TestDouble root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestDouble", ""});
@@ -159,7 +159,7 @@ TEST_F(TestSerializerStruct, testDouble)
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestDouble", ""});
     serializer->finished();
 
-    fmq::test::TestDouble cmp;
+    test::TestDouble cmp;
     cmp.value = VALUE;
     ASSERT_EQ(root, cmp);
 }
@@ -169,7 +169,7 @@ TEST_F(TestSerializerStruct, testString)
 {
     static const std::string VALUE = "Hello World";
 
-    fmq::test::TestString root;
+    test::TestString root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", ""});
@@ -177,7 +177,7 @@ TEST_F(TestSerializerStruct, testString)
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", ""});
     serializer->finished();
 
-    fmq::test::TestString cmp;
+    test::TestString cmp;
     cmp.value = VALUE;
     ASSERT_EQ(root, cmp);
 }
@@ -186,7 +186,7 @@ TEST_F(TestSerializerStruct, testBytes)
 {
     static const Bytes VALUE = {'H','e','l',0,13,'l','o'};
 
-    fmq::test::TestBytes root;
+    test::TestBytes root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestBytes", ""});
@@ -194,7 +194,7 @@ TEST_F(TestSerializerStruct, testBytes)
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestBytes", ""});
     serializer->finished();
 
-    fmq::test::TestBytes cmp;
+    test::TestBytes cmp;
     cmp.value = VALUE;
     ASSERT_EQ(root, cmp);
 }
@@ -206,7 +206,7 @@ TEST_F(TestSerializerStruct, testStruct)
     static const std::string VALUE_STRING = "Hello World";
     static const std::uint32_t VALUE_UINT32 = 123;
 
-    fmq::test::TestStruct root;
+    test::TestStruct root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0});
@@ -221,7 +221,7 @@ TEST_F(TestSerializerStruct, testStruct)
 
     serializer->finished();
 
-    fmq::test::TestStruct cmp;
+    test::TestStruct cmp;
     cmp.struct_int32.value = VALUE_INT32;
     cmp.struct_string.value = VALUE_STRING;
     cmp.last_value = VALUE_UINT32;
@@ -231,9 +231,9 @@ TEST_F(TestSerializerStruct, testStruct)
 
 TEST_F(TestSerializerStruct, testEnum)
 {
-    static const fmq::test::Foo VALUE = fmq::test::Foo::FOO_HELLO;
+    static const test::Foo VALUE = test::Foo::FOO_HELLO;
 
-    fmq::test::TestEnum root;
+    test::TestEnum root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""});
@@ -241,7 +241,7 @@ TEST_F(TestSerializerStruct, testEnum)
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""});
     serializer->finished();
 
-    fmq::test::TestEnum cmp;
+    test::TestEnum cmp;
     cmp.value = VALUE;
     ASSERT_EQ(root, cmp);
 }
@@ -249,9 +249,9 @@ TEST_F(TestSerializerStruct, testEnum)
 
 TEST_F(TestSerializerStruct, testEnumStdString)
 {
-    static const fmq::test::Foo VALUE = fmq::test::Foo::FOO_HELLO;
+    static const test::Foo VALUE = test::Foo::FOO_HELLO;
 
-    fmq::test::TestEnum root;
+    test::TestEnum root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""});
@@ -259,7 +259,7 @@ TEST_F(TestSerializerStruct, testEnumStdString)
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""});
     serializer->finished();
 
-    fmq::test::TestEnum cmp;
+    test::TestEnum cmp;
     cmp.value = VALUE;
     ASSERT_EQ(root, cmp);
 }
@@ -267,9 +267,9 @@ TEST_F(TestSerializerStruct, testEnumStdString)
 
 TEST_F(TestSerializerStruct, testEnumString)
 {
-    static const fmq::test::Foo VALUE = fmq::test::Foo::FOO_HELLO;
+    static const test::Foo VALUE = test::Foo::FOO_HELLO;
 
-    fmq::test::TestEnum root;
+    test::TestEnum root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""});
@@ -277,7 +277,7 @@ TEST_F(TestSerializerStruct, testEnumString)
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""});
     serializer->finished();
 
-    fmq::test::TestEnum cmp;
+    test::TestEnum cmp;
     cmp.value = VALUE;
     ASSERT_EQ(root, cmp);
 }
@@ -292,7 +292,7 @@ TEST_F(TestSerializerStruct, testArrayBool)
     static const bool VALUE3 = true;
     static const std::vector<bool> VALUE = {VALUE1, VALUE2, VALUE3};
 
-    fmq::test::TestArrayBool root;
+    test::TestArrayBool root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayBool", ""});
@@ -300,7 +300,7 @@ TEST_F(TestSerializerStruct, testArrayBool)
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayBool", ""});
     serializer->finished();
 
-    fmq::test::TestArrayBool cmp;
+    test::TestArrayBool cmp;
     cmp.value = VALUE;
     ASSERT_EQ(root, cmp);
 }
@@ -315,7 +315,7 @@ TEST_F(TestSerializerStruct, testArrayInt32)
     static const std::int32_t VALUE3 = 1;
     static const std::vector<std::int32_t> VALUE = {VALUE1, VALUE2, VALUE3};
 
-    fmq::test::TestArrayInt32 root;
+    test::TestArrayInt32 root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayInt32", ""});
@@ -323,7 +323,7 @@ TEST_F(TestSerializerStruct, testArrayInt32)
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayInt32", ""});
     serializer->finished();
 
-    fmq::test::TestArrayInt32 cmp;
+    test::TestArrayInt32 cmp;
     cmp.value = VALUE;
     ASSERT_EQ(root, cmp);
 }
@@ -335,7 +335,7 @@ TEST_F(TestSerializerStruct, testArrayUInt32)
     static const std::uint32_t VALUE3 = 1;
     static const std::vector<std::uint32_t> VALUE = {VALUE1, VALUE2, VALUE3};
 
-    fmq::test::TestArrayUInt32 root;
+    test::TestArrayUInt32 root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayUInt32", ""});
@@ -343,7 +343,7 @@ TEST_F(TestSerializerStruct, testArrayUInt32)
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayUInt32", ""});
     serializer->finished();
 
-    fmq::test::TestArrayUInt32 cmp;
+    test::TestArrayUInt32 cmp;
     cmp.value = VALUE;
     ASSERT_EQ(root, cmp);
 }
@@ -355,7 +355,7 @@ TEST_F(TestSerializerStruct, testArrayInt64)
     static const std::int64_t VALUE3 = 1;
     static const std::vector<std::int64_t> VALUE = {VALUE1, VALUE2, VALUE3};
 
-    fmq::test::TestArrayInt64 root;
+    test::TestArrayInt64 root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayInt64", ""});
@@ -363,7 +363,7 @@ TEST_F(TestSerializerStruct, testArrayInt64)
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayInt64", ""});
     serializer->finished();
 
-    fmq::test::TestArrayInt64 cmp;
+    test::TestArrayInt64 cmp;
     cmp.value = VALUE;
     ASSERT_EQ(root, cmp);
 }
@@ -375,7 +375,7 @@ TEST_F(TestSerializerStruct, testArrayUInt64)
     static const std::uint64_t VALUE3 = 1;
     static const std::vector<std::uint64_t> VALUE = {VALUE1, VALUE2, VALUE3};
 
-    fmq::test::TestArrayUInt64 root;
+    test::TestArrayUInt64 root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayUInt64", ""});
@@ -383,7 +383,7 @@ TEST_F(TestSerializerStruct, testArrayUInt64)
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayUInt64", ""});
     serializer->finished();
 
-    fmq::test::TestArrayUInt64 cmp;
+    test::TestArrayUInt64 cmp;
     cmp.value = VALUE;
     ASSERT_EQ(root, cmp);
 }
@@ -395,7 +395,7 @@ TEST_F(TestSerializerStruct, testArrayFloat)
     static const float VALUE3 = 1;
     static const std::vector<float> VALUE = {VALUE1, VALUE2, VALUE3};
 
-    fmq::test::TestArrayFloat root;
+    test::TestArrayFloat root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayFloat", ""});
@@ -403,7 +403,7 @@ TEST_F(TestSerializerStruct, testArrayFloat)
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayFloat", ""});
     serializer->finished();
 
-    fmq::test::TestArrayFloat cmp;
+    test::TestArrayFloat cmp;
     cmp.value = VALUE;
     ASSERT_EQ(root, cmp);
 }
@@ -415,7 +415,7 @@ TEST_F(TestSerializerStruct, testArrayDouble)
     static const double VALUE3 = 1.1;
     static const std::vector<double> VALUE = {VALUE1, VALUE2, VALUE3};
 
-    fmq::test::TestArrayDouble root;
+    test::TestArrayDouble root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayDouble", ""});
@@ -423,7 +423,7 @@ TEST_F(TestSerializerStruct, testArrayDouble)
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayDouble", ""});
     serializer->finished();
 
-    fmq::test::TestArrayDouble cmp;
+    test::TestArrayDouble cmp;
     cmp.value = VALUE;
     ASSERT_EQ(root, cmp);
 }
@@ -436,7 +436,7 @@ TEST_F(TestSerializerStruct, testArrayString)
     static const std::string VALUE3 = "World";
     static const std::vector<std::string> VALUE = {VALUE1, VALUE2, VALUE3};
 
-    fmq::test::TestArrayString root;
+    test::TestArrayString root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayString", ""});
@@ -444,7 +444,7 @@ TEST_F(TestSerializerStruct, testArrayString)
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayString", ""});
     serializer->finished();
 
-    fmq::test::TestArrayString cmp;
+    test::TestArrayString cmp;
     cmp.value = VALUE;
     ASSERT_EQ(root, cmp);
 }
@@ -456,7 +456,7 @@ TEST_F(TestSerializerStruct, testArrayBytes)
     static const Bytes VALUE3 = {'W', 'o', 'r', 'l', 'd'};
     static const std::vector<Bytes> VALUE = {VALUE1, VALUE2, VALUE3};
 
-    fmq::test::TestArrayBytes root;
+    test::TestArrayBytes root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayBytes", ""});
@@ -464,7 +464,7 @@ TEST_F(TestSerializerStruct, testArrayBytes)
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayBytes", ""});
     serializer->finished();
 
-    fmq::test::TestArrayBytes cmp;
+    test::TestArrayBytes cmp;
     cmp.value = VALUE;
     ASSERT_EQ(root, cmp);
 }
@@ -481,7 +481,7 @@ TEST_F(TestSerializerStruct, testArrayStruct)
     static const std::string VALUE2_STRING = "foo";
     static const std::uint32_t VALUE2_UINT32 = 12345678;
 
-    fmq::test::TestArrayStruct root;
+    test::TestArrayStruct root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayStruct", "", "desc"});
@@ -515,7 +515,7 @@ TEST_F(TestSerializerStruct, testArrayStruct)
 
     serializer->finished();
 
-    fmq::test::TestArrayStruct cmp = {{
+    test::TestArrayStruct cmp = {{
                                           {{VALUE1_INT32}, {VALUE1_STRING}, VALUE1_UINT32},
                                           {{VALUE2_INT32}, {VALUE2_STRING}, VALUE2_UINT32},
                                           {}
@@ -526,13 +526,13 @@ TEST_F(TestSerializerStruct, testArrayStruct)
 
 TEST_F(TestSerializerStruct, testArrayEnum)
 {
-    static const fmq::test::Foo VALUE1 = fmq::test::Foo::FOO_HELLO;
-    static const fmq::test::Foo VALUE2 = fmq::test::Foo::FOO_WORLD;
-    static const fmq::test::Foo VALUE3 = fmq::test::Foo::FOO_WORLD2;
-    static const fmq::test::Foo VALUE4 = (fmq::test::Foo::Enum)123;
+    static const test::Foo VALUE1 = test::Foo::FOO_HELLO;
+    static const test::Foo VALUE2 = test::Foo::FOO_WORLD;
+    static const test::Foo VALUE3 = test::Foo::FOO_WORLD2;
+    static const test::Foo VALUE4 = (test::Foo::Enum)123;
     static const std::vector<std::int32_t> VALUE = {VALUE1, VALUE2, VALUE3, VALUE4};
 
-    fmq::test::TestArrayEnum root;
+    test::TestArrayEnum root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""});
@@ -540,20 +540,20 @@ TEST_F(TestSerializerStruct, testArrayEnum)
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""});
     serializer->finished();
 
-    fmq::test::TestArrayEnum cmp = {{VALUE1, VALUE2, VALUE3, VALUE2}};
+    test::TestArrayEnum cmp = {{VALUE1, VALUE2, VALUE3, VALUE2}};
     ASSERT_EQ(root, cmp);
 }
 
 
 TEST_F(TestSerializerStruct, testArrayEnumString)
 {
-    static const fmq::test::Foo VALUE1 = fmq::test::Foo::FOO_HELLO;
-    static const fmq::test::Foo VALUE2 = fmq::test::Foo::FOO_WORLD;
-    static const fmq::test::Foo VALUE3 = fmq::test::Foo::FOO_WORLD2;
-    static const fmq::test::Foo VALUE4 = (fmq::test::Foo::Enum)123;
+    static const test::Foo VALUE1 = test::Foo::FOO_HELLO;
+    static const test::Foo VALUE2 = test::Foo::FOO_WORLD;
+    static const test::Foo VALUE3 = test::Foo::FOO_WORLD2;
+    static const test::Foo VALUE4 = (test::Foo::Enum)123;
     static const std::vector<std::string> VALUEString = {VALUE1.toString(), VALUE2.toString(), VALUE3.toString(), VALUE4.toString()};
 
-    fmq::test::TestArrayEnum root;
+    test::TestArrayEnum root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""});
@@ -561,7 +561,7 @@ TEST_F(TestSerializerStruct, testArrayEnumString)
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""});
     serializer->finished();
 
-    fmq::test::TestArrayEnum cmp = {{VALUE1, VALUE2, VALUE3, VALUE2}};
+    test::TestArrayEnum cmp = {{VALUE1, VALUE2, VALUE3, VALUE2}};
     ASSERT_EQ(root, cmp);
 }
 

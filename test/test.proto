@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package test;
+package fmq.test;
 
 
 enum Foo

@@ -70,7 +70,7 @@ TEST_F(TestSerializerProto, testBool)
     m_serializer->enterBool({MetaTypeId::TYPE_BOOL, "", "value", "", 0}, VALUE);
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestBool", ""});
 
-    test::TestBool message;
+    fmq::test::TestBool message;
     bool res = message.ParseFromString(m_data);
     EXPECT_EQ(res, true);
     EXPECT_EQ(message.value(), VALUE);
@@ -85,7 +85,7 @@ TEST_F(TestSerializerProto, testInt32)
     m_serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "", 0}, VALUE);
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", ""});
 
-    test::TestInt32 message;
+    fmq::test::TestInt32 message;
     bool res = message.ParseFromString(m_data);
     EXPECT_EQ(res, true);
     EXPECT_EQ(message.value(), VALUE);
@@ -99,7 +99,7 @@ TEST_F(TestSerializerProto, testUInt32)
     m_serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "value", "", 0}, VALUE);
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestUInt32", ""});
 
-    test::TestUInt32 message;
+    fmq::test::TestUInt32 message;
     bool res = message.ParseFromString(m_data);
     EXPECT_EQ(res, true);
     EXPECT_EQ(message.value(), VALUE);
@@ -113,7 +113,7 @@ TEST_F(TestSerializerProto, testInt64)
     m_serializer->enterInt64({MetaTypeId::TYPE_INT64, "", "value", "", 0}, VALUE);
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt64", ""});
 
-    test::TestInt64 message;
+    fmq::test::TestInt64 message;
     bool res = message.ParseFromString(m_data);
     EXPECT_EQ(res, true);
     EXPECT_EQ(message.value(), VALUE);
@@ -127,7 +127,7 @@ TEST_F(TestSerializerProto, testUInt64)
     m_serializer->enterUInt64({MetaTypeId::TYPE_UINT64, "", "value", "", 0}, VALUE);
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestUInt64", ""});
 
-    test::TestUInt64 message;
+    fmq::test::TestUInt64 message;
     bool res = message.ParseFromString(m_data);
     EXPECT_EQ(res, true);
     EXPECT_EQ(message.value(), VALUE);
@@ -143,7 +143,7 @@ TEST_F(TestSerializerProto, testFloat)
     m_serializer->enterFloat({MetaTypeId::TYPE_FLOAT, "", "value", "", 0}, VALUE);
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestFloat", ""});
 
-    test::TestFloat message;
+    fmq::test::TestFloat message;
     bool res = message.ParseFromString(m_data);
     EXPECT_EQ(res, true);
     EXPECT_EQ(message.value(), VALUE);
@@ -158,7 +158,7 @@ TEST_F(TestSerializerProto, testDouble)
     m_serializer->enterDouble({MetaTypeId::TYPE_DOUBLE, "", "value", "", 0}, VALUE);
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestDouble", ""});
 
-    test::TestDouble message;
+    fmq::test::TestDouble message;
     bool res = message.ParseFromString(m_data);
     EXPECT_EQ(res, true);
     EXPECT_EQ(message.value(), VALUE);
@@ -173,7 +173,7 @@ TEST_F(TestSerializerProto, testString)
     m_serializer->enterString({MetaTypeId::TYPE_STRING, "", "value", "", 0}, VALUE.data(), VALUE.size());
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", ""});
 
-    test::TestString message;
+    fmq::test::TestString message;
     bool res = message.ParseFromString(m_data);
     EXPECT_EQ(res, true);
     EXPECT_EQ(message.value(), VALUE);
@@ -187,7 +187,7 @@ TEST_F(TestSerializerProto, testBytes)
     m_serializer->enterBytes({MetaTypeId::TYPE_BYTES, "", "value", "", 0}, VALUE.data(), VALUE.size());
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestBytes", ""});
 
-    test::TestBytes message;
+    fmq::test::TestBytes message;
     bool res = message.ParseFromString(m_data);
     EXPECT_EQ(res, true);
     Bytes result(message.value().data(), message.value().data() + message.value().size());
@@ -214,7 +214,7 @@ TEST_F(TestSerializerProto, testStruct)
 
     m_serializer->finished();
 
-    test::TestStruct message;
+    fmq::test::TestStruct message;
     bool res = message.ParseFromString(m_data);
     EXPECT_EQ(res, true);
     EXPECT_EQ(message.struct_int32().value(), VALUE_INT32);
@@ -226,13 +226,13 @@ TEST_F(TestSerializerProto, testStruct)
 
 TEST_F(TestSerializerProto, testEnum)
 {
-    static const test::Foo VALUE = test::Foo::FOO_HELLO;
+    static const fmq::test::Foo VALUE = fmq::test::Foo::FOO_HELLO;
 
     m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""});
     m_serializer->enterEnum({MetaTypeId::TYPE_ENUM, "", "value", "", 0}, VALUE);
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestEnum", ""});
 
-    test::TestEnum message;
+    fmq::test::TestEnum message;
     bool res = message.ParseFromString(m_data);
     EXPECT_EQ(res, true);
     EXPECT_EQ(message.value(), VALUE);
@@ -250,7 +250,7 @@ TEST_F(TestSerializerProto, testArrayBool)
     m_serializer->enterArrayBool({MetaTypeId::TYPE_ARRAY_BOOL, "", "value", "", 0}, VALUE);
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayBool", ""});
 
-    test::TestArrayBool message;
+    fmq::test::TestArrayBool message;
     bool res = message.ParseFromString(m_data);
     EXPECT_EQ(res, true);
     EXPECT_EQ(std::vector<bool>(message.value().begin(), message.value().end()), VALUE);
@@ -270,7 +270,7 @@ TEST_F(TestSerializerProto, testArrayInt32)
     m_serializer->enterArrayInt32({MetaTypeId::TYPE_ARRAY_INT32, "", "value", "", 0}, VALUE.data(), VALUE.size());
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayInt32", ""});
 
-    test::TestArrayInt32 message;
+    fmq::test::TestArrayInt32 message;
     bool res = message.ParseFromString(m_data);
     EXPECT_EQ(res, true);
     EXPECT_EQ(std::vector<std::int32_t>(message.value().begin(), message.value().end()), VALUE);
@@ -287,7 +287,7 @@ TEST_F(TestSerializerProto, testArrayUInt32)
     m_serializer->enterArrayUInt32({MetaTypeId::TYPE_ARRAY_UINT32, "", "value", "", 0}, VALUE.data(), VALUE.size());
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayUInt32", ""});
 
-    test::TestArrayUInt32 message;
+    fmq::test::TestArrayUInt32 message;
     bool res = message.ParseFromString(m_data);
     EXPECT_EQ(res, true);
     EXPECT_EQ(std::vector<std::uint32_t>(message.value().begin(), message.value().end()), VALUE);
@@ -304,7 +304,7 @@ TEST_F(TestSerializerProto, testArrayInt64)
     m_serializer->enterArrayInt64({MetaTypeId::TYPE_ARRAY_INT64, "", "value", "", 0}, VALUE.data(), VALUE.size());
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayInt64", ""});
 
-    test::TestArrayInt64 message;
+    fmq::test::TestArrayInt64 message;
     bool res = message.ParseFromString(m_data);
     EXPECT_EQ(res, true);
     EXPECT_EQ(std::vector<std::int64_t>(message.value().begin(), message.value().end()), VALUE);
@@ -321,7 +321,7 @@ TEST_F(TestSerializerProto, testArrayUInt64)
     m_serializer->enterArrayUInt64({MetaTypeId::TYPE_ARRAY_UINT64, "", "value", "", 0}, VALUE.data(), VALUE.size());
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayUInt64", ""});
 
-    test::TestArrayUInt64 message;
+    fmq::test::TestArrayUInt64 message;
     bool res = message.ParseFromString(m_data);
     EXPECT_EQ(res, true);
     EXPECT_EQ(std::vector<std::uint64_t>(message.value().begin(), message.value().end()), VALUE);
@@ -338,7 +338,7 @@ TEST_F(TestSerializerProto, testArrayFloat)
     m_serializer->enterArrayFloat({MetaTypeId::TYPE_ARRAY_FLOAT, "", "value", "", 0}, VALUE.data(), VALUE.size());
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayFloat", ""});
 
-    test::TestArrayFloat message;
+    fmq::test::TestArrayFloat message;
     bool res = message.ParseFromString(m_data);
     EXPECT_EQ(res, true);
     EXPECT_EQ(std::vector<float>(message.value().begin(), message.value().end()), VALUE);
@@ -355,7 +355,7 @@ TEST_F(TestSerializerProto, testArrayDouble)
     m_serializer->enterArrayDouble({MetaTypeId::TYPE_ARRAY_DOUBLE, "", "value", "", 0}, VALUE.data(), VALUE.size());
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayDouble", ""});
 
-    test::TestArrayDouble message;
+    fmq::test::TestArrayDouble message;
     bool res = message.ParseFromString(m_data);
     EXPECT_EQ(res, true);
     EXPECT_EQ(std::vector<double>(message.value().begin(), message.value().end()), VALUE);
@@ -373,7 +373,7 @@ TEST_F(TestSerializerProto, testArrayString)
     m_serializer->enterArrayString({MetaTypeId::TYPE_ARRAY_STRING, "", "value", "", 0}, VALUE);
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayString", ""});
 
-    test::TestArrayString message;
+    fmq::test::TestArrayString message;
     bool res = message.ParseFromString(m_data);
     EXPECT_EQ(res, true);
     EXPECT_EQ(std::vector<std::string>(message.value().begin(), message.value().end()), VALUE);
@@ -391,7 +391,7 @@ TEST_F(TestSerializerProto, testArrayBytes)
     m_serializer->enterArrayBytes({MetaTypeId::TYPE_ARRAY_BYTES, "", "value", "", 0}, VALUE);
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayBytes", ""});
 
-    test::TestArrayBytes message;
+    fmq::test::TestArrayBytes message;
     bool res = message.ParseFromString(m_data);
     EXPECT_EQ(res, true);
 
@@ -441,7 +441,7 @@ TEST_F(TestSerializerProto, testArrayStruct)
     m_serializer->exitArrayStruct({MetaTypeId::TYPE_ARRAY_STRUCT, "test.TestStruct", "value", "desc"});
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayStruct", "", "desc"});
 
-    test::TestArrayStruct message;
+    fmq::test::TestArrayStruct message;
     bool res = message.ParseFromString(m_data);
     EXPECT_EQ(res, true);
     EXPECT_EQ(message.value().size(), 3);
@@ -458,17 +458,17 @@ TEST_F(TestSerializerProto, testArrayStruct)
 
 TEST_F(TestSerializerProto, testArrayEnum)
 {
-    static const test::Foo VALUE1 = test::Foo::FOO_HELLO;
-    static const test::Foo VALUE2 = test::Foo::FOO_WORLD;
-    static const test::Foo VALUE3 = test::Foo::FOO_WORLD2;
-    static const test::Foo VALUE4 = (test::Foo)123;
+    static const fmq::test::Foo VALUE1 = fmq::test::Foo::FOO_HELLO;
+    static const fmq::test::Foo VALUE2 = fmq::test::Foo::FOO_WORLD;
+    static const fmq::test::Foo VALUE3 = fmq::test::Foo::FOO_WORLD2;
+    static const fmq::test::Foo VALUE4 = (fmq::test::Foo)123;
     static const std::vector<std::int32_t> VALUE = {VALUE1, VALUE2, VALUE3, VALUE4};
 
     m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""});
     m_serializer->enterArrayEnum({MetaTypeId::TYPE_ARRAY_ENUM, "", "value", "", 0}, VALUE.data(), VALUE.size());
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayEnum", ""});
 
-    test::TestArrayEnum message;
+    fmq::test::TestArrayEnum message;
     bool res = message.ParseFromString(m_data);
     EXPECT_EQ(res, true);
     EXPECT_EQ(std::vector<std::int32_t>(message.value().begin(), message.value().end()), VALUE);

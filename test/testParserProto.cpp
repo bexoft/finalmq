@@ -52,7 +52,7 @@ TEST_F(TestParserProto, testUnknownStruct)
 {
     std::string data;
 
-    test::TestBool message;
+    fmq::test::TestBool message;
     message.SerializeToString(&data);
 
     MockIParserVisitor mockVisitor;
@@ -81,7 +81,7 @@ TEST_F(TestParserProto, testBool)
 
     std::string data;
 
-    test::TestBool message;
+    fmq::test::TestBool message;
     message.set_value(VALUE);
     message.SerializeToString(&data);
 
@@ -111,7 +111,7 @@ TEST_F(TestParserProto, testInt32)
 
     std::string data;
 
-    test::TestInt32 message;
+    fmq::test::TestInt32 message;
     message.set_value(VALUE);
     message.SerializeToString(&data);
 
@@ -141,7 +141,7 @@ TEST_F(TestParserProto, testUInt32)
 
     std::string data;
 
-    test::TestUInt32 message;
+    fmq::test::TestUInt32 message;
     message.set_value(VALUE);
     message.SerializeToString(&data);
 
@@ -171,7 +171,7 @@ TEST_F(TestParserProto, testInt64)
 
     std::string data;
 
-    test::TestInt64 message;
+    fmq::test::TestInt64 message;
     message.set_value(VALUE);
     message.SerializeToString(&data);
 
@@ -201,7 +201,7 @@ TEST_F(TestParserProto, testUInt64)
 
     std::string data;
 
-    test::TestUInt64 message;
+    fmq::test::TestUInt64 message;
     message.set_value(VALUE);
     message.SerializeToString(&data);
 
@@ -232,7 +232,7 @@ TEST_F(TestParserProto, testFloat)
 
     std::string data;
 
-    test::TestFloat message;
+    fmq::test::TestFloat message;
     message.set_value(VALUE);
     message.SerializeToString(&data);
 
@@ -262,7 +262,7 @@ TEST_F(TestParserProto, testDouble)
 
     std::string data;
 
-    test::TestDouble message;
+    fmq::test::TestDouble message;
     message.set_value(VALUE);
     message.SerializeToString(&data);
 
@@ -292,7 +292,7 @@ TEST_F(TestParserProto, testString)
 
     std::string data;
 
-    test::TestString message;
+    fmq::test::TestString message;
     message.set_value(VALUE);
     message.SerializeToString(&data);
 
@@ -322,7 +322,7 @@ TEST_F(TestParserProto, testBytes)
 
     std::string data;
 
-    test::TestBytes message;
+    fmq::test::TestBytes message;
     message.set_value(VALUE);
     message.SerializeToString(&data);
 
@@ -359,7 +359,7 @@ TEST_F(TestParserProto, testStruct)
 
     std::string data;
 
-    test::TestStruct message;
+    fmq::test::TestStruct message;
     message.mutable_struct_int32()->set_value(VALUE_INT32);
     message.mutable_struct_string()->set_value(VALUE_STRING);
     message.SerializeToString(&data);
@@ -389,14 +389,14 @@ TEST_F(TestParserProto, testStruct)
 
 TEST_F(TestParserProto, testEnum)
 {
-    static const test::Foo VALUE = test::Foo::FOO_HELLO;
+    static const fmq::test::Foo VALUE = fmq::test::Foo::FOO_HELLO;
 
     const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestEnum", "value");
     ASSERT_NE(fieldValue, nullptr);
 
     std::string data;
 
-    test::TestEnum message;
+    fmq::test::TestEnum message;
     message.set_value(VALUE);
     message.SerializeToString(&data);
 
@@ -420,14 +420,14 @@ TEST_F(TestParserProto, testEnum)
 
 TEST_F(TestParserProto, testEnumNotAvailable)
 {
-    static const test::Foo VALUE = (test::Foo)123;
+    static const fmq::test::Foo VALUE = (fmq::test::Foo)123;
 
     const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestEnum", "value");
     ASSERT_NE(fieldValue, nullptr);
 
     std::string data;
 
-    test::TestEnum message;
+    fmq::test::TestEnum message;
     message.set_value(VALUE);
     message.SerializeToString(&data);
 
@@ -461,7 +461,7 @@ TEST_F(TestParserProto, testArrayBool)
 
     std::string data;
 
-    test::TestArrayBool message;
+    fmq::test::TestArrayBool message;
     auto* value = message.mutable_value();
     value->Add(VALUE1);
     value->Add(VALUE2);
@@ -499,7 +499,7 @@ TEST_F(TestParserProto, testArrayInt32)
 
     std::string data;
 
-    test::TestArrayInt32 message;
+    fmq::test::TestArrayInt32 message;
     auto* value = message.mutable_value();
     value->Add(VALUE1);
     value->Add(VALUE2);
@@ -536,7 +536,7 @@ TEST_F(TestParserProto, testArrayUInt32)
 
     std::string data;
 
-    test::TestArrayUInt32 message;
+    fmq::test::TestArrayUInt32 message;
     auto* value = message.mutable_value();
     value->Add(VALUE1);
     value->Add(VALUE2);
@@ -574,7 +574,7 @@ TEST_F(TestParserProto, testArrayInt64)
 
     std::string data;
 
-    test::TestArrayInt64 message;
+    fmq::test::TestArrayInt64 message;
     auto* value = message.mutable_value();
     value->Add(VALUE1);
     value->Add(VALUE2);
@@ -611,7 +611,7 @@ TEST_F(TestParserProto, testArrayUInt64)
 
     std::string data;
 
-    test::TestArrayUInt64 message;
+    fmq::test::TestArrayUInt64 message;
     auto* value = message.mutable_value();
     value->Add(VALUE1);
     value->Add(VALUE2);
@@ -649,7 +649,7 @@ TEST_F(TestParserProto, testArrayFloat)
 
     std::string data;
 
-    test::TestArrayFloat message;
+    fmq::test::TestArrayFloat message;
     auto* value = message.mutable_value();
     value->Add(VALUE1);
     value->Add(VALUE2);
@@ -686,7 +686,7 @@ TEST_F(TestParserProto, testArrayDouble)
 
     std::string data;
 
-    test::TestArrayDouble message;
+    fmq::test::TestArrayDouble message;
     auto* value = message.mutable_value();
     value->Add(VALUE1);
     value->Add(VALUE2);
@@ -724,7 +724,7 @@ TEST_F(TestParserProto, testArrayString)
 
     std::string data;
 
-    test::TestArrayString message;
+    fmq::test::TestArrayString message;
     auto* value = message.mutable_value();
     *value->Add() = VALUE1;
     *value->Add() = VALUE2;
@@ -762,7 +762,7 @@ TEST_F(TestParserProto, testArrayBytes)
 
     std::string data;
 
-    test::TestArrayBytes message;
+    fmq::test::TestArrayBytes message;
     auto* value = message.mutable_value();
     *value->Add() = std::string(reinterpret_cast<const char*>(VALUE1.data()), VALUE1.size());
     *value->Add() = std::string(reinterpret_cast<const char*>(VALUE2.data()), VALUE2.size());
@@ -810,7 +810,7 @@ TEST_F(TestParserProto, testArrayStruct)
 
     std::string data;
 
-    test::TestArrayStruct message;
+    fmq::test::TestArrayStruct message;
     auto* value = message.mutable_value();
     auto* message1 = value->Add();
     message1->mutable_struct_int32()->set_value(VALUE1_INT32);
@@ -863,17 +863,17 @@ TEST_F(TestParserProto, testArrayStruct)
 
 TEST_F(TestParserProto, testArrayEnum)
 {
-    static const test::Foo VALUE1 = test::Foo::FOO_HELLO;
-    static const test::Foo VALUE2 = test::Foo::FOO_WORLD;
-    static const test::Foo VALUE3 = test::Foo::FOO_WORLD2;
-    static const test::Foo VALUE4 = (test::Foo)123;
+    static const fmq::test::Foo VALUE1 = fmq::test::Foo::FOO_HELLO;
+    static const fmq::test::Foo VALUE2 = fmq::test::Foo::FOO_WORLD;
+    static const fmq::test::Foo VALUE3 = fmq::test::Foo::FOO_WORLD2;
+    static const fmq::test::Foo VALUE4 = (fmq::test::Foo)123;
 
     const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestArrayEnum", "value");
     ASSERT_NE(fieldValue, nullptr);
 
     std::string data;
 
-    test::TestArrayEnum message;
+    fmq::test::TestArrayEnum message;
     auto* value = message.mutable_value();
     value->Add(VALUE1);
     value->Add(VALUE2);

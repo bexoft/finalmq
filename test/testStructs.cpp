@@ -2,35 +2,35 @@
 
 
 
-fmq::test::Foo::Foo()
+test::Foo::Foo()
 {
 }
-fmq::test::Foo::Foo(Enum en)
+test::Foo::Foo(Enum en)
     : m_value(en)
 {
 }
-fmq::test::Foo::operator const Enum&() const
+test::Foo::operator const Enum&() const
 {
     return m_value;
 }
-fmq::test::Foo::operator Enum&()
+test::Foo::operator Enum&()
 {
     return m_value;
 }
-const fmq::test::Foo& fmq::test::Foo::operator =(Enum en)
+const test::Foo& test::Foo::operator =(Enum en)
 {
     m_value = en;
     return *this;
 }
-const std::string& fmq::test::Foo::toString() const
+const std::string& test::Foo::toString() const
 {
     return _enumInfo.getMetaEnum().getNameByValue(m_value);
 }
-void fmq::test::Foo::fromString(const std::string& name)
+void test::Foo::fromString(const std::string& name)
 {
     m_value = static_cast<Enum>(_enumInfo.getMetaEnum().getValueByName(name));
 }
-const EnumInfo fmq::test::Foo::_enumInfo = {
+const EnumInfo test::Foo::_enumInfo = {
     "test.Foo", {
         {"FOO_WORLD",   0, "description"},
         {"FOO_HELLO",  -2, "description"},
@@ -40,30 +40,30 @@ const EnumInfo fmq::test::Foo::_enumInfo = {
 
 
 
-fmq::test::TestBool::TestBool()
+test::TestBool::TestBool()
 {
 }
-fmq::test::TestBool::TestBool(bool value_)
+test::TestBool::TestBool(bool value_)
     : value(value_)
 {
 }
-void fmq::test::TestBool::clear()
+void test::TestBool::clear()
 {
-    *this = fmq::test::TestBool();
+    *this = test::TestBool();
 }
-const StructInfo& fmq::test::TestBool::getStructInfo() const
+const StructInfo& test::TestBool::getStructInfo() const
 {
     return _structInfo;
 }
-bool fmq::test::TestBool::operator ==(const TestBool& rhs) const
+bool test::TestBool::operator ==(const TestBool& rhs) const
 {
     return (value == rhs.value);
 }
-bool fmq::test::TestBool::operator !=(const TestBool& rhs) const
+bool test::TestBool::operator !=(const TestBool& rhs) const
 {
     return !(*this == rhs);
 }
-const StructInfo fmq::test::TestBool::_structInfo = {
+const StructInfo test::TestBool::_structInfo = {
     "test.TestBool", {
          {TYPE_BOOL,  "", "value", "description", 0, 0}
      },{
@@ -71,30 +71,30 @@ const StructInfo fmq::test::TestBool::_structInfo = {
      }
 };
 
-fmq::test::TestInt32::TestInt32()
+test::TestInt32::TestInt32()
 {
 }
-fmq::test::TestInt32::TestInt32(decltype(value) value_)
+test::TestInt32::TestInt32(decltype(value) value_)
     : value(value_)
 {
 }
-void fmq::test::TestInt32::clear()
+void test::TestInt32::clear()
 {
-    *this = fmq::test::TestInt32();
+    *this = test::TestInt32();
 }
-const StructInfo& fmq::test::TestInt32::getStructInfo() const
+const StructInfo& test::TestInt32::getStructInfo() const
 {
     return _structInfo;
 }
-bool fmq::test::TestInt32::operator ==(const TestInt32& rhs) const
+bool test::TestInt32::operator ==(const TestInt32& rhs) const
 {
     return (value == rhs.value);
 }
-bool fmq::test::TestInt32::operator !=(const TestInt32& rhs) const
+bool test::TestInt32::operator !=(const TestInt32& rhs) const
 {
     return !(*this == rhs);
 }
-const StructInfo fmq::test::TestInt32::_structInfo = {
+const StructInfo test::TestInt32::_structInfo = {
     "test.TestInt32", {
          {TYPE_INT32,  "", "value", "description", 0, 0}
      },{
@@ -102,30 +102,30 @@ const StructInfo fmq::test::TestInt32::_structInfo = {
      }
 };
 
-fmq::test::TestUInt32::TestUInt32()
+test::TestUInt32::TestUInt32()
 {
 }
-fmq::test::TestUInt32::TestUInt32(decltype(value) value_)
+test::TestUInt32::TestUInt32(decltype(value) value_)
     : value(value_)
 {
 }
-void fmq::test::TestUInt32::clear()
+void test::TestUInt32::clear()
 {
-    *this = fmq::test::TestUInt32();
+    *this = test::TestUInt32();
 }
-const StructInfo& fmq::test::TestUInt32::getStructInfo() const
+const StructInfo& test::TestUInt32::getStructInfo() const
 {
     return _structInfo;
 }
-bool fmq::test::TestUInt32::operator ==(const TestUInt32& rhs) const
+bool test::TestUInt32::operator ==(const TestUInt32& rhs) const
 {
     return (value == rhs.value);
 }
-bool fmq::test::TestUInt32::operator !=(const TestUInt32& rhs) const
+bool test::TestUInt32::operator !=(const TestUInt32& rhs) const
 {
     return !(*this == rhs);
 }
-const StructInfo fmq::test::TestUInt32::_structInfo = {
+const StructInfo test::TestUInt32::_structInfo = {
     "test.TestUInt32", {
          {TYPE_UINT32,  "", "value", "description", 0, 0}
      },{
@@ -133,30 +133,30 @@ const StructInfo fmq::test::TestUInt32::_structInfo = {
      }
 };
 
-fmq::test::TestInt64::TestInt64()
+test::TestInt64::TestInt64()
 {
 }
-fmq::test::TestInt64::TestInt64(decltype(value) value_)
+test::TestInt64::TestInt64(decltype(value) value_)
     : value(value_)
 {
 }
-void fmq::test::TestInt64::clear()
+void test::TestInt64::clear()
 {
-    *this = fmq::test::TestInt64();
+    *this = test::TestInt64();
 }
-const StructInfo& fmq::test::TestInt64::getStructInfo() const
+const StructInfo& test::TestInt64::getStructInfo() const
 {
     return _structInfo;
 }
-bool fmq::test::TestInt64::operator ==(const TestInt64& rhs) const
+bool test::TestInt64::operator ==(const TestInt64& rhs) const
 {
     return (value == rhs.value);
 }
-bool fmq::test::TestInt64::operator !=(const TestInt64& rhs) const
+bool test::TestInt64::operator !=(const TestInt64& rhs) const
 {
     return !(*this == rhs);
 }
-const StructInfo fmq::test::TestInt64::_structInfo = {
+const StructInfo test::TestInt64::_structInfo = {
     "test.TestInt64", {
          {TYPE_INT64,  "", "value", "description", 0, 0}
      },{
@@ -164,30 +164,30 @@ const StructInfo fmq::test::TestInt64::_structInfo = {
      }
 };
 
-fmq::test::TestUInt64::TestUInt64()
+test::TestUInt64::TestUInt64()
 {
 }
-fmq::test::TestUInt64::TestUInt64(decltype(value) value_)
+test::TestUInt64::TestUInt64(decltype(value) value_)
     : value(value_)
 {
 }
-void fmq::test::TestUInt64::clear()
+void test::TestUInt64::clear()
 {
-    *this = fmq::test::TestUInt64();
+    *this = test::TestUInt64();
 }
-const StructInfo& fmq::test::TestUInt64::getStructInfo() const
+const StructInfo& test::TestUInt64::getStructInfo() const
 {
     return _structInfo;
 }
-bool fmq::test::TestUInt64::operator ==(const TestUInt64& rhs) const
+bool test::TestUInt64::operator ==(const TestUInt64& rhs) const
 {
     return (value == rhs.value);
 }
-bool fmq::test::TestUInt64::operator !=(const TestUInt64& rhs) const
+bool test::TestUInt64::operator !=(const TestUInt64& rhs) const
 {
     return !(*this == rhs);
 }
-const StructInfo fmq::test::TestUInt64::_structInfo = {
+const StructInfo test::TestUInt64::_structInfo = {
     "test.TestUInt64", {
          {TYPE_UINT64,  "", "value", "description", 0, 0}
      },{
@@ -195,30 +195,30 @@ const StructInfo fmq::test::TestUInt64::_structInfo = {
      }
 };
 
-fmq::test::TestFloat::TestFloat()
+test::TestFloat::TestFloat()
 {
 }
-fmq::test::TestFloat::TestFloat(decltype(value) value_)
+test::TestFloat::TestFloat(decltype(value) value_)
     : value(value_)
 {
 }
-void fmq::test::TestFloat::clear()
+void test::TestFloat::clear()
 {
-    *this = fmq::test::TestFloat();
+    *this = test::TestFloat();
 }
-const StructInfo& fmq::test::TestFloat::getStructInfo() const
+const StructInfo& test::TestFloat::getStructInfo() const
 {
     return _structInfo;
 }
-bool fmq::test::TestFloat::operator ==(const TestFloat& rhs) const
+bool test::TestFloat::operator ==(const TestFloat& rhs) const
 {
     return (value == rhs.value);
 }
-bool fmq::test::TestFloat::operator !=(const TestFloat& rhs) const
+bool test::TestFloat::operator !=(const TestFloat& rhs) const
 {
     return !(*this == rhs);
 }
-const StructInfo fmq::test::TestFloat::_structInfo = {
+const StructInfo test::TestFloat::_structInfo = {
     "test.TestFloat", {
          {TYPE_FLOAT,  "", "value", "description", 0, 0}
      },{
@@ -226,30 +226,30 @@ const StructInfo fmq::test::TestFloat::_structInfo = {
      }
 };
 
-fmq::test::TestDouble::TestDouble()
+test::TestDouble::TestDouble()
 {
 }
-fmq::test::TestDouble::TestDouble(decltype(value) value_)
+test::TestDouble::TestDouble(decltype(value) value_)
     : value(value_)
 {
 }
-void fmq::test::TestDouble::clear()
+void test::TestDouble::clear()
 {
-    *this = fmq::test::TestDouble();
+    *this = test::TestDouble();
 }
-const StructInfo& fmq::test::TestDouble::getStructInfo() const
+const StructInfo& test::TestDouble::getStructInfo() const
 {
     return _structInfo;
 }
-bool fmq::test::TestDouble::operator ==(const TestDouble& rhs) const
+bool test::TestDouble::operator ==(const TestDouble& rhs) const
 {
     return (value == rhs.value);
 }
-bool fmq::test::TestDouble::operator !=(const TestDouble& rhs) const
+bool test::TestDouble::operator !=(const TestDouble& rhs) const
 {
     return !(*this == rhs);
 }
-const StructInfo fmq::test::TestDouble::_structInfo = {
+const StructInfo test::TestDouble::_structInfo = {
     "test.TestDouble", {
          {TYPE_DOUBLE,  "", "value", "description", 0, 0}
      },{
@@ -257,30 +257,30 @@ const StructInfo fmq::test::TestDouble::_structInfo = {
      }
 };
 
-fmq::test::TestString::TestString()
+test::TestString::TestString()
 {
 }
-fmq::test::TestString::TestString(decltype(value) value_)
+test::TestString::TestString(decltype(value) value_)
     : value(value_)
 {
 }
-void fmq::test::TestString::clear()
+void test::TestString::clear()
 {
-    *this = fmq::test::TestString();
+    *this = test::TestString();
 }
-const StructInfo& fmq::test::TestString::getStructInfo() const
+const StructInfo& test::TestString::getStructInfo() const
 {
     return _structInfo;
 }
-bool fmq::test::TestString::operator ==(const TestString& rhs) const
+bool test::TestString::operator ==(const TestString& rhs) const
 {
     return (value == rhs.value);
 }
-bool fmq::test::TestString::operator !=(const TestString& rhs) const
+bool test::TestString::operator !=(const TestString& rhs) const
 {
     return !(*this == rhs);
 }
-const StructInfo fmq::test::TestString::_structInfo = {
+const StructInfo test::TestString::_structInfo = {
     "test.TestString", {
          {TYPE_STRING,  "", "value", "description", 0, 0}
      },{
@@ -288,30 +288,30 @@ const StructInfo fmq::test::TestString::_structInfo = {
      }
 };
 
-fmq::test::TestBytes::TestBytes()
+test::TestBytes::TestBytes()
 {
 }
-fmq::test::TestBytes::TestBytes(decltype(value) value_)
+test::TestBytes::TestBytes(decltype(value) value_)
     : value(value_)
 {
 }
-void fmq::test::TestBytes::clear()
+void test::TestBytes::clear()
 {
-    *this = fmq::test::TestBytes();
+    *this = test::TestBytes();
 }
-const StructInfo& fmq::test::TestBytes::getStructInfo() const
+const StructInfo& test::TestBytes::getStructInfo() const
 {
     return _structInfo;
 }
-bool fmq::test::TestBytes::operator ==(const TestBytes& rhs) const
+bool test::TestBytes::operator ==(const TestBytes& rhs) const
 {
     return (value == rhs.value);
 }
-bool fmq::test::TestBytes::operator !=(const TestBytes& rhs) const
+bool test::TestBytes::operator !=(const TestBytes& rhs) const
 {
     return !(*this == rhs);
 }
-const StructInfo fmq::test::TestBytes::_structInfo = {
+const StructInfo test::TestBytes::_structInfo = {
     "test.TestBytes", {
          {TYPE_BYTES,  "", "value", "description", 0, 0}
      },{
@@ -319,34 +319,34 @@ const StructInfo fmq::test::TestBytes::_structInfo = {
      }
 };
 
-fmq::test::TestStruct::TestStruct()
+test::TestStruct::TestStruct()
 {
 }
-fmq::test::TestStruct::TestStruct(decltype(struct_int32) struct_int32_, decltype(struct_string) struct_string_, decltype(last_value) last_value_)
+test::TestStruct::TestStruct(decltype(struct_int32) struct_int32_, decltype(struct_string) struct_string_, decltype(last_value) last_value_)
     : struct_int32(struct_int32_)
     , struct_string(struct_string_)
     , last_value(last_value_)
 {
 }
-void fmq::test::TestStruct::clear()
+void test::TestStruct::clear()
 {
-    *this = fmq::test::TestStruct();
+    *this = test::TestStruct();
 }
-const StructInfo& fmq::test::TestStruct::getStructInfo() const
+const StructInfo& test::TestStruct::getStructInfo() const
 {
     return _structInfo;
 }
-bool fmq::test::TestStruct::operator ==(const TestStruct& rhs) const
+bool test::TestStruct::operator ==(const TestStruct& rhs) const
 {
     return (struct_int32 == rhs.struct_int32 &&
             struct_string == rhs.struct_string &&
             last_value == rhs.last_value);
 }
-bool fmq::test::TestStruct::operator !=(const TestStruct& rhs) const
+bool test::TestStruct::operator !=(const TestStruct& rhs) const
 {
     return !(*this == rhs);
 }
-const StructInfo fmq::test::TestStruct::_structInfo = {
+const StructInfo test::TestStruct::_structInfo = {
     "test.TestStruct", {
          {TYPE_STRUCT,  "test.TestInt32",     "struct_int32", "description", 0, 0},
          {TYPE_STRUCT,  "test.TestString",    "struct_string","description", 1, 0},
@@ -360,30 +360,30 @@ const StructInfo fmq::test::TestStruct::_structInfo = {
 
 
 
-fmq::test::TestEnum::TestEnum()
+test::TestEnum::TestEnum()
 {
 }
-fmq::test::TestEnum::TestEnum(decltype(value) value_)
+test::TestEnum::TestEnum(decltype(value) value_)
     : value(value_)
 {
 }
-void fmq::test::TestEnum::clear()
+void test::TestEnum::clear()
 {
-    *this = fmq::test::TestEnum();
+    *this = test::TestEnum();
 }
-const StructInfo& fmq::test::TestEnum::getStructInfo() const
+const StructInfo& test::TestEnum::getStructInfo() const
 {
     return _structInfo;
 }
-bool fmq::test::TestEnum::operator ==(const TestEnum& rhs) const
+bool test::TestEnum::operator ==(const TestEnum& rhs) const
 {
     return (value == rhs.value);
 }
-bool fmq::test::TestEnum::operator !=(const TestEnum& rhs) const
+bool test::TestEnum::operator !=(const TestEnum& rhs) const
 {
     return !(*this == rhs);
 }
-const StructInfo fmq::test::TestEnum::_structInfo = {
+const StructInfo test::TestEnum::_structInfo = {
     "test.TestEnum", {
          {TYPE_ENUM,  "test.Foo", "value", "description", 0, 0}
      },{
@@ -392,30 +392,30 @@ const StructInfo fmq::test::TestEnum::_structInfo = {
 };
 
 
-fmq::test::TestArrayBool::TestArrayBool()
+test::TestArrayBool::TestArrayBool()
 {
 }
-fmq::test::TestArrayBool::TestArrayBool(decltype(value) value_)
+test::TestArrayBool::TestArrayBool(decltype(value) value_)
     : value(value_)
 {
 }
-void fmq::test::TestArrayBool::clear()
+void test::TestArrayBool::clear()
 {
-    *this = fmq::test::TestArrayBool();
+    *this = test::TestArrayBool();
 }
-const StructInfo& fmq::test::TestArrayBool::getStructInfo() const
+const StructInfo& test::TestArrayBool::getStructInfo() const
 {
     return _structInfo;
 }
-bool fmq::test::TestArrayBool::operator ==(const TestArrayBool& rhs) const
+bool test::TestArrayBool::operator ==(const TestArrayBool& rhs) const
 {
     return (value == rhs.value);
 }
-bool fmq::test::TestArrayBool::operator !=(const TestArrayBool& rhs) const
+bool test::TestArrayBool::operator !=(const TestArrayBool& rhs) const
 {
     return !(*this == rhs);
 }
-const StructInfo fmq::test::TestArrayBool::_structInfo = {
+const StructInfo test::TestArrayBool::_structInfo = {
     "test.TestArrayBool", {
          {TYPE_ARRAY_BOOL,  "", "value", "description", 0, 0}
      },{
@@ -423,30 +423,30 @@ const StructInfo fmq::test::TestArrayBool::_structInfo = {
      }
 };
 
-fmq::test::TestArrayInt32::TestArrayInt32()
+test::TestArrayInt32::TestArrayInt32()
 {
 }
-fmq::test::TestArrayInt32::TestArrayInt32(decltype(value) value_)
+test::TestArrayInt32::TestArrayInt32(decltype(value) value_)
     : value(value_)
 {
 }
-void fmq::test::TestArrayInt32::clear()
+void test::TestArrayInt32::clear()
 {
-    *this = fmq::test::TestArrayInt32();
+    *this = test::TestArrayInt32();
 }
-const StructInfo& fmq::test::TestArrayInt32::getStructInfo() const
+const StructInfo& test::TestArrayInt32::getStructInfo() const
 {
     return _structInfo;
 }
-bool fmq::test::TestArrayInt32::operator ==(const TestArrayInt32& rhs) const
+bool test::TestArrayInt32::operator ==(const TestArrayInt32& rhs) const
 {
     return (value == rhs.value);
 }
-bool fmq::test::TestArrayInt32::operator !=(const TestArrayInt32& rhs) const
+bool test::TestArrayInt32::operator !=(const TestArrayInt32& rhs) const
 {
     return !(*this == rhs);
 }
-const StructInfo fmq::test::TestArrayInt32::_structInfo = {
+const StructInfo test::TestArrayInt32::_structInfo = {
     "test.TestArrayInt32", {
          {TYPE_ARRAY_INT32,  "", "value", "description", 0, 0}
      },{
@@ -454,30 +454,30 @@ const StructInfo fmq::test::TestArrayInt32::_structInfo = {
      }
 };
 
-fmq::test::TestArrayUInt32::TestArrayUInt32()
+test::TestArrayUInt32::TestArrayUInt32()
 {
 }
-fmq::test::TestArrayUInt32::TestArrayUInt32(decltype(value) value_)
+test::TestArrayUInt32::TestArrayUInt32(decltype(value) value_)
     : value(value_)
 {
 }
-void fmq::test::TestArrayUInt32::clear()
+void test::TestArrayUInt32::clear()
 {
-    *this = fmq::test::TestArrayUInt32();
+    *this = test::TestArrayUInt32();
 }
-const StructInfo& fmq::test::TestArrayUInt32::getStructInfo() const
+const StructInfo& test::TestArrayUInt32::getStructInfo() const
 {
     return _structInfo;
 }
-bool fmq::test::TestArrayUInt32::operator ==(const TestArrayUInt32& rhs) const
+bool test::TestArrayUInt32::operator ==(const TestArrayUInt32& rhs) const
 {
     return (value == rhs.value);
 }
-bool fmq::test::TestArrayUInt32::operator !=(const TestArrayUInt32& rhs) const
+bool test::TestArrayUInt32::operator !=(const TestArrayUInt32& rhs) const
 {
     return !(*this == rhs);
 }
-const StructInfo fmq::test::TestArrayUInt32::_structInfo = {
+const StructInfo test::TestArrayUInt32::_structInfo = {
     "test.TestArrayUInt32", {
          {TYPE_ARRAY_UINT32,  "", "value", "description", 0, 0}
      },{
@@ -485,30 +485,30 @@ const StructInfo fmq::test::TestArrayUInt32::_structInfo = {
      }
 };
 
-fmq::test::TestArrayInt64::TestArrayInt64()
+test::TestArrayInt64::TestArrayInt64()
 {
 }
-fmq::test::TestArrayInt64::TestArrayInt64(decltype(value) value_)
+test::TestArrayInt64::TestArrayInt64(decltype(value) value_)
     : value(value_)
 {
 }
-void fmq::test::TestArrayInt64::clear()
+void test::TestArrayInt64::clear()
 {
-    *this = fmq::test::TestArrayInt64();
+    *this = test::TestArrayInt64();
 }
-const StructInfo& fmq::test::TestArrayInt64::getStructInfo() const
+const StructInfo& test::TestArrayInt64::getStructInfo() const
 {
     return _structInfo;
 }
-bool fmq::test::TestArrayInt64::operator ==(const TestArrayInt64& rhs) const
+bool test::TestArrayInt64::operator ==(const TestArrayInt64& rhs) const
 {
     return (value == rhs.value);
 }
-bool fmq::test::TestArrayInt64::operator !=(const TestArrayInt64& rhs) const
+bool test::TestArrayInt64::operator !=(const TestArrayInt64& rhs) const
 {
     return !(*this == rhs);
 }
-const StructInfo fmq::test::TestArrayInt64::_structInfo = {
+const StructInfo test::TestArrayInt64::_structInfo = {
     "test.TestArrayInt64", {
          {TYPE_ARRAY_INT64,  "", "value", "description", 0, 0}
      },{
@@ -516,30 +516,30 @@ const StructInfo fmq::test::TestArrayInt64::_structInfo = {
      }
 };
 
-fmq::test::TestArrayUInt64::TestArrayUInt64()
+test::TestArrayUInt64::TestArrayUInt64()
 {
 }
-fmq::test::TestArrayUInt64::TestArrayUInt64(decltype(value) value_)
+test::TestArrayUInt64::TestArrayUInt64(decltype(value) value_)
     : value(value_)
 {
 }
-void fmq::test::TestArrayUInt64::clear()
+void test::TestArrayUInt64::clear()
 {
-    *this = fmq::test::TestArrayUInt64();
+    *this = test::TestArrayUInt64();
 }
-const StructInfo& fmq::test::TestArrayUInt64::getStructInfo() const
+const StructInfo& test::TestArrayUInt64::getStructInfo() const
 {
     return _structInfo;
 }
-bool fmq::test::TestArrayUInt64::operator ==(const TestArrayUInt64& rhs) const
+bool test::TestArrayUInt64::operator ==(const TestArrayUInt64& rhs) const
 {
     return (value == rhs.value);
 }
-bool fmq::test::TestArrayUInt64::operator !=(const TestArrayUInt64& rhs) const
+bool test::TestArrayUInt64::operator !=(const TestArrayUInt64& rhs) const
 {
     return !(*this == rhs);
 }
-const StructInfo fmq::test::TestArrayUInt64::_structInfo = {
+const StructInfo test::TestArrayUInt64::_structInfo = {
     "test.TestArrayUInt64", {
          {TYPE_ARRAY_UINT64,  "", "value", "description", 0, 0}
      },{
@@ -547,30 +547,30 @@ const StructInfo fmq::test::TestArrayUInt64::_structInfo = {
      }
 };
 
-fmq::test::TestArrayFloat::TestArrayFloat()
+test::TestArrayFloat::TestArrayFloat()
 {
 }
-fmq::test::TestArrayFloat::TestArrayFloat(decltype(value) value_)
+test::TestArrayFloat::TestArrayFloat(decltype(value) value_)
     : value(value_)
 {
 }
-void fmq::test::TestArrayFloat::clear()
+void test::TestArrayFloat::clear()
 {
-    *this = fmq::test::TestArrayFloat();
+    *this = test::TestArrayFloat();
 }
-const StructInfo& fmq::test::TestArrayFloat::getStructInfo() const
+const StructInfo& test::TestArrayFloat::getStructInfo() const
 {
     return _structInfo;
 }
-bool fmq::test::TestArrayFloat::operator ==(const TestArrayFloat& rhs) const
+bool test::TestArrayFloat::operator ==(const TestArrayFloat& rhs) const
 {
     return (value == rhs.value);
 }
-bool fmq::test::TestArrayFloat::operator !=(const TestArrayFloat& rhs) const
+bool test::TestArrayFloat::operator !=(const TestArrayFloat& rhs) const
 {
     return !(*this == rhs);
 }
-const StructInfo fmq::test::TestArrayFloat::_structInfo = {
+const StructInfo test::TestArrayFloat::_structInfo = {
     "test.TestArrayFloat", {
          {TYPE_ARRAY_FLOAT,  "", "value", "description", 0, 0}
      },{
@@ -578,30 +578,30 @@ const StructInfo fmq::test::TestArrayFloat::_structInfo = {
      }
 };
 
-fmq::test::TestArrayDouble::TestArrayDouble()
+test::TestArrayDouble::TestArrayDouble()
 {
 }
-fmq::test::TestArrayDouble::TestArrayDouble(decltype(value) value_)
+test::TestArrayDouble::TestArrayDouble(decltype(value) value_)
     : value(value_)
 {
 }
-void fmq::test::TestArrayDouble::clear()
+void test::TestArrayDouble::clear()
 {
-    *this = fmq::test::TestArrayDouble();
+    *this = test::TestArrayDouble();
 }
-const StructInfo& fmq::test::TestArrayDouble::getStructInfo() const
+const StructInfo& test::TestArrayDouble::getStructInfo() const
 {
     return _structInfo;
 }
-bool fmq::test::TestArrayDouble::operator ==(const TestArrayDouble& rhs) const
+bool test::TestArrayDouble::operator ==(const TestArrayDouble& rhs) const
 {
     return (value == rhs.value);
 }
-bool fmq::test::TestArrayDouble::operator !=(const TestArrayDouble& rhs) const
+bool test::TestArrayDouble::operator !=(const TestArrayDouble& rhs) const
 {
     return !(*this == rhs);
 }
-const StructInfo fmq::test::TestArrayDouble::_structInfo = {
+const StructInfo test::TestArrayDouble::_structInfo = {
     "test.TestArrayDouble", {
          {TYPE_ARRAY_DOUBLE,  "", "value", "description", 0, 0}
      },{
@@ -609,30 +609,30 @@ const StructInfo fmq::test::TestArrayDouble::_structInfo = {
      }
 };
 
-fmq::test::TestArrayString::TestArrayString()
+test::TestArrayString::TestArrayString()
 {
 }
-fmq::test::TestArrayString::TestArrayString(decltype(value) value_)
+test::TestArrayString::TestArrayString(decltype(value) value_)
     : value(value_)
 {
 }
-void fmq::test::TestArrayString::clear()
+void test::TestArrayString::clear()
 {
-    *this = fmq::test::TestArrayString();
+    *this = test::TestArrayString();
 }
-const StructInfo& fmq::test::TestArrayString::getStructInfo() const
+const StructInfo& test::TestArrayString::getStructInfo() const
 {
     return _structInfo;
 }
-bool fmq::test::TestArrayString::operator ==(const TestArrayString& rhs) const
+bool test::TestArrayString::operator ==(const TestArrayString& rhs) const
 {
     return (value == rhs.value);
 }
-bool fmq::test::TestArrayString::operator !=(const TestArrayString& rhs) const
+bool test::TestArrayString::operator !=(const TestArrayString& rhs) const
 {
     return !(*this == rhs);
 }
-const StructInfo fmq::test::TestArrayString::_structInfo = {
+const StructInfo test::TestArrayString::_structInfo = {
     "test.TestArrayString", {
          {TYPE_ARRAY_STRING,  "", "value", "description", 0, 0}
      },{
@@ -640,30 +640,30 @@ const StructInfo fmq::test::TestArrayString::_structInfo = {
      }
 };
 
-fmq::test::TestArrayBytes::TestArrayBytes()
+test::TestArrayBytes::TestArrayBytes()
 {
 }
-fmq::test::TestArrayBytes::TestArrayBytes(decltype(value) value_)
+test::TestArrayBytes::TestArrayBytes(decltype(value) value_)
     : value(value_)
 {
 }
-void fmq::test::TestArrayBytes::clear()
+void test::TestArrayBytes::clear()
 {
-    *this = fmq::test::TestArrayBytes();
+    *this = test::TestArrayBytes();
 }
-const StructInfo& fmq::test::TestArrayBytes::getStructInfo() const
+const StructInfo& test::TestArrayBytes::getStructInfo() const
 {
     return _structInfo;
 }
-bool fmq::test::TestArrayBytes::operator ==(const TestArrayBytes& rhs) const
+bool test::TestArrayBytes::operator ==(const TestArrayBytes& rhs) const
 {
     return (value == rhs.value);
 }
-bool fmq::test::TestArrayBytes::operator !=(const TestArrayBytes& rhs) const
+bool test::TestArrayBytes::operator !=(const TestArrayBytes& rhs) const
 {
     return !(*this == rhs);
 }
-const StructInfo fmq::test::TestArrayBytes::_structInfo = {
+const StructInfo test::TestArrayBytes::_structInfo = {
     "test.TestArrayBytes", {
          {TYPE_ARRAY_BYTES,  "", "value", "description", 0, 0}
      },{
@@ -671,61 +671,61 @@ const StructInfo fmq::test::TestArrayBytes::_structInfo = {
      }
 };
 
-fmq::test::TestArrayStruct::TestArrayStruct()
+test::TestArrayStruct::TestArrayStruct()
 {
 }
-fmq::test::TestArrayStruct::TestArrayStruct(decltype(value) value_)
+test::TestArrayStruct::TestArrayStruct(decltype(value) value_)
     : value(std::move(value_))
 {
 }
-void fmq::test::TestArrayStruct::clear()
+void test::TestArrayStruct::clear()
 {
-    *this = fmq::test::TestArrayStruct();
+    *this = test::TestArrayStruct();
 }
-const StructInfo& fmq::test::TestArrayStruct::getStructInfo() const
+const StructInfo& test::TestArrayStruct::getStructInfo() const
 {
     return _structInfo;
 }
-bool fmq::test::TestArrayStruct::operator ==(const TestArrayStruct& rhs) const
+bool test::TestArrayStruct::operator ==(const TestArrayStruct& rhs) const
 {
     return (value == rhs.value);
 }
-bool fmq::test::TestArrayStruct::operator !=(const TestArrayStruct& rhs) const
+bool test::TestArrayStruct::operator !=(const TestArrayStruct& rhs) const
 {
     return !(*this == rhs);
 }
-const StructInfo fmq::test::TestArrayStruct::_structInfo = {
+const StructInfo test::TestArrayStruct::_structInfo = {
     "test.TestArrayStruct", {
          {TYPE_ARRAY_STRUCT,  "test.TestStruct", "value", "description", 0, 0}
      },{
-         {OFFSET_STRUCTBASE_TO_PARAM(TestArrayStruct, value), new ArrayStructAdapter<fmq::test::TestStruct>}
+         {OFFSET_STRUCTBASE_TO_PARAM(TestArrayStruct, value), new ArrayStructAdapter<test::TestStruct>}
      }
 };
 
-fmq::test::TestArrayEnum::TestArrayEnum()
+test::TestArrayEnum::TestArrayEnum()
 {
 }
-fmq::test::TestArrayEnum::TestArrayEnum(decltype(value) value_)
+test::TestArrayEnum::TestArrayEnum(decltype(value) value_)
     : value(value_)
 {
 }
-void fmq::test::TestArrayEnum::clear()
+void test::TestArrayEnum::clear()
 {
-    *this = fmq::test::TestArrayEnum();
+    *this = test::TestArrayEnum();
 }
-const StructInfo& fmq::test::TestArrayEnum::getStructInfo() const
+const StructInfo& test::TestArrayEnum::getStructInfo() const
 {
     return _structInfo;
 }
-bool fmq::test::TestArrayEnum::operator ==(const TestArrayEnum& rhs) const
+bool test::TestArrayEnum::operator ==(const TestArrayEnum& rhs) const
 {
     return (value == rhs.value);
 }
-bool fmq::test::TestArrayEnum::operator !=(const TestArrayEnum& rhs) const
+bool test::TestArrayEnum::operator !=(const TestArrayEnum& rhs) const
 {
     return !(*this == rhs);
 }
-const StructInfo fmq::test::TestArrayEnum::_structInfo = {
+const StructInfo test::TestArrayEnum::_structInfo = {
     "test.TestArrayEnum", {
          {TYPE_ARRAY_ENUM,  "test.Foo", "value", "description", 0, 0}
      },{
