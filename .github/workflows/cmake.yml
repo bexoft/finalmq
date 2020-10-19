@@ -16,20 +16,32 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Cache protobuf library
+      id: cache-protobuf
+      uses: actions/cache@v1
+      with:
+           path: protobuf
+           key: ${{ runner.os }}-protobuf
+    - name: Build protobuf library
+      if: steps.cache-protobuf.outputs.cache-hit != 'true'
+      run: |
+         git clone https://github.com/protocolbuffers/protobuf.git
+           cd protobuf
+           git submodule update --init --recursive
+           ./autogen.sh
+           ./autogen.sh
+           ./configure
+           make
+           make check
+    - name: Install protobuf library
+      run: |
+           cd protobuf
+           sudo make install
+           sudo ldconfig
     - name: install pre-requisites 
       shell: bash
       run: |
         sudo apt update
-         git clone https://github.com/protocolbuffers/protobuf.git
-         cd protobuf
-         git submodule update --init --recursive
-         ./autogen.sh
-         ./autogen.sh  # run autogen twice, see below
-         ./configure
-         make
-         make check
-         sudo make install
-         sudo ldconfig
         sudo apt install -y libssl-dev doxygen graphviz gcovr
 
     - name: Create Build Environment
