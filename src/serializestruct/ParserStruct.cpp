@@ -60,7 +60,7 @@ void ParserStruct::processField(const StructBase& structBase, const FieldInfo& f
             m_visitor.enterString(field, value.data(), value.size());
         }
         break;
-        case TYPE_BYTES:
+    case TYPE_BYTES:
         {
             const Bytes& value = structBase.getValue<Bytes>(field.index, field.typeId);
             m_visitor.enterBytes(field, value.data(), value.size());
