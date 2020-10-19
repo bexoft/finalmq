@@ -403,7 +403,6 @@ struct TestArrayStruct : public StructBase
 
 private:
     virtual void clear() override;
-    virtual StructBase* add(int index) override;
     virtual const StructInfo& getStructInfo() const override;
     static const StructInfo _structInfo;
 };

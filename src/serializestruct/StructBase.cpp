@@ -5,8 +5,9 @@
 
 
 
-FieldInfo::FieldInfo(int offset)
+FieldInfo::FieldInfo(int offset, IArrayStructAdapter* arrayStructAdapter)
     : m_offset(offset)
+    , m_arrayStructAdapter(arrayStructAdapter)
 {
 
 }
@@ -44,9 +45,29 @@ const MetaEnum& EnumInfo::getMetaEnum() const
 }
 
 
+
+
 StructBase* StructBase::add(int index)
 {
+    const StructInfo& structInfo = getStructInfo();
+    const FieldInfo* fieldInfo = structInfo.getField(index);
+    if (fieldInfo)
+    {
+        const MetaField* field = fieldInfo->getField();
+        if (field)
+        {
+            if (field->typeId == TYPE_ARRAY_STRUCT)
+            {
+                IArrayStructAdapter* arrayStructAdapter = fieldInfo->getArrayStructAdapter();
+                if (arrayStructAdapter)
+                {
+                    int offset = fieldInfo->getOffset();
+                    void* data = reinterpret_cast<void*>(reinterpret_cast<char*>(this) + offset);
+                    return arrayStructAdapter->add(data);
+                }
+            }
+        }
+    }
     return nullptr;
 }
-
 

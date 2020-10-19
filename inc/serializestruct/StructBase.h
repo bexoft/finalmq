@@ -7,11 +7,19 @@
 #include <vector>
 
 
+class StructBase;
+
+struct IArrayStructAdapter
+{
+    virtual ~IArrayStructAdapter() {}
+    virtual StructBase* add(void* array) = 0;
+};
+
 
 class FieldInfo
 {
 public:
-    FieldInfo(int offset);
+    FieldInfo(int offset, IArrayStructAdapter* arrayStructAdapter = nullptr);
     void setField(const MetaField* field);
 
     inline const MetaField* getField() const
@@ -22,10 +30,15 @@ public:
     {
         return m_offset;
     }
+    inline IArrayStructAdapter* getArrayStructAdapter() const
+    {
+        return m_arrayStructAdapter;
+    }
 
 private:
-    const MetaField*    m_field = nullptr;
-    int                 m_offset;
+    const MetaField*        m_field = nullptr;
+    int                     m_offset;
+    IArrayStructAdapter*    m_arrayStructAdapter = nullptr;
 };
 
 
@@ -63,8 +76,9 @@ private:
 class StructBase
 {
 public:
+    StructBase* add(int index);
+
     virtual void clear() = 0;
-    virtual StructBase* add(int index);
 
     template<class T>
     T* getValue(int index, int typeId)
@@ -101,3 +115,19 @@ private:
 #define OFFSET_STRUCTBASE_TO_STRUCTBASE(type, param)    ((int)((long long)((StructBase*)&((type*)1000)->param) - ((long long)(StructBase*)((type*)1000))))
 
 
+
+
+
+template<class T>
+class ArrayStructAdapter : public IArrayStructAdapter
+{
+private:
+    // IArrayStructAdapter
+    virtual StructBase* add(void* array) override
+    {
+        std::vector<T>& vect = *reinterpret_cast<std::vector<T>*>(array);
+        vect.resize(vect.size() + 1);
+        return &vect.back();
+    }
+
+};

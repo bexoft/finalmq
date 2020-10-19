@@ -682,20 +682,6 @@ void fmq::test::TestArrayStruct::clear()
 {
     *this = fmq::test::TestArrayStruct();
 }
-StructBase* fmq::test::TestArrayStruct::add(int index)
-{
-    StructBase* structBase = nullptr;
-    switch (index)
-    {
-    case 0:
-        value.resize(value.size() + 1);
-        structBase = &value.back();
-        break;
-    default:
-        break;
-    }
-    return structBase;
-}
 const StructInfo& fmq::test::TestArrayStruct::getStructInfo() const
 {
     return _structInfo;
@@ -712,7 +698,7 @@ const StructInfo fmq::test::TestArrayStruct::_structInfo = {
     "test.TestArrayStruct", {
          {TYPE_ARRAY_STRUCT,  "test.TestStruct", "value", "description", 0, 0}
      },{
-         {OFFSET_STRUCTBASE_TO_PARAM(TestArrayStruct, value)}
+         {OFFSET_STRUCTBASE_TO_PARAM(TestArrayStruct, value), new ArrayStructAdapter<fmq::test::TestStruct>}
      }
 };
 
