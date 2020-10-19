@@ -9,8 +9,8 @@
 
 
 
-static const int INDEX2ID = 1;
-static const int MAX_VARINT_SIZE = 10;
+static constexpr int INDEX2ID = 1;
+static constexpr int MAX_VARINT_SIZE = 10;
 
 enum WireType
 {

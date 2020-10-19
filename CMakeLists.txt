@@ -68,6 +68,7 @@ file(GLOB SOURCES "src/*.cpp" "inc/*.h"
                   "src/serializeproto/*.cpp" "inc/serializeproto/*.h"
                   "src/serializejson/*.cpp" "inc/serializejson/*.h"
                   "src/serializevariant/*.cpp" "inc/serializevariant/*.h"
+                  "src/serializestruct/*.cpp" "inc/serializestruct/*.h"
                   "src/variant/*.cpp" "inc/variant/*.h"
                   "inc/conversions/*.h"
                   "mock/*.h")

@@ -3,6 +3,31 @@
 
 
 
+MetaStruct::MetaStruct()
+{
+
+}
+
+MetaStruct::MetaStruct(const std::string& typeName, const std::vector<MetaField>& fields)
+    : m_typeName(typeName)
+{
+    for (size_t i = 0 ; i < fields.size(); ++i)
+    {
+        addField(fields[i]);
+    }
+}
+
+MetaStruct::MetaStruct(const std::string& typeName, std::vector<MetaField>&& fields)
+    : m_typeName(typeName)
+{
+    for (size_t i = 0 ; i < fields.size(); ++i)
+    {
+        addField(std::move(fields[i]));
+    }
+}
+
+
+
 void MetaStruct::setTypeName(const std::string& typeName)
 {
     m_typeName = typeName;

@@ -20,6 +20,10 @@ public:
 class MetaEnum
 {
 public:
+    MetaEnum();
+    MetaEnum(const std::string& typeName, const std::vector<MetaEnumEntry>& entries);
+    MetaEnum(const std::string& typeName, std::vector<MetaEnumEntry>&& entries);
+
     void setTypeName(const std::string& typeName);
     const std::string& getTypeName() const;
 
@@ -30,8 +34,8 @@ public:
     std::int32_t getValueByName(const std::string& name) const;
     const std::string& getNameByValue(std::int32_t value) const;
 
-    void addEntry(const MetaEnumEntry& field);
-    void addEntry(MetaEnumEntry&& field);
+    void addEntry(const MetaEnumEntry& entries);
+    void addEntry(MetaEnumEntry&& entries);
 
     int getEntrySize() const
     {

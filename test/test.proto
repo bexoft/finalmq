@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package test;
+package fmq.test;
 
 
 enum Foo
@@ -10,121 +10,121 @@ enum Foo
     FOO_WORLD2 = 1;
 }
 
-message TestMessageBool
+message TestBool
 {
     bool value = 1;
 }
 
-message TestMessageInt32
+message TestInt32
 {
     sfixed32 value = 1;
 }
 
-message TestMessageUInt32
+message TestUInt32
 {
     fixed32 value = 1;
 }
 
-message TestMessageInt64
+message TestInt64
 {
     sfixed64 value = 1;
 }
 
-message TestMessageUInt64
+message TestUInt64
 {
     fixed64 value = 1;
 }
 
-message TestMessageFloat
+message TestFloat
 {
     float value = 1;
 }
 
-message TestMessageDouble
+message TestDouble
 {
     double value = 1;
 }
 
-message TestMessageString
+message TestString
 {
     string value = 1;
 }
 
-message TestMessageBytes
+message TestBytes
 {
     bytes value = 1;
 }
 
-message TestMessageStruct
+message TestStruct
 {
-    TestMessageInt32 struct_int32 = 1;
-    TestMessageString struct_string = 2;
+    TestInt32 struct_int32 = 1;
+    TestString struct_string = 2;
     fixed32 last_value = 3;
 }
 
-message TestMessageStructBlockSize
+message TestStructBlockSize
 {
-    TestMessageInt32 struct_int32 = 1;
-    TestMessageString struct_string = 2;
+    TestInt32 struct_int32 = 1;
+    TestString struct_string = 2;
     uint32 last_value = 3;
 }
 
-message TestMessageEnum
+message TestEnum
 {
     Foo value = 1;
 }
 
-message TestMessageArrayBool
+message TestArrayBool
 {
     repeated bool value = 1;
 }
 
-message TestMessageArrayInt32
+message TestArrayInt32
 {
     repeated sfixed32 value = 1;
 }
 
-message TestMessageArrayUInt32
+message TestArrayUInt32
 {
     repeated fixed32 value = 1;
 }
 
-message TestMessageArrayInt64
+message TestArrayInt64
 {
     repeated sfixed64 value = 1;
 }
 
-message TestMessageArrayUInt64
+message TestArrayUInt64
 {
     repeated fixed64 value = 1;
 }
 
-message TestMessageArrayFloat
+message TestArrayFloat
 {
     repeated float value = 1;
 }
 
-message TestMessageArrayDouble
+message TestArrayDouble
 {
     repeated double value = 1;
 }
 
-message TestMessageArrayString
+message TestArrayString
 {
     repeated string value = 1;
 }
 
-message TestMessageArrayBytes
+message TestArrayBytes
 {
     repeated bytes value = 1;
 }
 
-message TestMessageArrayStruct
+message TestArrayStruct
 {
-    repeated TestMessageStruct value = 1;
+    repeated TestStruct value = 1;
 }
 
-message TestMessageArrayEnum
+message TestArrayEnum
 {
     repeated Foo value = 1;
 }

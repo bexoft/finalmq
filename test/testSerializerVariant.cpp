@@ -198,13 +198,6 @@ TEST_F(TestSerializerVariant, testEnum)
 {
     static const std::int32_t VALUE = -2;
 
-    MetaEnum metaEnum;
-    metaEnum.setTypeName("test.Foo");
-    metaEnum.addEntry({"FOO_WORLD", 0 ,""});
-    metaEnum.addEntry({"FOO_HELLO", -2 ,""});
-    metaEnum.addEntry({"FOO_WORLD2", 1 ,""});
-    MetaDataGlobal::instance().addEnum(std::move(metaEnum));
-
     m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageEnum", ""});
     m_serializer->enterEnum({MetaTypeId::TYPE_ENUM, "test.Foo", "value", "", 0}, VALUE);
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageEnum", ""});
@@ -218,13 +211,6 @@ TEST_F(TestSerializerVariant, testEnum)
 TEST_F(TestSerializerVariant, testEnumAsInt)
 {
     static const std::int32_t VALUE = -2;
-
-    MetaEnum metaEnum;
-    metaEnum.setTypeName("test.Foo");
-    metaEnum.addEntry({"FOO_WORLD", 0 ,""});
-    metaEnum.addEntry({"FOO_HELLO", -2 ,""});
-    metaEnum.addEntry({"FOO_WORLD2", 1 ,""});
-    MetaDataGlobal::instance().addEnum(std::move(metaEnum));
 
     m_serializerEnumAsInt->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageEnum", ""});
     m_serializerEnumAsInt->enterEnum({MetaTypeId::TYPE_ENUM, "test.Foo", "value", "", 0}, VALUE);
@@ -443,13 +429,6 @@ TEST_F(TestSerializerVariant, testArrayEnum)
     static const std::int32_t VALUE4 = 123;
     static const std::vector<std::int32_t> VALUE = {VALUE1, VALUE2, VALUE3, VALUE4};
 
-    MetaEnum metaEnum;
-    metaEnum.setTypeName("test.Foo");
-    metaEnum.addEntry({"FOO_WORLD", 0 ,""});
-    metaEnum.addEntry({"FOO_HELLO", -2 ,""});
-    metaEnum.addEntry({"FOO_WORLD2", 1 ,""});
-    MetaDataGlobal::instance().addEnum(std::move(metaEnum));
-
     m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageArrayEnum", ""});
     m_serializer->enterArrayEnum({MetaTypeId::TYPE_ARRAY_ENUM, "test.Foo", "value", "", 0}, VALUE.data(), VALUE.size());
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageArrayEnum", ""});
@@ -467,13 +446,6 @@ TEST_F(TestSerializerVariant, testArrayEnumAsInt)
     static const std::int32_t VALUE3 = 1;
     static const std::int32_t VALUE4 = 123;
     static const std::vector<std::int32_t> VALUE = {VALUE1, VALUE2, VALUE3, VALUE4};
-
-    MetaEnum metaEnum;
-    metaEnum.setTypeName("test.Foo");
-    metaEnum.addEntry({"FOO_WORLD", 0 ,""});
-    metaEnum.addEntry({"FOO_HELLO", -2 ,""});
-    metaEnum.addEntry({"FOO_WORLD2", 1 ,""});
-    MetaDataGlobal::instance().addEnum(std::move(metaEnum));
 
     m_serializerEnumAsInt->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageArrayEnum", ""});
     m_serializerEnumAsInt->enterArrayEnum({MetaTypeId::TYPE_ARRAY_ENUM, "test.Foo", "value", "", 0}, VALUE.data(), VALUE.size());

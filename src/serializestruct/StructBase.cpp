@@ -1,0 +1,73 @@
+#include "serializestruct/StructBase.h"
+#include "metadata/MetaData.h"
+
+#include <algorithm>
+
+
+
+FieldInfo::FieldInfo(int offset, IArrayStructAdapter* arrayStructAdapter)
+    : m_offset(offset)
+    , m_arrayStructAdapter(arrayStructAdapter)
+{
+
+}
+
+void FieldInfo::setField(const MetaField* field)
+{
+    m_field = field;
+}
+
+
+
+StructInfo::StructInfo(const std::string& typeName, std::vector<MetaField>&& fields, std::vector<FieldInfo>&& fieldInfos)
+    : m_fieldInfos(std::move(fieldInfos))
+{
+    const MetaStruct& stru = MetaDataGlobal::instance().addStruct({typeName, std::move(fields)});
+
+    int size = std::min(stru.getFieldsSize(), static_cast<int>(m_fieldInfos.size()));
+    for (int i = 0; i < size; ++i)
+    {
+        m_fieldInfos[i].setField(stru.getFieldByIndex(i));
+    }
+}
+
+
+
+
+EnumInfo::EnumInfo(const std::string& typeName, std::vector<MetaEnumEntry>&& entries)
+    : m_metaEnum(MetaDataGlobal::instance().addEnum({typeName, std::move(entries)}))
+{
+}
+
+const MetaEnum& EnumInfo::getMetaEnum() const
+{
+    return m_metaEnum;
+}
+
+
+
+
+StructBase* StructBase::add(int index)
+{
+    const StructInfo& structInfo = getStructInfo();
+    const FieldInfo* fieldInfo = structInfo.getField(index);
+    if (fieldInfo)
+    {
+        const MetaField* field = fieldInfo->getField();
+        if (field)
+        {
+            if (field->typeId == TYPE_ARRAY_STRUCT)
+            {
+                IArrayStructAdapter* arrayStructAdapter = fieldInfo->getArrayStructAdapter();
+                if (arrayStructAdapter)
+                {
+                    int offset = fieldInfo->getOffset();
+                    void* data = reinterpret_cast<void*>(reinterpret_cast<char*>(this) + offset);
+                    return arrayStructAdapter->add(data);
+                }
+            }
+        }
+    }
+    return nullptr;
+}
+

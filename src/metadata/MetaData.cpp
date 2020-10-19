@@ -46,6 +46,19 @@ const MetaStruct* MetaData::getStruct(const MetaField& field) const
 }
 
 
+const MetaField* MetaData::getField(const std::string& typeName, const std::string& fieldName) const
+{
+    const MetaStruct* stru = getStruct(typeName);
+    if (stru)
+    {
+        const MetaField* fieldValue = stru->getFieldByName(fieldName);
+        return fieldValue;
+    }
+    return nullptr;
+}
+
+
+
 const MetaEnum* MetaData::getEnum(const MetaField& field) const
 {
     assert(field.typeId == MetaTypeId::TYPE_ENUM || field.typeId == MetaTypeId::TYPE_ARRAY_ENUM);
@@ -78,6 +91,26 @@ const MetaField* MetaData::getArrayField(const MetaField& field) const
 }
 
 
+const MetaField* MetaData::getArrayField(const std::string& typeName, const std::string& fieldName) const
+{
+    const MetaField* field = getField(typeName, fieldName);
+    if (field)
+    {
+        return getArrayField(*field);
+    }
+    return nullptr;
+}
+
+bool MetaData::isEnumValue(const MetaField& field, std::int32_t value) const
+{
+    const MetaEnum* en = getEnum(field);
+    if (en)
+    {
+        return en->isId(value);
+    }
+    return false;
+}
+
 std::int32_t MetaData::getEnumValueByName(const MetaField& field, const std::string& name) const
 {
     std::int32_t value = 0;
@@ -102,47 +135,49 @@ const std::string& MetaData::getEnumNameByValue(const MetaField& field, std::int
 
 
 
-void MetaData::addStruct(const MetaStruct& stru)
+const MetaStruct& MetaData::addStruct(const MetaStruct& stru)
 {
-    addStruct(MetaStruct(stru));
+    return addStruct(MetaStruct(stru));
 }
 
-void MetaData::addStruct(MetaStruct&& stru)
+const MetaStruct& MetaData::addStruct(MetaStruct&& stru)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
 
-    if (m_name2Struct.find(stru.getTypeName()) != m_name2Struct.end())
+    auto it = m_name2Struct.find(stru.getTypeName());
+    if (it != m_name2Struct.end())
     {
         // struct already added
-        return;
+        return it->second;
     }
 
     std::string typeName = stru.getTypeName();
-    m_name2Struct.emplace(typeName, std::move(stru));
-
-    lock.unlock();
+    auto result = m_name2Struct.emplace(typeName, std::move(stru));
+    assert(result.second);
+    return result.first->second;
 }
 
 
 
-void MetaData::addEnum(const MetaEnum& en)
+const MetaEnum& MetaData::addEnum(const MetaEnum& en)
 {
-    addEnum(MetaEnum(en));
+    return addEnum(MetaEnum(en));
 }
 
-void MetaData::addEnum(MetaEnum&& en)
+const MetaEnum& MetaData::addEnum(MetaEnum&& en)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
 
-    if (m_name2Enum.find(en.getTypeName()) != m_name2Enum.end())
+    auto it = m_name2Enum.find(en.getTypeName());
+    if (it != m_name2Enum.end())
     {
         // enum already added
-        return;
+        return it->second;
     }
 
-    m_name2Enum.emplace(en.getTypeName(), std::move(en));
-
-    lock.unlock();
+    auto result = m_name2Enum.emplace(en.getTypeName(), std::move(en));
+    assert(result.second);
+    return result.first->second;
 }
 
 
