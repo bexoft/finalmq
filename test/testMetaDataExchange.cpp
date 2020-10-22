@@ -38,13 +38,27 @@ const std::string ENUM_ENTRY_NAME = "ENTRY_TEST1";
 const std::int32_t ENUM_ENTRY_ID = 0;
 const std::string ENUM_ENTRY_DESCRIPTION = "enum description 1";
 
-const std::string STRUCT_TYPE = "MyTestStructType";
 const std::string STRUCT_DESCRIPTION = "struct description";
 const SerializeMetaTypeId STRUCT_ENTRY_TYPEID = TYPE_STRING;
 const std::string STRUCT_ENTRY_TYPENAME = "JustATypeName";
 const std::string STRUCT_ENTRY_NAME = "value";
 const std::string STRUCT_ENTRY_DESCRIPTION = "value description";
 const std::vector<SerializeMetaFieldFlags> STRUCT_ENTRY_FLAGS = {METAFLAG_PROTO_VARINT, METAFLAG_PROTO_ZIGZAG};
+
+
+static SerializeMetaStruct importTestStruct(const std::string& typeName)
+{
+    SerializeMetaStruct stru;
+    stru.typeName = typeName;
+    stru.description = STRUCT_DESCRIPTION;
+    stru.fields.push_back({STRUCT_ENTRY_TYPEID, STRUCT_ENTRY_TYPENAME, STRUCT_ENTRY_NAME, STRUCT_ENTRY_DESCRIPTION, STRUCT_ENTRY_FLAGS});
+    SerializeMetaData serializeMetaData;
+    serializeMetaData.structs.push_back(stru);
+    MetaDataExchange::importMetaData(serializeMetaData);
+
+    return stru;
+}
+
 
 
 TEST_F(TestMetaDataExchange, testImportEnum)
@@ -77,18 +91,12 @@ TEST_F(TestMetaDataExchange, testImportEnum)
 
 TEST_F(TestMetaDataExchange, testImportStruct)
 {
+    const std::string STRUCT_TYPE = "MyTest_testImportStruct";
+
     const MetaStruct* metaStruct = MetaDataGlobal::instance().getStruct(STRUCT_TYPE);
     ASSERT_EQ(metaStruct, nullptr);
 
-    SerializeMetaStruct stru;
-    stru.typeName = STRUCT_TYPE;
-    stru.description = STRUCT_DESCRIPTION;
-    stru.fields.push_back({STRUCT_ENTRY_TYPEID, STRUCT_ENTRY_TYPENAME, STRUCT_ENTRY_NAME, STRUCT_ENTRY_DESCRIPTION, STRUCT_ENTRY_FLAGS});
-
-    SerializeMetaData serializeMetaData;
-    serializeMetaData.structs.push_back(stru);
-
-    MetaDataExchange::importMetaData(serializeMetaData);
+    importTestStruct(STRUCT_TYPE);
 
     metaStruct = MetaDataGlobal::instance().getStruct(STRUCT_TYPE);
     ASSERT_NE(metaStruct, nullptr);
@@ -134,13 +142,12 @@ TEST_F(TestMetaDataExchange, testExportEnum)
 
 TEST_F(TestMetaDataExchange, testExportStruct)
 {
-    SerializeMetaStruct stru;
-    stru.typeName = STRUCT_TYPE;
-    stru.description = STRUCT_DESCRIPTION;
-    stru.fields.push_back({STRUCT_ENTRY_TYPEID, STRUCT_ENTRY_TYPENAME, STRUCT_ENTRY_NAME, STRUCT_ENTRY_DESCRIPTION, STRUCT_ENTRY_FLAGS});
-    SerializeMetaData serializeMetaData;
-    serializeMetaData.structs.push_back(stru);
-    MetaDataExchange::importMetaData(serializeMetaData);
+    static const std::string STRUCT_TYPE = "MyTest_testExportStruct";
+
+    const MetaStruct* metaStruct = MetaDataGlobal::instance().getStruct(STRUCT_TYPE);
+    ASSERT_EQ(metaStruct, nullptr);
+
+    SerializeMetaStruct stru = importTestStruct(STRUCT_TYPE);
 
     SerializeMetaData serializeMetaDataExport;
     MetaDataExchange::exportMetaData(serializeMetaDataExport);
@@ -196,6 +203,13 @@ TEST_F(TestMetaDataExchange, testImportJson)
 
 TEST_F(TestMetaDataExchange, testExportJson)
 {
+    static const std::string STRUCT_TYPE = "MyTest_testExportJson";
+
+    const MetaStruct* metaStruct = MetaDataGlobal::instance().getStruct(STRUCT_TYPE);
+    ASSERT_EQ(metaStruct, nullptr);
+
+    SerializeMetaStruct stru = importTestStruct(STRUCT_TYPE);
+
     std::string json;
     MetaDataExchange::exportMetaDataJson(json);
 
@@ -203,11 +217,6 @@ TEST_F(TestMetaDataExchange, testExportJson)
     SerializerStruct serializer(root);
     ParserJson parser(serializer, json.c_str());
     parser.parseStruct("SerializeMetaData");
-
-    SerializeMetaStruct stru;
-    stru.typeName = STRUCT_TYPE;
-    stru.description = STRUCT_DESCRIPTION;
-    stru.fields.push_back({STRUCT_ENTRY_TYPEID, STRUCT_ENTRY_TYPENAME, STRUCT_ENTRY_NAME, STRUCT_ENTRY_DESCRIPTION, STRUCT_ENTRY_FLAGS});
 
     int found = 0;
     for (size_t i = 0; i < root.structs.size(); ++i)
