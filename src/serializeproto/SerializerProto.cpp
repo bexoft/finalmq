@@ -283,14 +283,18 @@ void SerializerProto::Internal::reserveSpace(int space)
     int sizeRemaining = m_bufferEnd - m_buffer;
     if (sizeRemaining < space)
     {
-        int sizeNew = std::max(m_maxBlockSize, space);
-        char* bufferStartNew = m_zeroCopybuffer.addBuffer(sizeNew);
         if (m_buffer != nullptr)
         {
             int size = m_buffer - m_bufferStart;
             assert(size >= 0);
             m_zeroCopybuffer.downsizeLastBuffer(size);
+        }
 
+        int sizeNew = std::max(m_maxBlockSize, space);
+        char* bufferStartNew = m_zeroCopybuffer.addBuffer(sizeNew);
+
+        if (m_buffer != nullptr)
+        {
             for (auto it = m_stackStruct.begin(); it != m_stackStruct.end(); ++it)
             {
                 StructData& structData = *it;
@@ -304,6 +308,7 @@ void SerializerProto::Internal::reserveSpace(int space)
                 }
             }
         }
+
         m_bufferStart = bufferStartNew;
         m_bufferEnd = m_bufferStart + sizeNew;
         m_buffer = m_bufferStart;

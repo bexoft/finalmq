@@ -28,7 +28,7 @@ ParserJson::ParserJson(IParserVisitor& visitor, const char* ptr, int size)
 bool ParserJson::parseStruct(const std::string& typeName)
 {
     assert(m_ptr);
-    assert(m_size >= 0);
+    assert(m_size >= CHECK_ON_ZEROTERM);
 
     const MetaStruct* stru = MetaDataGlobal::instance().getStruct(typeName);
     if (!stru)
@@ -435,7 +435,7 @@ void ParserJson::enterString(std::string&& value)
 
 void ParserJson::enterArray()
 {
-    if (m_fieldCurrent && ((int)m_fieldCurrent->typeId & (int)MetaTypeId::TYPE_ARRAY_FLAG))
+    if (m_fieldCurrent && ((int)m_fieldCurrent->typeId & (int)MetaTypeId::OFFSET_ARRAY_FLAG))
     {
         switch (m_fieldCurrent->typeId)
         {
@@ -474,7 +474,7 @@ void ParserJson::enterArray()
             m_visitor.enterArrayStruct(*m_fieldCurrent);
             m_stack.emplace_back(m_fieldCurrent);
             m_fieldCurrent = MetaDataGlobal::instance().getArrayField(*m_fieldCurrent);
-            m_stack.emplace_back(m_fieldCurrent);
+//            m_stack.emplace_back(m_fieldCurrent);
             m_structCurrent = nullptr;
             break;
         default:
@@ -492,7 +492,7 @@ void ParserJson::exitArray()
         return;
     }
 
-    if ((int)m_fieldCurrent->typeId & (int)MetaTypeId::TYPE_ARRAY_FLAG)
+    if ((int)m_fieldCurrent->typeId & (int)MetaTypeId::OFFSET_ARRAY_FLAG)
     {
         switch (m_fieldCurrent->typeId)
         {
@@ -558,11 +558,23 @@ void ParserJson::exitArray()
         m_fieldCurrent = nullptr;
         if (!m_stack.empty())
         {
-            m_stack.pop_back();
+//            m_stack.pop_back();
             m_fieldCurrent = m_stack.back().field;
+            if (m_fieldCurrent)
+            {
+                m_visitor.exitArrayStruct(*m_fieldCurrent);
+            }
             m_stack.pop_back();
         }
-        m_visitor.exitArrayStruct(*m_fieldCurrent);
+
+        if (!m_stack.empty())
+        {
+            m_fieldCurrent = m_stack.back().field;
+            if (m_fieldCurrent)
+            {
+                m_structCurrent = MetaDataGlobal::instance().getStruct(*m_fieldCurrent);
+            }
+        }
     }
 }
 
@@ -609,7 +621,14 @@ void ParserJson::exitObject()
         m_fieldCurrent = m_stack.back().field;
         if (m_fieldCurrent)
         {
-            m_structCurrent = MetaDataGlobal::instance().getStruct(*m_fieldCurrent);
+            if ((int)m_fieldCurrent->typeId & (int)MetaTypeId::OFFSET_ARRAY_FLAG)
+            {
+                m_fieldCurrent = MetaDataGlobal::instance().getArrayField(*m_fieldCurrent);
+            }
+            else
+            {
+                m_structCurrent = MetaDataGlobal::instance().getStruct(*m_fieldCurrent);
+            }
         }
     }
 }

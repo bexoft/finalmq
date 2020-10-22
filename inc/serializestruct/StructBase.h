@@ -2,6 +2,7 @@
 
 #include "metadata/MetaField.h"
 #include "metadata/MetaEnum.h"
+#include "metadata/MetaStruct.h"
 
 #include <cstdint>
 #include <vector>
@@ -77,11 +78,11 @@ private:
 class StructInfo
 {
 public:
-    StructInfo(const std::string& typeName, std::vector<MetaField>&& fields, std::vector<FieldInfo>&& fieldInfos);
+    StructInfo(const std::string& typeName, const std::string& description, std::vector<MetaField>&& fields, std::vector<FieldInfo>&& fieldInfos);
 
     inline const std::string& getTypeName() const
     {
-        return m_typeName;
+        return m_metaStruct.getTypeName();
     }
 
     inline const FieldInfo* getField(int index) const
@@ -99,7 +100,7 @@ public:
     }
 
 private:
-    std::string             m_typeName;
+    const MetaStruct&       m_metaStruct;
     std::vector<FieldInfo>  m_fieldInfos;
 };
 
@@ -107,7 +108,7 @@ private:
 class EnumInfo
 {
 public:
-    EnumInfo(const std::string& typeName, std::vector<MetaEnumEntry>&& entries);
+    EnumInfo(const std::string& typeName, const std::string& description, std::vector<MetaEnumEntry>&& entries);
     const MetaEnum& getMetaEnum() const;
 
 private:
@@ -119,8 +120,6 @@ class StructBase
 {
 public:
     StructBase* add(int index);
-//    int size(int index) const = 0;
-//    const StructBase& at(int index, int index) const = 0;
 
     virtual void clear() = 0;
 

@@ -8,8 +8,9 @@ MetaStruct::MetaStruct()
 
 }
 
-MetaStruct::MetaStruct(const std::string& typeName, const std::vector<MetaField>& fields)
+MetaStruct::MetaStruct(const std::string& typeName, const std::string& description, const std::vector<MetaField>& fields)
     : m_typeName(typeName)
+    , m_description(description)
 {
     for (size_t i = 0 ; i < fields.size(); ++i)
     {
@@ -17,8 +18,9 @@ MetaStruct::MetaStruct(const std::string& typeName, const std::vector<MetaField>
     }
 }
 
-MetaStruct::MetaStruct(const std::string& typeName, std::vector<MetaField>&& fields)
+MetaStruct::MetaStruct(const std::string& typeName, const std::string& description, std::vector<MetaField>&& fields)
     : m_typeName(typeName)
+    , m_description(description)
 {
     for (size_t i = 0 ; i < fields.size(); ++i)
     {
@@ -38,6 +40,15 @@ const std::string& MetaStruct::getTypeName() const
     return m_typeName;
 }
 
+void MetaStruct::setDescription(const std::string& description)
+{
+    m_description = description;
+}
+
+const std::string& MetaStruct::getDescription() const
+{
+    return m_description;
+}
 
 
 const MetaField* MetaStruct::getFieldByIndex(int index) const

@@ -31,10 +31,10 @@ void test::Foo::fromString(const std::string& name)
     m_value = static_cast<Enum>(_enumInfo.getMetaEnum().getValueByName(name));
 }
 const EnumInfo test::Foo::_enumInfo = {
-    "test.Foo", {
-        {"FOO_WORLD",   0, "description"},
-        {"FOO_HELLO",  -2, "description"},
-        {"FOO_WORLD2",  1, "description"},
+    "test.Foo", "description", {
+        {"FOO_WORLD",   FOO_WORLD, "description"},
+        {"FOO_HELLO",   FOO_HELLO, "description"},
+        {"FOO_WORLD2",  FOO_WORLD2, "description"},
      }
 };
 
@@ -43,7 +43,7 @@ const EnumInfo test::Foo::_enumInfo = {
 test::TestBool::TestBool()
 {
 }
-test::TestBool::TestBool(bool value_)
+test::TestBool::TestBool(const decltype(value)& value_)
     : value(value_)
 {
 }
@@ -64,7 +64,7 @@ bool test::TestBool::operator !=(const TestBool& rhs) const
     return !(*this == rhs);
 }
 const StructInfo test::TestBool::_structInfo = {
-    "test.TestBool", {
+    "test.TestBool", "description", {
          {TYPE_BOOL,  "", "value", "description", 0, 0}
      },{
          {OFFSET_STRUCTBASE_TO_PARAM(TestBool, value)}
@@ -74,7 +74,7 @@ const StructInfo test::TestBool::_structInfo = {
 test::TestInt32::TestInt32()
 {
 }
-test::TestInt32::TestInt32(decltype(value) value_)
+test::TestInt32::TestInt32(const decltype(value)& value_)
     : value(value_)
 {
 }
@@ -95,7 +95,7 @@ bool test::TestInt32::operator !=(const TestInt32& rhs) const
     return !(*this == rhs);
 }
 const StructInfo test::TestInt32::_structInfo = {
-    "test.TestInt32", {
+    "test.TestInt32", "description", {
          {TYPE_INT32,  "", "value", "description", 0, 0}
      },{
          {OFFSET_STRUCTBASE_TO_PARAM(TestInt32, value)}
@@ -105,7 +105,7 @@ const StructInfo test::TestInt32::_structInfo = {
 test::TestUInt32::TestUInt32()
 {
 }
-test::TestUInt32::TestUInt32(decltype(value) value_)
+test::TestUInt32::TestUInt32(const decltype(value)& value_)
     : value(value_)
 {
 }
@@ -126,7 +126,7 @@ bool test::TestUInt32::operator !=(const TestUInt32& rhs) const
     return !(*this == rhs);
 }
 const StructInfo test::TestUInt32::_structInfo = {
-    "test.TestUInt32", {
+    "test.TestUInt32", "description", {
          {TYPE_UINT32,  "", "value", "description", 0, 0}
      },{
          {OFFSET_STRUCTBASE_TO_PARAM(TestUInt32, value)}
@@ -136,7 +136,7 @@ const StructInfo test::TestUInt32::_structInfo = {
 test::TestInt64::TestInt64()
 {
 }
-test::TestInt64::TestInt64(decltype(value) value_)
+test::TestInt64::TestInt64(const decltype(value)& value_)
     : value(value_)
 {
 }
@@ -157,7 +157,7 @@ bool test::TestInt64::operator !=(const TestInt64& rhs) const
     return !(*this == rhs);
 }
 const StructInfo test::TestInt64::_structInfo = {
-    "test.TestInt64", {
+    "test.TestInt64", "description", {
          {TYPE_INT64,  "", "value", "description", 0, 0}
      },{
          {OFFSET_STRUCTBASE_TO_PARAM(TestInt64, value)}
@@ -167,7 +167,7 @@ const StructInfo test::TestInt64::_structInfo = {
 test::TestUInt64::TestUInt64()
 {
 }
-test::TestUInt64::TestUInt64(decltype(value) value_)
+test::TestUInt64::TestUInt64(const decltype(value)& value_)
     : value(value_)
 {
 }
@@ -188,7 +188,7 @@ bool test::TestUInt64::operator !=(const TestUInt64& rhs) const
     return !(*this == rhs);
 }
 const StructInfo test::TestUInt64::_structInfo = {
-    "test.TestUInt64", {
+    "test.TestUInt64", "description", {
          {TYPE_UINT64,  "", "value", "description", 0, 0}
      },{
          {OFFSET_STRUCTBASE_TO_PARAM(TestUInt64, value)}
@@ -198,7 +198,7 @@ const StructInfo test::TestUInt64::_structInfo = {
 test::TestFloat::TestFloat()
 {
 }
-test::TestFloat::TestFloat(decltype(value) value_)
+test::TestFloat::TestFloat(const decltype(value)& value_)
     : value(value_)
 {
 }
@@ -219,7 +219,7 @@ bool test::TestFloat::operator !=(const TestFloat& rhs) const
     return !(*this == rhs);
 }
 const StructInfo test::TestFloat::_structInfo = {
-    "test.TestFloat", {
+    "test.TestFloat", "description", {
          {TYPE_FLOAT,  "", "value", "description", 0, 0}
      },{
          {OFFSET_STRUCTBASE_TO_PARAM(TestFloat, value)}
@@ -229,7 +229,7 @@ const StructInfo test::TestFloat::_structInfo = {
 test::TestDouble::TestDouble()
 {
 }
-test::TestDouble::TestDouble(decltype(value) value_)
+test::TestDouble::TestDouble(const decltype(value)& value_)
     : value(value_)
 {
 }
@@ -250,7 +250,7 @@ bool test::TestDouble::operator !=(const TestDouble& rhs) const
     return !(*this == rhs);
 }
 const StructInfo test::TestDouble::_structInfo = {
-    "test.TestDouble", {
+    "test.TestDouble", "description", {
          {TYPE_DOUBLE,  "", "value", "description", 0, 0}
      },{
          {OFFSET_STRUCTBASE_TO_PARAM(TestDouble, value)}
@@ -260,7 +260,7 @@ const StructInfo test::TestDouble::_structInfo = {
 test::TestString::TestString()
 {
 }
-test::TestString::TestString(decltype(value) value_)
+test::TestString::TestString(const decltype(value)& value_)
     : value(value_)
 {
 }
@@ -281,7 +281,7 @@ bool test::TestString::operator !=(const TestString& rhs) const
     return !(*this == rhs);
 }
 const StructInfo test::TestString::_structInfo = {
-    "test.TestString", {
+    "test.TestString", "description", {
          {TYPE_STRING,  "", "value", "description", 0, 0}
      },{
          {OFFSET_STRUCTBASE_TO_PARAM(TestString, value)}
@@ -291,7 +291,7 @@ const StructInfo test::TestString::_structInfo = {
 test::TestBytes::TestBytes()
 {
 }
-test::TestBytes::TestBytes(decltype(value) value_)
+test::TestBytes::TestBytes(const decltype(value)& value_)
     : value(value_)
 {
 }
@@ -312,7 +312,7 @@ bool test::TestBytes::operator !=(const TestBytes& rhs) const
     return !(*this == rhs);
 }
 const StructInfo test::TestBytes::_structInfo = {
-    "test.TestBytes", {
+    "test.TestBytes", "description", {
          {TYPE_BYTES,  "", "value", "description", 0, 0}
      },{
          {OFFSET_STRUCTBASE_TO_PARAM(TestBytes, value)}
@@ -322,7 +322,7 @@ const StructInfo test::TestBytes::_structInfo = {
 test::TestStruct::TestStruct()
 {
 }
-test::TestStruct::TestStruct(decltype(struct_int32) struct_int32_, decltype(struct_string) struct_string_, decltype(last_value) last_value_)
+test::TestStruct::TestStruct(const decltype(struct_int32)& struct_int32_, const decltype(struct_string)& struct_string_, const decltype(last_value)& last_value_)
     : struct_int32(struct_int32_)
     , struct_string(struct_string_)
     , last_value(last_value_)
@@ -347,10 +347,10 @@ bool test::TestStruct::operator !=(const TestStruct& rhs) const
     return !(*this == rhs);
 }
 const StructInfo test::TestStruct::_structInfo = {
-    "test.TestStruct", {
-         {TYPE_STRUCT,  "test.TestInt32",     "struct_int32", "description", 0, 0},
-         {TYPE_STRUCT,  "test.TestString",    "struct_string","description", 0, 1},
-         {TYPE_UINT32,  "",                   "last_value",   "description", 0, 2}
+    "test.TestStruct", "description", {
+         {TYPE_STRUCT,  "test.TestInt32",     "struct_int32", "description", 0},
+         {TYPE_STRUCT,  "test.TestString",    "struct_string","description", 0},
+         {TYPE_UINT32,  "",                   "last_value",   "description", 0}
      },{
         {OFFSET_STRUCTBASE_TO_STRUCTBASE(TestStruct, struct_int32)},
         {OFFSET_STRUCTBASE_TO_STRUCTBASE(TestStruct, struct_string)},
@@ -363,7 +363,7 @@ const StructInfo test::TestStruct::_structInfo = {
 test::TestEnum::TestEnum()
 {
 }
-test::TestEnum::TestEnum(decltype(value) value_)
+test::TestEnum::TestEnum(const decltype(value)& value_)
     : value(value_)
 {
 }
@@ -384,7 +384,7 @@ bool test::TestEnum::operator !=(const TestEnum& rhs) const
     return !(*this == rhs);
 }
 const StructInfo test::TestEnum::_structInfo = {
-    "test.TestEnum", {
+    "test.TestEnum", "description", {
          {TYPE_ENUM,  "test.Foo", "value", "description", 0, 0}
      },{
          {OFFSET_STRUCTBASE_TO_PARAM(TestEnum, value.operator const Enum&())}
@@ -395,7 +395,7 @@ const StructInfo test::TestEnum::_structInfo = {
 test::TestArrayBool::TestArrayBool()
 {
 }
-test::TestArrayBool::TestArrayBool(decltype(value) value_)
+test::TestArrayBool::TestArrayBool(const decltype(value)& value_)
     : value(value_)
 {
 }
@@ -416,7 +416,7 @@ bool test::TestArrayBool::operator !=(const TestArrayBool& rhs) const
     return !(*this == rhs);
 }
 const StructInfo test::TestArrayBool::_structInfo = {
-    "test.TestArrayBool", {
+    "test.TestArrayBool", "description", {
          {TYPE_ARRAY_BOOL,  "", "value", "description", 0, 0}
      },{
          {OFFSET_STRUCTBASE_TO_PARAM(TestArrayBool, value)}
@@ -426,7 +426,7 @@ const StructInfo test::TestArrayBool::_structInfo = {
 test::TestArrayInt32::TestArrayInt32()
 {
 }
-test::TestArrayInt32::TestArrayInt32(decltype(value) value_)
+test::TestArrayInt32::TestArrayInt32(const decltype(value)& value_)
     : value(value_)
 {
 }
@@ -447,7 +447,7 @@ bool test::TestArrayInt32::operator !=(const TestArrayInt32& rhs) const
     return !(*this == rhs);
 }
 const StructInfo test::TestArrayInt32::_structInfo = {
-    "test.TestArrayInt32", {
+    "test.TestArrayInt32", "description", {
          {TYPE_ARRAY_INT32,  "", "value", "description", 0, 0}
      },{
          {OFFSET_STRUCTBASE_TO_PARAM(TestArrayInt32, value)}
@@ -457,7 +457,7 @@ const StructInfo test::TestArrayInt32::_structInfo = {
 test::TestArrayUInt32::TestArrayUInt32()
 {
 }
-test::TestArrayUInt32::TestArrayUInt32(decltype(value) value_)
+test::TestArrayUInt32::TestArrayUInt32(const decltype(value)& value_)
     : value(value_)
 {
 }
@@ -478,7 +478,7 @@ bool test::TestArrayUInt32::operator !=(const TestArrayUInt32& rhs) const
     return !(*this == rhs);
 }
 const StructInfo test::TestArrayUInt32::_structInfo = {
-    "test.TestArrayUInt32", {
+    "test.TestArrayUInt32", "description", {
          {TYPE_ARRAY_UINT32,  "", "value", "description", 0, 0}
      },{
          {OFFSET_STRUCTBASE_TO_PARAM(TestArrayUInt32, value)}
@@ -488,7 +488,7 @@ const StructInfo test::TestArrayUInt32::_structInfo = {
 test::TestArrayInt64::TestArrayInt64()
 {
 }
-test::TestArrayInt64::TestArrayInt64(decltype(value) value_)
+test::TestArrayInt64::TestArrayInt64(const decltype(value)& value_)
     : value(value_)
 {
 }
@@ -509,7 +509,7 @@ bool test::TestArrayInt64::operator !=(const TestArrayInt64& rhs) const
     return !(*this == rhs);
 }
 const StructInfo test::TestArrayInt64::_structInfo = {
-    "test.TestArrayInt64", {
+    "test.TestArrayInt64", "description", {
          {TYPE_ARRAY_INT64,  "", "value", "description", 0, 0}
      },{
          {OFFSET_STRUCTBASE_TO_PARAM(TestArrayInt64, value)}
@@ -519,7 +519,7 @@ const StructInfo test::TestArrayInt64::_structInfo = {
 test::TestArrayUInt64::TestArrayUInt64()
 {
 }
-test::TestArrayUInt64::TestArrayUInt64(decltype(value) value_)
+test::TestArrayUInt64::TestArrayUInt64(const decltype(value)& value_)
     : value(value_)
 {
 }
@@ -540,7 +540,7 @@ bool test::TestArrayUInt64::operator !=(const TestArrayUInt64& rhs) const
     return !(*this == rhs);
 }
 const StructInfo test::TestArrayUInt64::_structInfo = {
-    "test.TestArrayUInt64", {
+    "test.TestArrayUInt64", "description", {
          {TYPE_ARRAY_UINT64,  "", "value", "description", 0, 0}
      },{
          {OFFSET_STRUCTBASE_TO_PARAM(TestArrayUInt64, value)}
@@ -550,7 +550,7 @@ const StructInfo test::TestArrayUInt64::_structInfo = {
 test::TestArrayFloat::TestArrayFloat()
 {
 }
-test::TestArrayFloat::TestArrayFloat(decltype(value) value_)
+test::TestArrayFloat::TestArrayFloat(const decltype(value)& value_)
     : value(value_)
 {
 }
@@ -571,7 +571,7 @@ bool test::TestArrayFloat::operator !=(const TestArrayFloat& rhs) const
     return !(*this == rhs);
 }
 const StructInfo test::TestArrayFloat::_structInfo = {
-    "test.TestArrayFloat", {
+    "test.TestArrayFloat", "description", {
          {TYPE_ARRAY_FLOAT,  "", "value", "description", 0, 0}
      },{
          {OFFSET_STRUCTBASE_TO_PARAM(TestArrayFloat, value)}
@@ -581,7 +581,7 @@ const StructInfo test::TestArrayFloat::_structInfo = {
 test::TestArrayDouble::TestArrayDouble()
 {
 }
-test::TestArrayDouble::TestArrayDouble(decltype(value) value_)
+test::TestArrayDouble::TestArrayDouble(const decltype(value)& value_)
     : value(value_)
 {
 }
@@ -602,7 +602,7 @@ bool test::TestArrayDouble::operator !=(const TestArrayDouble& rhs) const
     return !(*this == rhs);
 }
 const StructInfo test::TestArrayDouble::_structInfo = {
-    "test.TestArrayDouble", {
+    "test.TestArrayDouble", "description", {
          {TYPE_ARRAY_DOUBLE,  "", "value", "description", 0, 0}
      },{
          {OFFSET_STRUCTBASE_TO_PARAM(TestArrayDouble, value)}
@@ -612,7 +612,7 @@ const StructInfo test::TestArrayDouble::_structInfo = {
 test::TestArrayString::TestArrayString()
 {
 }
-test::TestArrayString::TestArrayString(decltype(value) value_)
+test::TestArrayString::TestArrayString(const decltype(value)& value_)
     : value(value_)
 {
 }
@@ -633,7 +633,7 @@ bool test::TestArrayString::operator !=(const TestArrayString& rhs) const
     return !(*this == rhs);
 }
 const StructInfo test::TestArrayString::_structInfo = {
-    "test.TestArrayString", {
+    "test.TestArrayString", "description", {
          {TYPE_ARRAY_STRING,  "", "value", "description", 0, 0}
      },{
          {OFFSET_STRUCTBASE_TO_PARAM(TestArrayString, value)}
@@ -643,7 +643,7 @@ const StructInfo test::TestArrayString::_structInfo = {
 test::TestArrayBytes::TestArrayBytes()
 {
 }
-test::TestArrayBytes::TestArrayBytes(decltype(value) value_)
+test::TestArrayBytes::TestArrayBytes(const decltype(value)& value_)
     : value(value_)
 {
 }
@@ -664,7 +664,7 @@ bool test::TestArrayBytes::operator !=(const TestArrayBytes& rhs) const
     return !(*this == rhs);
 }
 const StructInfo test::TestArrayBytes::_structInfo = {
-    "test.TestArrayBytes", {
+    "test.TestArrayBytes", "description", {
          {TYPE_ARRAY_BYTES,  "", "value", "description", 0, 0}
      },{
          {OFFSET_STRUCTBASE_TO_PARAM(TestArrayBytes, value)}
@@ -674,7 +674,7 @@ const StructInfo test::TestArrayBytes::_structInfo = {
 test::TestArrayStruct::TestArrayStruct()
 {
 }
-test::TestArrayStruct::TestArrayStruct(decltype(value) value_)
+test::TestArrayStruct::TestArrayStruct(const decltype(value)& value_)
     : value(std::move(value_))
 {
 }
@@ -695,7 +695,7 @@ bool test::TestArrayStruct::operator !=(const TestArrayStruct& rhs) const
     return !(*this == rhs);
 }
 const StructInfo test::TestArrayStruct::_structInfo = {
-    "test.TestArrayStruct", {
+    "test.TestArrayStruct", "description", {
          {TYPE_ARRAY_STRUCT,  "test.TestStruct", "value", "description", 0, 0}
      },{
          {OFFSET_STRUCTBASE_TO_PARAM(TestArrayStruct, value), new ArrayStructAdapter<test::TestStruct>}
@@ -705,7 +705,7 @@ const StructInfo test::TestArrayStruct::_structInfo = {
 test::TestArrayEnum::TestArrayEnum()
 {
 }
-test::TestArrayEnum::TestArrayEnum(decltype(value) value_)
+test::TestArrayEnum::TestArrayEnum(const decltype(value)& value_)
     : value(value_)
 {
 }
@@ -726,7 +726,7 @@ bool test::TestArrayEnum::operator !=(const TestArrayEnum& rhs) const
     return !(*this == rhs);
 }
 const StructInfo test::TestArrayEnum::_structInfo = {
-    "test.TestArrayEnum", {
+    "test.TestArrayEnum", "description", {
          {TYPE_ARRAY_ENUM,  "test.Foo", "value", "description", 0, 0}
      },{
          {OFFSET_STRUCTBASE_TO_PARAM(TestArrayEnum, value)}

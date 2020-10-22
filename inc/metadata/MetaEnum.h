@@ -21,11 +21,13 @@ class MetaEnum
 {
 public:
     MetaEnum();
-    MetaEnum(const std::string& typeName, const std::vector<MetaEnumEntry>& entries);
-    MetaEnum(const std::string& typeName, std::vector<MetaEnumEntry>&& entries);
+    MetaEnum(const std::string& typeName, const std::string& description, const std::vector<MetaEnumEntry>& entries);
+    MetaEnum(const std::string& typeName, const std::string& description, std::vector<MetaEnumEntry>&& entries);
 
     void setTypeName(const std::string& typeName);
     const std::string& getTypeName() const;
+    void setDescription(const std::string& description);
+    const std::string& getDescription() const;
 
     const MetaEnumEntry* getEntryById(int id) const;
     const MetaEnumEntry* getEntryByName(const std::string& name) const;
@@ -44,6 +46,7 @@ public:
 
 private:
     std::string                                                             m_typeName;
+    std::string                                                             m_description;
     std::vector<std::shared_ptr<const MetaEnumEntry>>                       m_entries;
     std::unordered_map<int, std::shared_ptr<const MetaEnumEntry>>           m_id2Entry;
     std::unordered_map<std::string, std::shared_ptr<const MetaEnumEntry>>   m_name2Entry;

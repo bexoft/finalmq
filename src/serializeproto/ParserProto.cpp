@@ -767,7 +767,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::TYPE_ARRAY_FLAG:
+                case MetaTypeId::OFFSET_ARRAY_FLAG:
                     assert(false);
                     break;
                 default:
@@ -779,6 +779,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
             {
                 WireType wireType = static_cast<WireType>(m_tag & 0x7);
                 skip(wireType);
+                m_tag = 0;
             }
         }
     }

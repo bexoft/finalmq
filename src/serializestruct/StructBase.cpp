@@ -19,24 +19,22 @@ void FieldInfo::setField(const MetaField* field)
 
 
 
-StructInfo::StructInfo(const std::string& typeName, std::vector<MetaField>&& fields, std::vector<FieldInfo>&& fieldInfos)
-    : m_typeName(typeName)
+StructInfo::StructInfo(const std::string& typeName, const std::string& description, std::vector<MetaField>&& fields, std::vector<FieldInfo>&& fieldInfos)
+    : m_metaStruct(MetaDataGlobal::instance().addStruct({typeName, description, std::move(fields)}))
     , m_fieldInfos(std::move(fieldInfos))
 {
-    const MetaStruct& stru = MetaDataGlobal::instance().addStruct({typeName, std::move(fields)});
-
-    int size = std::min(stru.getFieldsSize(), static_cast<int>(m_fieldInfos.size()));
+    int size = std::min(m_metaStruct.getFieldsSize(), static_cast<int>(m_fieldInfos.size()));
     for (int i = 0; i < size; ++i)
     {
-        m_fieldInfos[i].setField(stru.getFieldByIndex(i));
+        m_fieldInfos[i].setField(m_metaStruct.getFieldByIndex(i));
     }
 }
 
 
 
 
-EnumInfo::EnumInfo(const std::string& typeName, std::vector<MetaEnumEntry>&& entries)
-    : m_metaEnum(MetaDataGlobal::instance().addEnum({typeName, std::move(entries)}))
+EnumInfo::EnumInfo(const std::string& typeName, const std::string& description, std::vector<MetaEnumEntry>&& entries)
+    : m_metaEnum(MetaDataGlobal::instance().addEnum({typeName, description, std::move(entries)}))
 {
 }
 

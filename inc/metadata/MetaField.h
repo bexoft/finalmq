@@ -13,8 +13,9 @@ class MetaStruct;
 class IMetaData;
 
 
-enum MetaFieldFlags
+enum MetaFieldFlags : std::int32_t
 {
+    METAFLAG_NONE         = 0,
     METAFLAG_PROTO_VARINT = 1,
     METAFLAG_PROTO_ZIGZAG = 2,
 };
