@@ -3,6 +3,7 @@
 #include "helpers/ZeroCopyBuffer.h"
 
 #include <algorithm>
+#include <assert.h>
 
 std::string ZeroCopyBuffer::getData() const
 {
@@ -37,6 +38,7 @@ void ZeroCopyBuffer::downsizeLastBuffer(int newSize)
         return;
     }
 
+    assert(!m_strings.empty());
     std::string& str = m_strings.back();
     str.resize(newSize);
 }

@@ -474,7 +474,7 @@ void ParserJson::enterArray()
             m_visitor.enterArrayStruct(*m_fieldCurrent);
             m_stack.emplace_back(m_fieldCurrent);
             m_fieldCurrent = MetaDataGlobal::instance().getArrayField(*m_fieldCurrent);
-            m_stack.emplace_back(m_fieldCurrent);
+//            m_stack.emplace_back(m_fieldCurrent);
             m_structCurrent = nullptr;
             break;
         default:
@@ -558,7 +558,7 @@ void ParserJson::exitArray()
         m_fieldCurrent = nullptr;
         if (!m_stack.empty())
         {
-            m_stack.pop_back();
+//            m_stack.pop_back();
             m_fieldCurrent = m_stack.back().field;
             if (m_fieldCurrent)
             {
@@ -621,7 +621,14 @@ void ParserJson::exitObject()
         m_fieldCurrent = m_stack.back().field;
         if (m_fieldCurrent)
         {
-            m_structCurrent = MetaDataGlobal::instance().getStruct(*m_fieldCurrent);
+            if ((int)m_fieldCurrent->typeId & (int)MetaTypeId::OFFSET_ARRAY_FLAG)
+            {
+                m_fieldCurrent = MetaDataGlobal::instance().getArrayField(*m_fieldCurrent);
+            }
+            else
+            {
+                m_structCurrent = MetaDataGlobal::instance().getStruct(*m_fieldCurrent);
+            }
         }
     }
 }
