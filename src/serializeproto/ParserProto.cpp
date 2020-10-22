@@ -767,7 +767,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::TYPE_ARRAY_FLAG:
+                case MetaTypeId::OFFSET_ARRAY_FLAG:
                     assert(false);
                     break;
                 default:

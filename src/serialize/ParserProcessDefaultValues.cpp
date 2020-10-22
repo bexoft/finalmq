@@ -172,7 +172,7 @@ void ParserProcessDefaultValues::processDefaultValues(const MetaStruct& stru, co
                 case MetaTypeId::TYPE_ARRAY_ENUM:
                     m_visitor->enterArrayEnum(*field, std::vector<std::int32_t>());
                     break;
-                case MetaTypeId::TYPE_ARRAY_FLAG:
+                case MetaTypeId::OFFSET_ARRAY_FLAG:
                     assert(false);
                     break;
                 default:

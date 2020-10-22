@@ -8,8 +8,9 @@ MetaEnum::MetaEnum()
 
 }
 
-MetaEnum::MetaEnum(const std::string& typeName, const std::vector<MetaEnumEntry>& entries)
+MetaEnum::MetaEnum(const std::string& typeName, const std::string& description, const std::vector<MetaEnumEntry>& entries)
     : m_typeName(typeName)
+    , m_description(description)
 {
     for (size_t i = 0 ; i < entries.size(); ++i)
     {
@@ -17,8 +18,9 @@ MetaEnum::MetaEnum(const std::string& typeName, const std::vector<MetaEnumEntry>
     }
 }
 
-MetaEnum::MetaEnum(const std::string& typeName, std::vector<MetaEnumEntry>&& entries)
+MetaEnum::MetaEnum(const std::string& typeName, const std::string& description, std::vector<MetaEnumEntry>&& entries)
     : m_typeName(typeName)
+    , m_description(description)
 {
     for (size_t i = 0 ; i < entries.size(); ++i)
     {
@@ -39,6 +41,14 @@ const std::string& MetaEnum::getTypeName() const
     return m_typeName;
 }
 
+void MetaEnum::setDescription(const std::string& description)
+{
+    m_description = description;
+}
+const std::string& MetaEnum::getDescription() const
+{
+    return m_description;
+}
 
 const MetaEnumEntry* MetaEnum::getEntryById(int id) const
 {

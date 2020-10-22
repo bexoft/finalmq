@@ -435,7 +435,7 @@ void ParserJson::enterString(std::string&& value)
 
 void ParserJson::enterArray()
 {
-    if (m_fieldCurrent && ((int)m_fieldCurrent->typeId & (int)MetaTypeId::TYPE_ARRAY_FLAG))
+    if (m_fieldCurrent && ((int)m_fieldCurrent->typeId & (int)MetaTypeId::OFFSET_ARRAY_FLAG))
     {
         switch (m_fieldCurrent->typeId)
         {
@@ -492,7 +492,7 @@ void ParserJson::exitArray()
         return;
     }
 
-    if ((int)m_fieldCurrent->typeId & (int)MetaTypeId::TYPE_ARRAY_FLAG)
+    if ((int)m_fieldCurrent->typeId & (int)MetaTypeId::OFFSET_ARRAY_FLAG)
     {
         switch (m_fieldCurrent->typeId)
         {

@@ -15,6 +15,7 @@ class IMetaData;
 
 enum MetaFieldFlags
 {
+    METAFLAG_NONE         = 0,
     METAFLAG_PROTO_VARINT = 1,
     METAFLAG_PROTO_ZIGZAG = 2,
 };
@@ -23,7 +24,7 @@ enum MetaFieldFlags
 class MetaField
 {
 public:
-    MetaTypeId      typeId;                                 ///< type id of the parameter
+    MetaTypeId  typeId;                                 ///< type id of the parameter
     std::string     typeName;                               ///< is needed for struct and enum
     std::string     name;                                   ///< parameter name
     std::string     description;                            ///< description of the parameter
