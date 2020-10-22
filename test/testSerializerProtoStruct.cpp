@@ -200,8 +200,8 @@ TEST(TestSerializerProtoStruct, test0DataBlockSize1)
     {
         testing::InSequence seq;
         EXPECT_CALL(mockBuffer, addBuffer(_)).Times(1).WillOnce(Return((char*)data1.data()));
-        EXPECT_CALL(mockBuffer, addBuffer(_)).Times(1).WillOnce(Return((char*)data2.data()));
         EXPECT_CALL(mockBuffer, downsizeLastBuffer(_)).Times(1).WillOnce(Invoke(&data1, &String::resize));
+        EXPECT_CALL(mockBuffer, addBuffer(_)).Times(1).WillOnce(Return((char*)data2.data()));
         EXPECT_CALL(mockBuffer, downsizeLastBuffer(_)).Times(1).WillOnce(Invoke(&data2, &String::resize));
     }
 
@@ -245,10 +245,10 @@ TEST(TestSerializerProtoStruct, test32DataBlockSize1)
     {
         testing::InSequence seq;
         EXPECT_CALL(mockBuffer, addBuffer(_)).Times(1).WillOnce(Return((char*)data1.data()));
-        EXPECT_CALL(mockBuffer, addBuffer(_)).Times(1).WillOnce(Return((char*)data2.data()));
         EXPECT_CALL(mockBuffer, downsizeLastBuffer(_)).Times(1).WillOnce(Invoke(&data1, &String::resize));
-        EXPECT_CALL(mockBuffer, addBuffer(_)).Times(1).WillOnce(Return((char*)data3.data()));
+        EXPECT_CALL(mockBuffer, addBuffer(_)).Times(1).WillOnce(Return((char*)data2.data()));
         EXPECT_CALL(mockBuffer, downsizeLastBuffer(_)).Times(1).WillOnce(Invoke(&data2, &String::resize));
+        EXPECT_CALL(mockBuffer, addBuffer(_)).Times(1).WillOnce(Return((char*)data3.data()));
         EXPECT_CALL(mockBuffer, downsizeLastBuffer(_)).Times(1).WillOnce(Invoke(&data3, &String::resize));
     }
 
@@ -290,10 +290,10 @@ TEST(TestSerializerProtoStruct, test33DataBlockSize1)
     {
         testing::InSequence seq;
         EXPECT_CALL(mockBuffer, addBuffer(_)).Times(1).WillOnce(Return((char*)data1.data()));
-        EXPECT_CALL(mockBuffer, addBuffer(_)).Times(1).WillOnce(Return((char*)data2.data()));
         EXPECT_CALL(mockBuffer, downsizeLastBuffer(_)).Times(1).WillOnce(Invoke(&data1, &String::resize));
-        EXPECT_CALL(mockBuffer, addBuffer(_)).Times(1).WillOnce(Return((char*)data3.data()));
+        EXPECT_CALL(mockBuffer, addBuffer(_)).Times(1).WillOnce(Return((char*)data2.data()));
         EXPECT_CALL(mockBuffer, downsizeLastBuffer(_)).Times(1).WillOnce(Invoke(&data2, &String::resize));
+        EXPECT_CALL(mockBuffer, addBuffer(_)).Times(1).WillOnce(Return((char*)data3.data()));
         EXPECT_CALL(mockBuffer, downsizeLastBuffer(_)).Times(1).WillOnce(Invoke(&data3, &String::resize));
     }
 
@@ -336,10 +336,10 @@ TEST(TestSerializerProtoStruct, test121DataBlockSize1)
     {
         testing::InSequence seq;
         EXPECT_CALL(mockBuffer, addBuffer(_)).Times(1).WillOnce(Return((char*)data1.data()));
-        EXPECT_CALL(mockBuffer, addBuffer(_)).Times(1).WillOnce(Return((char*)data2.data()));
         EXPECT_CALL(mockBuffer, downsizeLastBuffer(_)).Times(1).WillOnce(Invoke(&data1, &String::resize));
-        EXPECT_CALL(mockBuffer, addBuffer(_)).Times(1).WillOnce(Return((char*)data3.data()));
+        EXPECT_CALL(mockBuffer, addBuffer(_)).Times(1).WillOnce(Return((char*)data2.data()));
         EXPECT_CALL(mockBuffer, downsizeLastBuffer(_)).Times(1).WillOnce(Invoke(&data2, &String::resize));
+        EXPECT_CALL(mockBuffer, addBuffer(_)).Times(1).WillOnce(Return((char*)data3.data()));
         EXPECT_CALL(mockBuffer, downsizeLastBuffer(_)).Times(1).WillOnce(Invoke(&data3, &String::resize));
     }
 
@@ -382,10 +382,10 @@ TEST(TestSerializerProtoStruct, test122DataBlockSize1)
     {
         testing::InSequence seq;
         EXPECT_CALL(mockBuffer, addBuffer(_)).Times(1).WillOnce(Return((char*)data1.data()));
-        EXPECT_CALL(mockBuffer, addBuffer(_)).Times(1).WillOnce(Return((char*)data2.data()));
         EXPECT_CALL(mockBuffer, downsizeLastBuffer(_)).Times(1).WillOnce(Invoke(&data1, &String::resize));
-        EXPECT_CALL(mockBuffer, addBuffer(_)).Times(1).WillOnce(Return((char*)data3.data()));
+        EXPECT_CALL(mockBuffer, addBuffer(_)).Times(1).WillOnce(Return((char*)data2.data()));
         EXPECT_CALL(mockBuffer, downsizeLastBuffer(_)).Times(1).WillOnce(Invoke(&data2, &String::resize));
+        EXPECT_CALL(mockBuffer, addBuffer(_)).Times(1).WillOnce(Return((char*)data3.data()));
         EXPECT_CALL(mockBuffer, downsizeLastBuffer(_)).Times(1).WillOnce(Invoke(&data3, &String::resize));
     }
 

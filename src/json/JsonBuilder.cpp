@@ -27,14 +27,14 @@ void JsonBuilder::reserveSpace(int space)
     int sizeRemaining = m_bufferEnd - m_buffer;
     if (sizeRemaining < space)
     {
-        int sizeNew = std::max(m_maxBlockSize, space);
-        char* bufferStartNew = m_zeroCopybuffer.addBuffer(sizeNew);
         if (m_buffer != nullptr)
         {
             int size = m_buffer - m_bufferStart;
             assert(size >= 0);
             m_zeroCopybuffer.downsizeLastBuffer(size);
         }
+        int sizeNew = std::max(m_maxBlockSize, space);
+        char* bufferStartNew = m_zeroCopybuffer.addBuffer(sizeNew);
         m_bufferStart = bufferStartNew;
         m_bufferEnd = m_bufferStart + sizeNew;
         m_buffer = m_bufferStart;
@@ -165,8 +165,10 @@ void JsonBuilder::enterArray()
 void JsonBuilder::exitArray()
 {
     correctComma();
-    reserveSpace(1);
+    reserveSpace(2);
     *m_buffer = ']';
+    ++m_buffer;
+    *m_buffer = ',';
     ++m_buffer;
 }
 
@@ -180,7 +182,7 @@ void JsonBuilder::enterObject()
 void JsonBuilder::exitObject()
 {
     correctComma();
-    reserveSpace(1);
+    reserveSpace(2);
     *m_buffer = '}';
     ++m_buffer;
     *m_buffer = ',';

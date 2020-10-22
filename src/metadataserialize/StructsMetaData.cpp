@@ -221,11 +221,11 @@ bool SerializeMetaField::operator !=(const SerializeMetaField& rhs) const
 }
 const StructInfo SerializeMetaField::_structInfo = {
     "SerializeMetaField", "description", {
-        {TYPE_ENUM,         "SerializeMetaTypeId",  "typeId",       "description", 0},
-        {TYPE_STRING,       "",                     "typeName",     "description", 0},
-        {TYPE_STRING,       "",                     "name",         "description", 0},
-        {TYPE_STRING,       "",                     "description",  "description", 0},
-        {TYPE_ARRAY_STRING, "",                     "flags",        "description", 0}
+        {TYPE_ENUM,         "SerializeMetaTypeId",      "typeId",       "description", 0},
+        {TYPE_STRING,       "",                         "typeName",     "description", 0},
+        {TYPE_STRING,       "",                         "name",         "description", 0},
+        {TYPE_STRING,       "",                         "description",  "description", 0},
+        {TYPE_ARRAY_ENUM,   "SerializeMetaFieldFlags",  "flags",        "description", 0}
      },{
         {OFFSET_STRUCTBASE_TO_PARAM(SerializeMetaField, typeId)},
         {OFFSET_STRUCTBASE_TO_PARAM(SerializeMetaField, typeName)},

@@ -215,7 +215,7 @@ void ParserConverter::enterEnum(const MetaField& field, const char* value, int s
 {
     if (field.typeId == MetaTypeId::TYPE_ENUM)
     {
-        m_visitor->enterEnum(field, value);
+        m_visitor->enterEnum(field, std::string(value, size));
     }
     else
     {

@@ -28,7 +28,7 @@ ParserJson::ParserJson(IParserVisitor& visitor, const char* ptr, int size)
 bool ParserJson::parseStruct(const std::string& typeName)
 {
     assert(m_ptr);
-    assert(m_size >= 0);
+    assert(m_size >= CHECK_ON_ZEROTERM);
 
     const MetaStruct* stru = MetaDataGlobal::instance().getStruct(typeName);
     if (!stru)
@@ -560,9 +560,21 @@ void ParserJson::exitArray()
         {
             m_stack.pop_back();
             m_fieldCurrent = m_stack.back().field;
+            if (m_fieldCurrent)
+            {
+                m_visitor.exitArrayStruct(*m_fieldCurrent);
+            }
             m_stack.pop_back();
         }
-        m_visitor.exitArrayStruct(*m_fieldCurrent);
+
+        if (!m_stack.empty())
+        {
+            m_fieldCurrent = m_stack.back().field;
+            if (m_fieldCurrent)
+            {
+                m_structCurrent = MetaDataGlobal::instance().getStruct(*m_fieldCurrent);
+            }
+        }
     }
 }
 

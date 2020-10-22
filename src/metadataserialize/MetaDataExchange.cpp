@@ -1,5 +1,10 @@
 #include "metadataserialize/MetaDataExchange.h"
 #include "metadata/MetaData.h"
+#include "serializejson/ParserJson.h"
+#include "serializejson/SerializerJson.h"
+#include "serializestruct/SerializerStruct.h"
+#include "serializestruct/ParserStruct.h"
+#include "helpers/ZeroCopyBuffer.h"
 
 #include <algorithm>
 
@@ -85,4 +90,30 @@ void MetaDataExchange::exportMetaData(SerializeMetaData& metadata)
         }
         metadata.structs.push_back(std::move(structDestination));
     }
+}
+
+
+
+void MetaDataExchange::importMetaDataJson(const char* json)
+{
+    SerializeMetaData root;
+    SerializerStruct serializer(root);
+    ParserJson parser(serializer, json);
+    parser.parseStruct("SerializeMetaData");
+
+    importMetaData(root);
+}
+
+
+void MetaDataExchange::exportMetaDataJson(std::string& json)
+{
+    SerializeMetaData root;
+    exportMetaData(root);
+
+    ZeroCopyBuffer buffer;
+    SerializerJson serializer(buffer, 128, true, false);
+    ParserStruct parser(serializer, root);
+    parser.parseStruct();
+
+    json = buffer.getData();
 }

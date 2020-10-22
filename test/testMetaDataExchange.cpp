@@ -5,6 +5,9 @@
 #include "metadataserialize/MetaDataExchange.h"
 #include "metadata/MetaData.h"
 
+#include "serializestruct/SerializerStruct.h"
+#include "serializejson/ParserJson.h"
+
 
 using ::testing::_;
 using ::testing::Return;
@@ -78,7 +81,6 @@ TEST_F(TestMetaDataExchange, testImportStruct)
     ASSERT_EQ(metaStruct, nullptr);
 
     SerializeMetaStruct stru;
-
     stru.typeName = STRUCT_TYPE;
     stru.description = STRUCT_DESCRIPTION;
     stru.fields.push_back({STRUCT_ENTRY_TYPEID, STRUCT_ENTRY_TYPENAME, STRUCT_ENTRY_NAME, STRUCT_ENTRY_DESCRIPTION, STRUCT_ENTRY_FLAGS});
@@ -155,3 +157,66 @@ TEST_F(TestMetaDataExchange, testExportStruct)
     ASSERT_EQ(found, 1);
 }
 
+
+TEST_F(TestMetaDataExchange, testImportJson)
+{
+    static const std::string JSON = "{\"structs\":["
+                                        "{\"typeName\": \"MyNextTestStruct\","
+                                          "\"description\": \"struct description\","
+                                            "\"fields\": [{"
+                                                "\"typeId\": \"TYPE_STRING\","
+                                                "\"typeName\": \"JustATypeName\","
+                                                "\"name\": \"value\","
+                                                "\"description\": \"value description\","
+                                                "\"flags\": [\"METAFLAG_PROTO_VARINT\",\"METAFLAG_PROTO_ZIGZAG\"]"
+                                            "}]"
+                                        "}"
+                                    "]}";
+
+    const MetaStruct* metaStruct = MetaDataGlobal::instance().getStruct("MyNextTestStruct");
+    ASSERT_EQ(metaStruct, nullptr);
+
+    MetaDataExchange::importMetaDataJson(JSON.c_str());
+
+    metaStruct = MetaDataGlobal::instance().getStruct("MyNextTestStruct");
+    ASSERT_NE(metaStruct, nullptr);
+    ASSERT_EQ(metaStruct->getTypeName(), "MyNextTestStruct");
+    ASSERT_EQ(metaStruct->getDescription(), STRUCT_DESCRIPTION);
+    ASSERT_EQ(metaStruct->getFieldsSize(), 1);
+    const MetaField* field = metaStruct->getFieldByIndex(0);
+    ASSERT_NE(field, nullptr);
+    ASSERT_EQ(field->typeId, STRUCT_ENTRY_TYPEID);
+    ASSERT_EQ(field->typeName, STRUCT_ENTRY_TYPENAME);
+    ASSERT_EQ(field->name, STRUCT_ENTRY_NAME);
+    ASSERT_EQ(field->description, STRUCT_ENTRY_DESCRIPTION);
+    ASSERT_EQ(field->flags, METAFLAG_PROTO_VARINT | METAFLAG_PROTO_ZIGZAG);
+}
+
+
+
+TEST_F(TestMetaDataExchange, testExportJson)
+{
+    std::string json;
+    MetaDataExchange::exportMetaDataJson(json);
+
+    SerializeMetaData root;
+    SerializerStruct serializer(root);
+    ParserJson parser(serializer, json.c_str());
+    parser.parseStruct("SerializeMetaData");
+
+    SerializeMetaStruct stru;
+    stru.typeName = STRUCT_TYPE;
+    stru.description = STRUCT_DESCRIPTION;
+    stru.fields.push_back({STRUCT_ENTRY_TYPEID, STRUCT_ENTRY_TYPENAME, STRUCT_ENTRY_NAME, STRUCT_ENTRY_DESCRIPTION, STRUCT_ENTRY_FLAGS});
+
+    int found = 0;
+    for (size_t i = 0; i < root.structs.size(); ++i)
+    {
+        if (root.structs[i].typeName == STRUCT_TYPE)
+        {
+            found++;
+            ASSERT_EQ(root.structs[i], stru);
+        }
+    }
+    ASSERT_EQ(found, 1);
+}
