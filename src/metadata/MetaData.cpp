@@ -181,6 +181,17 @@ const MetaEnum& MetaData::addEnum(MetaEnum&& en)
 }
 
 
+const std::unordered_map<std::string, MetaStruct>& MetaData::getAllStructs() const
+{
+    return m_name2Struct;
+}
+
+const std::unordered_map<std::string, MetaEnum>& MetaData::getAllEnums() const
+{
+    return m_name2Enum;
+}
+
+
 ////////////////////////////////
 
 std::unique_ptr<IMetaData> MetaDataGlobal::m_instance;
