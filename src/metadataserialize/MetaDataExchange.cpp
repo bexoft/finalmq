@@ -2,6 +2,8 @@
 #include "metadata/MetaData.h"
 #include "serializejson/ParserJson.h"
 #include "serializejson/SerializerJson.h"
+#include "serializeproto/ParserProto.h"
+#include "serializeproto/SerializerProto.h"
 #include "serializestruct/SerializerStruct.h"
 #include "serializestruct/ParserStruct.h"
 #include "helpers/ZeroCopyBuffer.h"
@@ -111,9 +113,35 @@ void MetaDataExchange::exportMetaDataJson(std::string& json)
     exportMetaData(root);
 
     ZeroCopyBuffer buffer;
-    SerializerJson serializer(buffer, 128, true, false);
+    SerializerJson serializer(buffer, 8192, true, false);
     ParserStruct parser(serializer, root);
     parser.parseStruct();
 
     json = buffer.getData();
+}
+
+
+
+void MetaDataExchange::importMetaDataProto(const char* proto, int size)
+{
+    SerializeMetaData root;
+    SerializerStruct serializer(root);
+    ParserProto parser(serializer, proto, size);
+    parser.parseStruct("SerializeMetaData");
+
+    importMetaData(root);
+}
+
+
+void MetaDataExchange::exportMetaDataProto(std::string& proto)
+{
+    SerializeMetaData root;
+    exportMetaData(root);
+
+    ZeroCopyBuffer buffer;
+    SerializerProto serializer(buffer, 8192);
+    ParserStruct parser(serializer, root);
+    parser.parseStruct();
+
+    proto = buffer.getData();
 }

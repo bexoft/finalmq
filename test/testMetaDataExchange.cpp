@@ -5,8 +5,12 @@
 #include "metadataserialize/MetaDataExchange.h"
 #include "metadata/MetaData.h"
 
+#include "serializestruct/ParserStruct.h"
 #include "serializestruct/SerializerStruct.h"
 #include "serializejson/ParserJson.h"
+#include "serializeproto/ParserProto.h"
+#include "serializeproto/SerializerProto.h"
+#include "helpers/ZeroCopyBuffer.h"
 
 
 using ::testing::_;
@@ -165,29 +169,32 @@ TEST_F(TestMetaDataExchange, testExportStruct)
 }
 
 
-TEST_F(TestMetaDataExchange, testImportJson)
+TEST_F(TestMetaDataExchange, testImportProto)
 {
-    static const std::string JSON = "{\"structs\":["
-                                        "{\"typeName\": \"MyNextTestStruct\","
-                                          "\"description\": \"struct description\","
-                                            "\"fields\": [{"
-                                                "\"typeId\": \"TYPE_STRING\","
-                                                "\"typeName\": \"JustATypeName\","
-                                                "\"name\": \"value\","
-                                                "\"description\": \"value description\","
-                                                "\"flags\": [\"METAFLAG_PROTO_VARINT\",\"METAFLAG_PROTO_ZIGZAG\"]"
-                                            "}]"
-                                        "}"
-                                    "]}";
+    static const std::string STRUCT_TYPE = "MyTest_testImportProto";
 
-    const MetaStruct* metaStruct = MetaDataGlobal::instance().getStruct("MyNextTestStruct");
+    SerializeMetaStruct stru;
+    stru.typeName = STRUCT_TYPE;
+    stru.description = STRUCT_DESCRIPTION;
+    stru.fields.push_back({STRUCT_ENTRY_TYPEID, STRUCT_ENTRY_TYPENAME, STRUCT_ENTRY_NAME, STRUCT_ENTRY_DESCRIPTION, STRUCT_ENTRY_FLAGS});
+    SerializeMetaData serializeMetaData;
+    serializeMetaData.structs.push_back(stru);
+
+    ZeroCopyBuffer buffer;
+    SerializerProto serializer(buffer, 8192);
+    ParserStruct parser(serializer, serializeMetaData);
+    parser.parseStruct();
+
+    std::string proto = buffer.getData();
+
+    const MetaStruct* metaStruct = MetaDataGlobal::instance().getStruct(STRUCT_TYPE);
     ASSERT_EQ(metaStruct, nullptr);
 
-    MetaDataExchange::importMetaDataJson(JSON.c_str());
+    MetaDataExchange::importMetaDataProto(proto.c_str(), proto.size());
 
-    metaStruct = MetaDataGlobal::instance().getStruct("MyNextTestStruct");
+    metaStruct = MetaDataGlobal::instance().getStruct(STRUCT_TYPE);
     ASSERT_NE(metaStruct, nullptr);
-    ASSERT_EQ(metaStruct->getTypeName(), "MyNextTestStruct");
+    ASSERT_EQ(metaStruct->getTypeName(), STRUCT_TYPE);
     ASSERT_EQ(metaStruct->getDescription(), STRUCT_DESCRIPTION);
     ASSERT_EQ(metaStruct->getFieldsSize(), 1);
     const MetaField* field = metaStruct->getFieldByIndex(0);
@@ -201,21 +208,21 @@ TEST_F(TestMetaDataExchange, testImportJson)
 
 
 
-TEST_F(TestMetaDataExchange, testExportJson)
+TEST_F(TestMetaDataExchange, testExportProto)
 {
-    static const std::string STRUCT_TYPE = "MyTest_testExportJson";
+    static const std::string STRUCT_TYPE = "MyTest_testExportProto";
 
     const MetaStruct* metaStruct = MetaDataGlobal::instance().getStruct(STRUCT_TYPE);
     ASSERT_EQ(metaStruct, nullptr);
 
     SerializeMetaStruct stru = importTestStruct(STRUCT_TYPE);
 
-    std::string json;
-    MetaDataExchange::exportMetaDataJson(json);
+    std::string proto;
+    MetaDataExchange::exportMetaDataProto(proto);
 
     SerializeMetaData root;
     SerializerStruct serializer(root);
-    ParserJson parser(serializer, json.c_str());
+    ParserProto parser(serializer, proto.c_str(), proto.size());
     parser.parseStruct("SerializeMetaData");
 
     int found = 0;

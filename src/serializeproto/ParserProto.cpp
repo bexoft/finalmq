@@ -779,6 +779,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
             {
                 WireType wireType = static_cast<WireType>(m_tag & 0x7);
                 skip(wireType);
+                m_tag = 0;
             }
         }
     }
