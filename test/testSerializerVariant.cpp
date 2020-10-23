@@ -380,7 +380,7 @@ TEST_F(TestSerializerVariant, testArrayStruct)
     static const std::int32_t VALUE2_INT32 = 345;
     static const std::string VALUE2_STRING = "foo";
     static const std::uint32_t VALUE2_UINT32 = 12345678;
-
+    static const std::uint32_t LAST_VALUE = 5;
 
     m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageArrayStruct", "", "desc"});
     m_serializer->enterArrayStruct({MetaTypeId::TYPE_ARRAY_STRUCT, "test.TestMessageStruct", "value", "desc"});
@@ -409,6 +409,7 @@ TEST_F(TestSerializerVariant, testArrayStruct)
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageStruct", "", "desc", 0});
 
     m_serializer->exitArrayStruct({MetaTypeId::TYPE_ARRAY_STRUCT, "test.TestMessageStruct", "value", "desc"});
+    m_serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "desc", 1}, LAST_VALUE);
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestMessageArrayStruct", "", "desc"});
 
     m_serializer->finished();
@@ -417,7 +418,7 @@ TEST_F(TestSerializerVariant, testArrayStruct)
         VariantStruct({ {"struct_int32", VariantStruct({ {"value", VALUE1_INT32} })}, {"struct_string", VariantStruct({ {"value", VALUE1_STRING} })},  {"last_value", VALUE1_UINT32} }),
         VariantStruct({ {"struct_int32", VariantStruct({ {"value", VALUE2_INT32} })}, {"struct_string", VariantStruct({ {"value", VALUE2_STRING} })},  {"last_value", VALUE2_UINT32} }),
         VariantStruct()
-    })} });
+    })}, {"last_value", LAST_VALUE} });
     ASSERT_EQ(m_root == VALUE, true);
 }
 

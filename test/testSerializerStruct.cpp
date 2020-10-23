@@ -480,6 +480,7 @@ TEST_F(TestSerializerStruct, testArrayStruct)
     static const std::int32_t VALUE2_INT32 = 345;
     static const std::string VALUE2_STRING = "foo";
     static const std::uint32_t VALUE2_UINT32 = 12345678;
+    static const std::uint32_t LAST_VALUE = 5;
 
     test::TestArrayStruct root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
@@ -511,6 +512,7 @@ TEST_F(TestSerializerStruct, testArrayStruct)
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0, 0});
 
     serializer->exitArrayStruct({MetaTypeId::TYPE_ARRAY_STRUCT, "test.TestStruct", "value", "desc", 0, 0});
+    serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "desc", 0, 1}, LAST_VALUE);
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayStruct", "", "desc", 0, 0});
 
     serializer->finished();
@@ -519,7 +521,7 @@ TEST_F(TestSerializerStruct, testArrayStruct)
                                           {{VALUE1_INT32}, {VALUE1_STRING}, VALUE1_UINT32},
                                           {{VALUE2_INT32}, {VALUE2_STRING}, VALUE2_UINT32},
                                           {}
-    }};
+    }, LAST_VALUE};
     ASSERT_EQ(root, cmp);
 }
 

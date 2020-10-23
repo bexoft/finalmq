@@ -649,6 +649,7 @@ TEST_F(TestParserStruct, testArrayStruct)
     static const std::int32_t VALUE2_INT32 = 345;
     static const std::string VALUE2_STRING = "foo";
     static const std::uint32_t VALUE2_LAST_VALUE = 120;
+    static const std::uint32_t LAST_VALUE = 5;
 
     const MetaField* fieldStruct = MetaDataGlobal::instance().getField("test.TestArrayStruct", "value");
     const MetaField* fieldStructWithoutArray = MetaDataGlobal::instance().getArrayField("test.TestArrayStruct", "value");
@@ -657,6 +658,7 @@ TEST_F(TestParserStruct, testArrayStruct)
     const MetaField* fieldStructLastValue = MetaDataGlobal::instance().getField("test.TestStruct", "last_value");
     const MetaField* fieldInt32 = MetaDataGlobal::instance().getField("test.TestInt32", "value");
     const MetaField* fieldString = MetaDataGlobal::instance().getField("test.TestString", "value");
+    const MetaField* fieldLastValue = MetaDataGlobal::instance().getField("test.TestArrayStruct", "last_value");
     ASSERT_NE(fieldStruct, nullptr);
     ASSERT_NE(fieldStructWithoutArray, nullptr);
     ASSERT_NE(fieldStructInt32, nullptr);
@@ -664,6 +666,7 @@ TEST_F(TestParserStruct, testArrayStruct)
     ASSERT_NE(fieldStructLastValue, nullptr);
     ASSERT_NE(fieldInt32, nullptr);
     ASSERT_NE(fieldString, nullptr);
+    ASSERT_NE(fieldLastValue, nullptr);
 
     MockIParserVisitor mockVisitor;
     MetaField rootStruct = {MetaTypeId::TYPE_STRUCT, "test.TestArrayStruct", ""};
@@ -704,6 +707,7 @@ TEST_F(TestParserStruct, testArrayStruct)
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldStructWithoutArray))).Times(1);
 
         EXPECT_CALL(mockVisitor, exitArrayStruct(MatcherMetaField(*fieldStruct))).Times(1);
+        EXPECT_CALL(mockVisitor, enterUInt32(MatcherMetaField(*fieldLastValue), LAST_VALUE)).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(rootStruct))).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
@@ -712,7 +716,7 @@ TEST_F(TestParserStruct, testArrayStruct)
         {{VALUE1_INT32},{VALUE1_STRING},VALUE1_LAST_VALUE},
         {{VALUE2_INT32},{VALUE2_STRING},VALUE2_LAST_VALUE},
         {}
-    }};
+    }, LAST_VALUE};
 
     ParserStruct parser(mockVisitor, root);
     bool res = parser.parseStruct();

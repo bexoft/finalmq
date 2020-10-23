@@ -395,9 +395,10 @@ namespace test {
 struct TestArrayStruct : public StructBase
 {
     std::vector<TestStruct> value;
+    std::uint32_t last_value = 0;
 
     TestArrayStruct();
-    TestArrayStruct(const decltype(value)& value_);
+    TestArrayStruct(const decltype(value)& value_, const decltype(last_value)& last_value_);
     bool operator ==(const TestArrayStruct& rhs) const;
     bool operator !=(const TestArrayStruct& rhs) const;
 

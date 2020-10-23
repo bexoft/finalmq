@@ -71,7 +71,8 @@
             {"typeId":"TYPE_ARRAY_BYTES","typeName":"","name":"value","description":"description","flags":[]}
         ]},
         {"typename":"TestArrayStruct","description":"desc","entries":[
-            {"typeId":"TYPE_ARRAY_STRUCT","typeName":"test.TestStruct","name":"value","description":"description","flags":[]}
+            {"typeId":"TYPE_ARRAY_STRUCT","typeName":"test.TestStruct","name":"value","description":"description","flags":[]},
+            {"typeId":"TYPE_UINT32","typeName":"","name":"last_value","description":"description","flags":[]}
         ]},
         {"typename":"TestArrayEnum","description":"desc","entries":[
             {"typeId":"TYPE_ARRAY_ENUM","typeName":"test.Foo","name":"value","description":"description","flags":[]}

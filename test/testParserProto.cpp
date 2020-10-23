@@ -794,6 +794,7 @@ TEST_F(TestParserProto, testArrayStruct)
     static const std::string VALUE1_STRING = "Hello World";
     static const std::int32_t VALUE2_INT32 = 345;
     static const std::string VALUE2_STRING = "foo";
+    static const std::uint32_t LAST_VALUE = 5;
 
     const MetaField* fieldStruct = MetaDataGlobal::instance().getField("test.TestArrayStruct", "value");
     const MetaField* fieldStructWithoutArray = MetaDataGlobal::instance().getArrayField("test.TestArrayStruct", "value");
@@ -801,12 +802,14 @@ TEST_F(TestParserProto, testArrayStruct)
     const MetaField* fieldStructString = MetaDataGlobal::instance().getField("test.TestStruct", "struct_string");
     const MetaField* fieldInt32 = MetaDataGlobal::instance().getField("test.TestInt32", "value");
     const MetaField* fieldString = MetaDataGlobal::instance().getField("test.TestString", "value");
+    const MetaField* fieldLastValue = MetaDataGlobal::instance().getField("test.TestArrayStruct", "last_value");
     ASSERT_NE(fieldStruct, nullptr);
     ASSERT_NE(fieldStructWithoutArray, nullptr);
     ASSERT_NE(fieldStructInt32, nullptr);
     ASSERT_NE(fieldStructString, nullptr);
     ASSERT_NE(fieldInt32, nullptr);
     ASSERT_NE(fieldString, nullptr);
+    ASSERT_NE(fieldLastValue, nullptr);
 
     std::string data;
 
@@ -819,6 +822,7 @@ TEST_F(TestParserProto, testArrayStruct)
     message2->mutable_struct_int32()->set_value(VALUE2_INT32);
     message2->mutable_struct_string()->set_value(VALUE2_STRING);
     auto* message3 = value->Add();
+    message.set_last_value(LAST_VALUE);
     message.SerializeToString(&data);
 
     MockIParserVisitor mockVisitor;
@@ -851,6 +855,7 @@ TEST_F(TestParserProto, testArrayStruct)
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldStructWithoutArray))).Times(1);
 
         EXPECT_CALL(mockVisitor, exitArrayStruct(MatcherMetaField(*fieldStruct))).Times(1);
+        EXPECT_CALL(mockVisitor, enterUInt32(MatcherMetaField(*fieldLastValue), LAST_VALUE)).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(rootStruct))).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }

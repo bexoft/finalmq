@@ -674,8 +674,9 @@ const StructInfo test::TestArrayBytes::_structInfo = {
 test::TestArrayStruct::TestArrayStruct()
 {
 }
-test::TestArrayStruct::TestArrayStruct(const decltype(value)& value_)
+test::TestArrayStruct::TestArrayStruct(const decltype(value)& value_, const decltype(last_value)& last_value_)
     : value(std::move(value_))
+    , last_value(last_value_)
 {
 }
 void test::TestArrayStruct::clear()
@@ -688,7 +689,8 @@ const StructInfo& test::TestArrayStruct::getStructInfo() const
 }
 bool test::TestArrayStruct::operator ==(const TestArrayStruct& rhs) const
 {
-    return (value == rhs.value);
+    return (value == rhs.value &&
+            last_value == rhs.last_value);
 }
 bool test::TestArrayStruct::operator !=(const TestArrayStruct& rhs) const
 {
@@ -696,9 +698,11 @@ bool test::TestArrayStruct::operator !=(const TestArrayStruct& rhs) const
 }
 const StructInfo test::TestArrayStruct::_structInfo = {
     "test.TestArrayStruct", "description", {
-         {TYPE_ARRAY_STRUCT,  "test.TestStruct", "value", "description", 0, 0}
+        {TYPE_ARRAY_STRUCT,  "test.TestStruct", "value", "description", 0, 0},
+        {TYPE_UINT32,  "", "last_value", "description", 0, 0}
      },{
-         {OFFSET_STRUCTBASE_TO_PARAM(TestArrayStruct, value), new ArrayStructAdapter<test::TestStruct>}
+        {OFFSET_STRUCTBASE_TO_PARAM(TestArrayStruct, value), new ArrayStructAdapter<test::TestStruct>},
+        {OFFSET_STRUCTBASE_TO_PARAM(TestArrayStruct, last_value)}
      }
 };
 
