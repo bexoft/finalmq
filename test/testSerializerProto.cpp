@@ -410,7 +410,7 @@ TEST_F(TestSerializerProto, testArrayStruct)
     static const std::int32_t VALUE2_INT32 = 345;
     static const std::string VALUE2_STRING = "foo";
     static const std::uint32_t VALUE2_UINT32 = 12345678;
-
+    static const std::uint32_t LAST_VALUE = 5;
 
     m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayStruct", "", "desc", 0, 0});
     m_serializer->enterArrayStruct({MetaTypeId::TYPE_ARRAY_STRUCT, "test.TestStruct", "value", "desc", 0, 0});
@@ -439,6 +439,7 @@ TEST_F(TestSerializerProto, testArrayStruct)
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0, 0});
 
     m_serializer->exitArrayStruct({MetaTypeId::TYPE_ARRAY_STRUCT, "test.TestStruct", "value", "desc", 0, 0});
+    m_serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "desc", 0, 1}, LAST_VALUE);
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayStruct", "", "desc", 0, 0});
 
     fmq::test::TestArrayStruct message;
@@ -454,6 +455,7 @@ TEST_F(TestSerializerProto, testArrayStruct)
     EXPECT_EQ(message.value()[2].struct_int32().value(), 0);
     EXPECT_EQ(message.value()[2].struct_string().value(), "");
     EXPECT_EQ(message.value()[2].last_value(), 0);
+    EXPECT_EQ(message.last_value(), LAST_VALUE);
 }
 
 TEST_F(TestSerializerProto, testArrayEnum)

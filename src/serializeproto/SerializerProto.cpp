@@ -11,6 +11,7 @@
 
 static constexpr int INDEX2ID = 1;
 static constexpr int MAX_VARINT_SIZE = 10;
+static constexpr int STRUCT_SIZE_COPY = 128;
 
 enum WireType
 {
@@ -465,7 +466,7 @@ void SerializerProto::Internal::exitStruct(const MetaField& field)
         {
             m_buffer = structData.bufferStructStart;
         }
-        else if (structSize <= 32 && !structData.allocateNextDataBuffer)
+        else if (structSize <= STRUCT_SIZE_COPY && !structData.allocateNextDataBuffer)
         {
             m_buffer = structData.bufferStructSize;
             serializeVarint(structSize);
