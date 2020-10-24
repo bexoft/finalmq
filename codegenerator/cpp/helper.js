@@ -114,6 +114,18 @@ module.exports = {
             return 'OFFSET_STRUCTBASE_TO_STRUCTBASE';
         }
         return 'OFFSET_STRUCTBASE_TO_PARAM';
-    }   
+    },
+
+    getDefaultEnum : function(entries)
+    {
+        for (var i = 0; i < entries.length; i++)
+        {
+            if (entries[i].id == 0)
+            {
+                return entries[i]
+            }
+        }
+        return entries[0]
+    }
      
 }

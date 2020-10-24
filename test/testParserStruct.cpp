@@ -4,7 +4,7 @@
 
 #include "serializestruct/ParserStruct.h"
 #include "metadata/MetaData.h"
-#include "testStructs.h"
+#include "test.json.h"
 #include "MockIParserVisitor.h"
 
 

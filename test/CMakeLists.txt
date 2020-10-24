@@ -55,6 +55,13 @@ endif()
 
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS test.proto)
 
+add_custom_command(
+    COMMAND node ${CMAKE_SOURCE_DIR}/codegenerator/cpp/cpp.js ${CMAKE_CURRENT_SOURCE_DIR}/test.json ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS test.json ${CMAKE_SOURCE_DIR}/codegenerator/cpp/cpp.js ${CMAKE_SOURCE_DIR}/codegenerator/cpp/cpp_cpp.ejs ${CMAKE_SOURCE_DIR}/codegenerator/cpp/cpp_h.ejs
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test.json.cpp ${CMAKE_CURRENT_BINARY_DIR}/test.json.h
+    COMMENT "Generating code out of test.json."
+)
+
 message("proto headers: ${PROTO_HDRS}")
 
 include_directories("${gmock_SOURCE_DIR}/include")
@@ -63,11 +70,10 @@ include_directories("${CMAKE_BINARY_DIR}/test")
 include_directories("${CMAKE_SOURCE_DIR}/mock")
 
 file(GLOB TESTSOURCES "*.cpp")
-
-#link_directories(~/openssl)
+file(GLOB GENCODE ${CMAKE_CURRENT_BINARY_DIR}/test.json.cpp)
 
 # Now simply link against gtest or gtest_main as needed. Eg
-add_executable(testfinalmq ${TESTSOURCES} ${PROTO_SRCS} ${PROTO_HDRS})
+add_executable(testfinalmq ${TESTSOURCES} ${PROTO_SRCS} ${PROTO_HDRS} ${GENCODE})
 target_link_libraries(testfinalmq gtest_main finalmq gmock ssl ${PROTOBUF_LIBRARIES})
 #add_test(NAME example_test COMMAND example)
 

@@ -41,7 +41,7 @@ public:
     void fromString(const std::string& name);
 
 private:
-    Enum m_value = TYPE_NONE;
+    Enum m_value = <%- helper.getDefaultEnum(en.entries).name %>;
     static const EnumInfo _enumInfo;
 };
 <% } %>
@@ -57,7 +57,8 @@ private:
     var stru = data.structs[i]
     var plainTypeName = helper.getPlainTypeName(stru.typeName) %>
 class <%- plainTypeName %> : public StructBase
-{<% -%>
+{
+public:<% -%>
 <% for (var n = 0; n < stru.fields.length; n++) { 
         field = stru.fields[n] %>
     <%- helper.typeId2type(data, field.typeId, field.typeName) %> <%- field.name %><% if (helper.typeId2default(field.typeId)){%> = <%- helper.typeId2default(field.typeId)%><% } %>;<% -%>
@@ -69,8 +70,8 @@ class <%- plainTypeName %> : public StructBase
         field = stru.fields[n] %><% -%>
 const <%- helper.typeId2type(data, field.typeId, field.typeName) %>& <%- field.name %>_<% if (n < stru.fields.length-1){ %>, <% } %><% -%>
 <% } %>);
-    bool operator ==(const TestBool& rhs) const;
-    bool operator !=(const TestBool& rhs) const;
+    bool operator ==(const <%- plainTypeName %>& rhs) const;
+    bool operator !=(const <%- plainTypeName %>& rhs) const;
 
 private:
     virtual void clear() override;

@@ -4,7 +4,7 @@
 
 #include "serializestruct/SerializerStruct.h"
 #include "metadata/MetaField.h"
-#include "testStructs.h"
+#include "test.json.h"
 
 
 using ::testing::_;

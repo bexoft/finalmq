@@ -55,7 +55,7 @@ void <%- plainTypeName %>::fromString(const std::string& name)
     m_value = static_cast<Enum>(_enumInfo.getMetaEnum().getValueByName(name));
 }
 const EnumInfo <%- plainTypeName %>::_enumInfo = {
-    "<%- en.typeName %>", "<%- en.description %>", {<% -%>
+    "<%- helper.typeNameWithNamespace(data, en.typeName, '.') %>", "<%- en.description %>", {<% -%>
         <% for (var i = 0; i < en.entries.length; i++) { 
             var entry = en.entries[i] %>
         {"<%- entry.name %>", <%- entry.id %>, "<%- entry.description %>"},<% -%>
@@ -90,7 +90,7 @@ const <%- helper.typeId2type(data, field.typeId, field.typeName) %>& <%- field.n
 <% } %><% -%>
 {
 }
-<%- plainTypeName %>::clear()
+void <%- plainTypeName %>::clear()
 {
     *this = <%- plainTypeName %>();
 }
@@ -98,14 +98,14 @@ const StructInfo& <%- plainTypeName %>::getStructInfo() const
 {
     return _structInfo;
 }
-bool <%- plainTypeName %>::operator ==(const TestBool& rhs) const
+bool <%- plainTypeName %>::operator ==(const <%- plainTypeName %>& rhs) const
 {
     return (<% for (var n = 0; n < stru.fields.length; n++) {
     field = stru.fields[n] %>
             <%- field.name %> == rhs.<%- field.name %><% if (n < stru.fields.length-1){ %> &&<% } %><% -%>
 <% } %>);
 }
-bool <%- plainTypeName %>::operator !=(const TestBool& rhs) const
+bool <%- plainTypeName %>::operator !=(const <%- plainTypeName %>& rhs) const
 {
     return !(*this == rhs);
 }
@@ -118,7 +118,7 @@ const StructInfo <%- plainTypeName %>::_structInfo = {
      },{<% -%>
     <% for (var n = 0; n < stru.fields.length; n++) { 
         field = stru.fields[n] %>
-        {<%- helper.getOffset(field.typeId) %>(<%- plainTypeName %>, <%- field.name %>)},<% -%>
+        {<%- helper.getOffset(field.typeId) %>(<%- plainTypeName %>, <%- field.name %>)<% if (field.typeId == 'TYPE_ARRAY_STRUCT') {%>, new ArrayStructAdapter<<%- helper.typeNameWithNamespace(data, field.typeName, '::') %>><% } %>},<% -%>
     <% } %>
      }
 };
