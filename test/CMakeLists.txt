@@ -70,10 +70,10 @@ include_directories("${CMAKE_BINARY_DIR}/test")
 include_directories("${CMAKE_SOURCE_DIR}/mock")
 
 file(GLOB TESTSOURCES "*.cpp")
-file(GLOB GENCODE ${CMAKE_CURRENT_BINARY_DIR}/test.json.cpp)
+#file(GLOB GENCODE ${CMAKE_CURRENT_BINARY_DIR}/test.json.cpp)
 
 # Now simply link against gtest or gtest_main as needed. Eg
-add_executable(testfinalmq ${TESTSOURCES} ${PROTO_SRCS} ${PROTO_HDRS} ${GENCODE})
+add_executable(testfinalmq ${TESTSOURCES} ${PROTO_SRCS} ${PROTO_HDRS} ${CMAKE_CURRENT_BINARY_DIR}/test.json.cpp)
 target_link_libraries(testfinalmq gtest_main finalmq gmock ssl ${PROTOBUF_LIBRARIES})
 #add_test(NAME example_test COMMAND example)
 
