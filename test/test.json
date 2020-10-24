@@ -1,81 +1,81 @@
 {
     "namespace":"test",
     "enums": [
-        {"typename":"Foo","description":"desc","entries":[
+        {"typeName":"Foo","description":"desc","entries":[
             {"name":"FOO_WORLD","id":0,"description":"description"},
             {"name":"FOO_HELLO","id":-2,"description":"description"},
             {"name":"FOO_WORLD2","id":1,"description":"description"}
         ]}
     ],
     "structs":[
-        {"typename":"TestBool","description":"desc","entries":[
+        {"typeName":"TestBool","description":"desc","fields":[
             {"typeId":"TYPE_BOOL","typeName":"","name":"value","description":"description","flags":[]}
         ]},
-        {"typename":"TestInt32","description":"desc","entries":[
+        {"typeName":"TestInt32","description":"desc","fields":[
             {"typeId":"TYPE_INT32","typeName":"","name":"value","description":"description","flags":[]}
         ]},
-        {"typename":"TestUInt32","description":"desc","entries":[
+        {"typeName":"TestUInt32","description":"desc","fields":[
             {"typeId":"TYPE_UINT32","typeName":"","name":"value","description":"description","flags":[]}
         ]},
-        {"typename":"TestInt64","description":"desc","entries":[
+        {"typeName":"TestInt64","description":"desc","fields":[
             {"typeId":"TYPE_INT64","typeName":"","name":"value","description":"description","flags":[]}
         ]},
-        {"typename":"TestUInt64","description":"desc","entries":[
+        {"typeName":"TestUInt64","description":"desc","fields":[
             {"typeId":"TYPE_UINT64","typeName":"","name":"value","description":"description","flags":[]}
         ]},
-        {"typename":"TestFloat","description":"desc","entries":[
+        {"typeName":"TestFloat","description":"desc","fields":[
             {"typeId":"TYPE_FLOAT","typeName":"","name":"value","description":"description","flags":[]}
         ]},
-        {"typename":"TestDouble","description":"desc","entries":[
+        {"typeName":"TestDouble","description":"desc","fields":[
             {"typeId":"TYPE_DOUBLE","typeName":"","name":"value","description":"description","flags":[]}
         ]},
-        {"typename":"TestString","description":"desc","entries":[
+        {"typeName":"TestString","description":"desc","fields":[
             {"typeId":"TYPE_STRING","typeName":"","name":"value","description":"description","flags":[]}
         ]},
-        {"typename":"TestBytes","description":"desc","entries":[
+        {"typeName":"TestBytes","description":"desc","fields":[
             {"typeId":"TYPE_BYTES","typeName":"","name":"value","description":"description","flags":[]}
         ]},
-        {"typename":"TestStruct","description":"desc","entries":[
-            {"typeId":"TYPE_STRUCT","typeName":"test.TestInt32","name":"struct_int32","description":"description","flags":[]},
-            {"typeId":"TYPE_STRUCT","typeName":"test.TestString","name":"struct_string","description":"description","flags":[]},
-            {"typeId":"TYPE_UNIT32","typeName":"","name":"last_value","description":"description","flags":[]}
-        ]},
-        {"typename":"TestEnum","description":"desc","entries":[
-            {"typeId":"TYPE_ENUM","typeName":"test.Foo","name":"value","description":"description","flags":[]}
-        ]},
-        {"typename":"TestArrayBool","description":"desc","entries":[
-            {"typeId":"TYPE_ARRAY_BOOL","typeName":"","name":"value","description":"description","flags":[]}
-        ]},
-        {"typename":"TestArrayInt32","description":"desc","entries":[
-            {"typeId":"TYPE_ARRAY_INT32","typeName":"","name":"value","description":"description","flags":[]}
-        ]},
-        {"typename":"TestArrayUInt32","description":"desc","entries":[
-            {"typeId":"TYPE_ARRAY_UINT32","typeName":"","name":"value","description":"description","flags":[]}
-        ]},
-        {"typename":"TestArrayInt64","description":"desc","entries":[
-            {"typeId":"TYPE_ARRAY_INT64","typeName":"","name":"value","description":"description","flags":[]}
-        ]},
-        {"typename":"TestArrayUInt64","description":"desc","entries":[
-            {"typeId":"TYPE_ARRAY_UINT64","typeName":"","name":"value","description":"description","flags":[]}
-        ]},
-        {"typename":"TestArrayFloat","description":"desc","entries":[
-            {"typeId":"TYPE_ARRAY_FLOAT","typeName":"","name":"value","description":"description","flags":[]}
-        ]},
-        {"typename":"TestArrayDouble","description":"desc","entries":[
-            {"typeId":"TYPE_ARRAY_DOUBLE","typeName":"","name":"value","description":"description","flags":[]}
-        ]},
-        {"typename":"TestArrayString","description":"desc","entries":[
-            {"typeId":"TYPE_ARRAY_STRING","typeName":"","name":"value","description":"description","flags":[]}
-        ]},
-        {"typename":"TestArrayBytes","description":"desc","entries":[
-            {"typeId":"TYPE_ARRAY_BYTES","typeName":"","name":"value","description":"description","flags":[]}
-        ]},
-        {"typename":"TestArrayStruct","description":"desc","entries":[
-            {"typeId":"TYPE_ARRAY_STRUCT","typeName":"test.TestStruct","name":"value","description":"description","flags":[]},
+        {"typeName":"TestStruct","description":"desc","fields":[
+            {"typeId":"TYPE_STRUCT","typeName":"TestInt32","name":"struct_int32","description":"description","flags":[]},
+            {"typeId":"TYPE_STRUCT","typeName":"TestString","name":"struct_string","description":"description","flags":[]},
             {"typeId":"TYPE_UINT32","typeName":"","name":"last_value","description":"description","flags":[]}
         ]},
-        {"typename":"TestArrayEnum","description":"desc","entries":[
-            {"typeId":"TYPE_ARRAY_ENUM","typeName":"test.Foo","name":"value","description":"description","flags":[]}
+        {"typeName":"TestEnum","description":"desc","fields":[
+            {"typeId":"TYPE_ENUM","typeName":"Foo","name":"value","description":"description","flags":[]}
+        ]},
+        {"typeName":"TestArrayBool","description":"desc","fields":[
+            {"typeId":"TYPE_ARRAY_BOOL","typeName":"","name":"value","description":"description","flags":[]}
+        ]},
+        {"typeName":"TestArrayInt32","description":"desc","fields":[
+            {"typeId":"TYPE_ARRAY_INT32","typeName":"","name":"value","description":"description","flags":[]}
+        ]},
+        {"typeName":"TestArrayUInt32","description":"desc","fields":[
+            {"typeId":"TYPE_ARRAY_UINT32","typeName":"","name":"value","description":"description","flags":[]}
+        ]},
+        {"typeName":"TestArrayInt64","description":"desc","fields":[
+            {"typeId":"TYPE_ARRAY_INT64","typeName":"","name":"value","description":"description","flags":[]}
+        ]},
+        {"typeName":"TestArrayUInt64","description":"desc","fields":[
+            {"typeId":"TYPE_ARRAY_UINT64","typeName":"","name":"value","description":"description","flags":[]}
+        ]},
+        {"typeName":"TestArrayFloat","description":"desc","fields":[
+            {"typeId":"TYPE_ARRAY_FLOAT","typeName":"","name":"value","description":"description","flags":[]}
+        ]},
+        {"typeName":"TestArrayDouble","description":"desc","fields":[
+            {"typeId":"TYPE_ARRAY_DOUBLE","typeName":"","name":"value","description":"description","flags":[]}
+        ]},
+        {"typeName":"TestArrayString","description":"desc","fields":[
+            {"typeId":"TYPE_ARRAY_STRING","typeName":"","name":"value","description":"description","flags":[]}
+        ]},
+        {"typeName":"TestArrayBytes","description":"desc","fields":[
+            {"typeId":"TYPE_ARRAY_BYTES","typeName":"","name":"value","description":"description","flags":[]}
+        ]},
+        {"typeName":"TestArrayStruct","description":"desc","fields":[
+            {"typeId":"TYPE_ARRAY_STRUCT","typeName":"TestStruct","name":"value","description":"description","flags":[]},
+            {"typeId":"TYPE_UINT32","typeName":"","name":"last_value","description":"description","flags":[]}
+        ]},
+        {"typeName":"TestArrayEnum","description":"desc","fields":[
+            {"typeId":"TYPE_ARRAY_ENUM","typeName":"Foo","name":"value","description":"description","flags":[]}
         ]}
     ]
 }

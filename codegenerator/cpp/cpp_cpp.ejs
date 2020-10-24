@@ -1,0 +1,138 @@
+<%
+var splitFileOutputH = fileOutputH.split('/')
+var fileInclude = splitFileOutputH[splitFileOutputH.length - 1]
+%>
+#include "<%- fileInclude %>"
+
+
+<%
+if (data.namespace)
+{
+data.namespace.trim();
+if (data.namespace.length > 0)
+{
+var namespaces = data.namespace.split('.')
+for (var i = 0; i < namespaces.length; i++) { 
+var ns = namespaces[i] 
+%>
+namespace <%- ns %> { <% -%>
+<% }}} %>    
+
+
+//////////////////////////////
+// Enums
+//////////////////////////////
+
+<% for (var i = 0; i < data.enums.length; i++) {
+    var en = data.enums[i]
+    var plainTypeName = helper.getPlainTypeName(en.typeName) %>
+<%- plainTypeName %>::<%- plainTypeName %>()
+{
+}
+<%- plainTypeName %>::<%- plainTypeName %>(Enum en)
+    : m_value(en)
+{
+}
+<%- plainTypeName %>::operator const Enum&() const
+{
+    return m_value;
+}
+<%- plainTypeName %>::operator Enum&()
+{
+    return m_value;
+}
+const <%- plainTypeName %>& <%- plainTypeName %>::operator =(Enum en)
+{
+    m_value = en;
+    return *this;
+}
+const std::string& <%- plainTypeName %>::toString() const
+{
+    return _enumInfo.getMetaEnum().getNameByValue(m_value);
+}
+void <%- plainTypeName %>::fromString(const std::string& name)
+{
+    m_value = static_cast<Enum>(_enumInfo.getMetaEnum().getValueByName(name));
+}
+const EnumInfo <%- plainTypeName %>::_enumInfo = {
+    "<%- en.typeName %>", "<%- en.description %>", {<% -%>
+        <% for (var i = 0; i < en.entries.length; i++) { 
+            var entry = en.entries[i] %>
+        {"<%- entry.name %>", <%- entry.id %>, "<%- entry.description %>"},<% -%>
+        <% } %>
+     }
+};
+<% } %>
+
+
+
+//////////////////////////////
+// Structs
+//////////////////////////////
+
+<%
+for (var i = 0; i < data.structs.length; i++)
+{
+    var stru = data.structs[i]
+    var plainTypeName = helper.getPlainTypeName(stru.typeName) %>
+
+<%- plainTypeName %>::<%- plainTypeName %>()
+{
+}
+<%- plainTypeName %>::<%- plainTypeName %>(<% -%>
+<% for (var n = 0; n < stru.fields.length; n++) {
+        field = stru.fields[n] %><% -%>
+const <%- helper.typeId2type(data, field.typeId, field.typeName) %>& <%- field.name %>_<% if (n < stru.fields.length-1){ %>, <% } %><% -%>
+<% } %>)
+<% for (var n = 0; n < stru.fields.length; n++) {
+    field = stru.fields[n] %><% -%>
+    <% if (n == 0){ %>:<% } else { %>,<% } %> <%- field.name %>(<%- field.name %>_)
+<% } %><% -%>
+{
+}
+<%- plainTypeName %>::clear()
+{
+    *this = <%- plainTypeName %>();
+}
+const StructInfo& <%- plainTypeName %>::getStructInfo() const
+{
+    return _structInfo;
+}
+bool <%- plainTypeName %>::operator ==(const TestBool& rhs) const
+{
+    return (<% for (var n = 0; n < stru.fields.length; n++) {
+    field = stru.fields[n] %>
+            <%- field.name %> == rhs.<%- field.name %><% if (n < stru.fields.length-1){ %> &&<% } %><% -%>
+<% } %>);
+}
+bool <%- plainTypeName %>::operator !=(const TestBool& rhs) const
+{
+    return !(*this == rhs);
+}
+const StructInfo <%- plainTypeName %>::_structInfo = {
+    "<%- helper.typeNameWithNamespace(data, stru.typeName, '.') %>", "<%- stru.description %>", {<% -%>
+    <% for (var n = 0; n < stru.fields.length; n++) { 
+        field = stru.fields[n] %>
+        {<%- field.typeId %>, "<%- helper.typeNameWithNamespace(data, field.typeName, '.') %>", "<%- field.name %>", "<%- field.description %>", <%- helper.convertFlags(field.flags) %>, <%- n %>},<% -%>
+    <% } %>
+     },{<% -%>
+    <% for (var n = 0; n < stru.fields.length; n++) { 
+        field = stru.fields[n] %>
+        {<%- helper.getOffset(field.typeId) %>(<%- plainTypeName %>, <%- field.name %>)},<% -%>
+    <% } %>
+     }
+};
+
+<% } %>
+
+<%
+if (data.namespace)
+{
+if (data.namespace.length > 0)
+{
+for (var i = 0; i < namespaces.length; i++) { 
+var ns = namespaces[namespaces.length - 1 - i] %>
+} // close namespace <%- ns %> <% -%>
+<% }}} %>    
+
+
