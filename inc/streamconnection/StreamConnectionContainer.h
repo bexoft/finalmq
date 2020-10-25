@@ -1,3 +1,25 @@
+//MIT License
+
+//Copyright (c) 2020 bexoft GmbH (mail@bexoft.de)
+
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
+
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
+
 #pragma once
 
 
@@ -14,24 +36,24 @@
 #include "helpers/CondVar.h"
 
 
-
+namespace finalmq {
 
 struct IStreamConnectionContainer
 {
     virtual ~IStreamConnectionContainer() {}
 
     virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000) = 0;
-    virtual int bind(const std::string& endpoint, bex::hybrid_ptr<IStreamConnectionCallback> callback) = 0;
+    virtual int bind(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback) = 0;
     virtual void unbind(const std::string& endpoint) = 0;
-    virtual IStreamConnectionPtr createConnection(const std::string& endpoint, bex::hybrid_ptr<IStreamConnectionCallback> callback, int reconnectInterval = 5000, int totalReconnectDuration = -1) = 0;
+    virtual IStreamConnectionPtr createConnection(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, int reconnectInterval = 5000, int totalReconnectDuration = -1) = 0;
     virtual std::vector< IStreamConnectionPtr > getAllConnections() const = 0;
     virtual IStreamConnectionPtr getConnection(std::int64_t connectionId) const = 0;
     virtual void threadEntry() = 0;
     virtual bool terminatePollerLoop(int timeout) = 0;
 
 #ifdef USE_OPENSSL
-    virtual int bindSsl(const std::string& endpoint, bex::hybrid_ptr<IStreamConnectionCallback> callback, const CertificateData& certificateData) = 0;
-    virtual IStreamConnectionPtr createConnectionSsl(const std::string& endpoint, bex::hybrid_ptr<IStreamConnectionCallback> callback, const CertificateData& certificateData, int reconnectInterval = 5000, int totalReconnectDuration = -1) = 0;
+    virtual int bindSsl(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const CertificateData& certificateData) = 0;
+    virtual IStreamConnectionPtr createConnectionSsl(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const CertificateData& certificateData, int reconnectInterval = 5000, int totalReconnectDuration = -1) = 0;
 #endif
 };
 
@@ -46,37 +68,37 @@ public:
 private:
     // IStreamConnectionContainer
     virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000) override;
-    virtual int bind(const std::string& endpoint, bex::hybrid_ptr<IStreamConnectionCallback> callback) override;
+    virtual int bind(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback) override;
     virtual void unbind(const std::string& endpoint) override;
-    virtual IStreamConnectionPtr createConnection(const std::string& endpoint, bex::hybrid_ptr<IStreamConnectionCallback> callback, int reconnectInterval = 5000, int totalReconnectDuration = -1) override;
+    virtual IStreamConnectionPtr createConnection(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, int reconnectInterval = 5000, int totalReconnectDuration = -1) override;
     virtual std::vector< IStreamConnectionPtr > getAllConnections() const override;
     virtual IStreamConnectionPtr getConnection(std::int64_t connectionId) const override;
     virtual void threadEntry() override;
     virtual bool terminatePollerLoop(int timeout) override;
 
 #ifdef USE_OPENSSL
-    virtual int bindSsl(const std::string& endpoint, bex::hybrid_ptr<IStreamConnectionCallback> callback, const CertificateData& certificateData) override;
-    virtual IStreamConnectionPtr createConnectionSsl(const std::string& endpoint, bex::hybrid_ptr<IStreamConnectionCallback> callback, const CertificateData& certificateData, int reconnectInterval = 5000, int totalReconnectDuration = -1) override;
+    virtual int bindSsl(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const CertificateData& certificateData) override;
+    virtual IStreamConnectionPtr createConnectionSsl(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const CertificateData& certificateData, int reconnectInterval = 5000, int totalReconnectDuration = -1) override;
 #endif
 
     void terminatePollerLoop();
-    int bindIntern(const std::string& endpoint, bex::hybrid_ptr<IStreamConnectionCallback> callbackDefault, bool ssl, const CertificateData& certificateData);
-    IStreamConnectionPtr createConnectionIntern(const std::string& endpoint, bex::hybrid_ptr<IStreamConnectionCallback> callback, bool ssl, const CertificateData& certificateData, int reconnectInterval, int totalReconnectDuration);
+    int bindIntern(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callbackDefault, bool ssl, const CertificateData& certificateData);
+    IStreamConnectionPtr createConnectionIntern(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, bool ssl, const CertificateData& certificateData, int reconnectInterval, int totalReconnectDuration);
 
     void pollerLoop();
 
     struct BindData
     {
-        ConnectionData                              connectionData;
-        SocketPtr                                   socket;
-        bex::hybrid_ptr<IStreamConnectionCallback>  callback;
+        ConnectionData                          connectionData;
+        SocketPtr                               socket;
+        hybrid_ptr<IStreamConnectionCallback>   callback;
     };
 
     std::unordered_map<SOCKET, BindData>::iterator findBindByEndpoint(const std::string& endpoint);
     IStreamConnectionPrivatePtr findConnectionBySd(SOCKET sd);
     void removeConnection(const SocketDescriptorPtr& sd, std::int64_t connectionId);
     void disconnectIntern(const IStreamConnectionPrivatePtr& connectionDisconnect, const SocketDescriptorPtr& sd);
-    IStreamConnectionPrivatePtr addConnection(const SocketPtr& socket, ConnectionData& connectionData, bex::hybrid_ptr<IStreamConnectionCallback> callback);
+    IStreamConnectionPrivatePtr addConnection(const SocketPtr& socket, ConnectionData& connectionData, hybrid_ptr<IStreamConnectionCallback> callback);
     void handleConnectionEvents(const IStreamConnectionPrivatePtr& connection, const SocketPtr& socket, const DescriptorInfo& info);
     void handleBindEvents(const DescriptorInfo& info);
     bool isReconnectTimerExpired();
@@ -100,10 +122,11 @@ private:
     {
         SocketPtr socket;
         ConnectionData connectionData;
-        bex::hybrid_ptr<IStreamConnectionCallback> callback;
+        hybrid_ptr<IStreamConnectionCallback> callback;
     };
     bool sslAccepting(SslAcceptingData& sslAcceptingData);
     std::unordered_map<SOCKET, SslAcceptingData>                    m_sslAcceptings;
 #endif
 };
 
+}   // namespace finalmq

@@ -42,7 +42,7 @@ public:
 
 private:
     Enum m_value = <%- helper.getDefaultEnum(en.entries).name %>;
-    static const EnumInfo _enumInfo;
+    static const finalmq::EnumInfo _enumInfo;
 };
 <% } %>
 
@@ -56,7 +56,7 @@ private:
 {
     var stru = data.structs[i]
     var plaintype = helper.getPlainType(stru.type) %>
-class <%- plaintype %> : public StructBase
+class <%- plaintype %> : public finalmq::StructBase
 {
 public:<% -%>
 <% for (var n = 0; n < stru.fields.length; n++) { 
@@ -75,8 +75,8 @@ const <%- helper.tid2type(data, field.tid, field.type) %>& <%- field.name %>_<% 
 
 private:
     virtual void clear() override;
-    virtual const StructInfo& getStructInfo() const override;
-    static const StructInfo _structInfo;
+    virtual const finalmq::StructInfo& getStructInfo() const override;
+    static const finalmq::StructInfo _structInfo;
 };
 <% } %>
 

@@ -1,11 +1,32 @@
+//MIT License
+
+//Copyright (c) 2020 bexoft GmbH (mail@bexoft.de)
+
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
+
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
 
 #include "protocolconnection/ProtocolSessionContainer.h"
 #include "streamconnection/StreamConnectionContainer.h"
 
 
+namespace finalmq {
 
-
-ProtocolBind::ProtocolBind(bex::hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const std::weak_ptr<IProtocolSessionList>& protocolSessionList)
+ProtocolBind::ProtocolBind(hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const std::weak_ptr<IProtocolSessionList>& protocolSessionList)
     : m_callback(callback)
     , m_protocolFactory(protocolFactory)
     , m_protocolSessionList(protocolSessionList)
@@ -14,7 +35,7 @@ ProtocolBind::ProtocolBind(bex::hybrid_ptr<IProtocolSessionCallback> callback, I
 }
 
 // IStreamConnectionCallback
-bex::hybrid_ptr<IStreamConnectionCallback> ProtocolBind::connected(const IStreamConnectionPtr& connection)
+hybrid_ptr<IStreamConnectionCallback> ProtocolBind::connected(const IStreamConnectionPtr& connection)
 {
     IProtocolPtr protocol = m_protocolFactory->createProtocol();
     assert(protocol);
@@ -57,7 +78,7 @@ void ProtocolSessionContainer::init(int cycleTime, int checkReconnectInterval)
     m_streamConnectionContainer->init(cycleTime, checkReconnectInterval);
 }
 
-int ProtocolSessionContainer::bind(const std::string& endpoint, bex::hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory)
+int ProtocolSessionContainer::bind(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory)
 {
     int err = 0;
     std::unique_lock<std::mutex> lock(m_mutex);
@@ -84,7 +105,7 @@ void ProtocolSessionContainer::unbind(const std::string& endpoint)
     }
 }
 
-IProtocolSessionPtr ProtocolSessionContainer::connect(const std::string& endpoint, bex::hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, int reconnectInterval, int totalReconnectDuration)
+IProtocolSessionPtr ProtocolSessionContainer::connect(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, int reconnectInterval, int totalReconnectDuration)
 {
     assert(protocol);
     IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(callback, protocol, m_protocolSessionList, m_streamConnectionContainer, endpoint, reconnectInterval, totalReconnectDuration);
@@ -118,7 +139,7 @@ bool ProtocolSessionContainer::terminatePollerLoop(int timeout)
 
 
 #ifdef USE_OPENSSL
-int ProtocolSessionContainer::bindSsl(const std::string& endpoint, bex::hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const CertificateData& certificateData)
+int ProtocolSessionContainer::bindSsl(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const CertificateData& certificateData)
 {
     int err = 0;
     std::unique_lock<std::mutex> lock(m_mutex);
@@ -134,7 +155,7 @@ int ProtocolSessionContainer::bindSsl(const std::string& endpoint, bex::hybrid_p
     return err;
 }
 
-IProtocolSessionPtr ProtocolSessionContainer::connectSsl(const std::string& endpoint, bex::hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const CertificateData& certificateData, int reconnectInterval, int totalReconnectDuration)
+IProtocolSessionPtr ProtocolSessionContainer::connectSsl(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const CertificateData& certificateData, int reconnectInterval, int totalReconnectDuration)
 {
     assert(protocol);
     IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(callback, protocol, m_protocolSessionList, m_streamConnectionContainer, endpoint, certificateData, reconnectInterval, totalReconnectDuration);
@@ -143,3 +164,4 @@ IProtocolSessionPtr ProtocolSessionContainer::connectSsl(const std::string& endp
 }
 #endif
 
+}   // namespace finalmq
