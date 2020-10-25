@@ -54,7 +54,7 @@ void <%- plaintype %>::fromString(const std::string& name)
 {
     m_value = static_cast<Enum>(_enumInfo.getMetaEnum().getValueByName(name));
 }
-const EnumInfo <%- plaintype %>::_enumInfo = {
+const finalmq::EnumInfo <%- plaintype %>::_enumInfo = {
     "<%- helper.typeWithNamespace(data, en.type, '.') %>", "<%- en.description %>", {<% -%>
         <% for (var n = 0; n < en.entries.length; n++) { 
             var entry = en.entries[n] %>
@@ -94,7 +94,7 @@ void <%- plaintype %>::clear()
 {
     *this = <%- plaintype %>();
 }
-const StructInfo& <%- plaintype %>::getStructInfo() const
+const finalmq::StructInfo& <%- plaintype %>::getStructInfo() const
 {
     return _structInfo;
 }
@@ -109,16 +109,16 @@ bool <%- plaintype %>::operator !=(const <%- plaintype %>& rhs) const
 {
     return !(*this == rhs);
 }
-const StructInfo <%- plaintype %>::_structInfo = {
+const finalmq::StructInfo <%- plaintype %>::_structInfo = {
     "<%- helper.typeWithNamespace(data, stru.type, '.') %>", "<%- stru.description %>", {<% -%>
     <% for (var n = 0; n < stru.fields.length; n++) { 
         field = stru.fields[n] %>
-        {<%- field.tid %>, "<%- helper.typeWithNamespace(data, field.type, '.') %>", "<%- field.name %>", "<%- field.description %>", <%- helper.convertFlags(field.flags) %>, <%- n %>},<% -%>
+        {finalmq::<%- field.tid %>, "<%- helper.typeWithNamespace(data, field.type, '.') %>", "<%- field.name %>", "<%- field.description %>", <%- helper.convertFlags(field.flags) %>, <%- n %>},<% -%>
     <% } %>
      },{<% -%>
     <% for (var n = 0; n < stru.fields.length; n++) { 
         field = stru.fields[n] %>
-        {<%- helper.getOffset(field.tid) %>(<%- plaintype %>, <%- field.name %>)<% if (field.tid == 'TYPE_ARRAY_STRUCT') {%>, new ArrayStructAdapter<<%- helper.typeWithNamespace(data, field.type, '::') %>><% } %>},<% -%>
+        {<%- helper.getOffset(field.tid) %>(<%- plaintype %>, <%- field.name %>)<% if (field.tid == 'TYPE_ARRAY_STRUCT') {%>, new finalmq::ArrayStructAdapter<<%- helper.typeWithNamespace(data, field.type, '::') %>><% } %>},<% -%>
     <% } %>
      }
 };

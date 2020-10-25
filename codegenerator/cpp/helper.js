@@ -51,7 +51,7 @@ module.exports = {
             case 'TYPE_FLOAT':          return 'float'
             case 'TYPE_DOUBLE':         return 'double'
             case 'TYPE_STRING':         return 'std::string'
-            case 'TYPE_BYTES':          return 'Bytes'
+            case 'TYPE_BYTES':          return 'finalmq::Bytes'
             case 'TYPE_STRUCT':         return this.typeWithNamespace(data, type, '::')
             case 'TYPE_ENUM':           return this.typeWithNamespace(data, type, '::')
             case 'TYPE_ARRAY_BOOL':     return 'std::vector<bool>'
@@ -62,7 +62,7 @@ module.exports = {
             case 'TYPE_ARRAY_FLOAT':    return 'std::vector<float>'
             case 'TYPE_ARRAY_DOUBLE':   return 'std::vector<double>'
             case 'TYPE_ARRAY_STRING':   return 'std::vector<std::string>'
-            case 'TYPE_ARRAY_BYTES':    return 'std::vector<Bytes>'
+            case 'TYPE_ARRAY_BYTES':    return 'std::vector<finalmq::Bytes>'
             case 'TYPE_ARRAY_STRUCT':   return 'std::vector<'+this.typeWithNamespace(data, type, '::')+'>'
             case 'TYPE_ARRAY_ENUM':     return 'std::vector<'+this.typeWithNamespace(data, type, '::')+'>'
         }
@@ -99,10 +99,10 @@ module.exports = {
    
     convertFlags : function(flagArray)
     {
-        var flags = 'METAFLAG_NONE'
+        var flags = 'finalmq::METAFLAG_NONE'
         for (var i = 0; i < flagArray.length; i++)
         {
-            flags += ' | ' + flagArray[i]
+            flags += ' | finalmq::' + flagArray[i]
         }
         return flags
     },

@@ -1,3 +1,24 @@
+//MIT License
+
+//Copyright (c) 2020 bexoft GmbH (mail@bexoft.de)
+
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
+
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
 
 
 #include "streamconnection/StreamConnectionContainer.h"
@@ -17,6 +38,8 @@
 
 //#include <iostream>
 
+
+namespace finalmq {
 
 
 // todo: should be removed this definition shall go into BexLibDefines.h
@@ -76,13 +99,13 @@ void StreamConnectionContainer::init(int cycleTime, int checkReconnectInterval)
 }
 
 
-int StreamConnectionContainer::bind(const std::string& endpoint, bex::hybrid_ptr<IStreamConnectionCallback> callbackDefault)
+int StreamConnectionContainer::bind(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callbackDefault)
 {
     return bindIntern(endpoint, callbackDefault, false, CertificateData());
 }
 
 
-int StreamConnectionContainer::bindIntern(const std::string& endpoint, bex::hybrid_ptr<IStreamConnectionCallback> callbackDefault, bool ssl, const CertificateData& certificateData)
+int StreamConnectionContainer::bindIntern(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callbackDefault, bool ssl, const CertificateData& certificateData)
 {
     ConnectionData connectionData = AddressHelpers::endpoint2ConnectionData(endpoint);
     connectionData.ssl = ssl;
@@ -144,12 +167,12 @@ void StreamConnectionContainer::unbind(const std::string& endpoint)
     locker.unlock();
 }
 
-IStreamConnectionPtr StreamConnectionContainer::createConnection(const std::string& endpoint, bex::hybrid_ptr<IStreamConnectionCallback> callback, int reconnectInterval, int totalReconnectDuration)
+IStreamConnectionPtr StreamConnectionContainer::createConnection(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, int reconnectInterval, int totalReconnectDuration)
 {
     return createConnectionIntern(endpoint, callback, false, CertificateData(), reconnectInterval, totalReconnectDuration);
 }
 
-IStreamConnectionPtr StreamConnectionContainer::createConnectionIntern(const std::string& endpoint, bex::hybrid_ptr<IStreamConnectionCallback> callback, bool ssl, const CertificateData& certificateData, int reconnectInterval, int totalReconnectDuration)
+IStreamConnectionPtr StreamConnectionContainer::createConnectionIntern(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, bool ssl, const CertificateData& certificateData, int reconnectInterval, int totalReconnectDuration)
 {
     ConnectionData connectionData = AddressHelpers::endpoint2ConnectionData(endpoint);
     connectionData.incomingConnection = false;
@@ -263,11 +286,11 @@ bool StreamConnectionContainer::terminatePollerLoop(int timeout)
 
 #ifdef USE_OPENSSL
 
-int StreamConnectionContainer::bindSsl(const std::string& endpoint, bex::hybrid_ptr<IStreamConnectionCallback> callback, const CertificateData& certificateData)
+int StreamConnectionContainer::bindSsl(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const CertificateData& certificateData)
 {
     return bindIntern(endpoint, callback, true, certificateData);
 }
-IStreamConnectionPtr StreamConnectionContainer::createConnectionSsl(const std::string& endpoint, bex::hybrid_ptr<IStreamConnectionCallback> callback, const CertificateData& certificateData, int reconnectInterval, int totalReconnectDuration)
+IStreamConnectionPtr StreamConnectionContainer::createConnectionSsl(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const CertificateData& certificateData, int reconnectInterval, int totalReconnectDuration)
 {
     return createConnectionIntern(endpoint, callback, true, certificateData, reconnectInterval, totalReconnectDuration);
 }
@@ -284,7 +307,7 @@ void StreamConnectionContainer::terminatePollerLoop()
 
 
 
-IStreamConnectionPrivatePtr StreamConnectionContainer::addConnection(const SocketPtr& socket, ConnectionData& connectionData, bex::hybrid_ptr<IStreamConnectionCallback> callback)
+IStreamConnectionPrivatePtr StreamConnectionContainer::addConnection(const SocketPtr& socket, ConnectionData& connectionData, hybrid_ptr<IStreamConnectionCallback> callback)
 {
     SocketDescriptorPtr sd = socket->getSocketDescriptor();
     assert(sd);
@@ -625,3 +648,4 @@ void StreamConnectionContainer::pollerLoop()
 }
 
 
+}   // namespace finalmq
