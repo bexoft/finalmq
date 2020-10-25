@@ -75,7 +75,7 @@ bool ParserJson::parseStruct(const std::string& typeName)
 
 
 
-void ParserJson::syntaxError(const char* str, const char* message)
+void ParserJson::syntaxError(const char* /*str*/, const char* /*message*/)
 {
 
 }
