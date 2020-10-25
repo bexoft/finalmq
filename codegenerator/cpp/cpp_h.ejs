@@ -26,8 +26,8 @@ class <%- plainTypeName %>
 {
 public:
     enum Enum : std::int32_t {<% -%>
-        <% for (var i = 0; i < en.entries.length; i++) { 
-            var entry = en.entries[i] %>
+        <% for (var n = 0; n < en.entries.length; n++) { 
+            var entry = en.entries[n] %>
         <%- entry.name %> = <%- entry.id %>,<% -%>
         <% } %>
     };

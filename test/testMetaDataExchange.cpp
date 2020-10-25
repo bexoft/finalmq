@@ -19,7 +19,11 @@ using ::testing::ReturnRef;
 using testing::Invoke;
 using testing::DoAll;
 
-
+using finalmq::SerializeMetaTypeId;
+using finalmq::SerializeMetaFieldFlags;
+using finalmq::SerializeMetaStruct;
+using finalmq::SerializeMetaData;
+using finalmq::SerializeMetaEnum;
 
 class TestMetaDataExchange : public testing::Test
 {
@@ -43,11 +47,11 @@ const std::int32_t ENUM_ENTRY_ID = 0;
 const std::string ENUM_ENTRY_DESCRIPTION = "enum description 1";
 
 const std::string STRUCT_DESCRIPTION = "struct description";
-const SerializeMetaTypeId STRUCT_ENTRY_TYPEID = TYPE_STRING;
+const SerializeMetaTypeId STRUCT_ENTRY_TYPEID = SerializeMetaTypeId::TYPE_STRING;
 const std::string STRUCT_ENTRY_TYPENAME = "JustATypeName";
 const std::string STRUCT_ENTRY_NAME = "value";
 const std::string STRUCT_ENTRY_DESCRIPTION = "value description";
-const std::vector<SerializeMetaFieldFlags> STRUCT_ENTRY_FLAGS = {METAFLAG_PROTO_VARINT, METAFLAG_PROTO_ZIGZAG};
+const std::vector<SerializeMetaFieldFlags> STRUCT_ENTRY_FLAGS = {SerializeMetaFieldFlags::METAFLAG_PROTO_VARINT, SerializeMetaFieldFlags::METAFLAG_PROTO_ZIGZAG};
 
 
 static SerializeMetaStruct importTestStruct(const std::string& typeName)
@@ -223,7 +227,7 @@ TEST_F(TestMetaDataExchange, testExportProto)
     SerializeMetaData root;
     SerializerStruct serializer(root);
     ParserProto parser(serializer, proto.c_str(), proto.size());
-    parser.parseStruct("SerializeMetaData");
+    parser.parseStruct("finalmq.SerializeMetaData");
 
     int found = 0;
     for (size_t i = 0; i < root.structs.size(); ++i)

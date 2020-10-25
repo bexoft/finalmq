@@ -55,15 +55,15 @@ endif()
 
 
 add_custom_command(
-    COMMAND node ${CMAKE_SOURCE_DIR}/codegenerator/cpp/cpp.js ${CMAKE_CURRENT_SOURCE_DIR}/test.json ${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS test.json ${CMAKE_SOURCE_DIR}/codegenerator/cpp/cpp.js ${CMAKE_SOURCE_DIR}/codegenerator/cpp/cpp_cpp.ejs ${CMAKE_SOURCE_DIR}/codegenerator/cpp/cpp_h.ejs
+    COMMAND node ${CODEGENERATOR}/cpp/cpp.js ${CMAKE_CURRENT_SOURCE_DIR}/test.json ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/test.json
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test.json.cpp ${CMAKE_CURRENT_BINARY_DIR}/test.json.h
     COMMENT "Generating code out of test.json."
 )
 
 add_custom_command(
-    COMMAND node ${CMAKE_SOURCE_DIR}/codegenerator/proto/proto.js ${CMAKE_CURRENT_SOURCE_DIR}/test.json ${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS test.json ${CMAKE_SOURCE_DIR}/codegenerator/proto/proto.ejs
+    COMMAND node ${CODEGENERATOR}/proto/proto.js ${CMAKE_CURRENT_SOURCE_DIR}/test.json ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/test.json
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test.proto
     COMMENT "Generating code out of test.json."
 )
