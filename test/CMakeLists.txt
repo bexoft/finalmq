@@ -53,7 +53,23 @@ else()
     message (FATAL_ERROR "Cannot find Protobuf")
 endif()
 
-PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS test.proto)
+
+add_custom_command(
+    COMMAND node ${CODEGENERATOR}/cpp/cpp.js ${CMAKE_CURRENT_SOURCE_DIR}/test.fmq ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/test.fmq
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/test.fmq.h
+    COMMENT "Generating cpp code out of test.fmq."
+)
+
+add_custom_command(
+    COMMAND node ${CODEGENERATOR}/proto/proto.js ${CMAKE_CURRENT_SOURCE_DIR}/test.fmq ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/test.fmq
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test.proto
+    COMMENT "Generating proto code out of test.fmq."
+)
+
+PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${CMAKE_CURRENT_BINARY_DIR}/test.proto)
+
 
 message("proto headers: ${PROTO_HDRS}")
 
@@ -63,11 +79,10 @@ include_directories("${CMAKE_BINARY_DIR}/test")
 include_directories("${CMAKE_SOURCE_DIR}/mock")
 
 file(GLOB TESTSOURCES "*.cpp")
-
-#link_directories(~/openssl)
+#file(GLOB GENCODE ${CMAKE_CURRENT_BINARY_DIR}/test.fmq.cpp)
 
 # Now simply link against gtest or gtest_main as needed. Eg
-add_executable(testfinalmq ${TESTSOURCES} ${PROTO_SRCS} ${PROTO_HDRS})
+add_executable(testfinalmq ${TESTSOURCES} ${PROTO_SRCS} ${PROTO_HDRS} ${CMAKE_CURRENT_BINARY_DIR}/test.fmq.cpp)
 target_link_libraries(testfinalmq gtest_main finalmq gmock ssl ${PROTOBUF_LIBRARIES})
 #add_test(NAME example_test COMMAND example)
 

@@ -1,13 +1,13 @@
 
-#include "StructsMetaData.h"
+#include "metadataserialize/metadata.fmq.h"
 
 
 
 class MetaDataExchange
 {
 public:
-    static void importMetaData(const SerializeMetaData& metadata);
-    static void exportMetaData(SerializeMetaData& metadata);
+    static void importMetaData(const finalmq::SerializeMetaData& metadata);
+    static void exportMetaData(finalmq::SerializeMetaData& metadata);
 
     static void importMetaDataJson(const char* json);
     static void exportMetaDataJson(std::string& json);

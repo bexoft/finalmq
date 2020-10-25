@@ -10,7 +10,25 @@
 
 #include <algorithm>
 
+using finalmq::SerializeMetaData;
+using finalmq::SerializeMetaEnum;
+using finalmq::SerializeMetaEnumEntry;
+using finalmq::SerializeMetaStruct;
+using finalmq::SerializeMetaField;
+using finalmq::SerializeMetaFieldFlags;
+using finalmq::SerializeMetaData;
+using finalmq::SerializeMetaTypeId;
 
+
+
+static MetaTypeId convert(SerializeMetaTypeId value)
+{
+    return static_cast<MetaTypeId>(static_cast<SerializeMetaTypeId::Enum>(value));
+}
+static SerializeMetaTypeId convert(MetaTypeId value)
+{
+    return static_cast<SerializeMetaTypeId::Enum>(static_cast<MetaTypeId>(value));
+}
 
 void MetaDataExchange::importMetaData(const SerializeMetaData& metadata)
 {
@@ -22,9 +40,9 @@ void MetaDataExchange::importMetaData(const SerializeMetaData& metadata)
         for (size_t n = 0; n < enumSource.entries.size(); ++n)
         {
             const SerializeMetaEnumEntry& entrySource = enumSource.entries[i];
-            entries.push_back({entrySource.name, entrySource.id, entrySource.description});
+            entries.push_back({entrySource.name, entrySource.id, entrySource.desc});
         }
-        MetaDataGlobal::instance().addEnum({enumSource.typeName, enumSource.description, std::move(entries)});
+        MetaDataGlobal::instance().addEnum({enumSource.type, enumSource.desc, std::move(entries)});
     }
 
     // structs
@@ -39,9 +57,9 @@ void MetaDataExchange::importMetaData(const SerializeMetaData& metadata)
             std::for_each(fieldSource.flags.begin(), fieldSource.flags.end(), [&flags] (const SerializeMetaFieldFlags& flag) {
                 flags |= flag;
             });
-            fields.push_back({fieldSource.typeId, fieldSource.typeName, fieldSource.name, fieldSource.description, flags});
+            fields.push_back({convert(fieldSource.tid), fieldSource.type, fieldSource.name, fieldSource.desc, flags});
         }
-        MetaDataGlobal::instance().addStruct({structSource.typeName, structSource.description, std::move(fields)});
+        MetaDataGlobal::instance().addStruct({structSource.type, structSource.desc, std::move(fields)});
     }
 }
 
@@ -56,8 +74,8 @@ void MetaDataExchange::exportMetaData(SerializeMetaData& metadata)
     {
         const MetaEnum& enumSource = it->second;
         SerializeMetaEnum enumDestination;
-        enumDestination.typeName = enumSource.getTypeName();
-        enumDestination.description = enumSource.getDescription();
+        enumDestination.type = enumSource.getTypeName();
+        enumDestination.desc = enumSource.getDescription();
         for (int n = 0; n < enumSource.getEntrySize(); ++n)
         {
             const MetaEnumEntry* entrySource = enumSource.getEntryByIndex(n);
@@ -73,8 +91,8 @@ void MetaDataExchange::exportMetaData(SerializeMetaData& metadata)
     {
         const MetaStruct& structSource = it->second;
         SerializeMetaStruct structDestination;
-        structDestination.typeName = structSource.getTypeName();
-        structDestination.description = structSource.getDescription();
+        structDestination.type = structSource.getTypeName();
+        structDestination.desc = structSource.getDescription();
         for (int n = 0; n < structSource.getFieldsSize(); ++n)
         {
             const MetaField* fieldSource = structSource.getFieldByIndex(n);
@@ -88,7 +106,7 @@ void MetaDataExchange::exportMetaData(SerializeMetaData& metadata)
                     flags.push_back(static_cast<SerializeMetaFieldFlags::Enum>(flag));
                 }
             }
-            structDestination.fields.push_back({fieldSource->typeId, fieldSource->typeName, fieldSource->name, fieldSource->description, flags});
+            structDestination.fields.push_back({convert(fieldSource->typeId), fieldSource->typeName, fieldSource->name, fieldSource->description, flags});
         }
         metadata.structs.push_back(std::move(structDestination));
     }
@@ -101,7 +119,7 @@ void MetaDataExchange::importMetaDataJson(const char* json)
     SerializeMetaData root;
     SerializerStruct serializer(root);
     ParserJson parser(serializer, json);
-    parser.parseStruct("SerializeMetaData");
+    parser.parseStruct("finalmq.SerializeMetaData");
 
     importMetaData(root);
 }
@@ -127,7 +145,7 @@ void MetaDataExchange::importMetaDataProto(const char* proto, int size)
     SerializeMetaData root;
     SerializerStruct serializer(root);
     ParserProto parser(serializer, proto, size);
-    parser.parseStruct("SerializeMetaData");
+    parser.parseStruct("finalmq.SerializeMetaData");
 
     importMetaData(root);
 }
