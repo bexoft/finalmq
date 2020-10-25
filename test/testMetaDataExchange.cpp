@@ -57,7 +57,7 @@ const std::vector<SerializeMetaFieldFlags> STRUCT_ENTRY_FLAGS = {SerializeMetaFi
 static SerializeMetaStruct importTestStruct(const std::string& typeName)
 {
     SerializeMetaStruct stru;
-    stru.typeName = typeName;
+    stru.type = typeName;
     stru.desc = STRUCT_DESCRIPTION;
     stru.fields.push_back({STRUCT_ENTRY_TYPEID, STRUCT_ENTRY_TYPENAME, STRUCT_ENTRY_NAME, STRUCT_ENTRY_DESCRIPTION, STRUCT_ENTRY_FLAGS});
     SerializeMetaData serializeMetaData;
@@ -76,7 +76,7 @@ TEST_F(TestMetaDataExchange, testImportEnum)
 
     SerializeMetaEnum en;
 
-    en.typeName = ENUM_TYPE;
+    en.type = ENUM_TYPE;
     en.desc = ENUM_DESCRIPTION;
     en.entries.push_back({ENUM_ENTRY_NAME, ENUM_ENTRY_ID, ENUM_ENTRY_DESCRIPTION});
 
@@ -125,7 +125,7 @@ TEST_F(TestMetaDataExchange, testImportStruct)
 TEST_F(TestMetaDataExchange, testExportEnum)
 {
     SerializeMetaEnum en;
-    en.typeName = ENUM_TYPE;
+    en.type = ENUM_TYPE;
     en.desc = ENUM_DESCRIPTION;
     en.entries.push_back({ENUM_ENTRY_NAME, ENUM_ENTRY_ID, ENUM_ENTRY_DESCRIPTION});
     SerializeMetaData serializeMetaData;
@@ -138,7 +138,7 @@ TEST_F(TestMetaDataExchange, testExportEnum)
     int found = 0;
     for (size_t i = 0; i < serializeMetaDataExport.enums.size(); ++i)
     {
-        if (serializeMetaDataExport.enums[i].typeName == ENUM_TYPE)
+        if (serializeMetaDataExport.enums[i].type == ENUM_TYPE)
         {
             found++;
             ASSERT_EQ(serializeMetaDataExport.enums[i], en);
@@ -163,7 +163,7 @@ TEST_F(TestMetaDataExchange, testExportStruct)
     int found = 0;
     for (size_t i = 0; i < serializeMetaDataExport.structs.size(); ++i)
     {
-        if (serializeMetaDataExport.structs[i].typeName == STRUCT_TYPE)
+        if (serializeMetaDataExport.structs[i].type == STRUCT_TYPE)
         {
             found++;
             ASSERT_EQ(serializeMetaDataExport.structs[i], stru);
@@ -178,7 +178,7 @@ TEST_F(TestMetaDataExchange, testImportProto)
     static const std::string STRUCT_TYPE = "MyTest_testImportProto";
 
     SerializeMetaStruct stru;
-    stru.typeName = STRUCT_TYPE;
+    stru.type = STRUCT_TYPE;
     stru.desc = STRUCT_DESCRIPTION;
     stru.fields.push_back({STRUCT_ENTRY_TYPEID, STRUCT_ENTRY_TYPENAME, STRUCT_ENTRY_NAME, STRUCT_ENTRY_DESCRIPTION, STRUCT_ENTRY_FLAGS});
     SerializeMetaData serializeMetaData;
@@ -232,7 +232,7 @@ TEST_F(TestMetaDataExchange, testExportProto)
     int found = 0;
     for (size_t i = 0; i < root.structs.size(); ++i)
     {
-        if (root.structs[i].typeName == STRUCT_TYPE)
+        if (root.structs[i].type == STRUCT_TYPE)
         {
             found++;
             ASSERT_EQ(root.structs[i], stru);

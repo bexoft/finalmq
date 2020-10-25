@@ -4,7 +4,7 @@
 
 #include "serializestruct/SerializerStruct.h"
 #include "metadata/MetaField.h"
-#include "test.json.h"
+#include "test.fmq.h"
 
 
 using ::testing::_;

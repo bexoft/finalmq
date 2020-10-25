@@ -12,7 +12,13 @@ var strTemplate = fs.readFileSync(fileTemplate, 'utf8');
 
 var data = JSON.parse(strData);
 
-var fileOutput = fileData.split('.')[0] + '.proto'
+// make the following conversion: ../abc/test.fmq -> ../abc/test
+var fileDataSplitPath = fileData.split('/')                                         // fileDataSplitPath = .. abc test.fmq
+var fileDataPlain = fileDataSplitPath[fileDataSplitPath.length - 1].split('.')[0]   // fileDataPlain = test
+fileDataSplitPath[fileDataSplitPath.length - 1] = fileDataPlain                     // fileDataSplitPath = .. abc test
+fileData = fileDataSplitPath.join('/')                                              // fileData = ../abc/test
+
+var fileOutput = fileData + '.proto'
 
 if (pathOutput)
 {

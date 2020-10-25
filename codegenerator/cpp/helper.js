@@ -1,17 +1,17 @@
 module.exports = {
 
-    isTypeInData : function(data, typeName)
+    isTypeInData : function(data, type)
     {
         for (var i = 0; i < data.enums.length; i++)
         {
-            if (data.enums[i].typeName == typeName)
+            if (data.enums[i].type == type)
             {
                 return true;
             }
         }
         for (var i = 0; i < data.structs.length; i++)
         {
-            if (data.structs[i].typeName == typeName)
+            if (data.structs[i].type == type)
             {
                 return true;
             }
@@ -19,29 +19,29 @@ module.exports = {
         return false;
     },
 
-    typeNameWithNamespace : function(data, typeName, delimiter)
+    typeWithNamespace : function(data, type, delimiter)
     {
-        var type = typeName;
-        if (typeName.split('.').length > 1 || data.namespace == null || data.namespace.length == 0 || !this.isTypeInData(data, typeName))
+        var type = type;
+        if (type.split('.').length > 1 || data.namespace == null || data.namespace.length == 0 || !this.isTypeInData(data, type))
         {
-            type = typeName;
+            type = type;
         }
         else
         {
-            type = data.namespace + '.' + typeName
+            type = data.namespace + '.' + type
         }
         return type.replace('.', delimiter)
     },
 
-    getPlainTypeName : function(typeName)
+    getPlainType : function(type)
     {
-        list = typeName.split('.')
+        list = type.split('.')
         return list[list.length - 1]
     },
      
-    typeId2type : function(data, typeId, typeName) { 
+    tid2type : function(data, tid, type) { 
 
-        switch (typeId)
+        switch (tid)
         {
             case 'TYPE_BOOL':           return 'bool'
             case 'TYPE_INT32':          return 'std::int32_t'
@@ -52,8 +52,8 @@ module.exports = {
             case 'TYPE_DOUBLE':         return 'double'
             case 'TYPE_STRING':         return 'std::string'
             case 'TYPE_BYTES':          return 'Bytes'
-            case 'TYPE_STRUCT':         return this.typeNameWithNamespace(data, typeName, '::')
-            case 'TYPE_ENUM':           return this.typeNameWithNamespace(data, typeName, '::')
+            case 'TYPE_STRUCT':         return this.typeWithNamespace(data, type, '::')
+            case 'TYPE_ENUM':           return this.typeWithNamespace(data, type, '::')
             case 'TYPE_ARRAY_BOOL':     return 'std::vector<bool>'
             case 'TYPE_ARRAY_INT32':    return 'std::vector<std::int32_t>'
             case 'TYPE_ARRAY_UINT32':   return 'std::vector<std::uint32_t>'
@@ -63,14 +63,14 @@ module.exports = {
             case 'TYPE_ARRAY_DOUBLE':   return 'std::vector<double>'
             case 'TYPE_ARRAY_STRING':   return 'std::vector<std::string>'
             case 'TYPE_ARRAY_BYTES':    return 'std::vector<Bytes>'
-            case 'TYPE_ARRAY_STRUCT':   return 'std::vector<'+this.typeNameWithNamespace(data, typeName, '::')+'>'
-            case 'TYPE_ARRAY_ENUM':     return 'std::vector<'+this.typeNameWithNamespace(data, typeName, '::')+'>'
+            case 'TYPE_ARRAY_STRUCT':   return 'std::vector<'+this.typeWithNamespace(data, type, '::')+'>'
+            case 'TYPE_ARRAY_ENUM':     return 'std::vector<'+this.typeWithNamespace(data, type, '::')+'>'
         }
     },
 
-    typeId2default : function(typeId) { 
+    tid2default : function(tid) { 
 
-        switch (typeId)
+        switch (tid)
         {
             case 'TYPE_BOOL':           return 'false'
             case 'TYPE_INT32':          return '0'
@@ -107,9 +107,9 @@ module.exports = {
         return flags
     },
 
-    getOffset : function(typeId)
+    getOffset : function(tid)
     {
-        if (typeId == 'TYPE_STRUCT')
+        if (tid == 'TYPE_STRUCT')
         {
             return 'OFFSET_STRUCTBASE_TO_STRUCTBASE';
         }

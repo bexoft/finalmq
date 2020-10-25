@@ -1,17 +1,17 @@
 module.exports = {
 
-    isTypeInData : function(data, typeName)
+    isTypeInData : function(data, type)
     {
         for (var i = 0; i < data.enums.length; i++)
         {
-            if (data.enums[i].typeName == typeName)
+            if (data.enums[i].type == type)
             {
                 return true;
             }
         }
         for (var i = 0; i < data.structs.length; i++)
         {
-            if (data.structs[i].typeName == typeName)
+            if (data.structs[i].type == type)
             {
                 return true;
             }
@@ -19,23 +19,23 @@ module.exports = {
         return false;
     },
 
-    typeNameWithNamespace : function(data, typeName, delimiter)
+    typeWithNamespace : function(data, type, delimiter)
     {
-        var type = typeName;
-        if (typeName.split('.').length > 1 || data.namespace == null || data.namespace.length == 0 || !this.isTypeInData(data, typeName))
+        var type = type;
+        if (type.split('.').length > 1 || data.namespace == null || data.namespace.length == 0 || !this.isTypeInData(data, type))
         {
-            type = 'fmq.' + typeName;
+            type = 'fmq.' + type;
         }
         else
         {
-            type = 'fmq.' + data.namespace + '.' + typeName
+            type = 'fmq.' + data.namespace + '.' + type
         }
         return type.replace('.', delimiter)
     },
 
-    getPlainTypeName : function(typeName)
+    getPlainType : function(type)
     {
-        list = typeName.split('.')
+        list = type.split('.')
         return list[list.length - 1]
     },
 
@@ -63,9 +63,9 @@ module.exports = {
         return false;
     },
      
-    typeId2type : function(data, typeId, typeName, flags) { 
+    tid2type : function(data, tid, type, flags) { 
 
-        switch (typeId)
+        switch (tid)
         {
             case 'TYPE_BOOL':           return 'bool'
             case 'TYPE_INT32':          return (this.isVarint(flags)) ? 'int32'  : (this.isZigZag(flags)) ? 'sint32' : 'sfixed32';
@@ -76,8 +76,8 @@ module.exports = {
             case 'TYPE_DOUBLE':         return 'double'
             case 'TYPE_STRING':         return 'string'
             case 'TYPE_BYTES':          return 'bytes'
-            case 'TYPE_STRUCT':         return this.typeNameWithNamespace(data, typeName, '.')
-            case 'TYPE_ENUM':           return this.typeNameWithNamespace(data, typeName, '.')
+            case 'TYPE_STRUCT':         return this.typeWithNamespace(data, type, '.')
+            case 'TYPE_ENUM':           return this.typeWithNamespace(data, type, '.')
             case 'TYPE_ARRAY_BOOL':     return 'repeated bool'
             case 'TYPE_ARRAY_INT32':    return 'repeated ' + ((this.isVarint(flags)) ? 'int32'  : (this.isZigZag(flags)) ? 'sint32' : 'sfixed32')
             case 'TYPE_ARRAY_UINT32':   return 'repeated ' + ((this.isVarint(flags)) ? 'uint32' : 'fixed32')
@@ -87,8 +87,8 @@ module.exports = {
             case 'TYPE_ARRAY_DOUBLE':   return 'repeated double'
             case 'TYPE_ARRAY_STRING':   return 'repeated string'
             case 'TYPE_ARRAY_BYTES':    return 'repeated bytes'
-            case 'TYPE_ARRAY_STRUCT':   return 'repeated '+this.typeNameWithNamespace(data, typeName, '.')
-            case 'TYPE_ARRAY_ENUM':     return 'repeated '+this.typeNameWithNamespace(data, typeName, '.')
+            case 'TYPE_ARRAY_STRUCT':   return 'repeated '+this.typeWithNamespace(data, type, '.')
+            case 'TYPE_ARRAY_ENUM':     return 'repeated '+this.typeWithNamespace(data, type, '.')
         }
     },
 
