@@ -90,7 +90,7 @@ file(GLOB SOURCES "src/*.cpp" "inc/*.h"
 
 #Generate the shared library from the sources
 add_library(finalmq SHARED ${SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/inc/metadataserialize/metadata.fmq.cpp)
- target_compile_options(finalmq -Werror -Wall -Wextra)
+target_compile_options(finalmq PRIVATE -Werror -Wall -Wextra)
 #Set the location for library installation -- i.e., /usr/lib in this case
 # not really necessary in this example. Use "sudo make install" to apply
 install(TARGETS finalmq DESTINATION /usr/lib)
