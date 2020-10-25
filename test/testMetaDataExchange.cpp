@@ -58,7 +58,7 @@ static SerializeMetaStruct importTestStruct(const std::string& typeName)
 {
     SerializeMetaStruct stru;
     stru.typeName = typeName;
-    stru.description = STRUCT_DESCRIPTION;
+    stru.desc = STRUCT_DESCRIPTION;
     stru.fields.push_back({STRUCT_ENTRY_TYPEID, STRUCT_ENTRY_TYPENAME, STRUCT_ENTRY_NAME, STRUCT_ENTRY_DESCRIPTION, STRUCT_ENTRY_FLAGS});
     SerializeMetaData serializeMetaData;
     serializeMetaData.structs.push_back(stru);
@@ -77,7 +77,7 @@ TEST_F(TestMetaDataExchange, testImportEnum)
     SerializeMetaEnum en;
 
     en.typeName = ENUM_TYPE;
-    en.description = ENUM_DESCRIPTION;
+    en.desc = ENUM_DESCRIPTION;
     en.entries.push_back({ENUM_ENTRY_NAME, ENUM_ENTRY_ID, ENUM_ENTRY_DESCRIPTION});
 
     SerializeMetaData serializeMetaData;
@@ -126,7 +126,7 @@ TEST_F(TestMetaDataExchange, testExportEnum)
 {
     SerializeMetaEnum en;
     en.typeName = ENUM_TYPE;
-    en.description = ENUM_DESCRIPTION;
+    en.desc = ENUM_DESCRIPTION;
     en.entries.push_back({ENUM_ENTRY_NAME, ENUM_ENTRY_ID, ENUM_ENTRY_DESCRIPTION});
     SerializeMetaData serializeMetaData;
     serializeMetaData.enums.push_back(en);
@@ -179,7 +179,7 @@ TEST_F(TestMetaDataExchange, testImportProto)
 
     SerializeMetaStruct stru;
     stru.typeName = STRUCT_TYPE;
-    stru.description = STRUCT_DESCRIPTION;
+    stru.desc = STRUCT_DESCRIPTION;
     stru.fields.push_back({STRUCT_ENTRY_TYPEID, STRUCT_ENTRY_TYPENAME, STRUCT_ENTRY_NAME, STRUCT_ENTRY_DESCRIPTION, STRUCT_ENTRY_FLAGS});
     SerializeMetaData serializeMetaData;
     serializeMetaData.structs.push_back(stru);

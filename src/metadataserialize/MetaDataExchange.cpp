@@ -40,9 +40,9 @@ void MetaDataExchange::importMetaData(const SerializeMetaData& metadata)
         for (size_t n = 0; n < enumSource.entries.size(); ++n)
         {
             const SerializeMetaEnumEntry& entrySource = enumSource.entries[i];
-            entries.push_back({entrySource.name, entrySource.id, entrySource.description});
+            entries.push_back({entrySource.name, entrySource.id, entrySource.desc});
         }
-        MetaDataGlobal::instance().addEnum({enumSource.typeName, enumSource.description, std::move(entries)});
+        MetaDataGlobal::instance().addEnum({enumSource.typeName, enumSource.desc, std::move(entries)});
     }
 
     // structs
@@ -57,9 +57,9 @@ void MetaDataExchange::importMetaData(const SerializeMetaData& metadata)
             std::for_each(fieldSource.flags.begin(), fieldSource.flags.end(), [&flags] (const SerializeMetaFieldFlags& flag) {
                 flags |= flag;
             });
-            fields.push_back({convert(fieldSource.typeId), fieldSource.typeName, fieldSource.name, fieldSource.description, flags});
+            fields.push_back({convert(fieldSource.typeId), fieldSource.typeName, fieldSource.name, fieldSource.desc, flags});
         }
-        MetaDataGlobal::instance().addStruct({structSource.typeName, structSource.description, std::move(fields)});
+        MetaDataGlobal::instance().addStruct({structSource.typeName, structSource.desc, std::move(fields)});
     }
 }
 
@@ -75,7 +75,7 @@ void MetaDataExchange::exportMetaData(SerializeMetaData& metadata)
         const MetaEnum& enumSource = it->second;
         SerializeMetaEnum enumDestination;
         enumDestination.typeName = enumSource.getTypeName();
-        enumDestination.description = enumSource.getDescription();
+        enumDestination.desc = enumSource.getDescription();
         for (int n = 0; n < enumSource.getEntrySize(); ++n)
         {
             const MetaEnumEntry* entrySource = enumSource.getEntryByIndex(n);
@@ -92,7 +92,7 @@ void MetaDataExchange::exportMetaData(SerializeMetaData& metadata)
         const MetaStruct& structSource = it->second;
         SerializeMetaStruct structDestination;
         structDestination.typeName = structSource.getTypeName();
-        structDestination.description = structSource.getDescription();
+        structDestination.desc = structSource.getDescription();
         for (int n = 0; n < structSource.getFieldsSize(); ++n)
         {
             const MetaField* fieldSource = structSource.getFieldByIndex(n);
