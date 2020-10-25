@@ -51,7 +51,7 @@ SerializerStruct::Internal::Internal(StructBase& root)
 
 
 // IParserVisitor
-void SerializerStruct::Internal::notifyError(const char* str, const char* message)
+void SerializerStruct::Internal::notifyError(const char* /*str*/, const char* /*message*/)
 {
 }
 
@@ -88,7 +88,7 @@ void SerializerStruct::Internal::enterStruct(const MetaField& field)
     }
 }
 
-void SerializerStruct::Internal::exitStruct(const MetaField& field)
+void SerializerStruct::Internal::exitStruct(const MetaField& /*field*/)
 {
     if (!m_stack.empty())
     {
@@ -111,7 +111,7 @@ void SerializerStruct::Internal::enterArrayStruct(const MetaField& field)
     m_current->structArrayIndex = field.index;
 }
 
-void SerializerStruct::Internal::exitArrayStruct(const MetaField& field)
+void SerializerStruct::Internal::exitArrayStruct(const MetaField& /*field*/)
 {
     assert(m_current);
     m_current->structArrayIndex = -1;
@@ -321,6 +321,7 @@ void SerializerStruct::Internal::enterArrayEnum(const MetaField& field, const st
 {
     std::vector<std::int32_t> enums;
     enums.reserve(size);
+
     std::for_each(value, value + size, [this, &field, &enums] (const std::int32_t& entry) {
         bool validEnum = MetaDataGlobal::instance().isEnumValue(field, entry);
         enums.push_back(validEnum ? entry : 0);
