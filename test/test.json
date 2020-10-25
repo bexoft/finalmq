@@ -40,6 +40,11 @@
             {"typeId":"TYPE_STRUCT","typeName":"TestString","name":"struct_string","description":"description","flags":[]},
             {"typeId":"TYPE_UINT32","typeName":"","name":"last_value","description":"description","flags":[]}
         ]},
+        {"typeName":"TestStructBlockSize","description":"desc","fields":[
+            {"typeId":"TYPE_STRUCT","typeName":"TestInt32","name":"struct_int32","description":"description","flags":[]},
+            {"typeId":"TYPE_STRUCT","typeName":"TestString","name":"struct_string","description":"description","flags":[]},
+            {"typeId":"TYPE_UINT32","typeName":"","name":"last_value","description":"description","flags":["METAFLAG_PROTO_VARINT"]}
+        ]},
         {"typeName":"TestEnum","description":"desc","fields":[
             {"typeId":"TYPE_ENUM","typeName":"Foo","name":"value","description":"description","flags":[]}
         ]},

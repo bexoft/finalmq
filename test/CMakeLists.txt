@@ -53,7 +53,6 @@ else()
     message (FATAL_ERROR "Cannot find Protobuf")
 endif()
 
-PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS test.proto)
 
 add_custom_command(
     COMMAND node ${CMAKE_SOURCE_DIR}/codegenerator/cpp/cpp.js ${CMAKE_CURRENT_SOURCE_DIR}/test.json ${CMAKE_CURRENT_BINARY_DIR}
@@ -61,6 +60,16 @@ add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test.json.cpp ${CMAKE_CURRENT_BINARY_DIR}/test.json.h
     COMMENT "Generating code out of test.json."
 )
+
+add_custom_command(
+    COMMAND node ${CMAKE_SOURCE_DIR}/codegenerator/proto/proto.js ${CMAKE_CURRENT_SOURCE_DIR}/test.json ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS test.json ${CMAKE_SOURCE_DIR}/codegenerator/proto/proto.ejs
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test.proto
+    COMMENT "Generating code out of test.json."
+)
+
+PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${CMAKE_CURRENT_BINARY_DIR}/test.proto)
+
 
 message("proto headers: ${PROTO_HDRS}")
 
