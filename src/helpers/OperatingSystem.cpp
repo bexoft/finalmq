@@ -283,7 +283,7 @@ int OperatingSystemImpl::setNonBlocking(int fd, bool nonBlock)
 }
 
 
-int OperatingSystemImpl::setLinger(int fd, bool on, int timeToLinger)
+int OperatingSystemImpl::setLinger(int fd, bool /*on*/, int /*timeToLinger*/)
 {
     struct linger l;
     l.l_onoff = true;

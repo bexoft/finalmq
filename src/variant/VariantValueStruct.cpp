@@ -175,12 +175,12 @@ bool VariantValueStruct::add(const std::string& name, Variant&& variant)
     return false;
 }
 
-bool VariantValueStruct::add(const Variant& variant)
+bool VariantValueStruct::add(const Variant& /*variant*/)
 {
     return false;
 }
 
-bool VariantValueStruct::add(Variant&& variant)
+bool VariantValueStruct::add(Variant&& /*variant*/)
 {
     return false;
 }

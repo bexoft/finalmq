@@ -122,11 +122,11 @@ void ConnectionHub::stopForwardingToSession(std::int64_t sessionId)
 
 
 // IProtocolSessionCallback
-void ConnectionHub::connected(const IProtocolSessionPtr& session)
+void ConnectionHub::connected(const IProtocolSessionPtr& /*session*/)
 {
 }
 
-void ConnectionHub::disconnected(const IProtocolSessionPtr& session)
+void ConnectionHub::disconnected(const IProtocolSessionPtr& /*session*/)
 {
 
 }
@@ -178,12 +178,12 @@ void ConnectionHub::received(const IProtocolSessionPtr& session, const IMessageP
     lock.unlock();
 }
 
-void ConnectionHub::socketConnected(const IProtocolSessionPtr& session)
+void ConnectionHub::socketConnected(const IProtocolSessionPtr& /*session*/)
 {
 
 }
 
-void ConnectionHub::socketDisconnected(const IProtocolSessionPtr& session)
+void ConnectionHub::socketDisconnected(const IProtocolSessionPtr& /*session*/)
 {
 
 }

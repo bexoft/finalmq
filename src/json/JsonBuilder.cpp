@@ -81,7 +81,7 @@ void JsonBuilder::resizeBuffer()
 
 
 // IJsonParserVisitor
-void JsonBuilder::syntaxError(const char* str, const char* message)
+void JsonBuilder::syntaxError(const char* /*str*/, const char* /*message*/)
 {
     assert(false);
 }
