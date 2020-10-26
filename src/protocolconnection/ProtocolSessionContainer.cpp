@@ -44,13 +44,13 @@ hybrid_ptr<IStreamConnectionCallback> ProtocolBind::connected(const IStreamConne
     return std::weak_ptr<IStreamConnectionCallback>(protocolSession);
 }
 
-void ProtocolBind::disconnected(const IStreamConnectionPtr& connection)
+void ProtocolBind::disconnected(const IStreamConnectionPtr& /*connection*/)
 {
     // should never be called, because the callback will be overriden by connected
     assert(false);
 }
 
-void ProtocolBind::received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead)
+void ProtocolBind::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& /*socket*/, int /*bytesToRead*/)
 {
     // should never be called, because the callback will be overriden by connected
     assert(false);

@@ -55,7 +55,7 @@ SerializerVariant::Internal::Internal(Variant& root, bool enumAsString)
 
 
 // IParserVisitor
-void SerializerVariant::Internal::notifyError(const char* str, const char* message)
+void SerializerVariant::Internal::notifyError(const char* /*str*/, const char* /*message*/)
 {
 }
 
@@ -94,7 +94,7 @@ void SerializerVariant::Internal::enterStruct(const MetaField& field)
     }
 }
 
-void SerializerVariant::Internal::exitStruct(const MetaField& field)
+void SerializerVariant::Internal::exitStruct(const MetaField& /*field*/)
 {
     if (!m_stack.empty())
     {
@@ -135,7 +135,7 @@ void SerializerVariant::Internal::enterArrayStruct(const MetaField& field)
     }
 }
 
-void SerializerVariant::Internal::exitArrayStruct(const MetaField& field)
+void SerializerVariant::Internal::exitArrayStruct(const MetaField& /*field*/)
 {
     if (!m_stack.empty())
     {

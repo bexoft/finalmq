@@ -152,11 +152,11 @@ bool VariantValueList::operator ==(const IVariantValue& rhs) const
 }
 
 
-bool VariantValueList::add(const std::string& name, const Variant& variant)
+bool VariantValueList::add(const std::string& /*name*/, const Variant& /*variant*/)
 {
     return false;
 }
-bool VariantValueList::add(const std::string& name, Variant&& variant)
+bool VariantValueList::add(const std::string& /*name*/, Variant&& /*variant*/)
 {
     return false;
 }

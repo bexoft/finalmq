@@ -358,7 +358,7 @@ void SerializerProto::Internal::resizeBuffer()
 
 
 // IParserVisitor
-void SerializerProto::Internal::notifyError(const char* str, const char* message)
+void SerializerProto::Internal::notifyError(const char* /*str*/, const char* /*message*/)
 {
 
 }
@@ -473,7 +473,7 @@ void SerializerProto::Internal::fillRemainingStruct(int remainingSize)
     }
 }
 
-void SerializerProto::Internal::exitStruct(const MetaField& field)
+void SerializerProto::Internal::exitStruct(const MetaField& /*field*/)
 {
     assert(!m_stackStruct.empty());
     StructData& structData = m_stackStruct.back();
@@ -519,12 +519,12 @@ void SerializerProto::Internal::exitStruct(const MetaField& field)
     m_stackStruct.pop_back();
 }
 
-void SerializerProto::Internal::enterArrayStruct(const MetaField& field)
+void SerializerProto::Internal::enterArrayStruct(const MetaField& /*field*/)
 {
     assert(!m_stackStruct.empty());
     m_stackStruct.back().arrayParent = true;
 }
-void SerializerProto::Internal::exitArrayStruct(const MetaField& field)
+void SerializerProto::Internal::exitArrayStruct(const MetaField& /*field*/)
 {
     assert(!m_stackStruct.empty());
     m_stackStruct.back().arrayParent = false;

@@ -61,7 +61,7 @@ void SerializerJson::Internal::setKey(const MetaField& field)
 
 
 // IParserVisitor
-void SerializerJson::Internal::notifyError(const char* str, const char* message)
+void SerializerJson::Internal::notifyError(const char* /*str*/, const char* /*message*/)
 {
 }
 
@@ -77,7 +77,7 @@ void SerializerJson::Internal::enterStruct(const MetaField& field)
     m_jsonBuilder.enterObject();
 }
 
-void SerializerJson::Internal::exitStruct(const MetaField& field)
+void SerializerJson::Internal::exitStruct(const MetaField& /*field*/)
 {
     m_jsonBuilder.exitObject();
 }
@@ -89,7 +89,7 @@ void SerializerJson::Internal::enterArrayStruct(const MetaField& field)
     m_jsonBuilder.enterArray();
 }
 
-void SerializerJson::Internal::exitArrayStruct(const MetaField& field)
+void SerializerJson::Internal::exitArrayStruct(const MetaField& /*field*/)
 {
     m_jsonBuilder.exitArray();
 }

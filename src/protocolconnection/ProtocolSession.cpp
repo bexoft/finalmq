@@ -220,18 +220,18 @@ void ProtocolSession::disconnect()
 
 
 // IStreamConnectionCallback
-hybrid_ptr<IStreamConnectionCallback> ProtocolSession::connected(const IStreamConnectionPtr& connection)
+hybrid_ptr<IStreamConnectionCallback> ProtocolSession::connected(const IStreamConnectionPtr& /*connection*/)
 {
     m_protocol->socketConnected();
     return nullptr;
 }
 
-void ProtocolSession::disconnected(const IStreamConnectionPtr& connection)
+void ProtocolSession::disconnected(const IStreamConnectionPtr& /*connection*/)
 {
     m_protocol->socketDisconnected();
 }
 
-void ProtocolSession::received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead)
+void ProtocolSession::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
 {
     m_protocol->receive(socket, bytesToRead);
 }

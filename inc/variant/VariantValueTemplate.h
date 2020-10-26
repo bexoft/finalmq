@@ -69,12 +69,12 @@ private:
         return &m_value;
     }
 
-    virtual Variant* getVariant(const std::string& name) override
+    virtual Variant* getVariant(const std::string& /*name*/) override
     {
         return nullptr;
     }
 
-    virtual const Variant* getVariant(const std::string& name) const override
+    virtual const Variant* getVariant(const std::string& /*name*/) const override
     {
         return nullptr;
     }
@@ -102,19 +102,19 @@ private:
         return m_value == *rhsData;
     }
 
-    virtual bool add(const std::string& name, const Variant& variant) override
+    virtual bool add(const std::string& /*name*/, const Variant& /*variant*/) override
     {
         return false;
     }
-    virtual bool add(const std::string& name, Variant&& variant) override
+    virtual bool add(const std::string& /*name*/, Variant&& /*variant*/) override
     {
         return false;
     }
-    virtual bool add(const Variant& variant) override
+    virtual bool add(const Variant& /*variant*/) override
     {
         return false;
     }
-    virtual bool add(Variant&& variant) override
+    virtual bool add(Variant&& /*variant*/) override
     {
         return false;
     }
