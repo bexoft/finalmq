@@ -27,10 +27,22 @@
 #include "logger/LogStream.h"
 
 
+using testing::StrEq;
+using testing::_;
+
 using namespace finalmq;
 
 
 static const char* MODULENAME = "TestModule";
+
+
+
+class MockFuncLogEvent
+{
+public:
+    MOCK_METHOD(void, func, (const LogContext& context, const char* text));
+};
+
 
 
 class TestLogger : public testing::Test
@@ -51,9 +63,16 @@ protected:
 
 TEST_F(TestLogger, test)
 {
-//    Logger::instance().registerConsumer([](const LogContext& context, const char* text){
-//        std::cout << text << std::endl;
-//    });
-//    streamInfo << "Hello";
-//    streamInfo << "World";
+    MockFuncLogEvent mock;
+    Logger::instance().registerConsumer([&mock](const LogContext& context, const char* text){
+        mock.func(context, text);
+    });
+
+    EXPECT_CALL(mock, func(_, StrEq("Hello"))).Times(1);
+    streamInfo << "Hello";
+
+    std::unique_ptr<ILogger> noLogger;
+    Logger::setInstance(noLogger);
+
+    streamInfo << "Hello";
 }

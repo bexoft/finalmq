@@ -20,6 +20,8 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
+#pragma once
+
 
 #include <functional>
 #include <memory>
@@ -103,7 +105,7 @@ public:
         return *m_instance;
     }
 
-    void setInstance(std::unique_ptr<ILogger>& instance);
+    static void setInstance(std::unique_ptr<ILogger>& instance);
 
 private:
     static std::unique_ptr<ILogger> m_instance;

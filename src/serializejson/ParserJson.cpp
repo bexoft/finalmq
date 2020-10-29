@@ -23,7 +23,8 @@
 
 #include "serializejson/ParserJson.h"
 #include "metadata/MetaData.h"
-//#include "helpers/BexDefines.h"
+#include "logger/LogStream.h"
+#include "helpers/ModulenameFinalmq.h"
 
 #include "conversions/itoa.h"
 #include "conversions/dtoa.h"
@@ -161,7 +162,7 @@ void ParserJson::enterNumber(T value)
         }
         break;
     default:
-        std::cout << "number not expected";
+        streamError << "number not expected";
         break;
     }
 }
@@ -322,7 +323,7 @@ void ParserJson::enterString(const char* value, int size)
         }
         break;
     default:
-        std::cout << "string not expected";
+        streamError << "string not expected";
         break;
     }
 }
@@ -452,7 +453,7 @@ void ParserJson::enterString(std::string&& value)
         }
         break;
     default:
-        std::cout << "string not expected";
+        streamError << "string not expected";
         break;
     }
 }
@@ -622,7 +623,6 @@ void ParserJson::enterObject()
     }
     else
     {
-//        std::cout << "struct not expected" << std::endl;
         m_fieldCurrent = nullptr;
     }
 }

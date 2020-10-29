@@ -388,7 +388,6 @@ void StreamConnectionContainer::handleConnectionEvents(const IStreamConnectionPr
 #ifdef USE_OPENSSL
             if (socket->isReadWhenWritable())
             {
-//                std::cout << "isReadWhenWritable" << info.sd << std::endl;
                 connection->received(connection, socket, 0);
             }
 #endif
@@ -399,7 +398,6 @@ void StreamConnectionContainer::handleConnectionEvents(const IStreamConnectionPr
 #ifdef USE_OPENSSL
             if (socket->isWriteWhenReadable())
             {
-//                std::cout << "isReadWhenWritable " << info.sd << std::endl;
                 connection->sendPendingMessages();
             }
 #endif

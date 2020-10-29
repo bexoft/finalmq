@@ -24,6 +24,8 @@
 #include "json/JsonBuilder.h"
 #include "conversions/itoa.h"
 #include "conversions/dtoa.h"
+#include "logger/LogStream.h"
+#include "helpers/ModulenameFinalmq.h"
 
 #include <assert.h>
 #include <string.h>
@@ -391,7 +393,7 @@ void JsonBuilder::escapeString(const char* str, int size)
             bool ok = decodeUtf8(str, codepoint);
             if (!ok)
             {
-                std::cout << "wrong utf8 format" << std::endl;
+                streamError << "wrong utf8 format";
             }
             *m_buffer = '\\';
             m_buffer++;

@@ -24,6 +24,8 @@
 
 #include "streamconnection/Socket.h"
 #include "helpers/OperatingSystem.h"
+#include "logger/LogStream.h"
+#include "helpers/ModulenameFinalmq.h"
 
 
 #include <errno.h>
@@ -382,7 +384,7 @@ int Socket::handleError(int err, const char* funcName)
         }
         else
         {
-            std::cout << funcName << " failed with error " << getLastError();
+            streamError << funcName << " failed with error " << getLastError();
         }
     }
     return err;
