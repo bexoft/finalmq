@@ -74,5 +74,6 @@ TEST_F(TestLogger, test)
     std::unique_ptr<ILogger> noLogger;
     Logger::setInstance(noLogger);
 
-    streamInfo << "Hello";
+    EXPECT_CALL(mock, func(_, _)).Times(0);
+    streamInfo << "World";
 }

@@ -28,30 +28,25 @@ namespace finalmq {
 
 LoggerImpl::LoggerImpl()
 {
-    m_flagIdle.test_and_set(std::memory_order_acquire);
 }
 
 
 
 void LoggerImpl::registerConsumer(FuncLogEvent consumer)
 {
+    // lock, so that registerConsumer can be called from multiple threads
     std::unique_lock<std::mutex> lock(m_mutex);
-    m_consumersAdd.push_back(consumer);
+    m_consumers.push_back(consumer);
+    m_sizeConsumers.store(m_consumers.size(), std::memory_order_release);
     lock.unlock();
-    m_flagIdle.clear(std::memory_order_release);
 }
 
 void LoggerImpl::triggerLog(const LogContext& context, const char* text)
 {
-    if (!m_flagIdle.test_and_set(std::memory_order_acquire))
+    size_t size = m_sizeConsumers.load(std::memory_order_acquire);
+    for (size_t i = 0; i < size; ++i)
     {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        m_consumers.insert(m_consumers.end(), m_consumersAdd.begin(), m_consumersAdd.end());
-        lock.unlock();
-    }
-    for (auto it = m_consumers.begin(); it != m_consumers.end(); ++it)
-    {
-        FuncLogEvent& func = *it;
+        FuncLogEvent& func = m_consumers[i];
         if (func)
         {
             func(context, text);

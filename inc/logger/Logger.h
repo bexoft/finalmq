@@ -85,10 +85,8 @@ private:
     virtual void registerConsumer(FuncLogEvent consumer) override;
     virtual void triggerLog(const LogContext& context, const char* text) override;
 
-    std::deque<FuncLogEvent>    m_consumersAdd;
-
     std::deque<FuncLogEvent>    m_consumers;
-    std::atomic_flag            m_flagIdle = ATOMIC_FLAG_INIT;
+    std::atomic_int             m_sizeConsumers{};
     std::mutex                  m_mutex;
 };
 
