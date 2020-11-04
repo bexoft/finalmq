@@ -35,7 +35,7 @@ static const int INVALID_FD = -1;
 
 #if defined(WIN32) || defined(__MINGW32__)
 #else
-typedef int					SOCKET;
+using SOCKET = int;
 #endif
 
 
