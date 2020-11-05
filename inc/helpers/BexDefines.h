@@ -30,16 +30,25 @@ namespace finalmq {
 
 static const int INVALID_FD = -1;
 
+}   // namespace finalmq
+
 
 #if defined(WIN32) || defined(__MINGW32__)
-
 #else
-
-typedef int					SOCKET;
-
+using SOCKET = int;
 #endif
 
-}   // namespace finalmq
+
+#if defined(WIN32)
+#define METHODNAME  __FUNCTION__
+#else
+#define METHODNAME  __FUNCTION__
+#endif
+
+
+#define TOKENPASTE(x, y) x ## y
+#define TOKENPASTE2(x, y) TOKENPASTE(x, y)
+
 
 #ifdef _MSC_VER
 // Assuming windows is always little-endian.

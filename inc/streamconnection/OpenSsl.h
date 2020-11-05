@@ -22,6 +22,9 @@
 
 #pragma once
 
+#include "logger/LogStream.h"
+#include "helpers/ModulenameFinalmq.h"
+
 #include <string>
 
 namespace finalmq {
@@ -163,7 +166,7 @@ public:
             else
             {
                 state = IoState::ERROR;
-//                std::cout << "SSL_accept failed with " << err << std::endl;
+                streamError << "SSL_accept failed with " << err;
             }
         }
         return state;
@@ -200,7 +203,7 @@ public:
             else
             {
                 state = IoState::ERROR;
-//                std::cout << "SSL_connect failed with " << err << std::endl;
+                streamError << "SSL_connect failed with " << err;
             }
         }
         return state;

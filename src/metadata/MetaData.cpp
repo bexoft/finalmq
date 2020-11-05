@@ -22,6 +22,8 @@
 
 
 #include "metadata/MetaData.h"
+#include "logger/LogStream.h"
+#include "helpers/ModulenameFinalmq.h"
 
 #include <assert.h>
 #include <iostream>
@@ -64,7 +66,7 @@ const MetaStruct* MetaData::getStruct(const MetaField& field) const
         if (!field.metaStruct)
         {
             // struct not found
-            std::cout << "struct not found: " << field.typeName << std::endl;
+            streamError << "struct not found: " << field.typeName;
         }
     }
     return field.metaStruct;
@@ -94,7 +96,7 @@ const MetaEnum* MetaData::getEnum(const MetaField& field) const
         if (!field.metaEnum)
         {
             // enum not found
-            std::cout << "enum not found: " << field.typeName << std::endl;
+            streamError << "enum not found: " << field.typeName;
         }
     }
     return field.metaEnum;

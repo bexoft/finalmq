@@ -23,6 +23,8 @@
 #ifdef USE_OPENSSL
 
 #include "streamconnection/OpenSsl.h"
+#include "logger/LogStream.h"
+#include "helpers/ModulenameFinalmq.h"
 
 #include <iostream>
 
@@ -62,7 +64,7 @@ std::shared_ptr<SslContext> OpenSslImpl::configContext(SSL_CTX* ctx, const Certi
     {
         if (SSL_CTX_use_certificate_file(ctx, certificateData.certificateFile.c_str(), SSL_FILETYPE_PEM) < 0)
         {
-            std::cout << "SSL_CTX_use_certificate_file failed" << std::endl;
+            streamError << "SSL_CTX_use_certificate_file failed";
             return nullptr;
         }
     }
@@ -70,7 +72,7 @@ std::shared_ptr<SslContext> OpenSslImpl::configContext(SSL_CTX* ctx, const Certi
     {
         if (SSL_CTX_use_PrivateKey_file(ctx, certificateData.privateKeyFile.c_str(), SSL_FILETYPE_PEM) < 0)
         {
-            std::cout << "SSL_CTX_use_PrivateKey_file failed" << std::endl;
+            streamError << "SSL_CTX_use_PrivateKey_file failed";
             return nullptr;
         }
     }
@@ -78,7 +80,7 @@ std::shared_ptr<SslContext> OpenSslImpl::configContext(SSL_CTX* ctx, const Certi
     const char* capath = certificateData.caPath.empty() ? nullptr : certificateData.caPath.c_str();
     if (SSL_CTX_load_verify_locations(ctx, cafile, capath) < 0)
     {
-        std::cout << "SSL_CTX_load_verify_locations failed" << std::endl;
+        streamError << "SSL_CTX_load_verify_locations failed";
         return nullptr;
     }
     if (!certificateData.certificateChainFile.empty())
@@ -108,7 +110,7 @@ std::shared_ptr<SslContext> OpenSslImpl::createServerContext(const CertificateDa
     lock.unlock();
     if (ctx == nullptr)
     {
-        std::cout << "create SSL context failed" << std::endl;
+        streamError << "create SSL context failed";
         return nullptr;
     }
 
@@ -123,7 +125,7 @@ std::shared_ptr<SslContext> OpenSslImpl::createClientContext(const CertificateDa
     lock.unlock();
     if (ctx == nullptr)
     {
-        std::cout << "create SSL context failed" << std::endl;
+        streamError << "create SSL context failed";
         return nullptr;
     }
 

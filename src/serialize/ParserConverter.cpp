@@ -23,6 +23,8 @@
 
 #include "serialize/ParserConverter.h"
 #include "metadata/MetaData.h"
+#include "logger/LogStream.h"
+#include "helpers/ModulenameFinalmq.h"
 
 #include "conversions/itoa.h"
 #include "conversions/dtoa.h"
@@ -198,7 +200,7 @@ void ParserConverter::enterBytes(const MetaField& field, Bytes&& value)
     }
     else
     {
-        std::cout << "bytes not expected" << std::endl;
+        streamError << "bytes not expected";
     }
 }
 void ParserConverter::enterBytes(const MetaField& field, const BytesElement* value, int size)
@@ -209,7 +211,7 @@ void ParserConverter::enterBytes(const MetaField& field, const BytesElement* val
     }
     else
     {
-        std::cout << "bytes not expected" << std::endl;
+        streamError << "bytes not expected";
     }
 }
 void ParserConverter::enterEnum(const MetaField& field, std::int32_t value)
@@ -430,7 +432,7 @@ void ParserConverter::enterArrayBytesMove(const MetaField& field, std::vector<By
     }
     else
     {
-        std::cout << "bytes array not expected" << std::endl;
+        streamError << "bytes array not expected";
     }
 }
 void ParserConverter::enterArrayBytes(const MetaField& field, const std::vector<Bytes>& value)
@@ -441,7 +443,7 @@ void ParserConverter::enterArrayBytes(const MetaField& field, const std::vector<
     }
     else
     {
-        std::cout << "bytes array not expected" << std::endl;
+        streamError << "bytes array not expected";
     }
 }
 void ParserConverter::enterArrayEnum(const MetaField& field, std::vector<std::int32_t>&& value)
@@ -586,7 +588,7 @@ void ParserConverter::convertNumber(const MetaField& field, T value)
         }
         break;
     default:
-        std::cout << "number not expected";
+        streamError << "number not expected";
         break;
     }
 }
@@ -697,7 +699,7 @@ void ParserConverter::convertString(const MetaField& field, const char* value, i
         }
         break;
     default:
-        std::cout << "number not expected";
+        streamError << "number not expected";
         break;
     }
 }
@@ -799,7 +801,7 @@ void ParserConverter::convertArraytNumber(const MetaField& field, const T* value
         }
         break;
     default:
-        std::cout << "array not expected";
+        streamError << "array not expected";
         break;
     }
 }
@@ -901,7 +903,7 @@ void ParserConverter::convertArraytNumber(const MetaField& field, const std::vec
         }
         break;
     default:
-        std::cout << "array not expected";
+        streamError << "array not expected";
         break;
     }
 }
@@ -996,7 +998,7 @@ void ParserConverter::convertArraytString(const MetaField& field, const std::vec
         }
         break;
     default:
-        std::cout << "array not expected";
+        streamError << "array not expected";
         break;
     }
 }

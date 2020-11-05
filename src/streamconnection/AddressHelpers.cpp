@@ -21,6 +21,8 @@
 //SOFTWARE.
 
 #include "streamconnection/AddressHelpers.h"
+#include "logger/LogStream.h"
+#include "helpers/ModulenameFinalmq.h"
 
 
 #if !defined(MSVCPP) && !defined(__MINGW32__)
@@ -121,14 +123,14 @@ ConnectionData AddressHelpers::endpoint2ConnectionData(const std::string& endpoi
 #endif
         else
         {
-            std::cout << "unknown protocol " << protocol << std::endl;
+            streamError << "unknown protocol " << protocol;
             ret = -1;
         }
     }
 
     if (ret != 0)
     {
-        std::cout << "invalid endpoint " << endpoint << std::endl;
+        streamError << "invalid endpoint " << endpoint;
     }
 
     return connectionData;
@@ -178,7 +180,7 @@ std::string AddressHelpers::makeSocketAddress(const std::string& hostname, int p
         break;
 #endif
     default:
-        std::cout << "protocol not supported" << std::endl;
+        streamError << "protocol not supported";
         break;
     }
     if (addr)

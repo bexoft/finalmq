@@ -72,6 +72,7 @@ include_directories(inc)
 file(GLOB SOURCES "src/*.cpp" "inc/*.h"
                   "src/helpers/*.cpp" "inc/helpers/*.h"
                   "src/json/*.cpp" "inc/json/*.h"
+                  "src/logger/*.cpp" "inc/logger/*.h"
                   "src/metadata/*.cpp" "inc/metadata/*.h"
                   "src/metadataserialize/*.cpp" "inc/metadataserialize/*.h"
                   "src/poller/*.cpp" "inc/poller/*.h"
