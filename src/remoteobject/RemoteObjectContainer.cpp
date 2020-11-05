@@ -21,7 +21,8 @@
 //SOFTWARE.
 
 #include "remoteobject/RemoteObjectContainer.h"
-
+#include "protocols/ProtocolHeaderBinarySize.h"
+#include "protocols/ProtocolDelimiter.h"
 
 namespace finalmq {
 
@@ -39,14 +40,15 @@ RemoteObjectContainer::~RemoteObjectContainer()
 
 
 // IRemoteObjectContainer
+
 void RemoteObjectContainer::init(int cycleTime, int checkReconnectInterval)
 {
     m_streamConnectionContainer->init(cycleTime, checkReconnectInterval);
 }
 
-int RemoteObjectContainer::bind(const std::string& endpoint, IProtocolFactoryPtr protocolFactory)
+int RemoteObjectContainer::bind(const std::string& endpoint, RemoteObjectProtocol protocol)
 {
-    return m_streamConnectionContainer->bind(endpoint, this, protocolFactory);
+    return m_streamConnectionContainer->bind(endpoint, this, createProtocolFactory(protocol));
 }
 
 void RemoteObjectContainer::unbind(const std::string& endpoint)
@@ -54,9 +56,9 @@ void RemoteObjectContainer::unbind(const std::string& endpoint)
     m_streamConnectionContainer->unbind(endpoint);
 }
 
-void RemoteObjectContainer::connect(const std::string& endpoint, const IProtocolPtr& protocol, int reconnectInterval, int totalReconnectDuration)
+void RemoteObjectContainer::connect(const std::string& /*endpoint*/, RemoteObjectProtocol /*protocol*/, int /*reconnectInterval*/, int /*totalReconnectDuration*/)
 {
-    m_streamConnectionContainer->connect(endpoint, this, protocol, reconnectInterval, totalReconnectDuration);
+//    m_streamConnectionContainer->connect(endpoint, this, protocol, reconnectInterval, totalReconnectDuration);
 }
 
 void RemoteObjectContainer::threadEntry()
@@ -71,17 +73,28 @@ bool RemoteObjectContainer::terminatePollerLoop(int timeout)
 
 
 #ifdef USE_OPENSSL
-int RemoteObjectContainer::bindSsl(const std::string& endpoint, IProtocolFactoryPtr protocolFactory, const CertificateData& certificateData)
+int RemoteObjectContainer::bindSsl(const std::string& /*endpoint*/, RemoteObjectProtocol /*protocol*/, const CertificateData& /*certificateData*/)
 {
-    return m_streamConnectionContainer->bindSsl(endpoint, this, protocolFactory, certificateData);
+    //return m_streamConnectionContainer->bindSsl(endpoint, this, protocolFactory, certificateData);
+    return 0;
 }
 
-void RemoteObjectContainer::connectSsl(const std::string& endpoint, const IProtocolPtr& protocol, const CertificateData& certificateData, int reconnectInterval, int totalReconnectDuration)
+void RemoteObjectContainer::connectSsl(const std::string& /*endpoint*/, RemoteObjectProtocol /*protocol*/, const CertificateData& /*certificateData*/, int /*reconnectInterval*/, int /*totalReconnectDuration*/)
 {
-    m_streamConnectionContainer->connectSsl(endpoint, this, protocol, certificateData, reconnectInterval, totalReconnectDuration);
+    //m_streamConnectionContainer->connectSsl(endpoint, this, protocol, certificateData, reconnectInterval, totalReconnectDuration);
 }
 
 #endif
+
+int RemoteObjectContainer::registerObject(hybrid_ptr<IRemoteObject> /*remoteObject*/, const std::string& /*name*/)
+{
+    return 0;
+}
+
+void RemoteObjectContainer::unregisterObject(int /*objId*/)
+{
+
+}
 
 // IProtocolSessionCallback
 void RemoteObjectContainer::connected(const IProtocolSessionPtr& /*session*/)
@@ -109,6 +122,20 @@ void RemoteObjectContainer::socketDisconnected(const IProtocolSessionPtr& /*sess
 
 }
 
+
+IProtocolFactoryPtr RemoteObjectContainer::createProtocolFactory(RemoteObjectProtocol protocol)
+{
+    IProtocolFactoryPtr protocolFactory;
+    switch (protocol)
+    {
+    case RemoteObjectProtocol::PROT_PROTO:
+        return std::make_shared<ProtocolHeaderBinarySizeFactory>();
+    case RemoteObjectProtocol::PROT_JSON:
+        return std::make_shared<ProtocolDelimiterFactory>("\n");
+    }
+    assert(false);
+    return nullptr;
+}
 
 
 
