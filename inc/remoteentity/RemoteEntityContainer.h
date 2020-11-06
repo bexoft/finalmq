@@ -27,76 +27,76 @@
 namespace finalmq {
 
 
-using ObjectId = int;
+using EntityId = int;
 
 
-struct IRemoteObject
+struct IRemoteEntity
 {
-    virtual ~IRemoteObject() {}
+    virtual ~IRemoteEntity() {}
 };
 
 
 
-enum class RemoteObjectProtocol
+enum class RemoteEntityProtocol
 {
     PROT_PROTO,
     PROT_JSON
 };
 
-struct IRemoteObjectContainer
+struct IRemoteEntityContainer
 {
-    virtual ~IRemoteObjectContainer() {}
+    virtual ~IRemoteEntityContainer() {}
 
     virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000) = 0;
-    virtual int bind(const std::string& endpoint, RemoteObjectProtocol protocol) = 0;
+    virtual int bind(const std::string& endpoint, RemoteEntityProtocol protocol) = 0;
     virtual void unbind(const std::string& endpoint) = 0;
-    virtual void connect(const std::string& endpoint, RemoteObjectProtocol protocol, int reconnectInterval = 5000, int totalReconnectDuration = -1) = 0;
+    virtual void connect(const std::string& endpoint, RemoteEntityProtocol protocol, int reconnectInterval = 5000, int totalReconnectDuration = -1) = 0;
     virtual void threadEntry() = 0;
     virtual bool terminatePollerLoop(int timeout) = 0;
 
 #ifdef USE_OPENSSL
-    virtual int bindSsl(const std::string& endpoint, RemoteObjectProtocol protocol, const CertificateData& certificateData) = 0;
-    virtual void connectSsl(const std::string& endpoint, RemoteObjectProtocol protocol, const CertificateData& certificateData, int reconnectInterval = 5000, int totalReconnectDuration = -1) = 0;
+    virtual int bindSsl(const std::string& endpoint, RemoteEntityProtocol protocol, const CertificateData& certificateData) = 0;
+    virtual void connectSsl(const std::string& endpoint, RemoteEntityProtocol protocol, const CertificateData& certificateData, int reconnectInterval = 5000, int totalReconnectDuration = -1) = 0;
 #endif
 
-    virtual ObjectId registerObject(hybrid_ptr<IRemoteObject> remoteObject, const std::string& name = "") = 0;
-    virtual void unregisterObject(ObjectId objectId) = 0;
+    virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> RemoteEntity, const std::string& name = "") = 0;
+    virtual void unregisterEntity(EntityId entityId) = 0;
 };
 
-typedef std::shared_ptr<IRemoteObjectContainer> IRemoteObjectContainerPtr;
+typedef std::shared_ptr<IRemoteEntityContainer> IRemoteEntityContainerPtr;
 
 
 
 //struct IStreamConnectionContainer;
 
 
-static constexpr int INVALID_OBJECTID = -1;
+static constexpr int INVALID_ENTITYID = -1;
 
 
 
-class RemoteObjectContainer : public IRemoteObjectContainer
+class RemoteEntityContainer : public IRemoteEntityContainer
                             , public IProtocolSessionCallback
 {
 public:
-    RemoteObjectContainer();
-    virtual ~RemoteObjectContainer();
+    RemoteEntityContainer();
+    virtual ~RemoteEntityContainer();
 
 private:
-    // IRemoteObjectContainer
+    // IRemoteEntityContainer
     virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000) override;
-    virtual int bind(const std::string& endpoint, RemoteObjectProtocol protocol) override;
+    virtual int bind(const std::string& endpoint, RemoteEntityProtocol protocol) override;
     virtual void unbind(const std::string& endpoint) override;
-    virtual void connect(const std::string& endpoint, RemoteObjectProtocol protocol, int reconnectInterval = 5000, int totalReconnectDuration = -1) override;
+    virtual void connect(const std::string& endpoint, RemoteEntityProtocol protocol, int reconnectInterval = 5000, int totalReconnectDuration = -1) override;
     virtual void threadEntry() override;
     virtual bool terminatePollerLoop(int timeout) override;
 
 #ifdef USE_OPENSSL
-    virtual int bindSsl(const std::string& endpoint, RemoteObjectProtocol protocol, const CertificateData& certificateData) override;
-    virtual void connectSsl(const std::string& endpoint, RemoteObjectProtocol protocol, const CertificateData& certificateData, int reconnectInterval = 5000, int totalReconnectDuration = -1) override;
+    virtual int bindSsl(const std::string& endpoint, RemoteEntityProtocol protocol, const CertificateData& certificateData) override;
+    virtual void connectSsl(const std::string& endpoint, RemoteEntityProtocol protocol, const CertificateData& certificateData, int reconnectInterval = 5000, int totalReconnectDuration = -1) override;
 #endif
 
-    virtual ObjectId registerObject(hybrid_ptr<IRemoteObject> remoteObject, const std::string& name = "") override;
-    virtual void unregisterObject(ObjectId objectId) override;
+    virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> RemoteEntity, const std::string& name = "") override;
+    virtual void unregisterEntity(EntityId entityId) override;
 
     // IProtocolSessionCallback
     virtual void connected(const IProtocolSessionPtr& session) override;
@@ -106,14 +106,14 @@ private:
     virtual void socketDisconnected(const IProtocolSessionPtr& session) override;
 
 private:
-    static IProtocolFactoryPtr createProtocolFactory(RemoteObjectProtocol protocol);
-    static IProtocolPtr createProtocol(RemoteObjectProtocol protocol);
+    static IProtocolFactoryPtr createProtocolFactory(RemoteEntityProtocol protocol);
+    static IProtocolPtr createProtocol(RemoteEntityProtocol protocol);
 
 
     std::unique_ptr<IProtocolSessionContainer>                  m_streamConnectionContainer;
-    std::unordered_map<std::string, ObjectId>                   m_name2objectId;
-    std::unordered_map<ObjectId, hybrid_ptr<IRemoteObject>>     m_objectId2object;
-    int                                                         m_nextObjectId = 1;
+    std::unordered_map<std::string, EntityId>                   m_name2entityId;
+    std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>>     m_entityId2entity;
+    int                                                         m_nextEntityId = 1;
     mutable std::mutex                                          m_mutex;
 };
 

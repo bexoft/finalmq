@@ -20,7 +20,7 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#include "remoteobject/RemoteObjectContainer.h"
+#include "remoteentity/RemoteEntityContainer.h"
 #include "protocols/ProtocolHeaderBinarySize.h"
 #include "protocols/ProtocolDelimiter.h"
 
@@ -29,137 +29,137 @@
 namespace finalmq {
 
 
-RemoteObjectContainer::RemoteObjectContainer()
+RemoteEntityContainer::RemoteEntityContainer()
     : m_streamConnectionContainer(std::make_unique<ProtocolSessionContainer>())
 {
 
 }
 
-RemoteObjectContainer::~RemoteObjectContainer()
+RemoteEntityContainer::~RemoteEntityContainer()
 {
 
 }
 
 
-// IRemoteObjectContainer
+// IRemoteEntityContainer
 
-void RemoteObjectContainer::init(int cycleTime, int checkReconnectInterval)
+void RemoteEntityContainer::init(int cycleTime, int checkReconnectInterval)
 {
     m_streamConnectionContainer->init(cycleTime, checkReconnectInterval);
 }
 
-int RemoteObjectContainer::bind(const std::string& endpoint, RemoteObjectProtocol protocol)
+int RemoteEntityContainer::bind(const std::string& endpoint, RemoteEntityProtocol protocol)
 {
     return m_streamConnectionContainer->bind(endpoint, this, createProtocolFactory(protocol));
 }
 
-void RemoteObjectContainer::unbind(const std::string& endpoint)
+void RemoteEntityContainer::unbind(const std::string& endpoint)
 {
     m_streamConnectionContainer->unbind(endpoint);
 }
 
-void RemoteObjectContainer::connect(const std::string& endpoint, RemoteObjectProtocol protocol, int reconnectInterval, int totalReconnectDuration)
+void RemoteEntityContainer::connect(const std::string& endpoint, RemoteEntityProtocol protocol, int reconnectInterval, int totalReconnectDuration)
 {
     m_streamConnectionContainer->connect(endpoint, this, createProtocol(protocol), reconnectInterval, totalReconnectDuration);
 }
 
-void RemoteObjectContainer::threadEntry()
+void RemoteEntityContainer::threadEntry()
 {
     m_streamConnectionContainer->threadEntry();
 }
 
-bool RemoteObjectContainer::terminatePollerLoop(int timeout)
+bool RemoteEntityContainer::terminatePollerLoop(int timeout)
 {
     return m_streamConnectionContainer->terminatePollerLoop(timeout);
 }
 
 
 #ifdef USE_OPENSSL
-int RemoteObjectContainer::bindSsl(const std::string& endpoint, RemoteObjectProtocol protocol, const CertificateData& certificateData)
+int RemoteEntityContainer::bindSsl(const std::string& endpoint, RemoteEntityProtocol protocol, const CertificateData& certificateData)
 {
     return m_streamConnectionContainer->bindSsl(endpoint, this, createProtocolFactory(protocol), certificateData);
 }
 
-void RemoteObjectContainer::connectSsl(const std::string& endpoint, RemoteObjectProtocol protocol, const CertificateData& certificateData, int reconnectInterval, int totalReconnectDuration)
+void RemoteEntityContainer::connectSsl(const std::string& endpoint, RemoteEntityProtocol protocol, const CertificateData& certificateData, int reconnectInterval, int totalReconnectDuration)
 {
     m_streamConnectionContainer->connectSsl(endpoint, this, createProtocol(protocol), certificateData, reconnectInterval, totalReconnectDuration);
 }
 
 #endif
 
-int RemoteObjectContainer::registerObject(hybrid_ptr<IRemoteObject> remoteObject, const std::string& name)
+int RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> RemoteEntity, const std::string& name)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     if (!name.empty())
     {
-        auto it = m_name2objectId.find(name);
-        if (it != m_name2objectId.end())
+        auto it = m_name2entityId.find(name);
+        if (it != m_name2entityId.end())
         {
-            return INVALID_OBJECTID;
+            return INVALID_ENTITYID;
         }
     }
 
-    ObjectId objectId = m_nextObjectId;
-    ++m_nextObjectId;
+    EntityId entityId = m_nextEntityId;
+    ++m_nextEntityId;
 
     if (!name.empty())
     {
-        m_name2objectId[name] = objectId;
+        m_name2entityId[name] = entityId;
     }
 
-    m_objectId2object[objectId] = remoteObject;
+    m_entityId2entity[entityId] = RemoteEntity;
 
-    return objectId;
+    return entityId;
 }
 
-void RemoteObjectContainer::unregisterObject(int objectId)
+void RemoteEntityContainer::unregisterEntity(int entityId)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
-    for (auto it = m_name2objectId.begin(); it != m_name2objectId.end(); ++it)
+    for (auto it = m_name2entityId.begin(); it != m_name2entityId.end(); ++it)
     {
-        if (it->second == objectId)
+        if (it->second == entityId)
         {
-            m_name2objectId.erase(it);
+            m_name2entityId.erase(it);
             break;
         }
     }
-    m_objectId2object.erase(objectId);
+    m_entityId2entity.erase(entityId);
 }
 
 // IProtocolSessionCallback
-void RemoteObjectContainer::connected(const IProtocolSessionPtr& /*session*/)
+void RemoteEntityContainer::connected(const IProtocolSessionPtr& /*session*/)
 {
 
 }
 
-void RemoteObjectContainer::disconnected(const IProtocolSessionPtr& /*session*/)
+void RemoteEntityContainer::disconnected(const IProtocolSessionPtr& /*session*/)
 {
 
 }
 
-void RemoteObjectContainer::received(const IProtocolSessionPtr& /*session*/, const IMessagePtr& /*message*/)
+void RemoteEntityContainer::received(const IProtocolSessionPtr& /*session*/, const IMessagePtr& /*message*/)
 {
 
 }
 
-void RemoteObjectContainer::socketConnected(const IProtocolSessionPtr& /*session*/)
+void RemoteEntityContainer::socketConnected(const IProtocolSessionPtr& /*session*/)
 {
 
 }
 
-void RemoteObjectContainer::socketDisconnected(const IProtocolSessionPtr& /*session*/)
+void RemoteEntityContainer::socketDisconnected(const IProtocolSessionPtr& /*session*/)
 {
 
 }
 
 
-IProtocolFactoryPtr RemoteObjectContainer::createProtocolFactory(RemoteObjectProtocol protocol)
+IProtocolFactoryPtr RemoteEntityContainer::createProtocolFactory(RemoteEntityProtocol protocol)
 {
     switch (protocol)
     {
-    case RemoteObjectProtocol::PROT_PROTO:
+    case RemoteEntityProtocol::PROT_PROTO:
         return std::make_shared<ProtocolHeaderBinarySizeFactory>();
-    case RemoteObjectProtocol::PROT_JSON:
+    case RemoteEntityProtocol::PROT_JSON:
         return std::make_shared<ProtocolDelimiterFactory>("\n");
     }
     assert(false);
@@ -167,13 +167,13 @@ IProtocolFactoryPtr RemoteObjectContainer::createProtocolFactory(RemoteObjectPro
 }
 
 
-IProtocolPtr RemoteObjectContainer::createProtocol(RemoteObjectProtocol protocol)
+IProtocolPtr RemoteEntityContainer::createProtocol(RemoteEntityProtocol protocol)
 {
     switch (protocol)
     {
-    case RemoteObjectProtocol::PROT_PROTO:
+    case RemoteEntityProtocol::PROT_PROTO:
         return std::make_shared<ProtocolHeaderBinarySize>();
-    case RemoteObjectProtocol::PROT_JSON:
+    case RemoteEntityProtocol::PROT_JSON:
         return std::make_shared<ProtocolDelimiter>("\n");
     }
     assert(false);
