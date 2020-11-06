@@ -27,6 +27,9 @@
 namespace finalmq {
 
 
+using ObjectId = int;
+
+
 struct IRemoteObject
 {
     virtual ~IRemoteObject() {}
@@ -56,8 +59,8 @@ struct IRemoteObjectContainer
     virtual void connectSsl(const std::string& endpoint, RemoteObjectProtocol protocol, const CertificateData& certificateData, int reconnectInterval = 5000, int totalReconnectDuration = -1) = 0;
 #endif
 
-    virtual int registerObject(hybrid_ptr<IRemoteObject> remoteObject, const std::string& name = "") = 0;
-    virtual void unregisterObject(int objId) = 0;
+    virtual ObjectId registerObject(hybrid_ptr<IRemoteObject> remoteObject, const std::string& name = "") = 0;
+    virtual void unregisterObject(ObjectId objectId) = 0;
 };
 
 typedef std::shared_ptr<IRemoteObjectContainer> IRemoteObjectContainerPtr;
@@ -65,6 +68,9 @@ typedef std::shared_ptr<IRemoteObjectContainer> IRemoteObjectContainerPtr;
 
 
 //struct IStreamConnectionContainer;
+
+
+static constexpr int INVALID_OBJECTID = -1;
 
 
 
@@ -89,8 +95,8 @@ private:
     virtual void connectSsl(const std::string& endpoint, RemoteObjectProtocol protocol, const CertificateData& certificateData, int reconnectInterval = 5000, int totalReconnectDuration = -1) override;
 #endif
 
-    virtual int registerObject(hybrid_ptr<IRemoteObject> remoteObject, const std::string& name = "") override;
-    virtual void unregisterObject(int objId) override;
+    virtual ObjectId registerObject(hybrid_ptr<IRemoteObject> remoteObject, const std::string& name = "") override;
+    virtual void unregisterObject(ObjectId objectId) override;
 
     // IProtocolSessionCallback
     virtual void connected(const IProtocolSessionPtr& session) override;
@@ -101,10 +107,14 @@ private:
 
 private:
     static IProtocolFactoryPtr createProtocolFactory(RemoteObjectProtocol protocol);
+    static IProtocolPtr createProtocol(RemoteObjectProtocol protocol);
 
 
-    std::unique_ptr<IProtocolSessionContainer>              m_streamConnectionContainer;
-//    mutable std::mutex                                      m_mutex;
+    std::unique_ptr<IProtocolSessionContainer>                  m_streamConnectionContainer;
+    std::unordered_map<std::string, ObjectId>                   m_name2objectId;
+    std::unordered_map<ObjectId, hybrid_ptr<IRemoteObject>>     m_objectId2object;
+    int                                                         m_nextObjectId = 1;
+    mutable std::mutex                                          m_mutex;
 };
 
 }   // namespace finalmq
