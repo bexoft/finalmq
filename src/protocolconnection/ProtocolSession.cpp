@@ -27,17 +27,19 @@
 namespace finalmq {
 
 
-ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList)
+ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, int contentType)
     : m_callback(callback)
     , m_protocol(protocol)
     , m_protocolSessionList(protocolSessionList)
+    , m_contentType(contentType)
 {
 }
 
-ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, const std::string& endpoint, int reconnectInterval, int totalReconnectDuration)
+ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, const std::string& endpoint, int reconnectInterval, int totalReconnectDuration, int contentType)
     : m_callback(callback)
     , m_protocol(protocol)
     , m_protocolSessionList(protocolSessionList)
+    , m_contentType(contentType)
     , m_streamConnectionContainer(streamConnectionContainer)
     , m_endpoint(endpoint)
     , m_reconnectInterval(reconnectInterval)
@@ -47,20 +49,22 @@ ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, 
 
 
 #ifdef USE_OPENSSL
-ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const CertificateData& certificateData)
+ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const CertificateData& certificateData, int contentType)
     : m_callback(callback)
     , m_protocol(protocol)
     , m_protocolSessionList(protocolSessionList)
+    , m_contentType(contentType)
     , m_ssl(true)
     , m_certificateData(certificateData)
 {
 
 }
 
-ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, const std::string& endpoint, const CertificateData& certificateData, int reconnectInterval, int totalReconnectDuration)
+ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, const std::string& endpoint, const CertificateData& certificateData, int reconnectInterval, int totalReconnectDuration, int contentType)
     : m_callback(callback)
     , m_protocol(protocol)
     , m_protocolSessionList(protocolSessionList)
+    , m_contentType(contentType)
     , m_streamConnectionContainer(streamConnectionContainer)
     , m_endpoint(endpoint)
     , m_reconnectInterval(reconnectInterval)
@@ -204,6 +208,12 @@ SocketPtr ProtocolSession::getSocket()
 {
     assert(m_connection);
     return m_connection->getSocket();
+}
+
+
+int ProtocolSession::getContentType() const
+{
+    return m_contentType;
 }
 
 

@@ -64,7 +64,7 @@ private:
     virtual void prepareMessageToSend() override;
 
     // for the protocol to check if which protocol created the message
-    virtual int getProtocolId() const;
+    virtual std::uint32_t getProtocolId() const;
     virtual bool wasSent() const override;
 
     virtual void addMessage(const IMessagePtr& msg) override;

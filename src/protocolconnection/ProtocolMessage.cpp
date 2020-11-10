@@ -197,7 +197,7 @@ void ProtocolMessage::prepareMessageToSend()
 }
 
 // for the protocol to check if which protocol created the message
-int ProtocolMessage::getProtocolId() const
+std::uint32_t ProtocolMessage::getProtocolId() const
 {
     return m_protocolId;
 }

@@ -68,7 +68,7 @@ struct IMessage : public IZeroCopyBuffer
     virtual void prepareMessageToSend() = 0;
 
     // for the protocol to check if which protocol created the message
-    virtual int getProtocolId() const = 0;
+    virtual std::uint32_t getProtocolId() const = 0;
     virtual bool wasSent() const = 0;
 
     virtual void addMessage(const std::shared_ptr<IMessage>& msg) = 0;

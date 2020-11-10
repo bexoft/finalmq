@@ -46,9 +46,9 @@ void ProtocolStream::setCallback(const std::weak_ptr<IProtocolCallback>& callbac
     m_callback = callback;
 }
 
-int ProtocolStream::getProtocolId() const
+std::uint32_t ProtocolStream::getProtocolId() const
 {
-    return m_protocolId;
+    return PROTOCOL_ID;
 }
 
 bool ProtocolStream::areMessagesResendable() const
@@ -58,7 +58,7 @@ bool ProtocolStream::areMessagesResendable() const
 
 IMessagePtr ProtocolStream::createMessage() const
 {
-    return std::make_shared<ProtocolMessage>(m_protocolId);
+    return std::make_shared<ProtocolMessage>(PROTOCOL_ID);
 }
 
 void ProtocolStream::receive(const SocketPtr& socket, int bytesToRead)

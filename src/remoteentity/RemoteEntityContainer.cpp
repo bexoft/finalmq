@@ -48,9 +48,9 @@ void RemoteEntityContainer::init(int cycleTime, int checkReconnectInterval)
     m_streamConnectionContainer->init(cycleTime, checkReconnectInterval);
 }
 
-int RemoteEntityContainer::bind(const std::string& endpoint, RemoteEntityProtocol protocol)
+int RemoteEntityContainer::bind(const std::string& endpoint, IProtocolFactoryPtr protocolFactory, RemoteEntityContentType contentType)
 {
-    return m_streamConnectionContainer->bind(endpoint, this, createProtocolFactory(protocol));
+    return m_streamConnectionContainer->bind(endpoint, this, protocolFactory, contentType);
 }
 
 void RemoteEntityContainer::unbind(const std::string& endpoint)
@@ -58,9 +58,9 @@ void RemoteEntityContainer::unbind(const std::string& endpoint)
     m_streamConnectionContainer->unbind(endpoint);
 }
 
-void RemoteEntityContainer::connect(const std::string& endpoint, RemoteEntityProtocol protocol, int reconnectInterval, int totalReconnectDuration)
+void RemoteEntityContainer::connect(const std::string& endpoint, const IProtocolPtr& protocol, RemoteEntityContentType contentType, int reconnectInterval, int totalReconnectDuration)
 {
-    m_streamConnectionContainer->connect(endpoint, this, createProtocol(protocol), reconnectInterval, totalReconnectDuration);
+    m_streamConnectionContainer->connect(endpoint, this, protocol, reconnectInterval, totalReconnectDuration, contentType);
 }
 
 void RemoteEntityContainer::threadEntry()
@@ -75,14 +75,14 @@ bool RemoteEntityContainer::terminatePollerLoop(int timeout)
 
 
 #ifdef USE_OPENSSL
-int RemoteEntityContainer::bindSsl(const std::string& endpoint, RemoteEntityProtocol protocol, const CertificateData& certificateData)
+int RemoteEntityContainer::bindSsl(const std::string& endpoint, const IProtocolFactoryPtr protocolFactory, RemoteEntityContentType contentType, const CertificateData& certificateData)
 {
-    return m_streamConnectionContainer->bindSsl(endpoint, this, createProtocolFactory(protocol), certificateData);
+    return m_streamConnectionContainer->bindSsl(endpoint, this, protocolFactory, certificateData, contentType);
 }
 
-void RemoteEntityContainer::connectSsl(const std::string& endpoint, RemoteEntityProtocol protocol, const CertificateData& certificateData, int reconnectInterval, int totalReconnectDuration)
+void RemoteEntityContainer::connectSsl(const std::string& endpoint, const IProtocolPtr& protocol, RemoteEntityContentType contentType, const CertificateData& certificateData, int reconnectInterval, int totalReconnectDuration)
 {
-    m_streamConnectionContainer->connectSsl(endpoint, this, createProtocol(protocol), certificateData, reconnectInterval, totalReconnectDuration);
+    m_streamConnectionContainer->connectSsl(endpoint, this, protocol, certificateData, reconnectInterval, totalReconnectDuration, contentType);
 }
 
 #endif
@@ -134,7 +134,7 @@ void RemoteEntityContainer::connected(const IProtocolSessionPtr& /*session*/)
 
 void RemoteEntityContainer::disconnected(const IProtocolSessionPtr& /*session*/)
 {
-
+    // TODO: go through all entities and remove all effected entities.
 }
 
 void RemoteEntityContainer::received(const IProtocolSessionPtr& /*session*/, const IMessagePtr& /*message*/)
@@ -150,34 +150,6 @@ void RemoteEntityContainer::socketConnected(const IProtocolSessionPtr& /*session
 void RemoteEntityContainer::socketDisconnected(const IProtocolSessionPtr& /*session*/)
 {
 
-}
-
-
-IProtocolFactoryPtr RemoteEntityContainer::createProtocolFactory(RemoteEntityProtocol protocol)
-{
-    switch (protocol)
-    {
-    case RemoteEntityProtocol::PROT_PROTO:
-        return std::make_shared<ProtocolHeaderBinarySizeFactory>();
-    case RemoteEntityProtocol::PROT_JSON:
-        return std::make_shared<ProtocolDelimiterFactory>("\n");
-    }
-    assert(false);
-    return nullptr;
-}
-
-
-IProtocolPtr RemoteEntityContainer::createProtocol(RemoteEntityProtocol protocol)
-{
-    switch (protocol)
-    {
-    case RemoteEntityProtocol::PROT_PROTO:
-        return std::make_shared<ProtocolHeaderBinarySize>();
-    case RemoteEntityProtocol::PROT_JSON:
-        return std::make_shared<ProtocolDelimiter>("\n");
-    }
-    assert(false);
-    return nullptr;
 }
 
 

@@ -37,8 +37,6 @@ static const int HEADERSIZE = 4;
 // ProtocolHeaderBinarySize
 //---------------------------------------
 
-static std::atomic<std::int64_t> g_protocolInstanceIdNext(1);
-
 
 ProtocolHeaderBinarySize::ProtocolHeaderBinarySize()
     : m_headerHelper(HEADERSIZE, [] (const std::string& header) {
@@ -61,9 +59,9 @@ void ProtocolHeaderBinarySize::setCallback(const std::weak_ptr<IProtocolCallback
     m_callback = callback;
 }
 
-int ProtocolHeaderBinarySize::getProtocolId() const
+std::uint32_t ProtocolHeaderBinarySize::getProtocolId() const
 {
-    return m_protocolId;
+    return PROTOCOL_ID;
 }
 
 bool ProtocolHeaderBinarySize::areMessagesResendable() const
@@ -73,7 +71,7 @@ bool ProtocolHeaderBinarySize::areMessagesResendable() const
 
 IMessagePtr ProtocolHeaderBinarySize::createMessage() const
 {
-    return std::make_shared<ProtocolMessage>(m_protocolId, HEADERSIZE);
+    return std::make_shared<ProtocolMessage>(PROTOCOL_ID, HEADERSIZE);
 }
 
 void ProtocolHeaderBinarySize::receive(const SocketPtr& socket, int bytesToRead)
