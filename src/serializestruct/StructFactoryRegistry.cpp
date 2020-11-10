@@ -22,19 +22,29 @@
 
 #include "serializestruct/StructFactoryRegistry.h"
 
+#include <assert.h>
+
+
 namespace finalmq {
 
 
 // IStructFactoryRegistry
-void StructFactoryRegistryImpl::registerFactory(const std::string& /*typeName*/, FuncFactory /*func*/)
+void StructFactoryRegistryImpl::registerFactory(const std::string& typeName, FuncFactory func)
 {
-
+    m_factories[typeName] = func;
 }
 
-std::shared_ptr<StructBase> StructFactoryRegistryImpl::createStruct(const std::string& /*typeName*/)
+std::shared_ptr<StructBase> StructFactoryRegistryImpl::createStruct(const std::string& typeName)
 {
-    std::shared_ptr<StructBase> stru;
-    return stru;
+    auto it = m_factories.find(typeName);
+    if (it != m_factories.end())
+    {
+        if (it->second)
+        {
+            return it->second();
+        }
+    }
+    return {};
 }
 
 
@@ -51,7 +61,7 @@ IStructFactoryRegistry& StructFactoryRegistry::instance()
     {
         m_instance = std::make_unique<StructFactoryRegistryImpl>();
     }
-//    LOG_ASSERT(m_instance);
+    assert(m_instance);
     return *m_instance.get();
 }
 

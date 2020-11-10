@@ -24,6 +24,7 @@
 
 #include <functional>
 #include <memory>
+#include <unordered_map>
 
 
 namespace finalmq {
@@ -47,6 +48,8 @@ private:
     // IStructFactoryRegistry
     virtual void registerFactory(const std::string& typeName, FuncFactory func) override;
     virtual std::shared_ptr<StructBase> createStruct(const std::string& typeName) override;
+
+    std::unordered_map<std::string, IStructFactoryRegistry::FuncFactory> m_factories;
 };
 
 class StructFactoryRegistry
