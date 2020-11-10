@@ -22,20 +22,19 @@
 
 #pragma once
 
-#include <functional>
+#include "StructBase.h"
+
 #include <memory>
 #include <unordered_map>
 
 
 namespace finalmq {
 
-class StructBase;
 
 struct IStructFactoryRegistry
 {
-    typedef std::function<std::shared_ptr<StructBase>()>    FuncFactory;
     virtual ~IStructFactoryRegistry() {}
-    virtual void registerFactory(const std::string& typeName, FuncFactory func) = 0;
+    virtual void registerFactory(const std::string& typeName, FuncStructBaseFactory factory) = 0;
     virtual std::shared_ptr<StructBase> createStruct(const std::string& typeName) = 0;
 };
 
@@ -46,10 +45,10 @@ public:
 
 private:
     // IStructFactoryRegistry
-    virtual void registerFactory(const std::string& typeName, FuncFactory func) override;
+    virtual void registerFactory(const std::string& typeName, FuncStructBaseFactory factory) override;
     virtual std::shared_ptr<StructBase> createStruct(const std::string& typeName) override;
 
-    std::unordered_map<std::string, IStructFactoryRegistry::FuncFactory> m_factories;
+    std::unordered_map<std::string, FuncStructBaseFactory> m_factories;
 };
 
 class StructFactoryRegistry

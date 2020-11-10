@@ -73,9 +73,10 @@ const <%- helper.tid2type(data, field.tid, field.type) %>& <%- field.name %>_<% 
     bool operator ==(const <%- plaintype %>& rhs) const;
     bool operator !=(const <%- plaintype %>& rhs) const;
 
-private:
     virtual void clear() override;
     virtual const finalmq::StructInfo& getStructInfo() const override;
+
+private:
     static const finalmq::StructInfo _structInfo;
 };
 <% } %>

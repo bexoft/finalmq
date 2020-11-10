@@ -110,7 +110,7 @@ bool <%- plaintype %>::operator !=(const <%- plaintype %>& rhs) const
     return !(*this == rhs);
 }
 const finalmq::StructInfo <%- plaintype %>::_structInfo = {
-    "<%- helper.typeWithNamespace(data, stru.type, '.') %>", "<%- stru.description %>", {<% -%>
+    "<%- helper.typeWithNamespace(data, stru.type, '.') %>", "<%- stru.description %>", [] () { return std::make_shared<<%- plaintype %>>(); }, {<% -%>
     <% for (var n = 0; n < stru.fields.length; n++) { 
         field = stru.fields[n] %>
         {finalmq::<%- field.tid %>, "<%- helper.typeWithNamespace(data, field.type, '.') %>", "<%- field.name %>", "<%- field.description %>", <%- helper.convertFlags(field.flags) %>, <%- n %>},<% -%>

@@ -29,9 +29,9 @@ namespace finalmq {
 
 
 // IStructFactoryRegistry
-void StructFactoryRegistryImpl::registerFactory(const std::string& typeName, FuncFactory func)
+void StructFactoryRegistryImpl::registerFactory(const std::string& typeName, FuncStructBaseFactory factory)
 {
-    m_factories[typeName] = func;
+    m_factories[typeName] = factory;
 }
 
 std::shared_ptr<StructBase> StructFactoryRegistryImpl::createStruct(const std::string& typeName)

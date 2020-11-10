@@ -74,6 +74,11 @@ typedef std::shared_ptr<IRemoteEntityContainer> IRemoteEntityContainerPtr;
 static constexpr int INVALID_ENTITYID = -1;
 
 
+class StructBase;
+
+namespace remoteentity {
+    class Header;
+}
 
 class RemoteEntityContainer : public IRemoteEntityContainer
                             , public IProtocolSessionCallback
@@ -105,6 +110,9 @@ private:
     virtual void received(const IProtocolSessionPtr& session, const IMessagePtr& message) override;
     virtual void socketConnected(const IProtocolSessionPtr& session) override;
     virtual void socketDisconnected(const IProtocolSessionPtr& session) override;
+
+    std::shared_ptr<StructBase> parseMessageProto(const BufferRef& bufferRef, finalmq::remoteentity::Header& header);
+    std::shared_ptr<StructBase> parseMessageJson(const BufferRef& bufferRef, finalmq::remoteentity::Header& header);
 
 private:
 

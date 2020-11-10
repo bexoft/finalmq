@@ -54,13 +54,22 @@ endif(  IS_ABSOLUTE ${GCOVR}  )
 SET(CODEGENERATOR ${CMAKE_SOURCE_DIR}/codegenerator)
 
 
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/inc/metadataserialize)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/inc)
+
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/inc/metadataserialize)
 add_custom_command(
     COMMAND node ${CODEGENERATOR}/cpp/cpp.js ${CMAKE_CURRENT_SOURCE_DIR}/inc/metadataserialize/metadata.fmq ${CMAKE_CURRENT_BINARY_DIR}/inc/metadataserialize
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/inc/metadataserialize/metadata.fmq
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/inc/metadataserialize/metadata.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/inc/metadataserialize/metadata.fmq.h
     COMMENT "Generating cpp code out of metadata.fmq."
+)
+
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/inc/remoteentity)
+add_custom_command(
+    COMMAND node ${CODEGENERATOR}/cpp/cpp.js ${CMAKE_CURRENT_SOURCE_DIR}/inc/remoteentity/entitydata.fmq ${CMAKE_CURRENT_BINARY_DIR}/inc/remoteentity
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/inc/remoteentity/entitydata.fmq
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/inc/remoteentity/entitydata.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/inc/remoteentity/entitydata.fmq.h
+    COMMENT "Generating cpp code out of entitydata.fmq."
 )
 
 
@@ -91,7 +100,7 @@ file(GLOB SOURCES "src/*.cpp" "inc/*.h"
                   "mock/*.h")
 
 #Generate the shared library from the sources
-add_library(finalmq SHARED ${SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/inc/metadataserialize/metadata.fmq.cpp)
+add_library(finalmq SHARED ${SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/inc/metadataserialize/metadata.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/inc/remoteentity/entitydata.fmq.cpp)
 target_compile_options(finalmq PRIVATE -Werror -Wall -Wextra)
 #Set the location for library installation -- i.e., /usr/lib in this case
 # not really necessary in this example. Use "sudo make install" to apply

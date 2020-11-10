@@ -50,7 +50,7 @@ ParserJson::ParserJson(IParserVisitor& visitor, const char* ptr, int size)
 
 
 
-bool ParserJson::parseStruct(const std::string& typeName)
+const char* ParserJson::parseStruct(const std::string& typeName)
 {
     assert(m_ptr);
     assert(m_size >= CHECK_ON_ZEROTERM);
@@ -60,7 +60,7 @@ bool ParserJson::parseStruct(const std::string& typeName)
     {
         m_visitor.notifyError(m_ptr, "typename not found");
         m_visitor.finished();
-        return false;
+        return nullptr;
     }
 
     MetaField field = {MetaTypeId::TYPE_STRUCT, typeName};
@@ -70,7 +70,7 @@ bool ParserJson::parseStruct(const std::string& typeName)
     const char* str = m_parser.parse(m_ptr, m_size);
     m_visitor.finished();
 
-    return (str != nullptr);
+    return str;
 }
 
 

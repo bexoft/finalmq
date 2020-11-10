@@ -1,16 +1,9 @@
 {
-    "namespace":"finalmq",
+    "namespace":"finalmq.remoteentity",
     "enums": [
         {"type":"MsgMode","desc":"","entries":[
-            {"name":"MSG_NONE",         "id":0,     "desc":""},
-            {"name":"MSG_REQUEST",      "id":1,     "desc":""},
-            {"name":"MSG_REPLY",        "id":2,     "desc":""},
-            {"name":"MSG_EVENT",        "id":3,     "desc":""}
-        ]},
-        {"type":"CallMode","desc":"","entries":[
-            {"name":"CALL_NONE",            "id":0,     "desc":""},
-            {"name":"CALL_REQUEST_REPLY",   "id":1,     "desc":""},
-            {"name":"CALL_EVENT",           "id":2,     "desc":""}
+            {"name":"MSG_REQUEST",      "id":0,     "desc":""},
+            {"name":"MSG_REPLY",        "id":1,     "desc":""}
         ]}
     ],
 
@@ -19,8 +12,8 @@
             {"tid":"TYPE_INT32",        "type":"",          "name":"destId",    "desc":"","flags":[]},
             {"tid":"TYPE_STRING",       "type":"",          "name":"destName",  "desc":"","flags":[]},
             {"tid":"TYPE_INT32",        "type":"",          "name":"srcId",     "desc":"","flags":[]},
-            {"tid":"TYPE_Enum",         "type":"MsgMode",   "name":"mode",      "desc":"","flags":[]},
-            {"tid":"TYPE_STRING",       "type":"",          "name":"command",   "desc":"","flags":[]}
+            {"tid":"TYPE_ENUM",         "type":"MsgMode",   "name":"mode",      "desc":"","flags":[]},
+            {"tid":"TYPE_STRING",       "type":"",          "name":"type",      "desc":"","flags":[]}
         ]}
     ]
 }

@@ -26,6 +26,7 @@
 #include "metadata/MetaEnum.h"
 #include "metadata/MetaStruct.h"
 
+#include <functional>
 #include <cstdint>
 #include <vector>
 #include <assert.h>
@@ -99,11 +100,13 @@ private:
 };
 
 
+typedef std::function<std::shared_ptr<StructBase>()>    FuncStructBaseFactory;
+
 
 class StructInfo
 {
 public:
-    StructInfo(const std::string& typeName, const std::string& description, std::vector<MetaField>&& fields, std::vector<FieldInfo>&& fieldInfos);
+    StructInfo(const std::string& typeName, const std::string& description, FuncStructBaseFactory factory, std::vector<MetaField>&& fields, std::vector<FieldInfo>&& fieldInfos);
 
     inline const std::string& getTypeName() const
     {

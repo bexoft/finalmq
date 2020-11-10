@@ -24,6 +24,15 @@
 #include "protocols/ProtocolHeaderBinarySize.h"
 #include "protocols/ProtocolDelimiter.h"
 
+#include "serializeproto/ParserProto.h"
+#include "serializejson/ParserJson.h"
+#include "serializestruct/SerializerStruct.h"
+#include "serializestruct/StructFactoryRegistry.h"
+
+#include "remoteentity/entitydata.fmq.h"
+
+
+using finalmq::remoteentity::Header;
 
 
 namespace finalmq {
@@ -137,9 +146,114 @@ void RemoteEntityContainer::disconnected(const IProtocolSessionPtr& /*session*/)
     // TODO: go through all entities and remove all effected entities.
 }
 
-void RemoteEntityContainer::received(const IProtocolSessionPtr& /*session*/, const IMessagePtr& /*message*/)
-{
 
+std::shared_ptr<StructBase> RemoteEntityContainer::parseMessageProto(const BufferRef& bufferRef, Header& header)
+{
+    const char* buffer = bufferRef.first;
+    int sizeBuffer = bufferRef.second;
+    int sizeHeader = 0;
+    if (sizeBuffer >= 4)
+    {
+        sizeHeader = (unsigned char)*buffer;
+        ++buffer;
+        sizeHeader = ((unsigned char)*buffer) << 8;
+        ++buffer;
+        sizeHeader = ((unsigned char)*buffer) << 16;
+        ++buffer;
+        sizeHeader = ((unsigned char)*buffer) << 24;
+        ++buffer;
+    }
+
+    bool ok = false;
+    std::shared_ptr<StructBase> data;
+
+    if (sizeHeader <= sizeBuffer)
+    {
+        SerializerStruct serializerHeader(header);
+        ParserProto parserHeader(serializerHeader, buffer, sizeHeader);
+        ok = parserHeader.parseStruct(header.getStructInfo().getTypeName());
+    }
+
+    if (ok)
+    {
+        buffer += sizeHeader;
+        data = StructFactoryRegistry::instance().createStruct(header.type);
+    }
+
+    if (data)
+    {
+        int sizeData = sizeBuffer - sizeHeader;
+        assert(sizeData >= 0);
+        SerializerStruct serializerData(*data);
+        ParserProto parserData(serializerData, buffer, sizeData);
+        ok = parserData.parseStruct(header.getStructInfo().getTypeName());
+        if (!ok)
+        {
+            data = nullptr;
+        }
+    }
+
+    return data;
+}
+
+std::shared_ptr<StructBase> RemoteEntityContainer::parseMessageJson(const BufferRef& bufferRef, Header& header)
+{
+    const char* buffer = bufferRef.first;
+    int sizeBuffer = bufferRef.second;
+
+    std::shared_ptr<StructBase> data;
+
+    SerializerStruct serializerHeader(header);
+    ParserJson parserHeader(serializerHeader, buffer, sizeBuffer);
+    const char* endHeader = parserHeader.parseStruct(header.getStructInfo().getTypeName());
+
+    if (endHeader)
+    {
+        data = StructFactoryRegistry::instance().createStruct(header.type);
+    }
+
+    if (data)
+    {
+        assert(endHeader);
+        int sizeHeader = endHeader - buffer;
+        assert(sizeHeader >= 0);
+        int sizeData = sizeBuffer - sizeHeader;
+        assert(sizeData >= 0);
+        SerializerStruct serializerData(*data);
+        ParserJson parserData(serializerData, buffer, sizeData);
+        const char* endData = parserData.parseStruct(header.getStructInfo().getTypeName());
+        if (!endData)
+        {
+            data = nullptr;
+        }
+    }
+
+    return data;
+}
+
+
+
+void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const IMessagePtr& message)
+{
+    assert(session);
+    assert(message);
+    BufferRef bufferRef = message->getReceivePayload();
+    std::shared_ptr<StructBase> structBase;
+
+    Header header;
+    int contentType = session->getContentType();
+    switch (contentType)
+    {
+    case CONTENTTYPE_PROTO:
+        structBase = parseMessageProto(bufferRef, header);
+        break;
+    case CONTENTTYPE_JSON:
+        structBase = parseMessageJson(bufferRef, header);
+        break;
+    default:
+        assert(false);
+        break;
+    }
 }
 
 void RemoteEntityContainer::socketConnected(const IProtocolSessionPtr& /*session*/)
