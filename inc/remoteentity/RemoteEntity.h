@@ -29,6 +29,7 @@
 #include <vector>
 #include <unordered_map>
 #include <mutex>
+#include <atomic>
 
 
 namespace finalmq {
@@ -74,7 +75,8 @@ struct IRemoteEntity
 {
     virtual ~IRemoteEntity() {}
 
-    virtual bool request(const PeerId& peerId, const StructBase& structBase) = 0;
+    virtual CorrelationId getCorrelationId() const = 0;
+    virtual bool request(const PeerId& peerId, CorrelationId correlationId, const StructBase& structBase) = 0;
     virtual void reply(const ReplyContext& replyContext, const StructBase& structBase) = 0;
     virtual PeerId connect(const IProtocolSessionPtr& session, const std::string& entityName, EntityId = ENTITYID_INVALID) = 0;
     virtual void removePeer(PeerId peerId) = 0;
@@ -96,7 +98,8 @@ public:
 
 private:
     // IRemoteEntity
-    virtual bool request(const PeerId& peerId, const StructBase& structBase) override;
+    virtual CorrelationId getCorrelationId() const override;
+    virtual bool request(const PeerId& peerId, CorrelationId correlationId, const StructBase& structBase) override;
     virtual void reply(const ReplyContext& replyContext, const StructBase& structBase) override;
     virtual PeerId connect(const IProtocolSessionPtr& session, const std::string& entityName, EntityId = ENTITYID_INVALID) override;
     virtual void removePeer(PeerId peerId) override;
@@ -122,8 +125,8 @@ private:
     EntityId                            m_entityId = 0;
 
     std::unordered_map<PeerId, Peer>    m_peers;
-    PeerId                              m_peerIdNext = 1;
-    CorrelationId                       m_nextCorrelationId = 1;
+    PeerId                              m_nextPeerId{1};
+    mutable std::atomic_uint64_t        m_nextCorrelationId{1};
     mutable std::mutex                  m_mutex;
 };
 

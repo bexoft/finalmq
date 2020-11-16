@@ -15,6 +15,10 @@
             {"tid":"TYPE_ENUM",         "type":"MsgMode",   "name":"mode",      "desc":"","flags":[]},
             {"tid":"TYPE_STRING",       "type":"",          "name":"type",      "desc":"","flags":[]},
             {"tid":"TYPE_UINT64",       "type":"",          "name":"corrid",    "desc":"","flags":["METAFLAG_PROTO_VARINT"]}
+        ]},
+        {"type":"EntityConnect","desc":"","fields":[
+        ]},
+        {"type":"EntityConnectReply","desc":"","fields":[
         ]}
     ]
 }

@@ -31,6 +31,8 @@
 
 using finalmq::remoteentity::MsgMode;
 using finalmq::remoteentity::Header;
+using finalmq::remoteentity::EntityConnect;
+using finalmq::remoteentity::EntityConnectReply;
 
 
 namespace finalmq {
@@ -102,7 +104,15 @@ bool RemoteEntity::send(const IProtocolSessionPtr& session, const remoteentity::
 
 
 // IRemoteEntity
-bool RemoteEntity::request(const PeerId& peerId, const StructBase& structBase)
+
+CorrelationId RemoteEntity::getCorrelationId() const
+{
+    CorrelationId id = m_nextCorrelationId.fetch_add(1);
+    return id;
+}
+
+
+bool RemoteEntity::request(const PeerId& peerId, CorrelationId correlationId, const StructBase& structBase)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     auto it = m_peers.find(peerId);
@@ -110,8 +120,7 @@ bool RemoteEntity::request(const PeerId& peerId, const StructBase& structBase)
     {
         const auto& peer = it->second;
         IProtocolSessionPtr session = peer.session;
-        Header header = {peer.entityId, peer.entityName, m_entityId, MsgMode::MSG_REQUEST, structBase.getStructInfo().getTypeName(), m_nextCorrelationId};
-        ++m_nextCorrelationId;
+        Header header = {peer.entityId, peer.entityName, m_entityId, MsgMode::MSG_REQUEST, structBase.getStructInfo().getTypeName(), correlationId};
         lock.unlock();
 
         bool ok = send(session, header, structBase);
@@ -131,9 +140,20 @@ void RemoteEntity::reply(const ReplyContext& replyContext, const StructBase& str
 }
 
 
-PeerId RemoteEntity::connect(const IProtocolSessionPtr& /*session*/, const std::string& /*entityName*/, EntityId /*entityId*/)
+PeerId RemoteEntity::connect(const IProtocolSessionPtr& session, const std::string& entityName, EntityId entityId)
 {
-    return PEERID_ALL;
+    std::unique_lock<std::mutex> lock(m_mutex);
+    PeerId peerId = m_nextPeerId;
+    ++m_nextPeerId;
+
+    Peer peer{session, entityId, entityName, getCorrelationId()};
+    m_peers[peerId] = peer;
+
+    lock.unlock();
+
+    request(peerId, peer.correlationId, EntityConnect{});
+
+    return peerId;
 }
 
 
