@@ -96,7 +96,7 @@ void RemoteEntityContainer::connectSsl(const std::string& endpoint, const IProto
 
 #endif
 
-int RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> RemoteEntity, const std::string& name)
+EntityId RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, const std::string& name)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     if (!name.empty())
@@ -104,7 +104,7 @@ int RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> RemoteEntity
         auto it = m_name2entityId.find(name);
         if (it != m_name2entityId.end())
         {
-            return INVALID_ENTITYID;
+            return ENTITYID_INVALID;
         }
     }
 
@@ -116,12 +116,17 @@ int RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> RemoteEntity
         m_name2entityId[name] = entityId;
     }
 
-    m_entityId2entity[entityId] = RemoteEntity;
+    auto re = remoteEntity.lock();
+    if (re)
+    {
+        re->initEntity(entityId);
+    }
+    m_entityId2entity[entityId] = remoteEntity;
 
     return entityId;
 }
 
-void RemoteEntityContainer::unregisterEntity(int entityId)
+void RemoteEntityContainer::unregisterEntity(EntityId entityId)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     for (auto it = m_name2entityId.begin(); it != m_name2entityId.end(); ++it)
@@ -253,6 +258,26 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     default:
         assert(false);
         break;
+    }
+
+    hybrid_ptr<IRemoteEntity> remoteEntity;
+    if (structBase)
+    {
+        if (header.destid != ENTITYID_INVALID)
+        {
+            std::unique_lock<std::mutex> lock(m_mutex);
+            auto it = m_entityId2entity.find(header.destid);
+            if (it != m_entityId2entity.end())
+            {
+                remoteEntity = it->second;
+            }
+        }
+    }
+
+    auto entity = remoteEntity.lock();
+    if (entity)
+    {
+        entity->received(session, header, *structBase);
     }
 }
 

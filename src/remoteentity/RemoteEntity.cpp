@@ -1,0 +1,178 @@
+//MIT License
+
+//Copyright (c) 2020 bexoft GmbH (mail@bexoft.de)
+
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
+
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
+
+#include "remoteentity/RemoteEntity.h"
+#include "remoteentity/entitydata.fmq.h"
+
+#include "serializeproto/SerializerProto.h"
+#include "serializejson/SerializerJson.h"
+#include "serializestruct/ParserStruct.h"
+
+#include <algorithm>
+
+using finalmq::remoteentity::MsgMode;
+using finalmq::remoteentity::Header;
+
+
+namespace finalmq {
+
+
+void RemoteEntity::serializeProto(const IMessagePtr& message, const Header& header, const StructBase& structBase)
+{
+    assert(message);
+
+    char* bufferSizeHeader = message->addSendPayload(4);
+
+    SerializerProto serializerHeader(*message);
+    ParserStruct parserHeader(serializerHeader, header);
+    parserHeader.parseStruct();
+    int sizeHeader = message->getTotalSendPayloadSize() - 4;
+    assert(sizeHeader >= 0);
+
+    *bufferSizeHeader = static_cast<unsigned char>(sizeHeader);
+    ++bufferSizeHeader;
+    *bufferSizeHeader = static_cast<unsigned char>(sizeHeader >> 8);
+    ++bufferSizeHeader;
+    *bufferSizeHeader = static_cast<unsigned char>(sizeHeader >> 16);
+    ++bufferSizeHeader;
+    *bufferSizeHeader = static_cast<unsigned char>(sizeHeader >> 24);
+
+    SerializerProto serializerData(*message);
+    ParserStruct parserData(serializerData, structBase);
+    parserData.parseStruct();
+}
+
+
+void RemoteEntity::serializeJson(const IMessagePtr& message, const Header& header, const StructBase& structBase)
+{
+    assert(message);
+
+    SerializerJson serializerHeader(*message);
+    ParserStruct parserHeader(serializerHeader, header);
+    parserHeader.parseStruct();
+
+    SerializerJson serializerData(*message);
+    ParserStruct parserData(serializerData, structBase);
+    parserData.parseStruct();
+}
+
+
+
+bool RemoteEntity::send(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase& structBase)
+{
+    assert(session);
+    IMessagePtr message = session->createMessage();
+
+    switch (session->getContentType())
+    {
+    case CONTENTTYPE_PROTO:
+        serializeProto(message, header, structBase);
+        break;
+    case CONTENTTYPE_JSON:
+        serializeJson(message, header, structBase);
+        break;
+    default:
+        assert(false);
+        break;
+    }
+
+    bool ok = session->sendMessage(message);
+    return ok;
+}
+
+
+
+// IRemoteEntity
+bool RemoteEntity::request(const PeerId& peerId, const StructBase& structBase)
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    auto it = m_peers.find(peerId);
+    if (it != m_peers.end())
+    {
+        const auto& peer = it->second;
+        IProtocolSessionPtr session = peer.session;
+        Header header = {peer.entityId, peer.entityName, m_entityId, MsgMode::MSG_REQUEST, structBase.getStructInfo().getTypeName(), m_nextCorrelationId};
+        ++m_nextCorrelationId;
+        lock.unlock();
+
+        bool ok = send(session, header, structBase);
+        if (!ok)
+        {
+            removePeer(peerId);
+        }
+    }
+    return false;
+}
+
+
+void RemoteEntity::reply(const ReplyContext& replyContext, const StructBase& structBase)
+{
+    Header header = {replyContext.entityId, "", m_entityId, MsgMode::MSG_REPLY, structBase.getStructInfo().getTypeName(), replyContext.correlationId};
+    send(replyContext.session, header, structBase);
+}
+
+
+PeerId RemoteEntity::connect(const IProtocolSessionPtr& /*session*/, const std::string& /*entityName*/, EntityId /*entityId*/)
+{
+    return PEERID_ALL;
+}
+
+
+void RemoteEntity::removePeer(PeerId peerId)
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    m_peers.erase(peerId);
+}
+
+
+
+std::vector<PeerId> RemoteEntity::getAllPeers() const
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    std::vector<PeerId> peers;
+    peers.reserve(m_peers.size());
+    std::for_each(m_peers.begin(), m_peers.end(), [&peers] (const auto& entry) {
+        peers.push_back(entry.first);
+    });
+    return peers;
+}
+
+
+void RemoteEntity::initEntity(EntityId entityId)
+{
+    m_entityId = entityId;
+}
+
+
+
+void RemoteEntity::connected(const IProtocolSessionPtr& /*sessionPeer*/, EntityId /*entityIdPeer*/)
+{
+
+}
+
+void RemoteEntity::received(const IProtocolSessionPtr& /*session*/, const remoteentity::Header& /*header*/, const StructBase& /*structBase*/)
+{
+
+}
+
+
+}   // namespace finalmq

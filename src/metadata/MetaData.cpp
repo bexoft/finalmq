@@ -36,6 +36,7 @@ namespace finalmq {
 
 const MetaStruct* MetaData::getStruct(const std::string& typeName) const
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     auto it = m_name2Struct.find(typeName);
     if (it != m_name2Struct.end())
     {
@@ -47,6 +48,7 @@ const MetaStruct* MetaData::getStruct(const std::string& typeName) const
 
 const MetaEnum* MetaData::getEnum(const std::string& typeName) const
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     auto it = m_name2Enum.find(typeName);
     if (it != m_name2Enum.end())
     {
@@ -208,13 +210,15 @@ const MetaEnum& MetaData::addEnum(MetaEnum&& en)
 }
 
 
-const std::unordered_map<std::string, MetaStruct>& MetaData::getAllStructs() const
+const std::unordered_map<std::string, MetaStruct> MetaData::getAllStructs() const
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     return m_name2Struct;
 }
 
-const std::unordered_map<std::string, MetaEnum>& MetaData::getAllEnums() const
+const std::unordered_map<std::string, MetaEnum> MetaData::getAllEnums() const
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     return m_name2Enum;
 }
 

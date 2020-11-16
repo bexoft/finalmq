@@ -49,8 +49,8 @@ struct IMetaData
     virtual const MetaStruct& addStruct(MetaStruct&& stru) = 0;
     virtual const MetaEnum& addEnum(const MetaEnum& en) = 0;
     virtual const MetaEnum& addEnum(MetaEnum&& en) = 0;
-    virtual const std::unordered_map<std::string, MetaStruct>& getAllStructs() const = 0;
-    virtual const std::unordered_map<std::string, MetaEnum>& getAllEnums() const = 0;
+    virtual const std::unordered_map<std::string, MetaStruct> getAllStructs() const = 0;
+    virtual const std::unordered_map<std::string, MetaEnum> getAllEnums() const = 0;
 };
 
 
@@ -74,12 +74,12 @@ private:
     virtual const MetaStruct& addStruct(MetaStruct&& stru) override;
     virtual const MetaEnum& addEnum(const MetaEnum& en) override;
     virtual const MetaEnum& addEnum(MetaEnum&& en) override;
-    virtual const std::unordered_map<std::string, MetaStruct>& getAllStructs() const override;
-    virtual const std::unordered_map<std::string, MetaEnum>& getAllEnums() const override;
+    virtual const std::unordered_map<std::string, MetaStruct> getAllStructs() const override;
+    virtual const std::unordered_map<std::string, MetaEnum> getAllEnums() const override;
 
     std::unordered_map<std::string, MetaStruct> m_name2Struct;
     std::unordered_map<std::string, MetaEnum>   m_name2Enum;
-    std::mutex                                  m_mutex;
+    mutable std::mutex                          m_mutex;
 };
 
 

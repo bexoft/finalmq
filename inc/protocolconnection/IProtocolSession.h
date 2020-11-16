@@ -38,7 +38,7 @@ struct IProtocolSession
     virtual void disconnect() = 0;
 };
 
-struct IProtocolSession;
+//struct IProtocolSession;
 typedef std::shared_ptr<IProtocolSession> IProtocolSessionPtr;
 
 

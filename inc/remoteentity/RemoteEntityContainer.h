@@ -22,26 +22,10 @@
 
 #pragma once
 
-#include "protocolconnection/ProtocolSessionContainer.h"
+#include "remoteentity/RemoteEntity.h"
 
 namespace finalmq {
 
-
-using EntityId = int;
-
-
-struct IRemoteEntity
-{
-    virtual ~IRemoteEntity() {}
-};
-
-
-
-enum RemoteEntityContentType
-{
-    CONTENTTYPE_PROTO = 1,
-    CONTENTTYPE_JSON = 2
-};
 
 
 struct IRemoteEntityContainer
@@ -60,25 +44,13 @@ struct IRemoteEntityContainer
     virtual void connectSsl(const std::string& endpoint, const IProtocolPtr& protocol, RemoteEntityContentType contentType, const CertificateData& certificateData, int reconnectInterval = 5000, int totalReconnectDuration = -1) = 0;
 #endif
 
-    virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> RemoteEntity, const std::string& name = "") = 0;
+    virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, const std::string& name = "") = 0;
     virtual void unregisterEntity(EntityId entityId) = 0;
 };
 
 typedef std::shared_ptr<IRemoteEntityContainer> IRemoteEntityContainerPtr;
 
 
-
-//struct IStreamConnectionContainer;
-
-
-static constexpr int INVALID_ENTITYID = -1;
-
-
-class StructBase;
-
-namespace remoteentity {
-    class Header;
-}
 
 class RemoteEntityContainer : public IRemoteEntityContainer
                             , public IProtocolSessionCallback
@@ -101,7 +73,7 @@ private:
     virtual void connectSsl(const std::string& endpoint, const IProtocolPtr& protocol, RemoteEntityContentType contentType, const CertificateData& certificateData, int reconnectInterval = 5000, int totalReconnectDuration = -1) override;
 #endif
 
-    virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> RemoteEntity, const std::string& name = "") override;
+    virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, const std::string& name = "") override;
     virtual void unregisterEntity(EntityId entityId) override;
 
     // IProtocolSessionCallback
@@ -119,7 +91,7 @@ private:
     std::unique_ptr<IProtocolSessionContainer>                  m_streamConnectionContainer;
     std::unordered_map<std::string, EntityId>                   m_name2entityId;
     std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>>     m_entityId2entity;
-    int                                                         m_nextEntityId = 1;
+    EntityId                                                    m_nextEntityId = 1;
     mutable std::mutex                                          m_mutex;
 };
 
