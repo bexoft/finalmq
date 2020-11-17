@@ -78,6 +78,11 @@ const <%- helper.tid2type(data, field.tid, field.type) %>& <%- field.name %>_<% 
     virtual void clear() override;
     virtual const finalmq::StructInfo& getStructInfo() const override;
 
+    inline static const finalmq::StructInfo& structInfo()
+    {
+        return _structInfo;
+    }
+
 private:
     static const finalmq::StructInfo _structInfo;
 };

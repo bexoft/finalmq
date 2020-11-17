@@ -189,9 +189,42 @@ void RemoteEntity::connected(const IProtocolSessionPtr& /*sessionPeer*/, EntityI
 
 }
 
-void RemoteEntity::received(const IProtocolSessionPtr& /*session*/, const remoteentity::Header& /*header*/, const StructBase& /*structBase*/)
+void RemoteEntity::received(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase& /*structBase*/)
 {
+    if (header.type == EntityConnect::structInfo().getTypeName())
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        PeerId peerId = m_nextPeerId;
+        ++m_nextPeerId;
+        Peer& peer = m_peers[peerId];
+        peer.entityId = header.srcid;
+        peer.session = session;
+        lock.unlock();
+        reply({session, header.srcid, header.corrid}, EntityConnectReply());
+    }
+    else if (header.type == EntityConnectReply::structInfo().getTypeName())
+    {
+        if (header.corrid != CORRELATIONID_NONE)
+        {
+            std::unique_lock<std::mutex> lock(m_mutex);
+            for (auto it = m_peers.begin(); it != m_peers.end(); ++it)
+            {
+                Peer& peer = it->second;
+                if (peer.correlationId == header.corrid &&
+                    peer.entityId == ENTITYID_INVALID &&
+                    peer.session == session)
+                {
+                    peer.correlationId = CORRELATIONID_NONE;
+                    peer.entityId = header.srcid;
+                    break;
+                }
+            }
+        }
+    }
+    else
+    {
 
+    }
 }
 
 
