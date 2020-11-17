@@ -4,6 +4,15 @@
         {"type":"MsgMode","desc":"","entries":[
             {"name":"MSG_REQUEST",      "id":0,     "desc":""},
             {"name":"MSG_REPLY",        "id":1,     "desc":""}
+        ]},
+        {"type":"Status","desc":"","entries":[
+            {"name":"STATUS_OK",                    "id":0,     "desc":""},
+            {"name":"STATUS_ENTITY_NOT_FOUND",      "id":1,     "desc":""},
+            {"name":"STATUS_MESSAGE_NOT_FOUND",     "id":2,     "desc":""}
+        ]},
+        {"type":"ConnectStatus","desc":"","entries":[
+            {"name":"CONNECT_OK",                   "id":0,     "desc":""},
+            {"name":"CONNECT_ALREADY_DONE",         "id":1,     "desc":""}
         ]}
     ],
 
@@ -13,12 +22,18 @@
             {"tid":"TYPE_STRING",       "type":"",          "name":"destname",  "desc":"","flags":[]},
             {"tid":"TYPE_UINT32",       "type":"",          "name":"srcid",     "desc":"","flags":["METAFLAG_PROTO_VARINT"]},
             {"tid":"TYPE_ENUM",         "type":"MsgMode",   "name":"mode",      "desc":"","flags":[]},
+            {"tid":"TYPE_ENUM",         "type":"Status",    "name":"status",    "desc":"","flags":[]},
             {"tid":"TYPE_STRING",       "type":"",          "name":"type",      "desc":"","flags":[]},
             {"tid":"TYPE_UINT64",       "type":"",          "name":"corrid",    "desc":"","flags":["METAFLAG_PROTO_VARINT"]}
+        ]},
+        {"type":"ErrorReply","desc":"","fields":[
         ]},
         {"type":"EntityConnect","desc":"","fields":[
         ]},
         {"type":"EntityConnectReply","desc":"","fields":[
+            {"tid":"TYPE_ENUM",         "type":"ConnectStatus",    "name":"status",    "desc":"","flags":[]}
+        ]},
+        {"type":"EntityDisconnect","desc":"","fields":[
         ]}
     ]
 }

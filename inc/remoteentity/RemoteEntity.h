@@ -40,6 +40,7 @@ typedef std::shared_ptr<IProtocolSession> IProtocolSessionPtr;
 
 
 namespace remoteentity {
+    class Status;
     class Header;
 }
 
@@ -75,15 +76,15 @@ struct IRemoteEntity
 {
     virtual ~IRemoteEntity() {}
 
-    virtual CorrelationId getCorrelationId() const = 0;
+    virtual CorrelationId getNextCorrelationId() const = 0;
     virtual bool request(const PeerId& peerId, CorrelationId correlationId, const StructBase& structBase) = 0;
     virtual void reply(const ReplyContext& replyContext, const StructBase& structBase) = 0;
+    virtual void replyError(const ReplyContext& replyContext, remoteentity::Status status) = 0;
     virtual PeerId connect(const IProtocolSessionPtr& session, const std::string& entityName, EntityId = ENTITYID_INVALID) = 0;
     virtual void removePeer(PeerId peerId) = 0;
     virtual std::vector<PeerId> getAllPeers() const = 0;
 
     virtual void initEntity(EntityId entityId) = 0;
-    virtual void connected(const IProtocolSessionPtr& sessionPeer, EntityId entityIdPeer) = 0;
     virtual void received(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase& structBase) = 0;
 };
 typedef std::shared_ptr<IRemoteEntity> IRemoteEntityPtr;
@@ -98,21 +99,16 @@ public:
 
 private:
     // IRemoteEntity
-    virtual CorrelationId getCorrelationId() const override;
+    virtual CorrelationId getNextCorrelationId() const override;
     virtual bool request(const PeerId& peerId, CorrelationId correlationId, const StructBase& structBase) override;
     virtual void reply(const ReplyContext& replyContext, const StructBase& structBase) override;
+    virtual void replyError(const ReplyContext& replyContext, remoteentity::Status status) override;
     virtual PeerId connect(const IProtocolSessionPtr& session, const std::string& entityName, EntityId = ENTITYID_INVALID) override;
     virtual void removePeer(PeerId peerId) override;
     virtual std::vector<PeerId> getAllPeers() const override;
 
     virtual void initEntity(EntityId entityId) override;
-    virtual void connected(const IProtocolSessionPtr& sessionPeer, EntityId entityIdPeer) override;
     virtual void received(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase& structBase) override;
-
-    void serializeProto(const IMessagePtr& message, const remoteentity::Header& header, const StructBase& structBase);
-    void serializeJson(const IMessagePtr& message, const remoteentity::Header& header, const StructBase& structBase);
-    bool send(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase& structBase);
-
 
     struct Peer
     {
@@ -121,6 +117,12 @@ private:
         std::string         entityName;
         CorrelationId       correlationId = CORRELATIONID_NONE;
     };
+
+    static void serializeProto(const IMessagePtr& message, const remoteentity::Header& header, const StructBase& structBase);
+    static void serializeJson(const IMessagePtr& message, const remoteentity::Header& header, const StructBase& structBase);
+    static bool send(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase& structBase);
+    std::unordered_map<PeerId, Peer>::iterator findPeer(const IProtocolSessionPtr& session, EntityId entityId);
+
 
     EntityId                            m_entityId = 0;
 
