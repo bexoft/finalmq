@@ -174,43 +174,58 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     Header header;
     std::shared_ptr<StructBase> structBase = RemoteEntityFormat::parseMessage(*message, session->getContentType(), header);
 
-    Status status = Status::STATUS_INVALID_MESSAGE;
-    hybrid_ptr<IRemoteEntity> remoteEntity;
-    if (structBase)
+    std::unique_lock<std::mutex> lock(m_mutex);
+    Status status = Status::STATUS_ENTITY_NOT_FOUND;
+    EntityId entityId = header.destid;
+    if (entityId == ENTITYID_INVALID)
     {
-        status = Status::STATUS_ENTITY_NOT_FOUND;
-        EntityId entityId = header.destid;
-        std::unique_lock<std::mutex> lock(m_mutex);
-        if (entityId == ENTITYID_INVALID)
+        auto itName = m_name2entityId.find(header.destname);
+        if (itName != m_name2entityId.end())
         {
-            auto itName = m_name2entityId.find(header.destname);
-            if (itName != m_name2entityId.end())
-            {
-                entityId = itName->second;
-            }
+            entityId = itName->second;
         }
-        if (entityId != ENTITYID_INVALID)
+    }
+    hybrid_ptr<IRemoteEntity> remoteEntity;
+    if (entityId != ENTITYID_INVALID)
+    {
+        auto it = m_entityId2entity.find(entityId);
+        if (it != m_entityId2entity.end())
         {
-            auto it = m_entityId2entity.find(header.destid);
-            if (it != m_entityId2entity.end())
-            {
-                remoteEntity = it->second;
-                status = Status::STATUS_OK;
-            }
+            remoteEntity = it->second;
+            status = Status::STATUS_OK;
+        }
+    }
+    lock.unlock();
+
+    if (status == Status::STATUS_OK)
+    {
+        if (!structBase)
+        {
+            status = (header.mode == MsgMode::MSG_REQUEST) ? Status::STATUS_REQUEST_NOT_FOUND : Status::STATUS_REPLY_NOT_FOUND;
         }
     }
 
     auto entity = remoteEntity.lock();
-    if (entity)
+    if (status == Status::STATUS_OK)
     {
-        assert(status == Status::STATUS_OK);
-        entity->received(session, header, *structBase);
+        assert(entity);
+        entity->received(session, header, structBase);
     }
-    else
+    else if (header.mode == MsgMode::MSG_REQUEST)
     {
-        assert(status != Status::STATUS_OK);
-        Header headerReply{header.srcid, "", header.destid, MsgMode::MSG_REPLY, status, ErrorReply::structInfo().getTypeName(), header.corrid};
+        Header headerReply{header.srcid, "", entityId, MsgMode::MSG_REPLY, status, ErrorReply::structInfo().getTypeName(), header.corrid};
         RemoteEntityFormat::send(session, headerReply, ErrorReply());
+    }
+    else if (header.mode == MsgMode::MSG_REPLY)
+    {
+        if (status == Status::STATUS_REPLY_NOT_FOUND)
+        {
+            if (entity)
+            {
+                header.status = status;
+                entity->received(session, header, std::make_shared<ErrorReply>());
+            }
+        }
     }
 }
 

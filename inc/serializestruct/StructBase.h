@@ -192,6 +192,7 @@ public:
     virtual const StructInfo& getStructInfo() const = 0;
 };
 
+typedef std::shared_ptr<StructBase> StructBasePtr;
 
 
 #define OFFSET_STRUCTBASE_TO_PARAM(type, param)         ((int)((long long)(&((type*)1000)->param) - ((long long)(StructBase*)((type*)1000))))

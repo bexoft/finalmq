@@ -36,6 +36,7 @@
 namespace finalmq {
 
 class StructBase;
+typedef std::shared_ptr<StructBase> StructBasePtr;
 class IProtocolSession;
 typedef std::shared_ptr<IProtocolSession> IProtocolSessionPtr;
 
@@ -78,7 +79,7 @@ struct IRemoteEntity
 
     virtual void initEntity(EntityId entityId) = 0;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) = 0;
-    virtual void received(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase& structBase) = 0;
+    virtual void received(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBasePtr& structBase) = 0;
 };
 typedef std::shared_ptr<IRemoteEntity> IRemoteEntityPtr;
 
@@ -102,7 +103,7 @@ private:
 
     virtual void initEntity(EntityId entityId) override;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) override;
-    virtual void received(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase& structBase) override;
+    virtual void received(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBasePtr& structBase) override;
 
     struct Peer
     {

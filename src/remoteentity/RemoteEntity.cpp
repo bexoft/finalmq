@@ -182,8 +182,9 @@ std::unordered_map<PeerId, RemoteEntity::Peer>::iterator RemoteEntity::findPeer(
 
 
 
-void RemoteEntity::received(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase& structBase)
+void RemoteEntity::received(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBasePtr& structBase)
 {
+    assert(structBase);
     if (header.mode == MsgMode::MSG_REQUEST)
     {
         if (header.type == EntityConnect::structInfo().getTypeName())
@@ -226,7 +227,7 @@ void RemoteEntity::received(const IProtocolSessionPtr& session, const remoteenti
         {
             if (header.type == EntityConnectReply::structInfo().getTypeName())
             {
-                const EntityConnectReply& connectReply = static_cast<const EntityConnectReply&>(structBase);
+                const EntityConnectReply& connectReply = static_cast<const EntityConnectReply&>(*structBase);
                 if (connectReply.status == Status::STATUS_OK && header.corrid != CORRELATIONID_NONE)
                 {
                     std::unique_lock<std::mutex> lock(m_mutex);
