@@ -49,7 +49,7 @@ namespace remoteentity {
 
 
 using PeerId = std::int64_t;
-static constexpr PeerId PEERID_ALL = -1;
+static constexpr PeerId PEERID_INVALID = 0;
 
 using CorrelationId = std::uint64_t;
 static constexpr CorrelationId CORRELATIONID_NONE = 0;
@@ -73,10 +73,11 @@ struct IRemoteEntity
     virtual void reply(const ReplyContext& replyContext, const StructBase& structBase) = 0;
     virtual void replyError(const ReplyContext& replyContext, remoteentity::Status status) = 0;
     virtual PeerId connect(const IProtocolSessionPtr& session, const std::string& entityName, EntityId = ENTITYID_INVALID) = 0;
-    virtual void removePeer(PeerId peerId) = 0;
+    virtual void disconnect(PeerId peerId) = 0;
     virtual std::vector<PeerId> getAllPeers() const = 0;
 
     virtual void initEntity(EntityId entityId) = 0;
+    virtual void sessionDisconnected(const IProtocolSessionPtr& session) = 0;
     virtual void received(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase& structBase) = 0;
 };
 typedef std::shared_ptr<IRemoteEntity> IRemoteEntityPtr;
@@ -96,10 +97,11 @@ private:
     virtual void reply(const ReplyContext& replyContext, const StructBase& structBase) override;
     virtual void replyError(const ReplyContext& replyContext, remoteentity::Status status) override;
     virtual PeerId connect(const IProtocolSessionPtr& session, const std::string& entityName, EntityId = ENTITYID_INVALID) override;
-    virtual void removePeer(PeerId peerId) override;
+    virtual void disconnect(PeerId peerId) override;
     virtual std::vector<PeerId> getAllPeers() const override;
 
     virtual void initEntity(EntityId entityId) override;
+    virtual void sessionDisconnected(const IProtocolSessionPtr& session) override;
     virtual void received(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase& structBase) override;
 
     struct Peer
@@ -111,6 +113,7 @@ private:
     };
 
     std::unordered_map<PeerId, Peer>::iterator findPeer(const IProtocolSessionPtr& session, EntityId entityId);
+    void removePeer(PeerId peerId);
 
 
     EntityId                            m_entityId = 0;

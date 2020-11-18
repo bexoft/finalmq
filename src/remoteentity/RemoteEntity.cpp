@@ -98,10 +98,28 @@ PeerId RemoteEntity::connect(const IProtocolSessionPtr& session, const std::stri
 }
 
 
+void RemoteEntity::disconnect(PeerId peerId)
+{
+    request(peerId, CORRELATIONID_NONE, EntityDisconnect());
+    removePeer(peerId);
+}
+
+
 void RemoteEntity::removePeer(PeerId peerId)
 {
-    std::unique_lock<std::mutex> lock(m_mutex);
-    m_peers.erase(peerId);
+    if (peerId != PEERID_INVALID)
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        auto it = m_peers.find(peerId);
+        if (it != m_peers.end())
+        {
+            Peer peer = it->second;
+            m_peers.erase(peerId);
+            lock.unlock();
+
+            // TODO: release pending calls
+        }
+    }
 }
 
 
@@ -124,6 +142,30 @@ void RemoteEntity::initEntity(EntityId entityId)
 }
 
 
+void RemoteEntity::sessionDisconnected(const IProtocolSessionPtr& session)
+{
+    std::vector<PeerId> peerIds;
+    peerIds.reserve(m_peers.size());
+    std::unique_lock<std::mutex> lock(m_mutex);
+    for (auto it = m_peers.begin(); it != m_peers.end(); ++it)
+    {
+        const Peer& peer = it->second;
+        if (peer.session == session)
+        {
+            peerIds.push_back(it->first);
+        }
+    }
+    lock.unlock();
+
+    for (size_t i = 0; i < peerIds.size(); ++i)
+    {
+        removePeer(peerIds[i]);
+    }
+}
+
+
+
+
 std::unordered_map<PeerId, RemoteEntity::Peer>::iterator RemoteEntity::findPeer(const IProtocolSessionPtr& session, EntityId entityId)
 {
     for (auto it = m_peers.begin(); it != m_peers.end(); ++it)
@@ -137,7 +179,6 @@ std::unordered_map<PeerId, RemoteEntity::Peer>::iterator RemoteEntity::findPeer(
     }
     return m_peers.end();
 }
-
 
 
 
@@ -164,13 +205,15 @@ void RemoteEntity::received(const IProtocolSessionPtr& session, const remoteenti
         }
         else if (header.type == EntityDisconnect::structInfo().getTypeName())
         {
+            PeerId peerId = PEERID_INVALID;
             std::unique_lock<std::mutex> lock(m_mutex);
             std::unordered_map<PeerId, Peer>::iterator it = findPeer(session, header.srcid);
             if (it != m_peers.end())
             {
-                m_peers.erase(it);
-                // TODO: trigger all pending calls
+                peerId = it->first;
             }
+            lock.unlock();
+            removePeer(peerId);
         }
         else
         {
@@ -211,13 +254,15 @@ void RemoteEntity::received(const IProtocolSessionPtr& session, const remoteenti
             // status not ok
             if (header.status == Status::STATUS_ENTITY_NOT_FOUND)
             {
+                PeerId peerId = PEERID_INVALID;
                 std::unique_lock<std::mutex> lock(m_mutex);
                 std::unordered_map<PeerId, Peer>::iterator it = findPeer(session, header.srcid);
                 if (it != m_peers.end())
                 {
-                    m_peers.erase(it);
-                    // TODO: trigger all pending calls
+                    peerId = it->first;
                 }
+                lock.unlock();
+                removePeer(peerId);
             }
         }
     }

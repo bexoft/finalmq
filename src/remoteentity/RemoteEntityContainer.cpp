@@ -144,9 +144,25 @@ void RemoteEntityContainer::connected(const IProtocolSessionPtr& /*session*/)
 
 }
 
-void RemoteEntityContainer::disconnected(const IProtocolSessionPtr& /*session*/)
+void RemoteEntityContainer::disconnected(const IProtocolSessionPtr& session)
 {
-    // TODO: go through all entities and remove all effected entities.
+    std::vector<hybrid_ptr<IRemoteEntity>> entities;
+    std::unique_lock<std::mutex> lock(m_mutex);
+    entities.reserve(m_entityId2entity.size());
+    for (auto it = m_entityId2entity.begin(); it != m_entityId2entity.end(); ++it)
+    {
+        entities.push_back(it->second);
+    }
+    lock.unlock();
+
+    for (size_t i = 0; i < entities.size(); ++i)
+    {
+        auto entity = entities[i].lock();
+        if (entity)
+        {
+            entity->sessionDisconnected(session);
+        }
+    }
 }
 
 
