@@ -47,7 +47,7 @@ CorrelationId RemoteEntity::getNextCorrelationId() const
 }
 
 
-bool RemoteEntity::request(const PeerId& peerId, CorrelationId correlationId, const StructBase& structBase)
+bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     auto it = m_peers.find(peerId);
@@ -68,14 +68,48 @@ bool RemoteEntity::request(const PeerId& peerId, CorrelationId correlationId, co
 }
 
 
-void RemoteEntity::reply(const ReplyContext& replyContext, const StructBase& structBase)
+bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply)
+{
+    CorrelationId correlationId = getNextCorrelationId();
+    std::unique_lock<std::mutex> lock(m_mutex);
+    m_requests[correlationId] = std::make_shared<FuncReply>(std::move(funcReply));
+    lock.unlock();
+    bool ok = sendRequest(peerId, structBase, correlationId);
+    if (!ok)
+    {
+        triggerReply(correlationId, Status::STATUS_DISCONNECT, std::make_shared<ErrorReply>());
+    }
+    return ok;
+}
+
+
+void RemoteEntity::triggerReply(CorrelationId correlationId, Status status, const StructBasePtr& structBase)
+{
+    std::shared_ptr<FuncReply> func;
+    std::unique_lock<std::mutex> lock(m_mutex);
+    auto it = m_requests.find(correlationId);
+    if (it != m_requests.end())
+    {
+        func = it->second;
+        assert(func);
+    }
+    lock.unlock();
+
+    if (func)
+    {
+        (*func)(status, structBase);
+    }
+}
+
+
+void RemoteEntity::sendReply(const ReplyContext& replyContext, const StructBase& structBase)
 {
     Header header = {replyContext.entityId, "", m_entityId, MsgMode::MSG_REPLY, Status::STATUS_OK, structBase.getStructInfo().getTypeName(), replyContext.correlationId};
     RemoteEntityFormat::send(replyContext.session, header, structBase);
 }
 
 
-void RemoteEntity::replyError(const ReplyContext& replyContext, remoteentity::Status status)
+void RemoteEntity::sendReplyError(const ReplyContext& replyContext, remoteentity::Status status)
 {
     Header header = {replyContext.entityId, "", m_entityId, MsgMode::MSG_REPLY, status, ErrorReply::structInfo().getTypeName(), replyContext.correlationId};
     RemoteEntityFormat::send(replyContext.session, header, ErrorReply());
@@ -92,7 +126,7 @@ PeerId RemoteEntity::connect(const IProtocolSessionPtr& session, const std::stri
     m_peers[peerId] = peer;
     lock.unlock();
 
-    request(peerId, peer.correlationId, EntityConnect{});
+    sendRequest(peerId, EntityConnect{}, peer.correlationId);
 
     return peerId;
 }
@@ -100,7 +134,7 @@ PeerId RemoteEntity::connect(const IProtocolSessionPtr& session, const std::stri
 
 void RemoteEntity::disconnect(PeerId peerId)
 {
-    request(peerId, CORRELATIONID_NONE, EntityDisconnect());
+    sendRequest(peerId, EntityDisconnect(), CORRELATIONID_NONE);
     removePeer(peerId);
 }
 
@@ -202,7 +236,7 @@ void RemoteEntity::received(const IProtocolSessionPtr& session, const remoteenti
                 connectStatus = ConnectStatus::CONNECT_OK;
             }
             lock.unlock();
-            reply({session, header.srcid, header.corrid}, EntityConnectReply(connectStatus));
+            sendReply({session, header.srcid, header.corrid}, EntityConnectReply(connectStatus));
         }
         else if (header.type == EntityDisconnect::structInfo().getTypeName())
         {
@@ -247,7 +281,7 @@ void RemoteEntity::received(const IProtocolSessionPtr& session, const remoteenti
             }
             else
             {
-
+                triggerReply(header.corrid, header.status, structBase);
             }
         }
         else
