@@ -83,10 +83,6 @@ private:
     virtual void socketConnected(const IProtocolSessionPtr& session) override;
     virtual void socketDisconnected(const IProtocolSessionPtr& session) override;
 
-    static std::shared_ptr<StructBase> parseMessageProto(const BufferRef& bufferRef, remoteentity::Header& header);
-    static std::shared_ptr<StructBase> parseMessageJson(const BufferRef& bufferRef, remoteentity::Header& header);
-    static std::shared_ptr<StructBase> parseMessage(const IMessage& message, int contentType, remoteentity::Header& header);
-
 private:
 
     std::unique_ptr<IProtocolSessionContainer>                  m_streamConnectionContainer;

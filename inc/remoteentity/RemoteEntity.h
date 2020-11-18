@@ -23,6 +23,7 @@
 #pragma once
 
 #include "protocolconnection/ProtocolSessionContainer.h"
+#include "remoteentity/RemoteEntityFormat.h"
 
 
 #include <memory>
@@ -45,16 +46,7 @@ namespace remoteentity {
 }
 
 
-enum RemoteEntityContentType
-{
-    CONTENTTYPE_PROTO = 1,
-    CONTENTTYPE_JSON = 2
-};
 
-
-
-using EntityId = std::uint32_t;
-static constexpr EntityId ENTITYID_INVALID = 0;  // should be 0, so that it matches with the deserialized default value.
 
 using PeerId = std::int64_t;
 static constexpr PeerId PEERID_ALL = -1;
@@ -118,9 +110,6 @@ private:
         CorrelationId       correlationId = CORRELATIONID_NONE;
     };
 
-    static void serializeProto(const IMessagePtr& message, const remoteentity::Header& header, const StructBase& structBase);
-    static void serializeJson(const IMessagePtr& message, const remoteentity::Header& header, const StructBase& structBase);
-    static bool send(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase& structBase);
     std::unordered_map<PeerId, Peer>::iterator findPeer(const IProtocolSessionPtr& session, EntityId entityId);
 
 

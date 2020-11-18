@@ -23,10 +23,6 @@
 #include "remoteentity/RemoteEntity.h"
 #include "remoteentity/entitydata.fmq.h"
 
-#include "serializeproto/SerializerProto.h"
-#include "serializejson/SerializerJson.h"
-#include "serializestruct/ParserStruct.h"
-
 #include <algorithm>
 
 using finalmq::remoteentity::MsgMode;
@@ -40,71 +36,6 @@ using finalmq::remoteentity::EntityDisconnect;
 
 
 namespace finalmq {
-
-
-void RemoteEntity::serializeProto(const IMessagePtr& message, const Header& header, const StructBase& structBase)
-{
-    assert(message);
-
-    char* bufferSizeHeader = message->addSendPayload(4);
-
-    SerializerProto serializerHeader(*message);
-    ParserStruct parserHeader(serializerHeader, header);
-    parserHeader.parseStruct();
-    int sizeHeader = message->getTotalSendPayloadSize() - 4;
-    assert(sizeHeader >= 0);
-
-    *bufferSizeHeader = static_cast<unsigned char>(sizeHeader);
-    ++bufferSizeHeader;
-    *bufferSizeHeader = static_cast<unsigned char>(sizeHeader >> 8);
-    ++bufferSizeHeader;
-    *bufferSizeHeader = static_cast<unsigned char>(sizeHeader >> 16);
-    ++bufferSizeHeader;
-    *bufferSizeHeader = static_cast<unsigned char>(sizeHeader >> 24);
-
-    SerializerProto serializerData(*message);
-    ParserStruct parserData(serializerData, structBase);
-    parserData.parseStruct();
-}
-
-
-void RemoteEntity::serializeJson(const IMessagePtr& message, const Header& header, const StructBase& structBase)
-{
-    assert(message);
-
-    SerializerJson serializerHeader(*message);
-    ParserStruct parserHeader(serializerHeader, header);
-    parserHeader.parseStruct();
-
-    SerializerJson serializerData(*message);
-    ParserStruct parserData(serializerData, structBase);
-    parserData.parseStruct();
-}
-
-
-
-bool RemoteEntity::send(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase& structBase)
-{
-    assert(session);
-    IMessagePtr message = session->createMessage();
-
-    switch (session->getContentType())
-    {
-    case CONTENTTYPE_PROTO:
-        serializeProto(message, header, structBase);
-        break;
-    case CONTENTTYPE_JSON:
-        serializeJson(message, header, structBase);
-        break;
-    default:
-        assert(false);
-        break;
-    }
-
-    bool ok = session->sendMessage(message);
-    return ok;
-}
-
 
 
 // IRemoteEntity
@@ -127,7 +58,7 @@ bool RemoteEntity::request(const PeerId& peerId, CorrelationId correlationId, co
         Header header = {peer.entityId, peer.entityName, m_entityId, MsgMode::MSG_REQUEST, Status::STATUS_OK, structBase.getStructInfo().getTypeName(), correlationId};
         lock.unlock();
 
-        bool ok = send(session, header, structBase);
+        bool ok = RemoteEntityFormat::send(session, header, structBase);
         if (!ok)
         {
             removePeer(peerId);
@@ -140,14 +71,14 @@ bool RemoteEntity::request(const PeerId& peerId, CorrelationId correlationId, co
 void RemoteEntity::reply(const ReplyContext& replyContext, const StructBase& structBase)
 {
     Header header = {replyContext.entityId, "", m_entityId, MsgMode::MSG_REPLY, Status::STATUS_OK, structBase.getStructInfo().getTypeName(), replyContext.correlationId};
-    send(replyContext.session, header, structBase);
+    RemoteEntityFormat::send(replyContext.session, header, structBase);
 }
 
 
 void RemoteEntity::replyError(const ReplyContext& replyContext, remoteentity::Status status)
 {
     Header header = {replyContext.entityId, "", m_entityId, MsgMode::MSG_REPLY, status, ErrorReply::structInfo().getTypeName(), replyContext.correlationId};
-    send(replyContext.session, header, ErrorReply());
+    RemoteEntityFormat::send(replyContext.session, header, ErrorReply());
 }
 
 
