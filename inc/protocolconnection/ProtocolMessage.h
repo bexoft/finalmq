@@ -45,7 +45,7 @@ private:
     virtual void downsizeLastSendPayload(int newSize) override;
 
     // for receive
-    virtual BufferRef getReceivePayload() override;
+    virtual BufferRef getReceivePayload() const override;
     virtual char* resizeReceivePayload(int size) override;
 
     // for the framework

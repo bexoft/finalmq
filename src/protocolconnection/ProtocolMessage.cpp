@@ -116,7 +116,7 @@ void ProtocolMessage::downsizeLastSendPayload(int newSize)
 }
 
 // for receive
-BufferRef ProtocolMessage::getReceivePayload()
+BufferRef ProtocolMessage::getReceivePayload() const
 {
     return {const_cast<char*>(m_receiveBuffer.data() + m_sizeHeader), m_sizeReceiveBuffer - m_sizeHeader};
 }

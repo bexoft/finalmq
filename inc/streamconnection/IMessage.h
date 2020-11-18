@@ -49,7 +49,7 @@ struct IMessage : public IZeroCopyBuffer
     virtual void downsizeLastSendPayload(int newSize) = 0;
 
     // for receive
-    virtual BufferRef getReceivePayload() = 0;
+    virtual BufferRef getReceivePayload() const = 0;
     virtual char* resizeReceivePayload(int size) = 0;
 
     // for the framework

@@ -238,15 +238,11 @@ std::shared_ptr<StructBase> RemoteEntityContainer::parseMessageJson(const Buffer
 
 
 
-void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const IMessagePtr& message)
+std::shared_ptr<StructBase> RemoteEntityContainer::parseMessage(const IMessage& message, int contentType, Header& header)
 {
-    assert(session);
-    assert(message);
-    BufferRef bufferRef = message->getReceivePayload();
+    BufferRef bufferRef = message.getReceivePayload();
     std::shared_ptr<StructBase> structBase;
 
-    Header header;
-    int contentType = session->getContentType();
     switch (contentType)
     {
     case CONTENTTYPE_PROTO:
@@ -259,6 +255,18 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
         assert(false);
         break;
     }
+
+    return structBase;
+}
+
+
+void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const IMessagePtr& message)
+{
+    assert(session);
+    assert(message);
+
+    Header header;
+    std::shared_ptr<StructBase> structBase = parseMessage(*message, session->getContentType(), header);
 
     hybrid_ptr<IRemoteEntity> remoteEntity;
     if (structBase)
