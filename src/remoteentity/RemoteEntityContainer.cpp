@@ -27,7 +27,10 @@
 #include "remoteentity/entitydata.fmq.h"
 
 
+using finalmq::remoteentity::MsgMode;
+using finalmq::remoteentity::Status;
 using finalmq::remoteentity::Header;
+using finalmq::remoteentity::ErrorReply;
 
 
 namespace finalmq {
@@ -155,16 +158,28 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     Header header;
     std::shared_ptr<StructBase> structBase = RemoteEntityFormat::parseMessage(*message, session->getContentType(), header);
 
+    Status status = Status::STATUS_INVALID_MESSAGE;
     hybrid_ptr<IRemoteEntity> remoteEntity;
     if (structBase)
     {
-        if (header.destid != ENTITYID_INVALID)
+        status = Status::STATUS_ENTITY_NOT_FOUND;
+        EntityId entityId = header.destid;
+        std::unique_lock<std::mutex> lock(m_mutex);
+        if (entityId == ENTITYID_INVALID)
         {
-            std::unique_lock<std::mutex> lock(m_mutex);
+            auto itName = m_name2entityId.find(header.destname);
+            if (itName != m_name2entityId.end())
+            {
+                entityId = itName->second;
+            }
+        }
+        if (entityId != ENTITYID_INVALID)
+        {
             auto it = m_entityId2entity.find(header.destid);
             if (it != m_entityId2entity.end())
             {
                 remoteEntity = it->second;
+                status = Status::STATUS_OK;
             }
         }
     }
@@ -172,7 +187,14 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     auto entity = remoteEntity.lock();
     if (entity)
     {
+        assert(status == Status::STATUS_OK);
         entity->received(session, header, *structBase);
+    }
+    else
+    {
+        assert(status != Status::STATUS_OK);
+        Header headerReply{header.srcid, "", header.destid, MsgMode::MSG_REPLY, status, ErrorReply::structInfo().getTypeName(), header.corrid};
+        RemoteEntityFormat::send(session, headerReply, ErrorReply());
     }
 }
 

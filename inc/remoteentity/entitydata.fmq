@@ -8,7 +8,8 @@
         {"type":"Status","desc":"","entries":[
             {"name":"STATUS_OK",                    "id":0,     "desc":""},
             {"name":"STATUS_ENTITY_NOT_FOUND",      "id":1,     "desc":""},
-            {"name":"STATUS_MESSAGE_NOT_FOUND",     "id":2,     "desc":""}
+            {"name":"STATUS_MESSAGE_NOT_FOUND",     "id":2,     "desc":""},
+            {"name":"STATUS_INVALID_MESSAGE",       "id":3,     "desc":""}
         ]},
         {"type":"ConnectStatus","desc":"","entries":[
             {"name":"CONNECT_OK",                   "id":0,     "desc":""},
