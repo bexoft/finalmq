@@ -72,7 +72,7 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
 {
     CorrelationId correlationId = getNextCorrelationId();
     std::unique_lock<std::mutex> lock(m_mutex);
-    m_requests[correlationId] = std::make_shared<FuncReply>(std::move(funcReply));
+    m_requests[correlationId] = {peerId, std::make_shared<FuncReply>(std::move(funcReply))};
     lock.unlock();
     bool ok = sendRequest(peerId, structBase, correlationId);
     if (!ok)
@@ -90,8 +90,9 @@ void RemoteEntity::triggerReply(CorrelationId correlationId, Status status, cons
     auto it = m_requests.find(correlationId);
     if (it != m_requests.end())
     {
-        func = it->second;
+        func = it->second.func;
         assert(func);
+        m_requests.erase(it);
     }
     lock.unlock();
 
@@ -149,9 +150,29 @@ void RemoteEntity::removePeer(PeerId peerId)
         {
             Peer peer = it->second;
             m_peers.erase(peerId);
-            lock.unlock();
 
-            // TODO: release pending calls
+            // release pending calls
+            std::vector<std::shared_ptr<FuncReply>> funcs;
+            funcs.reserve(m_requests.size());
+            for (auto it = m_requests.begin(); it != m_requests.end(); )
+            {
+                if (it->second.peerId == peerId)
+                {
+                    assert(it->second.func);
+                    funcs.push_back(it->second.func);
+                    it = m_requests.erase(it);
+                }
+                else
+                {
+                    ++it;
+                }
+            }
+            lock.unlock();
+            for (size_t i = 0; i < funcs.size(); ++i)
+            {
+                assert(funcs[i]);
+                (*funcs[i])(Status::STATUS_PEER_REMOVED, std::make_shared<ErrorReply>());
+            }
         }
     }
 }

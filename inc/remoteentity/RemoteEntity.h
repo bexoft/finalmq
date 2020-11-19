@@ -121,12 +121,17 @@ private:
     void removePeer(PeerId peerId);
     void triggerReply(CorrelationId correlationId, remoteentity::Status status, const StructBasePtr& structBase);
 
+    struct Request
+    {
+        PeerId                      peerId = PEERID_INVALID;
+        std::shared_ptr<FuncReply>  func;
+    };
 
     EntityId                            m_entityId = 0;
 
     std::unordered_map<PeerId, Peer>    m_peers;
     PeerId                              m_nextPeerId{1};
-    std::unordered_map<CorrelationId, std::shared_ptr<FuncReply>> m_requests;
+    std::unordered_map<CorrelationId, Request> m_requests;
     mutable std::atomic_uint64_t        m_nextCorrelationId{1};
     mutable std::mutex                  m_mutex;
 };

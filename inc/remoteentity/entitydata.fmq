@@ -10,7 +10,8 @@
             {"name":"STATUS_ENTITY_NOT_FOUND",      "id":1,     "desc":""},
             {"name":"STATUS_REQUEST_NOT_FOUND",     "id":2,     "desc":""},
             {"name":"STATUS_REPLY_NOT_FOUND",       "id":3,     "desc":""},
-            {"name":"STATUS_DISCONNECT",            "id":4,     "desc":""}
+            {"name":"STATUS_DISCONNECT",            "id":4,     "desc":""},
+            {"name":"STATUS_PEER_REMOVED",          "id":5,     "desc":""}
         ]},
         {"type":"ConnectStatus","desc":"","entries":[
             {"name":"CONNECT_OK",                   "id":0,     "desc":""},
