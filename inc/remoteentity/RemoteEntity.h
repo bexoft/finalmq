@@ -74,6 +74,7 @@ struct IRemoteEntity
     virtual PeerId connect(const IProtocolSessionPtr& session, const std::string& entityName, EntityId = ENTITYID_INVALID) = 0;
     virtual void disconnect(PeerId peerId) = 0;
     virtual std::vector<PeerId> getAllPeers() const = 0;
+    virtual PeerId replyContextToPeerId(const ReplyContext& replyContext) const = 0;
 
     virtual void initEntity(EntityId entityId) = 0;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) = 0;
@@ -101,6 +102,7 @@ private:
     virtual PeerId connect(const IProtocolSessionPtr& session, const std::string& entityName, EntityId = ENTITYID_INVALID) override;
     virtual void disconnect(PeerId peerId) override;
     virtual std::vector<PeerId> getAllPeers() const override;
+    virtual PeerId replyContextToPeerId(const ReplyContext& replyContext) const override;
 
     virtual void initEntity(EntityId entityId) override;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) override;
@@ -115,6 +117,7 @@ private:
     };
 
     std::unordered_map<PeerId, Peer>::iterator findPeer(const IProtocolSessionPtr& session, EntityId entityId);
+    PeerId addPeer(const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName);
     void removePeer(PeerId peerId, remoteentity::Status status);
     CorrelationId getNextCorrelationId() const;
     bool sendRequest(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId);
@@ -131,6 +134,7 @@ private:
     std::unordered_map<PeerId, Peer>    m_peers;
     PeerId                              m_nextPeerId{1};
     std::unordered_map<CorrelationId, Request> m_requests;
+    std::unordered_map<std::uint64_t, std::unordered_map<EntityId, PeerId>> m_sessionEntityToPeerId;
     mutable std::atomic_uint64_t        m_nextCorrelationId{1};
     mutable std::mutex                  m_mutex;
 };
