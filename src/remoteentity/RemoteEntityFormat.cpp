@@ -33,6 +33,8 @@
 #include "serializestruct/StructFactoryRegistry.h"
 
 
+using finalmq::remoteentity::MsgMode;
+using finalmq::remoteentity::Status;
 using finalmq::remoteentity::Header;
 
 
@@ -139,13 +141,19 @@ bool RemoteEntityFormat::send(const IProtocolSessionPtr& session, const remoteen
 }
 
 
+
 bool RemoteEntityFormat::send(const IProtocolSessionPtr& session, const remoteentity::Header& header)
 {
-    assert(session);
-    IMessagePtr message = session->createMessage();
-    assert(message);
-    serialize(*message, session->getContentType(), header);
-    bool ok = session->sendMessage(message);
+    bool ok = true;
+    if ((header.mode != MsgMode::MSG_REPLY) ||
+        (header.status == Status::STATUS_ENTITY_NOT_FOUND || header.corrid != CORRELATIONID_NONE))
+    {
+        assert(session);
+        IMessagePtr message = session->createMessage();
+        assert(message);
+        serialize(*message, session->getContentType(), header);
+        ok = session->sendMessage(message);
+    }
     return ok;
 }
 

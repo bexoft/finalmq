@@ -52,8 +52,6 @@ namespace remoteentity {
 using PeerId = std::int64_t;
 static constexpr PeerId PEERID_INVALID = 0;
 
-using CorrelationId = std::uint64_t;
-static constexpr CorrelationId CORRELATIONID_NONE = 0;
 
 
 struct ReplyContext
@@ -117,7 +115,7 @@ private:
     };
 
     std::unordered_map<PeerId, Peer>::iterator findPeer(const IProtocolSessionPtr& session, EntityId entityId);
-    void removePeer(PeerId peerId);
+    void removePeer(PeerId peerId, remoteentity::Status status);
     CorrelationId getNextCorrelationId() const;
     bool sendRequest(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId);
     void triggerReply(CorrelationId correlationId, remoteentity::Status status, const StructBasePtr& structBase);

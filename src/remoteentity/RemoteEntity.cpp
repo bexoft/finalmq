@@ -60,8 +60,12 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
         ok = RemoteEntityFormat::send(session, header, structBase);
         if (!ok)
         {
-            removePeer(peerId);
+            removePeer(peerId, Status::STATUS_SESSION_DISCONNECTED);
         }
+    }
+    else
+    {
+        triggerReply(correlationId, Status::STATUS_PEER_DISCONNECTED, nullptr);
     }
     return ok;
 }
@@ -74,10 +78,6 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
     m_requests[correlationId] = {peerId, std::make_shared<FuncReply>(std::move(funcReply))};
     lock.unlock();
     bool ok = sendRequest(peerId, structBase, correlationId);
-    if (!ok)
-    {
-        triggerReply(correlationId, Status::STATUS_PEER_REMOVED, nullptr);
-    }
     return ok;
 }
 
@@ -151,11 +151,11 @@ PeerId RemoteEntity::connect(const IProtocolSessionPtr& session, const std::stri
 void RemoteEntity::disconnect(PeerId peerId)
 {
     sendRequest(peerId, EntityDisconnect(), CORRELATIONID_NONE);
-    removePeer(peerId);
+    removePeer(peerId, Status::STATUS_PEER_DISCONNECTED);
 }
 
 
-void RemoteEntity::removePeer(PeerId peerId)
+void RemoteEntity::removePeer(PeerId peerId, remoteentity::Status status)
 {
     if (peerId != PEERID_INVALID)
     {
@@ -186,7 +186,7 @@ void RemoteEntity::removePeer(PeerId peerId)
             for (size_t i = 0; i < funcs.size(); ++i)
             {
                 assert(funcs[i]);
-                (*funcs[i])(Status::STATUS_PEER_REMOVED, nullptr);
+                (*funcs[i])(status, nullptr);
             }
         }
     }
@@ -229,7 +229,7 @@ void RemoteEntity::sessionDisconnected(const IProtocolSessionPtr& session)
 
     for (size_t i = 0; i < peerIds.size(); ++i)
     {
-        removePeer(peerIds[i]);
+        removePeer(peerIds[i], Status::STATUS_SESSION_DISCONNECTED);
     }
 }
 
@@ -280,7 +280,7 @@ void RemoteEntity::receivedRequest(const IProtocolSessionPtr& session, const rem
             peerId = it->first;
         }
         lock.unlock();
-        removePeer(peerId);
+        removePeer(peerId, Status::STATUS_PEER_DISCONNECTED);
     }
     else
     {
@@ -290,6 +290,8 @@ void RemoteEntity::receivedRequest(const IProtocolSessionPtr& session, const rem
 
 void RemoteEntity::receivedReply(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBasePtr& structBase)
 {
+    triggerReply(header.corrid, header.status, structBase);
+
     if (header.status == Status::STATUS_ENTITY_NOT_FOUND)
     {
         PeerId peerId = PEERID_INVALID;
@@ -300,14 +302,8 @@ void RemoteEntity::receivedReply(const IProtocolSessionPtr& session, const remot
             peerId = it->first;
         }
         lock.unlock();
-        removePeer(peerId);
-    }
-    else
-    {
-        triggerReply(header.corrid, header.status, structBase);
+        removePeer(peerId, Status::STATUS_PEER_DISCONNECTED);
     }
 }
-
-
 
 }   // namespace finalmq
