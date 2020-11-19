@@ -114,7 +114,6 @@ private:
         IProtocolSessionPtr session;
         EntityId            entityId = ENTITYID_INVALID;
         std::string         entityName;
-        CorrelationId       correlationId = CORRELATIONID_NONE;
     };
 
     std::unordered_map<PeerId, Peer>::iterator findPeer(const IProtocolSessionPtr& session, EntityId entityId);

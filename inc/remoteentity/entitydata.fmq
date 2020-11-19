@@ -10,8 +10,7 @@
             {"name":"STATUS_ENTITY_NOT_FOUND",          "id":1,     "desc":""},
             {"name":"STATUS_REQUESTTYPE_NOT_DEFINED",   "id":2,     "desc":""},
             {"name":"STATUS_REPLYTYPE_NOT_DEFINED",     "id":3,     "desc":""},
-            {"name":"STATUS_DISCONNECT",                "id":4,     "desc":""},
-            {"name":"STATUS_PEER_REMOVED",              "id":5,     "desc":""}
+            {"name":"STATUS_PEER_REMOVED",              "id":4,     "desc":""}
         ]}
     ],
 
@@ -28,6 +27,7 @@
         {"type":"EntityConnect","desc":"","fields":[
         ]},
         {"type":"EntityConnectReply","desc":"","fields":[
+            {"tid":"TYPE_UINT32",       "type":"",          "name":"entityid",     "desc":"","flags":["METAFLAG_PROTO_VARINT"]}
         ]},
         {"type":"EntityDisconnect","desc":"","fields":[
         ]}
