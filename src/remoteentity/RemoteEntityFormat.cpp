@@ -39,7 +39,7 @@ using finalmq::remoteentity::Header;
 namespace finalmq {
 
 
-void RemoteEntityFormat::serializeProto(IMessage& message, const Header& header, const StructBase& structBase)
+void RemoteEntityFormat::serializeProto(IMessage& message, const Header& header)
 {
     char* bufferSizeHeader = message.addSendPayload(4);
 
@@ -56,24 +56,58 @@ void RemoteEntityFormat::serializeProto(IMessage& message, const Header& header,
     *bufferSizeHeader = static_cast<unsigned char>(sizeHeader >> 16);
     ++bufferSizeHeader;
     *bufferSizeHeader = static_cast<unsigned char>(sizeHeader >> 24);
+}
+
+
+
+void RemoteEntityFormat::serializeProto(IMessage& message, const Header& header, const StructBase& structBase)
+{
+    serializeProto(message, header);
 
     SerializerProto serializerData(message);
     ParserStruct parserData(serializerData, structBase);
     parserData.parseStruct();
+
+    // add end of header
+    message.addSendPayload("\t", 1);
 }
 
 
-void RemoteEntityFormat::serializeJson(IMessage& message, const Header& header, const StructBase& structBase)
+void RemoteEntityFormat::serializeJson(IMessage& message, const Header& header)
 {
     SerializerJson serializerHeader(message);
     ParserStruct parserHeader(serializerHeader, header);
     parserHeader.parseStruct();
+}
+
+
+
+void RemoteEntityFormat::serializeJson(IMessage& message, const Header& header, const StructBase& structBase)
+{
+    serializeJson(message, header);
 
     SerializerJson serializerData(message);
     ParserStruct parserData(serializerData, structBase);
     parserData.parseStruct();
 }
 
+
+
+void RemoteEntityFormat::serialize(IMessage& message, int contentType, const remoteentity::Header& header)
+{
+    switch (contentType)
+    {
+    case CONTENTTYPE_PROTO:
+        serializeProto(message, header);
+        break;
+    case CONTENTTYPE_JSON:
+        serializeJson(message, header);
+        break;
+    default:
+        assert(false);
+        break;
+    }
+}
 
 
 void RemoteEntityFormat::serialize(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase& structBase)
@@ -100,6 +134,17 @@ bool RemoteEntityFormat::send(const IProtocolSessionPtr& session, const remoteen
     IMessagePtr message = session->createMessage();
     assert(message);
     serialize(*message, session->getContentType(), header, structBase);
+    bool ok = session->sendMessage(message);
+    return ok;
+}
+
+
+bool RemoteEntityFormat::send(const IProtocolSessionPtr& session, const remoteentity::Header& header)
+{
+    assert(session);
+    IMessagePtr message = session->createMessage();
+    assert(message);
+    serialize(*message, session->getContentType(), header);
     bool ok = session->sendMessage(message);
     return ok;
 }
@@ -133,7 +178,7 @@ std::shared_ptr<StructBase> RemoteEntityFormat::parseMessageProto(const BufferRe
         ok = parserHeader.parseStruct(header.getStructInfo().getTypeName());
     }
 
-    if (ok)
+    if (ok && !header.type.empty())
     {
         buffer += sizeHeader;
         data = StructFactoryRegistry::instance().createStruct(header.type);
@@ -166,7 +211,7 @@ std::shared_ptr<StructBase> RemoteEntityFormat::parseMessageJson(const BufferRef
     ParserJson parserHeader(serializerHeader, buffer, sizeBuffer);
     const char* endHeader = parserHeader.parseStruct(header.getStructInfo().getTypeName());
 
-    if (endHeader)
+    if (endHeader && !header.type.empty())
     {
         data = StructFactoryRegistry::instance().createStruct(header.type);
     }

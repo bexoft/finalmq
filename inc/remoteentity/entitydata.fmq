@@ -6,16 +6,12 @@
             {"name":"MSG_REPLY",        "id":1,     "desc":""}
         ]},
         {"type":"Status","desc":"","entries":[
-            {"name":"STATUS_OK",                    "id":0,     "desc":""},
-            {"name":"STATUS_ENTITY_NOT_FOUND",      "id":1,     "desc":""},
-            {"name":"STATUS_REQUEST_NOT_FOUND",     "id":2,     "desc":""},
-            {"name":"STATUS_REPLY_NOT_FOUND",       "id":3,     "desc":""},
-            {"name":"STATUS_DISCONNECT",            "id":4,     "desc":""},
-            {"name":"STATUS_PEER_REMOVED",          "id":5,     "desc":""}
-        ]},
-        {"type":"ConnectStatus","desc":"","entries":[
-            {"name":"CONNECT_OK",                   "id":0,     "desc":""},
-            {"name":"CONNECT_ALREADY_DONE",         "id":1,     "desc":""}
+            {"name":"STATUS_OK",                        "id":0,     "desc":""},
+            {"name":"STATUS_ENTITY_NOT_FOUND",          "id":1,     "desc":""},
+            {"name":"STATUS_REQUESTTYPE_NOT_DEFINED",   "id":2,     "desc":""},
+            {"name":"STATUS_REPLYTYPE_NOT_DEFINED",     "id":3,     "desc":""},
+            {"name":"STATUS_DISCONNECT",                "id":4,     "desc":""},
+            {"name":"STATUS_PEER_REMOVED",              "id":5,     "desc":""}
         ]}
     ],
 
@@ -29,12 +25,9 @@
             {"tid":"TYPE_STRING",       "type":"",          "name":"type",      "desc":"","flags":[]},
             {"tid":"TYPE_UINT64",       "type":"",          "name":"corrid",    "desc":"","flags":["METAFLAG_PROTO_VARINT"]}
         ]},
-        {"type":"ErrorReply","desc":"","fields":[
-        ]},
         {"type":"EntityConnect","desc":"","fields":[
         ]},
         {"type":"EntityConnectReply","desc":"","fields":[
-            {"tid":"TYPE_ENUM",         "type":"ConnectStatus",    "name":"status",    "desc":"","flags":[]}
         ]},
         {"type":"EntityDisconnect","desc":"","fields":[
         ]}

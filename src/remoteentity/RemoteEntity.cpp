@@ -27,9 +27,7 @@
 
 using finalmq::remoteentity::MsgMode;
 using finalmq::remoteentity::Status;
-using finalmq::remoteentity::ConnectStatus;
 using finalmq::remoteentity::Header;
-using finalmq::remoteentity::ErrorReply;
 using finalmq::remoteentity::EntityConnect;
 using finalmq::remoteentity::EntityConnectReply;
 using finalmq::remoteentity::EntityDisconnect;
@@ -77,7 +75,7 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
     bool ok = sendRequest(peerId, structBase, correlationId);
     if (!ok)
     {
-        triggerReply(correlationId, Status::STATUS_DISCONNECT, std::make_shared<ErrorReply>());
+        triggerReply(correlationId, Status::STATUS_DISCONNECT, nullptr);
     }
     return ok;
 }
@@ -109,11 +107,17 @@ void RemoteEntity::sendReply(const ReplyContext& replyContext, const StructBase&
     RemoteEntityFormat::send(replyContext.session, header, structBase);
 }
 
+void RemoteEntity::sendReply(const ReplyContext& replyContext)
+{
+    Header header = {replyContext.entityId, "", m_entityId, MsgMode::MSG_REPLY, Status::STATUS_OK, "", replyContext.correlationId};
+    RemoteEntityFormat::send(replyContext.session, header);
+}
+
 
 void RemoteEntity::sendReplyError(const ReplyContext& replyContext, remoteentity::Status status)
 {
-    Header header = {replyContext.entityId, "", m_entityId, MsgMode::MSG_REPLY, status, ErrorReply::structInfo().getTypeName(), replyContext.correlationId};
-    RemoteEntityFormat::send(replyContext.session, header, ErrorReply());
+    Header header = {replyContext.entityId, "", m_entityId, MsgMode::MSG_REPLY, status, "", replyContext.correlationId};
+    RemoteEntityFormat::send(replyContext.session, header);
 }
 
 
@@ -171,7 +175,7 @@ void RemoteEntity::removePeer(PeerId peerId)
             for (size_t i = 0; i < funcs.size(); ++i)
             {
                 assert(funcs[i]);
-                (*funcs[i])(Status::STATUS_PEER_REMOVED, std::make_shared<ErrorReply>());
+                (*funcs[i])(Status::STATUS_PEER_REMOVED, nullptr);
             }
         }
     }
@@ -237,92 +241,84 @@ std::unordered_map<PeerId, RemoteEntity::Peer>::iterator RemoteEntity::findPeer(
 
 
 
-void RemoteEntity::received(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBasePtr& structBase)
+void RemoteEntity::receivedRequest(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBasePtr& structBase)
 {
     assert(structBase);
-    if (header.mode == MsgMode::MSG_REQUEST)
+    if (header.type == EntityConnect::structInfo().getTypeName())
     {
-        if (header.type == EntityConnect::structInfo().getTypeName())
+        std::unique_lock<std::mutex> lock(m_mutex);
+        std::unordered_map<PeerId, Peer>::iterator it = findPeer(session, header.srcid);
+        if (it == m_peers.end())
         {
-            ConnectStatus connectStatus = ConnectStatus::CONNECT_ALREADY_DONE;
-            std::unique_lock<std::mutex> lock(m_mutex);
-            std::unordered_map<PeerId, Peer>::iterator it = findPeer(session, header.srcid);
-            if (it == m_peers.end())
-            {
-                PeerId peerId = m_nextPeerId;
-                ++m_nextPeerId;
-                Peer& peer = m_peers[peerId];
-                peer.entityId = header.srcid;
-                peer.session = session;
-                connectStatus = ConnectStatus::CONNECT_OK;
-            }
-            lock.unlock();
-            sendReply({session, header.srcid, header.corrid}, EntityConnectReply(connectStatus));
+            PeerId peerId = m_nextPeerId;
+            ++m_nextPeerId;
+            Peer& peer = m_peers[peerId];
+            peer.entityId = header.srcid;
+            peer.session = session;
         }
-        else if (header.type == EntityDisconnect::structInfo().getTypeName())
-        {
-            PeerId peerId = PEERID_INVALID;
-            std::unique_lock<std::mutex> lock(m_mutex);
-            std::unordered_map<PeerId, Peer>::iterator it = findPeer(session, header.srcid);
-            if (it != m_peers.end())
-            {
-                peerId = it->first;
-            }
-            lock.unlock();
-            removePeer(peerId);
-        }
-        else
-        {
-
-        }
+        lock.unlock();
+        sendReply({session, header.srcid, header.corrid}, EntityConnectReply());
     }
-    else if (header.mode == MsgMode::MSG_REPLY)
+    else if (header.type == EntityDisconnect::structInfo().getTypeName())
     {
-        if (header.status == Status::STATUS_OK)
+        PeerId peerId = PEERID_INVALID;
+        std::unique_lock<std::mutex> lock(m_mutex);
+        std::unordered_map<PeerId, Peer>::iterator it = findPeer(session, header.srcid);
+        if (it != m_peers.end())
         {
-            if (header.type == EntityConnectReply::structInfo().getTypeName())
+            peerId = it->first;
+        }
+        lock.unlock();
+        removePeer(peerId);
+    }
+    else
+    {
+
+    }
+}
+
+void RemoteEntity::receivedReply(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBasePtr& structBase)
+{
+    if (header.status == Status::STATUS_ENTITY_NOT_FOUND)
+    {
+        PeerId peerId = PEERID_INVALID;
+        std::unique_lock<std::mutex> lock(m_mutex);
+        std::unordered_map<PeerId, Peer>::iterator it = findPeer(session, header.srcid);
+        if (it != m_peers.end())
+        {
+            peerId = it->first;
+        }
+        lock.unlock();
+        removePeer(peerId);
+    }
+    else
+    {
+        if (header.type == EntityConnectReply::structInfo().getTypeName())
+        {
+            if (header.corrid != CORRELATIONID_NONE)
             {
-                const EntityConnectReply& connectReply = static_cast<const EntityConnectReply&>(*structBase);
-                if (connectReply.status == Status::STATUS_OK && header.corrid != CORRELATIONID_NONE)
+                std::unique_lock<std::mutex> lock(m_mutex);
+                for (auto it = m_peers.begin(); it != m_peers.end(); ++it)
                 {
-                    std::unique_lock<std::mutex> lock(m_mutex);
-                    for (auto it = m_peers.begin(); it != m_peers.end(); ++it)
+                    Peer& peer = it->second;
+                    if (peer.correlationId == header.corrid &&
+                        peer.entityId == ENTITYID_INVALID &&
+                        peer.session == session)
                     {
-                        Peer& peer = it->second;
-                        if (peer.correlationId == header.corrid &&
-                            peer.entityId == ENTITYID_INVALID &&
-                            peer.session == session)
-                        {
-                            peer.correlationId = CORRELATIONID_NONE;
-                            peer.entityId = header.srcid;
-                            break;
-                        }
+                        peer.correlationId = CORRELATIONID_NONE;
+                        peer.entityId = header.srcid;
+                        break;
                     }
                 }
             }
-            else
-            {
-                triggerReply(header.corrid, header.status, structBase);
-            }
         }
         else
         {
-            // status not ok
-            if (header.status == Status::STATUS_ENTITY_NOT_FOUND)
-            {
-                PeerId peerId = PEERID_INVALID;
-                std::unique_lock<std::mutex> lock(m_mutex);
-                std::unordered_map<PeerId, Peer>::iterator it = findPeer(session, header.srcid);
-                if (it != m_peers.end())
-                {
-                    peerId = it->first;
-                }
-                lock.unlock();
-                removePeer(peerId);
-            }
+            triggerReply(header.corrid, header.status, structBase);
         }
     }
 }
+
 
 
 }   // namespace finalmq

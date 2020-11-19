@@ -65,11 +65,15 @@ public:
     static std::shared_ptr<StructBase> parseMessageJson(const BufferRef& bufferRef, remoteentity::Header& header);
     static std::shared_ptr<StructBase> parseMessage(const IMessage& message, int contentType, remoteentity::Header& header);
 
+    static void serializeProto(IMessage& message, const remoteentity::Header& header);
     static void serializeProto(IMessage& message, const remoteentity::Header& header, const StructBase& structBase);
+    static void serializeJson(IMessage& message, const remoteentity::Header& header);
     static void serializeJson(IMessage& message, const remoteentity::Header& header, const StructBase& structBase);
+    static void serialize(IMessage& message, int contentType, const remoteentity::Header& header);
     static void serialize(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase& structBase);
 
     static bool send(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase& structBase);
+    static bool send(const IProtocolSessionPtr& session, const remoteentity::Header& header);
 };
 
 
