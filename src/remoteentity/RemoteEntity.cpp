@@ -104,45 +104,61 @@ void RemoteEntity::triggerReply(CorrelationId correlationId, Status status, cons
 
 void RemoteEntity::sendReply(const ReplyContext& replyContext, const StructBase& structBase)
 {
-    Header header = {replyContext.entityId, "", m_entityId, MsgMode::MSG_REPLY, Status::STATUS_OK, structBase.getStructInfo().getTypeName(), replyContext.correlationId};
+    Header header{replyContext.entityId, "", m_entityId, MsgMode::MSG_REPLY, Status::STATUS_OK, structBase.getStructInfo().getTypeName(), replyContext.correlationId};
     RemoteEntityFormat::send(replyContext.session, header, structBase);
 }
 
 void RemoteEntity::sendReply(const ReplyContext& replyContext)
 {
-    Header header = {replyContext.entityId, "", m_entityId, MsgMode::MSG_REPLY, Status::STATUS_OK, "", replyContext.correlationId};
+    Header header{replyContext.entityId, "", m_entityId, MsgMode::MSG_REPLY, Status::STATUS_OK, "", replyContext.correlationId};
     RemoteEntityFormat::send(replyContext.session, header);
 }
 
 
 void RemoteEntity::sendReplyError(const ReplyContext& replyContext, remoteentity::Status status)
 {
-    Header header = {replyContext.entityId, "", m_entityId, MsgMode::MSG_REPLY, status, "", replyContext.correlationId};
+    Header header{replyContext.entityId, "", m_entityId, MsgMode::MSG_REPLY, status, "", replyContext.correlationId};
     RemoteEntityFormat::send(replyContext.session, header);
 }
 
 
 
-PeerId RemoteEntity::connect(const IProtocolSessionPtr& session, const std::string& entityName, EntityId entityId)
+PeerId RemoteEntity::connectIntern(const IProtocolSessionPtr& session, const std::string& entityName, EntityId entityId)
 {
-    std::unique_lock<std::mutex> lock(m_mutex);
-    PeerId peerId = addPeer(session, entityId, entityName);
-    lock.unlock();
+    bool added{};
+    PeerId peerId = addPeer(session, entityId, entityName, added);
 
-    sendRequest(peerId, EntityConnect{}, [this, peerId] (remoteentity::Status /*status*/, const StructBasePtr& structBase) {
-        if (structBase && (structBase->getStructInfo().getTypeName() == EntityConnectReply::structInfo().getTypeName()))
-        {
-            const EntityConnectReply& entityConnectReply = static_cast<const EntityConnectReply&>(*structBase);
-            std::unique_lock<std::mutex> lock(m_mutex);
-            auto it = m_peers.find(peerId);
-            if (it != m_peers.end())
+    if (added)
+    {
+        sendRequest(peerId, EntityConnect{}, [this, peerId] (remoteentity::Status /*status*/, const StructBasePtr& structBase) {
+            if (structBase && (structBase->getStructInfo().getTypeName() == EntityConnectReply::structInfo().getTypeName()))
             {
-                it->second.entityId = entityConnectReply.entityid;
+                const EntityConnectReply& entityConnectReply = static_cast<const EntityConnectReply&>(*structBase);
+                std::unique_lock<std::mutex> lock(m_mutex);
+                auto it = m_peers.find(peerId);
+                if (it != m_peers.end())
+                {
+                    Peer& peer = it->second;
+                    peer.entityId = entityConnectReply.entityid;
+                    peer.entityName = entityConnectReply.entityName;
+                    m_sessionEntityToPeerId[peer.session->getSessionId()].first[peer.entityId] = peerId;
+                    m_sessionEntityToPeerId[peer.session->getSessionId()].second[peer.entityName] = peerId;
+                }
             }
-        }
-    });
+        });
+    }
 
     return peerId;
+}
+
+PeerId RemoteEntity::connect(const IProtocolSessionPtr& session, const std::string& entityName)
+{
+    return connectIntern(session, entityName, ENTITYID_INVALID);
+}
+
+PeerId RemoteEntity::connect(const IProtocolSessionPtr& session, EntityId entityId)
+{
+    return connectIntern(session, "", entityId);
 }
 
 
@@ -168,14 +184,22 @@ void RemoteEntity::removePeer(PeerId peerId, remoteentity::Status status)
             auto it1 = m_sessionEntityToPeerId.find(peer.session->getSessionId());
             if (it1 != m_sessionEntityToPeerId.end())
             {
-                auto it2 = it1->second.find(peer.entityId);
-                if (it2 != it1->second.end())
+                auto& entityIdContainer = it1->second.first;
+                auto itA = entityIdContainer.find(peer.entityId);
+                if (itA != entityIdContainer.end())
                 {
-                    it1->second.erase(it2);
-                    if (it1->second.empty())
-                    {
-                        m_sessionEntityToPeerId.erase(it1);
-                    }
+                    entityIdContainer.erase(itA);
+                }
+                auto& entityNameContainer = it1->second.second;
+                auto itB = entityNameContainer.find(peer.entityName);
+                if (itB != entityNameContainer.end())
+                {
+                    entityNameContainer.erase(itB);
+                }
+
+                if (entityIdContainer.empty() && entityNameContainer.empty())
+                {
+                    m_sessionEntityToPeerId.erase(it1);
                 }
             }
 
@@ -224,23 +248,15 @@ std::vector<PeerId> RemoteEntity::getAllPeers() const
 PeerId RemoteEntity::replyContextToPeerId(const ReplyContext& replyContext) const
 {
     std::unique_lock<std::mutex> lock(m_mutex);
-    assert(replyContext.session);
-    auto it1 = m_sessionEntityToPeerId.find(replyContext.session->getSessionId());
-    if (it1 != m_sessionEntityToPeerId.end())
-    {
-        auto it2 = it1->second.find(replyContext.entityId);
-        if (it2 != it1->second.end())
-        {
-            return it2->second;
-        }
-    }
-    return PEERID_INVALID;
+    PeerId peerId = getPeerId(replyContext.session, replyContext.entityId, "");
+    return peerId;
 }
 
 
-void RemoteEntity::initEntity(EntityId entityId)
+void RemoteEntity::initEntity(EntityId entityId, const std::string& entityName)
 {
     m_entityId = entityId;
+    m_entityName = entityName;
 }
 
 
@@ -268,31 +284,55 @@ void RemoteEntity::sessionDisconnected(const IProtocolSessionPtr& session)
 
 
 
-std::unordered_map<PeerId, RemoteEntity::Peer>::iterator RemoteEntity::findPeer(const IProtocolSessionPtr& session, EntityId entityId)
+PeerId RemoteEntity::getPeerId(const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName) const
 {
-    for (auto it = m_peers.begin(); it != m_peers.end(); ++it)
+    auto it = m_sessionEntityToPeerId.find(session->getSessionId());
+    if (it != m_sessionEntityToPeerId.end())
     {
-        const Peer& peer = it->second;
-        if (peer.session == session &&
-            peer.entityId == entityId)
+        if (entityId != ENTITYID_INVALID)
         {
-            return it;
+            const auto& entityIdContainer = it->second.first;
+            auto itA = entityIdContainer.find(entityId);
+            if (itA != entityIdContainer.end())
+            {
+                return itA->second;
+            }
+        }
+        else
+        {
+            const auto& entityNameContainer = it->second.second;
+            auto itB = entityNameContainer.find(entityName);
+            if (itB != entityNameContainer.end())
+            {
+                return itB->second;
+            }
         }
     }
-    return m_peers.end();
+
+    return PEERID_INVALID;
 }
 
 
-PeerId RemoteEntity::addPeer(const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName)
-{
-    PeerId peerId = m_nextPeerId;
-    ++m_nextPeerId;
-    Peer& peer = m_peers[peerId];
-    peer.session = session;
-    peer.entityId = entityId;
-    peer.entityName = entityName;
 
-    m_sessionEntityToPeerId[session->getSessionId()][entityId] = peerId;
+PeerId RemoteEntity::addPeer(const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName, bool& added)
+{
+    added = false;
+
+    std::unique_lock<std::mutex> lock(m_mutex);
+
+    PeerId peerId = getPeerId(session, entityId, entityName);
+
+    if (peerId == PEERID_INVALID)
+    {
+        peerId = m_nextPeerId;
+        ++m_nextPeerId;
+        Peer& peer = m_peers[peerId];
+        peer.session = session;
+        peer.entityId = entityId;
+        peer.entityName = entityName;
+        added = true;
+        m_sessionEntityToPeerId[session->getSessionId()].first[entityId] = peerId;
+    }
 
     return peerId;
 }
@@ -304,16 +344,15 @@ void RemoteEntity::receivedRequest(const IProtocolSessionPtr& session, const rem
 
     ReplyContext replyContext{session, header.srcid, header.corrid};
 
-    if (header.type == EntityConnect::structInfo().getTypeName())
+    const std::string& type = structBase->getStructInfo().getTypeName();
+    if (type == EntityConnect::structInfo().getTypeName())
     {
-        PeerId peerId = replyContextToPeerId(replyContext);
-        if (peerId == PEERID_INVALID)
-        {
-            addPeer(session, header.srcid, "");
-        }
-        sendReply(replyContext, EntityConnectReply(m_entityId));
+        const EntityConnect& entityConnect = static_cast<const EntityConnect&>(*structBase);
+        bool added{};
+        addPeer(session, entityConnect.entityid, entityConnect.entityName, added);
+        sendReply(replyContext, EntityConnectReply(m_entityId, m_entityName));
     }
-    else if (header.type == EntityDisconnect::structInfo().getTypeName())
+    else if (type == EntityDisconnect::structInfo().getTypeName())
     {
         PeerId peerId = replyContextToPeerId(replyContext);
         removePeer(peerId, Status::STATUS_PEER_DISCONNECTED);
@@ -330,13 +369,8 @@ void RemoteEntity::receivedReply(const IProtocolSessionPtr& session, const remot
 
     if (header.status == Status::STATUS_ENTITY_NOT_FOUND)
     {
-        PeerId peerId = PEERID_INVALID;
         std::unique_lock<std::mutex> lock(m_mutex);
-        std::unordered_map<PeerId, Peer>::iterator it = findPeer(session, header.srcid);
-        if (it != m_peers.end())
-        {
-            peerId = it->first;
-        }
+        PeerId peerId = getPeerId(session, header.srcid, "");
         lock.unlock();
         removePeer(peerId, Status::STATUS_PEER_DISCONNECTED);
     }

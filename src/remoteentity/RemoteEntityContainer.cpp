@@ -116,7 +116,7 @@ EntityId RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> remoteE
     auto re = remoteEntity.lock();
     if (re)
     {
-        re->initEntity(entityId);
+        re->initEntity(entityId, name);
     }
     m_entityId2entity[entityId] = remoteEntity;
 
