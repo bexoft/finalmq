@@ -129,14 +129,30 @@ void RemoteEntityFormat::serialize(IMessage& message, int contentType, const rem
 }
 
 
+inline static bool shallSend(const remoteentity::Header& header)
+{
+    if ((header.mode != MsgMode::MSG_REPLY) ||
+        (header.status == Status::STATUS_ENTITY_NOT_FOUND || header.corrid != CORRELATIONID_NONE))
+    {
+        return true;
+    }
+    return false;
+}
+
+
+
 
 bool RemoteEntityFormat::send(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase& structBase)
 {
-    assert(session);
-    IMessagePtr message = session->createMessage();
-    assert(message);
-    serialize(*message, session->getContentType(), header, structBase);
-    bool ok = session->sendMessage(message);
+    bool ok = true;
+    if (shallSend(header))
+    {
+        assert(session);
+        IMessagePtr message = session->createMessage();
+        assert(message);
+        serialize(*message, session->getContentType(), header, structBase);
+        ok = session->sendMessage(message);
+    }
     return ok;
 }
 
@@ -145,8 +161,7 @@ bool RemoteEntityFormat::send(const IProtocolSessionPtr& session, const remoteen
 bool RemoteEntityFormat::send(const IProtocolSessionPtr& session, const remoteentity::Header& header)
 {
     bool ok = true;
-    if ((header.mode != MsgMode::MSG_REPLY) ||
-        (header.status == Status::STATUS_ENTITY_NOT_FOUND || header.corrid != CORRELATIONID_NONE))
+    if (shallSend(header))
     {
         assert(session);
         IMessagePtr message = session->createMessage();

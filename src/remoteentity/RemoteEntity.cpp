@@ -54,7 +54,7 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
     {
         const auto& peer = it->second;
         IProtocolSessionPtr session = peer.session;
-        Header header = {peer.entityId, peer.entityName, m_entityId, MsgMode::MSG_REQUEST, Status::STATUS_OK, structBase.getStructInfo().getTypeName(), correlationId};
+        Header header = {peer.entityId, (peer.entityId == ENTITYID_INVALID) ? peer.entityName : std::string(), m_entityId, MsgMode::MSG_REQUEST, Status::STATUS_OK, structBase.getStructInfo().getTypeName(), correlationId};
         lock.unlock();
 
         ok = RemoteEntityFormat::send(session, header, structBase);
@@ -71,11 +71,17 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
 }
 
 
+bool RemoteEntity::sendEvent(const PeerId& peerId, const StructBase& structBase)
+{
+    bool ok = sendRequest(peerId, structBase, CORRELATIONID_NONE);
+    return ok;
+}
+
 bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply)
 {
     CorrelationId correlationId = getNextCorrelationId();
     std::unique_lock<std::mutex> lock(m_mutex);
-    m_requests[correlationId] = {peerId, std::make_shared<FuncReply>(std::move(funcReply))};
+    m_requests[correlationId] = std::make_unique<Request>(Request{peerId, std::move(funcReply)});
     lock.unlock();
     bool ok = sendRequest(peerId, structBase, correlationId);
     return ok;
@@ -84,20 +90,20 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
 
 void RemoteEntity::triggerReply(CorrelationId correlationId, Status status, const StructBasePtr& structBase)
 {
-    std::shared_ptr<FuncReply> func;
+    std::unique_ptr<Request> request;
     std::unique_lock<std::mutex> lock(m_mutex);
     auto it = m_requests.find(correlationId);
     if (it != m_requests.end())
     {
-        func = it->second.func;
-        assert(func);
+        request = std::move(it->second);
+        assert(request);
         m_requests.erase(it);
     }
     lock.unlock();
 
-    if (func)
+    if (request && request->func)
     {
-        (*func)(status, structBase);
+        request->func(request->peerId, status, structBase);
     }
 }
 
@@ -130,7 +136,7 @@ PeerId RemoteEntity::connectIntern(const IProtocolSessionPtr& session, const std
 
     if (added)
     {
-        sendRequest(peerId, EntityConnect{}, [this, peerId] (remoteentity::Status /*status*/, const StructBasePtr& structBase) {
+        sendRequest(peerId, EntityConnect{}, [this] (PeerId peerId, remoteentity::Status /*status*/, const StructBasePtr& structBase) {
             if (structBase && (structBase->getStructInfo().getTypeName() == EntityConnectReply::structInfo().getTypeName()))
             {
                 const EntityConnectReply& entityConnectReply = static_cast<const EntityConnectReply&>(*structBase);
@@ -206,14 +212,13 @@ void RemoteEntity::removePeer(PeerId peerId, remoteentity::Status status)
             m_peers.erase(it);
 
             // release pending calls
-            std::vector<std::shared_ptr<FuncReply>> funcs;
-            funcs.reserve(m_requests.size());
+            std::vector<std::unique_ptr<Request>> requests;
+            requests.reserve(m_requests.size());
             for (auto it = m_requests.begin(); it != m_requests.end(); )
             {
-                if (it->second.peerId == peerId)
+                if (it->second->peerId == peerId)
                 {
-                    assert(it->second.func);
-                    funcs.push_back(it->second.func);
+                    requests.push_back(std::move(it->second));
                     it = m_requests.erase(it);
                 }
                 else
@@ -222,10 +227,14 @@ void RemoteEntity::removePeer(PeerId peerId, remoteentity::Status status)
                 }
             }
             lock.unlock();
-            for (size_t i = 0; i < funcs.size(); ++i)
+            for (size_t i = 0; i < requests.size(); ++i)
             {
-                assert(funcs[i]);
-                (*funcs[i])(status, nullptr);
+                std::unique_ptr<Request>& request = requests[i];
+                assert(request);
+                if (request->func)
+                {
+                    request->func(request->peerId, status, nullptr);
+                }
             }
         }
     }

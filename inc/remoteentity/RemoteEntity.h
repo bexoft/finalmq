@@ -61,12 +61,13 @@ struct ReplyContext
     CorrelationId       correlationId = CORRELATIONID_NONE;
 };
 
-typedef std::function<void(remoteentity::Status status, const StructBasePtr& structBase)> FuncReply;
+typedef std::function<void(PeerId peerId, remoteentity::Status status, const StructBasePtr& structBase)> FuncReply;
 
 struct IRemoteEntity
 {
     virtual ~IRemoteEntity() {}
 
+    virtual bool sendEvent(const PeerId& peerId, const StructBase& structBase) = 0;
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) = 0;
     virtual void sendReply(const ReplyContext& replyContext, const StructBase& structBase) = 0;
     virtual void sendReply(const ReplyContext& replyContext) = 0;
@@ -96,6 +97,7 @@ public:
 
 private:
     // IRemoteEntity
+    virtual bool sendEvent(const PeerId& peerId, const StructBase& structBase) override;
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) override;
     virtual void sendReply(const ReplyContext& replyContext, const StructBase& structBase) override;
     virtual void sendReply(const ReplyContext& replyContext) override;
@@ -138,8 +140,8 @@ private:
 
     struct Request
     {
-        PeerId                      peerId = PEERID_INVALID;
-        std::shared_ptr<FuncReply>  func;
+        PeerId      peerId = PEERID_INVALID;
+        FuncReply   func;
     };
 
     EntityId                            m_entityId = 0;
@@ -147,7 +149,7 @@ private:
 
     std::unordered_map<PeerId, Peer>    m_peers;
     PeerId                              m_nextPeerId{1};
-    std::unordered_map<CorrelationId, Request> m_requests;
+    std::unordered_map<CorrelationId, std::unique_ptr<Request>> m_requests;
     std::unordered_map<std::uint64_t, std::pair<std::unordered_map<EntityId, PeerId>, std::unordered_map<std::string, PeerId>>> m_sessionEntityToPeerId;
     mutable std::atomic_uint64_t        m_nextCorrelationId{1};
     mutable std::mutex                  m_mutex;
