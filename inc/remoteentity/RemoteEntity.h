@@ -24,6 +24,7 @@
 
 #include "protocolconnection/ProtocolSessionContainer.h"
 #include "remoteentity/RemoteEntityFormat.h"
+#include "remoteentity/entitydata.fmq.h"
 
 
 #include <memory>
@@ -35,8 +36,6 @@
 
 namespace finalmq {
 
-class StructBase;
-typedef std::shared_ptr<StructBase> StructBasePtr;
 class IProtocolSession;
 typedef std::shared_ptr<IProtocolSession> IProtocolSessionPtr;
 
@@ -66,6 +65,27 @@ typedef std::function<void(PeerId peerId, remoteentity::Status status, const Str
 struct IRemoteEntity
 {
     virtual ~IRemoteEntity() {}
+
+    template<class R>
+    bool requestReply(const PeerId& peerId,
+                      const StructBase& structBase,
+                      std::function<void(PeerId peerId, remoteentity::Status status, const std::shared_ptr<R>& reply)> funcReply)
+    {
+        bool ok = sendRequest(peerId, structBase, [funcReply{std::move(funcReply)}] (PeerId peerId, remoteentity::Status status, const StructBasePtr& structBase) {
+            std::shared_ptr<R> reply;
+            bool typeOk = (!structBase || structBase->getStructInfo().getTypeName() == R::structInfo().getTypeName());
+            if (status == remoteentity::Status::STATUS_OK && structBase && typeOk)
+            {
+                reply = std::static_pointer_cast<R>(structBase);
+            }
+            if (!typeOk)
+            {
+                status = remoteentity::Status::STATUS_WRONG_REPLY_TYPE;
+            }
+            funcReply(peerId, status, reply);
+        });
+        return ok;
+    }
 
     virtual bool sendEvent(const PeerId& peerId, const StructBase& structBase) = 0;
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) = 0;
@@ -115,16 +135,6 @@ private:
 
     struct Peer
     {
-//        bool operator ==(const Peer& rhs) const
-//        {
-//            if ((session == rhs.session) &&
-//                ((entityId != ENTITYID_INVALID && entityId == rhs.entityId) ||
-//                 (entityId == ENTITYID_INVALID && !entityName.empty() && entityName == rhs.entityName)))
-//            {
-//                return true;
-//            }
-//            return false;
-//        }
         IProtocolSessionPtr session;
         EntityId            entityId = ENTITYID_INVALID;
         std::string         entityName;

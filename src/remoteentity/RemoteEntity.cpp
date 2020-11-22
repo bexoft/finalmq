@@ -21,7 +21,6 @@
 //SOFTWARE.
 
 #include "remoteentity/RemoteEntity.h"
-#include "remoteentity/entitydata.fmq.h"
 
 #include <algorithm>
 
@@ -136,17 +135,16 @@ PeerId RemoteEntity::connectIntern(const IProtocolSessionPtr& session, const std
 
     if (added)
     {
-        sendRequest(peerId, EntityConnect{}, [this] (PeerId peerId, remoteentity::Status /*status*/, const StructBasePtr& structBase) {
-            if (structBase && (structBase->getStructInfo().getTypeName() == EntityConnectReply::structInfo().getTypeName()))
+        requestReply<EntityConnectReply>(peerId, EntityConnect{}, [this] (PeerId peerId, remoteentity::Status /*status*/, const std::shared_ptr<EntityConnectReply>& reply) {
+            if (reply)
             {
-                const EntityConnectReply& entityConnectReply = static_cast<const EntityConnectReply&>(*structBase);
                 std::unique_lock<std::mutex> lock(m_mutex);
                 auto it = m_peers.find(peerId);
                 if (it != m_peers.end())
                 {
                     Peer& peer = it->second;
-                    peer.entityId = entityConnectReply.entityid;
-                    peer.entityName = entityConnectReply.entityName;
+                    peer.entityId = reply->entityid;
+                    peer.entityName = reply->entityName;
                     m_sessionEntityToPeerId[peer.session->getSessionId()].first[peer.entityId] = peerId;
                     m_sessionEntityToPeerId[peer.session->getSessionId()].second[peer.entityName] = peerId;
                 }
@@ -353,6 +351,7 @@ void RemoteEntity::receivedRequest(const IProtocolSessionPtr& session, const rem
 
     ReplyContext replyContext{session, header.srcid, header.corrid};
 
+    bool replySent = false;
     const std::string& type = structBase->getStructInfo().getTypeName();
     if (type == EntityConnect::structInfo().getTypeName())
     {
@@ -360,6 +359,7 @@ void RemoteEntity::receivedRequest(const IProtocolSessionPtr& session, const rem
         bool added{};
         addPeer(session, entityConnect.entityid, entityConnect.entityName, added);
         sendReply(replyContext, EntityConnectReply(m_entityId, m_entityName));
+        replySent = true;
     }
     else if (type == EntityDisconnect::structInfo().getTypeName())
     {
@@ -369,6 +369,11 @@ void RemoteEntity::receivedRequest(const IProtocolSessionPtr& session, const rem
     else
     {
 
+    }
+
+    if (!replySent && header.corrid != CORRELATIONID_NONE)
+    {
+        sendReply(replyContext);
     }
 }
 
