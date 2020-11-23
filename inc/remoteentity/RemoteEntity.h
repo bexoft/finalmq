@@ -102,9 +102,6 @@ struct IRemoteEntity
 
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) = 0;
 
-    // methods for ReplyContext
-    virtual PeerId getPeerId(const IProtocolSessionPtr& session, EntityId entityId) const = 0;
-
     // methods for RemoteEntityContainer
     virtual void initEntity(EntityId entityId, const std::string& entityName) = 0;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) = 0;
@@ -114,11 +111,27 @@ struct IRemoteEntity
 typedef std::shared_ptr<IRemoteEntity> IRemoteEntityPtr;
 
 
+
+class SessionIdEntityIdToPeerId
+{
+public:
+    void updatePeer(std::int64_t sessionId, EntityId entityId, const std::string& entityName, PeerId peerId);
+    void removePeer(std::int64_t sessionId, EntityId entityId, const std::string& entityName);
+    PeerId getPeerId(std::int64_t sessionId, EntityId entityId, const std::string& entityName) const;
+
+private:
+    std::unordered_map<std::uint64_t, std::pair<std::unordered_map<EntityId, PeerId>, std::unordered_map<std::string, PeerId>>> m_sessionEntityToPeerId;
+    mutable std::mutex  m_mutex;
+};
+typedef std::shared_ptr<SessionIdEntityIdToPeerId> SessionIdEntityIdToPeerIdPtr;
+
+
+
 class ReplyContext
 {
 public:
-    inline ReplyContext(const std::weak_ptr<IRemoteEntity>& entity, const IProtocolSessionPtr& session, EntityId entityIdDest, EntityId entityIdSrc, CorrelationId correlationId)
-        : m_entity(entity)
+    inline ReplyContext(const SessionIdEntityIdToPeerIdPtr& sessionIdEntityIdToPeerId, const IProtocolSessionPtr& session, EntityId entityIdDest, EntityId entityIdSrc, CorrelationId correlationId)
+        : m_sessionIdEntityIdToPeerId(sessionIdEntityIdToPeerId)
         , m_session(session)
         , m_entityIdDest(entityIdDest)
         , m_entityIdSrc(entityIdSrc)
@@ -139,11 +152,8 @@ public:
     {
         if (m_peerId == PEERID_INVALID)
         {
-            std::shared_ptr<IRemoteEntity> entity = m_entity.lock();
-            if (entity)
-            {
-                entity->getPeerId(m_session, m_entityIdDest);
-            }
+            assert(m_sessionIdEntityIdToPeerId);
+            m_peerId = m_sessionIdEntityIdToPeerId->getPeerId(m_session->getSessionId(), m_entityIdDest, "");
         }
         return m_peerId;
     }
@@ -177,7 +187,7 @@ private:
     ReplyContext(const ReplyContext&&) = delete;
     const ReplyContext& operator =(const ReplyContext&&) = delete;
 private:
-    std::weak_ptr<IRemoteEntity>    m_entity;
+    SessionIdEntityIdToPeerIdPtr    m_sessionIdEntityIdToPeerId;
     IProtocolSessionPtr             m_session;
     EntityId                        m_entityIdDest = ENTITYID_INVALID;
     EntityId                        m_entityIdSrc = ENTITYID_INVALID;
@@ -190,15 +200,10 @@ private:
 
 
 
-class SessionEntityIdToPeerId
-{
-
-};
 
 
 
 class RemoteEntity : public IRemoteEntity
-                   , private std::enable_shared_from_this<RemoteEntity>
 {
 public:
     RemoteEntity();
@@ -211,7 +216,6 @@ private:
     virtual PeerId connect(const IProtocolSessionPtr& session, EntityId) override;
     virtual void disconnect(PeerId peerId) override;
     virtual std::vector<PeerId> getAllPeers() const override;
-    virtual PeerId getPeerId(const IProtocolSessionPtr& session, EntityId entityId) const override;
     virtual void registerCommandFunction(const std::string& functionName, FuncCommand funcCommand) override;
 
     virtual void initEntity(EntityId entityId, const std::string& entityName) override;
@@ -246,8 +250,8 @@ private:
     std::unordered_map<PeerId, Peer>    m_peers;
     PeerId                              m_nextPeerId{1};
     std::unordered_map<CorrelationId, std::unique_ptr<Request>> m_requests;
-    std::unordered_map<std::uint64_t, std::pair<std::unordered_map<EntityId, PeerId>, std::unordered_map<std::string, PeerId>>> m_sessionEntityToPeerId;
     std::unordered_map<std::string, std::shared_ptr<FuncCommand>> m_funcCommands;
+    std::shared_ptr<SessionIdEntityIdToPeerId> m_sessionIdEntityIdToPeerId;
     mutable std::atomic_uint64_t        m_nextCorrelationId{1};
     mutable std::mutex                  m_mutex;
 };
