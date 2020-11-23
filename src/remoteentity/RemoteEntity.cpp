@@ -35,6 +35,23 @@ using finalmq::remoteentity::EntityDisconnect;
 namespace finalmq {
 
 
+RemoteEntity::RemoteEntity()
+{
+    registerRequest<EntityConnect>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<EntityConnect>& request) {
+        assert(request);
+        bool added{};
+        addPeer(replyContext->session(), request->entityid, request->entityName, added);
+        replyContext->reply(EntityConnectReply(m_entityId, m_entityName));
+    });
+    registerRequest<EntityDisconnect>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<EntityDisconnect>& request) {
+        assert(request);
+        PeerId peerId = replyContext->peerId();
+        removePeer(peerId, Status::STATUS_PEER_DISCONNECTED);
+    });
+}
+
+
+
 // IRemoteEntity
 
 CorrelationId RemoteEntity::getNextCorrelationId() const
@@ -109,14 +126,14 @@ void RemoteEntity::triggerReply(CorrelationId correlationId, Status status, cons
 
 void RemoteEntity::sendReply(const ReplyContext& replyContext, const StructBase& structBase)
 {
-    Header header{replyContext.entityId, "", m_entityId, MsgMode::MSG_REPLY, Status::STATUS_OK, structBase.getStructInfo().getTypeName(), replyContext.correlationId};
-    RemoteEntityFormat::send(replyContext.session, header, structBase);
+    Header header{replyContext.entityId(), "", m_entityId, MsgMode::MSG_REPLY, Status::STATUS_OK, structBase.getStructInfo().getTypeName(), replyContext.correlationId()};
+    RemoteEntityFormat::send(replyContext.session(), header, structBase);
 }
 
 void RemoteEntity::sendReply(const ReplyContext& replyContext, remoteentity::Status status)
 {
-    Header header{replyContext.entityId, "", m_entityId, MsgMode::MSG_REPLY, status, "", replyContext.correlationId};
-    RemoteEntityFormat::send(replyContext.session, header);
+    Header header{replyContext.entityId(), "", m_entityId, MsgMode::MSG_REPLY, status, "", replyContext.correlationId()};
+    RemoteEntityFormat::send(replyContext.session(), header);
 }
 
 
@@ -249,7 +266,7 @@ std::vector<PeerId> RemoteEntity::getAllPeers() const
 PeerId RemoteEntity::replyContextToPeerId(const ReplyContext& replyContext) const
 {
     std::unique_lock<std::mutex> lock(m_mutex);
-    PeerId peerId = getPeerId(replyContext.session, replyContext.entityId, "");
+    PeerId peerId = getPeerId(replyContext.session(), replyContext.entityId(), "");
     return peerId;
 }
 
@@ -351,47 +368,24 @@ void RemoteEntity::receivedRequest(const IProtocolSessionPtr& session, const rem
 {
     assert(structBase);
 
-    ReplyContextUPtr replyContext = std::make_unique<ReplyContext>(ReplyContext{session, header.srcid, header.corrid});
+    ReplyContextUPtr replyContext = std::make_unique<ReplyContext>(shared_from_this(), session, header.srcid, header.corrid);
     assert(replyContext);
 
-    bool replySent = false;
-    const std::string& type = structBase->getStructInfo().getTypeName();
-    if (type == EntityConnect::structInfo().getTypeName())
+    std::unique_lock<std::mutex> lock(m_mutex);
+    auto it = m_funcRequests.find(header.type);
+    if (it != m_funcRequests.end())
     {
-        const EntityConnect& entityConnect = static_cast<const EntityConnect&>(*structBase);
-        bool added{};
-        addPeer(session, entityConnect.entityid, entityConnect.entityName, added);
-        sendReply(*replyContext, EntityConnectReply(m_entityId, m_entityName));
-        replySent = true;
-    }
-    else if (type == EntityDisconnect::structInfo().getTypeName())
-    {
-        PeerId peerId = replyContextToPeerId(*replyContext);
-        removePeer(peerId, Status::STATUS_PEER_DISCONNECTED);
+        std::shared_ptr<FuncRequest> func = it->second;
+        lock.unlock();
+        assert(func);
+        if (*func)
+        {
+            (*func)(replyContext, structBase);
+        }
     }
     else
     {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        auto it = m_funcRequests.find(header.type);
-        if (it != m_funcRequests.end())
-        {
-            std::shared_ptr<FuncRequest> func = it->second;
-            lock.unlock();
-            assert(func);
-            if (*func)
-            {
-                replySent = (*func)(replyContext, structBase);
-            }
-        }
-        else
-        {
-            sendReply(*replyContext, Status::STATUS_REQUEST_NOT_FOUND);
-        }
-    }
-
-    if (!replySent && header.corrid != CORRELATIONID_NONE)
-    {
-        sendReply(*replyContext, Status::STATUS_OK);
+        replyContext->reply(Status::STATUS_REQUEST_NOT_FOUND);
     }
 }
 

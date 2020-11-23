@@ -53,16 +53,12 @@ static constexpr PeerId PEERID_INVALID = 0;
 
 
 
-struct ReplyContext
-{
-    IProtocolSessionPtr session;
-    EntityId            entityId = ENTITYID_INVALID;
-    CorrelationId       correlationId = CORRELATIONID_NONE;
-};
+class ReplyContext;
 typedef std::unique_ptr<ReplyContext> ReplyContextUPtr;
 
+
 typedef std::function<void(PeerId peerId, remoteentity::Status status, const StructBasePtr& structBase)> FuncReply;
-typedef std::function<bool(ReplyContextUPtr& replyContext, const StructBasePtr& structBase)> FuncRequest;
+typedef std::function<void(ReplyContextUPtr& replyContext, const StructBasePtr& structBase)> FuncRequest;
 
 
 struct IRemoteEntity
@@ -74,6 +70,7 @@ struct IRemoteEntity
                       const StructBase& structBase,
                       std::function<void(PeerId peerId, remoteentity::Status status, const std::shared_ptr<R>& reply)> funcReply)
     {
+        assert(funcReply);
         bool ok = sendRequest(peerId, structBase, [funcReply{std::move(funcReply)}] (PeerId peerId, remoteentity::Status status, const StructBasePtr& structBase) {
             std::shared_ptr<R> reply;
             bool typeOk = (!structBase || structBase->getStructInfo().getTypeName() == R::structInfo().getTypeName());
@@ -88,6 +85,12 @@ struct IRemoteEntity
             funcReply(peerId, status, reply);
         });
         return ok;
+    }
+
+    template<class R>
+    void registerRequest(std::function<void(ReplyContextUPtr& replyContext, const std::shared_ptr<R>& request)> funcRequest)
+    {
+        registerRequestFunction(R::structInfo().getTypeName(), reinterpret_cast<FuncRequest&>(funcRequest));
     }
 
     virtual bool sendEvent(const PeerId& peerId, const StructBase& structBase) = 0;
@@ -111,12 +114,99 @@ struct IRemoteEntity
 typedef std::shared_ptr<IRemoteEntity> IRemoteEntityPtr;
 
 
+class ReplyContext
+{
+public:
+    inline ReplyContext(const std::weak_ptr<IRemoteEntity>& entity, const IProtocolSessionPtr& session, EntityId entityId, CorrelationId correlationId)
+        : m_entity(entity)
+        , m_session(session)
+        , m_entityId(entityId)
+        , m_correlationId(correlationId)
+        , m_replySent(false)
+    {
+    }
+
+    ~ReplyContext()
+    {
+        if (!m_replySent && m_correlationId != CORRELATIONID_NONE)
+        {
+            reply(remoteentity::Status::STATUS_OK);
+        }
+    }
+
+    inline PeerId peerId()
+    {
+        if (m_peerId == PEERID_INVALID)
+        {
+            std::shared_ptr<IRemoteEntity> entityId = m_entity.lock();
+            if (entityId)
+            {
+                entityId->replyContextToPeerId(*this);
+            }
+        }
+        return m_peerId;
+    }
+
+    void reply(const StructBase& structBase)
+    {
+        std::shared_ptr<IRemoteEntity> entityId = m_entity.lock();
+        if (entityId)
+        {
+            entityId->sendReply(*this, structBase);
+        }
+        m_replySent = true;
+    }
+
+private:
+    void reply(remoteentity::Status status)
+    {
+        std::shared_ptr<IRemoteEntity> entityId = m_entity.lock();
+        if (entityId)
+        {
+            entityId->sendReply(*this, status);
+        }
+        m_replySent = true;
+    }
+
+    inline const IProtocolSessionPtr& session() const
+    {
+        return m_session;
+    }
+    inline EntityId entityId() const
+    {
+        return m_entityId;
+    }
+    inline CorrelationId correlationId() const
+    {
+        return m_correlationId;
+    }
+    inline bool isReplySent() const
+    {
+        return m_replySent;
+    }
+
+    ReplyContext(const ReplyContext&) = delete;
+    const ReplyContext& operator =(const ReplyContext&) = delete;
+    ReplyContext(const ReplyContext&&) = delete;
+    const ReplyContext& operator =(const ReplyContext&&) = delete;
+private:
+    std::weak_ptr<IRemoteEntity>    m_entity;
+    IProtocolSessionPtr             m_session;
+    EntityId                        m_entityId = ENTITYID_INVALID;
+    CorrelationId                   m_correlationId = CORRELATIONID_NONE;
+    PeerId                          m_peerId = PEERID_INVALID;
+    bool                            m_replySent = false;
+
+    friend class RemoteEntity;
+};
 
 
 
 class RemoteEntity : public IRemoteEntity
+                   , private std::enable_shared_from_this<RemoteEntity>
 {
 public:
+    RemoteEntity();
 
 private:
     // IRemoteEntity
