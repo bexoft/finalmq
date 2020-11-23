@@ -124,20 +124,6 @@ void RemoteEntity::triggerReply(CorrelationId correlationId, Status status, cons
 }
 
 
-void RemoteEntity::sendReply(const ReplyContext& replyContext, const StructBase& structBase)
-{
-    Header header{replyContext.entityId(), "", m_entityId, MsgMode::MSG_REPLY, Status::STATUS_OK, structBase.getStructInfo().getTypeName(), replyContext.correlationId()};
-    RemoteEntityFormat::send(replyContext.session(), header, structBase);
-}
-
-void RemoteEntity::sendReply(const ReplyContext& replyContext, remoteentity::Status status)
-{
-    Header header{replyContext.entityId(), "", m_entityId, MsgMode::MSG_REPLY, status, "", replyContext.correlationId()};
-    RemoteEntityFormat::send(replyContext.session(), header);
-}
-
-
-
 
 PeerId RemoteEntity::connectIntern(const IProtocolSessionPtr& session, const std::string& entityName, EntityId entityId)
 {
@@ -263,10 +249,10 @@ std::vector<PeerId> RemoteEntity::getAllPeers() const
 }
 
 
-PeerId RemoteEntity::replyContextToPeerId(const ReplyContext& replyContext) const
+PeerId RemoteEntity::getPeerId(const IProtocolSessionPtr& session, EntityId entityId) const
 {
     std::unique_lock<std::mutex> lock(m_mutex);
-    PeerId peerId = getPeerId(replyContext.session(), replyContext.entityId(), "");
+    PeerId peerId = getPeerId(session, entityId, "");
     return peerId;
 }
 
@@ -368,7 +354,7 @@ void RemoteEntity::receivedRequest(const IProtocolSessionPtr& session, const rem
 {
     assert(structBase);
 
-    ReplyContextUPtr replyContext = std::make_unique<ReplyContext>(shared_from_this(), session, header.srcid, header.corrid);
+    ReplyContextUPtr replyContext = std::make_unique<ReplyContext>(weak_from_this(), session, header.srcid, m_entityId, header.corrid);
     assert(replyContext);
 
     std::unique_lock<std::mutex> lock(m_mutex);
