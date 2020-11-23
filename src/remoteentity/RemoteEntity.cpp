@@ -113,18 +113,12 @@ void RemoteEntity::sendReply(const ReplyContext& replyContext, const StructBase&
     RemoteEntityFormat::send(replyContext.session, header, structBase);
 }
 
-void RemoteEntity::sendReply(const ReplyContext& replyContext)
-{
-    Header header{replyContext.entityId, "", m_entityId, MsgMode::MSG_REPLY, Status::STATUS_OK, "", replyContext.correlationId};
-    RemoteEntityFormat::send(replyContext.session, header);
-}
-
-
-void RemoteEntity::sendReplyError(const ReplyContext& replyContext, remoteentity::Status status)
+void RemoteEntity::sendReply(const ReplyContext& replyContext, remoteentity::Status status)
 {
     Header header{replyContext.entityId, "", m_entityId, MsgMode::MSG_REPLY, status, "", replyContext.correlationId};
     RemoteEntityFormat::send(replyContext.session, header);
 }
+
 
 
 
@@ -259,6 +253,14 @@ PeerId RemoteEntity::replyContextToPeerId(const ReplyContext& replyContext) cons
     return peerId;
 }
 
+void RemoteEntity::registerRequestFunction(const std::string& functionName, FuncRequest funcRequest)
+{
+    std::shared_ptr<FuncRequest> func = std::make_shared<FuncRequest>(std::move(funcRequest));
+    std::unique_lock<std::mutex> lock(m_mutex);
+    m_funcRequests[functionName] = func;
+}
+
+
 
 void RemoteEntity::initEntity(EntityId entityId, const std::string& entityName)
 {
@@ -349,7 +351,8 @@ void RemoteEntity::receivedRequest(const IProtocolSessionPtr& session, const rem
 {
     assert(structBase);
 
-    ReplyContext replyContext{session, header.srcid, header.corrid};
+    ReplyContextUPtr replyContext = std::make_unique<ReplyContext>(ReplyContext{session, header.srcid, header.corrid});
+    assert(replyContext);
 
     bool replySent = false;
     const std::string& type = structBase->getStructInfo().getTypeName();
@@ -358,22 +361,37 @@ void RemoteEntity::receivedRequest(const IProtocolSessionPtr& session, const rem
         const EntityConnect& entityConnect = static_cast<const EntityConnect&>(*structBase);
         bool added{};
         addPeer(session, entityConnect.entityid, entityConnect.entityName, added);
-        sendReply(replyContext, EntityConnectReply(m_entityId, m_entityName));
+        sendReply(*replyContext, EntityConnectReply(m_entityId, m_entityName));
         replySent = true;
     }
     else if (type == EntityDisconnect::structInfo().getTypeName())
     {
-        PeerId peerId = replyContextToPeerId(replyContext);
+        PeerId peerId = replyContextToPeerId(*replyContext);
         removePeer(peerId, Status::STATUS_PEER_DISCONNECTED);
     }
     else
     {
-
+        std::unique_lock<std::mutex> lock(m_mutex);
+        auto it = m_funcRequests.find(header.type);
+        if (it != m_funcRequests.end())
+        {
+            std::shared_ptr<FuncRequest> func = it->second;
+            lock.unlock();
+            assert(func);
+            if (*func)
+            {
+                replySent = (*func)(replyContext, structBase);
+            }
+        }
+        else
+        {
+            sendReply(*replyContext, Status::STATUS_REQUEST_NOT_FOUND);
+        }
     }
 
     if (!replySent && header.corrid != CORRELATIONID_NONE)
     {
-        sendReply(replyContext);
+        sendReply(*replyContext, Status::STATUS_OK);
     }
 }
 

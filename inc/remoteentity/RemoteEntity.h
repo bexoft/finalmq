@@ -59,8 +59,11 @@ struct ReplyContext
     EntityId            entityId = ENTITYID_INVALID;
     CorrelationId       correlationId = CORRELATIONID_NONE;
 };
+typedef std::unique_ptr<ReplyContext> ReplyContextUPtr;
 
 typedef std::function<void(PeerId peerId, remoteentity::Status status, const StructBasePtr& structBase)> FuncReply;
+typedef std::function<bool(ReplyContextUPtr& replyContext, const StructBasePtr& structBase)> FuncRequest;
+
 
 struct IRemoteEntity
 {
@@ -90,13 +93,13 @@ struct IRemoteEntity
     virtual bool sendEvent(const PeerId& peerId, const StructBase& structBase) = 0;
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) = 0;
     virtual void sendReply(const ReplyContext& replyContext, const StructBase& structBase) = 0;
-    virtual void sendReply(const ReplyContext& replyContext) = 0;
-    virtual void sendReplyError(const ReplyContext& replyContext, remoteentity::Status status) = 0;
+    virtual void sendReply(const ReplyContext& replyContext, remoteentity::Status status) = 0;
     virtual PeerId connect(const IProtocolSessionPtr& session, const std::string& entityName) = 0;
     virtual PeerId connect(const IProtocolSessionPtr& session, EntityId) = 0;
     virtual void disconnect(PeerId peerId) = 0;
     virtual std::vector<PeerId> getAllPeers() const = 0;
     virtual PeerId replyContextToPeerId(const ReplyContext& replyContext) const = 0;
+    virtual void registerRequestFunction(const std::string& functionName, FuncRequest funcRequest) = 0;
 
     virtual void initEntity(EntityId entityId, const std::string& entityName) = 0;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) = 0;
@@ -120,13 +123,13 @@ private:
     virtual bool sendEvent(const PeerId& peerId, const StructBase& structBase) override;
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) override;
     virtual void sendReply(const ReplyContext& replyContext, const StructBase& structBase) override;
-    virtual void sendReply(const ReplyContext& replyContext) override;
-    virtual void sendReplyError(const ReplyContext& replyContext, remoteentity::Status status) override;
+    virtual void sendReply(const ReplyContext& replyContext, remoteentity::Status status) override;
     virtual PeerId connect(const IProtocolSessionPtr& session, const std::string& entityName) override;
     virtual PeerId connect(const IProtocolSessionPtr& session, EntityId) override;
     virtual void disconnect(PeerId peerId) override;
     virtual std::vector<PeerId> getAllPeers() const override;
     virtual PeerId replyContextToPeerId(const ReplyContext& replyContext) const override;
+    virtual void registerRequestFunction(const std::string& functionName, FuncRequest funcRequest) override;
 
     virtual void initEntity(EntityId entityId, const std::string& entityName) override;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) override;
@@ -161,6 +164,7 @@ private:
     PeerId                              m_nextPeerId{1};
     std::unordered_map<CorrelationId, std::unique_ptr<Request>> m_requests;
     std::unordered_map<std::uint64_t, std::pair<std::unordered_map<EntityId, PeerId>, std::unordered_map<std::string, PeerId>>> m_sessionEntityToPeerId;
+    std::unordered_map<std::string, std::shared_ptr<FuncRequest>> m_funcRequests;
     mutable std::atomic_uint64_t        m_nextCorrelationId{1};
     mutable std::mutex                  m_mutex;
 };

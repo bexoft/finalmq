@@ -9,10 +9,11 @@
             {"name":"STATUS_OK",                        "id":0,     "desc":""},
             {"name":"STATUS_ENTITY_NOT_FOUND",          "id":1,     "desc":""},
             {"name":"STATUS_WRONG_REPLY_TYPE",          "id":2,     "desc":""},
-            {"name":"STATUS_REQUESTTYPE_NOT_DEFINED",   "id":3,     "desc":""},
-            {"name":"STATUS_REPLYTYPE_NOT_DEFINED",     "id":4,     "desc":""},
-            {"name":"STATUS_SESSION_DISCONNECTED",      "id":5,     "desc":""},
-            {"name":"STATUS_PEER_DISCONNECTED",         "id":6,     "desc":""}
+            {"name":"STATUS_REQUEST_NOT_FOUND",         "id":3,     "desc":""},
+            {"name":"STATUS_REQUESTTYPE_NOT_DEFINED",   "id":4,     "desc":""},
+            {"name":"STATUS_REPLYTYPE_NOT_DEFINED",     "id":5,     "desc":""},
+            {"name":"STATUS_SESSION_DISCONNECTED",      "id":6,     "desc":""},
+            {"name":"STATUS_PEER_DISCONNECTED",         "id":7,     "desc":""}
         ]}
     ],
 
