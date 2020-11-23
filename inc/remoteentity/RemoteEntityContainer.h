@@ -26,6 +26,14 @@
 
 namespace finalmq {
 
+enum class ConnectionEvent
+{
+    CONNECTIONEVENT_CONNECTED,
+    CONNECTIONEVENT_DISCONNECTED,
+    CONNECTIONEVENT_SOCKET_CONNECTED,
+    CONNECTIONEVENT_SOCKET_DISCONNECTED,
+};
+typedef std::function<void(const IProtocolSessionPtr& session, ConnectionEvent connectionEvent)> FuncConnectionEvent;
 
 
 struct IRemoteEntityContainer
@@ -46,6 +54,7 @@ struct IRemoteEntityContainer
 
     virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, const std::string& name = "") = 0;
     virtual void unregisterEntity(EntityId entityId) = 0;
+    virtual void registerConnectionEvent(FuncConnectionEvent funcConnectionEvent) = 0;
 };
 
 typedef std::shared_ptr<IRemoteEntityContainer> IRemoteEntityContainerPtr;
@@ -75,6 +84,7 @@ private:
 
     virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, const std::string& name = "") override;
     virtual void unregisterEntity(EntityId entityId) override;
+    virtual void registerConnectionEvent(FuncConnectionEvent funcConnectionEvent) override;
 
     // IProtocolSessionCallback
     virtual void connected(const IProtocolSessionPtr& session) override;
@@ -85,10 +95,13 @@ private:
 
 private:
 
+    inline void triggerConnectionEvent(const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) const;
+
     std::unique_ptr<IProtocolSessionContainer>                  m_streamConnectionContainer;
     std::unordered_map<std::string, EntityId>                   m_name2entityId;
     std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>>     m_entityId2entity;
     EntityId                                                    m_nextEntityId = 1;
+    std::shared_ptr<FuncConnectionEvent>                        m_funcConnectionEvent;
     mutable std::mutex                                          m_mutex;
 };
 

@@ -137,14 +137,36 @@ void RemoteEntityContainer::unregisterEntity(EntityId entityId)
     m_entityId2entity.erase(entityId);
 }
 
-// IProtocolSessionCallback
-void RemoteEntityContainer::connected(const IProtocolSessionPtr& /*session*/)
-{
 
+void RemoteEntityContainer::registerConnectionEvent(FuncConnectionEvent funcConnectionEvent)
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    m_funcConnectionEvent = std::make_shared<FuncConnectionEvent>(std::move(funcConnectionEvent));
+}
+
+
+inline void RemoteEntityContainer::triggerConnectionEvent(const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) const
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    std::shared_ptr<FuncConnectionEvent> funcConnectionEvent = m_funcConnectionEvent;
+    lock.unlock();
+    if (funcConnectionEvent && *funcConnectionEvent)
+    {
+        (*funcConnectionEvent)(session, connectionEvent);
+    }
+}
+
+
+// IProtocolSessionCallback
+void RemoteEntityContainer::connected(const IProtocolSessionPtr& session)
+{
+    triggerConnectionEvent(session, ConnectionEvent::CONNECTIONEVENT_CONNECTED);
 }
 
 void RemoteEntityContainer::disconnected(const IProtocolSessionPtr& session)
 {
+    triggerConnectionEvent(session, ConnectionEvent::CONNECTIONEVENT_DISCONNECTED);
+
     std::vector<hybrid_ptr<IRemoteEntity>> entities;
     std::unique_lock<std::mutex> lock(m_mutex);
     entities.reserve(m_entityId2entity.size());
@@ -230,14 +252,14 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     }
 }
 
-void RemoteEntityContainer::socketConnected(const IProtocolSessionPtr& /*session*/)
+void RemoteEntityContainer::socketConnected(const IProtocolSessionPtr& session)
 {
-
+    triggerConnectionEvent(session, ConnectionEvent::CONNECTIONEVENT_SOCKET_CONNECTED);
 }
 
-void RemoteEntityContainer::socketDisconnected(const IProtocolSessionPtr& /*session*/)
+void RemoteEntityContainer::socketDisconnected(const IProtocolSessionPtr& session)
 {
-
+    triggerConnectionEvent(session, ConnectionEvent::CONNECTIONEVENT_SOCKET_DISCONNECTED);
 }
 
 
