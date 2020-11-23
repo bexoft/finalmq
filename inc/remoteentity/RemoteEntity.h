@@ -58,7 +58,7 @@ typedef std::unique_ptr<ReplyContext> ReplyContextUPtr;
 
 
 typedef std::function<void(PeerId peerId, remoteentity::Status status, const StructBasePtr& structBase)> FuncReply;
-typedef std::function<void(ReplyContextUPtr& replyContext, const StructBasePtr& structBase)> FuncRequest;
+typedef std::function<void(ReplyContextUPtr& replyContext, const StructBasePtr& structBase)> FuncCommand;
 
 
 struct IRemoteEntity
@@ -88,28 +88,30 @@ struct IRemoteEntity
     }
 
     template<class R>
-    void registerRequest(std::function<void(ReplyContextUPtr& replyContext, const std::shared_ptr<R>& request)> funcRequest)
+    void registerCommand(std::function<void(ReplyContextUPtr& replyContext, const std::shared_ptr<R>& request)> funcCommand)
     {
-        registerRequestFunction(R::structInfo().getTypeName(), reinterpret_cast<FuncRequest&>(funcRequest));
+        registerCommandFunction(R::structInfo().getTypeName(), reinterpret_cast<FuncCommand&>(funcCommand));
     }
 
     virtual bool sendEvent(const PeerId& peerId, const StructBase& structBase) = 0;
-    virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) = 0;
-    virtual void sendReply(const ReplyContext& replyContext, const StructBase& structBase) = 0;
-    virtual void sendReply(const ReplyContext& replyContext, remoteentity::Status status) = 0;
     virtual PeerId connect(const IProtocolSessionPtr& session, const std::string& entityName) = 0;
     virtual PeerId connect(const IProtocolSessionPtr& session, EntityId) = 0;
     virtual void disconnect(PeerId peerId) = 0;
     virtual std::vector<PeerId> getAllPeers() const = 0;
-    virtual PeerId replyContextToPeerId(const ReplyContext& replyContext) const = 0;
-    virtual void registerRequestFunction(const std::string& functionName, FuncRequest funcRequest) = 0;
+    virtual void registerCommandFunction(const std::string& functionName, FuncCommand funcCommand) = 0;
 
+
+    // methods for ReplyContext
+    virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) = 0;
+    virtual void sendReply(const ReplyContext& replyContext, const StructBase& structBase) = 0;
+    virtual void sendReply(const ReplyContext& replyContext, remoteentity::Status status) = 0;
+    virtual PeerId replyContextToPeerId(const ReplyContext& replyContext) const = 0;
+
+    // methods for RemoteEntityContainer
     virtual void initEntity(EntityId entityId, const std::string& entityName) = 0;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) = 0;
     virtual void receivedRequest(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBasePtr& structBase) = 0;
     virtual void receivedReply(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBasePtr& structBase) = 0;
-
-
 };
 typedef std::shared_ptr<IRemoteEntity> IRemoteEntityPtr;
 
@@ -219,7 +221,7 @@ private:
     virtual void disconnect(PeerId peerId) override;
     virtual std::vector<PeerId> getAllPeers() const override;
     virtual PeerId replyContextToPeerId(const ReplyContext& replyContext) const override;
-    virtual void registerRequestFunction(const std::string& functionName, FuncRequest funcRequest) override;
+    virtual void registerCommandFunction(const std::string& functionName, FuncCommand funcCommand) override;
 
     virtual void initEntity(EntityId entityId, const std::string& entityName) override;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) override;
@@ -254,7 +256,7 @@ private:
     PeerId                              m_nextPeerId{1};
     std::unordered_map<CorrelationId, std::unique_ptr<Request>> m_requests;
     std::unordered_map<std::uint64_t, std::pair<std::unordered_map<EntityId, PeerId>, std::unordered_map<std::string, PeerId>>> m_sessionEntityToPeerId;
-    std::unordered_map<std::string, std::shared_ptr<FuncRequest>> m_funcRequests;
+    std::unordered_map<std::string, std::shared_ptr<FuncCommand>> m_funcCommands;
     mutable std::atomic_uint64_t        m_nextCorrelationId{1};
     mutable std::mutex                  m_mutex;
 };

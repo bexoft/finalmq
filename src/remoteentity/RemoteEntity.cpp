@@ -37,13 +37,13 @@ namespace finalmq {
 
 RemoteEntity::RemoteEntity()
 {
-    registerRequest<EntityConnect>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<EntityConnect>& request) {
+    registerCommand<EntityConnect>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<EntityConnect>& request) {
         assert(request);
         bool added{};
         addPeer(replyContext->session(), request->entityid, request->entityName, added);
         replyContext->reply(EntityConnectReply(m_entityId, m_entityName));
     });
-    registerRequest<EntityDisconnect>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<EntityDisconnect>& request) {
+    registerCommand<EntityDisconnect>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<EntityDisconnect>& request) {
         assert(request);
         PeerId peerId = replyContext->peerId();
         removePeer(peerId, Status::STATUS_PEER_DISCONNECTED);
@@ -270,11 +270,11 @@ PeerId RemoteEntity::replyContextToPeerId(const ReplyContext& replyContext) cons
     return peerId;
 }
 
-void RemoteEntity::registerRequestFunction(const std::string& functionName, FuncRequest funcRequest)
+void RemoteEntity::registerCommandFunction(const std::string& functionName, FuncCommand funcCommand)
 {
-    std::shared_ptr<FuncRequest> func = std::make_shared<FuncRequest>(std::move(funcRequest));
+    std::shared_ptr<FuncCommand> func = std::make_shared<FuncCommand>(std::move(funcCommand));
     std::unique_lock<std::mutex> lock(m_mutex);
-    m_funcRequests[functionName] = func;
+    m_funcCommands[functionName] = func;
 }
 
 
@@ -372,10 +372,10 @@ void RemoteEntity::receivedRequest(const IProtocolSessionPtr& session, const rem
     assert(replyContext);
 
     std::unique_lock<std::mutex> lock(m_mutex);
-    auto it = m_funcRequests.find(header.type);
-    if (it != m_funcRequests.end())
+    auto it = m_funcCommands.find(header.type);
+    if (it != m_funcCommands.end())
     {
-        std::shared_ptr<FuncRequest> func = it->second;
+        std::shared_ptr<FuncCommand> func = it->second;
         lock.unlock();
         assert(func);
         if (*func)
