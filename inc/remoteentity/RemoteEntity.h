@@ -57,8 +57,16 @@ class ReplyContext;
 typedef std::unique_ptr<ReplyContext> ReplyContextUPtr;
 
 
+enum class PeerEvent
+{
+    PEER_CONNECTED,
+    PEER_DISCONNECTED
+};
+
+
 typedef std::function<void(PeerId peerId, remoteentity::Status status, const StructBasePtr& structBase)> FuncReply;
 typedef std::function<void(ReplyContextUPtr& replyContext, const StructBasePtr& structBase)> FuncCommand;
+typedef std::function<void(PeerId peerId, PeerEvent peerEvent, bool incoming)> FuncPeerEvent;
 
 
 struct IRemoteEntity
@@ -99,6 +107,7 @@ struct IRemoteEntity
     virtual void disconnect(PeerId peerId) = 0;
     virtual std::vector<PeerId> getAllPeers() const = 0;
     virtual void registerCommandFunction(const std::string& functionName, FuncCommand funcCommand) = 0;
+    virtual void registerPeerEvent(FuncPeerEvent funcPeerEvent) = 0;
 
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) = 0;
 
@@ -217,6 +226,7 @@ private:
     virtual void disconnect(PeerId peerId) override;
     virtual std::vector<PeerId> getAllPeers() const override;
     virtual void registerCommandFunction(const std::string& functionName, FuncCommand funcCommand) override;
+    virtual void registerPeerEvent(FuncPeerEvent funcPeerEvent) override;
 
     virtual void initEntity(EntityId entityId, const std::string& entityName) override;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) override;
@@ -228,10 +238,11 @@ private:
         IProtocolSessionPtr session;
         EntityId            entityId = ENTITYID_INVALID;
         std::string         entityName;
+        bool                incoming = false;
     };
 
     PeerId getPeerId(const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName) const;
-    PeerId addPeer(const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName, bool& added);
+    PeerId addPeer(const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName, bool incoming, bool& added);
     PeerId connectIntern(const IProtocolSessionPtr& session, const std::string& entityName, EntityId);
     void removePeer(PeerId peerId, remoteentity::Status status);
     CorrelationId getNextCorrelationId() const;
@@ -246,6 +257,8 @@ private:
 
     EntityId                            m_entityId = 0;
     std::string                         m_entityName;
+
+    std::shared_ptr<FuncPeerEvent>      m_funcPeerEvent;
 
     std::unordered_map<PeerId, Peer>    m_peers;
     PeerId                              m_nextPeerId{1};

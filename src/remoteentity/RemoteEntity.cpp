@@ -108,7 +108,7 @@ RemoteEntity::RemoteEntity()
     registerCommand<EntityConnect>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<EntityConnect>& request) {
         assert(request);
         bool added{};
-        addPeer(replyContext->session(), request->entityid, request->entityName, added);
+        addPeer(replyContext->session(), request->entityid, request->entityName, true, added);
         replyContext->reply(EntityConnectReply(m_entityId, m_entityName));
     });
     registerCommand<EntityDisconnect>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<EntityDisconnect>& request) {
@@ -196,7 +196,7 @@ void RemoteEntity::triggerReply(CorrelationId correlationId, Status status, cons
 PeerId RemoteEntity::connectIntern(const IProtocolSessionPtr& session, const std::string& entityName, EntityId entityId)
 {
     bool added{};
-    PeerId peerId = addPeer(session, entityId, entityName, added);
+    PeerId peerId = addPeer(session, entityId, entityName, false, added);
 
     if (added)
     {
@@ -246,7 +246,7 @@ void RemoteEntity::removePeer(PeerId peerId, remoteentity::Status status)
         auto it = m_peers.find(peerId);
         if (it != m_peers.end())
         {
-            const Peer& peer = it->second;
+            const Peer peer = it->second;
 
             // remove from m_sessionEntityToPeerId
             assert(peer.session);
@@ -254,7 +254,7 @@ void RemoteEntity::removePeer(PeerId peerId, remoteentity::Status status)
             m_sessionIdEntityIdToPeerId->removePeer(peer.session->getSessionId(), peer.entityId, peer.entityName);
             m_peers.erase(it);
 
-            // release pending calls
+            // get pending calls
             std::vector<std::unique_ptr<Request>> requests;
             requests.reserve(m_requests.size());
             for (auto it = m_requests.begin(); it != m_requests.end(); )
@@ -269,7 +269,10 @@ void RemoteEntity::removePeer(PeerId peerId, remoteentity::Status status)
                     ++it;
                 }
             }
+            std::shared_ptr<FuncPeerEvent> funcPeerEvent = m_funcPeerEvent;
             lock.unlock();
+
+            // release pending calls
             for (size_t i = 0; i < requests.size(); ++i)
             {
                 std::unique_ptr<Request>& request = requests[i];
@@ -278,6 +281,12 @@ void RemoteEntity::removePeer(PeerId peerId, remoteentity::Status status)
                 {
                     request->func(request->peerId, status, nullptr);
                 }
+            }
+
+            // fire peer event DISCONNECTED
+            if (funcPeerEvent && *funcPeerEvent)
+            {
+                (*funcPeerEvent)(peerId, PeerEvent::PEER_DISCONNECTED, peer.incoming);
             }
         }
     }
@@ -303,6 +312,14 @@ void RemoteEntity::registerCommandFunction(const std::string& functionName, Func
     std::shared_ptr<FuncCommand> func = std::make_shared<FuncCommand>(std::move(funcCommand));
     std::unique_lock<std::mutex> lock(m_mutex);
     m_funcCommands[functionName] = func;
+}
+
+
+void RemoteEntity::registerPeerEvent(FuncPeerEvent funcPeerEvent)
+{
+    std::shared_ptr<FuncPeerEvent> func = std::make_shared<FuncPeerEvent>(std::move(funcPeerEvent));
+    std::unique_lock<std::mutex> lock(m_mutex);
+    m_funcPeerEvent = func;
 }
 
 
@@ -346,7 +363,7 @@ PeerId RemoteEntity::getPeerId(const IProtocolSessionPtr& session, EntityId enti
 
 
 
-PeerId RemoteEntity::addPeer(const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName, bool& added)
+PeerId RemoteEntity::addPeer(const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName, bool incoming, bool& added)
 {
     added = false;
 
@@ -362,9 +379,19 @@ PeerId RemoteEntity::addPeer(const IProtocolSessionPtr& session, EntityId entity
         peer.session = session;
         peer.entityId = entityId;
         peer.entityName = entityName;
+        peer.incoming = incoming;
         added = true;
         assert(m_sessionIdEntityIdToPeerId);
         m_sessionIdEntityIdToPeerId->updatePeer(session->getSessionId(), entityId, entityName, peerId);
+        std::shared_ptr<FuncPeerEvent> funcPeerEvent = m_funcPeerEvent;
+
+        lock.unlock();
+
+        // fire peer event CONNECTED
+        if (funcPeerEvent && *funcPeerEvent)
+        {
+            (*funcPeerEvent)(peerId, PeerEvent::PEER_CONNECTED, incoming);
+        }
     }
 
     return peerId;
