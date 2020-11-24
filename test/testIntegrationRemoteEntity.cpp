@@ -28,6 +28,7 @@
 
 #include "remoteentity/RemoteEntityContainer.h"
 #include "protocols/ProtocolHeaderBinarySize.h"
+#include "protocols/ProtocolDelimiter.h"
 #include "test.fmq.h"
 
 #include "testHelper.h"
@@ -133,6 +134,8 @@ TEST_F(TestIntegrationRemoteEntity, test)
 
     ientityContainer1.bind("tcp://*:7777", std::make_shared<ProtocolHeaderBinarySizeFactory>(), CONTENTTYPE_PROTO);
     IProtocolSessionPtr sessionClient = ientityContainer2.connect("tcp://localhost:7777", std::make_shared<ProtocolHeaderBinarySize>(), CONTENTTYPE_PROTO);
+//    ientityContainer1.bind("tcp://*:7777", std::make_shared<ProtocolDelimiterFactory>("\n"), CONTENTTYPE_JSON);
+//    IProtocolSessionPtr sessionClient = ientityContainer2.connect("tcp://localhost:7777", std::make_shared<ProtocolDelimiter>("\n"), CONTENTTYPE_JSON);
 
     EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent::PEER_CONNECTED, true)).Times(1);
     EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent::PEER_CONNECTED, false)).Times(1);

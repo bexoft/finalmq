@@ -250,11 +250,12 @@ std::shared_ptr<StructBase> RemoteEntityFormat::parseMessageJson(const BufferRef
         assert(endHeader);
         int sizeHeader = endHeader - buffer;
         assert(sizeHeader >= 0);
+        buffer += sizeHeader;
         int sizeData = sizeBuffer - sizeHeader;
         assert(sizeData >= 0);
         SerializerStruct serializerData(*data);
         ParserJson parserData(serializerData, buffer, sizeData);
-        const char* endData = parserData.parseStruct(header.getStructInfo().getTypeName());
+        const char* endData = parserData.parseStruct(header.type);
         if (!endData)
         {
             data = nullptr;
