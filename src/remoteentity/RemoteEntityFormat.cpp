@@ -69,9 +69,6 @@ void RemoteEntityFormat::serializeProto(IMessage& message, const Header& header,
     SerializerProto serializerData(message);
     ParserStruct parserData(serializerData, structBase);
     parserData.parseStruct();
-
-    // add end of header
-    message.addSendPayload("\t", 1);
 }
 
 
@@ -80,6 +77,9 @@ void RemoteEntityFormat::serializeJson(IMessage& message, const Header& header)
     SerializerJson serializerHeader(message);
     ParserStruct parserHeader(serializerHeader, header);
     parserHeader.parseStruct();
+
+    // add end of header
+    message.addSendPayload("\t", 1);
 }
 
 
@@ -178,27 +178,33 @@ std::shared_ptr<StructBase> RemoteEntityFormat::parseMessageProto(const BufferRe
 {
     const char* buffer = bufferRef.first;
     int sizeBuffer = bufferRef.second;
+    if (sizeBuffer < 4)
+    {
+        streamError << "buffer size too small: " << sizeBuffer;
+        return nullptr;
+    }
+
+    int sizePayload = sizeBuffer - 4;
     int sizeHeader = 0;
     if (sizeBuffer >= 4)
     {
         sizeHeader = (unsigned char)*buffer;
         ++buffer;
-        sizeHeader = ((unsigned char)*buffer) << 8;
+        sizeHeader |= ((unsigned char)*buffer) << 8;
         ++buffer;
-        sizeHeader = ((unsigned char)*buffer) << 16;
+        sizeHeader |= ((unsigned char)*buffer) << 16;
         ++buffer;
-        sizeHeader = ((unsigned char)*buffer) << 24;
+        sizeHeader |= ((unsigned char)*buffer) << 24;
         ++buffer;
     }
-
     bool ok = false;
     std::shared_ptr<StructBase> data;
 
-    if (sizeHeader <= sizeBuffer)
+    if (sizeHeader <= sizePayload)
     {
         SerializerStruct serializerHeader(header);
         ParserProto parserHeader(serializerHeader, buffer, sizeHeader);
-        ok = parserHeader.parseStruct(header.getStructInfo().getTypeName());
+        ok = parserHeader.parseStruct(Header::structInfo().getTypeName());
     }
 
     if (ok && !header.type.empty())
@@ -209,11 +215,11 @@ std::shared_ptr<StructBase> RemoteEntityFormat::parseMessageProto(const BufferRe
 
     if (data)
     {
-        int sizeData = sizeBuffer - sizeHeader;
+        int sizeData = sizePayload - sizeHeader;
         assert(sizeData >= 0);
         SerializerStruct serializerData(*data);
         ParserProto parserData(serializerData, buffer, sizeData);
-        ok = parserData.parseStruct(header.getStructInfo().getTypeName());
+        ok = parserData.parseStruct(header.type);
         if (!ok)
         {
             data = nullptr;

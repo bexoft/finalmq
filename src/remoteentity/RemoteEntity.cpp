@@ -200,7 +200,7 @@ PeerId RemoteEntity::connectIntern(const IProtocolSessionPtr& session, const std
 
     if (added)
     {
-        requestReply<EntityConnectReply>(peerId, EntityConnect{}, [this] (PeerId peerId, remoteentity::Status /*status*/, const std::shared_ptr<EntityConnectReply>& reply) {
+        requestReply<EntityConnectReply>(peerId, EntityConnect{m_entityId, m_entityName}, [this] (PeerId peerId, remoteentity::Status /*status*/, const std::shared_ptr<EntityConnectReply>& reply) {
             if (reply)
             {
                 std::unique_lock<std::mutex> lock(m_mutex);

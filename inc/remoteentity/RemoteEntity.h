@@ -217,16 +217,18 @@ class RemoteEntity : public IRemoteEntity
 public:
     RemoteEntity();
 
-private:
+protected:
     // IRemoteEntity
     virtual bool sendEvent(const PeerId& peerId, const StructBase& structBase) override;
-    virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) override;
     virtual PeerId connect(const IProtocolSessionPtr& session, const std::string& entityName) override;
     virtual PeerId connect(const IProtocolSessionPtr& session, EntityId) override;
     virtual void disconnect(PeerId peerId) override;
     virtual std::vector<PeerId> getAllPeers() const override;
     virtual void registerCommandFunction(const std::string& functionName, FuncCommand funcCommand) override;
     virtual void registerPeerEvent(FuncPeerEvent funcPeerEvent) override;
+
+private:
+    virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) override;
 
     virtual void initEntity(EntityId entityId, const std::string& entityName) override;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) override;

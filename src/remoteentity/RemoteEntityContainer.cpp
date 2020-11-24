@@ -64,9 +64,9 @@ void RemoteEntityContainer::unbind(const std::string& endpoint)
     m_streamConnectionContainer->unbind(endpoint);
 }
 
-void RemoteEntityContainer::connect(const std::string& endpoint, const IProtocolPtr& protocol, RemoteEntityContentType contentType, int reconnectInterval, int totalReconnectDuration)
+IProtocolSessionPtr RemoteEntityContainer::connect(const std::string& endpoint, const IProtocolPtr& protocol, RemoteEntityContentType contentType, int reconnectInterval, int totalReconnectDuration)
 {
-    m_streamConnectionContainer->connect(endpoint, this, protocol, reconnectInterval, totalReconnectDuration, contentType);
+    return m_streamConnectionContainer->connect(endpoint, this, protocol, reconnectInterval, totalReconnectDuration, contentType);
 }
 
 void RemoteEntityContainer::threadEntry()
@@ -86,9 +86,9 @@ int RemoteEntityContainer::bindSsl(const std::string& endpoint, const IProtocolF
     return m_streamConnectionContainer->bindSsl(endpoint, this, protocolFactory, certificateData, contentType);
 }
 
-void RemoteEntityContainer::connectSsl(const std::string& endpoint, const IProtocolPtr& protocol, RemoteEntityContentType contentType, const CertificateData& certificateData, int reconnectInterval, int totalReconnectDuration)
+IProtocolSessionPtr RemoteEntityContainer::connectSsl(const std::string& endpoint, const IProtocolPtr& protocol, RemoteEntityContentType contentType, const CertificateData& certificateData, int reconnectInterval, int totalReconnectDuration)
 {
-    m_streamConnectionContainer->connectSsl(endpoint, this, protocol, certificateData, reconnectInterval, totalReconnectDuration, contentType);
+    return m_streamConnectionContainer->connectSsl(endpoint, this, protocol, certificateData, reconnectInterval, totalReconnectDuration, contentType);
 }
 
 #endif

@@ -81,6 +81,12 @@
         ]},
         {"type":"TestArrayEnum","desc":"desc","fields":[
             {"tid":"TYPE_ARRAY_ENUM","type":"Foo","name":"value","desc":"desc","flags":[]}
+        ]},
+        {"type":"TestRequest","desc":"desc","fields":[
+            {"tid":"TYPE_STRING","type":"","name":"datarequest","desc":"desc","flags":[]}
+        ]},
+        {"type":"TestReply","desc":"desc","fields":[
+            {"tid":"TYPE_STRING","type":"","name":"datareply","desc":"desc","flags":[]}
         ]}
     ]
 }
