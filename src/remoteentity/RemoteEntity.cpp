@@ -138,7 +138,7 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
     {
         const auto& peer = it->second;
         IProtocolSessionPtr session = peer.session;
-        Header header = {peer.entityId, (peer.entityId == ENTITYID_INVALID) ? peer.entityName : std::string(), m_entityId, MsgMode::MSG_REQUEST, Status::STATUS_OK, structBase.getStructInfo().getTypeName(), correlationId};
+        Header header{peer.entityId, (peer.entityId == ENTITYID_INVALID) ? peer.entityName : std::string(), m_entityId, MsgMode::MSG_REQUEST, Status::STATUS_OK, structBase.getStructInfo().getTypeName(), correlationId};
         lock.unlock();
 
         ok = RemoteEntityFormat::send(session, header, structBase);
@@ -165,7 +165,7 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
 {
     CorrelationId correlationId = getNextCorrelationId();
     std::unique_lock<std::mutex> lock(m_mutex);
-    m_requests[correlationId] = std::make_unique<Request>(Request{peerId, std::move(funcReply)});
+    m_requests.emplace(correlationId, std::make_unique<Request>(peerId, std::move(funcReply)));
     lock.unlock();
     bool ok = sendRequest(peerId, structBase, correlationId);
     return ok;
@@ -311,7 +311,7 @@ void RemoteEntity::registerCommandFunction(const std::string& functionName, Func
 {
     std::shared_ptr<FuncCommand> func = std::make_shared<FuncCommand>(std::move(funcCommand));
     std::unique_lock<std::mutex> lock(m_mutex);
-    m_funcCommands[functionName] = func;
+    m_funcCommands.emplace(functionName, func);
 }
 
 
@@ -319,7 +319,7 @@ void RemoteEntity::registerPeerEvent(FuncPeerEvent funcPeerEvent)
 {
     std::shared_ptr<FuncPeerEvent> func = std::make_shared<FuncPeerEvent>(std::move(funcPeerEvent));
     std::unique_lock<std::mutex> lock(m_mutex);
-    m_funcPeerEvent = func;
+    m_funcPeerEvent = std::move(func);
 }
 
 

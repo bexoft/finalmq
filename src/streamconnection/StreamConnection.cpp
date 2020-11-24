@@ -159,7 +159,7 @@ bool StreamConnection::sendPendingMessages()
                     bool last = ((it == payloads.end()) && (m_pendingMessages.size() == 1));
                     int flags = last ? 0 : MSG_MORE;    // win32: MSG_PARTIAL
                     int size = payload.second - messageSendState.offset;
-                    assert(size > 0);
+                    assert(size > 0);   // TODO:!!!
                     int err = m_socketPrivate->send(payload.first + messageSendState.offset, size, flags);
                     if (err == size)
                     {

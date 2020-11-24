@@ -54,7 +54,16 @@ private:
 class StructFactoryRegistry
 {
 public:
-    static IStructFactoryRegistry& instance();
+    inline static IStructFactoryRegistry& instance()
+    {
+        if (!m_instance)
+        {
+            m_instance = std::make_unique<StructFactoryRegistryImpl>();
+        }
+        assert(m_instance);
+        return *m_instance.get();
+    }
+
     static void setInstance(std::unique_ptr<IStructFactoryRegistry>&& instance);
 
 private:

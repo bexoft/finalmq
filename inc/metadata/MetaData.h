@@ -86,7 +86,15 @@ private:
 class MetaDataGlobal
 {
 public:
-    static IMetaData& instance();
+    inline static IMetaData& instance()
+    {
+        if (!m_instance)
+        {
+            m_instance = std::make_unique<MetaData>();
+        }
+        return *m_instance.get();
+    }
+
     static void setInstance(std::unique_ptr<IMetaData>&& instance);
 
 private:

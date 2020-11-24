@@ -55,16 +55,6 @@ std::shared_ptr<StructBase> StructFactoryRegistryImpl::createStruct(const std::s
 
 std::unique_ptr<IStructFactoryRegistry> StructFactoryRegistry::m_instance;
 
-IStructFactoryRegistry& StructFactoryRegistry::instance()
-{
-    if (!m_instance)
-    {
-        m_instance = std::make_unique<StructFactoryRegistryImpl>();
-    }
-    assert(m_instance);
-    return *m_instance.get();
-}
-
 void StructFactoryRegistry::setInstance(std::unique_ptr<IStructFactoryRegistry>&& instance)
 {
     m_instance = std::move(instance);

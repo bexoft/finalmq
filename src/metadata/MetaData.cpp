@@ -227,16 +227,6 @@ const std::unordered_map<std::string, MetaEnum> MetaData::getAllEnums() const
 
 std::unique_ptr<IMetaData> MetaDataGlobal::m_instance;
 
-IMetaData& MetaDataGlobal::instance()
-{
-    if (!m_instance)
-    {
-        m_instance = std::make_unique<MetaData>();
-    }
-    assert(m_instance);
-    return *m_instance.get();
-}
-
 void MetaDataGlobal::setInstance(std::unique_ptr<IMetaData>&& instance)
 {
     m_instance = std::move(instance);

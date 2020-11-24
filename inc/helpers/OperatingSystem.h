@@ -91,7 +91,14 @@ private:
 class OperatingSystem
 {
 public:
-    static IOperatingSystem& instance();
+    inline static IOperatingSystem& instance()
+    {
+        if (!m_instance)
+        {
+            m_instance = std::make_unique<OperatingSystemImpl>();
+        }
+        return *m_instance;
+    }
     static void setInstance(std::unique_ptr<IOperatingSystem>& instance);
 
 private:

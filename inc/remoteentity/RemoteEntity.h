@@ -253,6 +253,11 @@ private:
 
     struct Request
     {
+        inline Request(PeerId peerId_, FuncReply&& func_)
+            : peerId(peerId_)
+            , func(std::move(func_))
+        {
+        }
         PeerId      peerId = PEERID_INVALID;
         FuncReply   func;
     };

@@ -141,15 +141,6 @@ std::mutex& OpenSslImpl::getMutex()
 
 std::unique_ptr<IOpenSsl> OpenSsl::m_instance;
 
-IOpenSsl& OpenSsl::instance()
-{
-    if (!m_instance)
-    {
-        m_instance = std::make_unique<OpenSslImpl>();
-    }
-    return *m_instance;
-}
-
 void OpenSsl::setInstance(std::unique_ptr<IOpenSsl>&& instance)
 {
     m_instance = std::move(instance);

@@ -144,7 +144,7 @@ int StreamConnectionContainer::bindIntern(const std::string& endpoint, hybrid_pt
         if (it == m_sd2binds.end())
         {
             assert(m_poller);
-            m_sd2binds[sd->getDescriptor()] = {connectionData, socket, callbackDefault};
+            m_sd2binds.emplace(sd->getDescriptor(), BindData{connectionData, socket, callbackDefault});
             m_poller->addSocket(sd);
         }
         locker.unlock();
@@ -467,8 +467,8 @@ void StreamConnectionContainer::handleBindEvents(const DescriptorInfo& info)
                 {
                     SocketDescriptorPtr sd = socketAccept->getSocketDescriptor();
                     assert(sd);
-                    SslAcceptingData sslAcceptingData = {socketAccept, connectionData, bindData.callback};
-                    m_sslAcceptings[sd->getDescriptor()] = sslAcceptingData;
+                    SslAcceptingData sslAcceptingData{socketAccept, connectionData, bindData.callback};
+                    m_sslAcceptings.emplace(sd->getDescriptor(), sslAcceptingData);
                     sslAccepting(sslAcceptingData);
                 }
                 else

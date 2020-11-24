@@ -91,7 +91,15 @@ private:
 class OpenSsl
 {
 public:
-    static IOpenSsl& instance();
+    inline static IOpenSsl& instance()
+    {
+        if (!m_instance)
+        {
+            m_instance = std::make_unique<OpenSslImpl>();
+        }
+        return *m_instance;
+    }
+
     static void setInstance(std::unique_ptr<IOpenSsl>&& instance);
 
 private:
