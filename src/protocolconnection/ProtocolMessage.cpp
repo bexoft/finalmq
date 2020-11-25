@@ -76,7 +76,6 @@ void ProtocolMessage::downsizeLastBuffer(int newSize)
     assert(m_sendBufferRefs.size() == m_payloadBuffers.size() + m_headerBuffers.size());
 
     int sizeHeader = 0;
-    int sizeTrailer = 0;
     if (m_payloadBuffers.size() == 1)
     {
         sizeHeader = m_sizeHeader;
@@ -185,6 +184,7 @@ void ProtocolMessage::downsizeLastSendHeader(int newSize)
     assert(m_sendBufferRefs.size() == m_payloadBuffers.size() + m_headerBuffers.size());
     auto itSendBufferRefs = m_itSendBufferRefsPayloadBegin;
     --itSendBufferRefs;
+    assert(itSendBufferRefs != m_sendBufferRefs.end());
     int& sizeCurrent = itSendBufferRefs->second;
     m_sizeSendBufferTotal += (newSize - sizeCurrent);
     sizeCurrent = newSize;
