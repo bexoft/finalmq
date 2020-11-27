@@ -150,7 +150,7 @@ void ParserProcessDefaultValues::processDefaultValues(const MetaStruct& stru, co
                     {
                         m_visitor->enterStruct(*field);
                         const MetaStruct* substru = MetaDataGlobal::instance().getStruct(*field);
-                        if (!substru)
+                        if (substru)
                         {
                             std::vector<bool> subfieldsDone(substru->getFieldsSize(), false);
                             processDefaultValues(*substru, subfieldsDone);

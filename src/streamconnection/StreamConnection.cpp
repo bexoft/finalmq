@@ -70,6 +70,10 @@ bool StreamConnection::sendMessage(const IMessagePtr& msg)
                     int err = m_socketPrivate->send(payload.first, payload.second, flags);
                     if (err != payload.second)
                     {
+                        if (err < 0)
+                        {
+                            err = 0;
+                        }
                         assert(err < payload.second);
                         --it;
                         m_pendingMessages.push_back({msg, it, err});

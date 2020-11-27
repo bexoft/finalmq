@@ -44,7 +44,7 @@ ProtocolHeaderBinarySize::ProtocolHeaderBinarySize()
             int sizePayload = 0;
             for (int i = 0; i < 4; ++i)
             {
-                sizePayload += (int)header[i] << (8 * i);
+                sizePayload |= ((unsigned int)header[i] & 0xff) << (8 * i);
             }
             return sizePayload;
       })
@@ -76,13 +76,14 @@ IMessagePtr ProtocolHeaderBinarySize::createMessage() const
 
 void ProtocolHeaderBinarySize::receive(const SocketPtr& socket, int bytesToRead)
 {
-    std::vector<IMessagePtr> messages = m_headerHelper.receive(socket, bytesToRead);
+    std::deque<IMessagePtr> messages;
+    m_headerHelper.receive(socket, bytesToRead, messages);
     auto callback = m_callback.lock();
     if (callback)
     {
-        for (size_t i = 0; i < messages.size(); ++i)
+        for (auto it = messages.begin(); it != messages.end(); ++it)
         {
-            callback->received(messages[i]);
+            callback->received(*it);
         }
     }
 }

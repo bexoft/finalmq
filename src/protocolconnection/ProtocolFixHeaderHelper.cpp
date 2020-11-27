@@ -36,10 +36,8 @@ ProtocolFixHeaderHelper::ProtocolFixHeaderHelper(int sizeHeader, std::function<i
 
 
 
-std::vector<IMessagePtr> ProtocolFixHeaderHelper::receive(const SocketPtr& socket, int bytesToRead)
+void ProtocolFixHeaderHelper::receive(const SocketPtr& socket, int bytesToRead, std::deque<IMessagePtr>& messages)
 {
-    std::vector<IMessagePtr> messages;
-
     bool ok = true;
     while (bytesToRead > 0 && ok)
     {
@@ -68,8 +66,6 @@ std::vector<IMessagePtr> ProtocolFixHeaderHelper::receive(const SocketPtr& socke
             break;
         }
     }
-
-    return messages;
 }
 
 
@@ -110,6 +106,7 @@ bool ProtocolFixHeaderHelper::receiveHeader(const SocketPtr& socket, int& bytesT
 void ProtocolFixHeaderHelper::setPayloadSize(int sizePayload)
 {
     assert(m_state == State::HEADERRECEIVED);
+    assert(sizePayload >= 0);
     m_sizePayload = sizePayload;
     m_message = std::make_shared<ProtocolMessage>(0, m_header.size());
     m_payload = m_message->resizeReceivePayload(m_header.size() + sizePayload);

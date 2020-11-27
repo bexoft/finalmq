@@ -15,8 +15,8 @@ void string2Number(const std::string& str, bool& number)
     static const std::string STR_TRUE = "true";
     if (str != STR_TRUE)
     {
-        double number = strtof64(str.c_str(), nullptr);
-        if (number == 0)
+        double value = strtof64(str.c_str(), nullptr);
+        if (value == 0)
         {
             number = false;
         }

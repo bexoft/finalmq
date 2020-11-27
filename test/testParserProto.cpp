@@ -845,7 +845,7 @@ TEST_F(TestParserProto, testArrayStruct)
     auto* message2 = value->Add();
     message2->mutable_struct_int32()->set_value(VALUE2_INT32);
     message2->mutable_struct_string()->set_value(VALUE2_STRING);
-    auto* message3 = value->Add();
+    value->Add();
     message.set_last_value(LAST_VALUE);
     message.SerializeToString(&data);
 
