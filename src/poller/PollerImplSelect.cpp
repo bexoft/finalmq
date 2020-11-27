@@ -49,7 +49,7 @@ void PollerImplSelect::init()
     {
         assert(m_controlSocketWrite);
         assert(m_controlSocketRead);
-        addSocket(m_controlSocketRead);
+        addSocketEnableRead(m_controlSocketRead);
     }
 }
 
@@ -57,11 +57,29 @@ void PollerImplSelect::init()
 void PollerImplSelect::addSocket(const SocketDescriptorPtr& fd)
 {
     std::unique_lock<std::mutex> locker(m_mutex);
-    if (!FD_ISSET(fd->getDescriptor(), &m_readfdsCached))
+    auto result = m_socketDescriptors.insert(std::make_pair(fd, 0));
+    if (result.second)
     {
-        FD_SET(fd->getDescriptor(), &m_readfdsCached);
-        m_socketDescriptors.insert(fd);
-        sockedDescriptorHasChanged();
+    }
+    else
+    {
+        // socket already added
+    }
+    locker.unlock();
+}
+
+
+void PollerImplSelect::addSocketEnableRead(const SocketDescriptorPtr& fd)
+{
+    std::unique_lock<std::mutex> locker(m_mutex);
+    auto result = m_socketDescriptors.insert(std::make_pair(fd, EPOLLIN));
+    if (result.second)
+    {
+        if (!FD_ISSET(fd->getDescriptor(), &m_readfdsCached))
+        {
+            FD_SET(fd->getDescriptor(), &m_readfdsCached);
+            sockedDescriptorHasChanged();
+        }
     }
     else
     {
@@ -74,11 +92,12 @@ void PollerImplSelect::addSocket(const SocketDescriptorPtr& fd)
 void PollerImplSelect::removeSocket(const SocketDescriptorPtr& fd)
 {
     std::unique_lock<std::mutex> locker(m_mutex);
-    if (FD_ISSET(fd->getDescriptor(), &m_readfdsCached))
+    auto it = m_socketDescriptors.find(fd);
+    if (it != m_socketDescriptors.end())
     {
         FD_CLR(fd->getDescriptor(), &m_readfdsCached);
         FD_CLR(fd->getDescriptor(), &m_writefdsCached);
-        m_socketDescriptors.erase(fd);
+        m_socketDescriptors.erase(it);
         sockedDescriptorHasChanged();
     }
     else
@@ -89,16 +108,61 @@ void PollerImplSelect::removeSocket(const SocketDescriptorPtr& fd)
 }
 
 
+void PollerImplSelect::enableRead(const SocketDescriptorPtr& fd)
+{
+    std::unique_lock<std::mutex> locker(m_mutex);
+    auto it = m_socketDescriptors.find(fd);
+    if (it != m_socketDescriptors.end())
+    {
+        it->second |= EPOLLIN;
+        if (!FD_ISSET(fd->getDescriptor(), &m_readfdsCached))
+        {
+            FD_SET(fd->getDescriptor(), &m_readfdsCached);
+            sockedDescriptorHasChanged();
+        }
+    }
+    else
+    {
+        // error: socket not added
+    }
+    locker.unlock();
+}
+
+
+void PollerImplSelect::disableRead(const SocketDescriptorPtr& fd)
+{
+    std::unique_lock<std::mutex> locker(m_mutex);
+    auto it = m_socketDescriptors.find(fd);
+    if (it != m_socketDescriptors.end())
+    {
+        it->second &= ~EPOLLIN;
+        if (FD_ISSET(fd->getDescriptor(), &m_readfdsCached))
+        {
+            FD_CLR(fd->getDescriptor(), &m_readfdsCached);
+            sockedDescriptorHasChanged();
+        }
+    }
+    else
+    {
+        // error: socket not added
+    }
+    locker.unlock();
+}
+
+
+
 
 void PollerImplSelect::enableWrite(const SocketDescriptorPtr& fd)
 {
     std::unique_lock<std::mutex> locker(m_mutex);
-    if (FD_ISSET(fd->getDescriptor(), &m_readfdsCached))
+    auto it = m_socketDescriptors.find(fd);
+    if (it != m_socketDescriptors.end())
     {
+        it->second |= EPOLLOUT;
         if (!FD_ISSET(fd->getDescriptor(), &m_writefdsCached))
         {
             FD_SET(fd->getDescriptor(), &m_writefdsCached);
-            writeSockedDescriptorHasChanged();
+            sockedDescriptorHasChanged();
         }
     }
     else
@@ -112,12 +176,14 @@ void PollerImplSelect::enableWrite(const SocketDescriptorPtr& fd)
 void PollerImplSelect::disableWrite(const SocketDescriptorPtr& fd)
 {
     std::unique_lock<std::mutex> locker(m_mutex);
-    if (FD_ISSET(fd->getDescriptor(), &m_readfdsCached))
+    auto it = m_socketDescriptors.find(fd);
+    if (it != m_socketDescriptors.end())
     {
+        it->second &= ~EPOLLOUT;
         if (FD_ISSET(fd->getDescriptor(), &m_writefdsCached))
         {
             FD_CLR(fd->getDescriptor(), &m_writefdsCached);
-            writeSockedDescriptorHasChanged();
+            sockedDescriptorHasChanged();
         }
     }
     else
@@ -136,21 +202,15 @@ void PollerImplSelect::copyFds(fd_set& dest, fd_set& source)
 
 void PollerImplSelect::sockedDescriptorHasChanged()
 {
-    writeSockedDescriptorHasChanged();
-
-    if (!m_insideCollect)
-    {
-        updateSocketDescriptors();
-    }
-}
-
-
-void PollerImplSelect::writeSockedDescriptorHasChanged()
-{
     m_socketDescriptorsChanged = true;
     if (m_insideWait)
     {
         releaseWaitInternal();
+    }
+
+    if (!m_insideCollect)
+    {
+        updateSocketDescriptors();
     }
 }
 
@@ -162,10 +222,15 @@ void PollerImplSelect::updateSocketDescriptors()
     {
         m_socketDescriptorsChanged = false;
         m_sdMax = 0;
-        m_socketDescriptorsConstForSelect = m_socketDescriptors;
+        m_socketDescriptorsConstForSelect.clear();
+        m_socketDescriptorsConstForSelect.reserve(m_socketDescriptors.size());
         for (auto it = m_socketDescriptors.begin(); it != m_socketDescriptors.end(); ++it)
         {
-            m_sdMax = std::max((*it)->getDescriptor(), m_sdMax);
+            if (it->second)
+            {
+                m_socketDescriptorsConstForSelect.push_back(it->first);
+                m_sdMax = std::max(it->first->getDescriptor(), m_sdMax);
+            }
         }
     }
 }

@@ -114,7 +114,10 @@ struct IPoller
     virtual ~IPoller() {}
     virtual void init() = 0;
     virtual void addSocket(const SocketDescriptorPtr& fd) = 0;
+    virtual void addSocketEnableRead(const SocketDescriptorPtr& fd) = 0;
     virtual void removeSocket(const SocketDescriptorPtr& fd) = 0;
+    virtual void enableRead(const SocketDescriptorPtr& fd) = 0;
+    virtual void disableRead(const SocketDescriptorPtr& fd) = 0;
     virtual void enableWrite(const SocketDescriptorPtr& fd) = 0;
     virtual void disableWrite(const SocketDescriptorPtr& fd) = 0;
     virtual const PollerResult& wait(std::int32_t timeout) = 0;

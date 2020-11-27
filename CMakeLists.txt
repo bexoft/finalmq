@@ -10,6 +10,7 @@ enable_testing()
 
 # Add compile flags to determine coverage
 SET(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage -O0")
+#SET(GCC_COVERAGE_COMPILE_FLAGS "-O3")
 SET(GCC_COVERAGE_LINK_FLAGS    "-lgcov")
 
 SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DUSE_OPENSSL -Wall -Wno-unused-function -Wno-unused-variable" )

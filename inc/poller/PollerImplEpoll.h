@@ -23,7 +23,7 @@
 #pragma once
 
 #include "Poller.h"
-#include <unordered_set>
+#include <unordered_map>
 #include <array>
 #include <mutex>
 
@@ -47,7 +47,10 @@ private:
 
     virtual void init() override;
     virtual void addSocket(const SocketDescriptorPtr& fd) override;
+    virtual void addSocketEnableRead(const SocketDescriptorPtr& fd) override;
     virtual void removeSocket(const SocketDescriptorPtr& fd) override;
+    virtual void enableRead(const SocketDescriptorPtr& fd) override;
+    virtual void disableRead(const SocketDescriptorPtr& fd) override;
     virtual void enableWrite(const SocketDescriptorPtr& fd) override;
     virtual void disableWrite(const SocketDescriptorPtr& fd) override;
     virtual const PollerResult& wait(std::int32_t timeout) override;
@@ -62,7 +65,7 @@ private:
     SocketDescriptorPtr m_controlSocketRead;
     SocketDescriptorPtr m_controlSocketWrite;
 
-    std::unordered_set<SocketDescriptorPtr> m_socketDescriptors;
+    std::unordered_map<SocketDescriptorPtr, int> m_socketDescriptors;
 
     PollerResult    m_result;
     int             m_fdEpoll = -1;
@@ -71,7 +74,7 @@ private:
     std::array<epoll_event, 32>     m_events;
 
 
-    std::unordered_set<SocketDescriptorPtr> m_socketDescriptorsConstForEpoll;
+    std::vector<SocketDescriptorPtr> m_socketDescriptorsConstForEpoll;
 
     std::mutex m_mutex;
 };

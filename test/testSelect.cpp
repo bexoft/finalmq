@@ -118,7 +118,7 @@ TEST_F(TestSelect, testAddSocketReadableWait)
 {
     SocketDescriptorPtr socket = std::make_shared<SocketDescriptor>(TESTSOCKET);
 
-    m_select->addSocket(socket);
+    m_select->addSocketEnableRead(socket);
 
     fd_set fdsReadIn;
     fd_set fdsWriteIn;
@@ -159,7 +159,7 @@ TEST_F(TestSelect, testAddSocketReadableEINTR)
 {
     SocketDescriptorPtr socket = std::make_shared<SocketDescriptor>(TESTSOCKET);
 
-    m_select->addSocket(socket);
+    m_select->addSocketEnableRead(socket);
 
     fd_set fdsReadIn;
     fd_set fdsWriteIn;
@@ -209,7 +209,7 @@ TEST_F(TestSelect, testAddSocketReleaseByControlSocket)
 {
     SocketDescriptorPtr socket = std::make_shared<SocketDescriptor>(TESTSOCKET);
 
-    m_select->addSocket(socket);
+    m_select->addSocketEnableRead(socket);
 
     fd_set fdsReadIn;
     fd_set fdsWriteIn;
@@ -251,7 +251,7 @@ TEST_F(TestSelect, testAddSocketReadableError)
 {
     SocketDescriptorPtr socket = std::make_shared<SocketDescriptor>(TESTSOCKET);
 
-    m_select->addSocket(socket);
+    m_select->addSocketEnableRead(socket);
 
     fd_set fdsReadIn;
     fd_set fdsWriteIn;
@@ -283,7 +283,7 @@ TEST_F(TestSelect, testAddSocketReadableWaitSocketDescriptorsChanged)
 {
     SocketDescriptorPtr socket = std::make_shared<SocketDescriptor>(TESTSOCKET);
 
-    m_select->addSocket(socket);
+    m_select->addSocketEnableRead(socket);
 
     fd_set fdsReadIn;
     fd_set fdsWriteIn;
@@ -335,7 +335,7 @@ TEST_F(TestSelect, testAddSocketDisconnect)
 {
     SocketDescriptorPtr socket = std::make_shared<SocketDescriptor>(TESTSOCKET);
 
-    m_select->addSocket(socket);
+    m_select->addSocketEnableRead(socket);
 
     fd_set fdsReadIn;
     fd_set fdsWriteIn;
@@ -375,7 +375,7 @@ TEST_F(TestSelect, testAddSocketIoCtlError)
 {
     SocketDescriptorPtr socket = std::make_shared<SocketDescriptor>(TESTSOCKET);
 
-    m_select->addSocket(socket);
+    m_select->addSocketEnableRead(socket);
 
     fd_set fdsReadIn;
     fd_set fdsWriteIn;
@@ -416,7 +416,7 @@ TEST_F(TestSelect, testAddSocketWritableWait)
 {
     SocketDescriptorPtr socket = std::make_shared<SocketDescriptor>(TESTSOCKET);
 
-    m_select->addSocket(socket);
+    m_select->addSocketEnableRead(socket);
     m_select->enableWrite(socket);
 
     fd_set fdsReadIn;
@@ -464,7 +464,7 @@ TEST_F(TestSelect, testAddSocketDisableWritableWait)
 {
     SocketDescriptorPtr socket = std::make_shared<SocketDescriptor>(TESTSOCKET);
 
-    m_select->addSocket(socket);
+    m_select->addSocketEnableRead(socket);
     m_select->enableWrite(socket);
     m_select->disableWrite(socket);
 

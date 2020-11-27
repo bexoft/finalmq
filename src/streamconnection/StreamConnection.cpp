@@ -132,7 +132,7 @@ bool StreamConnection::connect()
             m_connectionData.connectionState = CONNECTIONSTATE_CONNECTING;
             SocketDescriptorPtr sd = m_socketPrivate->getSocketDescriptor();
             assert(sd);
-            m_poller->addSocket(sd);
+            m_poller->addSocketEnableRead(sd);
             m_poller->enableWrite(sd);
         }
     }
