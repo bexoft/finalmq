@@ -355,28 +355,41 @@ void StreamConnectionContainer::handleReceive(const IStreamConnectionPrivatePtr&
             break;
         }
     }
+
+#ifdef USE_OPENSSL
+    if (socket->isReadWhenWritable())
+    {
+        SocketDescriptorPtr sd = socket->getSocketDescriptor();
+        assert(sd);
+        m_poller->enableWrite(sd);
+    }
+#endif
 }
 
 
 
 void StreamConnectionContainer::handleConnectionEvents(const IStreamConnectionPrivatePtr& connection, const SocketPtr& socket, const DescriptorInfo& info)
 {
-    SocketDescriptorPtr sd = socket->getSocketDescriptor();
-    assert(sd);
     bool disconnected = (info.disconnected || (info.readable && info.bytesToRead == 0));
     if (disconnected)
     {
+        SocketDescriptorPtr sd = socket->getSocketDescriptor();
+        assert(sd);
         disconnectIntern(connection, sd);
     }
     else
     {
+        std::int32_t bytesToRead = info.bytesToRead;
         bool writable = info.writable;
         bool readable = info.readable;
+        bool isSsl = socket->isSsl();
 #ifdef USE_OPENSSL
-        if (socket->isSsl())
+        if (isSsl)
         {
             if (connection->getConnectionData().connectionState == CONNECTIONSTATE_CONNECTING)
             {
+                SocketDescriptorPtr sd = socket->getSocketDescriptor();
+                assert(sd);
                 SslSocket::IoState state = socket->sslConnecting();
                 if (state == SslSocket::IoState::WANT_WRITE)
                 {
@@ -403,39 +416,30 @@ void StreamConnectionContainer::handleConnectionEvents(const IStreamConnectionPr
             }
         }
 #endif
-        if (writable)
-        {
-            bool edgeConnection = connection->checkEdgeConnected();
-            if (edgeConnection)
-            {
-                connection->connected(connection);
-            }
 
-#ifdef USE_OPENSSL
-            if (socket->isReadWhenWritable())
-            {
-                handleReceive(connection, socket, info.bytesToRead);
-            }
-#endif
+        if (isSsl && writable && socket->isReadWhenWritable())
+        {
+            handleReceive(connection, socket, bytesToRead);
+        }
+        else if (isSsl && readable && socket->isWriteWhenReadable())
+        {
             connection->sendPendingMessages();
         }
-        if (readable)
+        else
         {
-#ifdef USE_OPENSSL
-            if (socket->isWriteWhenReadable())
+            if (writable)
             {
+                bool edgeConnection = connection->checkEdgeConnected();
+                if (edgeConnection)
+                {
+                    connection->connected(connection);
+                }
                 connection->sendPendingMessages();
             }
-#endif
-
-            handleReceive(connection, socket, info.bytesToRead);
-
-#ifdef USE_OPENSSL
-            if (socket->isReadWhenWritable())
+            if (readable && !socket->isWriteWhenReadable())
             {
-                m_poller->enableWrite(sd);
+                handleReceive(connection, socket, bytesToRead);
             }
-#endif
         }
     }
 }

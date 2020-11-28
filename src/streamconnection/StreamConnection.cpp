@@ -59,28 +59,30 @@ bool StreamConnection::sendMessage(const IMessagePtr& msg)
             }
             else
             {
-                bool ex = false;
-                int i = 0;
-                for (auto it = payloads.begin(); it != payloads.end() && !ex; ++i)
-                {
-                    const BufferRef& payload = *it;
-                    ++it;
-                    bool last = (it == payloads.end());
-                    int flags = last ? 0 : MSG_MORE;    // win32: MSG_PARTIAL
-                    int err = m_socketPrivate->send(payload.first, payload.second, flags);
-                    if (err != payload.second)
-                    {
-                        if (err < 0)
-                        {
-                            err = 0;
-                        }
-                        assert(err < payload.second);
-                        --it;
-                        m_pendingMessages.push_back({msg, it, err});
-                        m_poller->enableWrite(m_socketPrivate->getSocketDescriptor());
-                        ex = true;
-                    }
-                }
+                m_pendingMessages.push_back({msg, payloads.begin(), 0});
+                m_poller->enableWrite(m_socketPrivate->getSocketDescriptor());
+//                bool ex = false;
+//                int i = 0;
+//                for (auto it = payloads.begin(); it != payloads.end() && !ex; ++i)
+//                {
+//                    const BufferRef& payload = *it;
+//                    ++it;
+//                    bool last = (it == payloads.end());
+//                    int flags = last ? 0 : MSG_MORE;    // win32: MSG_PARTIAL
+//                    int err = m_socketPrivate->send(payload.first, payload.second, flags);
+//                    if (err != payload.second)
+//                    {
+//                        if (err < 0)
+//                        {
+//                            err = 0;
+//                        }
+//                        assert(err < payload.second);
+//                        --it;
+//                        m_pendingMessages.push_back({msg, it, err});
+//                        m_poller->enableWrite(m_socketPrivate->getSocketDescriptor());
+//                        ex = true;
+//                    }
+//                }
             }
         }
     }

@@ -194,6 +194,18 @@ void ProtocolMessage::downsizeLastSendHeader(int newSize)
 void ProtocolMessage::prepareMessageToSend()
 {
     m_preparedToSend = true;
+    for (auto it = m_sendBufferRefs.begin(); it != m_sendBufferRefs.end(); )
+    {
+        assert(it->first != nullptr);
+        if (it->second == 0)
+        {
+            it = m_sendBufferRefs.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
 }
 
 // for the protocol to check if which protocol created the message
