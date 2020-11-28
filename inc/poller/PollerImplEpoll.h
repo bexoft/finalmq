@@ -67,10 +67,9 @@ private:
 
     std::unordered_map<SocketDescriptorPtr, int> m_socketDescriptors;
 
-    PollerResult    m_result;
-    int             m_fdEpoll = -1;
-    bool            m_insideCollect = false;
-    bool            m_socketDescriptorsChanged = false;
+    PollerResult        m_result;
+    int                 m_fdEpoll = -1;
+    std::atomic_flag    m_socketDescriptorsStable;
     std::array<epoll_event, 32>     m_events;
 
 

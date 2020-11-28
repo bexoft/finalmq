@@ -326,6 +326,38 @@ IStreamConnectionPrivatePtr StreamConnectionContainer::addConnection(const Socke
 }
 
 
+void StreamConnectionContainer::handleReceive(const IStreamConnectionPrivatePtr& connection, const SocketPtr& socket, int bytesToRead)
+{
+#ifdef USE_OPENSSL
+    if (socket->isSsl())
+    {
+        bytesToRead = socket->sslPending();
+    }
+#endif
+
+    int maxloop = 5;
+    while (bytesToRead > 0)
+    {
+        connection->received(connection, socket, bytesToRead);
+        maxloop--;
+        if (maxloop > 0)
+        {
+            bytesToRead = socket->pendingRead();
+#ifdef USE_OPENSSL
+            if (bytesToRead > 0 && socket->isSsl())
+            {
+                bytesToRead = socket->sslPending();
+            }
+#endif
+        }
+        else
+        {
+            break;
+        }
+    }
+}
+
+
 
 void StreamConnectionContainer::handleConnectionEvents(const IStreamConnectionPrivatePtr& connection, const SocketPtr& socket, const DescriptorInfo& info)
 {
@@ -338,7 +370,6 @@ void StreamConnectionContainer::handleConnectionEvents(const IStreamConnectionPr
     }
     else
     {
-        int bytesToRead = info.bytesToRead;
         bool writable = info.writable;
         bool readable = info.readable;
 #ifdef USE_OPENSSL
@@ -370,12 +401,6 @@ void StreamConnectionContainer::handleConnectionEvents(const IStreamConnectionPr
                 }
                 return;
             }
-            if (readable)
-            {
-                char c = 0;
-                socket->receive(&c, 0);
-                bytesToRead = socket->sslPending();
-            }
         }
 #endif
         if (writable)
@@ -385,10 +410,11 @@ void StreamConnectionContainer::handleConnectionEvents(const IStreamConnectionPr
             {
                 connection->connected(connection);
             }
+
 #ifdef USE_OPENSSL
             if (socket->isReadWhenWritable())
             {
-                connection->received(connection, socket, 0);
+                handleReceive(connection, socket, info.bytesToRead);
             }
 #endif
             connection->sendPendingMessages();
@@ -401,28 +427,8 @@ void StreamConnectionContainer::handleConnectionEvents(const IStreamConnectionPr
                 connection->sendPendingMessages();
             }
 #endif
-            int maxloop = 10;
-            while (bytesToRead > 0)
-            {
-                connection->received(connection, socket, bytesToRead);
-                maxloop--;
-                if (maxloop > 0)
-                {
-                    bytesToRead = socket->pendingRead();
-#ifdef USE_OPENSSL
-                    if (bytesToRead > 0 && socket->isSsl())
-                    {
-                        char c = 0;
-                        socket->receive(&c, 0);
-                        bytesToRead = socket->sslPending();
-                    }
-#endif
-                }
-                else
-                {
-                    bytesToRead = 0;
-                }
-            }
+
+            handleReceive(connection, socket, info.bytesToRead);
 
 #ifdef USE_OPENSSL
             if (socket->isReadWhenWritable())

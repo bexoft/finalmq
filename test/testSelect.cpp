@@ -73,6 +73,8 @@ protected:
         SocketDescriptorPtr sd2 = std::make_shared<SocketDescriptor>(CONTROLSOCKET_WRITE);
         EXPECT_CALL(*m_mockMockOperatingSystem, makeSocketPair(_, _)).Times(1)
                     .WillRepeatedly(DoAll(testing::SetArgReferee<0>(sd1), testing::SetArgReferee<1>(sd2), Return(0)));
+        EXPECT_CALL(*m_mockMockOperatingSystem, write(CONTROLSOCKET_WRITE, _, 1)).Times(1)
+                                                            .WillRepeatedly(Return(1));
         m_select->init();
         testing::Mock::VerifyAndClearExpectations(m_mockMockOperatingSystem);
     }
@@ -118,6 +120,9 @@ TEST_F(TestSelect, testAddSocketReadableWait)
 {
     SocketDescriptorPtr socket = std::make_shared<SocketDescriptor>(TESTSOCKET);
 
+    EXPECT_CALL(*m_mockMockOperatingSystem, write(CONTROLSOCKET_WRITE, _, 1)).Times(1)
+                                                        .WillRepeatedly(Return(1));
+
     m_select->addSocketEnableRead(socket);
 
     fd_set fdsReadIn;
@@ -159,6 +164,8 @@ TEST_F(TestSelect, testAddSocketReadableEINTR)
 {
     SocketDescriptorPtr socket = std::make_shared<SocketDescriptor>(TESTSOCKET);
 
+    EXPECT_CALL(*m_mockMockOperatingSystem, write(CONTROLSOCKET_WRITE, _, 1)).Times(1)
+                                                        .WillRepeatedly(Return(1));
     m_select->addSocketEnableRead(socket);
 
     fd_set fdsReadIn;
@@ -209,6 +216,8 @@ TEST_F(TestSelect, testAddSocketReleaseByControlSocket)
 {
     SocketDescriptorPtr socket = std::make_shared<SocketDescriptor>(TESTSOCKET);
 
+    EXPECT_CALL(*m_mockMockOperatingSystem, write(CONTROLSOCKET_WRITE, _, 1)).Times(1)
+                                                        .WillRepeatedly(Return(1));
     m_select->addSocketEnableRead(socket);
 
     fd_set fdsReadIn;
@@ -251,6 +260,8 @@ TEST_F(TestSelect, testAddSocketReadableError)
 {
     SocketDescriptorPtr socket = std::make_shared<SocketDescriptor>(TESTSOCKET);
 
+    EXPECT_CALL(*m_mockMockOperatingSystem, write(CONTROLSOCKET_WRITE, _, 1)).Times(1)
+                                                        .WillRepeatedly(Return(1));
     m_select->addSocketEnableRead(socket);
 
     fd_set fdsReadIn;
@@ -283,6 +294,8 @@ TEST_F(TestSelect, testAddSocketReadableWaitSocketDescriptorsChanged)
 {
     SocketDescriptorPtr socket = std::make_shared<SocketDescriptor>(TESTSOCKET);
 
+    EXPECT_CALL(*m_mockMockOperatingSystem, write(CONTROLSOCKET_WRITE, _, 1)).Times(1)
+                                                        .WillRepeatedly(Return(1));
     m_select->addSocketEnableRead(socket);
 
     fd_set fdsReadIn;
@@ -335,6 +348,8 @@ TEST_F(TestSelect, testAddSocketDisconnect)
 {
     SocketDescriptorPtr socket = std::make_shared<SocketDescriptor>(TESTSOCKET);
 
+    EXPECT_CALL(*m_mockMockOperatingSystem, write(CONTROLSOCKET_WRITE, _, 1)).Times(1)
+                                                        .WillRepeatedly(Return(1));
     m_select->addSocketEnableRead(socket);
 
     fd_set fdsReadIn;
@@ -375,6 +390,8 @@ TEST_F(TestSelect, testAddSocketIoCtlError)
 {
     SocketDescriptorPtr socket = std::make_shared<SocketDescriptor>(TESTSOCKET);
 
+    EXPECT_CALL(*m_mockMockOperatingSystem, write(CONTROLSOCKET_WRITE, _, 1)).Times(1)
+                                                        .WillRepeatedly(Return(1));
     m_select->addSocketEnableRead(socket);
 
     fd_set fdsReadIn;
@@ -415,6 +432,9 @@ TEST_F(TestSelect, testAddSocketIoCtlError)
 TEST_F(TestSelect, testAddSocketWritableWait)
 {
     SocketDescriptorPtr socket = std::make_shared<SocketDescriptor>(TESTSOCKET);
+
+    EXPECT_CALL(*m_mockMockOperatingSystem, write(CONTROLSOCKET_WRITE, _, 1)).Times(2)
+                                                        .WillRepeatedly(Return(1));
 
     m_select->addSocketEnableRead(socket);
     m_select->enableWrite(socket);
@@ -464,6 +484,8 @@ TEST_F(TestSelect, testAddSocketDisableWritableWait)
 {
     SocketDescriptorPtr socket = std::make_shared<SocketDescriptor>(TESTSOCKET);
 
+    EXPECT_CALL(*m_mockMockOperatingSystem, write(CONTROLSOCKET_WRITE, _, 1)).Times(3)
+                                                        .WillRepeatedly(Return(1));
     m_select->addSocketEnableRead(socket);
     m_select->enableWrite(socket);
     m_select->disableWrite(socket);

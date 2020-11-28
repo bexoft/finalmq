@@ -35,7 +35,9 @@ namespace finalmq {
 
 
 PollerImplEpoll::PollerImplEpoll()
+    : m_socketDescriptorsStable(ATOMIC_FLAG_INIT)
 {
+    m_socketDescriptorsStable.test_and_set();
 }
 
 PollerImplEpoll::~PollerImplEpoll()
@@ -216,26 +218,17 @@ void PollerImplEpoll::disableWrite(const SocketDescriptorPtr& fd)
 
 void PollerImplEpoll::sockedDescriptorHasChanged()
 {
-    m_socketDescriptorsChanged = true;
-
-    if (!m_insideCollect)
-    {
-        updateSocketDescriptors();
-    }
+    m_socketDescriptorsStable.clear(std::memory_order_release);
 }
 
 
 void PollerImplEpoll::updateSocketDescriptors()
 {
-    if (m_socketDescriptorsChanged)
+    m_socketDescriptorsConstForEpoll.clear();
+    m_socketDescriptorsConstForEpoll.reserve(m_socketDescriptors.size());
+    for (auto it = m_socketDescriptors.begin(); it != m_socketDescriptors.end(); ++it)
     {
-        m_socketDescriptorsChanged = false;
-        m_socketDescriptorsConstForEpoll.clear();
-        m_socketDescriptorsConstForEpoll.reserve(m_socketDescriptors.size());
-        for (auto it = m_socketDescriptors.begin(); it != m_socketDescriptors.end(); ++it)
-        {
-            m_socketDescriptorsConstForEpoll.push_back(it->first);
-        }
+        m_socketDescriptorsConstForEpoll.push_back(it->first);
     }
 }
 
@@ -334,16 +327,15 @@ const PollerResult& PollerImplEpoll::wait(std::int32_t timeout)
 {
     int res = 0;
     int err = 0;
-    do
+
+    if (!m_socketDescriptorsStable.test_and_set(std::memory_order_acquire))
     {
         std::unique_lock<std::mutex> locker(m_mutex);
-        m_insideCollect = true;
-
         updateSocketDescriptors();
+    }
 
-        locker.unlock();
-
-
+    do
+    {
         res = OperatingSystem::instance().epoll_pwait(m_fdEpoll, &m_events[0], m_events.size(), timeout, nullptr);
 
         if (res == -1)
@@ -355,13 +347,10 @@ const PollerResult& PollerImplEpoll::wait(std::int32_t timeout)
 
     collectSockets(res);
 
-    m_insideCollect = false;
-
-    if (m_socketDescriptorsChanged)
+    if (!m_socketDescriptorsStable.test_and_set(std::memory_order_acquire))
     {
         std::unique_lock<std::mutex> locker(m_mutex);
         updateSocketDescriptors();
-        locker.unlock();
     }
 
     return m_result;

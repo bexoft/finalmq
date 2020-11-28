@@ -436,6 +436,8 @@ bool Socket::isWriteWhenReadable() const
 int Socket::sslPending()
 {
     assert(m_sslSocket);
+    char c = 0;
+    receive(&c, 0);
     return m_sslSocket->sslPending();
 }
 
