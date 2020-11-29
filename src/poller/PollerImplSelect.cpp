@@ -232,16 +232,11 @@ void PollerImplSelect::sockedDescriptorAndSdMaxHasChanged()
 
 void PollerImplSelect::updateSocketDescriptors()
 {
-    m_sdMax = 0;
     m_socketDescriptorsConstForSelect.clear();
     m_socketDescriptorsConstForSelect.reserve(m_socketDescriptors.size());
     for (auto it = m_socketDescriptors.begin(); it != m_socketDescriptors.end(); ++it)
     {
-        // if an event is active (readable or writeable)
-        if (it->second)
-        {
-            m_socketDescriptorsConstForSelect.push_back(it->first);
-        }
+        m_socketDescriptorsConstForSelect.push_back(it->first);
     }
 }
 
