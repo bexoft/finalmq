@@ -54,9 +54,9 @@ void RemoteEntityContainer::init(int cycleTime, int checkReconnectInterval)
     m_streamConnectionContainer->init(cycleTime, checkReconnectInterval);
 }
 
-int RemoteEntityContainer::bind(const std::string& endpoint, IProtocolFactoryPtr protocolFactory, RemoteEntityContentType contentType)
+int RemoteEntityContainer::bind(const std::string& endpoint, IProtocolFactoryPtr protocolFactory, RemoteEntityContentType contentType, const BindProperties& bindProperties)
 {
-    return m_streamConnectionContainer->bind(endpoint, this, protocolFactory, contentType);
+    return m_streamConnectionContainer->bind(endpoint, this, protocolFactory, bindProperties, contentType);
 }
 
 void RemoteEntityContainer::unbind(const std::string& endpoint)
@@ -64,9 +64,9 @@ void RemoteEntityContainer::unbind(const std::string& endpoint)
     m_streamConnectionContainer->unbind(endpoint);
 }
 
-IProtocolSessionPtr RemoteEntityContainer::connect(const std::string& endpoint, const IProtocolPtr& protocol, RemoteEntityContentType contentType, int reconnectInterval, int totalReconnectDuration)
+IProtocolSessionPtr RemoteEntityContainer::connect(const std::string& endpoint, const IProtocolPtr& protocol, RemoteEntityContentType contentType, const ConnectProperties& connectProperties)
 {
-    return m_streamConnectionContainer->connect(endpoint, this, protocol, reconnectInterval, totalReconnectDuration, contentType);
+    return m_streamConnectionContainer->connect(endpoint, this, protocol, connectProperties, contentType);
 }
 
 void RemoteEntityContainer::threadEntry()
@@ -79,19 +79,6 @@ bool RemoteEntityContainer::terminatePollerLoop(int timeout)
     return m_streamConnectionContainer->terminatePollerLoop(timeout);
 }
 
-
-#ifdef USE_OPENSSL
-int RemoteEntityContainer::bindSsl(const std::string& endpoint, const IProtocolFactoryPtr protocolFactory, RemoteEntityContentType contentType, const CertificateData& certificateData)
-{
-    return m_streamConnectionContainer->bindSsl(endpoint, this, protocolFactory, certificateData, contentType);
-}
-
-IProtocolSessionPtr RemoteEntityContainer::connectSsl(const std::string& endpoint, const IProtocolPtr& protocol, RemoteEntityContentType contentType, const CertificateData& certificateData, int reconnectInterval, int totalReconnectDuration)
-{
-    return m_streamConnectionContainer->connectSsl(endpoint, this, protocol, certificateData, reconnectInterval, totalReconnectDuration, contentType);
-}
-
-#endif
 
 EntityId RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, const std::string& name)
 {

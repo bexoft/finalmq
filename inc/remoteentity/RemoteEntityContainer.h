@@ -41,16 +41,11 @@ struct IRemoteEntityContainer
     virtual ~IRemoteEntityContainer() {}
 
     virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000) = 0;
-    virtual int bind(const std::string& endpoint, const IProtocolFactoryPtr protocolFactory, RemoteEntityContentType contentType) = 0;
+    virtual int bind(const std::string& endpoint, const IProtocolFactoryPtr protocolFactory, RemoteEntityContentType contentType, const BindProperties& bindProperties = {}) = 0;
     virtual void unbind(const std::string& endpoint) = 0;
-    virtual IProtocolSessionPtr connect(const std::string& endpoint, const IProtocolPtr& protocol, RemoteEntityContentType contentType, int reconnectInterval = 5000, int totalReconnectDuration = -1) = 0;
+    virtual IProtocolSessionPtr connect(const std::string& endpoint, const IProtocolPtr& protocol, RemoteEntityContentType contentType, const ConnectProperties& connectProperties = {}) = 0;
     virtual void threadEntry() = 0;
     virtual bool terminatePollerLoop(int timeout) = 0;
-
-#ifdef USE_OPENSSL
-    virtual int bindSsl(const std::string& endpoint, const IProtocolFactoryPtr protocolFactory, RemoteEntityContentType contentType, const CertificateData& certificateData) = 0;
-    virtual IProtocolSessionPtr connectSsl(const std::string& endpoint, const IProtocolPtr& protocol, RemoteEntityContentType contentType, const CertificateData& certificateData, int reconnectInterval = 5000, int totalReconnectDuration = -1) = 0;
-#endif
 
     virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, const std::string& name = "") = 0;
     virtual void unregisterEntity(EntityId entityId) = 0;
@@ -71,16 +66,11 @@ public:
 private:
     // IRemoteEntityContainer
     virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000) override;
-    virtual int bind(const std::string& endpoint, const IProtocolFactoryPtr protocolFactory, RemoteEntityContentType contentType) override;
+    virtual int bind(const std::string& endpoint, const IProtocolFactoryPtr protocolFactory, RemoteEntityContentType contentType, const BindProperties& bindProperties = {}) override;
     virtual void unbind(const std::string& endpoint) override;
-    virtual IProtocolSessionPtr connect(const std::string& endpoint, const IProtocolPtr& protocol, RemoteEntityContentType contentType, int reconnectInterval = 5000, int totalReconnectDuration = -1) override;
+    virtual IProtocolSessionPtr connect(const std::string& endpoint, const IProtocolPtr& protocol, RemoteEntityContentType contentType, const ConnectProperties& connectProperties = {}) override;
     virtual void threadEntry() override;
     virtual bool terminatePollerLoop(int timeout) override;
-
-#ifdef USE_OPENSSL
-    virtual int bindSsl(const std::string& endpoint, const IProtocolFactoryPtr protocolFactory, RemoteEntityContentType contentType, const CertificateData& certificateData) override;
-    virtual IProtocolSessionPtr connectSsl(const std::string& endpoint, const IProtocolPtr& protocol, RemoteEntityContentType contentType, const CertificateData& certificateData, int reconnectInterval = 5000, int totalReconnectDuration = -1) override;
-#endif
 
     virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, const std::string& name = "") override;
     virtual void unregisterEntity(EntityId entityId) override;

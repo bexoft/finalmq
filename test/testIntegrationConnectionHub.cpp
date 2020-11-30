@@ -111,9 +111,9 @@ TEST_F(TestIntegrationConnectionHub, testConnect)
     auto& expectConnectClient = EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(1);
     auto& expectConnectServer = EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
 
-    m_connectionHub->connect("tcp://localhost:3333", std::make_shared<ProtocolStream>(), 1);
+    m_connectionHub->connect("tcp://localhost:3333", std::make_shared<ProtocolStream>(), {{},1});
     m_sessionContainer->bind("tcp://*:3333", m_mockServerCallback, m_factoryProtocol);
-    m_sessionContainer->connect("tcp://localhost:3334", m_mockClientCallback, std::make_shared<ProtocolDelimiter>(DELIMITER), 1);
+    m_sessionContainer->connect("tcp://localhost:3334", m_mockClientCallback, std::make_shared<ProtocolDelimiter>(DELIMITER), {{},1});
     m_connectionHub->bind("tcp://*:3334", std::make_shared<ProtocolStreamFactory>());
 
     waitTillDone(expectConnectClient, 5000);
@@ -125,9 +125,9 @@ TEST_F(TestIntegrationConnectionHub, testUnbind)
     auto& expectConnectClient = EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(1);
     auto& expectConnectServer = EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
 
-    m_connectionHub->connect("tcp://localhost:3333", std::make_shared<ProtocolStream>(), 1);
+    m_connectionHub->connect("tcp://localhost:3333", std::make_shared<ProtocolStream>(), {{},1});
     m_sessionContainer->bind("tcp://*:3333", m_mockServerCallback, m_factoryProtocol);
-    m_sessionContainer->connect("tcp://localhost:3334", m_mockClientCallback, std::make_shared<ProtocolDelimiter>(DELIMITER), 1);
+    m_sessionContainer->connect("tcp://localhost:3334", m_mockClientCallback, std::make_shared<ProtocolDelimiter>(DELIMITER), {{},1});
     m_connectionHub->bind("tcp://*:3334", std::make_shared<ProtocolStreamFactory>());
 
     waitTillDone(expectConnectClient, 5000);
@@ -143,9 +143,9 @@ TEST_F(TestIntegrationConnectionHub, testGetAllSessions)
     auto& expectConnectClient = EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(1);
     auto& expectConnectServer = EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
 
-    m_connectionHub->connect("tcp://localhost:3333", std::make_shared<ProtocolStream>(), 1);
+    m_connectionHub->connect("tcp://localhost:3333", std::make_shared<ProtocolStream>(), {{},1});
     m_sessionContainer->bind("tcp://*:3333", m_mockServerCallback, m_factoryProtocol);
-    m_sessionContainer->connect("tcp://localhost:3334", m_mockClientCallback, std::make_shared<ProtocolDelimiter>(DELIMITER), 1);
+    m_sessionContainer->connect("tcp://localhost:3334", m_mockClientCallback, std::make_shared<ProtocolDelimiter>(DELIMITER), {{},1});
     m_connectionHub->bind("tcp://*:3334", std::make_shared<ProtocolStreamFactory>());
 
     waitTillDone(expectConnectClient, 5000);
@@ -161,9 +161,9 @@ TEST_F(TestIntegrationConnectionHub, testGetSession)
     auto& expectConnectClient = EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(1);
     auto& expectConnectServer = EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
 
-    m_connectionHub->connect("tcp://localhost:3333", std::make_shared<ProtocolStream>(), 1);
+    m_connectionHub->connect("tcp://localhost:3333", std::make_shared<ProtocolStream>(), {{},1});
     m_sessionContainer->bind("tcp://*:3333", m_mockServerCallback, m_factoryProtocol);
-    m_sessionContainer->connect("tcp://localhost:3334", m_mockClientCallback, std::make_shared<ProtocolDelimiter>(DELIMITER), 1);
+    m_sessionContainer->connect("tcp://localhost:3334", m_mockClientCallback, std::make_shared<ProtocolDelimiter>(DELIMITER), {{},1});
     m_connectionHub->bind("tcp://*:3334", std::make_shared<ProtocolStreamFactory>());
 
     waitTillDone(expectConnectClient, 5000);
@@ -185,9 +185,9 @@ TEST_F(TestIntegrationConnectionHub, testForwardLateMessage)
     auto& expectConnectServer = EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1)
                                                 .WillOnce(testing::SaveArg<0>(&bindSession));
 
-    m_connectionHub->connect("tcp://localhost:3333", std::make_shared<ProtocolStream>(), 1);
+    m_connectionHub->connect("tcp://localhost:3333", std::make_shared<ProtocolStream>(), {{},1});
     m_sessionContainer->bind("tcp://*:3333", m_mockServerCallback, m_factoryProtocol);
-    IProtocolSessionPtr session = m_sessionContainer->connect("tcp://localhost:3334", m_mockClientCallback, std::make_shared<ProtocolDelimiter>(DELIMITER), 1);
+    IProtocolSessionPtr session = m_sessionContainer->connect("tcp://localhost:3334", m_mockClientCallback, std::make_shared<ProtocolDelimiter>(DELIMITER), {{},1});
     m_connectionHub->bind("tcp://*:3334", std::make_shared<ProtocolStreamFactory>());
 
     auto& expectReceiveClient = EXPECT_CALL(*m_mockClientCallback, received(_, ReceivedMessage(MESSAGE_BUFFER))).Times(1);
@@ -211,9 +211,9 @@ TEST_F(TestIntegrationConnectionHub, testForwardEarlyMessage)
     auto& expectConnectClient = EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(1);
     auto& expectConnectServer = EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
 
-    m_connectionHub->connect("tcp://localhost:3333", std::make_shared<ProtocolStream>(), 1);
+    m_connectionHub->connect("tcp://localhost:3333", std::make_shared<ProtocolStream>(), {{},1});
     m_sessionContainer->bind("tcp://*:3333", m_mockServerCallback, m_factoryProtocol);
-    IProtocolSessionPtr session = m_sessionContainer->connect("tcp://localhost:3334", m_mockClientCallback, std::make_shared<ProtocolDelimiter>(DELIMITER), 1);
+    IProtocolSessionPtr session = m_sessionContainer->connect("tcp://localhost:3334", m_mockClientCallback, std::make_shared<ProtocolDelimiter>(DELIMITER), {{},1});
     m_connectionHub->bind("tcp://*:3334", std::make_shared<ProtocolStreamFactory>());
 
     IMessagePtr message = session->createMessage();
@@ -239,9 +239,9 @@ TEST_F(TestIntegrationConnectionHub, testStopForwardingToSession)
     auto& expectConnectServer = EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1)
                                                 .WillOnce(testing::SaveArg<0>(&bindSession));
 
-    IProtocolSessionPtr sessionForward = m_connectionHub->connect("tcp://localhost:3333", std::make_shared<ProtocolStream>(), 1);
+    IProtocolSessionPtr sessionForward = m_connectionHub->connect("tcp://localhost:3333", std::make_shared<ProtocolStream>(), {{},1});
     m_sessionContainer->bind("tcp://*:3333", m_mockServerCallback, m_factoryProtocol);
-    IProtocolSessionPtr session = m_sessionContainer->connect("tcp://localhost:3334", m_mockClientCallback, std::make_shared<ProtocolDelimiter>(DELIMITER), 1);
+    IProtocolSessionPtr session = m_sessionContainer->connect("tcp://localhost:3334", m_mockClientCallback, std::make_shared<ProtocolDelimiter>(DELIMITER), {{},1});
     m_connectionHub->bind("tcp://*:3334", std::make_shared<ProtocolStreamFactory>());
 
     IMessagePtr message = session->createMessage();
@@ -277,9 +277,9 @@ TEST_F(TestIntegrationConnectionHub, testStopForwardingFromSession)
     auto& expectConnectServer = EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1)
                                                 .WillOnce(testing::SaveArg<0>(&bindSession));
 
-    IProtocolSessionPtr sessionForward = m_connectionHub->connect("tcp://localhost:3333", std::make_shared<ProtocolStream>(), 1);
+    IProtocolSessionPtr sessionForward = m_connectionHub->connect("tcp://localhost:3333", std::make_shared<ProtocolStream>(), {{},1});
     m_sessionContainer->bind("tcp://*:3333", m_mockServerCallback, m_factoryProtocol);
-    IProtocolSessionPtr session = m_sessionContainer->connect("tcp://localhost:3334", m_mockClientCallback, std::make_shared<ProtocolDelimiter>(DELIMITER), 1);
+    IProtocolSessionPtr session = m_sessionContainer->connect("tcp://localhost:3334", m_mockClientCallback, std::make_shared<ProtocolDelimiter>(DELIMITER),{{},1});
     m_connectionHub->bind("tcp://*:3334", std::make_shared<ProtocolStreamFactory>());
 
     IMessagePtr message = session->createMessage();

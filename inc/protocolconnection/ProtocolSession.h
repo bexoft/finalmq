@@ -48,13 +48,8 @@ class ProtocolSession : public IProtocolSessionPrivate
                       , public std::enable_shared_from_this<ProtocolSession>
 {
 public:
-    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, int contentType);
-    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, const std::string& endpoint, int reconnectInterval, int totalReconnectDuration, int contentType);
-
-#ifdef USE_OPENSSL
-    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const CertificateData& certificateData, int contentType);
-    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, const std::string& endpoint, const CertificateData& certificateData, int reconnectInterval, int totalReconnectDuration, int contentType);
-#endif
+    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const BindProperties& bindProperties, int contentType);
+    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, const std::string& endpoint, const ConnectProperties& connectProperties, int contentType);
 
     virtual ~ProtocolSession();
 
@@ -94,13 +89,9 @@ private:
 
     std::shared_ptr<IStreamConnectionContainer>     m_streamConnectionContainer;
     const std::string                               m_endpoint;
-    const int                                       m_reconnectInterval = 5000;
-    const int                                       m_totalReconnectDuration = -1;
 
-#ifdef USE_OPENSSL
-    bool                                            m_ssl = false;
-    CertificateData                                 m_certificateData;
-#endif
+    BindProperties                                  m_bindProperties;
+    ConnectProperties                               m_connectProperties;
 
     mutable std::mutex                              m_mutex;
 };

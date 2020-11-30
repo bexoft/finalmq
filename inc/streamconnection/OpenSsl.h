@@ -31,6 +31,7 @@ namespace finalmq {
 
 struct CertificateData
 {
+    bool ssl = false;
     std::string certificateFile;        // SSL_CTX_use_certificate_file, pem
     std::string privateKeyFile;         // SSL_CTX_use_PrivateKey_file, pem
     std::string caFile;                 // SSL_CTX_load_verify_location, pem

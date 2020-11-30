@@ -136,6 +136,8 @@ TEST_F(TestIntegrationRemoteEntity, test)
     IProtocolSessionPtr sessionClient = ientityContainer2.connect("tcp://localhost:7777", std::make_shared<ProtocolHeaderBinarySize>(), CONTENTTYPE_PROTO);
 //    ientityContainer1.bind("tcp://*:7777", std::make_shared<ProtocolDelimiterFactory>("\n"), CONTENTTYPE_JSON);
 //    IProtocolSessionPtr sessionClient = ientityContainer2.connect("tcp://localhost:7777", std::make_shared<ProtocolDelimiter>("\n"), CONTENTTYPE_JSON);
+//    ientityContainer1.bind("tcp://*:7777", std::make_shared<ProtocolHeaderBinarySizeFactory>(), CONTENTTYPE_PROTO, {{true, "ssltest.cert.pem", "ssltest.key.pem"}});
+//    IProtocolSessionPtr sessionClient = ientityContainer2.connect("tcp://localhost:7777", std::make_shared<ProtocolHeaderBinarySize>(), CONTENTTYPE_PROTO, {{true}});
 
     EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent::PEER_CONNECTED, true)).Times(1);
     EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent::PEER_CONNECTED, false)).Times(1);
@@ -152,7 +154,7 @@ TEST_F(TestIntegrationRemoteEntity, test)
         });
     }
 
-    waitTillDone(expectReply, 5000);
+    waitTillDone(expectReply, 150000);
     bool ok1 = ientityContainer1.terminatePollerLoop(1000);
     bool ok2 = ientityContainer2.terminatePollerLoop(1000);
     ASSERT_EQ(ok1, true);

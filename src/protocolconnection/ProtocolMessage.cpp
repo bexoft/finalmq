@@ -194,9 +194,15 @@ void ProtocolMessage::downsizeLastSendHeader(int newSize)
 void ProtocolMessage::prepareMessageToSend()
 {
     m_preparedToSend = true;
+//    std::string buffer;
+//    buffer.resize(getTotalSendBufferSize());
+//    int offset = 0;
     for (auto it = m_sendBufferRefs.begin(); it != m_sendBufferRefs.end(); )
     {
-        assert(it->first != nullptr);
+//        assert(it->first != nullptr);
+//        memcpy(const_cast<char*>(buffer.data())+offset, it->first, it->second);
+//        offset += it->second;
+//        ++it;
         if (it->second == 0)
         {
             it = m_sendBufferRefs.erase(it);
@@ -206,6 +212,9 @@ void ProtocolMessage::prepareMessageToSend()
             ++it;
         }
     }
+//    m_payloadBuffers.push_back(std::move(buffer));
+//    m_sendBufferRefs.clear();
+//    m_sendBufferRefs.push_back(std::make_pair(const_cast<char*>(m_payloadBuffers.rbegin()->data()), m_payloadBuffers.rbegin()->size()));
 }
 
 // for the protocol to check if which protocol created the message

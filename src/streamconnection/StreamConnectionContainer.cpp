@@ -99,23 +99,17 @@ void StreamConnectionContainer::init(int cycleTime, int checkReconnectInterval)
 }
 
 
-int StreamConnectionContainer::bind(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callbackDefault)
-{
-    return bindIntern(endpoint, callbackDefault, false, CertificateData());
-}
-
-
-int StreamConnectionContainer::bindIntern(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callbackDefault, bool ssl, const CertificateData& certificateData)
+int StreamConnectionContainer::bind(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callbackDefault, const BindProperties& bindProperties)
 {
     ConnectionData connectionData = AddressHelpers::endpoint2ConnectionData(endpoint);
-    connectionData.ssl = ssl;
+    connectionData.ssl = bindProperties.certificateData.ssl;
     std::shared_ptr<Socket> socket = std::make_shared<Socket>();
 
     int err = -1;
 #ifdef USE_OPENSSL
-    if (ssl)
+    if (connectionData.ssl)
     {
-        err = socket->createSslServer(connectionData.af, connectionData.type, connectionData.protocol, certificateData);
+        err = socket->createSslServer(connectionData.af, connectionData.type, connectionData.protocol, bindProperties.certificateData);
     }
     else
 #endif
@@ -153,6 +147,7 @@ int StreamConnectionContainer::bindIntern(const std::string& endpoint, hybrid_pt
 }
 
 
+
 void StreamConnectionContainer::unbind(const std::string& endpoint)
 {
     std::unique_lock<std::mutex> locker(m_mutex);
@@ -167,19 +162,14 @@ void StreamConnectionContainer::unbind(const std::string& endpoint)
     locker.unlock();
 }
 
-IStreamConnectionPtr StreamConnectionContainer::createConnection(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, int reconnectInterval, int totalReconnectDuration)
-{
-    return createConnectionIntern(endpoint, callback, false, CertificateData(), reconnectInterval, totalReconnectDuration);
-}
-
-IStreamConnectionPtr StreamConnectionContainer::createConnectionIntern(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, bool ssl, const CertificateData& certificateData, int reconnectInterval, int totalReconnectDuration)
+IStreamConnectionPtr StreamConnectionContainer::createConnection(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const ConnectProperties& connectionProperties)
 {
     ConnectionData connectionData = AddressHelpers::endpoint2ConnectionData(endpoint);
     connectionData.incomingConnection = false;
-    connectionData.reconnectInterval = reconnectInterval;
-    connectionData.totalReconnectDuration = totalReconnectDuration;
+    connectionData.reconnectInterval = connectionProperties.reconnectInterval;
+    connectionData.totalReconnectDuration = connectionProperties.totalReconnectDuration;
     connectionData.startTime = std::chrono::system_clock::now();
-    connectionData.ssl = ssl;
+    connectionData.ssl = connectionProperties.certificateData.ssl;
     connectionData.connectionState = CONNECTIONSTATE_CREATED;
     std::string addr = AddressHelpers::makeSocketAddress(connectionData.hostname, connectionData.port, connectionData.af);
     connectionData.sockaddr = addr;
@@ -187,9 +177,9 @@ IStreamConnectionPtr StreamConnectionContainer::createConnectionIntern(const std
     SocketPtr socket = std::make_shared<Socket>();
     int ret = -1;
 #ifdef USE_OPENSSL
-    if (ssl)
+    if (connectionData.ssl)
     {
-        ret = socket->createSslClient(connectionData.af, connectionData.type, connectionData.protocol, certificateData);
+        ret = socket->createSslClient(connectionData.af, connectionData.type, connectionData.protocol, connectionProperties.certificateData);
     }
     else
 #endif
@@ -207,6 +197,7 @@ IStreamConnectionPtr StreamConnectionContainer::createConnectionIntern(const std
 
     return connection;
 }
+
 
 
 std::vector< IStreamConnectionPtr > StreamConnectionContainer::getAllConnections() const
@@ -281,21 +272,6 @@ bool StreamConnectionContainer::terminatePollerLoop(int timeout)
     terminatePollerLoop();
     return m_pollerLoopTerminated.wait(timeout);
 }
-
-
-
-#ifdef USE_OPENSSL
-
-int StreamConnectionContainer::bindSsl(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const CertificateData& certificateData)
-{
-    return bindIntern(endpoint, callback, true, certificateData);
-}
-IStreamConnectionPtr StreamConnectionContainer::createConnectionSsl(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const CertificateData& certificateData, int reconnectInterval, int totalReconnectDuration)
-{
-    return createConnectionIntern(endpoint, callback, true, certificateData, reconnectInterval, totalReconnectDuration);
-}
-
-#endif
 
 
 

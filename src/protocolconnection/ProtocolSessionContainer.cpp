@@ -26,10 +26,11 @@
 
 namespace finalmq {
 
-ProtocolBind::ProtocolBind(hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, int contentType)
+ProtocolBind::ProtocolBind(hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const BindProperties& bindProperties, int contentType)
     : m_callback(callback)
     , m_protocolFactory(protocolFactory)
     , m_protocolSessionList(protocolSessionList)
+    , m_bindProperties(bindProperties)
     , m_contentType(contentType)
 {
 
@@ -40,7 +41,7 @@ hybrid_ptr<IStreamConnectionCallback> ProtocolBind::connected(const IStreamConne
 {
     IProtocolPtr protocol = m_protocolFactory->createProtocol();
     assert(protocol);
-    IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(m_callback, protocol, m_protocolSessionList, m_contentType);
+    IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(m_callback, protocol, m_protocolSessionList, m_bindProperties, m_contentType);
     protocolSession->setConnection(connection);
     return std::weak_ptr<IStreamConnectionCallback>(protocolSession);
 }
@@ -79,18 +80,18 @@ void ProtocolSessionContainer::init(int cycleTime, int checkReconnectInterval)
     m_streamConnectionContainer->init(cycleTime, checkReconnectInterval);
 }
 
-int ProtocolSessionContainer::bind(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, int contentType)
+int ProtocolSessionContainer::bind(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const BindProperties& bindProperties, int contentType)
 {
     int err = 0;
     std::unique_lock<std::mutex> lock(m_mutex);
     auto it = m_endpoint2Bind.find(endpoint);
     if (it == m_endpoint2Bind.end())
     {
-        ProtocolBindPtr bind = std::make_shared<ProtocolBind>(callback, protocolFactory, m_protocolSessionList, contentType);
+        ProtocolBindPtr bind = std::make_shared<ProtocolBind>(callback, protocolFactory, m_protocolSessionList, bindProperties, contentType);
         m_endpoint2Bind[endpoint] = bind;
         lock.unlock();
 
-        err = m_streamConnectionContainer->bind(endpoint, bind);
+        err = m_streamConnectionContainer->bind(endpoint, bind, bindProperties);
     }
     return err;
 }
@@ -106,10 +107,10 @@ void ProtocolSessionContainer::unbind(const std::string& endpoint)
     }
 }
 
-IProtocolSessionPtr ProtocolSessionContainer::connect(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, int reconnectInterval, int totalReconnectDuration, int contentType)
+IProtocolSessionPtr ProtocolSessionContainer::connect(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const ConnectProperties& connectProperties, int contentType)
 {
     assert(protocol);
-    IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(callback, protocol, m_protocolSessionList, m_streamConnectionContainer, endpoint, reconnectInterval, totalReconnectDuration, contentType);
+    IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(callback, protocol, m_protocolSessionList, m_streamConnectionContainer, endpoint, connectProperties, contentType);
     protocolSession->connect();
     return protocolSession;
 }
@@ -139,30 +140,5 @@ bool ProtocolSessionContainer::terminatePollerLoop(int timeout)
 }
 
 
-#ifdef USE_OPENSSL
-int ProtocolSessionContainer::bindSsl(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const CertificateData& certificateData, int contentType)
-{
-    int err = 0;
-    std::unique_lock<std::mutex> lock(m_mutex);
-    auto it = m_endpoint2Bind.find(endpoint);
-    if (it == m_endpoint2Bind.end())
-    {
-        ProtocolBindPtr bind = std::make_shared<ProtocolBind>(callback, protocolFactory, m_protocolSessionList, contentType);
-        m_endpoint2Bind[endpoint] = bind;
-        lock.unlock();
-
-        err = m_streamConnectionContainer->bindSsl(endpoint, bind, certificateData);
-    }
-    return err;
-}
-
-IProtocolSessionPtr ProtocolSessionContainer::connectSsl(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const CertificateData& certificateData, int reconnectInterval, int totalReconnectDuration, int contentType)
-{
-    assert(protocol);
-    IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(callback, protocol, m_protocolSessionList, m_streamConnectionContainer, endpoint, certificateData, reconnectInterval, totalReconnectDuration, contentType);
-    protocolSession->connect();
-    return protocolSession;
-}
-#endif
 
 }   // namespace finalmq
