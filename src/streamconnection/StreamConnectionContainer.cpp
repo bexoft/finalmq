@@ -435,8 +435,12 @@ void StreamConnectionContainer::handleConnectionEvents(const IStreamConnectionPr
                     connection->connected(connection);
                 }
                 connection->sendPendingMessages();
+                if (socket->isWriteWhenReadable())
+                {
+                    readable = false;
+                }
             }
-            if (readable && !socket->isWriteWhenReadable())
+            if (readable)
             {
                 handleReceive(connection, socket, bytesToRead);
             }
