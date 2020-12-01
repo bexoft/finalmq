@@ -42,23 +42,48 @@ ProtocolMessage::ProtocolMessage(int protocolId, int sizeHeader, int sizeTrailer
 char* ProtocolMessage::addBuffer(int size)
 {
     assert(!m_preparedToSend);
+    assert(size > 0);
+
+    if (m_offset > 0)
+    {
+        const std::string& bufLast = m_payloadBuffers.back();
+        int remaining = bufLast.size() - m_offset - m_sizeTrailer;
+        assert(remaining >= 0);
+        if (size <= remaining)
+        {
+            m_sendBufferRefs.back().second += size;
+            m_sendPayloadRefs.back().second += size;
+            int offset = m_offset;
+            m_offset += size;
+            m_sizeLastBlock = size;
+            m_sizeSendBufferTotal += size;
+            m_sizeSendPayloadTotal += size;
+            return const_cast<char*>(bufLast.data()) + offset;
+        }
+    }
+
     int sizeHeader = 0;
     if (m_payloadBuffers.empty())
     {
         sizeHeader = m_sizeHeader;
-        m_sizeSendBufferTotal += m_sizeHeader + m_sizeTrailer;
+        assert(m_sizeSendBufferTotal == 0);
+        m_sizeSendBufferTotal = m_sizeHeader + m_sizeTrailer;
     }
     else
     {
         // remove the trailer of the last payload
         m_sendBufferRefs.back().second -= m_sizeTrailer;
     }
+
+    m_offset = sizeHeader + size;
+    m_sizeLastBlock = size;
+
     m_sizeSendBufferTotal += size;
     m_sizeSendPayloadTotal += size;
     int sizeBuffer = sizeHeader + size + m_sizeTrailer;
     m_payloadBuffers.resize(m_payloadBuffers.size() + 1);
     m_payloadBuffers.back().resize(sizeBuffer);
-    m_sendBufferRefs.push_back({const_cast<char*>(m_payloadBuffers.back().data()), sizeBuffer});
+    m_sendBufferRefs.push_back({const_cast<char*>(m_payloadBuffers.back().data()),               sizeBuffer});
     m_sendPayloadRefs.push_back({const_cast<char*>(m_payloadBuffers.back().data() + sizeHeader), size});
     return const_cast<char*>(m_payloadBuffers.back().data() + sizeHeader);
 }
@@ -72,25 +97,40 @@ void ProtocolMessage::downsizeLastBuffer(int newSize)
         return;
     }
 
+    assert(newSize <= m_sizeLastBlock);
+    assert(m_offset != -1 || newSize == 0);
     assert(!m_payloadBuffers.empty());
     assert(m_sendBufferRefs.size() == m_payloadBuffers.size() + m_headerBuffers.size());
 
-    int sizeHeader = 0;
-    if (m_payloadBuffers.size() == 1)
+    int diff = m_sizeLastBlock - newSize;
+    assert(diff >= 0);
+
+    if (diff == 0)
     {
-        sizeHeader = m_sizeHeader;
+        return;
     }
 
-    int newSizeBuffer = sizeHeader + newSize + m_sizeTrailer;
-    int& sizeBufferCurrent = m_sendBufferRefs.back().second;
-    assert(newSizeBuffer <= sizeBufferCurrent);
-    m_sizeSendBufferTotal += (newSizeBuffer - sizeBufferCurrent);
-    sizeBufferCurrent = newSizeBuffer;
+    m_sendBufferRefs.back().second -= diff;
+    m_sizeSendBufferTotal -= diff;
+    assert(m_sendBufferRefs.back().second >= 0);
+    assert(m_sizeSendBufferTotal >= 0);
+    m_sizeSendPayloadTotal -= diff;
+    m_offset -= diff;
+    m_sizeLastBlock = newSize;
+    assert(m_sizeSendPayloadTotal >= 0);
+    assert(m_offset >= 0);
 
-    int& sizePayloadCurrent = m_sendPayloadRefs.back().second;
-    assert(newSize <= sizePayloadCurrent);
-    m_sizeSendPayloadTotal += (newSize - sizePayloadCurrent);
-    sizePayloadCurrent = newSize;
+    if (m_sendBufferRefs.back().second > 0)
+    {
+        m_sendPayloadRefs.back().second -= diff;
+        assert(m_sendPayloadRefs.back().second >= 0);
+    }
+    else
+    {
+        m_sendBufferRefs.pop_back();
+        m_sendPayloadRefs.pop_back();
+        m_offset = -1;
+    }
 }
 
 

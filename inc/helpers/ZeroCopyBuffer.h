@@ -38,7 +38,7 @@ private:
     virtual char* addBuffer(int size) override;
     virtual void downsizeLastBuffer(int newSize) override;
 
-    std::list<std::string>    m_strings;
+    std::list<std::string>  m_strings;
 };
 
 

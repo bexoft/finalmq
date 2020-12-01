@@ -76,6 +76,8 @@ private:
     std::list<std::string>      m_payloadBuffers;
     std::list<BufferRef>        m_sendBufferRefs;
     std::list<BufferRef>::iterator m_itSendBufferRefsPayloadBegin;
+    int                         m_offset = -1;
+    int                         m_sizeLastBlock = 0;
     int                         m_sizeSendBufferTotal = 0;
     std::list<BufferRef>        m_sendPayloadRefs;
     int                         m_sizeSendPayloadTotal = 0;
