@@ -230,16 +230,79 @@ std::shared_ptr<StructBase> RemoteEntityFormat::parseMessageProto(const BufferRe
     return data;
 }
 
+static int findFirst(const char* buffer, int size, char c)
+{
+    for (int i = 0; i < size; ++i)
+    {
+        if (buffer[i] == c)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+static int findLast(const char* buffer, int size, char c)
+{
+    for (int i = size - 1; i >= 0; --i)
+    {
+        if (buffer[i] == c)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+
 std::shared_ptr<StructBase> RemoteEntityFormat::parseMessageJson(const BufferRef& bufferRef, Header& header)
 {
     const char* buffer = bufferRef.first;
     int sizeBuffer = bufferRef.second;
 
-    std::shared_ptr<StructBase> data;
+    if (sizeBuffer == 0)
+    {
+        return nullptr;
+    }
 
-    SerializerStruct serializerHeader(header);
-    ParserJson parserHeader(serializerHeader, buffer, sizeBuffer);
-    const char* endHeader = parserHeader.parseStruct(header.getStructInfo().getTypeName());
+    const char* endHeader = nullptr;
+    if (buffer[0] == '/')
+    {
+        // 012345678901234567890123456789
+        // /MyServer/test.TestRequest#1{}
+        int ixEndHeader = findFirst(buffer, sizeBuffer, '{');   //28
+        if (ixEndHeader == -1)
+        {
+            ixEndHeader = sizeBuffer;
+        }
+        endHeader = &buffer[ixEndHeader];
+        int ixStartCommand = findLast(buffer, ixEndHeader, '/');    //9
+        assert(ixStartCommand >= 0);
+        if (ixStartCommand > 1)
+        {
+            header.destname = {&buffer[1], &buffer[ixStartCommand]};
+        }
+        int ixCorrelationId = findLast(buffer, ixEndHeader, '#');   //26
+        if (ixCorrelationId != -1)
+        {
+            header.corrid = strtoll(&buffer[ixCorrelationId+1], nullptr, 10);
+        }
+        else
+        {
+            ixCorrelationId = ixEndHeader;
+        }
+        header.type = {&buffer[ixStartCommand+1], &buffer[ixCorrelationId]};
+
+        header.mode = MsgMode::MSG_REQUEST;
+    }
+    else
+    {
+        SerializerStruct serializerHeader(header);
+        ParserJson parserHeader(serializerHeader, buffer, sizeBuffer);
+        endHeader = parserHeader.parseStruct(header.getStructInfo().getTypeName());
+    }
+
+    std::shared_ptr<StructBase> data;
 
     if (endHeader && !header.type.empty())
     {
@@ -254,12 +317,15 @@ std::shared_ptr<StructBase> RemoteEntityFormat::parseMessageJson(const BufferRef
         buffer += sizeHeader;
         int sizeData = sizeBuffer - sizeHeader;
         assert(sizeData >= 0);
-        SerializerStruct serializerData(*data);
-        ParserJson parserData(serializerData, buffer, sizeData);
-        const char* endData = parserData.parseStruct(header.type);
-        if (!endData)
+        if (sizeData > 0)
         {
-            data = nullptr;
+            SerializerStruct serializerData(*data);
+            ParserJson parserData(serializerData, buffer, sizeData);
+            const char* endData = parserData.parseStruct(header.type);
+            if (!endData)
+            {
+                data = nullptr;
+            }
         }
     }
 

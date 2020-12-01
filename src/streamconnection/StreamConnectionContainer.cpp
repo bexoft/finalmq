@@ -473,6 +473,23 @@ void StreamConnectionContainer::handleBindEvents(const DescriptorInfo& info)
             }
         }
     }
+    if (info.disconnected)
+    {
+        bool found = false;
+        std::string endpoint;
+        std::unique_lock<std::mutex> lock(m_mutex);
+        auto it = m_sd2binds.find(info.sd);
+        if (it != m_sd2binds.end())
+        {
+            endpoint = it->second.connectionData.endpoint;
+            found = true;
+        }
+        lock.unlock();
+        if (found)
+        {
+            unbind(endpoint);
+        }
+    }
 }
 
 
