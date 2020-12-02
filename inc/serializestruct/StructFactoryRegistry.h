@@ -22,45 +22,57 @@
 
 #pragma once
 
-#include "streamconnection/IMessage.h"
-#include "protocolconnection/IProtocol.h"
-#include "protocolconnection/ProtocolFixHeaderHelper.h"
+#include "StructBase.h"
 
+#include <memory>
+#include <unordered_map>
 
 
 namespace finalmq {
 
 
-class ProtocolHeaderBinarySize : public IProtocol
+struct IStructFactoryRegistry
 {
-public:
-    ProtocolHeaderBinarySize();
-
-private:
-    // IProtocol
-    virtual void setCallback(const std::weak_ptr<IProtocolCallback>& callback) override;
-    virtual std::uint32_t getProtocolId() const override;
-    virtual bool areMessagesResendable() const override;
-    virtual IMessagePtr createMessage() const override;
-    virtual void receive(const SocketPtr& socket, int bytesToRead) override;
-    virtual void prepareMessageToSend(IMessagePtr message) override;
-    virtual void socketConnected() override;
-    virtual void socketDisconnected() override;
-
-    std::weak_ptr<IProtocolCallback>    m_callback;
-    ProtocolFixHeaderHelper             m_headerHelper;
-
-    const std::uint32_t PROTOCOL_ID = 0x00000002;
+    virtual ~IStructFactoryRegistry() {}
+    virtual void registerFactory(const std::string& typeName, FuncStructBaseFactory factory) = 0;
+    virtual std::shared_ptr<StructBase> createStruct(const std::string& typeName) = 0;
 };
 
 
-class ProtocolHeaderBinarySizeFactory : public IProtocolFactory
+class StructFactoryRegistryImpl : public IStructFactoryRegistry
 {
 public:
 
 private:
-    // IProtocolFactory
-    virtual IProtocolPtr createProtocol() override;
+    // IStructFactoryRegistry
+    virtual void registerFactory(const std::string& typeName, FuncStructBaseFactory factory) override;
+    virtual std::shared_ptr<StructBase> createStruct(const std::string& typeName) override;
+
+    std::unordered_map<std::string, FuncStructBaseFactory> m_factories;
 };
+
+class StructFactoryRegistry
+{
+public:
+    inline static IStructFactoryRegistry& instance()
+    {
+        if (!m_instance)
+        {
+            m_instance = std::make_unique<StructFactoryRegistryImpl>();
+        }
+        assert(m_instance);
+        return *m_instance.get();
+    }
+
+    static void setInstance(std::unique_ptr<IStructFactoryRegistry>&& instance);
+
+private:
+    StructFactoryRegistry() = delete;
+
+    static std::unique_ptr<IStructFactoryRegistry> m_instance;
+};
+
+
 
 }   // namespace finalmq
+

@@ -51,6 +51,7 @@ std::string ZeroCopyBuffer::getData() const
 
 char* ZeroCopyBuffer::addBuffer(int size)
 {
+    assert(size > 0);
     std::string str;
     str.resize(size);
     m_strings.push_back(std::move(str));
@@ -65,8 +66,16 @@ void ZeroCopyBuffer::downsizeLastBuffer(int newSize)
     }
 
     assert(!m_strings.empty());
-    std::string& str = m_strings.back();
-    str.resize(newSize);
+
+    if (newSize == 0)
+    {
+        m_strings.pop_back();
+    }
+    else
+    {
+        std::string& str = m_strings.back();
+        str.resize(newSize);
+    }
 }
 
 }   // namespace finalmq

@@ -39,9 +39,9 @@ void ConnectionHub::init(int cycleTime, int checkReconnectInterval)
     m_protocolSessionContainer->init(cycleTime, checkReconnectInterval);
 }
 
-int ConnectionHub::bind(const std::string& endpoint, IProtocolFactoryPtr protocolFactory)
+int ConnectionHub::bind(const std::string& endpoint, IProtocolFactoryPtr protocolFactory, const BindProperties& bindProperties)
 {
-    return m_protocolSessionContainer->bind(endpoint, this, protocolFactory);
+    return m_protocolSessionContainer->bind(endpoint, this, protocolFactory, bindProperties);
 }
 
 void ConnectionHub::unbind(const std::string& endpoint)
@@ -49,9 +49,9 @@ void ConnectionHub::unbind(const std::string& endpoint)
     m_protocolSessionContainer->unbind(endpoint);
 }
 
-IProtocolSessionPtr ConnectionHub::connect(const std::string& endpoint, const IProtocolPtr& protocol, int reconnectInterval, int totalReconnectDuration)
+IProtocolSessionPtr ConnectionHub::connect(const std::string& endpoint, const IProtocolPtr& protocol, const ConnectProperties& connectProperties)
 {
-    IProtocolSessionPtr session = m_protocolSessionContainer->connect(endpoint, this, protocol, reconnectInterval, totalReconnectDuration);
+    IProtocolSessionPtr session = m_protocolSessionContainer->connect(endpoint, this, protocol, connectProperties);
     return session;
 }
 
@@ -76,19 +76,6 @@ bool ConnectionHub::waitForTerminationOfPollerLoop(int timeout)
     return m_protocolSessionContainer->terminatePollerLoop(timeout);
 }
 
-
-#ifdef USE_OPENSSL
-int ConnectionHub::bindSsl(const std::string& endpoint, IProtocolFactoryPtr protocolFactory, const CertificateData& certificateData)
-{
-    return m_protocolSessionContainer->bindSsl(endpoint, this, protocolFactory, certificateData);
-}
-
-IProtocolSessionPtr ConnectionHub::connectSsl(const std::string& endpoint, const IProtocolPtr& protocol, const CertificateData& certificateData, int reconnectInterval, int totalReconnectDuration)
-{
-    return m_protocolSessionContainer->connectSsl(endpoint, this, protocol, certificateData, reconnectInterval, totalReconnectDuration);
-}
-
-#endif
 
 
 void ConnectionHub::startMessageForwarding()

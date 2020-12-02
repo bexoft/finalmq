@@ -120,7 +120,7 @@ TEST_F(TestEpoll, testAddSocketReadableWait)
 
     EXPECT_CALL(*m_mockMockOperatingSystem, epoll_ctl(_, EPOLL_CTL_ADD, socket->getDescriptor(), Event(&evCtl))).Times(1);
 
-    m_select->addSocket(socket);
+    m_select->addSocketEnableRead(socket);
 
     struct epoll_event events;
     events.data.fd = socket->getDescriptor();
@@ -155,7 +155,7 @@ TEST_F(TestEpoll, testAddSocketReadableEINTR)
     evCtl.data.fd = socket->getDescriptor();
     EXPECT_CALL(*m_mockMockOperatingSystem, epoll_ctl(EPOLL_FD, EPOLL_CTL_ADD, socket->getDescriptor(), Event(&evCtl))).Times(1);
 
-    m_select->addSocket(socket);
+    m_select->addSocketEnableRead(socket);
 
     struct epoll_event events;
     events.data.fd = socket->getDescriptor();
@@ -200,7 +200,7 @@ TEST_F(TestEpoll, testAddSocketReadableError)
     evCtl.data.fd = socket->getDescriptor();
     EXPECT_CALL(*m_mockMockOperatingSystem, epoll_ctl(EPOLL_FD, EPOLL_CTL_ADD, socket->getDescriptor(), Event(&evCtl))).Times(1);
 
-    m_select->addSocket(socket);
+    m_select->addSocketEnableRead(socket);
 
     EXPECT_CALL(*m_mockMockOperatingSystem, epoll_pwait(EPOLL_FD, _, _, TIMEOUT, nullptr)).Times(1)
                 .WillRepeatedly(Return(-1));
@@ -223,7 +223,7 @@ TEST_F(TestEpoll, testAddSocketReadableWaitSocketDescriptorsChanged)
     evCtl.data.fd = socket->getDescriptor();
     EXPECT_CALL(*m_mockMockOperatingSystem, epoll_ctl(EPOLL_FD, EPOLL_CTL_ADD, socket->getDescriptor(), Event(&evCtl))).Times(1);
 
-    m_select->addSocket(socket);
+    m_select->addSocketEnableRead(socket);
 
     struct epoll_event events;
     events.data.fd = socket->getDescriptor();
@@ -272,7 +272,7 @@ TEST_F(TestEpoll, testAddSocketDisconnectRead)
     evCtl.data.fd = socket->getDescriptor();
     EXPECT_CALL(*m_mockMockOperatingSystem, epoll_ctl(EPOLL_FD, EPOLL_CTL_ADD, socket->getDescriptor(), Event(&evCtl))).Times(1);
 
-    m_select->addSocket(socket);
+    m_select->addSocketEnableRead(socket);
 
     struct epoll_event events;
     events.data.fd = socket->getDescriptor();
@@ -308,7 +308,7 @@ TEST_F(TestEpoll, testAddSocketDisconnectEpollError)
     evCtl.data.fd = socket->getDescriptor();
     EXPECT_CALL(*m_mockMockOperatingSystem, epoll_ctl(EPOLL_FD, EPOLL_CTL_ADD, socket->getDescriptor(), Event(&evCtl))).Times(1);
 
-    m_select->addSocket(socket);
+    m_select->addSocketEnableRead(socket);
 
     struct epoll_event events;
     events.data.fd = socket->getDescriptor();
@@ -340,7 +340,7 @@ TEST_F(TestEpoll, testAddSocketIoCtlError)
     evCtl.data.fd = socket->getDescriptor();
     EXPECT_CALL(*m_mockMockOperatingSystem, epoll_ctl(EPOLL_FD, EPOLL_CTL_ADD, socket->getDescriptor(), Event(&evCtl))).Times(1);
 
-    m_select->addSocket(socket);
+    m_select->addSocketEnableRead(socket);
 
     struct epoll_event events;
     events.data.fd = socket->getDescriptor();
@@ -375,7 +375,7 @@ TEST_F(TestEpoll, testAddSocketWritableWait)
     evCtl.data.fd = socket->getDescriptor();
     EXPECT_CALL(*m_mockMockOperatingSystem, epoll_ctl(EPOLL_FD, EPOLL_CTL_ADD, socket->getDescriptor(), Event(&evCtl))).Times(1);
 
-    m_select->addSocket(socket);
+    m_select->addSocketEnableRead(socket);
 
     epoll_event evCtlWrite;
     evCtlWrite.events = EPOLLIN | EPOLLOUT;
@@ -416,7 +416,7 @@ TEST_F(TestEpoll, testAddSocketDisableWritableWait)
     evCtl.data.fd = socket->getDescriptor();
     EXPECT_CALL(*m_mockMockOperatingSystem, epoll_ctl(EPOLL_FD, EPOLL_CTL_ADD, socket->getDescriptor(), Event(&evCtl))).Times(1);
 
-    m_select->addSocket(socket);
+    m_select->addSocketEnableRead(socket);
 
     epoll_event evCtlWrite;
     evCtlWrite.events = EPOLLIN | EPOLLOUT;

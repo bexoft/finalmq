@@ -35,18 +35,13 @@ struct IProtocolSessionContainer
     virtual ~IProtocolSessionContainer() {}
 
     virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000) = 0;
-    virtual int bind(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory) = 0;
+    virtual int bind(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const BindProperties& bindProperties = {}, int contentType = 0) = 0;
     virtual void unbind(const std::string& endpoint) = 0;
-    virtual IProtocolSessionPtr connect(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, int reconnectInterval = 5000, int totalReconnectDuration = -1) = 0;
+    virtual IProtocolSessionPtr connect(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const ConnectProperties& connectProperties = {}, int contentType = 0) = 0;
     virtual std::vector< IProtocolSessionPtr > getAllSessions() const = 0;
     virtual IProtocolSessionPtr getSession(std::int64_t sessionId) const = 0;
     virtual void threadEntry() = 0;
     virtual bool terminatePollerLoop(int timeout) = 0;
-
-#ifdef USE_OPENSSL
-    virtual int bindSsl(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const CertificateData& certificateData) = 0;
-    virtual IProtocolSessionPtr connectSsl(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const CertificateData& certificateData, int reconnectInterval = 5000, int totalReconnectDuration = -1) = 0;
-#endif
 };
 
 typedef std::shared_ptr<IProtocolSessionContainer> IProtocolSessionContainerPtr;
@@ -59,7 +54,7 @@ struct IStreamConnectionContainer;
 class ProtocolBind : public IStreamConnectionCallback
 {
 public:
-    ProtocolBind(hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const std::weak_ptr<IProtocolSessionList>& protocolSessionList);
+    ProtocolBind(hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const BindProperties& bindProperties = {}, int contentType = 0);
 
 private:
     // IStreamConnectionCallback
@@ -70,6 +65,8 @@ private:
     hybrid_ptr<IProtocolSessionCallback>    m_callback;
     IProtocolFactoryPtr                     m_protocolFactory;
     std::weak_ptr<IProtocolSessionList>     m_protocolSessionList;
+    BindProperties                          m_bindProperties;
+    int                                     m_contentType = 0;
 };
 
 typedef std::shared_ptr<ProtocolBind> ProtocolBindPtr;
@@ -87,18 +84,13 @@ public:
 private:
     // IProtocolSessionContainer
     virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000) override;
-    virtual int bind(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory) override;
+    virtual int bind(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const BindProperties& bindProperties = {}, int contentType = 0) override;
     virtual void unbind(const std::string& endpoint) override;
-    virtual IProtocolSessionPtr connect(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, int reconnectInterval = 5000, int totalReconnectDuration = -1) override;
+    virtual IProtocolSessionPtr connect(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const ConnectProperties& connectProperties = {}, int contentType = 0) override;
     virtual std::vector< IProtocolSessionPtr > getAllSessions() const override;
     virtual IProtocolSessionPtr getSession(std::int64_t sessionId) const override;
     virtual void threadEntry() override;
     virtual bool terminatePollerLoop(int timeout) override;
-
-#ifdef USE_OPENSSL
-    virtual int bindSsl(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const CertificateData& certificateData) override;
-    virtual IProtocolSessionPtr connectSsl(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const CertificateData& certificateData, int reconnectInterval = 5000, int totalReconnectDuration = -1) override;
-#endif
 
 private:
     IProtocolSessionListPtr                                     m_protocolSessionList;

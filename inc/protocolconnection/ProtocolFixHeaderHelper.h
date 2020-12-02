@@ -24,7 +24,7 @@
 
 #include "streamconnection/IMessage.h"
 #include "protocolconnection/IProtocol.h"
-#include <vector>
+#include <deque>
 #include <functional>
 
 namespace finalmq {
@@ -34,7 +34,7 @@ class ProtocolFixHeaderHelper
 public:
     ProtocolFixHeaderHelper(int sizeHeader, std::function<int(const std::string& header)> funcGetPayloadSize);
 
-    std::vector<IMessagePtr> receive(const SocketPtr& socket, int bytesToRead);
+    void receive(const SocketPtr& socket, int bytesToRead, std::deque<IMessagePtr>& messages);
 
 private:
 

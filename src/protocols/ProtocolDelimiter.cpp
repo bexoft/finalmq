@@ -45,9 +45,9 @@ void ProtocolDelimiter::setCallback(const std::weak_ptr<IProtocolCallback>& call
     m_callback = callback;
 }
 
-int ProtocolDelimiter::getProtocolId() const
+std::uint32_t ProtocolDelimiter::getProtocolId() const
 {
-    return m_protocolId;
+    return PROTOCOL_ID;
 }
 
 bool ProtocolDelimiter::areMessagesResendable() const
@@ -57,7 +57,7 @@ bool ProtocolDelimiter::areMessagesResendable() const
 
 IMessagePtr ProtocolDelimiter::createMessage() const
 {
-    return std::make_shared<ProtocolMessage>(m_protocolId, 0, m_delimiter.size());
+    return std::make_shared<ProtocolMessage>(PROTOCOL_ID, 0, m_delimiter.size());
 }
 
 std::vector<int> ProtocolDelimiter::findEndOfMessage(const char* buffer, int size)

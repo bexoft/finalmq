@@ -34,10 +34,11 @@ struct IProtocolSession
     virtual std::int64_t getSessionId() const = 0;
     virtual const ConnectionData& getConnectionData() const = 0;
     virtual SocketPtr getSocket() = 0;
+    virtual int getContentType() const = 0;
     virtual void disconnect() = 0;
 };
 
-struct IProtocolSession;
+//struct IProtocolSession;
 typedef std::shared_ptr<IProtocolSession> IProtocolSessionPtr;
 
 

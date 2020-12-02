@@ -21,6 +21,7 @@
 //SOFTWARE.
 
 #include "serializestruct/StructBase.h"
+#include "serializestruct/StructFactoryRegistry.h"
 #include "metadata/MetaData.h"
 
 #include <algorithm>
@@ -43,10 +44,11 @@ void FieldInfo::setField(const MetaField* field)
 
 
 
-StructInfo::StructInfo(const std::string& typeName, const std::string& description, std::vector<MetaField>&& fields, std::vector<FieldInfo>&& fieldInfos)
+StructInfo::StructInfo(const std::string& typeName, const std::string& description, FuncStructBaseFactory factory, std::vector<MetaField>&& fields, std::vector<FieldInfo>&& fieldInfos)
     : m_metaStruct(MetaDataGlobal::instance().addStruct({typeName, description, std::move(fields)}))
     , m_fieldInfos(std::move(fieldInfos))
 {
+    StructFactoryRegistry::instance().registerFactory(typeName, factory);
     int size = std::min(m_metaStruct.getFieldsSize(), static_cast<int>(m_fieldInfos.size()));
     for (int i = 0; i < size; ++i)
     {

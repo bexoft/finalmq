@@ -37,7 +37,7 @@ class ParserJson : public IJsonParserVisitor
 public:
     ParserJson(IParserVisitor& visitor, const char* ptr, int size = CHECK_ON_ZEROTERM);
 
-    bool parseStruct(const std::string& typeName);
+    const char* parseStruct(const std::string& typeName);
 
 private:
     // IJsonParserVisitor

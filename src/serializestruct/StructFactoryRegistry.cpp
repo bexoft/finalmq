@@ -20,47 +20,48 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#pragma once
+#include "serializestruct/StructFactoryRegistry.h"
 
-#include "streamconnection/IMessage.h"
-#include "protocolconnection/IProtocol.h"
-#include "protocolconnection/ProtocolFixHeaderHelper.h"
-
+#include <assert.h>
 
 
 namespace finalmq {
 
 
-class ProtocolHeaderBinarySize : public IProtocol
+// IStructFactoryRegistry
+void StructFactoryRegistryImpl::registerFactory(const std::string& typeName, FuncStructBaseFactory factory)
 {
-public:
-    ProtocolHeaderBinarySize();
+    m_factories[typeName] = factory;
+}
 
-private:
-    // IProtocol
-    virtual void setCallback(const std::weak_ptr<IProtocolCallback>& callback) override;
-    virtual std::uint32_t getProtocolId() const override;
-    virtual bool areMessagesResendable() const override;
-    virtual IMessagePtr createMessage() const override;
-    virtual void receive(const SocketPtr& socket, int bytesToRead) override;
-    virtual void prepareMessageToSend(IMessagePtr message) override;
-    virtual void socketConnected() override;
-    virtual void socketDisconnected() override;
-
-    std::weak_ptr<IProtocolCallback>    m_callback;
-    ProtocolFixHeaderHelper             m_headerHelper;
-
-    const std::uint32_t PROTOCOL_ID = 0x00000002;
-};
-
-
-class ProtocolHeaderBinarySizeFactory : public IProtocolFactory
+std::shared_ptr<StructBase> StructFactoryRegistryImpl::createStruct(const std::string& typeName)
 {
-public:
+    auto it = m_factories.find(typeName);
+    if (it != m_factories.end())
+    {
+        if (it->second)
+        {
+            return it->second();
+        }
+    }
+    return {};
+}
 
-private:
-    // IProtocolFactory
-    virtual IProtocolPtr createProtocol() override;
-};
+
+
+
+
+////////////////////////////////
+
+std::unique_ptr<IStructFactoryRegistry> StructFactoryRegistry::m_instance;
+
+void StructFactoryRegistry::setInstance(std::unique_ptr<IStructFactoryRegistry>&& instance)
+{
+    m_instance = std::move(instance);
+}
+
+
+
+
 
 }   // namespace finalmq

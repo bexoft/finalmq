@@ -30,7 +30,7 @@ module.exports = {
         {
             type = data.namespace + '.' + type
         }
-        return type.replace('.', delimiter)
+        return type.split('.').join(delimiter)
     },
 
     getPlainType : function(type)

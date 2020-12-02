@@ -45,7 +45,7 @@ private:
     virtual void downsizeLastSendPayload(int newSize) override;
 
     // for receive
-    virtual BufferRef getReceivePayload() override;
+    virtual BufferRef getReceivePayload() const override;
     virtual char* resizeReceivePayload(int size) override;
 
     // for the framework
@@ -64,7 +64,7 @@ private:
     virtual void prepareMessageToSend() override;
 
     // for the protocol to check if which protocol created the message
-    virtual int getProtocolId() const;
+    virtual std::uint32_t getProtocolId() const;
     virtual bool wasSent() const override;
 
     virtual void addMessage(const IMessagePtr& msg) override;
@@ -76,6 +76,8 @@ private:
     std::list<std::string>      m_payloadBuffers;
     std::list<BufferRef>        m_sendBufferRefs;
     std::list<BufferRef>::iterator m_itSendBufferRefsPayloadBegin;
+    int                         m_offset = -1;
+    int                         m_sizeLastBlock = 0;
     int                         m_sizeSendBufferTotal = 0;
     std::list<BufferRef>        m_sendPayloadRefs;
     int                         m_sizeSendPayloadTotal = 0;

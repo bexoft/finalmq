@@ -70,6 +70,7 @@ TEST(TestIntegrationSelect, testAddSocketReadableBeforeWait)
     EXPECT_NE(controlSocketOutside, nullptr);
 
     poller->addSocket(controlSocketInside);
+    poller->enableRead(controlSocketInside);
     OperatingSystem::instance().write(controlSocketOutside->getDescriptor(), BUFFER.c_str(), BUFFER.size());
 
     const PollerResult& result = poller->wait(10);
@@ -99,6 +100,7 @@ TEST(TestIntegrationSelect, testAddSocketReadableInsideWait)
     std::thread thread([poller, controlSocketInside, controlSocketOutside] () {
         std::this_thread::sleep_for(10ms);
         poller->addSocket(controlSocketInside);
+        poller->enableRead(controlSocketInside);
         OperatingSystem::instance().write(controlSocketOutside->getDescriptor(), BUFFER.c_str(), BUFFER.size());
     });
 
@@ -129,6 +131,7 @@ TEST(TestIntegrationSelect, testEnableWriteSocketBeforeWait)
     EXPECT_NE(controlSocketOutside, nullptr);
 
     poller->addSocket(controlSocketInside);
+    poller->enableRead(controlSocketInside);
     const PollerResult& result1 = poller->wait(0);
     EXPECT_EQ(result1.error, false);
     EXPECT_EQ(result1.timeout, true);
@@ -160,6 +163,7 @@ TEST(TestIntegrationSelect, testEnableWriteSocketInsideWait)
     EXPECT_NE(controlSocketOutside, nullptr);
 
     poller->addSocket(controlSocketInside);
+    poller->enableRead(controlSocketInside);
 
     const PollerResult& result1 = poller->wait(0);
     EXPECT_EQ(result1.error, false);
@@ -197,6 +201,7 @@ TEST(TestIntegrationSelect, testEnableWriteSocketNotWritable)
     EXPECT_NE(controlSocketOutside, nullptr);
 
     poller->addSocket(controlSocketInside);
+    poller->enableRead(controlSocketInside);
     const PollerResult& result1 = poller->wait(0);
     EXPECT_EQ(result1.error, false);
     EXPECT_EQ(result1.timeout, true);
@@ -230,6 +235,7 @@ TEST(TestIntegrationSelect, testEnableWriteSocketNotWritableToWritable)
     EXPECT_NE(controlSocketOutside, nullptr);
 
     poller->addSocket(controlSocketInside);
+    poller->enableRead(controlSocketInside);
     const PollerResult& result1 = poller->wait(0);
     EXPECT_EQ(result1.error, false);
     EXPECT_EQ(result1.timeout, true);
@@ -280,6 +286,7 @@ TEST(TestIntegrationSelect, testDisableWriteSocket)
     EXPECT_NE(controlSocketOutside, nullptr);
 
     poller->addSocket(controlSocketInside);
+    poller->enableRead(controlSocketInside);
     const PollerResult& result1 = poller->wait(0);
     EXPECT_EQ(result1.error, false);
     EXPECT_EQ(result1.timeout, true);
@@ -328,6 +335,7 @@ TEST(TestIntegrationSelect, testRemoveSocketInsideWait)
     EXPECT_NE(controlSocketOutside, nullptr);
 
     poller->addSocket(controlSocketInside);
+    poller->enableRead(controlSocketInside);
 
     std::thread thread([poller, controlSocketInside, controlSocketOutside] () {
         std::this_thread::sleep_for(10ms);

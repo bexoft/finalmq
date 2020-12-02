@@ -49,7 +49,7 @@ struct IMessage : public IZeroCopyBuffer
     virtual void downsizeLastSendPayload(int newSize) = 0;
 
     // for receive
-    virtual BufferRef getReceivePayload() = 0;
+    virtual BufferRef getReceivePayload() const = 0;
     virtual char* resizeReceivePayload(int size) = 0;
 
     // for the framework
@@ -67,8 +67,8 @@ struct IMessage : public IZeroCopyBuffer
     // for the protocol to prepare the message for send
     virtual void prepareMessageToSend() = 0;
 
-    // for the protocol to check if which protocol created the message
-    virtual int getProtocolId() const = 0;
+    // for the protocol to check which protocol created the message
+    virtual std::uint32_t getProtocolId() const = 0;
     virtual bool wasSent() const = 0;
 
     virtual void addMessage(const std::shared_ptr<IMessage>& msg) = 0;

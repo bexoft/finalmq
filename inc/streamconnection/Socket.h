@@ -82,9 +82,28 @@ public:
     SSL* getSslSocket();
     SslSocket::IoState sslAccepting();
     SslSocket::IoState sslConnecting();
-    bool isSsl() const;
-    bool isReadWhenWritable() const;
-    bool isWriteWhenReadable() const;
+    inline bool isSsl() const
+    {
+        return !!m_sslContext;
+    }
+    inline bool isReadWhenWritable() const
+    {
+        if (m_sslContext)
+        {
+            assert(m_sslSocket);
+            return m_sslSocket->isReadWhenWritable();
+        }
+        return false;
+    }
+    inline bool isWriteWhenReadable() const
+    {
+        if (m_sslContext)
+        {
+            assert(m_sslSocket);
+            return m_sslSocket->isWriteWhenReadable();
+        }
+        return false;
+    }
     int sslPending();
 private:
     void startSslAccept(const std::shared_ptr<SslContext>& sslContext);

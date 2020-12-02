@@ -35,7 +35,9 @@ namespace finalmq {
 
 
 PollerImplEpoll::PollerImplEpoll()
+    : m_socketDescriptorsStable(ATOMIC_FLAG_INIT)
 {
+    m_socketDescriptorsStable.test_and_set();
 }
 
 PollerImplEpoll::~PollerImplEpoll()
@@ -57,7 +59,7 @@ void PollerImplEpoll::init()
     {
         assert(m_controlSocketWrite);
         assert(m_controlSocketRead);
-        addSocket(m_controlSocketRead);
+        addSocketEnableRead(m_controlSocketRead);
     }
 }
 
@@ -65,7 +67,28 @@ void PollerImplEpoll::init()
 void PollerImplEpoll::addSocket(const SocketDescriptorPtr& fd)
 {
     std::unique_lock<std::mutex> locker(m_mutex);
-    auto result = m_socketDescriptors.insert(fd);
+    auto result = m_socketDescriptors.insert(std::make_pair(fd, 0));
+    if (result.second)
+    {
+        epoll_event ev;
+        ev.events = 0;
+        ev.data.fd = fd->getDescriptor();
+        int res = OperatingSystem::instance().epoll_ctl(m_fdEpoll, EPOLL_CTL_ADD, fd->getDescriptor(), &ev);
+        assert(res != -1);
+        sockedDescriptorHasChanged();
+    }
+    else
+    {
+        // socket already added
+    }
+    locker.unlock();
+}
+
+
+void PollerImplEpoll::addSocketEnableRead(const SocketDescriptorPtr& fd)
+{
+    std::unique_lock<std::mutex> locker(m_mutex);
+    auto result = m_socketDescriptors.insert(std::make_pair(fd, EPOLLIN));
     if (result.second)
     {
         epoll_event ev;
@@ -86,14 +109,15 @@ void PollerImplEpoll::addSocket(const SocketDescriptorPtr& fd)
 void PollerImplEpoll::removeSocket(const SocketDescriptorPtr& fd)
 {
     std::unique_lock<std::mutex> locker(m_mutex);
-    if (m_socketDescriptors.find(fd) != m_socketDescriptors.end())
+    auto it = m_socketDescriptors.find(fd);
+    if (it != m_socketDescriptors.end())
     {
         epoll_event ev; // to be compatible with linux versions before 2.6.9
         ev.events = 0;
         ev.data.fd = fd->getDescriptor();
         int res = OperatingSystem::instance().epoll_ctl(m_fdEpoll, EPOLL_CTL_DEL, fd->getDescriptor(), &ev);
         assert(res != -1);
-        m_socketDescriptors.erase(fd);
+        m_socketDescriptors.erase(it);
         sockedDescriptorHasChanged();
     }
     else
@@ -105,13 +129,59 @@ void PollerImplEpoll::removeSocket(const SocketDescriptorPtr& fd)
 
 
 
+void PollerImplEpoll::enableRead(const SocketDescriptorPtr& fd)
+{
+    std::unique_lock<std::mutex> locker(m_mutex);
+    auto it = m_socketDescriptors.find(fd);
+    if (it != m_socketDescriptors.end())
+    {
+        it->second |= EPOLLIN;
+        epoll_event ev;
+        ev.events = it->second;
+        ev.data.fd = fd->getDescriptor();
+        int res = OperatingSystem::instance().epoll_ctl(m_fdEpoll, EPOLL_CTL_MOD, fd->getDescriptor(), &ev);
+        assert(res != -1);
+    }
+    else
+    {
+        // error: socket not added
+    }
+    locker.unlock();
+}
+
+
+void PollerImplEpoll::disableRead(const SocketDescriptorPtr& fd)
+{
+    std::unique_lock<std::mutex> locker(m_mutex);
+    auto it = m_socketDescriptors.find(fd);
+    if (it != m_socketDescriptors.end())
+    {
+        it->second &= ~EPOLLIN;
+        epoll_event ev;
+        ev.events = it->second;
+        ev.data.fd = fd->getDescriptor();
+        int res = OperatingSystem::instance().epoll_ctl(m_fdEpoll, EPOLL_CTL_MOD, fd->getDescriptor(), &ev);
+        assert(res != -1);
+    }
+    else
+    {
+        // error: socket not added
+    }
+    locker.unlock();
+}
+
+
+
+
 void PollerImplEpoll::enableWrite(const SocketDescriptorPtr& fd)
 {
     std::unique_lock<std::mutex> locker(m_mutex);
-    if (m_socketDescriptors.find(fd) != m_socketDescriptors.end())
+    auto it = m_socketDescriptors.find(fd);
+    if (it != m_socketDescriptors.end())
     {
+        it->second |= EPOLLOUT;
         epoll_event ev;
-        ev.events = EPOLLIN | EPOLLOUT;
+        ev.events = it->second;
         ev.data.fd = fd->getDescriptor();
         int res = OperatingSystem::instance().epoll_ctl(m_fdEpoll, EPOLL_CTL_MOD, fd->getDescriptor(), &ev);
         assert(res != -1);
@@ -127,10 +197,12 @@ void PollerImplEpoll::enableWrite(const SocketDescriptorPtr& fd)
 void PollerImplEpoll::disableWrite(const SocketDescriptorPtr& fd)
 {
     std::unique_lock<std::mutex> locker(m_mutex);
-    if (m_socketDescriptors.find(fd) != m_socketDescriptors.end())
+    auto it = m_socketDescriptors.find(fd);
+    if (it != m_socketDescriptors.end())
     {
+        it->second &= ~EPOLLOUT;
         epoll_event ev;
-        ev.events = EPOLLIN;
+        ev.events = it->second;
         ev.data.fd = fd->getDescriptor();
         int res = OperatingSystem::instance().epoll_ctl(m_fdEpoll, EPOLL_CTL_MOD, fd->getDescriptor(), &ev);
         assert(res != -1);
@@ -146,21 +218,17 @@ void PollerImplEpoll::disableWrite(const SocketDescriptorPtr& fd)
 
 void PollerImplEpoll::sockedDescriptorHasChanged()
 {
-    m_socketDescriptorsChanged = true;
-
-    if (!m_insideCollect)
-    {
-        updateSocketDescriptors();
-    }
+    m_socketDescriptorsStable.clear(std::memory_order_release);
 }
 
 
 void PollerImplEpoll::updateSocketDescriptors()
 {
-    if (m_socketDescriptorsChanged)
+    m_socketDescriptorsConstForEpoll.clear();
+    m_socketDescriptorsConstForEpoll.reserve(m_socketDescriptors.size());
+    for (auto it = m_socketDescriptors.begin(); it != m_socketDescriptors.end(); ++it)
     {
-        m_socketDescriptorsChanged = false;
-        m_socketDescriptorsConstForEpoll = m_socketDescriptors;
+        m_socketDescriptorsConstForEpoll.push_back(it->first);
     }
 }
 
@@ -259,16 +327,15 @@ const PollerResult& PollerImplEpoll::wait(std::int32_t timeout)
 {
     int res = 0;
     int err = 0;
-    do
+
+    if (!m_socketDescriptorsStable.test_and_set(std::memory_order_acquire))
     {
         std::unique_lock<std::mutex> locker(m_mutex);
-        m_insideCollect = true;
-
         updateSocketDescriptors();
+    }
 
-        locker.unlock();
-
-
+    do
+    {
         res = OperatingSystem::instance().epoll_pwait(m_fdEpoll, &m_events[0], m_events.size(), timeout, nullptr);
 
         if (res == -1)
@@ -280,13 +347,10 @@ const PollerResult& PollerImplEpoll::wait(std::int32_t timeout)
 
     collectSockets(res);
 
-    m_insideCollect = false;
-
-    if (m_socketDescriptorsChanged)
+    if (!m_socketDescriptorsStable.test_and_set(std::memory_order_acquire))
     {
         std::unique_lock<std::mutex> locker(m_mutex);
         updateSocketDescriptors();
-        locker.unlock();
     }
 
     return m_result;

@@ -59,24 +59,30 @@ bool StreamConnection::sendMessage(const IMessagePtr& msg)
             }
             else
             {
-                bool ex = false;
-                int i = 0;
-                for (auto it = payloads.begin(); it != payloads.end() && !ex; ++i)
-                {
-                    const BufferRef& payload = *it;
-                    ++it;
-                    bool last = (it == payloads.end());
-                    int flags = last ? 0 : MSG_MORE;    // win32: MSG_PARTIAL
-                    int err = m_socketPrivate->send(payload.first, payload.second, flags);
-                    if (err != payload.second)
-                    {
-                        assert(err < payload.second);
-                        --it;
-                        m_pendingMessages.push_back({msg, it, err});
-                        m_poller->enableWrite(m_socketPrivate->getSocketDescriptor());
-                        ex = true;
-                    }
-                }
+                m_pendingMessages.push_back({msg, payloads.begin(), 0});
+                m_poller->enableWrite(m_socketPrivate->getSocketDescriptor());
+//                bool ex = false;
+//                int i = 0;
+//                for (auto it = payloads.begin(); it != payloads.end() && !ex; ++i)
+//                {
+//                    const BufferRef& payload = *it;
+//                    ++it;
+//                    bool last = (it == payloads.end());
+//                    int flags = last ? 0 : MSG_MORE;    // win32: MSG_PARTIAL
+//                    int err = m_socketPrivate->send(payload.first, payload.second, flags);
+//                    if (err != payload.second)
+//                    {
+//                        if (err < 0)
+//                        {
+//                            err = 0;
+//                        }
+//                        assert(err < payload.second);
+//                        --it;
+//                        m_pendingMessages.push_back({msg, it, err});
+//                        m_poller->enableWrite(m_socketPrivate->getSocketDescriptor());
+//                        ex = true;
+//                    }
+//                }
             }
         }
     }
@@ -128,7 +134,7 @@ bool StreamConnection::connect()
             m_connectionData.connectionState = CONNECTIONSTATE_CONNECTING;
             SocketDescriptorPtr sd = m_socketPrivate->getSocketDescriptor();
             assert(sd);
-            m_poller->addSocket(sd);
+            m_poller->addSocketEnableRead(sd);
             m_poller->enableWrite(sd);
         }
     }
@@ -159,11 +165,12 @@ bool StreamConnection::sendPendingMessages()
                     bool last = ((it == payloads.end()) && (m_pendingMessages.size() == 1));
                     int flags = last ? 0 : MSG_MORE;    // win32: MSG_PARTIAL
                     int size = payload.second - messageSendState.offset;
-                    assert(size > 0);
+                    assert((payload.second == 0 && size == 0) || (size > 0));
                     int err = m_socketPrivate->send(payload.first + messageSendState.offset, size, flags);
                     if (err == size)
                     {
-                        ++messageSendState.it;
+                        messageSendState.it = it;
+                        messageSendState.offset = 0;
                     }
                     else if (err > 0)
                     {

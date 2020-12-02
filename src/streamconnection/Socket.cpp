@@ -421,21 +421,11 @@ void Socket::startSslAccept(const std::shared_ptr<SslContext>& sslContext)
     m_sslSocket->startAccept();
 }
 
-bool Socket::isSsl() const
-{
-    return !!m_sslContext;
-}
-bool Socket::isReadWhenWritable() const
-{
-    return m_readWhenWritable;
-}
-bool Socket::isWriteWhenReadable() const
-{
-    return m_writeWhenReadable;
-}
 int Socket::sslPending()
 {
     assert(m_sslSocket);
+    char c = 0;
+    receive(&c, 0);
     return m_sslSocket->sslPending();
 }
 

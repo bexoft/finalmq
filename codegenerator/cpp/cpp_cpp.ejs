@@ -79,6 +79,7 @@ for (var i = 0; i < data.structs.length; i++)
 <%- plaintype %>::<%- plaintype %>()
 {
 }
+<% if (stru.fields.length > 0) { %>
 <%- plaintype %>::<%- plaintype %>(<% -%>
 <% for (var n = 0; n < stru.fields.length; n++) {
         field = stru.fields[n] %><% -%>
@@ -90,6 +91,7 @@ const <%- helper.tid2type(data, field.tid, field.type) %>& <%- field.name %>_<% 
 <% } %><% -%>
 {
 }
+<% } %>
 void <%- plaintype %>::clear()
 {
     *this = <%- plaintype %>();
@@ -98,19 +100,23 @@ const finalmq::StructInfo& <%- plaintype %>::getStructInfo() const
 {
     return _structInfo;
 }
-bool <%- plaintype %>::operator ==(const <%- plaintype %>& rhs) const
+bool <%- plaintype %>::operator ==(const <%- plaintype %>& <% if (stru.fields.length == 0) { %>/*<% } %>rhs<% if (stru.fields.length == 0) { %>*/<% } %>) const
 {
+<% if (stru.fields.length > 0) { %>
     return (<% for (var n = 0; n < stru.fields.length; n++) {
     field = stru.fields[n] %>
             <%- field.name %> == rhs.<%- field.name %><% if (n < stru.fields.length-1){ %> &&<% } %><% -%>
-<% } %>);
+<% } -%>);
+<% } else { -%>
+    return true;
+<% } -%>
 }
 bool <%- plaintype %>::operator !=(const <%- plaintype %>& rhs) const
 {
     return !(*this == rhs);
 }
 const finalmq::StructInfo <%- plaintype %>::_structInfo = {
-    "<%- helper.typeWithNamespace(data, stru.type, '.') %>", "<%- stru.description %>", {<% -%>
+    "<%- helper.typeWithNamespace(data, stru.type, '.') %>", "<%- stru.description %>", [] () { return std::make_shared<<%- plaintype %>>(); }, {<% -%>
     <% for (var n = 0; n < stru.fields.length; n++) { 
         field = stru.fields[n] %>
         {finalmq::<%- field.tid %>, "<%- helper.typeWithNamespace(data, field.type, '.') %>", "<%- field.name %>", "<%- field.description %>", <%- helper.convertFlags(field.flags) %>, <%- n %>},<% -%>

@@ -37,8 +37,6 @@ static const int HEADERSIZE = 4;
 // ProtocolHeaderBinarySize
 //---------------------------------------
 
-static std::atomic<std::int64_t> g_protocolInstanceIdNext(1);
-
 
 ProtocolHeaderBinarySize::ProtocolHeaderBinarySize()
     : m_headerHelper(HEADERSIZE, [] (const std::string& header) {
@@ -46,7 +44,7 @@ ProtocolHeaderBinarySize::ProtocolHeaderBinarySize()
             int sizePayload = 0;
             for (int i = 0; i < 4; ++i)
             {
-                sizePayload += (int)header[i] << (8 * i);
+                sizePayload |= ((unsigned int)header[i] & 0xff) << (8 * i);
             }
             return sizePayload;
       })
@@ -61,9 +59,9 @@ void ProtocolHeaderBinarySize::setCallback(const std::weak_ptr<IProtocolCallback
     m_callback = callback;
 }
 
-int ProtocolHeaderBinarySize::getProtocolId() const
+std::uint32_t ProtocolHeaderBinarySize::getProtocolId() const
 {
-    return m_protocolId;
+    return PROTOCOL_ID;
 }
 
 bool ProtocolHeaderBinarySize::areMessagesResendable() const
@@ -73,18 +71,19 @@ bool ProtocolHeaderBinarySize::areMessagesResendable() const
 
 IMessagePtr ProtocolHeaderBinarySize::createMessage() const
 {
-    return std::make_shared<ProtocolMessage>(m_protocolId, HEADERSIZE);
+    return std::make_shared<ProtocolMessage>(PROTOCOL_ID, HEADERSIZE);
 }
 
 void ProtocolHeaderBinarySize::receive(const SocketPtr& socket, int bytesToRead)
 {
-    std::vector<IMessagePtr> messages = m_headerHelper.receive(socket, bytesToRead);
+    std::deque<IMessagePtr> messages;
+    m_headerHelper.receive(socket, bytesToRead, messages);
     auto callback = m_callback.lock();
     if (callback)
     {
-        for (size_t i = 0; i < messages.size(); ++i)
+        for (auto it = messages.begin(); it != messages.end(); ++it)
         {
-            callback->received(messages[i]);
+            callback->received(*it);
         }
     }
 }

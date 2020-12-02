@@ -31,6 +31,7 @@ namespace finalmq {
 
 struct CertificateData
 {
+    bool ssl = false;
     std::string certificateFile;        // SSL_CTX_use_certificate_file, pem
     std::string privateKeyFile;         // SSL_CTX_use_PrivateKey_file, pem
     std::string caFile;                 // SSL_CTX_load_verify_location, pem
@@ -91,7 +92,15 @@ private:
 class OpenSsl
 {
 public:
-    static IOpenSsl& instance();
+    inline static IOpenSsl& instance()
+    {
+        if (!m_instance)
+        {
+            m_instance = std::make_unique<OpenSslImpl>();
+        }
+        return *m_instance;
+    }
+
     static void setInstance(std::unique_ptr<IOpenSsl>&& instance);
 
 private:
@@ -211,25 +220,31 @@ public:
 
     IoState read(char* buffer, int size, int& numRead)
     {
+        assert(m_ssl);
         IoState state = IoState::ERROR;
         numRead = 0;
         std::unique_lock<std::mutex> lock(m_sslMutex);
-        int res = SSL_read(m_ssl, buffer, size);
-        if ((res > 0) || (size == 0 && res == 0))
+        m_readWhenWritable = false;
+        if (!m_writeWhenReadable)
         {
-            state = IoState::SUCCESS;
-            numRead = res;
-        }
-        else if (res == -1)
-        {
-            res = SSL_get_error(m_ssl, res);
-            if (res == SSL_ERROR_WANT_READ)
+            int res = SSL_read(m_ssl, buffer, size);
+            if ((res > 0) || (size == 0 && res == 0))
             {
-                state = IoState::WANT_READ;
+                state = IoState::SUCCESS;
+                numRead = res;
             }
-            else if (res == SSL_ERROR_WANT_WRITE)
+            else if (res == -1)
             {
-                state = IoState::WANT_WRITE;
+                res = SSL_get_error(m_ssl, res);
+                if (res == SSL_ERROR_WANT_READ)
+                {
+                    state = IoState::WANT_READ;
+                }
+                else if (res == SSL_ERROR_WANT_WRITE)
+                {
+                    state = IoState::WANT_WRITE;
+                    m_readWhenWritable = true;
+                }
             }
         }
         return state;
@@ -237,25 +252,31 @@ public:
 
     IoState write(const char* buffer, int size, int& numRead)
     {
+        assert(m_ssl);
         IoState state = IoState::ERROR;
         numRead = 0;
         std::unique_lock<std::mutex> lock(m_sslMutex);
-        int res = SSL_write(m_ssl, buffer, size);
-        if (res > 0)
+        m_writeWhenReadable = false;
+        if (!m_readWhenWritable)
         {
-            state = IoState::SUCCESS;
-            numRead = res;
-        }
-        else if (res == -1)
-        {
-            res = SSL_get_error(m_ssl, res);
-            if (res == SSL_ERROR_WANT_READ)
+            int res = SSL_write(m_ssl, buffer, size);
+            if (res > 0)
             {
-                state = IoState::WANT_READ;
+                state = IoState::SUCCESS;
+                numRead = res;
             }
-            else if (res == SSL_ERROR_WANT_WRITE)
+            else if (res == -1)
             {
-                state = IoState::WANT_WRITE;
+                res = SSL_get_error(m_ssl, res);
+                if (res == SSL_ERROR_WANT_READ)
+                {
+                    state = IoState::WANT_READ;
+                    m_writeWhenReadable = true;
+                }
+                else if (res == SSL_ERROR_WANT_WRITE)
+                {
+                    state = IoState::WANT_WRITE;
+                }
             }
         }
         return state;
@@ -268,11 +289,23 @@ public:
         return pending;
     }
 
+    inline bool isReadWhenWritable() const
+    {
+        return m_readWhenWritable;
+    }
+
+    inline bool isWriteWhenReadable() const
+    {
+        return m_writeWhenReadable;
+    }
+
 private:
     SslSocket(const SslSocket&) = delete;
     const SslSocket& operator =(const SslSocket&) = delete;
 
     SSL* m_ssl = nullptr;
+    bool m_readWhenWritable = false;
+    bool m_writeWhenReadable = false;
     std::mutex& m_sslMutex;
 };
 

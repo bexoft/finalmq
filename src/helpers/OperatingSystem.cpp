@@ -300,15 +300,6 @@ int OperatingSystemImpl::setLinger(int fd, bool /*on*/, int /*timeToLinger*/)
 
 std::unique_ptr<IOperatingSystem> OperatingSystem::m_instance;
 
-IOperatingSystem& OperatingSystem::instance()
-{
-    if (!m_instance)
-    {
-        m_instance = std::make_unique<OperatingSystemImpl>();
-    }
-    return *m_instance;
-}
-
 void OperatingSystem::setInstance(std::unique_ptr<IOperatingSystem>& instance)
 {
     m_instance = std::move(instance);

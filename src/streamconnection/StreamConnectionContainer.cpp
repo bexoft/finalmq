@@ -99,23 +99,17 @@ void StreamConnectionContainer::init(int cycleTime, int checkReconnectInterval)
 }
 
 
-int StreamConnectionContainer::bind(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callbackDefault)
-{
-    return bindIntern(endpoint, callbackDefault, false, CertificateData());
-}
-
-
-int StreamConnectionContainer::bindIntern(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callbackDefault, bool ssl, const CertificateData& certificateData)
+int StreamConnectionContainer::bind(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callbackDefault, const BindProperties& bindProperties)
 {
     ConnectionData connectionData = AddressHelpers::endpoint2ConnectionData(endpoint);
-    connectionData.ssl = ssl;
+    connectionData.ssl = bindProperties.certificateData.ssl;
     std::shared_ptr<Socket> socket = std::make_shared<Socket>();
 
     int err = -1;
 #ifdef USE_OPENSSL
-    if (ssl)
+    if (connectionData.ssl)
     {
-        err = socket->createSslServer(connectionData.af, connectionData.type, connectionData.protocol, certificateData);
+        err = socket->createSslServer(connectionData.af, connectionData.type, connectionData.protocol, bindProperties.certificateData);
     }
     else
 #endif
@@ -144,13 +138,14 @@ int StreamConnectionContainer::bindIntern(const std::string& endpoint, hybrid_pt
         if (it == m_sd2binds.end())
         {
             assert(m_poller);
-            m_sd2binds[sd->getDescriptor()] = {connectionData, socket, callbackDefault};
-            m_poller->addSocket(sd);
+            m_sd2binds.emplace(sd->getDescriptor(), BindData{connectionData, socket, callbackDefault});
+            m_poller->addSocketEnableRead(sd);
         }
         locker.unlock();
     }
     return err;
 }
+
 
 
 void StreamConnectionContainer::unbind(const std::string& endpoint)
@@ -167,19 +162,14 @@ void StreamConnectionContainer::unbind(const std::string& endpoint)
     locker.unlock();
 }
 
-IStreamConnectionPtr StreamConnectionContainer::createConnection(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, int reconnectInterval, int totalReconnectDuration)
-{
-    return createConnectionIntern(endpoint, callback, false, CertificateData(), reconnectInterval, totalReconnectDuration);
-}
-
-IStreamConnectionPtr StreamConnectionContainer::createConnectionIntern(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, bool ssl, const CertificateData& certificateData, int reconnectInterval, int totalReconnectDuration)
+IStreamConnectionPtr StreamConnectionContainer::createConnection(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const ConnectProperties& connectionProperties)
 {
     ConnectionData connectionData = AddressHelpers::endpoint2ConnectionData(endpoint);
     connectionData.incomingConnection = false;
-    connectionData.reconnectInterval = reconnectInterval;
-    connectionData.totalReconnectDuration = totalReconnectDuration;
+    connectionData.reconnectInterval = connectionProperties.reconnectInterval;
+    connectionData.totalReconnectDuration = connectionProperties.totalReconnectDuration;
     connectionData.startTime = std::chrono::system_clock::now();
-    connectionData.ssl = ssl;
+    connectionData.ssl = connectionProperties.certificateData.ssl;
     connectionData.connectionState = CONNECTIONSTATE_CREATED;
     std::string addr = AddressHelpers::makeSocketAddress(connectionData.hostname, connectionData.port, connectionData.af);
     connectionData.sockaddr = addr;
@@ -187,9 +177,9 @@ IStreamConnectionPtr StreamConnectionContainer::createConnectionIntern(const std
     SocketPtr socket = std::make_shared<Socket>();
     int ret = -1;
 #ifdef USE_OPENSSL
-    if (ssl)
+    if (connectionData.ssl)
     {
-        ret = socket->createSslClient(connectionData.af, connectionData.type, connectionData.protocol, certificateData);
+        ret = socket->createSslClient(connectionData.af, connectionData.type, connectionData.protocol, connectionProperties.certificateData);
     }
     else
 #endif
@@ -207,6 +197,7 @@ IStreamConnectionPtr StreamConnectionContainer::createConnectionIntern(const std
 
     return connection;
 }
+
 
 
 std::vector< IStreamConnectionPtr > StreamConnectionContainer::getAllConnections() const
@@ -284,21 +275,6 @@ bool StreamConnectionContainer::terminatePollerLoop(int timeout)
 
 
 
-#ifdef USE_OPENSSL
-
-int StreamConnectionContainer::bindSsl(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const CertificateData& certificateData)
-{
-    return bindIntern(endpoint, callback, true, certificateData);
-}
-IStreamConnectionPtr StreamConnectionContainer::createConnectionSsl(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const CertificateData& certificateData, int reconnectInterval, int totalReconnectDuration)
-{
-    return createConnectionIntern(endpoint, callback, true, certificateData, reconnectInterval, totalReconnectDuration);
-}
-
-#endif
-
-
-
 void StreamConnectionContainer::terminatePollerLoop()
 {
     m_terminatePollerLoop = true;
@@ -326,26 +302,70 @@ IStreamConnectionPrivatePtr StreamConnectionContainer::addConnection(const Socke
 }
 
 
+void StreamConnectionContainer::handleReceive(const IStreamConnectionPrivatePtr& connection, const SocketPtr& socket, int bytesToRead)
+{
+#ifdef USE_OPENSSL
+    if (socket->isSsl())
+    {
+        bytesToRead = socket->sslPending();
+    }
+#endif
+
+    int maxloop = 5;
+    while (bytesToRead > 0)
+    {
+        connection->received(connection, socket, bytesToRead);
+        maxloop--;
+        if (maxloop > 0)
+        {
+            bytesToRead = socket->pendingRead();
+#ifdef USE_OPENSSL
+            if (bytesToRead > 0 && socket->isSsl())
+            {
+                bytesToRead = socket->sslPending();
+            }
+#endif
+        }
+        else
+        {
+            break;
+        }
+    }
+
+#ifdef USE_OPENSSL
+    if (socket->isReadWhenWritable())
+    {
+        SocketDescriptorPtr sd = socket->getSocketDescriptor();
+        assert(sd);
+        m_poller->enableWrite(sd);
+    }
+#endif
+}
+
+
 
 void StreamConnectionContainer::handleConnectionEvents(const IStreamConnectionPrivatePtr& connection, const SocketPtr& socket, const DescriptorInfo& info)
 {
-    SocketDescriptorPtr sd = socket->getSocketDescriptor();
-    assert(sd);
     bool disconnected = (info.disconnected || (info.readable && info.bytesToRead == 0));
     if (disconnected)
     {
+        SocketDescriptorPtr sd = socket->getSocketDescriptor();
+        assert(sd);
         disconnectIntern(connection, sd);
     }
     else
     {
-        int bytesToRead = info.bytesToRead;
+        std::int32_t bytesToRead = info.bytesToRead;
         bool writable = info.writable;
         bool readable = info.readable;
+        bool isSsl = socket->isSsl();
 #ifdef USE_OPENSSL
-        if (socket->isSsl())
+        if (isSsl)
         {
             if (connection->getConnectionData().connectionState == CONNECTIONSTATE_CONNECTING)
             {
+                SocketDescriptorPtr sd = socket->getSocketDescriptor();
+                assert(sd);
                 SslSocket::IoState state = socket->sslConnecting();
                 if (state == SslSocket::IoState::WANT_WRITE)
                 {
@@ -370,66 +390,36 @@ void StreamConnectionContainer::handleConnectionEvents(const IStreamConnectionPr
                 }
                 return;
             }
-            if (readable)
-            {
-                char c = 0;
-                socket->receive(&c, 0);
-                bytesToRead = socket->sslPending();
-            }
         }
 #endif
-        if (writable)
+
+        if (isSsl && writable && socket->isReadWhenWritable())
         {
-            bool edgeConnection = connection->checkEdgeConnected();
-            if (edgeConnection)
-            {
-                connection->connected(connection);
-            }
-#ifdef USE_OPENSSL
-            if (socket->isReadWhenWritable())
-            {
-                connection->received(connection, socket, 0);
-            }
-#endif
+            handleReceive(connection, socket, bytesToRead);
+        }
+        else if (isSsl && readable && socket->isWriteWhenReadable())
+        {
             connection->sendPendingMessages();
         }
-        if (readable)
+        else
         {
-#ifdef USE_OPENSSL
-            if (socket->isWriteWhenReadable())
+            if (writable)
             {
+                bool edgeConnection = connection->checkEdgeConnected();
+                if (edgeConnection)
+                {
+                    connection->connected(connection);
+                }
                 connection->sendPendingMessages();
-            }
-#endif
-            int maxloop = 10;
-            while (bytesToRead > 0)
-            {
-                connection->received(connection, socket, bytesToRead);
-                maxloop--;
-                if (maxloop > 0)
+                if (socket->isWriteWhenReadable())
                 {
-                    bytesToRead = socket->pendingRead();
-#ifdef USE_OPENSSL
-                    if (bytesToRead > 0 && socket->isSsl())
-                    {
-                        char c = 0;
-                        socket->receive(&c, 0);
-                        bytesToRead = socket->sslPending();
-                    }
-#endif
-                }
-                else
-                {
-                    bytesToRead = 0;
+                    readable = false;
                 }
             }
-
-#ifdef USE_OPENSSL
-            if (socket->isReadWhenWritable())
+            if (readable)
             {
-                m_poller->enableWrite(sd);
+                handleReceive(connection, socket, bytesToRead);
             }
-#endif
         }
     }
 }
@@ -467,8 +457,8 @@ void StreamConnectionContainer::handleBindEvents(const DescriptorInfo& info)
                 {
                     SocketDescriptorPtr sd = socketAccept->getSocketDescriptor();
                     assert(sd);
-                    SslAcceptingData sslAcceptingData = {socketAccept, connectionData, bindData.callback};
-                    m_sslAcceptings[sd->getDescriptor()] = sslAcceptingData;
+                    SslAcceptingData sslAcceptingData{socketAccept, connectionData, bindData.callback};
+                    m_sslAcceptings.emplace(sd->getDescriptor(), sslAcceptingData);
                     sslAccepting(sslAcceptingData);
                 }
                 else
@@ -479,8 +469,25 @@ void StreamConnectionContainer::handleBindEvents(const DescriptorInfo& info)
                 }
                 SocketDescriptorPtr sd = socketAccept->getSocketDescriptor();
                 assert(sd);
-                m_poller->addSocket(sd);
+                m_poller->addSocketEnableRead(sd);
             }
+        }
+    }
+    if (info.disconnected)
+    {
+        bool found = false;
+        std::string endpoint;
+        std::unique_lock<std::mutex> lock(m_mutex);
+        auto it = m_sd2binds.find(info.sd);
+        if (it != m_sd2binds.end())
+        {
+            endpoint = it->second.connectionData.endpoint;
+            found = true;
+        }
+        lock.unlock();
+        if (found)
+        {
+            unbind(endpoint);
         }
     }
 }

@@ -38,6 +38,21 @@
 
 namespace finalmq {
 
+
+struct BindProperties
+{
+    CertificateData certificateData;
+};
+
+struct ConnectProperties
+{
+    CertificateData certificateData;
+    int reconnectInterval = 5000;
+    int totalReconnectDuration = -1;
+};
+
+
+
 struct IStreamConnection;
 typedef std::shared_ptr<IStreamConnection> IStreamConnectionPtr;
 

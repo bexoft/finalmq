@@ -38,23 +38,19 @@
 
 namespace finalmq {
 
+
 struct IStreamConnectionContainer
 {
     virtual ~IStreamConnectionContainer() {}
 
     virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000) = 0;
-    virtual int bind(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback) = 0;
+    virtual int bind(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const BindProperties& bindProperties = {}) = 0;
     virtual void unbind(const std::string& endpoint) = 0;
-    virtual IStreamConnectionPtr createConnection(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, int reconnectInterval = 5000, int totalReconnectDuration = -1) = 0;
+    virtual IStreamConnectionPtr createConnection(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const ConnectProperties& connectionProperties = {}) = 0;
     virtual std::vector< IStreamConnectionPtr > getAllConnections() const = 0;
     virtual IStreamConnectionPtr getConnection(std::int64_t connectionId) const = 0;
     virtual void threadEntry() = 0;
     virtual bool terminatePollerLoop(int timeout) = 0;
-
-#ifdef USE_OPENSSL
-    virtual int bindSsl(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const CertificateData& certificateData) = 0;
-    virtual IStreamConnectionPtr createConnectionSsl(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const CertificateData& certificateData, int reconnectInterval = 5000, int totalReconnectDuration = -1) = 0;
-#endif
 };
 
 
@@ -68,22 +64,15 @@ public:
 private:
     // IStreamConnectionContainer
     virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000) override;
-    virtual int bind(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback) override;
+    virtual int bind(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const BindProperties& bindProperties = {}) override;
     virtual void unbind(const std::string& endpoint) override;
-    virtual IStreamConnectionPtr createConnection(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, int reconnectInterval = 5000, int totalReconnectDuration = -1) override;
+    virtual IStreamConnectionPtr createConnection(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const ConnectProperties& connectionProperties = {}) override;
     virtual std::vector< IStreamConnectionPtr > getAllConnections() const override;
     virtual IStreamConnectionPtr getConnection(std::int64_t connectionId) const override;
     virtual void threadEntry() override;
     virtual bool terminatePollerLoop(int timeout) override;
 
-#ifdef USE_OPENSSL
-    virtual int bindSsl(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const CertificateData& certificateData) override;
-    virtual IStreamConnectionPtr createConnectionSsl(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const CertificateData& certificateData, int reconnectInterval = 5000, int totalReconnectDuration = -1) override;
-#endif
-
     void terminatePollerLoop();
-    int bindIntern(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callbackDefault, bool ssl, const CertificateData& certificateData);
-    IStreamConnectionPtr createConnectionIntern(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, bool ssl, const CertificateData& certificateData, int reconnectInterval, int totalReconnectDuration);
 
     void pollerLoop();
 
@@ -101,6 +90,7 @@ private:
     IStreamConnectionPrivatePtr addConnection(const SocketPtr& socket, ConnectionData& connectionData, hybrid_ptr<IStreamConnectionCallback> callback);
     void handleConnectionEvents(const IStreamConnectionPrivatePtr& connection, const SocketPtr& socket, const DescriptorInfo& info);
     void handleBindEvents(const DescriptorInfo& info);
+    void handleReceive(const IStreamConnectionPrivatePtr& connection, const SocketPtr& socket, int bytesToRead);
     bool isReconnectTimerExpired();
     void doReconnect();
 
