@@ -43,7 +43,7 @@ namespace finalmq {
 
 void RemoteEntityFormat::serializeProto(IMessage& message, const Header& header)
 {
-    char* bufferSizeHeader = message.addSendPayload(1500);
+    char* bufferSizeHeader = message.addSendPayload(2048);
     message.downsizeLastSendPayload(4);
 
     SerializerProto serializerHeader(message);
@@ -75,7 +75,7 @@ void RemoteEntityFormat::serializeProto(IMessage& message, const Header& header,
 
 void RemoteEntityFormat::serializeJson(IMessage& message, const Header& header)
 {
-    SerializerJson serializerHeader(message);
+    SerializerJson serializerHeader(message, 2048);
     ParserStruct parserHeader(serializerHeader, header);
     parserHeader.parseStruct();
 
