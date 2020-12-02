@@ -111,8 +111,7 @@ RemoteEntity::RemoteEntity()
         addPeer(replyContext->session(), request->entityid, request->entityName, true, added);
         replyContext->reply(EntityConnectReply(m_entityId, m_entityName));
     });
-    registerCommand<EntityDisconnect>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<EntityDisconnect>& request) {
-        assert(request);
+    registerCommand<EntityDisconnect>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<EntityDisconnect>& /*request*/) {
         PeerId peerId = replyContext->peerId();
         removePeer(peerId, Status::STATUS_PEER_DISCONNECTED);
     });

@@ -1,21 +1,20 @@
 cmake_minimum_required(VERSION 3.10)
 
+
 project(finalmq)
 
+option(FINALMQ_BUILD_TESTS "Build tests" OFF)
+option(FINALMQ_BUILD_COVERAGE "Build with gcov" OFF)
 
-SET(CMAKE_BUILD_TYPE Debug)
-
-# Build testing framework
-enable_testing()
 
 # Add compile flags to determine coverage
-SET(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage -O0")
-#SET(GCC_COVERAGE_COMPILE_FLAGS "-O3")
-SET(GCC_COVERAGE_LINK_FLAGS    "-lgcov")
+if (FINALMQ_BUILD_COVERAGE)
+    SET(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage -O0")
+    SET(GCC_COVERAGE_LINK_FLAGS    "-lgcov")
+endif(FINALMQ_BUILD_COVERAGE)
 
 SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DUSE_OPENSSL -Wall -Wno-unused-function -Wno-unused-variable" )
 
-#SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS} -fno-rtti" )
 SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}" )
 SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}" )
 
@@ -26,6 +25,7 @@ add_custom_target( verify ${CMAKE_CURRENT_BINARY_DIR}/test/testfinalmq)
 
 message(${CMAKE_CURRENT_BINARY_DIR})
 
+if (FINALMQ_BUILD_COVERAGE)
 # go for the latest gcovr version locally installed via pip if available
 # since latest only gcov 3.4 supports branch coverage display in html details
 find_program(GCOVR NAMES gcovr PATHS /usr/local/bin /usr/bin)
@@ -50,7 +50,7 @@ else(  IS_ABSOLUTE ${GCOVR}  )
     MESSAGE("++ ERROR: gcovr application not found to measure coverage")
 
 endif(  IS_ABSOLUTE ${GCOVR}  )
-
+endif(FINALMQ_BUILD_COVERAGE)
 
 SET(CODEGENERATOR ${CMAKE_SOURCE_DIR}/codegenerator)
 
@@ -107,9 +107,9 @@ target_compile_options(finalmq PRIVATE -Werror -Wall -Wextra)
 # not really necessary in this example. Use "sudo make install" to apply
 install(TARGETS finalmq DESTINATION /usr/lib)
 
-
-add_subdirectory(test)
-
+if (FINALMQ_BUILD_TESTS)
+    add_subdirectory(test)
+endif()
 
 # add a target to generate API documentation with Doxygen
 find_package(Doxygen
@@ -117,7 +117,7 @@ find_package(Doxygen
              OPTIONAL_COMPONENTS mscgen dia)
 if(DOXYGEN_FOUND)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
-  add_custom_target(finalmqdoc
+  add_custom_target(doc
     ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Generating API documentation with Doxygen (finalmq)" VERBATIM)
