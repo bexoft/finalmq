@@ -173,7 +173,7 @@ public:
     {
         if (!m_replySent && m_correlationId != CORRELATIONID_NONE)
         {
-            reply(remoteentity::Status::STATUS_OK);
+            reply(remoteentity::Status::STATUS_NO_REPLY);
         }
     }
 

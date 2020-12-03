@@ -452,6 +452,10 @@ void RemoteEntity::receivedRequest(const IProtocolSessionPtr& session, const rem
         {
             (*func)(replyContext, structBase);
         }
+        else
+        {
+            replyContext->reply(Status::STATUS_REQUEST_NOT_FOUND);
+        }
     }
     else
     {

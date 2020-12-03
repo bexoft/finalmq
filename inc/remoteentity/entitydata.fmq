@@ -13,7 +13,8 @@
             {"name":"STATUS_REQUESTTYPE_NOT_DEFINED",   "id":4,     "desc":""},
             {"name":"STATUS_REPLYTYPE_NOT_DEFINED",     "id":5,     "desc":""},
             {"name":"STATUS_SESSION_DISCONNECTED",      "id":6,     "desc":""},
-            {"name":"STATUS_PEER_DISCONNECTED",         "id":7,     "desc":""}
+            {"name":"STATUS_PEER_DISCONNECTED",         "id":7,     "desc":""},
+            {"name":"STATUS_NO_REPLY",                  "id":8,     "desc":""}
         ]}
     ],
 
