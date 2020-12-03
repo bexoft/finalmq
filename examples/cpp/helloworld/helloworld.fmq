@@ -1,0 +1,16 @@
+{
+    "namespace":"helloworld",
+    "enums": [
+    ],
+
+    "structs":[
+        {"type":"HelloRequest","desc":"","fields":[
+            {"tid":"TYPE_STRING", "name":"name",  "desc":"The name is the input data of the request."}
+        ]},
+        {"type":"HelloReply","desc":"","fields":[
+            {"tid":"TYPE_STRING", "name":"message", "desc":"The message contains the reply data."}
+        ]}
+    ]
+}
+
+

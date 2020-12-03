@@ -136,8 +136,8 @@ TEST_F(TestIntegrationRemoteEntity, testProto)
     ientityContainerServer.bind("tcp://*:7777", std::make_shared<ProtocolHeaderBinarySizeFactory>(), CONTENTTYPE_PROTO);
     IProtocolSessionPtr sessionClient = ientityContainerClient.connect("tcp://localhost:7777", std::make_shared<ProtocolHeaderBinarySize>(), CONTENTTYPE_PROTO);
 
-    EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent::PEER_CONNECTED, true)).Times(1);
-    EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent::PEER_CONNECTED, false)).Times(1);
+    EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
+    EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
     PeerId peerId = ientityClient.connect(sessionClient, "MyServer");
 
     static const int LOOP = 1;
@@ -196,8 +196,8 @@ TEST_F(TestIntegrationRemoteEntity, testJson)
     ientityContainerServer.bind("tcp://*:7777", std::make_shared<ProtocolDelimiterFactory>("\n"), CONTENTTYPE_JSON);
     IProtocolSessionPtr sessionClient = ientityContainerClient.connect("tcp://localhost:7777", std::make_shared<ProtocolDelimiter>("\n"), CONTENTTYPE_JSON);
 
-    EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent::PEER_CONNECTED, true)).Times(1);
-    EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent::PEER_CONNECTED, false)).Times(1);
+    EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
+    EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
     PeerId peerId = ientityClient.connect(sessionClient, "MyServer");
 
     static const int LOOP = 1;
@@ -254,8 +254,8 @@ TEST_F(TestIntegrationRemoteEntity, testSslProto)
     ientityContainerServer.bind("tcp://*:7777", std::make_shared<ProtocolHeaderBinarySizeFactory>(), CONTENTTYPE_PROTO, {{true, "ssltest.cert.pem", "ssltest.key.pem"}});
     IProtocolSessionPtr sessionClient = ientityContainerClient.connect("tcp://localhost:7777", std::make_shared<ProtocolHeaderBinarySize>(), CONTENTTYPE_PROTO, {{true}});
 
-    EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent::PEER_CONNECTED, true)).Times(1);
-    EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent::PEER_CONNECTED, false)).Times(1);
+    EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
+    EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
     PeerId peerId = ientityClient.connect(sessionClient, "MyServer");
 
     static const int LOOP = 1;

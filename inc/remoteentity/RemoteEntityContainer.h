@@ -26,13 +26,30 @@
 
 namespace finalmq {
 
-enum class ConnectionEvent
+class ConnectionEvent
 {
-    CONNECTIONEVENT_CONNECTED,
-    CONNECTIONEVENT_DISCONNECTED,
-    CONNECTIONEVENT_SOCKET_CONNECTED,
-    CONNECTIONEVENT_SOCKET_DISCONNECTED,
+public:
+    enum Enum : std::int32_t {
+        CONNECTIONEVENT_CONNECTED = 0,
+        CONNECTIONEVENT_DISCONNECTED = 1,
+        CONNECTIONEVENT_SOCKET_CONNECTED = 2,
+        CONNECTIONEVENT_SOCKET_DISCONNECTED = 3,
+    };
+
+    ConnectionEvent();
+    ConnectionEvent(Enum en);
+    operator const Enum&() const;
+    operator Enum&();
+    const ConnectionEvent& operator =(Enum en);
+    const std::string& toString() const;
+    void fromString(const std::string& name);
+
+private:
+    Enum m_value = CONNECTIONEVENT_CONNECTED;
+    static const EnumInfo _enumInfo;
 };
+
+
 typedef std::function<void(const IProtocolSessionPtr& session, ConnectionEvent connectionEvent)> FuncConnectionEvent;
 
 

@@ -34,7 +34,44 @@ using finalmq::remoteentity::EntityDisconnect;
 
 namespace finalmq {
 
+PeerEvent::PeerEvent()
+{
+}
+PeerEvent::PeerEvent(Enum en)
+    : m_value(en)
+{
+}
+PeerEvent::operator const Enum&() const
+{
+    return m_value;
+}
+PeerEvent::operator Enum&()
+{
+    return m_value;
+}
+const PeerEvent& PeerEvent::operator =(Enum en)
+{
+    m_value = en;
+    return *this;
+}
+const std::string& PeerEvent::toString() const
+{
+    return _enumInfo.getMetaEnum().getNameByValue(m_value);
+}
+void PeerEvent::fromString(const std::string& name)
+{
+    m_value = static_cast<Enum>(_enumInfo.getMetaEnum().getValueByName(name));
+}
+const EnumInfo PeerEvent::_enumInfo = {
+    "PeerEvent", "", {
+        {"PEER_CONNECTED", 0, ""},
+        {"PEER_DISCONNECTED", 1, ""},
+     }
+};
 
+
+
+///////////////////////////////////
 
 void SessionIdEntityIdToPeerId::updatePeer(std::int64_t sessionId, EntityId entityId, const std::string& entityName, PeerId peerId)
 {

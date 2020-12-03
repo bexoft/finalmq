@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 
 project(finalmq)
 
+option(FINALMQ_BUILD_EXAMPLES "Build tests" ON)
 option(FINALMQ_BUILD_TESTS "Build tests" OFF)
 option(FINALMQ_BUILD_COVERAGE "Build with gcov" OFF)
 
@@ -110,6 +111,11 @@ install(TARGETS finalmq DESTINATION /usr/lib)
 if (FINALMQ_BUILD_TESTS)
     add_subdirectory(test)
 endif()
+
+if (FINALMQ_BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
+
 
 # add a target to generate API documentation with Doxygen
 find_package(Doxygen

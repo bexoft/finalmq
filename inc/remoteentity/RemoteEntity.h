@@ -57,11 +57,27 @@ class ReplyContext;
 typedef std::unique_ptr<ReplyContext> ReplyContextUPtr;
 
 
-enum class PeerEvent
+class PeerEvent
 {
-    PEER_CONNECTED,
-    PEER_DISCONNECTED
+public:
+    enum Enum : std::int32_t {
+        PEER_CONNECTED = 0,
+        PEER_DISCONNECTED = 1
+    };
+
+    PeerEvent();
+    PeerEvent(Enum en);
+    operator const Enum&() const;
+    operator Enum&();
+    const PeerEvent& operator =(Enum en);
+    const std::string& toString() const;
+    void fromString(const std::string& name);
+
+private:
+    Enum m_value = PEER_CONNECTED;
+    static const EnumInfo _enumInfo;
 };
+
 
 
 typedef std::function<void(PeerId peerId, remoteentity::Status status, const StructBasePtr& structBase)> FuncReply;
