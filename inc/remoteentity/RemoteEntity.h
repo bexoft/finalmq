@@ -197,9 +197,12 @@ public:
 private:
     void reply(remoteentity::Status status)
     {
-        remoteentity::Header header{m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, status, "", m_correlationId};
-        RemoteEntityFormat::send(m_session, header);
-        m_replySent = true;
+        if (!m_replySent)
+        {
+            remoteentity::Header header{m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, status, "", m_correlationId};
+            RemoteEntityFormat::send(m_session, header);
+            m_replySent = true;
+        }
     }
 
     inline const IProtocolSessionPtr& session() const
