@@ -66,7 +66,7 @@ protected:
         m_sessionContainer->init(1, 1);
         IProtocolSessionContainer* sessionContainerRaw = m_sessionContainer.get();
         m_thread = std::make_unique<std::thread>([sessionContainerRaw] () {
-            sessionContainerRaw->threadEntry();
+            sessionContainerRaw->run();
         });
     }
 

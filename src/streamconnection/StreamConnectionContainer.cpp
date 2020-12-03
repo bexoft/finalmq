@@ -261,7 +261,7 @@ void StreamConnectionContainer::disconnectIntern(const IStreamConnectionPrivateP
 
 
 
-void StreamConnectionContainer::threadEntry()
+void StreamConnectionContainer::run()
 {
     pollerLoop();
 }

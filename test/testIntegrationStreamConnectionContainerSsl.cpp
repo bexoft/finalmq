@@ -68,7 +68,7 @@ protected:
         m_connectionContainer->init(1, 1);
         IStreamConnectionContainer* connectionContainerRaw = m_connectionContainer.get();
         m_thread = std::make_unique<std::thread>([connectionContainerRaw] () {
-            connectionContainerRaw->threadEntry();
+            connectionContainerRaw->run();
         });
     }
 

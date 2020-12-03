@@ -66,9 +66,9 @@ IProtocolSessionPtr ConnectionHub::getSession(std::int64_t sessionId) const
 }
 
 
-void ConnectionHub::threadEntry()
+void ConnectionHub::run()
 {
-    return m_protocolSessionContainer->threadEntry();
+    return m_protocolSessionContainer->run();
 }
 
 bool ConnectionHub::waitForTerminationOfPollerLoop(int timeout)

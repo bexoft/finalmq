@@ -117,10 +117,10 @@ TEST_F(TestIntegrationRemoteEntity, testProto)
     IRemoteEntity& ientityClient = entityClient;
 
     std::thread thread1 = std::thread([&ientityContainerServer] () {
-        ientityContainerServer.threadEntry();
+        ientityContainerServer.run();
     });
     std::thread thread2 = std::thread([&ientityContainerClient] () {
-        ientityContainerClient.threadEntry();
+        ientityContainerClient.run();
     });
 
     ientityClient.registerPeerEvent([&mockEventsClient] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
@@ -177,10 +177,10 @@ TEST_F(TestIntegrationRemoteEntity, testJson)
     IRemoteEntity& ientityClient = entityClient;
 
     std::thread thread1 = std::thread([&ientityContainerServer] () {
-        ientityContainerServer.threadEntry();
+        ientityContainerServer.run();
     });
     std::thread thread2 = std::thread([&ientityContainerClient] () {
-        ientityContainerClient.threadEntry();
+        ientityContainerClient.run();
     });
 
     ientityClient.registerPeerEvent([&mockEventsClient] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
@@ -235,10 +235,10 @@ TEST_F(TestIntegrationRemoteEntity, testSslProto)
     IRemoteEntity& ientityClient = entityClient;
 
     std::thread thread1 = std::thread([&ientityContainerServer] () {
-        ientityContainerServer.threadEntry();
+        ientityContainerServer.run();
     });
     std::thread thread2 = std::thread([&ientityContainerClient] () {
-        ientityContainerClient.threadEntry();
+        ientityContainerClient.run();
     });
 
     ientityClient.registerPeerEvent([&mockEventsClient] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
@@ -295,7 +295,7 @@ TEST_F(TestIntegrationRemoteEntity, testServer)
     IRemoteEntityContainer& ientityContainerServer = entityContainer1;
 
     std::thread thread1 = std::thread([&ientityContainerServer] () {
-        ientityContainerServer.threadEntry();
+        ientityContainerServer.run();
     });
 
     ientityContainerServer.init();
@@ -325,7 +325,7 @@ TEST_F(TestIntegrationRemoteEntity, testClient)
     IRemoteEntity& ientityClient = entityClient;
 
     std::thread thread2 = std::thread([&ientityContainerClient] () {
-        ientityContainerClient.threadEntry();
+        ientityContainerClient.run();
     });
 
     ientityClient.registerPeerEvent([&mockEventsClient] (PeerId peerId, PeerEvent peerEvent, bool incoming) {

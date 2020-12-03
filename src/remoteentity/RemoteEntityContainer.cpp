@@ -112,9 +112,9 @@ IProtocolSessionPtr RemoteEntityContainer::connect(const std::string& endpoint, 
     return m_streamConnectionContainer->connect(endpoint, this, protocol, connectProperties, contentType);
 }
 
-void RemoteEntityContainer::threadEntry()
+void RemoteEntityContainer::run()
 {
-    m_streamConnectionContainer->threadEntry();
+    m_streamConnectionContainer->run();
 }
 
 bool RemoteEntityContainer::terminatePollerLoop(int timeout)

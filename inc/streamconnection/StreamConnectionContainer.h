@@ -49,7 +49,7 @@ struct IStreamConnectionContainer
     virtual IStreamConnectionPtr createConnection(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const ConnectProperties& connectionProperties = {}) = 0;
     virtual std::vector< IStreamConnectionPtr > getAllConnections() const = 0;
     virtual IStreamConnectionPtr getConnection(std::int64_t connectionId) const = 0;
-    virtual void threadEntry() = 0;
+    virtual void run() = 0;
     virtual bool terminatePollerLoop(int timeout) = 0;
 };
 
@@ -69,7 +69,7 @@ private:
     virtual IStreamConnectionPtr createConnection(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const ConnectProperties& connectionProperties = {}) override;
     virtual std::vector< IStreamConnectionPtr > getAllConnections() const override;
     virtual IStreamConnectionPtr getConnection(std::int64_t connectionId) const override;
-    virtual void threadEntry() override;
+    virtual void run() override;
     virtual bool terminatePollerLoop(int timeout) override;
 
     void terminatePollerLoop();

@@ -99,7 +99,7 @@ int main()
     //                       {{true, "myservercertificate.cert.pem", "myservercertificate.key.pem"}});
 
     // run
-    entityContainer->threadEntry();
+    entityContainer->run();
 
     return 0;
 }

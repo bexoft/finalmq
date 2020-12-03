@@ -128,9 +128,9 @@ IProtocolSessionPtr ProtocolSessionContainer::getSession(std::int64_t sessionId)
 }
 
 
-void ProtocolSessionContainer::threadEntry()
+void ProtocolSessionContainer::run()
 {
-    m_streamConnectionContainer->threadEntry();
+    m_streamConnectionContainer->run();
 }
 
 

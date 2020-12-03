@@ -67,13 +67,13 @@ protected:
         m_sessionContainer->init(1, 1);
         IProtocolSessionContainer* sessionContainerRaw = m_sessionContainer.get();
         m_threadSessionContainer = std::make_unique<std::thread>([sessionContainerRaw] () {
-            sessionContainerRaw->threadEntry();
+            sessionContainerRaw->run();
         });
         m_connectionHub = std::make_unique<ConnectionHub>();
         m_connectionHub->init(1, 1);
         IConnectionHub* connectionHubRaw = m_connectionHub.get();
         m_threadConnectionHub = std::make_unique<std::thread>([connectionHubRaw] () {
-            connectionHubRaw->threadEntry();
+            connectionHubRaw->run();
         });
     }
 
