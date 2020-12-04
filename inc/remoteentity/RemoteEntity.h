@@ -240,7 +240,7 @@ class RemoteEntity : public IRemoteEntity
 public:
     RemoteEntity();
 
-protected:
+public:
     // IRemoteEntity
     virtual bool sendEvent(const PeerId& peerId, const StructBase& structBase) override;
     virtual PeerId connect(const IProtocolSessionPtr& session, const std::string& entityName) override;

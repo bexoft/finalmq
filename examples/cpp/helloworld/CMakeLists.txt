@@ -35,3 +35,6 @@ include_directories(${CMAKE_SOURCE_DIR}/inc)
 
 add_executable(helloworld_server ${HELLOWORLD_FMQ_CPP} helloworld_server.cpp)
 target_link_libraries(helloworld_server finalmq ssl pthread)
+
+add_executable(helloworld_client ${HELLOWORLD_FMQ_CPP} helloworld_client.cpp)
+target_link_libraries(helloworld_client finalmq ssl pthread)

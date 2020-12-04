@@ -30,13 +30,12 @@ using finalmq::RemoteEntityContainer;
 using finalmq::IRemoteEntityContainer;
 using finalmq::PeerId;
 using finalmq::PeerEvent;
-using finalmq::ReplyContextUPtr;
-using finalmq::ProtocolHeaderBinarySizeFactory;
-using finalmq::ProtocolDelimiterFactory;
+using finalmq::ProtocolHeaderBinarySize;
 using finalmq::RemoteEntityContentType;
 using finalmq::IProtocolSessionPtr;
 using finalmq::ConnectionData;
 using finalmq::ConnectionEvent;
+using finalmq::remoteentity::Status;
 using helloworld::HelloRequest;
 using helloworld::HelloReply;
 
@@ -44,33 +43,17 @@ using helloworld::HelloReply;
 #include <thread>
 
 
-class EntityServer : public RemoteEntity
-{
-public:
-    EntityServer()
-    {
-        // register peer events to see when a remote entity connects or disconnects.
-        registerPeerEvent([] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
-            std::cout << "peer event " << peerEvent.toString() << std::endl;
-        });
-
-        // json example: /MyService/helloworld.HelloRequest#1{"name":"World"}
-        registerCommand<HelloRequest>([] (ReplyContextUPtr& replyContext, const std::shared_ptr<HelloRequest>& request) {
-            assert(request);
-
-            // The replyContext is a unique_ptr, it can be moved to another unique_ptr, so that the reply can be called later.
-            std::string prefix("Hello ");
-            replyContext->reply(HelloReply(prefix + request->name));
-        });
-    }
-};
-
 
 int main()
 {
     // Create and initialize entity container
     std::shared_ptr<IRemoteEntityContainer> entityContainer = std::make_shared<RemoteEntityContainer>();
     entityContainer->init();
+
+    // run entity container in separate thread
+    std::thread thread([&entityContainer] () {
+        entityContainer->run();
+    });
 
     entityContainer->registerConnectionEvent([] (const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) {
         const ConnectionData connectionData = session->getConnectionData();
@@ -81,27 +64,49 @@ int main()
 
     // Create server entity and register it at the entityContainer with the service name "MyService"
     // note: multiple entities can be registered.
-    EntityServer entityServer;
-    entityContainer->registerEntity(&entityServer, "MyService");
+    RemoteEntity entityClient;
 
-    // Open listener port 7777 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
+    // register peer events to see when a remote entity connects or disconnects.
+    entityClient.registerPeerEvent([] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
+        std::cout << "peer event " << peerEvent.toString() << std::endl;
+    });
+
+    entityContainer->registerEntity(&entityClient);
+
+    // connect to port 7777 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
     // content type in payload: protobuf
-    entityContainer->bind("tcp://*:7777", std::make_shared<ProtocolHeaderBinarySizeFactory>(), RemoteEntityContentType::CONTENTTYPE_PROTO);
+    IProtocolSessionPtr sessionClient = entityContainer->connect("tcp://localhost:7777", std::make_shared<ProtocolHeaderBinarySize>(), RemoteEntityContentType::CONTENTTYPE_PROTO);
 
-    // Open listener port 8888 with delimiter framing protocol ProtocolDelimiter ('\n' is end of frame).
-    // content type in payload: JSON
-    entityContainer->bind("tcp://*:8888", std::make_shared<ProtocolDelimiterFactory>("\n"), RemoteEntityContentType::CONTENTTYPE_JSON);
+    PeerId peerId = entityClient.connect(sessionClient, "MyService");
 
-    // note:
-    // multiple access points (listening ports) can be activated by calling bind() several times.
-    // For Unix Domain Sockets use: "ipc://socketname"
-    // For SSL/TLS encryption use BindProperties e.g.:
-    // entityContainer->bind("tcp://*:7777", std::make_shared<ProtocolHeaderBinarySizeFactory>(),
-    //                       RemoteEntityContentType::CONTENTTYPE_PROTO,
-    //                       {{true, "myservercertificate.cert.pem", "myservercertificate.key.pem"}});
+    // asynchronous request/reply
+    // each request has its own lambda. The lambda is been called when the corresponding reply is received.
+    entityClient.requestReply<HelloReply>(peerId, HelloRequest{"World"}, [] (PeerId peerId, Status status, const std::shared_ptr<HelloReply>& reply) {
+        if (reply)
+        {
+            std::cout << "REPLY of World: " << reply->message << std::endl;
+        }
+        else
+        {
+            std::cout << "REPLY error: " << status.toString() << std::endl;
+        }
+    });
 
-    // run
-    entityContainer->run();
+    // another asynchronous request/reply
+    entityClient.requestReply<HelloReply>(peerId, HelloRequest{"Foo"}, [] (PeerId peerId, Status status, const std::shared_ptr<HelloReply>& reply) {
+        if (reply)
+        {
+            std::cout << "REPLY of Foo: " << reply->message << std::endl;
+        }
+        else
+        {
+            std::cout << "REPLY error: " << status.toString() << std::endl;
+        }
+    });
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(60000));
+    entityContainer->terminatePollerLoop(1000);
+    thread.join();
 
     return 0;
 }
