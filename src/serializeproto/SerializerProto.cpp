@@ -24,6 +24,8 @@
 #include "serializeproto/SerializerProto.h"
 #include "metadata/MetaData.h"
 #include "helpers/BexDefines.h"
+#include "helpers/ModulenameFinalmq.h"
+#include "logger/LogStream.h"
 
 #include <assert.h>
 #include <memory.h>
@@ -506,6 +508,10 @@ void SerializerProto::Internal::exitStruct(const MetaField& /*field*/)
             serializeVarint(structSize);
             assert(remainingSize <= 7 && remainingSize >= 3);
             int remainingSizeFromBuffer = structData.bufferStructSize + RESERVE_STRUCT_SIZE - m_buffer;
+            if (remainingSizeFromBuffer != remainingSize)
+            {
+                streamFatal << "Struct calculations are wrong";
+            }
             assert(remainingSizeFromBuffer == remainingSize);
             static constexpr std::uint32_t tagDummy = (DUMMY_ID << 3) | WIRETYPE_VARINT;
             serializeVarint(tagDummy);

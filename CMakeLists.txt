@@ -5,7 +5,8 @@ project(finalmq)
 
 option(FINALMQ_BUILD_EXAMPLES "Build tests" ON)
 option(FINALMQ_BUILD_TESTS "Build tests" OFF)
-option(FINALMQ_BUILD_COVERAGE "Build with gcov" OFF)
+option(FINALMQ_BUILD_COVERAGE "Build for gcov" OFF)
+option(FINALMQ_USE_SSL "Build with openssl" ON)
 
 
 # Add compile flags to determine coverage
@@ -14,7 +15,12 @@ if (FINALMQ_BUILD_COVERAGE)
     SET(GCC_COVERAGE_LINK_FLAGS    "-lgcov")
 endif(FINALMQ_BUILD_COVERAGE)
 
-SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DUSE_OPENSSL -Wall -Wno-unused-function -Wno-unused-variable" )
+SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wno-unused-function" )
+
+if (FINALMQ_USE_SSL)
+    SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DUSE_OPENSSL" )
+endif(FINALMQ_USE_SSL)
+
 
 SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}" )
 SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}" )
