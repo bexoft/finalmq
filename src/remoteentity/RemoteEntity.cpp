@@ -27,9 +27,9 @@
 using finalmq::remoteentity::MsgMode;
 using finalmq::remoteentity::Status;
 using finalmq::remoteentity::Header;
-using finalmq::remoteentity::EntityConnect;
-using finalmq::remoteentity::EntityConnectReply;
-using finalmq::remoteentity::EntityDisconnect;
+using finalmq::remoteentity::ConnectEntity;
+using finalmq::remoteentity::ConnectEntityReply;
+using finalmq::remoteentity::DisconnectEntity;
 
 
 namespace finalmq {
@@ -143,13 +143,13 @@ PeerId SessionIdEntityIdToPeerId::getPeerId(std::int64_t sessionId, EntityId ent
 RemoteEntity::RemoteEntity()
     : m_sessionIdEntityIdToPeerId(std::make_shared<SessionIdEntityIdToPeerId>())
 {
-    registerCommand<EntityConnect>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<EntityConnect>& request) {
+    registerCommand<ConnectEntity>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<ConnectEntity>& request) {
         assert(request);
         bool added{};
         addPeer(replyContext->session(), replyContext->entityId(), request->entityName, true, added);
-        replyContext->reply(EntityConnectReply(m_entityId, m_entityName));
+        replyContext->reply(ConnectEntityReply(m_entityId, m_entityName));
     });
-    registerCommand<EntityDisconnect>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<EntityDisconnect>& /*request*/) {
+    registerCommand<DisconnectEntity>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<DisconnectEntity>& /*request*/) {
         PeerId peerId = replyContext->peerId();
         removePeer(peerId, Status::STATUS_PEER_DISCONNECTED);
     });
@@ -237,8 +237,8 @@ PeerId RemoteEntity::connectIntern(const IProtocolSessionPtr& session, const std
 
     if (added)
     {
-        requestReply<EntityConnectReply>(peerId, EntityConnect{m_entityName},
-                                         [this, funcReplyConnect{std::move(funcReplyConnect)}] (PeerId peerId, remoteentity::Status status, const std::shared_ptr<EntityConnectReply>& reply) {
+        requestReply<ConnectEntityReply>(peerId, ConnectEntity{m_entityName},
+                                         [this, funcReplyConnect{std::move(funcReplyConnect)}] (PeerId peerId, remoteentity::Status status, const std::shared_ptr<ConnectEntityReply>& reply) {
             if (funcReplyConnect)
             {
                 funcReplyConnect(peerId, status);
@@ -297,7 +297,7 @@ PeerId RemoteEntity::connect(const IProtocolSessionPtr& session, EntityId entity
 
 void RemoteEntity::disconnect(PeerId peerId)
 {
-    sendRequest(peerId, EntityDisconnect(), CORRELATIONID_NONE);
+    sendRequest(peerId, DisconnectEntity(), CORRELATIONID_NONE);
     removePeer(peerId, Status::STATUS_PEER_DISCONNECTED);
 }
 
