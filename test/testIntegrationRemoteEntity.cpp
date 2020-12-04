@@ -133,8 +133,8 @@ TEST_F(TestIntegrationRemoteEntity, testProto)
     ientityContainerServer.registerEntity(&entityServer, "MyServer");
     ientityContainerClient.registerEntity(&entityClient);
 
-    ientityContainerServer.bind("tcp://*:7777", std::make_shared<ProtocolHeaderBinarySizeFactory>(), CONTENTTYPE_PROTO);
-    IProtocolSessionPtr sessionClient = ientityContainerClient.connect("tcp://localhost:7777", std::make_shared<ProtocolHeaderBinarySize>(), CONTENTTYPE_PROTO);
+    ientityContainerServer.bind("tcp://*:7788", std::make_shared<ProtocolHeaderBinarySizeFactory>(), CONTENTTYPE_PROTO);
+    IProtocolSessionPtr sessionClient = ientityContainerClient.connect("tcp://localhost:7788", std::make_shared<ProtocolHeaderBinarySize>(), CONTENTTYPE_PROTO);
 
     EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
     EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTING), false)).Times(1);
@@ -147,12 +147,14 @@ TEST_F(TestIntegrationRemoteEntity, testProto)
     for (int i = 0; i < LOOP; ++i)
     {
         ientityClient.requestReply<TestReply>(peerId, TestRequest{DATA_REQUEST}, [&mockEventsClient] (PeerId peerId, remoteentity::Status status, const std::shared_ptr<TestReply>& reply) {
+            ASSERT_EQ(status, remoteentity::Status::STATUS_OK);
+            ASSERT_NE(reply, nullptr);
             ASSERT_EQ(reply->datareply, DATA_REPLY);
             mockEventsClient.testReply(peerId, status, reply);
         });
     }
 
-    waitTillDone(expectReply, 150000);
+    waitTillDone(expectReply, 15000);
     bool ok1 = ientityContainerServer.terminatePollerLoop(1000);
     bool ok2 = ientityContainerClient.terminatePollerLoop(1000);
     ASSERT_EQ(ok1, true);
@@ -194,8 +196,8 @@ TEST_F(TestIntegrationRemoteEntity, testJson)
     ientityContainerServer.registerEntity(&entityServer, "MyServer");
     ientityContainerClient.registerEntity(&entityClient);
 
-    ientityContainerServer.bind("tcp://*:7777", std::make_shared<ProtocolDelimiterFactory>("\n"), CONTENTTYPE_JSON);
-    IProtocolSessionPtr sessionClient = ientityContainerClient.connect("tcp://localhost:7777", std::make_shared<ProtocolDelimiter>("\n"), CONTENTTYPE_JSON);
+    ientityContainerServer.bind("tcp://*:7788", std::make_shared<ProtocolDelimiterFactory>("\n"), CONTENTTYPE_JSON);
+    IProtocolSessionPtr sessionClient = ientityContainerClient.connect("tcp://localhost:7788", std::make_shared<ProtocolDelimiter>("\n"), CONTENTTYPE_JSON);
 
     EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
     EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTING), false)).Times(1);
@@ -213,7 +215,7 @@ TEST_F(TestIntegrationRemoteEntity, testJson)
         });
     }
 
-    waitTillDone(expectReply, 150000);
+    waitTillDone(expectReply, 15000);
     bool ok1 = ientityContainerServer.terminatePollerLoop(1000);
     bool ok2 = ientityContainerClient.terminatePollerLoop(1000);
     ASSERT_EQ(ok1, true);
@@ -253,8 +255,8 @@ TEST_F(TestIntegrationRemoteEntity, testSslProto)
     ientityContainerServer.registerEntity(&entityServer, "MyServer");
     ientityContainerClient.registerEntity(&entityClient);
 
-    ientityContainerServer.bind("tcp://*:7777", std::make_shared<ProtocolHeaderBinarySizeFactory>(), CONTENTTYPE_PROTO, {{true, "ssltest.cert.pem", "ssltest.key.pem"}});
-    IProtocolSessionPtr sessionClient = ientityContainerClient.connect("tcp://localhost:7777", std::make_shared<ProtocolHeaderBinarySize>(), CONTENTTYPE_PROTO, {{true}});
+    ientityContainerServer.bind("tcp://*:7788", std::make_shared<ProtocolHeaderBinarySizeFactory>(), CONTENTTYPE_PROTO, {{true, "ssltest.cert.pem", "ssltest.key.pem"}});
+    IProtocolSessionPtr sessionClient = ientityContainerClient.connect("tcp://localhost:7788", std::make_shared<ProtocolHeaderBinarySize>(), CONTENTTYPE_PROTO, {{true}});
 
     EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
     EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTING), false)).Times(1);
@@ -272,7 +274,7 @@ TEST_F(TestIntegrationRemoteEntity, testSslProto)
         });
     }
 
-    waitTillDone(expectReply, 150000);
+    waitTillDone(expectReply, 15000);
     bool ok1 = ientityContainerServer.terminatePollerLoop(1000);
     bool ok2 = ientityContainerClient.terminatePollerLoop(1000);
     ASSERT_EQ(ok1, true);
