@@ -64,8 +64,9 @@ void PeerEvent::fromString(const std::string& name)
 }
 const EnumInfo PeerEvent::_enumInfo = {
     "PeerEvent", "", {
-        {"PEER_CONNECTED", 0, ""},
-        {"PEER_DISCONNECTED", 1, ""},
+        {"PEER_CONNECTING", 0, ""},
+        {"PEER_CONNECTED", 1, ""},
+        {"PEER_DISCONNECTED", 2, ""},
      }
 };
 
@@ -229,14 +230,19 @@ void RemoteEntity::triggerReply(CorrelationId correlationId, Status status, cons
 
 
 
-PeerId RemoteEntity::connectIntern(const IProtocolSessionPtr& session, const std::string& entityName, EntityId entityId)
+PeerId RemoteEntity::connectIntern(const IProtocolSessionPtr& session, const std::string& entityName, EntityId entityId, FuncReplyConnect funcReplyConnect)
 {
     bool added{};
     PeerId peerId = addPeer(session, entityId, entityName, false, added);
 
     if (added)
     {
-        requestReply<EntityConnectReply>(peerId, EntityConnect{m_entityId, m_entityName}, [this] (PeerId peerId, remoteentity::Status /*status*/, const std::shared_ptr<EntityConnectReply>& reply) {
+        requestReply<EntityConnectReply>(peerId, EntityConnect{m_entityId, m_entityName},
+                                         [this, funcReplyConnect{std::move(funcReplyConnect)}] (PeerId peerId, remoteentity::Status status, const std::shared_ptr<EntityConnectReply>& reply) {
+            if (funcReplyConnect)
+            {
+                funcReplyConnect(peerId, status);
+            }
             if (reply)
             {
                 std::unique_lock<std::mutex> lock(m_mutex);
@@ -249,6 +255,28 @@ PeerId RemoteEntity::connectIntern(const IProtocolSessionPtr& session, const std
                     assert(m_sessionIdEntityIdToPeerId);
                     m_sessionIdEntityIdToPeerId->updatePeer(peer.session->getSessionId(), peer.entityId, peer.entityName, peerId);
                 }
+                std::shared_ptr<FuncPeerEvent> funcPeerEvent = m_funcPeerEvent;
+                lock.unlock();
+
+                // fire peer event CONNECTED
+                if (funcPeerEvent && *funcPeerEvent)
+                {
+                    (*funcPeerEvent)(peerId, PeerEvent::PEER_CONNECTED, false);
+                }
+            }
+            else if (status == Status::STATUS_ENTITY_NOT_FOUND)
+            {
+                std::string entityName;
+                std::unique_lock<std::mutex> lock(m_mutex);
+                auto it = m_peers.find(peerId);
+                if (it != m_peers.end())
+                {
+                    Peer& peer = it->second;
+                    entityName = peer.entityName;
+                }
+                lock.unlock();
+                streamError << "Entity not found: " << entityName;
+                removePeer(peerId, status);
             }
         });
     }
@@ -256,14 +284,14 @@ PeerId RemoteEntity::connectIntern(const IProtocolSessionPtr& session, const std
     return peerId;
 }
 
-PeerId RemoteEntity::connect(const IProtocolSessionPtr& session, const std::string& entityName)
+PeerId RemoteEntity::connect(const IProtocolSessionPtr& session, const std::string& entityName, FuncReplyConnect funcReplyConnect)
 {
-    return connectIntern(session, entityName, ENTITYID_INVALID);
+    return connectIntern(session, entityName, ENTITYID_INVALID, std::move(funcReplyConnect));
 }
 
-PeerId RemoteEntity::connect(const IProtocolSessionPtr& session, EntityId entityId)
+PeerId RemoteEntity::connect(const IProtocolSessionPtr& session, EntityId entityId, FuncReplyConnect funcReplyConnect)
 {
-    return connectIntern(session, "", entityId);
+    return connectIntern(session, "", entityId, std::move(funcReplyConnect));
 }
 
 
@@ -308,6 +336,12 @@ void RemoteEntity::removePeer(PeerId peerId, remoteentity::Status status)
             std::shared_ptr<FuncPeerEvent> funcPeerEvent = m_funcPeerEvent;
             lock.unlock();
 
+            // fire peer event DISCONNECTED
+            if (funcPeerEvent && *funcPeerEvent)
+            {
+                (*funcPeerEvent)(peerId, PeerEvent::PEER_DISCONNECTED, peer.incoming);
+            }
+
             // release pending calls
             for (size_t i = 0; i < requests.size(); ++i)
             {
@@ -317,12 +351,6 @@ void RemoteEntity::removePeer(PeerId peerId, remoteentity::Status status)
                 {
                     request->func(request->peerId, status, nullptr);
                 }
-            }
-
-            // fire peer event DISCONNECTED
-            if (funcPeerEvent && *funcPeerEvent)
-            {
-                (*funcPeerEvent)(peerId, PeerEvent::PEER_DISCONNECTED, peer.incoming);
             }
         }
     }
@@ -426,7 +454,7 @@ PeerId RemoteEntity::addPeer(const IProtocolSessionPtr& session, EntityId entity
         // fire peer event CONNECTED
         if (funcPeerEvent && *funcPeerEvent)
         {
-            (*funcPeerEvent)(peerId, PeerEvent::PEER_CONNECTED, incoming);
+            (*funcPeerEvent)(peerId, incoming ? PeerEvent::PEER_CONNECTED : PeerEvent::PEER_CONNECTING, incoming);
         }
     }
 
@@ -467,7 +495,8 @@ void RemoteEntity::receivedReply(const IProtocolSessionPtr& session, const remot
 {
     triggerReply(header.corrid, header.status, structBase);
 
-    if (header.status == Status::STATUS_ENTITY_NOT_FOUND)
+    if (header.status == Status::STATUS_ENTITY_NOT_FOUND &&
+        header.srcid != ENTITYID_INVALID)
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         PeerId peerId = getPeerId(session, header.srcid, "");

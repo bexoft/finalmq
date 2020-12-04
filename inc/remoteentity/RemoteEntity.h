@@ -61,8 +61,9 @@ class PeerEvent
 {
 public:
     enum Enum : std::int32_t {
-        PEER_CONNECTED = 0,
-        PEER_DISCONNECTED = 1
+        PEER_CONNECTING = 0,
+        PEER_CONNECTED = 1,
+        PEER_DISCONNECTED = 2
     };
 
     PeerEvent();
@@ -83,7 +84,7 @@ private:
 typedef std::function<void(PeerId peerId, remoteentity::Status status, const StructBasePtr& structBase)> FuncReply;
 typedef std::function<void(ReplyContextUPtr& replyContext, const StructBasePtr& structBase)> FuncCommand;
 typedef std::function<void(PeerId peerId, PeerEvent peerEvent, bool incoming)> FuncPeerEvent;
-
+typedef std::function<void(PeerId peerId, remoteentity::Status status)> FuncReplyConnect;
 
 struct IRemoteEntity
 {
@@ -118,8 +119,8 @@ struct IRemoteEntity
     }
 
     virtual bool sendEvent(const PeerId& peerId, const StructBase& structBase) = 0;
-    virtual PeerId connect(const IProtocolSessionPtr& session, const std::string& entityName) = 0;
-    virtual PeerId connect(const IProtocolSessionPtr& session, EntityId) = 0;
+    virtual PeerId connect(const IProtocolSessionPtr& session, const std::string& entityName, FuncReplyConnect funcReplyConnect = {}) = 0;
+    virtual PeerId connect(const IProtocolSessionPtr& session, EntityId, FuncReplyConnect funcReplyConnect = {}) = 0;
     virtual void disconnect(PeerId peerId) = 0;
     virtual std::vector<PeerId> getAllPeers() const = 0;
     virtual void registerCommandFunction(const std::string& functionName, FuncCommand funcCommand) = 0;
@@ -243,8 +244,8 @@ public:
 public:
     // IRemoteEntity
     virtual bool sendEvent(const PeerId& peerId, const StructBase& structBase) override;
-    virtual PeerId connect(const IProtocolSessionPtr& session, const std::string& entityName) override;
-    virtual PeerId connect(const IProtocolSessionPtr& session, EntityId) override;
+    virtual PeerId connect(const IProtocolSessionPtr& session, const std::string& entityName, FuncReplyConnect funcReplyConnect = {}) override;
+    virtual PeerId connect(const IProtocolSessionPtr& session, EntityId, FuncReplyConnect funcReplyConnect = {}) override;
     virtual void disconnect(PeerId peerId) override;
     virtual std::vector<PeerId> getAllPeers() const override;
     virtual void registerCommandFunction(const std::string& functionName, FuncCommand funcCommand) override;
@@ -269,7 +270,7 @@ private:
 
     PeerId getPeerId(const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName) const;
     PeerId addPeer(const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName, bool incoming, bool& added);
-    PeerId connectIntern(const IProtocolSessionPtr& session, const std::string& entityName, EntityId);
+    PeerId connectIntern(const IProtocolSessionPtr& session, const std::string& entityName, EntityId, FuncReplyConnect funcReplyConnect);
     void removePeer(PeerId peerId, remoteentity::Status status);
     void triggerReply(CorrelationId correlationId, remoteentity::Status status, const StructBasePtr& structBase);
 

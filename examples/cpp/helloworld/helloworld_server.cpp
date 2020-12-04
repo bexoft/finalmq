@@ -23,6 +23,7 @@
 #include "remoteentity/RemoteEntityContainer.h"
 #include "protocols/ProtocolHeaderBinarySize.h"
 #include "protocols/ProtocolDelimiter.h"
+#include "logger/Logger.h"
 #include "helloworld.fmq.h"
 
 using finalmq::RemoteEntity;
@@ -37,6 +38,8 @@ using finalmq::RemoteEntityContentType;
 using finalmq::IProtocolSessionPtr;
 using finalmq::ConnectionData;
 using finalmq::ConnectionEvent;
+using finalmq::Logger;
+using finalmq::LogContext;
 using helloworld::HelloRequest;
 using helloworld::HelloReply;
 
@@ -68,7 +71,12 @@ public:
 
 int main()
 {
-    // Create and initialize entity container
+    // display log traces
+    Logger::instance().registerConsumer([] (const LogContext& context, const char* text) {
+        std::cout << context.filename << "(" << context.line << ") " << text << std::endl;
+    });
+
+    // Create and initialize entity container. Entities can be added with registerEntity().
     std::shared_ptr<IRemoteEntityContainer> entityContainer = std::make_shared<RemoteEntityContainer>();
     entityContainer->init();
 
@@ -99,6 +107,7 @@ int main()
     // entityContainer->bind("tcp://*:7777", std::make_shared<ProtocolHeaderBinarySizeFactory>(),
     //                       RemoteEntityContentType::CONTENTTYPE_PROTO,
     //                       {{true, "myservercertificate.cert.pem", "myservercertificate.key.pem"}});
+    // And by the way, also connects()s are possible for an EntityContainer. An EntityContainer can be client and server at the same time.
 
     // run
     entityContainer->run();

@@ -23,6 +23,7 @@
 #include "remoteentity/RemoteEntityContainer.h"
 #include "protocols/ProtocolHeaderBinarySize.h"
 #include "protocols/ProtocolDelimiter.h"
+#include "logger/Logger.h"
 #include "helloworld.fmq.h"
 
 using finalmq::RemoteEntity;
@@ -36,6 +37,8 @@ using finalmq::IProtocolSessionPtr;
 using finalmq::ConnectionData;
 using finalmq::ConnectionEvent;
 using finalmq::remoteentity::Status;
+using finalmq::Logger;
+using finalmq::LogContext;
 using helloworld::HelloRequest;
 using helloworld::HelloReply;
 
@@ -43,10 +46,14 @@ using helloworld::HelloReply;
 #include <thread>
 
 
-
 int main()
 {
-    // Create and initialize entity container
+    // display log traces
+    Logger::instance().registerConsumer([] (const LogContext& context, const char* text) {
+        std::cout << context.filename << "(" << context.line << ") " << text << std::endl;
+    });
+
+    // Create and initialize entity container. Entities can be added with registerEntity().
     std::shared_ptr<IRemoteEntityContainer> entityContainer = std::make_shared<RemoteEntityContainer>();
     entityContainer->init();
 
@@ -55,6 +62,7 @@ int main()
         entityContainer->run();
     });
 
+    // register lambda for connection events
     entityContainer->registerConnectionEvent([] (const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) {
         const ConnectionData connectionData = session->getConnectionData();
         std::cout << "connection event at " << connectionData.endpoint
@@ -65,19 +73,22 @@ int main()
     // Create server entity and register it at the entityContainer with the service name "MyService"
     // note: multiple entities can be registered.
     RemoteEntity entityClient;
+    entityContainer->registerEntity(&entityClient);
 
     // register peer events to see when a remote entity connects or disconnects.
     entityClient.registerPeerEvent([] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
         std::cout << "peer event " << peerEvent.toString() << std::endl;
     });
 
-    entityContainer->registerEntity(&entityClient);
-
     // connect to port 7777 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
     // content type in payload: protobuf
+    // note: Also multiple connects are possible. And by the way, also bind()s are possible. An EntityContainer can be client and server at the same time.
     IProtocolSessionPtr sessionClient = entityContainer->connect("tcp://localhost:7777", std::make_shared<ProtocolHeaderBinarySize>(), RemoteEntityContentType::CONTENTTYPE_PROTO);
 
-    PeerId peerId = entityClient.connect(sessionClient, "MyService");
+    // connect entityClient to remote server entity "MyService" with the created TCP session.
+    PeerId peerId = entityClient.connect(sessionClient, "MyService", [] (PeerId peerId, Status status) {
+        std::cout << "connect reply: " << status.toString() << std::endl;
+    });
 
     // asynchronous request/reply
     // each request has its own lambda. The lambda is been called when the corresponding reply is received.
