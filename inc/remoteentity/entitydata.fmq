@@ -29,7 +29,6 @@
             {"tid":"TYPE_UINT64",       "type":"",          "name":"corrid",    "desc":"","flags":["METAFLAG_PROTO_VARINT"]}
         ]},
         {"type":"EntityConnect","desc":"","fields":[
-            {"tid":"TYPE_UINT32",       "type":"",          "name":"entityid",     "desc":"","flags":["METAFLAG_PROTO_VARINT"]},
             {"tid":"TYPE_STRING",       "type":"",          "name":"entityName",   "desc":"","flags":[]}
         ]},
         {"type":"EntityConnectReply","desc":"","fields":[

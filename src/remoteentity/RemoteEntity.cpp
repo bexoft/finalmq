@@ -146,7 +146,7 @@ RemoteEntity::RemoteEntity()
     registerCommand<EntityConnect>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<EntityConnect>& request) {
         assert(request);
         bool added{};
-        addPeer(replyContext->session(), request->entityid, request->entityName, true, added);
+        addPeer(replyContext->session(), replyContext->entityId(), request->entityName, true, added);
         replyContext->reply(EntityConnectReply(m_entityId, m_entityName));
     });
     registerCommand<EntityDisconnect>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<EntityDisconnect>& /*request*/) {
@@ -237,7 +237,7 @@ PeerId RemoteEntity::connectIntern(const IProtocolSessionPtr& session, const std
 
     if (added)
     {
-        requestReply<EntityConnectReply>(peerId, EntityConnect{m_entityId, m_entityName},
+        requestReply<EntityConnectReply>(peerId, EntityConnect{m_entityName},
                                          [this, funcReplyConnect{std::move(funcReplyConnect)}] (PeerId peerId, remoteentity::Status status, const std::shared_ptr<EntityConnectReply>& reply) {
             if (funcReplyConnect)
             {
