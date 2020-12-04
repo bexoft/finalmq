@@ -80,6 +80,7 @@ int main()
     std::shared_ptr<IRemoteEntityContainer> entityContainer = std::make_shared<RemoteEntityContainer>();
     entityContainer->init();
 
+    // register lambda for connection events to see when a network node connects or disconnects.
     entityContainer->registerConnectionEvent([] (const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) {
         const ConnectionData connectionData = session->getConnectionData();
         std::cout << "connection event at " << connectionData.endpoint
@@ -91,6 +92,11 @@ int main()
     // note: multiple entities can be registered.
     EntityServer entityServer;
     entityContainer->registerEntity(&entityServer, "MyService");
+
+    // register peer events to see when a remote entity connects or disconnects.
+    entityServer.registerPeerEvent([] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
+        std::cout << "peer event " << peerEvent.toString() << std::endl;
+    });
 
     // Open listener port 7777 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
     // content type in payload: protobuf

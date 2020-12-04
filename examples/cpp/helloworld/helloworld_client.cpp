@@ -62,7 +62,7 @@ int main()
         entityContainer->run();
     });
 
-    // register lambda for connection events
+    // register lambda for connection events to see when a network node connects or disconnects.
     entityContainer->registerConnectionEvent([] (const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) {
         const ConnectionData connectionData = session->getConnectionData();
         std::cout << "connection event at " << connectionData.endpoint
