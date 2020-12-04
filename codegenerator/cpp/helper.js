@@ -21,16 +21,23 @@ module.exports = {
 
     typeWithNamespace : function(data, type, delimiter)
     {
-        var type = type;
-        if (type.split('.').length > 1 || data.namespace == null || data.namespace.length == 0 || !this.isTypeInData(data, type))
-        {
-            type = type;
+        if (type)
+        { 
+            var type = type;
+            if (type.split('.').length > 1 || data.namespace == null || data.namespace.length == 0 || !this.isTypeInData(data, type))
+            {
+                type = type;
+            }
+            else
+            {
+                type = data.namespace + '.' + type
+            }
+            return type.split('.').join(delimiter)
         }
         else
         {
-            type = data.namespace + '.' + type
+            return ""
         }
-        return type.split('.').join(delimiter)
     },
 
     getPlainType : function(type)
@@ -100,9 +107,12 @@ module.exports = {
     convertFlags : function(flagArray)
     {
         var flags = 'finalmq::METAFLAG_NONE'
-        for (var i = 0; i < flagArray.length; i++)
+        if (flagArray)
         {
-            flags += ' | finalmq::' + flagArray[i]
+            for (var i = 0; i < flagArray.length; i++)
+            {
+                flags += ' | finalmq::' + flagArray[i]
+            }
         }
         return flags
     },

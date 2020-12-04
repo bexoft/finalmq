@@ -25,6 +25,8 @@
 #include "poller/PollerImplEpoll.h"
 
 #include "helpers/OperatingSystem.h"
+#include "helpers/ModulenameFinalmq.h"
+#include "logger/LogStream.h"
 
 
 #include <netinet/tcp.h>
@@ -74,6 +76,10 @@ void PollerImplEpoll::addSocket(const SocketDescriptorPtr& fd)
         ev.events = 0;
         ev.data.fd = fd->getDescriptor();
         int res = OperatingSystem::instance().epoll_ctl(m_fdEpoll, EPOLL_CTL_ADD, fd->getDescriptor(), &ev);
+        if (res == -1)
+        {
+            streamFatal << "epoll_ctl failed with errno: " << errno;
+        }
         assert(res != -1);
         sockedDescriptorHasChanged();
     }
@@ -95,6 +101,10 @@ void PollerImplEpoll::addSocketEnableRead(const SocketDescriptorPtr& fd)
         ev.events = EPOLLIN;
         ev.data.fd = fd->getDescriptor();
         int res = OperatingSystem::instance().epoll_ctl(m_fdEpoll, EPOLL_CTL_ADD, fd->getDescriptor(), &ev);
+        if (res == -1)
+        {
+            streamFatal << "epoll_ctl failed with errno: " << errno;
+        }
         assert(res != -1);
         sockedDescriptorHasChanged();
     }
@@ -116,6 +126,10 @@ void PollerImplEpoll::removeSocket(const SocketDescriptorPtr& fd)
         ev.events = 0;
         ev.data.fd = fd->getDescriptor();
         int res = OperatingSystem::instance().epoll_ctl(m_fdEpoll, EPOLL_CTL_DEL, fd->getDescriptor(), &ev);
+        if (res == -1)
+        {
+            streamFatal << "epoll_ctl failed with errno: " << errno;
+        }
         assert(res != -1);
         m_socketDescriptors.erase(it);
         sockedDescriptorHasChanged();
@@ -140,6 +154,10 @@ void PollerImplEpoll::enableRead(const SocketDescriptorPtr& fd)
         ev.events = it->second;
         ev.data.fd = fd->getDescriptor();
         int res = OperatingSystem::instance().epoll_ctl(m_fdEpoll, EPOLL_CTL_MOD, fd->getDescriptor(), &ev);
+        if (res == -1)
+        {
+            streamFatal << "epoll_ctl failed with errno: " << errno;
+        }
         assert(res != -1);
     }
     else
@@ -161,6 +179,10 @@ void PollerImplEpoll::disableRead(const SocketDescriptorPtr& fd)
         ev.events = it->second;
         ev.data.fd = fd->getDescriptor();
         int res = OperatingSystem::instance().epoll_ctl(m_fdEpoll, EPOLL_CTL_MOD, fd->getDescriptor(), &ev);
+        if (res == -1)
+        {
+            streamFatal << "epoll_ctl failed with errno: " << errno;
+        }
         assert(res != -1);
     }
     else
@@ -184,6 +206,10 @@ void PollerImplEpoll::enableWrite(const SocketDescriptorPtr& fd)
         ev.events = it->second;
         ev.data.fd = fd->getDescriptor();
         int res = OperatingSystem::instance().epoll_ctl(m_fdEpoll, EPOLL_CTL_MOD, fd->getDescriptor(), &ev);
+        if (res == -1)
+        {
+            streamFatal << "epoll_ctl failed with errno: " << errno;
+        }
         assert(res != -1);
     }
     else
@@ -205,6 +231,10 @@ void PollerImplEpoll::disableWrite(const SocketDescriptorPtr& fd)
         ev.events = it->second;
         ev.data.fd = fd->getDescriptor();
         int res = OperatingSystem::instance().epoll_ctl(m_fdEpoll, EPOLL_CTL_MOD, fd->getDescriptor(), &ev);
+        if (res == -1)
+        {
+            streamFatal << "epoll_ctl failed with errno: " << errno;
+        }
         assert(res != -1);
     }
     else
@@ -232,9 +262,6 @@ void PollerImplEpoll::updateSocketDescriptors()
     }
 }
 
-
-
-static int MILLITOMICRO = 1000;
 
 
 void PollerImplEpoll::collectSockets(int res)

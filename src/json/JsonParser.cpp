@@ -193,8 +193,6 @@ const char* JsonParser::parseFalse(const char* str)
 const char* JsonParser::parseNumber(const char* str)
 {
     const char* first = str;
-    bool ex = false;
-    bool ok = true;
     char c = getChar(str);
     bool isNegative = false;
     if (c == '-')

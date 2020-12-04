@@ -13,7 +13,8 @@
             {"name":"STATUS_REQUESTTYPE_NOT_DEFINED",   "id":4,     "desc":""},
             {"name":"STATUS_REPLYTYPE_NOT_DEFINED",     "id":5,     "desc":""},
             {"name":"STATUS_SESSION_DISCONNECTED",      "id":6,     "desc":""},
-            {"name":"STATUS_PEER_DISCONNECTED",         "id":7,     "desc":""}
+            {"name":"STATUS_PEER_DISCONNECTED",         "id":7,     "desc":""},
+            {"name":"STATUS_NO_REPLY",                  "id":8,     "desc":""}
         ]}
     ],
 
@@ -27,15 +28,14 @@
             {"tid":"TYPE_STRING",       "type":"",          "name":"type",      "desc":"","flags":[]},
             {"tid":"TYPE_UINT64",       "type":"",          "name":"corrid",    "desc":"","flags":["METAFLAG_PROTO_VARINT"]}
         ]},
-        {"type":"EntityConnect","desc":"","fields":[
+        {"type":"ConnectEntity","desc":"","fields":[
+            {"tid":"TYPE_STRING",       "type":"",          "name":"entityName",   "desc":"","flags":[]}
+        ]},
+        {"type":"ConnectEntityReply","desc":"","fields":[
             {"tid":"TYPE_UINT32",       "type":"",          "name":"entityid",     "desc":"","flags":["METAFLAG_PROTO_VARINT"]},
             {"tid":"TYPE_STRING",       "type":"",          "name":"entityName",   "desc":"","flags":[]}
         ]},
-        {"type":"EntityConnectReply","desc":"","fields":[
-            {"tid":"TYPE_UINT32",       "type":"",          "name":"entityid",     "desc":"","flags":["METAFLAG_PROTO_VARINT"]},
-            {"tid":"TYPE_STRING",       "type":"",          "name":"entityName",   "desc":"","flags":[]}
-        ]},
-        {"type":"EntityDisconnect","desc":"","fields":[
+        {"type":"DisconnectEntity","desc":"","fields":[
         ]}
     ]
 }

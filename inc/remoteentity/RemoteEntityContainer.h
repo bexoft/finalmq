@@ -26,13 +26,30 @@
 
 namespace finalmq {
 
-enum class ConnectionEvent
+class ConnectionEvent
 {
-    CONNECTIONEVENT_CONNECTED,
-    CONNECTIONEVENT_DISCONNECTED,
-    CONNECTIONEVENT_SOCKET_CONNECTED,
-    CONNECTIONEVENT_SOCKET_DISCONNECTED,
+public:
+    enum Enum : std::int32_t {
+        CONNECTIONEVENT_CONNECTED = 0,
+        CONNECTIONEVENT_DISCONNECTED = 1,
+        CONNECTIONEVENT_SOCKET_CONNECTED = 2,
+        CONNECTIONEVENT_SOCKET_DISCONNECTED = 3,
+    };
+
+    ConnectionEvent();
+    ConnectionEvent(Enum en);
+    operator const Enum&() const;
+    operator Enum&();
+    const ConnectionEvent& operator =(Enum en);
+    const std::string& toString() const;
+    void fromString(const std::string& name);
+
+private:
+    Enum m_value = CONNECTIONEVENT_CONNECTED;
+    static const EnumInfo _enumInfo;
 };
+
+
 typedef std::function<void(const IProtocolSessionPtr& session, ConnectionEvent connectionEvent)> FuncConnectionEvent;
 
 
@@ -44,7 +61,7 @@ struct IRemoteEntityContainer
     virtual int bind(const std::string& endpoint, const IProtocolFactoryPtr protocolFactory, RemoteEntityContentType contentType, const BindProperties& bindProperties = {}) = 0;
     virtual void unbind(const std::string& endpoint) = 0;
     virtual IProtocolSessionPtr connect(const std::string& endpoint, const IProtocolPtr& protocol, RemoteEntityContentType contentType, const ConnectProperties& connectProperties = {}) = 0;
-    virtual void threadEntry() = 0;
+    virtual void run() = 0;
     virtual bool terminatePollerLoop(int timeout) = 0;
 
     virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, const std::string& name = "") = 0;
@@ -69,7 +86,7 @@ private:
     virtual int bind(const std::string& endpoint, const IProtocolFactoryPtr protocolFactory, RemoteEntityContentType contentType, const BindProperties& bindProperties = {}) override;
     virtual void unbind(const std::string& endpoint) override;
     virtual IProtocolSessionPtr connect(const std::string& endpoint, const IProtocolPtr& protocol, RemoteEntityContentType contentType, const ConnectProperties& connectProperties = {}) override;
-    virtual void threadEntry() override;
+    virtual void run() override;
     virtual bool terminatePollerLoop(int timeout) override;
 
     virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, const std::string& name = "") override;

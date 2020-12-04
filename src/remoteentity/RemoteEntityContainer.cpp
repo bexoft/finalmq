@@ -35,6 +35,49 @@ using finalmq::remoteentity::Header;
 namespace finalmq {
 
 
+
+ConnectionEvent::ConnectionEvent()
+{
+}
+ConnectionEvent::ConnectionEvent(Enum en)
+    : m_value(en)
+{
+}
+ConnectionEvent::operator const Enum&() const
+{
+    return m_value;
+}
+ConnectionEvent::operator Enum&()
+{
+    return m_value;
+}
+const ConnectionEvent& ConnectionEvent::operator =(Enum en)
+{
+    m_value = en;
+    return *this;
+}
+const std::string& ConnectionEvent::toString() const
+{
+    return ConnectionEvent::_enumInfo.getMetaEnum().getNameByValue(m_value);
+}
+void ConnectionEvent::fromString(const std::string& name)
+{
+    m_value = static_cast<Enum>(_enumInfo.getMetaEnum().getValueByName(name));
+}
+const EnumInfo ConnectionEvent::_enumInfo = {
+    "ConnectionEvent", "", {
+        {"CONNECTIONEVENT_CONNECTED", 0, ""},
+        {"CONNECTIONEVENT_DISCONNECTED", 1, ""},
+        {"CONNECTIONEVENT_SOCKET_CONNECTED", 2, ""},
+        {"CONNECTIONEVENT_SOCKET_DISCONNECTED", 3, ""},
+     }
+};
+
+
+
+///////////////////////////////////
+
+
 RemoteEntityContainer::RemoteEntityContainer()
     : m_streamConnectionContainer(std::make_unique<ProtocolSessionContainer>())
 {
@@ -69,9 +112,9 @@ IProtocolSessionPtr RemoteEntityContainer::connect(const std::string& endpoint, 
     return m_streamConnectionContainer->connect(endpoint, this, protocol, connectProperties, contentType);
 }
 
-void RemoteEntityContainer::threadEntry()
+void RemoteEntityContainer::run()
 {
-    m_streamConnectionContainer->threadEntry();
+    m_streamConnectionContainer->run();
 }
 
 bool RemoteEntityContainer::terminatePollerLoop(int timeout)

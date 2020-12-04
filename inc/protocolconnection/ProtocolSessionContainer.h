@@ -40,7 +40,7 @@ struct IProtocolSessionContainer
     virtual IProtocolSessionPtr connect(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const ConnectProperties& connectProperties = {}, int contentType = 0) = 0;
     virtual std::vector< IProtocolSessionPtr > getAllSessions() const = 0;
     virtual IProtocolSessionPtr getSession(std::int64_t sessionId) const = 0;
-    virtual void threadEntry() = 0;
+    virtual void run() = 0;
     virtual bool terminatePollerLoop(int timeout) = 0;
 };
 
@@ -89,7 +89,7 @@ private:
     virtual IProtocolSessionPtr connect(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const ConnectProperties& connectProperties = {}, int contentType = 0) override;
     virtual std::vector< IProtocolSessionPtr > getAllSessions() const override;
     virtual IProtocolSessionPtr getSession(std::int64_t sessionId) const override;
-    virtual void threadEntry() override;
+    virtual void run() override;
     virtual bool terminatePollerLoop(int timeout) override;
 
 private:

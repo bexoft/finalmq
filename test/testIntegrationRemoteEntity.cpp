@@ -117,10 +117,10 @@ TEST_F(TestIntegrationRemoteEntity, testProto)
     IRemoteEntity& ientityClient = entityClient;
 
     std::thread thread1 = std::thread([&ientityContainerServer] () {
-        ientityContainerServer.threadEntry();
+        ientityContainerServer.run();
     });
     std::thread thread2 = std::thread([&ientityContainerClient] () {
-        ientityContainerClient.threadEntry();
+        ientityContainerClient.run();
     });
 
     ientityClient.registerPeerEvent([&mockEventsClient] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
@@ -133,11 +133,12 @@ TEST_F(TestIntegrationRemoteEntity, testProto)
     ientityContainerServer.registerEntity(&entityServer, "MyServer");
     ientityContainerClient.registerEntity(&entityClient);
 
-    ientityContainerServer.bind("tcp://*:7777", std::make_shared<ProtocolHeaderBinarySizeFactory>(), CONTENTTYPE_PROTO);
-    IProtocolSessionPtr sessionClient = ientityContainerClient.connect("tcp://localhost:7777", std::make_shared<ProtocolHeaderBinarySize>(), CONTENTTYPE_PROTO);
+    ientityContainerServer.bind("tcp://*:7788", std::make_shared<ProtocolHeaderBinarySizeFactory>(), CONTENTTYPE_PROTO);
+    IProtocolSessionPtr sessionClient = ientityContainerClient.connect("tcp://localhost:7788", std::make_shared<ProtocolHeaderBinarySize>(), CONTENTTYPE_PROTO);
 
-    EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent::PEER_CONNECTED, true)).Times(1);
-    EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent::PEER_CONNECTED, false)).Times(1);
+    EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
+    EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTING), false)).Times(1);
+    EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
     PeerId peerId = ientityClient.connect(sessionClient, "MyServer");
 
     static const int LOOP = 1;
@@ -146,12 +147,14 @@ TEST_F(TestIntegrationRemoteEntity, testProto)
     for (int i = 0; i < LOOP; ++i)
     {
         ientityClient.requestReply<TestReply>(peerId, TestRequest{DATA_REQUEST}, [&mockEventsClient] (PeerId peerId, remoteentity::Status status, const std::shared_ptr<TestReply>& reply) {
+            ASSERT_EQ(status, remoteentity::Status::STATUS_OK);
+            ASSERT_NE(reply, nullptr);
             ASSERT_EQ(reply->datareply, DATA_REPLY);
             mockEventsClient.testReply(peerId, status, reply);
         });
     }
 
-    waitTillDone(expectReply, 150000);
+    waitTillDone(expectReply, 15000);
     bool ok1 = ientityContainerServer.terminatePollerLoop(1000);
     bool ok2 = ientityContainerClient.terminatePollerLoop(1000);
     ASSERT_EQ(ok1, true);
@@ -177,10 +180,10 @@ TEST_F(TestIntegrationRemoteEntity, testJson)
     IRemoteEntity& ientityClient = entityClient;
 
     std::thread thread1 = std::thread([&ientityContainerServer] () {
-        ientityContainerServer.threadEntry();
+        ientityContainerServer.run();
     });
     std::thread thread2 = std::thread([&ientityContainerClient] () {
-        ientityContainerClient.threadEntry();
+        ientityContainerClient.run();
     });
 
     ientityClient.registerPeerEvent([&mockEventsClient] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
@@ -193,11 +196,12 @@ TEST_F(TestIntegrationRemoteEntity, testJson)
     ientityContainerServer.registerEntity(&entityServer, "MyServer");
     ientityContainerClient.registerEntity(&entityClient);
 
-    ientityContainerServer.bind("tcp://*:7777", std::make_shared<ProtocolDelimiterFactory>("\n"), CONTENTTYPE_JSON);
-    IProtocolSessionPtr sessionClient = ientityContainerClient.connect("tcp://localhost:7777", std::make_shared<ProtocolDelimiter>("\n"), CONTENTTYPE_JSON);
+    ientityContainerServer.bind("tcp://*:7788", std::make_shared<ProtocolDelimiterFactory>("\n"), CONTENTTYPE_JSON);
+    IProtocolSessionPtr sessionClient = ientityContainerClient.connect("tcp://localhost:7788", std::make_shared<ProtocolDelimiter>("\n"), CONTENTTYPE_JSON);
 
-    EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent::PEER_CONNECTED, true)).Times(1);
-    EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent::PEER_CONNECTED, false)).Times(1);
+    EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
+    EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTING), false)).Times(1);
+    EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
     PeerId peerId = ientityClient.connect(sessionClient, "MyServer");
 
     static const int LOOP = 1;
@@ -211,7 +215,7 @@ TEST_F(TestIntegrationRemoteEntity, testJson)
         });
     }
 
-    waitTillDone(expectReply, 150000);
+    waitTillDone(expectReply, 15000);
     bool ok1 = ientityContainerServer.terminatePollerLoop(1000);
     bool ok2 = ientityContainerClient.terminatePollerLoop(1000);
     ASSERT_EQ(ok1, true);
@@ -235,10 +239,10 @@ TEST_F(TestIntegrationRemoteEntity, testSslProto)
     IRemoteEntity& ientityClient = entityClient;
 
     std::thread thread1 = std::thread([&ientityContainerServer] () {
-        ientityContainerServer.threadEntry();
+        ientityContainerServer.run();
     });
     std::thread thread2 = std::thread([&ientityContainerClient] () {
-        ientityContainerClient.threadEntry();
+        ientityContainerClient.run();
     });
 
     ientityClient.registerPeerEvent([&mockEventsClient] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
@@ -251,11 +255,12 @@ TEST_F(TestIntegrationRemoteEntity, testSslProto)
     ientityContainerServer.registerEntity(&entityServer, "MyServer");
     ientityContainerClient.registerEntity(&entityClient);
 
-    ientityContainerServer.bind("tcp://*:7777", std::make_shared<ProtocolHeaderBinarySizeFactory>(), CONTENTTYPE_PROTO, {{true, "ssltest.cert.pem", "ssltest.key.pem"}});
-    IProtocolSessionPtr sessionClient = ientityContainerClient.connect("tcp://localhost:7777", std::make_shared<ProtocolHeaderBinarySize>(), CONTENTTYPE_PROTO, {{true}});
+    ientityContainerServer.bind("tcp://*:7788", std::make_shared<ProtocolHeaderBinarySizeFactory>(), CONTENTTYPE_PROTO, {{true, "ssltest.cert.pem", "ssltest.key.pem"}});
+    IProtocolSessionPtr sessionClient = ientityContainerClient.connect("tcp://localhost:7788", std::make_shared<ProtocolHeaderBinarySize>(), CONTENTTYPE_PROTO, {{true}});
 
-    EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent::PEER_CONNECTED, true)).Times(1);
-    EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent::PEER_CONNECTED, false)).Times(1);
+    EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
+    EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTING), false)).Times(1);
+    EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
     PeerId peerId = ientityClient.connect(sessionClient, "MyServer");
 
     static const int LOOP = 1;
@@ -269,7 +274,7 @@ TEST_F(TestIntegrationRemoteEntity, testSslProto)
         });
     }
 
-    waitTillDone(expectReply, 150000);
+    waitTillDone(expectReply, 15000);
     bool ok1 = ientityContainerServer.terminatePollerLoop(1000);
     bool ok2 = ientityContainerClient.terminatePollerLoop(1000);
     ASSERT_EQ(ok1, true);
@@ -277,94 +282,6 @@ TEST_F(TestIntegrationRemoteEntity, testSslProto)
     thread1.join();
     thread2.join();
 }
-
-
-
-
-
-
-
-
-/*
-TEST_F(TestIntegrationRemoteEntity, testServer)
-{
-    MockEvents mockEventsServer;
-    RemoteEntityContainer entityContainer1;
-    EntityServer entityServer(mockEventsServer);
-
-    IRemoteEntityContainer& ientityContainerServer = entityContainer1;
-
-    std::thread thread1 = std::thread([&ientityContainerServer] () {
-        ientityContainerServer.threadEntry();
-    });
-
-    ientityContainerServer.init();
-
-    ientityContainerServer.registerEntity(&entityServer, "MyServer");
-//{"mode":"MSG_REQUEST","corrid":"1","destname":"MyServer","type":"test.TestRequest"}{}
-    ientityContainerServer.bind("tcp://localhost:8888", std::make_shared<ProtocolDelimiterFactory>("\n"), CONTENTTYPE_JSON);
-    ientityContainerServer.bind("tcp://localhost:7777", std::make_shared<ProtocolHeaderBinarySizeFactory>(), CONTENTTYPE_PROTO);
-    ientityContainerServer.bind("ipc://abc1234", std::make_shared<ProtocolHeaderBinarySizeFactory>(), CONTENTTYPE_PROTO);
-
-//    EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent::PEER_CONNECTED, true)).WillRepeatedly();
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(10000000));
-    bool ok1 = ientityContainerServer.terminatePollerLoop(1000);
-    ASSERT_EQ(ok1, true);
-    thread1.join();
-}
-
-
-TEST_F(TestIntegrationRemoteEntity, testClient)
-{
-    MockEvents mockEventsClient;
-    RemoteEntityContainer entityContainer2;
-    RemoteEntity entityClient;
-
-    IRemoteEntityContainer& ientityContainerClient = entityContainer2;
-    IRemoteEntity& ientityClient = entityClient;
-
-    std::thread thread2 = std::thread([&ientityContainerClient] () {
-        ientityContainerClient.threadEntry();
-    });
-
-    ientityClient.registerPeerEvent([&mockEventsClient] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
-        mockEventsClient.peerEvent(peerId, peerEvent, incoming);
-    });
-
-    ientityContainerClient.init();
-
-    ientityContainerClient.registerEntity(&entityClient);
-
-//    IProtocolSessionPtr sessionClient = ientityContainerClient.connect("tcp://localhost:7777", std::make_shared<ProtocolHeaderBinarySize>(), CONTENTTYPE_PROTO);
-    IProtocolSessionPtr sessionClient = ientityContainerClient.connect("ipc://abc1234", std::make_shared<ProtocolHeaderBinarySize>(), CONTENTTYPE_PROTO);
-
-    EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent::PEER_CONNECTED, false)).Times(1);
-    PeerId peerId = ientityClient.connect(sessionClient, "MyServer");
-
-    auto timestart = std::chrono::high_resolution_clock::now();
-    static const int LOOP = 100000;
-//    EXPECT_CALL(mockEventsServer, testRequest(_, _)).Times(LOOP);
-    auto& expectReply = EXPECT_CALL(mockEventsClient, testReply(peerId, _, _)).Times(LOOP);
-    for (int i = 0; i < LOOP; ++i)
-    {
-        ientityClient.requestReply<TestReply>(peerId, TestRequest{DATA_REQUEST}, [&mockEventsClient] (PeerId peerId, remoteentity::Status status, const std::shared_ptr<TestReply>& reply) {
-            ASSERT_EQ(reply->datareply, DATA_REPLY);
-            mockEventsClient.testReply(peerId, status, reply);
-        });
-    }
-
-    waitTillDone(expectReply, 150000);
-    auto timeend = std::chrono::high_resolution_clock::now();
-    auto diff = (timeend - timestart) / std::chrono::milliseconds(1);
-    std::cout << "Time: " << diff << std::endl;
-
-
-    bool ok2 = ientityContainerClient.terminatePollerLoop(1000);
-    ASSERT_EQ(ok2, true);
-    thread2.join();
-}
-*/
 
 
 

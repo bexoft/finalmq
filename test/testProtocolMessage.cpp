@@ -358,9 +358,9 @@ TEST_F(TestProtocolMessage, addSendPayloadWithDownsizeAndMultipleAddSendPayloadF
     IMessage& imessage = message;
     char* buffer1 = imessage.addSendPayload(50);
     imessage.downsizeLastSendPayload(8);
-    char* buffer2 = imessage.addSendPayload(10);
+    imessage.addSendPayload(10);
     imessage.downsizeLastSendPayload(8);
-    char* buffer3 = imessage.addSendPayload(10);
+    imessage.addSendPayload(10);
     imessage.downsizeLastSendPayload(8);
     char* buffer4 = imessage.addSendPayload(100);
     imessage.downsizeLastSendPayload(8);
@@ -396,9 +396,9 @@ TEST_F(TestProtocolMessage, addSendPayloadWithDownsizeAndMultipleAddSendPayloadF
     IMessage& imessage = message;
     char* buffer1 = imessage.addSendPayload(50);
     imessage.downsizeLastSendPayload(8);
-    char* buffer2 = imessage.addSendPayload(10);
+    imessage.addSendPayload(10);
     imessage.downsizeLastSendPayload(8);
-    char* buffer3 = imessage.addSendPayload(10);
+    imessage.addSendPayload(10);
     imessage.downsizeLastSendPayload(8);
     char* buffer4 = imessage.addSendPayload(100);
     imessage.downsizeLastSendPayload(0);
@@ -435,7 +435,7 @@ TEST_F(TestProtocolMessage, addSendPayloadMultipleWithDownsizeZeroNoTrailer)
     IMessage& imessage = message;
     char* buffer1 = imessage.addSendPayload(4);
     imessage.downsizeLastSendPayload(4);
-    char* buffer2 = imessage.addSendPayload(4);
+    imessage.addSendPayload(4);
     imessage.downsizeLastSendPayload(0);
 
     const std::list<BufferRef>& sendBuffers = imessage.getAllSendBuffers();
@@ -526,7 +526,7 @@ TEST_F(TestProtocolMessage, firstDownsizeZeroBlockRemoveBlock)
 {
     ProtocolMessage message(PROTOCOL_ID, 0, 0);
     IMessage& imessage = message;
-    char* buffer1 = imessage.addSendPayload(4);
+    imessage.addSendPayload(4);
     imessage.downsizeLastSendPayload(0);
 
     const std::list<BufferRef>& sendBuffers = imessage.getAllSendBuffers();
@@ -544,7 +544,7 @@ TEST_F(TestProtocolMessage, firstDownsizeZeroBlockRemoveBlockRepeatDownsize)
 {
     ProtocolMessage message(PROTOCOL_ID, 0, 0);
     IMessage& imessage = message;
-    char* buffer1 = imessage.addSendPayload(4);
+    imessage.addSendPayload(4);
     imessage.downsizeLastSendPayload(0);
     imessage.downsizeLastSendPayload(0);
 
@@ -564,7 +564,7 @@ TEST_F(TestProtocolMessage, firstDownsizeZeroBlockRemoveBlockAddSendPayload)
 {
     ProtocolMessage message(PROTOCOL_ID, 0, 0);
     IMessage& imessage = message;
-    char* buffer1 = imessage.addSendPayload(4);
+    imessage.addSendPayload(4);
     imessage.downsizeLastSendPayload(0);
     char* buffer2 = imessage.addSendPayload(4);
     imessage.downsizeLastSendPayload(2);
