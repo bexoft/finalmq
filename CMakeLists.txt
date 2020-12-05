@@ -5,7 +5,8 @@ project(finalmq)
 
 option(FINALMQ_BUILD_EXAMPLES "Build tests" ON)
 option(FINALMQ_BUILD_TESTS "Build tests" OFF)
-option(FINALMQ_BUILD_COVERAGE "Build for gcov" OFF)
+option(FINALMQ_BUILD_COVERAGE "Enable gcov" OFF)
+option(FINALMQ_BUILD_DOXYGEN "Enable doxygen" OFF)
 option(FINALMQ_USE_SSL "Build with openssl" ON)
 
 
@@ -123,17 +124,19 @@ if (FINALMQ_BUILD_EXAMPLES)
 endif()
 
 
-# add a target to generate API documentation with Doxygen
-find_package(Doxygen
-             REQUIRED dot
-             OPTIONAL_COMPONENTS mscgen dia)
-if(DOXYGEN_FOUND)
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
-  add_custom_target(doc
-    ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMENT "Generating API documentation with Doxygen (finalmq)" VERBATIM)
-endif(DOXYGEN_FOUND)
+if (FINALMQ_BUILD_DOXYGEN)
+    # add a target to generate API documentation with Doxygen
+    find_package(Doxygen
+                 REQUIRED dot
+                 OPTIONAL_COMPONENTS mscgen dia)
+    if(DOXYGEN_FOUND)
+      configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+      add_custom_target(doc
+        ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Generating API documentation with Doxygen (finalmq)" VERBATIM)
+    endif(DOXYGEN_FOUND)
+endif (FINALMQ_BUILD_DOXYGEN)
 
 
 
