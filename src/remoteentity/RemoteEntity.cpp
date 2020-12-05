@@ -188,6 +188,14 @@ void PeerManager::removePeerFromSessionEntityToPeerId(std::int64_t sessionId, En
 
 PeerId PeerManager::getPeerId(std::int64_t sessionId, EntityId entityId, const std::string& entityName) const
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
+    return getPeerIdIntern(sessionId, entityId, entityName);
+}
+
+
+
+PeerId PeerManager::getPeerIdIntern(std::int64_t sessionId, EntityId entityId, const std::string& entityName) const
+{
     auto it = m_sessionEntityToPeerId.find(sessionId);
     if (it != m_sessionEntityToPeerId.end())
     {
@@ -252,7 +260,7 @@ PeerId PeerManager::addPeer(const IProtocolSessionPtr& session, EntityId entityI
 
     std::unique_lock<std::mutex> lock(m_mutex);
 
-    PeerId peerId = getPeerId(session->getSessionId(), entityId, entityName);
+    PeerId peerId = getPeerIdIntern(session->getSessionId(), entityId, entityName);
 
     if (peerId == PEERID_INVALID)
     {
@@ -517,12 +525,6 @@ void RemoteEntity::sessionDisconnected(const IProtocolSessionPtr& session)
 
 
 
-PeerId RemoteEntity::getPeerId(const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName) const
-{
-    assert(m_peerManager);
-    return m_peerManager->getPeerId(session->getSessionId(), entityId, entityName);
-}
-
 
 
 PeerId RemoteEntity::addPeer(const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName, bool incoming, bool& added)
@@ -568,9 +570,8 @@ void RemoteEntity::receivedReply(const IProtocolSessionPtr& session, const remot
     if (header.status == Status::STATUS_ENTITY_NOT_FOUND &&
         header.srcid != ENTITYID_INVALID)
     {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        PeerId peerId = getPeerId(session, header.srcid, "");
-        lock.unlock();
+        assert(m_peerManager);
+        PeerId peerId = m_peerManager->getPeerId(session->getSessionId(), header.srcid, "");
         removePeer(peerId, Status::STATUS_PEER_DISCONNECTED);
     }
 }

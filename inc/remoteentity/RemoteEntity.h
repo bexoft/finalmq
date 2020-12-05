@@ -159,6 +159,7 @@ public:
 
 private:
     void removePeerFromSessionEntityToPeerId(std::int64_t sessionId, EntityId entityId, const std::string& entityName);
+    PeerId getPeerIdIntern(std::int64_t sessionId, EntityId entityId, const std::string& entityName) const;
 
     struct Peer
     {
@@ -206,7 +207,9 @@ public:
         if (m_peerId == PEERID_INVALID)
         {
             assert(m_peerManager);
-            m_peerId = m_peerManager->getPeerId(m_session->getSessionId(), m_entityIdDest, "");
+            bool added = false;
+            // get peer, but if not existing, then add it (lazy connect)
+            m_peerId = m_peerManager->addPeer(m_session, m_entityIdDest, "", true, added);
         }
         return m_peerId;
     }
@@ -289,7 +292,6 @@ private:
     PeerId addPeer(const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName, bool incoming, bool& added);
     PeerId connectIntern(const IProtocolSessionPtr& session, const std::string& entityName, EntityId, FuncReplyConnect funcReplyConnect);
     void removePeer(PeerId peerId, remoteentity::Status status);
-    PeerId getPeerId(const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName) const;
     void triggerReply(CorrelationId correlationId, remoteentity::Status status, const StructBasePtr& structBase);
 
     struct Request
