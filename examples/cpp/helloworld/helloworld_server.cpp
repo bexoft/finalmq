@@ -26,6 +26,10 @@
 #include "logger/Logger.h"
 #include "helloworld.fmq.h"
 
+#include <iostream>
+#include <thread>
+
+
 using finalmq::RemoteEntity;
 using finalmq::RemoteEntityContainer;
 using finalmq::IRemoteEntityContainer;
@@ -43,8 +47,6 @@ using finalmq::LogContext;
 using helloworld::HelloRequest;
 using helloworld::HelloReply;
 
-#include <iostream>
-#include <thread>
 
 
 class EntityServer : public RemoteEntity
@@ -57,13 +59,18 @@ public:
             std::cout << "peer event " << peerEvent.toString() << std::endl;
         });
 
-        // json example: /MyService/helloworld.HelloRequest#1{"name":"World"}
+        // json example: /MyService/helloworld.HelloRequest#1{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
         registerCommand<HelloRequest>([] (ReplyContextUPtr& replyContext, const std::shared_ptr<HelloRequest>& request) {
             assert(request);
 
             // The replyContext is a unique_ptr, it can be moved to another unique_ptr, so that the reply can be called later.
             std::string prefix("Hello ");
-            replyContext->reply(HelloReply(prefix + request->name));
+            HelloReply reply;
+            for (size_t i = 0; i < request->persons.size(); ++i)
+            {
+                reply.greetings.emplace_back(prefix + request->persons[i].name);
+            }
+            replyContext->reply(std::move(reply));
         });
     }
 };
