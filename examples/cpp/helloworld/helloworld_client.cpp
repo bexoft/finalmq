@@ -24,6 +24,8 @@
 #include "protocols/ProtocolHeaderBinarySize.h"
 #include "protocols/ProtocolDelimiter.h"
 #include "logger/Logger.h"
+
+// the definition of the messages are in the file helloworld.fmq
 #include "helloworld.fmq.h"
 
 #include <iostream>
@@ -88,11 +90,16 @@ int main()
 
     // connect to port 7777 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
     // content type in payload: protobuf
-    // note: Also multiple connects are possible. And by the way, also bind()s are possible. An EntityContainer can be client and server at the same time.
+    // note: Also multiple connects are possible.
+    // And by the way, also bind()s are possible. An EntityContainer can be client and server at the same time.
+    // A client can be started before the server is started. The connect is been retried in the background till the server
+    // becomes available. Use the ConnectProperties to change the reconnect properties
+    // (default is: try to connect every 5s forever till the server becomes available).
     IProtocolSessionPtr sessionClient = entityContainer->connect("tcp://localhost:7777", std::make_shared<ProtocolHeaderBinarySize>(), RemoteEntityContentType::CONTENTTYPE_PROTO);
 
     // connect entityClient to remote server entity "MyService" with the created TCP session.
-    // The returned peerId identifies the peer entity. The peerId will be used for sending commands to the peer (requestReply(), sendEvent())
+    // The returned peerId identifies the peer entity.
+    // The peerId will be used for sending commands to the peer (requestReply(), sendEvent())
     PeerId peerId = entityClient.connect(sessionClient, "MyService", [] (PeerId peerId, Status status) {
         std::cout << "connect reply: " << status.toString() << std::endl;
     });
@@ -118,6 +125,7 @@ int main()
         }
     });
 
+    // another request/reply
     entityClient.requestReply<HelloReply>(peerId,
                 HelloRequest{{ {"Albert","Einstein",Sex::FEMALE,1879,{"somestreet",   12,89073, "Ulm",    "Germany"}},
                                {"Marie", "Curie",   Sex::FEMALE,1867,{"anotherstreet",32,00001,"Warschau","Poland"}},
@@ -137,7 +145,10 @@ int main()
         }
     });
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+    // wait 20s
+    std::this_thread::sleep_for(std::chrono::milliseconds(20000));
+
+    // release the thread
     entityContainer->terminatePollerLoop(1000);
     thread.join();
 
