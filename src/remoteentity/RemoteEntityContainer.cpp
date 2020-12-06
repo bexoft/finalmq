@@ -222,8 +222,9 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     assert(session);
     assert(message);
 
+    bool syntaxError = false;
     Header header;
-    std::shared_ptr<StructBase> structBase = RemoteEntityFormat::parseMessage(*message, session->getContentType(), header);
+    std::shared_ptr<StructBase> structBase = RemoteEntityFormat::parseMessage(*message, session->getContentType(), header, syntaxError);
 
     std::unique_lock<std::mutex> lock(m_mutex);
     EntityId entityId = header.destid;
@@ -247,24 +248,34 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     lock.unlock();
 
     auto entity = remoteEntity.lock();
-
     if (header.mode == MsgMode::MSG_REQUEST)
     {
-        if (entity)
+        Status replyStatus = Status::STATUS_OK;
+        if (!syntaxError)
         {
-            if (!structBase)
+            if (entity)
             {
-                Header headerReply{header.srcid, "", entityId, MsgMode::MSG_REPLY, Status::STATUS_REQUESTTYPE_NOT_DEFINED, "", header.corrid};
-                RemoteEntityFormat::send(session, headerReply);
+                if (structBase)
+                {
+                    entity->receivedRequest(session, header, structBase);
+                }
+                else
+                {
+                    replyStatus = Status::STATUS_REQUESTTYPE_NOT_KNOWN;
+                }
             }
             else
             {
-                entity->receivedRequest(session, header, structBase);
+                replyStatus = Status::STATUS_ENTITY_NOT_FOUND;
             }
         }
         else
         {
-            Header headerReply{header.srcid, "", entityId, MsgMode::MSG_REPLY, Status::STATUS_ENTITY_NOT_FOUND, "", header.corrid};
+            replyStatus = Status::STATUS_SYNTAX_ERROR;
+        }
+        if (replyStatus != Status::STATUS_OK)
+        {
+            Header headerReply{header.srcid, "", entityId, MsgMode::MSG_REPLY, Status::STATUS_SYNTAX_ERROR, "", header.corrid};
             RemoteEntityFormat::send(session, headerReply);
         }
     }
@@ -274,7 +285,7 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
         {
             if (!structBase && header.status == Status::STATUS_OK && !header.type.empty())
             {
-                header.status = Status::STATUS_REPLYTYPE_NOT_DEFINED;
+                header.status = Status::STATUS_REPLYTYPE_NOT_KNOWN;
                 header.type = "";
             }
             entity->receivedReply(session, header, structBase);

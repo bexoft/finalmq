@@ -2,40 +2,41 @@
     "namespace":"finalmq.remoteentity",
     "enums": [
         {"type":"MsgMode","desc":"","entries":[
-            {"name":"MSG_REQUEST",      "id":0,     "desc":""},
-            {"name":"MSG_REPLY",        "id":1,     "desc":""}
+            {"name":"MSG_REQUEST",      "id":0,     "desc":"The message is a request"},
+            {"name":"MSG_REPLY",        "id":1,     "desc":"The message is a reply"}
         ]},
         {"type":"Status","desc":"","entries":[
-            {"name":"STATUS_OK",                        "id":0,     "desc":""},
-            {"name":"STATUS_ENTITY_NOT_FOUND",          "id":1,     "desc":""},
-            {"name":"STATUS_WRONG_REPLY_TYPE",          "id":2,     "desc":""},
-            {"name":"STATUS_REQUEST_NOT_FOUND",         "id":3,     "desc":""},
-            {"name":"STATUS_REQUESTTYPE_NOT_DEFINED",   "id":4,     "desc":""},
-            {"name":"STATUS_REPLYTYPE_NOT_DEFINED",     "id":5,     "desc":""},
-            {"name":"STATUS_SESSION_DISCONNECTED",      "id":6,     "desc":""},
-            {"name":"STATUS_PEER_DISCONNECTED",         "id":7,     "desc":""},
-            {"name":"STATUS_NO_REPLY",                  "id":8,     "desc":""}
+            {"name":"STATUS_OK",                        "id":0,     "desc":"OK"},
+            {"name":"STATUS_ENTITY_NOT_FOUND",          "id":1,     "desc":"Peer endity not found"},
+            {"name":"STATUS_WRONG_REPLY_TYPE",          "id":2,     "desc":"Not expected reply type"},
+            {"name":"STATUS_SYNTAX_ERROR",              "id":3,     "desc":"Syntax error at parsing the message"},
+            {"name":"STATUS_REQUEST_NOT_FOUND",         "id":4,     "desc":"The request/command is not registered at the request executor (server)"},
+            {"name":"STATUS_REQUESTTYPE_NOT_KNOWN",     "id":5,     "desc":"The request type is not known"},
+            {"name":"STATUS_REPLYTYPE_NOT_KNOWN",       "id":6,     "desc":"the reply type is not known"},
+            {"name":"STATUS_SESSION_DISCONNECTED",      "id":7,     "desc":"the (socket) session is disconnected"},
+            {"name":"STATUS_PEER_DISCONNECTED",         "id":8,     "desc":"The peer is disconnected"},
+            {"name":"STATUS_NO_REPLY",                  "id":9,     "desc":"No reply was sent by the request executor (server)"}
         ]}
     ],
 
     "structs":[
         {"type":"Header","desc":"","fields":[
-            {"tid":"TYPE_UINT32",       "type":"",          "name":"destid",    "desc":"","flags":["METAFLAG_PROTO_VARINT"]},
-            {"tid":"TYPE_STRING",       "type":"",          "name":"destname",  "desc":"","flags":[]},
-            {"tid":"TYPE_UINT32",       "type":"",          "name":"srcid",     "desc":"","flags":["METAFLAG_PROTO_VARINT"]},
-            {"tid":"TYPE_ENUM",         "type":"MsgMode",   "name":"mode",      "desc":"","flags":[]},
-            {"tid":"TYPE_ENUM",         "type":"Status",    "name":"status",    "desc":"","flags":[]},
-            {"tid":"TYPE_STRING",       "type":"",          "name":"type",      "desc":"","flags":[]},
-            {"tid":"TYPE_UINT64",       "type":"",          "name":"corrid",    "desc":"","flags":["METAFLAG_PROTO_VARINT"]}
+            {"tid":"TYPE_UINT32",       "type":"",          "name":"destid",    "desc":"ID of destination/receiver endity","flags":["METAFLAG_PROTO_VARINT"]},
+            {"tid":"TYPE_STRING",       "type":"",          "name":"destname",  "desc":"Name of destination/receiver endity","flags":[]},
+            {"tid":"TYPE_UINT32",       "type":"",          "name":"srcid",     "desc":"ID of source/sender endity","flags":["METAFLAG_PROTO_VARINT"]},
+            {"tid":"TYPE_ENUM",         "type":"MsgMode",   "name":"mode",      "desc":"mode: request or reply","flags":[]},
+            {"tid":"TYPE_ENUM",         "type":"Status",    "name":"status",    "desc":"Reply status","flags":[]},
+            {"tid":"TYPE_STRING",       "type":"",          "name":"type",      "desc":"Message type in payload","flags":[]},
+            {"tid":"TYPE_UINT64",       "type":"",          "name":"corrid",    "desc":"It is set by the sender of the request. The receiver of the request will reply with the same correlation ID","flags":["METAFLAG_PROTO_VARINT"]}
         ]},
-        {"type":"ConnectEntity","desc":"","fields":[
-            {"tid":"TYPE_STRING",       "type":"",          "name":"entityName",   "desc":"","flags":[]}
+        {"type":"ConnectEntity","desc":"If an entity connects to a remote entity it shall send ConnectEntity","fields":[
+            {"tid":"TYPE_STRING",       "type":"",          "name":"entityName",   "desc":"The entity name of the sender of ConnectEntity request","flags":[]}
         ]},
-        {"type":"ConnectEntityReply","desc":"","fields":[
-            {"tid":"TYPE_UINT32",       "type":"",          "name":"entityid",     "desc":"","flags":["METAFLAG_PROTO_VARINT"]},
-            {"tid":"TYPE_STRING",       "type":"",          "name":"entityName",   "desc":"","flags":[]}
+        {"type":"ConnectEntityReply","desc":"If an entity receives a ConnectEntity request it shall reply with ConnectEntityReply","fields":[
+            {"tid":"TYPE_UINT32",       "type":"",          "name":"entityid",     "desc":"The entity ID of the sender of ConnectivityReply","flags":["METAFLAG_PROTO_VARINT"]},
+            {"tid":"TYPE_STRING",       "type":"",          "name":"entityName",   "desc":"The entity name of the sender of ConnectivityReply","flags":[]}
         ]},
-        {"type":"DisconnectEntity","desc":"","fields":[
+        {"type":"DisconnectEntity","desc":"The entity that will be removed will send DisconnectEntity to all its peers.","fields":[
         ]}
     ]
 }

@@ -63,9 +63,9 @@ static constexpr CorrelationId CORRELATIONID_NONE = 0;
 class RemoteEntityFormat
 {
 public:
-    static std::shared_ptr<StructBase> parseMessageProto(const BufferRef& bufferRef, remoteentity::Header& header);
-    static std::shared_ptr<StructBase> parseMessageJson(const BufferRef& bufferRef, remoteentity::Header& header);
-    static std::shared_ptr<StructBase> parseMessage(const IMessage& message, int contentType, remoteentity::Header& header);
+    static std::shared_ptr<StructBase> parseMessageProto(const BufferRef& bufferRef, remoteentity::Header& header, bool& syntaxError);
+    static std::shared_ptr<StructBase> parseMessageJson(const BufferRef& bufferRef, remoteentity::Header& header, bool& syntaxError);
+    static std::shared_ptr<StructBase> parseMessage(const IMessage& message, int contentType, remoteentity::Header& header, bool& syntaxError);
 
     static void serializeProto(IMessage& message, const remoteentity::Header& header);
     static void serializeProto(IMessage& message, const remoteentity::Header& header, const StructBase& structBase);

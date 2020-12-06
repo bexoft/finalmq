@@ -24,6 +24,8 @@
 #include "protocols/ProtocolHeaderBinarySize.h"
 #include "protocols/ProtocolDelimiter.h"
 #include "logger/Logger.h"
+
+// the definition of the messages are in the file helloworld.fmq
 #include "helloworld.fmq.h"
 
 #include <iostream>
@@ -59,18 +61,35 @@ public:
             std::cout << "peer event " << peerEvent.toString() << std::endl;
         });
 
-        // json example: /MyService/helloworld.HelloRequest#1{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
+        // handle the HelloRequest
+        // this is fun - try to access the server with the json interface at port 8888:
+        // telnet localhost 8888  (or: netcat localhost 8888)
+        // /MyService/helloworld.HelloRequest#4711{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
         registerCommand<HelloRequest>([] (ReplyContextUPtr& replyContext, const std::shared_ptr<HelloRequest>& request) {
             assert(request);
 
-            // The replyContext is a unique_ptr, it can be moved to another unique_ptr, so that the reply can be called later.
+            // prepare the reply
             std::string prefix("Hello ");
             HelloReply reply;
             for (size_t i = 0; i < request->persons.size(); ++i)
             {
                 reply.greetings.emplace_back(prefix + request->persons[i].name);
             }
+
+            // send reply
             replyContext->reply(std::move(reply));
+
+            // note:
+            // The reply does not have to be sent immediately:
+            // The replyContext is a unique_ptr, it can be moved to another unique_ptr,
+            // so that the reply can be called later.
+
+            // note:
+            // The replyContext has the method replyContext->peerId()
+            // The returned peerId can be used for calling requestReply() or sendEvent().
+            // So, also a server entity can act as a client and can send requestReply()
+            // to the peer entity that is calling this request.
+            // An entity can act as a client and as a server. It is bidirectional (symmetric) as a socket.
         });
     }
 };
@@ -120,7 +139,8 @@ int main()
     // entityContainer->bind("tcp://*:7777", std::make_shared<ProtocolHeaderBinarySizeFactory>(),
     //                       RemoteEntityContentType::CONTENTTYPE_PROTO,
     //                       {{true, "myservercertificate.cert.pem", "myservercertificate.key.pem"}});
-    // And by the way, also connects()s are possible for an EntityContainer. An EntityContainer can be client and server at the same time.
+    // And by the way, also connect()s are possible for an EntityContainer. An EntityContainer can be client and server at the same time.
+
 
     // run
     entityContainer->run();

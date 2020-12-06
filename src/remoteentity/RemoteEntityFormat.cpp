@@ -175,8 +175,9 @@ bool RemoteEntityFormat::send(const IProtocolSessionPtr& session, const remoteen
 
 
 
-std::shared_ptr<StructBase> RemoteEntityFormat::parseMessageProto(const BufferRef& bufferRef, Header& header)
+std::shared_ptr<StructBase> RemoteEntityFormat::parseMessageProto(const BufferRef& bufferRef, Header& header, bool& syntaxError)
 {
+    syntaxError = false;
     const char* buffer = bufferRef.first;
     int sizeBuffer = bufferRef.second;
     if (sizeBuffer < 4)
@@ -223,6 +224,7 @@ std::shared_ptr<StructBase> RemoteEntityFormat::parseMessageProto(const BufferRe
         ok = parserData.parseStruct(header.type);
         if (!ok)
         {
+            syntaxError = true;
             data = nullptr;
         }
     }
@@ -255,8 +257,9 @@ static int findLast(const char* buffer, int size, char c)
 }
 
 
-std::shared_ptr<StructBase> RemoteEntityFormat::parseMessageJson(const BufferRef& bufferRef, Header& header)
+std::shared_ptr<StructBase> RemoteEntityFormat::parseMessageJson(const BufferRef& bufferRef, Header& header, bool& syntaxError)
 {
+    syntaxError = false;
     const char* buffer = bufferRef.first;
     int sizeBuffer = bufferRef.second;
 
@@ -324,6 +327,7 @@ std::shared_ptr<StructBase> RemoteEntityFormat::parseMessageJson(const BufferRef
             const char* endData = parserData.parseStruct(header.type);
             if (!endData)
             {
+                syntaxError = true;
                 data = nullptr;
             }
         }
@@ -334,18 +338,19 @@ std::shared_ptr<StructBase> RemoteEntityFormat::parseMessageJson(const BufferRef
 
 
 
-std::shared_ptr<StructBase> RemoteEntityFormat::parseMessage(const IMessage& message, int contentType, Header& header)
+std::shared_ptr<StructBase> RemoteEntityFormat::parseMessage(const IMessage& message, int contentType, Header& header, bool& syntaxError)
 {
+    syntaxError = false;
     BufferRef bufferRef = message.getReceivePayload();
     std::shared_ptr<StructBase> structBase;
 
     switch (contentType)
     {
     case CONTENTTYPE_PROTO:
-        structBase = parseMessageProto(bufferRef, header);
+        structBase = parseMessageProto(bufferRef, header, syntaxError);
         break;
     case CONTENTTYPE_JSON:
-        structBase = parseMessageJson(bufferRef, header);
+        structBase = parseMessageJson(bufferRef, header, syntaxError);
         break;
     default:
         assert(false);

@@ -207,9 +207,9 @@ public:
         if (m_peerId == PEERID_INVALID)
         {
             assert(m_peerManager);
-            bool added = false;
-            // get peer, but if not existing, then add it (lazy connect)
-            m_peerId = m_peerManager->addPeer(m_session, m_entityIdDest, "", true, added);
+            assert(m_session);
+            // get peer
+            m_peerId = m_peerManager->getPeerId(m_session->getSessionId(), m_entityIdDest, "");
         }
         return m_peerId;
     }
