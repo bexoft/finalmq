@@ -1,14 +1,36 @@
 {
     "namespace":"helloworld",
+
     "enums": [
+        {"type":"Sex","desc":"The sex of a person","entries":[
+            {"name":"INVALID",  "id":0,"desc":"invalid sex"},
+            {"name":"MALE",     "id":1,"desc":"male"},
+            {"name":"FEMALE",   "id":2,"desc":"female"},
+            {"name":"DIVERSE",  "id":3,"desc":"diverse"}
+        ]}
     ],
 
     "structs":[
+        {"type":"Address","desc":"An address","fields":[
+            {"tid":"TYPE_STRING",                           "name":"street",            "desc":"The first name of a person."},
+            {"tid":"TYPE_UINT32",                           "name":"number",            "desc":"The house number"},
+            {"tid":"TYPE_UINT32",                           "name":"postalcode",        "desc":"The postal code."},
+            {"tid":"TYPE_STRING",                           "name":"city",              "desc":"The city name."},
+            {"tid":"TYPE_STRING",                           "name":"country",           "desc":"The country name."}
+        ]},
+        {"type":"Person","desc":"Models a person","fields":[
+            {"tid":"TYPE_STRING",                           "name":"name",              "desc":"The first name of a person."},
+            {"tid":"TYPE_STRING",                           "name":"surname",           "desc":"The last name of a person."},
+            {"tid":"TYPE_ENUM",         "type":"Sex",       "name":"sex",               "desc":"The sex of a person."},
+            {"tid":"TYPE_UINT32",                           "name":"yearOfBirth",       "desc":"Year of birth."},
+            {"tid":"TYPE_STRUCT",       "type":"Address",   "name":"address",           "desc":"The address of a person."}
+        ]},
+
         {"type":"HelloRequest","desc":"","fields":[
-            {"tid":"TYPE_STRING", "name":"name",  "desc":"The name is the input data of the request."}
+            {"tid":"TYPE_ARRAY_STRUCT", "type":"Person",    "name":"persons",           "desc":"Parameter of HelloRequest"}
         ]},
         {"type":"HelloReply","desc":"","fields":[
-            {"tid":"TYPE_STRING", "name":"message", "desc":"The message contains the reply data."}
+            {"tid":"TYPE_ARRAY_STRING",                     "name":"greetings",         "desc":"The greetings for all persons."}
         ]}
     ]
 }
