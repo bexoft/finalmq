@@ -26,10 +26,7 @@
 
 #include "helpers/OperatingSystem.h"
 
-#if defined(WIN32) || defined(__MINGW32__)
-static const int SOCKET_POLLIN = 1;
-static const int SOCKET_POLLOUT = 2;
-#else
+#if !defined(WIN32) && !defined(__MINGW32__)
 #include <netinet/tcp.h>
 #include <sys/ioctl.h>
 #endif
@@ -38,6 +35,9 @@ static const int SOCKET_POLLOUT = 2;
 
 
 namespace finalmq {
+
+static const int SOCKET_POLLIN  = 1;
+static const int SOCKET_POLLOUT = 2;
 
 
 PollerImplSelect::PollerImplSelect()
