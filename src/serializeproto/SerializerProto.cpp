@@ -143,7 +143,7 @@ void SerializerProto::Internal::serializeFixedValue(int id, T value)
 
 
 template<bool ignoreZeroLength>
-void SerializerProto::Internal::serializeString(int id, const char* value, int size)
+void SerializerProto::Internal::serializeString(int id, const char* value, ssize_t size)
 {
     if (size <= 0 && ignoreZeroLength)
     {
@@ -164,7 +164,7 @@ void SerializerProto::Internal::serializeString(int id, const char* value, int s
 
 
 template<class T>
-void SerializerProto::Internal::serializeArrayFixed(int id, const T* value, int size)
+void SerializerProto::Internal::serializeArrayFixed(int id, const T* value, ssize_t size)
 {
     if (size <= 0)
     {
@@ -178,7 +178,7 @@ void SerializerProto::Internal::serializeArrayFixed(int id, const T* value, int 
     serializeVarint(tag);
     serializeVarint(sizeByte);
     assert(sizeByte <= m_bufferEnd - m_buffer);
-#ifdef BEXMQ_LITTLE_ENDIAN
+#ifdef FINALMQ_LITTLE_ENDIAN
     memcpy(m_buffer, value, sizeByte);
 #else
     for (int i = 0; i < value.size(); i++)
@@ -245,7 +245,7 @@ void SerializerProto::Internal::serializeArrayBytes(int id, const std::vector<By
 
 
 template<class T>
-void SerializerProto::Internal::serializeArrayVarint(int id, const T* value, int size)
+void SerializerProto::Internal::serializeArrayVarint(int id, const T* value, ssize_t size)
 {
     if (size <= 0)
     {
@@ -265,7 +265,7 @@ void SerializerProto::Internal::serializeArrayVarint(int id, const T* value, int
 
 
 template<class T>
-void SerializerProto::Internal::serializeArrayZigZag(int id, const T* value, int size)
+void SerializerProto::Internal::serializeArrayZigZag(int id, const T* value, ssize_t size)
 {
     if (size <= 0)
     {
@@ -615,7 +615,7 @@ void SerializerProto::Internal::enterString(const MetaField& field, std::string&
     int id = field.index + INDEX2ID;
     serializeString<true>(id, value.data(), value.size());
 }
-void SerializerProto::Internal::enterString(const MetaField& field, const char* value, int size)
+void SerializerProto::Internal::enterString(const MetaField& field, const char* value, ssize_t size)
 {
     int id = field.index + INDEX2ID;
     serializeString<true>(id, value, size);
@@ -625,7 +625,7 @@ void SerializerProto::Internal::enterBytes(const MetaField& field, Bytes&& value
     int id = field.index + INDEX2ID;
     serializeString<true>(id, reinterpret_cast<const char*>(value.data()), value.size());
 }
-void SerializerProto::Internal::enterBytes(const MetaField& field, const BytesElement* value, int size)
+void SerializerProto::Internal::enterBytes(const MetaField& field, const BytesElement* value, ssize_t size)
 {
     int id = field.index + INDEX2ID;
     serializeString<true>(id, value, size);
@@ -642,7 +642,7 @@ void SerializerProto::Internal::enterEnum(const MetaField& field, std::string&& 
     enterEnum(field, enumValue);
 }
 
-void SerializerProto::Internal::enterEnum(const MetaField& field, const char* value, int size)
+void SerializerProto::Internal::enterEnum(const MetaField& field, const char* value, ssize_t size)
 {
     enterEnum(field, std::string(value, size));
 }
@@ -663,7 +663,7 @@ void SerializerProto::Internal::enterArrayInt32(const MetaField& field, std::vec
 {
     enterArrayInt32(field, value.data(), value.size());
 }
-void SerializerProto::Internal::enterArrayInt32(const MetaField& field, const std::int32_t* value, int size)
+void SerializerProto::Internal::enterArrayInt32(const MetaField& field, const std::int32_t* value, ssize_t size)
 {
     int id = field.index + INDEX2ID;
     if (field.flags & METAFLAG_PROTO_VARINT)
@@ -683,7 +683,7 @@ void SerializerProto::Internal::enterArrayUInt32(const MetaField& field, std::ve
 {
     enterArrayUInt32(field, value.data(), value.size());
 }
-void SerializerProto::Internal::enterArrayUInt32(const MetaField& field, const std::uint32_t* value, int size)
+void SerializerProto::Internal::enterArrayUInt32(const MetaField& field, const std::uint32_t* value, ssize_t size)
 {
     int id = field.index + INDEX2ID;
     if (field.flags & METAFLAG_PROTO_VARINT)
@@ -699,7 +699,7 @@ void SerializerProto::Internal::enterArrayInt64(const MetaField& field, std::vec
 {
     enterArrayInt64(field, value.data(), value.size());
 }
-void SerializerProto::Internal::enterArrayInt64(const MetaField& field, const std::int64_t* value, int size)
+void SerializerProto::Internal::enterArrayInt64(const MetaField& field, const std::int64_t* value, ssize_t size)
 {
     int id = field.index + INDEX2ID;
     if (field.flags & METAFLAG_PROTO_VARINT)
@@ -719,7 +719,7 @@ void SerializerProto::Internal::enterArrayUInt64(const MetaField& field, std::ve
 {
     enterArrayUInt64(field, value.data(), value.size());
 }
-void SerializerProto::Internal::enterArrayUInt64(const MetaField& field, const std::uint64_t* value, int size)
+void SerializerProto::Internal::enterArrayUInt64(const MetaField& field, const std::uint64_t* value, ssize_t size)
 {
     int id = field.index + INDEX2ID;
     if (field.flags & METAFLAG_PROTO_VARINT)
@@ -736,7 +736,7 @@ void SerializerProto::Internal::enterArrayFloat(const MetaField& field, std::vec
     int id = field.index + INDEX2ID;
     serializeArrayFixed(id, value.data(), value.size());
 }
-void SerializerProto::Internal::enterArrayFloat(const MetaField& field, const float* value, int size)
+void SerializerProto::Internal::enterArrayFloat(const MetaField& field, const float* value, ssize_t size)
 {
     int id = field.index + INDEX2ID;
     serializeArrayFixed(id, value, size);
@@ -746,7 +746,7 @@ void SerializerProto::Internal::enterArrayDouble(const MetaField& field, std::ve
     int id = field.index + INDEX2ID;
     serializeArrayFixed(id, value.data(), value.size());
 }
-void SerializerProto::Internal::enterArrayDouble(const MetaField& field, const double* value, int size)
+void SerializerProto::Internal::enterArrayDouble(const MetaField& field, const double* value, ssize_t size)
 {
     int id = field.index + INDEX2ID;
     serializeArrayFixed(id, value, size);
@@ -776,7 +776,7 @@ void SerializerProto::Internal::enterArrayEnum(const MetaField& field, std::vect
     int id = field.index + INDEX2ID;
     serializeArrayVarint(id, value.data(), value.size());
 }
-void SerializerProto::Internal::enterArrayEnum(const MetaField& field, const std::int32_t* value, int size)
+void SerializerProto::Internal::enterArrayEnum(const MetaField& field, const std::int32_t* value, ssize_t size)
 {
     int id = field.index + INDEX2ID;
     serializeArrayVarint(id, value, size);

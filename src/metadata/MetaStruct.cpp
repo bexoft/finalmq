@@ -74,7 +74,7 @@ const std::string& MetaStruct::getDescription() const
 }
 
 
-const MetaField* MetaStruct::getFieldByIndex(int index) const
+const MetaField* MetaStruct::getFieldByIndex(ssize_t index) const
 {
     if (index >= 0 && index < static_cast<int>(m_fields.size()))
     {

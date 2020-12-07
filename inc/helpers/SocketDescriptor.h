@@ -32,16 +32,16 @@ namespace finalmq {
 class SocketDescriptor
 {
 public:
-    SocketDescriptor(int sd);
+    SocketDescriptor(SOCKET sd);
     ~SocketDescriptor();
 
-	inline int getDescriptor() const
+	inline SOCKET getDescriptor() const
     {
         return m_sd;
     }
 
 private:
-    int		m_sd = INVALID_FD;
+    SOCKET		m_sd = INVALID_SOCKET;
 };
 
 typedef std::shared_ptr<SocketDescriptor> SocketDescriptorPtr;

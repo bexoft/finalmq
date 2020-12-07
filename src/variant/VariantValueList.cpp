@@ -172,7 +172,7 @@ bool VariantValueList::add(Variant&& variant)
     return true;
 }
 
-int VariantValueList::size() const
+ssize_t VariantValueList::size() const
 {
     return m_value->size();
 }

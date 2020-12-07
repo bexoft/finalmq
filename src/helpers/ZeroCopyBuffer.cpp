@@ -22,6 +22,7 @@
 
 
 
+#include "helpers/BexDefines.h"
 #include "helpers/ZeroCopyBuffer.h"
 
 #include <algorithm>
@@ -34,7 +35,7 @@ namespace finalmq {
 std::string ZeroCopyBuffer::getData() const
 {
     std::string data;
-    int size = 0;
+    ssize_t size = 0;
     std::for_each(m_strings.begin(), m_strings.end(), [&size] (const std::string& entry) {
         size += entry.size();
     });

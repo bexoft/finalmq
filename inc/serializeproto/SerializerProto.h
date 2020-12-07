@@ -59,40 +59,40 @@ private:
         virtual void enterFloat(const MetaField& field, float value) override;
         virtual void enterDouble(const MetaField& field, double value) override;
         virtual void enterString(const MetaField& field, std::string&& value) override;
-        virtual void enterString(const MetaField& field, const char* value, int size) override;
+        virtual void enterString(const MetaField& field, const char* value, ssize_t size) override;
         virtual void enterBytes(const MetaField& field, Bytes&& value) override;
-        virtual void enterBytes(const MetaField& field, const BytesElement* value, int size) override;
+        virtual void enterBytes(const MetaField& field, const BytesElement* value, ssize_t size) override;
         virtual void enterEnum(const MetaField& field, std::int32_t value) override;
         virtual void enterEnum(const MetaField& field, std::string&& value) override;
-        virtual void enterEnum(const MetaField& field, const char* value, int size) override;
+        virtual void enterEnum(const MetaField& field, const char* value, ssize_t size) override;
 
         virtual void enterArrayBoolMove(const MetaField& field, std::vector<bool>&& value) override;
         virtual void enterArrayBool(const MetaField& field, const std::vector<bool>& value) override;
         virtual void enterArrayInt32(const MetaField& field, std::vector<std::int32_t>&& value) override;
-        virtual void enterArrayInt32(const MetaField& field, const std::int32_t* value, int size) override;
+        virtual void enterArrayInt32(const MetaField& field, const std::int32_t* value, ssize_t size) override;
         virtual void enterArrayUInt32(const MetaField& field, std::vector<std::uint32_t>&& value) override;
-        virtual void enterArrayUInt32(const MetaField& field, const std::uint32_t* value, int size) override;
+        virtual void enterArrayUInt32(const MetaField& field, const std::uint32_t* value, ssize_t size) override;
         virtual void enterArrayInt64(const MetaField& field, std::vector<std::int64_t>&& value) override;
-        virtual void enterArrayInt64(const MetaField& field, const std::int64_t* value, int size) override;
+        virtual void enterArrayInt64(const MetaField& field, const std::int64_t* value, ssize_t size) override;
         virtual void enterArrayUInt64(const MetaField& field, std::vector<std::uint64_t>&& value) override;
-        virtual void enterArrayUInt64(const MetaField& field, const std::uint64_t* value, int size) override;
+        virtual void enterArrayUInt64(const MetaField& field, const std::uint64_t* value, ssize_t size) override;
         virtual void enterArrayFloat(const MetaField& field, std::vector<float>&& value) override;
-        virtual void enterArrayFloat(const MetaField& field, const float* value, int size) override;
+        virtual void enterArrayFloat(const MetaField& field, const float* value, ssize_t size) override;
         virtual void enterArrayDouble(const MetaField& field, std::vector<double>&& value) override;
-        virtual void enterArrayDouble(const MetaField& field, const double* value, int size) override;
+        virtual void enterArrayDouble(const MetaField& field, const double* value, ssize_t size) override;
         virtual void enterArrayStringMove(const MetaField& field, std::vector<std::string>&& value) override;
         virtual void enterArrayString(const MetaField& field, const std::vector<std::string>& value) override;
         virtual void enterArrayBytesMove(const MetaField& field, std::vector<Bytes>&& value) override;
         virtual void enterArrayBytes(const MetaField& field, const std::vector<Bytes>& value) override;
         virtual void enterArrayEnum(const MetaField& field, std::vector<std::int32_t>&& value) override;
-        virtual void enterArrayEnum(const MetaField& field, const std::int32_t* value, int size) override;
+        virtual void enterArrayEnum(const MetaField& field, const std::int32_t* value, ssize_t size) override;
         virtual void enterArrayEnumMove(const MetaField& field, std::vector<std::string>&& value) override;
         virtual void enterArrayEnum(const MetaField& field, const std::vector<std::string>& value) override;
 
         int m_levelStruct = 0;
 
         template<bool ignoreZeroLength>
-        void serializeString(int id, const char* value, int size);
+        void serializeString(int id, const char* value, ssize_t size);
 
         char* serializeStruct(int id);
 
@@ -109,17 +109,17 @@ private:
         void serializeFixedValue(int id, T value);
 
         template<class T>
-        void serializeArrayFixed(int id, const T* value, int size);
+        void serializeArrayFixed(int id, const T* value, ssize_t size);
 
         void serializeArrayBool(int id, const std::vector<bool>& value);
         void serializeArrayString(int id, const std::vector<std::string>& value);
         void serializeArrayBytes(int id, const std::vector<Bytes>& value);
 
         template<class T>
-        void serializeArrayVarint(int id, const T* value, int size);
+        void serializeArrayVarint(int id, const T* value, ssize_t size);
 
         template<class T>
-        void serializeArrayZigZag(int id, const T* value, int size);
+        void serializeArrayZigZag(int id, const T* value, ssize_t size);
 
         inline void serializeVarint(std::uint64_t value);
         void reserveSpace(int space);

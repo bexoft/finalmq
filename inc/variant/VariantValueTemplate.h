@@ -119,7 +119,7 @@ private:
         return false;
     }
 
-    virtual int size() const override
+    virtual ssize_t size() const override
     {
         return 1;
     }

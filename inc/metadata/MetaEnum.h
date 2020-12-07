@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include "helpers/BexDefines.h"
 
 #include <vector>
 #include <string>
@@ -63,7 +64,7 @@ public:
     void addEntry(const MetaEnumEntry& entries);
     void addEntry(MetaEnumEntry&& entries);
 
-    int getEntrySize() const
+    ssize_t getEntrySize() const
     {
         return m_entries.size();
     }

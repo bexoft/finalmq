@@ -49,8 +49,8 @@ StructInfo::StructInfo(const std::string& typeName, const std::string& descripti
     , m_fieldInfos(std::move(fieldInfos))
 {
     StructFactoryRegistry::instance().registerFactory(typeName, factory);
-    int size = std::min(m_metaStruct.getFieldsSize(), static_cast<int>(m_fieldInfos.size()));
-    for (int i = 0; i < size; ++i)
+    ssize_t size = std::min(m_metaStruct.getFieldsSize(), static_cast<ssize_t>(m_fieldInfos.size()));
+    for (ssize_t i = 0; i < size; ++i)
     {
         m_fieldInfos[i].setField(m_metaStruct.getFieldByIndex(i));
     }
@@ -72,7 +72,7 @@ const MetaEnum& EnumInfo::getMetaEnum() const
 
 
 
-StructBase* StructBase::add(int index)
+StructBase* StructBase::add(ssize_t index)
 {
     const StructInfo& structInfo = getStructInfo();
     const FieldInfo* fieldInfo = structInfo.getField(index);

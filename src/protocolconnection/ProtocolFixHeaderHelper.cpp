@@ -75,7 +75,7 @@ bool ProtocolFixHeaderHelper::receiveHeader(const SocketPtr& socket, int& bytesT
     assert(m_sizeCurrent < static_cast<int>(m_header.size()));
     bool ret = false;
 
-    int sizeRead = m_header.size() - m_sizeCurrent;
+    ssize_t sizeRead = m_header.size() - m_sizeCurrent;
     if (bytesToRead < sizeRead)
     {
         sizeRead = bytesToRead;

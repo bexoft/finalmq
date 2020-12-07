@@ -181,7 +181,7 @@ void ParserConverter::enterString(const MetaField& field, std::string&& value)
         convertString(field, value.data(), value.size());
     }
 }
-void ParserConverter::enterString(const MetaField& field, const char* value, int size)
+void ParserConverter::enterString(const MetaField& field, const char* value, ssize_t size)
 {
     if (field.typeId == MetaTypeId::TYPE_STRING)
     {
@@ -203,7 +203,7 @@ void ParserConverter::enterBytes(const MetaField& field, Bytes&& value)
         streamError << "bytes not expected";
     }
 }
-void ParserConverter::enterBytes(const MetaField& field, const BytesElement* value, int size)
+void ParserConverter::enterBytes(const MetaField& field, const BytesElement* value, ssize_t size)
 {
     if (field.typeId == MetaTypeId::TYPE_BYTES)
     {
@@ -236,7 +236,7 @@ void ParserConverter::enterEnum(const MetaField& field, std::string&& value)
         convertString(field, value.data(), value.size());
     }
 }
-void ParserConverter::enterEnum(const MetaField& field, const char* value, int size)
+void ParserConverter::enterEnum(const MetaField& field, const char* value, ssize_t size)
 {
     if (field.typeId == MetaTypeId::TYPE_ENUM)
     {
@@ -281,7 +281,7 @@ void ParserConverter::enterArrayInt32(const MetaField& field, std::vector<std::i
         convertArraytNumber(field, value);
     }
 }
-void ParserConverter::enterArrayInt32(const MetaField& field, const std::int32_t* value, int size)
+void ParserConverter::enterArrayInt32(const MetaField& field, const std::int32_t* value, ssize_t size)
 {
     if (field.typeId == MetaTypeId::TYPE_ARRAY_INT32)
     {
@@ -303,7 +303,7 @@ void ParserConverter::enterArrayUInt32(const MetaField& field, std::vector<std::
         convertArraytNumber(field, value);
     }
 }
-void ParserConverter::enterArrayUInt32(const MetaField& field, const std::uint32_t* value, int size)
+void ParserConverter::enterArrayUInt32(const MetaField& field, const std::uint32_t* value, ssize_t size)
 {
     if (field.typeId == MetaTypeId::TYPE_ARRAY_UINT32)
     {
@@ -325,7 +325,7 @@ void ParserConverter::enterArrayInt64(const MetaField& field, std::vector<std::i
         convertArraytNumber(field, value);
     }
 }
-void ParserConverter::enterArrayInt64(const MetaField& field, const std::int64_t* value, int size)
+void ParserConverter::enterArrayInt64(const MetaField& field, const std::int64_t* value, ssize_t size)
 {
     if (field.typeId == MetaTypeId::TYPE_ARRAY_INT64)
     {
@@ -347,7 +347,7 @@ void ParserConverter::enterArrayUInt64(const MetaField& field, std::vector<std::
         convertArraytNumber(field, value);
     }
 }
-void ParserConverter::enterArrayUInt64(const MetaField& field, const std::uint64_t* value, int size)
+void ParserConverter::enterArrayUInt64(const MetaField& field, const std::uint64_t* value, ssize_t size)
 {
     if (field.typeId == MetaTypeId::TYPE_ARRAY_UINT64)
     {
@@ -369,7 +369,7 @@ void ParserConverter::enterArrayFloat(const MetaField& field, std::vector<float>
         convertArraytNumber(field, value);
     }
 }
-void ParserConverter::enterArrayFloat(const MetaField& field, const float* value, int size)
+void ParserConverter::enterArrayFloat(const MetaField& field, const float* value, ssize_t size)
 {
     if (field.typeId == MetaTypeId::TYPE_ARRAY_FLOAT)
     {
@@ -391,7 +391,7 @@ void ParserConverter::enterArrayDouble(const MetaField& field, std::vector<doubl
         convertArraytNumber(field, value);
     }
 }
-void ParserConverter::enterArrayDouble(const MetaField& field, const double* value, int size)
+void ParserConverter::enterArrayDouble(const MetaField& field, const double* value, ssize_t size)
 {
     if (field.typeId == MetaTypeId::TYPE_ARRAY_DOUBLE)
     {
@@ -457,7 +457,7 @@ void ParserConverter::enterArrayEnum(const MetaField& field, std::vector<std::in
         convertArraytNumber(field, value);
     }
 }
-void ParserConverter::enterArrayEnum(const MetaField& field, const std::int32_t* value, int size)
+void ParserConverter::enterArrayEnum(const MetaField& field, const std::int32_t* value, ssize_t size)
 {
     if (field.typeId == MetaTypeId::TYPE_ARRAY_ENUM)
     {
@@ -594,7 +594,7 @@ void ParserConverter::convertNumber(const MetaField& field, T value)
 }
 
 
-void ParserConverter::convertString(const MetaField& field, const char* value, int size)
+void ParserConverter::convertString(const MetaField& field, const char* value, ssize_t size)
 {
     switch (field.typeId)
     {
@@ -706,7 +706,7 @@ void ParserConverter::convertString(const MetaField& field, const char* value, i
 
 
 template<class T>
-void ParserConverter::convertArraytNumber(const MetaField& field, const T* value, int size)
+void ParserConverter::convertArraytNumber(const MetaField& field, const T* value, ssize_t size)
 {
     switch (field.typeId)
     {

@@ -41,7 +41,7 @@ struct IArrayStructAdapter
 {
     virtual ~IArrayStructAdapter() {}
     virtual StructBase* add(void* array) = 0;
-    virtual int size(const void* array) const = 0;
+    virtual ssize_t size(const void* array) const = 0;
     virtual const StructBase& at(const void* array, int index) const = 0;
 };
 
@@ -58,7 +58,7 @@ private:
         return &vect.back();
     }
 
-    virtual int size(const void* array) const override
+    virtual ssize_t size(const void* array) const override
     {
         const std::vector<T>& vect = *reinterpret_cast<const std::vector<T>*>(array);
         return vect.size();
@@ -147,12 +147,12 @@ private:
 class StructBase
 {
 public:
-    StructBase* add(int index);
+    StructBase* add(ssize_t index);
 
     virtual void clear() = 0;
 
     template<class T>
-    T* getData(int index, int typeId)
+    T* getData(ssize_t index, int typeId)
     {
         const StructInfo& structInfo = getStructInfo();
         const FieldInfo* fieldInfo = structInfo.getField(index);
@@ -172,13 +172,13 @@ public:
     }
 
     template<class T>
-    const T* getData(int index, int typeId) const
+    const T* getData(ssize_t index, int typeId) const
     {
         return const_cast<StructBase*>(this)->getData<T>(index, typeId);
     }
 
     template<class T>
-    const T& getValue(int index, int typeId) const
+    const T& getValue(ssize_t index, int typeId) const
     {
         const T* data = getData<T>(index, typeId);
         if (data)

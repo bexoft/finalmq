@@ -36,7 +36,7 @@
 
 namespace finalmq {
 
-class IProtocolSession;
+struct IProtocolSession;
 typedef std::shared_ptr<IProtocolSession> IProtocolSessionPtr;
 
 

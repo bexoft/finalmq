@@ -50,7 +50,7 @@ JsonBuilder::~JsonBuilder()
 
 void JsonBuilder::reserveSpace(int space)
 {
-    int sizeRemaining = m_bufferEnd - m_buffer;
+    ssize_t sizeRemaining = m_bufferEnd - m_buffer;
     if (sizeRemaining < space)
     {
         if (m_buffer != nullptr)
@@ -157,7 +157,7 @@ void JsonBuilder::enterDouble(double value)
     ++m_buffer;
 }
 
-void JsonBuilder::enterString(const char* value, int size)
+void JsonBuilder::enterString(const char* value, ssize_t size)
 {
     reserveSpace(size*6 + 2 + 1); // string*6 + 2" + comma
     *m_buffer = '\"';
@@ -218,7 +218,7 @@ void JsonBuilder::exitObject()
 
 
 
-void JsonBuilder::enterKey(const char* key, int size)
+void JsonBuilder::enterKey(const char* key, ssize_t size)
 {
     reserveSpace(size*6 + 2 + 1); // string*6 + 2" + :
     *m_buffer = '\"';
@@ -339,7 +339,7 @@ static bool decodeUtf8(const char*& str, unsigned int& codepoint)
 
 
 
-void JsonBuilder::escapeString(const char* str, int size)
+void JsonBuilder::escapeString(const char* str, ssize_t size)
 {
     static const char hexDigits[16]{ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 

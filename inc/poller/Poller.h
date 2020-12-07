@@ -39,7 +39,7 @@ struct DescriptorInfo
         disconnected = false;
         bytesToRead = 0;
     }
-    SOCKET sd = INVALID_FD;
+    SOCKET sd = INVALID_SOCKET;
     bool readable = false;
     bool writable = false;
     bool disconnected = false;
@@ -73,7 +73,7 @@ public:
         return m_size;
     }
 
-    const DescriptorInfo& operator [](int ix) const
+    const DescriptorInfo& operator [](ssize_t ix) const
     {
         assert(ix < m_size);
         assert(ix < static_cast<int>(m_descriptorInfos.size()));

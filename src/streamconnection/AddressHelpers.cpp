@@ -25,7 +25,7 @@
 #include "helpers/ModulenameFinalmq.h"
 
 
-#if !defined(MSVCPP) && !defined(__MINGW32__)
+#if !defined(WIN32) && !defined(__MINGW32__)
 #include <sys/un.h>
 #include <netdb.h>
 #endif

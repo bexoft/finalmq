@@ -60,23 +60,23 @@ IMessagePtr ProtocolDelimiter::createMessage() const
     return std::make_shared<ProtocolMessage>(PROTOCOL_ID, 0, m_delimiter.size());
 }
 
-std::vector<int> ProtocolDelimiter::findEndOfMessage(const char* buffer, int size)
+std::vector<ssize_t> ProtocolDelimiter::findEndOfMessage(const char* buffer, ssize_t size)
 {
     if (m_delimiter.empty())
     {
         return {size};
     }
 
-    int sizeDelimiterPartial = m_delimiterPartial.size();
+    ssize_t sizeDelimiterPartial = m_delimiterPartial.size();
 
-    std::vector<int> positions;
-    int indexStartBuffer = 0;
+    std::vector<ssize_t> positions;
+    ssize_t indexStartBuffer = 0;
     // was the delimiter not finished in last buffer?
     if (m_indexDelimiter != -1)
     {
-        int a = 0;
-        size_t b = m_indexDelimiter;
-        for ( ; a < size && b < m_delimiter.size(); ++a, ++b)
+        ssize_t a = 0;
+        ssize_t b = m_indexDelimiter;
+        for ( ; a < size && b < static_cast<ssize_t>(m_delimiter.size()); ++a, ++b)
         {
             if (buffer[a] != m_delimiter[b])
             {
@@ -104,12 +104,12 @@ std::vector<int> ProtocolDelimiter::findEndOfMessage(const char* buffer, int siz
     }
 
     char c = m_delimiter[0];
-    for (int i = indexStartBuffer; i < size; ++i)
+    for (ssize_t i = indexStartBuffer; i < size; ++i)
     {
         m_delimiterPartial.clear();
         if (buffer[i] == c)
         {
-            int a = i + 1;
+            ssize_t a = i + 1;
             size_t b = 1;
             for ( ; a < size && b < m_delimiter.size(); ++a, ++b)
             {
@@ -139,7 +139,7 @@ std::vector<int> ProtocolDelimiter::findEndOfMessage(const char* buffer, int siz
 void ProtocolDelimiter::receive(const SocketPtr& socket, int bytesToRead)
 {
     std::string receiveBuffer;
-    int sizeDelimiterPartial = m_delimiterPartial.size();
+    ssize_t sizeDelimiterPartial = m_delimiterPartial.size();
     receiveBuffer.resize(sizeDelimiterPartial + bytesToRead);
     if (sizeDelimiterPartial > 0)
     {
@@ -148,10 +148,10 @@ void ProtocolDelimiter::receive(const SocketPtr& socket, int bytesToRead)
     int res = socket->receive(const_cast<char*>(receiveBuffer.data() + sizeDelimiterPartial), bytesToRead);
     if (res > 0)
     {
-        int bytesReceived = res;
+        ssize_t bytesReceived = res;
         assert(bytesReceived <= bytesToRead);
-        int sizeOfReceiveBuffer = sizeDelimiterPartial + bytesReceived;
-        std::vector<int> positions = findEndOfMessage(receiveBuffer.data(), sizeOfReceiveBuffer);
+        ssize_t sizeOfReceiveBuffer = sizeDelimiterPartial + bytesReceived;
+        std::vector<ssize_t> positions = findEndOfMessage(receiveBuffer.data(), sizeOfReceiveBuffer);
         if (!positions.empty())
         {
             int pos = positions[0];

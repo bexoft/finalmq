@@ -35,7 +35,7 @@ namespace finalmq {
 class ParserJson : public IJsonParserVisitor
 {
 public:
-    ParserJson(IParserVisitor& visitor, const char* ptr, int size = CHECK_ON_ZEROTERM);
+    ParserJson(IParserVisitor& visitor, const char* ptr, ssize_t size = CHECK_ON_ZEROTERM);
 
     const char* parseStruct(const std::string& typeName);
 
@@ -49,13 +49,13 @@ private:
     virtual void enterInt64(std::int64_t value) override;
     virtual void enterUInt64(std::uint64_t value) override;
     virtual void enterDouble(double value) override;
-    virtual void enterString(const char* value, int size) override;
+    virtual void enterString(const char* value, ssize_t size) override;
     virtual void enterString(std::string&& value) override;
     virtual void enterArray() override;
     virtual void exitArray() override;
     virtual void enterObject() override;
     virtual void exitObject() override;
-    virtual void enterKey(const char* key, int size) override;
+    virtual void enterKey(const char* key, ssize_t size) override;
     virtual void enterKey(std::string&& key) override;
     virtual void finished() override;
 
@@ -73,7 +73,7 @@ private:
     };
 
     const char*         m_ptr = nullptr;
-    int                 m_size = 0;
+    ssize_t             m_size = 0;
     IParserVisitor&     m_visitor;
     JsonParser          m_parser;
 

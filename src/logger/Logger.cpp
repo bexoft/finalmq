@@ -37,7 +37,7 @@ void LoggerImpl::registerConsumer(FuncLogEvent consumer)
     // lock, so that registerConsumer can be called from multiple threads
     std::unique_lock<std::mutex> lock(m_mutex);
     m_consumers.push_back(consumer);
-    m_sizeConsumers.store(m_consumers.size(), std::memory_order_release);
+    m_sizeConsumers.store(static_cast<int>(m_consumers.size()), std::memory_order_release);
     lock.unlock();
 }
 

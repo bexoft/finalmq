@@ -185,7 +185,7 @@ bool VariantValueStruct::add(Variant&& /*variant*/)
     return false;
 }
 
-int VariantValueStruct::size() const
+ssize_t VariantValueStruct::size() const
 {
     return m_value->size();
 }

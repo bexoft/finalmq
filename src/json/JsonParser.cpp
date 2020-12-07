@@ -260,7 +260,7 @@ const char* JsonParser::parseNumber(const char* str)
         assert(value < 0);
         if (value >= INT_MIN)
         {
-            m_visitor.enterInt32(value);
+            m_visitor.enterInt32(static_cast<std::int32_t>(value));
         }
         else
         {
@@ -277,7 +277,7 @@ const char* JsonParser::parseNumber(const char* str)
         }
         if (value <= INT_MAX)
         {
-            m_visitor.enterUInt32(value);
+            m_visitor.enterUInt32(static_cast<std::uint32_t>(value));
         }
         else
         {

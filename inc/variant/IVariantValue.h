@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include "helpers/BexDefines.h"
+
 #include <string>
 #include <memory>
 
@@ -58,7 +60,7 @@ struct IVariantValue
     virtual bool add(const std::string& name, Variant&& variant) = 0;
     virtual bool add(const Variant& variant) = 0;
     virtual bool add(Variant&& variant) = 0;
-    virtual int size() const = 0;
+    virtual ssize_t size() const = 0;
     virtual void visit(IVariantVisitor& visitor, Variant& variant, int index, int level, int size, const std::string& name) = 0;
 };
 

@@ -24,6 +24,7 @@
 
 #include "streamconnection/IMessage.h"
 #include "protocolconnection/IProtocol.h"
+#include "helpers/BexDefines.h"
 #include <vector>
 
 
@@ -46,16 +47,16 @@ private:
     virtual void socketConnected() override;
     virtual void socketDisconnected() override;
 
-    std::vector<int> findEndOfMessage(const char* buffer, int size);
+    std::vector<ssize_t> findEndOfMessage(const char* buffer, ssize_t size);
 
     std::weak_ptr<IProtocolCallback>    m_callback;
 
     std::string                         m_delimiter;
 
     std::list<std::string>              m_receiveBuffers;
-    int                                 m_indexStartBuffer = 0;
-    int                                 m_characterCounter = 0;
-    int                                 m_indexDelimiter = -1;
+    ssize_t                             m_indexStartBuffer = 0;
+    ssize_t                             m_characterCounter = 0;
+    ssize_t                             m_indexDelimiter = -1;
 
     std::string                         m_delimiterPartial;
 

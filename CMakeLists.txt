@@ -10,20 +10,25 @@ option(FINALMQ_BUILD_DOXYGEN "Enable doxygen" OFF)
 option(FINALMQ_USE_SSL "Build with openssl" ON)
 
 
+
+
 # Add compile flags to determine coverage
 if (FINALMQ_BUILD_COVERAGE)
     SET(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage -O0")
     SET(GCC_COVERAGE_LINK_FLAGS    "-lgcov")
 endif(FINALMQ_BUILD_COVERAGE)
 
-SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wno-unused-function" )
+if (WIN32)
+else()
+    SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wno-unused-function" )
+endif()
 
 if (FINALMQ_USE_SSL)
     SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DUSE_OPENSSL" )
 endif(FINALMQ_USE_SSL)
 
 
-SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}" )
+SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS} -DNOMINMAX" )
 SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}" )
 
 set(CMAKE_CXX_STANDARD 14)
@@ -82,6 +87,12 @@ add_custom_command(
 )
 
 
+if (FINALMQ_USE_SSL)
+if (WIN32)
+    SET(OPENSSL_DIR "$ENV{OPENSSL_INSTALL_DIR}")
+    include_directories(${OPENSSL_DIR}/include)
+endif()
+endif()
 
 #Bring the headers into the project
 include_directories(inc)
@@ -110,7 +121,10 @@ file(GLOB SOURCES "src/*.cpp" "inc/*.h"
 
 #Generate the shared library from the sources
 add_library(finalmq SHARED ${SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/inc/metadataserialize/metadata.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/inc/remoteentity/entitydata.fmq.cpp)
-target_compile_options(finalmq PRIVATE -Werror -Wall -Wextra)
+if (WIN32)
+else()
+    target_compile_options(finalmq PRIVATE -Werror -Wall -Wextra)
+endif()
 #Set the location for library installation -- i.e., /usr/lib in this case
 # not really necessary in this example. Use "sudo make install" to apply
 install(TARGETS finalmq DESTINATION /usr/lib)

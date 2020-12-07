@@ -188,7 +188,7 @@ void SerializerStruct::Internal::enterString(const MetaField& field, std::string
     setValue(field, std::move(value));
 }
 
-void SerializerStruct::Internal::enterString(const MetaField& field, const char* value, int size)
+void SerializerStruct::Internal::enterString(const MetaField& field, const char* value, ssize_t size)
 {
     setValue(field, std::string(value, size));
 }
@@ -198,7 +198,7 @@ void SerializerStruct::Internal::enterBytes(const MetaField& field, Bytes&& valu
     setValue(field, std::move(value));
 }
 
-void SerializerStruct::Internal::enterBytes(const MetaField& field, const BytesElement* value, int size)
+void SerializerStruct::Internal::enterBytes(const MetaField& field, const BytesElement* value, ssize_t size)
 {
     setValue(field, Bytes(value, value + size));
 }
@@ -216,7 +216,7 @@ void SerializerStruct::Internal::enterEnum(const MetaField& field, std::string&&
     setValue<std::int32_t>(field, v);
 }
 
-void SerializerStruct::Internal::enterEnum(const MetaField& field, const char* value, int size)
+void SerializerStruct::Internal::enterEnum(const MetaField& field, const char* value, ssize_t size)
 {
     std::int32_t v = MetaDataGlobal::instance().getEnumValueByName(field, std::string(value, size));
     setValue<std::int32_t>(field, v);
@@ -237,7 +237,7 @@ void SerializerStruct::Internal::enterArrayInt32(const MetaField& field, std::ve
     setValue(field, std::move(value));
 }
 
-void SerializerStruct::Internal::enterArrayInt32(const MetaField& field, const std::int32_t* value, int size)
+void SerializerStruct::Internal::enterArrayInt32(const MetaField& field, const std::int32_t* value, ssize_t size)
 {
     setValue(field, std::vector<std::int32_t>(value, value + size));
 }
@@ -247,7 +247,7 @@ void SerializerStruct::Internal::enterArrayUInt32(const MetaField& field, std::v
     setValue(field, std::move(value));
 }
 
-void SerializerStruct::Internal::enterArrayUInt32(const MetaField& field, const std::uint32_t* value, int size)
+void SerializerStruct::Internal::enterArrayUInt32(const MetaField& field, const std::uint32_t* value, ssize_t size)
 {
     setValue(field, std::vector<std::uint32_t>(value, value + size));
 }
@@ -257,7 +257,7 @@ void SerializerStruct::Internal::enterArrayInt64(const MetaField& field, std::ve
     setValue(field, std::move(value));
 }
 
-void SerializerStruct::Internal::enterArrayInt64(const MetaField& field, const std::int64_t* value, int size)
+void SerializerStruct::Internal::enterArrayInt64(const MetaField& field, const std::int64_t* value, ssize_t size)
 {
     setValue(field, std::vector<std::int64_t>(value, value + size));
 }
@@ -267,7 +267,7 @@ void SerializerStruct::Internal::enterArrayUInt64(const MetaField& field, std::v
     setValue(field, std::move(value));
 }
 
-void SerializerStruct::Internal::enterArrayUInt64(const MetaField& field, const std::uint64_t* value, int size)
+void SerializerStruct::Internal::enterArrayUInt64(const MetaField& field, const std::uint64_t* value, ssize_t size)
 {
     setValue(field, std::vector<std::uint64_t>(value, value + size));
 }
@@ -277,7 +277,7 @@ void SerializerStruct::Internal::enterArrayFloat(const MetaField& field, std::ve
     setValue(field, std::move(value));
 }
 
-void SerializerStruct::Internal::enterArrayFloat(const MetaField& field, const float* value, int size)
+void SerializerStruct::Internal::enterArrayFloat(const MetaField& field, const float* value, ssize_t size)
 {
     setValue(field, std::vector<float>(value, value + size));
 }
@@ -287,7 +287,7 @@ void SerializerStruct::Internal::enterArrayDouble(const MetaField& field, std::v
     setValue(field, std::move(value));
 }
 
-void SerializerStruct::Internal::enterArrayDouble(const MetaField& field, const double* value, int size)
+void SerializerStruct::Internal::enterArrayDouble(const MetaField& field, const double* value, ssize_t size)
 {
     setValue(field, std::vector<double>(value, value + size));
 }
@@ -317,7 +317,7 @@ void SerializerStruct::Internal::enterArrayEnum(const MetaField& field, std::vec
     enterArrayEnum(field, value.data(), value.size());
 }
 
-void SerializerStruct::Internal::enterArrayEnum(const MetaField& field, const std::int32_t* value, int size)
+void SerializerStruct::Internal::enterArrayEnum(const MetaField& field, const std::int32_t* value, ssize_t size)
 {
     std::vector<std::int32_t> enums;
     enums.reserve(size);

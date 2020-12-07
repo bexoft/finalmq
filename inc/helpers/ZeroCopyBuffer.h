@@ -25,6 +25,7 @@
 #include "IZeroCopyBuffer.h"
 
 #include <list>
+#include <string>
 
 namespace finalmq {
 

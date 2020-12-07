@@ -227,7 +227,7 @@ void SerializerVariant::Internal::enterString(const MetaField& field, std::strin
     add(field, std::move(value));
 }
 
-void SerializerVariant::Internal::enterString(const MetaField& field, const char* value, int size)
+void SerializerVariant::Internal::enterString(const MetaField& field, const char* value, ssize_t size)
 {
     add(field, std::string(value, size));
 }
@@ -237,7 +237,7 @@ void SerializerVariant::Internal::enterBytes(const MetaField& field, Bytes&& val
     add(field, std::move(value));
 }
 
-void SerializerVariant::Internal::enterBytes(const MetaField& field, const BytesElement* value, int size)
+void SerializerVariant::Internal::enterBytes(const MetaField& field, const BytesElement* value, ssize_t size)
 {
     add(field, Bytes(value, value + size));
 }
@@ -269,7 +269,7 @@ void SerializerVariant::Internal::enterEnum(const MetaField& field, std::string&
     }
 }
 
-void SerializerVariant::Internal::enterEnum(const MetaField& field, const char* value, int size)
+void SerializerVariant::Internal::enterEnum(const MetaField& field, const char* value, ssize_t size)
 {
     if (m_enumAsString)
     {
@@ -297,7 +297,7 @@ void SerializerVariant::Internal::enterArrayInt32(const MetaField& field, std::v
     add(field, std::move(value));
 }
 
-void SerializerVariant::Internal::enterArrayInt32(const MetaField& field, const std::int32_t* value, int size)
+void SerializerVariant::Internal::enterArrayInt32(const MetaField& field, const std::int32_t* value, ssize_t size)
 {
     add(field, std::vector<std::int32_t>(value, value + size));
 }
@@ -307,7 +307,7 @@ void SerializerVariant::Internal::enterArrayUInt32(const MetaField& field, std::
     add(field, std::move(value));
 }
 
-void SerializerVariant::Internal::enterArrayUInt32(const MetaField& field, const std::uint32_t* value, int size)
+void SerializerVariant::Internal::enterArrayUInt32(const MetaField& field, const std::uint32_t* value, ssize_t size)
 {
     add(field, std::vector<std::uint32_t>(value, value + size));
 }
@@ -317,7 +317,7 @@ void SerializerVariant::Internal::enterArrayInt64(const MetaField& field, std::v
     add(field, std::move(value));
 }
 
-void SerializerVariant::Internal::enterArrayInt64(const MetaField& field, const std::int64_t* value, int size)
+void SerializerVariant::Internal::enterArrayInt64(const MetaField& field, const std::int64_t* value, ssize_t size)
 {
     add(field, std::vector<std::int64_t>(value, value + size));
 }
@@ -327,7 +327,7 @@ void SerializerVariant::Internal::enterArrayUInt64(const MetaField& field, std::
     add(field, std::move(value));
 }
 
-void SerializerVariant::Internal::enterArrayUInt64(const MetaField& field, const std::uint64_t* value, int size)
+void SerializerVariant::Internal::enterArrayUInt64(const MetaField& field, const std::uint64_t* value, ssize_t size)
 {
     add(field, std::vector<std::uint64_t>(value, value + size));
 }
@@ -337,7 +337,7 @@ void SerializerVariant::Internal::enterArrayFloat(const MetaField& field, std::v
     add(field, std::move(value));
 }
 
-void SerializerVariant::Internal::enterArrayFloat(const MetaField& field, const float* value, int size)
+void SerializerVariant::Internal::enterArrayFloat(const MetaField& field, const float* value, ssize_t size)
 {
     add(field, std::vector<float>(value, value + size));
 }
@@ -347,7 +347,7 @@ void SerializerVariant::Internal::enterArrayDouble(const MetaField& field, std::
     add(field, std::move(value));
 }
 
-void SerializerVariant::Internal::enterArrayDouble(const MetaField& field, const double* value, int size)
+void SerializerVariant::Internal::enterArrayDouble(const MetaField& field, const double* value, ssize_t size)
 {
     add(field, std::vector<double>(value, value + size));
 }
@@ -392,7 +392,7 @@ void SerializerVariant::Internal::enterArrayEnum(const MetaField& field, std::ve
     }
 }
 
-void SerializerVariant::Internal::enterArrayEnum(const MetaField& field, const std::int32_t* value, int size)
+void SerializerVariant::Internal::enterArrayEnum(const MetaField& field, const std::int32_t* value, ssize_t size)
 {
     assert(field.typeId == MetaTypeId::TYPE_ARRAY_ENUM);
 

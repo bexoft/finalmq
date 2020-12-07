@@ -82,7 +82,7 @@ private:
     bool m_releaseWaitExternal = false;
 
     // parameters that are const during select and collect.
-    SOCKET m_sdMax = 0;
+    int m_sdMax = 0;
     std::vector<SocketDescriptorPtr> m_socketDescriptorsConstForSelect;
 
     std::mutex m_mutex;

@@ -38,7 +38,7 @@ namespace finalmq {
 
 
 
-ParserJson::ParserJson(IParserVisitor& visitor, const char* ptr, int size)
+ParserJson::ParserJson(IParserVisitor& visitor, const char* ptr, ssize_t size)
     : m_ptr(ptr)
     , m_size(size)
     , m_visitor(visitor)
@@ -199,7 +199,7 @@ void ParserJson::enterDouble(double value)
     enterNumber(value);
 }
 
-void ParserJson::enterString(const char* value, int size)
+void ParserJson::enterString(const char* value, ssize_t size)
 {
     if (!m_fieldCurrent)
     {
@@ -657,7 +657,7 @@ void ParserJson::exitObject()
     }
 }
 
-void ParserJson::enterKey(const char* key, int size)
+void ParserJson::enterKey(const char* key, ssize_t size)
 {
     enterKey(std::string(key, size));
 }

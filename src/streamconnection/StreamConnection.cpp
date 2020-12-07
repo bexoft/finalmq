@@ -224,7 +224,7 @@ bool StreamConnection::doReconnect()
     {
         std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
         std::chrono::duration<double> dur = now - m_lastReconnectTime;
-        int delta = dur.count() * 1000;
+        int delta = static_cast<int>(dur.count() * 1000);
         if (delta < 0 || delta >= m_connectionData.reconnectInterval)
         {
             m_lastReconnectTime = now;
@@ -242,7 +242,7 @@ bool StreamConnection::changeStateForDisconnect()
     if (!m_disconnectFlag && (m_connectionData.connectionState == CONNECTIONSTATE_CONNECTING))
     {
         std::chrono::duration<double> dur = std::chrono::system_clock::now() - m_connectionData.startTime;
-        int delta = dur.count() * 1000;
+        int delta = static_cast<int>(dur.count() * 1000);
         if (m_connectionData.totalReconnectDuration >= 0 && (delta < 0 || delta >= m_connectionData.totalReconnectDuration))
         {
             reconnectExpired = true;

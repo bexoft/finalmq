@@ -24,6 +24,7 @@
 
 
 #include "MetaType.h"
+#include "helpers/BexDefines.h"
 
 #include <string>
 #include <memory>
@@ -34,7 +35,7 @@ namespace finalmq {
 
 class MetaEnum;
 class MetaStruct;
-class IMetaData;
+struct IMetaData;
 
 
 enum MetaFieldFlags : std::int32_t
@@ -50,14 +51,14 @@ class MetaField
 public:
     MetaTypeId      typeId;                                 ///< type id of the parameter
     std::string     typeName;                               ///< is needed for struct and enum
-    std::string     name{};                                   ///< parameter name
-    std::string     description{};                            ///< description of the parameter
+    std::string     name{};                                 ///< parameter name
+    std::string     description{};                          ///< description of the parameter
     int             flags = 0;                              ///< flaggs of the parameter
-    int             index = -1;                             ///< index of field inside struct
+    ssize_t         index = -1;                             ///< index of field inside struct
 
     mutable const MetaEnum*     metaEnum    = nullptr;      ///< cache to find MetaEnum of typeName faster
     mutable const MetaStruct*   metaStruct  = nullptr;      ///< cache to find MetaStruct of typeName faster
-    mutable std::shared_ptr<MetaField> fieldWithoutArray{};   ///< in case of an array, this is the MetaField for its entries
+    mutable std::shared_ptr<MetaField> fieldWithoutArray{}; ///< in case of an array, this is the MetaField for its entries
 };
 
 
