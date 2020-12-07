@@ -116,7 +116,7 @@ namespace finalmq {
     {
 #if defined(WIN32) || defined(__MINGW32__)
         return ::send(fd, static_cast<const char*>(buffer), static_cast<int>(len), flags);
-#elif
+#else
         return ::send(fd, buffer, len, flags);
 #endif
     }
@@ -125,7 +125,7 @@ namespace finalmq {
     {
 #if defined(WIN32) || defined(__MINGW32__)
         return ::recv(fd, static_cast<char*>(buffer), static_cast<int>(len), flags);
-#elif
+#else
         return ::recv(fd, buffer, len, flags);
 #endif
     }
