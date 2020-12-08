@@ -57,7 +57,7 @@ class ReplyContext;
 typedef std::unique_ptr<ReplyContext> ReplyContextUPtr;
 
 
-class PeerEvent
+class SYMBOLEXP PeerEvent
 {
 public:
     enum Enum : std::int32_t {
@@ -265,7 +265,7 @@ private:
 
 
 
-class RemoteEntity : public IRemoteEntity
+class SYMBOLEXP RemoteEntity : public IRemoteEntity
 {
 public:
     RemoteEntity();

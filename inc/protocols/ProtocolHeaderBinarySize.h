@@ -31,7 +31,7 @@
 namespace finalmq {
 
 
-class ProtocolHeaderBinarySize : public IProtocol
+class SYMBOLEXP ProtocolHeaderBinarySize : public IProtocol
 {
 public:
     ProtocolHeaderBinarySize();
@@ -54,7 +54,7 @@ private:
 };
 
 
-class ProtocolHeaderBinarySizeFactory : public IProtocolFactory
+class SYMBOLEXP ProtocolHeaderBinarySizeFactory : public IProtocolFactory
 {
 public:
 

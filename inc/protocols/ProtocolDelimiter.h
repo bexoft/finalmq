@@ -31,7 +31,7 @@
 namespace finalmq {
 
 
-class ProtocolDelimiter : public IProtocol
+class SYMBOLEXP ProtocolDelimiter : public IProtocol
 {
 public:
     ProtocolDelimiter(const std::string& delimiter);
@@ -64,7 +64,7 @@ private:
 };
 
 
-class ProtocolDelimiterFactory : public IProtocolFactory
+class SYMBOLEXP ProtocolDelimiterFactory : public IProtocolFactory
 {
 public:
     ProtocolDelimiterFactory(const std::string& delimiter);

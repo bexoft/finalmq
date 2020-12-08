@@ -27,6 +27,31 @@
 
 
 
+#if defined(WIN32)
+
+#define	DLL_IMPORT	__declspec(dllimport)
+#define	DLL_EXPORT	__declspec(dllexport)
+#pragma warning(disable: 4251)
+#pragma warning(disable: 4275)
+
+#else	
+
+#define	DLL_IMPORT
+#define	DLL_EXPORT	__attribute__ ((visibility("default")))
+
+#endif
+
+
+#undef SYMBOLEXP
+#ifdef EXPORT_finalmq
+#define	SYMBOLEXP	DLL_EXPORT
+#else 
+#define	SYMBOLEXP	DLL_IMPORT
+#endif
+
+
+
+
 #if defined(WIN32) || defined(__MINGW32__)
 #include <winsock2.h>
 using ssize_t = std::int64_t;

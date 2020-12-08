@@ -42,7 +42,7 @@ public:
 
 
 
-class MetaEnum
+class SYMBOLEXP MetaEnum
 {
 public:
     MetaEnum();

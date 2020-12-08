@@ -34,7 +34,7 @@
 namespace finalmq {
 
 
-class MetaStruct
+class SYMBOLEXP MetaStruct
 {
 public:
     MetaStruct();

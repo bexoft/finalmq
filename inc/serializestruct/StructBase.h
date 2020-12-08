@@ -74,7 +74,7 @@ private:
 
 
 
-class FieldInfo
+class SYMBOLEXP FieldInfo
 {
 public:
     FieldInfo(int offset, IArrayStructAdapter* arrayStructAdapter = nullptr);
@@ -103,7 +103,7 @@ private:
 typedef std::function<std::shared_ptr<StructBase>()>    FuncStructBaseFactory;
 
 
-class StructInfo
+class SYMBOLEXP StructInfo
 {
 public:
     StructInfo(const std::string& typeName, const std::string& description, FuncStructBaseFactory factory, std::vector<MetaField>&& fields, std::vector<FieldInfo>&& fieldInfos);
@@ -133,7 +133,7 @@ private:
 };
 
 
-class EnumInfo
+class SYMBOLEXP EnumInfo
 {
 public:
     EnumInfo(const std::string& typeName, const std::string& description, std::vector<MetaEnumEntry>&& entries);

@@ -29,7 +29,7 @@
 namespace finalmq {
 
 
-class ProtocolStream : public IProtocol
+class SYMBOLEXP ProtocolStream : public IProtocol
 {
 public:
     ProtocolStream();
@@ -51,7 +51,7 @@ private:
 };
 
 
-class ProtocolStreamFactory : public IProtocolFactory
+class SYMBOLEXP ProtocolStreamFactory : public IProtocolFactory
 {
 public:
 
