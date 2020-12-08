@@ -154,13 +154,13 @@ void ProtocolDelimiter::receive(const SocketPtr& socket, int bytesToRead)
         std::vector<ssize_t> positions = findEndOfMessage(receiveBuffer.data(), sizeOfReceiveBuffer);
         if (!positions.empty())
         {
-            int pos = positions[0];
+            ssize_t pos = positions[0];
             IMessagePtr message = std::make_shared<ProtocolMessage>(0);
             message->resizeReceivePayload(m_characterCounter + pos);
             m_characterCounter += bytesReceived;
             assert(m_characterCounter >= 0);
 
-            int offset = 0;
+            ssize_t offset = 0;
 
             if (pos < 0)
             {
@@ -168,7 +168,7 @@ void ProtocolDelimiter::receive(const SocketPtr& socket, int bytesToRead)
                 {
                     const std::string& buffer = *it;
                     ++it;
-                    int size = buffer.size() - m_indexStartBuffer;
+                    ssize_t size = buffer.size() - m_indexStartBuffer;
                     if (it == m_receiveBuffers.end())
                     {
                         size += pos;
@@ -186,8 +186,8 @@ void ProtocolDelimiter::receive(const SocketPtr& socket, int bytesToRead)
                 for (auto it = m_receiveBuffers.begin(); it != m_receiveBuffers.end(); ++it)
                 {
                     const std::string& buffer = *it;
-                    int sizeBuffer = buffer.size();
-                    int size = sizeBuffer - m_indexStartBuffer;
+                    ssize_t sizeBuffer = buffer.size();
+                    ssize_t size = sizeBuffer - m_indexStartBuffer;
                     assert(size >= 0);
                     memcpy(message->getReceivePayload().first + offset, buffer.c_str() + m_indexStartBuffer, size);
                     offset += size;
@@ -212,7 +212,7 @@ void ProtocolDelimiter::receive(const SocketPtr& socket, int bytesToRead)
             {
                 pos = positions[i];
                 message = std::make_shared<ProtocolMessage>(0);
-                int size = pos - m_indexStartBuffer;
+                ssize_t size = pos - m_indexStartBuffer;
                 message->resizeReceivePayload(size);
                 memcpy(message->getReceivePayload().first, receiveBuffer.c_str() + m_indexStartBuffer + sizeDelimiterPartial, size);
                 m_characterCounter -= size + m_delimiter.size();
@@ -256,7 +256,7 @@ void ProtocolDelimiter::prepareMessageToSend(IMessagePtr message)
         if (!buffers.empty() && !m_delimiter.empty())
         {
             const BufferRef& buffer = *buffers.rbegin();
-            assert(buffer.second >= static_cast<int>(m_delimiter.size()));
+            assert(buffer.second >= static_cast<ssize_t>(m_delimiter.size()));
             memcpy(buffer.first + buffer.second - m_delimiter.size(), m_delimiter.data(), m_delimiter.size());
             message->prepareMessageToSend();
         }

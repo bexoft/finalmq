@@ -306,7 +306,7 @@ void PollerImplSelect::collectSockets(int res)
                     {
                         // read pending bytes from control socket
                         std::vector<char> buffer(countRead);
-                        OperatingSystem::instance().recv(sd, buffer.data(), buffer.size(), 0);
+                        OperatingSystem::instance().recv(sd, buffer.data(), static_cast<int>(buffer.size()), 0);
                         std::unique_lock<std::mutex> locker(m_mutex);
                         m_result.releaseWait = m_releaseWaitExternal;
                         m_releaseWaitExternal = false;

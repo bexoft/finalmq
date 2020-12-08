@@ -195,7 +195,7 @@ void ParserStruct::parseStruct(const StructBase& structBase)
         const FieldInfo& fieldInfo = fields[i];
         const MetaField* field = fieldInfo.getField();
         assert(field);
-        const_cast<MetaField*>(field)->index = i;
+        const_cast<MetaField*>(field)->index = static_cast<int>(i);
         processField(structBase, fieldInfo);
     }
 }

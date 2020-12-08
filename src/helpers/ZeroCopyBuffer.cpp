@@ -50,7 +50,7 @@ std::string ZeroCopyBuffer::getData() const
 
 
 
-char* ZeroCopyBuffer::addBuffer(int size)
+char* ZeroCopyBuffer::addBuffer(ssize_t size)
 {
     assert(size > 0);
     std::string str;
@@ -59,7 +59,7 @@ char* ZeroCopyBuffer::addBuffer(int size)
     return const_cast<char*>(m_strings.back().data());
 }
 
-void ZeroCopyBuffer::downsizeLastBuffer(int newSize)
+void ZeroCopyBuffer::downsizeLastBuffer(ssize_t newSize)
 {
     if (m_strings.empty() && newSize == 0)
     {

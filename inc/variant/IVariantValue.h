@@ -37,11 +37,11 @@ class Variant;
 struct IVariantVisitor
 {
     virtual ~IVariantVisitor() {}
-    virtual void enterLeaf(Variant& variant, int type, int index, int level, int size, const std::string& name) = 0;
-    virtual void enterStruct(Variant& variant, int type, int index, int level, int size, const std::string& name) = 0;
-    virtual void exitStruct(Variant& variant, int type, int index, int level, int size, const std::string& name) = 0;
-    virtual void enterList(Variant& variant, int type, int index, int level, int size, const std::string& name) = 0;
-    virtual void exitList(Variant& variant, int type, int index, int level, int size, const std::string& name) = 0;
+    virtual void enterLeaf(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name) = 0;
+    virtual void enterStruct(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name) = 0;
+    virtual void exitStruct(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name) = 0;
+    virtual void enterList(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name) = 0;
+    virtual void exitList(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name) = 0;
 };
 
 
@@ -61,7 +61,7 @@ struct IVariantValue
     virtual bool add(const Variant& variant) = 0;
     virtual bool add(Variant&& variant) = 0;
     virtual ssize_t size() const = 0;
-    virtual void visit(IVariantVisitor& visitor, Variant& variant, int index, int level, int size, const std::string& name) = 0;
+    virtual void visit(IVariantVisitor& visitor, Variant& variant, ssize_t index, int level, ssize_t size, const std::string& name) = 0;
 };
 
 

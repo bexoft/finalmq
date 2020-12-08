@@ -60,10 +60,10 @@ class JsonParser
 public:
     JsonParser(IJsonParserVisitor& visitor);
 
-    const char* parse(const char* str, int size = CHECK_ON_ZEROTERM);
+    const char* parse(const char* str, ssize_t size = CHECK_ON_ZEROTERM);
 
 private:
-    const char* parseValue(const char* str, int size = CHECK_ON_ZEROTERM);
+    const char* parseValue(const char* str, ssize_t size = CHECK_ON_ZEROTERM);
     inline const char* parseWhiteSpace(const char* str);
     const char* parseObject(const char* str);
     const char* parseArray(const char* str);

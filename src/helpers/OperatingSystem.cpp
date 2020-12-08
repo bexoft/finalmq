@@ -102,29 +102,29 @@ namespace finalmq {
     }
 
 
-    int OperatingSystemImpl::write(int fd, const void* buffer, size_t len)
+    int OperatingSystemImpl::write(int fd, const void* buffer, int len)
     {
-        return ::write(fd, buffer, static_cast<unsigned int>(len));
+        return ::write(fd, buffer, len);
     }
 
-    int OperatingSystemImpl::read(int fd, void* buffer, size_t len)
+    int OperatingSystemImpl::read(int fd, void* buffer, int len)
     {
-        return ::read(fd, buffer, static_cast<int>(len));
+        return ::read(fd, buffer, len);
     }
 
-    int OperatingSystemImpl::send(SOCKET fd, const void* buffer, size_t len, int flags)
+    int OperatingSystemImpl::send(SOCKET fd, const void* buffer, int len, int flags)
     {
 #if defined(WIN32) || defined(__MINGW32__)
-        return ::send(fd, static_cast<const char*>(buffer), static_cast<int>(len), flags);
+        return ::send(fd, static_cast<const char*>(buffer), len, flags);
 #else
         return ::send(fd, buffer, len, flags);
 #endif
     }
 
-    int OperatingSystemImpl::recv(SOCKET fd, void* buffer, size_t len, int flags)
+    int OperatingSystemImpl::recv(SOCKET fd, void* buffer, int len, int flags)
     {
 #if defined(WIN32) || defined(__MINGW32__)
-        return ::recv(fd, static_cast<char*>(buffer), static_cast<int>(len), flags);
+        return ::recv(fd, static_cast<char*>(buffer), len, flags);
 #else
         return ::recv(fd, buffer, len, flags);
 #endif

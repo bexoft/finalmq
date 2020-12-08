@@ -92,7 +92,7 @@ void ProtocolHeaderBinarySize::prepareMessageToSend(IMessagePtr message)
 {
     if (!message->wasSent())
     {
-        int sizePayload = message->getTotalSendPayloadSize();
+        ssize_t sizePayload = message->getTotalSendPayloadSize();
         const std::list<BufferRef>& buffers = message->getAllSendBuffers();
         assert(!buffers.empty());
         assert(buffers.begin()->second >= 4);

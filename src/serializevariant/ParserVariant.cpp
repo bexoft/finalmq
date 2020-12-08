@@ -274,8 +274,8 @@ void ParserVariant::processField(const Variant* sub, const MetaField* field)
                 const MetaStruct* stru = MetaDataGlobal::instance().getStruct(*fieldWithoutArray);
                 if (stru)
                 {
-                    int size = list->size();
-                    for (int i = 0; i < size; ++i)
+                    ssize_t size = list->size();
+                    for (ssize_t i = 0; i < size; ++i)
                     {
                         const Variant& element = list->at(i);
                         m_visitor.enterStruct(*fieldWithoutArray);
@@ -413,8 +413,8 @@ void ParserVariant::processEmptyField(const MetaField* field)
 
 void ParserVariant::parseStruct(const MetaStruct& stru, const Variant& variant)
 {
-    int size = stru.getFieldsSize();
-    for (int i = 0; i < size; ++i)
+    ssize_t size = stru.getFieldsSize();
+    for (ssize_t i = 0; i < size; ++i)
     {
         const MetaField* field = stru.getFieldByIndex(i);
         assert(field);
@@ -433,8 +433,8 @@ void ParserVariant::parseStruct(const MetaStruct& stru, const Variant& variant)
 
 void ParserVariant::parseStruct(const MetaStruct& stru)
 {
-    int size = stru.getFieldsSize();
-    for (int i = 0; i < size; ++i)
+    ssize_t size = stru.getFieldsSize();
+    for (ssize_t i = 0; i < size; ++i)
     {
         const MetaField* field = stru.getFieldByIndex(i);
         assert(field);

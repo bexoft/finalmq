@@ -48,7 +48,7 @@ bool StreamConnection::sendMessage(const IMessagePtr& msg)
     if (m_socketPrivate)
     {
         ret = true;
-        int size = msg->getTotalSendBufferSize();
+        ssize_t size = msg->getTotalSendBufferSize();
         if (size > 0)
         {
             const auto& payloads = msg->getAllSendBuffers();
@@ -164,9 +164,9 @@ bool StreamConnection::sendPendingMessages()
                     ++it;
                     bool last = ((it == payloads.end()) && (m_pendingMessages.size() == 1));
                     int flags = last ? 0 : MSG_MORE;    // win32: MSG_PARTIAL
-                    int size = payload.second - messageSendState.offset;
+                    ssize_t size = payload.second - messageSendState.offset;
                     assert((payload.second == 0 && size == 0) || (size > 0));
-                    int err = m_socketPrivate->send(payload.first + messageSendState.offset, size, flags);
+                    int err = m_socketPrivate->send(payload.first + messageSendState.offset, static_cast<int>(size), flags);
                     if (err == size)
                     {
                         messageSendState.it = it;

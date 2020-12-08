@@ -54,7 +54,7 @@ public:
     std::string     name{};                                 ///< parameter name
     std::string     description{};                          ///< description of the parameter
     int             flags = 0;                              ///< flaggs of the parameter
-    ssize_t         index = -1;                             ///< index of field inside struct
+    int             index = -1;                             ///< index of field inside struct
 
     mutable const MetaEnum*     metaEnum    = nullptr;      ///< cache to find MetaEnum of typeName faster
     mutable const MetaStruct*   metaStruct  = nullptr;      ///< cache to find MetaStruct of typeName faster

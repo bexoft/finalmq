@@ -72,7 +72,7 @@ void ProtocolFixHeaderHelper::receive(const SocketPtr& socket, int bytesToRead, 
 bool ProtocolFixHeaderHelper::receiveHeader(const SocketPtr& socket, int& bytesToRead)
 {
     assert(m_state == State::WAITFORHEADER);
-    assert(m_sizeCurrent < static_cast<int>(m_header.size()));
+    assert(m_sizeCurrent < static_cast<ssize_t>(m_header.size()));
     bool ret = false;
 
     ssize_t sizeRead = m_header.size() - m_sizeCurrent;
@@ -80,7 +80,7 @@ bool ProtocolFixHeaderHelper::receiveHeader(const SocketPtr& socket, int& bytesT
     {
         sizeRead = bytesToRead;
     }
-    int res = socket->receive(const_cast<char*>(m_header.data() + m_sizeCurrent), sizeRead);
+    int res = socket->receive(const_cast<char*>(m_header.data() + m_sizeCurrent), static_cast<int>(sizeRead));
     if (res > 0)
     {
         int bytesReceived = res;
@@ -88,8 +88,8 @@ bool ProtocolFixHeaderHelper::receiveHeader(const SocketPtr& socket, int& bytesT
         bytesToRead -= bytesReceived;
         assert(bytesToRead >= 0);
         m_sizeCurrent += bytesReceived;
-        assert(m_sizeCurrent <= static_cast<int>(m_header.size()));
-        if (m_sizeCurrent == static_cast<int>(m_header.size()))
+        assert(m_sizeCurrent <= static_cast<ssize_t>(m_header.size()));
+        if (m_sizeCurrent == static_cast<ssize_t>(m_header.size()))
         {
             m_sizeCurrent = 0;
             m_state = State::HEADERRECEIVED;
@@ -120,13 +120,13 @@ bool ProtocolFixHeaderHelper::receivePayload(const SocketPtr& socket, int& bytes
     assert(m_sizeCurrent < m_sizePayload);
     bool ret = false;
 
-    int sizeRead = m_sizePayload - m_sizeCurrent;
+    ssize_t sizeRead = m_sizePayload - m_sizeCurrent;
     if (bytesToRead < sizeRead)
     {
         sizeRead = bytesToRead;
     }
     memcpy(m_payload, m_header.data(), m_header.size());
-    int res = socket->receive(m_payload + m_header.size() + m_sizeCurrent, sizeRead);
+    int res = socket->receive(m_payload + m_header.size() + m_sizeCurrent, static_cast<int>(sizeRead));
     if (res > 0)
     {
         int bytesReceived = res;

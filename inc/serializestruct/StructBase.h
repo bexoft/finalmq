@@ -42,7 +42,7 @@ struct IArrayStructAdapter
     virtual ~IArrayStructAdapter() {}
     virtual StructBase* add(void* array) = 0;
     virtual ssize_t size(const void* array) const = 0;
-    virtual const StructBase& at(const void* array, int index) const = 0;
+    virtual const StructBase& at(const void* array, ssize_t index) const = 0;
 };
 
 
@@ -64,10 +64,10 @@ private:
         return vect.size();
     }
 
-    virtual const StructBase& at(const void* array, int index) const override
+    virtual const StructBase& at(const void* array, ssize_t index) const override
     {
         const std::vector<T>& vect = *reinterpret_cast<const std::vector<T>*>(array);
-        assert(index >= 0 && index < static_cast<int>(vect.size()));
+        assert(index >= 0 && index < static_cast<ssize_t>(vect.size()));
         return vect[index];
     }
 };
@@ -113,9 +113,9 @@ public:
         return m_metaStruct.getTypeName();
     }
 
-    inline const FieldInfo* getField(int index) const
+    inline const FieldInfo* getField(ssize_t index) const
     {
-        if (0 <= index && index < static_cast<int>(m_fieldInfos.size()))
+        if (0 <= index && index < static_cast<ssize_t>(m_fieldInfos.size()))
         {
             return &m_fieldInfos[index];
         }

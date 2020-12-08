@@ -25,7 +25,9 @@
 #include "helpers/ModulenameFinalmq.h"
 
 
-#if !defined(WIN32) && !defined(__MINGW32__)
+#if defined(WIN32) || defined(__MINGW32__)
+#pragma warning(disable: 4996)
+#else
 #include <sys/un.h>
 #include <netdb.h>
 #endif

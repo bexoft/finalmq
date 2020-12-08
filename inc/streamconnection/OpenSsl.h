@@ -341,7 +341,7 @@ public:
         SSL* ssl = SSL_new(m_ctx);
         if (ssl)
         {
-            SSL_set_fd(ssl, static_cast<int>(sd));  // the cast is not nice for win64 sockets, but should work!
+            SSL_set_fd(ssl, static_cast<int>(sd));  // the cast is not nice for win64 sockets, but it works!
             return std::make_shared<SslSocket>(ssl);
         }
         return nullptr;

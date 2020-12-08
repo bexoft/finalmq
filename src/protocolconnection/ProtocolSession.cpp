@@ -110,10 +110,10 @@ bool ProtocolSession::sendMessage(const IMessagePtr& msg)
             message = m_protocol->createMessage();
             if (msg->getTotalSendPayloadSize() > 0)
             {
-                int sizePayload = msg->getTotalSendPayloadSize();
+                ssize_t sizePayload = msg->getTotalSendPayloadSize();
                 char* payload = message->addSendPayload(sizePayload);
                 const std::list<BufferRef>& payloads = msg->getAllSendPayloads();
-                int offset = 0;
+                ssize_t offset = 0;
                 for (auto it = payloads.begin(); it != payloads.end(); ++it)
                 {
                     const BufferRef& p = *it;

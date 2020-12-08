@@ -49,7 +49,7 @@ void RemoteEntityFormat::serializeProto(IMessage& message, const Header& header)
     SerializerProto serializerHeader(message);
     ParserStruct parserHeader(serializerHeader, header);
     parserHeader.parseStruct();
-    int sizeHeader = message.getTotalSendPayloadSize() - 4;
+    ssize_t sizeHeader = message.getTotalSendPayloadSize() - 4;
     assert(sizeHeader >= 0);
 
     *bufferSizeHeader = static_cast<unsigned char>(sizeHeader);
@@ -179,15 +179,15 @@ std::shared_ptr<StructBase> RemoteEntityFormat::parseMessageProto(const BufferRe
 {
     syntaxError = false;
     const char* buffer = bufferRef.first;
-    int sizeBuffer = bufferRef.second;
+    ssize_t sizeBuffer = bufferRef.second;
     if (sizeBuffer < 4)
     {
         streamError << "buffer size too small: " << sizeBuffer;
         return nullptr;
     }
 
-    int sizePayload = sizeBuffer - 4;
-    int sizeHeader = 0;
+    ssize_t sizePayload = sizeBuffer - 4;
+    ssize_t sizeHeader = 0;
     if (sizeBuffer >= 4)
     {
         sizeHeader = (unsigned char)*buffer;
@@ -217,7 +217,7 @@ std::shared_ptr<StructBase> RemoteEntityFormat::parseMessageProto(const BufferRe
 
     if (data)
     {
-        int sizeData = sizePayload - sizeHeader;
+        ssize_t sizeData = sizePayload - sizeHeader;
         assert(sizeData >= 0);
         SerializerStruct serializerData(*data);
         ParserProto parserData(serializerData, buffer, sizeData);
@@ -232,9 +232,9 @@ std::shared_ptr<StructBase> RemoteEntityFormat::parseMessageProto(const BufferRe
     return data;
 }
 
-static int findFirst(const char* buffer, int size, char c)
+static ssize_t findFirst(const char* buffer, ssize_t size, char c)
 {
-    for (int i = 0; i < size; ++i)
+    for (ssize_t i = 0; i < size; ++i)
     {
         if (buffer[i] == c)
         {
@@ -244,9 +244,9 @@ static int findFirst(const char* buffer, int size, char c)
     return -1;
 }
 
-static int findLast(const char* buffer, int size, char c)
+static ssize_t findLast(const char* buffer, ssize_t size, char c)
 {
-    for (int i = size - 1; i >= 0; --i)
+    for (ssize_t i = size - 1; i >= 0; --i)
     {
         if (buffer[i] == c)
         {
@@ -261,7 +261,7 @@ std::shared_ptr<StructBase> RemoteEntityFormat::parseMessageJson(const BufferRef
 {
     syntaxError = false;
     const char* buffer = bufferRef.first;
-    int sizeBuffer = bufferRef.second;
+    ssize_t sizeBuffer = bufferRef.second;
 
     if (sizeBuffer == 0)
     {
@@ -273,19 +273,19 @@ std::shared_ptr<StructBase> RemoteEntityFormat::parseMessageJson(const BufferRef
     {
         // 012345678901234567890123456789
         // /MyServer/test.TestRequest#1{}
-        int ixEndHeader = findFirst(buffer, sizeBuffer, '{');   //28
+        ssize_t ixEndHeader = findFirst(buffer, sizeBuffer, '{');   //28
         if (ixEndHeader == -1)
         {
             ixEndHeader = sizeBuffer;
         }
         endHeader = &buffer[ixEndHeader];
-        int ixStartCommand = findLast(buffer, ixEndHeader, '/');    //9
+        ssize_t ixStartCommand = findLast(buffer, ixEndHeader, '/');    //9
         assert(ixStartCommand >= 0);
         if (ixStartCommand > 1)
         {
             header.destname = {&buffer[1], &buffer[ixStartCommand]};
         }
-        int ixCorrelationId = findLast(buffer, ixEndHeader, '#');   //26
+        ssize_t ixCorrelationId = findLast(buffer, ixEndHeader, '#');   //26
         if (ixCorrelationId != -1)
         {
             header.corrid = strtoll(&buffer[ixCorrelationId+1], nullptr, 10);
@@ -315,10 +315,10 @@ std::shared_ptr<StructBase> RemoteEntityFormat::parseMessageJson(const BufferRef
     if (data)
     {
         assert(endHeader);
-        int sizeHeader = endHeader - buffer;
+        ssize_t sizeHeader = endHeader - buffer;
         assert(sizeHeader >= 0);
         buffer += sizeHeader;
-        int sizeData = sizeBuffer - sizeHeader;
+        ssize_t sizeData = sizeBuffer - sizeHeader;
         assert(sizeData >= 0);
         if (sizeData > 0)
         {

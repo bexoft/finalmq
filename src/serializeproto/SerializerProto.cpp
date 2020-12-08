@@ -171,7 +171,7 @@ void SerializerProto::Internal::serializeArrayFixed(int id, const T* value, ssiz
         return;
     }
 
-    int sizeByte = size * sizeof(T);
+    ssize_t sizeByte = size * sizeof(T);
     reserveSpace(MAX_VARINT_SIZE + sizeByte);
 
     std::uint32_t tag = (id << 3) | WIRETYPE_LENGTH_DELIMITED;
@@ -197,7 +197,7 @@ void SerializerProto::Internal::serializeArrayBool(int id, const std::vector<boo
         return;
     }
 
-    int sizeByte = value.size() * 1;
+    ssize_t sizeByte = value.size() * 1;
     reserveSpace(MAX_VARINT_SIZE + sizeByte);
 
     std::uint32_t tag = (id << 3) | WIRETYPE_LENGTH_DELIMITED;
@@ -213,7 +213,7 @@ void SerializerProto::Internal::serializeArrayBool(int id, const std::vector<boo
 
 void SerializerProto::Internal::serializeArrayString(int id, const std::vector<std::string>& value)
 {
-    int size = value.size();
+    ssize_t size = value.size();
     if (size <= 0)
     {
         return;
@@ -229,7 +229,7 @@ void SerializerProto::Internal::serializeArrayString(int id, const std::vector<s
 
 void SerializerProto::Internal::serializeArrayBytes(int id, const std::vector<Bytes>& value)
 {
-    int size = value.size();
+    ssize_t size = value.size();
     if (size <= 0)
     {
         return;
@@ -304,19 +304,19 @@ char* SerializerProto::Internal::serializeStruct(int id)
 
 
 
-void SerializerProto::Internal::reserveSpace(int space)
+void SerializerProto::Internal::reserveSpace(ssize_t space)
 {
-    int sizeRemaining = m_bufferEnd - m_buffer;
+    ssize_t sizeRemaining = m_bufferEnd - m_buffer;
     if (sizeRemaining < space)
     {
         if (m_buffer != nullptr)
         {
-            int size = m_buffer - m_bufferStart;
+            ssize_t size = m_buffer - m_bufferStart;
             assert(size >= 0);
             m_zeroCopybuffer.downsizeLastBuffer(size);
         }
 
-        int sizeNew = std::max(m_maxBlockSize, space);
+        ssize_t sizeNew = std::max(m_maxBlockSize, space);
         char* bufferStartNew = m_zeroCopybuffer.addBuffer(sizeNew);
 
         if (m_buffer != nullptr)
@@ -327,7 +327,7 @@ void SerializerProto::Internal::reserveSpace(int space)
                 if (structData.buffer)
                 {
                     structData.allocateNextDataBuffer = true;
-                    int sizeStruct = m_buffer - structData.buffer;
+                    ssize_t sizeStruct = m_buffer - structData.buffer;
                     assert(sizeStruct >= 0);
                     structData.size += sizeStruct;
                     structData.buffer = bufferStartNew;
@@ -345,7 +345,7 @@ void SerializerProto::Internal::resizeBuffer()
 {
     if (m_buffer != nullptr)
     {
-        int size = m_buffer - m_bufferStart;
+        ssize_t size = m_buffer - m_bufferStart;
         assert(size >= 0);
         m_zeroCopybuffer.downsizeLastBuffer(size);
         m_bufferStart = nullptr;
@@ -388,7 +388,7 @@ void SerializerProto::Internal::enterStruct(const MetaField& field)
     }
 }
 
-int SerializerProto::Internal::calculateStructSize(int& structSize)
+ssize_t SerializerProto::Internal::calculateStructSize(ssize_t& structSize)
 {
     static constexpr std::uint32_t tagDummy = (DUMMY_ID << 3) | WIRETYPE_VARINT;
 
@@ -450,7 +450,7 @@ int SerializerProto::Internal::calculateStructSize(int& structSize)
     return remainingSize;
 }
 
-void SerializerProto::Internal::fillRemainingStruct(int remainingSize)
+void SerializerProto::Internal::fillRemainingStruct(ssize_t remainingSize)
 {
     switch (remainingSize)
     {
@@ -486,7 +486,7 @@ void SerializerProto::Internal::exitStruct(const MetaField& /*field*/)
     else
     {
         assert(structData.buffer);
-        int structSize = (m_buffer - structData.buffer) + structData.size;
+        ssize_t structSize = (m_buffer - structData.buffer) + structData.size;
         if (structSize == 0 && !structData.allocateNextDataBuffer && !structData.arrayEntry)
         {
             m_buffer = structData.bufferStructStart;
@@ -500,14 +500,14 @@ void SerializerProto::Internal::exitStruct(const MetaField& /*field*/)
         }
         else
         {
-            int remainingSize = calculateStructSize(structSize);
+            ssize_t remainingSize = calculateStructSize(structSize);
 
             char* bufferCurrent = m_buffer;
             m_buffer = structData.bufferStructSize;
 
             serializeVarint(structSize);
             assert(remainingSize <= 7 && remainingSize >= 3);
-            int remainingSizeFromBuffer = structData.bufferStructSize + RESERVE_STRUCT_SIZE - m_buffer;
+            ssize_t remainingSizeFromBuffer = structData.bufferStructSize + RESERVE_STRUCT_SIZE - m_buffer;
             if (remainingSizeFromBuffer != remainingSize)
             {
                 streamFatal << "Struct calculations are wrong";

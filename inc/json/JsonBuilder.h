@@ -53,13 +53,13 @@ private:
     virtual void enterKey(std::string&& key) override;
     virtual void finished() override;
 
-    void reserveSpace(int space);
+    void reserveSpace(ssize_t space);
     void resizeBuffer();
     void correctComma();
     void escapeString(const char* str, ssize_t size);
 
     IZeroCopyBuffer&        m_zeroCopybuffer;
-    int                     m_maxBlockSize = 1024;
+    ssize_t                 m_maxBlockSize = 1024;
     char*                   m_bufferStart = nullptr;
     char*                   m_buffer = nullptr;
     char*                   m_bufferEnd = nullptr;

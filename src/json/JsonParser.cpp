@@ -71,7 +71,7 @@ const char* JsonParser::parseWhiteSpace(const char* str)
 }
 
 
-const char* JsonParser::parse(const char* str, int size)
+const char* JsonParser::parse(const char* str, ssize_t size)
 {
     const char* ret = parseValue(str, size);
     m_visitor.finished();
@@ -80,7 +80,7 @@ const char* JsonParser::parse(const char* str, int size)
 
 
 
-const char* JsonParser::parseValue(const char* str, int size)
+const char* JsonParser::parseValue(const char* str, ssize_t size)
 {
     if (size >= CHECK_ON_ZEROTERM)
     {
@@ -342,7 +342,7 @@ const char* JsonParser::parseString(const char* str, bool key)
     {
         if (c == '\"')
         {
-            int size = str - strBegin;
+            ssize_t size = str - strBegin;
             if (key)
             {
                 m_visitor.enterKey(strBegin, size);

@@ -37,7 +37,7 @@ namespace finalmq {
 static constexpr int INDEX2ID = 1;
 
 
-ParserProto::ParserProto(IParserVisitor& visitor, const char* ptr, int size)
+ParserProto::ParserProto(IParserVisitor& visitor, const char* ptr, ssize_t size)
     : m_ptr(ptr)
     , m_size(size)
     , m_visitor(visitor)
@@ -89,7 +89,7 @@ bool ParserProto::parseZigZag(T& value)
 
 
 
-bool ParserProto::parseString(const char*& buffer, int& size)
+bool ParserProto::parseString(const char*& buffer, ssize_t& size)
 {
     bool ok = true;
     buffer = nullptr;
@@ -341,7 +341,7 @@ bool ParserProto::parseArrayString(std::vector<T>& array)
                     m_size -= sizeBuffer;
                     if (m_size > 0)
                     {
-                        m_tag = parseVarint();
+                        m_tag = static_cast<std::uint32_t>(parseVarint());
                     }
                     else
                     {
@@ -598,7 +598,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                 case MetaTypeId::TYPE_STRING:
                     {
                         const char* buffer = nullptr;
-                        int size = 0;
+                        ssize_t size = 0;
                         bool ok = parseString(buffer, size);
                         if (ok && m_ptr)
                         {
@@ -609,7 +609,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                 case MetaTypeId::TYPE_BYTES:
                     {
                         const char* buffer = nullptr;
-                        int size = 0;
+                        ssize_t size = 0;
                         bool ok = parseString(buffer, size);
                         if (ok && m_ptr)
                         {
@@ -857,7 +857,7 @@ template<class T>
 T ParserProto::parseFixed()
 {
     T value = 0;
-    if (m_size >= static_cast<int>(sizeof(T)))
+    if (m_size >= static_cast<ssize_t>(sizeof(T)))
     {
         EndianHelper<sizeof(T)>::read(m_ptr, value);
         m_ptr += sizeof(T);
@@ -892,7 +892,7 @@ void ParserProto::skip(WireType wireType)
         parseVarint();
         break;
     case WIRETYPE_FIXED64:
-        if (m_size >= static_cast<int>(sizeof(std::uint64_t)))
+        if (m_size >= static_cast<ssize_t>(sizeof(std::uint64_t)))
         {
             m_ptr += sizeof(std::uint64_t);
             m_size -= sizeof(std::uint64_t);
@@ -919,7 +919,7 @@ void ParserProto::skip(WireType wireType)
         }
         break;
     case WIRETYPE_FIXED32:
-        if (m_size >= static_cast<int>(sizeof(std::uint32_t)))
+        if (m_size >= static_cast<ssize_t>(sizeof(std::uint32_t)))
         {
             m_ptr += sizeof(std::uint32_t);
             m_size -= sizeof(std::uint32_t);

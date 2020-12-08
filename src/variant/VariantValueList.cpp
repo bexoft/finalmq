@@ -72,8 +72,8 @@ const void* VariantValueList::getData() const
 
 VariantList::iterator VariantValueList::find(const std::string& name)
 {
-    int index = std::atoi(name.c_str());
-    if (index >= 0 && index < static_cast<int>(m_value->size()))
+    ssize_t index = static_cast<ssize_t>(std::atoll(name.c_str()));
+    if (index >= 0 && index < static_cast<ssize_t>(m_value->size()))
     {
         return m_value->begin() + index;
     }
@@ -177,12 +177,12 @@ ssize_t VariantValueList::size() const
     return m_value->size();
 }
 
-void VariantValueList::visit(IVariantVisitor& visitor, Variant& variant, int index, int level, int size, const std::string& name)
+void VariantValueList::visit(IVariantVisitor& visitor, Variant& variant, ssize_t index, int level, ssize_t size, const std::string& name)
 {
     visitor.enterList(variant, VARTYPE_LIST, index, level, size, name);
     ++level;
-    int i = 0;
-    int subsize = m_value->size();
+    size_t i = 0;
+    ssize_t subsize = m_value->size();
     for (auto it = m_value->begin(); it != m_value->end(); ++it)
     {
         Variant& subVariant = *it;

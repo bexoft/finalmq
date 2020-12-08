@@ -56,7 +56,7 @@ public:
 
     const MetaEnumEntry* getEntryById(int id) const;
     const MetaEnumEntry* getEntryByName(const std::string& name) const;
-    const MetaEnumEntry* getEntryByIndex(int index) const;
+    const MetaEnumEntry* getEntryByIndex(ssize_t index) const;
     bool isId(int id) const;
     std::int32_t getValueByName(const std::string& name) const;
     const std::string& getNameByValue(std::int32_t value) const;

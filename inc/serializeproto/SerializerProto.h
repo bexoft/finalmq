@@ -122,10 +122,10 @@ private:
         void serializeArrayZigZag(int id, const T* value, ssize_t size);
 
         inline void serializeVarint(std::uint64_t value);
-        void reserveSpace(int space);
+        void reserveSpace(ssize_t space);
         void resizeBuffer();
-        int calculateStructSize(int& structSize);
-        void fillRemainingStruct(int remainingSize);
+        ssize_t calculateStructSize(ssize_t& structSize);
+        void fillRemainingStruct(ssize_t remainingSize);
 
         struct StructData
         {
@@ -139,14 +139,14 @@ private:
             char*   bufferStructStart = nullptr;
             char*   bufferStructSize = nullptr;
             char*   buffer = nullptr;
-            int     size = 0;
+            ssize_t size = 0;
             bool    allocateNextDataBuffer = false;
             bool    arrayParent = false;
             bool    arrayEntry = false;
         };
 
         IZeroCopyBuffer&        m_zeroCopybuffer;
-        int                     m_maxBlockSize = 1024;
+        ssize_t                 m_maxBlockSize = 1024;
         char*                   m_bufferStart = nullptr;
         char*                   m_buffer = nullptr;
         char*                   m_bufferEnd = nullptr;
