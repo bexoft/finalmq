@@ -37,12 +37,31 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/inc)
 
 
+if (WIN32)
+link_directories(${OPENSSL_DIR}/lib ${CMAKE_BINARY_DIR})
+endif()
+
+
+
+# SERVER
+
 add_executable(helloworld_server ${HELLOWORLD_FMQ_CPP} helloworld_server.cpp)
-target_link_libraries(helloworld_server finalmq ssl pthread)
+
+if (WIN32)
+target_link_libraries(helloworld_server libssl libcrypto wsock32 ws2_32)
+else()
+target_link_libraries(helloworld_server ssl pthread)
+endif()
+
+
+# Client
 
 add_executable(helloworld_client ${HELLOWORLD_FMQ_CPP} helloworld_client.cpp)
+
+if (WIN32)
+target_link_libraries(helloworld_client finalmq libssl libcrypto wsock32 ws2_32)
+else()
 target_link_libraries(helloworld_client finalmq ssl pthread)
+endif()
 
 
-#target_link_libraries(helloworld_server wsock32 ws2_32 ${OPENSSL_DIR}/lib/libssl.lib ${OPENSSL_DIR}/lib/libcrypto.lib ${CMAKE_BINARY_DIR}/finalmq.dll)
-#target_link_libraries(helloworld_client wsock32 ws2_32 ${OPENSSL_DIR}/lib/libssl.lib ${OPENSSL_DIR}/lib/libcrypto.lib ${CMAKE_BINARY_DIR}/finalmq.dll)
