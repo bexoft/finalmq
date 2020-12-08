@@ -83,7 +83,7 @@ std::vector<ssize_t> ProtocolDelimiter::findEndOfMessage(const char* buffer, ssi
                 break;
             }
         }
-        if (b == m_delimiter.size())
+        if (b == static_cast<ssize_t>(m_delimiter.size()))
         {
             positions.push_back(0 - m_indexDelimiter - sizeDelimiterPartial);
             indexStartBuffer = a;

@@ -40,13 +40,13 @@ public:
     MOCK_METHOD(void, enterInt64, (std::int64_t value), (override));
     MOCK_METHOD(void, enterUInt64, (std::uint64_t value), (override));
     MOCK_METHOD(void, enterDouble, (double value), (override));
-    MOCK_METHOD(void, enterString, (const char* value, int size), (override));
+    MOCK_METHOD(void, enterString, (const char* value, ssize_t size), (override));
     MOCK_METHOD(void, enterString, (std::string&& value), (override));
     MOCK_METHOD(void, enterArray, (), (override));
     MOCK_METHOD(void, exitArray, (), (override));
     MOCK_METHOD(void, enterObject, (), (override));
     MOCK_METHOD(void, exitObject, (), (override));
-    MOCK_METHOD(void, enterKey, (const char* key, int size), (override));
+    MOCK_METHOD(void, enterKey, (const char* key, ssize_t size), (override));
     MOCK_METHOD(void, enterKey, (std::string&& key), (override));
     MOCK_METHOD(void, finished, (), (override));
 };
