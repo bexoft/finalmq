@@ -4,7 +4,11 @@ cmake_minimum_required(VERSION 3.10)
 project(helloworld)
 
 
-SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DUSE_OPENSSL -Wall" )
+if (WIN32)
+    SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DUSE_OPENSSL" )
+else()
+    SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DUSE_OPENSSL -Wall" )
+endif()
 
 
 set(CMAKE_CXX_STANDARD 14)
@@ -38,3 +42,7 @@ target_link_libraries(helloworld_server finalmq ssl pthread)
 
 add_executable(helloworld_client ${HELLOWORLD_FMQ_CPP} helloworld_client.cpp)
 target_link_libraries(helloworld_client finalmq ssl pthread)
+
+
+#target_link_libraries(helloworld_server wsock32 ws2_32 ${OPENSSL_DIR}/lib/libssl.lib ${OPENSSL_DIR}/lib/libcrypto.lib ${CMAKE_BINARY_DIR}/finalmq.dll)
+#target_link_libraries(helloworld_client wsock32 ws2_32 ${OPENSSL_DIR}/lib/libssl.lib ${OPENSSL_DIR}/lib/libcrypto.lib ${CMAKE_BINARY_DIR}/finalmq.dll)

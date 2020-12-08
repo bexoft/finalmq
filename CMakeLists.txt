@@ -87,12 +87,6 @@ add_custom_command(
 )
 
 
-if (FINALMQ_USE_SSL)
-if (WIN32)
-    SET(OPENSSL_DIR "$ENV{OPENSSL_INSTALL_DIR}")
-    include_directories(${OPENSSL_DIR}/include)
-endif()
-endif()
 
 #Bring the headers into the project
 include_directories(inc)
@@ -121,7 +115,15 @@ file(GLOB SOURCES "src/*.cpp" "inc/*.h"
 
 #Generate the shared library from the sources
 add_library(finalmq SHARED ${SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/inc/metadataserialize/metadata.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/inc/remoteentity/entitydata.fmq.cpp)
+
+
+
 if (WIN32)
+if (FINALMQ_USE_SSL)
+    SET(OPENSSL_DIR "$ENV{OPENSSL_INSTALL_DIR}")
+    include_directories(${OPENSSL_DIR}/include)
+    target_link_libraries(finalmq wsock32 ws2_32 ${OPENSSL_DIR}/lib/libssl.lib ${OPENSSL_DIR}/lib/libcrypto.lib)
+endif()
 else()
     target_compile_options(finalmq PRIVATE -Werror -Wall -Wextra)
 endif()

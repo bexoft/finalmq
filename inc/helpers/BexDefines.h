@@ -174,8 +174,8 @@ namespace finalmq {
 
 
     // constants
-    const unsigned int LEAD_OFFSET = 0xD800 - (0x10000 >> 10);
-    const unsigned int SURROGATE_OFFSET = 0x10000 - (0xD800 << 10) - 0xDC00;
+    const unsigned int LEAD_OFFSET = static_cast<unsigned int>(0xD800 - (0x10000 >> 10));
+    const unsigned int SURROGATE_OFFSET = static_cast<unsigned int>(0x10000 - (0xD800 << 10) - 0xDC00);
 
     // first 16bit in the lower word, second 16bit in higher word.
     static unsigned int utf32to16(unsigned int utf32)
