@@ -24,9 +24,14 @@
 #include "streamconnection/StreamConnectionContainer.h"
 #include "streamconnection/Socket.h"
 #include "streamconnection/AddressHelpers.h"
-#include "poller/PollerImplEpoll.h"
 
-#if !defined(MSVCPP) && !defined(__MINGW32__)
+#if defined(WIN32) || defined(__MINGW32__)
+#include "poller/PollerImplSelect.h"
+#else
+#include "poller/PollerImplEpoll.h"
+#endif
+
+#if !defined(WIN32) && !defined(__MINGW32__)
 #include <netinet/tcp.h>
 #include <fcntl.h>
 #include <sys/unistd.h>
@@ -36,19 +41,16 @@
 #include <thread>
 #include <assert.h>
 
-//#include <iostream>
-
 
 namespace finalmq {
 
 
-// todo: should be removed this definition shall go into BexLibDefines.h
-#define SOCKETERROR(err)	err
-
-
-
 StreamConnectionContainer::StreamConnectionContainer()
+#if defined(WIN32) || defined(__MINGW32__)
+    : m_poller(std::make_shared<PollerImplSelect>())
+#else
     : m_poller(std::make_shared<PollerImplEpoll>())
+#endif
     , m_pollerLoopTerminated(CondVar::CONDVAR_MANUAL)
 {
 }
@@ -105,19 +107,20 @@ int StreamConnectionContainer::bind(const std::string& endpoint, hybrid_ptr<IStr
     connectionData.ssl = bindProperties.certificateData.ssl;
     std::shared_ptr<Socket> socket = std::make_shared<Socket>();
 
-    int err = -1;
+    bool ok = false;
 #ifdef USE_OPENSSL
     if (connectionData.ssl)
     {
-        err = socket->createSslServer(connectionData.af, connectionData.type, connectionData.protocol, bindProperties.certificateData);
+        ok = socket->createSslServer(connectionData.af, connectionData.type, connectionData.protocol, bindProperties.certificateData);
     }
     else
 #endif
     {
-        err = socket->create(connectionData.af, connectionData.type, connectionData.protocol);
+        ok = socket->create(connectionData.af, connectionData.type, connectionData.protocol);
     }
 
-    if (err >= 0)
+    int err = -1;
+    if (ok)
     {
         std::string addr = AddressHelpers::makeSocketAddress(connectionData.hostname, connectionData.port, connectionData.af);
         err = socket->bind((const sockaddr*)addr.c_str(), (int)addr.size());
@@ -291,7 +294,7 @@ IStreamConnectionPrivatePtr StreamConnectionContainer::addConnection(const Socke
     AddressHelpers::addr2peer((sockaddr*)connectionData.sockaddr.c_str(), connectionData);
 
     std::unique_lock<std::mutex> lock(m_mutex);
-    int connectionId = m_nextConnectionId++;
+    std::int64_t connectionId = m_nextConnectionId++;
     connectionData.connectionId = connectionId;
     IStreamConnectionPrivatePtr connection = std::make_shared<StreamConnection>(connectionData, socket, m_poller, callback);
     m_connectionId2Connection[connectionId] = connection;
@@ -375,7 +378,7 @@ void StreamConnectionContainer::handleConnectionEvents(const IStreamConnectionPr
                 {
                     m_poller->disableWrite(sd);
                 }
-                else if (state == SslSocket::IoState::ERROR)
+                else if (state == SslSocket::IoState::SSL_ERROR)
                 {
                     disconnectIntern(connection, sd);
                 }
@@ -441,7 +444,7 @@ void StreamConnectionContainer::handleBindEvents(const DescriptorInfo& info)
         {
             std::string addr;
             addr.resize(400);
-            socklen_t addrlen = addr.size();
+            socklen_t addrlen = static_cast<socklen_t>(addr.size());
             SocketPtr socketAccept;
             bindData.socket->accept((sockaddr*)addr.c_str(), &addrlen, socketAccept);
             if (socketAccept)
@@ -516,7 +519,7 @@ bool StreamConnectionContainer::sslAccepting(SslAcceptingData& sslAcceptingData)
         IStreamConnectionPrivatePtr connection = addConnection(sslAcceptingData.socket, sslAcceptingData.connectionData, sslAcceptingData.callback);
         connection->connected(connection);
     }
-    if (state == SslSocket::IoState::SUCCESS || state == SslSocket::IoState::ERROR)
+    if (state == SslSocket::IoState::SUCCESS || state == SslSocket::IoState::SSL_ERROR)
     {
         m_sslAcceptings.erase(sd->getDescriptor());
     }
@@ -544,7 +547,7 @@ bool StreamConnectionContainer::isReconnectTimerExpired()
 
     // reconnect timer
     std::chrono::duration<double> dur = now - m_lastReconnectTime;
-    int delta = dur.count() * 1000;
+    int delta = static_cast<int>(dur.count() * 1000);
     if (delta < 0 || delta >= m_checkReconnectInterval)
     {
         m_lastReconnectTime = now;

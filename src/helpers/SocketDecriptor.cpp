@@ -29,7 +29,7 @@
 namespace finalmq {
 
 
-SocketDescriptor::SocketDescriptor(int sd)
+SocketDescriptor::SocketDescriptor(SOCKET sd)
     : m_sd(sd)
 {
 
@@ -37,7 +37,7 @@ SocketDescriptor::SocketDescriptor(int sd)
 
 SocketDescriptor::~SocketDescriptor()
 {
-    if (m_sd != INVALID_FD)
+    if (m_sd != INVALID_SOCKET)
     {
         OperatingSystem::instance().closeSocket(m_sd);
     }

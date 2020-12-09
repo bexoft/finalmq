@@ -54,7 +54,7 @@ struct IMetaData
 };
 
 
-class MetaData : public IMetaData
+class SYMBOLEXP MetaData : public IMetaData
 {
 public:
 

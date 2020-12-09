@@ -159,8 +159,8 @@ void ParserStruct::processField(const StructBase& structBase, const FieldInfo& f
                 {
                     const MetaField* fieldWithoutArray = MetaDataGlobal::instance().getArrayField(field);
                     assert(fieldWithoutArray);
-                    int size = arrayStructAdapter->size(array);
-                    for (int i = 0; i < size; ++i)
+                    ssize_t size = arrayStructAdapter->size(array);
+                    for (ssize_t i = 0; i < size; ++i)
                     {
                         const StructBase& sub = arrayStructAdapter->at(array, i);
                         m_visitor.enterStruct(*fieldWithoutArray);
@@ -195,7 +195,7 @@ void ParserStruct::parseStruct(const StructBase& structBase)
         const FieldInfo& fieldInfo = fields[i];
         const MetaField* field = fieldInfo.getField();
         assert(field);
-        const_cast<MetaField*>(field)->index = i;
+        const_cast<MetaField*>(field)->index = static_cast<int>(i);
         processField(structBase, fieldInfo);
     }
 }

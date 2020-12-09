@@ -26,17 +26,23 @@
 
 #include "helpers/OperatingSystem.h"
 
+#if !defined(WIN32) && !defined(__MINGW32__)
 #include <netinet/tcp.h>
 #include <sys/ioctl.h>
+#endif
+
 #include <assert.h>
 
 
 namespace finalmq {
 
+static const int SOCKET_POLLIN  = 1;
+static const int SOCKET_POLLOUT = 2;
+
 
 PollerImplSelect::PollerImplSelect()
-    : m_socketDescriptorsStable(ATOMIC_FLAG_INIT)
-    , m_sdMaxStable(ATOMIC_FLAG_INIT)
+    : m_socketDescriptorsStable{}
+    , m_sdMaxStable{}
 {
     m_socketDescriptorsStable.test_and_set();
     m_sdMaxStable.test_and_set();
@@ -79,7 +85,7 @@ void PollerImplSelect::addSocket(const SocketDescriptorPtr& fd)
 void PollerImplSelect::addSocketEnableRead(const SocketDescriptorPtr& fd)
 {
     std::unique_lock<std::mutex> locker(m_mutex);
-    auto result = m_socketDescriptors.insert(std::make_pair(fd, EPOLLIN));
+    auto result = m_socketDescriptors.insert(std::make_pair(fd, SOCKET_POLLIN));
     if (result.second)
     {
         if (!FD_ISSET(fd->getDescriptor(), &m_readfdsCached))
@@ -121,7 +127,7 @@ void PollerImplSelect::enableRead(const SocketDescriptorPtr& fd)
     auto it = m_socketDescriptors.find(fd);
     if (it != m_socketDescriptors.end())
     {
-        it->second |= EPOLLIN;
+        it->second |= SOCKET_POLLIN;
         if (!FD_ISSET(fd->getDescriptor(), &m_readfdsCached))
         {
             FD_SET(fd->getDescriptor(), &m_readfdsCached);
@@ -142,7 +148,7 @@ void PollerImplSelect::disableRead(const SocketDescriptorPtr& fd)
     auto it = m_socketDescriptors.find(fd);
     if (it != m_socketDescriptors.end())
     {
-        it->second &= ~EPOLLIN;
+        it->second &= ~SOCKET_POLLIN;
         if (FD_ISSET(fd->getDescriptor(), &m_readfdsCached))
         {
             FD_CLR(fd->getDescriptor(), &m_readfdsCached);
@@ -165,7 +171,7 @@ void PollerImplSelect::enableWrite(const SocketDescriptorPtr& fd)
     auto it = m_socketDescriptors.find(fd);
     if (it != m_socketDescriptors.end())
     {
-        it->second |= EPOLLOUT;
+        it->second |= SOCKET_POLLOUT;
         if (!FD_ISSET(fd->getDescriptor(), &m_writefdsCached))
         {
             FD_SET(fd->getDescriptor(), &m_writefdsCached);
@@ -186,7 +192,7 @@ void PollerImplSelect::disableWrite(const SocketDescriptorPtr& fd)
     auto it = m_socketDescriptors.find(fd);
     if (it != m_socketDescriptors.end())
     {
-        it->second &= ~EPOLLOUT;
+        it->second &= ~SOCKET_POLLOUT;
         if (FD_ISSET(fd->getDescriptor(), &m_writefdsCached))
         {
             FD_CLR(fd->getDescriptor(), &m_writefdsCached);
@@ -243,6 +249,7 @@ void PollerImplSelect::updateSocketDescriptors()
 void PollerImplSelect::updateSdMax()
 {
     m_sdMax = 0;
+#if !defined(WIN32) && !defined(__MINGW32__)
     for (auto it = m_socketDescriptors.begin(); it != m_socketDescriptors.end(); ++it)
     {
         // if an event is active (readable or writeable)
@@ -251,6 +258,7 @@ void PollerImplSelect::updateSdMax()
             m_sdMax = std::max(it->first->getDescriptor(), m_sdMax);
         }
     }
+#endif
     copyFds(m_readfdsOriginal, m_readfdsCached);
     copyFds(m_writefdsOriginal, m_writefdsCached);
 }
@@ -260,7 +268,7 @@ void PollerImplSelect::releaseWaitInternal()
 {
     if (m_controlSocketWrite)
     {
-        OperatingSystem::instance().write(m_controlSocketWrite->getDescriptor(), "", 1);
+        OperatingSystem::instance().send(m_controlSocketWrite->getDescriptor(), "", 1, 0);
     }
 }
 
@@ -298,7 +306,7 @@ void PollerImplSelect::collectSockets(int res)
                     {
                         // read pending bytes from control socket
                         std::vector<char> buffer(countRead);
-                        OperatingSystem::instance().read(sd, buffer.data(), buffer.size());
+                        OperatingSystem::instance().recv(sd, buffer.data(), static_cast<int>(buffer.size()), 0);
                         std::unique_lock<std::mutex> locker(m_mutex);
                         m_result.releaseWait = m_releaseWaitExternal;
                         m_releaseWaitExternal = false;

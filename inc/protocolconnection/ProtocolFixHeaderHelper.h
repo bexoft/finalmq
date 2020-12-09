@@ -24,6 +24,8 @@
 
 #include "streamconnection/IMessage.h"
 #include "protocolconnection/IProtocol.h"
+#include "helpers/BexDefines.h"
+
 #include <deque>
 #include <functional>
 
@@ -53,9 +55,9 @@ private:
 
     std::string m_header;
     State       m_state = State::WAITFORHEADER;
-    int         m_sizeCurrent = 0;
+    ssize_t     m_sizeCurrent = 0;
 
-    int         m_sizePayload = 0;
+    ssize_t     m_sizePayload = 0;
     IMessagePtr m_message;
     char*       m_payload = nullptr;
 

@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include "helpers/BexDefines.h"
+
 #include <cstdint>
 #include <string>
 
@@ -38,19 +40,19 @@ struct IJsonParserVisitor
     virtual void enterInt64(std::int64_t value) = 0;
     virtual void enterUInt64(std::uint64_t value) = 0;
     virtual void enterDouble(double value) = 0;
-    virtual void enterString(const char* value, int size) = 0;
+    virtual void enterString(const char* value, ssize_t size) = 0;
     virtual void enterString(std::string&& value) = 0;
     virtual void enterArray() = 0;
     virtual void exitArray() = 0;
     virtual void enterObject() = 0;
     virtual void exitObject() = 0;
-    virtual void enterKey(const char* key, int size) = 0;
+    virtual void enterKey(const char* key, ssize_t size) = 0;
     virtual void enterKey(std::string&& key) = 0;
     virtual void finished() = 0;
 };
 
 
-static const int CHECK_ON_ZEROTERM = -1;
+static const ssize_t CHECK_ON_ZEROTERM = -1;
 
 
 class JsonParser
@@ -58,10 +60,10 @@ class JsonParser
 public:
     JsonParser(IJsonParserVisitor& visitor);
 
-    const char* parse(const char* str, int size = CHECK_ON_ZEROTERM);
+    const char* parse(const char* str, ssize_t size = CHECK_ON_ZEROTERM);
 
 private:
-    const char* parseValue(const char* str, int size = CHECK_ON_ZEROTERM);
+    const char* parseValue(const char* str, ssize_t size = CHECK_ON_ZEROTERM);
     inline const char* parseWhiteSpace(const char* str);
     const char* parseObject(const char* str);
     const char* parseArray(const char* str);

@@ -48,7 +48,7 @@ bool StreamConnection::sendMessage(const IMessagePtr& msg)
     if (m_socketPrivate)
     {
         ret = true;
-        int size = msg->getTotalSendBufferSize();
+        ssize_t size = msg->getTotalSendBufferSize();
         if (size > 0)
         {
             const auto& payloads = msg->getAllSendBuffers();
@@ -164,9 +164,9 @@ bool StreamConnection::sendPendingMessages()
                     ++it;
                     bool last = ((it == payloads.end()) && (m_pendingMessages.size() == 1));
                     int flags = last ? 0 : MSG_MORE;    // win32: MSG_PARTIAL
-                    int size = payload.second - messageSendState.offset;
+                    ssize_t size = payload.second - messageSendState.offset;
                     assert((payload.second == 0 && size == 0) || (size > 0));
-                    int err = m_socketPrivate->send(payload.first + messageSendState.offset, size, flags);
+                    int err = m_socketPrivate->send(payload.first + messageSendState.offset, static_cast<int>(size), flags);
                     if (err == size)
                     {
                         messageSendState.it = it;
@@ -224,7 +224,7 @@ bool StreamConnection::doReconnect()
     {
         std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
         std::chrono::duration<double> dur = now - m_lastReconnectTime;
-        int delta = dur.count() * 1000;
+        int delta = static_cast<int>(dur.count() * 1000);
         if (delta < 0 || delta >= m_connectionData.reconnectInterval)
         {
             m_lastReconnectTime = now;
@@ -242,7 +242,7 @@ bool StreamConnection::changeStateForDisconnect()
     if (!m_disconnectFlag && (m_connectionData.connectionState == CONNECTIONSTATE_CONNECTING))
     {
         std::chrono::duration<double> dur = std::chrono::system_clock::now() - m_connectionData.startTime;
-        int delta = dur.count() * 1000;
+        int delta = static_cast<int>(dur.count() * 1000);
         if (m_connectionData.totalReconnectDuration >= 0 && (delta < 0 || delta >= m_connectionData.totalReconnectDuration))
         {
             reconnectExpired = true;

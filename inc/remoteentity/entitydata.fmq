@@ -1,4 +1,6 @@
 {
+	"imports":[
+	],
     "namespace":"finalmq.remoteentity",
     "enums": [
         {"type":"MsgMode","desc":"","entries":[

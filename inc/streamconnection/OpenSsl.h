@@ -121,7 +121,7 @@ public:
         SUCCESS,
         WANT_READ,
         WANT_WRITE,
-        ERROR
+        SSL_ERROR
     };
 
     SslSocket(SSL* ssl)
@@ -154,7 +154,7 @@ public:
     IoState accepting()
     {
         assert(m_ssl);
-        IoState state = IoState::ERROR;
+        IoState state = IoState::SSL_ERROR;
         std::unique_lock<std::mutex> lock(m_sslMutex);
         int res = SSL_accept(m_ssl);
         if (res == 1)
@@ -174,7 +174,7 @@ public:
             }
             else
             {
-                state = IoState::ERROR;
+                state = IoState::SSL_ERROR;
                 streamError << "SSL_accept failed with " << err;
             }
         }
@@ -191,7 +191,7 @@ public:
     IoState connecting()
     {
         assert(m_ssl);
-        IoState state = IoState::ERROR;
+        IoState state = IoState::SSL_ERROR;
         std::unique_lock<std::mutex> lock(m_sslMutex);
         int res = SSL_connect(m_ssl);
         if (res == 1)
@@ -211,7 +211,7 @@ public:
             }
             else
             {
-                state = IoState::ERROR;
+                state = IoState::SSL_ERROR;
                 streamError << "SSL_connect failed with " << err;
             }
         }
@@ -221,7 +221,7 @@ public:
     IoState read(char* buffer, int size, int& numRead)
     {
         assert(m_ssl);
-        IoState state = IoState::ERROR;
+        IoState state = IoState::SSL_ERROR;
         numRead = 0;
         std::unique_lock<std::mutex> lock(m_sslMutex);
         m_readWhenWritable = false;
@@ -253,7 +253,7 @@ public:
     IoState write(const char* buffer, int size, int& numRead)
     {
         assert(m_ssl);
-        IoState state = IoState::ERROR;
+        IoState state = IoState::SSL_ERROR;
         numRead = 0;
         std::unique_lock<std::mutex> lock(m_sslMutex);
         m_writeWhenReadable = false;
@@ -334,14 +334,14 @@ public:
         return m_ctx;
     }
 
-    std::shared_ptr<SslSocket> createSocket(int sd)
+    std::shared_ptr<SslSocket> createSocket(SOCKET sd)
     {
         assert(m_ctx);
         std::unique_lock<std::mutex> lock(m_sslMutex);
         SSL* ssl = SSL_new(m_ctx);
         if (ssl)
         {
-            SSL_set_fd(ssl, sd);
+            SSL_set_fd(ssl, static_cast<int>(sd));  // the cast is not nice for win64 sockets, but it works!
             return std::make_shared<SslSocket>(ssl);
         }
         return nullptr;

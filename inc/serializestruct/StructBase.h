@@ -41,8 +41,8 @@ struct IArrayStructAdapter
 {
     virtual ~IArrayStructAdapter() {}
     virtual StructBase* add(void* array) = 0;
-    virtual int size(const void* array) const = 0;
-    virtual const StructBase& at(const void* array, int index) const = 0;
+    virtual ssize_t size(const void* array) const = 0;
+    virtual const StructBase& at(const void* array, ssize_t index) const = 0;
 };
 
 
@@ -58,23 +58,23 @@ private:
         return &vect.back();
     }
 
-    virtual int size(const void* array) const override
+    virtual ssize_t size(const void* array) const override
     {
         const std::vector<T>& vect = *reinterpret_cast<const std::vector<T>*>(array);
         return vect.size();
     }
 
-    virtual const StructBase& at(const void* array, int index) const override
+    virtual const StructBase& at(const void* array, ssize_t index) const override
     {
         const std::vector<T>& vect = *reinterpret_cast<const std::vector<T>*>(array);
-        assert(index >= 0 && index < static_cast<int>(vect.size()));
+        assert(index >= 0 && index < static_cast<ssize_t>(vect.size()));
         return vect[index];
     }
 };
 
 
 
-class FieldInfo
+class SYMBOLEXP FieldInfo
 {
 public:
     FieldInfo(int offset, IArrayStructAdapter* arrayStructAdapter = nullptr);
@@ -103,7 +103,7 @@ private:
 typedef std::function<std::shared_ptr<StructBase>()>    FuncStructBaseFactory;
 
 
-class StructInfo
+class SYMBOLEXP StructInfo
 {
 public:
     StructInfo(const std::string& typeName, const std::string& description, FuncStructBaseFactory factory, std::vector<MetaField>&& fields, std::vector<FieldInfo>&& fieldInfos);
@@ -113,9 +113,9 @@ public:
         return m_metaStruct.getTypeName();
     }
 
-    inline const FieldInfo* getField(int index) const
+    inline const FieldInfo* getField(ssize_t index) const
     {
-        if (0 <= index && index < static_cast<int>(m_fieldInfos.size()))
+        if (0 <= index && index < static_cast<ssize_t>(m_fieldInfos.size()))
         {
             return &m_fieldInfos[index];
         }
@@ -133,7 +133,7 @@ private:
 };
 
 
-class EnumInfo
+class SYMBOLEXP EnumInfo
 {
 public:
     EnumInfo(const std::string& typeName, const std::string& description, std::vector<MetaEnumEntry>&& entries);
@@ -147,12 +147,12 @@ private:
 class StructBase
 {
 public:
-    StructBase* add(int index);
+    StructBase* add(ssize_t index);
 
     virtual void clear() = 0;
 
     template<class T>
-    T* getData(int index, int typeId)
+    T* getData(ssize_t index, int typeId)
     {
         const StructInfo& structInfo = getStructInfo();
         const FieldInfo* fieldInfo = structInfo.getField(index);
@@ -172,13 +172,13 @@ public:
     }
 
     template<class T>
-    const T* getData(int index, int typeId) const
+    const T* getData(ssize_t index, int typeId) const
     {
         return const_cast<StructBase*>(this)->getData<T>(index, typeId);
     }
 
     template<class T>
-    const T& getValue(int index, int typeId) const
+    const T& getValue(ssize_t index, int typeId) const
     {
         const T* data = getData<T>(index, typeId);
         if (data)

@@ -58,8 +58,8 @@ private:
     virtual bool add(const std::string& name, Variant&& variant) override;
     virtual bool add(const Variant& variant) override;
     virtual bool add(Variant&& variant) override;
-    virtual int size() const override;
-    virtual void visit(IVariantVisitor& visitor, Variant& variant, int index, int level, int size, const std::string& name) override;
+    virtual ssize_t size() const override;
+    virtual void visit(IVariantVisitor& visitor, Variant& variant, ssize_t index, int level, ssize_t size, const std::string& name) override;
 
 
     VariantList::iterator find(const std::string& name);

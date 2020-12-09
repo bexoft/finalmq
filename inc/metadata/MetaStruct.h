@@ -23,6 +23,7 @@
 #pragma once
 
 #include "MetaField.h"
+#include "helpers/BexDefines.h"
 
 #include <vector>
 #include <list>
@@ -33,7 +34,7 @@
 namespace finalmq {
 
 
-class MetaStruct
+class SYMBOLEXP MetaStruct
 {
 public:
     MetaStruct();
@@ -45,13 +46,13 @@ public:
     void setDescription(const std::string& description);
     const std::string& getDescription() const;
 
-    const MetaField* getFieldByIndex(int index) const;
+    const MetaField* getFieldByIndex(ssize_t index) const;
     const MetaField* getFieldByName(const std::string& name) const;
 
     void addField(const MetaField& field);
     void addField(MetaField&& field);
 
-    int getFieldsSize() const
+    ssize_t getFieldsSize() const
     {
         return m_fields.size();
     }

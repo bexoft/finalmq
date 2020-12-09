@@ -60,7 +60,7 @@ static constexpr CorrelationId CORRELATIONID_NONE = 0;
 
 
 
-class RemoteEntityFormat
+class SYMBOLEXP RemoteEntityFormat
 {
 public:
     static std::shared_ptr<StructBase> parseMessageProto(const BufferRef& bufferRef, remoteentity::Header& header, bool& syntaxError);

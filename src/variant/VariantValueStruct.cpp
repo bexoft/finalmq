@@ -185,17 +185,17 @@ bool VariantValueStruct::add(Variant&& /*variant*/)
     return false;
 }
 
-int VariantValueStruct::size() const
+ssize_t VariantValueStruct::size() const
 {
     return m_value->size();
 }
 
-void VariantValueStruct::visit(IVariantVisitor& visitor, Variant& variant, int index, int level, int size, const std::string& name)
+void VariantValueStruct::visit(IVariantVisitor& visitor, Variant& variant, ssize_t index, int level, ssize_t size, const std::string& name)
 {
     visitor.enterStruct(variant, VARTYPE_STRUCT, index, level, size, name);
     level++;
-    int i = 0;
-    int subsize = m_value->size();
+    ssize_t i = 0;
+    ssize_t subsize = m_value->size();
     for (auto it = m_value->begin(); it != m_value->end(); ++it)  //std::list<std::string, Variant>::iterator????
     {
         Variant& subVariant = it->second;

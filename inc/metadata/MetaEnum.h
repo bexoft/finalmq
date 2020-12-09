@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include "helpers/BexDefines.h"
 
 #include <vector>
 #include <string>
@@ -41,7 +42,7 @@ public:
 
 
 
-class MetaEnum
+class SYMBOLEXP MetaEnum
 {
 public:
     MetaEnum();
@@ -55,7 +56,7 @@ public:
 
     const MetaEnumEntry* getEntryById(int id) const;
     const MetaEnumEntry* getEntryByName(const std::string& name) const;
-    const MetaEnumEntry* getEntryByIndex(int index) const;
+    const MetaEnumEntry* getEntryByIndex(ssize_t index) const;
     bool isId(int id) const;
     std::int32_t getValueByName(const std::string& name) const;
     const std::string& getNameByValue(std::int32_t value) const;
@@ -63,7 +64,7 @@ public:
     void addEntry(const MetaEnumEntry& entries);
     void addEntry(MetaEnumEntry&& entries);
 
-    int getEntrySize() const
+    ssize_t getEntrySize() const
     {
         return m_entries.size();
     }

@@ -129,7 +129,7 @@ public:
     Variant(Variant&& rhs);
     Variant& operator =(Variant&& rhs);
 
-    void visit(IVariantVisitor& visitor, int index = 0, int level = 0, int size = 0, const std::string& name = "");
+    void visit(IVariantVisitor& visitor, ssize_t index = 0, int level = 0, ssize_t size = 0, const std::string& name = "");
 
     int getType() const;
     Variant* getVariant(const std::string& name);
@@ -141,7 +141,7 @@ public:
     bool add(const std::string& name, Variant&& variant);
     bool add(const Variant& variant);
     bool add(Variant&& variant);
-    int size() const;
+    ssize_t size() const;
 
 private:
 

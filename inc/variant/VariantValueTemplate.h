@@ -119,11 +119,11 @@ private:
         return false;
     }
 
-    virtual int size() const override
+    virtual ssize_t size() const override
     {
         return 1;
     }
-    virtual void visit(IVariantVisitor& visitor, Variant& variant, int index, int level, int size, const std::string& name)
+    virtual void visit(IVariantVisitor& visitor, Variant& variant, ssize_t index, int level, ssize_t size, const std::string& name) override
     {
         visitor.enterLeaf(variant, VARTYPE, index, level, size, name);
     }

@@ -26,7 +26,7 @@
 
 namespace finalmq {
 
-class ConnectionEvent
+class SYMBOLEXP ConnectionEvent
 {
 public:
     enum Enum : std::int32_t {
@@ -73,8 +73,8 @@ typedef std::shared_ptr<IRemoteEntityContainer> IRemoteEntityContainerPtr;
 
 
 
-class RemoteEntityContainer : public IRemoteEntityContainer
-                            , public IProtocolSessionCallback
+class SYMBOLEXP RemoteEntityContainer : public IRemoteEntityContainer
+                                      , public IProtocolSessionCallback
 {
 public:
     RemoteEntityContainer();

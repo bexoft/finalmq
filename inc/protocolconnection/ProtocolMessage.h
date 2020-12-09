@@ -32,33 +32,33 @@ namespace finalmq {
 class ProtocolMessage : public IMessage
 {
 public:
-    ProtocolMessage(int protocolId, int sizeHeader = 0, int sizeTrailer = 0);
+    ProtocolMessage(int protocolId, ssize_t sizeHeader = 0, ssize_t sizeTrailer = 0);
 
 private:
-    virtual char* addBuffer(int size) override;
-    virtual void downsizeLastBuffer(int newSize) override;
+    virtual char* addBuffer(ssize_t size) override;
+    virtual void downsizeLastBuffer(ssize_t newSize) override;
 
     // for send
     virtual void addSendPayload(const std::string& payload) override;
-    virtual void addSendPayload(const char* payload, int size) override;
-    virtual char* addSendPayload(int size) override;
-    virtual void downsizeLastSendPayload(int newSize) override;
+    virtual void addSendPayload(const char* payload, ssize_t size) override;
+    virtual char* addSendPayload(ssize_t size) override;
+    virtual void downsizeLastSendPayload(ssize_t newSize) override;
 
     // for receive
     virtual BufferRef getReceivePayload() const override;
-    virtual char* resizeReceivePayload(int size) override;
+    virtual char* resizeReceivePayload(ssize_t size) override;
 
     // for the framework
     virtual const std::list<BufferRef>& getAllSendBuffers() const override;
-    virtual int getTotalSendBufferSize() const override;
+    virtual ssize_t getTotalSendBufferSize() const override;
     virtual const std::list<BufferRef>& getAllSendPayloads() const override;
-    virtual int getTotalSendPayloadSize() const override;
+    virtual ssize_t getTotalSendPayloadSize() const override;
 
     // for the protocol to add a header
     virtual void addSendHeader(const std::string& header) override;
-    virtual void addSendHeader(const char* header, int size) override;
-    virtual char* addSendHeader(int size) override;
-    virtual void downsizeLastSendHeader(int newSize) override;
+    virtual void addSendHeader(const char* header, ssize_t size) override;
+    virtual char* addSendHeader(ssize_t size) override;
+    virtual void downsizeLastSendHeader(ssize_t newSize) override;
 
     // for the protocol to prepare the message for send
     virtual void prepareMessageToSend() override;
@@ -76,18 +76,18 @@ private:
     std::list<std::string>      m_payloadBuffers;
     std::list<BufferRef>        m_sendBufferRefs;
     std::list<BufferRef>::iterator m_itSendBufferRefsPayloadBegin;
-    int                         m_offset = -1;
-    int                         m_sizeLastBlock = 0;
-    int                         m_sizeSendBufferTotal = 0;
+    ssize_t                     m_offset = -1;
+    ssize_t                     m_sizeLastBlock = 0;
+    ssize_t                     m_sizeSendBufferTotal = 0;
     std::list<BufferRef>        m_sendPayloadRefs;
-    int                         m_sizeSendPayloadTotal = 0;
+    ssize_t                     m_sizeSendPayloadTotal = 0;
 
     // receive
     std::string                 m_receiveBuffer;
-    int                         m_sizeReceiveBuffer = 0;
+    ssize_t                     m_sizeReceiveBuffer = 0;
 
-    int                         m_sizeHeader = 0;
-    int                         m_sizeTrailer = 0;
+    ssize_t                     m_sizeHeader = 0;
+    ssize_t                     m_sizeTrailer = 0;
 
     bool                        m_preparedToSend = false;
     const int                   m_protocolId;

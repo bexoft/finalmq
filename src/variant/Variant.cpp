@@ -77,7 +77,7 @@ Variant& Variant::operator =(Variant&& rhs)
 }
 
 
-void Variant::visit(IVariantVisitor& visitor, int index, int level, int size, const std::string& name)
+void Variant::visit(IVariantVisitor& visitor, ssize_t index, int level, ssize_t size, const std::string& name)
 {
 
     if (m_value)
@@ -184,7 +184,7 @@ bool Variant::add(Variant&& variant)
     return false;
 }
 
-int Variant::size() const
+ssize_t Variant::size() const
 {
     if (m_value)
     {

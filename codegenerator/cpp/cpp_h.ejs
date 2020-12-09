@@ -2,6 +2,31 @@
 
 #include "serializestruct/StructBase.h"
 
+<%
+if (data.imports)
+{
+for (var i = 0; i < data.imports.length; i++) { 
+var importfile = data.imports[i]
+importfile += '.h'
+%>
+#include "<%- importfile %>" <% -%>
+<% }} %>    
+
+
+
+#undef SYMBOLEXP <% -%>
+<%
+if (exportMacro)
+{ %>
+#ifdef <%- exportMacro %>
+#define	SYMBOLEXP	DLL_EXPORT
+#else
+#define	SYMBOLEXP	DLL_IMPORT
+#endif
+<% } else { %>
+#define	SYMBOLEXP
+<% } %>
+
 
 <%
 if (data.namespace)
@@ -24,7 +49,7 @@ namespace <%- ns %> { <% -%>
 <% for (var i = 0; i < data.enums.length; i++) {
     var en = data.enums[i]
     var plaintype = helper.getPlainType(en.type) %>
-class <%- plaintype %>
+class SYMBOLEXP <%- plaintype %>
 {
 public:
     enum Enum : std::int32_t {<% -%>
@@ -58,7 +83,7 @@ private:
 {
     var stru = data.structs[i]
     var plaintype = helper.getPlainType(stru.type) %>
-class <%- plaintype %> : public finalmq::StructBase
+class SYMBOLEXP <%- plaintype %> : public finalmq::StructBase
 {
 public:<% -%>
 <% for (var n = 0; n < stru.fields.length; n++) { 

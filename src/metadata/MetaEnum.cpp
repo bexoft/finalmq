@@ -96,9 +96,9 @@ const MetaEnumEntry* MetaEnum::getEntryByName(const std::string& name) const
 
 
 
-const MetaEnumEntry* MetaEnum::getEntryByIndex(int index) const
+const MetaEnumEntry* MetaEnum::getEntryByIndex(ssize_t index) const
 {
-    if (index < static_cast<int>(m_entries.size()))
+    if (index < static_cast<ssize_t>(m_entries.size()))
     {
         return m_entries[index].get();
     }

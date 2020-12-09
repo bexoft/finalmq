@@ -31,7 +31,7 @@ namespace finalmq {
 //---------------------------------------
 
 
-ProtocolMessage::ProtocolMessage(int protocolId, int sizeHeader, int sizeTrailer)
+ProtocolMessage::ProtocolMessage(int protocolId, ssize_t sizeHeader, ssize_t sizeTrailer)
     : m_sizeHeader(sizeHeader)
     , m_sizeTrailer(sizeTrailer)
     , m_protocolId(protocolId)
@@ -39,7 +39,7 @@ ProtocolMessage::ProtocolMessage(int protocolId, int sizeHeader, int sizeTrailer
     m_itSendBufferRefsPayloadBegin = m_sendBufferRefs.end();
 }
 
-char* ProtocolMessage::addBuffer(int size)
+char* ProtocolMessage::addBuffer(ssize_t size)
 {
     assert(!m_preparedToSend);
     assert(size > 0);
@@ -48,13 +48,13 @@ char* ProtocolMessage::addBuffer(int size)
     {
         assert(!m_payloadBuffers.empty());
         const std::string& bufLast = m_payloadBuffers.back();
-        int remaining = bufLast.size() - m_offset - m_sizeTrailer;
+        ssize_t remaining = bufLast.size() - m_offset - m_sizeTrailer;
         assert(remaining >= 0);
         if (size <= remaining)
         {
             m_sendBufferRefs.back().second += size;
             m_sendPayloadRefs.back().second += size;
-            int offset = m_offset;
+            ssize_t offset = m_offset;
             m_offset += size;
             m_sizeLastBlock = size;
             m_sizeSendBufferTotal += size;
@@ -63,7 +63,7 @@ char* ProtocolMessage::addBuffer(int size)
         }
     }
 
-    int sizeHeader = 0;
+    ssize_t sizeHeader = 0;
     if (m_payloadBuffers.empty())
     {
         sizeHeader = m_sizeHeader;
@@ -81,7 +81,7 @@ char* ProtocolMessage::addBuffer(int size)
 
     m_sizeSendBufferTotal += size;
     m_sizeSendPayloadTotal += size;
-    int sizeBuffer = sizeHeader + size + m_sizeTrailer;
+    ssize_t sizeBuffer = sizeHeader + size + m_sizeTrailer;
     m_payloadBuffers.resize(m_payloadBuffers.size() + 1);
     m_payloadBuffers.back().resize(sizeBuffer);
     m_sendBufferRefs.push_back({const_cast<char*>(m_payloadBuffers.back().data()),               sizeBuffer});
@@ -89,7 +89,7 @@ char* ProtocolMessage::addBuffer(int size)
     return const_cast<char*>(m_payloadBuffers.back().data() + sizeHeader);
 }
 
-void ProtocolMessage::downsizeLastBuffer(int newSize)
+void ProtocolMessage::downsizeLastBuffer(ssize_t newSize)
 {
     assert(!m_preparedToSend);
 
@@ -103,7 +103,7 @@ void ProtocolMessage::downsizeLastBuffer(int newSize)
     assert(!m_payloadBuffers.empty());
     assert(m_sendBufferRefs.size() == m_payloadBuffers.size() + m_headerBuffers.size());
 
-    int diff = m_sizeLastBlock - newSize;
+    ssize_t diff = m_sizeLastBlock - newSize;
     assert(diff >= 0);
 
     if (diff == 0)
@@ -141,17 +141,17 @@ void ProtocolMessage::addSendPayload(const std::string& payload)
 {
     addSendPayload(payload.data(), payload.size());
 }
-void ProtocolMessage::addSendPayload(const char* payload, int size)
+void ProtocolMessage::addSendPayload(const char* payload, ssize_t size)
 {
     char* payloadDest = addSendPayload(size);
     memcpy(payloadDest, payload, size);
 }
-char* ProtocolMessage::addSendPayload(int size)
+char* ProtocolMessage::addSendPayload(ssize_t size)
 {
     return addBuffer(size);
 }
 
-void ProtocolMessage::downsizeLastSendPayload(int newSize)
+void ProtocolMessage::downsizeLastSendPayload(ssize_t newSize)
 {
     return downsizeLastBuffer(newSize);
 }
@@ -163,7 +163,7 @@ BufferRef ProtocolMessage::getReceivePayload() const
 }
 
 
-char* ProtocolMessage::resizeReceivePayload(int size)
+char* ProtocolMessage::resizeReceivePayload(ssize_t size)
 {
     if (size > m_sizeReceiveBuffer)
     {
@@ -180,7 +180,7 @@ const std::list<BufferRef>& ProtocolMessage::getAllSendBuffers() const
 {
     return m_sendBufferRefs;
 }
-int ProtocolMessage::getTotalSendBufferSize() const
+ssize_t ProtocolMessage::getTotalSendBufferSize() const
 {
     return m_sizeSendBufferTotal;
 }
@@ -189,7 +189,7 @@ const std::list<BufferRef>& ProtocolMessage::getAllSendPayloads() const
 {
     return m_sendPayloadRefs;
 }
-int ProtocolMessage::getTotalSendPayloadSize() const
+ssize_t ProtocolMessage::getTotalSendPayloadSize() const
 {
     return m_sizeSendPayloadTotal;
 }
@@ -201,12 +201,12 @@ void ProtocolMessage::addSendHeader(const std::string& buffer)
 {
     addSendHeader(buffer.data(), buffer.size());
 }
-void ProtocolMessage::addSendHeader(const char* buffer, int size)
+void ProtocolMessage::addSendHeader(const char* buffer, ssize_t size)
 {
     char* header = addSendHeader(size);
     memcpy(header, buffer, size);
 }
-char* ProtocolMessage::addSendHeader(int size)
+char* ProtocolMessage::addSendHeader(ssize_t size)
 {
     assert(!m_preparedToSend);
     if (m_headerBuffers.empty())
@@ -219,7 +219,7 @@ char* ProtocolMessage::addSendHeader(int size)
     m_sizeSendBufferTotal += size;
     return const_cast<char*>(m_headerBuffers.back().data());
 }
-void ProtocolMessage::downsizeLastSendHeader(int newSize)
+void ProtocolMessage::downsizeLastSendHeader(ssize_t newSize)
 {
     assert(!m_preparedToSend);
     assert(!m_headerBuffers.empty());
@@ -227,7 +227,7 @@ void ProtocolMessage::downsizeLastSendHeader(int newSize)
     auto itSendBufferRefs = m_itSendBufferRefsPayloadBegin;
     --itSendBufferRefs;
     assert(itSendBufferRefs != m_sendBufferRefs.end());
-    int& sizeCurrent = itSendBufferRefs->second;
+    ssize_t& sizeCurrent = itSendBufferRefs->second;
     m_sizeSendBufferTotal += (newSize - sizeCurrent);
     sizeCurrent = newSize;
 }

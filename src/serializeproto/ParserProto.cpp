@@ -25,6 +25,7 @@
 #include "metadata/MetaData.h"
 #include "helpers/BexDefines.h"
 
+
 #include <assert.h>
 #include <memory.h>
 #include <iostream>
@@ -36,7 +37,7 @@ namespace finalmq {
 static constexpr int INDEX2ID = 1;
 
 
-ParserProto::ParserProto(IParserVisitor& visitor, const char* ptr, int size)
+ParserProto::ParserProto(IParserVisitor& visitor, const char* ptr, ssize_t size)
     : m_ptr(ptr)
     , m_size(size)
     , m_visitor(visitor)
@@ -88,7 +89,7 @@ bool ParserProto::parseZigZag(T& value)
 
 
 
-bool ParserProto::parseString(const char*& buffer, int& size)
+bool ParserProto::parseString(const char*& buffer, ssize_t& size)
 {
     bool ok = true;
     buffer = nullptr;
@@ -191,7 +192,6 @@ bool ParserProto::parseFixedValue(T& value)
     return ok;
 }
 
-
 template<class T, int WIRETYPE>
 bool ParserProto::parseArrayFixed(std::vector<T>& array)
 {
@@ -210,7 +210,7 @@ bool ParserProto::parseArrayFixed(std::vector<T>& array)
                 array.push_back(value);
                 if (m_size > 0)
                 {
-                    m_tag = parseVarint();
+                    m_tag = static_cast<std::int32_t>(parseVarint());
                 }
                 else
                 {
@@ -227,12 +227,12 @@ bool ParserProto::parseArrayFixed(std::vector<T>& array)
             {
                 if (sizeBuffer >= 0 && sizeBuffer <= m_size)
                 {
-                    std::uint32_t sizeElements = sizeBuffer / sizeof(T);
+                    ssize_t sizeElements = sizeBuffer / sizeof(T);
                     array.resize(sizeElements);
-#ifdef BEXMQ_LITTLE_ENDIAN
+#ifdef FINALMQ_LITTLE_ENDIAN
                     memcpy(array.data(), m_ptr, sizeElements * sizeof(T));
 #else
-                    for (int i = 0; i < sizeElements; i++)
+                    for (ssize_t i = 0; i < sizeElements; i++)
                     {
                         EndianHelper<sizeof(T)>::read(&m_ptr[i * sizeof(T)], &array[i]);
                     }
@@ -258,7 +258,7 @@ bool ParserProto::parseArrayFixed(std::vector<T>& array)
 }
 
 
-template<class T, bool ZIGZAG = false>
+template<class T, bool ZIGZAG>
 bool ParserProto::parseArrayVarint(std::vector<T>& array)
 {
     bool ok = true;
@@ -273,11 +273,11 @@ bool ParserProto::parseArrayVarint(std::vector<T>& array)
             std::uint64_t value = parseVarint();
             if (m_ptr)
             {
-                T v = (ZIGZAG) ? zigzag(value) : static_cast<T>(value);
+                T v = (ZIGZAG) ? static_cast<T>(zigzag(value)) : static_cast<T>(value);
                 array.push_back(v);
                 if (m_size > 0)
                 {
-                    m_tag = parseVarint();
+                    m_tag = static_cast<std::uint32_t>(parseVarint());
                 }
                 else
                 {
@@ -297,7 +297,7 @@ bool ParserProto::parseArrayVarint(std::vector<T>& array)
                     while (m_size > 0)
                     {
                         std::uint64_t value = parseVarint();
-                        T v = (ZIGZAG) ? zigzag(value) : static_cast<T>(value);
+                        T v = (ZIGZAG) ? static_cast<T>(zigzag(value)) : static_cast<T>(value);
                         array.push_back(v);
                     }
                 }
@@ -341,7 +341,7 @@ bool ParserProto::parseArrayString(std::vector<T>& array)
                     m_size -= sizeBuffer;
                     if (m_size > 0)
                     {
-                        m_tag = parseVarint();
+                        m_tag = static_cast<std::uint32_t>(parseVarint());
                     }
                     else
                     {
@@ -411,7 +411,7 @@ void ParserProto::parseArrayStruct(const MetaField& field)
 
                 if (m_size > 0)
                 {
-                    m_tag = parseVarint();
+                    m_tag = static_cast<std::uint32_t>(parseVarint());
                 }
                 else
                 {
@@ -472,7 +472,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
     {
         if (m_tag == 0)
         {
-            m_tag = parseVarint();
+            m_tag = static_cast<std::uint32_t>(parseVarint());
         }
         if (m_ptr)
         {
@@ -598,7 +598,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                 case MetaTypeId::TYPE_STRING:
                     {
                         const char* buffer = nullptr;
-                        int size = 0;
+                        ssize_t size = 0;
                         bool ok = parseString(buffer, size);
                         if (ok && m_ptr)
                         {
@@ -609,7 +609,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                 case MetaTypeId::TYPE_BYTES:
                     {
                         const char* buffer = nullptr;
-                        int size = 0;
+                        ssize_t size = 0;
                         bool ok = parseString(buffer, size);
                         if (ok && m_ptr)
                         {
@@ -857,7 +857,7 @@ template<class T>
 T ParserProto::parseFixed()
 {
     T value = 0;
-    if (m_size >= static_cast<int>(sizeof(T)))
+    if (m_size >= static_cast<ssize_t>(sizeof(T)))
     {
         EndianHelper<sizeof(T)>::read(m_ptr, value);
         m_ptr += sizeof(T);
@@ -892,7 +892,7 @@ void ParserProto::skip(WireType wireType)
         parseVarint();
         break;
     case WIRETYPE_FIXED64:
-        if (m_size >= static_cast<int>(sizeof(std::uint64_t)))
+        if (m_size >= static_cast<ssize_t>(sizeof(std::uint64_t)))
         {
             m_ptr += sizeof(std::uint64_t);
             m_size -= sizeof(std::uint64_t);
@@ -919,7 +919,7 @@ void ParserProto::skip(WireType wireType)
         }
         break;
     case WIRETYPE_FIXED32:
-        if (m_size >= static_cast<int>(sizeof(std::uint32_t)))
+        if (m_size >= static_cast<ssize_t>(sizeof(std::uint32_t)))
         {
             m_ptr += sizeof(std::uint32_t);
             m_size -= sizeof(std::uint32_t);

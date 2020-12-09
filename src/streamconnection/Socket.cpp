@@ -33,10 +33,30 @@
 #include <iostream>
 #include <assert.h>
 
-#if !defined(MSVCPP) && !defined(__MINGW32__)
+#if defined(WIN32) || defined(__MINGW32__)
+#pragma warning(disable: 4996)
+//#include <winsock2.h>
+#else
 #include <netinet/tcp.h>
 #include <fcntl.h>
 #include <sys/unistd.h>
+#endif
+
+
+
+
+#if defined(WIN32) || defined(__MINGW32__)
+class InitWinSocket
+{
+public:
+    InitWinSocket()
+    {
+        WSADATA wsaData;
+        WORD wVersion = MAKEWORD(2, 2);
+        WSAStartup(wVersion, &wsaData);
+    }
+};
+static InitWinSocket g_initWinSocket;
 #endif
 
 
@@ -55,15 +75,16 @@ Socket::~Socket()
 }
 
 
-int Socket::create(int af, int type, int protocol)
+bool Socket::create(int af, int type, int protocol)
 {
     destroy();
     m_af = af;
     m_protocol = protocol;
-    int err = OperatingSystem::instance().socket(af, type, protocol);
-    if (err != -1)
+    bool ok = false;
+    SOCKET sd = OperatingSystem::instance().socket(af, type, protocol);
+    if (sd != INVALID_SOCKET)
     {
-        int sd = err;
+        ok = true;
         m_sd = std::make_shared<SocketDescriptor>(sd);
         OperatingSystem::instance().setNonBlocking(sd, true);
         OperatingSystem::instance().setLinger(sd, true, 0);
@@ -72,47 +93,46 @@ int Socket::create(int af, int type, int protocol)
             OperatingSystem::instance().setNoDelay(sd, true);
         }
     }
-    err = handleError(err, "create socket");
-    return err;
+    return ok;
 }
 
 
 
 #ifdef USE_OPENSSL
-int Socket::createSslServer(int af, int type, int protocol, const CertificateData& certificateData)
+bool Socket::createSslServer(int af, int type, int protocol, const CertificateData& certificateData)
 {
-    int err = this->create(af, type, protocol);
-    if (err != -1)
+    bool ok = this->create(af, type, protocol);
+    if (ok)
     {
         assert(m_sd->getDescriptor());
-        err = -1;
+        ok = false;
         m_sslContext = OpenSsl::instance().createServerContext(certificateData);
         if (m_sslContext)
         {
-            err = m_sd->getDescriptor();
+            ok = true;
         }
     }
-    return err;
+    return ok;
 }
 
-int Socket::createSslClient(int af, int type, int protocol, const CertificateData& certificateData)
+bool Socket::createSslClient(int af, int type, int protocol, const CertificateData& certificateData)
 {
-    int err = create(af, type, protocol);
-    if (err != -1)
+    int ok = create(af, type, protocol);
+    if (ok)
     {
         assert(m_sd->getDescriptor());
-        err = -1;
+        ok = false;
         m_sslContext = OpenSsl::instance().createClientContext(certificateData);
         if (m_sslContext)
         {
             m_sslSocket = m_sslContext->createSocket(m_sd->getDescriptor());
             if (m_sslSocket)
             {
-                err = m_sd->getDescriptor();
+                ok = true;
             }
         }
     }
-    return err;
+    return ok;
 }
 #endif
 
@@ -137,14 +157,15 @@ int Socket::connect(const sockaddr* addr, int addrlen)
     return err;
 }
 
-int Socket::accept(sockaddr* addr, socklen_t* addrlen, SocketPtr& socketAccept)
+bool Socket::accept(sockaddr* addr, socklen_t* addrlen, SocketPtr& socketAccept)
 {
+    bool ok = false;
     socketAccept = nullptr;
     assert(m_sd);
-    int err = OperatingSystem::instance().accept(m_sd->getDescriptor(), addr, (socklen_t*)addrlen);
-    if (err != -1)
+    SOCKET sd = OperatingSystem::instance().accept(m_sd->getDescriptor(), addr, (socklen_t*)addrlen);
+    if (sd != INVALID_SOCKET)
     {
-        int sd = err;
+        ok = true;
         socketAccept = std::make_shared<Socket>();
         socketAccept->attach(sd);
 #ifdef USE_OPENSSL
@@ -154,14 +175,13 @@ int Socket::accept(sockaddr* addr, socklen_t* addrlen, SocketPtr& socketAccept)
         }
 #endif
     }
-    err = handleError(err, "accept");
-    return err;
+    return ok;
 }
 
 
 int Socket::bind(const sockaddr* addr, int addrlen)
 {
-#if !defined(MSVCPP) && !defined(__MINGW32__)
+#if !defined(WIN32) && !defined(__MINGW32__)
     if (m_af == AF_UNIX)
     {
         struct sockaddr_un* addrunix = (sockaddr_un*)addr;
@@ -335,9 +355,9 @@ SocketDescriptorPtr Socket::getSocketDescriptor() const
 
 
 
-void Socket::attach(int sd)
+void Socket::attach(SOCKET sd)
 {
-    if (sd != INVALID_FD)
+    if (sd != INVALID_SOCKET)
     {
         m_sd = std::make_shared<SocketDescriptor>(sd);
         OperatingSystem::instance().setNonBlocking(sd, true);

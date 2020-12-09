@@ -10,20 +10,25 @@ option(FINALMQ_BUILD_DOXYGEN "Enable doxygen" OFF)
 option(FINALMQ_USE_SSL "Build with openssl" ON)
 
 
+
+
 # Add compile flags to determine coverage
 if (FINALMQ_BUILD_COVERAGE)
     SET(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage -O0")
     SET(GCC_COVERAGE_LINK_FLAGS    "-lgcov")
 endif(FINALMQ_BUILD_COVERAGE)
 
-SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wno-unused-function" )
+if (WIN32)
+else()
+    SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wno-unused-function" )
+endif()
 
 if (FINALMQ_USE_SSL)
     SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DUSE_OPENSSL" )
 endif(FINALMQ_USE_SSL)
 
 
-SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}" )
+SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS} -DNOMINMAX" )
 SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}" )
 
 set(CMAKE_CXX_STANDARD 14)
@@ -65,9 +70,11 @@ SET(CODEGENERATOR ${CMAKE_SOURCE_DIR}/codegenerator)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/inc)
 
+SET(CODEGENERATOR_CPP ${CODEGENERATOR}/cpp/cpp.js)
+
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/inc/metadataserialize)
 add_custom_command(
-    COMMAND node ${CODEGENERATOR}/cpp/cpp.js ${CMAKE_CURRENT_SOURCE_DIR}/inc/metadataserialize/metadata.fmq ${CMAKE_CURRENT_BINARY_DIR}/inc/metadataserialize
+    COMMAND node ${CODEGENERATOR_CPP} --input=${CMAKE_CURRENT_SOURCE_DIR}/inc/metadataserialize/metadata.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}/inc/metadataserialize --exportmacro=EXPORT_finalmq
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/inc/metadataserialize/metadata.fmq
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/inc/metadataserialize/metadata.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/inc/metadataserialize/metadata.fmq.h
     COMMENT "Generating cpp code out of metadata.fmq."
@@ -75,7 +82,7 @@ add_custom_command(
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/inc/remoteentity)
 add_custom_command(
-    COMMAND node ${CODEGENERATOR}/cpp/cpp.js ${CMAKE_CURRENT_SOURCE_DIR}/inc/remoteentity/entitydata.fmq ${CMAKE_CURRENT_BINARY_DIR}/inc/remoteentity
+    COMMAND node ${CODEGENERATOR_CPP} --input=${CMAKE_CURRENT_SOURCE_DIR}/inc/remoteentity/entitydata.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}/inc/remoteentity --exportmacro=EXPORT_finalmq
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/inc/remoteentity/entitydata.fmq
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/inc/remoteentity/entitydata.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/inc/remoteentity/entitydata.fmq.h
     COMMENT "Generating cpp code out of entitydata.fmq."
@@ -110,7 +117,20 @@ file(GLOB SOURCES "src/*.cpp" "inc/*.h"
 
 #Generate the shared library from the sources
 add_library(finalmq SHARED ${SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/inc/metadataserialize/metadata.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/inc/remoteentity/entitydata.fmq.cpp)
-target_compile_options(finalmq PRIVATE -Werror -Wall -Wextra)
+
+
+
+if (WIN32)
+if (FINALMQ_USE_SSL)
+    SET(OPENSSL_DIR "$ENV{OPENSSL_INSTALL_DIR}")
+    include_directories(${OPENSSL_DIR}/include)
+    link_directories(${OPENSSL_DIR}/lib)
+    target_link_libraries(finalmq wsock32 ws2_32 ${OPENSSL_DIR}/lib/libssl.lib ${OPENSSL_DIR}/lib/libcrypto.lib)
+    target_compile_options(finalmq PRIVATE -DEXPORT_finalmq)
+endif()
+else()
+    target_compile_options(finalmq PRIVATE -Werror -Wall -Wextra)
+endif()
 #Set the location for library installation -- i.e., /usr/lib in this case
 # not really necessary in this example. Use "sudo make install" to apply
 install(TARGETS finalmq DESTINATION /usr/lib)

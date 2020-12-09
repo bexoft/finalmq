@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include "helpers/BexDefines.h"
 
 #include <functional>
 #include <memory>
@@ -91,7 +92,7 @@ private:
 };
 
 
-class Logger
+class SYMBOLEXP Logger
 {
 public:
     static inline ILogger& instance()

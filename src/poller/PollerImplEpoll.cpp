@@ -312,7 +312,7 @@ void PollerImplEpoll::collectSockets(int res)
                     {
                         // read pending bytes from control socket
                         std::vector<char> buffer(countRead);
-                        OperatingSystem::instance().read(sd, buffer.data(), buffer.size());
+                        OperatingSystem::instance().recv(sd, buffer.data(), buffer.size(), 0);
                         m_result.releaseWait = true;
                     }
                     else
@@ -387,7 +387,7 @@ void PollerImplEpoll::releaseWait()
 {
     if (m_controlSocketWrite)
     {
-        OperatingSystem::instance().write(m_controlSocketWrite->getDescriptor(), "", 1);
+        OperatingSystem::instance().send(m_controlSocketWrite->getDescriptor(), "", 1, 0);
     }
 }
 

@@ -43,23 +43,23 @@ private:
     virtual void enterInt64(std::int64_t value) override;
     virtual void enterUInt64(std::uint64_t value) override;
     virtual void enterDouble(double value) override;
-    virtual void enterString(const char* value, int size) override;
+    virtual void enterString(const char* value, ssize_t size) override;
     virtual void enterString(std::string&& value) override;
     virtual void enterArray() override;
     virtual void exitArray() override;
     virtual void enterObject() override;
     virtual void exitObject() override;
-    virtual void enterKey(const char* key, int size) override;
+    virtual void enterKey(const char* key, ssize_t size) override;
     virtual void enterKey(std::string&& key) override;
     virtual void finished() override;
 
-    void reserveSpace(int space);
+    void reserveSpace(ssize_t space);
     void resizeBuffer();
     void correctComma();
-    void escapeString(const char* str, int size);
+    void escapeString(const char* str, ssize_t size);
 
     IZeroCopyBuffer&        m_zeroCopybuffer;
-    int                     m_maxBlockSize = 1024;
+    ssize_t                 m_maxBlockSize = 1024;
     char*                   m_bufferStart = nullptr;
     char*                   m_buffer = nullptr;
     char*                   m_bufferEnd = nullptr;

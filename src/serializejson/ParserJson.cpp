@@ -38,7 +38,7 @@ namespace finalmq {
 
 
 
-ParserJson::ParserJson(IParserVisitor& visitor, const char* ptr, int size)
+ParserJson::ParserJson(IParserVisitor& visitor, const char* ptr, ssize_t size)
     : m_ptr(ptr)
     , m_size(size)
     , m_visitor(visitor)
@@ -100,49 +100,49 @@ void ParserJson::enterNumber(T value)
         m_visitor.enterBool(*m_fieldCurrent, value);
         break;
     case MetaTypeId::TYPE_INT32:
-        m_visitor.enterInt32(*m_fieldCurrent, value);
+        m_visitor.enterInt32(*m_fieldCurrent, static_cast<std::int32_t>(value));
         break;
     case MetaTypeId::TYPE_UINT32:
-        m_visitor.enterUInt32(*m_fieldCurrent, value);
+        m_visitor.enterUInt32(*m_fieldCurrent, static_cast<std::uint32_t>(value));
         break;
     case MetaTypeId::TYPE_INT64:
-        m_visitor.enterInt64(*m_fieldCurrent, value);
+        m_visitor.enterInt64(*m_fieldCurrent, static_cast<std::int64_t>(value));
         break;
     case MetaTypeId::TYPE_UINT64:
-        m_visitor.enterUInt64(*m_fieldCurrent, value);
+        m_visitor.enterUInt64(*m_fieldCurrent, static_cast<std::uint64_t>(value));
         break;
     case MetaTypeId::TYPE_FLOAT:
-        m_visitor.enterFloat(*m_fieldCurrent, value);
+        m_visitor.enterFloat(*m_fieldCurrent, static_cast<float>(value));
         break;
     case MetaTypeId::TYPE_DOUBLE:
-        m_visitor.enterDouble(*m_fieldCurrent, value);
+        m_visitor.enterDouble(*m_fieldCurrent, static_cast<double>(value));
         break;
     case MetaTypeId::TYPE_STRING:
         m_visitor.enterString(*m_fieldCurrent, std::to_string(value));
         break;
     case MetaTypeId::TYPE_ENUM:
-        m_visitor.enterEnum(*m_fieldCurrent, value);
+        m_visitor.enterEnum(*m_fieldCurrent, static_cast<std::int32_t>(value));
         break;
     case MetaTypeId::TYPE_ARRAY_BOOL:
         m_arrayBool.push_back(value);
         break;
     case MetaTypeId::TYPE_ARRAY_INT32:
-        m_arrayInt32.push_back(value);
+        m_arrayInt32.push_back(static_cast<std::int32_t>(value));
         break;
     case MetaTypeId::TYPE_ARRAY_UINT32:
-        m_arrayUInt32.push_back(value);
+        m_arrayUInt32.push_back(static_cast<std::uint32_t>(value));
         break;
     case MetaTypeId::TYPE_ARRAY_INT64:
-        m_arrayInt64.push_back(value);
+        m_arrayInt64.push_back(static_cast<std::int64_t>(value));
         break;
     case MetaTypeId::TYPE_ARRAY_UINT64:
-        m_arrayUInt64.push_back(value);
+        m_arrayUInt64.push_back(static_cast<std::uint64_t>(value));
         break;
     case MetaTypeId::TYPE_ARRAY_FLOAT:
-        m_arrayFloat.push_back(value);
+        m_arrayFloat.push_back(static_cast<float>(value));
         break;
     case MetaTypeId::TYPE_ARRAY_DOUBLE:
-        m_arrayDouble.push_back(value);
+        m_arrayDouble.push_back(static_cast<double>(value));
         break;
     case MetaTypeId::TYPE_ARRAY_STRING:
         m_arrayString.push_back(std::to_string(value));
@@ -153,11 +153,11 @@ void ParserJson::enterNumber(T value)
     case MetaTypeId::TYPE_ARRAY_ENUM:
         if (m_arrayString.empty() || !m_arrayInt32.empty())
         {
-            m_arrayInt32.push_back(value);
+            m_arrayInt32.push_back(static_cast<std::int32_t>(value));
         }
         else
         {
-            const std::string& v = MetaDataGlobal::instance().getEnumNameByValue(*m_fieldCurrent, value);
+            const std::string& v = MetaDataGlobal::instance().getEnumNameByValue(*m_fieldCurrent, static_cast<std::int32_t>(value));
             m_arrayString.push_back(v);
         }
         break;
@@ -199,7 +199,7 @@ void ParserJson::enterDouble(double value)
     enterNumber(value);
 }
 
-void ParserJson::enterString(const char* value, int size)
+void ParserJson::enterString(const char* value, ssize_t size)
 {
     if (!m_fieldCurrent)
     {
@@ -274,7 +274,7 @@ void ParserJson::enterString(const char* value, int size)
         break;
     case MetaTypeId::TYPE_ARRAY_UINT32:
         {
-            std::uint32_t v = strtoull(value, nullptr, 10);
+            std::uint32_t v = strtoul(value, nullptr, 10);
             m_arrayUInt32.push_back(v);
         }
         break;
@@ -657,7 +657,7 @@ void ParserJson::exitObject()
     }
 }
 
-void ParserJson::enterKey(const char* key, int size)
+void ParserJson::enterKey(const char* key, ssize_t size)
 {
     enterKey(std::string(key, size));
 }

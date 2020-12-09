@@ -1,9 +1,11 @@
 var ejs = require('ejs')
 var fs = require('fs')
 var helper = require(__dirname + '/helper')
+var argv = require('minimist')(process.argv.slice(2));
 
-var fileData = process.argv[2]
-var pathOutput = process.argv[3]
+var fileData = argv['input']
+var pathOutput = argv['outpath']
+
 
 var fileTemplate = __dirname + '/proto.ejs'
 

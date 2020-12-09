@@ -74,7 +74,7 @@ const std::string& MetaStruct::getDescription() const
 }
 
 
-const MetaField* MetaStruct::getFieldByIndex(int index) const
+const MetaField* MetaStruct::getFieldByIndex(ssize_t index) const
 {
     if (index >= 0 && index < static_cast<int>(m_fields.size()))
     {
@@ -109,7 +109,7 @@ void MetaStruct::addField(MetaField&& field)
         return;
     }
 
-    field.index = m_fields.size();
+    field.index = static_cast<int>(m_fields.size());
 
     std::shared_ptr<MetaField> f = std::make_shared<MetaField>(std::move(field));
     m_fields.emplace_back(f);

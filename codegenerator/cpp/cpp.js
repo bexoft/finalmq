@@ -1,9 +1,11 @@
 var ejs = require('ejs')
 var fs = require('fs')
 var helper = require(__dirname + '/helper')
+var argv = require('minimist')(process.argv.slice(2));
 
-var fileData = process.argv[2]
-var pathOutput = process.argv[3]
+var fileData = argv['input']
+var pathOutput = argv['outpath']
+var exportMacro = argv['exportmacro']
 
 var fileTemplateCpp = __dirname + '/cpp_cpp.ejs'
 var fileTemplateH = __dirname + '/cpp_h.ejs'
@@ -26,7 +28,7 @@ if (pathOutput)
     fileOutputH   = pathOutput + '/' + splitFileOutputH[splitFileOutputH.length - 1]
 }
 
-var options = {data:data, helper:helper,fileOutputH:fileOutputH}
+var options = {data:data, exportMacro:exportMacro, helper:helper, fileOutputH:fileOutputH}
 var strCpp = ejs.render(strTemplateCpp, options)
 var strH = ejs.render(strTemplateH, options)
 

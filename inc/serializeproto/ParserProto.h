@@ -46,12 +46,12 @@ enum WireType
 class ParserProto
 {
 public:
-    ParserProto(IParserVisitor& visitor, const char* ptr, int size);
+    ParserProto(IParserVisitor& visitor, const char* ptr, ssize_t size);
 
     bool parseStruct(const std::string& typeName);
 
 private:
-    bool parseString(const char*& buffer, int& size);
+    bool parseString(const char*& buffer, ssize_t& size);
     void parseStructWire(const MetaField& field);
     bool parseStructIntern(const MetaStruct& stru);
     void parseArrayStruct(const MetaField& field);
@@ -85,7 +85,7 @@ private:
     void skip(WireType wireType);
 
     const char*         m_ptr = nullptr;
-    int                 m_size = 0;
+    ssize_t             m_size = 0;
     IParserVisitor&     m_visitor;
 
     std::uint32_t       m_tag = 0;

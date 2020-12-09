@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include "helpers/BexDefines.h"
+
 #include <memory>
 
 namespace finalmq {
@@ -30,8 +32,8 @@ struct IZeroCopyBuffer
 {
     virtual ~IZeroCopyBuffer() {}
 
-    virtual char* addBuffer(int size) = 0;
-    virtual void downsizeLastBuffer(int newSize) = 0;
+    virtual char* addBuffer(ssize_t size) = 0;
+    virtual void downsizeLastBuffer(ssize_t newSize) = 0;
 };
 
 

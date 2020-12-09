@@ -22,6 +22,8 @@
 
 #pragma once
 
+#if !defined(WIN32) && !defined(__MINGW32__)
+
 #include "Poller.h"
 #include <unordered_map>
 #include <array>
@@ -79,3 +81,6 @@ private:
 };
 
 }   // namespace finalmq
+
+
+#endif

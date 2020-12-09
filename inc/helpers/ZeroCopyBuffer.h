@@ -25,6 +25,7 @@
 #include "IZeroCopyBuffer.h"
 
 #include <list>
+#include <string>
 
 namespace finalmq {
 
@@ -35,8 +36,8 @@ public:
     std::string getData() const;
 
 private:
-    virtual char* addBuffer(int size) override;
-    virtual void downsizeLastBuffer(int newSize) override;
+    virtual char* addBuffer(ssize_t size) override;
+    virtual void downsizeLastBuffer(ssize_t newSize) override;
 
     std::list<std::string>  m_strings;
 };
