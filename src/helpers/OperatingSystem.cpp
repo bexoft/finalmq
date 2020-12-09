@@ -133,7 +133,7 @@ namespace finalmq {
     int OperatingSystemImpl::getLastError()
     {
         int err = -1;
-#if defined(MSVCPP) || defined(__MINGW32__)
+#if defined(WIN32) || defined(__MINGW32__)
         err = ::GetLastError();
 #else
         err = errno;

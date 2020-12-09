@@ -70,9 +70,11 @@ SET(CODEGENERATOR ${CMAKE_SOURCE_DIR}/codegenerator)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/inc)
 
+SET(CODEGENERATOR_CPP ${CODEGENERATOR}/cpp/cpp.js)
+
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/inc/metadataserialize)
 add_custom_command(
-    COMMAND node ${CODEGENERATOR}/cpp/cpp.js ${CMAKE_CURRENT_SOURCE_DIR}/inc/metadataserialize/metadata.fmq ${CMAKE_CURRENT_BINARY_DIR}/inc/metadataserialize
+    COMMAND node ${CODEGENERATOR_CPP} --input=${CMAKE_CURRENT_SOURCE_DIR}/inc/metadataserialize/metadata.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}/inc/metadataserialize --exportmacro=EXPORT_finalmq
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/inc/metadataserialize/metadata.fmq
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/inc/metadataserialize/metadata.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/inc/metadataserialize/metadata.fmq.h
     COMMENT "Generating cpp code out of metadata.fmq."
@@ -80,7 +82,7 @@ add_custom_command(
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/inc/remoteentity)
 add_custom_command(
-    COMMAND node ${CODEGENERATOR}/cpp/cpp.js ${CMAKE_CURRENT_SOURCE_DIR}/inc/remoteentity/entitydata.fmq ${CMAKE_CURRENT_BINARY_DIR}/inc/remoteentity
+    COMMAND node ${CODEGENERATOR_CPP} --input=${CMAKE_CURRENT_SOURCE_DIR}/inc/remoteentity/entitydata.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}/inc/remoteentity --exportmacro=EXPORT_finalmq
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/inc/remoteentity/entitydata.fmq
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/inc/remoteentity/entitydata.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/inc/remoteentity/entitydata.fmq.h
     COMMENT "Generating cpp code out of entitydata.fmq."

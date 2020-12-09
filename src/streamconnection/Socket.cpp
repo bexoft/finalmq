@@ -44,6 +44,23 @@
 
 
 
+
+#if defined(WIN32) || defined(__MINGW32__)
+class InitWinSocket
+{
+public:
+    InitWinSocket()
+    {
+        WSADATA wsaData;
+        WORD wVersion = MAKEWORD(2, 2);
+        WSAStartup(wVersion, &wsaData);
+    }
+};
+static InitWinSocket g_initWinSocket;
+#endif
+
+
+
 namespace finalmq {
 
 
