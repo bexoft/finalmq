@@ -62,7 +62,7 @@ add_custom_command(
 )
 
 add_custom_command(
-    COMMAND node ${CODEGENERATOR}/proto/proto.js --input=${CMAKE_CURRENT_SOURCE_DIR}/test.fmq --outpath${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND node ${CODEGENERATOR}/proto/proto.js --input=${CMAKE_CURRENT_SOURCE_DIR}/test.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/test.fmq
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test.proto
     COMMENT "Generating proto code out of test.fmq."
