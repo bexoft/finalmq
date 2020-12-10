@@ -39,7 +39,7 @@ struct IStructFactoryRegistry
 };
 
 
-class StructFactoryRegistryImpl : public IStructFactoryRegistry
+class SYMBOLEXP StructFactoryRegistryImpl : public IStructFactoryRegistry
 {
 public:
 
@@ -51,7 +51,7 @@ private:
     std::unordered_map<std::string, FuncStructBaseFactory> m_factories;
 };
 
-class StructFactoryRegistry
+class SYMBOLEXP StructFactoryRegistry
 {
 public:
     inline static IStructFactoryRegistry& instance()

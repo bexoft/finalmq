@@ -42,7 +42,7 @@ class VariantValueList : public IVariantValue
 public:
     VariantValueList();
     VariantValueList(const VariantValueList& rhs);
-    VariantValueList(VariantValueList&& rhs);
+    VariantValueList(VariantValueList&& rhs) noexcept;
     VariantValueList(const VariantList& value);
     VariantValueList(VariantList&& value);
 

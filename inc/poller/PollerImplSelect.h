@@ -31,7 +31,7 @@
 
 namespace finalmq {
 
-class PollerImplSelect : public IPoller
+class SYMBOLEXP PollerImplSelect : public IPoller
 {
 public:
     PollerImplSelect();
@@ -70,13 +70,13 @@ private:
     std::unordered_map<SocketDescriptorPtr, int> m_socketDescriptors;
 
     PollerResult m_result;
-    fd_set m_readfdsCached;
-    fd_set m_writefdsCached;
-    fd_set m_readfdsOriginal;
-    fd_set m_writefdsOriginal;
-    fd_set m_readfds;
-    fd_set m_writefds;
-    fd_set m_errorfds;
+    fd_set m_readfdsCached{};
+    fd_set m_writefdsCached{};
+    fd_set m_readfdsOriginal{};
+    fd_set m_writefdsOriginal{};
+    fd_set m_readfds{};
+    fd_set m_writefds{};
+    fd_set m_errorfds{};
     std::atomic_flag m_socketDescriptorsStable;
     std::atomic_flag m_sdMaxStable;
     bool m_releaseWaitExternal = false;

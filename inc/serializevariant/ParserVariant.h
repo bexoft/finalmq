@@ -34,7 +34,7 @@
 namespace finalmq {
 
 
-class ParserVariant
+class SYMBOLEXP ParserVariant
 {
 public:
     ParserVariant(IParserVisitor& visitor, const Variant& variant);

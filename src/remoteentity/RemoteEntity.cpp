@@ -347,7 +347,7 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
     }
     else
     {
-        triggerReply(correlationId, Status::STATUS_PEER_DISCONNECTED, nullptr);
+        replyReceived(correlationId, Status::STATUS_PEER_DISCONNECTED, nullptr);
     }
     return ok;
 }
@@ -370,7 +370,7 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
 }
 
 
-void RemoteEntity::triggerReply(CorrelationId correlationId, Status status, const StructBasePtr& structBase)
+void RemoteEntity::replyReceived(CorrelationId correlationId, Status status, const StructBasePtr& structBase)
 {
     std::unique_ptr<Request> request;
     std::unique_lock<std::mutex> lock(m_mutex);
@@ -399,14 +399,14 @@ PeerId RemoteEntity::connectIntern(const IProtocolSessionPtr& session, const std
     if (added)
     {
         requestReply<ConnectEntityReply>(peerId, ConnectEntity{m_entityName},
-                                         [this, funcReplyConnect{std::move(funcReplyConnect)}] (PeerId peerId, remoteentity::Status status, const std::shared_ptr<ConnectEntityReply>& reply) {
+                                         [this, funcReplyConnect{std::move(funcReplyConnect)}] (PeerId peerId, remoteentity::Status status, const std::shared_ptr<ConnectEntityReply>& replyReceived) {
             if (funcReplyConnect)
             {
                 funcReplyConnect(peerId, status);
             }
-            if (reply)
+            if (replyReceived)
             {
-                m_peerManager->updatePeer(peerId, reply->entityid, reply->entityName);
+                m_peerManager->updatePeer(peerId, replyReceived->entityid, replyReceived->entityName);
             }
             else if (status == Status::STATUS_ENTITY_NOT_FOUND)
             {
@@ -565,7 +565,7 @@ void RemoteEntity::receivedRequest(const IProtocolSessionPtr& session, const rem
 
 void RemoteEntity::receivedReply(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBasePtr& structBase)
 {
-    triggerReply(header.corrid, header.status, structBase);
+    replyReceived(header.corrid, header.status, structBase);
 
     if (header.status == Status::STATUS_ENTITY_NOT_FOUND &&
         header.srcid != ENTITYID_INVALID)

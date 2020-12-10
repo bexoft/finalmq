@@ -39,7 +39,7 @@ LogStream::LogStream(const LogStream& rhs)
 }
 
 
-LogStream::LogStream(LogStream&& rhs)
+LogStream::LogStream(LogStream&& rhs) noexcept
     : m_context(rhs.m_context)
     , m_buffer(rhs.m_buffer)
 {

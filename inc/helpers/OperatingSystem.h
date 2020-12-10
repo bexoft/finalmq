@@ -51,7 +51,7 @@ typedef sockaddr            t_sockaddr;
 
 namespace finalmq {
 
-    class OperatingSystemImpl : public IOperatingSystem
+    class SYMBOLEXP OperatingSystemImpl : public IOperatingSystem
     {
     public:
         OperatingSystemImpl();
@@ -90,7 +90,7 @@ namespace finalmq {
     };
 
 
-    class OperatingSystem
+    class SYMBOLEXP OperatingSystem
     {
     public:
         inline static IOperatingSystem& instance()

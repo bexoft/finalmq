@@ -100,10 +100,10 @@ void RemoteEntityFormat::serialize(IMessage& message, int contentType, const rem
 {
     switch (contentType)
     {
-    case CONTENTTYPE_PROTO:
+    case RemoteEntityContentType::CONTENTTYPE_PROTO:
         serializeProto(message, header);
         break;
-    case CONTENTTYPE_JSON:
+    case RemoteEntityContentType::CONTENTTYPE_JSON:
         serializeJson(message, header);
         break;
     default:
@@ -117,10 +117,10 @@ void RemoteEntityFormat::serialize(IMessage& message, int contentType, const rem
 {
     switch (contentType)
     {
-    case CONTENTTYPE_PROTO:
+    case RemoteEntityContentType::CONTENTTYPE_PROTO:
         serializeProto(message, header, structBase);
         break;
-    case CONTENTTYPE_JSON:
+    case RemoteEntityContentType::CONTENTTYPE_JSON:
         serializeJson(message, header, structBase);
         break;
     default:
@@ -346,10 +346,10 @@ std::shared_ptr<StructBase> RemoteEntityFormat::parseMessage(const IMessage& mes
 
     switch (contentType)
     {
-    case CONTENTTYPE_PROTO:
+    case RemoteEntityContentType::CONTENTTYPE_PROTO:
         structBase = parseMessageProto(bufferRef, header, syntaxError);
         break;
-    case CONTENTTYPE_JSON:
+    case RemoteEntityContentType::CONTENTTYPE_JSON:
         structBase = parseMessageJson(bufferRef, header, syntaxError);
         break;
     default:

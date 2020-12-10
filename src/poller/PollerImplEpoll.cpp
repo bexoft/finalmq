@@ -352,6 +352,9 @@ void PollerImplEpoll::collectSockets(int res)
 
 const PollerResult& PollerImplEpoll::wait(std::int32_t timeout)
 {
+    // check if init happened
+    assert(m_fdEpoll != -1);
+
     int res = 0;
     int err = 0;
 
@@ -371,6 +374,10 @@ const PollerResult& PollerImplEpoll::wait(std::int32_t timeout)
         }
     } while (res == -1 && (err == SOCKETERROR(EINTR) || err == SOCKETERROR(EAGAIN)));
 
+    if (res == -1)
+    {
+        streamError << "epoll_pwait failed with errno: " << err;
+    }
 
     collectSockets(res);
 

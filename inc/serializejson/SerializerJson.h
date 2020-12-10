@@ -30,7 +30,7 @@
 
 namespace finalmq {
 
-class SerializerJson : public ParserConverter
+class SYMBOLEXP SerializerJson : public ParserConverter
 {
 public:
     SerializerJson(IZeroCopyBuffer& buffer, int maxBlockSize = 1024, bool enumAsString = true, bool skipDefaultValues = true);

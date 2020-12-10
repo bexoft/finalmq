@@ -51,7 +51,7 @@ StreamConnectionContainer::StreamConnectionContainer()
 #else
     : m_poller(std::make_shared<PollerImplEpoll>())
 #endif
-    , m_pollerLoopTerminated(CondVar::CONDVAR_MANUAL)
+    , m_pollerLoopTerminated(CondVar::CondVarMode::CONDVAR_MANUAL)
 {
 }
 
@@ -173,7 +173,7 @@ IStreamConnectionPtr StreamConnectionContainer::createConnection(const std::stri
     connectionData.totalReconnectDuration = connectionProperties.totalReconnectDuration;
     connectionData.startTime = std::chrono::system_clock::now();
     connectionData.ssl = connectionProperties.certificateData.ssl;
-    connectionData.connectionState = CONNECTIONSTATE_CREATED;
+    connectionData.connectionState = ConnectionState::CONNECTIONSTATE_CREATED;
     std::string addr = AddressHelpers::makeSocketAddress(connectionData.hostname, connectionData.port, connectionData.af);
     connectionData.sockaddr = addr;
 
@@ -365,7 +365,7 @@ void StreamConnectionContainer::handleConnectionEvents(const IStreamConnectionPr
 #ifdef USE_OPENSSL
         if (isSsl)
         {
-            if (connection->getConnectionData().connectionState == CONNECTIONSTATE_CONNECTING)
+            if (connection->getConnectionData().connectionState == ConnectionState::CONNECTIONSTATE_CONNECTING)
             {
                 SocketDescriptorPtr sd = socket->getSocketDescriptor();
                 assert(sd);
@@ -453,7 +453,7 @@ void StreamConnectionContainer::handleBindEvents(const DescriptorInfo& info)
                 connectionData.incomingConnection = true;
                 connectionData.startTime = std::chrono::system_clock::now();
                 connectionData.sockaddr = addr;
-                connectionData.connectionState = CONNECTIONSTATE_CONNECTED;
+                connectionData.connectionState = ConnectionState::CONNECTIONSTATE_CONNECTED;
 
 #ifdef USE_OPENSSL
                 if (connectionData.ssl)

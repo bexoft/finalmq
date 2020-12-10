@@ -40,7 +40,7 @@ class Socket;
 typedef std::shared_ptr<Socket> SocketPtr;
 
 
-class Socket
+class SYMBOLEXP Socket
 {
 public:
     Socket();

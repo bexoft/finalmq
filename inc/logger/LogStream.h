@@ -42,7 +42,7 @@
 namespace finalmq {
 
 
-class LogStream
+class SYMBOLEXP LogStream
 {
 public:
 
@@ -53,7 +53,7 @@ public:
 
     explicit LogStream(const LogContext& context);
     LogStream(const LogStream& rhs);
-    LogStream(LogStream&& rhs);
+    LogStream(LogStream&& rhs) noexcept;
 
     ~LogStream();
 

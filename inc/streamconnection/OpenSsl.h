@@ -68,7 +68,7 @@ struct IOpenSsl
 
 
 
-class OpenSslImpl : public IOpenSsl
+class SYMBOLEXP OpenSslImpl : public IOpenSsl
 {
 public:
     OpenSslImpl();
@@ -89,7 +89,7 @@ private:
 };
 
 
-class OpenSsl
+class SYMBOLEXP OpenSsl
 {
 public:
     inline static IOpenSsl& instance()

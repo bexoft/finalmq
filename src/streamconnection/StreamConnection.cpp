@@ -53,7 +53,7 @@ bool StreamConnection::sendMessage(const IMessagePtr& msg)
         {
             const auto& payloads = msg->getAllSendBuffers();
             if (!m_pendingMessages.empty() ||
-                m_connectionData.connectionState != CONNECTIONSTATE_CONNECTED)
+                m_connectionData.connectionState != ConnectionState::CONNECTIONSTATE_CONNECTED)
             {
                 m_pendingMessages.push_back({msg, payloads.begin(), 0});
             }
@@ -124,14 +124,14 @@ bool StreamConnection::connect()
 {
     bool connecting = false;
     std::unique_lock<std::mutex> lock(m_mutex);
-    if ((m_connectionData.connectionState == CONNECTIONSTATE_CREATED || m_connectionData.connectionState == CONNECTIONSTATE_CONNECTING_FAILED) &&
+    if ((m_connectionData.connectionState == ConnectionState::CONNECTIONSTATE_CREATED || m_connectionData.connectionState == ConnectionState::CONNECTIONSTATE_CONNECTING_FAILED) &&
         m_socketPrivate)
     {
         int ret = m_socketPrivate->connect((const sockaddr*)m_connectionData.sockaddr.c_str(), (int)m_connectionData.sockaddr.size());
         if (ret == 0)
         {
             connecting = true;
-            m_connectionData.connectionState = CONNECTIONSTATE_CONNECTING;
+            m_connectionData.connectionState = ConnectionState::CONNECTIONSTATE_CONNECTING;
             SocketDescriptorPtr sd = m_socketPrivate->getSocketDescriptor();
             assert(sd);
             m_poller->addSocketEnableRead(sd);
@@ -150,7 +150,7 @@ bool StreamConnection::sendPendingMessages()
     std::unique_lock<std::mutex> lock(m_mutex);
     if (m_socketPrivate)
     {
-        if (m_connectionData.connectionState == CONNECTIONSTATE_CONNECTED)
+        if (m_connectionData.connectionState == ConnectionState::CONNECTIONSTATE_CONNECTED)
         {
             while (!m_pendingMessages.empty() && !pending)
             {
@@ -206,9 +206,9 @@ bool StreamConnection::sendPendingMessages()
 bool StreamConnection::checkEdgeConnected()
 {
     bool edgeConnected = false;
-    if (m_connectionData.connectionState == CONNECTIONSTATE_CONNECTING)
+    if (m_connectionData.connectionState == ConnectionState::CONNECTIONSTATE_CONNECTING)
     {
-        m_connectionData.connectionState = CONNECTIONSTATE_CONNECTED;
+        m_connectionData.connectionState = ConnectionState::CONNECTIONSTATE_CONNECTED;
         edgeConnected = true;
     }
     return edgeConnected;
@@ -219,7 +219,7 @@ bool StreamConnection::doReconnect()
 {
     bool reconnecting = false;
     if (!m_connectionData.incomingConnection &&
-        m_connectionData.connectionState == CONNECTIONSTATE_CONNECTING_FAILED &&
+        m_connectionData.connectionState == ConnectionState::CONNECTIONSTATE_CONNECTING_FAILED &&
         m_connectionData.reconnectInterval >= 0)
     {
         std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
@@ -239,7 +239,7 @@ bool StreamConnection::changeStateForDisconnect()
 {
     bool removeConnection = false;
     bool reconnectExpired = false;
-    if (!m_disconnectFlag && (m_connectionData.connectionState == CONNECTIONSTATE_CONNECTING))
+    if (!m_disconnectFlag && (m_connectionData.connectionState == ConnectionState::CONNECTIONSTATE_CONNECTING))
     {
         std::chrono::duration<double> dur = std::chrono::system_clock::now() - m_connectionData.startTime;
         int delta = static_cast<int>(dur.count() * 1000);
@@ -250,17 +250,17 @@ bool StreamConnection::changeStateForDisconnect()
         else
         {
             assert(m_socketPrivate);
-            m_connectionData.connectionState = CONNECTIONSTATE_CONNECTING_FAILED;
+            m_connectionData.connectionState = ConnectionState::CONNECTIONSTATE_CONNECTING_FAILED;
             m_poller->removeSocket(m_socketPrivate->getSocketDescriptor());
         }
     }
 
-    if (m_disconnectFlag || (m_connectionData.connectionState == CONNECTIONSTATE_CONNECTED) || reconnectExpired)
+    if (m_disconnectFlag || (m_connectionData.connectionState == ConnectionState::CONNECTIONSTATE_CONNECTED) || reconnectExpired)
     {
         removeConnection = true;
 
         assert(m_socketPrivate);
-        m_connectionData.connectionState = CONNECTIONSTATE_DISCONNECTED;
+        m_connectionData.connectionState = ConnectionState::CONNECTIONSTATE_DISCONNECTED;
         m_poller->removeSocket(m_socketPrivate->getSocketDescriptor());
         m_socketPrivate = nullptr;
         std::unique_lock<std::mutex> lock(m_mutex);

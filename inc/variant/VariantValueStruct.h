@@ -41,7 +41,7 @@ class VariantValueStruct : public IVariantValue
 public:
     VariantValueStruct();
     VariantValueStruct(const VariantValueStruct& rhs);
-    VariantValueStruct(VariantValueStruct&& rhs);
+    VariantValueStruct(VariantValueStruct&& rhs) noexcept;
     VariantValueStruct(const VariantStruct& value);
     VariantValueStruct(VariantStruct&& value);
 

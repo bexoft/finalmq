@@ -38,15 +38,7 @@ static constexpr int INDEX2ID = 1;
 static constexpr int MAX_VARINT_SIZE = 10;
 static constexpr int STRUCT_SIZE_COPY = 128;
 
-enum WireType
-{
-    WIRETYPE_VARINT = 0,
-    WIRETYPE_FIXED64 = 1,
-    WIRETYPE_LENGTH_DELIMITED = 2,
-    WIRETYPE_START_GROUP = 3,
-    WIRETYPE_END_GROUP = 4,
-    WIRETYPE_FIXED32 = 5,
-};
+
 
 
 SerializerProto::SerializerProto(IZeroCopyBuffer& buffer, int maxBlockSize)

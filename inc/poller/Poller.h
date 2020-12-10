@@ -81,7 +81,7 @@ public:
     }
 
 private:
-    int                         m_size = 0;
+    ssize_t                     m_size = 0;
     std::vector<DescriptorInfo> m_descriptorInfos;
 };
 

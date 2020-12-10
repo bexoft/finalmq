@@ -144,7 +144,7 @@ private:
 };
 
 
-class StructBase
+class SYMBOLEXP StructBase
 {
 public:
     StructBase* add(ssize_t index);

@@ -27,7 +27,7 @@
 
 namespace finalmq {
 
-class JsonBuilder : public IJsonParserVisitor
+class SYMBOLEXP JsonBuilder : public IJsonParserVisitor
 {
 public:
     JsonBuilder(IZeroCopyBuffer& buffer, int maxBlockSize = 1024);

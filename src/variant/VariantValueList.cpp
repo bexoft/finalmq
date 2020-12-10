@@ -38,7 +38,7 @@ VariantValueList::VariantValueList(const VariantValueList& rhs)
 {
 }
 
-VariantValueList::VariantValueList(VariantValueList&& rhs)
+VariantValueList::VariantValueList(VariantValueList&& rhs) noexcept
     : m_value(std::move(rhs.m_value))
 {
 }

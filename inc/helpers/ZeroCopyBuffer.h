@@ -30,7 +30,7 @@
 namespace finalmq {
 
 
-class ZeroCopyBuffer : public IZeroCopyBuffer
+class SYMBOLEXP ZeroCopyBuffer : public IZeroCopyBuffer
 {
 public:
     std::string getData() const;

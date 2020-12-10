@@ -29,7 +29,7 @@
 namespace finalmq {
 
 
-class SocketDescriptor
+class SYMBOLEXP SocketDescriptor
 {
 public:
     SocketDescriptor(SOCKET sd);

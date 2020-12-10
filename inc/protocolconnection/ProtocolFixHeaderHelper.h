@@ -31,7 +31,7 @@
 
 namespace finalmq {
 
-class ProtocolFixHeaderHelper
+class SYMBOLEXP ProtocolFixHeaderHelper
 {
 public:
     ProtocolFixHeaderHelper(int sizeHeader, std::function<int(const std::string& header)> funcGetPayloadSize);

@@ -126,8 +126,8 @@ public:
 
     Variant(const Variant& rhs);
     const Variant& operator =(const Variant& rhs);
-    Variant(Variant&& rhs);
-    Variant& operator =(Variant&& rhs);
+    Variant(Variant&& rhs) noexcept;
+    Variant& operator =(Variant&& rhs) noexcept;
 
     void visit(IVariantVisitor& visitor, ssize_t index = 0, int level = 0, ssize_t size = 0, const std::string& name = "");
 

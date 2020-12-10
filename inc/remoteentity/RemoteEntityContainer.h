@@ -80,7 +80,6 @@ public:
     RemoteEntityContainer();
     virtual ~RemoteEntityContainer();
 
-private:
     // IRemoteEntityContainer
     virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000) override;
     virtual int bind(const std::string& endpoint, const IProtocolFactoryPtr protocolFactory, RemoteEntityContentType contentType, const BindProperties& bindProperties = {}) override;
@@ -93,14 +92,13 @@ private:
     virtual void unregisterEntity(EntityId entityId) override;
     virtual void registerConnectionEvent(FuncConnectionEvent funcConnectionEvent) override;
 
+private:
     // IProtocolSessionCallback
     virtual void connected(const IProtocolSessionPtr& session) override;
     virtual void disconnected(const IProtocolSessionPtr& session) override;
     virtual void received(const IProtocolSessionPtr& session, const IMessagePtr& message) override;
     virtual void socketConnected(const IProtocolSessionPtr& session) override;
     virtual void socketDisconnected(const IProtocolSessionPtr& session) override;
-
-private:
 
     inline void triggerConnectionEvent(const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) const;
 

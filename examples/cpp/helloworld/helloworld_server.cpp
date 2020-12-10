@@ -103,11 +103,13 @@ int main()
     });
 
     // Create and initialize entity container. Entities can be added with registerEntity().
-    std::shared_ptr<IRemoteEntityContainer> entityContainer = std::make_shared<RemoteEntityContainer>();
-    entityContainer->init();
+    // Entities are like remote objects, but they can be at the same time client and server.
+    // This means, an entity can send (client) and receive (server) a request command.
+    RemoteEntityContainer entityContainer;
+    entityContainer.init();
 
     // register lambda for connection events to see when a network node connects or disconnects.
-    entityContainer->registerConnectionEvent([] (const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) {
+    entityContainer.registerConnectionEvent([] (const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) {
         const ConnectionData connectionData = session->getConnectionData();
         std::cout << "connection event at " << connectionData.endpoint
                   << " remote: " << connectionData.endpointPeer
@@ -117,7 +119,7 @@ int main()
     // Create server entity and register it at the entityContainer with the service name "MyService"
     // note: multiple entities can be registered.
     EntityServer entityServer;
-    entityContainer->registerEntity(&entityServer, "MyService");
+    entityContainer.registerEntity(&entityServer, "MyService");
 
     // register peer events to see when a remote entity connects or disconnects.
     entityServer.registerPeerEvent([] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
@@ -126,11 +128,11 @@ int main()
 
     // Open listener port 7777 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
     // content type in payload: protobuf
-    entityContainer->bind("tcp://*:7777", std::make_shared<ProtocolHeaderBinarySizeFactory>(), RemoteEntityContentType::CONTENTTYPE_PROTO);
+    entityContainer.bind("tcp://*:7777", std::make_shared<ProtocolHeaderBinarySizeFactory>(), RemoteEntityContentType::CONTENTTYPE_PROTO);
 
     // Open listener port 8888 with delimiter framing protocol ProtocolDelimiter ('\n' is end of frame).
     // content type in payload: JSON
-    entityContainer->bind("tcp://*:8888", std::make_shared<ProtocolDelimiterFactory>("\n"), RemoteEntityContentType::CONTENTTYPE_JSON);
+    entityContainer.bind("tcp://*:8888", std::make_shared<ProtocolDelimiterFactory>("\n"), RemoteEntityContentType::CONTENTTYPE_JSON);
 
     // note:
     // multiple access points (listening ports) can be activated by calling bind() several times.
@@ -143,7 +145,7 @@ int main()
 
 
     // run
-    entityContainer->run();
+    entityContainer.run();
 
     return 0;
 }

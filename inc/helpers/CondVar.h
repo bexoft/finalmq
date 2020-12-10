@@ -23,12 +23,12 @@
 #pragma once
 
 #include <condition_variable>
-
+#include "helpers/BexDefines.h"
 
 namespace finalmq {
 
 
-class CondVar
+class SYMBOLEXP CondVar
 {
 public:
 
@@ -47,7 +47,7 @@ public:
     * The constructor of the class CondVar initalizes/creates the CondVar.
     * @param mode the mode of signal. If no parameter is passed to the constructor, then it is a manual signal.
     */
-    explicit CondVar(CondVarMode mode = CONDVAR_AUTOMATICRESET);
+    explicit CondVar(CondVarMode mode = CondVarMode::CONDVAR_AUTOMATICRESET);
     virtual ~CondVar(void);
 
     /**
@@ -97,7 +97,7 @@ private:
 
     mutable std::condition_variable     m_condvar;
     mutable bool                        m_value = false;
-    const CondVarMode                   m_mode = CONDVAR_MANUAL;
+    const CondVarMode                   m_mode = CondVarMode::CONDVAR_MANUAL;
     mutable std::mutex                  m_mutex;
 };
 

@@ -26,7 +26,7 @@
 namespace finalmq {
 
 
-class MetaDataExchange
+class SYMBOLEXP MetaDataExchange
 {
 public:
     static void importMetaData(const finalmq::SerializeMetaData& metadata);
