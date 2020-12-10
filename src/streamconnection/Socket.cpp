@@ -53,7 +53,11 @@ public:
     {
         WSADATA wsaData;
         WORD wVersion = MAKEWORD(2, 2);
-        WSAStartup(wVersion, &wsaData);
+        int res = WSAStartup(wVersion, &wsaData);
+        if (res != 0)
+        {
+            streamFatal << "WSAStartup failed with: " << res;
+        }
     }
 };
 static InitWinSocket g_initWinSocket;

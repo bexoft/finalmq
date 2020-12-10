@@ -30,7 +30,7 @@
 
 namespace finalmq {
 
-enum ConnectionState
+enum class ConnectionState
 {
     CONNECTIONSTATE_CREATED = 0,
     CONNECTIONSTATE_CONNECTING = 1,
@@ -55,12 +55,12 @@ struct ConnectionData
     int             portPeer = 0;
     std::string     sockaddr;
     bool            incomingConnection = false;
-    SOCKET          sd;
+    SOCKET          sd = INVALID_SOCKET;
     int             reconnectInterval = 5000;
     int             totalReconnectDuration = -1;
     std::chrono::time_point<std::chrono::system_clock> startTime;
     bool            ssl = false;
-    ConnectionState connectionState = CONNECTIONSTATE_CREATED;
+    ConnectionState connectionState = ConnectionState::CONNECTIONSTATE_CREATED;
 };
 
 }   // namespace finalmq

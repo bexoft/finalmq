@@ -39,7 +39,7 @@ VariantValueStruct::VariantValueStruct(const VariantValueStruct& rhs)
 {
 }
 
-VariantValueStruct::VariantValueStruct(VariantValueStruct&& rhs)
+VariantValueStruct::VariantValueStruct(VariantValueStruct&& rhs) noexcept
     : m_value(std::move(rhs.m_value))
 {
 }

@@ -60,13 +60,13 @@ const Variant& Variant::operator =(const Variant& rhs)
     return *this;
 }
 
-Variant::Variant(Variant&& rhs)
+Variant::Variant(Variant&& rhs) noexcept
     : m_value(std::move(rhs.m_value))
 {
 
 }
 
-Variant& Variant::operator =(Variant&& rhs)
+Variant& Variant::operator =(Variant&& rhs) noexcept
 {
     if (this == &rhs)
     {
