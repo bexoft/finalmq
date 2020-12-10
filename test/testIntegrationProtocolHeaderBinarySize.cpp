@@ -147,7 +147,7 @@ TEST_F(TestIntegrationProtocolHeaderBinarySize, testConnectBind)
 
     waitTillDone(expectConnected, 5000);
 
-    EXPECT_EQ(connection->getConnectionData().connectionState, CONNECTIONSTATE_CONNECTED);
+    EXPECT_EQ(connection->getConnectionData().connectionState, ConnectionState::CONNECTIONSTATE_CONNECTED);
     EXPECT_EQ(m_sessionContainer->getSession(connection->getSessionId()), connection);
 }
 
@@ -170,7 +170,7 @@ TEST_F(TestIntegrationProtocolHeaderBinarySize, testSendConnectBind)
 
     waitTillDone(expectReceive, 5000);
 
-    EXPECT_EQ(connection->getConnectionData().connectionState, CONNECTIONSTATE_CONNECTED);
+    EXPECT_EQ(connection->getConnectionData().connectionState, ConnectionState::CONNECTIONSTATE_CONNECTED);
     EXPECT_EQ(m_sessionContainer->getSession(connection->getSessionId()), connection);
 }
 
@@ -188,7 +188,7 @@ TEST_F(TestIntegrationProtocolHeaderBinarySize, testReconnectExpires)
 
     waitTillDone(expectDisconnected, 5000);
 
-    EXPECT_EQ(connection->getConnectionData().connectionState, CONNECTIONSTATE_DISCONNECTED);
+    EXPECT_EQ(connection->getConnectionData().connectionState, ConnectionState::CONNECTIONSTATE_DISCONNECTED);
     EXPECT_EQ(m_sessionContainer->getSession(connection->getSessionId()), nullptr);
 }
 
@@ -219,7 +219,7 @@ TEST_F(TestIntegrationProtocolHeaderBinarySize, testBindConnectDisconnect)
 
     waitTillDone(expectDisconnected, 5000);
 
-    EXPECT_EQ(connection->getConnectionData().connectionState, CONNECTIONSTATE_DISCONNECTED);
+    EXPECT_EQ(connection->getConnectionData().connectionState, ConnectionState::CONNECTIONSTATE_DISCONNECTED);
     EXPECT_EQ(m_sessionContainer->getSession(connection->getSessionId()), nullptr);
 }
 

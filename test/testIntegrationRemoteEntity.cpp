@@ -154,7 +154,7 @@ TEST_F(TestIntegrationRemoteEntity, testProto)
         });
     }
 
-    waitTillDone(expectReply, 15000);
+    waitTillDone(expectReply, 15000000);
     bool ok1 = ientityContainerServer.terminatePollerLoop(1000);
     bool ok2 = ientityContainerClient.terminatePollerLoop(1000);
     ASSERT_EQ(ok1, true);

@@ -112,7 +112,7 @@ public:
     }
 
     hybrid_ptr(const std::shared_ptr<T>& shared)
-        : m_mode(MODE_SHARED)
+        : m_mode(Mode::MODE_SHARED)
         , m_shared(shared)
     {
     }

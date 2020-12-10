@@ -184,7 +184,7 @@ TEST_F(TestIntegrationStreamConnectionContainer, testConnectBind)
 
     waitTillDone(expectConnected, 5000);
 
-    EXPECT_EQ(connection->getConnectionData().connectionState, CONNECTIONSTATE_CONNECTED);
+    EXPECT_EQ(connection->getConnectionData().connectionState, ConnectionState::CONNECTIONSTATE_CONNECTED);
     EXPECT_EQ(m_connectionContainer->getConnection(connection->getConnectionData().connectionId), connection);
 }
 
@@ -213,7 +213,7 @@ TEST_F(TestIntegrationStreamConnectionContainer, testSendConnectBind)
 
     waitTillDone(expectReceive, 5000);
 
-    EXPECT_EQ(connection->getConnectionData().connectionState, CONNECTIONSTATE_CONNECTED);
+    EXPECT_EQ(connection->getConnectionData().connectionState, ConnectionState::CONNECTIONSTATE_CONNECTED);
     EXPECT_EQ(m_connectionContainer->getConnection(connection->getConnectionData().connectionId), connection);
     EXPECT_EQ(m_messagesServer.size(), 1);
     EXPECT_EQ(m_messagesServer[0], MESSAGE1_BUFFER);
@@ -234,7 +234,7 @@ TEST_F(TestIntegrationStreamConnectionContainer, testReconnectExpires)
 
     waitTillDone(expectDisconnected, 5000);
 
-    EXPECT_EQ(connection->getConnectionData().connectionState, CONNECTIONSTATE_DISCONNECTED);
+    EXPECT_EQ(connection->getConnectionData().connectionState, ConnectionState::CONNECTIONSTATE_DISCONNECTED);
     EXPECT_EQ(m_connectionContainer->getConnection(connection->getConnectionData().connectionId), nullptr);
 }
 
@@ -272,7 +272,7 @@ TEST_F(TestIntegrationStreamConnectionContainer, testBindConnectDisconnect)
     waitTillDone(expectDisconnectedClient, 5000);
     waitTillDone(expectDisconnectedServer, 5000);
 
-    EXPECT_EQ(connection->getConnectionData().connectionState, CONNECTIONSTATE_DISCONNECTED);
+    EXPECT_EQ(connection->getConnectionData().connectionState, ConnectionState::CONNECTIONSTATE_DISCONNECTED);
     EXPECT_EQ(m_connectionContainer->getConnection(connection->getConnectionData().connectionId), nullptr);
     EXPECT_EQ(m_messagesServer.size(), 1);
     EXPECT_EQ(m_messagesServer[0], MESSAGE1_BUFFER);
