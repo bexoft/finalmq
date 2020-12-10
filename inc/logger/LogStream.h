@@ -42,7 +42,7 @@
 namespace finalmq {
 
 
-class LogStream
+class SYMBOLEXP LogStream
 {
 public:
 

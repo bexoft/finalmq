@@ -31,7 +31,7 @@
 namespace finalmq {
 
 
-class ParserProcessDefaultValues : public IParserVisitor
+class SYMBOLEXP ParserProcessDefaultValues : public IParserVisitor
 {
 public:
     ParserProcessDefaultValues(bool skipDefaultValues, IParserVisitor* visitor = nullptr);

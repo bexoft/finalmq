@@ -29,7 +29,7 @@ namespace finalmq {
 
 
 
-class ParserConverter : public IParserVisitor
+class SYMBOLEXP ParserConverter : public IParserVisitor
 {
 public:
     ParserConverter(IParserVisitor* visitor = nullptr);

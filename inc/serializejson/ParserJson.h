@@ -32,7 +32,7 @@
 
 namespace finalmq {
 
-class ParserJson : public IJsonParserVisitor
+class SYMBOLEXP ParserJson : public IJsonParserVisitor
 {
 public:
     ParserJson(IParserVisitor& visitor, const char* ptr, ssize_t size = CHECK_ON_ZEROTERM);

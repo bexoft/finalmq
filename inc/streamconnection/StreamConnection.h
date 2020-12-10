@@ -97,7 +97,7 @@ struct IStreamConnectionPrivate : public IStreamConnection
 typedef std::shared_ptr<IStreamConnectionPrivate> IStreamConnectionPrivatePtr;
 
 
-class StreamConnection : public IStreamConnectionPrivate
+class SYMBOLEXP StreamConnection : public IStreamConnectionPrivate
 {
 public:
     StreamConnection(const ConnectionData& connectionData, std::shared_ptr<Socket> socket, const IPollerPtr& poller, hybrid_ptr<IStreamConnectionCallback> callback);

@@ -75,7 +75,7 @@ typedef std::shared_ptr<ProtocolBind> ProtocolBindPtr;
 
 
 
-class ProtocolSessionContainer : public IProtocolSessionContainer
+class SYMBOLEXP ProtocolSessionContainer : public IProtocolSessionContainer
 {
 public:
     ProtocolSessionContainer();

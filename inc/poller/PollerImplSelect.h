@@ -31,7 +31,7 @@
 
 namespace finalmq {
 
-class PollerImplSelect : public IPoller
+class SYMBOLEXP PollerImplSelect : public IPoller
 {
 public:
     PollerImplSelect();

@@ -23,12 +23,12 @@
 #pragma once
 
 #include <condition_variable>
-
+#include "helpers/BexDefines.h"
 
 namespace finalmq {
 
 
-class CondVar
+class SYMBOLEXP CondVar
 {
 public:
 

@@ -32,7 +32,7 @@ struct sockaddr;
 namespace finalmq {
 
 
-class AddressHelpers
+class SYMBOLEXP AddressHelpers
 {
 public:
     static int parseEndpoint(const std::string& endpoint, std::string& protocol, std::string& address);

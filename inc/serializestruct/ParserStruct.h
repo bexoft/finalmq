@@ -34,7 +34,7 @@
 namespace finalmq {
 
 
-class ParserStruct
+class SYMBOLEXP ParserStruct
 {
 public:
     ParserStruct(IParserVisitor& visitor, const StructBase& structBase);

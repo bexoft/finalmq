@@ -76,7 +76,7 @@ struct ILogger
  * to e.g. stdout, file, log4cpp, ...
  * Triggering log data to the consumers is implemented in a lock free way.
  */
-class LoggerImpl : public ILogger
+class SYMBOLEXP LoggerImpl : public ILogger
 {
 public:
     LoggerImpl();

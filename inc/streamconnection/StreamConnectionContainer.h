@@ -55,7 +55,7 @@ struct IStreamConnectionContainer
 
 
 
-class StreamConnectionContainer : public IStreamConnectionContainer
+class SYMBOLEXP StreamConnectionContainer : public IStreamConnectionContainer
 {
 public:
     StreamConnectionContainer();

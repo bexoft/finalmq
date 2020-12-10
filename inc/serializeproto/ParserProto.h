@@ -43,7 +43,7 @@ enum WireType
 
 
 
-class ParserProto
+class SYMBOLEXP ParserProto
 {
 public:
     ParserProto(IParserVisitor& visitor, const char* ptr, ssize_t size);

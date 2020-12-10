@@ -29,7 +29,7 @@
 
 namespace finalmq {
 
-class ProtocolMessage : public IMessage
+class SYMBOLEXP ProtocolMessage : public IMessage
 {
 public:
     ProtocolMessage(int protocolId, ssize_t sizeHeader = 0, ssize_t sizeTrailer = 0);

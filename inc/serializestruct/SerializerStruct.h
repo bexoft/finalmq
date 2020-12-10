@@ -30,7 +30,7 @@
 
 namespace finalmq {
 
-class SerializerStruct : public ParserConverter
+class SYMBOLEXP SerializerStruct : public ParserConverter
 {
 public:
     SerializerStruct(StructBase& root);

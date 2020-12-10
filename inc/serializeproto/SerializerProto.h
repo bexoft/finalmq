@@ -30,7 +30,7 @@
 
 namespace finalmq {
 
-class SerializerProto : public ParserConverter
+class SYMBOLEXP SerializerProto : public ParserConverter
 {
 public:
     SerializerProto(IZeroCopyBuffer& buffer, int maxBlockSize = 1024);

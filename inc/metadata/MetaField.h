@@ -46,7 +46,7 @@ enum MetaFieldFlags : std::int32_t
 };
 
 
-class SYMBOLEXP MetaField
+class MetaField
 {
 public:
     MetaTypeId      typeId;                                 ///< type id of the parameter

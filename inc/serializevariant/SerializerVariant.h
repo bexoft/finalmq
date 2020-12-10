@@ -31,7 +31,7 @@
 namespace finalmq {
 
 
-class SerializerVariant : public ParserConverter
+class SYMBOLEXP SerializerVariant : public ParserConverter
 {
 public:
     SerializerVariant(Variant& root, bool enumAsString = true, bool skipDefaultValues = true);
