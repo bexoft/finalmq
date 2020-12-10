@@ -62,16 +62,18 @@ int main()
     });
 
     // Create and initialize entity container. Entities can be added with registerEntity().
-    std::shared_ptr<IRemoteEntityContainer> entityContainer = std::make_shared<RemoteEntityContainer>();
-    entityContainer->init();
+    // Entities are like remote objects, but they can be at the same time client and server.
+    // This means, an entity can send (client) and receive (server) a request command.
+    RemoteEntityContainer entityContainer;
+    entityContainer.init();
 
     // run entity container in separate thread
     std::thread thread([&entityContainer] () {
-        entityContainer->run();
+        entityContainer.run();
     });
 
     // register lambda for connection events to see when a network node connects or disconnects.
-    entityContainer->registerConnectionEvent([] (const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) {
+    entityContainer.registerConnectionEvent([] (const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) {
         const ConnectionData connectionData = session->getConnectionData();
         std::cout << "connection event at " << connectionData.endpoint
                   << " remote: " << connectionData.endpointPeer
@@ -81,7 +83,7 @@ int main()
     // Create server entity and register it at the entityContainer with the service name "MyService"
     // note: multiple entities can be registered.
     RemoteEntity entityClient;
-    entityContainer->registerEntity(&entityClient);
+    entityContainer.registerEntity(&entityClient);
 
     // register peer events to see when a remote entity connects or disconnects.
     entityClient.registerPeerEvent([] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
@@ -95,7 +97,7 @@ int main()
     // A client can be started before the server is started. The connect is been retried in the background till the server
     // becomes available. Use the ConnectProperties to change the reconnect properties
     // (default is: try to connect every 5s forever till the server becomes available).
-    IProtocolSessionPtr sessionClient = entityContainer->connect("tcp://localhost:7777", std::make_shared<ProtocolHeaderBinarySize>(), RemoteEntityContentType::CONTENTTYPE_PROTO);
+    IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:7777", std::make_shared<ProtocolHeaderBinarySize>(), RemoteEntityContentType::CONTENTTYPE_PROTO);
 
     // connect entityClient to remote server entity "MyService" with the created TCP session.
     // The returned peerId identifies the peer entity.
@@ -149,7 +151,7 @@ int main()
     std::this_thread::sleep_for(std::chrono::milliseconds(20000));
 
     // release the thread
-    entityContainer->terminatePollerLoop(1000);
+    entityContainer.terminatePollerLoop(1000);
     thread.join();
 
     return 0;

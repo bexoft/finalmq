@@ -25,6 +25,8 @@
 #include "poller/PollerImplSelect.h"
 
 #include "helpers/OperatingSystem.h"
+#include "helpers/ModulenameFinalmq.h"
+#include "logger/LogStream.h"
 
 #if !defined(WIN32) && !defined(__MINGW32__)
 #include <netinet/tcp.h>
@@ -357,9 +359,12 @@ void PollerImplSelect::collectSockets(int res)
 
 const PollerResult& PollerImplSelect::wait(std::int32_t timeout)
 {
+    // check if init happened
+    assert(m_controlSocketRead);
     do
     {
         int res = 0;
+        int err = 0;
         do
         {
             if (!m_socketDescriptorsStable.test_and_set(std::memory_order_acquire))
@@ -383,7 +388,17 @@ const PollerResult& PollerImplSelect::wait(std::int32_t timeout)
 
             res = OperatingSystem::instance().select(m_sdMax + 1, &m_readfds, &m_writefds, nullptr, &tim);
 
-        } while (res == -1 && OperatingSystem::instance().getLastError() == SOCKETERROR(EINTR));
+            if (res == -1)
+            {
+                err = OperatingSystem::instance().getLastError();
+            }
+
+        } while (res == -1 && (err == SOCKETERROR(EINTR) || err == SOCKETERROR(EAGAIN)));
+
+        if (res == -1)
+        {
+            streamError << "select failed with errno: " << err;
+        }
 
         collectSockets(res);
 
