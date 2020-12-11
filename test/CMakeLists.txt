@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
+
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/ssltest.cert.pem DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/ssltest.key.pem DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/ssltest.cert.pem DESTINATION ${CMAKE_BINARY_DIR})
@@ -17,6 +18,12 @@ if (CMAKE_VERSION VERSION_LESS 2.8.11)
     include_directories("${gtest_SOURCE_DIR}/include")
 endif()
 
+if (WIN32)
+#set(Protobuf_LIBRARIES "C:/Users/David/source/repos/protobuf/cmake/build/Debug")
+#set(PROTOBUF_LIBRARIES ${Protobuf_LIBRARIES})
+set(Protobuf_INCLUDE_DIR "C:/Users/David/source/repos/protobuf/src")
+include_directories(${Protobuf_INCLUDE_DIR} "${CMAKE_CURRENT_BINARY_DIR}/googletest-src/googlemock/include")
+endif()
 
 find_package(Protobuf REQUIRED)
 
@@ -82,7 +89,20 @@ file(GLOB TESTSOURCES "*.cpp")
 #file(GLOB GENCODE ${CMAKE_CURRENT_BINARY_DIR}/test.fmq.cpp)
 
 # Now simply link against gtest or gtest_main as needed. Eg
+if (WIN32)
+SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -D_ALLOW_KEYWORD_MACROS" )
+endif()
 add_executable(testfinalmq ${TESTSOURCES} ${PROTO_SRCS} ${PROTO_HDRS} ${CMAKE_CURRENT_BINARY_DIR}/test.fmq.cpp)
-target_link_libraries(testfinalmq gtest_main finalmq gmock ssl ${PROTOBUF_LIBRARIES})
+
+
+if (WIN32)
+if (FINALMQ_USE_SSL)
+    message("Protobuf libs: " ${PROTOBUF_LIBRARIES})
+    target_link_libraries(testfinalmq wsock32 gtest_main finalmq gmock ws2_32 ${PROTOBUF_LIBRARIES} ${OPENSSL_DIR}/lib/libssl.lib ${OPENSSL_DIR}/lib/libcrypto.lib)
+endif()
+else()
+    target_link_libraries(testfinalmq gtest_main finalmq gmock ssl ${PROTOBUF_LIBRARIES})
+endif()
+
 #add_test(NAME example_test COMMAND example)
 

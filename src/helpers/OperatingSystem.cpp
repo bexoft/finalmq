@@ -138,7 +138,7 @@ namespace finalmq {
 #else
         err = errno;
 #endif
-        if (err == SOCKETERROR(EINPROGRESS) || err == SOCKETERROR(EAGAIN))
+        if (err == SOCKETERROR(EINPROGRESS) || err == EAGAIN)
         {
             err = SOCKETERROR(EWOULDBLOCK);
         }

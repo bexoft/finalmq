@@ -28,7 +28,7 @@
 #if defined(WIN32) || defined(__MINGW32__)
 #include <winsock2.h>
 #include <windows.h>
-#define SOCKETERROR(err)	err
+#define SOCKETERROR(err)	WSA##err
 typedef	int					socklen_t;
 typedef sockaddr            t_sockaddr;
 

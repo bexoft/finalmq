@@ -20,6 +20,8 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
+#if !defined(WIN32)
+
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
@@ -442,3 +444,4 @@ TEST_F(TestEpoll, testAddSocketDisableWritableWait)
 }
 
 
+#endif

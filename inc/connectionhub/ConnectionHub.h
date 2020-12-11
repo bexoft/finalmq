@@ -49,8 +49,8 @@ struct IConnectionHub
 
 
 
-class ConnectionHub : public IConnectionHub
-                    , private IProtocolSessionCallback
+class SYMBOLEXP ConnectionHub : public IConnectionHub
+                              , private IProtocolSessionCallback
 {
 public:
     ConnectionHub();
