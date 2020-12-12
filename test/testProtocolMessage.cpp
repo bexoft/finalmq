@@ -464,7 +464,7 @@ TEST_F(TestProtocolMessage, addSendPayloadMultipleWithDownsizeZeroAdAnotherSendP
     IMessage& imessage = message;
     char* buffer1 = imessage.addSendPayload(4);
     imessage.downsizeLastSendPayload(4);
-    char* buffer2 = imessage.addSendPayload(4);
+    imessage.addSendPayload(4);
     imessage.downsizeLastSendPayload(0);
     char* buffer3 = imessage.addSendPayload(4);
     imessage.downsizeLastSendPayload(2);
