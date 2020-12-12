@@ -343,6 +343,16 @@ void PollerImplSelect::collectSockets(int res)
                     descriptorInfo->writable = true;
                 }
             }
+            if (FD_ISSET(sd, &m_errorfds))
+            {
+                cntFd++;
+                if (descriptorInfo == nullptr)
+                {
+                    descriptorInfo = &m_result.descriptorInfos.add();
+                    descriptorInfo->sd = sd;
+                    descriptorInfo->disconnected = true;
+                }
+            }
         }
     }
     else if (res == 0)
@@ -381,19 +391,20 @@ const PollerResult& PollerImplSelect::wait(std::int32_t timeout)
             // copy fds
             copyFds(m_readfds, m_readfdsOriginal);
             copyFds(m_writefds, m_writefdsOriginal);
+            copyFds(m_errorfds, m_readfdsOriginal);
 
             timeval tim;
             tim.tv_sec = 0;
             tim.tv_usec = timeout * MILLITOMICRO;
 
-            res = OperatingSystem::instance().select(m_sdMax + 1, &m_readfds, &m_writefds, nullptr, &tim);
+            res = OperatingSystem::instance().select(m_sdMax + 1, &m_readfds, &m_writefds, &m_errorfds, &tim);
 
             if (res == -1)
             {
                 err = OperatingSystem::instance().getLastError();
             }
 
-        } while (res == -1 && (err == SOCKETERROR(EINTR) || err == SOCKETERROR(EAGAIN)));
+        } while (res == -1 && (err == SOCKETERROR(EINTR) || err == EAGAIN));
 
         if (res == -1)
         {

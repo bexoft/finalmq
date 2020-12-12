@@ -218,6 +218,8 @@ namespace finalmq {
         socket1 = std::make_shared<SocketDescriptor>(fdServer);
         socket2 = fileDescriptorClient;
 
+        setNonBlocking(fdClient, true);
+        setNonBlocking(fdServer, true);
         setLinger(fdServer, true, 0);
         setNoDelay(fdServer, true);
 
@@ -253,6 +255,13 @@ namespace finalmq {
         int res = socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, sds);
         if (res == 0)
         {
+            setNonBlocking(sds[0], true);
+            setLinger(sds[0], true, 0);
+            setNoDelay(sds[0], true);
+            setNonBlocking(sds[1], true);
+            setLinger(sds[1], true, 0);
+            setNoDelay(sds[1], true);
+
             socket1 = std::make_shared<SocketDescriptor>(sds[0]);
             socket2 = std::make_shared<SocketDescriptor>(sds[1]);
         }
