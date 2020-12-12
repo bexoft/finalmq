@@ -19,9 +19,7 @@ if (CMAKE_VERSION VERSION_LESS 2.8.11)
 endif()
 
 if (WIN32)
-#set(Protobuf_LIBRARIES "C:/Users/David/source/repos/protobuf/cmake/build/Debug")
-#set(PROTOBUF_LIBRARIES ${Protobuf_LIBRARIES})
-set(Protobuf_INCLUDE_DIR "C:/Users/David/source/repos/protobuf/src")
+set(Protobuf_INCLUDE_DIR $ENV{Protobuf_INCLUDE_DIR})
 include_directories(${Protobuf_INCLUDE_DIR} "${CMAKE_CURRENT_BINARY_DIR}/googletest-src/googlemock/include")
 endif()
 
