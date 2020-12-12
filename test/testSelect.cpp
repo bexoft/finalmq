@@ -96,8 +96,8 @@ protected:
 
 TEST_F(TestSelect, timeout)
 {
-    fd_set fdsReadIn;
-    fd_set fdsWriteIn;
+    fd_set fdsReadIn{};
+    fd_set fdsWriteIn{};
     FD_ZERO(&fdsReadIn);
     FD_ZERO(&fdsWriteIn);
     FD_SET(CONTROLSOCKET_READ, &fdsReadIn);
@@ -106,7 +106,12 @@ TEST_F(TestSelect, timeout)
     tim.tv_sec = 0;
     tim.tv_usec = TIMEOUT * MILLITOMICRO;
 
-    EXPECT_CALL(*m_mockMockOperatingSystem, select(CONTROLSOCKET_READ + 1, FdSet(&fdsReadIn), FdSet(&fdsWriteIn), FdSet(&fdsReadIn), Time(&tim))).Times(1)
+    int sdMax = CONTROLSOCKET_READ + 1;
+#if defined(WIN32)
+    sdMax = 1;
+#endif
+
+    EXPECT_CALL(*m_mockMockOperatingSystem, select(sdMax, FdSet(&fdsReadIn), FdSet(&fdsWriteIn), FdSet(&fdsReadIn), Time(&tim))).Times(1)
                 .WillRepeatedly(Return(0));
 
     const PollerResult& result = m_select->wait(TIMEOUT);
@@ -125,8 +130,8 @@ TEST_F(TestSelect, testAddSocketReadableWait)
 
     m_select->addSocketEnableRead(socket);
 
-    fd_set fdsReadIn;
-    fd_set fdsWriteIn;
+    fd_set fdsReadIn{};
+    fd_set fdsWriteIn{};
     FD_ZERO(&fdsReadIn);
     FD_ZERO(&fdsWriteIn);
     FD_SET(CONTROLSOCKET_READ, &fdsReadIn);
@@ -136,12 +141,19 @@ TEST_F(TestSelect, testAddSocketReadableWait)
     tim.tv_sec = 0;
     tim.tv_usec = TIMEOUT * MILLITOMICRO;
 
-    fd_set fdsRead;
+    fd_set fdsRead{};
     FD_ZERO(&fdsRead);
     FD_SET(socket->getDescriptor(), &fdsRead);
 
-    EXPECT_CALL(*m_mockMockOperatingSystem, select(static_cast<int>(static_cast<int>(socket->getDescriptor())) + 1, FdSet(&fdsReadIn), FdSet(&fdsWriteIn), FdSet(&fdsReadIn), Time(&tim))).Times(1)
-                                                                  .WillRepeatedly(testing::DoAll(testing::SetArgPointee<1>(fdsRead), Return(1)));
+    fd_set fdsError{};
+    FD_ZERO(&fdsError);
+
+    int sdMax = static_cast<int>(static_cast<int>(socket->getDescriptor())) + 1;
+#if defined(WIN32)
+    sdMax = 1;
+#endif
+    EXPECT_CALL(*m_mockMockOperatingSystem, select(sdMax, FdSet(&fdsReadIn), FdSet(&fdsWriteIn), FdSet(&fdsReadIn), Time(&tim))).Times(1)
+                                                                  .WillRepeatedly(testing::DoAll(testing::SetArgPointee<1>(fdsRead), testing::SetArgPointee<3>(fdsError), Return(1)));
     EXPECT_CALL(*m_mockMockOperatingSystem, ioctlInt(socket->getDescriptor(), FIONREAD, _)).Times(1)
                                                         .WillRepeatedly(testing::DoAll(testing::SetArgPointee<2>(NUMBER_OF_BYTES_TO_READ), Return(0)));
 
@@ -168,8 +180,8 @@ TEST_F(TestSelect, testAddSocketReadableEINTR)
                                                         .WillRepeatedly(Return(1));
     m_select->addSocketEnableRead(socket);
 
-    fd_set fdsReadIn;
-    fd_set fdsWriteIn;
+    fd_set fdsReadIn{};
+    fd_set fdsWriteIn{};
     FD_ZERO(&fdsReadIn);
     FD_ZERO(&fdsWriteIn);
     FD_SET(CONTROLSOCKET_READ, &fdsReadIn);
@@ -179,17 +191,24 @@ TEST_F(TestSelect, testAddSocketReadableEINTR)
     tim.tv_sec = 0;
     tim.tv_usec = TIMEOUT * MILLITOMICRO;
 
-    fd_set fdsRead;
+    fd_set fdsRead{};
     FD_ZERO(&fdsRead);
     FD_SET(socket->getDescriptor(), &fdsRead);
+
+    fd_set fdsError{};
+    FD_ZERO(&fdsError);
 
     {
         InSequence seq;
 
-        EXPECT_CALL(*m_mockMockOperatingSystem, select(static_cast<int>(socket->getDescriptor()) + 1, FdSet(&fdsReadIn), FdSet(&fdsWriteIn), FdSet(&fdsReadIn), Time(&tim))).Times(1)
+        int sdMax = static_cast<int>(static_cast<int>(socket->getDescriptor())) + 1;
+#if defined(WIN32)
+        sdMax = 1;
+#endif
+        EXPECT_CALL(*m_mockMockOperatingSystem, select(sdMax, FdSet(&fdsReadIn), FdSet(&fdsWriteIn), FdSet(&fdsReadIn), Time(&tim))).Times(1)
                             .WillOnce(Return(-1));
-        EXPECT_CALL(*m_mockMockOperatingSystem, select(static_cast<int>(socket->getDescriptor()) + 1, FdSet(&fdsReadIn), FdSet(&fdsWriteIn), FdSet(&fdsReadIn), Time(&tim))).Times(1)
-                            .WillOnce(testing::DoAll(testing::SetArgPointee<1>(fdsRead), Return(1)));
+        EXPECT_CALL(*m_mockMockOperatingSystem, select(sdMax, FdSet(&fdsReadIn), FdSet(&fdsWriteIn), FdSet(&fdsReadIn), Time(&tim))).Times(1)
+                            .WillOnce(testing::DoAll(testing::SetArgPointee<1>(fdsRead), testing::SetArgPointee<3>(fdsError), Return(1)));
     }
     EXPECT_CALL(*m_mockMockOperatingSystem, getLastError()).Times(1)
                         .WillOnce(Return(SOCKETERROR(EINTR)));
@@ -220,8 +239,8 @@ TEST_F(TestSelect, testAddSocketReleaseByControlSocket)
                                                         .WillRepeatedly(Return(1));
     m_select->addSocketEnableRead(socket);
 
-    fd_set fdsReadIn;
-    fd_set fdsWriteIn;
+    fd_set fdsReadIn{};
+    fd_set fdsWriteIn{};
     FD_ZERO(&fdsReadIn);
     FD_ZERO(&fdsWriteIn);
     FD_SET(CONTROLSOCKET_READ, &fdsReadIn);
@@ -231,7 +250,7 @@ TEST_F(TestSelect, testAddSocketReleaseByControlSocket)
     tim.tv_sec = 0;
     tim.tv_usec = TIMEOUT * MILLITOMICRO;
 
-    fd_set fdsRead;
+    fd_set fdsRead{};
     FD_ZERO(&fdsRead);
     FD_SET(CONTROLSOCKET_READ, &fdsRead);
 
@@ -241,9 +260,13 @@ TEST_F(TestSelect, testAddSocketReleaseByControlSocket)
     {
         InSequence seq;
 
-        EXPECT_CALL(*m_mockMockOperatingSystem, select(static_cast<int>(socket->getDescriptor()) + 1, FdSet(&fdsReadIn), FdSet(&fdsWriteIn), _, Time(&tim))).Times(1)
+        int sdMax = static_cast<int>(static_cast<int>(socket->getDescriptor())) + 1;
+#if defined(WIN32)
+        sdMax = 1;
+#endif
+        EXPECT_CALL(*m_mockMockOperatingSystem, select(sdMax, FdSet(&fdsReadIn), FdSet(&fdsWriteIn), _, Time(&tim))).Times(1)
                             .WillOnce(testing::DoAll(testing::SetArgPointee<1>(fdsRead), testing::SetArgPointee<3>(fdsError), Return(1)));
-        EXPECT_CALL(*m_mockMockOperatingSystem, select(static_cast<int>(socket->getDescriptor()) + 1, FdSet(&fdsReadIn), FdSet(&fdsWriteIn), _, Time(&tim))).Times(1)
+        EXPECT_CALL(*m_mockMockOperatingSystem, select(sdMax, FdSet(&fdsReadIn), FdSet(&fdsWriteIn), _, Time(&tim))).Times(1)
                             .WillOnce(Return(0));
     }
     EXPECT_CALL(*m_mockMockOperatingSystem, ioctlInt(CONTROLSOCKET_READ, FIONREAD, _)).Times(1)
@@ -267,8 +290,8 @@ TEST_F(TestSelect, testAddSocketReadableError)
                                                         .WillRepeatedly(Return(1));
     m_select->addSocketEnableRead(socket);
 
-    fd_set fdsReadIn;
-    fd_set fdsWriteIn;
+    fd_set fdsReadIn{};
+    fd_set fdsWriteIn{};
     FD_ZERO(&fdsReadIn);
     FD_ZERO(&fdsWriteIn);
     FD_SET(CONTROLSOCKET_READ, &fdsReadIn);
@@ -278,10 +301,15 @@ TEST_F(TestSelect, testAddSocketReadableError)
     tim.tv_sec = 0;
     tim.tv_usec = TIMEOUT * MILLITOMICRO;
 
-    fd_set fdsRead;
+    fd_set fdsRead{};
     FD_ZERO(&fdsRead);
     FD_SET(socket->getDescriptor(), &fdsRead);
-    EXPECT_CALL(*m_mockMockOperatingSystem, select(static_cast<int>(socket->getDescriptor()) + 1, FdSet(&fdsReadIn), FdSet(&fdsWriteIn), FdSet(&fdsReadIn), Time(&tim))).Times(1)
+
+    int sdMax = static_cast<int>(static_cast<int>(socket->getDescriptor())) + 1;
+#if defined(WIN32)
+    sdMax = 1;
+#endif
+    EXPECT_CALL(*m_mockMockOperatingSystem, select(sdMax, FdSet(&fdsReadIn), FdSet(&fdsWriteIn), FdSet(&fdsReadIn), Time(&tim))).Times(1)
                         .WillOnce(Return(-1));
     EXPECT_CALL(*m_mockMockOperatingSystem, getLastError()).Times(1)
                         .WillOnce(Return(SOCKETERROR(EACCES)));
@@ -301,8 +329,8 @@ TEST_F(TestSelect, testAddSocketReadableWaitSocketDescriptorsChanged)
                                                         .WillRepeatedly(Return(1));
     m_select->addSocketEnableRead(socket);
 
-    fd_set fdsReadIn;
-    fd_set fdsWriteIn;
+    fd_set fdsReadIn{};
+    fd_set fdsWriteIn{};
     FD_ZERO(&fdsReadIn);
     FD_ZERO(&fdsWriteIn);
     FD_SET(CONTROLSOCKET_READ, &fdsReadIn);
@@ -312,17 +340,24 @@ TEST_F(TestSelect, testAddSocketReadableWaitSocketDescriptorsChanged)
     tim.tv_sec = 0;
     tim.tv_usec = TIMEOUT * MILLITOMICRO;
 
-    fd_set fdsRead;
+    fd_set fdsRead{};
     FD_ZERO(&fdsRead);
     FD_SET(socket->getDescriptor(), &fdsRead);
 
-    EXPECT_CALL(*m_mockMockOperatingSystem, select(static_cast<int>(socket->getDescriptor()) + 1, FdSet(&fdsReadIn), FdSet(&fdsWriteIn), FdSet(&fdsReadIn), Time(&tim))).Times(1)
+    fd_set fdsError{};
+    FD_ZERO(&fdsError);
+
+    int sdMax = static_cast<int>(static_cast<int>(socket->getDescriptor())) + 1;
+#if defined(WIN32)
+    sdMax = 1;
+#endif
+    EXPECT_CALL(*m_mockMockOperatingSystem, select(sdMax, FdSet(&fdsReadIn), FdSet(&fdsWriteIn), FdSet(&fdsReadIn), Time(&tim))).Times(1)
             .WillRepeatedly(
                 testing::DoAll(
                     testing::Invoke([this, &socket](int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, struct timeval* timeout){
                         m_select->removeSocket(socket);
                     }),
-                    testing::SetArgPointee<1>(fdsRead),
+                    testing::SetArgPointee<1>(fdsRead), testing::SetArgPointee<3>(fdsError),
                     Return(1)
                 )
             );
@@ -355,8 +390,8 @@ TEST_F(TestSelect, testAddSocketDisconnect)
                                                         .WillRepeatedly(Return(1));
     m_select->addSocketEnableRead(socket);
 
-    fd_set fdsReadIn;
-    fd_set fdsWriteIn;
+    fd_set fdsReadIn{};
+    fd_set fdsWriteIn{};
     FD_ZERO(&fdsReadIn);
     FD_ZERO(&fdsWriteIn);
     FD_SET(CONTROLSOCKET_READ, &fdsReadIn);
@@ -366,12 +401,19 @@ TEST_F(TestSelect, testAddSocketDisconnect)
     tim.tv_sec = 0;
     tim.tv_usec = TIMEOUT * MILLITOMICRO;
 
-    fd_set fdsRead;
+    fd_set fdsRead{};
     FD_ZERO(&fdsRead);
     FD_SET(socket->getDescriptor(), &fdsRead);
 
-    EXPECT_CALL(*m_mockMockOperatingSystem, select(static_cast<int>(socket->getDescriptor()) + 1, FdSet(&fdsReadIn), FdSet(&fdsWriteIn), FdSet(&fdsReadIn), Time(&tim))).Times(1)
-                                                                  .WillRepeatedly(testing::DoAll(testing::SetArgPointee<1>(fdsRead), Return(1)));
+    fd_set fdsError{};
+    FD_ZERO(&fdsError);
+
+    int sdMax = static_cast<int>(static_cast<int>(socket->getDescriptor())) + 1;
+#if defined(WIN32)
+    sdMax = 1;
+#endif
+    EXPECT_CALL(*m_mockMockOperatingSystem, select(sdMax, FdSet(&fdsReadIn), FdSet(&fdsWriteIn), FdSet(&fdsReadIn), Time(&tim))).Times(1)
+                                                                  .WillRepeatedly(testing::DoAll(testing::SetArgPointee<1>(fdsRead), testing::SetArgPointee<3>(fdsError), Return(1)));
     EXPECT_CALL(*m_mockMockOperatingSystem, ioctlInt(socket->getDescriptor(), FIONREAD, _)).Times(1)
                                                         .WillRepeatedly(testing::DoAll(testing::SetArgPointee<2>(0), Return(0)));
 
@@ -397,8 +439,8 @@ TEST_F(TestSelect, testAddSocketIoCtlError)
                                                         .WillRepeatedly(Return(1));
     m_select->addSocketEnableRead(socket);
 
-    fd_set fdsReadIn;
-    fd_set fdsWriteIn;
+    fd_set fdsReadIn{};
+    fd_set fdsWriteIn{};
     FD_ZERO(&fdsReadIn);
     FD_ZERO(&fdsWriteIn);
     FD_SET(CONTROLSOCKET_READ, &fdsReadIn);
@@ -408,12 +450,19 @@ TEST_F(TestSelect, testAddSocketIoCtlError)
     tim.tv_sec = 0;
     tim.tv_usec = TIMEOUT * MILLITOMICRO;
 
-    fd_set fdsRead;
+    fd_set fdsRead{};
     FD_ZERO(&fdsRead);
     FD_SET(socket->getDescriptor(), &fdsRead);
 
-    EXPECT_CALL(*m_mockMockOperatingSystem, select(static_cast<int>(socket->getDescriptor()) + 1, FdSet(&fdsReadIn), FdSet(&fdsWriteIn), FdSet(&fdsReadIn), Time(&tim))).Times(1)
-                                                                  .WillRepeatedly(testing::DoAll(testing::SetArgPointee<1>(fdsRead), Return(1)));
+    fd_set fdsError{};
+    FD_ZERO(&fdsError);
+
+    int sdMax = static_cast<int>(static_cast<int>(socket->getDescriptor())) + 1;
+#if defined(WIN32)
+    sdMax = 1;
+#endif
+    EXPECT_CALL(*m_mockMockOperatingSystem, select(sdMax, FdSet(&fdsReadIn), FdSet(&fdsWriteIn), FdSet(&fdsReadIn), Time(&tim))).Times(1)
+                                                                  .WillRepeatedly(testing::DoAll(testing::SetArgPointee<1>(fdsRead), testing::SetArgPointee<3>(fdsError), Return(1)));
     EXPECT_CALL(*m_mockMockOperatingSystem, ioctlInt(socket->getDescriptor(), FIONREAD, _)).Times(1)
                                                         .WillRepeatedly(testing::DoAll(testing::SetArgPointee<2>(0), Return(-1)));
 
@@ -442,8 +491,8 @@ TEST_F(TestSelect, testAddSocketWritableWait)
     m_select->addSocketEnableRead(socket);
     m_select->enableWrite(socket);
 
-    fd_set fdsReadIn;
-    fd_set fdsWriteIn;
+    fd_set fdsReadIn{};
+    fd_set fdsWriteIn{};
     FD_ZERO(&fdsReadIn);
     FD_ZERO(&fdsWriteIn);
     FD_SET(CONTROLSOCKET_READ, &fdsReadIn);
@@ -454,15 +503,23 @@ TEST_F(TestSelect, testAddSocketWritableWait)
     tim.tv_sec = 0;
     tim.tv_usec = TIMEOUT * MILLITOMICRO;
 
-    fd_set fdsRead;
-    fd_set fdsWrite;
+    fd_set fdsRead{};
+    fd_set fdsWrite{};
     FD_ZERO(&fdsRead);
     FD_ZERO(&fdsWrite);
     FD_SET(socket->getDescriptor(), &fdsWrite);
 
-    EXPECT_CALL(*m_mockMockOperatingSystem, select(static_cast<int>(socket->getDescriptor()) + 1, FdSet(&fdsReadIn), FdSet(&fdsWriteIn), FdSet(&fdsReadIn), Time(&tim))).Times(1)
+    fd_set fdsError{};
+    FD_ZERO(&fdsError);
+
+    int sdMax = static_cast<int>(static_cast<int>(socket->getDescriptor())) + 1;
+#if defined(WIN32)
+    sdMax = 1;
+#endif
+    EXPECT_CALL(*m_mockMockOperatingSystem, select(sdMax, FdSet(&fdsReadIn), FdSet(&fdsWriteIn), FdSet(&fdsReadIn), Time(&tim))).Times(1)
                                                                   .WillRepeatedly(testing::DoAll(testing::SetArgPointee<1>(fdsRead),
                                                                                                  testing::SetArgPointee<2>(fdsWrite),
+                                                                                                 testing::SetArgPointee<3>(fdsError),
                                                                                                  Return(1)));
 
     const PollerResult& result = m_select->wait(TIMEOUT);
@@ -493,18 +550,25 @@ TEST_F(TestSelect, testAddSocketDisableWritableWait)
     m_select->enableWrite(socket);
     m_select->disableWrite(socket);
 
-    fd_set fdsReadIn;
-    fd_set fdsWriteIn;
+    fd_set fdsReadIn{};
+    fd_set fdsWriteIn{};
     FD_ZERO(&fdsReadIn);
     FD_ZERO(&fdsWriteIn);
     FD_SET(CONTROLSOCKET_READ, &fdsReadIn);
     FD_SET(socket->getDescriptor(), &fdsReadIn);
+    FD_SET(socket->getDescriptor(), &fdsWriteIn);
+    FD_CLR(socket->getDescriptor(), &fdsWriteIn);
 
     timeval tim;
     tim.tv_sec = 0;
     tim.tv_usec = TIMEOUT * MILLITOMICRO;
 
-    EXPECT_CALL(*m_mockMockOperatingSystem, select(static_cast<int>(socket->getDescriptor()) + 1, FdSet(&fdsReadIn), FdSet(&fdsWriteIn), FdSet(&fdsReadIn), Time(&tim))).Times(1)
+    int sdMax = static_cast<int>(static_cast<int>(socket->getDescriptor())) + 1;
+#if defined(WIN32)
+    sdMax = 1;
+#endif
+
+    EXPECT_CALL(*m_mockMockOperatingSystem, select(sdMax, FdSet(&fdsReadIn), FdSet(&fdsWriteIn), FdSet(&fdsReadIn), Time(&tim))).Times(1)
                                                                   .WillRepeatedly(Return(0));
 
     const PollerResult& result = m_select->wait(TIMEOUT);

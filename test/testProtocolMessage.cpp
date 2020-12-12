@@ -490,7 +490,7 @@ TEST_F(TestProtocolMessage, addSendPayloadMultipleWithDownsizeZeroAdAnotherSendP
     ASSERT_EQ(itPayloads->first, buffer1);
     ASSERT_EQ(itPayloads->second, 4);
     ++itPayloads;
-    ASSERT_EQ(itPayloads->first, buffer2);
+    ASSERT_EQ(itPayloads->first, buffer3);
     ASSERT_EQ(itPayloads->second, 2);
 }
 
