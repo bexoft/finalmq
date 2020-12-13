@@ -363,11 +363,23 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
 {
     CorrelationId correlationId = getNextCorrelationId();
     std::unique_lock<std::mutex> lock(m_mutex);
-    m_requests.emplace(correlationId, std::make_unique<Request>(peerId, std::move(funcReply)));
+    m_requests.emplace(correlationId, std::make_unique<Request>(peerId, std::make_shared<FuncReply>(std::move(funcReply))));
     lock.unlock();
     bool ok = sendRequest(peerId, structBase, correlationId);
     return ok;
 }
+
+
+bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBase, const std::shared_ptr<FuncReply>& funcReply)
+{
+    CorrelationId correlationId = getNextCorrelationId();
+    std::unique_lock<std::mutex> lock(m_mutex);
+    m_requests.emplace(correlationId, std::make_unique<Request>(peerId, funcReply));
+    lock.unlock();
+    bool ok = sendRequest(peerId, structBase, correlationId);
+    return ok;
+}
+
 
 
 void RemoteEntity::replyReceived(CorrelationId correlationId, Status status, const StructBasePtr& structBase)
@@ -383,12 +395,17 @@ void RemoteEntity::replyReceived(CorrelationId correlationId, Status status, con
     }
     lock.unlock();
 
-    if (request && request->func)
+    if (request && request->func && *request->func)
     {
-        request->func(request->peerId, status, structBase);
+        (*request->func)(request->peerId, status, structBase);
     }
 }
 
+
+void RemoteEntity::registerReplyEvent(FuncReplyEvent funcReplyEvent)
+{
+    m_funcReplyEvent = std::move(funcReplyEvent);
+}
 
 
 PeerId RemoteEntity::connectIntern(const IProtocolSessionPtr& session, const std::string& entityName, EntityId entityId, FuncReplyConnect funcReplyConnect)
@@ -470,9 +487,9 @@ void RemoteEntity::removePeer(PeerId peerId, remoteentity::Status status)
             {
                 std::unique_ptr<Request>& request = requests[i];
                 assert(request);
-                if (request->func)
+                if (request->func && *request->func)
                 {
-                    request->func(request->peerId, status, nullptr);
+                    (*request->func)(request->peerId, status, nullptr);
                 }
             }
         }
@@ -565,6 +582,10 @@ void RemoteEntity::receivedRequest(const IProtocolSessionPtr& session, const rem
 
 void RemoteEntity::receivedReply(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBasePtr& structBase)
 {
+    if (m_funcReplyEvent)
+    {
+        m_funcReplyEvent(header.corrid, header.status, structBase);
+    }
     replyReceived(header.corrid, header.status, structBase);
 
     if (header.status == Status::STATUS_ENTITY_NOT_FOUND &&

@@ -11,7 +11,6 @@ option(FINALMQ_USE_SSL "Build with openssl" ON)
 
 
 
-
 # Add compile flags to determine coverage
 if (FINALMQ_BUILD_COVERAGE)
     SET(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage -O0")
@@ -126,8 +125,10 @@ if (FINALMQ_USE_SSL)
     include_directories(${OPENSSL_DIR}/include)
     link_directories(${OPENSSL_DIR}/lib)
     target_link_libraries(finalmq wsock32 ws2_32 ${OPENSSL_DIR}/lib/libssl.lib ${OPENSSL_DIR}/lib/libcrypto.lib)
-    target_compile_options(finalmq PRIVATE -DEXPORT_finalmq)
+else()
+    target_link_libraries(finalmq wsock32 ws2_32)
 endif()
+    target_compile_options(finalmq PRIVATE -DEXPORT_finalmq)
 else()
     target_compile_options(finalmq PRIVATE -Werror -Wall -Wextra)
 endif()

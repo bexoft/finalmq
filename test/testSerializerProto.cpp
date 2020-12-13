@@ -161,7 +161,7 @@ TEST_F(TestSerializerProto, testUInt64)
 
 TEST_F(TestSerializerProto, testFloat)
 {
-    static const float VALUE = -2.1;
+    static const float VALUE = -2.1f;
 
     m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestFloat", "", "", 0});
     m_serializer->enterFloat({MetaTypeId::TYPE_FLOAT, "", "value", "", 0, 0}, VALUE);
@@ -353,9 +353,9 @@ TEST_F(TestSerializerProto, testArrayUInt64)
 
 TEST_F(TestSerializerProto, testArrayFloat)
 {
-    static const float VALUE1 = -1.1;
-    static const float VALUE2 = 0;
-    static const float VALUE3 = 1.1;
+    static const float VALUE1 = -1.1f;
+    static const float VALUE2 = 0.0f;
+    static const float VALUE3 = 1.1f;
     static const std::vector<float> VALUE = {VALUE1, VALUE2, VALUE3};
 
     m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayFloat", "", "", 0});

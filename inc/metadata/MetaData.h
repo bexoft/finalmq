@@ -83,7 +83,7 @@ private:
 };
 
 
-class MetaDataGlobal
+class SYMBOLEXP MetaDataGlobal
 {
 public:
     inline static IMetaData& instance()

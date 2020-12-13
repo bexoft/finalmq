@@ -37,7 +37,7 @@ namespace finalmq {
 
 const static int VARTYPE_NONE = 0;
 
-class Variant
+class SYMBOLEXP Variant
 {
 public:
     Variant();

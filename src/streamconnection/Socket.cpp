@@ -390,7 +390,7 @@ int Socket::pendingRead() const
 int Socket::getLastError()
 {
     int errorNumber = OperatingSystem::instance().getLastError();
-    if (errorNumber == SOCKETERROR(EAGAIN))
+    if (errorNumber == EAGAIN)
     {
         errorNumber = SOCKETERROR(EWOULDBLOCK);
     }

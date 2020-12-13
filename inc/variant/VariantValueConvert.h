@@ -32,7 +32,7 @@
 namespace finalmq {
 
 template<class T>
-class Convert
+class SYMBOLEXP Convert
 {
 public:
     typedef std::function<T(const Variant& variant)> FuncConvert;

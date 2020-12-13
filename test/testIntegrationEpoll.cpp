@@ -20,6 +20,8 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
+#if !defined(WIN32)
+
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
@@ -71,7 +73,7 @@ TEST(TestIntegrationEpoll, testAddSocketReadableBeforeWait)
 
     poller->addSocket(controlSocketInside);
     poller->enableRead(controlSocketInside);
-    OperatingSystem::instance().write(controlSocketOutside->getDescriptor(), BUFFER.c_str(), BUFFER.size());
+    OperatingSystem::instance().send(controlSocketOutside->getDescriptor(), BUFFER.c_str(), BUFFER.size(), 0);
 
     const PollerResult& result = poller->wait(10);
     EXPECT_EQ(result.error, false);
@@ -101,7 +103,7 @@ TEST(TestIntegrationEpoll, testAddSocketReadableInsideWait)
         std::this_thread::sleep_for(10ms);
         poller->addSocket(controlSocketInside);
         poller->enableRead(controlSocketInside);
-        OperatingSystem::instance().write(controlSocketOutside->getDescriptor(), BUFFER.c_str(), BUFFER.size());
+        OperatingSystem::instance().send(controlSocketOutside->getDescriptor(), BUFFER.c_str(), BUFFER.size(), 0);
     });
 
     const PollerResult& result = poller->wait(1000000);
@@ -211,7 +213,7 @@ TEST(TestIntegrationEpoll, testEnableWriteSocketNotWritable)
     res = 0;
     while (res >= 0)
     {
-        res = OperatingSystem::instance().write(controlSocketInside->getDescriptor(), LARGE_BUFFER.c_str(), LARGE_BUFFER.size());
+        res = OperatingSystem::instance().send(controlSocketInside->getDescriptor(), LARGE_BUFFER.c_str(), LARGE_BUFFER.size(), 0);
     }
     poller->enableWrite(controlSocketInside);
     const PollerResult& result2 = poller->wait(0);
@@ -245,7 +247,7 @@ TEST(TestIntegrationEpoll, testEnableWriteSocketNotWritableToWritable)
     res = 0;
     while (res >= 0)
     {
-        res = OperatingSystem::instance().write(controlSocketInside->getDescriptor(), LARGE_BUFFER.c_str(), LARGE_BUFFER.size());
+        res = OperatingSystem::instance().send(controlSocketInside->getDescriptor(), LARGE_BUFFER.c_str(), LARGE_BUFFER.size(), 0);
     }
     poller->enableWrite(controlSocketInside);
 
@@ -255,7 +257,7 @@ TEST(TestIntegrationEpoll, testEnableWriteSocketNotWritableToWritable)
         int res = 0;
         while (res >= 0)
         {
-            res = OperatingSystem::instance().read(controlSocketOutside->getDescriptor(), buffer, sizeof(buffer));
+            res = OperatingSystem::instance().recv(controlSocketOutside->getDescriptor(), buffer, sizeof(buffer), 0);
         }
     });
 
@@ -296,7 +298,7 @@ TEST(TestIntegrationEpoll, testDisableWriteSocket)
     res = 0;
     while (res >= 0)
     {
-        res = OperatingSystem::instance().write(controlSocketInside->getDescriptor(), LARGE_BUFFER.c_str(), LARGE_BUFFER.size());
+        res = OperatingSystem::instance().send(controlSocketInside->getDescriptor(), LARGE_BUFFER.c_str(), LARGE_BUFFER.size(), 0);
     }
     poller->enableWrite(controlSocketInside);
 
@@ -308,7 +310,7 @@ TEST(TestIntegrationEpoll, testDisableWriteSocket)
         int res = 0;
         while (res >= 0)
         {
-            res = OperatingSystem::instance().read(controlSocketOutside->getDescriptor(), buffer, sizeof(buffer));
+            res = OperatingSystem::instance().recv(controlSocketOutside->getDescriptor(), buffer, sizeof(buffer), 0);
         }
     });
 
@@ -341,7 +343,7 @@ TEST(TestIntegrationEpoll, testRemoveSocketInsideWait)
         std::this_thread::sleep_for(10ms);
         poller->removeSocket(controlSocketInside);
         std::this_thread::sleep_for(10ms);
-        OperatingSystem::instance().write(controlSocketOutside->getDescriptor(), BUFFER.c_str(), BUFFER.size());
+        OperatingSystem::instance().send(controlSocketOutside->getDescriptor(), BUFFER.c_str(), BUFFER.size(), 0);
     });
 
 
@@ -353,4 +355,6 @@ TEST(TestIntegrationEpoll, testRemoveSocketInsideWait)
     thread.join();
 }
 
+
+#endif
 

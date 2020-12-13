@@ -36,7 +36,7 @@ class Variant;
 typedef std::deque<std::pair<std::string, Variant>> VariantStruct;
 
 const static int VARTYPE_STRUCT = TYPE_STRUCT;
-class VariantValueStruct : public IVariantValue
+class SYMBOLEXP VariantValueStruct : public IVariantValue
 {
 public:
     VariantValueStruct();
