@@ -84,6 +84,7 @@ private:
 typedef std::function<void(PeerId peerId, remoteentity::Status status, const StructBasePtr& structBase)> FuncReply;
 typedef std::function<void(ReplyContextUPtr& replyContext, const StructBasePtr& structBase)> FuncCommand;
 typedef std::function<void(PeerId peerId, PeerEvent peerEvent, bool incoming)> FuncPeerEvent;
+typedef std::function<void(CorrelationId correlationId, remoteentity::Status status, const StructBasePtr& structBase)> FuncReplyEvent;
 typedef std::function<void(PeerId peerId, remoteentity::Status status)> FuncReplyConnect;
 
 struct IRemoteEntity
@@ -130,6 +131,9 @@ struct IRemoteEntity
     virtual CorrelationId getNextCorrelationId() const = 0;
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId) = 0;
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) = 0;
+    virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, const std::shared_ptr<FuncReply>& funcReply) = 0;
+    // A callback for every received reply. With this callback a match with the correlation ID can be done by the application.
+    virtual void registerReplyEvent(FuncReplyEvent funcReplyEvent) = 0;
     // Can be overriden by the application. Will be called for every reply.
     virtual void replyReceived(CorrelationId correlationId, remoteentity::Status status, const StructBasePtr& structBase) = 0;
 
@@ -282,10 +286,12 @@ public:
     virtual std::vector<PeerId> getAllPeers() const override;
     virtual void registerPeerEvent(FuncPeerEvent funcPeerEvent) override;
     virtual void registerCommandFunction(const std::string& functionName, FuncCommand funcCommand) override;
-    CorrelationId getNextCorrelationId() const override;
-    bool sendRequest(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId) override;
+    virtual CorrelationId getNextCorrelationId() const override;
+    virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId) override;
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) override;
+    virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, const std::shared_ptr<FuncReply>& funcReply);
     virtual void replyReceived(CorrelationId correlationId, remoteentity::Status status, const StructBasePtr& structBase) override;
+    virtual void registerReplyEvent(FuncReplyEvent funcReplyEvent) override;
 
 private:
     virtual void initEntity(EntityId entityId, const std::string& entityName) override;
@@ -299,18 +305,19 @@ private:
 
     struct Request
     {
-        inline Request(PeerId peerId_, FuncReply&& func_)
+        inline Request(PeerId peerId_, const std::shared_ptr<FuncReply>& func_)
             : peerId(peerId_)
-            , func(std::move(func_))
+            , func(func_)
         {
         }
-        PeerId      peerId = PEERID_INVALID;
-        FuncReply   func;
+        PeerId                      peerId = PEERID_INVALID;
+        std::shared_ptr<FuncReply>  func;
     };
 
     EntityId                            m_entityId = 0;
     std::string                         m_entityName;
 
+    FuncReplyEvent                      m_funcReplyEvent;
     std::unordered_map<CorrelationId, std::unique_ptr<Request>> m_requests;
     std::unordered_map<std::string, std::shared_ptr<FuncCommand>> m_funcCommands;
     std::shared_ptr<PeerManager>        m_peerManager;
