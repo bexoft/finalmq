@@ -84,7 +84,7 @@ private:
 typedef std::function<void(PeerId peerId, remoteentity::Status status, const StructBasePtr& structBase)> FuncReply;
 typedef std::function<void(ReplyContextUPtr& replyContext, const StructBasePtr& structBase)> FuncCommand;
 typedef std::function<void(PeerId peerId, PeerEvent peerEvent, bool incoming)> FuncPeerEvent;
-typedef std::function<void(CorrelationId correlationId, remoteentity::Status status, const StructBasePtr& structBase)> FuncReplyEvent;
+typedef std::function<bool(CorrelationId correlationId, remoteentity::Status status, const StructBasePtr& structBase)> FuncReplyEvent; // return bool reply handled -> skip looking for reply lambda.
 typedef std::function<void(PeerId peerId, remoteentity::Status status)> FuncReplyConnect;
 
 struct IRemoteEntity
@@ -131,9 +131,10 @@ struct IRemoteEntity
     virtual CorrelationId getNextCorrelationId() const = 0;
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId) = 0;
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) = 0;
-    virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, const std::shared_ptr<FuncReply>& funcReply) = 0;
     // A callback for every received reply. With this callback a match with the correlation ID can be done by the application.
     virtual void registerReplyEvent(FuncReplyEvent funcReplyEvent) = 0;
+
+protected:
     // Can be overriden by the application. Will be called for every reply.
     virtual void replyReceived(CorrelationId correlationId, remoteentity::Status status, const StructBasePtr& structBase) = 0;
 
@@ -289,7 +290,6 @@ public:
     virtual CorrelationId getNextCorrelationId() const override;
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId) override;
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) override;
-    virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, const std::shared_ptr<FuncReply>& funcReply);
     virtual void replyReceived(CorrelationId correlationId, remoteentity::Status status, const StructBasePtr& structBase) override;
     virtual void registerReplyEvent(FuncReplyEvent funcReplyEvent) override;
 

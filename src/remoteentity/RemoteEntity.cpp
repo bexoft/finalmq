@@ -370,17 +370,6 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
 }
 
 
-bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBase, const std::shared_ptr<FuncReply>& funcReply)
-{
-    CorrelationId correlationId = getNextCorrelationId();
-    std::unique_lock<std::mutex> lock(m_mutex);
-    m_requests.emplace(correlationId, std::make_unique<Request>(peerId, funcReply));
-    lock.unlock();
-    bool ok = sendRequest(peerId, structBase, correlationId);
-    return ok;
-}
-
-
 
 void RemoteEntity::replyReceived(CorrelationId correlationId, Status status, const StructBasePtr& structBase)
 {
@@ -582,11 +571,15 @@ void RemoteEntity::receivedRequest(const IProtocolSessionPtr& session, const rem
 
 void RemoteEntity::receivedReply(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBasePtr& structBase)
 {
+    bool replyHandled = false;
     if (m_funcReplyEvent)
     {
-        m_funcReplyEvent(header.corrid, header.status, structBase);
+        replyHandled = m_funcReplyEvent(header.corrid, header.status, structBase);
     }
-    replyReceived(header.corrid, header.status, structBase);
+    if (!replyHandled)
+    {
+        replyReceived(header.corrid, header.status, structBase);
+    }
 
     if (header.status == Status::STATUS_ENTITY_NOT_FOUND &&
         header.srcid != ENTITYID_INVALID)
