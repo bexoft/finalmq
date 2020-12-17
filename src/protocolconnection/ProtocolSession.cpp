@@ -170,7 +170,7 @@ std::int64_t ProtocolSession::getSessionId() const
     return m_sessionId;
 }
 
-const ConnectionData& ProtocolSession::getConnectionData() const
+ConnectionData ProtocolSession::getConnectionData() const
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     IStreamConnectionPtr connection = m_connection;
@@ -216,7 +216,12 @@ bool ProtocolSession::setEndpoint(const std::string& endpoint, const ConnectProp
 
     assert(connection);
 
-    return m_streamConnectionContainer->setEndpoint(connection, endpoint, connectionProperties);
+    bool res = m_streamConnectionContainer->setEndpoint(connection, endpoint, connectionProperties);
+    if (res)
+    {
+        res = connection->connect();
+    }
+    return res;
 }
 
 

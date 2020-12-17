@@ -232,7 +232,7 @@ bool StreamConnectionContainer::setEndpoint(const IStreamConnectionPtr& streamCo
 {
     assert(streamConnection);
     ConnectionData connectionData = AddressHelpers::endpoint2ConnectionData(endpoint);
-    connectionData.connectionId = streamConnection->getConnectionData().connectionId;
+    connectionData.connectionId = streamConnection->getConnectionId();
     connectionData.incomingConnection = false;
     connectionData.reconnectInterval = connectionProperties.reconnectInterval;
     connectionData.totalReconnectDuration = connectionProperties.totalReconnectDuration;
@@ -332,8 +332,6 @@ IStreamConnectionPtr StreamConnectionContainer::getConnection(std::int64_t conne
 
 void StreamConnectionContainer::removeConnection(const SocketDescriptorPtr& sd, std::int64_t connectionId)
 {
-    assert(sd);
-
     std::unique_lock<std::mutex> lock(m_mutex);
     if (sd)
     {
@@ -349,7 +347,7 @@ void StreamConnectionContainer::disconnectIntern(const IStreamConnectionPrivateP
     bool removeConn = connectionDisconnect->changeStateForDisconnect();
     if (removeConn)
     {
-        removeConnection(sd, connectionDisconnect->getConnectionData().connectionId);
+        removeConnection(sd, connectionDisconnect->getConnectionId());
         connectionDisconnect->disconnected(connectionDisconnect);
     }
 }
@@ -458,7 +456,7 @@ void StreamConnectionContainer::handleConnectionEvents(const IStreamConnectionPr
 #ifdef USE_OPENSSL
         if (isSsl)
         {
-            if (connection->getConnectionData().connectionState == ConnectionState::CONNECTIONSTATE_CONNECTING)
+            if (connection->getConnectionState() == ConnectionState::CONNECTIONSTATE_CONNECTING)
             {
                 SocketDescriptorPtr sd = socket->getSocketDescriptor();
                 assert(sd);
@@ -690,6 +688,7 @@ void StreamConnectionContainer::pollerLoop()
             {
                 const IStreamConnectionPrivatePtr& connectionDisconnect = connectionsDisconnect[i];
                 SocketPtr socket = connectionDisconnect->getSocketPrivate();
+                if (socket)
                 {
                     SocketDescriptorPtr sd = socket->getSocketDescriptor();
                     disconnectIntern(connectionDisconnect, sd);

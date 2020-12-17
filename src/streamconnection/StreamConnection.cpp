@@ -92,10 +92,25 @@ bool StreamConnection::sendMessage(const IMessagePtr& msg)
 }
 
 
-const ConnectionData& StreamConnection::getConnectionData() const
+ConnectionData StreamConnection::getConnectionData() const
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     return m_connectionData;
 }
+
+
+ConnectionState StreamConnection::getConnectionState() const
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    return m_connectionData.connectionState;
+}
+
+std::int64_t StreamConnection::getConnectionId() const
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    return m_connectionData.connectionId;
+}
+
 
 
 SocketPtr StreamConnection::getSocketPrivate()

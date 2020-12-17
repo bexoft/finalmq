@@ -60,7 +60,7 @@ private:
     virtual IMessagePtr createMessage() const override;
     virtual bool sendMessage(const IMessagePtr& msg) override;
     virtual std::int64_t getSessionId() const;
-    virtual const ConnectionData& getConnectionData() const override;
+    virtual ConnectionData getConnectionData() const override;
     virtual SocketPtr getSocket() override;
     virtual int getContentType() const override;
     virtual void disconnect() override;

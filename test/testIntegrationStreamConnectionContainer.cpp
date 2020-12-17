@@ -372,3 +372,20 @@ TEST_F(TestIntegrationStreamConnectionContainer, testSendLateConnectBind)
     EXPECT_EQ(m_messagesServer[0], MESSAGE1_BUFFER);
 }
 
+TEST_F(TestIntegrationStreamConnectionContainer, testCreateConnectionDisconnect)
+{
+    auto& expectDisconnectedClient = EXPECT_CALL(*m_mockClientCallback, disconnected(_)).Times(1);
+
+    IStreamConnectionPtr connection = m_connectionContainer->createConnection(m_mockClientCallback);
+
+    IMessagePtr message = std::make_shared<ProtocolMessage>(0);
+    message->addSendPayload(MESSAGE1_BUFFER);
+    connection->sendMessage(message);
+
+    connection->disconnect();
+
+    waitTillDone(expectDisconnectedClient, 5000);
+
+    EXPECT_EQ(connection->getConnectionData().connectionState, ConnectionState::CONNECTIONSTATE_DISCONNECTED);
+    EXPECT_EQ(m_connectionContainer->getConnection(connection->getConnectionData().connectionId), nullptr);
+}

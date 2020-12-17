@@ -72,7 +72,9 @@ struct IStreamConnection
     virtual ~IStreamConnection() {}
     virtual bool connect() = 0;
     virtual bool sendMessage(const IMessagePtr& msg) = 0;
-    virtual const ConnectionData& getConnectionData() const = 0;
+    virtual ConnectionData getConnectionData() const = 0;
+    virtual ConnectionState getConnectionState() const = 0;
+    virtual std::int64_t getConnectionId() const = 0;
     virtual SocketPtr getSocket() = 0;
     virtual void disconnect() = 0;
 };
@@ -107,7 +109,9 @@ private:
     // IStreamConnection
     virtual bool connect() override;
     virtual bool sendMessage(const IMessagePtr& msg) override;
-    virtual const ConnectionData& getConnectionData() const override;
+    virtual ConnectionData getConnectionData() const override;
+    virtual ConnectionState getConnectionState() const override;
+    virtual std::int64_t getConnectionId() const override;
     virtual SocketPtr getSocket() override;
     virtual void disconnect() override;
 
