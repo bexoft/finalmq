@@ -115,6 +115,17 @@ IProtocolSessionPtr ProtocolSessionContainer::connect(const std::string& endpoin
     return protocolSession;
 }
 
+
+IProtocolSessionPtr ProtocolSessionContainer::createSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, int contentType)
+{
+    assert(protocol);
+    IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(callback, protocol, m_protocolSessionList, m_streamConnectionContainer, contentType);
+    protocolSession->createConnection();
+    return protocolSession;
+}
+
+
+
 std::vector< IProtocolSessionPtr > ProtocolSessionContainer::getAllSessions() const
 {
     std::vector< IProtocolSessionPtr > protocolSessions = m_protocolSessionList->getAllSessions();

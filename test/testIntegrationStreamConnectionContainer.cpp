@@ -123,8 +123,7 @@ TEST_F(TestIntegrationStreamConnectionContainer, testBindConnect)
                                             .WillOnce(DoAll(testing::SaveArg<0>(&connConnect), Return(nullptr)));
     auto& expectConnectedServer = EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
 
-    IStreamConnectionPtr connection = m_connectionContainer->createConnection("tcp://localhost:3333", m_mockClientCallback);
-    connection->connect();
+    IStreamConnectionPtr connection = m_connectionContainer->connect(m_mockClientCallback, "tcp://localhost:3333");
 
     waitTillDone(expectConnectedClient, 5000);
     waitTillDone(expectConnectedServer, 5000);
@@ -149,8 +148,7 @@ TEST_F(TestIntegrationStreamConnectionContainer, testBindConnectSend)
     auto& expectReceive = EXPECT_CALL(*m_mockServerCallback, received(_, _, _)).Times(1)
                                                    .WillRepeatedly(Invoke(this, &TestIntegrationStreamConnectionContainer::receivedServer));
 
-    IStreamConnectionPtr connection = m_connectionContainer->createConnection("tcp://localhost:3333", m_mockClientCallback);
-    connection->connect();
+    IStreamConnectionPtr connection = m_connectionContainer->connect(m_mockClientCallback, "tcp://localhost:3333");
     IMessagePtr message = std::make_shared<ProtocolMessage>(0);
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
@@ -174,8 +172,7 @@ TEST_F(TestIntegrationStreamConnectionContainer, testConnectBind)
                                             .WillOnce(Return(nullptr));
     EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
 
-    IStreamConnectionPtr connection = m_connectionContainer->createConnection("tcp://localhost:3333", m_mockClientCallback, {{}, 1});
-    connection->connect();
+    IStreamConnectionPtr connection = m_connectionContainer->connect(m_mockClientCallback, "tcp://localhost:3333", {{}, 1});
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
@@ -200,11 +197,11 @@ TEST_F(TestIntegrationStreamConnectionContainer, testSendConnectBind)
     auto& expectReceive = EXPECT_CALL(*m_mockServerCallback, received(_, _, _)).Times(1)
                                                    .WillRepeatedly(Invoke(this, &TestIntegrationStreamConnectionContainer::receivedServer));
 
-    IStreamConnectionPtr connection = m_connectionContainer->createConnection("tcp://localhost:3333", m_mockClientCallback, {{}, 1});
+    IStreamConnectionPtr connection = m_connectionContainer->createConnection(m_mockClientCallback);
     IMessagePtr message = std::make_shared<ProtocolMessage>(0);
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
-    connection->connect();
+    m_connectionContainer->connect(connection, "tcp://localhost:3333", {{}, 1});
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
@@ -226,8 +223,7 @@ TEST_F(TestIntegrationStreamConnectionContainer, testReconnectExpires)
     EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(0);
     auto& expectDisconnected = EXPECT_CALL(*m_mockClientCallback, disconnected(_)).Times(1);
 
-    IStreamConnectionPtr connection = m_connectionContainer->createConnection("tcp://localhost:3333", m_mockClientCallback, {{}, 1, 1});
-    connection->connect();
+    IStreamConnectionPtr connection = m_connectionContainer->connect(m_mockClientCallback, "tcp://localhost:3333", {{}, 1, 1});
     IMessagePtr message = std::make_shared<ProtocolMessage>(0);
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
@@ -259,8 +255,7 @@ TEST_F(TestIntegrationStreamConnectionContainer, testBindConnectDisconnect)
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
-    IStreamConnectionPtr connection = m_connectionContainer->createConnection("tcp://localhost:3333", m_mockClientCallback);
-    connection->connect();
+    IStreamConnectionPtr connection = m_connectionContainer->connect(m_mockClientCallback, "tcp://localhost:3333");
     IMessagePtr message = std::make_shared<ProtocolMessage>(0);
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
@@ -292,8 +287,7 @@ TEST_F(TestIntegrationStreamConnectionContainer, testGetAllConnections)
                                             .WillOnce(DoAll(testing::SaveArg<0>(&connConnect), Return(nullptr)));
     auto& expectConnectedServer = EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
 
-    IStreamConnectionPtr connection = m_connectionContainer->createConnection("tcp://localhost:3333", m_mockClientCallback);
-    connection->connect();
+    IStreamConnectionPtr connection = m_connectionContainer->connect(m_mockClientCallback, "tcp://localhost:3333");
 
     waitTillDone(expectConnectedClient, 5000);
     waitTillDone(expectConnectedServer, 5000);
@@ -312,3 +306,78 @@ TEST_F(TestIntegrationStreamConnectionContainer, testGetAllConnections)
 }
 
 
+
+TEST_F(TestIntegrationStreamConnectionContainer, testBindLateConnect)
+{
+    int res = m_connectionContainer->bind("tcp://*:3333", m_mockBindCallback);
+    EXPECT_EQ(res, 0);
+
+    IStreamConnectionPtr connBind;
+    IStreamConnectionPtr connConnect;
+    EXPECT_CALL(*m_mockBindCallback, connected(_)).Times(1)
+                                            .WillOnce(DoAll(testing::SaveArg<0>(&connBind), Return(m_mockServerCallback)));
+    auto& expectConnectedClient = EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(1)
+                                            .WillOnce(DoAll(testing::SaveArg<0>(&connConnect), Return(nullptr)));
+    auto& expectConnectedServer = EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
+
+    IStreamConnectionPtr connection = m_connectionContainer->createConnection(m_mockClientCallback);
+    bool res2 = m_connectionContainer->connect(connection, "tcp://localhost:3333");
+    ASSERT_EQ(res2, true);
+
+    waitTillDone(expectConnectedClient, 5000);
+    waitTillDone(expectConnectedServer, 5000);
+
+    EXPECT_EQ(connConnect, connection);
+    EXPECT_EQ(connBind->getConnectionData().endpoint, "tcp://*:3333");
+}
+
+
+TEST_F(TestIntegrationStreamConnectionContainer, testSendLateConnectBind)
+{
+    EXPECT_CALL(*m_mockBindCallback, connected(_)).Times(1)
+                                            .WillOnce(Return(m_mockServerCallback));
+    EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(1)
+                                            .WillOnce(Return(nullptr));
+    EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
+    auto& expectReceive = EXPECT_CALL(*m_mockServerCallback, received(_, _, _)).Times(1)
+                                                   .WillRepeatedly(Invoke(this, &TestIntegrationStreamConnectionContainer::receivedServer));
+
+    IStreamConnectionPtr connection = m_connectionContainer->createConnection(m_mockClientCallback);
+
+    IMessagePtr message = std::make_shared<ProtocolMessage>(0);
+    message->addSendPayload(MESSAGE1_BUFFER);
+    connection->sendMessage(message);
+
+    bool res2 = m_connectionContainer->connect(connection, "tcp://localhost:3333", {{}, 1});
+    ASSERT_EQ(res2, true);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+
+    int res = m_connectionContainer->bind("tcp://*:3333", m_mockBindCallback);
+    EXPECT_EQ(res, 0);
+
+    waitTillDone(expectReceive, 5000);
+
+    EXPECT_EQ(connection->getConnectionData().connectionState, ConnectionState::CONNECTIONSTATE_CONNECTED);
+    EXPECT_EQ(m_connectionContainer->getConnection(connection->getConnectionData().connectionId), connection);
+    EXPECT_EQ(m_messagesServer.size(), 1);
+    EXPECT_EQ(m_messagesServer[0], MESSAGE1_BUFFER);
+}
+
+TEST_F(TestIntegrationStreamConnectionContainer, testCreateConnectionDisconnect)
+{
+    auto& expectDisconnectedClient = EXPECT_CALL(*m_mockClientCallback, disconnected(_)).Times(1);
+
+    IStreamConnectionPtr connection = m_connectionContainer->createConnection(m_mockClientCallback);
+
+    IMessagePtr message = std::make_shared<ProtocolMessage>(0);
+    message->addSendPayload(MESSAGE1_BUFFER);
+    connection->sendMessage(message);
+
+    connection->disconnect();
+
+    waitTillDone(expectDisconnectedClient, 5000);
+
+    EXPECT_EQ(connection->getConnectionData().connectionState, ConnectionState::CONNECTIONSTATE_DISCONNECTED);
+    EXPECT_EQ(m_connectionContainer->getConnection(connection->getConnectionData().connectionId), nullptr);
+}

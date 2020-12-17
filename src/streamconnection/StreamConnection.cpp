@@ -22,6 +22,7 @@
 
 
 #include "streamconnection/StreamConnection.h"
+#include "streamconnection/AddressHelpers.h"
 #include <thread>
 
 
@@ -91,10 +92,25 @@ bool StreamConnection::sendMessage(const IMessagePtr& msg)
 }
 
 
-const ConnectionData& StreamConnection::getConnectionData() const
+ConnectionData StreamConnection::getConnectionData() const
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     return m_connectionData;
 }
+
+
+ConnectionState StreamConnection::getConnectionState() const
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    return m_connectionData.connectionState;
+}
+
+std::int64_t StreamConnection::getConnectionId() const
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    return m_connectionData.connectionId;
+}
+
 
 
 SocketPtr StreamConnection::getSocketPrivate()
@@ -116,8 +132,6 @@ void StreamConnection::disconnect()
     m_disconnectFlag = true;
     m_poller->releaseWait();
 }
-
-
 
 
 bool StreamConnection::connect()
@@ -273,6 +287,14 @@ bool StreamConnection::changeStateForDisconnect()
 bool StreamConnection::getDisconnectFlag() const
 {
     return m_disconnectFlag;
+}
+
+
+void StreamConnection::updateConnectionData(const ConnectionData& connectionData)
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    m_connectionData = connectionData;
+    lock.unlock();
 }
 
 

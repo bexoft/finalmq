@@ -35,6 +35,9 @@
 #include "StreamConnection.h"
 #include "helpers/CondVar.h"
 
+#include <thread>
+
+
 
 namespace finalmq {
 
@@ -46,11 +49,43 @@ struct IStreamConnectionContainer
     virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000) = 0;
     virtual int bind(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const BindProperties& bindProperties = {}) = 0;
     virtual void unbind(const std::string& endpoint) = 0;
-    virtual IStreamConnectionPtr createConnection(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const ConnectProperties& connectionProperties = {}) = 0;
+    virtual IStreamConnectionPtr connect(hybrid_ptr<IStreamConnectionCallback> callback, const std::string& endpoint, const ConnectProperties& connectionProperties = {}) = 0;
+    virtual IStreamConnectionPtr createConnection(hybrid_ptr<IStreamConnectionCallback> callback) = 0;
+    virtual bool connect(const IStreamConnectionPtr& streamConnection, const std::string& endpoint, const ConnectProperties& connectionProperties = {}) = 0;
     virtual std::vector< IStreamConnectionPtr > getAllConnections() const = 0;
     virtual IStreamConnectionPtr getConnection(std::int64_t connectionId) const = 0;
     virtual void run() = 0;
     virtual bool terminatePollerLoop(int timeout) = 0;
+};
+
+
+class AddressResolver
+{
+public:
+    typedef std::function<void(bool ok, const in_addr& addr)> FuncResolved;
+
+    ~AddressResolver();
+    void init();
+    void resolveHost(const std::string& hostname, FuncResolved funcResolved);
+    void run();
+
+private:
+    struct ResolveRequest
+    {
+        ResolveRequest(const std::string& hostname_, FuncResolved&& funcResolved_)
+            : hostname(hostname_)
+            , funcResolved(std::move(funcResolved_))
+        {
+        }
+        std::string  hostname;
+        FuncResolved funcResolved;
+    };
+
+    std::deque<std::unique_ptr<ResolveRequest>> m_requests;
+    CondVar                         m_release;
+    bool                            m_terminate = false;
+    std::unique_ptr<std::thread>    m_thread;
+    mutable std::mutex              m_mutex;
 };
 
 
@@ -66,7 +101,9 @@ private:
     virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000) override;
     virtual int bind(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const BindProperties& bindProperties = {}) override;
     virtual void unbind(const std::string& endpoint) override;
-    virtual IStreamConnectionPtr createConnection(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const ConnectProperties& connectionProperties = {}) override;
+    virtual IStreamConnectionPtr connect(hybrid_ptr<IStreamConnectionCallback> callback, const std::string& endpoint, const ConnectProperties& connectionProperties = {}) override;
+    virtual IStreamConnectionPtr createConnection(hybrid_ptr<IStreamConnectionCallback> callback) override;
+    virtual bool connect(const IStreamConnectionPtr& streamConnection, const std::string& endpoint, const ConnectProperties& connectionProperties = {}) override;
     virtual std::vector< IStreamConnectionPtr > getAllConnections() const override;
     virtual IStreamConnectionPtr getConnection(std::int64_t connectionId) const override;
     virtual void run() override;
@@ -85,6 +122,8 @@ private:
 
     std::unordered_map<SOCKET, BindData>::iterator findBindByEndpoint(const std::string& endpoint);
     IStreamConnectionPrivatePtr findConnectionBySd(SOCKET sd);
+    IStreamConnectionPrivatePtr findConnectionById(std::int64_t connectionId);
+    bool createSocket(const IStreamConnectionPtr& streamConnection, ConnectionData& connectionData, const ConnectProperties& connectionProperties);
     void removeConnection(const SocketDescriptorPtr& sd, std::int64_t connectionId);
     void disconnectIntern(const IStreamConnectionPrivatePtr& connectionDisconnect, const SocketDescriptorPtr& sd);
     IStreamConnectionPrivatePtr addConnection(const SocketPtr& socket, ConnectionData& connectionData, hybrid_ptr<IStreamConnectionCallback> callback);
@@ -103,6 +142,7 @@ private:
     CondVar                                                         m_pollerLoopTerminated;
     int                                                             m_cycleTime = 100;
     double                                                          m_checkReconnectInterval = 1000;
+    AddressResolver                                                 m_addressResolver;
     mutable std::mutex                                              m_mutex;
 
     std::chrono::time_point<std::chrono::system_clock>              m_lastReconnectTime;

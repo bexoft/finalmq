@@ -70,9 +70,10 @@ struct IStreamConnectionCallback
 struct IStreamConnection
 {
     virtual ~IStreamConnection() {}
-    virtual bool connect() = 0;
     virtual bool sendMessage(const IMessagePtr& msg) = 0;
-    virtual const ConnectionData& getConnectionData() const = 0;
+    virtual ConnectionData getConnectionData() const = 0;
+    virtual ConnectionState getConnectionState() const = 0;
+    virtual std::int64_t getConnectionId() const = 0;
     virtual SocketPtr getSocket() = 0;
     virtual void disconnect() = 0;
 };
@@ -80,12 +81,14 @@ struct IStreamConnection
 
 struct IStreamConnectionPrivate : public IStreamConnection
 {
+    virtual bool connect() = 0;
     virtual SocketPtr getSocketPrivate() = 0;
     virtual bool sendPendingMessages() = 0;
     virtual bool checkEdgeConnected() = 0;
     virtual bool doReconnect() = 0;
     virtual bool changeStateForDisconnect() = 0;
     virtual bool getDisconnectFlag() const = 0;
+    virtual void updateConnectionData(const ConnectionData& connectionData) = 0;
 
     virtual void connected(const IStreamConnectionPtr& connection) = 0;
     virtual void disconnected(const IStreamConnectionPtr& connection) = 0;
@@ -104,19 +107,22 @@ public:
 
 private:
     // IStreamConnection
-    virtual bool connect() override;
     virtual bool sendMessage(const IMessagePtr& msg) override;
-    virtual const ConnectionData& getConnectionData() const override;
+    virtual ConnectionData getConnectionData() const override;
+    virtual ConnectionState getConnectionState() const override;
+    virtual std::int64_t getConnectionId() const override;
     virtual SocketPtr getSocket() override;
     virtual void disconnect() override;
 
     // IStreamConnectionPrivate
+    virtual bool connect() override;
     virtual SocketPtr getSocketPrivate() override;
     virtual bool sendPendingMessages() override;
     virtual bool checkEdgeConnected() override;
     virtual bool doReconnect() override;
     virtual bool changeStateForDisconnect() override;
     virtual bool getDisconnectFlag() const override;
+    virtual void updateConnectionData(const ConnectionData& connectionData) override;
 
     virtual void connected(const IStreamConnectionPtr& connection) override;
     virtual void disconnected(const IStreamConnectionPtr& connection) override;

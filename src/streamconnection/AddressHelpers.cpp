@@ -23,7 +23,7 @@
 #include "streamconnection/AddressHelpers.h"
 #include "logger/LogStream.h"
 #include "helpers/ModulenameFinalmq.h"
-
+#include <assert.h>
 
 #if defined(WIN32) || defined(__MINGW32__)
 #pragma warning(disable: 4996)
@@ -141,10 +141,11 @@ ConnectionData AddressHelpers::endpoint2ConnectionData(const std::string& endpoi
 
 
 
-std::string AddressHelpers::makeSocketAddress(const std::string& hostname, int port, int af)
+std::string AddressHelpers::makeSocketAddress(const std::string& hostname, int port, int af, bool asyncGetHostByName, bool& doAsyncGetHostByName)
 {
     const sockaddr* addr = nullptr;
     int addrlen = 0;
+    doAsyncGetHostByName = false;
 
     struct sockaddr_in addrTcp;
 #ifndef WIN32
@@ -153,22 +154,30 @@ std::string AddressHelpers::makeSocketAddress(const std::string& hostname, int p
     switch (af)
     {
     case AF_INET:
-        addrlen = sizeof(addrTcp);
-        if (!hostname.empty())
         {
+            assert(!hostname.empty());
+            addrlen = 0;
             std::string hname = hostname;
             if (hname == "*")
             {
                 hname = "0.0.0.0";
             }
-            struct hostent* hp = gethostbyname(hname.c_str());
-            if (hp)
+            if (asyncGetHostByName)
             {
-                memset(&addrTcp, 0, addrlen);
-                addrTcp.sin_family = af;
-                addrTcp.sin_addr.s_addr = ((struct in_addr *)(hp->h_addr))->s_addr;
-                addrTcp.sin_port = htons(port);
-                addr = (sockaddr*)&addrTcp;
+                doAsyncGetHostByName = true;
+            }
+            else
+            {
+                addrlen = sizeof(addrTcp);
+                struct hostent* hp = gethostbyname(hname.c_str());
+                if (hp)
+                {
+                    memset(&addrTcp, 0, addrlen);
+                    addrTcp.sin_family = af;
+                    addrTcp.sin_addr.s_addr = ((struct in_addr *)(hp->h_addr))->s_addr;
+                    addrTcp.sin_port = htons(port);
+                    addr = (sockaddr*)&addrTcp;
+                }
             }
         }
         break;

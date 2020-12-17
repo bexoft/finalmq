@@ -32,10 +32,11 @@ struct IProtocolSession
     virtual IMessagePtr createMessage() const = 0;
     virtual bool sendMessage(const IMessagePtr& msg) = 0;
     virtual std::int64_t getSessionId() const = 0;
-    virtual const ConnectionData& getConnectionData() const = 0;
+    virtual ConnectionData getConnectionData() const = 0;
     virtual SocketPtr getSocket() = 0;
     virtual int getContentType() const = 0;
     virtual void disconnect() = 0;
+    virtual bool setEndpoint(const std::string& endpoint, const ConnectProperties& connectionProperties = {}) = 0;
 };
 
 //struct IProtocolSession;
