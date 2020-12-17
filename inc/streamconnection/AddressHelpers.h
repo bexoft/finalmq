@@ -39,7 +39,7 @@ public:
     static int parseTcpAddress(const std::string& address, std::string& hostname, int& port);
     static ConnectionData endpoint2ConnectionData(const std::string& endpoint);
     static void addr2peer(sockaddr* addr, ConnectionData& connectionData);
-    static std::string makeSocketAddress(const std::string& hostname, int port, int af);
+    static std::string makeSocketAddress(const std::string& hostname, int port, int af, bool asyncGetHostByName, bool& doAsyncGetHostByName);
 };
 
 }   // namespace finalmq

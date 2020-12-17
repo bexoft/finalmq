@@ -122,7 +122,8 @@ int StreamConnectionContainer::bind(const std::string& endpoint, hybrid_ptr<IStr
     int err = -1;
     if (ok)
     {
-        std::string addr = AddressHelpers::makeSocketAddress(connectionData.hostname, connectionData.port, connectionData.af);
+        bool doAsyncGetHostByName = false;
+        std::string addr = AddressHelpers::makeSocketAddress(connectionData.hostname, connectionData.port, connectionData.af, false, doAsyncGetHostByName);
         err = socket->bind((const sockaddr*)addr.c_str(), (int)addr.size());
     }
     if (err == 0)
@@ -167,40 +168,14 @@ void StreamConnectionContainer::unbind(const std::string& endpoint)
 
 IStreamConnectionPtr StreamConnectionContainer::createConnection(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const ConnectProperties& connectionProperties)
 {
-    ConnectionData connectionData = AddressHelpers::endpoint2ConnectionData(endpoint);
-    connectionData.incomingConnection = false;
-    connectionData.reconnectInterval = connectionProperties.reconnectInterval;
-    connectionData.totalReconnectDuration = connectionProperties.totalReconnectDuration;
-    connectionData.startTime = std::chrono::system_clock::now();
-    connectionData.ssl = connectionProperties.certificateData.ssl;
-    connectionData.connectionState = ConnectionState::CONNECTIONSTATE_CREATED;
-    std::string addr = AddressHelpers::makeSocketAddress(connectionData.hostname, connectionData.port, connectionData.af);
-    connectionData.sockaddr = addr;
-
-    SocketPtr socket = std::make_shared<Socket>();
-    bool ret = false;
-#ifdef USE_OPENSSL
-    if (connectionData.ssl)
+    IStreamConnectionPtr connection = createConnection(callback);
+    if (connection)
     {
-        ret = socket->createSslClient(connectionData.af, connectionData.type, connectionData.protocol, connectionProperties.certificateData);
-    }
-    else
-#endif
-    {
-        ret = socket->create(connectionData.af, connectionData.type, connectionData.protocol);
-    }
-
-    IStreamConnectionPrivatePtr connection;
-
-    if (ret)
-    {
-        SocketDescriptorPtr sd = socket->getSocketDescriptor();
-        assert(sd);
-        connectionData.sd = sd->getDescriptor();
-        AddressHelpers::addr2peer((sockaddr*)connectionData.sockaddr.c_str(), connectionData);
-
-        connection = addConnection(socket, connectionData, callback);
-        assert(connection);
+        bool res = setEndpoint(connection, endpoint, connectionProperties);
+        if (!res)
+        {
+            connection = nullptr;
+        }
     }
 
     return connection;
@@ -239,7 +214,8 @@ bool StreamConnectionContainer::setEndpoint(const IStreamConnectionPtr& streamCo
     connectionData.startTime = std::chrono::system_clock::now();
     connectionData.ssl = connectionProperties.certificateData.ssl;
     connectionData.connectionState = ConnectionState::CONNECTIONSTATE_CREATED;
-    std::string addr = AddressHelpers::makeSocketAddress(connectionData.hostname, connectionData.port, connectionData.af);
+    bool doAsyncGetHostByName = false;
+    std::string addr = AddressHelpers::makeSocketAddress(connectionData.hostname, connectionData.port, connectionData.af, false, doAsyncGetHostByName);
     connectionData.sockaddr = addr;
 
     SocketPtr socket = streamConnection->getSocket();
