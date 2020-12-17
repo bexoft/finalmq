@@ -126,8 +126,7 @@ TEST_F(TestIntegrationStreamConnectionContainerSsl, testBindConnect)
                                             .WillOnce(DoAll(testing::SaveArg<0>(&connConnect), Return(nullptr)));
     auto& expectConnectedServer = EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
 
-    IStreamConnectionPtr connection = m_connectionContainer->createConnection("tcp://localhost:3333", m_mockClientCallback, {{true}});
-    connection->connect();
+    IStreamConnectionPtr connection = m_connectionContainer->connect(m_mockClientCallback, "tcp://localhost:3333", {{true}});
 
     waitTillDone(expectConnectedClient, 5000);
     waitTillDone(expectConnectedServer, 5000);
@@ -154,8 +153,7 @@ TEST_F(TestIntegrationStreamConnectionContainerSsl, testBindConnectSend)
     auto& expectReceive = EXPECT_CALL(*m_mockServerCallback, received(_, _, _)).Times(1)
                                                    .WillRepeatedly(Invoke(this, &TestIntegrationStreamConnectionContainerSsl::receivedServer));
 
-    IStreamConnectionPtr connection = m_connectionContainer->createConnection("tcp://localhost:3333", m_mockClientCallback, {{true}});
-    connection->connect();
+    IStreamConnectionPtr connection = m_connectionContainer->connect(m_mockClientCallback, "tcp://localhost:3333", {{true}});
 
     IMessagePtr message = std::make_shared<ProtocolMessage>(0);
     message->addSendPayload(MESSAGE1_BUFFER);
@@ -181,8 +179,7 @@ TEST_F(TestIntegrationStreamConnectionContainerSsl, testConnectBind)
                                             .WillOnce(Return(nullptr));
     EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
 
-    IStreamConnectionPtr connection = m_connectionContainer->createConnection("tcp://localhost:3333", m_mockClientCallback, {{true}, 1});
-    connection->connect();
+    IStreamConnectionPtr connection = m_connectionContainer->connect(m_mockClientCallback, "tcp://localhost:3333", {{true}, 1});
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
@@ -207,11 +204,11 @@ TEST_F(TestIntegrationStreamConnectionContainerSsl, testSendConnectBind)
     auto& expectReceive = EXPECT_CALL(*m_mockServerCallback, received(_, _, _)).Times(1)
                                                    .WillRepeatedly(Invoke(this, &TestIntegrationStreamConnectionContainerSsl::receivedServer));
 
-    IStreamConnectionPtr connection = m_connectionContainer->createConnection("tcp://localhost:3333", m_mockClientCallback, {{true}, 1});
+    IStreamConnectionPtr connection = m_connectionContainer->createConnection(m_mockClientCallback);
     IMessagePtr message = std::make_shared<ProtocolMessage>(0);
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
-    connection->connect();
+    m_connectionContainer->connect(connection, "tcp://localhost:3333", {{true}, 1});
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
@@ -233,8 +230,7 @@ TEST_F(TestIntegrationStreamConnectionContainerSsl, testReconnectExpires)
     EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(0);
     auto& expectDisconnected = EXPECT_CALL(*m_mockClientCallback, disconnected(_)).Times(1);
 
-    IStreamConnectionPtr connection = m_connectionContainer->createConnection("tcp://localhost:3333", m_mockClientCallback, {{true}, 1, 1});
-    connection->connect();
+    IStreamConnectionPtr connection = m_connectionContainer->connect(m_mockClientCallback, "tcp://localhost:3333", {{true}, 1, 1});
     IMessagePtr message = std::make_shared<ProtocolMessage>(0);
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
@@ -266,8 +262,7 @@ TEST_F(TestIntegrationStreamConnectionContainerSsl, testBindConnectDisconnect)
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
-    IStreamConnectionPtr connection = m_connectionContainer->createConnection("tcp://localhost:3333", m_mockClientCallback, {{true}});
-    connection->connect();
+    IStreamConnectionPtr connection = m_connectionContainer->connect(m_mockClientCallback, "tcp://localhost:3333", {{true}});
     IMessagePtr message = std::make_shared<ProtocolMessage>(0);
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
@@ -299,8 +294,7 @@ TEST_F(TestIntegrationStreamConnectionContainerSsl, testGetAllConnections)
                                             .WillOnce(DoAll(testing::SaveArg<0>(&connConnect), Return(nullptr)));
     auto& expectConnectedServer = EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
 
-    IStreamConnectionPtr connection = m_connectionContainer->createConnection("tcp://localhost:3333", m_mockClientCallback, {{true}});
-    connection->connect();
+    IStreamConnectionPtr connection = m_connectionContainer->connect(m_mockClientCallback, "tcp://localhost:3333", {{true}});
 
     waitTillDone(expectConnectedClient, 5000);
     waitTillDone(expectConnectedServer, 5000);
@@ -335,9 +329,8 @@ TEST_F(TestIntegrationStreamConnectionContainerSsl, testBindLateConnect)
     auto& expectConnectedServer = EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
 
     IStreamConnectionPtr connection = m_connectionContainer->createConnection(m_mockClientCallback);
-    bool res2 = m_connectionContainer->setEndpoint(connection, "tcp://localhost:3333", {{true}});
+    bool res2 = m_connectionContainer->connect(connection, "tcp://localhost:3333", {{true}});
     ASSERT_EQ(res2, true);
-    connection->connect();
 
     waitTillDone(expectConnectedClient, 5000);
     waitTillDone(expectConnectedServer, 5000);
@@ -364,9 +357,8 @@ TEST_F(TestIntegrationStreamConnectionContainerSsl, testSendLateConnectBind)
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
 
-    bool res2 = m_connectionContainer->setEndpoint(connection, "tcp://localhost:3333", {{true}, 1});
+    bool res2 = m_connectionContainer->connect(connection, "tcp://localhost:3333", {{true}, 1});
     ASSERT_EQ(res2, true);
-    connection->connect();
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 

@@ -70,7 +70,6 @@ struct IStreamConnectionCallback
 struct IStreamConnection
 {
     virtual ~IStreamConnection() {}
-    virtual bool connect() = 0;
     virtual bool sendMessage(const IMessagePtr& msg) = 0;
     virtual ConnectionData getConnectionData() const = 0;
     virtual ConnectionState getConnectionState() const = 0;
@@ -82,6 +81,7 @@ struct IStreamConnection
 
 struct IStreamConnectionPrivate : public IStreamConnection
 {
+    virtual bool connect() = 0;
     virtual SocketPtr getSocketPrivate() = 0;
     virtual bool sendPendingMessages() = 0;
     virtual bool checkEdgeConnected() = 0;
@@ -107,7 +107,6 @@ public:
 
 private:
     // IStreamConnection
-    virtual bool connect() override;
     virtual bool sendMessage(const IMessagePtr& msg) override;
     virtual ConnectionData getConnectionData() const override;
     virtual ConnectionState getConnectionState() const override;
@@ -116,6 +115,7 @@ private:
     virtual void disconnect() override;
 
     // IStreamConnectionPrivate
+    virtual bool connect() override;
     virtual SocketPtr getSocketPrivate() override;
     virtual bool sendPendingMessages() override;
     virtual bool checkEdgeConnected() override;

@@ -89,6 +89,82 @@ IStreamConnectionPrivatePtr StreamConnectionContainer::findConnectionBySd(SOCKET
 }
 
 
+IStreamConnectionPrivatePtr StreamConnectionContainer::findConnectionById(std::int64_t connectionId)
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    IStreamConnectionPrivatePtr connection;
+    auto it = m_connectionId2Connection.find(connectionId);
+    if (it != m_connectionId2Connection.end())
+    {
+        connection = it->second;
+    }
+    lock.unlock();
+    return connection;
+}
+
+
+
+// AddressResolver
+
+AddressResolver::~AddressResolver()
+{
+    if (m_thread)
+    {
+        m_terminate = true;
+        m_release = true;
+        m_thread->join();
+    }
+}
+
+void AddressResolver::init()
+{
+    assert(!m_thread);
+    m_thread = std::make_unique<std::thread>([this] () { run(); });
+}
+
+void AddressResolver::resolveHost(const std::string& hostname, FuncResolved funcResolved)
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    m_requests.emplace_back(std::make_unique<ResolveRequest>(hostname, std::move(funcResolved)));
+    lock.unlock();
+    m_release = true;
+}
+
+void AddressResolver::run()
+{
+    while (!m_terminate)
+    {
+        m_release.wait();
+        if (!m_terminate)
+        {
+            std::unique_ptr<ResolveRequest> request;
+            std::unique_lock<std::mutex> lock(m_mutex);
+            if (!m_requests.empty())
+            {
+                request = std::move(m_requests.front());
+                m_requests.pop_front();
+            }
+            lock.unlock();
+            if (request)
+            {
+                bool ok = false;
+                struct in_addr addr;
+                struct hostent* hp = gethostbyname(request->hostname.c_str());
+                if (hp)
+                {
+                    ok = true;
+                    addr = *((struct in_addr *)(hp->h_addr));
+                }
+                if (request->funcResolved)
+                {
+                    request->funcResolved(ok, addr);
+                }
+            }
+        }
+    }
+}
+
+
 
 // IStreamConnectionContainer
 
@@ -98,6 +174,7 @@ void StreamConnectionContainer::init(int cycleTime, int checkReconnectInterval)
     m_cycleTime = cycleTime;
     m_checkReconnectInterval = checkReconnectInterval;
     m_poller->init();
+    m_addressResolver.init();
 }
 
 
@@ -166,12 +243,12 @@ void StreamConnectionContainer::unbind(const std::string& endpoint)
     locker.unlock();
 }
 
-IStreamConnectionPtr StreamConnectionContainer::createConnection(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const ConnectProperties& connectionProperties)
+IStreamConnectionPtr StreamConnectionContainer::connect(hybrid_ptr<IStreamConnectionCallback> callback, const std::string& endpoint, const ConnectProperties& connectionProperties)
 {
     IStreamConnectionPtr connection = createConnection(callback);
     if (connection)
     {
-        bool res = setEndpoint(connection, endpoint, connectionProperties);
+        bool res = connect(connection, endpoint, connectionProperties);
         if (!res)
         {
             connection = nullptr;
@@ -202,22 +279,8 @@ IStreamConnectionPtr StreamConnectionContainer::createConnection(hybrid_ptr<IStr
 
 
 
-
-bool StreamConnectionContainer::setEndpoint(const IStreamConnectionPtr& streamConnection, const std::string& endpoint, const ConnectProperties& connectionProperties)
+bool StreamConnectionContainer::createSocket(const IStreamConnectionPtr& streamConnection, ConnectionData& connectionData, const ConnectProperties& connectionProperties)
 {
-    assert(streamConnection);
-    ConnectionData connectionData = AddressHelpers::endpoint2ConnectionData(endpoint);
-    connectionData.connectionId = streamConnection->getConnectionId();
-    connectionData.incomingConnection = false;
-    connectionData.reconnectInterval = connectionProperties.reconnectInterval;
-    connectionData.totalReconnectDuration = connectionProperties.totalReconnectDuration;
-    connectionData.startTime = std::chrono::system_clock::now();
-    connectionData.ssl = connectionProperties.certificateData.ssl;
-    connectionData.connectionState = ConnectionState::CONNECTIONSTATE_CREATED;
-    bool doAsyncGetHostByName = false;
-    std::string addr = AddressHelpers::makeSocketAddress(connectionData.hostname, connectionData.port, connectionData.af, false, doAsyncGetHostByName);
-    connectionData.sockaddr = addr;
-
     SocketPtr socket = streamConnection->getSocket();
     assert(socket);
 
@@ -264,7 +327,68 @@ bool StreamConnectionContainer::setEndpoint(const IStreamConnectionPtr& streamCo
     {
         streamConnection->disconnect();
     }
+    return ret;
+}
 
+
+
+bool StreamConnectionContainer::connect(const IStreamConnectionPtr& streamConnection, const std::string& endpoint, const ConnectProperties& connectionProperties)
+{
+    assert(streamConnection);
+    IStreamConnectionPrivatePtr connection = findConnectionById(streamConnection->getConnectionId());
+    if (!connection)
+    {
+        return false;
+    }
+
+    ConnectionData connectionData = AddressHelpers::endpoint2ConnectionData(endpoint);
+    connectionData.connectionId = connection->getConnectionId();
+    connectionData.incomingConnection = false;
+    connectionData.reconnectInterval = connectionProperties.reconnectInterval;
+    connectionData.totalReconnectDuration = connectionProperties.totalReconnectDuration;
+    connectionData.startTime = std::chrono::system_clock::now();
+    connectionData.ssl = connectionProperties.certificateData.ssl;
+    connectionData.connectionState = ConnectionState::CONNECTIONSTATE_CREATED;
+    bool doAsyncGetHostByName = false;
+    std::string addr = AddressHelpers::makeSocketAddress(connectionData.hostname, connectionData.port, connectionData.af, true, doAsyncGetHostByName);
+    bool ret = false;
+    if (doAsyncGetHostByName)
+    {
+        ret = true;
+        m_addressResolver.resolveHost(connectionData.hostname, [this, connection, connectionData, connectionProperties] (bool ok, const in_addr& addr) mutable {
+            if (ok)
+            {
+                struct sockaddr_in addrTcp;
+                memset(&addrTcp, 0, sizeof(sockaddr_in));
+                addrTcp.sin_family = connectionData.af;
+                addrTcp.sin_addr.s_addr = addr.s_addr;
+                addrTcp.sin_port = htons(connectionData.port);
+                connectionData.sockaddr = std::string((const char*)&addrTcp, sizeof(sockaddr_in));
+                ok = createSocket(connection, connectionData, connectionProperties);
+                if (ok)
+                {
+                    ok = connection->connect();
+                }
+            }
+            if(!ok)
+            {
+                connection->disconnect();
+            }
+        });
+    }
+    else
+    {
+        connectionData.sockaddr = addr;
+        ret = createSocket(connection, connectionData, connectionProperties);
+        if (ret)
+        {
+            ret = connection->connect();
+        }
+    }
+    if (!ret)
+    {
+        streamConnection->disconnect();
+    }
     return ret;
 }
 

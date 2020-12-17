@@ -70,9 +70,9 @@ void ProtocolSession::connect()
 {
     assert(m_streamConnectionContainer);
     IStreamConnectionPtr connection;
-    connection = m_streamConnectionContainer->createConnection(m_endpoint, std::weak_ptr<IStreamConnectionCallback>(shared_from_this()), m_connectProperties);
+    connection = m_streamConnectionContainer->createConnection(std::weak_ptr<IStreamConnectionCallback>(shared_from_this()));
     setConnection(connection);
-    connection->connect();
+    m_streamConnectionContainer->connect(connection,m_endpoint, m_connectProperties);
 }
 
 
@@ -216,11 +216,7 @@ bool ProtocolSession::setEndpoint(const std::string& endpoint, const ConnectProp
 
     assert(connection);
 
-    bool res = m_streamConnectionContainer->setEndpoint(connection, endpoint, connectionProperties);
-    if (res)
-    {
-        res = connection->connect();
-    }
+    bool res = m_streamConnectionContainer->connect(connection, endpoint, connectionProperties);
     return res;
 }
 
