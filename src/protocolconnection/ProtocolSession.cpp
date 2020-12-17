@@ -47,6 +47,15 @@ ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, 
 {
 }
 
+ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, int contentType)
+    : m_callback(callback)
+    , m_protocol(protocol)
+    , m_protocolSessionList(protocolSessionList)
+    , m_contentType(contentType)
+    , m_streamConnectionContainer(streamConnectionContainer)
+{
+}
+
 
 
 ProtocolSession::~ProtocolSession()
@@ -64,6 +73,15 @@ void ProtocolSession::connect()
     connection = m_streamConnectionContainer->createConnection(m_endpoint, std::weak_ptr<IStreamConnectionCallback>(shared_from_this()), m_connectProperties);
     setConnection(connection);
     connection->connect();
+}
+
+
+void ProtocolSession::createConnection()
+{
+    assert(m_streamConnectionContainer);
+    IStreamConnectionPtr connection;
+    connection = m_streamConnectionContainer->createConnection(std::weak_ptr<IStreamConnectionCallback>(shared_from_this()));
+    setConnection(connection);
 }
 
 
@@ -189,6 +207,19 @@ void ProtocolSession::disconnect()
         return connection->disconnect();
     }
 }
+
+bool ProtocolSession::setEndpoint(const std::string& endpoint, const ConnectProperties& connectionProperties)
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    IStreamConnectionPtr connection = m_connection;
+    lock.unlock();
+
+    assert(connection);
+
+    return m_streamConnectionContainer->setEndpoint(connection, endpoint, connectionProperties);
+}
+
+
 
 
 // IStreamConnectionCallback

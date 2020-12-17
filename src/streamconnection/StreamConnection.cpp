@@ -22,6 +22,7 @@
 
 
 #include "streamconnection/StreamConnection.h"
+#include "streamconnection/AddressHelpers.h"
 #include <thread>
 
 
@@ -116,8 +117,6 @@ void StreamConnection::disconnect()
     m_disconnectFlag = true;
     m_poller->releaseWait();
 }
-
-
 
 
 bool StreamConnection::connect()
@@ -273,6 +272,14 @@ bool StreamConnection::changeStateForDisconnect()
 bool StreamConnection::getDisconnectFlag() const
 {
     return m_disconnectFlag;
+}
+
+
+void StreamConnection::updateConnectionData(const ConnectionData& connectionData)
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    m_connectionData = connectionData;
+    lock.unlock();
 }
 
 

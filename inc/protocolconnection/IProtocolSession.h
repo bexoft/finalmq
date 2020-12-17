@@ -36,6 +36,7 @@ struct IProtocolSession
     virtual SocketPtr getSocket() = 0;
     virtual int getContentType() const = 0;
     virtual void disconnect() = 0;
+    virtual bool setEndpoint(const std::string& endpoint, const ConnectProperties& connectionProperties = {}) = 0;
 };
 
 //struct IProtocolSession;

@@ -47,6 +47,8 @@ struct IStreamConnectionContainer
     virtual int bind(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const BindProperties& bindProperties = {}) = 0;
     virtual void unbind(const std::string& endpoint) = 0;
     virtual IStreamConnectionPtr createConnection(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const ConnectProperties& connectionProperties = {}) = 0;
+    virtual IStreamConnectionPtr createConnection(hybrid_ptr<IStreamConnectionCallback> callback) = 0;
+    virtual bool setEndpoint(const IStreamConnectionPtr& streamConnection, const std::string& endpoint, const ConnectProperties& connectionProperties = {}) = 0;
     virtual std::vector< IStreamConnectionPtr > getAllConnections() const = 0;
     virtual IStreamConnectionPtr getConnection(std::int64_t connectionId) const = 0;
     virtual void run() = 0;
@@ -67,6 +69,8 @@ private:
     virtual int bind(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const BindProperties& bindProperties = {}) override;
     virtual void unbind(const std::string& endpoint) override;
     virtual IStreamConnectionPtr createConnection(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const ConnectProperties& connectionProperties = {}) override;
+    virtual IStreamConnectionPtr createConnection(hybrid_ptr<IStreamConnectionCallback> callback) override;
+    virtual bool setEndpoint(const IStreamConnectionPtr& streamConnection, const std::string& endpoint, const ConnectProperties& connectionProperties = {}) override;
     virtual std::vector< IStreamConnectionPtr > getAllConnections() const override;
     virtual IStreamConnectionPtr getConnection(std::int64_t connectionId) const override;
     virtual void run() override;

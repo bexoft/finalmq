@@ -178,7 +178,7 @@ IStreamConnectionPtr StreamConnectionContainer::createConnection(const std::stri
     connectionData.sockaddr = addr;
 
     SocketPtr socket = std::make_shared<Socket>();
-    int ret = -1;
+    bool ret = false;
 #ifdef USE_OPENSSL
     if (connectionData.ssl)
     {
@@ -192,14 +192,106 @@ IStreamConnectionPtr StreamConnectionContainer::createConnection(const std::stri
 
     IStreamConnectionPrivatePtr connection;
 
-    if (ret >= 0)
+    if (ret)
     {
+        SocketDescriptorPtr sd = socket->getSocketDescriptor();
+        assert(sd);
+        connectionData.sd = sd->getDescriptor();
+        AddressHelpers::addr2peer((sockaddr*)connectionData.sockaddr.c_str(), connectionData);
+
         connection = addConnection(socket, connectionData, callback);
         assert(connection);
     }
 
     return connection;
 }
+
+
+
+
+IStreamConnectionPtr StreamConnectionContainer::createConnection(hybrid_ptr<IStreamConnectionCallback> callback)
+{
+    ConnectionData connectionData;
+    connectionData.incomingConnection = false;
+    connectionData.connectionState = ConnectionState::CONNECTIONSTATE_CREATED;
+
+    SocketPtr socket = std::make_shared<Socket>();
+
+    IStreamConnectionPrivatePtr connection;
+
+    connection = addConnection(socket, connectionData, callback);
+    assert(connection);
+
+    return connection;
+}
+
+
+
+
+bool StreamConnectionContainer::setEndpoint(const IStreamConnectionPtr& streamConnection, const std::string& endpoint, const ConnectProperties& connectionProperties)
+{
+    assert(streamConnection);
+    ConnectionData connectionData = AddressHelpers::endpoint2ConnectionData(endpoint);
+    connectionData.connectionId = streamConnection->getConnectionData().connectionId;
+    connectionData.incomingConnection = false;
+    connectionData.reconnectInterval = connectionProperties.reconnectInterval;
+    connectionData.totalReconnectDuration = connectionProperties.totalReconnectDuration;
+    connectionData.startTime = std::chrono::system_clock::now();
+    connectionData.ssl = connectionProperties.certificateData.ssl;
+    connectionData.connectionState = ConnectionState::CONNECTIONSTATE_CREATED;
+    std::string addr = AddressHelpers::makeSocketAddress(connectionData.hostname, connectionData.port, connectionData.af);
+    connectionData.sockaddr = addr;
+
+    SocketPtr socket = streamConnection->getSocket();
+    assert(socket);
+
+    // the endpoint should not been set twice!
+    assert(socket->getSocketDescriptor() == nullptr);
+
+    bool ret = false;
+#ifdef USE_OPENSSL
+    if (connectionData.ssl)
+    {
+        ret = socket->createSslClient(connectionData.af, connectionData.type, connectionData.protocol, connectionProperties.certificateData);
+    }
+    else
+#endif
+    {
+        ret = socket->create(connectionData.af, connectionData.type, connectionData.protocol);
+    }
+
+    if (ret)
+    {
+        SocketDescriptorPtr sd = socket->getSocketDescriptor();
+        assert(sd);
+        connectionData.sd = sd->getDescriptor();
+        AddressHelpers::addr2peer((sockaddr*)connectionData.sockaddr.c_str(), connectionData);
+
+        IStreamConnectionPrivatePtr streamConnectionPrivate;
+        std::unique_lock<std::mutex> lock(m_mutex);
+        auto it = m_connectionId2Connection.find(connectionData.connectionId);
+        if (it != m_connectionId2Connection.end())
+        {
+            streamConnectionPrivate = it->second;
+            assert(streamConnectionPrivate);
+            streamConnectionPrivate->updateConnectionData(connectionData);
+            m_sd2Connection[connectionData.sd] = it->second;
+        }
+        else
+        {
+            ret = false;
+        }
+        lock.unlock();
+    }
+
+    if (!ret)
+    {
+        streamConnection->disconnect();
+    }
+
+    return ret;
+}
+
 
 
 
@@ -243,7 +335,10 @@ void StreamConnectionContainer::removeConnection(const SocketDescriptorPtr& sd, 
     assert(sd);
 
     std::unique_lock<std::mutex> lock(m_mutex);
-    m_sd2Connection.erase(sd->getDescriptor());
+    if (sd)
+    {
+        m_sd2Connection.erase(sd->getDescriptor());
+    }
     m_connectionId2Connection.erase(connectionId);
     lock.unlock();
 }
@@ -288,17 +383,15 @@ void StreamConnectionContainer::terminatePollerLoop()
 
 IStreamConnectionPrivatePtr StreamConnectionContainer::addConnection(const SocketPtr& socket, ConnectionData& connectionData, hybrid_ptr<IStreamConnectionCallback> callback)
 {
-    SocketDescriptorPtr sd = socket->getSocketDescriptor();
-    assert(sd);
-    connectionData.sd = sd->getDescriptor();
-    AddressHelpers::addr2peer((sockaddr*)connectionData.sockaddr.c_str(), connectionData);
-
     std::unique_lock<std::mutex> lock(m_mutex);
     std::int64_t connectionId = m_nextConnectionId++;
     connectionData.connectionId = connectionId;
     IStreamConnectionPrivatePtr connection = std::make_shared<StreamConnection>(connectionData, socket, m_poller, callback);
     m_connectionId2Connection[connectionId] = connection;
-    m_sd2Connection[connectionData.sd] = connection;
+    if (connectionData.sd != INVALID_SOCKET)
+    {
+        m_sd2Connection[connectionData.sd] = connection;
+    }
     lock.unlock();
 
     return connection;
@@ -467,6 +560,11 @@ void StreamConnectionContainer::handleBindEvents(const DescriptorInfo& info)
                 else
 #endif
                 {
+                    SocketDescriptorPtr sd = socketAccept->getSocketDescriptor();
+                    assert(sd);
+                    connectionData.sd = sd->getDescriptor();
+                    AddressHelpers::addr2peer((sockaddr*)connectionData.sockaddr.c_str(), connectionData);
+
                     IStreamConnectionPrivatePtr connection = addConnection(socketAccept, connectionData, bindData.callback);
                     connection->connected(connection);
                 }
@@ -516,6 +614,11 @@ bool StreamConnectionContainer::sslAccepting(SslAcceptingData& sslAcceptingData)
 
     if (state == SslSocket::IoState::SUCCESS)
     {
+        SocketDescriptorPtr sd = sslAcceptingData.socket->getSocketDescriptor();
+        assert(sd);
+        sslAcceptingData.connectionData.sd = sd->getDescriptor();
+        AddressHelpers::addr2peer((sockaddr*)sslAcceptingData.connectionData.sockaddr.c_str(), sslAcceptingData.connectionData);
+
         IStreamConnectionPrivatePtr connection = addConnection(sslAcceptingData.socket, sslAcceptingData.connectionData, sslAcceptingData.callback);
         connection->connected(connection);
     }
@@ -570,8 +673,8 @@ void StreamConnectionContainer::pollerLoop()
         if (result.releaseWait)
         {
             std::vector<IStreamConnectionPrivatePtr> connectionsDisconnect;
-            connectionsDisconnect.reserve(m_connectionId2Connection.size());
             std::unique_lock<std::mutex> lock(m_mutex);
+            connectionsDisconnect.reserve(m_connectionId2Connection.size());
             for (auto it = m_connectionId2Connection.begin(); it != m_connectionId2Connection.end(); ++it)
             {
                 const IStreamConnectionPrivatePtr& connection = it->second;

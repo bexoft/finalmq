@@ -34,6 +34,7 @@ struct IProtocolSessionPrivate : public IProtocolSession
                                , public IStreamConnectionCallback
 {
     virtual void connect() = 0;
+    virtual void createConnection() = 0;
     virtual int64_t setConnection(const IStreamConnectionPtr& connection) = 0;
 };
 
@@ -50,6 +51,7 @@ class ProtocolSession : public IProtocolSessionPrivate
 public:
     ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const BindProperties& bindProperties, int contentType);
     ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, const std::string& endpoint, const ConnectProperties& connectProperties, int contentType);
+    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, int contentType);
 
     virtual ~ProtocolSession();
 
@@ -62,6 +64,7 @@ private:
     virtual SocketPtr getSocket() override;
     virtual int getContentType() const override;
     virtual void disconnect() override;
+    virtual bool setEndpoint(const std::string& endpoint, const ConnectProperties& connectionProperties = {}) override;
 
     // IStreamConnectionCallback
     virtual hybrid_ptr<IStreamConnectionCallback> connected(const IStreamConnectionPtr& connection) override;
@@ -70,6 +73,7 @@ private:
 
     // IProtocolSessionPrivate
     virtual void connect() override;
+    virtual void createConnection() override;
     virtual int64_t setConnection(const IStreamConnectionPtr& connection) override;
 
     // IProtocolCallback

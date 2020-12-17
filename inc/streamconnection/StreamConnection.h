@@ -86,6 +86,7 @@ struct IStreamConnectionPrivate : public IStreamConnection
     virtual bool doReconnect() = 0;
     virtual bool changeStateForDisconnect() = 0;
     virtual bool getDisconnectFlag() const = 0;
+    virtual void updateConnectionData(const ConnectionData& connectionData) = 0;
 
     virtual void connected(const IStreamConnectionPtr& connection) = 0;
     virtual void disconnected(const IStreamConnectionPtr& connection) = 0;
@@ -117,6 +118,7 @@ private:
     virtual bool doReconnect() override;
     virtual bool changeStateForDisconnect() override;
     virtual bool getDisconnectFlag() const override;
+    virtual void updateConnectionData(const ConnectionData& connectionData) override;
 
     virtual void connected(const IStreamConnectionPtr& connection) override;
     virtual void disconnected(const IStreamConnectionPtr& connection) override;
