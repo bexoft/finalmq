@@ -144,6 +144,7 @@ private:
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) = 0;
     virtual void receivedRequest(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBasePtr& structBase) = 0;
     virtual void receivedReply(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBasePtr& structBase) = 0;
+    virtual void deinit() = 0;
     friend class RemoteEntityContainer;
 };
 typedef std::shared_ptr<IRemoteEntity> IRemoteEntityPtr;
@@ -298,6 +299,7 @@ private:
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) override;
     virtual void receivedRequest(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBasePtr& structBase) override;
     virtual void receivedReply(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBasePtr& structBase) override;
+    virtual void deinit() override;
 
     PeerId addPeer(const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName, bool incoming, bool& added);
     PeerId connectIntern(const IProtocolSessionPtr& session, const std::string& entityName, EntityId, FuncReplyConnect funcReplyConnect);

@@ -25,6 +25,7 @@
             {"tid":"TYPE_ENUM",         "type":"SocketProtocol",    "name":"socketprotocol",    "desc":"","flags":[]},
             {"tid":"TYPE_ENUM",         "type":"FramingProtocol",   "name":"framingprotocol",   "desc":"","flags":[]},
             {"tid":"TYPE_ENUM",         "type":"ContentType",       "name":"contenttype",       "desc":"","flags":[]},
+            {"tid":"TYPE_BOOL",         "type":"",                  "name":"ssl",               "desc":"","flags":[]},
             {"tid":"TYPE_STRING",       "type":"",                  "name":"endpoint",          "desc":"","flags":[]}
         ]},
         {"type":"Service","desc":"","fields":[

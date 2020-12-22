@@ -80,7 +80,7 @@ int main()
                   << " event: " << connectionEvent.toString() << std::endl;
     });
 
-    // Create server entity and register it at the entityContainer with the service name "MyService"
+    // Create client entity and register it at the entityContainer
     // note: multiple entities can be registered.
     RemoteEntity entityClient;
     entityContainer.registerEntity(&entityClient);
