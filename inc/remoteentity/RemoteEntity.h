@@ -121,7 +121,7 @@ struct IRemoteEntity
 
     virtual bool sendEvent(const PeerId& peerId, const StructBase& structBase) = 0;
     virtual PeerId connect(const IProtocolSessionPtr& session, const std::string& entityName, FuncReplyConnect funcReplyConnect = {}) = 0;
-    virtual PeerId connect(const IProtocolSessionPtr& session, EntityId, FuncReplyConnect funcReplyConnect = {}) = 0;
+    virtual PeerId connect(const IProtocolSessionPtr& session, EntityId entityId, FuncReplyConnect funcReplyConnect = {}) = 0;
     virtual void disconnect(PeerId peerId) = 0;
     virtual std::vector<PeerId> getAllPeers() const = 0;
     virtual void registerPeerEvent(FuncPeerEvent funcPeerEvent) = 0;
@@ -282,7 +282,7 @@ public:
     // IRemoteEntity
     virtual bool sendEvent(const PeerId& peerId, const StructBase& structBase) override;
     virtual PeerId connect(const IProtocolSessionPtr& session, const std::string& entityName, FuncReplyConnect funcReplyConnect = {}) override;
-    virtual PeerId connect(const IProtocolSessionPtr& session, EntityId, FuncReplyConnect funcReplyConnect = {}) override;
+    virtual PeerId connect(const IProtocolSessionPtr& session, EntityId entityId, FuncReplyConnect funcReplyConnect = {}) override;
     virtual void disconnect(PeerId peerId) override;
     virtual std::vector<PeerId> getAllPeers() const override;
     virtual void registerPeerEvent(FuncPeerEvent funcPeerEvent) override;
