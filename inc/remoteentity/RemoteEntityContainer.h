@@ -101,6 +101,7 @@ private:
     virtual void socketDisconnected(const IProtocolSessionPtr& session) override;
 
     inline void triggerConnectionEvent(const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) const;
+    void deinit();
 
     std::unique_ptr<IProtocolSessionContainer>                  m_streamConnectionContainer;
     std::unordered_map<std::string, EntityId>                   m_name2entityId;

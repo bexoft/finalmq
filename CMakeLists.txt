@@ -87,6 +87,14 @@ add_custom_command(
     COMMENT "Generating cpp code out of entitydata.fmq."
 )
 
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/inc/interfaces)
+add_custom_command(
+    COMMAND node ${CODEGENERATOR_CPP} --input=${CMAKE_CURRENT_SOURCE_DIR}/inc/interfaces/fmqreg.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}/inc/interfaces --exportmacro=EXPORT_finalmq
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/inc/interfaces/fmqreg.fmq
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/inc/interfaces/fmqreg.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/inc/interfaces/fmqreg.fmq.h
+    COMMENT "Generating cpp code out of fmqreg.fmq."
+)
+
 
 
 #Bring the headers into the project
@@ -115,7 +123,11 @@ file(GLOB SOURCES "src/*.cpp" "inc/*.h"
                   "mock/*.h")
 
 #Generate the shared library from the sources
-add_library(finalmq SHARED ${SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/inc/metadataserialize/metadata.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/inc/remoteentity/entitydata.fmq.cpp)
+add_library(finalmq SHARED ${SOURCES}
+    ${CMAKE_CURRENT_BINARY_DIR}/inc/metadataserialize/metadata.fmq.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/inc/remoteentity/entitydata.fmq.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/inc/interfaces/fmqreg.fmq.cpp
+    )
 
 
 
@@ -135,6 +147,10 @@ endif()
 #Set the location for library installation -- i.e., /usr/lib in this case
 # not really necessary in this example. Use "sudo make install" to apply
 install(TARGETS finalmq DESTINATION /usr/lib)
+
+
+add_subdirectory(services)
+
 
 if (FINALMQ_BUILD_TESTS)
     add_subdirectory(test)

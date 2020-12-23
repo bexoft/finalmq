@@ -25,8 +25,7 @@
 #include "protocols/ProtocolDelimiter.h"
 #include "logger/Logger.h"
 
-// the definition of the messages are in the file helloworld.fmq
-#include "helloworld.fmq.h"
+#include "interfaces/fmqreg.fmq.h"
 
 #include <iostream>
 #include <thread>
@@ -46,52 +45,43 @@ using finalmq::ConnectionData;
 using finalmq::ConnectionEvent;
 using finalmq::Logger;
 using finalmq::LogContext;
-using helloworld::HelloRequest;
-using helloworld::HelloReply;
+using finalmq::fmqreg::RegisterService;
+using finalmq::fmqreg::GetService;
+using finalmq::fmqreg::GetServiceReply;
+using finalmq::fmqreg::Service;
 
 
 
-class EntityServer : public RemoteEntity
+class Registry : public RemoteEntity
 {
 public:
-    EntityServer()
+    Registry()
     {
         // register peer events to see when a remote entity connects or disconnects.
         registerPeerEvent([] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
             std::cout << "peer event " << peerEvent.toString() << std::endl;
         });
 
-        // handle the HelloRequest
-        // this is fun - try to access the server with the json interface at port 8888:
-        // telnet localhost 8888  (or: netcat localhost 8888)
-        // /MyService/helloworld.HelloRequest#4711{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
-        registerCommand<HelloRequest>([] (ReplyContextUPtr& replyContext, const std::shared_ptr<HelloRequest>& request) {
+        registerCommand<RegisterService>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<RegisterService>& request) {
             assert(request);
+            m_services[request->service.name] = request->service;
+        });
 
-            // prepare the reply
-            std::string prefix("Hello ");
-            HelloReply reply;
-            for (size_t i = 0; i < request->persons.size(); ++i)
+        registerCommand<GetService>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<GetService>& request) {
+            assert(request);
+            auto it = m_services.find(request->name);
+            if (it != m_services.end())
             {
-                reply.greetings.emplace_back(prefix + request->persons[i].name);
+                replyContext->reply(GetServiceReply(true, it->second));
             }
-
-            // send reply
-            replyContext->reply(std::move(reply));
-
-            // note:
-            // The reply does not have to be sent immediately:
-            // The replyContext is a unique_ptr, it can be moved to another unique_ptr,
-            // so that the reply can be called later.
-
-            // note:
-            // The replyContext has the method replyContext->peerId()
-            // The returned peerId can be used for calling requestReply() or sendEvent().
-            // So, also a server entity can act as a client and can send requestReply()
-            // to the peer entity that is calling this request.
-            // An entity can act as a client and as a server. It is bidirectional (symmetric) as a socket.
+            else
+            {
+                replyContext->reply(GetServiceReply(false, Service()));
+            }
         });
     }
+
+    std::unordered_map<std::string, Service>    m_services;
 };
 
 
@@ -118,26 +108,16 @@ int main()
 
     // Create server entity and register it at the entityContainer with the service name "MyService"
     // note: multiple entities can be registered.
-    EntityServer entityServer;
-    entityContainer.registerEntity(&entityServer, "MyService");
+    Registry registry;
+    entityContainer.registerEntity(&registry, "fmqreg");
 
     // Open listener port 7777 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
     // content type in payload: protobuf
-    entityContainer.bind("tcp://*:7777", std::make_shared<ProtocolHeaderBinarySizeFactory>(), RemoteEntityContentType::CONTENTTYPE_PROTO);
+    entityContainer.bind("tcp://*:18180", std::make_shared<ProtocolHeaderBinarySizeFactory>(), RemoteEntityContentType::CONTENTTYPE_PROTO);
 
     // Open listener port 8888 with delimiter framing protocol ProtocolDelimiter ('\n' is end of frame).
     // content type in payload: JSON
-    entityContainer.bind("tcp://*:8888", std::make_shared<ProtocolDelimiterFactory>("\n"), RemoteEntityContentType::CONTENTTYPE_JSON);
-
-    // note:
-    // multiple access points (listening ports) can be activated by calling bind() several times.
-    // For Unix Domain Sockets use: "ipc://socketname"
-    // For SSL/TLS encryption use BindProperties e.g.:
-    // entityContainer->bind("tcp://*:7777", std::make_shared<ProtocolHeaderBinarySizeFactory>(),
-    //                       RemoteEntityContentType::CONTENTTYPE_PROTO,
-    //                       {{true, "myservercertificate.cert.pem", "myservercertificate.key.pem"}});
-    // And by the way, also connect()s are possible for an EntityContainer. An EntityContainer can be client and server at the same time.
-
+    entityContainer.bind("tcp://*:18181", std::make_shared<ProtocolDelimiterFactory>("\n"), RemoteEntityContentType::CONTENTTYPE_JSON);
 
     // run
     entityContainer.run();

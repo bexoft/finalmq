@@ -590,4 +590,16 @@ void RemoteEntity::receivedReply(const IProtocolSessionPtr& session, const remot
     }
 }
 
+
+void RemoteEntity::deinit()
+{
+    std::vector<PeerId> peers = getAllPeers();
+    for (size_t i = 0; i < peers.size(); ++i)
+    {
+        removePeer(peers[i], Status::STATUS_PEER_DISCONNECTED);
+    }
+}
+
+
+
 }   // namespace finalmq

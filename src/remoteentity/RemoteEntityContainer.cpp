@@ -86,8 +86,33 @@ RemoteEntityContainer::RemoteEntityContainer()
 
 RemoteEntityContainer::~RemoteEntityContainer()
 {
-
+    deinit();
 }
+
+
+void RemoteEntityContainer::deinit()
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    std::vector<hybrid_ptr<IRemoteEntity>> entities;
+    entities.reserve(m_entityId2entity.size());
+    for (auto it = m_entityId2entity.begin(); it != m_entityId2entity.end(); ++it)
+    {
+        entities.push_back(it->second);
+    }
+    m_name2entityId.clear();
+    m_entityId2entity.clear();
+    lock.unlock();
+
+    for (size_t i = 0; i < entities.size(); ++i)
+    {
+        auto entity = entities[i].lock();
+        if (entity)
+        {
+            entity->deinit();
+        }
+    }
+}
+
 
 
 // IRemoteEntityContainer
@@ -115,6 +140,7 @@ IProtocolSessionPtr RemoteEntityContainer::connect(const std::string& endpoint, 
 void RemoteEntityContainer::run()
 {
     m_streamConnectionContainer->run();
+    deinit();
 }
 
 bool RemoteEntityContainer::terminatePollerLoop(int timeout)
@@ -275,7 +301,7 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
         }
         if (replyStatus != Status::STATUS_OK)
         {
-            Header headerReply{header.srcid, "", entityId, MsgMode::MSG_REPLY, Status::STATUS_SYNTAX_ERROR, "", header.corrid};
+            Header headerReply{header.srcid, "", entityId, MsgMode::MSG_REPLY, replyStatus, "", header.corrid};
             RemoteEntityFormat::send(session, headerReply);
         }
     }

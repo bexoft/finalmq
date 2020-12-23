@@ -143,6 +143,8 @@ TEST_F(TestIntegrationRemoteEntity, testProto)
     EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
     EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTING), false)).Times(1);
     EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
+    EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_DISCONNECTED), true)).Times(1);
+    EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_DISCONNECTED), false)).Times(1);
     PeerId peerId = entityClient.connect(sessionClient, "MyServer");
 
     static const int LOOP = 1;
@@ -202,6 +204,8 @@ TEST_F(TestIntegrationRemoteEntity, testJson)
     EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
     EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTING), false)).Times(1);
     EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
+    EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_DISCONNECTED), true)).Times(1);
+    EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_DISCONNECTED), false)).Times(1);
     PeerId peerId = entityClient.connect(sessionClient, "MyServer");
 
     static const int LOOP = 1;
@@ -257,6 +261,8 @@ TEST_F(TestIntegrationRemoteEntity, testSslProto)
     EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
     EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTING), false)).Times(1);
     EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
+    EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_DISCONNECTED), true)).Times(1);
+    EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_DISCONNECTED), false)).Times(1);
     PeerId peerId = entityClient.connect(sessionClient, "MyServer");
 
     static const int LOOP = 1;
