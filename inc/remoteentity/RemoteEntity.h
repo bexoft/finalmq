@@ -125,6 +125,7 @@ struct IRemoteEntity
     virtual void disconnect(PeerId peerId) = 0;
     virtual std::vector<PeerId> getAllPeers() const = 0;
     virtual void registerPeerEvent(FuncPeerEvent funcPeerEvent) = 0;
+    virtual EntityId getEntityId() const = 0;
 
     // low level methods
     virtual void registerCommandFunction(const std::string& functionName, FuncCommand funcCommand) = 0;
@@ -133,10 +134,6 @@ struct IRemoteEntity
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) = 0;
     // A callback for every received reply. With this callback a match with the correlation ID can be done by the application.
     virtual void registerReplyEvent(FuncReplyEvent funcReplyEvent) = 0;
-
-protected:
-    // Can be overriden by the application. Will be called for every reply.
-    virtual void replyReceived(CorrelationId correlationId, remoteentity::Status status, const StructBasePtr& structBase) = 0;
 
 private:
     // methods for RemoteEntityContainer
@@ -287,11 +284,11 @@ public:
     virtual void disconnect(PeerId peerId) override;
     virtual std::vector<PeerId> getAllPeers() const override;
     virtual void registerPeerEvent(FuncPeerEvent funcPeerEvent) override;
+    virtual EntityId getEntityId() const override;
     virtual void registerCommandFunction(const std::string& functionName, FuncCommand funcCommand) override;
     virtual CorrelationId getNextCorrelationId() const override;
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId) override;
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) override;
-    virtual void replyReceived(CorrelationId correlationId, remoteentity::Status status, const StructBasePtr& structBase) override;
     virtual void registerReplyEvent(FuncReplyEvent funcReplyEvent) override;
 
 private:
@@ -304,6 +301,7 @@ private:
     PeerId addPeer(const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName, bool incoming, bool& added);
     PeerId connectIntern(const IProtocolSessionPtr& session, const std::string& entityName, EntityId, FuncReplyConnect funcReplyConnect);
     void removePeer(PeerId peerId, remoteentity::Status status);
+    void replyReceived(CorrelationId correlationId, remoteentity::Status status, const StructBasePtr& structBase);
 
     struct Request
     {

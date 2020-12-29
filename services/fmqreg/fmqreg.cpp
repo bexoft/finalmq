@@ -51,6 +51,9 @@ using finalmq::fmqreg::GetServiceReply;
 using finalmq::fmqreg::Service;
 
 
+#define PORTNUMBER_PROTO    "18180"
+#define PORTNUMBER_JSON     "18181"
+
 
 class Registry : public RemoteEntity
 {
@@ -111,13 +114,13 @@ int main()
     Registry registry;
     entityContainer.registerEntity(&registry, "fmqreg");
 
-    // Open listener port 7777 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
+    // Open listener port 18180 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
     // content type in payload: protobuf
-    entityContainer.bind("tcp://*:18180", std::make_shared<ProtocolHeaderBinarySizeFactory>(), RemoteEntityContentType::CONTENTTYPE_PROTO);
+    entityContainer.bind("tcp://*:" PORTNUMBER_PROTO, std::make_shared<ProtocolHeaderBinarySizeFactory>(), RemoteEntityContentType::CONTENTTYPE_PROTO);
 
-    // Open listener port 8888 with delimiter framing protocol ProtocolDelimiter ('\n' is end of frame).
+    // Open listener port 18181 with delimiter framing protocol ProtocolDelimiter ('\n' is end of frame).
     // content type in payload: JSON
-    entityContainer.bind("tcp://*:18181", std::make_shared<ProtocolDelimiterFactory>("\n"), RemoteEntityContentType::CONTENTTYPE_JSON);
+    entityContainer.bind("tcp://*:" PORTNUMBER_JSON, std::make_shared<ProtocolDelimiterFactory>("\n"), RemoteEntityContentType::CONTENTTYPE_JSON);
 
     // run
     entityContainer.run();

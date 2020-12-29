@@ -397,6 +397,9 @@ void RemoteEntity::registerReplyEvent(FuncReplyEvent funcReplyEvent)
 }
 
 
+
+
+
 PeerId RemoteEntity::connectIntern(const IProtocolSessionPtr& session, const std::string& entityName, EntityId entityId, FuncReplyConnect funcReplyConnect)
 {
     bool added{};
@@ -508,6 +511,11 @@ void RemoteEntity::registerPeerEvent(FuncPeerEvent funcPeerEvent)
     m_peerManager->setPeerEvent(func);
 }
 
+
+EntityId RemoteEntity::getEntityId() const
+{
+    return m_entityId;
+}
 
 
 void RemoteEntity::initEntity(EntityId entityId, const std::string& entityName)
