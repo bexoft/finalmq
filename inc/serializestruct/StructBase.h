@@ -190,6 +190,7 @@ public:
     }
 
     virtual const StructInfo& getStructInfo() const = 0;
+    virtual std::shared_ptr<StructBase> clone() const = 0;
 };
 
 typedef std::shared_ptr<StructBase> StructBasePtr;

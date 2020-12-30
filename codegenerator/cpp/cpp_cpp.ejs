@@ -100,6 +100,11 @@ const finalmq::StructInfo& <%- plaintype %>::getStructInfo() const
 {
     return _structInfo;
 }
+std::shared_ptr<finalmq::StructBase> <%- plaintype %>::clone() const
+{
+    return std::make_shared<<%- plaintype %>>(*this);
+}
+
 bool <%- plaintype %>::operator ==(const <%- plaintype %>& <% if (stru.fields.length == 0) { %>/*<% } %>rhs<% if (stru.fields.length == 0) { %>*/<% } %>) const
 {
 <% if (stru.fields.length > 0) { %>

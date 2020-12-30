@@ -104,6 +104,7 @@ const <%- helper.tid2type(data, field.tid, field.type) %>& <%- field.name %>_<% 
 
     virtual void clear() override;
     virtual const finalmq::StructInfo& getStructInfo() const override;
+    virtual std::shared_ptr<finalmq::StructBase> clone() const override;
 
     inline static const finalmq::StructInfo& structInfo()
     {
