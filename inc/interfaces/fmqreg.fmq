@@ -13,7 +13,7 @@
     "structs":[
         {"type":"Endpoint","desc":"","fields":[
             {"tid":"TYPE_ENUM",         "type":"SocketProtocol",    "name":"socketprotocol",    "desc":"","flags":[]},
-            {"tid":"TYPE_INT32",        "type":"",                  "name":"framingprotocol",   "desc":"","flags":[]},
+            {"tid":"TYPE_UINT32",       "type":"",                  "name":"framingprotocol",   "desc":"","flags":[]},
             {"tid":"TYPE_INT32",        "type":"",                  "name":"contenttype",       "desc":"","flags":[]},
             {"tid":"TYPE_BOOL",         "type":"",                  "name":"ssl",               "desc":"","flags":[]},
             {"tid":"TYPE_STRING",       "type":"",                  "name":"endpoint",          "desc":"","flags":[]}

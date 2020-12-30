@@ -52,7 +52,7 @@ enum RemoteEntityContentType
 
 
 
-using EntityId = std::uint32_t;
+using EntityId = std::uint64_t;
 static constexpr EntityId ENTITYID_INVALID = 0;  // should be 0, so that it matches with the deserialized default value.
 
 using CorrelationId = std::uint64_t;

@@ -61,6 +61,7 @@ struct IRemoteEntityContainer
     virtual int bind(const std::string& endpoint, const IProtocolFactoryPtr protocolFactory, RemoteEntityContentType contentType, const BindProperties& bindProperties = {}) = 0;
     virtual void unbind(const std::string& endpoint) = 0;
     virtual IProtocolSessionPtr connect(const std::string& endpoint, const IProtocolPtr& protocol, RemoteEntityContentType contentType, const ConnectProperties& connectProperties = {}) = 0;
+    virtual IProtocolSessionPtr createSession() = 0;
     virtual void run() = 0;
     virtual bool terminatePollerLoop(int timeout) = 0;
 
@@ -85,6 +86,7 @@ public:
     virtual int bind(const std::string& endpoint, const IProtocolFactoryPtr protocolFactory, RemoteEntityContentType contentType, const BindProperties& bindProperties = {}) override;
     virtual void unbind(const std::string& endpoint) override;
     virtual IProtocolSessionPtr connect(const std::string& endpoint, const IProtocolPtr& protocol, RemoteEntityContentType contentType, const ConnectProperties& connectProperties = {}) override;
+    virtual IProtocolSessionPtr createSession() override;
     virtual void run() override;
     virtual bool terminatePollerLoop(int timeout) override;
 
@@ -103,7 +105,7 @@ private:
     inline void triggerConnectionEvent(const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) const;
     void deinit();
 
-    std::unique_ptr<IProtocolSessionContainer>                  m_streamConnectionContainer;
+    std::unique_ptr<IProtocolSessionContainer>                  m_protocolSessionContainer;
     std::unordered_map<std::string, EntityId>                   m_name2entityId;
     std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>>     m_entityId2entity;
     EntityId                                                    m_nextEntityId = 1;

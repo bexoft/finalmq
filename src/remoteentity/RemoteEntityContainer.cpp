@@ -79,7 +79,7 @@ const EnumInfo ConnectionEvent::_enumInfo = {
 
 
 RemoteEntityContainer::RemoteEntityContainer()
-    : m_streamConnectionContainer(std::make_unique<ProtocolSessionContainer>())
+    : m_protocolSessionContainer(std::make_unique<ProtocolSessionContainer>())
 {
 
 }
@@ -119,38 +119,52 @@ void RemoteEntityContainer::deinit()
 
 void RemoteEntityContainer::init(int cycleTime, int checkReconnectInterval)
 {
-    m_streamConnectionContainer->init(cycleTime, checkReconnectInterval);
+    m_protocolSessionContainer->init(cycleTime, checkReconnectInterval);
 }
 
 int RemoteEntityContainer::bind(const std::string& endpoint, IProtocolFactoryPtr protocolFactory, RemoteEntityContentType contentType, const BindProperties& bindProperties)
 {
-    return m_streamConnectionContainer->bind(endpoint, this, protocolFactory, bindProperties, contentType);
+    return m_protocolSessionContainer->bind(endpoint, this, protocolFactory, bindProperties, contentType);
 }
 
 void RemoteEntityContainer::unbind(const std::string& endpoint)
 {
-    m_streamConnectionContainer->unbind(endpoint);
+    m_protocolSessionContainer->unbind(endpoint);
 }
 
 IProtocolSessionPtr RemoteEntityContainer::connect(const std::string& endpoint, const IProtocolPtr& protocol, RemoteEntityContentType contentType, const ConnectProperties& connectProperties)
 {
-    return m_streamConnectionContainer->connect(endpoint, this, protocol, connectProperties, contentType);
+    return m_protocolSessionContainer->connect(endpoint, this, protocol, connectProperties, contentType);
 }
+
+
+IProtocolSessionPtr RemoteEntityContainer::createSession()
+{
+    return m_protocolSessionContainer->createSession(this);
+}
+
 
 void RemoteEntityContainer::run()
 {
-    m_streamConnectionContainer->run();
+    m_protocolSessionContainer->run();
     deinit();
 }
 
 bool RemoteEntityContainer::terminatePollerLoop(int timeout)
 {
-    return m_streamConnectionContainer->terminatePollerLoop(timeout);
+    return m_protocolSessionContainer->terminatePollerLoop(timeout);
 }
 
 
 EntityId RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, const std::string& name)
 {
+    auto re = remoteEntity.lock();
+    if (!re || re->isEntityRegistered())
+    {
+        streamError << "entity is invalid or already registered";
+        return ENTITYID_INVALID;
+    }
+
     std::unique_lock<std::mutex> lock(m_mutex);
     if (!name.empty())
     {
@@ -169,11 +183,7 @@ EntityId RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> remoteE
         m_name2entityId[name] = entityId;
     }
 
-    auto re = remoteEntity.lock();
-    if (re)
-    {
-        re->initEntity(entityId, name);
-    }
+    re->initEntity(entityId, name);
     m_entityId2entity[entityId] = remoteEntity;
 
     return entityId;

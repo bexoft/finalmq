@@ -137,6 +137,7 @@ struct IRemoteEntity
 
 private:
     // methods for RemoteEntityContainer
+    virtual bool isEntityRegistered() const = 0;
     virtual void initEntity(EntityId entityId, const std::string& entityName) = 0;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) = 0;
     virtual void receivedRequest(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBasePtr& structBase) = 0;
@@ -292,6 +293,7 @@ public:
     virtual void registerReplyEvent(FuncReplyEvent funcReplyEvent) override;
 
 private:
+    virtual bool isEntityRegistered() const override;
     virtual void initEntity(EntityId entityId, const std::string& entityName) override;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) override;
     virtual void receivedRequest(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBasePtr& structBase) override;

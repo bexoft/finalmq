@@ -117,8 +117,14 @@ void PeerManager::updatePeer(PeerId peerId, EntityId entityId, const std::string
         peer.entityName = entityName;
         assert(peer.session);
         std::int64_t sessionId = peer.session->getSessionId();
-        m_sessionEntityToPeerId[sessionId].first[entityId] = peerId;
-        m_sessionEntityToPeerId[sessionId].second[entityName] = peerId;
+        if (entityId != ENTITYID_INVALID)
+        {
+            m_sessionEntityToPeerId[sessionId].first[entityId] = peerId;
+        }
+        if (!entityName.empty())
+        {
+            m_sessionEntityToPeerId[sessionId].second[entityName] = peerId;
+        }
 
         std::shared_ptr<FuncPeerEvent> funcPeerEvent = m_funcPeerEvent;
         lock.unlock();
@@ -273,8 +279,14 @@ PeerId PeerManager::addPeer(const IProtocolSessionPtr& session, EntityId entityI
         peer.incoming = incoming;
         added = true;
         std::int64_t sessionId = session->getSessionId();
-        m_sessionEntityToPeerId[sessionId].first[entityId] = peerId;
-        m_sessionEntityToPeerId[sessionId].second[entityName] = peerId;
+        if (entityId != ENTITYID_INVALID)
+        {
+            m_sessionEntityToPeerId[sessionId].first[entityId] = peerId;
+        }
+        if (!entityName.empty())
+        {
+            m_sessionEntityToPeerId[sessionId].second[entityName] = peerId;
+        }
 
         std::shared_ptr<FuncPeerEvent> funcPeerEvent = m_funcPeerEvent;
         lock.unlock();
@@ -516,6 +528,13 @@ EntityId RemoteEntity::getEntityId() const
 {
     return m_entityId;
 }
+
+
+bool RemoteEntity::isEntityRegistered() const
+{
+    return (m_entityId != ENTITYID_INVALID);
+}
+
 
 
 void RemoteEntity::initEntity(EntityId entityId, const std::string& entityName)
