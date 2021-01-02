@@ -33,7 +33,7 @@ public:
     FmqRegistryClient(const IRemoteEntityContainerPtr& remoteEntityContainer);
 
     void registerService(const finalmq::fmqreg::Service& service);
-    PeerId connectService(const std::string& serviceName, hybrid_ptr<IRemoteEntity> remoteEntity, const ConnectProperties& connectProperties, FuncReplyConnect funcReplyConnect);
+    PeerId connectService(const std::string& serviceName, EntityId entityId, const ConnectProperties& connectProperties, FuncReplyConnect funcReplyConnect);
 
 private:
     void init();

@@ -205,6 +205,31 @@ void RemoteEntityContainer::registerConnectionEvent(FuncConnectionEvent funcConn
 }
 
 
+std::vector<EntityId> RemoteEntityContainer::getAllEntities() const
+{
+    std::vector<EntityId> entities;
+    entities.reserve(m_entityId2entity.size());
+    for (auto it = m_entityId2entity.begin(); it != m_entityId2entity.end(); ++it)
+    {
+        entities.push_back(it->first);
+    }
+    return entities;
+}
+
+hybrid_ptr<IRemoteEntity> RemoteEntityContainer::getEntity(EntityId entityId) const
+{
+    std::vector<EntityId> entities;
+    auto it = m_entityId2entity.find(entityId);
+    if (it !=  m_entityId2entity.end())
+    {
+        return it->second;
+    }
+    return nullptr;
+}
+
+
+
+
 inline void RemoteEntityContainer::triggerConnectionEvent(const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) const
 {
     std::unique_lock<std::mutex> lock(m_mutex);

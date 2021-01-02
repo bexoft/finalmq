@@ -67,6 +67,9 @@ struct IRemoteEntityContainer
     virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, const std::string& name = "") = 0;
     virtual void unregisterEntity(EntityId entityId) = 0;
     virtual void registerConnectionEvent(FuncConnectionEvent funcConnectionEvent) = 0;
+
+    virtual std::vector<EntityId> getAllEntities() const = 0;
+    virtual hybrid_ptr<IRemoteEntity> getEntity(EntityId) const = 0;
 };
 
 typedef std::shared_ptr<IRemoteEntityContainer> IRemoteEntityContainerPtr;
@@ -91,6 +94,9 @@ public:
     virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, const std::string& name = "") override;
     virtual void unregisterEntity(EntityId entityId) override;
     virtual void registerConnectionEvent(FuncConnectionEvent funcConnectionEvent) override;
+
+    virtual std::vector<EntityId> getAllEntities() const override;
+    virtual hybrid_ptr<IRemoteEntity> getEntity(EntityId entityId) const override;
 
 private:
     // IProtocolSessionCallback

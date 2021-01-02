@@ -52,19 +52,15 @@ void FmqRegistryClient::init()
 
 
 
-PeerId FmqRegistryClient::connectService(const std::string& serviceName, hybrid_ptr<IRemoteEntity> remoteEntity, const ConnectProperties& connectProperties, FuncReplyConnect funcReplyConnect)
+PeerId FmqRegistryClient::connectService(const std::string& serviceName, EntityId entityId, const ConnectProperties& connectProperties, FuncReplyConnect funcReplyConnect)
 {
-    PeerId peerId = PEERID_INVALID;
-
-    auto re = remoteEntity.lock();
-    if (re)
+    auto re = m_remoteEntityContainer->getEntity(entityId).lock();
+    if (!re)
     {
-        if (!re->isEntityRegistered())
-        {
-            m_remoteEntityContainer->registerEntity(remoteEntity);
-        }
-        peerId = re->createPeer(std::move(funcReplyConnect));
+        return PEERID_INVALID;
     }
+
+    PeerId peerId = re->createPeer(std::move(funcReplyConnect));
 
     std::string hostname;
     std::string remainingServiceName = serviceName;
@@ -85,11 +81,11 @@ PeerId FmqRegistryClient::connectService(const std::string& serviceName, hybrid_
     IProtocolSessionPtr sessionRegistry = createRegistrySession(hostname, connectPropertiesRegistry);
     assert(sessionRegistry);
     PeerId peerIdRegistry = m_entityRegistry->connect(sessionRegistry, "fmqreg");
-    m_entityRegistry->requestReply<GetServiceReply>(peerIdRegistry, GetService{remainingServiceName}, [this, sessionRegistry, connectProperties, remoteEntity, peerId]
+    m_entityRegistry->requestReply<GetServiceReply>(peerIdRegistry, GetService{remainingServiceName}, [this, sessionRegistry, connectProperties, entityId, peerId]
                                                     (PeerId /*peerIdRegistry*/, remoteentity::Status /*status*/, const std::shared_ptr<GetServiceReply>& reply) {
         if (reply)
         {
-            auto re = remoteEntity.lock();
+            auto re = m_remoteEntityContainer->getEntity(entityId).lock();
             if (re)
             {
                 IProtocolSessionPtr session;// = m_remoteEntityContainer->connect(reply->service.endpoints[0].endpoint, reply->service.endpoints[0].framingprotocol, reply->service.endpoints[0].contenttype, connectProperties);
