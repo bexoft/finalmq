@@ -138,12 +138,6 @@ IProtocolSessionPtr RemoteEntityContainer::connect(const std::string& endpoint, 
 }
 
 
-IProtocolSessionPtr RemoteEntityContainer::createSession()
-{
-    return m_protocolSessionContainer->createSession(this);
-}
-
-
 void RemoteEntityContainer::run()
 {
     m_protocolSessionContainer->run();

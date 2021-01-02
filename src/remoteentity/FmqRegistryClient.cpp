@@ -55,12 +55,15 @@ void FmqRegistryClient::init()
 PeerId FmqRegistryClient::connectService(const std::string& serviceName, hybrid_ptr<IRemoteEntity> remoteEntity, const ConnectProperties& connectProperties, FuncReplyConnect funcReplyConnect)
 {
     PeerId peerId = PEERID_INVALID;
-    m_remoteEntityContainer->registerEntity(remoteEntity);
-    IProtocolSessionPtr session = m_remoteEntityContainer->createSession();
+
     auto re = remoteEntity.lock();
     if (re)
     {
-        peerId = re->connect(session, 0, std::move(funcReplyConnect));
+        if (!re->isEntityRegistered())
+        {
+            m_remoteEntityContainer->registerEntity(remoteEntity);
+        }
+        peerId = re->createPeer(std::move(funcReplyConnect));
     }
 
     std::string hostname;
@@ -82,11 +85,16 @@ PeerId FmqRegistryClient::connectService(const std::string& serviceName, hybrid_
     IProtocolSessionPtr sessionRegistry = createRegistrySession(hostname, connectPropertiesRegistry);
     assert(sessionRegistry);
     PeerId peerIdRegistry = m_entityRegistry->connect(sessionRegistry, "fmqreg");
-    m_entityRegistry->requestReply<GetServiceReply>(peerIdRegistry, GetService{remainingServiceName}, [this, sessionRegistry]
-                                                    (PeerId /*peerId*/, remoteentity::Status /*status*/, const std::shared_ptr<GetServiceReply>& reply) {
+    m_entityRegistry->requestReply<GetServiceReply>(peerIdRegistry, GetService{remainingServiceName}, [this, sessionRegistry, connectProperties, remoteEntity, peerId]
+                                                    (PeerId /*peerIdRegistry*/, remoteentity::Status /*status*/, const std::shared_ptr<GetServiceReply>& reply) {
         if (reply)
         {
-//            session->connectProtocol();
+            auto re = remoteEntity.lock();
+            if (re)
+            {
+                IProtocolSessionPtr session;// = m_remoteEntityContainer->connect(reply->service.endpoints[0].endpoint, reply->service.endpoints[0].framingprotocol, reply->service.endpoints[0].contenttype, connectProperties);
+                re->connect(peerId, session, reply->service.entityname, reply->service.entityid);
+            }
         }
         sessionRegistry->disconnect();
     });
