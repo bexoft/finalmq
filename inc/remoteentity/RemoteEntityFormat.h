@@ -46,6 +46,7 @@ namespace remoteentity {
 
 enum RemoteEntityContentType
 {
+    CONTENTTYPE_NONE = 0,
     CONTENTTYPE_PROTO = 1,
     CONTENTTYPE_JSON = 2
 };

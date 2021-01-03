@@ -37,6 +37,8 @@ static const int HEADERSIZE = 4;
 // ProtocolHeaderBinarySize
 //---------------------------------------
 
+const std::uint32_t ProtocolHeaderBinarySize::PROTOCOL_ID = 0x00000002;
+
 
 ProtocolHeaderBinarySize::ProtocolHeaderBinarySize()
     : m_headerHelper(HEADERSIZE, [] (const std::string& header) {

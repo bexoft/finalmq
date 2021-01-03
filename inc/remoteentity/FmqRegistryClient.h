@@ -25,6 +25,8 @@
 #include "remoteentity/RemoteEntityContainer.h"
 #include "interfaces/fmqreg.fmq.h"
 
+#include <sys/types.h>
+
 namespace finalmq {
 
 class FmqRegistryClient
@@ -38,6 +40,7 @@ public:
 private:
     void init();
     IProtocolSessionPtr createRegistrySession(const std::string& hostname, const ConnectProperties& connectProperties = {});
+    static ssize_t pickEndpointEntry(const std::vector<fmqreg::Endpoint>& endpoints, bool ssl, bool local);
 
     bool                        m_init = false;
     IRemoteEntityContainerPtr   m_remoteEntityContainer;

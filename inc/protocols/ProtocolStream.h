@@ -32,6 +32,8 @@ namespace finalmq {
 class SYMBOLEXP ProtocolStream : public IProtocol
 {
 public:
+    static const std::uint32_t PROTOCOL_ID;
+
     ProtocolStream();
 
 private:
@@ -46,8 +48,6 @@ private:
     virtual void socketDisconnected() override;
 
     std::weak_ptr<IProtocolCallback>    m_callback;
-
-    const std::uint32_t PROTOCOL_ID = 0x00000001;
 };
 
 

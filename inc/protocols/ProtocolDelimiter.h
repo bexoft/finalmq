@@ -34,6 +34,8 @@ namespace finalmq {
 class SYMBOLEXP ProtocolDelimiter : public IProtocol
 {
 public:
+    static const std::uint32_t PROTOCOL_ID;
+
     ProtocolDelimiter(const std::string& delimiter);
 
 private:
@@ -59,8 +61,6 @@ private:
     ssize_t                             m_indexDelimiter = -1;
 
     std::string                         m_delimiterPartial;
-
-    const std::uint32_t PROTOCOL_ID = 0x00000003;
 };
 
 

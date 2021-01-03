@@ -32,6 +32,7 @@ namespace finalmq {
 // ProtocolStream
 //---------------------------------------
 
+const std::uint32_t ProtocolStream::PROTOCOL_ID = 0x00000001;
 
 
 ProtocolStream::ProtocolStream()

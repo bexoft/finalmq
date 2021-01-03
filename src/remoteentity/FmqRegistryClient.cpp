@@ -22,6 +22,8 @@
 
 #include "remoteentity/FmqRegistryClient.h"
 #include "protocols/ProtocolHeaderBinarySize.h"
+#include "protocols/ProtocolDelimiter.h"
+
 
 using finalmq::fmqreg::RegisterService;
 using finalmq::fmqreg::GetService;
@@ -51,6 +53,64 @@ void FmqRegistryClient::init()
 }
 
 
+ssize_t FmqRegistryClient::pickEndpointEntry(const std::vector<fmqreg::Endpoint>& endpoints, bool ssl, bool local)
+{
+    ssize_t index = -1;
+    ssize_t indexProtoTcp = -1;
+    ssize_t indexProtoUds = -1;
+    ssize_t indexJsonTcp = -1;
+    ssize_t indexJsonUds = -1;
+    for (ssize_t i = 0; i < static_cast<ssize_t>(endpoints.size()); ++i)
+    {
+        const fmqreg::Endpoint& endpoint = endpoints[i];
+        if (endpoint.ssl == ssl)
+        {
+            if (endpoint.socketprotocol == fmqreg::SocketProtocol::SOCKET_TCP)
+            {
+                if (endpoint.contenttype == CONTENTTYPE_PROTO)
+                {
+                    indexProtoTcp = i;
+                }
+                else if (endpoint.contenttype == CONTENTTYPE_JSON)
+                {
+                    indexJsonTcp = i;
+                }
+            }
+            else if (endpoint.socketprotocol == fmqreg::SocketProtocol::SOCKET_UNIXDOMAIN)
+            {
+                if (endpoint.contenttype == CONTENTTYPE_PROTO)
+                {
+                    indexProtoUds = i;
+                }
+                else if (endpoint.contenttype == CONTENTTYPE_JSON)
+                {
+                    indexJsonUds = i;
+                }
+            }
+        }
+    }
+
+    if (indexProtoUds != -1 && local)
+    {
+        index = indexProtoUds;
+    }
+    else if (indexProtoTcp != -1)
+    {
+        index = indexProtoTcp;
+    }
+    else if (indexJsonUds != -1 && local)
+    {
+        index = indexJsonUds;
+    }
+    else if (indexJsonTcp != -1)
+    {
+        index = indexJsonTcp;
+    }
+    return index;
+}
+
+
+
 
 PeerId FmqRegistryClient::connectService(const std::string& serviceName, EntityId entityId, const ConnectProperties& connectProperties, FuncReplyConnect funcReplyConnect)
 {
@@ -70,9 +130,15 @@ PeerId FmqRegistryClient::connectService(const std::string& serviceName, EntityI
         hostname = serviceName.substr(0, n);
         remainingServiceName = serviceName.substr(n+1);
     }
-    if (hostname.empty())
+    if (hostname.empty() || hostname == "localhost")
     {
         hostname = "127.0.0.1";
+    }
+
+    bool local = false;
+    if (hostname == "127.0.0.1")
+    {
+        local = true;
     }
 
     ConnectProperties connectPropertiesRegistry;
@@ -81,15 +147,59 @@ PeerId FmqRegistryClient::connectService(const std::string& serviceName, EntityI
     IProtocolSessionPtr sessionRegistry = createRegistrySession(hostname, connectPropertiesRegistry);
     assert(sessionRegistry);
     PeerId peerIdRegistry = m_entityRegistry->connect(sessionRegistry, "fmqreg");
-    m_entityRegistry->requestReply<GetServiceReply>(peerIdRegistry, GetService{remainingServiceName}, [this, sessionRegistry, connectProperties, entityId, peerId]
+    m_entityRegistry->requestReply<GetServiceReply>(peerIdRegistry, GetService{remainingServiceName}, [this, sessionRegistry, connectProperties, entityId, peerId, local, hostname]
                                                     (PeerId /*peerIdRegistry*/, remoteentity::Status /*status*/, const std::shared_ptr<GetServiceReply>& reply) {
-        if (reply)
+        bool connectDone = false;
+        auto re = m_remoteEntityContainer->getEntity(entityId).lock();
+        if (re)
         {
-            auto re = m_remoteEntityContainer->getEntity(entityId).lock();
-            if (re)
+            if (reply)
             {
-                IProtocolSessionPtr session;// = m_remoteEntityContainer->connect(reply->service.endpoints[0].endpoint, reply->service.endpoints[0].framingprotocol, reply->service.endpoints[0].contenttype, connectProperties);
-                re->connect(peerId, session, reply->service.entityname, reply->service.entityid);
+                ssize_t endpointIndex = pickEndpointEntry(reply->service.endpoints, connectProperties.certificateData.ssl, local);
+                if (endpointIndex != -1)
+                {
+                    const fmqreg::Endpoint& endpointEntry = reply->service.endpoints[endpointIndex];
+                    std::string endpoint = endpointEntry.endpoint;
+
+                    // replace * by hostname in endpoint
+                    std::string::size_type pos = endpoint.find("*");
+                    if (pos != std::string::npos)
+                    {
+                        endpoint.replace(pos, std::string("*").length(), hostname);
+                    }
+
+                    IProtocolPtr protocol;
+                    if (endpointEntry.framingprotocol == ProtocolDelimiter::PROTOCOL_ID)
+                    {
+                        protocol = std::make_shared<ProtocolDelimiter>("\n");
+                    }
+                    else if (endpointEntry.framingprotocol == ProtocolHeaderBinarySize::PROTOCOL_ID)
+                    {
+                        protocol = std::make_shared<ProtocolHeaderBinarySize>();
+                    }
+
+                    RemoteEntityContentType contentType = CONTENTTYPE_NONE;
+                    switch (endpointEntry.contenttype)
+                    {
+                    case RemoteEntityContentType::CONTENTTYPE_PROTO:
+                        contentType = RemoteEntityContentType::CONTENTTYPE_PROTO;
+                        break;
+                    case RemoteEntityContentType::CONTENTTYPE_JSON:
+                        contentType = RemoteEntityContentType::CONTENTTYPE_JSON;
+                        break;
+                    }
+
+                    if (protocol)
+                    {
+                        connectDone = true;
+                        IProtocolSessionPtr session = m_remoteEntityContainer->connect(endpoint, protocol, contentType, connectProperties);
+                        re->connect(peerId, session, reply->service.entityname, reply->service.entityid);
+                    }
+                }
+            }
+            if (!connectDone)
+            {
+                re->disconnect(peerId);
             }
         }
         sessionRegistry->disconnect();
