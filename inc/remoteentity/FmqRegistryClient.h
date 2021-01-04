@@ -34,13 +34,12 @@ class FmqRegistryClient
 public:
     FmqRegistryClient(const IRemoteEntityContainerPtr& remoteEntityContainer);
 
-    void registerService(const finalmq::fmqreg::Service& service);
+    void registerService(const finalmq::fmqreg::Service& service, int retryDurationMs = 60000);
     PeerId connectService(const std::string& serviceName, EntityId entityId, const ConnectProperties& connectProperties, FuncReplyConnect funcReplyConnect);
 
 private:
     void init();
     IProtocolSessionPtr createRegistrySession(const std::string& hostname, const ConnectProperties& connectProperties = {});
-    static ssize_t pickEndpointEntry(const std::vector<fmqreg::Endpoint>& endpoints, bool ssl, bool local);
 
     bool                        m_init = false;
     IRemoteEntityContainerPtr   m_remoteEntityContainer;
