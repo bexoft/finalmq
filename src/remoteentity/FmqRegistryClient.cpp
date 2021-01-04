@@ -114,6 +114,8 @@ ssize_t FmqRegistryClient::pickEndpointEntry(const std::vector<fmqreg::Endpoint>
 
 PeerId FmqRegistryClient::connectService(const std::string& serviceName, EntityId entityId, const ConnectProperties& connectProperties, FuncReplyConnect funcReplyConnect)
 {
+    init();
+
     auto re = m_remoteEntityContainer->getEntity(entityId).lock();
     if (!re)
     {
@@ -147,10 +149,12 @@ PeerId FmqRegistryClient::connectService(const std::string& serviceName, EntityI
     IProtocolSessionPtr sessionRegistry = createRegistrySession(hostname, connectPropertiesRegistry);
     assert(sessionRegistry);
     PeerId peerIdRegistry = m_entityRegistry->connect(sessionRegistry, "fmqreg");
-    m_entityRegistry->requestReply<GetServiceReply>(peerIdRegistry, GetService{remainingServiceName}, [this, sessionRegistry, connectProperties, entityId, peerId, local, hostname]
+
+    IRemoteEntityContainerPtr remoteEntityContainer = m_remoteEntityContainer;
+    m_entityRegistry->requestReply<GetServiceReply>(peerIdRegistry, GetService{remainingServiceName}, [remoteEntityContainer, sessionRegistry, connectProperties, entityId, peerId, local, hostname]
                                                     (PeerId /*peerIdRegistry*/, remoteentity::Status /*status*/, const std::shared_ptr<GetServiceReply>& reply) {
         bool connectDone = false;
-        auto re = m_remoteEntityContainer->getEntity(entityId).lock();
+        auto re = remoteEntityContainer->getEntity(entityId).lock();
         if (re)
         {
             if (reply)
@@ -192,7 +196,7 @@ PeerId FmqRegistryClient::connectService(const std::string& serviceName, EntityI
                     if (protocol)
                     {
                         connectDone = true;
-                        IProtocolSessionPtr session = m_remoteEntityContainer->connect(endpoint, protocol, contentType, connectProperties);
+                        IProtocolSessionPtr session = remoteEntityContainer->connect(endpoint, protocol, contentType, connectProperties);
                         re->connect(peerId, session, reply->service.entityname, reply->service.entityid);
                     }
                 }

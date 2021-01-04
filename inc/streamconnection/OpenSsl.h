@@ -23,9 +23,10 @@
 #pragma once
 
 #include "logger/LogStream.h"
-#include "helpers/ModulenameFinalmq.h"
 
 #include <string>
+
+#define MODULENAME  "FinalMQ"
 
 namespace finalmq {
 
@@ -358,4 +359,8 @@ private:
 
 }   // namespace finalmq
 
+#undef MODULENAME
+
 #endif  // USE_OPENSSL
+
+

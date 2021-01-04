@@ -23,6 +23,7 @@
 #include "remoteentity/RemoteEntityContainer.h"
 #include "protocols/ProtocolHeaderBinarySize.h"
 #include "protocols/ProtocolDelimiter.h"
+#include "helpers/ModulenameFinalmq.h"
 
 #include "remoteentity/entitydata.fmq.h"
 

@@ -21,6 +21,7 @@
 //SOFTWARE.
 
 #include "remoteentity/RemoteEntity.h"
+#include "helpers/ModulenameFinalmq.h"
 
 #include <algorithm>
 
@@ -148,8 +149,10 @@ bool PeerManager::removePeer(PeerId peerId, bool& incoming)
     {
         found = true;
         const Peer& peer = it->second;
-        assert(peer.session);
-        removePeerFromSessionEntityToPeerId(peer.session->getSessionId(), peer.entityId, peer.entityName);
+        if (peer.session)
+        {
+            removePeerFromSessionEntityToPeerId(peer.session->getSessionId(), peer.entityId, peer.entityName);
+        }
         incoming = peer.incoming;
         m_peers.erase(it);
 

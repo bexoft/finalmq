@@ -20,6 +20,7 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
+#include "registry.h"
 #include "remoteentity/RemoteEntityContainer.h"
 #include "protocols/ProtocolHeaderBinarySize.h"
 #include "protocols/ProtocolDelimiter.h"
@@ -54,38 +55,6 @@ using finalmq::fmqreg::Service;
 #define PORTNUMBER_PROTO    "18180"
 #define PORTNUMBER_JSON     "18181"
 
-
-class Registry : public RemoteEntity
-{
-public:
-    Registry()
-    {
-        // register peer events to see when a remote entity connects or disconnects.
-        registerPeerEvent([] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
-            std::cout << "peer event " << peerEvent.toString() << std::endl;
-        });
-
-        registerCommand<RegisterService>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<RegisterService>& request) {
-            assert(request);
-            m_services[request->service.name] = request->service;
-        });
-
-        registerCommand<GetService>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<GetService>& request) {
-            assert(request);
-            auto it = m_services.find(request->name);
-            if (it != m_services.end())
-            {
-                replyContext->reply(GetServiceReply(true, it->second));
-            }
-            else
-            {
-                replyContext->reply(GetServiceReply(false, Service()));
-            }
-        });
-    }
-
-    std::unordered_map<std::string, Service>    m_services;
-};
 
 
 int main()
