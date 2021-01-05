@@ -23,7 +23,6 @@
 #include "registry.h"
 #include "logger/LogStream.h"
 
-
 #define MODULENAME "FmqRegistry"
 
 using finalmq::PeerId;

@@ -84,14 +84,11 @@ protected:
 
         m_entityContainerServer = std::make_shared<RemoteEntityContainer>();
         m_entityContainerServer->init();
-        EntityId entityId = m_entityContainerServer->registerEntity(&m_server);
+        m_entityIdServer = m_entityContainerServer->registerEntity(&m_server);
         m_entityContainerServer->bind("tcp://*:7799", std::make_shared<ProtocolHeaderBinarySizeFactory>(), RemoteEntityContentType::CONTENTTYPE_PROTO);
         m_threadServer = std::thread([this] () {
             m_entityContainerServer->run();
         });
-
-        FmqRegistryClient fmqRegistryClient(m_entityContainerServer);
-        fmqRegistryClient.registerService({"MyService", "", entityId, {{fmqreg::SocketProtocol::SOCKET_TCP, ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityContentType::CONTENTTYPE_PROTO, false, "tcp://*:7799"}}});
 
         m_entityContainerClient = std::make_shared<RemoteEntityContainer>();
         m_entityContainerClient->init();
@@ -122,6 +119,7 @@ protected:
     std::thread                 m_threadRegistry;
 
     IRemoteEntityContainerPtr   m_entityContainerServer;
+    EntityId                    m_entityIdServer = ENTITYID_INVALID;
     EntityServer                m_server;
     std::thread                 m_threadServer;
 
@@ -138,9 +136,12 @@ protected:
 
 TEST_F(TestIntegrationFmqRegistryClient, testConnectDisconnect)
 {
+    FmqRegistryClient fmqRegistryClient(m_entityContainerClient);
+    fmqRegistryClient.registerService({"MyService", "", m_entityIdServer, {{fmqreg::SocketProtocol::SOCKET_TCP, ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityContentType::CONTENTTYPE_PROTO, false, "tcp://*:7799"}}});
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+
     auto& expectConnectReply = EXPECT_CALL(m_mockEvents, connectReply(_, _)).Times(1);
 
-    FmqRegistryClient fmqRegistryClient(m_entityContainerClient);
     fmqRegistryClient.connectService("MyService", m_entityIdClient, {}, [this] (PeerId peerId, remoteentity::Status status) {
         m_mockEvents.connectReply(peerId, status);
     });
@@ -151,8 +152,11 @@ TEST_F(TestIntegrationFmqRegistryClient, testConnectDisconnect)
 
 TEST_F(TestIntegrationFmqRegistryClient, testConnectSendDisconnect)
 {
-    EXPECT_CALL(m_mockEvents, connectReply(_, _)).Times(1);
     FmqRegistryClient fmqRegistryClient(m_entityContainerClient);
+    fmqRegistryClient.registerService({"MyService", "", m_entityIdServer, {{fmqreg::SocketProtocol::SOCKET_TCP, ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityContentType::CONTENTTYPE_PROTO, false, "tcp://*:7799"}}});
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+
+    EXPECT_CALL(m_mockEvents, connectReply(_, _)).Times(1);
     PeerId peerId = fmqRegistryClient.connectService("MyService", m_entityIdClient, {{}, 10, 3000}, [this] (PeerId peerId, remoteentity::Status status) {
         m_mockEvents.connectReply(peerId, status);
     });
@@ -168,8 +172,11 @@ TEST_F(TestIntegrationFmqRegistryClient, testConnectSendDisconnect)
 
 TEST_F(TestIntegrationFmqRegistryClient, testConnectSend)
 {
-    EXPECT_CALL(m_mockEvents, connectReply(_, remoteentity::Status(remoteentity::Status::STATUS_OK))).Times(1);
     FmqRegistryClient fmqRegistryClient(m_entityContainerClient);
+    fmqRegistryClient.registerService({"MyService", "", m_entityIdServer, {{fmqreg::SocketProtocol::SOCKET_TCP, ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityContentType::CONTENTTYPE_PROTO, false, "tcp://*:7799"}}});
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+
+    EXPECT_CALL(m_mockEvents, connectReply(_, remoteentity::Status(remoteentity::Status::STATUS_OK))).Times(1);
     PeerId peerId = fmqRegistryClient.connectService("MyService", m_entityIdClient, {{}, 10, 3000}, [this] (PeerId peerId, remoteentity::Status status) {
         m_mockEvents.connectReply(peerId, status);
     });
@@ -182,25 +189,125 @@ TEST_F(TestIntegrationFmqRegistryClient, testConnectSend)
     ASSERT_EQ(ok, true);
 }
 
-//TEST_F(TestIntegrationFmqRegistryClient, testConnectEmptyServiceSend)
-//{
-//    FmqRegistryClient fmqRegistryClient(m_entityContainerClient);
-//    fmqRegistryClient.registerService({"MyService", "", ENTITYID_INVALID, {}});
+TEST_F(TestIntegrationFmqRegistryClient, testConnectEmptyEndpointSend)
+{
+    FmqRegistryClient fmqRegistryClient(m_entityContainerClient);
+    fmqRegistryClient.registerService({"MyService", "", ENTITYID_INVALID, {}});
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
-//    EXPECT_CALL(m_mockEvents, connectReply(_, remoteentity::Status(remoteentity::Status::STATUS_PEER_DISCONNECTED))).Times(1);
-//    PeerId peerId = fmqRegistryClient.connectService("MyService", m_entityIdClient, {{}, 10, 3000}, [this] (PeerId peerId, remoteentity::Status status) {
-//        m_mockEvents.connectReply(peerId, status);
-//    });
+    EXPECT_CALL(m_mockEvents, connectReply(_, remoteentity::Status(remoteentity::Status::STATUS_PEER_DISCONNECTED))).Times(1);
+    PeerId peerId = fmqRegistryClient.connectService("MyService", m_entityIdClient, {{}, 10, 3000}, [this] (PeerId peerId, remoteentity::Status status) {
+        m_mockEvents.connectReply(peerId, status);
+    });
 
-//    auto& expectReply = EXPECT_CALL(m_mockEvents, testReply(peerId, remoteentity::Status(remoteentity::Status::STATUS_PEER_DISCONNECTED), _)).Times(1);
-//    m_entityClient.requestReply<test::TestReply>(peerId, test::TestRequest{"request"}, [this] (PeerId peerId, remoteentity::Status status, const std::shared_ptr<test::TestReply>& reply) {
-//        m_mockEvents.testReply(peerId, status, reply);
-//    });
-//    bool ok = waitTillDone(expectReply, 15000);
-//    ASSERT_EQ(ok, true);
-//}
+    auto& expectReply = EXPECT_CALL(m_mockEvents, testReply(peerId, remoteentity::Status(remoteentity::Status::STATUS_PEER_DISCONNECTED), _)).Times(1);
+    m_entityClient.requestReply<test::TestReply>(peerId, test::TestRequest{"request"}, [this] (PeerId peerId, remoteentity::Status status, const std::shared_ptr<test::TestReply>& reply) {
+        m_mockEvents.testReply(peerId, status, reply);
+    });
+    bool ok = waitTillDone(expectReply, 15000);
+    ASSERT_EQ(ok, true);
+}
 
 TEST_F(TestIntegrationFmqRegistryClient, testConnectNoServiceSend)
+{
+    FmqRegistryClient fmqRegistryClient(m_entityContainerClient);
+    fmqRegistryClient.registerService({"MyService", "", m_entityIdServer, {{fmqreg::SocketProtocol::SOCKET_TCP, ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityContentType::CONTENTTYPE_PROTO, false, "tcp://*:7799"}}});
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+
+    EXPECT_CALL(m_mockEvents, connectReply(_, remoteentity::Status(remoteentity::Status::STATUS_PEER_DISCONNECTED))).Times(1);
+    PeerId peerId = fmqRegistryClient.connectService("NoService", m_entityIdClient, {{}, 10, 100}, [this] (PeerId peerId, remoteentity::Status status) {
+        m_mockEvents.connectReply(peerId, status);
+    });
+
+    auto& expectReply = EXPECT_CALL(m_mockEvents, testReply(peerId, remoteentity::Status(remoteentity::Status::STATUS_PEER_DISCONNECTED), _)).Times(1);
+    m_entityClient.requestReply<test::TestReply>(peerId, test::TestRequest{"request"}, [this] (PeerId peerId, remoteentity::Status status, const std::shared_ptr<test::TestReply>& reply) {
+        m_mockEvents.testReply(peerId, status, reply);
+    });
+    bool ok = waitTillDone(expectReply, 15000);
+    ASSERT_EQ(ok, true);
+}
+
+
+
+TEST_F(TestIntegrationFmqRegistryClient, testConnectDisconnectLateRegister)
+{
+    auto& expectConnectReply = EXPECT_CALL(m_mockEvents, connectReply(_, _)).Times(1);
+
+    FmqRegistryClient fmqRegistryClient(m_entityContainerClient);
+    fmqRegistryClient.connectService("MyService", m_entityIdClient, {{}, 10, 3000}, [this] (PeerId peerId, remoteentity::Status status) {
+        m_mockEvents.connectReply(peerId, status);
+    });
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    fmqRegistryClient.registerService({"MyService", "", m_entityIdServer, {{fmqreg::SocketProtocol::SOCKET_TCP, ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityContentType::CONTENTTYPE_PROTO, false, "tcp://*:7799"}}});
+
+    bool ok = waitTillDone(expectConnectReply, 15000);
+    ASSERT_EQ(ok, true);
+}
+
+TEST_F(TestIntegrationFmqRegistryClient, testConnectSendDisconnectLateRegister)
+{
+    EXPECT_CALL(m_mockEvents, connectReply(_, _)).Times(1);
+    FmqRegistryClient fmqRegistryClient(m_entityContainerClient);
+    PeerId peerId = fmqRegistryClient.connectService("MyService", m_entityIdClient, {{}, 10, 3000}, [this] (PeerId peerId, remoteentity::Status status) {
+        m_mockEvents.connectReply(peerId, status);
+    });
+
+    auto& expectReply = EXPECT_CALL(m_mockEvents, testReply(peerId, _, _)).Times(1);
+    m_entityClient.requestReply<test::TestReply>(peerId, test::TestRequest{"request"}, [this] (PeerId peerId, remoteentity::Status status, const std::shared_ptr<test::TestReply>& reply) {
+        m_mockEvents.testReply(peerId, status, reply);
+    });
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    fmqRegistryClient.registerService({"MyService", "", m_entityIdServer, {{fmqreg::SocketProtocol::SOCKET_TCP, ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityContentType::CONTENTTYPE_PROTO, false, "tcp://*:7799"}}});
+
+    bool ok = waitTillDone(expectReply, 15000);
+    ASSERT_EQ(ok, true);
+}
+
+
+TEST_F(TestIntegrationFmqRegistryClient, testConnectSendLateRegister)
+{
+    EXPECT_CALL(m_mockEvents, connectReply(_, remoteentity::Status(remoteentity::Status::STATUS_OK))).Times(1);
+    FmqRegistryClient fmqRegistryClient(m_entityContainerClient);
+    PeerId peerId = fmqRegistryClient.connectService("MyService", m_entityIdClient, {{}, 10, 3000}, [this] (PeerId peerId, remoteentity::Status status) {
+        m_mockEvents.connectReply(peerId, status);
+    });
+
+    auto& expectReply = EXPECT_CALL(m_mockEvents, testReply(peerId, remoteentity::Status(remoteentity::Status::STATUS_OK), _)).Times(1);
+    m_entityClient.requestReply<test::TestReply>(peerId, test::TestRequest{"request"}, [this] (PeerId peerId, remoteentity::Status status, const std::shared_ptr<test::TestReply>& reply) {
+        m_mockEvents.testReply(peerId, status, reply);
+    });
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    fmqRegistryClient.registerService({"MyService", "", m_entityIdServer, {{fmqreg::SocketProtocol::SOCKET_TCP, ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityContentType::CONTENTTYPE_PROTO, false, "tcp://*:7799"}}});
+
+    bool ok = waitTillDone(expectReply, 15000);
+    ASSERT_EQ(ok, true);
+}
+
+TEST_F(TestIntegrationFmqRegistryClient, testConnectEmptyEndpointSendLateRegister)
+{
+    FmqRegistryClient fmqRegistryClient(m_entityContainerClient);
+
+    EXPECT_CALL(m_mockEvents, connectReply(_, remoteentity::Status(remoteentity::Status::STATUS_PEER_DISCONNECTED))).Times(1);
+    PeerId peerId = fmqRegistryClient.connectService("MyService", m_entityIdClient, {{}, 10, 3000}, [this] (PeerId peerId, remoteentity::Status status) {
+        m_mockEvents.connectReply(peerId, status);
+    });
+
+    auto& expectReply = EXPECT_CALL(m_mockEvents, testReply(peerId, remoteentity::Status(remoteentity::Status::STATUS_PEER_DISCONNECTED), _)).Times(1);
+    m_entityClient.requestReply<test::TestReply>(peerId, test::TestRequest{"request"}, [this] (PeerId peerId, remoteentity::Status status, const std::shared_ptr<test::TestReply>& reply) {
+        m_mockEvents.testReply(peerId, status, reply);
+    });
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    fmqRegistryClient.registerService({"MyService", "", ENTITYID_INVALID, {}});
+
+    bool ok = waitTillDone(expectReply, 15000);
+    ASSERT_EQ(ok, true);
+}
+
+TEST_F(TestIntegrationFmqRegistryClient, testConnectNoServiceSendLateRegister)
 {
     EXPECT_CALL(m_mockEvents, connectReply(_, remoteentity::Status(remoteentity::Status::STATUS_PEER_DISCONNECTED))).Times(1);
     FmqRegistryClient fmqRegistryClient(m_entityContainerClient);
@@ -212,6 +319,10 @@ TEST_F(TestIntegrationFmqRegistryClient, testConnectNoServiceSend)
     m_entityClient.requestReply<test::TestReply>(peerId, test::TestRequest{"request"}, [this] (PeerId peerId, remoteentity::Status status, const std::shared_ptr<test::TestReply>& reply) {
         m_mockEvents.testReply(peerId, status, reply);
     });
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    fmqRegistryClient.registerService({"MyService", "", m_entityIdServer, {{fmqreg::SocketProtocol::SOCKET_TCP, ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityContentType::CONTENTTYPE_PROTO, false, "tcp://*:7799"}}});
+
     bool ok = waitTillDone(expectReply, 15000);
     ASSERT_EQ(ok, true);
 }

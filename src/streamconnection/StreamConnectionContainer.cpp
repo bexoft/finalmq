@@ -137,27 +137,25 @@ void AddressResolver::run()
         m_release.wait();
         if (!m_terminate)
         {
-            std::unique_ptr<ResolveRequest> request;
             std::unique_lock<std::mutex> lock(m_mutex);
-            if (!m_requests.empty())
-            {
-                request = std::move(m_requests.front());
-                m_requests.pop_front();
-            }
+            std::deque<std::unique_ptr<ResolveRequest>> requests = std::move(m_requests);
+            m_requests.clear();
             lock.unlock();
-            if (request)
+            for (size_t i = 0; i < requests.size(); ++i)
             {
+                assert(requests[i]);
+                const ResolveRequest& request = *requests[i];
                 bool ok = false;
                 struct in_addr addr;
-                struct hostent* hp = gethostbyname(request->hostname.c_str());
+                struct hostent* hp = gethostbyname(request.hostname.c_str());
                 if (hp)
                 {
                     ok = true;
                     addr = *((struct in_addr *)(hp->h_addr));
                 }
-                if (request->funcResolved)
+                if (request.funcResolved)
                 {
-                    request->funcResolved(ok, addr);
+                    request.funcResolved(ok, addr);
                 }
             }
         }

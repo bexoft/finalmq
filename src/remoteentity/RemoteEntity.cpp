@@ -25,6 +25,7 @@
 
 #include <algorithm>
 
+
 using finalmq::remoteentity::MsgMode;
 using finalmq::remoteentity::Status;
 using finalmq::remoteentity::Header;
