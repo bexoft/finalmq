@@ -22,42 +22,30 @@
 
 #pragma once
 
-#include "streamconnection/IMessage.h"
-#include "protocolconnection/IProtocol.h"
+#include "remoteentity/RemoteEntityContainer.h"
+#include "interfaces/fmqreg.fmq.h"
 
+#include <sys/types.h>
 
 namespace finalmq {
 
-
-class SYMBOLEXP ProtocolStream : public IProtocol
+class FmqRegistryClient
 {
 public:
-    static const std::uint32_t PROTOCOL_ID;
+    FmqRegistryClient(const IRemoteEntityContainerPtr& remoteEntityContainer);
 
-    ProtocolStream();
-
-private:
-    // IProtocol
-    virtual void setCallback(const std::weak_ptr<IProtocolCallback>& callback) override;
-    virtual std::uint32_t getProtocolId() const override;
-    virtual bool areMessagesResendable() const override;
-    virtual IMessagePtr createMessage() const override;
-    virtual void receive(const SocketPtr& socket, int bytesToRead) override;
-    virtual void prepareMessageToSend(IMessagePtr message) override;
-    virtual void socketConnected() override;
-    virtual void socketDisconnected() override;
-
-    std::weak_ptr<IProtocolCallback>    m_callback;
-};
-
-
-class SYMBOLEXP ProtocolStreamFactory : public IProtocolFactory
-{
-public:
+    void registerService(const finalmq::fmqreg::Service& service, int retryDurationMs = 60000);
+    PeerId connectService(const std::string& serviceName, EntityId entityId, const ConnectProperties& connectProperties, FuncReplyConnect funcReplyConnect);
 
 private:
-    // IProtocolFactory
-    virtual IProtocolPtr createProtocol() override;
+    void init();
+    IProtocolSessionPtr createRegistrySession(const std::string& hostname, const ConnectProperties& connectProperties = {});
+
+    bool                        m_init = false;
+    IRemoteEntityContainerPtr   m_remoteEntityContainer;
+    IRemoteEntityPtr            m_entityRegistry;
 };
+
 
 }   // namespace finalmq
+

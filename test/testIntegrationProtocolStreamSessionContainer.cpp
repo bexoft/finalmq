@@ -274,7 +274,7 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testBindLateConnect)
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
 
-    connection->setEndpoint("tcp://localhost:3333");
+    connection->connect("tcp://localhost:3333");
 
     waitTillDone(expectReceive, 5000);
 
@@ -292,7 +292,7 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testSendLateConnectBind)
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
 
-    connection->setEndpoint("tcp://localhost:3333", {{}, 1});
+    connection->connect("tcp://localhost:3333", {{}, 1});
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
@@ -311,6 +311,77 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testCreateConnectionDiscon
     auto& expectDisconnectedClient = EXPECT_CALL(*m_mockClientCallback, disconnected(_)).Times(1);
 
     IProtocolSessionPtr connection = m_sessionContainer->createSession(m_mockClientCallback, std::make_shared<ProtocolStream>());
+    IMessagePtr message = connection->createMessage();
+    message->addSendPayload(MESSAGE1_BUFFER);
+    connection->sendMessage(message);
+
+    connection->disconnect();
+
+    waitTillDone(expectDisconnectedClient, 5000);
+
+    EXPECT_EQ(connection->getConnectionData().connectionState, ConnectionState::CONNECTIONSTATE_DISCONNECTED);
+    EXPECT_EQ(m_sessionContainer->getSession(connection->getSessionId()), nullptr);
+}
+
+
+
+
+TEST_F(TestIntegrationProtocolStreamSessionContainer, testBindLateConnectProtocol)
+{
+    int res = m_sessionContainer->bind("tcp://*:3333", m_mockServerCallback, m_factoryProtocol);
+    EXPECT_EQ(res, 0);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+
+    IProtocolSessionPtr connConnect;
+    auto& expectConnected = EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(1)
+                                            .WillOnce(testing::SaveArg<0>(&connConnect));
+    EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
+    auto& expectReceive = EXPECT_CALL(*m_mockServerCallback, received(_, ReceivedMessage(MESSAGE1_BUFFER))).Times(1);
+
+    IProtocolSessionPtr connection = m_sessionContainer->createSession(m_mockClientCallback);
+    IMessagePtr message = connection->createMessage();
+    message->addSendPayload(MESSAGE1_BUFFER);
+    connection->sendMessage(message);
+
+    connection->connectProtocol("tcp://localhost:3333", std::make_shared<ProtocolStream>());
+
+    waitTillDone(expectConnected, 5000);
+    waitTillDone(expectReceive, 5000);
+
+    EXPECT_EQ(connConnect, connection);
+}
+
+TEST_F(TestIntegrationProtocolStreamSessionContainer, testSendLateConnectProtocolBind)
+{
+    EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(1);
+    EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
+    auto& expectReceive = EXPECT_CALL(*m_mockServerCallback, received(_, ReceivedMessage(MESSAGE1_BUFFER))).Times(1);
+
+    IProtocolSessionPtr connection = m_sessionContainer->createSession(m_mockClientCallback);
+    IMessagePtr message = connection->createMessage();
+    message->addSendPayload(MESSAGE1_BUFFER);
+    connection->sendMessage(message);
+
+    connection->connectProtocol("tcp://localhost:3333", std::make_shared<ProtocolStream>(), {{}, 1});
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+
+    int res = m_sessionContainer->bind("tcp://*:3333", m_mockServerCallback, m_factoryProtocol);
+    EXPECT_EQ(res, 0);
+
+    waitTillDone(expectReceive, 5000);
+
+    EXPECT_EQ(connection->getConnectionData().connectionState, ConnectionState::CONNECTIONSTATE_CONNECTED);
+    EXPECT_EQ(m_sessionContainer->getSession(connection->getSessionId()), connection);
+}
+
+
+TEST_F(TestIntegrationProtocolStreamSessionContainer, testCreateConnectionWithoutProtocolDisconnect)
+{
+    auto& expectDisconnectedClient = EXPECT_CALL(*m_mockClientCallback, disconnected(_)).Times(1);
+
+    IProtocolSessionPtr connection = m_sessionContainer->createSession(m_mockClientCallback);
     IMessagePtr message = connection->createMessage();
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);

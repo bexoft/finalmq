@@ -151,7 +151,7 @@ public:
         m_mode = Mode::MODE_NULL;
     }
 
-    transient_ptr<T> lock()
+    transient_ptr<T> lock() const
     {
         switch (m_mode)
         {

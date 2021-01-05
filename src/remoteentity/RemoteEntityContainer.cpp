@@ -23,6 +23,7 @@
 #include "remoteentity/RemoteEntityContainer.h"
 #include "protocols/ProtocolHeaderBinarySize.h"
 #include "protocols/ProtocolDelimiter.h"
+#include "helpers/ModulenameFinalmq.h"
 
 #include "remoteentity/entitydata.fmq.h"
 
@@ -79,7 +80,7 @@ const EnumInfo ConnectionEvent::_enumInfo = {
 
 
 RemoteEntityContainer::RemoteEntityContainer()
-    : m_streamConnectionContainer(std::make_unique<ProtocolSessionContainer>())
+    : m_protocolSessionContainer(std::make_unique<ProtocolSessionContainer>())
 {
 
 }
@@ -119,38 +120,46 @@ void RemoteEntityContainer::deinit()
 
 void RemoteEntityContainer::init(int cycleTime, int checkReconnectInterval)
 {
-    m_streamConnectionContainer->init(cycleTime, checkReconnectInterval);
+    m_protocolSessionContainer->init(cycleTime, checkReconnectInterval);
 }
 
 int RemoteEntityContainer::bind(const std::string& endpoint, IProtocolFactoryPtr protocolFactory, RemoteEntityContentType contentType, const BindProperties& bindProperties)
 {
-    return m_streamConnectionContainer->bind(endpoint, this, protocolFactory, bindProperties, contentType);
+    return m_protocolSessionContainer->bind(endpoint, this, protocolFactory, bindProperties, contentType);
 }
 
 void RemoteEntityContainer::unbind(const std::string& endpoint)
 {
-    m_streamConnectionContainer->unbind(endpoint);
+    m_protocolSessionContainer->unbind(endpoint);
 }
 
 IProtocolSessionPtr RemoteEntityContainer::connect(const std::string& endpoint, const IProtocolPtr& protocol, RemoteEntityContentType contentType, const ConnectProperties& connectProperties)
 {
-    return m_streamConnectionContainer->connect(endpoint, this, protocol, connectProperties, contentType);
+    return m_protocolSessionContainer->connect(endpoint, this, protocol, connectProperties, contentType);
 }
+
 
 void RemoteEntityContainer::run()
 {
-    m_streamConnectionContainer->run();
+    m_protocolSessionContainer->run();
     deinit();
 }
 
 bool RemoteEntityContainer::terminatePollerLoop(int timeout)
 {
-    return m_streamConnectionContainer->terminatePollerLoop(timeout);
+    return m_protocolSessionContainer->terminatePollerLoop(timeout);
 }
 
 
 EntityId RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, const std::string& name)
 {
+    auto re = remoteEntity.lock();
+    if (!re || re->isEntityRegistered())
+    {
+        streamError << "entity is invalid or already registered";
+        return ENTITYID_INVALID;
+    }
+
     std::unique_lock<std::mutex> lock(m_mutex);
     if (!name.empty())
     {
@@ -169,11 +178,7 @@ EntityId RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> remoteE
         m_name2entityId[name] = entityId;
     }
 
-    auto re = remoteEntity.lock();
-    if (re)
-    {
-        re->initEntity(entityId, name);
-    }
+    re->initEntity(entityId, name);
     m_entityId2entity[entityId] = remoteEntity;
 
     return entityId;
@@ -199,6 +204,31 @@ void RemoteEntityContainer::registerConnectionEvent(FuncConnectionEvent funcConn
     std::unique_lock<std::mutex> lock(m_mutex);
     m_funcConnectionEvent = std::make_shared<FuncConnectionEvent>(std::move(funcConnectionEvent));
 }
+
+
+std::vector<EntityId> RemoteEntityContainer::getAllEntities() const
+{
+    std::vector<EntityId> entities;
+    entities.reserve(m_entityId2entity.size());
+    for (auto it = m_entityId2entity.begin(); it != m_entityId2entity.end(); ++it)
+    {
+        entities.push_back(it->first);
+    }
+    return entities;
+}
+
+hybrid_ptr<IRemoteEntity> RemoteEntityContainer::getEntity(EntityId entityId) const
+{
+    std::vector<EntityId> entities;
+    auto it = m_entityId2entity.find(entityId);
+    if (it !=  m_entityId2entity.end())
+    {
+        return it->second;
+    }
+    return nullptr;
+}
+
+
 
 
 inline void RemoteEntityContainer::triggerConnectionEvent(const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) const

@@ -125,6 +125,14 @@ IProtocolSessionPtr ProtocolSessionContainer::createSession(hybrid_ptr<IProtocol
 }
 
 
+IProtocolSessionPtr ProtocolSessionContainer::createSession(hybrid_ptr<IProtocolSessionCallback> callback)
+{
+    IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(callback, m_protocolSessionList, m_streamConnectionContainer);
+    protocolSession->createConnection();
+    return protocolSession;
+}
+
+
 
 std::vector< IProtocolSessionPtr > ProtocolSessionContainer::getAllSessions() const
 {

@@ -20,6 +20,7 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
+#include "registry.h"
 #include "remoteentity/RemoteEntityContainer.h"
 #include "protocols/ProtocolHeaderBinarySize.h"
 #include "protocols/ProtocolDelimiter.h"
@@ -51,38 +52,9 @@ using finalmq::fmqreg::GetServiceReply;
 using finalmq::fmqreg::Service;
 
 
+#define PORTNUMBER_PROTO    "18180"
+#define PORTNUMBER_JSON     "18181"
 
-class Registry : public RemoteEntity
-{
-public:
-    Registry()
-    {
-        // register peer events to see when a remote entity connects or disconnects.
-        registerPeerEvent([] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
-            std::cout << "peer event " << peerEvent.toString() << std::endl;
-        });
-
-        registerCommand<RegisterService>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<RegisterService>& request) {
-            assert(request);
-            m_services[request->service.name] = request->service;
-        });
-
-        registerCommand<GetService>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<GetService>& request) {
-            assert(request);
-            auto it = m_services.find(request->name);
-            if (it != m_services.end())
-            {
-                replyContext->reply(GetServiceReply(true, it->second));
-            }
-            else
-            {
-                replyContext->reply(GetServiceReply(false, Service()));
-            }
-        });
-    }
-
-    std::unordered_map<std::string, Service>    m_services;
-};
 
 
 int main()
@@ -111,13 +83,13 @@ int main()
     Registry registry;
     entityContainer.registerEntity(&registry, "fmqreg");
 
-    // Open listener port 7777 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
+    // Open listener port 18180 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
     // content type in payload: protobuf
-    entityContainer.bind("tcp://*:18180", std::make_shared<ProtocolHeaderBinarySizeFactory>(), RemoteEntityContentType::CONTENTTYPE_PROTO);
+    entityContainer.bind("tcp://*:" PORTNUMBER_PROTO, std::make_shared<ProtocolHeaderBinarySizeFactory>(), RemoteEntityContentType::CONTENTTYPE_PROTO);
 
-    // Open listener port 8888 with delimiter framing protocol ProtocolDelimiter ('\n' is end of frame).
+    // Open listener port 18181 with delimiter framing protocol ProtocolDelimiter ('\n' is end of frame).
     // content type in payload: JSON
-    entityContainer.bind("tcp://*:18181", std::make_shared<ProtocolDelimiterFactory>("\n"), RemoteEntityContentType::CONTENTTYPE_JSON);
+    entityContainer.bind("tcp://*:" PORTNUMBER_JSON, std::make_shared<ProtocolDelimiterFactory>("\n"), RemoteEntityContentType::CONTENTTYPE_JSON);
 
     // run
     entityContainer.run();

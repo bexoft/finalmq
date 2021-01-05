@@ -20,44 +20,19 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#pragma once
-
-#include "streamconnection/IMessage.h"
-#include "protocolconnection/IProtocol.h"
+#include "remoteentity/RemoteEntity.h"
+#include "interfaces/fmqreg.fmq.h"
 
 
-namespace finalmq {
 
 
-class SYMBOLEXP ProtocolStream : public IProtocol
+class Registry : public finalmq::RemoteEntity
 {
 public:
-    static const std::uint32_t PROTOCOL_ID;
-
-    ProtocolStream();
+    Registry();
 
 private:
-    // IProtocol
-    virtual void setCallback(const std::weak_ptr<IProtocolCallback>& callback) override;
-    virtual std::uint32_t getProtocolId() const override;
-    virtual bool areMessagesResendable() const override;
-    virtual IMessagePtr createMessage() const override;
-    virtual void receive(const SocketPtr& socket, int bytesToRead) override;
-    virtual void prepareMessageToSend(IMessagePtr message) override;
-    virtual void socketConnected() override;
-    virtual void socketDisconnected() override;
-
-    std::weak_ptr<IProtocolCallback>    m_callback;
+    std::unordered_map<std::string, finalmq::fmqreg::Service>    m_services;
 };
 
 
-class SYMBOLEXP ProtocolStreamFactory : public IProtocolFactory
-{
-public:
-
-private:
-    // IProtocolFactory
-    virtual IProtocolPtr createProtocol() override;
-};
-
-}   // namespace finalmq

@@ -67,6 +67,9 @@ struct IRemoteEntityContainer
     virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, const std::string& name = "") = 0;
     virtual void unregisterEntity(EntityId entityId) = 0;
     virtual void registerConnectionEvent(FuncConnectionEvent funcConnectionEvent) = 0;
+
+    virtual std::vector<EntityId> getAllEntities() const = 0;
+    virtual hybrid_ptr<IRemoteEntity> getEntity(EntityId) const = 0;
 };
 
 typedef std::shared_ptr<IRemoteEntityContainer> IRemoteEntityContainerPtr;
@@ -92,6 +95,9 @@ public:
     virtual void unregisterEntity(EntityId entityId) override;
     virtual void registerConnectionEvent(FuncConnectionEvent funcConnectionEvent) override;
 
+    virtual std::vector<EntityId> getAllEntities() const override;
+    virtual hybrid_ptr<IRemoteEntity> getEntity(EntityId entityId) const override;
+
 private:
     // IProtocolSessionCallback
     virtual void connected(const IProtocolSessionPtr& session) override;
@@ -103,7 +109,7 @@ private:
     inline void triggerConnectionEvent(const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) const;
     void deinit();
 
-    std::unique_ptr<IProtocolSessionContainer>                  m_streamConnectionContainer;
+    std::unique_ptr<IProtocolSessionContainer>                  m_protocolSessionContainer;
     std::unordered_map<std::string, EntityId>                   m_name2entityId;
     std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>>     m_entityId2entity;
     EntityId                                                    m_nextEntityId = 1;

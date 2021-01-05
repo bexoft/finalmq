@@ -34,6 +34,8 @@ namespace finalmq {
 class SYMBOLEXP ProtocolHeaderBinarySize : public IProtocol
 {
 public:
+    static const std::uint32_t PROTOCOL_ID;
+
     ProtocolHeaderBinarySize();
 
 private:
@@ -49,8 +51,6 @@ private:
 
     std::weak_ptr<IProtocolCallback>    m_callback;
     ProtocolFixHeaderHelper             m_headerHelper;
-
-    const std::uint32_t PROTOCOL_ID = 0x00000002;
 };
 
 

@@ -7,31 +7,21 @@
             {"name":"SOCKET_INVALID",           "id":0,     "desc":"Invalid protocol"},
             {"name":"SOCKET_TCP",               "id":1,     "desc":"TCP"},
             {"name":"SOCKET_UNIXDOMAIN",        "id":2,     "desc":"Unix Domain Socket"}
-        ]},
-        {"type":"FramingProtocol","desc":"","entries":[
-            {"name":"FRAME_INVALID",            "id":0,     "desc":"Invalid framing protocol"},
-            {"name":"FRAME_MESSAGESIZE",        "id":1,     "desc":"message size in message header"},
-            {"name":"FRAME_DELIMITER_LF",       "id":2,     "desc":"delimiter with LF"}
-        ]},
-        {"type":"ContentType","desc":"","entries":[
-            {"name":"CONTENTTYPE_INVALID",      "id":0,     "desc":"Invalid content type"},
-            {"name":"CONTENTTYPE_PROTOBUF",     "id":1,     "desc":"content type: protobuf"},
-            {"name":"CONTENTTYPE_JSON",         "id":2,     "desc":"content type: JSON"}
         ]}
     ],
 
     "structs":[
         {"type":"Endpoint","desc":"","fields":[
             {"tid":"TYPE_ENUM",         "type":"SocketProtocol",    "name":"socketprotocol",    "desc":"","flags":[]},
-            {"tid":"TYPE_ENUM",         "type":"FramingProtocol",   "name":"framingprotocol",   "desc":"","flags":[]},
-            {"tid":"TYPE_ENUM",         "type":"ContentType",       "name":"contenttype",       "desc":"","flags":[]},
+            {"tid":"TYPE_UINT32",       "type":"",                  "name":"framingprotocol",   "desc":"","flags":["METAFLAG_PROTO_VARINT"]},
+            {"tid":"TYPE_INT32",        "type":"",                  "name":"contenttype",       "desc":"","flags":[]},
             {"tid":"TYPE_BOOL",         "type":"",                  "name":"ssl",               "desc":"","flags":[]},
             {"tid":"TYPE_STRING",       "type":"",                  "name":"endpoint",          "desc":"","flags":[]}
         ]},
         {"type":"Service","desc":"","fields":[
             {"tid":"TYPE_STRING",       "type":"",                  "name":"name",              "desc":"","flags":[]},
             {"tid":"TYPE_STRING",       "type":"",                  "name":"entityname",        "desc":"","flags":[]},
-            {"tid":"TYPE_UINT32",       "type":"",                  "name":"entityid",          "desc":"","flags":[]},
+            {"tid":"TYPE_UINT64",       "type":"",                  "name":"entityid",          "desc":"","flags":["METAFLAG_PROTO_VARINT"]},
             {"tid":"TYPE_ARRAY_STRUCT", "type":"Endpoint",          "name":"endpoints",         "desc":"","flags":[]}
         ]},
 

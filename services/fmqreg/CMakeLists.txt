@@ -23,7 +23,7 @@ endif()
 
 
 
-add_executable(fmqreg fmqreg.cpp)
+add_executable(fmqreg fmqreg.cpp registry.cpp registry.h)
 
 if (WIN32)
 target_link_libraries(fmqreg finalmq libssl libcrypto wsock32 ws2_32)

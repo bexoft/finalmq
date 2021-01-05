@@ -30,7 +30,6 @@
 
 #include <errno.h>
 #include <string.h>
-#include <iostream>
 #include <assert.h>
 
 #if defined(WIN32) || defined(__MINGW32__)

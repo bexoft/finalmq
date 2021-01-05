@@ -52,6 +52,7 @@ public:
     ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const BindProperties& bindProperties, int contentType);
     ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, const std::string& endpoint, const ConnectProperties& connectProperties, int contentType);
     ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, int contentType);
+    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer);
 
     virtual ~ProtocolSession();
 
@@ -64,7 +65,8 @@ private:
     virtual SocketPtr getSocket() override;
     virtual int getContentType() const override;
     virtual void disconnect() override;
-    virtual bool setEndpoint(const std::string& endpoint, const ConnectProperties& connectionProperties = {}) override;
+    virtual bool connect(const std::string& endpoint, const ConnectProperties& connectionProperties = {}) override;
+    virtual bool connectProtocol(const std::string& endpoint, const IProtocolPtr& protocol, const ConnectProperties& connectionProperties = {}, int contentType = 0) override;
 
     // IStreamConnectionCallback
     virtual hybrid_ptr<IStreamConnectionCallback> connected(const IStreamConnectionPtr& connection) override;
@@ -84,6 +86,8 @@ private:
     virtual void socketDisconnected() override;
     virtual void reconnect() override;
 
+    IMessagePtr convertMessageToProtocol(const IMessagePtr& msg);
+
     IStreamConnectionPtr                            m_connection;
     hybrid_ptr<IProtocolSessionCallback>            m_callback;
     IProtocolPtr                                    m_protocol;
@@ -92,10 +96,12 @@ private:
     int                                             m_contentType = 0;
 
     std::shared_ptr<IStreamConnectionContainer>     m_streamConnectionContainer;
-    const std::string                               m_endpoint;
+    std::string                                     m_endpoint;
 
     BindProperties                                  m_bindProperties;
-    ConnectProperties                               m_connectProperties;
+    ConnectProperties                               m_connectionProperties;
+
+    std::deque<IMessagePtr>                         m_messages;
 
     mutable std::mutex                              m_mutex;
 };

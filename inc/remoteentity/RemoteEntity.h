@@ -125,18 +125,20 @@ struct IRemoteEntity
     virtual void disconnect(PeerId peerId) = 0;
     virtual std::vector<PeerId> getAllPeers() const = 0;
     virtual void registerPeerEvent(FuncPeerEvent funcPeerEvent) = 0;
+    virtual EntityId getEntityId() const = 0;
 
     // low level methods
+    virtual PeerId createPeer(FuncReplyConnect funcReplyConnect = {}) = 0;
+    virtual void connect(PeerId peerId, const IProtocolSessionPtr& session, const std::string& entityName) = 0;
+    virtual void connect(PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId) = 0;
+    virtual void connect(PeerId peerId, const IProtocolSessionPtr& session, const std::string& entityName, EntityId entityId) = 0;
     virtual void registerCommandFunction(const std::string& functionName, FuncCommand funcCommand) = 0;
     virtual CorrelationId getNextCorrelationId() const = 0;
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId) = 0;
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) = 0;
+    virtual bool isEntityRegistered() const = 0;
     // A callback for every received reply. With this callback a match with the correlation ID can be done by the application.
     virtual void registerReplyEvent(FuncReplyEvent funcReplyEvent) = 0;
-
-protected:
-    // Can be overriden by the application. Will be called for every reply.
-    virtual void replyReceived(CorrelationId correlationId, remoteentity::Status status, const StructBasePtr& structBase) = 0;
 
 private:
     // methods for RemoteEntityContainer
@@ -154,15 +156,31 @@ typedef std::shared_ptr<IRemoteEntity> IRemoteEntityPtr;
 class PeerManager
 {
 public:
+
+    enum ReadyToSend
+    {
+        RTS_READY,
+        RTS_SESSION_NOT_AVAILABLE,
+        RTS_PEER_NOT_AVAILABLE
+    };
+
+    struct Request
+    {
+        StructBasePtr structBase;
+        CorrelationId correlationId = CORRELATIONID_NONE;
+    };
+
     PeerManager();
     std::vector<PeerId> getAllPeers() const;
     std::vector<PeerId> getAllPeersWithSession(IProtocolSessionPtr session) const;
     void updatePeer(PeerId peerId, EntityId entityId, const std::string& entityName);
     bool removePeer(PeerId peerId, bool& incoming);
     PeerId getPeerId(std::int64_t sessionId, EntityId entityId, const std::string& entityName) const;
-    IProtocolSessionPtr getRequestHeader(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId, remoteentity::Header& header);
+    ReadyToSend getRequestHeader(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId, remoteentity::Header& header, IProtocolSessionPtr& session);
     std::string getEntityName(const PeerId& peerId);
     PeerId addPeer(const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName, bool incoming, bool& added);
+    PeerId addPeer();
+    std::deque<PeerManager::Request> connect(PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName);
     void setEntityId(EntityId entityId);
     void setPeerEvent(const std::shared_ptr<FuncPeerEvent>& funcPeerEvent);
 
@@ -176,6 +194,7 @@ private:
         EntityId            entityId{ENTITYID_INVALID};
         std::string         entityName;
         bool                incoming = false;
+        std::deque<Request> requests;
     };
 
 
@@ -287,11 +306,16 @@ public:
     virtual void disconnect(PeerId peerId) override;
     virtual std::vector<PeerId> getAllPeers() const override;
     virtual void registerPeerEvent(FuncPeerEvent funcPeerEvent) override;
+    virtual EntityId getEntityId() const override;
+    virtual PeerId createPeer(FuncReplyConnect funcReplyConnect = {}) override;
+    virtual void connect(PeerId peerId, const IProtocolSessionPtr& session, const std::string& entityName) override;
+    virtual void connect(PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId) override;
+    virtual void connect(PeerId peerId, const IProtocolSessionPtr& session, const std::string& entityName, EntityId entityId) override;
     virtual void registerCommandFunction(const std::string& functionName, FuncCommand funcCommand) override;
     virtual CorrelationId getNextCorrelationId() const override;
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId) override;
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) override;
-    virtual void replyReceived(CorrelationId correlationId, remoteentity::Status status, const StructBasePtr& structBase) override;
+    virtual bool isEntityRegistered() const override;
     virtual void registerReplyEvent(FuncReplyEvent funcReplyEvent) override;
 
 private:
@@ -302,8 +326,11 @@ private:
     virtual void deinit() override;
 
     PeerId addPeer(const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName, bool incoming, bool& added);
-    PeerId connectIntern(const IProtocolSessionPtr& session, const std::string& entityName, EntityId, FuncReplyConnect funcReplyConnect);
+    PeerId connectIntern(const IProtocolSessionPtr& session, const std::string& entityName, EntityId, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect);
+    void connectIntern(PeerId peerId, const IProtocolSessionPtr& session, const std::string& entityName, EntityId entityId);
     void removePeer(PeerId peerId, remoteentity::Status status);
+    void replyReceived(CorrelationId correlationId, remoteentity::Status status, const StructBasePtr& structBase);
+    void sendConnectEntity(PeerId peerId, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect);
 
     struct Request
     {

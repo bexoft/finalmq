@@ -32,6 +32,8 @@
 #include "serializestruct/SerializerStruct.h"
 #include "serializestruct/StructFactoryRegistry.h"
 
+#include "helpers/ModulenameFinalmq.h"
+
 
 using finalmq::remoteentity::MsgMode;
 using finalmq::remoteentity::Status;

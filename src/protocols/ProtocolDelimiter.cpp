@@ -32,6 +32,8 @@ namespace finalmq {
 // ProtocolDelimiter
 //---------------------------------------
 
+const std::uint32_t ProtocolDelimiter::PROTOCOL_ID = 0x00000003;
+
 
 ProtocolDelimiter::ProtocolDelimiter(const std::string& delimiter)
     : m_delimiter(delimiter)
