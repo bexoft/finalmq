@@ -52,28 +52,96 @@ using finalmq::LogContext;
 
 
 
+class Request
+{
+public:
+    inline Request()
+    {
+    }
+    inline Request(Request&& rhs)
+        : m_request(rhs.m_request)
+    {
+        rhs.m_request = nullptr;
+    }
+    inline const Request& operator =(Request&& rhs)
+    {
+        if (this != &rhs)
+        {
+            m_request = rhs.m_request;
+            rhs.m_request = nullptr;
+        }
+        return *this;
+    }
+    inline ~Request()
+    {
+        finish();
+    }
+
+    inline void finish()
+    {
+        if (m_request)
+        {
+            FCGX_Finish_r(m_request);
+            m_request = nullptr;
+        }
+    }
+
+    inline int accept()
+    {
+        if (!m_request)
+        {
+            m_request = new FCGX_Request;
+            FCGX_InitRequest(m_request, 0, 0);
+        }
+        return FCGX_Accept_r(m_request);
+    }
+
+    inline operator bool() const
+    {
+        return (m_request != nullptr);
+    }
+
+    inline void putstr(const char* data, ssize_t size)
+    {
+        assert(m_request);
+        FCGX_PutStr(data, size, m_request->out);
+    }
+
+    inline void putstr(const std::string& data)
+    {
+        assert(m_request);
+        FCGX_PutStr(data.c_str(), data.size(), m_request->out);
+    }
+
+private:
+    Request(const Request&) = delete;
+    const Request& operator =(const Request&) = delete;
+
+    FCGX_Request*   m_request = nullptr;
+};
+
+
 
 int main(void)
 {
 
-    FCGX_Request request;
-
     FCGX_Init();
-    FCGX_InitRequest(&request, 0, 0);
 
-    while (FCGX_Accept_r(&request) == 0) {
+    Request request;
+
+    while (request.accept() == 0) {
 
         std::string outstr("Content-type: text/html\r\n"
             "\r\n"
             "<html>\n"
             "  <head>\n"
-            "    <title>Hello, World!</title>\n"
+            "    <title>Hello, World</title>\n"
             "  </head>\n"
             "  <body>\n"
             "    <h1>Hello, World</h1>\n"
             "  </body>\n"
             "</html>\n");
-        FCGX_PutStr(outstr.c_str(), outstr.size(), request.out);
+        request.putstr(outstr);
     }
 
 
