@@ -26,6 +26,7 @@
 #include "logger/Logger.h"
 
 #include <thread>
+#include <random>
 #include <iostream>
 
 #include <fcgiapp.h>
@@ -128,10 +129,29 @@ private:
 
 
 
+class Session
+{
+public:
+    Session()
+    {
+    }
+
+private:
+};
+
+typedef std::shared_ptr<Session>    SessionPtr;
+
+
 
 class RequestManager
 {
 public:
+    RequestManager()
+        : m_randomDevice()
+        , m_randomGenerator(m_randomDevice())
+    {
+
+    }
 
     static void decode(std::string& str)
     {
@@ -164,22 +184,25 @@ public:
     void getQueries(const char* querystring, std::vector<std::string>& listQuery)
     {
         const char* str = nullptr;
-        while ((str = strchr(querystring, '&')) != nullptr)
+        do
         {
-            std::string query(querystring, str);
+            str = strchr(querystring, '&');
+            std::string query;
+            if (str)
+            {
+                query = {querystring, str};
+                querystring = str + 1;
+            }
+            else
+            {
+                query = querystring;
+            }
             decode(query);
             if (!query.empty())
             {
                 listQuery.push_back(std::move(query));
             }
-            querystring = str + 1;
-        }
-        std::string query(querystring);
-        decode(query);
-        if (!query.empty())
-        {
-            listQuery.push_back(std::move(query));
-        }
+        } while (str != nullptr);
     }
 
     void getData(Request& request, std::string& data)
@@ -195,6 +218,72 @@ public:
         data.resize(data.size() - DATABLOCKSIZE + cnt);
     }
 
+    SessionPtr findSession(const char* cookies)
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        SessionPtr session;
+        if (cookies)
+        {
+            const char* str = nullptr;
+            do
+            {
+                str = strchr(cookies, ';');
+                std::string cookie;
+                if (str)
+                {
+                    cookie = {cookies, str};
+                    cookies = str + 1;
+                }
+                else
+                {
+                    cookie = cookies;
+                }
+                const char* pos = strstr(cookie.c_str(), "sessionid-fmqfcgi");
+                if (pos)
+                {
+                    size_t p = cookie.find('=');
+                    if (p != std::string::npos)
+                    {
+                        std::string httpSessionId = &cookie.c_str()[p + 1];
+                        auto it = m_sessions.find(httpSessionId);
+                        if (it != m_sessions.end())
+                        {
+                            session = it->second;
+                        }
+                    }
+                }
+            } while (str != nullptr && !session);
+        }
+        return session;
+    }
+
+    std::string createHttpSessionId()
+    {
+        std::uint64_t sessionCounter = m_nextSessionCounter;
+        ++m_nextSessionCounter;
+        std::uint64_t v1 = m_randomVariable(m_randomGenerator);
+        std::uint64_t v2 = m_randomVariable(m_randomGenerator);
+
+        v1 &= 0xffffffff00000000ull;
+        v1 |= (sessionCounter & 0x00000000ffffffffull);
+
+        std::ostringstream oss;
+        oss << std::hex << v2 << v1;
+        std::string httpSessionId = oss.str();
+        return httpSessionId;
+    }
+
+    SessionPtr createSession(Request& request)
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        SessionPtr session;
+        std::string httpSessionId = createHttpSessionId();
+        m_sessions[httpSessionId] = std::make_shared<Session>();
+        lock.unlock();
+
+        FCGX_FPrintF(request->out, "Set-Cookie: sessionid-fmqfcgi=%s\r\n", httpSessionId.c_str());
+        return session;
+    }
 
     void handleRequest(Request& request)
     {
@@ -258,6 +347,17 @@ public:
         getData(request, data);
         getQueries(data.c_str(), listQuery);
 
+        SessionPtr session = findSession(cookies);
+        if (session)
+        {
+            std::cerr << "session found" << std::endl;
+        }
+        else
+        {
+            std::cerr << "create session" << std::endl;
+            session = createSession(request);
+        }
+
         for (size_t i = 0; i < listQuery.size(); ++i)
         {
             std::cerr << listQuery[i] << std::endl;
@@ -276,7 +376,14 @@ public:
             "</html>\n");
         request.putstr(outstr);
     }
+
 private:
+    std::random_device                              m_randomDevice;
+    std::mt19937                                    m_randomGenerator;
+    std::uniform_int_distribution<std::uint64_t>    m_randomVariable;
+    std::unordered_map<std::string, SessionPtr>     m_sessions;
+    std::uint64_t                                   m_nextSessionCounter = 1;
+    std::mutex                                      m_mutex;
 };
 
 
