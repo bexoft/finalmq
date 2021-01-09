@@ -31,10 +31,12 @@
 
 #include <fcgiapp.h>
 
+#define MODULENAME "fmqfcgi"
 
 //using finalmq::RemoteEntity;
-//using finalmq::RemoteEntityContainer;
-//using finalmq::IRemoteEntityContainer;
+using finalmq::RemoteEntityContainer;
+using finalmq::IRemoteEntityPtr;
+using finalmq::RemoteEntity;
 //using finalmq::PeerId;
 //using finalmq::PeerEvent;
 //using finalmq::ReplyContextUPtr;
@@ -129,17 +131,23 @@ private:
 
 
 
-class Session
+class HttpSession
 {
 public:
-    Session()
+    HttpSession()
     {
     }
 
+    void setEntity(const IRemoteEntityPtr& entity)
+    {
+        m_entity = entity;
+    }
+
 private:
+    IRemoteEntityPtr m_entity;
 };
 
-typedef std::shared_ptr<Session>    SessionPtr;
+typedef std::shared_ptr<HttpSession>    HttpSessionPtr;
 
 
 
@@ -151,6 +159,19 @@ public:
         , m_randomGenerator(m_randomDevice())
     {
 
+    }
+
+    ~RequestManager()
+    {
+        m_thread.join();
+    }
+
+    void init()
+    {
+        m_entityContainer.init();
+        m_thread = std::thread([this] () {
+            m_entityContainer.run();
+        });
     }
 
     static void decode(std::string& str)
@@ -218,10 +239,10 @@ public:
         data.resize(data.size() - DATABLOCKSIZE + cnt);
     }
 
-    SessionPtr findSession(const char* cookies)
+    HttpSessionPtr findSession(const char* cookies)
     {
         std::unique_lock<std::mutex> lock(m_mutex);
-        SessionPtr session;
+        HttpSessionPtr session;
         if (cookies)
         {
             const char* str = nullptr;
@@ -273,16 +294,35 @@ public:
         return httpSessionId;
     }
 
-    SessionPtr createSession(Request& request)
+    HttpSessionPtr createSession(const std::string& httpSessionId)
     {
+        HttpSessionPtr session = std::make_shared<HttpSession>();
         std::unique_lock<std::mutex> lock(m_mutex);
-        SessionPtr session;
-        std::string httpSessionId = createHttpSessionId();
-        m_sessions[httpSessionId] = std::make_shared<Session>();
+        m_sessions[httpSessionId] = session;
         lock.unlock();
 
-        FCGX_FPrintF(request->out, "Set-Cookie: sessionid-fmqfcgi=%s\r\n", httpSessionId.c_str());
         return session;
+    }
+
+    static ssize_t getRequestData(const std::string& query, ssize_t posValue, std::string& objectName, std::string& type)
+    {
+        // 01234567890123456789012345678901234
+        // request=MyServer/test.TestRequest{}
+        ssize_t ixEndHeader = query.find_first_of('{');   //33
+        if (ixEndHeader == -1)
+        {
+            ixEndHeader = query.size();
+        }
+//                endHeader = &buffer[ixEndHeader];
+        ssize_t ixStartCommand = query.find_last_of('/', ixEndHeader);
+        assert(ixStartCommand >= 0);
+        if (ixStartCommand != -1)
+        {
+            objectName = {&query[posValue], &query[ixStartCommand]};
+        }
+        type = {&query[ixStartCommand+1], &query[ixEndHeader]};
+
+        return ixEndHeader;
     }
 
     void handleRequest(Request& request)
@@ -300,23 +340,23 @@ public:
 
         if (uriEscaped)
         {
-            std::cerr << "REQUEST_URI: " << uriEscaped << std::endl;
+            streamInfo << "REQUEST_URI: " << uriEscaped;
         }
         if (pathinfo)
         {
-            std::cerr << "PATH_INFO: " << pathinfo << std::endl;
+            streamInfo << "PATH_INFO: " << pathinfo;
         }
         if (querystring)
         {
-            std::cerr << "QUERY_STRING: " << querystring << std::endl;
+            streamInfo << "QUERY_STRING: " << querystring;
         }
         if (cookies)
         {
-            std::cerr << "HTTP_COOKIE: " << cookies << std::endl;
+            streamInfo << "HTTP_COOKIE: " << cookies;
         }
         if (origin)
         {
-            std::cerr << "HTTP_ORIGIN: " << origin << std::endl;
+            streamInfo << "HTTP_ORIGIN: " << origin;
         }
 
         FCGX_FPrintF(request->out, "Content-type: text/plain; charset=utf-8\r\n");
@@ -347,20 +387,35 @@ public:
         getData(request, data);
         getQueries(data.c_str(), listQuery);
 
-        SessionPtr session = findSession(cookies);
-        if (session)
+        HttpSessionPtr httpSession = findSession(cookies);
+        if (httpSession)
         {
-            std::cerr << "session found" << std::endl;
+            streamInfo << "session found";
         }
         else
         {
-            std::cerr << "create session" << std::endl;
-            session = createSession(request);
+            streamInfo << "create session";
+            std::string httpSessionId = createHttpSessionId();
+            FCGX_FPrintF(request->out, "Set-Cookie: sessionid-fmqfcgi=%s\r\n", httpSessionId.c_str());
+            httpSession = createSession(httpSessionId);
+
+            IRemoteEntityPtr entity = std::make_shared<RemoteEntity>();
+            httpSession->setEntity(entity);
+            m_entityContainer.registerEntity(entity);
         }
 
+        static const std::string KEY_REQUEST = "request=";
         for (size_t i = 0; i < listQuery.size(); ++i)
         {
-            std::cerr << listQuery[i] << std::endl;
+            const std::string& query = listQuery[i];
+            if (query.find_first_of(KEY_REQUEST) == 0)
+            {
+                std::string objectName;
+                std::string type;
+
+//                ssize_t posParameter = getRequestData(query, KEY_REQUEST.size(), objectName, type);
+
+            }
         }
 
 
@@ -381,14 +436,23 @@ private:
     std::random_device                              m_randomDevice;
     std::mt19937                                    m_randomGenerator;
     std::uniform_int_distribution<std::uint64_t>    m_randomVariable;
-    std::unordered_map<std::string, SessionPtr>     m_sessions;
+    std::unordered_map<std::string, HttpSessionPtr> m_sessions;
     std::uint64_t                                   m_nextSessionCounter = 1;
+
+    RemoteEntityContainer                           m_entityContainer;
+    std::thread                                     m_thread;
+
     std::mutex                                      m_mutex;
 };
 
 
 int main(void)
 {
+    // display log traces
+    Logger::instance().registerConsumer([] (const LogContext& context, const char* text) {
+        std::cerr << context.filename << "(" << context.line << ") " << text << std::endl;
+    });
+
     FCGX_Init();
     RequestManager requestManager;
 
