@@ -160,6 +160,32 @@ bool RemoteEntityFormat::send(const IProtocolSessionPtr& session, const remoteen
 }
 
 
+bool RemoteEntityFormat::send(const IProtocolSessionPtr& session, const remoteentity::Header& header, const IMessagePtr& messagePayload)
+{
+    bool ok = true;
+    if (shallSend(header))
+    {
+        assert(session);
+        IMessagePtr message = session->createMessage();
+        assert(message);
+        serialize(*message, session->getContentType(), header);
+        ssize_t totalSendPayloadSize = messagePayload->getTotalSendPayloadSize();
+        char* payload = message->addSendPayload(totalSendPayloadSize);
+        const std::list<BufferRef>& payloads = messagePayload->getAllSendPayloads();
+        int sum = 0;
+        for (auto it = payloads.begin(); it != payloads.end(); ++it)
+        {
+            sum += it->second;
+            assert(sum <= totalSendPayloadSize);
+            memcpy(payload, it->first, it->second);
+            payload += it->second;
+        }
+        ok = session->sendMessage(message);
+    }
+    return ok;
+}
+
+
 
 bool RemoteEntityFormat::send(const IProtocolSessionPtr& session, const remoteentity::Header& header)
 {

@@ -77,6 +77,7 @@ public:
 
     static bool send(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase& structBase);
     static bool send(const IProtocolSessionPtr& session, const remoteentity::Header& header);
+    static bool send(const IProtocolSessionPtr& session, const remoteentity::Header& header, const IMessagePtr& structBase);
 };
 
 

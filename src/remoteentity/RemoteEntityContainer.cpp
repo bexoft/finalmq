@@ -342,9 +342,8 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
             if (!structBase && header.status == Status::STATUS_OK && !header.type.empty())
             {
                 header.status = Status::STATUS_REPLYTYPE_NOT_KNOWN;
-                header.type = "";
             }
-            entity->receivedReply(session, header, structBase);
+            entity->receivedReply(session, header, structBase, message->getReceivePayload());
         }
     }
 }

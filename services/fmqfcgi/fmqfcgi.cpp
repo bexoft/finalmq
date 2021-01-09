@@ -21,8 +21,10 @@
 //SOFTWARE.
 
 #include "remoteentity/RemoteEntityContainer.h"
+#include "remoteentity/FmqRegistryClient.h"
 #include "protocols/ProtocolHeaderBinarySize.h"
 #include "protocols/ProtocolDelimiter.h"
+#include "protocolconnection/ProtocolMessage.h"
 #include "logger/Logger.h"
 
 #include <thread>
@@ -35,23 +37,23 @@
 
 //using finalmq::RemoteEntity;
 using finalmq::RemoteEntityContainer;
+using finalmq::IRemoteEntityContainerPtr;
 using finalmq::IRemoteEntityPtr;
 using finalmq::RemoteEntity;
-//using finalmq::PeerId;
-//using finalmq::PeerEvent;
-//using finalmq::ReplyContextUPtr;
-//using finalmq::ProtocolHeaderBinarySizeFactory;
-//using finalmq::ProtocolDelimiterFactory;
-//using finalmq::RemoteEntityContentType;
-//using finalmq::IProtocolSessionPtr;
-//using finalmq::ConnectionData;
-//using finalmq::ConnectionEvent;
+using finalmq::PEERID_INVALID;
+using finalmq::ENTITYID_INVALID;
+using finalmq::PeerId;
+using finalmq::EntityId;
+using finalmq::IProtocolSessionPtr;
+using finalmq::IProtocolPtr;
+using finalmq::ProtocolDelimiter;
+using finalmq::ProtocolHeaderBinarySize;
 using finalmq::Logger;
 using finalmq::LogContext;
-//using finalmq::fmqreg::RegisterService;
-//using finalmq::fmqreg::GetService;
-//using finalmq::fmqreg::GetServiceReply;
-//using finalmq::fmqreg::Service;
+using finalmq::FmqRegistryClient;
+using finalmq::remoteentity::Status;
+using finalmq::fmqreg::GetServiceReply;
+using finalmq::fmqreg::Endpoint;
 
 
 
@@ -128,6 +130,20 @@ private:
 
     FCGX_Request*   m_request = nullptr;
 };
+typedef std::shared_ptr<Request>    RequestPtr;
+
+struct SessionAndEntity
+{
+    struct EntityAndPeerId
+    {
+        IRemoteEntityPtr    entity;
+        PeerId              peerId{PEERID_INVALID};
+    };
+    IProtocolSessionPtr             session;
+    EntityId                        entityId{ENTITYID_INVALID};
+    std::string                     entityName;
+    std::deque<EntityAndPeerId>     entities;
+};
 
 
 
@@ -143,8 +159,34 @@ public:
         m_entity = entity;
     }
 
+    IRemoteEntityPtr getEntity() const
+    {
+        return m_entity;
+    }
+
+    bool getPeerId(const std::string& objectName, PeerId& peerId)
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        auto it = m_objectName2PeerId.find(objectName);
+        if (it != m_objectName2PeerId.end())
+        {
+            peerId = it->second;
+            return true;
+        }
+
+        peerId = m_entity->createPeer();
+        assert(peerId != PEERID_INVALID);
+
+        m_objectName2PeerId[objectName] = peerId;
+
+        return false;
+    }
+
+
 private:
-    IRemoteEntityPtr m_entity;
+    IRemoteEntityPtr                        m_entity;
+    std::unordered_map<std::string, PeerId> m_objectName2PeerId;
+    std::mutex                              m_mutex;
 };
 
 typedef std::shared_ptr<HttpSession>    HttpSessionPtr;
@@ -157,6 +199,8 @@ public:
     RequestManager()
         : m_randomDevice()
         , m_randomGenerator(m_randomDevice())
+        , m_entityContainer(std::make_shared<RemoteEntityContainer>())
+        , m_fmqRegistryClient(m_entityContainer)
     {
 
     }
@@ -168,9 +212,9 @@ public:
 
     void init()
     {
-        m_entityContainer.init();
+        m_entityContainer->init();
         m_thread = std::thread([this] () {
-            m_entityContainer.run();
+            m_entityContainer->run();
         });
     }
 
@@ -266,8 +310,8 @@ public:
                     if (p != std::string::npos)
                     {
                         std::string httpSessionId = &cookie.c_str()[p + 1];
-                        auto it = m_sessions.find(httpSessionId);
-                        if (it != m_sessions.end())
+                        auto it = m_httpSessions.find(httpSessionId);
+                        if (it != m_httpSessions.end())
                         {
                             session = it->second;
                         }
@@ -294,14 +338,14 @@ public:
         return httpSessionId;
     }
 
-    HttpSessionPtr createSession(const std::string& httpSessionId)
+    HttpSessionPtr createHttpSession(const std::string& httpSessionId)
     {
-        HttpSessionPtr session = std::make_shared<HttpSession>();
+        HttpSessionPtr httpSession = std::make_shared<HttpSession>();
         std::unique_lock<std::mutex> lock(m_mutex);
-        m_sessions[httpSessionId] = session;
+        m_httpSessions[httpSessionId] = httpSession;
         lock.unlock();
 
-        return session;
+        return httpSession;
     }
 
     static ssize_t getRequestData(const std::string& query, ssize_t posValue, std::string& objectName, std::string& type)
@@ -325,12 +369,89 @@ public:
         return ixEndHeader;
     }
 
-    void handleRequest(Request& request)
+    void connectEntity(const std::string& objectName, PeerId peerId, const IRemoteEntityPtr& entity)
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        auto it = m_objectName2sessionAndEntity.find(objectName);
+        bool found = (it != m_objectName2sessionAndEntity.end());
+        SessionAndEntity& sessionAndEntity = (found) ? it->second : m_objectName2sessionAndEntity[objectName];
+        if (sessionAndEntity.session)
+        {
+            entity->connect(peerId, sessionAndEntity.session, sessionAndEntity.entityName, sessionAndEntity.entityId);
+        }
+        else
+        {
+            sessionAndEntity.entities.push_back({entity, peerId});
+            lock.unlock();
+
+            if (!found)
+            {
+                m_fmqRegistryClient.getService(objectName, [this, objectName] (Status status, const std::shared_ptr<GetServiceReply>& reply) {
+                    std::unique_lock<std::mutex> lock(m_mutex);
+                    IProtocolPtr protocol;
+                    std::string endpoint;
+                    auto it = m_objectName2sessionAndEntity.find(objectName);
+                    if (it != m_objectName2sessionAndEntity.end())
+                    {
+                        SessionAndEntity& sessionAndEntity = it->second;
+                        if (reply)
+                        {
+                            sessionAndEntity.entityId = reply->service.entityid;
+                            sessionAndEntity.entityName = reply->service.entityname;
+                            std::vector<finalmq::fmqreg::Endpoint>& endpointEntries = reply->service.endpoints;
+                            for (size_t i = 0; i < endpointEntries.size() && !protocol; ++i)
+                            {
+                                const Endpoint& endpointEntry = endpointEntries[i];
+                                endpoint = endpointEntry.endpoint;
+                                if (!endpointEntry.ssl &&
+                                    endpointEntry.contenttype == finalmq::RemoteEntityContentType::CONTENTTYPE_JSON)
+                                {
+                                    if (endpointEntry.framingprotocol == ProtocolDelimiter::PROTOCOL_ID)
+                                    {
+                                        protocol = std::make_shared<ProtocolDelimiter>("\n");
+                                    }
+                                    else if (endpointEntry.framingprotocol == ProtocolHeaderBinarySize::PROTOCOL_ID)
+                                    {
+                                        protocol = std::make_shared<ProtocolHeaderBinarySize>();
+                                    }
+                                }
+                            }
+                            if (protocol)
+                            {
+                                IProtocolSessionPtr& session = m_endpoint2session[endpoint];
+                                if (!session || session->getConnectionData().connectionState == finalmq::ConnectionState::CONNECTIONSTATE_DISCONNECTED)
+                                {
+                                    session = m_entityContainer->connect(endpoint, protocol, finalmq::RemoteEntityContentType::CONTENTTYPE_JSON, {{}, 5000, 0});
+                                }
+                                sessionAndEntity.session = session;
+                                for (size_t n = 0; n < sessionAndEntity.entities.size(); n++)
+                                {
+                                    const SessionAndEntity::EntityAndPeerId& entityAndPeerId = sessionAndEntity.entities[n];
+                                    entityAndPeerId.entity->connect(entityAndPeerId.peerId, session, reply->service.entityname, reply->service.entityid);
+                                }
+                                sessionAndEntity.entities.clear();
+                            }
+                        }
+                        for (size_t n = 0; n < sessionAndEntity.entities.size(); n++)
+                        {
+                            const SessionAndEntity::EntityAndPeerId& entityAndPeerId = sessionAndEntity.entities[n];
+                            entityAndPeerId.entity->disconnect(entityAndPeerId.peerId);
+                        }
+                        sessionAndEntity.entities.clear();
+                    }
+                });
+            }
+        }
+    }
+
+    void handleRequest(const RequestPtr& requestPtr)
     {
         // GET http://localhost/root.fmq/MyService/helloworld.getGreetings%7B%22hello%22:%22world%22%7D?call=hello.world{%22hey%22:5}
         // REQUEST_URI: /root.fmq/MyService/helloworld.getGreetings%7B%22hello%22:%22world%22%7D?call=hello.world{%22hey%22:5}
         // PATH_INFO: /MyService/helloworld.getGreetings{"hello":"world"}
         // QUERY_STRING: call=hello.world%7B%22hey%22:5%7D
+
+        Request& request = *requestPtr;
 
         const char* cookies = FCGX_GetParam("HTTP_COOKIE", request->envp);
         const char* querystring = FCGX_GetParam("QUERY_STRING", request->envp);
@@ -376,7 +497,6 @@ public:
             FCGX_FPrintF(request->out, "Access-Control-Allow-Origin: null\r\n");
         }
 
-
         std::vector<std::string> listQuery;
         if (querystring && querystring[0])
         {
@@ -397,12 +517,17 @@ public:
             streamInfo << "create session";
             std::string httpSessionId = createHttpSessionId();
             FCGX_FPrintF(request->out, "Set-Cookie: sessionid-fmqfcgi=%s\r\n", httpSessionId.c_str());
-            httpSession = createSession(httpSessionId);
+            httpSession = createHttpSession(httpSessionId);
 
             IRemoteEntityPtr entity = std::make_shared<RemoteEntity>();
             httpSession->setEntity(entity);
-            m_entityContainer.registerEntity(entity);
+            m_entityContainer->registerEntity(entity);
         }
+
+        assert(httpSession);
+
+        // end of header
+        FCGX_FPrintF(request->out, "\r\n");
 
         static const std::string KEY_REQUEST = "request=";
         for (size_t i = 0; i < listQuery.size(); ++i)
@@ -411,36 +536,49 @@ public:
             if (query.find_first_of(KEY_REQUEST) == 0)
             {
                 std::string objectName;
-                std::string type;
+                std::string typeName;
 
-//                ssize_t posParameter = getRequestData(query, KEY_REQUEST.size(), objectName, type);
+                ssize_t posParameter = getRequestData(query, KEY_REQUEST.size(), objectName, typeName);
+                PeerId peerId;
+                bool found = httpSession->getPeerId(objectName, peerId);
+                if (!found)
+                {
+                    connectEntity(objectName, peerId, httpSession->getEntity());
+                }
 
+                finalmq::IMessagePtr message = std::make_shared<finalmq::ProtocolMessage>(0);
+                ssize_t sizePayload = query.size() - posParameter;
+                char* payload = message->addSendPayload(sizePayload);
+                memcpy(payload, &query[posParameter], sizePayload);
+                httpSession->getEntity()->sendRequest(peerId, typeName, message, [requestPtr] (PeerId peerId, Status status, const finalmq::BufferRef& payload) {
+                    bool sent = false;
+                    if (payload.first)
+                    {
+                        char* start = strchr(payload.first, '\t');
+                        if (start != nullptr)
+                        {
+                            ssize_t offset = start - payload.first;
+                            requestPtr->putstr(start, payload.second - offset);
+                            sent = true;
+                        }
+                    }
+                });
             }
         }
-
-
-        std::string outstr("Content-type: text/html\r\n"
-            "\r\n"
-            "<html>\n"
-            "  <head>\n"
-            "    <title>Hello, World</title>\n"
-            "  </head>\n"
-            "  <body>\n"
-            "    <h1>Hello, World</h1>\n"
-            "  </body>\n"
-            "</html>\n");
-        request.putstr(outstr);
     }
 
 private:
     std::random_device                              m_randomDevice;
     std::mt19937                                    m_randomGenerator;
     std::uniform_int_distribution<std::uint64_t>    m_randomVariable;
-    std::unordered_map<std::string, HttpSessionPtr> m_sessions;
+    std::unordered_map<std::string, HttpSessionPtr> m_httpSessions;
     std::uint64_t                                   m_nextSessionCounter = 1;
 
-    RemoteEntityContainer                           m_entityContainer;
+    IRemoteEntityContainerPtr                       m_entityContainer;
+    FmqRegistryClient                               m_fmqRegistryClient;
     std::thread                                     m_thread;
+    std::unordered_map<std::string, SessionAndEntity> m_objectName2sessionAndEntity;
+    std::unordered_map<std::string, IProtocolSessionPtr> m_endpoint2session;
 
     std::mutex                                      m_mutex;
 };
@@ -455,11 +593,13 @@ int main(void)
 
     FCGX_Init();
     RequestManager requestManager;
+    requestManager.init();
 
-    Request request;
-    while (request.accept() == 0)
+    RequestPtr request = std::make_shared<Request>();
+    while (request->accept() == 0)
     {
         requestManager.handleRequest(request);
+        request = std::make_shared<Request>();
     }
 
     return 0;

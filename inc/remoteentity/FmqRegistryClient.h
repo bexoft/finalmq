@@ -32,10 +32,13 @@ namespace finalmq {
 class FmqRegistryClient
 {
 public:
+    typedef std::function<void(remoteentity::Status status, const std::shared_ptr<fmqreg::GetServiceReply>& reply)> FuncGetServiceReply;
+
     FmqRegistryClient(const IRemoteEntityContainerPtr& remoteEntityContainer);
 
     void registerService(const finalmq::fmqreg::Service& service, int retryDurationMs = 60000);
     PeerId connectService(const std::string& serviceName, EntityId entityId, const ConnectProperties& connectProperties, FuncReplyConnect funcReplyConnect);
+    void getService(const std::string& serviceName, FuncGetServiceReply funcGetServiceReply);
 
 private:
     void init();
