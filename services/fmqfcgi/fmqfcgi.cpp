@@ -421,6 +421,12 @@ public:
                                 IProtocolSessionPtr& session = m_endpoint2session[endpoint];
                                 if (!session || session->getConnectionData().connectionState == finalmq::ConnectionState::CONNECTIONSTATE_DISCONNECTED)
                                 {
+                                    // replace * by hostname in endpoint
+                                    std::string::size_type pos = endpoint.find("*");
+                                    if (pos != std::string::npos)
+                                    {
+                                        endpoint.replace(pos, std::string("*").length(), "127.0.0.1");
+                                    }
                                     session = m_entityContainer->connect(endpoint, protocol, finalmq::RemoteEntityContentType::CONTENTTYPE_JSON, {{}, 5000, 0});
                                 }
                                 sessionAndEntity.session = session;
@@ -442,6 +448,11 @@ public:
                 });
             }
         }
+    }
+
+    void sendReplyHeader(Request& request, Status status)
+    {
+        FCGX_FPrintF(request->out, "{\"mode\":\"MSG_REPLY\",\"status\":\"%s\"}\t", status.toString().c_str());
     }
 
     void handleRequest(const RequestPtr& requestPtr)
@@ -550,16 +561,18 @@ public:
                 ssize_t sizePayload = query.size() - posParameter;
                 char* payload = message->addSendPayload(sizePayload);
                 memcpy(payload, &query[posParameter], sizePayload);
-                httpSession->getEntity()->sendRequest(peerId, typeName, message, [requestPtr] (PeerId peerId, Status status, const finalmq::BufferRef& payload) {
-                    bool sent = false;
+                httpSession->getEntity()->sendRequest(peerId, typeName, message, [this, requestPtr] (PeerId peerId, Status status, const finalmq::BufferRef& payload) {
+                    assert(requestPtr);
+                    Request& request = *requestPtr;
+                    sendReplyHeader(request, status);
                     if (payload.first)
                     {
                         char* start = strchr(payload.first, '\t');
                         if (start != nullptr)
                         {
+                            ++start;
                             ssize_t offset = start - payload.first;
-                            requestPtr->putstr(start, payload.second - offset);
-                            sent = true;
+                            request.putstr(start, payload.second - offset);
                         }
                     }
                 });

@@ -569,6 +569,10 @@ void RemoteEntity::replyReceived(CorrelationId correlationId, Status status, con
     }
     else if (request && request->funcRaw && *request->funcRaw)
     {
+        if (status == Status::STATUS_REPLYTYPE_NOT_KNOWN)
+        {
+            status = Status::STATUS_OK;
+        }
         (*request->funcRaw)(request->peerId, status, payload);
     }
 }
@@ -702,7 +706,6 @@ void RemoteEntity::connectIntern(PeerId peerId, const IProtocolSessionPtr& sessi
     for (size_t i = 0; i < pendingRequests.size() && ok; ++i)
     {
         const PeerManager::Request request = pendingRequests[i];
-        assert(request.structBase);
         Header header;
         IProtocolSessionPtr sessionRet;
         PeerManager::ReadyToSend readyToSend = PeerManager::ReadyToSend::RTS_PEER_NOT_AVAILABLE;
@@ -722,7 +725,18 @@ void RemoteEntity::connectIntern(PeerId peerId, const IProtocolSessionPtr& sessi
         if (readyToSend == PeerManager::ReadyToSend::RTS_READY)
         {
             assert(session);
-            ok = RemoteEntityFormat::send(sessionRet, header, *request.structBase);
+            if (request.structBase)
+            {
+                ok = RemoteEntityFormat::send(sessionRet, header, *request.structBase);
+            }
+            else if (request.message)
+            {
+                ok = RemoteEntityFormat::send(sessionRet, header, request.message);
+            }
+            else
+            {
+                assert(false);
+            }
         }
         else
         {

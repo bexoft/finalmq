@@ -34,9 +34,9 @@ class FmqRegistryClient
 public:
     typedef std::function<void(remoteentity::Status status, const std::shared_ptr<fmqreg::GetServiceReply>& reply)> FuncGetServiceReply;
 
-    FmqRegistryClient(const IRemoteEntityContainerPtr& remoteEntityContainer);
+    FmqRegistryClient(const hybrid_ptr<IRemoteEntityContainer>& remoteEntityContainer);
 
-    void registerService(const finalmq::fmqreg::Service& service, int retryDurationMs = 60000);
+    void registerService(const finalmq::fmqreg::Service& service, int retryDurationMs = -1);
     PeerId connectService(const std::string& serviceName, EntityId entityId, const ConnectProperties& connectProperties, FuncReplyConnect funcReplyConnect);
     void getService(const std::string& serviceName, FuncGetServiceReply funcGetServiceReply);
 
@@ -44,9 +44,9 @@ private:
     void init();
     IProtocolSessionPtr createRegistrySession(const std::string& hostname, const ConnectProperties& connectProperties = {});
 
-    bool                        m_init = false;
-    IRemoteEntityContainerPtr   m_remoteEntityContainer;
-    IRemoteEntityPtr            m_entityRegistry;
+    bool                                m_init = false;
+    hybrid_ptr<IRemoteEntityContainer>  m_remoteEntityContainer;
+    IRemoteEntityPtr                    m_entityRegistry;
 };
 
 

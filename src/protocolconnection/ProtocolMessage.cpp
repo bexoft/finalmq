@@ -42,7 +42,10 @@ ProtocolMessage::ProtocolMessage(int protocolId, ssize_t sizeHeader, ssize_t siz
 char* ProtocolMessage::addBuffer(ssize_t size)
 {
     assert(!m_preparedToSend);
-    assert(size > 0);
+    if (size <= 0)
+    {
+        return nullptr;
+    }
 
     if (m_offset != -1)
     {
