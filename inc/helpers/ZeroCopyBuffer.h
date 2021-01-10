@@ -36,7 +36,7 @@ public:
     std::string getData() const;
 
 private:
-    virtual char* addBuffer(ssize_t size) override;
+    virtual char* addBuffer(ssize_t size, ssize_t reserve = 0) override;
     virtual void downsizeLastBuffer(ssize_t newSize) override;
 
     std::list<std::string>  m_strings;

@@ -35,13 +35,13 @@ public:
     ProtocolMessage(int protocolId, ssize_t sizeHeader = 0, ssize_t sizeTrailer = 0);
 
 private:
-    virtual char* addBuffer(ssize_t size) override;
+    virtual char* addBuffer(ssize_t size, ssize_t reserve = 0) override;
     virtual void downsizeLastBuffer(ssize_t newSize) override;
 
     // for send
     virtual void addSendPayload(const std::string& payload) override;
-    virtual void addSendPayload(const char* payload, ssize_t size) override;
-    virtual char* addSendPayload(ssize_t size) override;
+    virtual void addSendPayload(const char* payload, ssize_t size, int reserve = 0) override;
+    virtual char* addSendPayload(ssize_t size, ssize_t reserve = 0) override;
     virtual void downsizeLastSendPayload(ssize_t newSize) override;
 
     // for receive

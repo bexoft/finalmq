@@ -85,36 +85,49 @@ void RemoteEntityFormat::serializeProto(IMessage& message, const Header& header,
     }
 }
 
+#define JSONBLOCKSIZE   2048
 
-void RemoteEntityFormat::serializeJson(IMessage& message, const Header& header)
+void RemoteEntityFormat::serializeJson(IMessage& message, const Header& header, bool structBaseAvailable)
 {
-    SerializerJson serializerHeader(message, 2048);
+    message.addSendPayload("[", 1, JSONBLOCKSIZE);
+
+    SerializerJson serializerHeader(message);
     ParserStruct parserHeader(serializerHeader, header);
     parserHeader.parseStruct();
 
+
     // add end of header
-    message.addSendPayload("\t", 1);
+    if (structBaseAvailable)
+    {
+        message.addSendPayload(",\t", 2, JSONBLOCKSIZE);
+    }
+    else
+    {
+        message.addSendPayload(",\t{}]", 5);
+    }
 }
 
 
 
 void RemoteEntityFormat::serializeJson(IMessage& message, const Header& header, const StructBase& structBase)
 {
-    serializeJson(message, header);
+    serializeJson(message, header, true);
 
     const std::string* typeName = &structBase.getStructInfo().getTypeName();
     if (*typeName == remoteentity::GenericMessage::structInfo().getTypeName())
     {
         const remoteentity::GenericMessage& genericMessage = static_cast<const remoteentity::GenericMessage&>(structBase);
         assert(genericMessage.contenttype == RemoteEntityContentType::CONTENTTYPE_JSON);
-        char* payload = message.addSendPayload(genericMessage.data.size());
+        char* payload = message.addSendPayload(genericMessage.data.size() + 1);
         memcpy(payload, genericMessage.data.data(), genericMessage.data.size());
+        payload[genericMessage.data.size()] = ']';
     }
     else
     {
         SerializerJson serializerData(message);
         ParserStruct parserData(serializerData, structBase);
         parserData.parseStruct();
+        message.addSendPayload("]", 1);
     }
 }
 
@@ -128,7 +141,7 @@ void RemoteEntityFormat::serialize(IMessage& message, int contentType, const rem
         serializeProto(message, header);
         break;
     case RemoteEntityContentType::CONTENTTYPE_JSON:
-        serializeJson(message, header);
+        serializeJson(message, header, false);
         break;
     default:
         assert(false);
@@ -303,6 +316,16 @@ std::shared_ptr<StructBase> RemoteEntityFormat::parseMessageJson(const BufferRef
         return nullptr;
     }
 
+    if (buffer[0] == '[')
+    {
+        ++buffer;
+        --sizeBuffer;
+    }
+    if (buffer[sizeBuffer - 1] == ']')
+    {
+        --sizeBuffer;
+    }
+
     const char* endHeader = nullptr;
     if (buffer[0] == '/')
     {
@@ -338,6 +361,8 @@ std::shared_ptr<StructBase> RemoteEntityFormat::parseMessageJson(const BufferRef
         SerializerStruct serializerHeader(header);
         ParserJson parserHeader(serializerHeader, buffer, sizeBuffer);
         endHeader = parserHeader.parseStruct(header.getStructInfo().getTypeName());
+        // skip comma
+        ++endHeader;
     }
 
     std::shared_ptr<StructBase> data;

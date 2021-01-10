@@ -32,7 +32,7 @@ namespace finalmq {
 class MockIZeroCopyBuffer : public IZeroCopyBuffer
 {
 public:
-    MOCK_METHOD(char*, addBuffer, (ssize_t size), (override));
+    MOCK_METHOD(char*, addBuffer, (ssize_t size, ssize_t reserve), (override));
     MOCK_METHOD(void, downsizeLastBuffer, (ssize_t newSize), (override));
 };
 

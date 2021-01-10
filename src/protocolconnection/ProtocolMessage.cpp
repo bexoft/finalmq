@@ -39,7 +39,7 @@ ProtocolMessage::ProtocolMessage(int protocolId, ssize_t sizeHeader, ssize_t siz
     m_itSendBufferRefsPayloadBegin = m_sendBufferRefs.end();
 }
 
-char* ProtocolMessage::addBuffer(ssize_t size)
+char* ProtocolMessage::addBuffer(ssize_t size, ssize_t reserve)
 {
     assert(!m_preparedToSend);
     if (size <= 0)
@@ -66,6 +66,11 @@ char* ProtocolMessage::addBuffer(ssize_t size)
         }
     }
 
+    if (reserve < size)
+    {
+        reserve = size;
+    }
+
     ssize_t sizeHeader = 0;
     if (m_payloadBuffers.empty())
     {
@@ -79,16 +84,20 @@ char* ProtocolMessage::addBuffer(ssize_t size)
         m_sendBufferRefs.back().second -= m_sizeTrailer;
     }
 
-    m_offset = sizeHeader + size;
-    m_sizeLastBlock = size;
+    m_offset = sizeHeader + reserve;
+    m_sizeLastBlock = reserve;
 
-    m_sizeSendBufferTotal += size;
-    m_sizeSendPayloadTotal += size;
-    ssize_t sizeBuffer = sizeHeader + size + m_sizeTrailer;
+    m_sizeSendBufferTotal += reserve;
+    m_sizeSendPayloadTotal += reserve;
+    ssize_t sizeBuffer = sizeHeader + reserve + m_sizeTrailer;
     m_payloadBuffers.resize(m_payloadBuffers.size() + 1);
     m_payloadBuffers.back().resize(sizeBuffer);
     m_sendBufferRefs.push_back({const_cast<char*>(m_payloadBuffers.back().data()),               sizeBuffer});
-    m_sendPayloadRefs.push_back({const_cast<char*>(m_payloadBuffers.back().data() + sizeHeader), size});
+    m_sendPayloadRefs.push_back({const_cast<char*>(m_payloadBuffers.back().data() + sizeHeader), reserve});
+    if (size < reserve)
+    {
+        downsizeLastBuffer(size);
+    }
     return const_cast<char*>(m_payloadBuffers.back().data() + sizeHeader);
 }
 
@@ -142,16 +151,16 @@ void ProtocolMessage::downsizeLastBuffer(ssize_t newSize)
 // for send
 void ProtocolMessage::addSendPayload(const std::string& payload)
 {
-    addSendPayload(payload.data(), payload.size());
+    addSendPayload(payload.data(), payload.size(), 0);
 }
-void ProtocolMessage::addSendPayload(const char* payload, ssize_t size)
+void ProtocolMessage::addSendPayload(const char* payload, ssize_t size, int reserve)
 {
-    char* payloadDest = addSendPayload(size);
+    char* payloadDest = addSendPayload(size, reserve);
     memcpy(payloadDest, payload, size);
 }
-char* ProtocolMessage::addSendPayload(ssize_t size)
+char* ProtocolMessage::addSendPayload(ssize_t size, ssize_t reserve)
 {
-    return addBuffer(size);
+    return addBuffer(size, reserve);
 }
 
 void ProtocolMessage::downsizeLastSendPayload(ssize_t newSize)

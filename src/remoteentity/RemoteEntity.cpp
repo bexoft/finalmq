@@ -696,6 +696,13 @@ EntityId RemoteEntity::getEntityId() const
 }
 
 
+IProtocolSessionPtr RemoteEntity::getSession(PeerId peerId) const
+{
+    return m_peerManager->getSession(peerId);
+}
+
+
+
 bool RemoteEntity::isEntityRegistered() const
 {
     return (m_entityId != ENTITYID_INVALID);

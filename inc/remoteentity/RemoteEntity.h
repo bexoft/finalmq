@@ -126,6 +126,7 @@ struct IRemoteEntity
     virtual std::vector<PeerId> getAllPeers() const = 0;
     virtual void registerPeerEvent(FuncPeerEvent funcPeerEvent) = 0;
     virtual EntityId getEntityId() const = 0;
+    virtual IProtocolSessionPtr getSession(PeerId peerId) const = 0;
 
     // low level methods
     virtual PeerId createPeer(FuncReplyConnect funcReplyConnect = {}) = 0;
@@ -308,6 +309,7 @@ public:
     virtual std::vector<PeerId> getAllPeers() const override;
     virtual void registerPeerEvent(FuncPeerEvent funcPeerEvent) override;
     virtual EntityId getEntityId() const override;
+    virtual IProtocolSessionPtr getSession(PeerId peerId) const override;
     virtual PeerId createPeer(FuncReplyConnect funcReplyConnect = {}) override;
     virtual void connect(PeerId peerId, const IProtocolSessionPtr& session, const std::string& entityName) override;
     virtual void connect(PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId) override;

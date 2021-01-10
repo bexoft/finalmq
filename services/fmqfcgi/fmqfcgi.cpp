@@ -172,7 +172,13 @@ public:
         if (it != m_objectName2PeerId.end())
         {
             peerId = it->second;
-            return true;
+
+            // check connection status. if disconnected -> reconnect
+            IProtocolSessionPtr session = m_entity->getSession(peerId);
+            if (session && session->getConnectionData().connectionState != finalmq::ConnectionState::CONNECTIONSTATE_DISCONNECTED)
+            {
+                return true;
+            }
         }
 
         peerId = m_entity->createPeer();
@@ -182,7 +188,6 @@ public:
 
         return false;
     }
-
 
 private:
     IRemoteEntityPtr                        m_entity;
@@ -375,7 +380,14 @@ public:
         std::unique_lock<std::mutex> lock(m_mutex);
         auto it = m_objectName2sessionAndEntity.find(objectName);
         bool found = (it != m_objectName2sessionAndEntity.end());
+        if (found && it->second.session && it->second.session->getConnectionData().connectionState == finalmq::ConnectionState::CONNECTIONSTATE_DISCONNECTED)
+        {
+            found = false;
+            m_objectName2sessionAndEntity.erase(objectName);
+            it = m_objectName2sessionAndEntity.end();
+        }
         SessionAndEntity& sessionAndEntity = (found) ? it->second : m_objectName2sessionAndEntity[objectName];
+
         if (sessionAndEntity.session)
         {
             entity->connect(peerId, sessionAndEntity.session, sessionAndEntity.entityName, sessionAndEntity.entityId);
@@ -451,9 +463,27 @@ public:
         }
     }
 
-    void sendReplyHeader(Request& request, Status status)
+    void sendReply(Request& request, const std::string& type, Status status, const finalmq::Bytes* data)
     {
-        FCGX_FPrintF(request->out, "{\"mode\":\"MSG_REPLY\",\"status\":\"%s\"}\t", status.toString().c_str());
+        static const std::string STR_HEADER_BEGIN = "[{\"mode\":\"MSG_REPLY\",\"type\":\"";
+        static const std::string STR_HEADER_STATUS = "\",\"status\":\"";
+        static const std::string STR_HEADER_END_PAYLOADWILLFOLLOW = "\"},\t";
+        static const std::string STR_HEADER_END = "\"},\t{}]";
+        request.putstr(STR_HEADER_BEGIN);
+        request.putstr(type);
+        request.putstr(STR_HEADER_STATUS);
+        request.putstr(status.toString());
+
+        if (data)
+        {
+            request.putstr(STR_HEADER_END_PAYLOADWILLFOLLOW);
+            request.putstr(data->data(), data->size());
+            request.putstr("]", 1);
+        }
+        else
+        {
+            request.putstr(STR_HEADER_END);
+        }
     }
 
     void handleRequest(const RequestPtr& requestPtr)
@@ -571,10 +601,13 @@ public:
                     {
                         status = Status::STATUS_WRONG_CONTENTTYPE;
                     }
-                    sendReplyHeader(request, status);
                     if (reply && status == Status::STATUS_OK)
                     {
-                        request.putstr(reply->data.data(), reply->data.size());
+                        sendReply(request, reply->type, status, &reply->data);
+                    }
+                    else
+                    {
+                        sendReply(request, "", status, nullptr);
                     }
                 });
             }
