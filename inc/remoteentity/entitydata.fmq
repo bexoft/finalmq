@@ -17,7 +17,8 @@
             {"name":"STATUS_REPLYTYPE_NOT_KNOWN",       "id":6,     "desc":"the reply type is not known"},
             {"name":"STATUS_SESSION_DISCONNECTED",      "id":7,     "desc":"the (socket) session is disconnected"},
             {"name":"STATUS_PEER_DISCONNECTED",         "id":8,     "desc":"The peer is disconnected"},
-            {"name":"STATUS_NO_REPLY",                  "id":9,     "desc":"No reply was sent by the request executor (server)"}
+            {"name":"STATUS_NO_REPLY",                  "id":9,     "desc":"No reply was sent by the request executor (server)"},
+            {"name":"STATUS_WRONG_CONTENTTYPE",         "id":10,    "desc":"Wrong content type"}
         ]}
     ],
 
@@ -30,6 +31,11 @@
             {"tid":"TYPE_ENUM",         "type":"Status",    "name":"status",    "desc":"Reply status","flags":[]},
             {"tid":"TYPE_STRING",       "type":"",          "name":"type",      "desc":"Message type in payload","flags":[]},
             {"tid":"TYPE_UINT64",       "type":"",          "name":"corrid",    "desc":"It is set by the sender of the request. The receiver of the request will reply with the same correlation ID","flags":["METAFLAG_PROTO_VARINT"]}
+        ]},
+        {"type":"GenericMessage","desc":"Contains plain message data","fields":[
+            {"tid":"TYPE_STRING",       "type":"",          "name":"type",          "desc":"The type name of the message it represents","flags":[]},
+            {"tid":"TYPE_UINT32",       "type":"",          "name":"contenttype",   "desc":"The content type of the data","flags":["METAFLAG_PROTO_VARINT"]},
+            {"tid":"TYPE_BYTES",        "type":"",          "name":"data",          "desc":"The data","flags":[]}
         ]},
         {"type":"ConnectEntity","desc":"If an entity connects to a remote entity it shall send ConnectEntity","fields":[
             {"tid":"TYPE_STRING",       "type":"",          "name":"entityName",   "desc":"The entity name of the sender of ConnectEntity request","flags":[]}

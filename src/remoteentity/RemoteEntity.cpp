@@ -246,40 +246,24 @@ PeerManager::ReadyToSend PeerManager::getRequestHeader(const PeerId& peerId, con
         {
             readyToSend = RTS_READY;
             session = peer.session;
-            header = {peer.entityId, (peer.entityId == ENTITYID_INVALID) ? peer.entityName : std::string(), m_entityId, MsgMode::MSG_REQUEST, Status::STATUS_OK, structBase.getStructInfo().getTypeName(), correlationId};
+            const std::string* typeName = &structBase.getStructInfo().getTypeName();
+            if (*typeName == remoteentity::GenericMessage::structInfo().getTypeName())
+            {
+                const remoteentity::GenericMessage& message = static_cast<const remoteentity::GenericMessage&>(structBase);
+                typeName = &message.type;
+            }
+            assert(typeName);
+            header = {peer.entityId, (peer.entityId == ENTITYID_INVALID) ? peer.entityName : std::string(), m_entityId, MsgMode::MSG_REQUEST, Status::STATUS_OK, *typeName, correlationId};
         }
         else
         {
             readyToSend = RTS_SESSION_NOT_AVAILABLE;
-            peer.requests.emplace_back(Request{structBase.clone(), nullptr, "", correlationId});
+            peer.requests.emplace_back(Request{structBase.clone(), correlationId});
         }
     }
     return readyToSend;
 }
 
-
-PeerManager::ReadyToSend PeerManager::getRequestHeader(const PeerId& peerId, const std::string& typeName, const IMessagePtr& message, CorrelationId correlationId, remoteentity::Header& header, IProtocolSessionPtr& session)
-{
-    ReadyToSend readyToSend = RTS_PEER_NOT_AVAILABLE;
-    std::unique_lock<std::mutex> lock(m_mutex);
-    auto it = m_peers.find(peerId);
-    if (it != m_peers.end())
-    {
-        auto& peer = it->second;
-        if (peer.session)
-        {
-            readyToSend = RTS_READY;
-            session = peer.session;
-            header = {peer.entityId, (peer.entityId == ENTITYID_INVALID) ? peer.entityName : std::string(), m_entityId, MsgMode::MSG_REQUEST, Status::STATUS_OK, typeName, correlationId};
-        }
-        else
-        {
-            readyToSend = RTS_SESSION_NOT_AVAILABLE;
-            peer.requests.emplace_back(Request{nullptr, message, typeName, correlationId});
-        }
-    }
-    return readyToSend;
-}
 
 
 
@@ -477,7 +461,7 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
     }
     else
     {
-        replyReceived(correlationId, Status::STATUS_PEER_DISCONNECTED, nullptr, {});
+        replyReceived(correlationId, Status::STATUS_PEER_DISCONNECTED, nullptr);
     }
     return ok;
 }
@@ -493,7 +477,7 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
 {
     CorrelationId correlationId = getNextCorrelationId();
     std::unique_lock<std::mutex> lock(m_mutex);
-    m_requests.emplace(correlationId, std::make_unique<Request>(peerId, std::make_shared<FuncReply>(std::move(funcReply)), nullptr));
+    m_requests.emplace(correlationId, std::make_unique<Request>(peerId, std::make_shared<FuncReply>(std::move(funcReply))));
     lock.unlock();
     bool ok = sendRequest(peerId, structBase, correlationId);
     return ok;
@@ -501,56 +485,7 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
 
 
 
-bool RemoteEntity::sendRequest(const PeerId& peerId, const std::string& typeName, const IMessagePtr& message, CorrelationId correlationId)
-{
-    bool ok = false;
-    Header header;
-    IProtocolSessionPtr session;
-
-    // the mutex lock is important for RTS_CONNECT_NOT_AVAILABLE / RTS_READY handling. See connectIntern(PeerId ...)
-    std::unique_lock<std::mutex> lock(m_mutex);
-    PeerManager::ReadyToSend readyToSend = m_peerManager->getRequestHeader(peerId, typeName, message, correlationId, header, session);
-    lock.unlock();
-
-    if (readyToSend == PeerManager::ReadyToSend::RTS_READY)
-    {
-        assert(session);
-        ok = RemoteEntityFormat::send(session, header, message);
-        if (!ok)
-        {
-            removePeer(peerId, Status::STATUS_SESSION_DISCONNECTED);
-        }
-    }
-    else if (readyToSend == PeerManager::ReadyToSend::RTS_SESSION_NOT_AVAILABLE)
-    {
-        ok = true;
-    }
-    else
-    {
-        replyReceived(correlationId, Status::STATUS_PEER_DISCONNECTED, nullptr, {});
-    }
-    return ok;
-}
-
-bool RemoteEntity::sendRequest(const PeerId& peerId, const std::string& typeName, const IMessagePtr& message, FuncReplyRaw funcReplyRaw)
-{
-    CorrelationId correlationId = getNextCorrelationId();
-    std::unique_lock<std::mutex> lock(m_mutex);
-    m_requests.emplace(correlationId, std::make_unique<Request>(peerId, nullptr, std::make_shared<FuncReplyRaw>(std::move(funcReplyRaw))));
-    lock.unlock();
-    bool ok = sendRequest(peerId, typeName, message, correlationId);
-    return ok;
-}
-
-
-bool RemoteEntity::sendEvent(const PeerId& peerId, const std::string& typeName, const IMessagePtr& message)
-{
-    bool ok = sendRequest(peerId, typeName, message, CORRELATIONID_NONE);
-    return ok;
-}
-
-
-void RemoteEntity::replyReceived(CorrelationId correlationId, Status status, const StructBasePtr& structBase, const BufferRef& payload)
+void RemoteEntity::replyReceived(CorrelationId correlationId, Status status, const StructBasePtr& structBase)
 {
     std::unique_ptr<Request> request;
     std::unique_lock<std::mutex> lock(m_mutex);
@@ -566,14 +501,6 @@ void RemoteEntity::replyReceived(CorrelationId correlationId, Status status, con
     if (request && request->func && *request->func)
     {
         (*request->func)(request->peerId, status, structBase);
-    }
-    else if (request && request->funcRaw && *request->funcRaw)
-    {
-        if (status == Status::STATUS_REPLYTYPE_NOT_KNOWN)
-        {
-            status = Status::STATUS_OK;
-        }
-        (*request->funcRaw)(request->peerId, status, payload);
     }
 }
 
@@ -709,34 +636,13 @@ void RemoteEntity::connectIntern(PeerId peerId, const IProtocolSessionPtr& sessi
         Header header;
         IProtocolSessionPtr sessionRet;
         PeerManager::ReadyToSend readyToSend = PeerManager::ReadyToSend::RTS_PEER_NOT_AVAILABLE;
-        if (request.structBase)
-        {
-            readyToSend = m_peerManager->getRequestHeader(peerId, *request.structBase, request.correlationId, header, sessionRet);
-        }
-        else if (request.message)
-        {
-            readyToSend = m_peerManager->getRequestHeader(peerId, request.typeName, request.message, request.correlationId, header, sessionRet);
-        }
-        else
-        {
-            assert(false);
-        }
+        assert(request.structBase);
+        readyToSend = m_peerManager->getRequestHeader(peerId, *request.structBase, request.correlationId, header, sessionRet);
 
         if (readyToSend == PeerManager::ReadyToSend::RTS_READY)
         {
             assert(session);
-            if (request.structBase)
-            {
-                ok = RemoteEntityFormat::send(sessionRet, header, *request.structBase);
-            }
-            else if (request.message)
-            {
-                ok = RemoteEntityFormat::send(sessionRet, header, request.message);
-            }
-            else
-            {
-                assert(false);
-            }
+            ok = RemoteEntityFormat::send(sessionRet, header, *request.structBase);
         }
         else
         {
@@ -836,6 +742,10 @@ void RemoteEntity::receivedRequest(const IProtocolSessionPtr& session, const rem
 
     std::unique_lock<std::mutex> lock(m_mutex);
     auto it = m_funcCommands.find(header.type);
+    if (it == m_funcCommands.end())
+    {
+        it = m_funcCommands.find("*");
+    }
     if (it != m_funcCommands.end())
     {
         std::shared_ptr<FuncCommand> func = it->second;
@@ -856,16 +766,16 @@ void RemoteEntity::receivedRequest(const IProtocolSessionPtr& session, const rem
     }
 }
 
-void RemoteEntity::receivedReply(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBasePtr& structBase, const BufferRef& payload)
+void RemoteEntity::receivedReply(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBasePtr& structBase)
 {
     bool replyHandled = false;
     if (m_funcReplyEvent)
     {
-        replyHandled = m_funcReplyEvent(header.corrid, header.status, structBase, payload);
+        replyHandled = m_funcReplyEvent(header.corrid, header.status, structBase);
     }
     if (!replyHandled)
     {
-        replyReceived(header.corrid, header.status, structBase, payload);
+        replyReceived(header.corrid, header.status, structBase);
     }
 
     if (header.status == Status::STATUS_ENTITY_NOT_FOUND &&

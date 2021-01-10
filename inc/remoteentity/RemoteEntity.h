@@ -82,10 +82,9 @@ private:
 
 
 typedef std::function<void(PeerId peerId, remoteentity::Status status, const StructBasePtr& structBase)> FuncReply;
-typedef std::function<void(PeerId peerId, remoteentity::Status status, const BufferRef& payload)> FuncReplyRaw;
 typedef std::function<void(ReplyContextUPtr& replyContext, const StructBasePtr& structBase)> FuncCommand;
 typedef std::function<void(PeerId peerId, PeerEvent peerEvent, bool incoming)> FuncPeerEvent;
-typedef std::function<bool(CorrelationId correlationId, remoteentity::Status status, const StructBasePtr& structBase, const BufferRef& payload)> FuncReplyEvent; // return bool reply handled -> skip looking for reply lambda.
+typedef std::function<bool(CorrelationId correlationId, remoteentity::Status status, const StructBasePtr& structBase)> FuncReplyEvent; // return bool reply handled -> skip looking for reply lambda.
 typedef std::function<void(PeerId peerId, remoteentity::Status status)> FuncReplyConnect;
 
 struct IRemoteEntity
@@ -137,9 +136,6 @@ struct IRemoteEntity
     virtual CorrelationId getNextCorrelationId() const = 0;
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId) = 0;
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) = 0;
-    virtual bool sendRequest(const PeerId& peerId, const std::string& typeName, const IMessagePtr& message, CorrelationId correlationId) = 0;
-    virtual bool sendRequest(const PeerId& peerId, const std::string& typeName, const IMessagePtr& message, FuncReplyRaw funcReply) = 0;
-    virtual bool sendEvent(const PeerId& peerId, const std::string& typeName, const IMessagePtr& message) = 0;
     virtual bool isEntityRegistered() const = 0;
     // A callback for every received reply. With this callback a match with the correlation ID can be done by the application.
     virtual void registerReplyEvent(FuncReplyEvent funcReplyEvent) = 0;
@@ -149,7 +145,7 @@ private:
     virtual void initEntity(EntityId entityId, const std::string& entityName) = 0;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) = 0;
     virtual void receivedRequest(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBasePtr& structBase) = 0;
-    virtual void receivedReply(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBasePtr& structBase, const BufferRef& payload) = 0;
+    virtual void receivedReply(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBasePtr& structBase) = 0;
     virtual void deinit() = 0;
     friend class RemoteEntityContainer;
 };
@@ -171,8 +167,6 @@ public:
     struct Request
     {
         StructBasePtr   structBase;
-        IMessagePtr     message;
-        std::string     typeName;
         CorrelationId   correlationId = CORRELATIONID_NONE;
     };
 
@@ -183,7 +177,6 @@ public:
     bool removePeer(PeerId peerId, bool& incoming);
     PeerId getPeerId(std::int64_t sessionId, EntityId entityId, const std::string& entityName) const;
     ReadyToSend getRequestHeader(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId, remoteentity::Header& header, IProtocolSessionPtr& session);
-    ReadyToSend getRequestHeader(const PeerId& peerId, const std::string& typeName, const IMessagePtr& message, CorrelationId correlationId, remoteentity::Header& header, IProtocolSessionPtr& session);
     std::string getEntityName(const PeerId& peerId);
     PeerId addPeer(const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName, bool incoming, bool& added);
     PeerId addPeer();
@@ -323,9 +316,6 @@ public:
     virtual CorrelationId getNextCorrelationId() const override;
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId) override;
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) override;
-    virtual bool sendRequest(const PeerId& peerId, const std::string& typeName, const IMessagePtr& message, CorrelationId correlationId) override;
-    virtual bool sendRequest(const PeerId& peerId, const std::string& typeName, const IMessagePtr& message, FuncReplyRaw funcReply) override;
-    virtual bool sendEvent(const PeerId& peerId, const std::string& typeName, const IMessagePtr& message) override;
     virtual bool isEntityRegistered() const override;
     virtual void registerReplyEvent(FuncReplyEvent funcReplyEvent) override;
 
@@ -333,27 +323,25 @@ private:
     virtual void initEntity(EntityId entityId, const std::string& entityName) override;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) override;
     virtual void receivedRequest(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBasePtr& structBase) override;
-    virtual void receivedReply(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBasePtr& structBase, const BufferRef& payload) override;
+    virtual void receivedReply(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBasePtr& structBase) override;
     virtual void deinit() override;
 
     PeerId addPeer(const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName, bool incoming, bool& added);
     PeerId connectIntern(const IProtocolSessionPtr& session, const std::string& entityName, EntityId, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect);
     void connectIntern(PeerId peerId, const IProtocolSessionPtr& session, const std::string& entityName, EntityId entityId);
     void removePeer(PeerId peerId, remoteentity::Status status);
-    void replyReceived(CorrelationId correlationId, remoteentity::Status status, const StructBasePtr& structBase, const BufferRef& payload);
+    void replyReceived(CorrelationId correlationId, remoteentity::Status status, const StructBasePtr& structBase);
     void sendConnectEntity(PeerId peerId, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect);
 
     struct Request
     {
-        inline Request(PeerId peerId_, const std::shared_ptr<FuncReply>& func_, const std::shared_ptr<FuncReplyRaw>& funcRaw_)
+        inline Request(PeerId peerId_, const std::shared_ptr<FuncReply>& func_)
             : peerId(peerId_)
             , func(func_)
-            , funcRaw(funcRaw_)
         {
         }
         PeerId                          peerId = PEERID_INVALID;
         std::shared_ptr<FuncReply>      func;
-        std::shared_ptr<FuncReplyRaw>   funcRaw;
     };
 
     EntityId                            m_entityId = 0;

@@ -54,7 +54,8 @@ using finalmq::FmqRegistryClient;
 using finalmq::remoteentity::Status;
 using finalmq::fmqreg::GetServiceReply;
 using finalmq::fmqreg::Endpoint;
-
+using finalmq::remoteentity::GenericMessage;
+using finalmq::RemoteEntityContentType;
 
 
 class Request
@@ -557,23 +558,23 @@ public:
                     connectEntity(objectName, peerId, httpSession->getEntity());
                 }
 
-                finalmq::IMessagePtr message = std::make_shared<finalmq::ProtocolMessage>(0);
                 ssize_t sizePayload = query.size() - posParameter;
-                char* payload = message->addSendPayload(sizePayload);
-                memcpy(payload, &query[posParameter], sizePayload);
-                httpSession->getEntity()->sendRequest(peerId, typeName, message, [this, requestPtr] (PeerId peerId, Status status, const finalmq::BufferRef& payload) {
+                GenericMessage message;
+                message.type = typeName;
+                message.contenttype = RemoteEntityContentType::CONTENTTYPE_JSON;
+                message.data.resize(sizePayload);
+                memcpy(message.data.data(), &query[posParameter], sizePayload);
+                httpSession->getEntity()->requestReply<GenericMessage>(peerId, message, [this, requestPtr] (PeerId peerId, Status status, const std::shared_ptr<GenericMessage>& reply) {
                     assert(requestPtr);
                     Request& request = *requestPtr;
-                    sendReplyHeader(request, status);
-                    if (payload.first)
+                    if (reply && reply->contenttype != RemoteEntityContentType::CONTENTTYPE_JSON)
                     {
-                        char* start = strchr(payload.first, '\t');
-                        if (start != nullptr)
-                        {
-                            ++start;
-                            ssize_t offset = start - payload.first;
-                            request.putstr(start, payload.second - offset);
-                        }
+                        status = Status::STATUS_WRONG_CONTENTTYPE;
+                    }
+                    sendReplyHeader(request, status);
+                    if (reply && status == Status::STATUS_OK)
+                    {
+                        request.putstr(reply->data.data(), reply->data.size());
                     }
                 });
             }
