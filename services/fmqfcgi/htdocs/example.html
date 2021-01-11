@@ -1,0 +1,56 @@
+<html>                                                                          
+
+
+<head>                                                                          
+
+<script type="text/javascript" src="json2.js"></script>
+<script type="text/javascript" src="fmq.js"></script>
+
+                                                                                
+<script type="text/javascript" >
+
+//////////////////////////////////////////////////////////////////////
+
+
+
+function printGreetings(greetings)
+{
+    var title = '<h1>' + 'Greetings' + '</h1>';
+    var table = '<table border="1">';
+    for (i=0; i<greetings.length; i++)
+    {
+        var greeting = greetings[i];
+        table += '<tr>';
+        table += '<td width="320" align="left">' + greeting +'</td>';
+        table += '</tr>';
+    }
+    table += '</table>';
+    var el = document.getElementById('testcontainer');
+    el.innerHTML = title + '<br>' + table;
+}
+
+
+
+function startScript()
+{
+    var inparams = {persons:[{name:"Bonnie"},{name:"Clyde"}]};
+    var outparams = callObject('ExampleService', 'helloworld.HelloRequest', inparams);
+    printGreetings(outparams.greetings);
+}
+
+                                                                           
+</script>                                                                       
+                                                                          
+</head>
+
+                                                               
+<body>                                                                          
+
+<body onLoad="startScript()">
+<div id="testcontainer"></div>
+
+</body>
+
+
+</html>
+       
