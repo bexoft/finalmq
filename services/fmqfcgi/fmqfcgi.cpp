@@ -304,14 +304,14 @@ public:
 
     }
 
-    static void decode(std::string& str)
+    static void decode(finalmq::BufferRef& str)
     {
-        const char* src = str.c_str();
-        char* dest = const_cast<char*>(str.c_str());
+        const char* src = str.first;
+        char* dest = str.first;
         char code[3] = {0};
         unsigned long c = 0;
 
-        while (*src)
+        for (int i = 0; i < str.second; ++i)
         {
             if (*src == '%')
             {
@@ -329,29 +329,38 @@ public:
                 ++src;
             }
         }
-        str.resize(dest - str.c_str());
+        str.second -= src - dest;
     }
 
-    void getQueries(const char* querystring, std::vector<std::string>& listQuery)
+    void getQueries(const char* querystring, std::deque<std::pair<std::string, finalmq::BufferRef>>& listQuery)
     {
         const char* str = nullptr;
         do
         {
             str = strchr(querystring, '&');
-            std::string query;
+            finalmq::BufferRef query;
             if (str)
             {
-                query = {querystring, str};
+                query = {const_cast<char*>(querystring), str - querystring};
                 querystring = str + 1;
             }
             else
             {
-                query = querystring;
+                query = {const_cast<char*>(querystring), strlen(querystring)};
             }
             decode(query);
-            if (!query.empty())
+            if (query.second > 0)
             {
-                listQuery.push_back(std::move(query));
+                char* eq = static_cast<char*>(memchr(query.first, '=', query.second));
+                if (eq)
+                {
+                    int posEq = eq - query.first;
+                    listQuery.emplace_back(std::string{query.first, eq}, finalmq::BufferRef{eq+1, query.second - posEq - 1});
+                }
+                else
+                {
+                    listQuery.emplace_back(std::string{query.first, query.first + query.second}, finalmq::BufferRef{nullptr, 0});
+                }
             }
         } while (str != nullptr);
     }
@@ -434,23 +443,23 @@ public:
         return httpSession;
     }
 
-    static ssize_t getRequestData(const std::string& query, ssize_t posValue, std::string& objectName, std::string& type)
+    static ssize_t getRequestData(const finalmq::BufferRef& value, std::string& objectName, std::string& type)
     {
         // 01234567890123456789012345678901234
-        // request=MyServer/test.TestRequest{}
-        ssize_t ixEndHeader = query.find_first_of('{');   //33
-        if (ixEndHeader == -1)
+        // MyServer/test.TestRequest{}
+        char* strEndHeader = static_cast<char*>(memchr(value.first, '{', value.second));   //25
+        ssize_t ixEndHeader = value.second;
+        if (strEndHeader != nullptr)
         {
-            ixEndHeader = query.size();
+            ixEndHeader = strEndHeader - value.first;
         }
-//                endHeader = &buffer[ixEndHeader];
-        ssize_t ixStartCommand = query.find_last_of('/', ixEndHeader);
-        assert(ixStartCommand >= 0);
-        if (ixStartCommand != -1)
+
+        char* strStartCommand = static_cast<char*>(memrchr(value.first, '/', ixEndHeader));
+        if (strStartCommand != nullptr)
         {
-            objectName = {&query[posValue], &query[ixStartCommand]};
+            objectName = {value.first, strStartCommand};
+            type = {strStartCommand + 1, value.first + ixEndHeader};
         }
-        type = {&query[ixStartCommand+1], &query[ixEndHeader]};
 
         return ixEndHeader;
     }
@@ -548,7 +557,7 @@ public:
         static const std::string STR_HEADER_BEGIN = "[{\"mode\":\"MSG_REPLY\",\"type\":\"";
         static const std::string STR_HEADER_STATUS = "\",\"status\":\"";
         static const std::string STR_HEADER_END_PAYLOADWILLFOLLOW = "\"},\t";
-        static const std::string STR_HEADER_END = "\"},\t{}]";
+        static const std::string STR_HEADER_END = "\"},\t{}]\n";
         request.putstr(STR_HEADER_BEGIN);
         request.putstr(type);
         request.putstr(STR_HEADER_STATUS);
@@ -558,7 +567,7 @@ public:
         {
             request.putstr(STR_HEADER_END_PAYLOADWILLFOLLOW);
             request.putstr(data, size);
-            request.putstr("]", 1);
+            request.putstr("]\n", 2);
         }
         else
         {
@@ -567,12 +576,12 @@ public:
     }
 
 
-    void executeRequest(const HttpSessionPtr& httpSession, const RequestPtr& requestPtr, const std::string& query, ssize_t posValue)
+    void executeRequest(const HttpSessionPtr& httpSession, const RequestPtr& requestPtr, const finalmq::BufferRef& value)
     {
         std::string objectName;
         std::string typeName;
 
-        ssize_t posParameter = getRequestData(query, posValue, objectName, typeName);
+        ssize_t posParameters = getRequestData(value, objectName, typeName);
         PeerId peerId;
         bool found = httpSession->getPeerId(objectName, peerId);
         if (!found)
@@ -580,12 +589,18 @@ public:
             connectEntity(objectName, peerId, httpSession->getEntity());
         }
 
-        ssize_t sizePayload = query.size() - posParameter;
         GenericMessage message;
         message.type = typeName;
         message.contenttype = RemoteEntityContentType::CONTENTTYPE_JSON;
-        message.data.resize(sizePayload);
-        memcpy(message.data.data(), &query[posParameter], sizePayload);
+        message.data.resize(value.second - posParameters);
+        if (!message.data.empty())
+        {
+            memcpy(message.data.data(), value.first + posParameters, message.data.size());
+        }
+        else
+        {
+            message.data = {'{','}'};
+        }
         httpSession->getEntity()->requestReply<GenericMessage>(peerId, message, [this, requestPtr] (PeerId peerId, Status status, const std::shared_ptr<GenericMessage>& reply) {
             assert(requestPtr);
             Request& request = *requestPtr;
@@ -604,12 +619,12 @@ public:
         });
     }
 
-    void executeCreateCallbackChannel(const HttpSessionPtr& httpSession, const RequestPtr& requestPtr, const std::string& query, ssize_t posValue)
-    {
-        std::string strCallbackChannel = httpSession->createCallbackChannel();
-        std::string reply = "{\"callbackchannelid\":\"" + strCallbackChannel + "\"}";
-        sendReply(*requestPtr, "finalmq.fmqfcgi.CreateCallbackChannelReply", Status::STATUS_OK, reply.data(), reply.size());
-    }
+//    void executeCreateCallbackChannel(const HttpSessionPtr& httpSession, const RequestPtr& requestPtr, const std::string& query, ssize_t posValue)
+//    {
+//        std::string strCallbackChannel = httpSession->createCallbackChannel();
+//        std::string reply = "{\"callbackchannelid\":\"" + strCallbackChannel + "\"}";
+//        sendReply(*requestPtr, "finalmq.fmqfcgi.CreateCallbackChannelReply", Status::STATUS_OK, reply.data(), reply.size());
+//    }
 
     void handleRequest(const RequestPtr& requestPtr)
     {
@@ -664,7 +679,7 @@ public:
             FCGX_FPrintF(request->out, "Access-Control-Allow-Origin: null\r\n");
         }
 
-        std::vector<std::string> listQuery;
+        std::deque<std::pair<std::string, finalmq::BufferRef>> listQuery;
         if (querystring && querystring[0])
         {
             getQueries(querystring, listQuery);
@@ -696,20 +711,17 @@ public:
         // end of header
         FCGX_FPrintF(request->out, "\r\n");
 
-        static const std::string KEY_REQUEST                = "request=";
-        static const std::string KEY_CREATECALLBACKCHANNEL  = "createcallbackchannel=";
+        static const std::string KEY_REQUEST                = "request";
+        static const std::string KEY_CREATECALLBACKCHANNEL  = "createcallbackchannel";
 
         for (size_t i = 0; i < listQuery.size(); ++i)
         {
-            const std::string& query = listQuery[i];
+            const std::string& key = listQuery[i].first;
+            const finalmq::BufferRef& value = listQuery[i].second;
 
-            if (query.find_first_of(KEY_REQUEST) == 0)
+            if (key == KEY_REQUEST)
             {
-                executeRequest(httpSession, requestPtr, query, KEY_REQUEST.size());
-            }
-            else if (query.find_first_of(KEY_CREATECALLBACKCHANNEL) == 0)
-            {
-                executeCreateCallbackChannel(httpSession, requestPtr, query, KEY_CREATECALLBACKCHANNEL.size());
+                executeRequest(httpSession, requestPtr, value);
             }
         }
     }
