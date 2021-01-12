@@ -166,9 +166,10 @@ void AddressResolver::run()
 
 // IStreamConnectionContainer
 
-void StreamConnectionContainer::init(int cycleTime, int checkReconnectInterval)
+void StreamConnectionContainer::init(int cycleTime, int checkReconnectInterval, FuncPollerLoopTimer funcTimer)
 {
     // no mutex lock, because it init is called before the thread will be active.
+    m_funcTimer = std::move(funcTimer);
     m_cycleTime = cycleTime;
     m_checkReconnectInterval = checkReconnectInterval;
     m_poller->init();
@@ -739,17 +740,16 @@ void StreamConnectionContainer::doReconnect()
 
 
 
-bool StreamConnectionContainer::isReconnectTimerExpired()
+bool StreamConnectionContainer::isTimerExpired(std::chrono::time_point<std::chrono::system_clock>& lastTime, int interval)
 {
     bool expired = false;
     std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
 
-    // reconnect timer
-    std::chrono::duration<double> dur = now - m_lastReconnectTime;
+    std::chrono::duration<double> dur = now - lastTime;
     int delta = static_cast<int>(dur.count() * 1000);
-    if (delta < 0 || delta >= m_checkReconnectInterval)
+    if (delta < 0 || delta >= interval)
     {
-        m_lastReconnectTime = now;
+        lastTime = now;
         expired = true;
     }
 
@@ -762,6 +762,7 @@ bool StreamConnectionContainer::isReconnectTimerExpired()
 void StreamConnectionContainer::pollerLoop()
 {
     m_lastReconnectTime = std::chrono::system_clock::now();
+    m_lastCycleTime = std::chrono::system_clock::now();
     while (!m_terminatePollerLoop)
     {
         const PollerResult& result = m_poller->wait(m_cycleTime);
@@ -847,9 +848,16 @@ void StreamConnectionContainer::pollerLoop()
             }
         }
 
-        if (isReconnectTimerExpired())
+        if (isTimerExpired(m_lastCycleTime, m_cycleTime))
         {
-            doReconnect();
+            if (isTimerExpired(m_lastReconnectTime, m_checkReconnectInterval))
+            {
+                doReconnect();
+            }
+            if (m_funcTimer)
+            {
+                m_funcTimer();
+            }
         }
     }
     m_pollerLoopTerminated = true;

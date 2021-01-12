@@ -30,11 +30,13 @@
 
 namespace finalmq {
 
+typedef std::function<void()>   FuncPollerLoopTimer;
+
 struct IProtocolSessionContainer
 {
     virtual ~IProtocolSessionContainer() {}
 
-    virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000) = 0;
+    virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000, FuncPollerLoopTimer funcTimer = {}) = 0;
     virtual int bind(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const BindProperties& bindProperties = {}, int contentType = 0) = 0;
     virtual void unbind(const std::string& endpoint) = 0;
     virtual IProtocolSessionPtr connect(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const ConnectProperties& connectProperties = {}, int contentType = 0) = 0;
@@ -85,7 +87,7 @@ public:
 
 private:
     // IProtocolSessionContainer
-    virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000) override;
+    virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000, FuncPollerLoopTimer funcTimer = {}) override;
     virtual int bind(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const BindProperties& bindProperties = {}, int contentType = 0) override;
     virtual void unbind(const std::string& endpoint) override;
     virtual IProtocolSessionPtr connect(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const ConnectProperties& connectProperties = {}, int contentType = 0) override;

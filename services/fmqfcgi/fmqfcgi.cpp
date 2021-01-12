@@ -58,6 +58,9 @@ using finalmq::remoteentity::GenericMessage;
 using finalmq::RemoteEntityContentType;
 
 
+static const int LONGPOLL_RELEASE_INTERVAL = 20000;
+
+
 class Request
 {
 public:
@@ -147,6 +150,62 @@ struct SessionAndEntity
 };
 
 
+class CallbackChannel
+{
+public:
+    CallbackChannel()
+        : m_lastActivityTime(std::chrono::system_clock::now())
+    {
+    }
+
+    void setRequest(const std::shared_ptr<Request>& request)
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        m_lastActivityTime = std::chrono::system_clock::now();
+        m_request = request;
+    }
+
+    void addRequestString(std::string&& str)
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        m_requestStrings.push_back(std::move(str));
+    }
+
+    std::deque<std::string> getAllRequestStrings()
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        return std::move(m_requestStrings);
+    }
+
+    std::shared_ptr<Request> getRequest()
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        return std::move(m_request);
+    }
+
+    bool isActivityTimerExpired()
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        bool expired = false;
+        std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+        std::chrono::duration<double> dur = now - m_lastActivityTime;
+        int delta = static_cast<int>(dur.count() * 1000);
+        if (delta < 0 || delta >= LONGPOLL_RELEASE_INTERVAL)
+        {
+            m_lastActivityTime = now;
+            expired = true;
+        }
+
+        return expired;
+    }
+
+private:
+    std::shared_ptr<Request>                            m_request;
+    std::deque<std::string>                             m_requestStrings;
+    std::chrono::time_point<std::chrono::system_clock>  m_lastActivityTime;
+    std::mutex                                          m_mutex;
+};
+
 
 class HttpSession
 {
@@ -189,13 +248,27 @@ public:
         return false;
     }
 
+    std::string createCallbackChannel()
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        int callbackChannelId = m_nextCallbackChannelId;
+        ++m_nextCallbackChannelId;
+        std::string strCallbackChannelId = std::to_string(callbackChannelId);
+        m_callbackChannels[strCallbackChannelId];
+        return strCallbackChannelId;
+    }
+
 private:
     IRemoteEntityPtr                        m_entity;
     std::unordered_map<std::string, PeerId> m_objectName2PeerId;
+    std::unordered_map<std::string, CallbackChannel> m_callbackChannels;
+    std::uint64_t                           m_nextCallbackChannelId = 1;
     std::mutex                              m_mutex;
 };
 
 typedef std::shared_ptr<HttpSession>    HttpSessionPtr;
+
+
 
 
 
@@ -218,10 +291,17 @@ public:
 
     void init()
     {
-        m_entityContainer->init();
+        m_entityContainer->init(100, 1000, [this] () {
+            timeout();
+        });
         m_thread = std::thread([this] () {
             m_entityContainer->run();
         });
+    }
+
+    void timeout()
+    {
+
     }
 
     static void decode(std::string& str)
@@ -463,7 +543,7 @@ public:
         }
     }
 
-    void sendReply(Request& request, const std::string& type, Status status, const finalmq::Bytes* data)
+    void sendReply(Request& request, const std::string& type, Status status, const char* data, int size)
     {
         static const std::string STR_HEADER_BEGIN = "[{\"mode\":\"MSG_REPLY\",\"type\":\"";
         static const std::string STR_HEADER_STATUS = "\",\"status\":\"";
@@ -477,13 +557,58 @@ public:
         if (data)
         {
             request.putstr(STR_HEADER_END_PAYLOADWILLFOLLOW);
-            request.putstr(data->data(), data->size());
+            request.putstr(data, size);
             request.putstr("]", 1);
         }
         else
         {
             request.putstr(STR_HEADER_END);
         }
+    }
+
+
+    void executeRequest(const HttpSessionPtr& httpSession, const RequestPtr& requestPtr, const std::string& query, ssize_t posValue)
+    {
+        std::string objectName;
+        std::string typeName;
+
+        ssize_t posParameter = getRequestData(query, posValue, objectName, typeName);
+        PeerId peerId;
+        bool found = httpSession->getPeerId(objectName, peerId);
+        if (!found)
+        {
+            connectEntity(objectName, peerId, httpSession->getEntity());
+        }
+
+        ssize_t sizePayload = query.size() - posParameter;
+        GenericMessage message;
+        message.type = typeName;
+        message.contenttype = RemoteEntityContentType::CONTENTTYPE_JSON;
+        message.data.resize(sizePayload);
+        memcpy(message.data.data(), &query[posParameter], sizePayload);
+        httpSession->getEntity()->requestReply<GenericMessage>(peerId, message, [this, requestPtr] (PeerId peerId, Status status, const std::shared_ptr<GenericMessage>& reply) {
+            assert(requestPtr);
+            Request& request = *requestPtr;
+            if (reply && reply->contenttype != RemoteEntityContentType::CONTENTTYPE_JSON)
+            {
+                status = Status::STATUS_WRONG_CONTENTTYPE;
+            }
+            if (reply && status == Status::STATUS_OK)
+            {
+                sendReply(request, reply->type, status, reply->data.data(), reply->data.size());
+            }
+            else
+            {
+                sendReply(request, "", status, nullptr, 0);
+            }
+        });
+    }
+
+    void executeCreateCallbackChannel(const HttpSessionPtr& httpSession, const RequestPtr& requestPtr, const std::string& query, ssize_t posValue)
+    {
+        std::string strCallbackChannel = httpSession->createCallbackChannel();
+        std::string reply = "{\"callbackchannelid\":\"" + strCallbackChannel + "\"}";
+        sendReply(*requestPtr, "finalmq.fmqfcgi.CreateCallbackChannelReply", Status::STATUS_OK, reply.data(), reply.size());
     }
 
     void handleRequest(const RequestPtr& requestPtr)
@@ -571,45 +696,20 @@ public:
         // end of header
         FCGX_FPrintF(request->out, "\r\n");
 
-        static const std::string KEY_REQUEST = "request=";
+        static const std::string KEY_REQUEST                = "request=";
+        static const std::string KEY_CREATECALLBACKCHANNEL  = "createcallbackchannel=";
+
         for (size_t i = 0; i < listQuery.size(); ++i)
         {
             const std::string& query = listQuery[i];
+
             if (query.find_first_of(KEY_REQUEST) == 0)
             {
-                std::string objectName;
-                std::string typeName;
-
-                ssize_t posParameter = getRequestData(query, KEY_REQUEST.size(), objectName, typeName);
-                PeerId peerId;
-                bool found = httpSession->getPeerId(objectName, peerId);
-                if (!found)
-                {
-                    connectEntity(objectName, peerId, httpSession->getEntity());
-                }
-
-                ssize_t sizePayload = query.size() - posParameter;
-                GenericMessage message;
-                message.type = typeName;
-                message.contenttype = RemoteEntityContentType::CONTENTTYPE_JSON;
-                message.data.resize(sizePayload);
-                memcpy(message.data.data(), &query[posParameter], sizePayload);
-                httpSession->getEntity()->requestReply<GenericMessage>(peerId, message, [this, requestPtr] (PeerId peerId, Status status, const std::shared_ptr<GenericMessage>& reply) {
-                    assert(requestPtr);
-                    Request& request = *requestPtr;
-                    if (reply && reply->contenttype != RemoteEntityContentType::CONTENTTYPE_JSON)
-                    {
-                        status = Status::STATUS_WRONG_CONTENTTYPE;
-                    }
-                    if (reply && status == Status::STATUS_OK)
-                    {
-                        sendReply(request, reply->type, status, &reply->data);
-                    }
-                    else
-                    {
-                        sendReply(request, "", status, nullptr);
-                    }
-                });
+                executeRequest(httpSession, requestPtr, query, KEY_REQUEST.size());
+            }
+            else if (query.find_first_of(KEY_CREATECALLBACKCHANNEL) == 0)
+            {
+                executeCreateCallbackChannel(httpSession, requestPtr, query, KEY_CREATECALLBACKCHANNEL.size());
             }
         }
     }

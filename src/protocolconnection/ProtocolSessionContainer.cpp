@@ -75,9 +75,9 @@ ProtocolSessionContainer::~ProtocolSessionContainer()
 }
 
 // IProtocolSessionContainer
-void ProtocolSessionContainer::init(int cycleTime, int checkReconnectInterval)
+void ProtocolSessionContainer::init(int cycleTime, int checkReconnectInterval, FuncPollerLoopTimer funcTimer)
 {
-    m_streamConnectionContainer->init(cycleTime, checkReconnectInterval);
+    m_streamConnectionContainer->init(cycleTime, checkReconnectInterval, std::move(funcTimer));
 }
 
 int ProtocolSessionContainer::bind(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const BindProperties& bindProperties, int contentType)

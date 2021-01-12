@@ -57,7 +57,7 @@ struct IRemoteEntityContainer
 {
     virtual ~IRemoteEntityContainer() {}
 
-    virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000) = 0;
+    virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000, FuncPollerLoopTimer funcTimer = {}) = 0;
     virtual int bind(const std::string& endpoint, const IProtocolFactoryPtr protocolFactory, RemoteEntityContentType contentType, const BindProperties& bindProperties = {}) = 0;
     virtual void unbind(const std::string& endpoint) = 0;
     virtual IProtocolSessionPtr connect(const std::string& endpoint, const IProtocolPtr& protocol, RemoteEntityContentType contentType, const ConnectProperties& connectProperties = {}) = 0;
@@ -84,7 +84,7 @@ public:
     virtual ~RemoteEntityContainer();
 
     // IRemoteEntityContainer
-    virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000) override;
+    virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000, FuncPollerLoopTimer funcTimer = {}) override;
     virtual int bind(const std::string& endpoint, const IProtocolFactoryPtr protocolFactory, RemoteEntityContentType contentType, const BindProperties& bindProperties = {}) override;
     virtual void unbind(const std::string& endpoint) override;
     virtual IProtocolSessionPtr connect(const std::string& endpoint, const IProtocolPtr& protocol, RemoteEntityContentType contentType, const ConnectProperties& connectProperties = {}) override;

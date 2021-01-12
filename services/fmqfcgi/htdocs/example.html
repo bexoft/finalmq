@@ -13,9 +13,10 @@
 
 
 
-function printGreetings(greetings)
+function printGreetings(outparams)
 {
-    var title = '<h1>' + 'Greetings' + '</h1>';
+    var greetings = outparams.greetings;
+    var title = '<h1>Greetings</h1>';
     var table = '<table border="1">';
     for (i=0; i<greetings.length; i++)
     {
@@ -34,8 +35,9 @@ function printGreetings(greetings)
 function startScript()
 {
     var inparams = {persons:[{name:"Bonnie"},{name:"Clyde"}]};
-    var outparams = callObject('ExampleService', 'helloworld.HelloRequest', inparams);
-    printGreetings(outparams.greetings);
+    outparams = callObject('ExampleService', 'helloworld.HelloRequest', inparams, function(outparams) {
+        printGreetings(outparams);
+    });
 }
 
                                                                            

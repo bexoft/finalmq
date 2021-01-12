@@ -118,9 +118,9 @@ void RemoteEntityContainer::deinit()
 
 // IRemoteEntityContainer
 
-void RemoteEntityContainer::init(int cycleTime, int checkReconnectInterval)
+void RemoteEntityContainer::init(int cycleTime, int checkReconnectInterval, FuncPollerLoopTimer funcTimer)
 {
-    m_protocolSessionContainer->init(cycleTime, checkReconnectInterval);
+    m_protocolSessionContainer->init(cycleTime, checkReconnectInterval, std::move(funcTimer));
 }
 
 int RemoteEntityContainer::bind(const std::string& endpoint, IProtocolFactoryPtr protocolFactory, RemoteEntityContentType contentType, const BindProperties& bindProperties)
