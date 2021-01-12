@@ -50,7 +50,7 @@ function callObject(objectname, funcname, inparams, funcresult, context)
     }
     xmlhttp.open('POST',g_hostname + 'root.fmq', (funcresult == null) ? false : true);
     var jsonInParams = (inparams == null) ? "" : JSON.stringify(inparams);                               
-    xmlhttp.send('request=' + escape(objectname) + '/' + escape(funcname) + escape(jsonInParams));                                  
+    xmlhttp.send(objectname + '/' + funcname + jsonInParams + '\r');                                  
 	if (funcresult == null)
 	{
 	    var command = getCommand(xmlhttp.responseText);

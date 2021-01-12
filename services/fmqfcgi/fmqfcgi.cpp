@@ -365,6 +365,29 @@ public:
         } while (str != nullptr);
     }
 
+    void getQueriesFromData(const char* querystring, std::deque<std::pair<std::string, finalmq::BufferRef>>& listQuery)
+    {
+        const char* str = nullptr;
+        do
+        {
+            str = strchr(querystring, '\n');
+            finalmq::BufferRef query;
+            if (str)
+            {
+                query = {const_cast<char*>(querystring), str - querystring};
+                querystring = str + 1;
+            }
+            else
+            {
+                query = {const_cast<char*>(querystring), strlen(querystring)};
+            }
+            if (query.second > 0)
+            {
+                listQuery.emplace_back("request", query);
+            }
+        } while (str != nullptr);
+    }
+
     void getData(Request& request, std::string& data)
     {
         static const int DATABLOCKSIZE = 1000;
@@ -687,7 +710,7 @@ public:
 
         std::string data;
         getData(request, data);
-        getQueries(data.c_str(), listQuery);
+        getQueriesFromData(data.c_str(), listQuery);
 
         HttpSessionPtr httpSession = findSession(cookies);
         if (httpSession)
