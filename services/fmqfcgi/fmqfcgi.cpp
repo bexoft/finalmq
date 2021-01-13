@@ -60,6 +60,10 @@ using finalmq::RemoteEntityContentType;
 
 static const int LONGPOLL_RELEASE_INTERVAL = 20000;
 
+static const std::string KEY_REQUEST            = "request";
+static const std::string KEY_CREATESESSION      = "createsession";
+static const std::string KEY_SESSIONID          = "sessionid";
+
 
 class Request
 {
@@ -210,7 +214,8 @@ private:
 class HttpSession
 {
 public:
-    HttpSession()
+    HttpSession(const std::string& httpSessionId)
+        : m_httpSessionId(httpSessionId)
     {
     }
 
@@ -258,11 +263,17 @@ public:
         return strCallbackChannelId;
     }
 
+    const std::string& getSessionId() const
+    {
+        return m_httpSessionId;
+    }
+
 private:
     IRemoteEntityPtr                        m_entity;
     std::unordered_map<std::string, PeerId> m_objectName2PeerId;
     std::unordered_map<std::string, CallbackChannel> m_callbackChannels;
     std::uint64_t                           m_nextCallbackChannelId = 1;
+    std::string                             m_httpSessionId;
     std::mutex                              m_mutex;
 };
 
@@ -401,9 +412,18 @@ public:
         data.resize(data.size() - DATABLOCKSIZE + cnt);
     }
 
-    HttpSessionPtr findSession(const char* cookies)
+    HttpSessionPtr findSession(const std::string& httpSessionId)
     {
         std::unique_lock<std::mutex> lock(m_mutex);
+        auto it = m_httpSessions.find(httpSessionId);
+        if (it != m_httpSessions.end())
+        {
+            return it->second;
+        }
+        return nullptr;
+    }
+    HttpSessionPtr findCookieSession(const char* cookies)
+    {
         HttpSessionPtr session;
         if (cookies)
         {
@@ -428,11 +448,7 @@ public:
                     if (p != std::string::npos)
                     {
                         std::string httpSessionId = &cookie.c_str()[p + 1];
-                        auto it = m_httpSessions.find(httpSessionId);
-                        if (it != m_httpSessions.end())
-                        {
-                            session = it->second;
-                        }
+                        session = findSession(httpSessionId);
                     }
                 }
             } while (str != nullptr && !session);
@@ -456,13 +472,45 @@ public:
         return httpSessionId;
     }
 
-    HttpSessionPtr createHttpSession(const std::string& httpSessionId)
+    HttpSessionPtr createHttpSession()
     {
-        HttpSessionPtr httpSession = std::make_shared<HttpSession>();
+        streamInfo << "create session";
+        std::string httpSessionId = createHttpSessionId();
+
+        HttpSessionPtr httpSession = std::make_shared<HttpSession>(httpSessionId);
         std::unique_lock<std::mutex> lock(m_mutex);
         m_httpSessions[httpSessionId] = httpSession;
         lock.unlock();
 
+        IRemoteEntityPtr entity = std::make_shared<RemoteEntity>();
+        httpSession->setEntity(entity);
+        m_entityContainer->registerEntity(entity);
+
+        return httpSession;
+    }
+
+    HttpSessionPtr getHttpSession(Request& request, bool createSession, const std::string& httpSessionId, const char* cookies)
+    {
+        HttpSessionPtr httpSession;
+        if (createSession)
+        {
+            httpSession = createHttpSession();
+            assert(httpSession);
+        }
+        else if (!httpSessionId.empty())
+        {
+            httpSession = findSession(httpSessionId);
+        }
+        if (!httpSession)
+        {
+            httpSession = findCookieSession(cookies);
+            if (!httpSession)
+            {
+                httpSession = createHttpSession();
+                assert(httpSession);
+                FCGX_FPrintF(request->out, "Set-Cookie: sessionid-fmqfcgi=%s\r\n", httpSession->getSessionId().c_str());
+            }
+        }
         return httpSession;
     }
 
@@ -642,12 +690,22 @@ public:
         });
     }
 
-//    void executeCreateCallbackChannel(const HttpSessionPtr& httpSession, const RequestPtr& requestPtr, const std::string& query, ssize_t posValue)
-//    {
-//        std::string strCallbackChannel = httpSession->createCallbackChannel();
-//        std::string reply = "{\"callbackchannelid\":\"" + strCallbackChannel + "\"}";
-//        sendReply(*requestPtr, "finalmq.fmqfcgi.CreateCallbackChannelReply", Status::STATUS_OK, reply.data(), reply.size());
-//    }
+    bool getSessionInfo(const std::deque<std::pair<std::string, finalmq::BufferRef>>& listQuery, std::string& httpSessionId)
+    {
+        httpSessionId.clear();
+        for (auto it = listQuery.begin(); it != listQuery.end(); ++it)
+        {
+            if (it->first == KEY_CREATESESSION)
+            {
+                return true;
+            }
+            else if (it->first == KEY_SESSIONID)
+            {
+                httpSessionId = {it->second.first, it->second.first + it->second.second};
+            }
+        }
+        return false;
+    }
 
     void handleRequest(const RequestPtr& requestPtr)
     {
@@ -712,30 +770,14 @@ public:
         getData(request, data);
         getQueriesFromData(data.c_str(), listQuery);
 
-        HttpSessionPtr httpSession = findSession(cookies);
-        if (httpSession)
-        {
-            streamInfo << "session found";
-        }
-        else
-        {
-            streamInfo << "create session";
-            std::string httpSessionId = createHttpSessionId();
-            FCGX_FPrintF(request->out, "Set-Cookie: sessionid-fmqfcgi=%s\r\n", httpSessionId.c_str());
-            httpSession = createHttpSession(httpSessionId);
+        std::string httpSessionId;
+        bool createSession = getSessionInfo(listQuery, httpSessionId);
 
-            IRemoteEntityPtr entity = std::make_shared<RemoteEntity>();
-            httpSession->setEntity(entity);
-            m_entityContainer->registerEntity(entity);
-        }
-
+        HttpSessionPtr httpSession = getHttpSession(request, createSession, httpSessionId, cookies);
         assert(httpSession);
 
         // end of header
         FCGX_FPrintF(request->out, "\r\n");
-
-        static const std::string KEY_REQUEST                = "request";
-        static const std::string KEY_CREATECALLBACKCHANNEL  = "createcallbackchannel";
 
         for (size_t i = 0; i < listQuery.size(); ++i)
         {
@@ -745,6 +787,10 @@ public:
             if (key == KEY_REQUEST)
             {
                 executeRequest(httpSession, requestPtr, value);
+            }
+            else
+            {
+
             }
         }
     }
