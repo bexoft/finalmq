@@ -61,8 +61,7 @@ using finalmq::RemoteEntityContentType;
 static const int LONGPOLL_RELEASE_INTERVAL = 20000;
 
 static const std::string KEY_REQUEST            = "request";
-static const std::string KEY_CREATESESSION      = "createsession";
-static const std::string KEY_SESSIONID          = "sessionid";
+static const std::string KEY_REMOVESESSION      = "removesession";
 
 
 class Request
@@ -154,62 +153,6 @@ struct SessionAndEntity
 };
 
 
-class CallbackChannel
-{
-public:
-    CallbackChannel()
-        : m_lastActivityTime(std::chrono::system_clock::now())
-    {
-    }
-
-    void setRequest(const std::shared_ptr<Request>& request)
-    {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        m_lastActivityTime = std::chrono::system_clock::now();
-        m_request = request;
-    }
-
-    void addRequestString(std::string&& str)
-    {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        m_requestStrings.push_back(std::move(str));
-    }
-
-    std::deque<std::string> getAllRequestStrings()
-    {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        return std::move(m_requestStrings);
-    }
-
-    std::shared_ptr<Request> getRequest()
-    {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        return std::move(m_request);
-    }
-
-    bool isActivityTimerExpired()
-    {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        bool expired = false;
-        std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
-        std::chrono::duration<double> dur = now - m_lastActivityTime;
-        int delta = static_cast<int>(dur.count() * 1000);
-        if (delta < 0 || delta >= LONGPOLL_RELEASE_INTERVAL)
-        {
-            m_lastActivityTime = now;
-            expired = true;
-        }
-
-        return expired;
-    }
-
-private:
-    std::shared_ptr<Request>                            m_request;
-    std::deque<std::string>                             m_requestStrings;
-    std::chrono::time_point<std::chrono::system_clock>  m_lastActivityTime;
-    std::mutex                                          m_mutex;
-};
-
 
 class HttpSession
 {
@@ -217,6 +160,17 @@ public:
     HttpSession(const std::string& httpSessionId)
         : m_httpSessionId(httpSessionId)
     {
+    }
+
+    ~HttpSession()
+    {
+        if (m_entity)
+        {
+            for (auto it = m_objectName2PeerId.begin(); it != m_objectName2PeerId.end(); ++it)
+            {
+                m_entity->disconnect(it->second);
+            }
+        }
     }
 
     void setEntity(const IRemoteEntityPtr& entity)
@@ -253,16 +207,6 @@ public:
         return false;
     }
 
-    std::string createCallbackChannel()
-    {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        int callbackChannelId = m_nextCallbackChannelId;
-        ++m_nextCallbackChannelId;
-        std::string strCallbackChannelId = std::to_string(callbackChannelId);
-        m_callbackChannels[strCallbackChannelId];
-        return strCallbackChannelId;
-    }
-
     const std::string& getSessionId() const
     {
         return m_httpSessionId;
@@ -271,7 +215,6 @@ public:
 private:
     IRemoteEntityPtr                        m_entity;
     std::unordered_map<std::string, PeerId> m_objectName2PeerId;
-    std::unordered_map<std::string, CallbackChannel> m_callbackChannels;
     std::uint64_t                           m_nextCallbackChannelId = 1;
     std::string                             m_httpSessionId;
     std::mutex                              m_mutex;
@@ -418,6 +361,7 @@ public:
         auto it = m_httpSessions.find(httpSessionId);
         if (it != m_httpSessions.end())
         {
+            streamInfo << "session found";
             return it->second;
         }
         return nullptr;
@@ -441,7 +385,7 @@ public:
                 {
                     cookie = cookies;
                 }
-                const char* pos = strstr(cookie.c_str(), "sessionid-fmqfcgi");
+                const char* pos = strstr(cookie.c_str(), "fmqfcgi");
                 if (pos)
                 {
                     size_t p = cookie.find('=');
@@ -489,18 +433,32 @@ public:
         return httpSession;
     }
 
-    HttpSessionPtr getHttpSession(Request& request, bool createSession, const std::string& httpSessionId, const char* cookies)
+    void removeSession(const std::string& httpSessionId)
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        m_httpSessions.erase(httpSessionId);
+        streamInfo << "remove session";
+    }
+
+    HttpSessionPtr getHttpSession(Request& request, const char* httpHeaderCreateSession, const char* httpHeaderSessionId, const char* cookies)
     {
         HttpSessionPtr httpSession;
-        if (createSession)
+
+        if (httpHeaderSessionId)
         {
+            httpSession = findSession(httpHeaderSessionId);
+        }
+        if (httpHeaderCreateSession || (httpHeaderSessionId && !httpSession))
+        {
+            if (httpSession)
+            {
+                removeSession(httpSession->getSessionId());
+            }
             httpSession = createHttpSession();
             assert(httpSession);
+            FCGX_FPrintF(request->out, "Set-fmqfcgi-Sessionid: %s\r\n", httpSession->getSessionId().c_str());
         }
-        else if (!httpSessionId.empty())
-        {
-            httpSession = findSession(httpSessionId);
-        }
+
         if (!httpSession)
         {
             httpSession = findCookieSession(cookies);
@@ -508,7 +466,7 @@ public:
             {
                 httpSession = createHttpSession();
                 assert(httpSession);
-                FCGX_FPrintF(request->out, "Set-Cookie: sessionid-fmqfcgi=%s\r\n", httpSession->getSessionId().c_str());
+                FCGX_FPrintF(request->out, "Set-Cookie: fmqfcgi=%s\r\n", httpSession->getSessionId().c_str());
             }
         }
         return httpSession;
@@ -690,23 +648,6 @@ public:
         });
     }
 
-    bool getSessionInfo(const std::deque<std::pair<std::string, finalmq::BufferRef>>& listQuery, std::string& httpSessionId)
-    {
-        httpSessionId.clear();
-        for (auto it = listQuery.begin(); it != listQuery.end(); ++it)
-        {
-            if (it->first == KEY_CREATESESSION)
-            {
-                return true;
-            }
-            else if (it->first == KEY_SESSIONID)
-            {
-                httpSessionId = {it->second.first, it->second.first + it->second.second};
-            }
-        }
-        return false;
-    }
-
     void handleRequest(const RequestPtr& requestPtr)
     {
         // GET http://localhost/root.fmq/MyService/helloworld.getGreetings%7B%22hello%22:%22world%22%7D?call=hello.world{%22hey%22:5}
@@ -716,31 +657,49 @@ public:
 
         Request& request = *requestPtr;
 
-        const char* cookies = FCGX_GetParam("HTTP_COOKIE", request->envp);
-        const char* querystring = FCGX_GetParam("QUERY_STRING", request->envp);
-        const char* pathinfo = FCGX_GetParam("PATH_INFO", request->envp);
-        const char* uriEscaped = FCGX_GetParam("REQUEST_URI", request->envp);
-        const char* origin = FCGX_GetParam("HTTP_ORIGIN", request->envp);
+        const char* httpHeaderCookies = FCGX_GetParam("HTTP_COOKIE", request->envp);
+        const char* httpHeaderQuerystring = FCGX_GetParam("QUERY_STRING", request->envp);
+        const char* httpHeaderPathinfo = FCGX_GetParam("PATH_INFO", request->envp);
+        const char* httpHeaderUriEscaped = FCGX_GetParam("REQUEST_URI", request->envp);
+        const char* httpHeaderOrigin = FCGX_GetParam("HTTP_ORIGIN", request->envp);
 
-        if (uriEscaped)
+        const char* httpHeaderCreateSession = FCGX_GetParam("HTTP_FMQ_CREATESESSION", request->envp);
+        const char* httpHeaderSessionId = FCGX_GetParam("HTTP_FMQ_SESSIONID", request->envp);
+
+//        for(int i=0; request->envp[i] != NULL; i+=1)
+//        {
+//            streamInfo << request->envp[i];
+//        }
+
+        streamInfo << "----- REQUEST -----";
+
+        if (httpHeaderUriEscaped)
         {
-            streamInfo << "REQUEST_URI: " << uriEscaped;
+            streamInfo << "REQUEST_URI: " << httpHeaderUriEscaped;
         }
-        if (pathinfo)
+        if (httpHeaderPathinfo)
         {
-            streamInfo << "PATH_INFO: " << pathinfo;
+            streamInfo << "PATH_INFO: " << httpHeaderPathinfo;
         }
-        if (querystring)
+        if (httpHeaderQuerystring)
         {
-            streamInfo << "QUERY_STRING: " << querystring;
+            streamInfo << "QUERY_STRING: " << httpHeaderQuerystring;
         }
-        if (cookies)
+        if (httpHeaderCookies)
         {
-            streamInfo << "HTTP_COOKIE: " << cookies;
+            streamInfo << "HTTP_COOKIE: " << httpHeaderCookies;
         }
-        if (origin)
+        if (httpHeaderOrigin)
         {
-            streamInfo << "HTTP_ORIGIN: " << origin;
+            streamInfo << "HTTP_ORIGIN: " << httpHeaderOrigin;
+        }
+        if (httpHeaderCreateSession)
+        {
+            streamInfo << "FMQ_CREATESESSION: " << httpHeaderCreateSession;
+        }
+        if (httpHeaderSessionId)
+        {
+            streamInfo << "FMQ_SESSIONID: " << httpHeaderSessionId;
         }
 
         FCGX_FPrintF(request->out, "Content-type: text/plain; charset=utf-8\r\n");
@@ -748,10 +707,10 @@ public:
         FCGX_FPrintF(request->out, "Cache-Control: no-cache\r\n");
         FCGX_FPrintF(request->out, "Expires: -1\r\n");
         FCGX_FPrintF(request->out, "Access-Control-Allow-Credentials: true\r\n");
-        if (origin && origin[0] != 0)
+        if (httpHeaderOrigin && httpHeaderOrigin[0] != 0)
         {
             std::string strACAO = "Access-Control-Allow-Origin: ";
-            strACAO += origin;
+            strACAO += httpHeaderOrigin;
             strACAO += "\r\n";
             FCGX_FPrintF(request->out, strACAO.c_str());
         }
@@ -760,24 +719,20 @@ public:
             FCGX_FPrintF(request->out, "Access-Control-Allow-Origin: null\r\n");
         }
 
-        std::deque<std::pair<std::string, finalmq::BufferRef>> listQuery;
-        if (querystring && querystring[0])
-        {
-            getQueries(querystring, listQuery);
-        }
-
-        std::string data;
-        getData(request, data);
-        getQueriesFromData(data.c_str(), listQuery);
-
-        std::string httpSessionId;
-        bool createSession = getSessionInfo(listQuery, httpSessionId);
-
-        HttpSessionPtr httpSession = getHttpSession(request, createSession, httpSessionId, cookies);
+        HttpSessionPtr httpSession = getHttpSession(request, httpHeaderCreateSession, httpHeaderSessionId, httpHeaderCookies);
         assert(httpSession);
 
         // end of header
         FCGX_FPrintF(request->out, "\r\n");
+
+        std::deque<std::pair<std::string, finalmq::BufferRef>> listQuery;
+        if (httpHeaderQuerystring && httpHeaderQuerystring[0])
+        {
+            getQueries(httpHeaderQuerystring, listQuery);
+        }
+        std::string data;
+        getData(request, data);
+        getQueriesFromData(data.c_str(), listQuery);
 
         for (size_t i = 0; i < listQuery.size(); ++i)
         {
@@ -788,9 +743,10 @@ public:
             {
                 executeRequest(httpSession, requestPtr, value);
             }
-            else
+            else if (key == KEY_REMOVESESSION)
             {
-
+                removeSession(httpSession->getSessionId());
+                request.putstr("\n");
             }
         }
     }

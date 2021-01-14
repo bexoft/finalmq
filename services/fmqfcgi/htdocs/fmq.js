@@ -1,4 +1,5 @@
 var g_hostname = "";
+var g_sessionId = null;
 
 function setHostname(hostname)
 {
@@ -45,10 +46,14 @@ function callObject(objectname, funcname, inparams, funcresult, context)
 	            var params = command[1];
 			    params.callret = cmd.ret;
 	            xmlhttp.funcresult(params, xmlhttp._context);
-	        }                                                                           
+	        }
 	    }
     }
     xmlhttp.open('POST',g_hostname + 'root.fmq', (funcresult == null) ? false : true);
+    if (g_sessionId)
+    {
+        xmlhttp.setRequestHeader('FMQ_SESSIONID', g_sessionId)
+    }
     var jsonInParams = (inparams == null) ? "" : JSON.stringify(inparams);                               
     xmlhttp.send(objectname + '/' + funcname + jsonInParams + '\r');                                  
 	if (funcresult == null)
@@ -59,5 +64,53 @@ function callObject(objectname, funcname, inparams, funcresult, context)
 	    params.callret = cmd.ret;
 	    return params;
 	}
+}
+
+
+function createSession(funcresult)
+{
+    var xmlhttp = createRequest();
+    xmlhttp.funcresult = funcresult;
+    if (funcresult != null)
+    {
+	    xmlhttp.onreadystatechange = function()
+	    {
+	        if (xmlhttp.readyState == 4 && xmlhttp.status == 200)                             
+	        {                                                                           
+                g_sessionId = xmlhttp.getResponseHeader('Set-fmqfcgi-Sessionid');
+	            xmlhttp.funcresult();
+	        }
+	    }
+    }
+    xmlhttp.open('POST',g_hostname + 'root.fmq', (funcresult == null) ? false : true);
+    xmlhttp.setRequestHeader('FMQ_CREATESESSION', 'true');
+    xmlhttp.send();                                  
+	if (funcresult == null)
+	{
+        g_sessionId = xmlhttp.getResponseHeader('Set-fmqfcgi-Sessionid');
+	}
+}
+
+function removeSession(funcresult)
+{
+    var xmlhttp = createRequest();
+    xmlhttp.funcresult = funcresult;
+    if (funcresult != null)
+    {
+	    xmlhttp.onreadystatechange = function()
+	    {
+	        if (xmlhttp.readyState == 4 && xmlhttp.status == 200)                             
+	        {                                                                           
+                g_sessionId = xmlhttp.getResponseHeader('Set-fmqfcgi-Sessionid');
+	            xmlhttp.funcresult();
+	        }
+	    }
+    }
+    xmlhttp.open('POST',g_hostname + 'root.fmq?removesession', (funcresult == null) ? false : true);
+    if (g_sessionId)
+    {
+        xmlhttp.setRequestHeader('FMQ_SESSIONID', g_sessionId)
+    }
+    xmlhttp.send('');
 }
 

@@ -31,13 +31,25 @@ function printGreetings(outparams)
 }
 
 
-
-function startScript()
+function fmqReady()
 {
     var inparams = {persons:[{name:"Bonnie"},{name:"Clyde"}]};
     outparams = callObject('ExampleService', 'helloworld.HelloRequest', inparams, function(outparams) {
         printGreetings(outparams);
     });
+}
+
+
+function pageLoad()
+{
+    createSession(function() {
+        fmqReady();
+    });
+}
+
+function pageUnload()
+{
+    removeSession(function() {});
 }
 
                                                                            
@@ -48,7 +60,7 @@ function startScript()
                                                                
 <body>                                                                          
 
-<body onLoad="startScript()">
+<body onload="pageLoad()" onunload="pageUnload()">
 <div id="testcontainer"></div>
 
 </body>
