@@ -254,6 +254,11 @@ public:
         }
     }
 
+    inline CorrelationId correlationId() const
+    {
+        return m_correlationId;
+    }
+
 private:
     void reply(remoteentity::Status status)
     {

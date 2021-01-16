@@ -44,6 +44,7 @@ using finalmq::PEERID_INVALID;
 using finalmq::ENTITYID_INVALID;
 using finalmq::PeerId;
 using finalmq::EntityId;
+using finalmq::CorrelationId;
 using finalmq::IProtocolSessionPtr;
 using finalmq::IProtocolPtr;
 using finalmq::ProtocolDelimiter;
@@ -60,9 +61,17 @@ using finalmq::RemoteEntityContentType;
 
 static const int LONGPOLL_RELEASE_INTERVAL = 20000;
 
-static const std::string KEY_REQUEST            = "request";
-static const std::string KEY_REMOVESESSION      = "removesession";
+static const std::string KEY_REQUEST                = "request";
+static const std::string KEY_REMOVESESSION          = "removesession";
+static const std::string KEY_SETEXPIRATIONDURATION  = "setexpirationduration";
+static const std::string KEY_LONGPOLL               = "longpoll";
 
+
+static const int CYCLETIME                  = 1000;
+static const int CHECK_RECONNECT_INTERVAL   = 1000;
+static const int RECONNECT_INTERVAL         = 5000;
+
+static const int DEFAULT_SESSION_EXPIRATION_DURATION = 5 * 60000;   // 5 minutes of inactivity will remove a session.
 
 class Request
 {
@@ -154,34 +163,120 @@ struct SessionAndEntity
 
 
 
-class HttpSession
+class HttpSession : public RemoteEntity
 {
 public:
     HttpSession(const std::string& httpSessionId)
         : m_httpSessionId(httpSessionId)
     {
+        registerCommandFunction("*", [this] (finalmq::ReplyContextUPtr& replyContext, const finalmq::StructBasePtr& structBase) {
+            if (structBase->getStructInfo().getTypeName() == GenericMessage::structInfo().getTypeName())
+            {
+                std::unique_lock<std::mutex> lock(m_mutex);
+                finalmq::CorrelationId correlationId = replyContext->correlationId();
+                if (correlationId != finalmq::CORRELATIONID_NONE)
+                {
+                    m_pendingEntityReplies[correlationId] = std::move(replyContext);
+                }
+
+                const GenericMessage& genericMessage = static_cast<GenericMessage&>(*structBase);
+                std::string entry;
+                createRequestEntry(genericMessage.type, correlationId, genericMessage.data.data(), genericMessage.data.size(), entry);
+                m_requestEntries.push_back(entry);
+
+                if (m_longpoll)
+                {
+                    triggerRequest(m_longpoll);
+                    m_longpoll = nullptr;
+                }
+            }
+        });
     }
 
     ~HttpSession()
     {
-        if (m_entity)
+        for (auto it = m_objectName2PeerId.begin(); it != m_objectName2PeerId.end(); ++it)
         {
-            for (auto it = m_objectName2PeerId.begin(); it != m_objectName2PeerId.end(); ++it)
-            {
-                m_entity->disconnect(it->second);
-            }
+            disconnect(it->second);
         }
     }
 
-    void setEntity(const IRemoteEntityPtr& entity)
+    void triggerRequest(const RequestPtr& longpoll)
     {
-        m_entity = entity;
+        for (size_t i = 0; i < m_requestEntries.size(); ++i)
+        {
+            longpoll->putstr(m_requestEntries[i]);
+        }
+        m_requestEntries.clear();
     }
 
-    IRemoteEntityPtr getEntity() const
+    void setLongPoll(const RequestPtr& longpoll, long long durationSecond)
     {
-        return m_entity;
+        std::unique_lock<std::mutex> lock(m_mutex);
+        m_longpollDurationMs = durationSecond * 1000;
+        m_longpoll = nullptr;
+        m_longpollTimer = std::chrono::system_clock::now();
+        if (m_requestEntries.empty() && m_longpollDurationMs > 0)
+        {
+            m_longpoll = longpoll;
+        }
+        else
+        {
+            triggerRequest(longpoll);
+        }
     }
+
+    bool isLongPollExpired()
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+        std::chrono::duration<double> dur = now - m_longpollTimer;
+        long long delta = static_cast<long long>(dur.count() * 1000);
+        bool expired = false;
+        if (delta > m_longpollDurationMs)
+        {
+            m_longpollTimer = now;
+            expired = true;
+        }
+        else if (delta < 0)
+        {
+            m_longpollTimer = now;
+        }
+        return expired;
+    }
+
+    void releaseLongpoll()
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        m_longpoll = nullptr;
+    }
+
+    void createRequestEntry(const std::string& type, CorrelationId correlationId, const char* data, int size, std::string& entry)
+    {
+        static const std::string STR_HEADER_BEGIN = "[{\"mode\":\"MSG_REQUEST\",\"type\":\"";
+        static const std::string STR_HEADER_CORRELATIONID = "\",\"corrid\":\"";
+        static const std::string STR_HEADER_END_PAYLOADWILLFOLLOW = "\"},\t";
+        static const std::string STR_HEADER_END_NOPAYLOAD = "\"},\t{}]\n";
+        static const std::string STR_HEADER_END = "]\n";
+        entry = STR_HEADER_BEGIN;
+        entry += type;
+        if (correlationId != finalmq::CORRELATIONID_NONE)
+        {
+            entry += STR_HEADER_CORRELATIONID;
+            entry += std::to_string(correlationId);
+        }
+        if (size > 0)
+        {
+            entry += STR_HEADER_END_PAYLOADWILLFOLLOW;
+            entry.insert(entry.end(), data, data + size);
+            entry += STR_HEADER_END;
+        }
+        else
+        {
+            entry += STR_HEADER_END_NOPAYLOAD;
+        }
+    }
+
 
     bool getPeerId(const std::string& objectName, PeerId& peerId)
     {
@@ -192,14 +287,14 @@ public:
             peerId = it->second;
 
             // check connection status. if disconnected -> reconnect
-            IProtocolSessionPtr session = m_entity->getSession(peerId);
+            IProtocolSessionPtr session = getSession(peerId);
             if (session && session->getConnectionData().connectionState != finalmq::ConnectionState::CONNECTIONSTATE_DISCONNECTED)
             {
                 return true;
             }
         }
 
-        peerId = m_entity->createPeer();
+        peerId = createPeer();
         assert(peerId != PEERID_INVALID);
 
         m_objectName2PeerId[objectName] = peerId;
@@ -212,11 +307,51 @@ public:
         return m_httpSessionId;
     }
 
+    void setActivity()
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        m_lastActivityTime = std::chrono::system_clock::now();
+    }
+
+    void setExpirationDuration(long long expirationDurationSecond)
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        m_sessionExpirationDurationMs = expirationDurationSecond * 1000;
+    }
+
+    bool isSessionTimeExpired()
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+        std::chrono::duration<double> dur = now - m_lastActivityTime;
+        long long delta = static_cast<long long>(dur.count() * 1000);
+        bool expired = false;
+        if (delta > m_sessionExpirationDurationMs)
+        {
+            m_lastActivityTime = now;
+            expired = true;
+        }
+        else if (delta < 0)
+        {
+            m_lastActivityTime = now;
+        }
+        return expired;
+    }
+
 private:
-    IRemoteEntityPtr                        m_entity;
     std::unordered_map<std::string, PeerId> m_objectName2PeerId;
     std::uint64_t                           m_nextCallbackChannelId = 1;
     std::string                             m_httpSessionId;
+
+    std::unordered_map<finalmq::CorrelationId, finalmq::ReplyContextUPtr> m_pendingEntityReplies;
+    std::deque<std::string>                 m_requestEntries;
+    RequestPtr                              m_longpoll;
+    long long                               m_longpollDurationMs;
+    std::chrono::time_point<std::chrono::system_clock> m_longpollTimer = std::chrono::system_clock::now();
+
+    std::chrono::time_point<std::chrono::system_clock> m_lastActivityTime = std::chrono::system_clock::now();
+    long long                               m_sessionExpirationDurationMs = DEFAULT_SESSION_EXPIRATION_DURATION;
+
     std::mutex                              m_mutex;
 };
 
@@ -245,7 +380,7 @@ public:
 
     void init()
     {
-        m_entityContainer->init(100, 1000, [this] () {
+        m_entityContainer->init(CYCLETIME, CHECK_RECONNECT_INTERVAL, [this] () {
             timeout();
         });
         m_thread = std::thread([this] () {
@@ -255,7 +390,32 @@ public:
 
     void timeout()
     {
+        std::vector<std::string> sessionIdsToRemove;
+        std::vector<HttpSessionPtr> sessionToReleaseLongpoll;
+        std::unique_lock<std::mutex> lock(m_mutex);
+        for (auto it = m_httpSessions.begin(); it != m_httpSessions.end(); ++it)
+        {
+            const HttpSessionPtr& session = it->second;
+            assert(session);
+            if (session->isSessionTimeExpired())
+            {
+                sessionIdsToRemove.push_back(it->first);
+            }
+            if (session->isLongPollExpired())
+            {
+                sessionToReleaseLongpoll.push_back(it->second);
+            }
+        }
+        lock.unlock();
 
+        for (size_t i = 0; i < sessionIdsToRemove.size(); ++i)
+        {
+            removeSession(sessionIdsToRemove[i]);
+        }
+        for (size_t i = 0; i < sessionToReleaseLongpoll.size(); ++i)
+        {
+            sessionToReleaseLongpoll[i]->releaseLongpoll();
+        }
     }
 
     static void decode(finalmq::BufferRef& str)
@@ -426,18 +586,27 @@ public:
         m_httpSessions[httpSessionId] = httpSession;
         lock.unlock();
 
-        IRemoteEntityPtr entity = std::make_shared<RemoteEntity>();
-        httpSession->setEntity(entity);
-        m_entityContainer->registerEntity(entity);
+        m_entityContainer->registerEntity(httpSession);
 
         return httpSession;
     }
 
     void removeSession(const std::string& httpSessionId)
     {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        m_httpSessions.erase(httpSessionId);
         streamInfo << "remove session";
+        EntityId entityId = ENTITYID_INVALID;
+        std::unique_lock<std::mutex> lock(m_mutex);
+        auto it = m_httpSessions.find(httpSessionId);
+        if (it != m_httpSessions.end())
+        {
+            entityId = it->second->getEntityId();
+            m_httpSessions.erase(it);
+        }
+        lock.unlock();
+        if (entityId != ENTITYID_INVALID)
+        {
+            m_entityContainer->unregisterEntity(entityId);
+        }
     }
 
     HttpSessionPtr getHttpSession(Request& request, const char* httpHeaderCreateSession, const char* httpHeaderSessionId, const char* cookies)
@@ -558,7 +727,7 @@ public:
                                     {
                                         endpoint.replace(pos, std::string("*").length(), "127.0.0.1");
                                     }
-                                    session = m_entityContainer->connect(endpoint, protocol, finalmq::RemoteEntityContentType::CONTENTTYPE_JSON, {{}, 5000, 0});
+                                    session = m_entityContainer->connect(endpoint, protocol, finalmq::RemoteEntityContentType::CONTENTTYPE_JSON, {{}, RECONNECT_INTERVAL, 0});
                                 }
                                 sessionAndEntity.session = session;
                                 for (size_t n = 0; n < sessionAndEntity.entities.size(); n++)
@@ -586,21 +755,22 @@ public:
         static const std::string STR_HEADER_BEGIN = "[{\"mode\":\"MSG_REPLY\",\"type\":\"";
         static const std::string STR_HEADER_STATUS = "\",\"status\":\"";
         static const std::string STR_HEADER_END_PAYLOADWILLFOLLOW = "\"},\t";
-        static const std::string STR_HEADER_END = "\"},\t{}]\n";
+        static const std::string STR_HEADER_END_NOPAYLOAD = "\"},\t{}]\n";
+        static const std::string STR_HEADER_END = "]\n";
         request.putstr(STR_HEADER_BEGIN);
         request.putstr(type);
         request.putstr(STR_HEADER_STATUS);
         request.putstr(status.toString());
 
-        if (data)
+        if (size > 0)
         {
             request.putstr(STR_HEADER_END_PAYLOADWILLFOLLOW);
             request.putstr(data, size);
-            request.putstr("]\n", 2);
+            request.putstr(STR_HEADER_END);
         }
         else
         {
-            request.putstr(STR_HEADER_END);
+            request.putstr(STR_HEADER_END_NOPAYLOAD);
         }
     }
 
@@ -615,7 +785,7 @@ public:
         bool found = httpSession->getPeerId(objectName, peerId);
         if (!found)
         {
-            connectEntity(objectName, peerId, httpSession->getEntity());
+            connectEntity(objectName, peerId, httpSession);
         }
 
         GenericMessage message;
@@ -630,7 +800,7 @@ public:
         {
             message.data = {'{','}'};
         }
-        httpSession->getEntity()->requestReply<GenericMessage>(peerId, message, [this, requestPtr] (PeerId peerId, Status status, const std::shared_ptr<GenericMessage>& reply) {
+        httpSession->requestReply<GenericMessage>(peerId, message, [this, requestPtr] (PeerId peerId, Status status, const std::shared_ptr<GenericMessage>& reply) {
             assert(requestPtr);
             Request& request = *requestPtr;
             if (reply && reply->contenttype != RemoteEntityContentType::CONTENTTYPE_JSON)
@@ -646,6 +816,19 @@ public:
                 sendReply(request, "", status, nullptr, 0);
             }
         });
+    }
+
+    void setExpirationDuration(const HttpSessionPtr& httpSession, const finalmq::BufferRef& value)
+    {
+        long long duration = std::atoll(std::string(value.first, value.first + value.second).c_str());
+        streamInfo << "set expiration time: " << duration << "s";
+        httpSession->setExpirationDuration(duration);
+    }
+
+    void longpoll(const HttpSessionPtr& httpSession, const RequestPtr& requestPtr, const finalmq::BufferRef& value)
+    {
+        long long duration = std::atoll(std::string(value.first, value.first + value.second).c_str());
+        httpSession->setLongPoll(requestPtr, duration);
     }
 
     void handleRequest(const RequestPtr& requestPtr)
@@ -747,6 +930,15 @@ public:
             {
                 removeSession(httpSession->getSessionId());
                 request.putstr("\n");
+            }
+            else if (key == KEY_SETEXPIRATIONDURATION)
+            {
+                setExpirationDuration(httpSession, value);
+                request.putstr("\n");
+            }
+            else if (key == KEY_LONGPOLL)
+            {
+                longpoll(httpSession, requestPtr, value);
             }
         }
     }

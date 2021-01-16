@@ -747,10 +747,14 @@ bool StreamConnectionContainer::isTimerExpired(std::chrono::time_point<std::chro
 
     std::chrono::duration<double> dur = now - lastTime;
     int delta = static_cast<int>(dur.count() * 1000);
-    if (delta < 0 || delta >= interval)
+    if (delta >= interval)
     {
         lastTime = now;
         expired = true;
+    }
+    else if (delta < 0)
+    {
+        lastTime = now;
     }
 
     return expired;
