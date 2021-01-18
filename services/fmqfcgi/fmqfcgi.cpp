@@ -184,13 +184,18 @@ public:
 
                 const GenericMessage& genericMessage = static_cast<GenericMessage&>(*structBase);
                 std::string entry;
-                createRequestEntry(genericMessage.type, correlationId, genericMessage.data.data(), genericMessage.data.size(), entry);
-                m_requestEntries.push_back(entry);
-
-                if (m_longpoll)
+                auto it = m_peerId2ObjectName.find(replyContext->peerId());
+                if (it != m_peerId2ObjectName.end())
                 {
-                    triggerRequest(m_longpoll);
-                    m_longpoll = nullptr;
+                    std::string objectName = it->second;
+                    createRequestEntry(objectName, genericMessage.type, correlationId, genericMessage.data.data(), genericMessage.data.size(), entry);
+                    m_requestEntries.push_back(entry);
+
+                    if (m_longpoll)
+                    {
+                        triggerRequest(m_longpoll);
+                        m_longpoll = nullptr;
+                    }
                 }
             }
         });
@@ -254,15 +259,18 @@ public:
         m_longpoll = nullptr;
     }
 
-    void createRequestEntry(const std::string& type, CorrelationId correlationId, const char* data, int size, std::string& entry)
+    void createRequestEntry(const std::string& objectName, const std::string& type, CorrelationId correlationId, const char* data, int size, std::string& entry)
     {
         static const std::string STR_HEADER_BEGIN = "[{\"mode\":\"MSG_REQUEST\",\"type\":\"";
+        static const std::string STR_HEADER_SRC = "\",\"src\":\"";
         static const std::string STR_HEADER_CORRELATIONID = "\",\"corrid\":\"";
         static const std::string STR_HEADER_END_PAYLOADWILLFOLLOW = "\"},\t";
         static const std::string STR_HEADER_END_NOPAYLOAD = "\"},\t{}]\n";
         static const std::string STR_HEADER_END = "]\n";
         entry = STR_HEADER_BEGIN;
         entry += type;
+        entry += STR_HEADER_SRC;
+        entry += objectName;
         if (correlationId != finalmq::CORRELATIONID_NONE)
         {
             entry += STR_HEADER_CORRELATIONID;
@@ -301,6 +309,7 @@ public:
         assert(peerId != PEERID_INVALID);
 
         m_objectName2PeerId[objectName] = peerId;
+        m_peerId2ObjectName[peerId] = objectName;
 
         return false;
     }
@@ -354,6 +363,7 @@ public:
 
 private:
     std::unordered_map<std::string, PeerId> m_objectName2PeerId;
+    std::unordered_map<PeerId, std::string> m_peerId2ObjectName;
     finalmq::CorrelationId                  m_nextCorrelationId = 1;
     std::string                             m_httpSessionId;
 
@@ -497,29 +507,6 @@ public:
             }
         } while (str != nullptr);
     }
-
-//    void getQueriesFromData(const char* querystring, std::deque<std::pair<std::string, finalmq::BufferRef>>& listQuery)
-//    {
-//        const char* str = nullptr;
-//        do
-//        {
-//            str = strchr(querystring, '\n');
-//            finalmq::BufferRef query;
-//            if (str)
-//            {
-//                query = {const_cast<char*>(querystring), str - querystring};
-//                querystring = str + 1;
-//            }
-//            else
-//            {
-//                query = {const_cast<char*>(querystring), strlen(querystring)};
-//            }
-//            if (query.second > 0)
-//            {
-//                listQuery.emplace_back("request", query);
-//            }
-//        } while (str != nullptr);
-//    }
 
     void getData(Request& request, std::string& data)
     {

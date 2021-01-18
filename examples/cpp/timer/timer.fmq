@@ -1,0 +1,18 @@
+{
+    "namespace":"timer",
+
+    "enums": [
+    ],
+
+    "structs":[
+        {"type":"StartRequest","desc":"","fields":[
+        ]},
+        {"type":"StopRequest","desc":"","fields":[
+        ]},
+        {"type":"TimerEvent","desc":"","fields":[
+            {"tid":"TYPE_STRING",                           "name":"time",              "desc":"The current time."}
+        ]}
+    ]
+}
+
+
