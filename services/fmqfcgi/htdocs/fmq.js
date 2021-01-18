@@ -78,7 +78,7 @@ class FmqSession
             xmlhttp.setRequestHeader('FMQ_SESSIONID', this.sessionId)
         }
         var jsonInParams = (inparams == null) ? "" : JSON.stringify(inparams);                               
-        xmlhttp.send(objectname + '/' + funcname + jsonInParams + '\r');                                  
+        xmlhttp.send('request=' + objectname + '/' + funcname + jsonInParams);
 	    if (funcresult == null)
 	    {
             this.updateSessionId(xmlhttp);

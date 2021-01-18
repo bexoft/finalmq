@@ -47,6 +47,7 @@ using finalmq::EntityId;
 using finalmq::CorrelationId;
 using finalmq::IProtocolSessionPtr;
 using finalmq::IProtocolPtr;
+using finalmq::ReplyContextUPtr;
 using finalmq::ProtocolDelimiter;
 using finalmq::ProtocolHeaderBinarySize;
 using finalmq::Logger;
@@ -62,6 +63,7 @@ using finalmq::RemoteEntityContentType;
 static const int LONGPOLL_RELEASE_INTERVAL = 20000;
 
 static const std::string KEY_REQUEST                = "request";
+static const std::string KEY_REPLY                  = "reply";
 static const std::string KEY_REMOVESESSION          = "removesession";
 static const std::string KEY_SETEXPIRATIONDURATION  = "setexpirationduration";
 static const std::string KEY_LONGPOLL               = "longpoll";
@@ -169,14 +171,15 @@ public:
     HttpSession(const std::string& httpSessionId)
         : m_httpSessionId(httpSessionId)
     {
-        registerCommandFunction("*", [this] (finalmq::ReplyContextUPtr& replyContext, const finalmq::StructBasePtr& structBase) {
+        registerCommandFunction("*", [this] (ReplyContextUPtr& replyContext, const finalmq::StructBasePtr& structBase) {
             if (structBase->getStructInfo().getTypeName() == GenericMessage::structInfo().getTypeName())
             {
                 std::unique_lock<std::mutex> lock(m_mutex);
                 finalmq::CorrelationId correlationId = replyContext->correlationId();
                 if (correlationId != finalmq::CORRELATIONID_NONE)
                 {
-                    m_pendingEntityReplies[correlationId] = std::move(replyContext);
+                    m_pendingEntityReplies[m_nextCorrelationId] = std::move(replyContext);
+                    ++m_nextCorrelationId;
                 }
 
                 const GenericMessage& genericMessage = static_cast<GenericMessage&>(*structBase);
@@ -338,12 +341,23 @@ public:
         return expired;
     }
 
+    ReplyContextUPtr getReplyContext(CorrelationId correlationId)
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        auto it = m_pendingEntityReplies.find(correlationId);
+        if (it != m_pendingEntityReplies.end())
+        {
+            return std::move(it->second);
+        }
+        return nullptr;
+    }
+
 private:
     std::unordered_map<std::string, PeerId> m_objectName2PeerId;
-    std::uint64_t                           m_nextCallbackChannelId = 1;
+    finalmq::CorrelationId                  m_nextCorrelationId = 1;
     std::string                             m_httpSessionId;
 
-    std::unordered_map<finalmq::CorrelationId, finalmq::ReplyContextUPtr> m_pendingEntityReplies;
+    std::unordered_map<finalmq::CorrelationId, ReplyContextUPtr> m_pendingEntityReplies;
     std::deque<std::string>                 m_requestEntries;
     RequestPtr                              m_longpoll;
     long long                               m_longpollDurationMs;
@@ -446,12 +460,14 @@ public:
         str.second -= src - dest;
     }
 
+
+    template <char SEPARATOR, bool DECODE>
     void getQueries(const char* querystring, std::deque<std::pair<std::string, finalmq::BufferRef>>& listQuery)
     {
         const char* str = nullptr;
         do
         {
-            str = strchr(querystring, '&');
+            str = strchr(querystring, SEPARATOR);
             finalmq::BufferRef query;
             if (str)
             {
@@ -462,7 +478,10 @@ public:
             {
                 query = {const_cast<char*>(querystring), strlen(querystring)};
             }
-            decode(query);
+            if (DECODE)
+            {
+                decode(query);
+            }
             if (query.second > 0)
             {
                 char* eq = static_cast<char*>(memchr(query.first, '=', query.second));
@@ -479,28 +498,28 @@ public:
         } while (str != nullptr);
     }
 
-    void getQueriesFromData(const char* querystring, std::deque<std::pair<std::string, finalmq::BufferRef>>& listQuery)
-    {
-        const char* str = nullptr;
-        do
-        {
-            str = strchr(querystring, '\n');
-            finalmq::BufferRef query;
-            if (str)
-            {
-                query = {const_cast<char*>(querystring), str - querystring};
-                querystring = str + 1;
-            }
-            else
-            {
-                query = {const_cast<char*>(querystring), strlen(querystring)};
-            }
-            if (query.second > 0)
-            {
-                listQuery.emplace_back("request", query);
-            }
-        } while (str != nullptr);
-    }
+//    void getQueriesFromData(const char* querystring, std::deque<std::pair<std::string, finalmq::BufferRef>>& listQuery)
+//    {
+//        const char* str = nullptr;
+//        do
+//        {
+//            str = strchr(querystring, '\n');
+//            finalmq::BufferRef query;
+//            if (str)
+//            {
+//                query = {const_cast<char*>(querystring), str - querystring};
+//                querystring = str + 1;
+//            }
+//            else
+//            {
+//                query = {const_cast<char*>(querystring), strlen(querystring)};
+//            }
+//            if (query.second > 0)
+//            {
+//                listQuery.emplace_back("request", query);
+//            }
+//        } while (str != nullptr);
+//    }
 
     void getData(Request& request, std::string& data)
     {
@@ -818,6 +837,33 @@ public:
         });
     }
 
+    void executeReply(const HttpSessionPtr& httpSession, const RequestPtr& requestPtr, const finalmq::BufferRef& value)
+    {
+        std::string objectName;
+        std::string typeName;
+
+        ssize_t posParameters = getRequestData(value, objectName, typeName);
+        CorrelationId correclationId = std::atoll(objectName.c_str());
+
+        ReplyContextUPtr replyContext = httpSession->getReplyContext(correclationId);
+        if (replyContext)
+        {
+            GenericMessage message;
+            message.type = typeName;
+            message.contenttype = RemoteEntityContentType::CONTENTTYPE_JSON;
+            message.data.resize(value.second - posParameters);
+            if (!message.data.empty())
+            {
+                memcpy(message.data.data(), value.first + posParameters, message.data.size());
+            }
+            else
+            {
+                message.data = {'{','}'};
+            }
+            replyContext->reply(message);
+        }
+    }
+
     void setExpirationDuration(const HttpSessionPtr& httpSession, const finalmq::BufferRef& value)
     {
         long long duration = std::atoll(std::string(value.first, value.first + value.second).c_str());
@@ -911,11 +957,11 @@ public:
         std::deque<std::pair<std::string, finalmq::BufferRef>> listQuery;
         if (httpHeaderQuerystring && httpHeaderQuerystring[0])
         {
-            getQueries(httpHeaderQuerystring, listQuery);
+            getQueries<'&', true>(httpHeaderQuerystring, listQuery);
         }
         std::string data;
         getData(request, data);
-        getQueriesFromData(data.c_str(), listQuery);
+        getQueries<'\n', false>(data.c_str(), listQuery);
 
         for (size_t i = 0; i < listQuery.size(); ++i)
         {
@@ -926,15 +972,17 @@ public:
             {
                 executeRequest(httpSession, requestPtr, value);
             }
+            else if (key == KEY_REPLY)
+            {
+                executeReply(httpSession, requestPtr, value);
+            }
             else if (key == KEY_REMOVESESSION)
             {
                 removeSession(httpSession->getSessionId());
-                request.putstr("\n");
             }
             else if (key == KEY_SETEXPIRATIONDURATION)
             {
                 setExpirationDuration(httpSession, value);
-                request.putstr("\n");
             }
             else if (key == KEY_LONGPOLL)
             {
