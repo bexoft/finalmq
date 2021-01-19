@@ -104,6 +104,7 @@ public:
     {
         if (m_request)
         {
+            streamInfo << "Request finish";
             FCGX_Finish_r(m_request);
             m_request = nullptr;
         }
@@ -171,6 +172,7 @@ public:
     HttpSession(const std::string& httpSessionId)
         : m_httpSessionId(httpSessionId)
     {
+        streamInfo << "HTTP session created";
         registerCommandFunction("*", [this] (ReplyContextUPtr& replyContext, const finalmq::StructBasePtr& structBase) {
             if (structBase->getStructInfo().getTypeName() == GenericMessage::structInfo().getTypeName())
             {
@@ -207,10 +209,12 @@ public:
         {
             disconnect(it->second);
         }
+        streamInfo << "HTTP session destroyed " << m_httpSessionId;
     }
 
     void triggerRequest(const RequestPtr& longpoll)
     {
+        streamInfo << "trigger requests";
         for (size_t i = 0; i < m_requestEntries.size(); ++i)
         {
             longpoll->putstr(m_requestEntries[i]);
@@ -220,12 +224,14 @@ public:
 
     void setLongPoll(const RequestPtr& longpoll, long long durationSecond)
     {
+        streamInfo << "Set longpoll";
         std::unique_lock<std::mutex> lock(m_mutex);
         m_longpollDurationMs = durationSecond * 1000;
         m_longpoll = nullptr;
         m_longpollTimer = std::chrono::system_clock::now();
         if (m_requestEntries.empty() && m_longpollDurationMs > 0)
         {
+            streamInfo << "Save longpoll";
             m_longpoll = longpoll;
         }
         else
@@ -670,6 +676,7 @@ public:
 
     void connectEntity(const std::string& objectName, PeerId peerId, const IRemoteEntityPtr& entity)
     {
+        streamInfo << "Connect entity " << objectName;
         std::unique_lock<std::mutex> lock(m_mutex);
         auto it = m_objectName2sessionAndEntity.find(objectName);
         bool found = (it != m_objectName2sessionAndEntity.end());
@@ -783,6 +790,7 @@ public:
 
     void executeRequest(const HttpSessionPtr& httpSession, const RequestPtr& requestPtr, const finalmq::BufferRef& value)
     {
+        streamInfo << "Execute request " << std::string(value.first, value.first + value.second);
         std::string objectName;
         std::string typeName;
 
@@ -826,6 +834,7 @@ public:
 
     void executeReply(const HttpSessionPtr& httpSession, const RequestPtr& requestPtr, const finalmq::BufferRef& value)
     {
+        streamInfo << "Execute reply " << std::string(value.first, value.first + value.second);
         std::string objectName;
         std::string typeName;
 
