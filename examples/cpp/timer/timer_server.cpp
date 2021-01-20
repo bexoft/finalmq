@@ -56,6 +56,8 @@ using timer::TimerEvent;
 
 
 
+#define MODULENAME  "timer_server"
+
 
 
 /**
@@ -114,6 +116,7 @@ public:
                     std::vector<PeerId> peers = getAllPeers();
                     for (size_t i = 0; i < peers.size(); ++i)
                     {
+                        streamInfo << "sendEvent " << timerEvent.time;
                         sendEvent(peers[i], timerEvent);
                     }
                 }

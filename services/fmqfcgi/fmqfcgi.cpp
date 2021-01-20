@@ -802,44 +802,53 @@ public:
             connectEntity(objectName, peerId, httpSession);
         }
 
-        GenericMessage message;
-        message.type = typeName;
-        message.contenttype = RemoteEntityContentType::CONTENTTYPE_JSON;
-        message.data.resize(value.second - posParameters);
-        if (!message.data.empty())
+        if (typeName.empty())
         {
-            memcpy(message.data.data(), value.first + posParameters, message.data.size());
+            // no type means only connect, but do not execute a request.
+            Request& request = *requestPtr;
+            sendReply(request, "", Status::STATUS_OK, nullptr, 0);
         }
         else
         {
-            message.data = {'{','}'};
-        }
-        httpSession->requestReply<GenericMessage>(peerId, message, [this, requestPtr] (PeerId peerId, Status status, const std::shared_ptr<GenericMessage>& reply) {
-            assert(requestPtr);
-            Request& request = *requestPtr;
-            if (reply && reply->contenttype != RemoteEntityContentType::CONTENTTYPE_JSON)
+            GenericMessage message;
+            message.type = typeName;
+            message.contenttype = RemoteEntityContentType::CONTENTTYPE_JSON;
+            message.data.resize(value.second - posParameters);
+            if (!message.data.empty())
             {
-                status = Status::STATUS_WRONG_CONTENTTYPE;
-            }
-            if (reply && status == Status::STATUS_OK)
-            {
-                sendReply(request, reply->type, status, reply->data.data(), reply->data.size());
+                memcpy(message.data.data(), value.first + posParameters, message.data.size());
             }
             else
             {
-                sendReply(request, "", status, nullptr, 0);
+                message.data = {'{','}'};
             }
-        });
+            httpSession->requestReply<GenericMessage>(peerId, message, [this, requestPtr] (PeerId peerId, Status status, const std::shared_ptr<GenericMessage>& reply) {
+                assert(requestPtr);
+                Request& request = *requestPtr;
+                if (reply && reply->contenttype != RemoteEntityContentType::CONTENTTYPE_JSON)
+                {
+                    status = Status::STATUS_WRONG_CONTENTTYPE;
+                }
+                if (reply && status == Status::STATUS_OK)
+                {
+                    sendReply(request, reply->type, status, reply->data.data(), reply->data.size());
+                }
+                else
+                {
+                    sendReply(request, "", status, nullptr, 0);
+                }
+            });
+        }
     }
 
     void executeReply(const HttpSessionPtr& httpSession, const RequestPtr& requestPtr, const finalmq::BufferRef& value)
     {
         streamInfo << "Execute reply " << std::string(value.first, value.first + value.second);
-        std::string objectName;
+        std::string strCorrelationId;
         std::string typeName;
 
-        ssize_t posParameters = getRequestData(value, objectName, typeName);
-        CorrelationId correclationId = std::atoll(objectName.c_str());
+        ssize_t posParameters = getRequestData(value, strCorrelationId, typeName);
+        CorrelationId correclationId = std::atoll(strCorrelationId.c_str());
 
         ReplyContextUPtr replyContext = httpSession->getReplyContext(correclationId);
         if (replyContext)

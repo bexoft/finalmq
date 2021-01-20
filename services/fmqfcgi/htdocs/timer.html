@@ -11,46 +11,42 @@
 
 //////////////////////////////////////////////////////////////////////
 
-var g_fmqEntity = new FmqEntity();
 
-
-function printGreetings(outparams)
+class TimerEntity extends FmqEntity
 {
-    var greetings = outparams.greetings;
-    var title = '<h1>Greetings</h1>';
-    var table = '<table border="1">';
-    for (i=0; i<greetings.length; i++)
+    constructor()
     {
-        var greeting = greetings[i];
-        table += '<tr>';
-        table += '<td width="320" align="left">' + greeting +'</td>';
-        table += '</tr>';
+        super();
     }
-    table += '</table>';
-    var el = document.getElementById('testcontainer');
-    el.innerHTML = title + '<br>' + table;
+
+    timer_TimerEvent(src, correlationId, params)
+    {
+        var el = document.getElementById('testcontainer');
+        el.innerHTML += '<tr><td width="320" align="left">' + params.time +'</td></tr>';
+    }
 }
 
 
-function fmqReady()
+var g_entity = new TimerEntity();
+
+
+
+function entityReady()
 {
-    var inparams = {persons:[{name:"Bonnie"},{name:"Clyde"}]};
-    outparams = g_fmqEntity.requestReply('ExampleService', 'helloworld.HelloRequest', inparams, function(outparams) {
-        printGreetings(outparams);
-    });
+    g_entity.sendEvent('TimerService', '', {});
 }
 
 
 function pageLoad()
 {
-    g_fmqEntity.createEntity(function() {
-        fmqReady();
+    g_entity.createEntity(function() {
+        entityReady();
     });
 }
 
 function pageUnload()
 {
-    g_fmqEntity.removeEntity(function() {});
+    g_entity.removeEntity(function() {});
 }
 
                                                                            
@@ -62,7 +58,10 @@ function pageUnload()
 <body>                                                                          
 
 <body onload="pageLoad()" onunload="pageUnload()">
-<div id="testcontainer"></div>
+
+<table border="1" id="testcontainer">
+</table>
+
 
 </body>
 
