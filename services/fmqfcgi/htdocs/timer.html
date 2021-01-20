@@ -24,6 +24,26 @@ class TimerEntity extends FmqEntity
         var el = document.getElementById('testcontainer');
         el.innerHTML += '<tr><td width="320" align="left">' + params.time +'</td></tr>';
     }
+
+    finalmq_disconnected(src, correlationId, params)
+    {
+        var el = document.getElementById('testcontainer');
+        el.innerHTML += '<tr><td width="320" align="left">disconnected</td></tr>';
+
+        setTimeout(function (_this, src) { _this.sendEvent(src, '', {}) }, 5000, this, src);
+    }
+
+    serverdisconnected()
+    {
+        document.getElementById('testcontainer').innerHTML += '<tr><td width="320" align="left">server disconnected</td></tr>';
+    }
+
+    serverreconnected()
+    {
+        document.getElementById('testcontainer').innerHTML += '<tr><td width="320" align="left">server reconnected</td></tr>';
+
+        this.sendEvent('TimerService', '', {});
+    }
 }
 
 
@@ -33,7 +53,6 @@ var g_entity = new TimerEntity();
 
 function entityReady()
 {
-    g_entity.sendEvent('TimerService', '', {});
 }
 
 

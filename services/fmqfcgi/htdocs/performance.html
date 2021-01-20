@@ -14,33 +14,21 @@
 var g_fmqEntity = new FmqEntity();
 
 
-function printGreetings(outparams)
-{
-    var greetings = outparams.greetings;
-    var title = '<h1>Greetings</h1>';
-    var table = '<table border="1">';
-    for (i=0; i<greetings.length; i++)
-    {
-        var greeting = greetings[i];
-        table += '<tr>';
-        table += '<td width="320" align="left">' + greeting +'</td>';
-        table += '</tr>';
-    }
-    table += '</table>';
-    var el = document.getElementById('testcontainer');
-    el.innerHTML = title + '<br>' + table;
-}
-
 
 function fmqReady()
 {
+    console.log('start...');
     var inparams = {persons:[{name:"Bonnie"},{name:"Clyde"}]};
-    outparams = g_fmqEntity.requestReply('ExampleService', 'helloworld.HelloRequest', inparams, function(outparams) {
-        if (outparams.replystatus == 'STATUS_OK')
-        {
-            printGreetings(outparams);
-        }
-    });
+    for (var i=0; i<1000; ++i)
+    {
+        outparams = g_fmqEntity.requestReply('ExampleService', 'helloworld.HelloRequest', inparams/*, function(outparams, i) {
+            if (i == 999)
+            {
+                console.log('done2');
+            }
+        }, i*/);
+    }
+    console.log('done1');
 }
 
 

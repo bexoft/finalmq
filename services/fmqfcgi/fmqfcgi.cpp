@@ -58,6 +58,7 @@ using finalmq::fmqreg::GetServiceReply;
 using finalmq::fmqreg::Endpoint;
 using finalmq::remoteentity::GenericMessage;
 using finalmq::RemoteEntityContentType;
+using finalmq::PeerEvent;
 
 
 static const int LONGPOLL_RELEASE_INTERVAL = 20000;
@@ -173,32 +174,36 @@ public:
         : m_httpSessionId(httpSessionId)
     {
         streamInfo << "HTTP session created";
+
+        // register peer events to see when a remote entity connects or disconnects.
+        registerPeerEvent([this] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
+            if (peerEvent == PeerEvent::PEER_DISCONNECTED)
+            {
+                std::unique_lock<std::mutex> lock(m_mutex);
+                auto it = m_peerId2ObjectName.find(peerId);
+                if (it != m_peerId2ObjectName.end())
+                {
+                    static const std::string DATA = "{}";
+                    GenericMessage genericMessage{"finalmq.disconnected", RemoteEntityContentType::CONTENTTYPE_JSON, {DATA.data(), DATA.data() + DATA.size()}};
+                    putRequestEntry(peerId, finalmq::CORRELATIONID_NONE, genericMessage);
+                }
+            }
+        });
+
         registerCommandFunction("*", [this] (ReplyContextUPtr& replyContext, const finalmq::StructBasePtr& structBase) {
             if (structBase->getStructInfo().getTypeName() == GenericMessage::structInfo().getTypeName())
             {
-                std::unique_lock<std::mutex> lock(m_mutex);
-                finalmq::CorrelationId correlationId = replyContext->correlationId();
-                if (correlationId != finalmq::CORRELATIONID_NONE)
-                {
-                    m_pendingEntityReplies[m_nextCorrelationId] = std::move(replyContext);
-                    ++m_nextCorrelationId;
-                }
-
                 const GenericMessage& genericMessage = static_cast<GenericMessage&>(*structBase);
-                std::string entry;
-                auto it = m_peerId2ObjectName.find(replyContext->peerId());
-                if (it != m_peerId2ObjectName.end())
-                {
-                    std::string objectName = it->second;
-                    createRequestEntry(objectName, genericMessage.type, correlationId, genericMessage.data.data(), genericMessage.data.size(), entry);
-                    m_requestEntries.push_back(entry);
 
-                    if (m_longpoll)
-                    {
-                        triggerRequest(m_longpoll);
-                        m_longpoll = nullptr;
-                    }
+                std::unique_lock<std::mutex> lock(m_mutex);
+                finalmq::CorrelationId correlationIdHttp = finalmq::CORRELATIONID_NONE;
+                if (replyContext->correlationId() != finalmq::CORRELATIONID_NONE)
+                {
+                    correlationIdHttp = m_nextCorrelationId;
+                    ++m_nextCorrelationId;
+                    m_pendingEntityReplies[correlationIdHttp] = std::move(replyContext);
                 }
+                putRequestEntry(replyContext->peerId(), correlationIdHttp, genericMessage);
             }
         });
     }
@@ -210,6 +215,24 @@ public:
             disconnect(it->second);
         }
         streamInfo << "HTTP session destroyed " << m_httpSessionId;
+    }
+
+    void putRequestEntry(PeerId peerId, CorrelationId correlationIdHttp, const GenericMessage& genericMessage)
+    {
+        std::string entry;
+        auto it = m_peerId2ObjectName.find(peerId);
+        if (it != m_peerId2ObjectName.end())
+        {
+            std::string objectName = it->second;
+            createRequestEntry(objectName, genericMessage.type, correlationIdHttp, genericMessage.data.data(), genericMessage.data.size(), entry);
+            m_requestEntries.push_back(entry);
+
+            if (m_longpoll)
+            {
+                triggerRequest(m_longpoll);
+                m_longpoll = nullptr;
+            }
+        }
     }
 
     void triggerRequest(const RequestPtr& longpoll)
