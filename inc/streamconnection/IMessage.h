@@ -44,8 +44,8 @@ struct IMessage : public IZeroCopyBuffer
 
     // for send
     virtual void addSendPayload(const std::string& payload) = 0;
-    virtual void addSendPayload(const char* payload, ssize_t size) = 0;
-    virtual char* addSendPayload(ssize_t size) = 0;
+    virtual void addSendPayload(const char* payload, ssize_t size, int reserve = 0) = 0;
+    virtual char* addSendPayload(ssize_t size, ssize_t reserve = 0) = 0;
     virtual void downsizeLastSendPayload(ssize_t newSize) = 0;
 
     // for receive

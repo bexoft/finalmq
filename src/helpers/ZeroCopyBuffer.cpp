@@ -50,7 +50,7 @@ std::string ZeroCopyBuffer::getData() const
 
 
 
-char* ZeroCopyBuffer::addBuffer(ssize_t size)
+char* ZeroCopyBuffer::addBuffer(ssize_t size, ssize_t /*reserve*/)
 {
     assert(size > 0);
     std::string str;

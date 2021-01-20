@@ -41,12 +41,13 @@
 
 namespace finalmq {
 
+typedef std::function<void()>   FuncPollerLoopTimer;
 
 struct IStreamConnectionContainer
 {
     virtual ~IStreamConnectionContainer() {}
 
-    virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000) = 0;
+    virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000, FuncPollerLoopTimer funcTimer = {}) = 0;
     virtual int bind(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const BindProperties& bindProperties = {}) = 0;
     virtual void unbind(const std::string& endpoint) = 0;
     virtual IStreamConnectionPtr connect(hybrid_ptr<IStreamConnectionCallback> callback, const std::string& endpoint, const ConnectProperties& connectionProperties = {}) = 0;
@@ -89,7 +90,6 @@ private:
 };
 
 
-
 class SYMBOLEXP StreamConnectionContainer : public IStreamConnectionContainer
 {
 public:
@@ -98,7 +98,7 @@ public:
 
 private:
     // IStreamConnectionContainer
-    virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000) override;
+    virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000, FuncPollerLoopTimer funcTimer = {}) override;
     virtual int bind(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const BindProperties& bindProperties = {}) override;
     virtual void unbind(const std::string& endpoint) override;
     virtual IStreamConnectionPtr connect(hybrid_ptr<IStreamConnectionCallback> callback, const std::string& endpoint, const ConnectProperties& connectionProperties = {}) override;
@@ -130,7 +130,7 @@ private:
     void handleConnectionEvents(const IStreamConnectionPrivatePtr& connection, const SocketPtr& socket, const DescriptorInfo& info);
     void handleBindEvents(const DescriptorInfo& info);
     void handleReceive(const IStreamConnectionPrivatePtr& connection, const SocketPtr& socket, int bytesToRead);
-    bool isReconnectTimerExpired();
+    bool isTimerExpired(std::chrono::time_point<std::chrono::system_clock>& lastTime, int interval);
     void doReconnect();
 
     std::shared_ptr<IPoller>                                        m_poller;
@@ -141,11 +141,13 @@ private:
     bool                                                            m_terminatePollerLoop = false;
     CondVar                                                         m_pollerLoopTerminated;
     int                                                             m_cycleTime = 100;
-    double                                                          m_checkReconnectInterval = 1000;
+    int                                                             m_checkReconnectInterval = 1000;
     AddressResolver                                                 m_addressResolver;
+    FuncPollerLoopTimer                                                       m_funcTimer;
     mutable std::mutex                                              m_mutex;
 
     std::chrono::time_point<std::chrono::system_clock>              m_lastReconnectTime;
+    std::chrono::time_point<std::chrono::system_clock>              m_lastCycleTime;
 
 #ifdef USE_OPENSSL
     struct SslAcceptingData

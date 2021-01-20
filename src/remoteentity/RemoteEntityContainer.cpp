@@ -118,9 +118,9 @@ void RemoteEntityContainer::deinit()
 
 // IRemoteEntityContainer
 
-void RemoteEntityContainer::init(int cycleTime, int checkReconnectInterval)
+void RemoteEntityContainer::init(int cycleTime, int checkReconnectInterval, FuncPollerLoopTimer funcTimer)
 {
-    m_protocolSessionContainer->init(cycleTime, checkReconnectInterval);
+    m_protocolSessionContainer->init(cycleTime, checkReconnectInterval, std::move(funcTimer));
 }
 
 int RemoteEntityContainer::bind(const std::string& endpoint, IProtocolFactoryPtr protocolFactory, RemoteEntityContentType contentType, const BindProperties& bindProperties)
@@ -342,7 +342,6 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
             if (!structBase && header.status == Status::STATUS_OK && !header.type.empty())
             {
                 header.status = Status::STATUS_REPLYTYPE_NOT_KNOWN;
-                header.type = "";
             }
             entity->receivedReply(session, header, structBase);
         }

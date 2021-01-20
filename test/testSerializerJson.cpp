@@ -66,7 +66,7 @@ protected:
         static const int MAX_BLOCK_SIZE = 500;
 
         m_data.resize(MAX_BLOCK_SIZE);
-        EXPECT_CALL(m_mockBuffer, addBuffer(MAX_BLOCK_SIZE)).Times(1).WillOnce(Return((char*)m_data.data()));
+        EXPECT_CALL(m_mockBuffer, addBuffer(MAX_BLOCK_SIZE, _)).Times(1).WillOnce(Return((char*)m_data.data()));
         EXPECT_CALL(m_mockBuffer, downsizeLastBuffer(_)).Times(1).WillOnce(Invoke(&m_data, &String::resize));
 
         m_serializer = std::make_unique<SerializerJson>(m_mockBuffer, MAX_BLOCK_SIZE);

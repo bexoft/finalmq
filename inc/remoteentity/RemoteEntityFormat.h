@@ -70,7 +70,7 @@ public:
 
     static void serializeProto(IMessage& message, const remoteentity::Header& header);
     static void serializeProto(IMessage& message, const remoteentity::Header& header, const StructBase& structBase);
-    static void serializeJson(IMessage& message, const remoteentity::Header& header);
+    static void serializeJson(IMessage& message, const remoteentity::Header& header, bool structBaseAvailable);
     static void serializeJson(IMessage& message, const remoteentity::Header& header, const StructBase& structBase);
     static void serialize(IMessage& message, int contentType, const remoteentity::Header& header);
     static void serialize(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase& structBase);

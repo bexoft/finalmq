@@ -1,0 +1,62 @@
+<html>                                                                          
+
+
+<head>                                                                          
+
+<script type="text/javascript" src="json2.js"></script>
+<script type="text/javascript" src="fmq.js"></script>
+
+                                                                                
+<script type="text/javascript" >
+
+//////////////////////////////////////////////////////////////////////
+
+var g_fmqEntity = new FmqEntity();
+
+
+
+function fmqReady()
+{
+    console.log('start...');
+    var inparams = {persons:[{name:"Bonnie"},{name:"Clyde"}]};
+    for (var i=0; i<1000; ++i)
+    {
+        outparams = g_fmqEntity.requestReply('ExampleService', 'helloworld.HelloRequest', inparams/*, function(outparams, i) {
+            if (i == 999)
+            {
+                console.log('done2');
+            }
+        }, i*/);
+    }
+    console.log('done1');
+}
+
+
+function pageLoad()
+{
+    g_fmqEntity.createEntity(function() {
+        fmqReady();
+    });
+}
+
+function pageUnload()
+{
+    g_fmqEntity.removeEntity(function() {});
+}
+
+                                                                           
+</script>                                                                       
+                                                                          
+</head>
+
+                                                               
+<body>                                                                          
+
+<body onload="pageLoad()" onunload="pageUnload()">
+<div id="testcontainer"></div>
+
+</body>
+
+
+</html>
+       

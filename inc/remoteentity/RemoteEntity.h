@@ -126,6 +126,7 @@ struct IRemoteEntity
     virtual std::vector<PeerId> getAllPeers() const = 0;
     virtual void registerPeerEvent(FuncPeerEvent funcPeerEvent) = 0;
     virtual EntityId getEntityId() const = 0;
+    virtual IProtocolSessionPtr getSession(PeerId peerId) const = 0;
 
     // low level methods
     virtual PeerId createPeer(FuncReplyConnect funcReplyConnect = {}) = 0;
@@ -166,8 +167,8 @@ public:
 
     struct Request
     {
-        StructBasePtr structBase;
-        CorrelationId correlationId = CORRELATIONID_NONE;
+        StructBasePtr   structBase;
+        CorrelationId   correlationId = CORRELATIONID_NONE;
     };
 
     PeerManager();
@@ -183,6 +184,7 @@ public:
     std::deque<PeerManager::Request> connect(PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName);
     void setEntityId(EntityId entityId);
     void setPeerEvent(const std::shared_ptr<FuncPeerEvent>& funcPeerEvent);
+    IProtocolSessionPtr getSession(PeerId peerId) const;
 
 private:
     void removePeerFromSessionEntityToPeerId(std::int64_t sessionId, EntityId entityId, const std::string& entityName);
@@ -252,6 +254,11 @@ public:
         }
     }
 
+    inline CorrelationId correlationId() const
+    {
+        return m_correlationId;
+    }
+
 private:
     void reply(remoteentity::Status status)
     {
@@ -307,6 +314,7 @@ public:
     virtual std::vector<PeerId> getAllPeers() const override;
     virtual void registerPeerEvent(FuncPeerEvent funcPeerEvent) override;
     virtual EntityId getEntityId() const override;
+    virtual IProtocolSessionPtr getSession(PeerId peerId) const override;
     virtual PeerId createPeer(FuncReplyConnect funcReplyConnect = {}) override;
     virtual void connect(PeerId peerId, const IProtocolSessionPtr& session, const std::string& entityName) override;
     virtual void connect(PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId) override;
@@ -339,8 +347,8 @@ private:
             , func(func_)
         {
         }
-        PeerId                      peerId = PEERID_INVALID;
-        std::shared_ptr<FuncReply>  func;
+        PeerId                          peerId = PEERID_INVALID;
+        std::shared_ptr<FuncReply>      func;
     };
 
     EntityId                            m_entityId = 0;
