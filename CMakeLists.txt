@@ -71,27 +71,27 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/inc)
 
 SET(CODEGENERATOR_CPP ${CODEGENERATOR}/cpp/cpp.js)
 
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/inc/metadataserialize)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/metadataserialize)
 add_custom_command(
-    COMMAND node ${CODEGENERATOR_CPP} --input=${CMAKE_CURRENT_SOURCE_DIR}/inc/metadataserialize/metadata.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}/inc/metadataserialize --exportmacro=EXPORT_finalmq
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/inc/metadataserialize/metadata.fmq
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/inc/metadataserialize/metadata.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/inc/metadataserialize/metadata.fmq.h
+    COMMAND node ${CODEGENERATOR_CPP} --input=${CMAKE_CURRENT_SOURCE_DIR}/inc/finalmq/metadataserialize/metadata.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/metadataserialize --exportmacro=EXPORT_finalmq
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/inc/finalmq/metadataserialize/metadata.fmq
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/metadataserialize/metadata.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/metadataserialize/metadata.fmq.h
     COMMENT "Generating cpp code out of metadata.fmq."
 )
 
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/inc/remoteentity)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/remoteentity)
 add_custom_command(
-    COMMAND node ${CODEGENERATOR_CPP} --input=${CMAKE_CURRENT_SOURCE_DIR}/inc/remoteentity/entitydata.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}/inc/remoteentity --exportmacro=EXPORT_finalmq
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/inc/remoteentity/entitydata.fmq
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/inc/remoteentity/entitydata.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/inc/remoteentity/entitydata.fmq.h
+    COMMAND node ${CODEGENERATOR_CPP} --input=${CMAKE_CURRENT_SOURCE_DIR}/inc/finalmq/remoteentity/entitydata.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/remoteentity --exportmacro=EXPORT_finalmq
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/inc/finalmq/remoteentity/entitydata.fmq
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/remoteentity/entitydata.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/remoteentity/entitydata.fmq.h
     COMMENT "Generating cpp code out of entitydata.fmq."
 )
 
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/inc/interfaces)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/interfaces)
 add_custom_command(
-    COMMAND node ${CODEGENERATOR_CPP} --input=${CMAKE_CURRENT_SOURCE_DIR}/inc/interfaces/fmqreg.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}/inc/interfaces --exportmacro=EXPORT_finalmq
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/inc/interfaces/fmqreg.fmq
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/inc/interfaces/fmqreg.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/inc/interfaces/fmqreg.fmq.h
+    COMMAND node ${CODEGENERATOR_CPP} --input=${CMAKE_CURRENT_SOURCE_DIR}/inc/finalmq/interfaces/fmqreg.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/interfaces --exportmacro=EXPORT_finalmq
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/inc/finalmq/interfaces/fmqreg.fmq
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/interfaces/fmqreg.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/interfaces/fmqreg.fmq.h
     COMMENT "Generating cpp code out of fmqreg.fmq."
 )
 
@@ -101,32 +101,32 @@ add_custom_command(
 include_directories(inc)
 
 #However, the file(GLOB...) allows for wildcard additions:
-file(GLOB SOURCES "src/*.cpp" "inc/*.h"
-                  "src/helpers/*.cpp" "inc/helpers/*.h"
-                  "src/json/*.cpp" "inc/json/*.h"
-                  "src/logger/*.cpp" "inc/logger/*.h"
-                  "src/metadata/*.cpp" "inc/metadata/*.h"
-                  "src/metadataserialize/*.cpp" "inc/metadataserialize/*.h"
-                  "src/poller/*.cpp" "inc/poller/*.h"
-                  "src/streamconnection/*.cpp" "inc/streamconnection/*.h"
-                  "src/protocolconnection/*.cpp" "inc/protocolconnection/*.h"
-                  "src/protocols/*.cpp" "inc/protocols/*.h"
-                  "src/remoteentity/*.cpp" "inc/remoteentity/*.h"
-                  "src/connectionhub/*.cpp" "inc/connectionhub/*.h"
-                  "src/serialize/*.cpp" "inc/serialize/*.h"
-                  "src/serializeproto/*.cpp" "inc/serializeproto/*.h"
-                  "src/serializejson/*.cpp" "inc/serializejson/*.h"
-                  "src/serializevariant/*.cpp" "inc/serializevariant/*.h"
-                  "src/serializestruct/*.cpp" "inc/serializestruct/*.h"
-                  "src/variant/*.cpp" "inc/variant/*.h"
-                  "inc/conversions/*.h"
+file(GLOB SOURCES "src/*.cpp" "inc/finalmq/*.h"
+                  "src/helpers/*.cpp" "inc/finalmq/helpers/*.h"
+                  "src/json/*.cpp" "inc/finalmq/json/*.h"
+                  "src/logger/*.cpp" "inc/finalmq/logger/*.h"
+                  "src/metadata/*.cpp" "inc/finalmq/metadata/*.h"
+                  "src/metadataserialize/*.cpp" "inc/finalmq/metadataserialize/*.h"
+                  "src/poller/*.cpp" "inc/finalmq/poller/*.h"
+                  "src/streamconnection/*.cpp" "inc/finalmq/streamconnection/*.h"
+                  "src/protocolconnection/*.cpp" "inc/finalmq/protocolconnection/*.h"
+                  "src/protocols/*.cpp" "inc/finalmq/protocols/*.h"
+                  "src/remoteentity/*.cpp" "inc/finalmq/remoteentity/*.h"
+                  "src/connectionhub/*.cpp" "inc/finalmq/connectionhub/*.h"
+                  "src/serialize/*.cpp" "inc/finalmq/serialize/*.h"
+                  "src/serializeproto/*.cpp" "inc/finalmq/serializeproto/*.h"
+                  "src/serializejson/*.cpp" "inc/finalmq/serializejson/*.h"
+                  "src/serializevariant/*.cpp" "inc/finalmq/serializevariant/*.h"
+                  "src/serializestruct/*.cpp" "inc/finalmq/serializestruct/*.h"
+                  "src/variant/*.cpp" "inc/finalmq/variant/*.h"
+                  "inc/finalmq/conversions/*.h"
                   "mock/*.h")
 
 #Generate the shared library from the sources
 add_library(finalmq SHARED ${SOURCES}
-    ${CMAKE_CURRENT_BINARY_DIR}/inc/metadataserialize/metadata.fmq.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/inc/remoteentity/entitydata.fmq.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/inc/interfaces/fmqreg.fmq.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/metadataserialize/metadata.fmq.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/remoteentity/entitydata.fmq.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/interfaces/fmqreg.fmq.cpp
     )
 
 

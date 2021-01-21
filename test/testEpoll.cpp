@@ -26,8 +26,8 @@
 #include "gmock/gmock.h"
 
 
-#include "poller/PollerImplEpoll.h"
-#include "helpers/OperatingSystem.h"
+#include "finalmq/poller/PollerImplEpoll.h"
+#include "finalmq/helpers/OperatingSystem.h"
 
 
 #include "MockIOperatingSystem.h"

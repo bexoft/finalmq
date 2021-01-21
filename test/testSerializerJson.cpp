@@ -24,8 +24,8 @@
 #include "gmock/gmock.h"
 
 
-#include "serializejson/SerializerJson.h"
-#include "metadata/MetaData.h"
+#include "finalmq/serializejson/SerializerJson.h"
+#include "finalmq/metadata/MetaData.h"
 #include "MockIZeroCopyBuffer.h"
 #include "test.pb.h"
 

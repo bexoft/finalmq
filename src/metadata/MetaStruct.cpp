@@ -21,7 +21,7 @@
 //SOFTWARE.
 
 
-#include "metadata/MetaStruct.h"
+#include "finalmq/metadata/MetaStruct.h"
 
 namespace finalmq {
 

@@ -24,11 +24,11 @@
 #include "gmock/gmock.h"
 
 
-#include "variant/VariantValueStruct.h"
-#include "variant/VariantValueList.h"
-#include "variant/VariantValues.h"
-#include "variant/Variant.h"
-#include "conversions/Conversions.h"
+#include "finalmq/variant/VariantValueStruct.h"
+#include "finalmq/variant/VariantValueList.h"
+#include "finalmq/variant/VariantValues.h"
+#include "finalmq/variant/Variant.h"
+#include "finalmq/conversions/Conversions.h"
 
 
 //using ::testing::_;

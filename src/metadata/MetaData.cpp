@@ -21,9 +21,9 @@
 //SOFTWARE.
 
 
-#include "metadata/MetaData.h"
-#include "logger/LogStream.h"
-#include "helpers/ModulenameFinalmq.h"
+#include "finalmq/metadata/MetaData.h"
+#include "finalmq/logger/LogStream.h"
+#include "finalmq/helpers/ModulenameFinalmq.h"
 
 #include <assert.h>
 #include <iostream>

@@ -20,9 +20,9 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#include "streamconnection/AddressHelpers.h"
-#include "logger/LogStream.h"
-#include "helpers/ModulenameFinalmq.h"
+#include "finalmq/streamconnection/AddressHelpers.h"
+#include "finalmq/logger/LogStream.h"
+#include "finalmq/helpers/ModulenameFinalmq.h"
 #include <assert.h>
 
 #if defined(WIN32) || defined(__MINGW32__)

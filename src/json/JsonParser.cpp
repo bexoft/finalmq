@@ -20,8 +20,8 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#include "json/JsonParser.h"
-#include "helpers/BexDefines.h"
+#include "finalmq/json/JsonParser.h"
+#include "finalmq/helpers/BexDefines.h"
 
 #include <string>
 #include <climits>

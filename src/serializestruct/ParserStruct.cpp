@@ -21,8 +21,8 @@
 //SOFTWARE.
 
 
-#include "serializestruct/ParserStruct.h"
-#include "metadata/MetaData.h"
+#include "finalmq/serializestruct/ParserStruct.h"
+#include "finalmq/metadata/MetaData.h"
 
 #include <assert.h>
 

@@ -24,8 +24,8 @@
 #include "gmock/gmock.h"
 
 
-#include "serializestruct/ParserStruct.h"
-#include "metadata/MetaData.h"
+#include "finalmq/serializestruct/ParserStruct.h"
+#include "finalmq/metadata/MetaData.h"
 #include "test.fmq.h"
 #include "MockIParserVisitor.h"
 

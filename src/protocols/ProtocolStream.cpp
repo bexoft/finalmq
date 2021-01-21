@@ -21,9 +21,9 @@
 //SOFTWARE.
 
 
-#include "protocols/ProtocolStream.h"
-#include "protocolconnection/ProtocolMessage.h"
-#include "streamconnection/Socket.h"
+#include "finalmq/protocols/ProtocolStream.h"
+#include "finalmq/protocolconnection/ProtocolMessage.h"
+#include "finalmq/streamconnection/Socket.h"
 
 
 namespace finalmq {

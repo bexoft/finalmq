@@ -20,19 +20,19 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#include "remoteentity/RemoteEntityFormat.h"
-#include "remoteentity/entitydata.fmq.h"
+#include "finalmq/remoteentity/RemoteEntityFormat.h"
+#include "finalmq/remoteentity/entitydata.fmq.h"
 
-#include "serializeproto/SerializerProto.h"
-#include "serializejson/SerializerJson.h"
-#include "serializestruct/ParserStruct.h"
+#include "finalmq/serializeproto/SerializerProto.h"
+#include "finalmq/serializejson/SerializerJson.h"
+#include "finalmq/serializestruct/ParserStruct.h"
 
-#include "serializeproto/ParserProto.h"
-#include "serializejson/ParserJson.h"
-#include "serializestruct/SerializerStruct.h"
-#include "serializestruct/StructFactoryRegistry.h"
+#include "finalmq/serializeproto/ParserProto.h"
+#include "finalmq/serializejson/ParserJson.h"
+#include "finalmq/serializestruct/SerializerStruct.h"
+#include "finalmq/serializestruct/StructFactoryRegistry.h"
 
-#include "helpers/ModulenameFinalmq.h"
+#include "finalmq/helpers/ModulenameFinalmq.h"
 
 
 using finalmq::remoteentity::MsgMode;

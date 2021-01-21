@@ -24,12 +24,12 @@
 #include "gmock/gmock.h"
 
 
-#include "protocolconnection/ProtocolSessionContainer.h"
+#include "finalmq/protocolconnection/ProtocolSessionContainer.h"
 #include "MockIProtocolSessionCallback.h"
-#include "protocols/ProtocolDelimiter.h"
-#include "protocols/ProtocolStream.h"
+#include "finalmq/protocols/ProtocolDelimiter.h"
+#include "finalmq/protocols/ProtocolStream.h"
 #include "testHelper.h"
-#include "connectionhub/ConnectionHub.h"
+#include "finalmq/connectionhub/ConnectionHub.h"
 
 #include <thread>
 #include <chrono>

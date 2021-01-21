@@ -20,7 +20,7 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#include "variant/Variant.h"
+#include "finalmq/variant/Variant.h"
 
 
 namespace finalmq {

@@ -23,9 +23,9 @@
 #include "gtest/gtest.h"
 
 
-#include "protocolconnection/ProtocolSessionContainer.h"
+#include "finalmq/protocolconnection/ProtocolSessionContainer.h"
 #include "MockIProtocolSessionCallback.h"
-#include "protocols/ProtocolStream.h"
+#include "finalmq/protocols/ProtocolStream.h"
 #include "testHelper.h"
 
 #include <thread>

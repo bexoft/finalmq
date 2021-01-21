@@ -22,10 +22,10 @@
 
 
 
-#include "streamconnection/Socket.h"
-#include "helpers/OperatingSystem.h"
-#include "logger/LogStream.h"
-#include "helpers/ModulenameFinalmq.h"
+#include "finalmq/streamconnection/Socket.h"
+#include "finalmq/helpers/OperatingSystem.h"
+#include "finalmq/logger/LogStream.h"
+#include "finalmq/helpers/ModulenameFinalmq.h"
 
 
 #include <errno.h>

@@ -22,11 +22,11 @@
 
 #if !defined(WIN32) && !defined(__MINGW32__)
 
-#include "poller/PollerImplEpoll.h"
+#include "finalmq/poller/PollerImplEpoll.h"
 
-#include "helpers/OperatingSystem.h"
-#include "helpers/ModulenameFinalmq.h"
-#include "logger/LogStream.h"
+#include "finalmq/helpers/OperatingSystem.h"
+#include "finalmq/helpers/ModulenameFinalmq.h"
+#include "finalmq/logger/LogStream.h"
 
 
 #include <netinet/tcp.h>

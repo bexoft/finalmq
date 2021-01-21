@@ -23,7 +23,7 @@
 #pragma once
 
 
-#include "streamconnection/StreamConnectionContainer.h"
+#include "finalmq/streamconnection/StreamConnectionContainer.h"
 
 
 #include "gmock/gmock.h"

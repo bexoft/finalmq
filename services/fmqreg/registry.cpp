@@ -21,7 +21,7 @@
 //SOFTWARE.
 
 #include "registry.h"
-#include "logger/LogStream.h"
+#include "finalmq/logger/LogStream.h"
 
 #define MODULENAME "FmqRegistry"
 

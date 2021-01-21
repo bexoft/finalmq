@@ -24,8 +24,8 @@
 #include "gmock/gmock.h"
 
 
-#include "helpers/BexDefines.h"
-#include "json/JsonParser.h"
+#include "finalmq/helpers/BexDefines.h"
+#include "finalmq/json/JsonParser.h"
 #include "MockIJsonParserVisitor.h"
 
 using ::testing::_;

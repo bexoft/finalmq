@@ -20,8 +20,8 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#include "remoteentity/RemoteEntity.h"
-#include "interfaces/fmqreg.fmq.h"
+#include "finalmq/remoteentity/RemoteEntity.h"
+#include "finalmq/interfaces/fmqreg.fmq.h"
 
 
 

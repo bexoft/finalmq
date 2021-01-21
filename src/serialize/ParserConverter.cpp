@@ -21,13 +21,13 @@
 //SOFTWARE.
 
 
-#include "serialize/ParserConverter.h"
-#include "metadata/MetaData.h"
-#include "logger/LogStream.h"
-#include "helpers/ModulenameFinalmq.h"
+#include "finalmq/serialize/ParserConverter.h"
+#include "finalmq/metadata/MetaData.h"
+#include "finalmq/logger/LogStream.h"
+#include "finalmq/helpers/ModulenameFinalmq.h"
 
-#include "conversions/itoa.h"
-#include "conversions/dtoa.h"
+#include "finalmq/conversions/itoa.h"
+#include "finalmq/conversions/dtoa.h"
 
 #include <assert.h>
 #include <iostream>

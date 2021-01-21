@@ -21,7 +21,7 @@
 //SOFTWARE.
 
 
-#include "metadata/MetaEnum.h"
+#include "finalmq/metadata/MetaEnum.h"
 
 namespace finalmq {
 

@@ -24,8 +24,8 @@
 #include "gmock/gmock.h"
 
 
-#include "serializeproto/ParserProto.h"
-#include "metadata/MetaData.h"
+#include "finalmq/serializeproto/ParserProto.h"
+#include "finalmq/metadata/MetaData.h"
 #include "MockIParserVisitor.h"
 #include "test.pb.h"
 

@@ -21,14 +21,14 @@
 //SOFTWARE.
 
 
-#include "streamconnection/StreamConnectionContainer.h"
-#include "streamconnection/Socket.h"
-#include "streamconnection/AddressHelpers.h"
+#include "finalmq/streamconnection/StreamConnectionContainer.h"
+#include "finalmq/streamconnection/Socket.h"
+#include "finalmq/streamconnection/AddressHelpers.h"
 
 #if defined(WIN32) || defined(__MINGW32__)
-#include "poller/PollerImplSelect.h"
+#include "finalmq/poller/PollerImplSelect.h"
 #else
-#include "poller/PollerImplEpoll.h"
+#include "finalmq/poller/PollerImplEpoll.h"
 #endif
 
 #if !defined(WIN32) && !defined(__MINGW32__)

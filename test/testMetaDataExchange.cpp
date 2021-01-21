@@ -24,15 +24,15 @@
 #include "gmock/gmock.h"
 
 
-#include "metadataserialize/MetaDataExchange.h"
-#include "metadata/MetaData.h"
+#include "finalmq/metadataserialize/MetaDataExchange.h"
+#include "finalmq/metadata/MetaData.h"
 
-#include "serializestruct/ParserStruct.h"
-#include "serializestruct/SerializerStruct.h"
-#include "serializejson/ParserJson.h"
-#include "serializeproto/ParserProto.h"
-#include "serializeproto/SerializerProto.h"
-#include "helpers/ZeroCopyBuffer.h"
+#include "finalmq/serializestruct/ParserStruct.h"
+#include "finalmq/serializestruct/SerializerStruct.h"
+#include "finalmq/serializejson/ParserJson.h"
+#include "finalmq/serializeproto/ParserProto.h"
+#include "finalmq/serializeproto/SerializerProto.h"
+#include "finalmq/helpers/ZeroCopyBuffer.h"
 
 
 using ::testing::_;

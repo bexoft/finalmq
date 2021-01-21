@@ -20,9 +20,9 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#include "remoteentity/RemoteEntity.h"
-#include "protocolconnection/ProtocolMessage.h"
-#include "helpers/ModulenameFinalmq.h"
+#include "finalmq/remoteentity/RemoteEntity.h"
+#include "finalmq/protocolconnection/ProtocolMessage.h"
+#include "finalmq/helpers/ModulenameFinalmq.h"
 
 #include <algorithm>
 

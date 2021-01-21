@@ -24,8 +24,8 @@
 #include "gmock/gmock.h"
 
 
-#include "serializejson/ParserJson.h"
-#include "metadata/MetaData.h"
+#include "finalmq/serializejson/ParserJson.h"
+#include "finalmq/metadata/MetaData.h"
 #include "MockIParserVisitor.h"
 
 //#include <thread>
