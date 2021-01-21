@@ -22,8 +22,8 @@
 
 
 
-#include "helpers/SocketDescriptor.h"
-#include "helpers/OperatingSystem.h"
+#include "finalmq/helpers/SocketDescriptor.h"
+#include "finalmq/helpers/OperatingSystem.h"
 
 
 namespace finalmq {

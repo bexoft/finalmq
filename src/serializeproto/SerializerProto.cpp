@@ -21,11 +21,11 @@
 //SOFTWARE.
 
 
-#include "serializeproto/SerializerProto.h"
-#include "metadata/MetaData.h"
-#include "helpers/BexDefines.h"
-#include "helpers/ModulenameFinalmq.h"
-#include "logger/LogStream.h"
+#include "finalmq/serializeproto/SerializerProto.h"
+#include "finalmq/metadata/MetaData.h"
+#include "finalmq/helpers/BexDefines.h"
+#include "finalmq/helpers/ModulenameFinalmq.h"
+#include "finalmq/logger/LogStream.h"
 
 #include <assert.h>
 #include <memory.h>

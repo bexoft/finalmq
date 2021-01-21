@@ -23,11 +23,11 @@
 #include "gtest/gtest.h"
 
 
-#include "streamconnection/StreamConnectionContainer.h"
+#include "finalmq/streamconnection/StreamConnectionContainer.h"
 #include "MockIStreamConnectionCallback.h"
-#include "helpers/OperatingSystem.h"
-#include "protocols/ProtocolStream.h"
-#include "protocolconnection/ProtocolMessage.h"
+#include "finalmq/helpers/OperatingSystem.h"
+#include "finalmq/protocols/ProtocolStream.h"
+#include "finalmq/protocolconnection/ProtocolMessage.h"
 #include "testHelper.h"
 
 #include <thread>

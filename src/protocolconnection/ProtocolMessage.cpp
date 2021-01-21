@@ -21,7 +21,7 @@
 //SOFTWARE.
 
 
-#include "protocolconnection/ProtocolMessage.h"
+#include "finalmq/protocolconnection/ProtocolMessage.h"
 
 
 namespace finalmq {

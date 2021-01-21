@@ -24,8 +24,8 @@
 #include "gmock/gmock.h"
 
 
-#include "serializeproto/SerializerProto.h"
-#include "metadata/MetaData.h"
+#include "finalmq/serializeproto/SerializerProto.h"
+#include "finalmq/metadata/MetaData.h"
 #include "MockIZeroCopyBuffer.h"
 #include "test.pb.h"
 

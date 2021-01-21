@@ -20,11 +20,11 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#include "remoteentity/RemoteEntityContainer.h"
-#include "remoteentity/FmqRegistryClient.h"
-#include "protocols/ProtocolHeaderBinarySize.h"
-#include "protocols/ProtocolDelimiter.h"
-#include "logger/Logger.h"
+#include "finalmq/remoteentity/RemoteEntityContainer.h"
+#include "finalmq/remoteentity/FmqRegistryClient.h"
+#include "finalmq/protocols/ProtocolHeaderBinarySize.h"
+#include "finalmq/protocols/ProtocolDelimiter.h"
+#include "finalmq/logger/Logger.h"
 
 // the definition of the messages are in the file helloworld.fmq
 #include "registry.fmq.h"

@@ -24,8 +24,8 @@
 #include "gmock/gmock.h"
 
 
-#include "helpers/BexDefines.h"
-#include "json/JsonBuilder.h"
+#include "finalmq/helpers/BexDefines.h"
+#include "finalmq/json/JsonBuilder.h"
 #include "MockIZeroCopyBuffer.h"
 
 using ::testing::_;

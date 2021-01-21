@@ -20,9 +20,9 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#include "serializestruct/StructBase.h"
-#include "serializestruct/StructFactoryRegistry.h"
-#include "metadata/MetaData.h"
+#include "finalmq/serializestruct/StructBase.h"
+#include "finalmq/serializestruct/StructFactoryRegistry.h"
+#include "finalmq/metadata/MetaData.h"
 
 #include <algorithm>
 

@@ -20,12 +20,12 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#include "remoteentity/RemoteEntityContainer.h"
-#include "protocols/ProtocolHeaderBinarySize.h"
-#include "protocols/ProtocolDelimiter.h"
-#include "helpers/ModulenameFinalmq.h"
+#include "finalmq/remoteentity/RemoteEntityContainer.h"
+#include "finalmq/protocols/ProtocolHeaderBinarySize.h"
+#include "finalmq/protocols/ProtocolDelimiter.h"
+#include "finalmq/helpers/ModulenameFinalmq.h"
 
-#include "remoteentity/entitydata.fmq.h"
+#include "finalmq/remoteentity/entitydata.fmq.h"
 
 
 using finalmq::remoteentity::MsgMode;

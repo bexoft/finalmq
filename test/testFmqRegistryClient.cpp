@@ -24,10 +24,10 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
-#include "remoteentity/RemoteEntityContainer.h"
-#include "protocols/ProtocolHeaderBinarySize.h"
+#include "finalmq/remoteentity/RemoteEntityContainer.h"
+#include "finalmq/protocols/ProtocolHeaderBinarySize.h"
 
-#include "remoteentity/FmqRegistryClient.h"
+#include "finalmq/remoteentity/FmqRegistryClient.h"
 #include "../services/fmqreg/registry.h"
 
 #include "test.fmq.h"

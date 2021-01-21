@@ -20,15 +20,15 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#include "metadataserialize/MetaDataExchange.h"
-#include "metadata/MetaData.h"
-#include "serializejson/ParserJson.h"
-#include "serializejson/SerializerJson.h"
-#include "serializeproto/ParserProto.h"
-#include "serializeproto/SerializerProto.h"
-#include "serializestruct/SerializerStruct.h"
-#include "serializestruct/ParserStruct.h"
-#include "helpers/ZeroCopyBuffer.h"
+#include "finalmq/metadataserialize/MetaDataExchange.h"
+#include "finalmq/metadata/MetaData.h"
+#include "finalmq/serializejson/ParserJson.h"
+#include "finalmq/serializejson/SerializerJson.h"
+#include "finalmq/serializeproto/ParserProto.h"
+#include "finalmq/serializeproto/SerializerProto.h"
+#include "finalmq/serializestruct/SerializerStruct.h"
+#include "finalmq/serializestruct/ParserStruct.h"
+#include "finalmq/helpers/ZeroCopyBuffer.h"
 
 #include <algorithm>
 

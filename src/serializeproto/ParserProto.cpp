@@ -21,9 +21,9 @@
 //SOFTWARE.
 
 
-#include "serializeproto/ParserProto.h"
-#include "metadata/MetaData.h"
-#include "helpers/BexDefines.h"
+#include "finalmq/serializeproto/ParserProto.h"
+#include "finalmq/metadata/MetaData.h"
+#include "finalmq/helpers/BexDefines.h"
 
 
 #include <assert.h>

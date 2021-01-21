@@ -22,9 +22,9 @@
 
 #ifdef USE_OPENSSL
 
-#include "streamconnection/OpenSsl.h"
-#include "logger/LogStream.h"
-#include "helpers/ModulenameFinalmq.h"
+#include "finalmq/streamconnection/OpenSsl.h"
+#include "finalmq/logger/LogStream.h"
+#include "finalmq/helpers/ModulenameFinalmq.h"
 
 #include <iostream>
 

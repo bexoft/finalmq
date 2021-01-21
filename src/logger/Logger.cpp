@@ -20,7 +20,7 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#include "logger/Logger.h"
+#include "finalmq/logger/Logger.h"
 
 
 namespace finalmq {

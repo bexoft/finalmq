@@ -21,8 +21,8 @@
 //SOFTWARE.
 
 
-#include "streamconnection/StreamConnection.h"
-#include "streamconnection/AddressHelpers.h"
+#include "finalmq/streamconnection/StreamConnection.h"
+#include "finalmq/streamconnection/AddressHelpers.h"
 #include <thread>
 
 

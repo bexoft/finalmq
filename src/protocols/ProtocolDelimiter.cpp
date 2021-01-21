@@ -21,9 +21,9 @@
 //SOFTWARE.
 
 
-#include "protocols/ProtocolDelimiter.h"
-#include "protocolconnection/ProtocolMessage.h"
-#include "streamconnection/Socket.h"
+#include "finalmq/protocols/ProtocolDelimiter.h"
+#include "finalmq/protocolconnection/ProtocolMessage.h"
+#include "finalmq/streamconnection/Socket.h"
 
 
 namespace finalmq {

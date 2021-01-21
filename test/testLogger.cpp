@@ -24,7 +24,7 @@
 #include "gmock/gmock.h"
 
 
-#include "logger/LogStream.h"
+#include "finalmq/logger/LogStream.h"
 
 
 using testing::StrEq;

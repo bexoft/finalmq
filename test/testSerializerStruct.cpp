@@ -24,8 +24,8 @@
 #include "gmock/gmock.h"
 
 
-#include "serializestruct/SerializerStruct.h"
-#include "metadata/MetaField.h"
+#include "finalmq/serializestruct/SerializerStruct.h"
+#include "finalmq/metadata/MetaField.h"
 #include "test.fmq.h"
 
 

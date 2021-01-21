@@ -24,11 +24,11 @@
 #include "gmock/gmock.h"
 
 
-#include "serializevariant/ParserVariant.h"
-#include "variant/VariantValueStruct.h"
-#include "variant/VariantValueList.h"
-#include "variant/VariantValues.h"
-#include "metadata/MetaData.h"
+#include "finalmq/serializevariant/ParserVariant.h"
+#include "finalmq/variant/VariantValueStruct.h"
+#include "finalmq/variant/VariantValueList.h"
+#include "finalmq/variant/VariantValues.h"
+#include "finalmq/metadata/MetaData.h"
 #include "MockIParserVisitor.h"
 
 //#include <thread>

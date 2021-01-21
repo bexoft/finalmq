@@ -20,9 +20,9 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#include "remoteentity/FmqRegistryClient.h"
-#include "protocols/ProtocolHeaderBinarySize.h"
-#include "protocols/ProtocolDelimiter.h"
+#include "finalmq/remoteentity/FmqRegistryClient.h"
+#include "finalmq/protocols/ProtocolHeaderBinarySize.h"
+#include "finalmq/protocols/ProtocolDelimiter.h"
 
 #include <thread>
 

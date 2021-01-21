@@ -26,10 +26,10 @@
 #include "gmock/gmock.h"
 
 
-#include "remoteentity/RemoteEntityContainer.h"
-#include "protocols/ProtocolHeaderBinarySize.h"
-#include "protocols/ProtocolDelimiter.h"
-#include "logger/Logger.h"
+#include "finalmq/remoteentity/RemoteEntityContainer.h"
+#include "finalmq/protocols/ProtocolHeaderBinarySize.h"
+#include "finalmq/protocols/ProtocolDelimiter.h"
+#include "finalmq/logger/Logger.h"
 #include "test.fmq.h"
 
 #include "testHelper.h"

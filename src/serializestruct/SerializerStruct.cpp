@@ -21,12 +21,12 @@
 //SOFTWARE.
 
 
-#include "serializestruct/SerializerStruct.h"
-#include "serialize/ParserProcessDefaultValues.h"
-#include "metadata/MetaData.h"
-#include "variant/VariantValueStruct.h"
-#include "variant/VariantValueList.h"
-#include "variant/VariantValues.h"
+#include "finalmq/serializestruct/SerializerStruct.h"
+#include "finalmq/serialize/ParserProcessDefaultValues.h"
+#include "finalmq/metadata/MetaData.h"
+#include "finalmq/variant/VariantValueStruct.h"
+#include "finalmq/variant/VariantValueList.h"
+#include "finalmq/variant/VariantValues.h"
 
 #include <assert.h>
 #include <algorithm>

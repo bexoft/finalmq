@@ -21,11 +21,11 @@
 //SOFTWARE.
 
 
-#include "serialize/ParserProcessDefaultValues.h"
-#include "metadata/MetaData.h"
+#include "finalmq/serialize/ParserProcessDefaultValues.h"
+#include "finalmq/metadata/MetaData.h"
 
-#include "conversions/itoa.h"
-#include "conversions/dtoa.h"
+#include "finalmq/conversions/itoa.h"
+#include "finalmq/conversions/dtoa.h"
 
 #include <assert.h>
 #include <iostream>

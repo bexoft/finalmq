@@ -21,10 +21,10 @@
 //SOFTWARE.
 
 
-#include "serializevariant/ParserVariant.h"
-#include "metadata/MetaData.h"
-#include "variant/VariantValues.h"
-#include "variant/VariantValueList.h"
+#include "finalmq/serializevariant/ParserVariant.h"
+#include "finalmq/metadata/MetaData.h"
+#include "finalmq/variant/VariantValues.h"
+#include "finalmq/variant/VariantValueList.h"
 
 #include <assert.h>
 

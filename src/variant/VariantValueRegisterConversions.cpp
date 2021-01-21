@@ -22,10 +22,10 @@
 
 
 
-#include "variant/VariantValueRegisterConversions.h"
+#include "finalmq/variant/VariantValueRegisterConversions.h"
 
-#include "variant/VariantValues.h"
-#include "conversions/Conversions.h"
+#include "finalmq/variant/VariantValues.h"
+#include "finalmq/conversions/Conversions.h"
 
 
 namespace finalmq {

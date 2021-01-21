@@ -21,9 +21,9 @@
 //SOFTWARE.
 
 
-#include "protocols/ProtocolHeaderBinarySize.h"
-#include "protocolconnection/ProtocolMessage.h"
-#include "streamconnection/Socket.h"
+#include "finalmq/protocols/ProtocolHeaderBinarySize.h"
+#include "finalmq/protocolconnection/ProtocolMessage.h"
+#include "finalmq/streamconnection/Socket.h"
 
 #include <atomic>
 

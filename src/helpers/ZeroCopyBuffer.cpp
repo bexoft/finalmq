@@ -22,8 +22,8 @@
 
 
 
-#include "helpers/BexDefines.h"
-#include "helpers/ZeroCopyBuffer.h"
+#include "finalmq/helpers/BexDefines.h"
+#include "finalmq/helpers/ZeroCopyBuffer.h"
 
 #include <algorithm>
 #include <assert.h>

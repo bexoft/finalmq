@@ -24,9 +24,9 @@
 #include "gmock/gmock.h"
 
 
-#include "poller/PollerImplSelect.h"
-#include "poller/PollerImplEpoll.h"
-#include "helpers/OperatingSystem.h"
+#include "finalmq/poller/PollerImplSelect.h"
+#include "finalmq/poller/PollerImplEpoll.h"
+#include "finalmq/helpers/OperatingSystem.h"
 
 #include <thread>
 #include <chrono>
