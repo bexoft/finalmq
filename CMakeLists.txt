@@ -144,9 +144,22 @@ endif()
 else()
     target_compile_options(finalmq PRIVATE -Werror -Wall -Wextra)
 endif()
-#Set the location for library installation -- i.e., /usr/lib in this case
-# not really necessary in this example. Use "sudo make install" to apply
-install(TARGETS finalmq DESTINATION /usr/lib)
+
+
+###############################################################
+# INSTALL
+###############################################################
+
+# Set the location for library installation
+# Use "sudo make install" to apply
+install(TARGETS finalmq DESTINATION lib)
+install(DIRECTORY inc/finalmq DESTINATION include FILES_MATCHING PATTERN "*.h")
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq DESTINATION include FILES_MATCHING PATTERN "*.h")
+install(DIRECTORY ${CODEGENERATOR} DESTINATION include/finalmq)
+
+
+###############################################################
+
 
 
 add_subdirectory(services)
