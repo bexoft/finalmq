@@ -27,6 +27,7 @@
 #include "ProtocolSessionList.h"
 
 #include <unordered_map>
+#include <thread>
 
 namespace finalmq {
 
@@ -36,7 +37,7 @@ struct IProtocolSessionContainer
 {
     virtual ~IProtocolSessionContainer() {}
 
-    virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000, FuncPollerLoopTimer funcTimer = {}) = 0;
+    virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000, FuncPollerLoopTimer funcTimer = {}, const IExecutorPtr& executor = nullptr) = 0;
     virtual int bind(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const BindProperties& bindProperties = {}, int contentType = 0) = 0;
     virtual void unbind(const std::string& endpoint) = 0;
     virtual IProtocolSessionPtr connect(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const ConnectProperties& connectProperties = {}, int contentType = 0) = 0;
@@ -45,7 +46,7 @@ struct IProtocolSessionContainer
     virtual std::vector< IProtocolSessionPtr > getAllSessions() const = 0;
     virtual IProtocolSessionPtr getSession(std::int64_t sessionId) const = 0;
     virtual void run() = 0;
-    virtual bool terminatePollerLoop(int timeout) = 0;
+    virtual void terminatePollerLoop() = 0;
 };
 
 typedef std::shared_ptr<IProtocolSessionContainer> IProtocolSessionContainerPtr;
@@ -58,7 +59,7 @@ struct IStreamConnectionContainer;
 class ProtocolBind : public IStreamConnectionCallback
 {
 public:
-    ProtocolBind(hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const BindProperties& bindProperties = {}, int contentType = 0);
+    ProtocolBind(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, IProtocolFactoryPtr protocolFactory, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const BindProperties& bindProperties = {}, int contentType = 0);
 
 private:
     // IStreamConnectionCallback
@@ -67,6 +68,7 @@ private:
     virtual void received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) override;
 
     hybrid_ptr<IProtocolSessionCallback>    m_callback;
+    IExecutorPtr                            m_executor;
     IProtocolFactoryPtr                     m_protocolFactory;
     std::weak_ptr<IProtocolSessionList>     m_protocolSessionList;
     BindProperties                          m_bindProperties;
@@ -87,7 +89,7 @@ public:
 
 private:
     // IProtocolSessionContainer
-    virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000, FuncPollerLoopTimer funcTimer = {}) override;
+    virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000, FuncPollerLoopTimer funcTimer = {}, const IExecutorPtr& executor = nullptr) override;
     virtual int bind(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const BindProperties& bindProperties = {}, int contentType = 0) override;
     virtual void unbind(const std::string& endpoint) override;
     virtual IProtocolSessionPtr connect(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const ConnectProperties& connectProperties = {}, int contentType = 0) override;
@@ -96,12 +98,14 @@ private:
     virtual std::vector< IProtocolSessionPtr > getAllSessions() const override;
     virtual IProtocolSessionPtr getSession(std::int64_t sessionId) const override;
     virtual void run() override;
-    virtual bool terminatePollerLoop(int timeout) override;
+    virtual void terminatePollerLoop() override;
 
 private:
     IProtocolSessionListPtr                                     m_protocolSessionList;
     std::unordered_map<std::string,  ProtocolBindPtr>           m_endpoint2Bind;
     std::shared_ptr<IStreamConnectionContainer>                 m_streamConnectionContainer;
+    IExecutorPtr                                                m_executor;
+    std::thread                                                 m_thread;
     mutable std::mutex                                          m_mutex;
 };
 

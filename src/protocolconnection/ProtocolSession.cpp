@@ -28,8 +28,9 @@
 namespace finalmq {
 
 
-ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const BindProperties& bindProperties, int contentType)
+ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const BindProperties& bindProperties, int contentType)
     : m_callback(callback)
+    , m_executor(executor)
     , m_protocol(protocol)
     , m_protocolSessionList(protocolSessionList)
     , m_contentType(contentType)
@@ -37,8 +38,9 @@ ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, 
 {
 }
 
-ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, const std::string& endpoint, const ConnectProperties& connectProperties, int contentType)
+ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, const std::string& endpoint, const ConnectProperties& connectProperties, int contentType)
     : m_callback(callback)
+    , m_executor(executor)
     , m_protocol(protocol)
     , m_protocolSessionList(protocolSessionList)
     , m_contentType(contentType)
@@ -48,8 +50,9 @@ ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, 
 {
 }
 
-ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, int contentType)
+ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, int contentType)
     : m_callback(callback)
+    , m_executor(executor)
     , m_protocol(protocol)
     , m_protocolSessionList(protocolSessionList)
     , m_contentType(contentType)
@@ -58,8 +61,9 @@ ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, 
 }
 
 
-ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer)
+ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer)
     : m_callback(callback)
+    , m_executor(executor)
     , m_protocolSessionList(protocolSessionList)
     , m_streamConnectionContainer(streamConnectionContainer)
 {
@@ -352,19 +356,45 @@ void ProtocolSession::received(const IStreamConnectionPtr& /*connection*/, const
 // IProtocolCallback
 void ProtocolSession::connected()
 {
-    auto callback = m_callback.lock();
-    if (callback)
+    if (m_executor)
     {
-        callback->connected(shared_from_this());
+        m_executor->addAction([this] () {
+            auto callback = m_callback.lock();
+            if (callback)
+            {
+                callback->connected(shared_from_this());
+            }
+        });
+    }
+    else
+    {
+        auto callback = m_callback.lock();
+        if (callback)
+        {
+            callback->connected(shared_from_this());
+        }
     }
 }
 
 void ProtocolSession::disconnected()
 {
-    auto callback = m_callback.lock();
-    if (callback)
+    if (m_executor)
     {
-        callback->disconnected(shared_from_this());
+        m_executor->addAction([this] () {
+            auto callback = m_callback.lock();
+            if (callback)
+            {
+                callback->disconnected(shared_from_this());
+            }
+        });
+    }
+    else
+    {
+        auto callback = m_callback.lock();
+        if (callback)
+        {
+            callback->disconnected(shared_from_this());
+        }
     }
     IProtocolSessionListPtr protocolSessionList = m_protocolSessionList.lock();
     if (protocolSessionList)
@@ -375,28 +405,67 @@ void ProtocolSession::disconnected()
 
 void ProtocolSession::received(const IMessagePtr& message)
 {
-    auto callback = m_callback.lock();
-    if (callback)
+    if (m_executor)
     {
-        callback->received(shared_from_this(), message);
+        m_executor->addAction([this, message] () {
+            auto callback = m_callback.lock();
+            if (callback)
+            {
+                callback->received(shared_from_this(), message);
+            }
+        });
+    }
+    else
+    {
+        auto callback = m_callback.lock();
+        if (callback)
+        {
+            callback->received(shared_from_this(), message);
+        }
     }
 }
 
 void ProtocolSession::socketConnected()
 {
-    auto callback = m_callback.lock();
-    if (callback)
+    if (m_executor)
     {
-        callback->socketConnected(shared_from_this());
+        m_executor->addAction([this] () {
+            auto callback = m_callback.lock();
+            if (callback)
+            {
+                callback->socketConnected(shared_from_this());
+            }
+        });
+    }
+    else
+    {
+        auto callback = m_callback.lock();
+        if (callback)
+        {
+            callback->socketConnected(shared_from_this());
+        }
     }
 }
 
 void ProtocolSession::socketDisconnected()
 {
-    auto callback = m_callback.lock();
-    if (callback)
+    if (m_executor)
     {
-        callback->socketDisconnected(shared_from_this());
+        m_executor->addAction([this] () {
+            auto callback = m_callback.lock();
+            if (callback)
+            {
+                callback->socketDisconnected(shared_from_this());
+            }
+        });
+    }
+    else
+    {
+        auto callback = m_callback.lock();
+        if (callback)
+        {
+            callback->socketDisconnected(shared_from_this());
+        }
     }
 }
 

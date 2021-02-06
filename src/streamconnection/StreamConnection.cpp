@@ -299,6 +299,12 @@ void StreamConnection::updateConnectionData(const ConnectionData& connectionData
 
 
 
+
+
+
+
+
+
 void StreamConnection::connected(const IStreamConnectionPtr& connection)
 {
     auto callback = m_callback.lock();
@@ -332,6 +338,7 @@ void StreamConnection::received(const IStreamConnectionPtr& connection, const So
     auto callback = m_callback.lock();
     if (callback)
     {
+//        m_executor->addAction(std::bind(&IStreamConnectionCallback::received, callback, connection, socket, bytesToRead));
         callback->received(connection, socket, bytesToRead);
     }
 }

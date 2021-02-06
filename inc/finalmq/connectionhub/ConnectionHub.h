@@ -39,7 +39,7 @@ struct IConnectionHub
     virtual std::vector< IProtocolSessionPtr > getAllSessions() const = 0;
     virtual IProtocolSessionPtr getSession(std::int64_t sessionId) const = 0;
     virtual void run() = 0;
-    virtual bool waitForTerminationOfPollerLoop(int timeout) = 0;
+    virtual void waitForTerminationOfPollerLoop() = 0;
 
     virtual void startMessageForwarding() = 0;
     virtual void stopForwardingFromSession(std::int64_t sessionId) = 0;
@@ -64,7 +64,7 @@ private:
     virtual std::vector< IProtocolSessionPtr > getAllSessions() const override;
     virtual IProtocolSessionPtr getSession(std::int64_t sessionId) const override;
     virtual void run() override;
-    virtual bool waitForTerminationOfPollerLoop(int timeout) override;
+    virtual void waitForTerminationOfPollerLoop() override;
 
     virtual void startMessageForwarding() override;
     virtual void stopForwardingFromSession(std::int64_t sessionId) override;

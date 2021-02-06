@@ -62,7 +62,7 @@ struct IRemoteEntityContainer
     virtual void unbind(const std::string& endpoint) = 0;
     virtual IProtocolSessionPtr connect(const std::string& endpoint, const IProtocolPtr& protocol, RemoteEntityContentType contentType, const ConnectProperties& connectProperties = {}) = 0;
     virtual void run() = 0;
-    virtual bool terminatePollerLoop(int timeout) = 0;
+    virtual void terminatePollerLoop() = 0;
 
     virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, const std::string& name = "") = 0;
     virtual void unregisterEntity(EntityId entityId) = 0;
@@ -89,7 +89,7 @@ public:
     virtual void unbind(const std::string& endpoint) override;
     virtual IProtocolSessionPtr connect(const std::string& endpoint, const IProtocolPtr& protocol, RemoteEntityContentType contentType, const ConnectProperties& connectProperties = {}) override;
     virtual void run() override;
-    virtual bool terminatePollerLoop(int timeout) override;
+    virtual void terminatePollerLoop() override;
 
     virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, const std::string& name = "") override;
     virtual void unregisterEntity(EntityId entityId) override;

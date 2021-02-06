@@ -165,10 +165,8 @@ TEST_F(TestIntegrationRemoteEntity, testProto)
     }
 
     waitTillDone(expectReply, 15000);
-    bool ok1 = entityContainerServer.terminatePollerLoop(1000);
-    bool ok2 = entityContainerClient.terminatePollerLoop(1000);
-    ASSERT_EQ(ok1, true);
-    ASSERT_EQ(ok2, true);
+    entityContainerServer.terminatePollerLoop();
+    entityContainerClient.terminatePollerLoop();
     thread1.join();
     thread2.join();
 }
@@ -227,10 +225,8 @@ TEST_F(TestIntegrationRemoteEntity, testJson)
     }
 
     waitTillDone(expectReply, 15000);
-    bool ok1 = entityContainerServer.terminatePollerLoop(1000);
-    bool ok2 = entityContainerClient.terminatePollerLoop(1000);
-    ASSERT_EQ(ok1, true);
-    ASSERT_EQ(ok2, true);
+    entityContainerServer.terminatePollerLoop();
+    entityContainerClient.terminatePollerLoop();
     thread1.join();
     thread2.join();
 }
@@ -287,10 +283,8 @@ TEST_F(TestIntegrationRemoteEntity, testSslProto)
     }
 
     waitTillDone(expectReply, 15000);
-    bool ok1 = entityContainerServer.terminatePollerLoop(1000);
-    bool ok2 = entityContainerClient.terminatePollerLoop(1000);
-    ASSERT_EQ(ok1, true);
-    ASSERT_EQ(ok2, true);
+    entityContainerServer.terminatePollerLoop();
+    entityContainerClient.terminatePollerLoop();
     thread1.join();
     thread2.join();
 }
@@ -354,10 +348,8 @@ TEST_F(TestIntegrationRemoteEntity, testProtoLateConnect)
     entityClient.connect(peerId, sessionClient, "MyServer");
 
     waitTillDone(expectReply, 15000);
-    bool ok1 = entityContainerServer.terminatePollerLoop(1000);
-    bool ok2 = entityContainerClient.terminatePollerLoop(1000);
-    ASSERT_EQ(ok1, true);
-    ASSERT_EQ(ok2, true);
+    entityContainerServer.terminatePollerLoop();
+    entityContainerClient.terminatePollerLoop();
     thread1.join();
     thread2.join();
 }

@@ -145,9 +145,9 @@ void RemoteEntityContainer::run()
     deinit();
 }
 
-bool RemoteEntityContainer::terminatePollerLoop(int timeout)
+void RemoteEntityContainer::terminatePollerLoop()
 {
-    return m_protocolSessionContainer->terminatePollerLoop(timeout);
+    m_protocolSessionContainer->terminatePollerLoop();
 }
 
 

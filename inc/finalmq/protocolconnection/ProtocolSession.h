@@ -23,12 +23,16 @@
 #pragma once
 
 #include "finalmq/streamconnection/StreamConnection.h"
+#include "finalmq/helpers/IExecutor.h"
 #include "IProtocol.h"
 #include "ProtocolSessionList.h"
 #include "IProtocolSession.h"
 
 
 namespace finalmq {
+
+
+
 
 struct IProtocolSessionPrivate : public IProtocolSession
                                , public IStreamConnectionCallback
@@ -49,10 +53,10 @@ class ProtocolSession : public IProtocolSessionPrivate
                       , public std::enable_shared_from_this<ProtocolSession>
 {
 public:
-    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const BindProperties& bindProperties, int contentType);
-    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, const std::string& endpoint, const ConnectProperties& connectProperties, int contentType);
-    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, int contentType);
-    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer);
+    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const BindProperties& bindProperties, int contentType);
+    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, const std::string& endpoint, const ConnectProperties& connectProperties, int contentType);
+    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, int contentType);
+    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer);
 
     virtual ~ProtocolSession();
 
@@ -90,6 +94,7 @@ private:
 
     IStreamConnectionPtr                            m_connection;
     hybrid_ptr<IProtocolSessionCallback>            m_callback;
+    IExecutorPtr                                    m_executor;
     IProtocolPtr                                    m_protocol;
     int64_t                                         m_sessionId = 0;
     std::weak_ptr<IProtocolSessionList>             m_protocolSessionList;

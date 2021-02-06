@@ -103,13 +103,13 @@ protected:
         FmqRegistryClient fmqRegistryClient(m_entityContainerServer);
         fmqRegistryClient.registerService({"MyService", "", ENTITYID_INVALID, {}});
 
-        m_entityContainerRegistry.terminatePollerLoop(5000);
+        m_entityContainerRegistry.terminatePollerLoop();
         m_threadRegistry.join();
 
-        m_entityContainerServer->terminatePollerLoop(5000);
+        m_entityContainerServer->terminatePollerLoop();
         m_threadServer.join();
 
-        m_entityContainerClient->terminatePollerLoop(5000);
+        m_entityContainerClient->terminatePollerLoop();
         m_threadClient.join();
     }
 
