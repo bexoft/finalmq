@@ -29,7 +29,7 @@
 
 namespace finalmq {
 
-class FmqRegistryClient
+class SYMBOLEXP FmqRegistryClient
 {
 public:
     typedef std::function<void(remoteentity::Status status, const std::shared_ptr<fmqreg::GetServiceReply>& reply)> FuncGetServiceReply;

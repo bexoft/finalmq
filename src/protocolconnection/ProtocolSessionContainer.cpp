@@ -72,7 +72,7 @@ ProtocolSessionContainer::ProtocolSessionContainer()
 
 ProtocolSessionContainer::~ProtocolSessionContainer()
 {
-
+    terminatePollerLoop();
 }
 
 // IProtocolSessionContainer
@@ -80,6 +80,10 @@ void ProtocolSessionContainer::init(int cycleTime, int checkReconnectInterval, F
 {
     m_executor = executor;
     m_streamConnectionContainer->init(cycleTime, checkReconnectInterval, std::move(funcTimer));
+    if (m_executor)
+    {
+        m_thread = std::thread([this]() { m_streamConnectionContainer->run(); });
+    }
 }
 
 int ProtocolSessionContainer::bind(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const BindProperties& bindProperties, int contentType)
@@ -151,6 +155,7 @@ IProtocolSessionPtr ProtocolSessionContainer::getSession(std::int64_t sessionId)
 
 void ProtocolSessionContainer::run()
 {
+    assert(m_executor == nullptr);
     m_streamConnectionContainer->run();
 }
 
@@ -158,6 +163,10 @@ void ProtocolSessionContainer::run()
 void ProtocolSessionContainer::terminatePollerLoop()
 {
     m_streamConnectionContainer->terminatePollerLoop();
+    if (m_thread.joinable())
+    {
+        m_thread.join();
+    }
 }
 
 

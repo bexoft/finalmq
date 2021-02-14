@@ -47,10 +47,11 @@ void Executor::runAvailableActions()
 void Executor::addAction(std::function<void()> func)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
+    bool notify = m_actions.empty();
     m_actions.push_back(std::move(func));
     lock.unlock();
     m_newActions = true;
-    if (m_funcNotify)
+    if (m_funcNotify && notify)
     {
         m_funcNotify();
     }

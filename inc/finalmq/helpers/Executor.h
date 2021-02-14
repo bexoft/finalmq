@@ -32,7 +32,7 @@
 namespace finalmq {
 
 
-class Executor : public IExecutor
+class SYMBOLEXP Executor : public IExecutor
 {
 public:
 
