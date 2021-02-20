@@ -20,7 +20,7 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#include "finalmq/remoteentity/RemoteEntityFormat.h"
+#include "finalmq/remoteentity/RemoteEntityFormatRegistry.h"
 #include "finalmq/remoteentity/entitydata.fmq.h"
 
 #include "finalmq/serializeproto/SerializerProto.h"
@@ -176,6 +176,10 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, co
 
 
 
+void RemoteEntityFormatRegistryImpl::registerFormat(int contentType, const std::shared_ptr<IRemoteEntityFormat>& format)
+{
+    m_formats[contentType] = format;
+}
 
 
 

@@ -23,7 +23,7 @@
 #pragma once
 
 #include "finalmq/protocolconnection/ProtocolSessionContainer.h"
-#include "finalmq/remoteentity/RemoteEntityFormat.h"
+#include "finalmq/remoteentity/RemoteEntityFormatRegistry.h"
 #include "finalmq/remoteentity/entitydata.fmq.h"
 
 
