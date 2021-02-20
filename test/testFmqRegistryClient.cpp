@@ -25,6 +25,8 @@
 #include "gmock/gmock.h"
 
 #include "finalmq/remoteentity/RemoteEntityContainer.h"
+#include "finalmq/remoteentity/RemoteEntityFormatProto.h"
+#include "finalmq/remoteentity/RemoteEntityFormatJson.h"
 #include "finalmq/protocols/ProtocolHeaderBinarySize.h"
 
 #include "finalmq/remoteentity/FmqRegistryClient.h"
@@ -77,7 +79,7 @@ protected:
     {
         m_entityContainerRegistry.init();
         m_entityContainerRegistry.registerEntity(&m_registry, "fmqreg");
-        m_entityContainerRegistry.bind("tcp://*:" PORTNUMBER_PROTO, std::make_shared<ProtocolHeaderBinarySizeFactory>(), RemoteEntityContentType::CONTENTTYPE_PROTO);
+        m_entityContainerRegistry.bind("tcp://*:" PORTNUMBER_PROTO, std::make_shared<ProtocolHeaderBinarySizeFactory>(), RemoteEntityFormatProto::CONTENT_TYPE);
         m_threadRegistry = std::thread([this] () {
             m_entityContainerRegistry.run();
         });
@@ -85,7 +87,7 @@ protected:
         m_entityContainerServer = std::make_shared<RemoteEntityContainer>();
         m_entityContainerServer->init();
         m_entityIdServer = m_entityContainerServer->registerEntity(&m_server);
-        m_entityContainerServer->bind("tcp://*:7799", std::make_shared<ProtocolHeaderBinarySizeFactory>(), RemoteEntityContentType::CONTENTTYPE_PROTO);
+        m_entityContainerServer->bind("tcp://*:7799", std::make_shared<ProtocolHeaderBinarySizeFactory>(), RemoteEntityFormatProto::CONTENT_TYPE);
         m_threadServer = std::thread([this] () {
             m_entityContainerServer->run();
         });
@@ -137,7 +139,7 @@ protected:
 TEST_F(TestIntegrationFmqRegistryClient, testConnectDisconnect)
 {
     FmqRegistryClient fmqRegistryClient(m_entityContainerClient);
-    fmqRegistryClient.registerService({"MyService", "", m_entityIdServer, {{fmqreg::SocketProtocol::SOCKET_TCP, ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityContentType::CONTENTTYPE_PROTO, false, "tcp://*:7799"}}});
+    fmqRegistryClient.registerService({"MyService", "", m_entityIdServer, {{fmqreg::SocketProtocol::SOCKET_TCP, ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityFormatProto::CONTENT_TYPE, false, "tcp://*:7799"}}});
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
     auto& expectConnectReply = EXPECT_CALL(m_mockEvents, connectReply(_, _)).Times(1);
@@ -153,7 +155,7 @@ TEST_F(TestIntegrationFmqRegistryClient, testConnectDisconnect)
 TEST_F(TestIntegrationFmqRegistryClient, testConnectSendDisconnect)
 {
     FmqRegistryClient fmqRegistryClient(m_entityContainerClient);
-    fmqRegistryClient.registerService({"MyService", "", m_entityIdServer, {{fmqreg::SocketProtocol::SOCKET_TCP, ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityContentType::CONTENTTYPE_PROTO, false, "tcp://*:7799"}}});
+    fmqRegistryClient.registerService({"MyService", "", m_entityIdServer, {{fmqreg::SocketProtocol::SOCKET_TCP, ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityFormatProto::CONTENT_TYPE, false, "tcp://*:7799"}}});
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
     EXPECT_CALL(m_mockEvents, connectReply(_, _)).Times(1);
@@ -173,7 +175,7 @@ TEST_F(TestIntegrationFmqRegistryClient, testConnectSendDisconnect)
 TEST_F(TestIntegrationFmqRegistryClient, testConnectSend)
 {
     FmqRegistryClient fmqRegistryClient(m_entityContainerClient);
-    fmqRegistryClient.registerService({"MyService", "", m_entityIdServer, {{fmqreg::SocketProtocol::SOCKET_TCP, ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityContentType::CONTENTTYPE_PROTO, false, "tcp://*:7799"}}});
+    fmqRegistryClient.registerService({"MyService", "", m_entityIdServer, {{fmqreg::SocketProtocol::SOCKET_TCP, ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityFormatProto::CONTENT_TYPE, false, "tcp://*:7799"}}});
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
     EXPECT_CALL(m_mockEvents, connectReply(_, remoteentity::Status(remoteentity::Status::STATUS_OK))).Times(1);
@@ -211,7 +213,7 @@ TEST_F(TestIntegrationFmqRegistryClient, testConnectEmptyEndpointSend)
 TEST_F(TestIntegrationFmqRegistryClient, testConnectNoServiceSend)
 {
     FmqRegistryClient fmqRegistryClient(m_entityContainerClient);
-    fmqRegistryClient.registerService({"MyService", "", m_entityIdServer, {{fmqreg::SocketProtocol::SOCKET_TCP, ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityContentType::CONTENTTYPE_PROTO, false, "tcp://*:7799"}}});
+    fmqRegistryClient.registerService({"MyService", "", m_entityIdServer, {{fmqreg::SocketProtocol::SOCKET_TCP, ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityFormatProto::CONTENT_TYPE, false, "tcp://*:7799"}}});
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
     EXPECT_CALL(m_mockEvents, connectReply(_, remoteentity::Status(remoteentity::Status::STATUS_PEER_DISCONNECTED))).Times(1);
@@ -239,7 +241,7 @@ TEST_F(TestIntegrationFmqRegistryClient, testConnectDisconnectLateRegister)
     });
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
-    fmqRegistryClient.registerService({"MyService", "", m_entityIdServer, {{fmqreg::SocketProtocol::SOCKET_TCP, ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityContentType::CONTENTTYPE_PROTO, false, "tcp://*:7799"}}});
+    fmqRegistryClient.registerService({"MyService", "", m_entityIdServer, {{fmqreg::SocketProtocol::SOCKET_TCP, ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityFormatProto::CONTENT_TYPE, false, "tcp://*:7799"}}});
 
     bool ok = waitTillDone(expectConnectReply, 15000);
     ASSERT_EQ(ok, true);
@@ -259,7 +261,7 @@ TEST_F(TestIntegrationFmqRegistryClient, testConnectSendDisconnectLateRegister)
     });
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
-    fmqRegistryClient.registerService({"MyService", "", m_entityIdServer, {{fmqreg::SocketProtocol::SOCKET_TCP, ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityContentType::CONTENTTYPE_PROTO, false, "tcp://*:7799"}}});
+    fmqRegistryClient.registerService({"MyService", "", m_entityIdServer, {{fmqreg::SocketProtocol::SOCKET_TCP, ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityFormatProto::CONTENT_TYPE, false, "tcp://*:7799"}}});
 
     bool ok = waitTillDone(expectReply, 15000);
     ASSERT_EQ(ok, true);
@@ -280,7 +282,7 @@ TEST_F(TestIntegrationFmqRegistryClient, testConnectSendLateRegister)
     });
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
-    fmqRegistryClient.registerService({"MyService", "", m_entityIdServer, {{fmqreg::SocketProtocol::SOCKET_TCP, ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityContentType::CONTENTTYPE_PROTO, false, "tcp://*:7799"}}});
+    fmqRegistryClient.registerService({"MyService", "", m_entityIdServer, {{fmqreg::SocketProtocol::SOCKET_TCP, ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityFormatProto::CONTENT_TYPE, false, "tcp://*:7799"}}});
 
     bool ok = waitTillDone(expectReply, 15000);
     ASSERT_EQ(ok, true);
@@ -321,7 +323,7 @@ TEST_F(TestIntegrationFmqRegistryClient, testConnectNoServiceSendLateRegister)
     });
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
-    fmqRegistryClient.registerService({"MyService", "", m_entityIdServer, {{fmqreg::SocketProtocol::SOCKET_TCP, ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityContentType::CONTENTTYPE_PROTO, false, "tcp://*:7799"}}});
+    fmqRegistryClient.registerService({"MyService", "", m_entityIdServer, {{fmqreg::SocketProtocol::SOCKET_TCP, ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityFormatProto::CONTENT_TYPE, false, "tcp://*:7799"}}});
 
     bool ok = waitTillDone(expectReply, 15000);
     ASSERT_EQ(ok, true);

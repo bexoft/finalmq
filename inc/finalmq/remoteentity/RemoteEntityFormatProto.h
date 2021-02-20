@@ -22,10 +22,20 @@
 
 #pragma once
 
+#include "RemoteEntityFormatRegistry.h"
 
 
 namespace finalmq {
 
+class RemoteEntityFormatProto : public IRemoteEntityFormat
+{
+public:
+    enum {CONTENT_TYPE = 1};
+
+private:
+    virtual std::shared_ptr<StructBase> parse(const BufferRef& bufferRef, remoteentity::Header& header, bool& syntaxError) override;
+    virtual void serialize(IMessage& message, const remoteentity::Header& header, const StructBase* structBase = nullptr) override;
+};
 
 
 

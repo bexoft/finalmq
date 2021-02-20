@@ -25,31 +25,16 @@
 #include "finalmq/protocolconnection/ProtocolSessionContainer.h"
 
 
-//#include <memory>
-//#include <vector>
-//#include <unordered_map>
-//#include <mutex>
-//#include <atomic>
-
 
 namespace finalmq {
 
 class StructBase;
-//class IProtocolSession;
 typedef std::shared_ptr<IProtocolSession> IProtocolSessionPtr;
 
 
 namespace remoteentity {
     class Header;
 }
-
-
-enum RemoteEntityContentType
-{
-    CONTENTTYPE_NONE = 0,
-    CONTENTTYPE_PROTO = 1,
-    CONTENTTYPE_JSON = 2
-};
 
 
 
@@ -71,8 +56,8 @@ struct IRemoteEntityFormat
 struct IRemoteEntityFormatRegistry
 {
     virtual ~IRemoteEntityFormatRegistry() {}
-    virtual std::shared_ptr<StructBase> parseMessage(const IMessage& message, int contentType, remoteentity::Header& header, bool& syntaxError) = 0;
-    virtual void serialize(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase* structBase = nullptr) = 0;
+    virtual std::shared_ptr<StructBase> parse(const IMessage& message, int contentType, remoteentity::Header& header, bool& syntaxError) = 0;
+    virtual bool serialize(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase* structBase = nullptr) = 0;
     virtual bool send(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase* structBase = nullptr) = 0;
 
     virtual void registerFormat(int contentType, const std::shared_ptr<IRemoteEntityFormat>& format) = 0;
@@ -81,20 +66,15 @@ struct IRemoteEntityFormatRegistry
 
 
 
-class SYMBOLEXP RemoteEntityFormatRegistryImpl : public IRemoteEntityFormatRegistry
+class RemoteEntityFormatRegistryImpl : public IRemoteEntityFormatRegistry
 {
 public:
-    virtual std::shared_ptr<StructBase> parseMessage(const IMessage& message, int contentType, remoteentity::Header& header, bool& syntaxError) override;
-    virtual void serialize(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase* structBase = nullptr) override;
+    virtual std::shared_ptr<StructBase> parse(const IMessage& message, int contentType, remoteentity::Header& header, bool& syntaxError) override;
+    virtual bool serialize(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase* structBase = nullptr) override;
     virtual bool send(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase* structBase = nullptr) override;
     virtual void registerFormat(int contentType, const std::shared_ptr<IRemoteEntityFormat>& format) override;
 
 private:
-    static std::shared_ptr<StructBase> parseMessageProto(const BufferRef& bufferRef, remoteentity::Header& header, bool& syntaxError);
-    static std::shared_ptr<StructBase> parseMessageJson(const BufferRef& bufferRef, remoteentity::Header& header, bool& syntaxError);
-    static void serializeProto(IMessage& message, const remoteentity::Header& header, const StructBase* structBase = nullptr);
-    static void serializeJson(IMessage& message, const remoteentity::Header& header, const StructBase* structBase = nullptr);
-
     std::unordered_map<int, std::shared_ptr<IRemoteEntityFormat>> m_formats;
 };
 
