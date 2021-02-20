@@ -1,4 +1,8 @@
 
 
 add_subdirectory(fmqreg)
-add_subdirectory(fmqfcgi)
+
+
+if (FINALMQ_BUILD_FMQFCGI)
+    add_subdirectory(fmqfcgi)
+endif (FINALMQ_BUILD_FMQFCGI)

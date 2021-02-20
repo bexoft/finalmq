@@ -26,8 +26,9 @@
 
 namespace finalmq {
 
-ProtocolBind::ProtocolBind(hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const BindProperties& bindProperties, int contentType)
+ProtocolBind::ProtocolBind(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, IProtocolFactoryPtr protocolFactory, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const BindProperties& bindProperties, int contentType)
     : m_callback(callback)
+    , m_executor(executor)
     , m_protocolFactory(protocolFactory)
     , m_protocolSessionList(protocolSessionList)
     , m_bindProperties(bindProperties)
@@ -41,7 +42,7 @@ hybrid_ptr<IStreamConnectionCallback> ProtocolBind::connected(const IStreamConne
 {
     IProtocolPtr protocol = m_protocolFactory->createProtocol();
     assert(protocol);
-    IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(m_callback, protocol, m_protocolSessionList, m_bindProperties, m_contentType);
+    IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(m_callback, m_executor, protocol, m_protocolSessionList, m_bindProperties, m_contentType);
     protocolSession->setConnection(connection);
     return std::weak_ptr<IStreamConnectionCallback>(protocolSession);
 }
@@ -71,13 +72,18 @@ ProtocolSessionContainer::ProtocolSessionContainer()
 
 ProtocolSessionContainer::~ProtocolSessionContainer()
 {
-
+    terminatePollerLoop();
 }
 
 // IProtocolSessionContainer
-void ProtocolSessionContainer::init(int cycleTime, int checkReconnectInterval, FuncPollerLoopTimer funcTimer)
+void ProtocolSessionContainer::init(int cycleTime, int checkReconnectInterval, FuncPollerLoopTimer funcTimer, const IExecutorPtr& executor)
 {
+    m_executor = executor;
     m_streamConnectionContainer->init(cycleTime, checkReconnectInterval, std::move(funcTimer));
+    if (m_executor)
+    {
+        m_thread = std::thread([this]() { m_streamConnectionContainer->run(); });
+    }
 }
 
 int ProtocolSessionContainer::bind(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const BindProperties& bindProperties, int contentType)
@@ -87,7 +93,7 @@ int ProtocolSessionContainer::bind(const std::string& endpoint, hybrid_ptr<IProt
     auto it = m_endpoint2Bind.find(endpoint);
     if (it == m_endpoint2Bind.end())
     {
-        ProtocolBindPtr bind = std::make_shared<ProtocolBind>(callback, protocolFactory, m_protocolSessionList, bindProperties, contentType);
+        ProtocolBindPtr bind = std::make_shared<ProtocolBind>(callback, m_executor, protocolFactory, m_protocolSessionList, bindProperties, contentType);
         m_endpoint2Bind[endpoint] = bind;
         lock.unlock();
 
@@ -110,7 +116,7 @@ void ProtocolSessionContainer::unbind(const std::string& endpoint)
 IProtocolSessionPtr ProtocolSessionContainer::connect(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const ConnectProperties& connectProperties, int contentType)
 {
     assert(protocol);
-    IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(callback, protocol, m_protocolSessionList, m_streamConnectionContainer, endpoint, connectProperties, contentType);
+    IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(callback, m_executor, protocol, m_protocolSessionList, m_streamConnectionContainer, endpoint, connectProperties, contentType);
     protocolSession->connect();
     return protocolSession;
 }
@@ -119,7 +125,7 @@ IProtocolSessionPtr ProtocolSessionContainer::connect(const std::string& endpoin
 IProtocolSessionPtr ProtocolSessionContainer::createSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, int contentType)
 {
     assert(protocol);
-    IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(callback, protocol, m_protocolSessionList, m_streamConnectionContainer, contentType);
+    IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(callback, m_executor, protocol, m_protocolSessionList, m_streamConnectionContainer, contentType);
     protocolSession->createConnection();
     return protocolSession;
 }
@@ -127,7 +133,7 @@ IProtocolSessionPtr ProtocolSessionContainer::createSession(hybrid_ptr<IProtocol
 
 IProtocolSessionPtr ProtocolSessionContainer::createSession(hybrid_ptr<IProtocolSessionCallback> callback)
 {
-    IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(callback, m_protocolSessionList, m_streamConnectionContainer);
+    IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(callback, m_executor, m_protocolSessionList, m_streamConnectionContainer);
     protocolSession->createConnection();
     return protocolSession;
 }
@@ -149,13 +155,18 @@ IProtocolSessionPtr ProtocolSessionContainer::getSession(std::int64_t sessionId)
 
 void ProtocolSessionContainer::run()
 {
+    assert(m_executor == nullptr);
     m_streamConnectionContainer->run();
 }
 
 
-bool ProtocolSessionContainer::terminatePollerLoop(int timeout)
+void ProtocolSessionContainer::terminatePollerLoop()
 {
-    return m_streamConnectionContainer->terminatePollerLoop(timeout);
+    m_streamConnectionContainer->terminatePollerLoop();
+    if (m_thread.joinable())
+    {
+        m_thread.join();
+    }
 }
 
 

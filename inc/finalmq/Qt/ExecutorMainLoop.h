@@ -22,33 +22,31 @@
 
 #pragma once
 
-#include "finalmq/remoteentity/RemoteEntityContainer.h"
-#include "finalmq/interfaces/fmqreg.fmq.h"
 
-#include <sys/types.h>
+#include "finalmq/helpers/Executor.h"
 
-namespace finalmq {
-
-class SYMBOLEXP FmqRegistryClient
+class ExecutorMainLoop : private QObject
 {
+    Q_OBJECT;
 public:
-    typedef std::function<void(remoteentity::Status status, const std::shared_ptr<fmqreg::GetServiceReply>& reply)> FuncGetServiceReply;
-
-    FmqRegistryClient(const hybrid_ptr<IRemoteEntityContainer>& remoteEntityContainer);
-
-    void registerService(const finalmq::fmqreg::Service& service, int retryDurationMs = -1);
-    PeerId connectService(const std::string& serviceName, EntityId entityId, const ConnectProperties& connectProperties, FuncReplyConnect funcReplyConnect);
-    void getService(const std::string& serviceName, FuncGetServiceReply funcGetServiceReply);
-
+    ExecutorMainLoop()
+    {
+        connect(this, SIGNAL(requestThreadSignal()), SLOT(requestThreadSlot()));
+        m_executor->registerActionNotification([this]() {
+            requestThreadSignal(); 
+        });
+    }
+    finalmq::IExecutorPtr getExecutor()
+    {
+        return m_executor;
+    }
+private Q_SLOTS:
+    void requestThreadSlot()
+    {
+        m_executor->runAvailableActions();
+    }
+signals:
+    void requestThreadSignal();
 private:
-    void init();
-    IProtocolSessionPtr createRegistrySession(const std::string& hostname, const ConnectProperties& connectProperties = {});
-
-    bool                                m_init = false;
-    hybrid_ptr<IRemoteEntityContainer>  m_remoteEntityContainer;
-    IRemoteEntityPtr                    m_entityRegistry;
+    finalmq::IExecutorPtr m_executor = std::make_shared<finalmq::Executor>();
 };
-
-
-}   // namespace finalmq
-

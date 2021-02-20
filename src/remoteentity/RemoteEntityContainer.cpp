@@ -118,9 +118,9 @@ void RemoteEntityContainer::deinit()
 
 // IRemoteEntityContainer
 
-void RemoteEntityContainer::init(int cycleTime, int checkReconnectInterval, FuncPollerLoopTimer funcTimer)
+void RemoteEntityContainer::init(int cycleTime, int checkReconnectInterval, FuncPollerLoopTimer funcTimer, const IExecutorPtr& executor)
 {
-    m_protocolSessionContainer->init(cycleTime, checkReconnectInterval, std::move(funcTimer));
+    m_protocolSessionContainer->init(cycleTime, checkReconnectInterval, std::move(funcTimer), executor);
 }
 
 int RemoteEntityContainer::bind(const std::string& endpoint, IProtocolFactoryPtr protocolFactory, RemoteEntityContentType contentType, const BindProperties& bindProperties)
@@ -145,9 +145,9 @@ void RemoteEntityContainer::run()
     deinit();
 }
 
-bool RemoteEntityContainer::terminatePollerLoop(int timeout)
+void RemoteEntityContainer::terminatePollerLoop()
 {
-    return m_protocolSessionContainer->terminatePollerLoop(timeout);
+    m_protocolSessionContainer->terminatePollerLoop();
 }
 
 

@@ -28,6 +28,7 @@
 #include "finalmq/poller/Poller.h"
 #include "finalmq/helpers/hybrid_ptr.h"
 #include "finalmq/streamconnection/IMessage.h"
+#include "finalmq/helpers/CondVar.h"
 
 #include <memory>
 #include <vector>
@@ -37,6 +38,10 @@
 
 
 namespace finalmq {
+
+
+
+
 
 
 struct BindProperties

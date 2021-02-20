@@ -470,15 +470,15 @@ TEST_F(TestSerializerProto, testArrayStruct)
     bool res = message.ParseFromString(m_data);
     EXPECT_EQ(res, true);
     EXPECT_EQ(message.value().size(), 3);
-    EXPECT_EQ(message.value()[0].struct_int32().value(), VALUE1_INT32);
-    EXPECT_EQ(message.value()[0].struct_string().value(), VALUE1_STRING);
-    EXPECT_EQ(message.value()[0].last_value(), VALUE1_UINT32);
-    EXPECT_EQ(message.value()[1].struct_int32().value(), VALUE2_INT32);
-    EXPECT_EQ(message.value()[1].struct_string().value(), VALUE2_STRING);
-    EXPECT_EQ(message.value()[1].last_value(), VALUE2_UINT32);
-    EXPECT_EQ(message.value()[2].struct_int32().value(), 0);
-    EXPECT_EQ(message.value()[2].struct_string().value(), "");
-    EXPECT_EQ(message.value()[2].last_value(), 0);
+    EXPECT_EQ(message.value(0).struct_int32().value(), VALUE1_INT32);
+    EXPECT_EQ(message.value(0).struct_string().value(), VALUE1_STRING);
+    EXPECT_EQ(message.value(0).last_value(), VALUE1_UINT32);
+    EXPECT_EQ(message.value(1).struct_int32().value(), VALUE2_INT32);
+    EXPECT_EQ(message.value(1).struct_string().value(), VALUE2_STRING);
+    EXPECT_EQ(message.value(1).last_value(), VALUE2_UINT32);
+    EXPECT_EQ(message.value(2).struct_int32().value(), 0);
+    EXPECT_EQ(message.value(2).struct_string().value(), "");
+    EXPECT_EQ(message.value(2).last_value(), 0);
     EXPECT_EQ(message.last_value(), LAST_VALUE);
 }
 

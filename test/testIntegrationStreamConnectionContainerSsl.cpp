@@ -74,9 +74,9 @@ protected:
 
     virtual void TearDown()
     {
-        EXPECT_EQ(m_connectionContainer->terminatePollerLoop(100), true);
-        m_connectionContainer = nullptr;
+        m_connectionContainer->terminatePollerLoop();
         m_thread->join();
+        m_connectionContainer = nullptr;
     }
 
     std::shared_ptr<IStreamConnectionContainer>             m_connectionContainer;

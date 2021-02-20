@@ -146,7 +146,7 @@ int main()
     std::this_thread::sleep_for(std::chrono::milliseconds(200000));
 
     // release the thread
-    entityContainer.terminatePollerLoop(1000);
+    entityContainer.terminatePollerLoop();
     thread.join();
 
     return 0;

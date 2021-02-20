@@ -77,9 +77,9 @@ protected:
 
     virtual void TearDown()
     {
-        EXPECT_EQ(m_sessionContainer->terminatePollerLoop(100), true);
-        m_sessionContainer = nullptr;
+        m_sessionContainer->terminatePollerLoop();
         m_thread->join();
+        m_sessionContainer = nullptr;
     }
 
     std::shared_ptr<IProtocolSessionContainer>              m_sessionContainer;

@@ -51,13 +51,12 @@ StreamConnectionContainer::StreamConnectionContainer()
 #else
     : m_poller(std::make_shared<PollerImplEpoll>())
 #endif
-    , m_pollerLoopTerminated(CondVar::CondVarMode::CONDVAR_MANUAL)
 {
 }
 
 StreamConnectionContainer::~StreamConnectionContainer()
 {
-    terminatePollerLoop(10);
+    terminatePollerLoop();
 }
 
 
@@ -462,14 +461,6 @@ void StreamConnectionContainer::run()
 }
 
 
-bool StreamConnectionContainer::terminatePollerLoop(int timeout)
-{
-    terminatePollerLoop();
-    return m_pollerLoopTerminated.wait(timeout);
-}
-
-
-
 void StreamConnectionContainer::terminatePollerLoop()
 {
     m_terminatePollerLoop = true;
@@ -864,7 +855,6 @@ void StreamConnectionContainer::pollerLoop()
             }
         }
     }
-    m_pollerLoopTerminated = true;
 }
 
 

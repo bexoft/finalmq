@@ -56,7 +56,7 @@ struct IStreamConnectionContainer
     virtual std::vector< IStreamConnectionPtr > getAllConnections() const = 0;
     virtual IStreamConnectionPtr getConnection(std::int64_t connectionId) const = 0;
     virtual void run() = 0;
-    virtual bool terminatePollerLoop(int timeout) = 0;
+    virtual void terminatePollerLoop() = 0;
 };
 
 
@@ -90,6 +90,7 @@ private:
 };
 
 
+
 class SYMBOLEXP StreamConnectionContainer : public IStreamConnectionContainer
 {
 public:
@@ -107,9 +108,7 @@ private:
     virtual std::vector< IStreamConnectionPtr > getAllConnections() const override;
     virtual IStreamConnectionPtr getConnection(std::int64_t connectionId) const override;
     virtual void run() override;
-    virtual bool terminatePollerLoop(int timeout) override;
-
-    void terminatePollerLoop();
+    virtual void terminatePollerLoop() override;
 
     void pollerLoop();
 
@@ -139,11 +138,10 @@ private:
     std::unordered_map<SOCKET, IStreamConnectionPrivatePtr>         m_sd2Connection;
     std::int64_t                                                    m_nextConnectionId = 1;
     bool                                                            m_terminatePollerLoop = false;
-    CondVar                                                         m_pollerLoopTerminated;
     int                                                             m_cycleTime = 100;
     int                                                             m_checkReconnectInterval = 1000;
     AddressResolver                                                 m_addressResolver;
-    FuncPollerLoopTimer                                                       m_funcTimer;
+    FuncPollerLoopTimer                                             m_funcTimer;
     mutable std::mutex                                              m_mutex;
 
     std::chrono::time_point<std::chrono::system_clock>              m_lastReconnectTime;

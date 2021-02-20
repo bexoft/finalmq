@@ -3,8 +3,9 @@ cmake_minimum_required(VERSION 3.10)
 
 project(finalmq)
 
-option(FINALMQ_BUILD_EXAMPLES "Build tests" ON)
+option(FINALMQ_BUILD_EXAMPLES "Build examples" ON)
 option(FINALMQ_BUILD_TESTS "Build tests" OFF)
+option(FINALMQ_BUILD_FMQFCGI "Build fmqfcgi" ON)
 option(FINALMQ_BUILD_COVERAGE "Enable gcov" OFF)
 option(FINALMQ_BUILD_DOXYGEN "Enable doxygen" OFF)
 option(FINALMQ_USE_SSL "Build with openssl" ON)
@@ -29,6 +30,7 @@ endif(FINALMQ_USE_SSL)
 
 SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS} -DNOMINMAX" )
 SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}" )
+
 
 set(CMAKE_CXX_STANDARD 14)
 
