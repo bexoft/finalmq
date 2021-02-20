@@ -249,7 +249,7 @@ public:
         if (!m_replySent)
         {
             remoteentity::Header header{m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, remoteentity::Status::STATUS_OK, structBase.getStructInfo().getTypeName(), m_correlationId};
-            RemoteEntityFormat::instance().send(m_session, header, &structBase);
+            RemoteEntityFormatRegistry::instance().send(m_session, header, &structBase);
             m_replySent = true;
         }
     }
@@ -265,7 +265,7 @@ private:
         if (!m_replySent)
         {
             remoteentity::Header header{m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, status, "", m_correlationId};
-            RemoteEntityFormat::instance().send(m_session, header);
+            RemoteEntityFormatRegistry::instance().send(m_session, header);
             m_replySent = true;
         }
     }

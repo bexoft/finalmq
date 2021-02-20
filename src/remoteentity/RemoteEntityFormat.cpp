@@ -46,7 +46,7 @@ namespace finalmq {
 
 
 
-void RemoteEntityFormatImpl::serializeProto(IMessage& message, const Header& header, const StructBase* structBase)
+void RemoteEntityFormatRegistryImpl::serializeProto(IMessage& message, const Header& header, const StructBase* structBase)
 {
     char* bufferSizeHeader = message.addSendPayload(2048);
     message.downsizeLastSendPayload(4);
@@ -89,7 +89,7 @@ void RemoteEntityFormatImpl::serializeProto(IMessage& message, const Header& hea
 
 
 
-void RemoteEntityFormatImpl::serializeJson(IMessage& message, const Header& header, const StructBase* structBase)
+void RemoteEntityFormatRegistryImpl::serializeJson(IMessage& message, const Header& header, const StructBase* structBase)
 {
     message.addSendPayload("[", 1, JSONBLOCKSIZE);
 
@@ -130,7 +130,7 @@ void RemoteEntityFormatImpl::serializeJson(IMessage& message, const Header& head
 
 
 
-void RemoteEntityFormatImpl::serialize(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase* structBase)
+void RemoteEntityFormatRegistryImpl::serialize(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase* structBase)
 {
     switch (contentType)
     {
@@ -160,7 +160,7 @@ inline static bool shallSend(const remoteentity::Header& header)
 
 
 
-bool RemoteEntityFormatImpl::send(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase* structBase)
+bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase* structBase)
 {
     bool ok = true;
     if (shallSend(header))
@@ -179,7 +179,7 @@ bool RemoteEntityFormatImpl::send(const IProtocolSessionPtr& session, const remo
 
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatImpl::parseMessageProto(const BufferRef& bufferRef, Header& header, bool& syntaxError)
+std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseMessageProto(const BufferRef& bufferRef, Header& header, bool& syntaxError)
 {
     syntaxError = false;
     const char* buffer = bufferRef.first;
@@ -271,7 +271,7 @@ static ssize_t findLast(const char* buffer, ssize_t size, char c)
 }
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatImpl::parseMessageJson(const BufferRef& bufferRef, Header& header, bool& syntaxError)
+std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseMessageJson(const BufferRef& bufferRef, Header& header, bool& syntaxError)
 {
     syntaxError = false;
     const char* buffer = bufferRef.first;
@@ -374,7 +374,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatImpl::parseMessageJson(const Buffe
 
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatImpl::parseMessage(const IMessage& message, int contentType, Header& header, bool& syntaxError)
+std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseMessage(const IMessage& message, int contentType, Header& header, bool& syntaxError)
 {
     syntaxError = false;
     BufferRef bufferRef = message.getReceivePayload();
@@ -401,9 +401,9 @@ std::shared_ptr<StructBase> RemoteEntityFormatImpl::parseMessage(const IMessage&
 //////////////////////////////////////
 /// RemoteEntityFormat
 
-std::unique_ptr<IRemoteEntityFormat> RemoteEntityFormat::m_instance;
+std::unique_ptr<IRemoteEntityFormatRegistry> RemoteEntityFormatRegistry::m_instance;
 
-void RemoteEntityFormat::setInstance(std::unique_ptr<IRemoteEntityFormat>& instance)
+void RemoteEntityFormatRegistry::setInstance(std::unique_ptr<IRemoteEntityFormatRegistry>& instance)
 {
     m_instance = std::move(instance);
 }

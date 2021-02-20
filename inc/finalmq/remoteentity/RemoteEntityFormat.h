@@ -60,9 +60,9 @@ using CorrelationId = std::uint64_t;
 static constexpr CorrelationId CORRELATIONID_NONE = 0;
 
 
-struct IRemoteEntityFormat
+struct IRemoteEntityFormatRegistry
 {
-    virtual ~IRemoteEntityFormat() {}
+    virtual ~IRemoteEntityFormatRegistry() {}
     virtual std::shared_ptr<StructBase> parseMessage(const IMessage& message, int contentType, remoteentity::Header& header, bool& syntaxError) = 0;
     virtual void serialize(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase* structBase = nullptr) = 0;
     virtual bool send(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase* structBase = nullptr) = 0;
@@ -70,7 +70,10 @@ struct IRemoteEntityFormat
 
 
 
-class SYMBOLEXP RemoteEntityFormatImpl : public IRemoteEntityFormat
+
+
+
+class SYMBOLEXP RemoteEntityFormatRegistryImpl : public IRemoteEntityFormatRegistry
 {
 public:
     virtual std::shared_ptr<StructBase> parseMessage(const IMessage& message, int contentType, remoteentity::Header& header, bool& syntaxError) override;
@@ -85,23 +88,23 @@ private:
 };
 
 
-class SYMBOLEXP RemoteEntityFormat
+class SYMBOLEXP RemoteEntityFormatRegistry
 {
 public:
-    inline static IRemoteEntityFormat& instance()
+    inline static IRemoteEntityFormatRegistry& instance()
     {
         if (!m_instance)
         {
-            m_instance = std::make_unique<RemoteEntityFormatImpl>();
+            m_instance = std::make_unique<RemoteEntityFormatRegistryImpl>();
         }
         return *m_instance;
     }
-    static void setInstance(std::unique_ptr<IRemoteEntityFormat>& instance);
+    static void setInstance(std::unique_ptr<IRemoteEntityFormatRegistry>& instance);
 
 private:
-    RemoteEntityFormat() = delete;
+    RemoteEntityFormatRegistry() = delete;
 
-    static std::unique_ptr<IRemoteEntityFormat> m_instance;
+    static std::unique_ptr<IRemoteEntityFormatRegistry> m_instance;
 };
 
 
