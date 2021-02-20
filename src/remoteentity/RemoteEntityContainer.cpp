@@ -280,7 +280,7 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
 
     bool syntaxError = false;
     Header header;
-    std::shared_ptr<StructBase> structBase = RemoteEntityFormat::parseMessage(*message, session->getContentType(), header, syntaxError);
+    std::shared_ptr<StructBase> structBase = RemoteEntityFormat::instance().parseMessage(*message, session->getContentType(), header, syntaxError);
 
     std::unique_lock<std::mutex> lock(m_mutex);
     EntityId entityId = header.destid;
@@ -332,7 +332,7 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
         if (replyStatus != Status::STATUS_OK)
         {
             Header headerReply{header.srcid, "", entityId, MsgMode::MSG_REPLY, replyStatus, "", header.corrid};
-            RemoteEntityFormat::send(session, headerReply);
+            RemoteEntityFormat::instance().send(session, headerReply);
         }
     }
     else if (header.mode == MsgMode::MSG_REPLY)

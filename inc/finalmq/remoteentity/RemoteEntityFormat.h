@@ -60,24 +60,50 @@ using CorrelationId = std::uint64_t;
 static constexpr CorrelationId CORRELATIONID_NONE = 0;
 
 
+struct IRemoteEntityFormat
+{
+    virtual ~IRemoteEntityFormat() {}
+    virtual std::shared_ptr<StructBase> parseMessage(const IMessage& message, int contentType, remoteentity::Header& header, bool& syntaxError) = 0;
+    virtual void serialize(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase* structBase = nullptr) = 0;
+    virtual bool send(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase* structBase = nullptr) = 0;
+};
+
+
+
+class SYMBOLEXP RemoteEntityFormatImpl : public IRemoteEntityFormat
+{
+public:
+    virtual std::shared_ptr<StructBase> parseMessage(const IMessage& message, int contentType, remoteentity::Header& header, bool& syntaxError) override;
+    virtual void serialize(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase* structBase = nullptr) override;
+    virtual bool send(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase* structBase = nullptr) override;
+
+private:
+    static std::shared_ptr<StructBase> parseMessageProto(const BufferRef& bufferRef, remoteentity::Header& header, bool& syntaxError);
+    static std::shared_ptr<StructBase> parseMessageJson(const BufferRef& bufferRef, remoteentity::Header& header, bool& syntaxError);
+    static void serializeProto(IMessage& message, const remoteentity::Header& header, const StructBase* structBase = nullptr);
+    static void serializeJson(IMessage& message, const remoteentity::Header& header, const StructBase* structBase = nullptr);
+};
+
 
 class SYMBOLEXP RemoteEntityFormat
 {
 public:
-    static std::shared_ptr<StructBase> parseMessageProto(const BufferRef& bufferRef, remoteentity::Header& header, bool& syntaxError);
-    static std::shared_ptr<StructBase> parseMessageJson(const BufferRef& bufferRef, remoteentity::Header& header, bool& syntaxError);
-    static std::shared_ptr<StructBase> parseMessage(const IMessage& message, int contentType, remoteentity::Header& header, bool& syntaxError);
+    inline static IRemoteEntityFormat& instance()
+    {
+        if (!m_instance)
+        {
+            m_instance = std::make_unique<RemoteEntityFormatImpl>();
+        }
+        return *m_instance;
+    }
+    static void setInstance(std::unique_ptr<IRemoteEntityFormat>& instance);
 
-    static void serializeProto(IMessage& message, const remoteentity::Header& header);
-    static void serializeProto(IMessage& message, const remoteentity::Header& header, const StructBase& structBase);
-    static void serializeJson(IMessage& message, const remoteentity::Header& header, bool structBaseAvailable);
-    static void serializeJson(IMessage& message, const remoteentity::Header& header, const StructBase& structBase);
-    static void serialize(IMessage& message, int contentType, const remoteentity::Header& header);
-    static void serialize(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase& structBase);
+private:
+    RemoteEntityFormat() = delete;
 
-    static bool send(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase& structBase);
-    static bool send(const IProtocolSessionPtr& session, const remoteentity::Header& header);
+    static std::unique_ptr<IRemoteEntityFormat> m_instance;
 };
+
 
 
 
