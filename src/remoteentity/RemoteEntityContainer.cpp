@@ -123,7 +123,7 @@ void RemoteEntityContainer::init(int cycleTime, int checkReconnectInterval, Func
     m_protocolSessionContainer->init(cycleTime, checkReconnectInterval, std::move(funcTimer), executor);
 }
 
-int RemoteEntityContainer::bind(const std::string& endpoint, IProtocolFactoryPtr protocolFactory, RemoteEntityContentType contentType, const BindProperties& bindProperties)
+int RemoteEntityContainer::bind(const std::string& endpoint, IProtocolFactoryPtr protocolFactory, int contentType, const BindProperties& bindProperties)
 {
     return m_protocolSessionContainer->bind(endpoint, this, protocolFactory, bindProperties, contentType);
 }
@@ -133,7 +133,7 @@ void RemoteEntityContainer::unbind(const std::string& endpoint)
     m_protocolSessionContainer->unbind(endpoint);
 }
 
-IProtocolSessionPtr RemoteEntityContainer::connect(const std::string& endpoint, const IProtocolPtr& protocol, RemoteEntityContentType contentType, const ConnectProperties& connectProperties)
+IProtocolSessionPtr RemoteEntityContainer::connect(const std::string& endpoint, const IProtocolPtr& protocol, int contentType, const ConnectProperties& connectProperties)
 {
     return m_protocolSessionContainer->connect(endpoint, this, protocol, connectProperties, contentType);
 }
@@ -280,7 +280,7 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
 
     bool syntaxError = false;
     Header header;
-    std::shared_ptr<StructBase> structBase = RemoteEntityFormat::parseMessage(*message, session->getContentType(), header, syntaxError);
+    std::shared_ptr<StructBase> structBase = RemoteEntityFormatRegistry::instance().parse(*message, session->getContentType(), header, syntaxError);
 
     std::unique_lock<std::mutex> lock(m_mutex);
     EntityId entityId = header.destid;
@@ -332,7 +332,7 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
         if (replyStatus != Status::STATUS_OK)
         {
             Header headerReply{header.srcid, "", entityId, MsgMode::MSG_REPLY, replyStatus, "", header.corrid};
-            RemoteEntityFormat::send(session, headerReply);
+            RemoteEntityFormatRegistry::instance().send(session, headerReply);
         }
     }
     else if (header.mode == MsgMode::MSG_REPLY)

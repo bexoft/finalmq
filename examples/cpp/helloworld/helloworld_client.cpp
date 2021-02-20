@@ -20,7 +20,11 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
+
+
 #include "finalmq/remoteentity/RemoteEntityContainer.h"
+#include "finalmq/remoteentity/RemoteEntityFormatProto.h"
+#include "finalmq/remoteentity/RemoteEntityFormatJson.h"
 #include "finalmq/protocols/ProtocolHeaderBinarySize.h"
 #include "finalmq/protocols/ProtocolDelimiter.h"
 #include "finalmq/logger/Logger.h"
@@ -35,11 +39,12 @@
 
 using finalmq::RemoteEntity;
 using finalmq::RemoteEntityContainer;
+using finalmq::RemoteEntityFormatProto;
+using finalmq::RemoteEntityFormatJson;
 using finalmq::IRemoteEntityContainer;
 using finalmq::PeerId;
 using finalmq::PeerEvent;
 using finalmq::ProtocolHeaderBinarySize;
-using finalmq::RemoteEntityContentType;
 using finalmq::IProtocolSessionPtr;
 using finalmq::ConnectionData;
 using finalmq::ConnectionEvent;
@@ -97,7 +102,7 @@ int main()
     // A client can be started before the server is started. The connect is been retried in the background till the server
     // becomes available. Use the ConnectProperties to change the reconnect properties
     // (default is: try to connect every 5s forever till the server becomes available).
-    IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:7777", std::make_shared<ProtocolHeaderBinarySize>(), RemoteEntityContentType::CONTENTTYPE_PROTO);
+    IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:7777", std::make_shared<ProtocolHeaderBinarySize>(), RemoteEntityFormatProto::CONTENT_TYPE);
 
     // connect entityClient to remote server entity "MyService" with the created TCP session.
     // The returned peerId identifies the peer entity.

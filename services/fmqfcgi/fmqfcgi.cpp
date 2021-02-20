@@ -20,7 +20,9 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
+
 #include "finalmq/remoteentity/RemoteEntityContainer.h"
+#include "finalmq/remoteentity/RemoteEntityFormatJson.h"
 #include "finalmq/remoteentity/FmqRegistryClient.h"
 #include "finalmq/protocols/ProtocolHeaderBinarySize.h"
 #include "finalmq/protocols/ProtocolDelimiter.h"
@@ -37,6 +39,7 @@
 
 //using finalmq::RemoteEntity;
 using finalmq::RemoteEntityContainer;
+using finalmq::RemoteEntityFormatJson;
 using finalmq::IRemoteEntityContainerPtr;
 using finalmq::IRemoteEntityPtr;
 using finalmq::RemoteEntity;
@@ -57,7 +60,6 @@ using finalmq::remoteentity::Status;
 using finalmq::fmqreg::GetServiceReply;
 using finalmq::fmqreg::Endpoint;
 using finalmq::remoteentity::GenericMessage;
-using finalmq::RemoteEntityContentType;
 using finalmq::PeerEvent;
 
 
@@ -184,7 +186,7 @@ public:
                 if (it != m_peerId2ObjectName.end())
                 {
                     static const std::string DATA = "{}";
-                    GenericMessage genericMessage{"finalmq.disconnected", RemoteEntityContentType::CONTENTTYPE_JSON, {DATA.data(), DATA.data() + DATA.size()}};
+                    GenericMessage genericMessage{"finalmq.disconnected", RemoteEntityFormatJson::CONTENT_TYPE, {DATA.data(), DATA.data() + DATA.size()}};
                     putRequestEntry(peerId, finalmq::CORRELATIONID_NONE, genericMessage);
                 }
             }
@@ -740,7 +742,7 @@ public:
                                 const Endpoint& endpointEntry = endpointEntries[i];
                                 endpoint = endpointEntry.endpoint;
                                 if (!endpointEntry.ssl &&
-                                    endpointEntry.contenttype == finalmq::RemoteEntityContentType::CONTENTTYPE_JSON)
+                                    endpointEntry.contenttype == RemoteEntityFormatJson::CONTENT_TYPE)
                                 {
                                     if (endpointEntry.framingprotocol == ProtocolDelimiter::PROTOCOL_ID)
                                     {
@@ -763,7 +765,7 @@ public:
                                     {
                                         endpoint.replace(pos, std::string("*").length(), "127.0.0.1");
                                     }
-                                    session = m_entityContainer->connect(endpoint, protocol, finalmq::RemoteEntityContentType::CONTENTTYPE_JSON, {{}, RECONNECT_INTERVAL, 0});
+                                    session = m_entityContainer->connect(endpoint, protocol, RemoteEntityFormatJson::CONTENT_TYPE, {{}, RECONNECT_INTERVAL, 0});
                                 }
                                 sessionAndEntity.session = session;
                                 for (size_t n = 0; n < sessionAndEntity.entities.size(); n++)
@@ -835,7 +837,7 @@ public:
         {
             GenericMessage message;
             message.type = typeName;
-            message.contenttype = RemoteEntityContentType::CONTENTTYPE_JSON;
+            message.contenttype = RemoteEntityFormatJson::CONTENT_TYPE;
             message.data.resize(value.second - posParameters);
             if (!message.data.empty())
             {
@@ -848,7 +850,7 @@ public:
             httpSession->requestReply<GenericMessage>(peerId, message, [this, requestPtr] (PeerId peerId, Status status, const std::shared_ptr<GenericMessage>& reply) {
                 assert(requestPtr);
                 Request& request = *requestPtr;
-                if (reply && reply->contenttype != RemoteEntityContentType::CONTENTTYPE_JSON)
+                if (reply && reply->contenttype != RemoteEntityFormatJson::CONTENT_TYPE)
                 {
                     status = Status::STATUS_WRONG_CONTENTTYPE;
                 }
@@ -878,7 +880,7 @@ public:
         {
             GenericMessage message;
             message.type = typeName;
-            message.contenttype = RemoteEntityContentType::CONTENTTYPE_JSON;
+            message.contenttype = RemoteEntityFormatJson::CONTENT_TYPE;
             message.data.resize(value.second - posParameters);
             if (!message.data.empty())
             {

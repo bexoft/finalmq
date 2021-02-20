@@ -20,6 +20,7 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
+
 #include "finalmq/remoteentity/RemoteEntityContainer.h"
 #include "finalmq/remoteentity/FmqRegistryClient.h"
 #include "finalmq/protocols/ProtocolHeaderBinarySize.h"
@@ -42,7 +43,6 @@ using finalmq::EntityId;
 using finalmq::PeerEvent;
 using finalmq::ReplyContextUPtr;
 using finalmq::ProtocolHeaderBinarySize;
-using finalmq::RemoteEntityContentType;
 using finalmq::IProtocolSessionPtr;
 using finalmq::ConnectionData;
 using finalmq::ConnectionEvent;

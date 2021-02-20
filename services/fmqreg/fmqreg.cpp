@@ -22,6 +22,8 @@
 
 #include "registry.h"
 #include "finalmq/remoteentity/RemoteEntityContainer.h"
+#include "finalmq/remoteentity/RemoteEntityFormatProto.h"
+#include "finalmq/remoteentity/RemoteEntityFormatJson.h"
 #include "finalmq/protocols/ProtocolHeaderBinarySize.h"
 #include "finalmq/protocols/ProtocolDelimiter.h"
 #include "finalmq/logger/Logger.h"
@@ -33,6 +35,8 @@
 
 
 using finalmq::RemoteEntity;
+using finalmq::RemoteEntityFormatProto;
+using finalmq::RemoteEntityFormatJson;
 using finalmq::RemoteEntityContainer;
 using finalmq::IRemoteEntityContainer;
 using finalmq::PeerId;
@@ -40,7 +44,6 @@ using finalmq::PeerEvent;
 using finalmq::ReplyContextUPtr;
 using finalmq::ProtocolHeaderBinarySizeFactory;
 using finalmq::ProtocolDelimiterFactory;
-using finalmq::RemoteEntityContentType;
 using finalmq::IProtocolSessionPtr;
 using finalmq::ConnectionData;
 using finalmq::ConnectionEvent;
@@ -85,11 +88,11 @@ int main()
 
     // Open listener port 18180 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
     // content type in payload: protobuf
-    entityContainer.bind("tcp://*:" PORTNUMBER_PROTO, std::make_shared<ProtocolHeaderBinarySizeFactory>(), RemoteEntityContentType::CONTENTTYPE_PROTO);
+    entityContainer.bind("tcp://*:" PORTNUMBER_PROTO, std::make_shared<ProtocolHeaderBinarySizeFactory>(), RemoteEntityFormatProto::CONTENT_TYPE);
 
     // Open listener port 18181 with delimiter framing protocol ProtocolDelimiter ('\n' is end of frame).
     // content type in payload: JSON
-    entityContainer.bind("tcp://*:" PORTNUMBER_JSON, std::make_shared<ProtocolDelimiterFactory>("\n"), RemoteEntityContentType::CONTENTTYPE_JSON);
+    entityContainer.bind("tcp://*:" PORTNUMBER_JSON, std::make_shared<ProtocolDelimiterFactory>("\n"), RemoteEntityFormatJson::CONTENT_TYPE);
 
     // run
     entityContainer.run();

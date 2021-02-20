@@ -449,7 +449,7 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
     if (readyToSend == PeerManager::ReadyToSend::RTS_READY)
     {
         assert(session);
-        ok = RemoteEntityFormat::send(session, header, structBase);
+        ok = RemoteEntityFormatRegistry::instance().send(session, header, &structBase);
         if (!ok)
         {
             removePeer(peerId, Status::STATUS_SESSION_DISCONNECTED);
@@ -642,7 +642,7 @@ void RemoteEntity::connectIntern(PeerId peerId, const IProtocolSessionPtr& sessi
         if (readyToSend == PeerManager::ReadyToSend::RTS_READY)
         {
             assert(session);
-            ok = RemoteEntityFormat::send(sessionRet, header, *request.structBase);
+            ok = RemoteEntityFormatRegistry::instance().send(sessionRet, header, request.structBase.get());
         }
         else
         {

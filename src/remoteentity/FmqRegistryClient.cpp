@@ -21,6 +21,9 @@
 //SOFTWARE.
 
 #include "finalmq/remoteentity/FmqRegistryClient.h"
+#include "finalmq/remoteentity/RemoteEntityFormatJson.h"
+#include "finalmq/remoteentity/RemoteEntityFormatProto.h"
+
 #include "finalmq/protocols/ProtocolHeaderBinarySize.h"
 #include "finalmq/protocols/ProtocolDelimiter.h"
 
@@ -72,22 +75,22 @@ static ssize_t pickEndpointEntry(const std::vector<fmqreg::Endpoint>& endpoints,
         {
             if (endpoint.socketprotocol == fmqreg::SocketProtocol::SOCKET_TCP)
             {
-                if (endpoint.contenttype == CONTENTTYPE_PROTO)
+                if (endpoint.contenttype == RemoteEntityFormatProto::CONTENT_TYPE)
                 {
                     indexProtoTcp = i;
                 }
-                else if (endpoint.contenttype == CONTENTTYPE_JSON)
+                else if (endpoint.contenttype == RemoteEntityFormatJson::CONTENT_TYPE)
                 {
                     indexJsonTcp = i;
                 }
             }
             else if (endpoint.socketprotocol == fmqreg::SocketProtocol::SOCKET_UNIXDOMAIN)
             {
-                if (endpoint.contenttype == CONTENTTYPE_PROTO)
+                if (endpoint.contenttype == RemoteEntityFormatProto::CONTENT_TYPE)
                 {
                     indexProtoUds = i;
                 }
-                else if (endpoint.contenttype == CONTENTTYPE_JSON)
+                else if (endpoint.contenttype == RemoteEntityFormatJson::CONTENT_TYPE)
                 {
                     indexJsonUds = i;
                 }
@@ -169,21 +172,10 @@ public:
                             protocol = std::make_shared<ProtocolHeaderBinarySize>();
                         }
 
-                        RemoteEntityContentType contentType = CONTENTTYPE_NONE;
-                        switch (endpointEntry.contenttype)
-                        {
-                        case RemoteEntityContentType::CONTENTTYPE_PROTO:
-                            contentType = RemoteEntityContentType::CONTENTTYPE_PROTO;
-                            break;
-                        case RemoteEntityContentType::CONTENTTYPE_JSON:
-                            contentType = RemoteEntityContentType::CONTENTTYPE_JSON;
-                            break;
-                        }
-
                         if (protocol)
                         {
                             connectDone = true;
-                            IProtocolSessionPtr session = remoteEntityContainer->connect(endpoint, protocol, contentType, m_connectProperties);
+                            IProtocolSessionPtr session = remoteEntityContainer->connect(endpoint, protocol, endpointEntry.contenttype, m_connectProperties);
                             re->connect(m_peerId, session, reply->service.entityname, reply->service.entityid);
                         }
                     }
@@ -360,7 +352,7 @@ IProtocolSessionPtr FmqRegistryClient::createRegistrySession(const std::string& 
     auto remoteEntityContainer = m_remoteEntityContainer.lock();
     if (remoteEntityContainer)
     {
-        session = remoteEntityContainer->connect(endpoint, std::make_shared<ProtocolHeaderBinarySize>(), RemoteEntityContentType::CONTENTTYPE_PROTO, connectProperties);
+        session = remoteEntityContainer->connect(endpoint, std::make_shared<ProtocolHeaderBinarySize>(), RemoteEntityFormatProto::CONTENT_TYPE, connectProperties);
     }
     return session;
 }

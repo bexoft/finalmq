@@ -20,7 +20,10 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
+
 #include "finalmq/remoteentity/RemoteEntityContainer.h"
+#include "finalmq/remoteentity/RemoteEntityFormatProto.h"
+#include "finalmq/remoteentity/RemoteEntityFormatJson.h"
 #include "finalmq/remoteentity/FmqRegistryClient.h"
 #include "finalmq/protocols/ProtocolHeaderBinarySize.h"
 #include "finalmq/protocols/ProtocolDelimiter.h"
@@ -35,13 +38,14 @@
 
 using finalmq::RemoteEntity;
 using finalmq::RemoteEntityContainer;
+using finalmq::RemoteEntityFormatProto;
+using finalmq::RemoteEntityFormatJson;
 using finalmq::IRemoteEntityContainer;
 using finalmq::PeerId;
 using finalmq::PeerEvent;
 using finalmq::ReplyContextUPtr;
 using finalmq::ProtocolHeaderBinarySizeFactory;
 using finalmq::ProtocolDelimiterFactory;
-using finalmq::RemoteEntityContentType;
 using finalmq::IProtocolSessionPtr;
 using finalmq::ConnectionData;
 using finalmq::ConnectionEvent;
@@ -125,26 +129,26 @@ int main()
 
     // Open listener port 7777 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
     // content type in payload: protobuf
-    entityContainer.bind("tcp://*:7777", std::make_shared<ProtocolHeaderBinarySizeFactory>(), RemoteEntityContentType::CONTENTTYPE_PROTO);
+    entityContainer.bind("tcp://*:7777", std::make_shared<ProtocolHeaderBinarySizeFactory>(), RemoteEntityFormatProto::CONTENT_TYPE);
 
     // Open listener port 8888 with delimiter framing protocol ProtocolDelimiter ('\n' is end of frame).
     // content type in payload: JSON
-    entityContainer.bind("tcp://*:8888", std::make_shared<ProtocolDelimiterFactory>("\n"), RemoteEntityContentType::CONTENTTYPE_JSON);
+    entityContainer.bind("tcp://*:8888", std::make_shared<ProtocolDelimiterFactory>("\n"), RemoteEntityFormatJson::CONTENT_TYPE);
 
     // note:
     // multiple access points (listening ports) can be activated by calling bind() several times.
     // For Unix Domain Sockets use: "ipc://socketname"
     // For SSL/TLS encryption use BindProperties e.g.:
     // entityContainer->bind("tcp://*:7777", std::make_shared<ProtocolHeaderBinarySizeFactory>(),
-    //                       RemoteEntityContentType::CONTENTTYPE_PROTO,
+    //                       RemoteEntityFormatProto::CONTENT_TYPE,
     //                       {{true, "myservercertificate.cert.pem", "myservercertificate.key.pem"}});
     // And by the way, also connect()s are possible for an EntityContainer. An EntityContainer can be client and server at the same time.
 
 
     FmqRegistryClient fmqRegistryClient(&entityContainer);
     fmqRegistryClient.registerService({"ExampleService", "MyService", finalmq::ENTITYID_INVALID,
-                                       {{finalmq::fmqreg::SocketProtocol::SOCKET_TCP, finalmq::ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityContentType::CONTENTTYPE_PROTO, false, "tcp://*:7777"},
-                                        {finalmq::fmqreg::SocketProtocol::SOCKET_TCP, finalmq::ProtocolDelimiter::PROTOCOL_ID,        RemoteEntityContentType::CONTENTTYPE_JSON,  false, "tcp://*:8888"}}});
+                                       {{finalmq::fmqreg::SocketProtocol::SOCKET_TCP, finalmq::ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityFormatProto::CONTENT_TYPE, false, "tcp://*:7777"},
+                                        {finalmq::fmqreg::SocketProtocol::SOCKET_TCP, finalmq::ProtocolDelimiter::PROTOCOL_ID,        RemoteEntityFormatJson::CONTENT_TYPE,  false, "tcp://*:8888"}}});
 
     // run
     entityContainer.run();
