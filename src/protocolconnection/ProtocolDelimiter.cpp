@@ -21,7 +21,7 @@
 //SOFTWARE.
 
 
-#include "finalmq/protocols/ProtocolDelimiter.h"
+#include "finalmq/protocolconnection/ProtocolDelimiter.h"
 #include "finalmq/protocolconnection/ProtocolMessage.h"
 #include "finalmq/streamconnection/Socket.h"
 
@@ -31,8 +31,6 @@ namespace finalmq {
 //---------------------------------------
 // ProtocolDelimiter
 //---------------------------------------
-
-const std::uint32_t ProtocolDelimiter::PROTOCOL_ID = 0x00000003;
 
 
 ProtocolDelimiter::ProtocolDelimiter(const std::string& delimiter)
@@ -47,11 +45,6 @@ void ProtocolDelimiter::setCallback(const std::weak_ptr<IProtocolCallback>& call
     m_callback = callback;
 }
 
-std::uint32_t ProtocolDelimiter::getProtocolId() const
-{
-    return PROTOCOL_ID;
-}
-
 bool ProtocolDelimiter::areMessagesResendable() const
 {
     return true;
@@ -59,7 +52,7 @@ bool ProtocolDelimiter::areMessagesResendable() const
 
 IMessagePtr ProtocolDelimiter::createMessage() const
 {
-    return std::make_shared<ProtocolMessage>(PROTOCOL_ID, 0, m_delimiter.size());
+    return std::make_shared<ProtocolMessage>(getProtocolId(), 0, m_delimiter.size());
 }
 
 std::vector<ssize_t> ProtocolDelimiter::findEndOfMessage(const char* buffer, ssize_t size)
@@ -284,23 +277,5 @@ void ProtocolDelimiter::socketDisconnected()
 }
 
 
-
-//---------------------------------------
-// ProtocolDelimiterFactory
-//---------------------------------------
-
-
-ProtocolDelimiterFactory::ProtocolDelimiterFactory(const std::string& delimiter)
-    : m_delimiter(delimiter)
-{
-
-}
-
-
-// IProtocolFactory
-IProtocolPtr ProtocolDelimiterFactory::createProtocol()
-{
-    return std::make_shared<ProtocolDelimiter>(m_delimiter);
-}
 
 }   // namespace finalmq

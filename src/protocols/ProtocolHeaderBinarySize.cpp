@@ -23,6 +23,7 @@
 
 #include "finalmq/protocols/ProtocolHeaderBinarySize.h"
 #include "finalmq/protocolconnection/ProtocolMessage.h"
+#include "finalmq/protocolconnection/ProtocolRegistry.h"
 #include "finalmq/streamconnection/Socket.h"
 
 #include <atomic>
@@ -36,8 +37,6 @@ static const int HEADERSIZE = 4;
 //---------------------------------------
 // ProtocolHeaderBinarySize
 //---------------------------------------
-
-const std::uint32_t ProtocolHeaderBinarySize::PROTOCOL_ID = 0x00000002;
 
 
 ProtocolHeaderBinarySize::ProtocolHeaderBinarySize()
@@ -130,6 +129,14 @@ void ProtocolHeaderBinarySize::socketDisconnected()
 //---------------------------------------
 // ProtocolHeaderBinarySizeFactory
 //---------------------------------------
+
+struct RegisterProtocolHeaderBinarySizeFactory
+{
+    RegisterProtocolHeaderBinarySizeFactory()
+    {
+        ProtocolRegistry::instance().registerProtocolFactory(ProtocolHeaderBinarySize::PROTOCOL_ID, std::make_shared<ProtocolHeaderBinarySizeFactory>());
+    }
+} g_registerProtocolHeaderBinarySizeFactory;
 
 
 

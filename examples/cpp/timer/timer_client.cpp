@@ -24,7 +24,6 @@
 #include "finalmq/remoteentity/RemoteEntityContainer.h"
 #include "finalmq/remoteentity/FmqRegistryClient.h"
 #include "finalmq/protocols/ProtocolHeaderBinarySize.h"
-#include "finalmq/protocols/ProtocolDelimiter.h"
 #include "finalmq/logger/Logger.h"
 
 // the definition of the messages are in the file timer.fmq
@@ -42,7 +41,6 @@ using finalmq::PeerId;
 using finalmq::EntityId;
 using finalmq::PeerEvent;
 using finalmq::ReplyContextUPtr;
-using finalmq::ProtocolHeaderBinarySize;
 using finalmq::IProtocolSessionPtr;
 using finalmq::ConnectionData;
 using finalmq::ConnectionEvent;

@@ -29,7 +29,7 @@
 #include "finalmq/remoteentity/RemoteEntityFormatProto.h"
 #include "finalmq/remoteentity/RemoteEntityFormatJson.h"
 #include "finalmq/protocols/ProtocolHeaderBinarySize.h"
-#include "finalmq/protocols/ProtocolDelimiter.h"
+#include "finalmq/protocols/ProtocolDelimiterLinefeed.h"
 #include "finalmq/logger/Logger.h"
 #include "test.fmq.h"
 
@@ -201,8 +201,8 @@ TEST_F(TestIntegrationRemoteEntity, testJson)
     entityContainerServer.registerEntity(&entityServer, "MyServer");
     entityContainerClient.registerEntity(&entityClient);
 
-    entityContainerServer.bind("tcp://*:7788", std::make_shared<ProtocolDelimiterFactory>("\n"), RemoteEntityFormatJson::CONTENT_TYPE);
-    IProtocolSessionPtr sessionClient = entityContainerClient.connect("tcp://localhost:7788", std::make_shared<ProtocolDelimiter>("\n"), RemoteEntityFormatJson::CONTENT_TYPE);
+    entityContainerServer.bind("tcp://*:7788", std::make_shared<ProtocolDelimiterLinefeedFactory>(), RemoteEntityFormatJson::CONTENT_TYPE);
+    IProtocolSessionPtr sessionClient = entityContainerClient.connect("tcp://localhost:7788", std::make_shared<ProtocolDelimiterLinefeed>(), RemoteEntityFormatJson::CONTENT_TYPE);
 
     EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
     EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTING), false)).Times(1);

@@ -22,39 +22,26 @@
 
 #pragma once
 
-#include "finalmq/streamconnection/IMessage.h"
-#include "finalmq/protocolconnection/IProtocol.h"
-#include "finalmq/protocolconnection/ProtocolFixHeaderHelper.h"
-
+#include "finalmq/protocolconnection/ProtocolDelimiter.h"
 
 
 namespace finalmq {
 
 
-class SYMBOLEXP ProtocolHeaderBinarySize : public IProtocol
+class SYMBOLEXP ProtocolDelimiterLinefeed : public ProtocolDelimiter
 {
 public:
-    enum { PROTOCOL_ID = 2 };
+    enum { PROTOCOL_ID = 3 };
 
-    ProtocolHeaderBinarySize();
+    ProtocolDelimiterLinefeed();
 
 private:
     // IProtocol
-    virtual void setCallback(const std::weak_ptr<IProtocolCallback>& callback) override;
     virtual std::uint32_t getProtocolId() const override;
-    virtual bool areMessagesResendable() const override;
-    virtual IMessagePtr createMessage() const override;
-    virtual void receive(const SocketPtr& socket, int bytesToRead) override;
-    virtual void prepareMessageToSend(IMessagePtr message) override;
-    virtual void socketConnected() override;
-    virtual void socketDisconnected() override;
-
-    std::weak_ptr<IProtocolCallback>    m_callback;
-    ProtocolFixHeaderHelper             m_headerHelper;
 };
 
 
-class SYMBOLEXP ProtocolHeaderBinarySizeFactory : public IProtocolFactory
+class SYMBOLEXP ProtocolDelimiterLinefeedFactory : public IProtocolFactory
 {
 public:
 

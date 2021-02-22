@@ -25,7 +25,7 @@
 #include "finalmq/remoteentity/RemoteEntityFormatJson.h"
 #include "finalmq/remoteentity/FmqRegistryClient.h"
 #include "finalmq/protocols/ProtocolHeaderBinarySize.h"
-#include "finalmq/protocols/ProtocolDelimiter.h"
+#include "finalmq/protocols/ProtocolDelimiterLinefeed.h"
 #include "finalmq/protocolconnection/ProtocolMessage.h"
 #include "finalmq/logger/Logger.h"
 
@@ -51,7 +51,7 @@ using finalmq::CorrelationId;
 using finalmq::IProtocolSessionPtr;
 using finalmq::IProtocolPtr;
 using finalmq::ReplyContextUPtr;
-using finalmq::ProtocolDelimiter;
+using finalmq::ProtocolDelimiterLinefeed;
 using finalmq::ProtocolHeaderBinarySize;
 using finalmq::Logger;
 using finalmq::LogContext;
@@ -744,9 +744,9 @@ public:
                                 if (!endpointEntry.ssl &&
                                     endpointEntry.contenttype == RemoteEntityFormatJson::CONTENT_TYPE)
                                 {
-                                    if (endpointEntry.framingprotocol == ProtocolDelimiter::PROTOCOL_ID)
+                                    if (endpointEntry.framingprotocol == ProtocolDelimiterLinefeed::PROTOCOL_ID)
                                     {
-                                        protocol = std::make_shared<ProtocolDelimiter>("\n");
+                                        protocol = std::make_shared<ProtocolDelimiterLinefeed>();
                                     }
                                     else if (endpointEntry.framingprotocol == ProtocolHeaderBinarySize::PROTOCOL_ID)
                                     {

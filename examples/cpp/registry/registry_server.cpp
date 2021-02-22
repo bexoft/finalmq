@@ -26,7 +26,7 @@
 #include "finalmq/remoteentity/RemoteEntityFormatJson.h"
 #include "finalmq/remoteentity/FmqRegistryClient.h"
 #include "finalmq/protocols/ProtocolHeaderBinarySize.h"
-#include "finalmq/protocols/ProtocolDelimiter.h"
+#include "finalmq/protocols/ProtocolDelimiterLinefeed.h"
 #include "finalmq/logger/Logger.h"
 
 // the definition of the messages are in the file helloworld.fmq
@@ -45,7 +45,7 @@ using finalmq::PeerId;
 using finalmq::PeerEvent;
 using finalmq::ReplyContextUPtr;
 using finalmq::ProtocolHeaderBinarySizeFactory;
-using finalmq::ProtocolDelimiterFactory;
+using finalmq::ProtocolDelimiterLinefeedFactory;
 using finalmq::IProtocolSessionPtr;
 using finalmq::ConnectionData;
 using finalmq::ConnectionEvent;
@@ -131,9 +131,9 @@ int main()
     // content type in payload: protobuf
     entityContainer.bind("tcp://*:7777", std::make_shared<ProtocolHeaderBinarySizeFactory>(), RemoteEntityFormatProto::CONTENT_TYPE);
 
-    // Open listener port 8888 with delimiter framing protocol ProtocolDelimiter ('\n' is end of frame).
+    // Open listener port 8888 with delimiter framing protocol ProtocolDelimiterLinefeed ('\n' is end of frame).
     // content type in payload: JSON
-    entityContainer.bind("tcp://*:8888", std::make_shared<ProtocolDelimiterFactory>("\n"), RemoteEntityFormatJson::CONTENT_TYPE);
+    entityContainer.bind("tcp://*:8888", std::make_shared<ProtocolDelimiterLinefeedFactory>(), RemoteEntityFormatJson::CONTENT_TYPE);
 
     // note:
     // multiple access points (listening ports) can be activated by calling bind() several times.
@@ -147,8 +147,8 @@ int main()
 
     FmqRegistryClient fmqRegistryClient(&entityContainer);
     fmqRegistryClient.registerService({"ExampleService", "MyService", finalmq::ENTITYID_INVALID,
-                                       {{finalmq::fmqreg::SocketProtocol::SOCKET_TCP, finalmq::ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityFormatProto::CONTENT_TYPE, false, "tcp://*:7777"},
-                                        {finalmq::fmqreg::SocketProtocol::SOCKET_TCP, finalmq::ProtocolDelimiter::PROTOCOL_ID,        RemoteEntityFormatJson::CONTENT_TYPE,  false, "tcp://*:8888"}}});
+                                       {{finalmq::fmqreg::SocketProtocol::SOCKET_TCP, finalmq::ProtocolHeaderBinarySize::PROTOCOL_ID,  RemoteEntityFormatProto::CONTENT_TYPE, false, "tcp://*:7777"},
+                                        {finalmq::fmqreg::SocketProtocol::SOCKET_TCP, finalmq::ProtocolDelimiterLinefeed::PROTOCOL_ID, RemoteEntityFormatJson::CONTENT_TYPE,  false, "tcp://*:8888"}}});
 
     // run
     entityContainer.run();

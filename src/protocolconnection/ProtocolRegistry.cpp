@@ -20,47 +20,45 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#pragma once
-
-#include "finalmq/streamconnection/IMessage.h"
-#include "finalmq/protocolconnection/IProtocol.h"
-#include "finalmq/protocolconnection/ProtocolFixHeaderHelper.h"
+#include "finalmq/protocolconnection/ProtocolRegistry.h"
 
 
 
 namespace finalmq {
 
 
-class SYMBOLEXP ProtocolHeaderBinarySize : public IProtocol
+
+void ProtocolRegistryImpl::registerProtocolFactory(int protocolId, const IProtocolFactoryPtr& protocolFactory)
 {
-public:
-    enum { PROTOCOL_ID = 2 };
-
-    ProtocolHeaderBinarySize();
-
-private:
-    // IProtocol
-    virtual void setCallback(const std::weak_ptr<IProtocolCallback>& callback) override;
-    virtual std::uint32_t getProtocolId() const override;
-    virtual bool areMessagesResendable() const override;
-    virtual IMessagePtr createMessage() const override;
-    virtual void receive(const SocketPtr& socket, int bytesToRead) override;
-    virtual void prepareMessageToSend(IMessagePtr message) override;
-    virtual void socketConnected() override;
-    virtual void socketDisconnected() override;
-
-    std::weak_ptr<IProtocolCallback>    m_callback;
-    ProtocolFixHeaderHelper             m_headerHelper;
-};
+    m_protocolFactories[protocolId] = protocolFactory;
+}
 
 
-class SYMBOLEXP ProtocolHeaderBinarySizeFactory : public IProtocolFactory
+IProtocolFactoryPtr ProtocolRegistryImpl::getProtocolFactory(int protocolId) const
 {
-public:
+    auto it = m_protocolFactories.find(protocolId);
+    if (it != m_protocolFactories.end())
+    {
+        return it->second;
+    }
+    return nullptr;
+}
 
-private:
-    // IProtocolFactory
-    virtual IProtocolPtr createProtocol() override;
-};
+
+
+
+
+//////////////////////////////////////
+/// ProtocolRegistry
+
+std::unique_ptr<IProtocolRegistry> ProtocolRegistry::m_instance;
+
+void ProtocolRegistry::setInstance(std::unique_ptr<IProtocolRegistry>& instance)
+{
+    m_instance = std::move(instance);
+}
+
+
+
 
 }   // namespace finalmq
