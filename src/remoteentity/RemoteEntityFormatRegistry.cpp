@@ -42,6 +42,15 @@ void RemoteEntityFormatRegistryImpl::registerFormat(int contentType, const std::
 }
 
 
+bool RemoteEntityFormatRegistryImpl::isRegistered(int contentType) const
+{
+    auto it = m_formats.find(contentType);
+    if (it != m_formats.end())
+    {
+        return true;
+    }
+    return false;
+}
 
 
 bool RemoteEntityFormatRegistryImpl::serialize(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase* structBase)
@@ -60,7 +69,7 @@ bool RemoteEntityFormatRegistryImpl::serialize(IMessage& message, int contentTyp
 inline static bool shallSend(const remoteentity::Header& header)
 {
     if ((header.mode != MsgMode::MSG_REPLY) ||
-        (header.status == Status::STATUS_ENTITY_NOT_FOUND || header.corrid != CORRELATIONID_NONE))
+        (/*header.status == Status::STATUS_ENTITY_NOT_FOUND ||*/ header.corrid != CORRELATIONID_NONE))
     {
         return true;
     }

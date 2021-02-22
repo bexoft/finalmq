@@ -61,6 +61,7 @@ struct IRemoteEntityFormatRegistry
     virtual bool send(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase* structBase = nullptr) = 0;
 
     virtual void registerFormat(int contentType, const std::shared_ptr<IRemoteEntityFormat>& format) = 0;
+    virtual bool isRegistered(int contentType) const = 0;
 };
 
 
@@ -73,6 +74,7 @@ public:
     virtual bool serialize(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase* structBase = nullptr) override;
     virtual bool send(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase* structBase = nullptr) override;
     virtual void registerFormat(int contentType, const std::shared_ptr<IRemoteEntityFormat>& format) override;
+    virtual bool isRegistered(int contentType) const override;
 
 private:
     std::unordered_map<int, std::shared_ptr<IRemoteEntityFormat>> m_formats;

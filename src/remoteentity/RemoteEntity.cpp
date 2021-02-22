@@ -285,7 +285,7 @@ std::string PeerManager::getEntityName(const PeerId& peerId)
 
 PeerId PeerManager::addPeer(const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName, bool incoming, bool& added)
 {
-    assert(entityId != ENTITYID_INVALID || !entityName.empty());
+//    assert(entityId != ENTITYID_INVALID || !entityName.empty());
     added = false;
 
     std::unique_lock<std::mutex> lock(m_mutex);

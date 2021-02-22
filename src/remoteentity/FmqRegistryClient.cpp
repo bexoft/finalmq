@@ -22,9 +22,10 @@
 
 #include "finalmq/remoteentity/FmqRegistryClient.h"
 #include "finalmq/remoteentity/RemoteEntityFormatProto.h"
+#include "finalmq/remoteentity/RemoteEntityFormatRegistry.h"
 
+#include "finalmq/protocolconnection/ProtocolRegistry.h"
 #include "finalmq/protocols/ProtocolHeaderBinarySize.h"
-#include "finalmq/protocols/ProtocolDelimiterLinefeed.h"
 
 #include <thread>
 
@@ -70,18 +71,23 @@ static ssize_t pickEndpointEntry(const std::vector<fmqreg::Endpoint>& endpoints,
         const fmqreg::Endpoint& endpoint = endpoints[i];
         if (endpoint.ssl == ssl)
         {
-            if (endpoint.socketprotocol == fmqreg::SocketProtocol::SOCKET_TCP)
+            IProtocolFactoryPtr factory = ProtocolRegistry::instance().getProtocolFactory(endpoint.framingprotocol);
+            bool contentTypeKnown = RemoteEntityFormatRegistry::instance().isRegistered(endpoint.contenttype);
+            if (factory && contentTypeKnown)
             {
-                if (indexTcp == -1)
+                if (endpoint.socketprotocol == fmqreg::SocketProtocol::SOCKET_TCP)
                 {
-                    indexTcp = i;
+                    if (indexTcp == -1)
+                    {
+                        indexTcp = i;
+                    }
                 }
-            }
-            else if (endpoint.socketprotocol == fmqreg::SocketProtocol::SOCKET_UNIXDOMAIN)
-            {
-                if (indexUds == -1)
+                else if (endpoint.socketprotocol == fmqreg::SocketProtocol::SOCKET_UNIXDOMAIN)
                 {
-                    indexUds = i;
+                    if (indexUds == -1)
+                    {
+                        indexUds = i;
+                    }
                 }
             }
         }
@@ -143,20 +149,12 @@ public:
                             endpoint.replace(pos, std::string("*").length(), m_hostname);
                         }
 
-                        IProtocolPtr protocol;
-                        if (endpointEntry.framingprotocol == ProtocolDelimiterLinefeed::PROTOCOL_ID)
-                        {
-                            protocol = std::make_shared<ProtocolDelimiterLinefeed>();
-                        }
-                        else if (endpointEntry.framingprotocol == ProtocolHeaderBinarySize::PROTOCOL_ID)
-                        {
-                            protocol = std::make_shared<ProtocolHeaderBinarySize>();
-                        }
+                        IProtocolFactoryPtr factory = ProtocolRegistry::instance().getProtocolFactory(endpointEntry.framingprotocol);
 
-                        if (protocol)
+                        if (factory)
                         {
                             connectDone = true;
-                            IProtocolSessionPtr session = remoteEntityContainer->connect(endpoint, protocol, endpointEntry.contenttype, m_connectProperties);
+                            IProtocolSessionPtr session = remoteEntityContainer->connect(endpoint, factory->createProtocol(), endpointEntry.contenttype, m_connectProperties);
                             re->connect(m_peerId, session, reply->service.entityname, reply->service.entityid);
                         }
                     }
