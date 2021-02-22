@@ -675,6 +675,17 @@ public:
         return httpSession;
     }
 
+
+#if WIN32
+    static void* memrchr(const void* m, int c, size_t n)
+    {
+        const unsigned char* s = (unsigned char*)m;
+        c = (unsigned char)c;
+        while (n--) if (s[n] == c) return (void*)(s + n);
+        return 0;
+    }
+#endif
+
     static ssize_t getRequestData(const finalmq::BufferRef& value, std::string& objectName, std::string& type)
     {
         // 01234567890123456789012345678901234

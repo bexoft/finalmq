@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include <QObject>
 
 #include "finalmq/helpers/Executor.h"
 

@@ -97,6 +97,13 @@ add_custom_command(
     COMMENT "Generating cpp code out of fmqreg.fmq."
 )
 
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/Qt)
+add_custom_command(
+    COMMAND node ${CODEGENERATOR_CPP} --input=${CMAKE_CURRENT_SOURCE_DIR}/inc/finalmq/Qt/qtdata.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/Qt --exportmacro=EXPORT_finalmq
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/inc/finalmq/Qt/qtdata.fmq
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/Qt/qtdata.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/Qt/qtdata.fmq.h
+    COMMENT "Generating cpp code out of qtdata.fmq."
+)
 
 
 #Bring the headers into the project
@@ -129,6 +136,7 @@ add_library(finalmq SHARED ${SOURCES}
     ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/metadataserialize/metadata.fmq.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/remoteentity/entitydata.fmq.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/interfaces/fmqreg.fmq.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/Qt/qtdata.fmq.cpp
     )
 
 
