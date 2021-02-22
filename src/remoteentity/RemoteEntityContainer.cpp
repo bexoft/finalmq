@@ -21,8 +21,6 @@
 //SOFTWARE.
 
 #include "finalmq/remoteentity/RemoteEntityContainer.h"
-#include "finalmq/protocols/ProtocolHeaderBinarySize.h"
-#include "finalmq/protocols/ProtocolDelimiter.h"
 #include "finalmq/helpers/ModulenameFinalmq.h"
 
 #include "finalmq/remoteentity/entitydata.fmq.h"

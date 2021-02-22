@@ -26,7 +26,7 @@
 #include "finalmq/remoteentity/RemoteEntityFormatProto.h"
 #include "finalmq/remoteentity/RemoteEntityFormatJson.h"
 #include "finalmq/protocols/ProtocolHeaderBinarySize.h"
-#include "finalmq/protocols/ProtocolDelimiter.h"
+#include "finalmq/protocols/ProtocolDelimiterLinefeed.h"
 #include "finalmq/logger/Logger.h"
 
 // the definition of the messages are in the file helloworld.fmq

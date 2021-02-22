@@ -21,11 +21,11 @@
 //SOFTWARE.
 
 #include "finalmq/remoteentity/FmqRegistryClient.h"
-#include "finalmq/remoteentity/RemoteEntityFormatJson.h"
 #include "finalmq/remoteentity/RemoteEntityFormatProto.h"
+#include "finalmq/remoteentity/RemoteEntityFormatRegistry.h"
 
+#include "finalmq/protocolconnection/ProtocolRegistry.h"
 #include "finalmq/protocols/ProtocolHeaderBinarySize.h"
-#include "finalmq/protocols/ProtocolDelimiter.h"
 
 #include <thread>
 
@@ -64,55 +64,42 @@ void FmqRegistryClient::init()
 static ssize_t pickEndpointEntry(const std::vector<fmqreg::Endpoint>& endpoints, bool ssl, bool local)
 {
     ssize_t index = -1;
-    ssize_t indexProtoTcp = -1;
-    ssize_t indexProtoUds = -1;
-    ssize_t indexJsonTcp = -1;
-    ssize_t indexJsonUds = -1;
+    ssize_t indexTcp = -1;
+    ssize_t indexUds = -1;
     for (ssize_t i = 0; i < static_cast<ssize_t>(endpoints.size()); ++i)
     {
         const fmqreg::Endpoint& endpoint = endpoints[i];
         if (endpoint.ssl == ssl)
         {
-            if (endpoint.socketprotocol == fmqreg::SocketProtocol::SOCKET_TCP)
+            IProtocolFactoryPtr factory = ProtocolRegistry::instance().getProtocolFactory(endpoint.framingprotocol);
+            bool contentTypeKnown = RemoteEntityFormatRegistry::instance().isRegistered(endpoint.contenttype);
+            if (factory && contentTypeKnown)
             {
-                if (endpoint.contenttype == RemoteEntityFormatProto::CONTENT_TYPE)
+                if (endpoint.socketprotocol == fmqreg::SocketProtocol::SOCKET_TCP)
                 {
-                    indexProtoTcp = i;
+                    if (indexTcp == -1)
+                    {
+                        indexTcp = i;
+                    }
                 }
-                else if (endpoint.contenttype == RemoteEntityFormatJson::CONTENT_TYPE)
+                else if (endpoint.socketprotocol == fmqreg::SocketProtocol::SOCKET_UNIXDOMAIN)
                 {
-                    indexJsonTcp = i;
-                }
-            }
-            else if (endpoint.socketprotocol == fmqreg::SocketProtocol::SOCKET_UNIXDOMAIN)
-            {
-                if (endpoint.contenttype == RemoteEntityFormatProto::CONTENT_TYPE)
-                {
-                    indexProtoUds = i;
-                }
-                else if (endpoint.contenttype == RemoteEntityFormatJson::CONTENT_TYPE)
-                {
-                    indexJsonUds = i;
+                    if (indexUds == -1)
+                    {
+                        indexUds = i;
+                    }
                 }
             }
         }
     }
 
-    if (indexProtoUds != -1 && local)
+    if (indexUds != -1 && local)
     {
-        index = indexProtoUds;
+        index = indexUds;
     }
-    else if (indexProtoTcp != -1)
+    else if (indexTcp != -1)
     {
-        index = indexProtoTcp;
-    }
-    else if (indexJsonUds != -1 && local)
-    {
-        index = indexJsonUds;
-    }
-    else if (indexJsonTcp != -1)
-    {
-        index = indexJsonTcp;
+        index = indexTcp;
     }
     return index;
 }
@@ -162,20 +149,12 @@ public:
                             endpoint.replace(pos, std::string("*").length(), m_hostname);
                         }
 
-                        IProtocolPtr protocol;
-                        if (endpointEntry.framingprotocol == ProtocolDelimiter::PROTOCOL_ID)
-                        {
-                            protocol = std::make_shared<ProtocolDelimiter>("\n");
-                        }
-                        else if (endpointEntry.framingprotocol == ProtocolHeaderBinarySize::PROTOCOL_ID)
-                        {
-                            protocol = std::make_shared<ProtocolHeaderBinarySize>();
-                        }
+                        IProtocolFactoryPtr factory = ProtocolRegistry::instance().getProtocolFactory(endpointEntry.framingprotocol);
 
-                        if (protocol)
+                        if (factory)
                         {
                             connectDone = true;
-                            IProtocolSessionPtr session = remoteEntityContainer->connect(endpoint, protocol, endpointEntry.contenttype, m_connectProperties);
+                            IProtocolSessionPtr session = remoteEntityContainer->connect(endpoint, factory->createProtocol(), endpointEntry.contenttype, m_connectProperties);
                             re->connect(m_peerId, session, reply->service.entityname, reply->service.entityid);
                         }
                     }

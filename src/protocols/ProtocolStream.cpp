@@ -23,6 +23,7 @@
 
 #include "finalmq/protocols/ProtocolStream.h"
 #include "finalmq/protocolconnection/ProtocolMessage.h"
+#include "finalmq/protocolconnection/ProtocolRegistry.h"
 #include "finalmq/streamconnection/Socket.h"
 
 
@@ -31,8 +32,6 @@ namespace finalmq {
 //---------------------------------------
 // ProtocolStream
 //---------------------------------------
-
-const std::uint32_t ProtocolStream::PROTOCOL_ID = 0x00000001;
 
 
 ProtocolStream::ProtocolStream()
@@ -108,6 +107,15 @@ void ProtocolStream::socketDisconnected()
 //---------------------------------------
 // ProtocolStreamFactory
 //---------------------------------------
+
+struct RegisterProtocolStreamFactory
+{
+    RegisterProtocolStreamFactory()
+    {
+        ProtocolRegistry::instance().registerProtocolFactory(ProtocolStream::PROTOCOL_ID, std::make_shared<ProtocolStreamFactory>());
+    }
+} g_registerProtocolStreamFactory;
+
 
 
 

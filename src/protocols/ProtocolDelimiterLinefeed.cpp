@@ -20,47 +20,54 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#pragma once
 
-#include "finalmq/streamconnection/IMessage.h"
-#include "finalmq/protocolconnection/IProtocol.h"
-#include "finalmq/protocolconnection/ProtocolFixHeaderHelper.h"
-
+#include "finalmq/protocols/ProtocolDelimiterLinefeed.h"
+#include "finalmq/protocolconnection/ProtocolMessage.h"
+#include "finalmq/protocolconnection/ProtocolRegistry.h"
+#include "finalmq/streamconnection/Socket.h"
 
 
 namespace finalmq {
 
+//---------------------------------------
+// ProtocolStream
+//---------------------------------------
 
-class SYMBOLEXP ProtocolHeaderBinarySize : public IProtocol
+
+ProtocolDelimiterLinefeed::ProtocolDelimiterLinefeed()
+    : ProtocolDelimiter("\n")
 {
-public:
-    enum { PROTOCOL_ID = 2 };
 
-    ProtocolHeaderBinarySize();
-
-private:
-    // IProtocol
-    virtual void setCallback(const std::weak_ptr<IProtocolCallback>& callback) override;
-    virtual std::uint32_t getProtocolId() const override;
-    virtual bool areMessagesResendable() const override;
-    virtual IMessagePtr createMessage() const override;
-    virtual void receive(const SocketPtr& socket, int bytesToRead) override;
-    virtual void prepareMessageToSend(IMessagePtr message) override;
-    virtual void socketConnected() override;
-    virtual void socketDisconnected() override;
-
-    std::weak_ptr<IProtocolCallback>    m_callback;
-    ProtocolFixHeaderHelper             m_headerHelper;
-};
+}
 
 
-class SYMBOLEXP ProtocolHeaderBinarySizeFactory : public IProtocolFactory
+// IProtocol
+std::uint32_t ProtocolDelimiterLinefeed::getProtocolId() const
 {
-public:
+    return PROTOCOL_ID;
+}
 
-private:
-    // IProtocolFactory
-    virtual IProtocolPtr createProtocol() override;
-};
+
+
+
+//---------------------------------------
+// ProtocolDelimiterLinefeedFactory
+//---------------------------------------
+
+
+struct RegisterProtocolDelimiterLinefeedFactory
+{
+    RegisterProtocolDelimiterLinefeedFactory()
+    {
+        ProtocolRegistry::instance().registerProtocolFactory(ProtocolDelimiterLinefeed::PROTOCOL_ID, std::make_shared<ProtocolDelimiterLinefeedFactory>());
+    }
+} g_registerProtocolDelimiterLinefeedFactory;
+
+
+// IProtocolFactory
+IProtocolPtr ProtocolDelimiterLinefeedFactory::createProtocol()
+{
+    return std::make_shared<ProtocolDelimiterLinefeed>();
+}
 
 }   // namespace finalmq

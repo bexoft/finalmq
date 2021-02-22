@@ -31,17 +31,15 @@
 namespace finalmq {
 
 
-class SYMBOLEXP ProtocolDelimiter : public IProtocol
+class ProtocolDelimiter : public IProtocol
 {
 public:
-    static const std::uint32_t PROTOCOL_ID;
-
     ProtocolDelimiter(const std::string& delimiter);
 
 private:
     // IProtocol
     virtual void setCallback(const std::weak_ptr<IProtocolCallback>& callback) override;
-    virtual std::uint32_t getProtocolId() const override;
+    virtual std::uint32_t getProtocolId() const = 0;
     virtual bool areMessagesResendable() const override;
     virtual IMessagePtr createMessage() const override;
     virtual void receive(const SocketPtr& socket, int bytesToRead) override;
@@ -64,16 +62,5 @@ private:
 };
 
 
-class SYMBOLEXP ProtocolDelimiterFactory : public IProtocolFactory
-{
-public:
-    ProtocolDelimiterFactory(const std::string& delimiter);
-
-private:
-    // IProtocolFactory
-    virtual IProtocolPtr createProtocol() override;
-
-    std::string                         m_delimiter;
-};
 
 }   // namespace finalmq

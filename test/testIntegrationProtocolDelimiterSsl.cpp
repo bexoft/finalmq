@@ -28,7 +28,7 @@
 
 #include "finalmq/protocolconnection/ProtocolSessionContainer.h"
 #include "MockIProtocolSessionCallback.h"
-#include "finalmq/protocols/ProtocolDelimiter.h"
+#include "finalmq/protocols/ProtocolDelimiterLinefeed.h"
 #include "testHelper.h"
 
 #include <thread>
@@ -48,6 +48,31 @@ static const std::string DELIMITER = "lololololololololololololololololololololo
 
 
 
+class ProtocolDelimiterTestLong : public ProtocolDelimiter
+{
+public:
+    ProtocolDelimiterTestLong()
+        : ProtocolDelimiter(DELIMITER)
+    {
+    }
+private:
+    // IProtocol
+    virtual std::uint32_t getProtocolId() const
+    {
+        return 0;   // not a real protocol, just for the test
+    }
+};
+class ProtocolDelimiterTestLongFactory : public IProtocolFactory
+{
+private:
+    // IProtocolFactory
+    virtual IProtocolPtr createProtocol() override
+    {
+        return std::make_shared<ProtocolDelimiterTestLong>();
+    }
+};
+
+
 
 MATCHER_P(ReceivedMessage, msg, "")
 {
@@ -57,14 +82,14 @@ MATCHER_P(ReceivedMessage, msg, "")
 }
 
 
-class TestIntegrationProtocolDelimiterSessionContainerSsl: public testing::Test
+class TestIntegrationProtocolDelimiterLinefeedSessionContainerSsl: public testing::Test
 {
 public:
 
 protected:
     virtual void SetUp()
     {
-        m_factoryProtocol = std::make_shared<ProtocolDelimiterFactory>(DELIMITER);
+        m_factoryProtocol = std::make_shared<ProtocolDelimiterTestLongFactory>();
         m_mockClientCallback = std::make_shared<MockIProtocolSessionCallback>();
         m_mockServerCallback = std::make_shared<MockIProtocolSessionCallback>();
         m_sessionContainer = std::make_unique<ProtocolSessionContainer>();
@@ -95,21 +120,21 @@ protected:
 
 
 
-TEST_F(TestIntegrationProtocolDelimiterSessionContainerSsl, testStartAndStopThreadIntern)
+TEST_F(TestIntegrationProtocolDelimiterLinefeedSessionContainerSsl, testStartAndStopThreadIntern)
 {
 }
 
 
 
 
-TEST_F(TestIntegrationProtocolDelimiterSessionContainerSsl, testBind)
+TEST_F(TestIntegrationProtocolDelimiterLinefeedSessionContainerSsl, testBind)
 {
     int res = m_sessionContainer->bind("tcp://*:3333", m_mockServerCallback, m_factoryProtocol, {{true, "ssltest.cert.pem", "ssltest.key.pem"}});
     EXPECT_EQ(res, 0);
 }
 
 
-TEST_F(TestIntegrationProtocolDelimiterSessionContainerSsl, testUnbind)
+TEST_F(TestIntegrationProtocolDelimiterLinefeedSessionContainerSsl, testUnbind)
 {
     int res = m_sessionContainer->bind("tcp://*:3333", m_mockServerCallback, m_factoryProtocol, {{true, "ssltest.cert.pem", "ssltest.key.pem"}});
     EXPECT_EQ(res, 0);
@@ -117,7 +142,7 @@ TEST_F(TestIntegrationProtocolDelimiterSessionContainerSsl, testUnbind)
 }
 
 
-TEST_F(TestIntegrationProtocolDelimiterSessionContainerSsl, testBindConnect)
+TEST_F(TestIntegrationProtocolDelimiterLinefeedSessionContainerSsl, testBindConnect)
 {
     int res = m_sessionContainer->bind("tcp://*:3333", m_mockServerCallback, m_factoryProtocol, {{true, "ssltest.cert.pem", "ssltest.key.pem"}});
     EXPECT_EQ(res, 0);
@@ -130,7 +155,7 @@ TEST_F(TestIntegrationProtocolDelimiterSessionContainerSsl, testBindConnect)
     EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
     auto& expectReceive = EXPECT_CALL(*m_mockServerCallback, received(_, ReceivedMessage(MESSAGE1_BUFFER))).Times(1);
 
-    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333", m_mockClientCallback, std::make_shared<ProtocolDelimiter>(DELIMITER), {{true}});
+    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333", m_mockClientCallback, std::make_shared<ProtocolDelimiterTestLong>(), {{true}});
     IMessagePtr message = connection->createMessage();
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
@@ -143,12 +168,12 @@ TEST_F(TestIntegrationProtocolDelimiterSessionContainerSsl, testBindConnect)
 
 
 
-TEST_F(TestIntegrationProtocolDelimiterSessionContainerSsl, testConnectBind)
+TEST_F(TestIntegrationProtocolDelimiterLinefeedSessionContainerSsl, testConnectBind)
 {
     auto& expectConnected = EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(1);
     EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
 
-    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333", m_mockClientCallback, std::make_shared<ProtocolDelimiter>(DELIMITER), {{true}, 1});
+    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333", m_mockClientCallback, std::make_shared<ProtocolDelimiterTestLong>(), {{true}, 1});
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
@@ -162,13 +187,13 @@ TEST_F(TestIntegrationProtocolDelimiterSessionContainerSsl, testConnectBind)
 }
 
 
-TEST_F(TestIntegrationProtocolDelimiterSessionContainerSsl, testSendConnectBind)
+TEST_F(TestIntegrationProtocolDelimiterLinefeedSessionContainerSsl, testSendConnectBind)
 {
     EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(1);
     EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
     auto& expectReceive = EXPECT_CALL(*m_mockServerCallback, received(_, ReceivedMessage(MESSAGE1_BUFFER))).Times(1);
 
-    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333", m_mockClientCallback, std::make_shared<ProtocolDelimiter>(DELIMITER), {{true}, 1});
+    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333", m_mockClientCallback, std::make_shared<ProtocolDelimiterTestLong>(), {{true}, 1});
     IMessagePtr message = connection->createMessage();
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
@@ -185,12 +210,12 @@ TEST_F(TestIntegrationProtocolDelimiterSessionContainerSsl, testSendConnectBind)
 }
 
 
-TEST_F(TestIntegrationProtocolDelimiterSessionContainerSsl, testReconnectExpires)
+TEST_F(TestIntegrationProtocolDelimiterLinefeedSessionContainerSsl, testReconnectExpires)
 {
     EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(0);
     auto& expectDisconnected = EXPECT_CALL(*m_mockClientCallback, disconnected(_)).Times(1);
 
-    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333", m_mockClientCallback, std::make_shared<ProtocolDelimiter>(DELIMITER), {{true}, 1, 1});
+    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333", m_mockClientCallback, std::make_shared<ProtocolDelimiterTestLong>(), {{true}, 1, 1});
     IMessagePtr message = connection->createMessage();
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
@@ -204,7 +229,7 @@ TEST_F(TestIntegrationProtocolDelimiterSessionContainerSsl, testReconnectExpires
 
 
 
-TEST_F(TestIntegrationProtocolDelimiterSessionContainerSsl, testBindConnectDisconnect)
+TEST_F(TestIntegrationProtocolDelimiterLinefeedSessionContainerSsl, testBindConnectDisconnect)
 {
     EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(1);
     auto& expectConnected = EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
@@ -217,7 +242,7 @@ TEST_F(TestIntegrationProtocolDelimiterSessionContainerSsl, testBindConnectDisco
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
-    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333", m_mockClientCallback, std::make_shared<ProtocolDelimiter>(DELIMITER), {{true}});
+    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333", m_mockClientCallback, std::make_shared<ProtocolDelimiterTestLong>(), {{true}});
     IMessagePtr message = connection->createMessage();
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
@@ -233,7 +258,7 @@ TEST_F(TestIntegrationProtocolDelimiterSessionContainerSsl, testBindConnectDisco
 }
 
 
-TEST_F(TestIntegrationProtocolDelimiterSessionContainerSsl, testGetAllConnections)
+TEST_F(TestIntegrationProtocolDelimiterLinefeedSessionContainerSsl, testGetAllConnections)
 {
     int res = m_sessionContainer->bind("tcp://*:3333", m_mockServerCallback, m_factoryProtocol, {{true, "ssltest.cert.pem", "ssltest.key.pem"}});
     EXPECT_EQ(res, 0);
@@ -245,7 +270,7 @@ TEST_F(TestIntegrationProtocolDelimiterSessionContainerSsl, testGetAllConnection
     auto& expectConnectedServer = EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1)
                                             .WillOnce(testing::SaveArg<0>(&connBind));
 
-    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333", m_mockClientCallback, std::make_shared<ProtocolDelimiter>(DELIMITER), {{true}});
+    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333", m_mockClientCallback, std::make_shared<ProtocolDelimiterTestLong>(), {{true}});
 
     waitTillDone(expectConnectedClient, 5000);
     waitTillDone(expectConnectedServer, 5000);
@@ -263,7 +288,7 @@ TEST_F(TestIntegrationProtocolDelimiterSessionContainerSsl, testGetAllConnection
 }
 
 
-TEST_F(TestIntegrationProtocolDelimiterSessionContainerSsl, testSendMultipleMessages)
+TEST_F(TestIntegrationProtocolDelimiterLinefeedSessionContainerSsl, testSendMultipleMessages)
 {
     int res = m_sessionContainer->bind("tcp://*:3333", m_mockServerCallback, m_factoryProtocol, {{true, "ssltest.cert.pem", "ssltest.key.pem"}});
     EXPECT_EQ(res, 0);
@@ -277,7 +302,7 @@ TEST_F(TestIntegrationProtocolDelimiterSessionContainerSsl, testSendMultipleMess
     auto& expectReceiveClient = EXPECT_CALL(*m_mockClientCallback, received(_, ReceivedMessage(MESSAGE1_BUFFER))).Times(10001);
     auto& expectReceiveServer = EXPECT_CALL(*m_mockServerCallback, received(_, ReceivedMessage(MESSAGE1_BUFFER))).Times(10001);
 
-    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333", m_mockClientCallback, std::make_shared<ProtocolDelimiter>(DELIMITER), {{true}});
+    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333", m_mockClientCallback, std::make_shared<ProtocolDelimiterTestLong>(), {{true}});
     IMessagePtr message = connection->createMessage();
     message->addSendPayload(MESSAGE1_BUFFER);
 
@@ -300,7 +325,7 @@ TEST_F(TestIntegrationProtocolDelimiterSessionContainerSsl, testSendMultipleMess
 }
 
 
-TEST_F(TestIntegrationProtocolDelimiterSessionContainerSsl, testSendBigMultipleMessages)
+TEST_F(TestIntegrationProtocolDelimiterLinefeedSessionContainerSsl, testSendBigMultipleMessages)
 {
     int res = m_sessionContainer->bind("tcp://*:3333", m_mockServerCallback, m_factoryProtocol, {{true, "ssltest.cert.pem", "ssltest.key.pem"}});
     EXPECT_EQ(res, 0);
@@ -314,7 +339,7 @@ TEST_F(TestIntegrationProtocolDelimiterSessionContainerSsl, testSendBigMultipleM
     auto& expectReceiveClient = EXPECT_CALL(*m_mockClientCallback, received(_, ReceivedMessage(MESSAGE2_BUFFER))).Times(101);
     auto& expectReceiveServer = EXPECT_CALL(*m_mockServerCallback, received(_, ReceivedMessage(MESSAGE2_BUFFER))).Times(101);
 
-    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333", m_mockClientCallback, std::make_shared<ProtocolDelimiter>(DELIMITER), {{true}});
+    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333", m_mockClientCallback, std::make_shared<ProtocolDelimiterTestLong>(), {{true}});
     IMessagePtr message = connection->createMessage();
     message->addSendPayload(MESSAGE2_BUFFER);
 
@@ -339,7 +364,7 @@ TEST_F(TestIntegrationProtocolDelimiterSessionContainerSsl, testSendBigMultipleM
 
 
 
-//TEST_F(TestIntegrationProtocolDelimiterSessionContainerSsl, testSslServer)
+//TEST_F(TestIntegrationProtocolDelimiterLinefeedSessionContainerSsl, testSslServer)
 //{
 //    int res = m_sessionContainer->bindSsl("tcp://localhost:3333", m_mockServerCallback, m_factoryProtocol, {"ssltest.cert.pem", "ssltest.key.pem"});
 //    EXPECT_EQ(res, 0);

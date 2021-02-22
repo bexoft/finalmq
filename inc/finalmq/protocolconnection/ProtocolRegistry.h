@@ -22,45 +22,65 @@
 
 #pragma once
 
-#include "finalmq/streamconnection/IMessage.h"
-#include "finalmq/protocolconnection/IProtocol.h"
-#include "finalmq/protocolconnection/ProtocolFixHeaderHelper.h"
 
+#include "finalmq/protocolconnection/IProtocol.h"
+
+#include <unordered_map>
 
 
 namespace finalmq {
 
 
-class SYMBOLEXP ProtocolHeaderBinarySize : public IProtocol
+enum
 {
-public:
-    enum { PROTOCOL_ID = 2 };
-
-    ProtocolHeaderBinarySize();
-
-private:
-    // IProtocol
-    virtual void setCallback(const std::weak_ptr<IProtocolCallback>& callback) override;
-    virtual std::uint32_t getProtocolId() const override;
-    virtual bool areMessagesResendable() const override;
-    virtual IMessagePtr createMessage() const override;
-    virtual void receive(const SocketPtr& socket, int bytesToRead) override;
-    virtual void prepareMessageToSend(IMessagePtr message) override;
-    virtual void socketConnected() override;
-    virtual void socketDisconnected() override;
-
-    std::weak_ptr<IProtocolCallback>    m_callback;
-    ProtocolFixHeaderHelper             m_headerHelper;
+    REMOTEENTITYPROTOCOL_DELIMITERLINEFEED = 1,
+    REMOTEENTITYPROTOCOL_HEADERBINARYSIZE = 2,
 };
 
 
-class SYMBOLEXP ProtocolHeaderBinarySizeFactory : public IProtocolFactory
+struct IProtocolRegistry
+{
+    virtual ~IProtocolRegistry() {}
+
+    virtual void registerProtocolFactory(int protocolId, const IProtocolFactoryPtr& protocolFactory) = 0;
+    virtual IProtocolFactoryPtr getProtocolFactory(int protocolId) const = 0;
+};
+
+
+
+
+class ProtocolRegistryImpl : public IProtocolRegistry
 {
 public:
+    virtual void registerProtocolFactory(int remoteEntityProtocolId, const IProtocolFactoryPtr& protocolFactory) override;
+    virtual IProtocolFactoryPtr getProtocolFactory(int remoteEntityProtocolId) const override;
 
 private:
-    // IProtocolFactory
-    virtual IProtocolPtr createProtocol() override;
+    std::unordered_map<int, IProtocolFactoryPtr> m_protocolFactories;
 };
+
+
+class SYMBOLEXP ProtocolRegistry
+{
+public:
+    inline static IProtocolRegistry& instance()
+    {
+        if (!m_instance)
+        {
+            m_instance = std::make_unique<ProtocolRegistryImpl>();
+        }
+        return *m_instance;
+    }
+    static void setInstance(std::unique_ptr<IProtocolRegistry>& instance);
+
+private:
+    ProtocolRegistry() = delete;
+
+    static std::unique_ptr<IProtocolRegistry> m_instance;
+};
+
+
+
+
 
 }   // namespace finalmq

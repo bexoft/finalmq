@@ -24,9 +24,8 @@
 #include "finalmq/remoteentity/RemoteEntityContainer.h"
 #include "finalmq/remoteentity/RemoteEntityFormatJson.h"
 #include "finalmq/remoteentity/FmqRegistryClient.h"
-#include "finalmq/protocols/ProtocolHeaderBinarySize.h"
-#include "finalmq/protocols/ProtocolDelimiter.h"
 #include "finalmq/protocolconnection/ProtocolMessage.h"
+#include "finalmq/protocolconnection/ProtocolRegistry.h"
 #include "finalmq/logger/Logger.h"
 
 #include <thread>
@@ -51,8 +50,6 @@ using finalmq::CorrelationId;
 using finalmq::IProtocolSessionPtr;
 using finalmq::IProtocolPtr;
 using finalmq::ReplyContextUPtr;
-using finalmq::ProtocolDelimiter;
-using finalmq::ProtocolHeaderBinarySize;
 using finalmq::Logger;
 using finalmq::LogContext;
 using finalmq::FmqRegistryClient;
@@ -726,7 +723,6 @@ public:
             {
                 m_fmqRegistryClient.getService(objectName, [this, objectName] (Status status, const std::shared_ptr<GetServiceReply>& reply) {
                     std::unique_lock<std::mutex> lock(m_mutex);
-                    IProtocolPtr protocol;
                     std::string endpoint;
                     auto it = m_objectName2sessionAndEntity.find(objectName);
                     if (it != m_objectName2sessionAndEntity.end())
@@ -734,6 +730,7 @@ public:
                         SessionAndEntity& sessionAndEntity = it->second;
                         if (reply)
                         {
+                            IProtocolPtr protocol;
                             sessionAndEntity.entityId = reply->service.entityid;
                             sessionAndEntity.entityName = reply->service.entityname;
                             std::vector<finalmq::fmqreg::Endpoint>& endpointEntries = reply->service.endpoints;
@@ -744,13 +741,10 @@ public:
                                 if (!endpointEntry.ssl &&
                                     endpointEntry.contenttype == RemoteEntityFormatJson::CONTENT_TYPE)
                                 {
-                                    if (endpointEntry.framingprotocol == ProtocolDelimiter::PROTOCOL_ID)
+                                    finalmq::IProtocolFactoryPtr factory = finalmq::ProtocolRegistry::instance().getProtocolFactory(endpointEntry.framingprotocol);
+                                    if (factory)
                                     {
-                                        protocol = std::make_shared<ProtocolDelimiter>("\n");
-                                    }
-                                    else if (endpointEntry.framingprotocol == ProtocolHeaderBinarySize::PROTOCOL_ID)
-                                    {
-                                        protocol = std::make_shared<ProtocolHeaderBinarySize>();
+                                        protocol = factory->createProtocol();
                                     }
                                 }
                             }

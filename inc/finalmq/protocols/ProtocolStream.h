@@ -32,7 +32,7 @@ namespace finalmq {
 class SYMBOLEXP ProtocolStream : public IProtocol
 {
 public:
-    static const std::uint32_t PROTOCOL_ID;
+    enum { PROTOCOL_ID = 1 };
 
     ProtocolStream();
 
