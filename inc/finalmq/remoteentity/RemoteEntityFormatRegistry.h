@@ -48,7 +48,7 @@ static constexpr CorrelationId CORRELATIONID_NONE = 0;
 struct IRemoteEntityFormat
 {
     virtual ~IRemoteEntityFormat() {}
-    virtual std::shared_ptr<StructBase> parse(const BufferRef& bufferRef, remoteentity::Header& header, bool& syntaxError) = 0;
+    virtual std::shared_ptr<StructBase> parse(const BufferRef& bufferRef, bool storeRawData, remoteentity::Header& header, bool& syntaxError) = 0;
     virtual void serialize(IMessage& message, const remoteentity::Header& header, const StructBase* structBase = nullptr) = 0;
 };
 
@@ -56,7 +56,7 @@ struct IRemoteEntityFormat
 struct IRemoteEntityFormatRegistry
 {
     virtual ~IRemoteEntityFormatRegistry() {}
-    virtual std::shared_ptr<StructBase> parse(const IMessage& message, int contentType, remoteentity::Header& header, bool& syntaxError) = 0;
+    virtual std::shared_ptr<StructBase> parse(const IMessage& message, int contentType, bool storeRawData, remoteentity::Header& header, bool& syntaxError) = 0;
     virtual bool serialize(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase* structBase = nullptr) = 0;
     virtual bool send(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase* structBase = nullptr) = 0;
 
@@ -70,7 +70,7 @@ struct IRemoteEntityFormatRegistry
 class RemoteEntityFormatRegistryImpl : public IRemoteEntityFormatRegistry
 {
 public:
-    virtual std::shared_ptr<StructBase> parse(const IMessage& message, int contentType, remoteentity::Header& header, bool& syntaxError) override;
+    virtual std::shared_ptr<StructBase> parse(const IMessage& message, int contentType, bool storeRawData, remoteentity::Header& header, bool& syntaxError) override;
     virtual bool serialize(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase* structBase = nullptr) override;
     virtual bool send(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase* structBase = nullptr) override;
     virtual void registerFormat(int contentType, const std::shared_ptr<IRemoteEntityFormat>& format) override;

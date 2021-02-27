@@ -246,11 +246,10 @@ PeerManager::ReadyToSend PeerManager::getRequestHeader(const PeerId& peerId, con
         {
             readyToSend = RTS_READY;
             session = peer.session;
-            const std::string* typeName = &structBase.getStructInfo().getTypeName();
-            if (*typeName == remoteentity::GenericMessage::structInfo().getTypeName())
+            const std::string* typeName = structBase.getRawType();
+            if (typeName == nullptr)
             {
-                const remoteentity::GenericMessage& message = static_cast<const remoteentity::GenericMessage&>(structBase);
-                typeName = &message.type;
+                typeName = &structBase.getStructInfo().getTypeName();
             }
             assert(typeName);
             header = {peer.entityId, (peer.entityId == ENTITYID_INVALID) ? peer.entityName : std::string(), m_entityId, MsgMode::MSG_REQUEST, Status::STATUS_OK, *typeName, correlationId};

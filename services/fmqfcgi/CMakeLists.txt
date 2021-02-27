@@ -19,7 +19,7 @@ include_directories(${CMAKE_SOURCE_DIR}/inc)
 
 if (WIN32)
 include_directories(C:/Users/David/source/repos/fcgi-2.4.0/include)     # path to fcgi library
-link_directories(${OPENSSL_DIR}/lib ${CMAKE_BINARY_DIR} C:/Users/David/source/deployment/win32-msvc2010/debug/lib)
+link_directories(${OPENSSL_DIR}/lib ${CMAKE_BINARY_DIR} C:/Users/David/source/repos/fcgi-2.4.0/x64/Debug)
 endif()
 
 

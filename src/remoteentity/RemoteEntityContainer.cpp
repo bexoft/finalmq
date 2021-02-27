@@ -116,8 +116,9 @@ void RemoteEntityContainer::deinit()
 
 // IRemoteEntityContainer
 
-void RemoteEntityContainer::init(int cycleTime, int checkReconnectInterval, FuncPollerLoopTimer funcTimer, const IExecutorPtr& executor)
+void RemoteEntityContainer::init(int cycleTime, int checkReconnectInterval, FuncPollerLoopTimer funcTimer, const IExecutorPtr& executor, bool storeRawDataInReceiveStruct)
 {
+    m_storeRawDataInReceiveStruct = storeRawDataInReceiveStruct;
     m_protocolSessionContainer->init(cycleTime, checkReconnectInterval, std::move(funcTimer), executor);
 }
 
@@ -278,7 +279,7 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
 
     bool syntaxError = false;
     Header header;
-    std::shared_ptr<StructBase> structBase = RemoteEntityFormatRegistry::instance().parse(*message, session->getContentType(), header, syntaxError);
+    std::shared_ptr<StructBase> structBase = RemoteEntityFormatRegistry::instance().parse(*message, session->getContentType(), m_storeRawDataInReceiveStruct, header, syntaxError);
 
     std::unique_lock<std::mutex> lock(m_mutex);
     EntityId entityId = header.destid;

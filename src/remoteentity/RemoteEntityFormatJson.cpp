@@ -67,14 +67,15 @@ void RemoteEntityFormatJson::serialize(IMessage& message, const Header& header, 
         message.addSendPayload(",\t", 2, JSONBLOCKSIZE);
 
         // payload
-        const std::string* typeName = &structBase->getStructInfo().getTypeName();
-        if (*typeName == remoteentity::GenericMessage::structInfo().getTypeName())
+        if (structBase->getRawContentType() == CONTENT_TYPE)
         {
-            const remoteentity::GenericMessage& genericMessage = static_cast<const remoteentity::GenericMessage&>(*structBase);
-            assert(genericMessage.contenttype == CONTENT_TYPE);
-            char* payload = message.addSendPayload(genericMessage.data.size() + 1);
-            memcpy(payload, genericMessage.data.data(), genericMessage.data.size());
-            payload[genericMessage.data.size()] = ']';
+            const std::string* typeName = structBase->getRawType();
+            assert(typeName);
+            const std::string* rawData = structBase->getRawData();
+            assert(rawData);
+            char* payload = message.addSendPayload(rawData->size() + 1);
+            memcpy(payload, rawData->data(), rawData->size());
+            payload[rawData->size()] = ']';
         }
         else
         {
@@ -115,7 +116,7 @@ static ssize_t findLast(const char* buffer, ssize_t size, char c)
 }
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& bufferRef, Header& header, bool& syntaxError)
+std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& bufferRef, bool storeRawData, Header& header, bool& syntaxError)
 {
     syntaxError = false;
     const char* buffer = bufferRef.first;
@@ -204,12 +205,15 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
         }
         else
         {
-            std::shared_ptr<remoteentity::GenericMessage> genericMessage = std::make_shared<remoteentity::GenericMessage>();
-            genericMessage->type = header.type;
-            genericMessage->contenttype = CONTENT_TYPE;
-            genericMessage->data.resize(sizeData);
-            memcpy(genericMessage->data.data(), buffer, sizeData);
-            data = genericMessage;
+            if (storeRawData)
+            {
+                data = std::make_shared<remoteentity::RawDataMessage>();
+            }
+        }
+
+        if (storeRawData && data)
+        {
+            data->setRawData(header.type, CONTENT_TYPE, buffer, sizeData);
         }
     }
 

@@ -57,7 +57,7 @@ struct IRemoteEntityContainer
 {
     virtual ~IRemoteEntityContainer() {}
 
-    virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000, FuncPollerLoopTimer funcTimer = {}, const IExecutorPtr& executor = nullptr) = 0;
+    virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000, FuncPollerLoopTimer funcTimer = {}, const IExecutorPtr& executor = nullptr, bool storeRawDataInReceiveStruct = false) = 0;
     virtual int bind(const std::string& endpoint, const IProtocolFactoryPtr protocolFactory, int contentType, const BindProperties& bindProperties = {}) = 0;
     virtual void unbind(const std::string& endpoint) = 0;
     virtual IProtocolSessionPtr connect(const std::string& endpoint, const IProtocolPtr& protocol, int contentType, const ConnectProperties& connectProperties = {}) = 0;
@@ -84,7 +84,7 @@ public:
     virtual ~RemoteEntityContainer();
 
     // IRemoteEntityContainer
-    virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000, FuncPollerLoopTimer funcTimer = {}, const IExecutorPtr& executor = nullptr) override;
+    virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000, FuncPollerLoopTimer funcTimer = {}, const IExecutorPtr& executor = nullptr, bool storeRawDataInReceiveStruct = false) override;
     virtual int bind(const std::string& endpoint, const IProtocolFactoryPtr protocolFactory, int contentType, const BindProperties& bindProperties = {}) override;
     virtual void unbind(const std::string& endpoint) override;
     virtual IProtocolSessionPtr connect(const std::string& endpoint, const IProtocolPtr& protocol, int contentType, const ConnectProperties& connectProperties = {}) override;
@@ -114,6 +114,7 @@ private:
     std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>>     m_entityId2entity;
     EntityId                                                    m_nextEntityId = 1;
     std::shared_ptr<FuncConnectionEvent>                        m_funcConnectionEvent;
+    bool                                                        m_storeRawDataInReceiveStruct = false;
     mutable std::mutex                                          m_mutex;
 };
 
