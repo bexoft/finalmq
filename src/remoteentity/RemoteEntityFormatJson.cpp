@@ -69,8 +69,6 @@ void RemoteEntityFormatJson::serialize(IMessage& message, const Header& header, 
         // payload
         if (structBase->getRawContentType() == CONTENT_TYPE)
         {
-            const std::string* typeName = structBase->getRawType();
-            assert(typeName);
             const std::string* rawData = structBase->getRawData();
             assert(rawData);
             char* payload = message.addSendPayload(rawData->size() + 1);
