@@ -4,11 +4,15 @@ cmake_minimum_required(VERSION 3.10)
 project(fmqfcgi)
 
 
-if (WIN32)
+if (FINALMQ_USE_SSL)
     SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DUSE_OPENSSL" )
-else()
-    SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DUSE_OPENSSL -Wall" )
+endif(FINALMQ_USE_SSL)
+
+
+if (!WIN32)
+    SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall" )
 endif()
+
 
 
 set(CMAKE_CXX_STANDARD 14)
@@ -26,11 +30,19 @@ endif()
 
 add_executable(fmqfcgi fmqfcgi.cpp)
 
-if (WIN32)
-target_link_libraries(fmqfcgi finalmq fcgi libssl libcrypto wsock32 ws2_32)
+if (FINALMQ_USE_SSL)
+    if (WIN32)
+        target_link_libraries(fmqfcgi finalmq fcgi libssl libcrypto wsock32 ws2_32)
+    else()
+        target_link_libraries(fmqfcgi finalmq fcgi ssl pthread)
+    endif()
 else()
-target_link_libraries(fmqfcgi finalmq fcgi ssl pthread)
-endif()
+    if (WIN32)
+        target_link_libraries(fmqfcgi finalmq fcgi wsock32 ws2_32)
+    else()
+        target_link_libraries(fmqfcgi finalmq fcgi pthread)
+    endif()
+endif(FINALMQ_USE_SSL)
 
 
 

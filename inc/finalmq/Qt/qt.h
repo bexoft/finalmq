@@ -52,7 +52,11 @@ using finalmq::qt::ObjectData;
 
 #include <QtWidgets/QApplication>
 #include <QMetaProperty>
+#include <QPushButton>
 
+namespace finalmq { namespace qt {
+
+	
 
 struct IObjectVisitor
 {
@@ -80,6 +84,9 @@ public:
 };
 
 
+
+
+
 class FillObjectTree : public IObjectVisitor
 {
 public:
@@ -104,15 +111,17 @@ private:
             objectData = &m_stack.back()->children.back();
             m_stack.push_back(objectData);
         }
-        
+
         const QMetaObject* metaobject = object.metaObject();
         int count = metaobject->propertyCount();
         for (int i = 0; i < count; ++i) {
             QMetaProperty metaproperty = metaobject->property(i);
             const char* name = metaproperty.name();
             QVariant value = object.property(name);
-            objectData->properties.push_back({name, value.toString().toStdString()});
+            objectData->properties.push_back({ name, value.toString().toStdString() });
         }
+
+        fillClassChain(metaobject, objectData->classchain);
     }
 
     virtual void exitObject(QObject& object, int level) override
@@ -123,6 +132,63 @@ private:
         }
     }
 
+    void fillClassChain(const QMetaObject* metaobject, std::vector<std::string>& classChain)
+    {
+        classChain.push_back(metaobject->className());
+        const QMetaObject* superClass = metaobject->superClass();
+        if (superClass)
+        {
+            fillClassChain(superClass, classChain);
+        }
+    }
+
     std::deque<ObjectData*>     m_stack;
 };
 
+
+
+class QtServer : public RemoteEntity
+{
+public:
+    QtServer()
+    {
+        // register peer events to see when a remote entity connects or disconnects.
+        registerPeerEvent([](PeerId peerId, PeerEvent peerEvent, bool incoming) {
+        });
+
+        registerCommand<GetObjectTreeRequest>([](ReplyContextUPtr& replyContext, const std::shared_ptr<GetObjectTreeRequest>& request) {
+            assert(request);
+
+            GetObjectTreeReply reply;
+            FillObjectTree fillObjectTree(reply.root);
+            ObjectIterator::accept(fillObjectTree, *qApp);
+            QWidgetList widgetList = qApp->topLevelWidgets();
+            for (int i = 0; i < widgetList.size(); ++i)
+            {
+                ObjectIterator::accept(fillObjectTree, *widgetList[i], 1);
+            }
+            // send reply
+            replyContext->reply(std::move(reply));
+
+            });
+
+        registerCommand<PressButtonRequest>([](ReplyContextUPtr& replyContext, const std::shared_ptr<PressButtonRequest>& request) {
+            assert(request);
+
+            QString objectName = request->objectName.c_str();
+            QWidgetList widgetList = qApp->topLevelWidgets();
+            for (int i = 0; i < widgetList.size(); ++i)
+            {
+                QPushButton* button = widgetList[i]->findChild<QPushButton*>(objectName);
+                if (button)
+                {
+                    button->click();
+                    break;
+                }
+            }
+        });
+    }
+};
+
+
+}}	// namespace finalmq::qt

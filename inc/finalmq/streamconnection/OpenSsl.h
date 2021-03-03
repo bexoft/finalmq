@@ -26,7 +26,6 @@
 
 #include <string>
 
-#define MODULENAME  "FinalMQ"
 
 namespace finalmq {
 
@@ -45,6 +44,7 @@ struct CertificateData
 
 #ifdef USE_OPENSSL
 
+#define MODULENAME  "FinalMQ"
 
 #include <assert.h>
 #include <memory>

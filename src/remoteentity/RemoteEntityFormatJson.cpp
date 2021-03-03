@@ -179,7 +179,6 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
     if (endHeader && !header.type.empty())
     {
         data = StructFactoryRegistry::instance().createStruct(header.type);
-
         assert(endHeader);
         ssize_t sizeHeader = endHeader - buffer;
         assert(sizeHeader >= 0);

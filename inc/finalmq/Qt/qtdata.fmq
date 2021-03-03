@@ -16,15 +16,19 @@
          ]},
         {"type":"ObjectData","desc":"","fields":[
             {"tid":"TYPE_ARRAY_STRUCT", "type":"Property",  "name":"properties","desc":"","flags":[]},
-            {"tid":"TYPE_ARRAY_STRUCT", "type":"ObjectData","name":"children","desc":"","flags":[]}
+            {"tid":"TYPE_ARRAY_STRUCT", "type":"ObjectData","name":"children","desc":"","flags":[]},
+            {"tid":"TYPE_ARRAY_STRING", "type":"",			"name":"classchain","desc":"","flags":[]}
          ]},
 
         {"type":"GetObjectTreeRequest","desc":"","fields":[
          ]},
         {"type":"GetObjectTreeReply","desc":"","fields":[
             {"tid":"TYPE_STRUCT", "type":"ObjectData","name":"root","desc":"","flags":[]}
-         ]}
+         ]},
         
+        {"type":"PressButtonRequest","desc":"","fields":[
+            {"tid":"TYPE_STRING",       "type":"",          "name":"objectName",     "desc":"","flags":[]}
+         ]}
     ]
 }
 

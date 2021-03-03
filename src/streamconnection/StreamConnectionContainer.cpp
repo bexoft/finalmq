@@ -542,8 +542,8 @@ void StreamConnectionContainer::handleConnectionEvents(const IStreamConnectionPr
         std::int32_t bytesToRead = info.bytesToRead;
         bool writable = info.writable;
         bool readable = info.readable;
-        bool isSsl = socket->isSsl();
 #ifdef USE_OPENSSL
+        bool isSsl = socket->isSsl();
         if (isSsl)
         {
             if (connection->getConnectionState() == ConnectionState::CONNECTIONSTATE_CONNECTING)
@@ -575,7 +575,6 @@ void StreamConnectionContainer::handleConnectionEvents(const IStreamConnectionPr
                 return;
             }
         }
-#endif
 
         if (isSsl && writable && socket->isReadWhenWritable())
         {
@@ -587,6 +586,7 @@ void StreamConnectionContainer::handleConnectionEvents(const IStreamConnectionPr
         }
         else
         {
+#endif
             if (writable)
             {
                 bool edgeConnection = connection->checkEdgeConnected();
@@ -595,16 +595,20 @@ void StreamConnectionContainer::handleConnectionEvents(const IStreamConnectionPr
                     connection->connected(connection);
                 }
                 connection->sendPendingMessages();
+#ifdef USE_OPENSSL
                 if (socket->isWriteWhenReadable())
                 {
                     readable = false;
                 }
+#endif
             }
             if (readable)
             {
                 handleReceive(connection, socket, bytesToRead);
             }
+#ifdef USE_OPENSSL
         }
+#endif
     }
 }
 

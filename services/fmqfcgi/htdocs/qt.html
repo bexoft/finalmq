@@ -1,0 +1,189 @@
+<html>                                                                          
+
+
+<head>                                                                          
+
+<script type="text/javascript" src="json2.js"></script>
+<script type="text/javascript" src="fmq.js"></script>
+
+                                                                                
+<script type="text/javascript" >
+
+//////////////////////////////////////////////////////////////////////
+
+var g_fmqEntity = new FmqEntity();
+
+function getProperty(properties, key)
+{
+	for (var i = 0; i < properties.length; i++)
+	{
+		var prop = properties[i];
+		if (prop.name == key)
+		{
+			return prop['value'];
+		}
+	}
+	return null;
+}
+
+
+function isDerivedFrom(obj, className)
+{
+	for (var i = 0; i < obj.classchain.length; i++)
+	{
+		var classNameIter = obj.classchain[i];
+		if (classNameIter == className)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+
+
+function iterateObjects(obj, level, idParent)
+{
+	var id = idParent;
+	if (isDerivedFrom(obj, 'QPushButton'))
+	{
+		var x = getProperty(obj.properties, 'x');
+		var y = getProperty(obj.properties, 'y');
+		var width = getProperty(obj.properties, 'width');
+		var height = getProperty(obj.properties, 'height');
+		var visible = getProperty(obj.properties, 'visible');
+		
+		if (visible == 'true')
+		{
+			id = insertButton(idParent, x, y, width, height, getProperty(obj.properties, 'objectName'));
+			insertText(id, getProperty(obj.properties, 'text'))
+			//insertText(id, getProperty(obj.properties, 'objectName'))
+		}
+	}
+	else if (isDerivedFrom(obj, 'QWidget'))
+	{
+		if (isDerivedFrom(obj, 'ScrollBar'))
+		{
+			var t=0;
+		}
+		var x = getProperty(obj.properties, 'x');
+		var y = getProperty(obj.properties, 'y');
+		var width = getProperty(obj.properties, 'width');
+		var height = getProperty(obj.properties, 'height');
+		var visible = getProperty(obj.properties, 'visible');
+		
+		if (visible == 'true')
+		{
+			id = insertBox(idParent, x, y, width, height);
+			//insertText(id, getProperty(obj.properties, 'objectName'))
+			insertText(id, getProperty(obj.properties, 'text'))
+		}
+	}
+	
+	for (var i = 0; i < obj.children.length; i++)
+	{
+		var child = obj.children[i];
+		iterateObjects(child, level + 1, id);
+	}
+}
+
+
+function poll()
+{
+    g_fmqEntity.requestReply('QtService', 'finalmq.qt.GetObjectTreeRequest', null, function(outparams) {
+        if (outparams.replystatus == 'STATUS_OK')
+        {
+			document.getElementById('root').innerHTML = ''
+            iterateObjects(outparams.root, 0, 'root');
+        }
+    });
+}
+
+
+
+function pressButton(objectName)
+{
+	var inparams = {objectName:objectName};
+    g_fmqEntity.requestReply('QtService', 'finalmq.qt.PressButtonRequest', inparams, function(outparams) {
+		var t=0;
+	});
+}
+
+
+function fmqReady()
+{
+	setInterval(poll, 1000);
+}
+
+
+function pageLoad()
+{
+    g_fmqEntity.createEntity(function() {
+        fmqReady();
+    });
+}
+
+function pageUnload()
+{
+    g_fmqEntity.removeEntity(function() {});
+}
+
+var nextItemId = 0;
+
+function insertBox(idParent, x, y, w, h)
+{
+	nextItemId++;
+	var id = 'itemid' + nextItemId;
+	var box = createBox(x, y, w, h, id);
+	insertItem(idParent, box);
+	return id;
+}
+
+function insertButton(idParent, x, y, w, h, objectName)
+{
+	nextItemId++;
+	var id = 'itemid' + nextItemId;
+	var button = createButton(x, y, w, h, id, objectName);
+	insertItem(idParent, button);
+	return id;
+}
+
+function insertText(idParent, text)
+{
+	insertItem(idParent, text);
+}
+
+function insertItem(idParent, item)
+{
+	document.getElementById(idParent).innerHTML += item;
+}
+                                       
+function createBox(x, y, w, h, id)
+{
+	var box = '<div style="position:absolute; left:'+x+'px; top:'+y+'px; width:'+w+'px; height:'+h+'px; border-width:1px; border-style:solid" id="'+id+'"></div>';
+	return box;
+}
+
+function createButton(x, y, w, h, id, objectName)
+{
+	var button = '<button style="position:absolute; left:'+x+'px; top:'+y+'px; width:'+w+'px; height:'+h+'px;" id="'+id+'" onmousedown="pressButton(\''+objectName+'\')"></button>';
+	return button;
+}
+
+												 
+</script>                                                                       
+                                                                          
+</head>
+
+                                                               
+<body>                                                                          
+
+<body onload="pageLoad()" onunload="pageUnload()">
+<div style="position:absolute; top:0; left:0; width:100%; height:100%; border:solid" id="root">
+</div>
+
+</body>
+
+
+</html>
+       

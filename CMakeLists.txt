@@ -5,11 +5,16 @@ project(finalmq)
 
 option(FINALMQ_BUILD_EXAMPLES "Build examples" ON)
 option(FINALMQ_BUILD_TESTS "Build tests" OFF)
-option(FINALMQ_BUILD_FMQFCGI "Build fmqfcgi" ON)
 option(FINALMQ_BUILD_COVERAGE "Enable gcov" OFF)
 option(FINALMQ_BUILD_DOXYGEN "Enable doxygen" OFF)
-option(FINALMQ_USE_SSL "Build with openssl" ON)
 
+if (WIN32)
+    option(FINALMQ_BUILD_FMQFCGI "Build fmqfcgi" OFF)   # avoid dependency to fcgi for windows
+    option(FINALMQ_USE_SSL "Build with openssl" OFF)    # avoid dependency to openssl for windows
+else()
+    option(FINALMQ_BUILD_FMQFCGI "Build fmqfcgi" ON)
+    option(FINALMQ_USE_SSL "Build with openssl" ON)
+endif()
 
 
 # Add compile flags to determine coverage
@@ -142,15 +147,15 @@ add_library(finalmq SHARED ${SOURCES}
 
 
 if (WIN32)
-if (FINALMQ_USE_SSL)
-    SET(OPENSSL_DIR "$ENV{OPENSSL_INSTALL_DIR}")
-    include_directories(${OPENSSL_DIR}/include)
-    link_directories(${OPENSSL_DIR}/lib)
-    target_link_libraries(finalmq wsock32 ws2_32 ${OPENSSL_DIR}/lib/libssl.lib ${OPENSSL_DIR}/lib/libcrypto.lib)
-else()
-    target_link_libraries(finalmq wsock32 ws2_32)
-endif()
-    target_compile_options(finalmq PRIVATE -DEXPORT_finalmq)
+    if (FINALMQ_USE_SSL)
+        SET(OPENSSL_DIR "$ENV{OPENSSL_INSTALL_DIR}")
+        include_directories(${OPENSSL_DIR}/include)
+        link_directories(${OPENSSL_DIR}/lib)
+        target_link_libraries(finalmq wsock32 ws2_32 ${OPENSSL_DIR}/lib/libssl.lib ${OPENSSL_DIR}/lib/libcrypto.lib)
+    else()
+        target_link_libraries(finalmq wsock32 ws2_32)
+    endif()
+        target_compile_options(finalmq PRIVATE -DEXPORT_finalmq)
 else()
     target_compile_options(finalmq PRIVATE -Werror -Wall -Wextra)
 endif()
