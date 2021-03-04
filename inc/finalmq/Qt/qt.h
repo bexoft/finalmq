@@ -118,7 +118,7 @@ private:
             QMetaProperty metaproperty = metaobject->property(i);
             const char* name = metaproperty.name();
             QVariant value = object.property(name);
-            objectData->properties.push_back({ name, value.toString().toStdString() });
+            objectData->properties.push_back({ name, value.toString().toUtf8().toStdString() });
         }
 
         fillClassChain(metaobject, objectData->classchain);
