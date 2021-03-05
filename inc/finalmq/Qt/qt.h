@@ -32,6 +32,7 @@
 
 #include "finalmq/Qt/qtdata.fmq.h"
 
+#include <algorithm>
 
 using finalmq::RemoteEntity;
 using finalmq::RemoteEntityContainer;
@@ -52,7 +53,9 @@ using finalmq::qt::ObjectData;
 
 #include <QtWidgets/QApplication>
 #include <QMetaProperty>
+#include <QJsonDocument>
 #include <QPushButton>
+#include <QLayout>
 
 namespace finalmq { namespace qt {
 
@@ -113,15 +116,43 @@ private:
         }
 
         const QMetaObject* metaobject = object.metaObject();
+        
         int count = metaobject->propertyCount();
         for (int i = 0; i < count; ++i) {
             QMetaProperty metaproperty = metaobject->property(i);
             const char* name = metaproperty.name();
             QVariant value = object.property(name);
-            objectData->properties.push_back({ name, value.toString().toUtf8().toStdString() });
+            QString v = value.toString();
+            if (v.isEmpty())
+            {
+                if (value.canConvert<QRect>())
+                {
+                    QRect rect = value.toRect();
+                    v = "{\"x\":" + QString::number(rect.x()) + ",\"y\":" + QString::number(rect.y()) + ",\"width\":" + QString::number(rect.width()) + ",\"height\":" + QString::number(rect.height()) + "}";
+                }
+                else if (value.canConvert<QSize>())
+                {
+                    QSize size = value.toSize();
+                    v = "{\"width\":" + QString::number(size.width()) + ",\"height\":" + QString::number(size.height()) + "}";
+                }
+            }
+            objectData->properties.push_back({ name, v.toUtf8().toStdString() });
         }
 
         fillClassChain(metaobject, objectData->classchain);
+
+        // if QLayout
+        if (std::find(objectData->classchain.begin(), objectData->classchain.end(), "QLayout") != objectData->classchain.end())
+        {
+            QLayout* layout = (QLayout*)&object;
+            QRect rect = layout->geometry();
+            objectData->properties.push_back({ "x", std::to_string(rect.x()) });
+            objectData->properties.push_back({ "y", std::to_string(rect.y()) });
+            objectData->properties.push_back({ "width", std::to_string(rect.width()) });
+            objectData->properties.push_back({ "height", std::to_string(rect.height()) });
+            objectData->properties.push_back({ "enabled", std::to_string(layout->isEnabled()) });
+
+        }
     }
 
     virtual void exitObject(QObject& object, int level) override
@@ -179,11 +210,14 @@ public:
             QWidgetList widgetList = qApp->topLevelWidgets();
             for (int i = 0; i < widgetList.size(); ++i)
             {
-                QPushButton* button = widgetList[i]->findChild<QPushButton*>(objectName);
-                if (button)
+                QList<QAbstractButton*> buttons = widgetList[i]->findChildren<QAbstractButton*>(objectName);
+                for (int i = 0; i < buttons.size(); ++i)
                 {
-                    button->click();
-                    break;
+                    QAbstractButton* button = buttons[i];
+                    if (button->isVisible())
+                    {
+                        button->click();
+                    }
                 }
             }
         });

@@ -294,7 +294,7 @@ const char* JsonParser::parseNumber(const char* str)
 
 static std::int32_t getHexDigit(char c)
 {
-    if (c >= '0' && c < '9')
+    if (c >= '0' && c <= '9')
     {
         return c - '0';
     }
