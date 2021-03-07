@@ -776,12 +776,6 @@ public:
                                     session = m_entityContainer->connect(endpoint, protocol, RemoteEntityFormatJson::CONTENT_TYPE, {{}, RECONNECT_INTERVAL, 0});
                                 }
                                 sessionAndEntity.session = session;
-                                for (size_t n = 0; n < sessionAndEntity.entities.size(); n++)
-                                {
-                                    const SessionAndEntity::EntityAndPeerId& entityAndPeerId = sessionAndEntity.entities[n];
-                                    entityAndPeerId.entity->connect(entityAndPeerId.peerId, session, reply->service.entityname, reply->service.entityid);
-                                }
-                                sessionAndEntity.entities.clear();
                             }
                         }
                         for (size_t n = 0; n < sessionAndEntity.entities.size(); n++)
@@ -991,6 +985,8 @@ public:
 
         HttpSessionPtr httpSession = getHttpSession(request, httpHeaderCreateSession, httpHeaderSessionId, httpHeaderCookies);
         assert(httpSession);
+        httpSession->setActivity();
+
 
         // end of header
         FCGX_FPrintF(request->out, "\r\n");

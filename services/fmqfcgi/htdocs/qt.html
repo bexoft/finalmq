@@ -11,6 +11,7 @@
 
 //////////////////////////////////////////////////////////////////////
 
+
 var g_fmqEntity = new FmqEntity();
 
 function getProperty(properties, key)
@@ -40,12 +41,22 @@ function isDerivedFrom(obj, className)
 	return false;
 }
 
+function insertProperties(id, obj)
+{
+	propstext = '';
+	for (var i = 0; i < obj.properties.length; i++)
+	{
+		var prop = obj.properties[i];
+		propstext += prop.name + '=' + prop.value+';';
+	}
+	insertComment(id, propstext);
+}
 
 
 function iterateObjects(obj, level, idParent)
 {
 	var id = idParent;
-	if (isDerivedFrom(obj, 'QPushButton'))
+	if (isDerivedFrom(obj, 'QAbstractButton'))
 	{
 		var x = getProperty(obj.properties, 'x');
 		var y = getProperty(obj.properties, 'y');
@@ -56,8 +67,12 @@ function iterateObjects(obj, level, idParent)
 		if (visible == 'true')
 		{
 			id = insertButton(idParent, x, y, width, height, getProperty(obj.properties, 'objectName'));
+			insertText(id, obj.classchain[0])
+			insertText(id, '<br>')
+			insertText(id, getProperty(obj.properties, 'objectName'))
+			insertText(id, '<br>')
 			insertText(id, getProperty(obj.properties, 'text'))
-			//insertText(id, getProperty(obj.properties, 'objectName'))
+			insertProperties(id, obj);
 		}
 	}
 	else if (isDerivedFrom(obj, 'QWidget'))
@@ -75,15 +90,52 @@ function iterateObjects(obj, level, idParent)
 		if (visible == 'true')
 		{
 			id = insertBox(idParent, x, y, width, height);
-			//insertText(id, getProperty(obj.properties, 'objectName'))
+			insertText(id, obj.classchain[0])
+			insertText(id, '<br>')
+			insertText(id, getProperty(obj.properties, 'objectName'))
+			insertText(id, '<br>')
 			insertText(id, getProperty(obj.properties, 'text'))
+			if (getProperty(obj.properties, 'html'))
+			{
+				insertText(id, '<br>')
+				insertText(id, getProperty(obj.properties, 'html'))
+			}
+			insertProperties(id, obj);
+		}
+	}
+	else if (isDerivedFrom(obj, 'QLayout'))
+	{
+		var x = getProperty(obj.properties, 'x');
+		var y = getProperty(obj.properties, 'y');
+		var width = getProperty(obj.properties, 'width');
+		var height = getProperty(obj.properties, 'height');
+		var enabled = getProperty(obj.properties, 'enabled');
+		
+		if (enabled == '1')
+		{
+			id = insertBox(idParent, x, y, width, height);
+			insertText(id, obj.classchain[0])
+			insertText(id, '<br>')
+			insertText(id, getProperty(obj.properties, 'objectName'))
+			insertProperties(id, obj);
 		}
 	}
 	
 	for (var i = 0; i < obj.children.length; i++)
 	{
 		var child = obj.children[i];
-		iterateObjects(child, level + 1, id);
+		if (!isDerivedFrom(child, 'QAbstractButton'))
+		{
+			iterateObjects(child, level + 1, id);
+		}
+	}
+	for (var i = 0; i < obj.children.length; i++)
+	{
+		var child = obj.children[i];
+		if (isDerivedFrom(child, 'QAbstractButton'))
+		{
+			iterateObjects(child, level + 1, id);
+		}
 	}
 }
 
@@ -153,6 +205,11 @@ function insertText(idParent, text)
 	insertItem(idParent, text);
 }
 
+function insertComment(idParent, text)
+{
+	insertItem(idParent, '<!--'+text+'-->');
+}
+
 function insertItem(idParent, item)
 {
 	document.getElementById(idParent).innerHTML += item;
@@ -179,7 +236,7 @@ function createButton(x, y, w, h, id, objectName)
 <body>                                                                          
 
 <body onload="pageLoad()" onunload="pageUnload()">
-<div style="position:absolute; top:0; left:0; width:100%; height:100%; border:solid" id="root">
+<div style="position:absolute; top:0; left:0; width:100%; height:100%;" id="root">
 </div>
 
 </body>
