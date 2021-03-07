@@ -5,11 +5,16 @@ project(finalmq)
 
 option(FINALMQ_BUILD_EXAMPLES "Build examples" ON)
 option(FINALMQ_BUILD_TESTS "Build tests" OFF)
-option(FINALMQ_BUILD_FMQFCGI "Build fmqfcgi" ON)
 option(FINALMQ_BUILD_COVERAGE "Enable gcov" OFF)
 option(FINALMQ_BUILD_DOXYGEN "Enable doxygen" OFF)
-option(FINALMQ_USE_SSL "Build with openssl" ON)
 
+if (WIN32)
+    option(FINALMQ_BUILD_FMQFCGI "Build fmqfcgi" OFF)   # avoid dependency to fcgi for windows
+    option(FINALMQ_USE_SSL "Build with openssl" OFF)    # avoid dependency to openssl for windows
+else()
+    option(FINALMQ_BUILD_FMQFCGI "Build fmqfcgi" ON)
+    option(FINALMQ_USE_SSL "Build with openssl" ON)
+endif()
 
 
 # Add compile flags to determine coverage
@@ -97,6 +102,13 @@ add_custom_command(
     COMMENT "Generating cpp code out of fmqreg.fmq."
 )
 
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/Qt)
+add_custom_command(
+    COMMAND node ${CODEGENERATOR_CPP} --input=${CMAKE_CURRENT_SOURCE_DIR}/inc/finalmq/Qt/qtdata.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/Qt --exportmacro=EXPORT_finalmq
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/inc/finalmq/Qt/qtdata.fmq
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/Qt/qtdata.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/Qt/qtdata.fmq.h
+    COMMENT "Generating cpp code out of qtdata.fmq."
+)
 
 
 #Bring the headers into the project
@@ -129,20 +141,21 @@ add_library(finalmq SHARED ${SOURCES}
     ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/metadataserialize/metadata.fmq.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/remoteentity/entitydata.fmq.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/interfaces/fmqreg.fmq.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/Qt/qtdata.fmq.cpp
     )
 
 
 
 if (WIN32)
-if (FINALMQ_USE_SSL)
-    SET(OPENSSL_DIR "$ENV{OPENSSL_INSTALL_DIR}")
-    include_directories(${OPENSSL_DIR}/include)
-    link_directories(${OPENSSL_DIR}/lib)
-    target_link_libraries(finalmq wsock32 ws2_32 ${OPENSSL_DIR}/lib/libssl.lib ${OPENSSL_DIR}/lib/libcrypto.lib)
-else()
-    target_link_libraries(finalmq wsock32 ws2_32)
-endif()
-    target_compile_options(finalmq PRIVATE -DEXPORT_finalmq)
+    if (FINALMQ_USE_SSL)
+        SET(OPENSSL_DIR "$ENV{OPENSSL_INSTALL_DIR}")
+        include_directories(${OPENSSL_DIR}/include)
+        link_directories(${OPENSSL_DIR}/lib)
+        target_link_libraries(finalmq wsock32 ws2_32 ${OPENSSL_DIR}/lib/libssl.lib ${OPENSSL_DIR}/lib/libcrypto.lib)
+    else()
+        target_link_libraries(finalmq wsock32 ws2_32)
+    endif()
+        target_compile_options(finalmq PRIVATE -DEXPORT_finalmq)
 else()
     target_compile_options(finalmq PRIVATE -Werror -Wall -Wextra)
 endif()

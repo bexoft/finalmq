@@ -4,11 +4,15 @@ cmake_minimum_required(VERSION 3.10)
 project(registry)
 
 
-if (WIN32)
+if (FINALMQ_USE_SSL)
     SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DUSE_OPENSSL" )
-else()
-    SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DUSE_OPENSSL -Wall" )
+endif(FINALMQ_USE_SSL)
+
+
+if (!WIN32)
+    SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall" )
 endif()
+
 
 
 set(CMAKE_CXX_STANDARD 14)
@@ -37,7 +41,7 @@ include_directories(${CMAKE_SOURCE_DIR}/inc)
 
 
 if (WIN32)
-link_directories(${OPENSSL_DIR}/lib ${CMAKE_BINARY_DIR})
+    link_directories(${OPENSSL_DIR}/lib ${CMAKE_BINARY_DIR})
 endif()
 
 
@@ -46,21 +50,37 @@ endif()
 
 add_executable(registry_server ${REGISTRY_FMQ_CPP} registry_server.cpp)
 
-if (WIN32)
-target_link_libraries(registry_server finalmq libssl libcrypto wsock32 ws2_32)
+if (FINALMQ_USE_SSL)
+    if (WIN32)
+        target_link_libraries(registry_server finalmq libssl libcrypto wsock32 ws2_32)
+    else()
+        target_link_libraries(registry_server finalmq ssl pthread)
+    endif()
 else()
-target_link_libraries(registry_server finalmq ssl pthread)
-endif()
+    if (WIN32)
+        target_link_libraries(registry_server finalmq wsock32 ws2_32)
+    else()
+        target_link_libraries(registry_server finalmq pthread)
+    endif()
+endif(FINALMQ_USE_SSL)
 
 
 # Client
 
 add_executable(registry_client ${REGISTRY_FMQ_CPP} registry_client.cpp)
 
-if (WIN32)
-target_link_libraries(registry_client finalmq libssl libcrypto wsock32 ws2_32)
+if (FINALMQ_USE_SSL)
+    if (WIN32)
+        target_link_libraries(registry_client finalmq libssl libcrypto wsock32 ws2_32)
+    else()
+        target_link_libraries(registry_client finalmq ssl pthread)
+    endif()
 else()
-target_link_libraries(registry_client finalmq ssl pthread)
-endif()
+    if (WIN32)
+        target_link_libraries(registry_client finalmq wsock32 ws2_32)
+    else()
+        target_link_libraries(registry_client finalmq pthread)
+    endif()
+endif(FINALMQ_USE_SSL)
 
 

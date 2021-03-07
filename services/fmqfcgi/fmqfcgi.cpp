@@ -32,6 +32,7 @@
 #include <random>
 #include <iostream>
 
+
 #include <fcgiapp.h>
 
 #define MODULENAME "fmqfcgi"
@@ -56,8 +57,9 @@ using finalmq::FmqRegistryClient;
 using finalmq::remoteentity::Status;
 using finalmq::fmqreg::GetServiceReply;
 using finalmq::fmqreg::Endpoint;
-using finalmq::remoteentity::GenericMessage;
+using finalmq::remoteentity::RawDataMessage;
 using finalmq::PeerEvent;
+using finalmq::StructBase;
 
 
 static const int LONGPOLL_RELEASE_INTERVAL = 20000;
@@ -183,27 +185,24 @@ public:
                 if (it != m_peerId2ObjectName.end())
                 {
                     static const std::string DATA = "{}";
-                    GenericMessage genericMessage{"finalmq.disconnected", RemoteEntityFormatJson::CONTENT_TYPE, {DATA.data(), DATA.data() + DATA.size()}};
-                    putRequestEntry(peerId, finalmq::CORRELATIONID_NONE, genericMessage);
+                    RawDataMessage rawDataMessage;
+                    rawDataMessage.setRawData("finalmq.disconnected", RemoteEntityFormatJson::CONTENT_TYPE, DATA.data(), DATA.size());
+                    putRequestEntry(peerId, finalmq::CORRELATIONID_NONE, rawDataMessage);
                 }
             }
         });
 
         registerCommandFunction("*", [this] (ReplyContextUPtr& replyContext, const finalmq::StructBasePtr& structBase) {
-            if (structBase->getStructInfo().getTypeName() == GenericMessage::structInfo().getTypeName())
+            assert(structBase);
+            std::unique_lock<std::mutex> lock(m_mutex);
+            finalmq::CorrelationId correlationIdHttp = finalmq::CORRELATIONID_NONE;
+            if (replyContext->correlationId() != finalmq::CORRELATIONID_NONE)
             {
-                const GenericMessage& genericMessage = static_cast<GenericMessage&>(*structBase);
-
-                std::unique_lock<std::mutex> lock(m_mutex);
-                finalmq::CorrelationId correlationIdHttp = finalmq::CORRELATIONID_NONE;
-                if (replyContext->correlationId() != finalmq::CORRELATIONID_NONE)
-                {
-                    correlationIdHttp = m_nextCorrelationId;
-                    ++m_nextCorrelationId;
-                    m_pendingEntityReplies[correlationIdHttp] = std::move(replyContext);
-                }
-                putRequestEntry(replyContext->peerId(), correlationIdHttp, genericMessage);
+                correlationIdHttp = m_nextCorrelationId;
+                ++m_nextCorrelationId;
+                m_pendingEntityReplies[correlationIdHttp] = std::move(replyContext);
             }
+            putRequestEntry(replyContext->peerId(), correlationIdHttp, *structBase);
         });
     }
 
@@ -216,14 +215,17 @@ public:
         streamInfo << "HTTP session destroyed " << m_httpSessionId;
     }
 
-    void putRequestEntry(PeerId peerId, CorrelationId correlationIdHttp, const GenericMessage& genericMessage)
+    void putRequestEntry(PeerId peerId, CorrelationId correlationIdHttp, const StructBase& structBase)
     {
         std::string entry;
         auto it = m_peerId2ObjectName.find(peerId);
         if (it != m_peerId2ObjectName.end())
         {
             std::string objectName = it->second;
-            createRequestEntry(objectName, genericMessage.type, correlationIdHttp, genericMessage.data.data(), genericMessage.data.size(), entry);
+            const std::string* type = structBase.getRawType();
+            const std::string* rawData = structBase.getRawData();
+            assert(type && rawData);
+            createRequestEntry(objectName, *type, correlationIdHttp, rawData->data(), rawData->size(), entry);
             m_requestEntries.push_back(entry);
 
             if (m_longpoll)
@@ -316,7 +318,7 @@ public:
         }
     }
 
-
+    
     bool getPeerId(const std::string& objectName, PeerId& peerId)
     {
         std::unique_lock<std::mutex> lock(m_mutex);
@@ -434,7 +436,8 @@ public:
     {
         m_entityContainer->init(CYCLETIME, CHECK_RECONNECT_INTERVAL, [this] () {
             timeout();
-        });
+        }, nullptr, true);  // storeRawDataInReceiveStruct = true -> we would like to receive raw data
+
         m_thread = std::thread([this] () {
             m_entityContainer->run();
         });
@@ -675,6 +678,17 @@ public:
         return httpSession;
     }
 
+
+#if WIN32
+    static void* memrchr(const void* m, int c, size_t n)
+    {
+        const unsigned char* s = (unsigned char*)m;
+        c = (unsigned char)c;
+        while (n--) if (s[n] == c) return (void*)(s + n);
+        return 0;
+    }
+#endif
+
     static ssize_t getRequestData(const finalmq::BufferRef& value, std::string& objectName, std::string& type)
     {
         // 01234567890123456789012345678901234
@@ -762,12 +776,6 @@ public:
                                     session = m_entityContainer->connect(endpoint, protocol, RemoteEntityFormatJson::CONTENT_TYPE, {{}, RECONNECT_INTERVAL, 0});
                                 }
                                 sessionAndEntity.session = session;
-                                for (size_t n = 0; n < sessionAndEntity.entities.size(); n++)
-                                {
-                                    const SessionAndEntity::EntityAndPeerId& entityAndPeerId = sessionAndEntity.entities[n];
-                                    entityAndPeerId.entity->connect(entityAndPeerId.peerId, session, reply->service.entityname, reply->service.entityid);
-                                }
-                                sessionAndEntity.entities.clear();
                             }
                         }
                         for (size_t n = 0; n < sessionAndEntity.entities.size(); n++)
@@ -776,6 +784,10 @@ public:
                             entityAndPeerId.entity->disconnect(entityAndPeerId.peerId);
                         }
                         sessionAndEntity.entities.clear();
+                        if (!reply)
+                        {
+                            m_objectName2sessionAndEntity.erase(it);
+                        }
                     }
                 });
             }
@@ -829,28 +841,29 @@ public:
         }
         else
         {
-            GenericMessage message;
-            message.type = typeName;
-            message.contenttype = RemoteEntityFormatJson::CONTENT_TYPE;
-            message.data.resize(value.second - posParameters);
-            if (!message.data.empty())
+            RawDataMessage message;
+            ssize_t size = value.second - posParameters;
+            if (size > 0)
             {
-                memcpy(message.data.data(), value.first + posParameters, message.data.size());
+                message.setRawData(typeName, RemoteEntityFormatJson::CONTENT_TYPE, value.first + posParameters, size);
             }
             else
             {
-                message.data = {'{','}'};
+                message.setRawData(typeName, RemoteEntityFormatJson::CONTENT_TYPE, "{}", 2);
             }
-            httpSession->requestReply<GenericMessage>(peerId, message, [this, requestPtr] (PeerId peerId, Status status, const std::shared_ptr<GenericMessage>& reply) {
+            httpSession->sendRequest(peerId, message, [this, requestPtr] (PeerId peerId, Status status, const std::shared_ptr<StructBase>& reply) {
                 assert(requestPtr);
                 Request& request = *requestPtr;
-                if (reply && reply->contenttype != RemoteEntityFormatJson::CONTENT_TYPE)
+                if (reply && reply->getRawContentType() != RemoteEntityFormatJson::CONTENT_TYPE)
                 {
                     status = Status::STATUS_WRONG_CONTENTTYPE;
                 }
                 if (reply && status == Status::STATUS_OK)
                 {
-                    sendReply(request, reply->type, status, reply->data.data(), reply->data.size());
+                    const std::string* type = reply->getRawType();
+                    const std::string* data = reply->getRawData();
+                    assert(type && data);
+                    sendReply(request, *type, status, data->data(), data->size());
                 }
                 else
                 {
@@ -872,17 +885,15 @@ public:
         ReplyContextUPtr replyContext = httpSession->getReplyContext(correclationId);
         if (replyContext)
         {
-            GenericMessage message;
-            message.type = typeName;
-            message.contenttype = RemoteEntityFormatJson::CONTENT_TYPE;
-            message.data.resize(value.second - posParameters);
-            if (!message.data.empty())
+            RawDataMessage message;
+            ssize_t size = value.second - posParameters;
+            if (size > 0)
             {
-                memcpy(message.data.data(), value.first + posParameters, message.data.size());
+                message.setRawData(typeName, RemoteEntityFormatJson::CONTENT_TYPE, value.first + posParameters, size);
             }
             else
             {
-                message.data = {'{','}'};
+                message.setRawData(typeName, RemoteEntityFormatJson::CONTENT_TYPE, "{}", 2);
             }
             replyContext->reply(message);
         }
@@ -974,6 +985,8 @@ public:
 
         HttpSessionPtr httpSession = getHttpSession(request, httpHeaderCreateSession, httpHeaderSessionId, httpHeaderCookies);
         assert(httpSession);
+        httpSession->setActivity();
+
 
         // end of header
         FCGX_FPrintF(request->out, "\r\n");

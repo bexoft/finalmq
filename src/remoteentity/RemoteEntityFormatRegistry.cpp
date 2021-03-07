@@ -99,7 +99,7 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, co
 
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(const IMessage& message, int contentType, Header& header, bool& syntaxError)
+std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(const IMessage& message, int contentType, bool storeRawData, Header& header, bool& syntaxError)
 {
     syntaxError = false;
     BufferRef bufferRef = message.getReceivePayload();
@@ -109,7 +109,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(const IMessage
     if (it != m_formats.end())
     {
         assert(it->second);
-        structBase = it->second->parse(bufferRef, header, syntaxError);
+        structBase = it->second->parse(bufferRef, storeRawData, header, syntaxError);
     }
 
     return structBase;

@@ -132,7 +132,6 @@ class FmqEntity
             var xmlhttp = this._createRequest();
             xmlhttp.open('POST', this._hostname + 'root.fmq', true);
             xmlhttp.setRequestHeader('FMQ_SESSIONID', this._sessionId)
-            var jsonInParams = (inparams == null) ? "" : JSON.stringify(inparams);                               
             xmlhttp.send('replystatus=' + correlationId + '/' + status);
         }
     }

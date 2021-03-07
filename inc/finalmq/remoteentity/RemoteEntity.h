@@ -93,11 +93,11 @@ struct IRemoteEntity
 
     template<class R>
     bool requestReply(const PeerId& peerId,
-                      const StructBase& structBase,
-                      std::function<void(PeerId peerId, remoteentity::Status status, const std::shared_ptr<R>& reply)> funcReply)
+        const StructBase& structBase,
+        std::function<void(PeerId peerId, remoteentity::Status status, const std::shared_ptr<R>& reply)> funcReply)
     {
         assert(funcReply);
-        bool ok = sendRequest(peerId, structBase, [funcReply{std::move(funcReply)}] (PeerId peerId, remoteentity::Status status, const StructBasePtr& structBase) {
+        bool ok = sendRequest(peerId, structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, remoteentity::Status status, const StructBasePtr& structBase) {
             std::shared_ptr<R> reply;
             bool typeOk = (!structBase || structBase->getStructInfo().getTypeName() == R::structInfo().getTypeName());
             if (status == remoteentity::Status::STATUS_OK && structBase && typeOk)
@@ -154,7 +154,7 @@ typedef std::shared_ptr<IRemoteEntity> IRemoteEntityPtr;
 
 
 
-class PeerManager
+class SYMBOLEXP PeerManager
 {
 public:
 

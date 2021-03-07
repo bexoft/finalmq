@@ -191,6 +191,50 @@ public:
 
     virtual const StructInfo& getStructInfo() const = 0;
     virtual std::shared_ptr<StructBase> clone() const = 0;
+
+private:
+    struct RawData
+    {
+        std::string type;
+        int         contentType = 0;
+        std::string data;
+    };
+
+public:
+    void setRawData(const std::string& type, int contentType, const char* rawData, ssize_t size)
+    {
+        if (!m_rawData)
+        {
+            m_rawData = std::make_shared<RawData>(RawData{ type, contentType, {rawData, rawData + size} });
+        }
+    }
+    const std::string* getRawType() const
+    {
+        if (m_rawData)
+        {
+            return &m_rawData->type;
+        }
+        return nullptr;
+    }
+    int getRawContentType() const
+    {
+        if (m_rawData)
+        {
+            return m_rawData->contentType;
+        }
+        return 0;
+    }
+    const std::string* getRawData() const
+    {
+        if (m_rawData)
+        {
+            return &m_rawData->data;
+        }
+        return nullptr;
+    }
+
+private:
+    std::shared_ptr<RawData>    m_rawData;
 };
 
 typedef std::shared_ptr<StructBase> StructBasePtr;

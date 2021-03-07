@@ -294,7 +294,7 @@ const char* JsonParser::parseNumber(const char* str)
 
 static std::int32_t getHexDigit(char c)
 {
-    if (c >= '0' && c < '9')
+    if (c >= '0' && c <= '9')
     {
         return c - '0';
     }
@@ -448,9 +448,9 @@ const char* JsonParser::parseString(const char* str, bool key)
                             //num += num2 << 16;
                             num = (((num - 0xD800) << 10) | (num2 - 0xDC00)) + 0x10000;
                         }
-                        else if (num > 0xDBFF)
+                        else if (num > 0xDBFF && num <= 0xDFFF)
                         {
-                            m_visitor.syntaxError(str, "utf16 value too high");
+                            m_visitor.syntaxError(str, "wrong utf16 valueh");
                             return nullptr;
                         }
                         str--;
