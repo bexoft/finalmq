@@ -124,7 +124,15 @@ function iterateObjects(obj, level, idParent)
 	for (var i = 0; i < obj.children.length; i++)
 	{
 		var child = obj.children[i];
-		if (!isDerivedFrom(child, 'QAbstractButton'))
+		if (isDerivedFrom(child, 'QLayout'))
+		{
+			iterateObjects(child, level + 1, id);
+		}
+	}
+	for (var i = 0; i < obj.children.length; i++)
+	{
+		var child = obj.children[i];
+		if (!isDerivedFrom(child, 'QAbstractButton') && !isDerivedFrom(child, 'QLayout'))
 		{
 			iterateObjects(child, level + 1, id);
 		}
@@ -142,15 +150,30 @@ function iterateObjects(obj, level, idParent)
 
 function poll()
 {
+	getObjectTree();
+	getScreenshot();
+}
+
+function getObjectTree()
+{
     g_fmqEntity.requestReply('QtService', 'finalmq.qt.GetObjectTreeRequest', null, function(outparams) {
         if (outparams.replystatus == 'STATUS_OK')
         {
-			document.getElementById('root').innerHTML = ''
+			document.getElementById('root').innerHTML = '';
             iterateObjects(outparams.root, 0, 'root');
         }
     });
 }
 
+function getScreenshot()
+{
+    g_fmqEntity.requestReply('QtService', 'finalmq.qt.GetScreenshotRequest', null, function(outparams) {
+        if (outparams.replystatus == 'STATUS_OK')
+        {
+			document.getElementById('image').innerHTML = '<img style="position:absolute; left:'+outparams.x+'; top:'+outparams.y+'; width:'+outparams.width+'; height:'+outparams.height+';" src="data:image/png;base64,'+outparams.screen+'"></img>'
+        }
+    });
+}
 
 
 function pressButton(objectName)
@@ -164,6 +187,7 @@ function pressButton(objectName)
 
 function fmqReady()
 {
+	poll();
 	setInterval(poll, 1000);
 }
 
@@ -217,13 +241,13 @@ function insertItem(idParent, item)
                                        
 function createBox(x, y, w, h, id)
 {
-	var box = '<div style="position:absolute; left:'+x+'px; top:'+y+'px; width:'+w+'px; height:'+h+'px; border-width:1px; border-style:solid" id="'+id+'"></div>';
+	var box = '<div style="position:absolute; color:rgb(0,155,155); left:'+x+'px; top:'+y+'px; width:'+w+'px; height:'+h+'px; border-width:1px; border-style:solid" id="'+id+'"></div>';
 	return box;
 }
 
 function createButton(x, y, w, h, id, objectName)
 {
-	var button = '<button style="position:absolute; left:'+x+'px; top:'+y+'px; width:'+w+'px; height:'+h+'px;" id="'+id+'" onmousedown="pressButton(\''+objectName+'\')"></button>';
+	var button = '<button style="position:absolute; opacity:0.5; left:'+x+'px; top:'+y+'px; width:'+w+'px; height:'+h+'px;" id="'+id+'" onmousedown="pressButton(\''+objectName+'\')"></button>';
 	return button;
 }
 
@@ -236,7 +260,11 @@ function createButton(x, y, w, h, id, objectName)
 <body>                                                                          
 
 <body onload="pageLoad()" onunload="pageUnload()">
-<div style="position:absolute; top:0; left:0; width:100%; height:100%;" id="root">
+<div style="position:absolute; top:0; left:0; width:100%; height:100%;">
+	<div style="position:absolute; top:0; left:0; width:100%; height:100%;" id="image">
+	</div>
+	<div style="position:absolute; top:0; left:0; width:100%; height:100%;" id="root">
+	</div>
 </div>
 
 </body>

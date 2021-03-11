@@ -28,7 +28,18 @@
         
         {"type":"PressButtonRequest","desc":"","fields":[
             {"tid":"TYPE_STRING",       "type":"",          "name":"objectName",     "desc":"","flags":[]}
-         ]}
+         ]},
+    
+        {"type":"GetScreenshotRequest","desc":"","fields":[
+         ]},
+        {"type":"GetScreenshotReply","desc":"","fields":[
+            {"tid":"TYPE_BYTES", "type":"","name":"screen","desc":"","flags":[]},
+            {"tid":"TYPE_INT32", "type":"","name":"x","desc":"","flags":[]},
+            {"tid":"TYPE_INT32", "type":"","name":"y","desc":"","flags":[]},
+            {"tid":"TYPE_INT32", "type":"","name":"width","desc":"","flags":[]},
+            {"tid":"TYPE_INT32", "type":"","name":"height","desc":"","flags":[]}
+        ]}
+        
     ]
 }
 
