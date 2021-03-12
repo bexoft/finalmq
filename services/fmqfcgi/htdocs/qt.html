@@ -13,6 +13,7 @@
 
 
 var g_fmqEntity = new FmqEntity();
+var g_layers = [true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true];
 
 function getProperty(properties, key)
 {
@@ -53,9 +54,11 @@ function insertProperties(id, obj)
 }
 
 
-function iterateObjects(obj, level, idParent)
+function iterateObjects(obj, level, idParent, parentWidget)
 {
+	var showLayer = (level >= g_layers.length) || g_layers[level];
 	var id = idParent;
+	var nextParentWidget = null;
 	if (isDerivedFrom(obj, 'QAbstractButton'))
 	{
 		var x = getProperty(obj.properties, 'x');
@@ -63,62 +66,73 @@ function iterateObjects(obj, level, idParent)
 		var width = getProperty(obj.properties, 'width');
 		var height = getProperty(obj.properties, 'height');
 		var visible = getProperty(obj.properties, 'visible');
+		nextParentWidget = obj;
 		
 		if (visible == 'true')
 		{
-			id = insertButton(idParent, x, y, width, height, getProperty(obj.properties, 'objectName'));
-			insertText(id, obj.classchain[0])
-			insertText(id, '<br>')
-			insertText(id, getProperty(obj.properties, 'objectName'))
-			insertText(id, '<br>')
-			insertText(id, getProperty(obj.properties, 'text'))
+			id = insertButton(idParent, x, y, width, height, getProperty(obj.properties, 'objectName'), showLayer);
+			insertText(id, obj.classchain[0], showLayer)
+			insertText(id, '<br>', showLayer)
+			insertText(id, getProperty(obj.properties, 'objectName'), showLayer)
+			insertText(id, '<br>', showLayer)
+			insertText(id, getProperty(obj.properties, 'text'), showLayer)
 			insertProperties(id, obj);
 		}
 	}
 	else if (isDerivedFrom(obj, 'QWidget'))
 	{
-		if (isDerivedFrom(obj, 'ScrollBar'))
-		{
-			var t=0;
-		}
 		var x = getProperty(obj.properties, 'x');
 		var y = getProperty(obj.properties, 'y');
 		var width = getProperty(obj.properties, 'width');
 		var height = getProperty(obj.properties, 'height');
 		var visible = getProperty(obj.properties, 'visible');
+		nextParentWidget = obj;
 		
 		if (visible == 'true')
 		{
-			id = insertBox(idParent, x, y, width, height);
-			insertText(id, obj.classchain[0])
-			insertText(id, '<br>')
-			insertText(id, getProperty(obj.properties, 'objectName'))
-			insertText(id, '<br>')
-			insertText(id, getProperty(obj.properties, 'text'))
+			id = insertBox(idParent, x, y, width, height, showLayer);
+			insertText(id, obj.classchain[0], showLayer)
+			insertText(id, '<br>', showLayer)
+			insertText(id, getProperty(obj.properties, 'objectName'), showLayer)
+			insertText(id, '<br>', showLayer)
+			insertText(id, getProperty(obj.properties, 'text'), showLayer)
 			if (getProperty(obj.properties, 'html'))
 			{
-				insertText(id, '<br>')
-				insertText(id, getProperty(obj.properties, 'html'))
+				insertText(id, '<br>', showLayer)
+				insertText(id, getProperty(obj.properties, 'html'), showLayer)
 			}
 			insertProperties(id, obj);
 		}
 	}
 	else if (isDerivedFrom(obj, 'QLayout'))
 	{
-		var x = getProperty(obj.properties, 'x');
-		var y = getProperty(obj.properties, 'y');
-		var width = getProperty(obj.properties, 'width');
-		var height = getProperty(obj.properties, 'height');
-		var enabled = getProperty(obj.properties, 'enabled');
-		
-		if (enabled == '1')
+		var visible = 'false';
+		if (parentWidget)
 		{
-			id = insertBox(idParent, x, y, width, height);
-			insertText(id, obj.classchain[0])
-			insertText(id, '<br>')
-			insertText(id, getProperty(obj.properties, 'objectName'))
-			insertProperties(id, obj);
+			visible = getProperty(parentWidget.properties, 'visible');
 		}
+		if (visible == 'true')
+		{
+			var x = getProperty(obj.properties, 'x');
+			var y = getProperty(obj.properties, 'y');
+			var width = getProperty(obj.properties, 'width');
+			var height = getProperty(obj.properties, 'height');
+			var enabled = getProperty(obj.properties, 'enabled');
+			
+			if (enabled == '1')
+			{
+				id = insertBox(idParent, x, y, width, height, showLayer);
+				insertText(id, obj.classchain[0], showLayer)
+				insertText(id, '<br>', showLayer)
+				insertText(id, getProperty(obj.properties, 'objectName'), showLayer)
+				insertProperties(id, obj);
+			}
+		}
+	}
+	
+	if (nextParentWidget)
+	{
+		parentWidget = nextParentWidget;
 	}
 	
 	for (var i = 0; i < obj.children.length; i++)
@@ -126,7 +140,7 @@ function iterateObjects(obj, level, idParent)
 		var child = obj.children[i];
 		if (isDerivedFrom(child, 'QLayout'))
 		{
-			iterateObjects(child, level + 1, id);
+			iterateObjects(child, level + 1, id, parentWidget);
 		}
 	}
 	for (var i = 0; i < obj.children.length; i++)
@@ -134,7 +148,7 @@ function iterateObjects(obj, level, idParent)
 		var child = obj.children[i];
 		if (!isDerivedFrom(child, 'QAbstractButton') && !isDerivedFrom(child, 'QLayout'))
 		{
-			iterateObjects(child, level + 1, id);
+			iterateObjects(child, level + 1, id, parentWidget);
 		}
 	}
 	for (var i = 0; i < obj.children.length; i++)
@@ -142,16 +156,25 @@ function iterateObjects(obj, level, idParent)
 		var child = obj.children[i];
 		if (isDerivedFrom(child, 'QAbstractButton'))
 		{
-			iterateObjects(child, level + 1, id);
+			iterateObjects(child, level + 1, id, parentWidget);
 		}
 	}
 }
 
+var g_displayScreen = true;
 
 function poll()
 {
 	getObjectTree();
-	getScreenshot();
+	
+	if (g_displayScreen)
+	{
+		getScreenshot();
+	}
+	else
+	{
+		document.getElementById('image').innerHTML = '';
+	}
 }
 
 function getObjectTree()
@@ -160,7 +183,7 @@ function getObjectTree()
         if (outparams.replystatus == 'STATUS_OK')
         {
 			document.getElementById('root').innerHTML = '';
-            iterateObjects(outparams.root, 0, 'root');
+            iterateObjects(outparams.root, 0, 'root', null);
         }
     });
 }
@@ -188,7 +211,7 @@ function pressButton(objectName)
 function fmqReady()
 {
 	poll();
-	setInterval(poll, 1000);
+	setInterval(poll, 2000);
 }
 
 
@@ -206,27 +229,34 @@ function pageUnload()
 
 var nextItemId = 0;
 
-function insertBox(idParent, x, y, w, h)
+function insertBox(idParent, x, y, w, h, showLayer)
 {
 	nextItemId++;
 	var id = 'itemid' + nextItemId;
-	var box = createBox(x, y, w, h, id);
+	var box = createBox(x, y, w, h, id, showLayer);
 	insertItem(idParent, box);
 	return id;
 }
 
-function insertButton(idParent, x, y, w, h, objectName)
+function insertButton(idParent, x, y, w, h, objectName, showLayer)
 {
 	nextItemId++;
 	var id = 'itemid' + nextItemId;
-	var button = createButton(x, y, w, h, id, objectName);
+	var button = createButton(x, y, w, h, id, objectName, showLayer);
 	insertItem(idParent, button);
 	return id;
 }
 
-function insertText(idParent, text)
+function insertText(idParent, text, showLayer)
 {
-	insertItem(idParent, text);
+	if (showLayer)
+	{
+		insertItem(idParent, text);
+	}
+	else
+	{
+		insertComment(idParent, text)
+	}
 }
 
 function insertComment(idParent, text)
@@ -239,18 +269,40 @@ function insertItem(idParent, item)
 	document.getElementById(idParent).innerHTML += item;
 }
                                        
-function createBox(x, y, w, h, id)
-{
-	var box = '<div style="position:absolute; color:rgb(0,155,155); left:'+x+'px; top:'+y+'px; width:'+w+'px; height:'+h+'px; border-width:1px; border-style:solid" id="'+id+'"></div>';
+function createBox(x, y, w, h, id, showLayer)
+{	
+	var borderstyle = (showLayer) ? 'solid' : 'none';
+	var style = 'position:absolute; color:rgb(0,155,155); left:'+x+'px; top:'+y+'px; width:'+w+'px; height:'+h+'px; border-width:1px; border-style:'+borderstyle+';';
+	var box = '<div style="'+style+'" id="'+id+'"></div>';
 	return box;
 }
 
-function createButton(x, y, w, h, id, objectName)
+function createButton(x, y, w, h, id, objectName, showLayer)
 {
-	var button = '<button style="position:absolute; opacity:0.5; left:'+x+'px; top:'+y+'px; width:'+w+'px; height:'+h+'px;" id="'+id+'" onmousedown="pressButton(\''+objectName+'\')"></button>';
+	var opacity = (showLayer) ? 0.5 : 0;
+	var style = 'position:absolute; opacity:'+opacity+'; left:'+x+'px; top:'+y+'px; width:'+w+'px; height:'+h+'px;';
+	var button = '<button style="'+style+'" id="'+id+'" onmousedown="pressButton(\''+objectName+'\')"></button>';
 	return button;
 }
 
+												 
+function handleCheckboxScreen(checkbox)
+{
+	var checked = checkbox.checked;
+	g_displayScreen = false;
+	if (checked)
+	{
+		g_displayScreen = true;
+	}
+}
+												 
+												 
+function handleCheckboxLayer(checkbox, layer)
+{
+	var checked = checkbox.checked;
+	g_layers[layer] = checked;
+}
+												 
 												 
 </script>                                                                       
                                                                           
@@ -265,6 +317,76 @@ function createButton(x, y, w, h, id, objectName)
 	</div>
 	<div style="position:absolute; top:0; left:0; width:100%; height:100%;" id="root">
 	</div>
+	<table style="position:absolute; top:20%; left:0%;">
+	<tr>
+		<td><input type="checkbox" id="cbscreen" onchange="handleCheckboxScreen(this)" checked></td>
+		<td>Screen</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer1" onchange="handleCheckboxLayer(this, 1)" checked></td>
+		<td>Layer 1</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer2" onchange="handleCheckboxLayer(this, 2)" checked></td>
+		<td>Layer 2</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer3" onchange="handleCheckboxLayer(this, 3)" checked></td>
+		<td>Layer 3</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer4"  onchange="handleCheckboxLayer(this, 4)"checked></td>
+		<td>Layer 4</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer5"  onchange="handleCheckboxLayer(this, 5)"checked></td>
+		<td>Layer 5</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer6"  onchange="handleCheckboxLayer(this, 6)"checked></td>
+		<td>Layer 6</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer7" onchange="handleCheckboxLayer(this, 7)" checked></td>
+		<td>Layer 7</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer8" onchange="handleCheckboxLayer(this, 8)" checked></td>
+		<td>Layer 8</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer9" onchange="handleCheckboxLayer(this, 9)" checked></td>
+		<td>Layer 9</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer10" onchange="handleCheckboxLayer(this, 10)" checked></td>
+		<td>Layer 10</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer11" onchange="handleCheckboxLayer(this, 11)" checked></td>
+		<td>Layer 11</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer12" onchange="handleCheckboxLayer(this, 12)" checked></td>
+		<td>Layer 12</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer13" onchange="handleCheckboxLayer(this, 13)" checked></td>
+		<td>Layer 13</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer14" onchange="handleCheckboxLayer(this, 14)" checked></td>
+		<td>Layer 14</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer15" onchange="handleCheckboxLayer(this, 15)" checked></td>
+		<td>Layer 15</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer16" onchange="handleCheckboxLayer(this, 16)" checked></td>
+		<td>Layer 16</td>
+	</tr>
+	</table>
 </div>
 
 </body>

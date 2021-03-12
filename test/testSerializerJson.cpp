@@ -189,14 +189,14 @@ TEST_F(TestSerializerJson, testString)
 
 TEST_F(TestSerializerJson, testBytes)
 {
-    static const Bytes VALUE = {'H','e','l',0,13,'l','o'};
+    static const Bytes VALUE = { 0x23, (BytesElement)0xaa, 0x00, 0x6a, 0x40, 0x00 };
 
     m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestBytes", ""});
     m_serializer->enterBytes({MetaTypeId::TYPE_BYTES, "", "value", "", 0}, VALUE.data(), VALUE.size());
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestBytes", ""});
     m_serializer->finished();
 
-    ASSERT_EQ(m_data, "{\"value\":\"Hel\\u0000\\rlo\"}");
+    ASSERT_EQ(m_data, "{\"value\":\"I6oAakAA\"}");
 }
 
 
@@ -380,17 +380,18 @@ TEST_F(TestSerializerJson, testArrayString)
 
 TEST_F(TestSerializerJson, testArrayBytes)
 {
-    static const Bytes VALUE1 = {'H', 'e', 'l', 'l', 'o'};
+    static const Bytes VALUE1 = { 0x23, (BytesElement)0xaa, 0x00, 0x6a, 0x40, 0x00 };
     static const Bytes VALUE2 = {};
-    static const Bytes VALUE3 = {'W', 'o', 'r', 'l', 'd'};
-    static const std::vector<Bytes> VALUE = {VALUE1, VALUE2, VALUE3};
+    static const Bytes VALUE3 = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, (BytesElement)0x88,(BytesElement)0x99, (BytesElement)0xaa, (BytesElement)0xbb, (BytesElement)0xcc, (BytesElement)0xdd, (BytesElement)0xee, (BytesElement)0xff };
+    static const Bytes VALUE4 = { 0x00 };
+    static const std::vector<Bytes> VALUE = {VALUE1, VALUE2, VALUE3, VALUE4};
 
     m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayBytes", ""});
     m_serializer->enterArrayBytes({MetaTypeId::TYPE_ARRAY_BYTES, "", "value", "", 0}, VALUE);
     m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestArrayBytes", ""});
     m_serializer->finished();
 
-    ASSERT_EQ(m_data, "{\"value\":[\"Hello\",\"\",\"World\"]}");
+    ASSERT_EQ(m_data, "{\"value\":[\"I6oAakAA\",\"\",\"ABEiM0RVZneImaq7zN3u/w==\",\"AA==\"]}");
 }
 
 TEST_F(TestSerializerJson, testArrayStruct)

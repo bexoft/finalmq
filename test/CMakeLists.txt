@@ -93,14 +93,22 @@ endif()
 add_executable(testfinalmq ${TESTSOURCES} ${PROTO_SRCS} ${PROTO_HDRS} ${CMAKE_CURRENT_BINARY_DIR}/test.fmq.cpp ../services/fmqreg/registry.cpp)
 
 
-if (WIN32)
+
 if (FINALMQ_USE_SSL)
-    message("Protobuf libs: " ${PROTOBUF_LIBRARIES})
-    target_link_libraries(testfinalmq wsock32 gtest_main finalmq gmock ws2_32 ${PROTOBUF_LIBRARIES} ${OPENSSL_DIR}/lib/libssl.lib ${OPENSSL_DIR}/lib/libcrypto.lib)
-endif()
+    if (WIN32)
+        target_link_libraries(testfinalmq wsock32 gtest_main finalmq gmock ws2_32 ${PROTOBUF_LIBRARIES} ${OPENSSL_DIR}/lib/libssl.lib ${OPENSSL_DIR}/lib/libcrypto.lib)
+    else()
+        target_link_libraries(testfinalmq gtest_main finalmq gmock ssl ${PROTOBUF_LIBRARIES})
+    endif()
 else()
-    target_link_libraries(testfinalmq gtest_main finalmq gmock ssl ${PROTOBUF_LIBRARIES})
-endif()
+    if (WIN32)
+        target_link_libraries(testfinalmq wsock32 gtest_main finalmq gmock ws2_32 ${PROTOBUF_LIBRARIES})
+    else()
+        target_link_libraries(testfinalmq gtest_main finalmq gmock ${PROTOBUF_LIBRARIES})
+    endif()
+endif(FINALMQ_USE_SSL)
+
+
 
 #add_test(NAME example_test COMMAND example)
 
