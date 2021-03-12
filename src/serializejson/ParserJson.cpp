@@ -25,6 +25,7 @@
 #include "finalmq/metadata/MetaData.h"
 #include "finalmq/logger/LogStream.h"
 #include "finalmq/helpers/ModulenameFinalmq.h"
+#include "finalmq/helpers/base64.h"
 
 #include "finalmq/conversions/itoa.h"
 #include "finalmq/conversions/dtoa.h"
@@ -254,8 +255,12 @@ void ParserJson::enterString(const char* value, ssize_t size)
         m_visitor.enterString(*m_fieldCurrent, value, size);
         break;
     case MetaTypeId::TYPE_BYTES:
-        // todo: convert from base64
-        m_visitor.enterBytes(*m_fieldCurrent, value, size);
+        {
+            // convert from base64
+            std::vector<char> bin;
+            Base64::decode(value, size, bin);
+            m_visitor.enterBytes(*m_fieldCurrent, std::move(bin));
+        }
         break;
     case MetaTypeId::TYPE_ENUM:
         m_visitor.enterEnum(*m_fieldCurrent, value, size);
@@ -307,8 +312,10 @@ void ParserJson::enterString(const char* value, ssize_t size)
         break;
     case MetaTypeId::TYPE_ARRAY_BYTES:
         {
-            // todo: convert from base64
-            m_arrayBytes.emplace_back(value, value + size);
+            // convert from base64
+            std::vector<char> bin;
+            Base64::decode(value, size, bin);
+            m_arrayBytes.emplace_back(std::move(bin));
         }
         break;
     case MetaTypeId::TYPE_ARRAY_ENUM:
@@ -384,8 +391,12 @@ void ParserJson::enterString(std::string&& value)
         m_visitor.enterString(*m_fieldCurrent, std::move(value));
         break;
     case MetaTypeId::TYPE_BYTES:
-        // todo: convert from base64
-        m_visitor.enterBytes(*m_fieldCurrent, value.data(), value.size());
+        {
+            // convert from base64
+            std::vector<char> bin;
+            Base64::decode(value, bin);
+            m_visitor.enterBytes(*m_fieldCurrent, std::move(bin));
+        }
         break;
     case MetaTypeId::TYPE_ENUM:
         m_visitor.enterEnum(*m_fieldCurrent, std::move(value));
@@ -437,8 +448,10 @@ void ParserJson::enterString(std::string&& value)
         break;
     case MetaTypeId::TYPE_ARRAY_BYTES:
         {
-            // todo: convert from base64
-            m_arrayBytes.emplace_back(value.data(), value.data() + value.size());
+            // convert from base64
+            std::vector<char> bin;
+            Base64::decode(value, bin);
+            m_arrayBytes.emplace_back(std::move(bin));
         }
         break;
     case MetaTypeId::TYPE_ARRAY_ENUM:

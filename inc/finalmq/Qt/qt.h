@@ -56,6 +56,7 @@ using finalmq::qt::ObjectData;
 #include <QJsonDocument>
 #include <QPushButton>
 #include <QLayout>
+#include <QBuffer>
 
 namespace finalmq { namespace qt {
 
@@ -219,6 +220,36 @@ public:
                         button->click();
                     }
                 }
+            }
+        });
+
+        registerCommand<GetScreenshotRequest>([](ReplyContextUPtr& replyContext, const std::shared_ptr<GetScreenshotRequest>& request) {
+            assert(request);
+
+            QWidget* visibleWidget = nullptr;
+            QWidgetList widgetList = qApp->topLevelWidgets();
+            for (int i = 0; i < widgetList.size(); ++i)
+            {
+                if (widgetList[i]->isVisible())
+                {
+                    visibleWidget = widgetList[i];
+                    break;
+                }
+            }
+            if (visibleWidget)
+            {
+                QPixmap pixmap = QPixmap::grabWindow(visibleWidget->winId());
+                QByteArray array;
+                QBuffer buffer(&array);
+                buffer.open(QIODevice::WriteOnly);
+                pixmap.save(&buffer, "PNG");
+                GetScreenshotReply reply{ {array.data(), array.data() + array.size()}, visibleWidget->x(), visibleWidget->y(), visibleWidget->width(), visibleWidget->height() };
+                replyContext->reply(reply);
+            }
+            else
+            {
+                GetScreenshotReply reply{};
+                replyContext->reply(reply);
             }
         });
     }

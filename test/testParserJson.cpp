@@ -317,7 +317,7 @@ TEST_F(TestParserJson, testStdString)
 
 TEST_F(TestParserJson, testBytes)
 {
-    Bytes VALUE = {'H', 'e', 12, 0, 'A'};
+    Bytes VALUE = { 0x23, (BytesElement)0xaa, 0x00, 0x6a, 0x40, 0x00 };
 
     const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestBytes", "value");
     ASSERT_NE(fieldValue, nullptr);
@@ -328,12 +328,12 @@ TEST_F(TestParserJson, testBytes)
     {
         testing::InSequence seq;
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(rootStruct))).Times(1);
-        EXPECT_CALL(mockVisitor, enterBytes(MatcherMetaField(*fieldValue), ArrayEq(VALUE.data(), VALUE.size()), VALUE.size())).Times(1);
+        EXPECT_CALL(mockVisitor, enterBytes(MatcherMetaField(*fieldValue), std::move(VALUE))).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(rootStruct))).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
 
-    std::string data = "{\"value\":\"He\\u000c\\u0000A\"}";
+    std::string data = "{\"value\":\"I6oAakAA\"}";
     ParserJson parser(mockVisitor, data.data(), data.size());
     bool res = parser.parseStruct("test.TestBytes");
     EXPECT_EQ(res, true);
@@ -836,10 +836,10 @@ TEST_F(TestParserJson, testArrayString)
 
 TEST_F(TestParserJson, testArrayBytes)
 {
-    static const Bytes VALUE1 = {'H', 'e', '\0', 'l', 'o'};
+    static const Bytes VALUE1 = { 0x23, (BytesElement)0xaa, 0x00, 0x6a, 0x40, 0x00 };
     static const Bytes VALUE2 = {};
-    static const Bytes VALUE3 = {'W', 'o', '\n', '\0', 'd'};
-    static const Bytes VALUE4 = {'F', '\t', '\0', 123, 12};
+    static const Bytes VALUE3 = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, (BytesElement)0x88, (BytesElement)0x99, (BytesElement)0xaa, (BytesElement)0xbb, (BytesElement)0xcc, (BytesElement)0xdd, (BytesElement)0xee, (BytesElement)0xff };
+    static const Bytes VALUE4 = { 0x00 };
 
     const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestArrayBytes", "value");
     ASSERT_NE(fieldValue, nullptr);
@@ -855,7 +855,7 @@ TEST_F(TestParserJson, testArrayBytes)
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
 
-    std::string data = "{\"value\":[\"He\\u0000lo\",\"\",\"Wo\n\\u0000d\",\"F\t\\u0000\\u007b\\u000c\"]}";
+    std::string data = "{\"value\":[\"I6oAakAA\",\"\",\"ABEiM0RVZneImaq7zN3u/w==\",\"AA==\"]}";
     ParserJson parser(mockVisitor, data.data(), data.size());
     bool res = parser.parseStruct("test.TestArrayBytes");
     EXPECT_EQ(res, true);

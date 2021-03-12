@@ -24,6 +24,7 @@
 #include "finalmq/serializejson/SerializerJson.h"
 #include "finalmq/serialize/ParserProcessDefaultValues.h"
 #include "finalmq/metadata/MetaData.h"
+#include "finalmq/helpers/base64.h"
 
 #include <assert.h>
 #include <algorithm>
@@ -162,16 +163,20 @@ void SerializerJson::Internal::enterBytes(const MetaField& field, Bytes&& value)
 {
     assert(field.typeId == MetaTypeId::TYPE_BYTES);
     setKey(field);
-    // todo: convert to base64
-    m_jsonBuilder.enterString(reinterpret_cast<const char*>(value.data()), value.size());
+    // convert to base64
+    std::string base64;
+    Base64::encode(value, base64);
+    m_jsonBuilder.enterString(base64.data(), base64.size());
 }
 
 void SerializerJson::Internal::enterBytes(const MetaField& field, const BytesElement* value, ssize_t size)
 {
     assert(field.typeId == MetaTypeId::TYPE_BYTES);
     setKey(field);
-    // todo: convert to base64
-    m_jsonBuilder.enterString(value, size);
+    // convert to base64
+    std::string base64;
+    Base64::encode(value, size, base64);
+    m_jsonBuilder.enterString(base64.data(), base64.size());
 }
 
 void SerializerJson::Internal::enterEnum(const MetaField& field, std::int32_t value)
@@ -365,8 +370,10 @@ void SerializerJson::Internal::enterArrayBytes(const MetaField& field, const std
     setKey(field);
     m_jsonBuilder.enterArray();
     std::for_each(value.begin(), value.end(), [this] (const Bytes& entry) {
-        // todo: convert to base64
-        m_jsonBuilder.enterString(reinterpret_cast<const char*>(entry.data()), entry.size());
+        // convert to base64
+        std::string base64;
+        Base64::encode(entry, base64);
+        m_jsonBuilder.enterString(base64.data(), base64.size());
     });
     m_jsonBuilder.exitArray();
 }

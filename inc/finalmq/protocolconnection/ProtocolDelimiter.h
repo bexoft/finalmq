@@ -31,7 +31,7 @@
 namespace finalmq {
 
 
-class ProtocolDelimiter : public IProtocol
+class SYMBOLEXP ProtocolDelimiter : public IProtocol
 {
 public:
     ProtocolDelimiter(const std::string& delimiter);
