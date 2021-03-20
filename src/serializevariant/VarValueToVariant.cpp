@@ -21,24 +21,9 @@
 //SOFTWARE.
 
 
-#include "finalmq/metadataserialize/metadata.fmq.h"
+#include "finalmq/serializevariant/VarValueToVariant.h"
 
 namespace finalmq {
 
-
-class SYMBOLEXP MetaDataExchange
-{
-public:
-    static void importMetaData(const finalmq::SerializeMetaData& metadata);
-    static void exportMetaData(finalmq::SerializeMetaData& metadata);
-
-    static void importMetaDataJson(const char* json);
-    static void exportMetaDataJson(std::string& json);
-
-    static void importMetaDataProto(const char* proto, ssize_t size);
-    static void exportMetaDataProto(std::string& proto);
-
-private:
-};
 
 }   // namespace finalmq

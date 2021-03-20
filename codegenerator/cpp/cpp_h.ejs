@@ -1,6 +1,7 @@
 #pragma once
 
 #include "finalmq/serializestruct/StructBase.h"
+#include "finalmq/variant/Variant.h"
 
 <%
 if (data.imports)
@@ -79,6 +80,17 @@ private:
 // Structs
 //////////////////////////////
 
+
+// FORWARD DECLARATIONS //
+<% for (var i = 0; i < data.structs.length; i++)
+{
+    var stru = data.structs[i]
+    var plaintype = helper.getPlainType(stru.type) %>
+class <%- plaintype %>;<% -%>
+<% } %>
+
+
+// CLASSES //
 <% for (var i = 0; i < data.structs.length; i++)
 {
     var stru = data.structs[i]

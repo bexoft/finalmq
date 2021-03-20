@@ -20,25 +20,26 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
+#pragma once
 
-#include "finalmq/metadataserialize/metadata.fmq.h"
+#include "finalmq/helpers/BexDefines.h"
+#include "finalmq/variant/Variant.h"
+#include "finalmq/serialize/IParserVisitor.h"
+
 
 namespace finalmq {
 
 
-class SYMBOLEXP MetaDataExchange
+class SYMBOLEXP VariantToVarValue
 {
 public:
-    static void importMetaData(const finalmq::SerializeMetaData& metadata);
-    static void exportMetaData(finalmq::SerializeMetaData& metadata);
+    VariantToVarValue(const Variant& variant, IParserVisitor& visitor);
 
-    static void importMetaDataJson(const char* json);
-    static void exportMetaDataJson(std::string& json);
-
-    static void importMetaDataProto(const char* proto, ssize_t size);
-    static void exportMetaDataProto(std::string& proto);
+    void convert();
 
 private:
+    const Variant&      m_variant;
+    IParserVisitor&     m_visitor;
 };
 
 }   // namespace finalmq

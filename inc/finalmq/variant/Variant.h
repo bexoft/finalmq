@@ -129,7 +129,7 @@ public:
     Variant(Variant&& rhs) noexcept;
     Variant& operator =(Variant&& rhs) noexcept;
 
-    void visit(IVariantVisitor& visitor, ssize_t index = 0, int level = 0, ssize_t size = 0, const std::string& name = "");
+    void accept(IVariantVisitor& visitor, ssize_t index = 0, int level = 0, ssize_t size = 0, const std::string& name = "");
 
     int getType() const;
     Variant* getVariant(const std::string& name);

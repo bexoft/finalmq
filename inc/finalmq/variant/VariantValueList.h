@@ -36,7 +36,7 @@ class Variant;
 
 typedef std::deque<Variant> VariantList;
 
-const static int VARTYPE_LIST = TYPE_ARRAY_STRUCT;
+const static int VARTYPE_LIST = TYPE_ARRAY_VARIANT;
 class SYMBOLEXP VariantValueList : public IVariantValue
 {
 public:
@@ -59,7 +59,7 @@ private:
     virtual bool add(const Variant& variant) override;
     virtual bool add(Variant&& variant) override;
     virtual ssize_t size() const override;
-    virtual void visit(IVariantVisitor& visitor, Variant& variant, ssize_t index, int level, ssize_t size, const std::string& name) override;
+    virtual void accept(IVariantVisitor& visitor, Variant& variant, ssize_t index, int level, ssize_t size, const std::string& name) override;
 
 
     VariantList::iterator find(const std::string& name);

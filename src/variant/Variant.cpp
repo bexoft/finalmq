@@ -77,12 +77,12 @@ Variant& Variant::operator =(Variant&& rhs) noexcept
 }
 
 
-void Variant::visit(IVariantVisitor& visitor, ssize_t index, int level, ssize_t size, const std::string& name)
+void Variant::accept(IVariantVisitor& visitor, ssize_t index, int level, ssize_t size, const std::string& name)
 {
 
     if (m_value)
     {
-        m_value->visit(visitor, *this, index, level, size, name);
+        m_value->accept(visitor, *this, index, level, size, name);
     }
     else
     {

@@ -61,6 +61,7 @@ module.exports = {
             case 'TYPE_BYTES':          return 'finalmq::Bytes'
             case 'TYPE_STRUCT':         return this.typeWithNamespace(data, type, '::')
             case 'TYPE_ENUM':           return this.typeWithNamespace(data, type, '::')
+            case 'TYPE_VARIANT':        return 'finalmq::Variant'
             case 'TYPE_ARRAY_BOOL':     return 'std::vector<bool>'
             case 'TYPE_ARRAY_INT32':    return 'std::vector<std::int32_t>'
             case 'TYPE_ARRAY_UINT32':   return 'std::vector<std::uint32_t>'
@@ -90,6 +91,7 @@ module.exports = {
             case 'TYPE_BYTES':          return null
             case 'TYPE_STRUCT':         return null
             case 'TYPE_ENUM':           return null
+            case 'TYPE_VARIANT':        return null
             case 'TYPE_ARRAY_BOOL':     return null
             case 'TYPE_ARRAY_INT32':    return null
             case 'TYPE_ARRAY_UINT32':   return null

@@ -1,0 +1,61 @@
+{
+    "namespace":"finalmq.variant",
+    "enums": [
+        {"type":"VarTypeId","desc":"desc","entries":[
+            {"name":"TYPE_NONE",                "id":0,     "desc":"desc"},
+            {"name":"TYPE_BOOL",                "id":1,     "desc":"desc"},
+            {"name":"TYPE_INT32",               "id":2,     "desc":"desc"},
+            {"name":"TYPE_UINT32",              "id":3,     "desc":"desc"},
+            {"name":"TYPE_INT64",               "id":4,     "desc":"desc"},
+            {"name":"TYPE_UINT64",              "id":5,     "desc":"desc"},
+            {"name":"TYPE_FLOAT",               "id":6,     "desc":"desc"},
+            {"name":"TYPE_DOUBLE",              "id":7,     "desc":"desc"},
+            {"name":"TYPE_STRING",              "id":8,     "desc":"desc"},
+            {"name":"TYPE_BYTES",               "id":9,     "desc":"desc"},
+            {"name":"TYPE_STRUCT",              "id":10,    "desc":"desc"},
+            {"name":"TYPE_ENUM",                "id":11,    "desc":"desc"},
+            {"name":"OFFSET_ARRAY_FLAG",        "id":1024,  "desc":"desc"},
+            {"name":"TYPE_ARRAY_BOOL",          "id":1025,  "desc":"desc"},
+            {"name":"TYPE_ARRAY_INT32",         "id":1026,  "desc":"desc"},
+            {"name":"TYPE_ARRAY_UINT32",        "id":1027,  "desc":"desc"},
+            {"name":"TYPE_ARRAY_INT64",         "id":1028,  "desc":"desc"},
+            {"name":"TYPE_ARRAY_UINT64",        "id":1029,  "desc":"desc"},
+            {"name":"TYPE_ARRAY_FLOAT",         "id":1030,  "desc":"desc"},
+            {"name":"TYPE_ARRAY_DOUBLE",        "id":1031,  "desc":"desc"},
+            {"name":"TYPE_ARRAY_STRING",        "id":1032,  "desc":"desc"},
+            {"name":"TYPE_ARRAY_BYTES",         "id":1033,  "desc":"desc"},
+            {"name":"TYPE_ARRAY_STRUCT",        "id":1034,  "desc":"desc"},
+            {"name":"TYPE_ARRAY_ENUM",          "id":1035,  "desc":"desc"}
+        ]}
+    ],
+
+    "structs":[
+        {"type":"VarValue","desc":"desc","fields":[
+            {"tid":"TYPE_STRING",       "type":"",                          "name":"name",          "desc":"name is only used for elements in valstruct","flags":[]},
+            {"tid":"TYPE_ENUM",         "type":"VarTypeId",                 "name":"type",          "desc":"","flags":[]},
+
+            {"tid":"TYPE_BOOL",         "type":"",                          "name":"valbool",       "desc":"","flags":[]},
+            {"tid":"TYPE_INT32",        "type":"",                          "name":"valint32",      "desc":"","flags":[]},
+            {"tid":"TYPE_UINT32",       "type":"",                          "name":"valuint32",     "desc":"","flags":[]},
+            {"tid":"TYPE_INT64",        "type":"",                          "name":"valint64",      "desc":"","flags":[]},
+            {"tid":"TYPE_UINT64",       "type":"",                          "name":"valuint64",     "desc":"","flags":[]},
+            {"tid":"TYPE_FLOAT",        "type":"",                          "name":"valfloat",      "desc":"","flags":[]},
+            {"tid":"TYPE_DOUBLE",       "type":"",                          "name":"valdouble",     "desc":"","flags":[]},
+            {"tid":"TYPE_STRING",       "type":"",                          "name":"valstring",     "desc":"","flags":[]},
+            {"tid":"TYPE_BYTES",        "type":"",                          "name":"valbytes",      "desc":"","flags":[]},
+            {"tid":"TYPE_ARRAY_STRUCT", "type":"VarValue",                  "name":"valstruct",     "desc":"","flags":[]},
+            {"tid":"TYPE_ARRAY_BOOL",   "type":"",                          "name":"valarrbool",    "desc":"","flags":[]},
+            {"tid":"TYPE_ARRAY_INT32",  "type":"",                          "name":"valarrint32",   "desc":"","flags":[]},
+            {"tid":"TYPE_ARRAY_UINT32", "type":"",                          "name":"valarruint32",  "desc":"","flags":[]},
+            {"tid":"TYPE_ARRAY_INT64",  "type":"",                          "name":"valarrint64",   "desc":"","flags":[]},
+            {"tid":"TYPE_ARRAY_UINT64", "type":"",                          "name":"valarruint64",  "desc":"","flags":[]},
+            {"tid":"TYPE_ARRAY_FLOAT",  "type":"",                          "name":"valarrfloat",   "desc":"","flags":[]},
+            {"tid":"TYPE_ARRAY_DOUBLE", "type":"",                          "name":"valarrdouble",  "desc":"","flags":[]},
+            {"tid":"TYPE_ARRAY_STRING", "type":"",                          "name":"valarrstring",  "desc":"","flags":[]},
+            {"tid":"TYPE_ARRAY_BYTES",  "type":"",                          "name":"valarrbytes",   "desc":"","flags":[]},
+            {"tid":"TYPE_ARRAY_STRUCT", "type":"VarValue",                  "name":"vallist",       "desc":"","flags":[]}
+        ]}
+    ]
+}
+
+

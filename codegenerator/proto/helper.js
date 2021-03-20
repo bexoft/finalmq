@@ -78,6 +78,7 @@ module.exports = {
             case 'TYPE_BYTES':          return 'bytes'
             case 'TYPE_STRUCT':         return this.typeWithNamespace(data, type, '.')
             case 'TYPE_ENUM':           return this.typeWithNamespace(data, type, '.')
+            case 'TYPE_VARIANT':        return 'finalmq.variant.VarValue'
             case 'TYPE_ARRAY_BOOL':     return 'repeated bool'
             case 'TYPE_ARRAY_INT32':    return 'repeated ' + ((this.isVarint(flags)) ? 'int32'  : (this.isZigZag(flags)) ? 'sint32' : 'sfixed32')
             case 'TYPE_ARRAY_UINT32':   return 'repeated ' + ((this.isVarint(flags)) ? 'uint32' : 'fixed32')
@@ -92,4 +93,19 @@ module.exports = {
         }
     },
 
+	isVariantNeeded : function(structs) {
+		for (var i = 0; i < structs.length; i++)
+		{
+			var stru = structs[i];
+			for (var n = 0; n < stru.fields.length; n++) 
+			{ 
+				field = stru.fields[n];
+				if (field.tid == 'TYPE_VARIANT')
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 }

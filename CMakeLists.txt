@@ -77,13 +77,21 @@ SET(CODEGENERATOR ${CMAKE_SOURCE_DIR}/codegenerator)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/inc)
 
 SET(CODEGENERATOR_CPP ${CODEGENERATOR}/cpp/cpp.js)
+SET(CODEGENERATOR_PROTO ${CODEGENERATOR}/proto/proto.js)
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/metadataserialize)
 add_custom_command(
     COMMAND node ${CODEGENERATOR_CPP} --input=${CMAKE_CURRENT_SOURCE_DIR}/inc/finalmq/metadataserialize/metadata.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/metadataserialize --exportmacro=EXPORT_finalmq
+    COMMAND node ${CODEGENERATOR_PROTO} --input=${CMAKE_CURRENT_SOURCE_DIR}/inc/finalmq/metadataserialize/variant.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/metadataserialize
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/inc/finalmq/metadataserialize/metadata.fmq
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/metadataserialize/metadata.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/metadataserialize/metadata.fmq.h
     COMMENT "Generating cpp code out of metadata.fmq."
+)
+add_custom_command(
+    COMMAND node ${CODEGENERATOR_CPP} --input=${CMAKE_CURRENT_SOURCE_DIR}/inc/finalmq/metadataserialize/variant.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/metadataserialize --exportmacro=EXPORT_finalmq
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/inc/finalmq/metadataserialize/variant.fmq
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/metadataserialize/variant.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/metadataserialize/variant.fmq.h
+    COMMENT "Generating cpp code out of variant.fmq."
 )
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/remoteentity)
@@ -139,6 +147,7 @@ file(GLOB SOURCES "src/*.cpp" "inc/finalmq/*.h"
 #Generate the shared library from the sources
 add_library(finalmq SHARED ${SOURCES}
     ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/metadataserialize/metadata.fmq.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/metadataserialize/variant.fmq.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/remoteentity/entitydata.fmq.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/interfaces/fmqreg.fmq.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/Qt/qtdata.fmq.cpp

@@ -84,7 +84,7 @@ void SerializerVariant::Internal::enterStruct(const MetaField& field)
         }
         else
         {
-            assert(m_current->getType() == TYPE_ARRAY_STRUCT);
+            assert(m_current->getType() == VARTYPE_LIST);
             m_current->add(VariantStruct());
             VariantList* list = *m_current;
             assert(list);
@@ -125,7 +125,7 @@ void SerializerVariant::Internal::enterArrayStruct(const MetaField& field)
         }
         else
         {
-            assert(m_current->getType() == TYPE_ARRAY_STRUCT);
+            assert(m_current->getType() == VARTYPE_LIST);
             m_current->add(VariantList());
             VariantList* list = *m_current;
             assert(list);
@@ -163,7 +163,7 @@ void SerializerVariant::Internal::add(const MetaField& field, const T& value)
         }
         else
         {
-            assert(m_current->getType() == TYPE_ARRAY_STRUCT);
+            assert(m_current->getType() == VARTYPE_LIST);
             m_current->add(value);
         }
     }
@@ -180,7 +180,7 @@ void SerializerVariant::Internal::add(const MetaField& field, T&& value)
         }
         else
         {
-            assert(m_current->getType() == TYPE_ARRAY_STRUCT);
+            assert(m_current->getType() == VARTYPE_LIST);
             m_current->add(std::move(value));
         }
     }
