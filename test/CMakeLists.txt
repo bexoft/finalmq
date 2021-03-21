@@ -67,7 +67,13 @@ add_custom_command(
 )
 
 add_custom_command(
-    COMMAND cp ${CMAKE_BINARY_DIR}/inc/finalmq/metadataserialize/variant.proto ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND node ${CODEGENERATOR_PROTO} --input=${CMAKE_SOURCE_DIR}/inc/finalmq/metadataserialize/variant.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${CMAKE_SOURCE_DIR}/inc/finalmq/metadataserialize/variant.fmq
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/variant.proto
+    COMMENT "Generating proto code out of variant.fmq."
+)
+
+add_custom_command(
     COMMAND node ${CODEGENERATOR}/proto/proto.js --input=${CMAKE_CURRENT_SOURCE_DIR}/test.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/test.fmq
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test.proto

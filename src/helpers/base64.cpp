@@ -115,7 +115,7 @@ void Base64::encode(const char* src, ssize_t len, std::string& dest)
     while((i++ < 3))
       dest[ixDest++] = '=';
   }
-  assert(ixDest < dest.size());
+  assert(ixDest < (ssize_t)dest.size());
   dest.resize(ixDest);
 }
 
@@ -164,7 +164,7 @@ ssize_t Base64::decode(const char* src, ssize_t len, std::vector<char>& dest)
     for (j = 0; (j < i - 1); j++) dest[ixDest++] = char_array_3[j];
   }
 
-  assert(ixDest < dest.size());
+  assert(ixDest < (ssize_t)dest.size());
   dest.resize(ixDest);
 
   return ixDest;
