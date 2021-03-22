@@ -30,16 +30,25 @@
 namespace finalmq {
 
 
-class SYMBOLEXP VariantToVarValue
+class SYMBOLEXP VariantToVarValue : private IVariantVisitor
 {
 public:
-    VariantToVarValue(const Variant& variant, IParserVisitor& visitor);
+    VariantToVarValue(Variant& variant, IParserVisitor& visitor);
 
     void convert();
 
 private:
-    const Variant&      m_variant;
-    IParserVisitor&     m_visitor;
+    // IVariantVisitor
+    virtual void enterLeaf(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name) override;
+    virtual void enterStruct(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name) override;
+    virtual void exitStruct(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name) override;
+    virtual void enterList(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name) override;
+    virtual void exitList(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name) override;
+
+
+    Variant&                    m_variant;
+    IParserVisitor&             m_visitor;
+    static const MetaStruct*    m_struct;
 };
 
 }   // namespace finalmq

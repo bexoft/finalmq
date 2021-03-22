@@ -123,12 +123,22 @@ bool <%- plaintype %>::operator !=(const <%- plaintype %>& rhs) const
 const finalmq::StructInfo <%- plaintype %>::_structInfo = {
     "<%- helper.typeWithNamespace(data, stru.type, '.') %>", "<%- stru.description %>", [] () { return std::make_shared<<%- plaintype %>>(); }, {<% -%>
     <% for (var n = 0; n < stru.fields.length; n++) { 
-        field = stru.fields[n] %>
+        field = stru.fields[n] 
+		if (field.tid == 'TYPE_VARIANT')
+		{
+			field = {tid:'TYPE_STRUCT', type:'finalmq.variant.VarValue', name:field.name, description:field.description, flags:field.flags};
+		}
+		%>
         {finalmq::<%- field.tid %>, "<%- helper.typeWithNamespace(data, field.type, '.') %>", "<%- field.name %>", "<%- field.description %>", <%- helper.convertFlags(field.flags) %>, <%- n %>},<% -%>
     <% } %>
      },{<% -%>
     <% for (var n = 0; n < stru.fields.length; n++) { 
-        field = stru.fields[n] %>
+        field = stru.fields[n] 
+		if (field.tid == 'TYPE_VARIANT')
+		{
+			field = {tid:'TYPE_STRUCT', type:'finalmq.variant.VarValue', name:field.name, description:field.description, flags:field.flags};
+		}
+		%>
         {<%- helper.getOffset(field.tid) %>(<%- plaintype %>, <%- field.name %>)<% if (field.tid == 'TYPE_ARRAY_STRUCT') {%>, new finalmq::ArrayStructAdapter<<%- helper.typeWithNamespace(data, field.type, '::') %>><% } %>},<% -%>
     <% } %>
      }
