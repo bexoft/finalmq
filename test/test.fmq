@@ -49,7 +49,7 @@
             {"tid":"TYPE_ENUM","type":"Foo","name":"value","desc":"desc","flags":[]}
         ]},
         {"type":"TestVariant","desc":"desc","fields":[
-            {"tid":"TYPE_VARIANT","type":"Foo","name":"value","desc":"desc","flags":[]}
+            {"tid":"TYPE_VARIANT","type":"","name":"value","desc":"desc","flags":[]}
         ]},
         {"type":"TestArrayBool","desc":"desc","fields":[
             {"tid":"TYPE_ARRAY_BOOL","type":"","name":"value","desc":"desc","flags":[]}

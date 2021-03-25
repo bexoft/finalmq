@@ -53,9 +53,9 @@ void VariantToVarValue::convert()
 
 
 // IVariantVisitor
-void VariantToVarValue::enterLeaf(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name)
+void VariantToVarValue::enterLeaf(Variant& variant, int type, ssize_t /*index*/, int /*level*/, ssize_t /*size*/, const std::string& name)
 {
-    static const MetaField* fieldStruct = m_struct->getFieldByName("valstruct");
+    static const MetaField* fieldStruct = m_struct->getFieldByName("vallist");
     assert(fieldStruct);
     static const MetaField* fieldStructWithoutArray = MetaDataGlobal::instance().getArrayField(*fieldStruct);
     assert(fieldStructWithoutArray);
@@ -170,28 +170,28 @@ void VariantToVarValue::enterLeaf(Variant& variant, int type, ssize_t index, int
     m_visitor.exitStruct(*fieldStructWithoutArray);
 }
 
-void VariantToVarValue::enterStruct(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name)
+void VariantToVarValue::enterStruct(Variant& /*variant*/, int /*type*/, ssize_t /*index*/, int /*level*/, ssize_t /*size*/, const std::string& /*name*/)
 {
-    static const MetaField* fieldStruct = m_struct->getFieldByName("valstruct");
+    static const MetaField* fieldStruct = m_struct->getFieldByName("vallist");
     assert(fieldStruct);
     m_visitor.enterArrayStruct(*fieldStruct);
 }
 
-void VariantToVarValue::exitStruct(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name)
+void VariantToVarValue::exitStruct(Variant& /*variant*/, int /*type*/, ssize_t /*index*/, int /*level*/, ssize_t /*size*/, const std::string& /*name*/)
 {
-    static const MetaField* fieldStruct = m_struct->getFieldByName("valstruct");
+    static const MetaField* fieldStruct = m_struct->getFieldByName("vallist");
     assert(fieldStruct);
     m_visitor.exitArrayStruct(*fieldStruct);
 }
 
-void VariantToVarValue::enterList(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name)
+void VariantToVarValue::enterList(Variant& /*variant*/, int /*type*/, ssize_t /*index*/, int /*level*/, ssize_t /*size*/, const std::string& /*name*/)
 {
     static const MetaField* fieldList = m_struct->getFieldByName("vallist");
     assert(fieldList);
     m_visitor.enterArrayStruct(*fieldList);
 }
 
-void VariantToVarValue::exitList(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name)
+void VariantToVarValue::exitList(Variant& /*variant*/, int /*type*/, ssize_t /*index*/, int /*level*/, ssize_t /*size*/, const std::string& /*name*/)
 {
     static const MetaField* fieldList = m_struct->getFieldByName("vallist");
     assert(fieldList);

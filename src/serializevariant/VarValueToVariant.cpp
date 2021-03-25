@@ -60,6 +60,8 @@ void VarValueToVariant::processVarValue(const variant::VarValue& varValue, Varia
 {
     switch (varValue.type)
     {
+    case variant::VarTypeId::T_NONE:
+        break;
     case variant::VarTypeId::T_BOOL:
         variant = varValue.valbool;
         break;
@@ -92,7 +94,7 @@ void VarValueToVariant::processVarValue(const variant::VarValue& varValue, Varia
             variant = VariantStruct();
             VariantStruct* variantStruct = variant;
             assert(variantStruct);
-            for (int i = 0; i < varValue.vallist.size(); ++i)
+            for (size_t i = 0; i < varValue.vallist.size(); ++i)
             {
                 const variant::VarValue& varValueElement = varValue.vallist[i];
                 variantStruct->emplace_back(varValueElement.name, Variant());
@@ -133,7 +135,7 @@ void VarValueToVariant::processVarValue(const variant::VarValue& varValue, Varia
             variant = VariantList();
             VariantList* variantList = variant;
             assert(variantList);
-            for (int i = 0; i < varValue.vallist.size(); ++i)
+            for (size_t i = 0; i < varValue.vallist.size(); ++i)
             {
                 const variant::VarValue& varValueElement = varValue.vallist[i];
                 variantList->emplace_back(Variant());
