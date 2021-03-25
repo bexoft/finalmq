@@ -80,8 +80,17 @@ protected:
         m_fieldDouble = structVarVariant->getFieldByName("valdouble");
         m_fieldString = structVarVariant->getFieldByName("valstring");
         m_fieldBytes = structVarVariant->getFieldByName("valbytes");
+        m_fieldList = structVarVariant->getFieldByName("vallist");
 
         m_fieldArrBool = structVarVariant->getFieldByName("valarrbool");
+        m_fieldArrInt32 = structVarVariant->getFieldByName("valarrint32");
+        m_fieldArrUInt32 = structVarVariant->getFieldByName("valarruint32");
+        m_fieldArrInt64 = structVarVariant->getFieldByName("valarrint64");
+        m_fieldArrUInt64 = structVarVariant->getFieldByName("valarruint64");
+        m_fieldArrFloat = structVarVariant->getFieldByName("valarrfloat");
+        m_fieldArrDouble = structVarVariant->getFieldByName("valarrdouble");
+        m_fieldArrString = structVarVariant->getFieldByName("valarrstring");
+        m_fieldArrBytes = structVarVariant->getFieldByName("valarrbytes");
 
         ASSERT_NE(m_fieldName, nullptr);
         ASSERT_NE(m_fieldType, nullptr);
@@ -95,8 +104,17 @@ protected:
         ASSERT_NE(m_fieldDouble, nullptr);
         ASSERT_NE(m_fieldString, nullptr);
         ASSERT_NE(m_fieldBytes, nullptr);
+        ASSERT_NE(m_fieldList, nullptr);
 
         ASSERT_NE(m_fieldArrBool, nullptr);
+        ASSERT_NE(m_fieldArrInt32, nullptr);
+        ASSERT_NE(m_fieldArrUInt32, nullptr);
+        ASSERT_NE(m_fieldArrInt64, nullptr);
+        ASSERT_NE(m_fieldArrUInt64, nullptr);
+        ASSERT_NE(m_fieldArrFloat, nullptr);
+        ASSERT_NE(m_fieldArrDouble, nullptr);
+        ASSERT_NE(m_fieldArrString, nullptr);
+        ASSERT_NE(m_fieldArrBytes, nullptr);
     }
 
     virtual void TearDown()
@@ -119,8 +137,17 @@ protected:
     const MetaField*        m_fieldFloat = nullptr;
     const MetaField*        m_fieldString = nullptr;
     const MetaField*        m_fieldBytes = nullptr;
+    const MetaField*        m_fieldList = nullptr;
 
     const MetaField*        m_fieldArrBool = nullptr;
+    const MetaField*        m_fieldArrInt32 = nullptr;
+    const MetaField*        m_fieldArrUInt32 = nullptr;
+    const MetaField*        m_fieldArrInt64 = nullptr;
+    const MetaField*        m_fieldArrUInt64 = nullptr;
+    const MetaField*        m_fieldArrDouble = nullptr;
+    const MetaField*        m_fieldArrFloat = nullptr;
+    const MetaField*        m_fieldArrString = nullptr;
+    const MetaField*        m_fieldArrBytes = nullptr;
 };
 
 
@@ -264,7 +291,7 @@ TEST_F(TestVarValueToVariant, testString)
 
 TEST_F(TestVarValueToVariant, testBytes)
 {
-    static const Bytes VALUE = {0x12, 0x00, 0x14};
+    static const Bytes VALUE = { 0x12, 0x00, 0x14 };
 
     m_visitor.enterStruct(*m_fieldValue);
     m_visitor.enterBytes(*m_fieldBytes, VALUE.data(), VALUE.size());
@@ -277,6 +304,38 @@ TEST_F(TestVarValueToVariant, testBytes)
     Bytes* val = m_root;
     ASSERT_NE(val, nullptr);
     ASSERT_EQ(*val, VALUE);
+}
+
+TEST_F(TestVarValueToVariant, testStruct)
+{
+    static const std::int32_t VALUE_INT32 = 123;
+    static const std::string VALUE_STRING = "Hello World";
+    m_visitor.enterStruct(*m_fieldValue);
+    m_visitor.enterArrayStruct(*m_fieldList);
+
+    m_visitor.enterStruct(*m_fieldValue);
+    m_visitor.enterInt32(*m_fieldInt32, 123);
+    m_visitor.enterString(*m_fieldName, "key1");
+    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_INT32);
+    m_visitor.exitStruct(*m_fieldValue);
+
+    m_visitor.enterStruct(*m_fieldValue);
+    m_visitor.enterString(*m_fieldString, VALUE_STRING.data(), VALUE_STRING.size());
+    m_visitor.enterString(*m_fieldName, "key2");
+    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_STRING);
+    m_visitor.exitStruct(*m_fieldValue);
+
+    m_visitor.exitArrayStruct(*m_fieldList);
+    m_visitor.enterString(*m_fieldName, "");
+    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_STRUCT);
+    m_visitor.exitStruct(*m_fieldValue);
+
+    m_varValueToVariant.convert();
+
+    VariantStruct* val = m_root;
+    ASSERT_NE(val, nullptr);
+    ASSERT_EQ(m_root.getDataValue<std::int32_t>("key1"), VALUE_INT32);
+    ASSERT_EQ(m_root.getDataValue<std::string>("key2"), VALUE_STRING);
 }
 
 TEST_F(TestVarValueToVariant, testArrayBool)
@@ -294,5 +353,173 @@ TEST_F(TestVarValueToVariant, testArrayBool)
     std::vector<bool>* val = m_root;
     ASSERT_NE(val, nullptr);
     ASSERT_EQ(*val, VALUE);
+}
+
+TEST_F(TestVarValueToVariant, testArrayInt32)
+{
+    static const std::vector<std::int32_t> VALUE = { -123, 0, 123, 12345, -12345 };
+
+    m_visitor.enterStruct(*m_fieldValue);
+    m_visitor.enterArrayInt32(*m_fieldArrInt32, VALUE.data(), VALUE.size());
+    m_visitor.enterString(*m_fieldName, "");
+    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_ARRAY_INT32);
+    m_visitor.exitStruct(*m_fieldValue);
+
+    m_varValueToVariant.convert();
+
+    std::vector<std::int32_t>* val = m_root;
+    ASSERT_NE(val, nullptr);
+    ASSERT_EQ(*val, VALUE);
+}
+
+TEST_F(TestVarValueToVariant, testArrayUInt32)
+{
+    static const std::vector<std::uint32_t> VALUE = { 123, 0, 12345, 8000, 982374 };
+
+    m_visitor.enterStruct(*m_fieldValue);
+    m_visitor.enterArrayUInt32(*m_fieldArrUInt32, VALUE.data(), VALUE.size());
+    m_visitor.enterString(*m_fieldName, "");
+    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_ARRAY_UINT32);
+    m_visitor.exitStruct(*m_fieldValue);
+
+    m_varValueToVariant.convert();
+
+    std::vector<std::uint32_t>* val = m_root;
+    ASSERT_NE(val, nullptr);
+    ASSERT_EQ(*val, VALUE);
+}
+
+TEST_F(TestVarValueToVariant, testArrayInt64)
+{
+    static const std::vector<std::int64_t> VALUE = { -123, 0, 123, 12345, -12345 };
+
+    m_visitor.enterStruct(*m_fieldValue);
+    m_visitor.enterArrayInt64(*m_fieldArrInt64, VALUE.data(), VALUE.size());
+    m_visitor.enterString(*m_fieldName, "");
+    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_ARRAY_INT64);
+    m_visitor.exitStruct(*m_fieldValue);
+
+    m_varValueToVariant.convert();
+
+    std::vector<std::int64_t>* val = m_root;
+    ASSERT_NE(val, nullptr);
+    ASSERT_EQ(*val, VALUE);
+}
+
+TEST_F(TestVarValueToVariant, testArrayUInt64)
+{
+    static const std::vector<std::uint64_t> VALUE = { 123, 0, 12345, 8000, 982374 };
+
+    m_visitor.enterStruct(*m_fieldValue);
+    m_visitor.enterArrayUInt64(*m_fieldArrUInt64, VALUE.data(), VALUE.size());
+    m_visitor.enterString(*m_fieldName, "");
+    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_ARRAY_UINT64);
+    m_visitor.exitStruct(*m_fieldValue);
+
+    m_varValueToVariant.convert();
+
+    std::vector<std::uint64_t>* val = m_root;
+    ASSERT_NE(val, nullptr);
+    ASSERT_EQ(*val, VALUE);
+}
+
+TEST_F(TestVarValueToVariant, testArrayFloat)
+{
+    static const std::vector<float> VALUE = { -123.4f, 0.0f, 123.4f, 872.28f, -12.13f};
+
+    m_visitor.enterStruct(*m_fieldValue);
+    m_visitor.enterArrayFloat(*m_fieldArrFloat, VALUE.data(), VALUE.size());
+    m_visitor.enterString(*m_fieldName, "");
+    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_ARRAY_FLOAT);
+    m_visitor.exitStruct(*m_fieldValue);
+
+    m_varValueToVariant.convert();
+
+    std::vector<float>* val = m_root;
+    ASSERT_NE(val, nullptr);
+    ASSERT_EQ(*val, VALUE);
+}
+
+TEST_F(TestVarValueToVariant, testArrayDouble)
+{
+    static const std::vector<double> VALUE = { -123.4, 0.0, 123.4, 872.28, -12.13 };
+
+    m_visitor.enterStruct(*m_fieldValue);
+    m_visitor.enterArrayDouble(*m_fieldArrDouble, VALUE.data(), VALUE.size());
+    m_visitor.enterString(*m_fieldName, "");
+    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_ARRAY_DOUBLE);
+    m_visitor.exitStruct(*m_fieldValue);
+
+    m_varValueToVariant.convert();
+
+    std::vector<double>* val = m_root;
+    ASSERT_NE(val, nullptr);
+    ASSERT_EQ(*val, VALUE);
+}
+
+TEST_F(TestVarValueToVariant, testArrayString)
+{
+    static const std::vector<std::string> VALUE = { "Hello", "", "World", "Foo", "42" };
+
+    m_visitor.enterStruct(*m_fieldValue);
+    m_visitor.enterArrayString(*m_fieldArrString, VALUE);
+    m_visitor.enterString(*m_fieldName, "");
+    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_ARRAY_STRING);
+    m_visitor.exitStruct(*m_fieldValue);
+
+    m_varValueToVariant.convert();
+
+    std::vector<std::string>* val = m_root;
+    ASSERT_NE(val, nullptr);
+    ASSERT_EQ(*val, VALUE);
+}
+
+TEST_F(TestVarValueToVariant, testArrayBytes)
+{
+    static const std::vector<Bytes> VALUE = { { 0x12, 0x00, 0x14 }, {}, { (BytesElement)0xff, (BytesElement)0xaa, (BytesElement)0xee } };
+
+    m_visitor.enterStruct(*m_fieldValue);
+    m_visitor.enterArrayBytes(*m_fieldArrBytes, VALUE);
+    m_visitor.enterString(*m_fieldName, "");
+    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_ARRAY_BYTES);
+    m_visitor.exitStruct(*m_fieldValue);
+
+    m_varValueToVariant.convert();
+
+    std::vector<Bytes>* val = m_root;
+    ASSERT_NE(val, nullptr);
+    ASSERT_EQ(*val, VALUE);
+}
+
+TEST_F(TestVarValueToVariant, testList)
+{
+    static const std::int32_t VALUE_INT32 = 123;
+    static const std::string VALUE_STRING = "Hello World";
+    m_visitor.enterStruct(*m_fieldValue);
+    m_visitor.enterArrayStruct(*m_fieldList);
+
+    m_visitor.enterStruct(*m_fieldValue);
+    m_visitor.enterInt32(*m_fieldInt32, 123);
+    m_visitor.enterString(*m_fieldName, "");
+    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_INT32);
+    m_visitor.exitStruct(*m_fieldValue);
+
+    m_visitor.enterStruct(*m_fieldValue);
+    m_visitor.enterString(*m_fieldString, VALUE_STRING.data(), VALUE_STRING.size());
+    m_visitor.enterString(*m_fieldName, "");
+    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_STRING);
+    m_visitor.exitStruct(*m_fieldValue);
+
+    m_visitor.exitArrayStruct(*m_fieldList);
+    m_visitor.enterString(*m_fieldName, "");
+    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_LIST);
+    m_visitor.exitStruct(*m_fieldValue);
+
+    m_varValueToVariant.convert();
+
+    VariantList* val = m_root;
+    ASSERT_NE(val, nullptr);
+    ASSERT_EQ(m_root.getDataValue<std::int32_t>("0"), VALUE_INT32);
+    ASSERT_EQ(m_root.getDataValue<std::string>("1"), VALUE_STRING);
 }
 

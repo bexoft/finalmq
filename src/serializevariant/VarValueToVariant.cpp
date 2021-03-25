@@ -87,9 +87,59 @@ void VarValueToVariant::processVarValue(const variant::VarValue& varValue, Varia
     case variant::VarTypeId::T_BYTES:
         variant = varValue.valbytes;
         break;
+    case variant::VarTypeId::T_STRUCT:
+        {
+            variant = VariantStruct();
+            VariantStruct* variantStruct = variant;
+            assert(variantStruct);
+            for (int i = 0; i < varValue.vallist.size(); ++i)
+            {
+                const variant::VarValue& varValueElement = varValue.vallist[i];
+                variantStruct->emplace_back(varValueElement.name, Variant());
+                processVarValue(varValueElement, variantStruct->back().second);
+            }
+        }
+        break;
 
     case variant::VarTypeId::T_ARRAY_BOOL:
         variant = varValue.valarrbool;
+        break;
+    case variant::VarTypeId::T_ARRAY_INT32:
+        variant = varValue.valarrint32;
+        break;
+    case variant::VarTypeId::T_ARRAY_UINT32:
+        variant = varValue.valarruint32;
+        break;
+    case variant::VarTypeId::T_ARRAY_INT64:
+        variant = varValue.valarrint64;
+        break;
+    case variant::VarTypeId::T_ARRAY_UINT64:
+        variant = varValue.valarruint64;
+        break;
+    case variant::VarTypeId::T_ARRAY_FLOAT:
+        variant = varValue.valarrfloat;
+        break;
+    case variant::VarTypeId::T_ARRAY_DOUBLE:
+        variant = varValue.valarrdouble;
+        break;
+    case variant::VarTypeId::T_ARRAY_STRING:
+        variant = varValue.valarrstring;
+        break;
+    case variant::VarTypeId::T_ARRAY_BYTES:
+        variant = varValue.valarrbytes;
+        break;
+    case variant::VarTypeId::T_LIST:
+        {
+            variant = VariantList();
+            VariantList* variantList = variant;
+            assert(variantList);
+            for (int i = 0; i < varValue.vallist.size(); ++i)
+            {
+                const variant::VarValue& varValueElement = varValue.vallist[i];
+                variantList->emplace_back(Variant());
+                processVarValue(varValueElement, variantList->back());
+            }
+        }
         break;
     }
 }
