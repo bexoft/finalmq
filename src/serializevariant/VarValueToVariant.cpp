@@ -20,10 +20,80 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-
 #include "finalmq/serializevariant/VarValueToVariant.h"
 
+#include "finalmq/variant/VariantValueStruct.h"
+#include "finalmq/variant/VariantValueList.h"
+#include "finalmq/variant/VariantValues.h"
+
+#include "finalmq/metadataserialize/variant.fmq.h"
+#include "finalmq/serializestruct/SerializerStruct.h"
+
+
+
 namespace finalmq {
+
+
+VarValueToVariant::VarValueToVariant(Variant& variant)
+    : m_variant(variant)
+{
+    m_varValue = std::make_unique<variant::VarValue>();
+    m_serializerStruct = std::make_unique<SerializerStruct>(*m_varValue);
+}
+
+
+IParserVisitor& VarValueToVariant::getVisitor()
+{
+    assert(m_serializerStruct);
+    return *m_serializerStruct;
+}
+
+
+void VarValueToVariant::convert()
+{
+    assert(m_varValue);
+    processVarValue(*m_varValue, m_variant);
+}
+
+
+void VarValueToVariant::processVarValue(const variant::VarValue& varValue, Variant& variant)
+{
+    switch (varValue.type)
+    {
+    case variant::VarTypeId::T_BOOL:
+        variant = varValue.valbool;
+        break;
+    case variant::VarTypeId::T_INT32:
+        variant = varValue.valint32;
+        break;
+    case variant::VarTypeId::T_UINT32:
+        variant = varValue.valuint32;
+        break;
+    case variant::VarTypeId::T_INT64:
+        variant = varValue.valint64;
+        break;
+    case variant::VarTypeId::T_UINT64:
+        variant = varValue.valuint64;
+        break;
+    case variant::VarTypeId::T_FLOAT:
+        variant = varValue.valfloat;
+        break;
+    case variant::VarTypeId::T_DOUBLE:
+        variant = varValue.valdouble;
+        break;
+    case variant::VarTypeId::T_STRING:
+        variant = varValue.valstring;
+        break;
+    case variant::VarTypeId::T_BYTES:
+        variant = varValue.valbytes;
+        break;
+
+    case variant::VarTypeId::T_ARRAY_BOOL:
+        variant = varValue.valarrbool;
+        break;
+    }
+}
+
 
 
 }   // namespace finalmq

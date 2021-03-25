@@ -24,15 +24,35 @@
 
 
 #include "finalmq/helpers/BexDefines.h"
+#include "finalmq/variant/Variant.h"
+#include "finalmq/serialize/IParserVisitor.h"
+
+
+#include <deque>
 
 
 namespace finalmq {
 
 
+namespace variant {
+    class VarValue;
+}
+
 class SYMBOLEXP VarValueToVariant
 {
 public:
+    VarValueToVariant(Variant& variant);
 
+    IParserVisitor& getVisitor();
+    void convert();
+
+private:
+    void processVarValue(const variant::VarValue& varValue, Variant& variant);
+
+    Variant&                            m_variant;
+
+    std::unique_ptr<IParserVisitor>     m_serializerStruct;
+    std::unique_ptr<variant::VarValue>  m_varValue;
 };
 
 }   // namespace finalmq
