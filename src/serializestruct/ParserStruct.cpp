@@ -39,10 +39,7 @@ ParserStruct::ParserStruct(IParserVisitor& visitor, const StructBase& structBase
 
 bool ParserStruct::parseStruct()
 {
-    MetaField field{MetaTypeId::TYPE_STRUCT, m_root.getStructInfo().getTypeName()};
-    m_visitor.enterStruct(field);
     parseStruct(m_root);
-    m_visitor.exitStruct(field);
     m_visitor.finished();
     return true;
 }

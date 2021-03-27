@@ -160,6 +160,7 @@ private:
         char*                   m_bufferStart = nullptr;
         char*                   m_buffer = nullptr;
         char*                   m_bufferEnd = nullptr;
+        bool                    m_arrayParent = false;
         std::deque<StructData>  m_stackStruct;
     };
 

@@ -60,7 +60,6 @@ enum MetaTypeId : std::int32_t
     TYPE_ARRAY_BYTES      = OFFSET_ARRAY_FLAG + TYPE_BYTES,
     TYPE_ARRAY_STRUCT     = OFFSET_ARRAY_FLAG + TYPE_STRUCT,
     TYPE_ARRAY_ENUM       = OFFSET_ARRAY_FLAG + TYPE_ENUM,
-    TYPE_ARRAY_VARIANT    = OFFSET_ARRAY_FLAG + TYPE_VARIANT,   // is only used for VariantValueList
 };
 
 

@@ -626,7 +626,11 @@ void ParserJson::enterObject()
         if (stru)
         {
             m_structCurrent = stru;
-            m_visitor.enterStruct(*m_fieldCurrent);
+            // the outer object shall not trigger enterStruct
+            if (m_stack.size() > 1)
+            {
+                m_visitor.enterStruct(*m_fieldCurrent);
+            }
             m_fieldCurrent = nullptr;
         }
         else
@@ -647,7 +651,8 @@ void ParserJson::exitObject()
     if (!m_stack.empty())
     {
         m_fieldCurrent = m_stack.back().field;
-        if (m_fieldCurrent)
+                              // the outer object shall not trigger exitStruct
+        if (m_fieldCurrent && (m_stack.size() > 1))
         {
             m_visitor.exitStruct(*m_fieldCurrent);
         }

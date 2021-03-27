@@ -47,6 +47,9 @@ SerializerStruct::SerializerStruct(StructBase& root)
 SerializerStruct::Internal::Internal(StructBase& root)
     : m_root(root)
 {
+    m_root.clear();
+    m_stack.push_back({ &m_root, -1 });
+    m_current = &m_stack.back();
 }
 
 
@@ -62,30 +65,22 @@ void SerializerStruct::Internal::finished()
 
 void SerializerStruct::Internal::enterStruct(const MetaField& field)
 {
-    if (m_stack.empty())
+    assert(!m_stack.empty());
+    assert(m_current);
+    StructBase* sub = nullptr;
+    if (m_current->structBase)
     {
-        m_root.clear();
-        m_stack.push_back({&m_root, -1});
-        m_current = &m_stack.back();
-    }
-    else
-    {
-        assert(m_current);
-        StructBase* sub = nullptr;
-        if (m_current->structBase)
+        if (m_current->structArrayIndex == -1)
         {
-            if (m_current->structArrayIndex == -1)
-            {
-                sub = m_current->structBase->getData<StructBase>(field.index, field.typeId);
-            }
-            else
-            {
-                sub = m_current->structBase->add(m_current->structArrayIndex);
-            }
+            sub = m_current->structBase->getData<StructBase>(field.index, field.typeId);
         }
-        m_stack.push_back({sub, -1});
-        m_current = &m_stack.back();
+        else
+        {
+            sub = m_current->structBase->add(m_current->structArrayIndex);
+        }
     }
+    m_stack.push_back({sub, -1});
+    m_current = &m_stack.back();
 }
 
 void SerializerStruct::Internal::exitStruct(const MetaField& /*field*/)

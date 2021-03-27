@@ -36,7 +36,7 @@ class Variant;
 
 typedef std::deque<Variant> VariantList;
 
-const static int VARTYPE_LIST = TYPE_ARRAY_VARIANT;
+const static int VARTYPE_LIST = TYPE_ARRAY_STRUCT;
 class SYMBOLEXP VariantValueList : public IVariantValue
 {
 public:

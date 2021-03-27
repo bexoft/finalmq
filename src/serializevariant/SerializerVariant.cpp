@@ -51,6 +51,9 @@ SerializerVariant::Internal::Internal(Variant& root, bool enumAsString)
     , m_enumAsString(enumAsString)
 {
     m_root = Variant();
+    m_root = VariantStruct();
+    m_stack.push_back(&m_root);
+    m_current = m_stack.back();
 }
 
 
@@ -66,32 +69,23 @@ void SerializerVariant::Internal::finished()
 
 void SerializerVariant::Internal::enterStruct(const MetaField& field)
 {
-    if (m_stack.empty())
+    assert(m_current);
+    if (m_current->getType() == TYPE_STRUCT)
     {
-        m_root = VariantStruct();
-        m_stack.push_back(&m_root);
-        m_current = m_stack.back();
+        m_current->add(field.name, VariantStruct());
+        VariantStruct* stru = *m_current;
+        assert(stru);
+        m_stack.push_back(&stru->back().second);
     }
     else
     {
-        assert(m_current);
-        if (m_current->getType() == TYPE_STRUCT)
-        {
-            m_current->add(field.name, VariantStruct());
-            VariantStruct* stru = *m_current;
-            assert(stru);
-            m_stack.push_back(&stru->back().second);
-        }
-        else
-        {
-            assert(m_current->getType() == VARTYPE_LIST);
-            m_current->add(VariantStruct());
-            VariantList* list = *m_current;
-            assert(list);
-            m_stack.push_back(&list->back());
-        }
-        m_current = m_stack.back();
+        assert(m_current->getType() == VARTYPE_LIST);
+        m_current->add(VariantStruct());
+        VariantList* list = *m_current;
+        assert(list);
+        m_stack.push_back(&list->back());
     }
+    m_current = m_stack.back();
 }
 
 void SerializerVariant::Internal::exitStruct(const MetaField& /*field*/)

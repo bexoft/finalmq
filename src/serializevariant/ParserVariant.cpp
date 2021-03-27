@@ -49,9 +49,7 @@ bool ParserVariant::parseStruct(const std::string& typeName)
     {
         MetaField field{MetaTypeId::TYPE_STRUCT, typeName,""};
         field.metaStruct = stru;
-        m_visitor.enterStruct(field);
         parseStruct(*stru, m_root);
-        m_visitor.exitStruct(field);
         ok = true;
     }
     else
