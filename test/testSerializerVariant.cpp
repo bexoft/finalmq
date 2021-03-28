@@ -193,7 +193,7 @@ TEST_F(TestSerializerVariant, testStruct)
 
     m_serializer->finished();
 
-    Variant VALUE = VariantStruct({ {"struct_int32", VariantStruct({ {"value", VALUE_INT32} })}, {"struct_string", VariantStruct({ {"value", VALUE_STRING} })},  {"last_value", VALUE_UINT32} });
+    Variant VALUE = VariantStruct{ {"struct_int32", VariantStruct{ {"value", VALUE_INT32} }}, {"struct_string", VariantStruct{ {"value", VALUE_STRING} }},  {"last_value", VALUE_UINT32} };
     ASSERT_EQ(m_root == VALUE, true);
 }
 
@@ -394,11 +394,11 @@ TEST_F(TestSerializerVariant, testArrayStruct)
 
     m_serializer->finished();
 
-    Variant VALUE = VariantStruct({ {"value", VariantList({
-        VariantStruct({ {"struct_int32", VariantStruct({ {"value", VALUE1_INT32} })}, {"struct_string", VariantStruct({ {"value", VALUE1_STRING} })},  {"last_value", VALUE1_UINT32} }),
-        VariantStruct({ {"struct_int32", VariantStruct({ {"value", VALUE2_INT32} })}, {"struct_string", VariantStruct({ {"value", VALUE2_STRING} })},  {"last_value", VALUE2_UINT32} }),
-        VariantStruct()
-    })}, {"last_value", LAST_VALUE} });
+    Variant VALUE = VariantStruct{ {"value", VariantList{
+        VariantStruct{ {"struct_int32", VariantStruct{ {"value", VALUE1_INT32} }}, {"struct_string", VariantStruct{ {"value", VALUE1_STRING} }},  {"last_value", VALUE1_UINT32} },
+        VariantStruct{ {"struct_int32", VariantStruct{ {"value", VALUE2_INT32} }}, {"struct_string", VariantStruct{ {"value", VALUE2_STRING} }},  {"last_value", VALUE2_UINT32} },
+        VariantStruct{}
+    }}, {"last_value", LAST_VALUE} };
     ASSERT_EQ(m_root == VALUE, true);
 }
 
