@@ -68,6 +68,7 @@ const char* ParserJson::parseStruct(const std::string& typeName)
     field.metaStruct = stru;
     m_fieldCurrent = &field;
 
+    m_visitor.startStruct(*stru);
     const char* str = m_parser.parse(m_ptr, m_size);
     m_visitor.finished();
 

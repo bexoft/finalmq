@@ -48,8 +48,6 @@ SerializerJson::Internal::Internal(IZeroCopyBuffer& buffer, int maxBlockSize, bo
     , m_jsonBuilder(*m_uniqueJsonBuilder.get())
     , m_enumAsString(enumAsString)
 {
-    // outer curly brackets
-    m_jsonBuilder.enterObject();
 }
 
 
@@ -67,6 +65,13 @@ void SerializerJson::Internal::setKey(const MetaField& field)
 void SerializerJson::Internal::notifyError(const char* /*str*/, const char* /*message*/)
 {
 }
+
+void SerializerJson::Internal::startStruct(const MetaStruct& /*stru*/)
+{
+    // outer curly brackets
+    m_jsonBuilder.enterObject();
+}
+
 
 void SerializerJson::Internal::finished()
 {

@@ -40,6 +40,7 @@ public:
 private:
     // IParserVisitor
     virtual void notifyError(const char* str, const char* message) override;
+    virtual void startStruct(const MetaStruct& stru) override;
     virtual void finished() override;
 
     virtual void enterStruct(const MetaField& field) override;
@@ -92,6 +93,7 @@ private:
 
     IParserVisitor*                 m_visitor = nullptr;
     bool                            m_skipDefaultValues = true;
+    const MetaStruct*               m_struct = nullptr;
     std::deque<std::vector<bool>>   m_stackFieldsDone;
 };
 

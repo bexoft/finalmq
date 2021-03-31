@@ -29,6 +29,7 @@
 
 
 #include <deque>
+#include <functional>
 
 
 namespace finalmq {
@@ -37,6 +38,7 @@ namespace finalmq {
 namespace variant {
     class VarValue;
 }
+class SerializerStruct;
 
 class SYMBOLEXP VarValueToVariant
 {
@@ -44,15 +46,20 @@ public:
     VarValueToVariant(Variant& variant);
 
     IParserVisitor& getVisitor();
+    void setExitNotification(std::function<void()> funcExit);
     void convert();
 
 private:
+    VarValueToVariant(const VarValueToVariant&) = delete;
+    const VarValueToVariant& operator =(const VarValueToVariant&) = delete;
+    VarValueToVariant(const VarValueToVariant&&) = delete;
+    const VarValueToVariant& operator =(const VarValueToVariant&&) = delete;
+
     void processVarValue(const variant::VarValue& varValue, Variant& variant);
 
     Variant&                            m_variant;
-
-    std::unique_ptr<IParserVisitor>     m_serializerStruct;
-    std::unique_ptr<variant::VarValue>  m_varValue;
+    std::shared_ptr<SerializerStruct>   m_serializerStruct;
+    std::shared_ptr<variant::VarValue>  m_varValue;
 };
 
 }   // namespace finalmq

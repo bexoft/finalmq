@@ -34,8 +34,8 @@ namespace finalmq {
 const MetaStruct* VariantToVarValue::m_struct = nullptr;
 
 
-VariantToVarValue::VariantToVarValue(Variant& variant, IParserVisitor& visitor)
-    : m_variant(variant)
+VariantToVarValue::VariantToVarValue(const Variant& variant, IParserVisitor& visitor)
+    : m_variant(const_cast<Variant&>(variant))
     , m_visitor(visitor)
 {
 }
@@ -53,8 +53,11 @@ void VariantToVarValue::convert()
 
 
 // IVariantVisitor
-void VariantToVarValue::enterLeaf(Variant& variant, int type, ssize_t /*index*/, int level, ssize_t /*size*/, const std::string& name)
+
+void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int level, ssize_t /*size*/, const std::string& name)
 {
+    const Variant& variant = var;
+
     static const MetaField* fieldStruct = m_struct->getFieldByName("vallist");
     assert(fieldStruct);
     static const MetaField* fieldStructWithoutArray = MetaDataGlobal::instance().getArrayField(*fieldStruct);
@@ -78,104 +81,170 @@ void VariantToVarValue::enterLeaf(Variant& variant, int type, ssize_t /*index*/,
 
     switch (type)
     {
+    case TYPE_NONE:
+        break;
     case TYPE_BOOL:
-        static const MetaField* fieldBool = m_struct->getFieldByName("valbool");
-        assert(fieldBool);
-        m_visitor.enterBool(*fieldBool, variant);
+        {
+            static const MetaField* fieldBool = m_struct->getFieldByName("valbool");
+            assert(fieldBool);
+            const bool* data = variant;
+            assert(data);
+            m_visitor.enterBool(*fieldBool, *data);
+        }
         break;
     case TYPE_INT32:
-        static const MetaField* fieldInt32 = m_struct->getFieldByName("valint32");
-        assert(fieldInt32);
-        m_visitor.enterInt32(*fieldInt32, variant);
+        {
+            static const MetaField* fieldInt32 = m_struct->getFieldByName("valint32");
+            assert(fieldInt32);
+            const std::int32_t* data = variant;
+            assert(data);
+            m_visitor.enterInt32(*fieldInt32, *data);
+        }
         break;
     case TYPE_UINT32:
-        static const MetaField* fieldUInt32 = m_struct->getFieldByName("valuint32");
-        assert(fieldUInt32);
-        m_visitor.enterUInt32(*fieldUInt32, variant);
+        {
+            static const MetaField* fieldUInt32 = m_struct->getFieldByName("valuint32");
+            assert(fieldUInt32);
+            const std::uint32_t* data = variant;
+            assert(data);
+            m_visitor.enterUInt32(*fieldUInt32, *data);
+        }
         break;
     case TYPE_INT64:
-        static const MetaField* fieldInt64 = m_struct->getFieldByName("valint64");
-        assert(fieldInt64);
-        m_visitor.enterInt64(*fieldInt64, variant);
+        {
+            static const MetaField* fieldInt64 = m_struct->getFieldByName("valint64");
+            assert(fieldInt64);
+            const std::int64_t* data = variant;
+            assert(data);
+            m_visitor.enterInt64(*fieldInt64, *data);
+        }
         break;
     case TYPE_UINT64:
-        static const MetaField* fieldUInt64 = m_struct->getFieldByName("valuint64");
-        assert(fieldUInt64);
-        m_visitor.enterUInt64(*fieldUInt64, variant);
+        {
+            static const MetaField* fieldUInt64 = m_struct->getFieldByName("valuint64");
+            assert(fieldUInt64);
+            const std::uint64_t* data = variant;
+            assert(data);
+            m_visitor.enterUInt64(*fieldUInt64, *data);
+        }
         break;
     case TYPE_FLOAT:
-        static const MetaField* fieldFloat = m_struct->getFieldByName("valfloat");
-        assert(fieldFloat);
-        m_visitor.enterFloat(*fieldFloat, variant);
+        {
+            static const MetaField* fieldFloat = m_struct->getFieldByName("valfloat");
+            assert(fieldFloat);
+            const float* data = variant;
+            assert(data);
+            m_visitor.enterFloat(*fieldFloat, *data);
+        }
         break;
     case TYPE_DOUBLE:
-        static const MetaField* fieldDouble = m_struct->getFieldByName("valdouble");
-        assert(fieldDouble);
-        m_visitor.enterDouble(*fieldDouble, variant);
+        {
+            static const MetaField* fieldDouble = m_struct->getFieldByName("valdouble");
+            assert(fieldDouble);
+            const double* data = variant;
+            assert(data);
+            m_visitor.enterDouble(*fieldDouble, *data);
+        }
         break;
     case TYPE_STRING:
         {
             static const MetaField* fieldString = m_struct->getFieldByName("valstring");
             assert(fieldString);
-            std::string* data = variant;
+            const std::string* data = variant;
             assert(data);
-            m_visitor.enterString(*fieldString, std::move(*data));
+            m_visitor.enterString(*fieldString, data->data(), data->size());
         }
         break;
     case TYPE_BYTES:
         {
             static const MetaField* fieldBytes = m_struct->getFieldByName("valbytes");
             assert(fieldBytes);
-            Bytes* data = variant;
+            const Bytes* data = variant;
             assert(data);
-            m_visitor.enterBytes(*fieldBytes, std::move(*data));
+            m_visitor.enterBytes(*fieldBytes, data->data(), data->size());
         }
         break;
 
     case TYPE_ARRAY_BOOL:
-        static const MetaField* fieldArrBool = m_struct->getFieldByName("valarrbool");
-        assert(fieldArrBool);
-        m_visitor.enterArrayBoolMove(*fieldArrBool, variant);
+        {
+            static const MetaField* fieldArrBool = m_struct->getFieldByName("valarrbool");
+            assert(fieldArrBool);
+            const std::vector<bool>* data = variant;
+            assert(data);
+            m_visitor.enterArrayBool(*fieldArrBool, *data);
+        }
         break;
     case TYPE_ARRAY_INT32:
-        static const MetaField* fieldArrInt32 = m_struct->getFieldByName("valarrint32");
-        assert(fieldArrInt32);
-        m_visitor.enterArrayInt32(*fieldArrInt32, variant);
+        {
+            static const MetaField* fieldArrInt32 = m_struct->getFieldByName("valarrint32");
+            assert(fieldArrInt32);
+            const std::vector<std::int32_t>* data = variant;
+            assert(data);
+            m_visitor.enterArrayInt32(*fieldArrInt32, data->data(), data->size());
+        }
         break;
     case TYPE_ARRAY_UINT32:
-        static const MetaField* fieldArrUInt32 = m_struct->getFieldByName("valarruint32");
-        assert(fieldArrUInt32);
-        m_visitor.enterArrayUInt32(*fieldArrUInt32, variant);
+        {
+            static const MetaField* fieldArrUInt32 = m_struct->getFieldByName("valarruint32");
+            assert(fieldArrUInt32);
+            const std::vector<std::uint32_t>* data = variant;
+            assert(data);
+            m_visitor.enterArrayUInt32(*fieldArrUInt32, data->data(), data->size());
+        }
         break;
     case TYPE_ARRAY_INT64:
-        static const MetaField* fieldArrInt64 = m_struct->getFieldByName("valarrint64");
-        assert(fieldArrInt64);
-        m_visitor.enterArrayInt64(*fieldArrInt64, variant);
+        {
+            static const MetaField* fieldArrInt64 = m_struct->getFieldByName("valarrint64");
+            assert(fieldArrInt64);
+            const std::vector<std::int64_t>* data = variant;
+            assert(data);
+            m_visitor.enterArrayInt64(*fieldArrInt64, data->data(), data->size());
+        }
         break;
     case TYPE_ARRAY_UINT64:
-        static const MetaField* fieldArrUInt64 = m_struct->getFieldByName("valarruint64");
-        assert(fieldArrUInt64);
-        m_visitor.enterArrayUInt64(*fieldArrUInt64, variant);
+        {
+            static const MetaField* fieldArrUInt64 = m_struct->getFieldByName("valarruint64");
+            assert(fieldArrUInt64);
+            const std::vector<std::uint64_t>* data = variant;
+            assert(data);
+            m_visitor.enterArrayUInt64(*fieldArrUInt64, data->data(), data->size());
+        }
         break;
     case TYPE_ARRAY_FLOAT:
-        static const MetaField* fieldArrFloat = m_struct->getFieldByName("valarrfloat");
-        assert(fieldArrFloat);
-        m_visitor.enterArrayFloat(*fieldArrFloat, variant);
+        {
+            static const MetaField* fieldArrFloat = m_struct->getFieldByName("valarrfloat");
+            assert(fieldArrFloat);
+            const std::vector<float>* data = variant;
+            assert(data);
+            m_visitor.enterArrayFloat(*fieldArrFloat, data->data(), data->size());
+        }
         break;
     case TYPE_ARRAY_DOUBLE:
-        static const MetaField* fieldArrDouble = m_struct->getFieldByName("valarrdouble");
-        assert(fieldArrDouble);
-        m_visitor.enterArrayDouble(*fieldArrDouble, variant);
+        {
+            static const MetaField* fieldArrDouble = m_struct->getFieldByName("valarrdouble");
+            assert(fieldArrDouble);
+            const std::vector<double>* data = variant;
+            assert(data);
+            m_visitor.enterArrayDouble(*fieldArrDouble, data->data(), data->size());
+        }
         break;
     case TYPE_ARRAY_STRING:
-        static const MetaField* fieldArrString = m_struct->getFieldByName("valarrstring");
-        assert(fieldArrString);
-        m_visitor.enterArrayString(*fieldArrString, variant);
+        {
+            static const MetaField* fieldArrString = m_struct->getFieldByName("valarrstring");
+            assert(fieldArrString);
+            const std::vector<std::string>* data = variant;
+            assert(data);
+            m_visitor.enterArrayString(*fieldArrString, *data);
+        }
         break;
     case TYPE_ARRAY_BYTES:
-        static const MetaField* fieldArrBytes = m_struct->getFieldByName("valarrbytes");
-        assert(fieldArrBytes);
-        m_visitor.enterArrayBytes(*fieldArrBytes, variant);
+        {
+            static const MetaField* fieldArrBytes = m_struct->getFieldByName("valarrbytes");
+            assert(fieldArrBytes);
+            const std::vector<Bytes>* data = variant;
+            assert(data);
+            m_visitor.enterArrayBytes(*fieldArrBytes, *data);
+        }
         break;
     }
 
@@ -187,14 +256,14 @@ void VariantToVarValue::enterLeaf(Variant& variant, int type, ssize_t /*index*/,
 
 void VariantToVarValue::enterStruct(Variant& /*variant*/, int type, ssize_t /*index*/, int level, ssize_t /*size*/, const std::string& name)
 {
-    static const MetaField* fieldStruct = m_struct->getFieldByName("vallist");
-    assert(fieldStruct);
-    static const MetaField* fieldStructWithoutArray = MetaDataGlobal::instance().getArrayField(*fieldStruct);
-    assert(fieldStructWithoutArray);
+    static const MetaField* fieldList = m_struct->getFieldByName("vallist");
+    assert(fieldList);
+    static const MetaField* fieldListWithoutArray = MetaDataGlobal::instance().getArrayField(*fieldList);
+    assert(fieldListWithoutArray);
 
     if (level > 0)
     {
-        m_visitor.enterStruct(*fieldStructWithoutArray);
+        m_visitor.enterStruct(*fieldListWithoutArray);
     }
 
     if (!name.empty())
@@ -208,20 +277,20 @@ void VariantToVarValue::enterStruct(Variant& /*variant*/, int type, ssize_t /*in
     assert(fieldType);
     m_visitor.enterEnum(*fieldType, type);
 
-    m_visitor.enterArrayStruct(*fieldStruct);
+    m_visitor.enterArrayStruct(*fieldList);
 }
 
 void VariantToVarValue::exitStruct(Variant& /*variant*/, int /*type*/, ssize_t /*index*/, int level, ssize_t /*size*/, const std::string& /*name*/)
 {
-    static const MetaField* fieldStruct = m_struct->getFieldByName("vallist");
-    assert(fieldStruct);
-    m_visitor.exitArrayStruct(*fieldStruct);
-    static const MetaField* fieldStructWithoutArray = MetaDataGlobal::instance().getArrayField(*fieldStruct);
-    assert(fieldStructWithoutArray);
+    static const MetaField* fieldList = m_struct->getFieldByName("vallist");
+    assert(fieldList);
+    m_visitor.exitArrayStruct(*fieldList);
+    static const MetaField* fieldListWithoutArray = MetaDataGlobal::instance().getArrayField(*fieldList);
+    assert(fieldListWithoutArray);
 
     if (level > 0)
     {
-        m_visitor.exitStruct(*fieldStructWithoutArray);
+        m_visitor.exitStruct(*fieldListWithoutArray);
     }
 }
 

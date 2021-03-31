@@ -33,7 +33,7 @@ namespace finalmq {
 class SYMBOLEXP VariantToVarValue : private IVariantVisitor
 {
 public:
-    VariantToVarValue(Variant& variant, IParserVisitor& visitor);
+    VariantToVarValue(const Variant& variant, IParserVisitor& visitor);
 
     void convert();
 

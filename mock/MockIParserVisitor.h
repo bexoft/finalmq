@@ -33,6 +33,7 @@ class MockIParserVisitor : public IParserVisitor
 {
 public:
     MOCK_METHOD(void, notifyError, (const char* str, const char* message), (override));
+    MOCK_METHOD(void, startStruct, (const MetaStruct& stru), (override));
     MOCK_METHOD(void, finished, (), (override));
 
     MOCK_METHOD(void, enterStruct, (const MetaField& field), (override));

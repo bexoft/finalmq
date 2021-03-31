@@ -76,6 +76,7 @@ TEST(TestSerializerProtoStruct, test0Data)
 
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerProto>(mockBuffer, MAX_BLOCK_SIZE);
 
+    serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestStruct"));
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0});
     serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "", 0, 0}, VALUE1);
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0});
@@ -111,6 +112,7 @@ void helperTestStructSize(int size)
 
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerProto>(mockBuffer, MAX_BLOCK_SIZE);
 
+    serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestStruct"));
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0});
     serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "", 0, 0}, VALUE1);
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0});
@@ -229,6 +231,7 @@ TEST(TestSerializerProtoStruct, test0DataBlockSize1)
 
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerProto>(mockBuffer, MAX_BLOCK_SIZE);
 
+    serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestStruct"));
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0});
     serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "", 0, 0}, VALUE1);
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0});
@@ -275,6 +278,7 @@ TEST(TestSerializerProtoStruct, test32DataBlockSize1)
 
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerProto>(mockBuffer, MAX_BLOCK_SIZE);
 
+    serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestStruct"));
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0});
     serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "", 0, 0}, VALUE1);
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0});
@@ -319,6 +323,7 @@ TEST(TestSerializerProtoStruct, test33DataBlockSize1)
 
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerProto>(mockBuffer, MAX_BLOCK_SIZE);
 
+    serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestStruct"));
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0});
     serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "", 0, 0}, VALUE1);
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0});
@@ -364,6 +369,7 @@ TEST(TestSerializerProtoStruct, test121DataBlockSize1)
 
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerProto>(mockBuffer, MAX_BLOCK_SIZE);
 
+    serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestStruct"));
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0});
     serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "", 0, 0}, VALUE1);
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0});
@@ -409,6 +415,7 @@ TEST(TestSerializerProtoStruct, test122DataBlockSize1)
 
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerProto>(mockBuffer, MAX_BLOCK_SIZE);
 
+    serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestStruct"));
     serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0});
     serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "", 0, 0}, VALUE1);
     serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0});

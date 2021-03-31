@@ -51,6 +51,10 @@ MATCHER_P(MatcherMetaField, metaField, "")
 }
 
 
+MATCHER_P2(ArrayEq, compareArray, n, "")
+{
+    return (memcmp(arg, compareArray, n * sizeof(*arg)) == 0);
+}
 
 
 
@@ -295,7 +299,7 @@ TEST_F(TestVariantToVarValue, testString)
         InSequence seq;
 
         EXPECT_CALL(*m_mockIParserVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_STRING)).Times(1);
-        EXPECT_CALL(*m_mockIParserVisitor, enterString(MatcherMetaField(*m_fieldString), std::move(VALUE))).Times(1);
+        EXPECT_CALL(*m_mockIParserVisitor, enterString(MatcherMetaField(*m_fieldString), StrEq(VALUE.data()), VALUE.size())).Times(1);
     }
 
     m_VariantToVarValue.convert();
@@ -310,7 +314,7 @@ TEST_F(TestVariantToVarValue, testBytes)
         InSequence seq;
 
         EXPECT_CALL(*m_mockIParserVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_BYTES)).Times(1);
-        EXPECT_CALL(*m_mockIParserVisitor, enterBytes(MatcherMetaField(*m_fieldBytes), std::move(VALUE))).Times(1);
+        EXPECT_CALL(*m_mockIParserVisitor, enterBytes(MatcherMetaField(*m_fieldBytes), ArrayEq(VALUE.data(), VALUE.size()), VALUE.size())).Times(1);
     }
 
     m_VariantToVarValue.convert();
@@ -342,7 +346,7 @@ TEST_F(TestVariantToVarValue, testStruct)
         EXPECT_CALL(*m_mockIParserVisitor, enterStruct(MatcherMetaField(*fieldEntry))).Times(1);
         EXPECT_CALL(*m_mockIParserVisitor, enterString(MatcherMetaField(*m_fieldName), StrEq("key2"), 4)).Times(1);
         EXPECT_CALL(*m_mockIParserVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_STRING)).Times(1);
-        EXPECT_CALL(*m_mockIParserVisitor, enterString(MatcherMetaField(*m_fieldString), std::move(VALUE_STRING))).Times(1);
+        EXPECT_CALL(*m_mockIParserVisitor, enterString(MatcherMetaField(*m_fieldString), StrEq(VALUE_STRING.data()), VALUE_STRING.size())).Times(1);
         EXPECT_CALL(*m_mockIParserVisitor, exitStruct(MatcherMetaField(*fieldEntry))).Times(1);
 
         EXPECT_CALL(*m_mockIParserVisitor, exitArrayStruct(MatcherMetaField(*m_fieldList))).Times(1);
@@ -361,7 +365,7 @@ TEST_F(TestVariantToVarValue, testArrayBool)
         InSequence seq;
 
         EXPECT_CALL(*m_mockIParserVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_ARRAY_BOOL)).Times(1);
-        EXPECT_CALL(*m_mockIParserVisitor, enterArrayBoolMove(MatcherMetaField(*m_fieldArrBool), std::move(VALUE))).Times(1);
+        EXPECT_CALL(*m_mockIParserVisitor, enterArrayBool(MatcherMetaField(*m_fieldArrBool), VALUE)).Times(1);
     }
 
     m_VariantToVarValue.convert();
@@ -376,7 +380,7 @@ TEST_F(TestVariantToVarValue, testArrayInt32)
         InSequence seq;
 
         EXPECT_CALL(*m_mockIParserVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_ARRAY_INT32)).Times(1);
-        EXPECT_CALL(*m_mockIParserVisitor, enterArrayInt32(MatcherMetaField(*m_fieldArrInt32), std::move(VALUE))).Times(1);
+        EXPECT_CALL(*m_mockIParserVisitor, enterArrayInt32(MatcherMetaField(*m_fieldArrInt32), ArrayEq(VALUE.data(), VALUE.size()), VALUE.size())).Times(1);
     }
 
     m_VariantToVarValue.convert();
@@ -391,7 +395,7 @@ TEST_F(TestVariantToVarValue, testArrayUInt32)
         InSequence seq;
 
         EXPECT_CALL(*m_mockIParserVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_ARRAY_UINT32)).Times(1);
-        EXPECT_CALL(*m_mockIParserVisitor, enterArrayUInt32(MatcherMetaField(*m_fieldArrUInt32), std::move(VALUE))).Times(1);
+        EXPECT_CALL(*m_mockIParserVisitor, enterArrayUInt32(MatcherMetaField(*m_fieldArrUInt32), ArrayEq(VALUE.data(), VALUE.size()), VALUE.size())).Times(1);
     }
 
     m_VariantToVarValue.convert();
@@ -406,7 +410,7 @@ TEST_F(TestVariantToVarValue, testArrayInt64)
         InSequence seq;
 
         EXPECT_CALL(*m_mockIParserVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_ARRAY_INT64)).Times(1);
-        EXPECT_CALL(*m_mockIParserVisitor, enterArrayInt64(MatcherMetaField(*m_fieldArrInt64), std::move(VALUE))).Times(1);
+        EXPECT_CALL(*m_mockIParserVisitor, enterArrayInt64(MatcherMetaField(*m_fieldArrInt64), ArrayEq(VALUE.data(), VALUE.size()), VALUE.size())).Times(1);
     }
 
     m_VariantToVarValue.convert();
@@ -421,7 +425,7 @@ TEST_F(TestVariantToVarValue, testArrayUInt64)
         InSequence seq;
 
         EXPECT_CALL(*m_mockIParserVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_ARRAY_UINT64)).Times(1);
-        EXPECT_CALL(*m_mockIParserVisitor, enterArrayUInt64(MatcherMetaField(*m_fieldArrUInt64), std::move(VALUE))).Times(1);
+        EXPECT_CALL(*m_mockIParserVisitor, enterArrayUInt64(MatcherMetaField(*m_fieldArrUInt64), ArrayEq(VALUE.data(), VALUE.size()), VALUE.size())).Times(1);
     }
 
     m_VariantToVarValue.convert();
@@ -436,7 +440,7 @@ TEST_F(TestVariantToVarValue, testArrayFloat)
         InSequence seq;
 
         EXPECT_CALL(*m_mockIParserVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_ARRAY_FLOAT)).Times(1);
-        EXPECT_CALL(*m_mockIParserVisitor, enterArrayFloat(MatcherMetaField(*m_fieldArrFloat), std::move(VALUE))).Times(1);
+        EXPECT_CALL(*m_mockIParserVisitor, enterArrayFloat(MatcherMetaField(*m_fieldArrFloat), ArrayEq(VALUE.data(), VALUE.size()), VALUE.size())).Times(1);
     }
 
     m_VariantToVarValue.convert();
@@ -451,7 +455,7 @@ TEST_F(TestVariantToVarValue, testArrayDouble)
         InSequence seq;
 
         EXPECT_CALL(*m_mockIParserVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_ARRAY_DOUBLE)).Times(1);
-        EXPECT_CALL(*m_mockIParserVisitor, enterArrayDouble(MatcherMetaField(*m_fieldArrDouble), std::move(VALUE))).Times(1);
+        EXPECT_CALL(*m_mockIParserVisitor, enterArrayDouble(MatcherMetaField(*m_fieldArrDouble), ArrayEq(VALUE.data(), VALUE.size()), VALUE.size())).Times(1);
     }
 
     m_VariantToVarValue.convert();
@@ -466,7 +470,7 @@ TEST_F(TestVariantToVarValue, testArrayString)
         InSequence seq;
 
         EXPECT_CALL(*m_mockIParserVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_ARRAY_STRING)).Times(1);
-        EXPECT_CALL(*m_mockIParserVisitor, enterArrayString(MatcherMetaField(*m_fieldArrString), std::move(VALUE))).Times(1);
+        EXPECT_CALL(*m_mockIParserVisitor, enterArrayString(MatcherMetaField(*m_fieldArrString), VALUE)).Times(1);
     }
 
     m_VariantToVarValue.convert();
@@ -481,7 +485,41 @@ TEST_F(TestVariantToVarValue, testArrayBytes)
         InSequence seq;
 
         EXPECT_CALL(*m_mockIParserVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_ARRAY_BYTES)).Times(1);
-        EXPECT_CALL(*m_mockIParserVisitor, enterArrayBytes(MatcherMetaField(*m_fieldArrBytes), std::move(VALUE))).Times(1);
+        EXPECT_CALL(*m_mockIParserVisitor, enterArrayBytes(MatcherMetaField(*m_fieldArrBytes), VALUE)).Times(1);
+    }
+
+    m_VariantToVarValue.convert();
+}
+
+
+TEST_F(TestVariantToVarValue, testList)
+{
+    static const std::int32_t VALUE_INT32 = 123;
+    std::string VALUE_STRING = "Hello World";
+
+    const MetaField* fieldEntry = MetaDataGlobal::instance().getArrayField(*m_fieldList);
+    ASSERT_NE(fieldEntry, nullptr);
+
+    m_root = VariantList{ VALUE_INT32, VALUE_STRING };
+
+    {
+        InSequence seq;
+
+        EXPECT_CALL(*m_mockIParserVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_LIST)).Times(1);
+
+        EXPECT_CALL(*m_mockIParserVisitor, enterArrayStruct(MatcherMetaField(*m_fieldList))).Times(1);
+
+        EXPECT_CALL(*m_mockIParserVisitor, enterStruct(MatcherMetaField(*fieldEntry))).Times(1);
+        EXPECT_CALL(*m_mockIParserVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_INT32)).Times(1);
+        EXPECT_CALL(*m_mockIParserVisitor, enterInt32(MatcherMetaField(*m_fieldInt32), VALUE_INT32)).Times(1);
+        EXPECT_CALL(*m_mockIParserVisitor, exitStruct(MatcherMetaField(*fieldEntry))).Times(1);
+
+        EXPECT_CALL(*m_mockIParserVisitor, enterStruct(MatcherMetaField(*fieldEntry))).Times(1);
+        EXPECT_CALL(*m_mockIParserVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_STRING)).Times(1);
+        EXPECT_CALL(*m_mockIParserVisitor, enterString(MatcherMetaField(*m_fieldString), StrEq(VALUE_STRING.data()), VALUE_STRING.size())).Times(1);
+        EXPECT_CALL(*m_mockIParserVisitor, exitStruct(MatcherMetaField(*fieldEntry))).Times(1);
+
+        EXPECT_CALL(*m_mockIParserVisitor, exitArrayStruct(MatcherMetaField(*m_fieldList))).Times(1);
     }
 
     m_VariantToVarValue.convert();

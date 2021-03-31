@@ -43,6 +43,12 @@ SerializerStruct::SerializerStruct(StructBase& root)
 }
 
 
+void SerializerStruct::setExitNotification(std::function<void()> funcExit)
+{
+    m_internal.setExitNotification(std::move(funcExit));
+}
+
+
 
 SerializerStruct::Internal::Internal(StructBase& root)
     : m_root(root)
@@ -52,9 +58,19 @@ SerializerStruct::Internal::Internal(StructBase& root)
     m_current = &m_stack.back();
 }
 
+void SerializerStruct::Internal::setExitNotification(std::function<void()> funcExit)
+{
+    m_funcExit = std::move(funcExit);
+}
+
 
 // IParserVisitor
 void SerializerStruct::Internal::notifyError(const char* /*str*/, const char* /*message*/)
+{
+}
+
+
+void SerializerStruct::Internal::startStruct(const MetaStruct& /*stru*/)
 {
 }
 
@@ -95,6 +111,10 @@ void SerializerStruct::Internal::exitStruct(const MetaField& /*field*/)
         else
         {
             m_current = nullptr;
+            if (m_funcExit)
+            {
+                m_funcExit();
+            }
         }
     }
 }

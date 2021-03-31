@@ -37,8 +37,8 @@ namespace finalmq {
 VarValueToVariant::VarValueToVariant(Variant& variant)
     : m_variant(variant)
 {
-    m_varValue = std::make_unique<variant::VarValue>();
-    m_serializerStruct = std::make_unique<SerializerStruct>(*m_varValue);
+    m_varValue = std::make_shared<variant::VarValue>();
+    m_serializerStruct = std::make_shared<SerializerStruct>(*m_varValue);
 }
 
 
@@ -48,6 +48,12 @@ IParserVisitor& VarValueToVariant::getVisitor()
     return *m_serializerStruct;
 }
 
+
+void VarValueToVariant::setExitNotification(std::function<void()> func)
+{
+    assert(m_serializerStruct);
+    m_serializerStruct->setExitNotification(std::move(func));
+}
 
 void VarValueToVariant::convert()
 {
@@ -84,10 +90,10 @@ void VarValueToVariant::processVarValue(const variant::VarValue& varValue, Varia
         variant = varValue.valdouble;
         break;
     case variant::VarTypeId::T_STRING:
-        variant = varValue.valstring;
+        variant = std::move(varValue.valstring);
         break;
     case variant::VarTypeId::T_BYTES:
-        variant = varValue.valbytes;
+        variant = std::move(varValue.valbytes);
         break;
     case variant::VarTypeId::T_STRUCT:
         {
@@ -104,31 +110,31 @@ void VarValueToVariant::processVarValue(const variant::VarValue& varValue, Varia
         break;
 
     case variant::VarTypeId::T_ARRAY_BOOL:
-        variant = varValue.valarrbool;
+        variant = std::move(varValue.valarrbool);
         break;
     case variant::VarTypeId::T_ARRAY_INT32:
-        variant = varValue.valarrint32;
+        variant = std::move(varValue.valarrint32);
         break;
     case variant::VarTypeId::T_ARRAY_UINT32:
-        variant = varValue.valarruint32;
+        variant = std::move(varValue.valarruint32);
         break;
     case variant::VarTypeId::T_ARRAY_INT64:
-        variant = varValue.valarrint64;
+        variant = std::move(varValue.valarrint64);
         break;
     case variant::VarTypeId::T_ARRAY_UINT64:
-        variant = varValue.valarruint64;
+        variant = std::move(varValue.valarruint64);
         break;
     case variant::VarTypeId::T_ARRAY_FLOAT:
-        variant = varValue.valarrfloat;
+        variant = std::move(varValue.valarrfloat);
         break;
     case variant::VarTypeId::T_ARRAY_DOUBLE:
-        variant = varValue.valarrdouble;
+        variant = std::move(varValue.valarrdouble);
         break;
     case variant::VarTypeId::T_ARRAY_STRING:
-        variant = varValue.valarrstring;
+        variant = std::move(varValue.valarrstring);
         break;
     case variant::VarTypeId::T_ARRAY_BYTES:
-        variant = varValue.valarrbytes;
+        variant = std::move(varValue.valarrbytes);
         break;
     case variant::VarTypeId::T_LIST:
         {

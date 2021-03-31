@@ -158,7 +158,7 @@ bool VariantValueStruct::add(const std::string& name, const Variant& variant)
     auto it = find(name);
     if (it == m_value->end())
     {
-        m_value->push_back(std::make_pair(name, variant));
+        m_value->emplace_back(name, variant);
         return true;
     }
     return false;
@@ -169,7 +169,7 @@ bool VariantValueStruct::add(const std::string& name, Variant&& variant)
     auto it = find(name);
     if (it == m_value->end())
     {
-        m_value->push_back(std::make_pair(name, std::move(variant)));
+        m_value->emplace_back(name, std::move(variant));
         return true;
     }
     return false;

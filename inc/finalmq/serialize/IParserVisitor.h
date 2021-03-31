@@ -34,6 +34,7 @@ struct IParserVisitor
     virtual ~IParserVisitor() {}
 
     virtual void notifyError(const char* str, const char* message) = 0;
+    virtual void startStruct(const MetaStruct& stru) = 0;
     virtual void finished() = 0;
 
     virtual void enterStruct(const MetaField& field) = 0;

@@ -39,6 +39,16 @@ ParserStruct::ParserStruct(IParserVisitor& visitor, const StructBase& structBase
 
 bool ParserStruct::parseStruct()
 {
+    const std::string typeName = m_root.getStructInfo().getTypeName();
+    const MetaStruct* stru = MetaDataGlobal::instance().getStruct(typeName);
+    if (!stru)
+    {
+        m_visitor.notifyError(nullptr, "typename not found");
+        m_visitor.finished();
+        return false;
+    }
+
+    m_visitor.startStruct(*stru);
     parseStruct(m_root);
     m_visitor.finished();
     return true;

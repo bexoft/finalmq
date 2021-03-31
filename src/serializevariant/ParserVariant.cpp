@@ -22,6 +22,7 @@
 
 
 #include "finalmq/serializevariant/ParserVariant.h"
+#include "finalmq/serializevariant/VariantToVarValue.h"
 #include "finalmq/metadata/MetaData.h"
 #include "finalmq/variant/VariantValues.h"
 #include "finalmq/variant/VariantValueList.h"
@@ -29,6 +30,10 @@
 #include <assert.h>
 
 namespace finalmq {
+
+
+static const std::string STR_VARVALUE = "finalmq.variant.VarValue";
+
 
 
 ParserVariant::ParserVariant(IParserVisitor& visitor, const Variant& variant)
@@ -47,8 +52,7 @@ bool ParserVariant::parseStruct(const std::string& typeName)
     const MetaStruct* stru = MetaDataGlobal::instance().getStruct(typeName);
     if (stru)
     {
-        MetaField field{MetaTypeId::TYPE_STRUCT, typeName,""};
-        field.metaStruct = stru;
+        m_visitor.startStruct(*stru);
         parseStruct(*stru, m_root);
         ok = true;
     }
@@ -117,15 +121,23 @@ void ParserVariant::processField(const Variant* sub, const MetaField* field)
         break;
     case TYPE_STRUCT:
         {
-            m_visitor.enterStruct(*field);
-            const MetaStruct* stru = MetaDataGlobal::instance().getStruct(*field);
-            if (stru)
+            m_visitor.enterStruct(*field);            
+            if (field->typeName == STR_VARVALUE)
             {
-                parseStruct(*stru, *sub);
+                VariantToVarValue variantToVarValue(*sub, m_visitor);
+                variantToVarValue.convert();
             }
             else
             {
-                m_visitor.notifyError(nullptr, "typename not found");
+                const MetaStruct* stru = MetaDataGlobal::instance().getStruct(*field);
+                if (stru)
+                {
+                    parseStruct(*stru, *sub);
+                }
+                else
+                {
+                    m_visitor.notifyError(nullptr, "typename not found");
+                }
             }
             m_visitor.exitStruct(*field);
         }
@@ -353,14 +365,22 @@ void ParserVariant::processEmptyField(const MetaField* field)
     case TYPE_STRUCT:
         {
             m_visitor.enterStruct(*field);
-            const MetaStruct* stru = MetaDataGlobal::instance().getStruct(*field);
-            if (stru)
+            if (field->typeName == STR_VARVALUE)
             {
-                parseStruct(*stru);
+                VariantToVarValue variantToVarValue(Variant(), m_visitor);
+                variantToVarValue.convert();
             }
             else
             {
-                m_visitor.notifyError(nullptr, "typename not found");
+                const MetaStruct* stru = MetaDataGlobal::instance().getStruct(*field);
+                if (stru)
+                {
+                    parseStruct(*stru);
+                }
+                else
+                {
+                    m_visitor.notifyError(nullptr, "typename not found");
+                }
             }
             m_visitor.exitStruct(*field);
         }

@@ -357,6 +357,13 @@ void SerializerProto::Internal::notifyError(const char* /*str*/, const char* /*m
 
 }
 
+
+
+void SerializerProto::Internal::startStruct(const MetaStruct& /*stru*/)
+{
+}
+
+
 void SerializerProto::Internal::finished()
 {
     resizeBuffer();

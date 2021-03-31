@@ -22,11 +22,13 @@
 
 
 #include "finalmq/serializevariant/SerializerVariant.h"
+#include "finalmq/serializevariant/VarValueToVariant.h"
 #include "finalmq/serialize/ParserProcessDefaultValues.h"
 #include "finalmq/metadata/MetaData.h"
 #include "finalmq/variant/VariantValueStruct.h"
 #include "finalmq/variant/VariantValueList.h"
 #include "finalmq/variant/VariantValues.h"
+#include "finalmq/metadataserialize/variant.fmq.h"
 
 #include <assert.h>
 #include <algorithm>
@@ -35,31 +37,39 @@
 namespace finalmq {
 
 
+static const std::string STR_VARVALUE = "finalmq.variant.VarValue";
+
+
 SerializerVariant::SerializerVariant(Variant& root, bool enumAsString, bool skipDefaultValues)
     : ParserConverter()
-    , m_internal(root, enumAsString)
+    , m_internal(*this, root, enumAsString)
     , m_parserProcessDefaultValues()
 {
-    m_parserProcessDefaultValues = std::make_unique<ParserProcessDefaultValues>(skipDefaultValues, &m_internal);
-    setVisitor(*m_parserProcessDefaultValues);
+    m_parserProcessDefaultValues = std::make_shared<ParserProcessDefaultValues>(skipDefaultValues, &m_internal);
+    ParserConverter::setVisitor(*m_parserProcessDefaultValues);
 }
 
 
 
-SerializerVariant::Internal::Internal(Variant& root, bool enumAsString)
+SerializerVariant::Internal::Internal(SerializerVariant& outer, Variant& root, bool enumAsString)
     : m_root(root)
     , m_enumAsString(enumAsString)
+    , m_outer(outer)
 {
-    m_root = Variant();
-    m_root = VariantStruct();
-    m_stack.push_back(&m_root);
-    m_current = m_stack.back();
 }
 
 
 // IParserVisitor
 void SerializerVariant::Internal::notifyError(const char* /*str*/, const char* /*message*/)
 {
+}
+
+void SerializerVariant::Internal::startStruct(const MetaStruct& /*stru*/)
+{
+    m_root = Variant();
+    m_root = VariantStruct();
+    m_stack.push_back(&m_root);
+    m_current = m_stack.back();
 }
 
 void SerializerVariant::Internal::finished()
@@ -70,22 +80,44 @@ void SerializerVariant::Internal::finished()
 void SerializerVariant::Internal::enterStruct(const MetaField& field)
 {
     assert(m_current);
-    if (m_current->getType() == TYPE_STRUCT)
+
+    if (field.typeName == STR_VARVALUE)
     {
-        m_current->add(field.name, VariantStruct());
-        VariantStruct* stru = *m_current;
-        assert(stru);
-        m_stack.push_back(&stru->back().second);
+        assert(m_varValueToVariant == nullptr);
+        m_current->add(field.name, Variant());
+        Variant* variant = m_current->getVariant(field.name);
+        assert(variant);
+        m_varValueToVariant = std::make_shared<VarValueToVariant>(*variant);
+        m_outer.ParserConverter::setVisitor(m_varValueToVariant->getVisitor());
+        m_outer.m_parserProcessDefaultValues->setVisitor(m_varValueToVariant->getVisitor());
+        m_varValueToVariant->setExitNotification([this, &field]() {
+            assert(m_varValueToVariant);
+            m_outer.ParserConverter::setVisitor(*m_outer.m_parserProcessDefaultValues);
+            m_outer.m_parserProcessDefaultValues->setVisitor(*this);
+            m_varValueToVariant->convert();
+            m_varValueToVariant->setExitNotification(nullptr);
+            m_varValueToVariant = nullptr;
+        });
     }
     else
     {
-        assert(m_current->getType() == VARTYPE_LIST);
-        m_current->add(VariantStruct());
-        VariantList* list = *m_current;
-        assert(list);
-        m_stack.push_back(&list->back());
+        if (m_current->getType() == TYPE_STRUCT)
+        {
+            m_current->add(field.name, VariantStruct());
+            VariantStruct* stru = *m_current;
+            assert(stru);
+            m_stack.push_back(&stru->back().second);
+        }
+        else
+        {
+            assert(m_current->getType() == VARTYPE_LIST);
+            m_current->add(VariantStruct());
+            VariantList* list = *m_current;
+            assert(list);
+            m_stack.push_back(&list->back());
+        }
+        m_current = m_stack.back();
     }
-    m_current = m_stack.back();
 }
 
 void SerializerVariant::Internal::exitStruct(const MetaField& /*field*/)

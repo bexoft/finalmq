@@ -56,6 +56,12 @@ void ParserConverter::notifyError(const char* str, const char* message)
     m_visitor->notifyError(str, message);
 }
 
+void ParserConverter::startStruct(const MetaStruct& stru)
+{
+    assert(m_visitor);
+    m_visitor->startStruct(stru);
+}
+
 void ParserConverter::finished()
 {
     assert(m_visitor);

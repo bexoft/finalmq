@@ -163,12 +163,12 @@ bool VariantValueList::add(const std::string& /*name*/, Variant&& /*variant*/)
 
 bool VariantValueList::add(const Variant& variant)
 {
-    m_value->push_back(variant);
+    m_value->emplace_back(variant);
     return true;
 }
 bool VariantValueList::add(Variant&& variant)
 {
-    m_value->push_back(std::move(variant));
+    m_value->emplace_back(std::move(variant));
     return true;
 }
 

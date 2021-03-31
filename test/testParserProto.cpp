@@ -113,6 +113,7 @@ TEST_F(TestParserProto, testBool)
 
     {
         testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
         EXPECT_CALL(mockVisitor, enterBool(MatcherMetaField(*fieldValue), VALUE)).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
@@ -140,6 +141,7 @@ TEST_F(TestParserProto, testInt32)
 
     {
         testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
         EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*fieldValue), VALUE)).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
@@ -167,6 +169,7 @@ TEST_F(TestParserProto, testUInt32)
 
     {
         testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
         EXPECT_CALL(mockVisitor, enterUInt32(MatcherMetaField(*fieldValue), VALUE)).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
@@ -194,6 +197,7 @@ TEST_F(TestParserProto, testInt64)
 
     {
         testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
         EXPECT_CALL(mockVisitor, enterInt64(MatcherMetaField(*fieldValue), VALUE)).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
@@ -221,6 +225,7 @@ TEST_F(TestParserProto, testUInt64)
 
     {
         testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
         EXPECT_CALL(mockVisitor, enterUInt64(MatcherMetaField(*fieldValue), VALUE)).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
@@ -249,6 +254,7 @@ TEST_F(TestParserProto, testFloat)
 
     {
         testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
         EXPECT_CALL(mockVisitor, enterFloat(MatcherMetaField(*fieldValue), VALUE)).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
@@ -276,6 +282,7 @@ TEST_F(TestParserProto, testDouble)
 
     {
         testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
         EXPECT_CALL(mockVisitor, enterDouble(MatcherMetaField(*fieldValue), VALUE)).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
@@ -303,6 +310,7 @@ TEST_F(TestParserProto, testString)
 
     {
         testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
         EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*fieldValue), ArrayEq(VALUE.data(), VALUE.size()), VALUE.size())).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
@@ -330,6 +338,7 @@ TEST_F(TestParserProto, testBytes)
 
     {
         testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
         EXPECT_CALL(mockVisitor, enterBytes(MatcherMetaField(*fieldValue), ArrayEq(VALUE.data(), VALUE.size()), VALUE.size())).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
@@ -365,6 +374,7 @@ TEST_F(TestParserProto, testStruct)
 
     {
         testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldStructInt32))).Times(1);
         EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*fieldInt32), VALUE_INT32)).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldStructInt32))).Times(1);
@@ -398,6 +408,7 @@ TEST_F(TestParserProto, testEnum)
 
     {
         testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
         EXPECT_CALL(mockVisitor, enterEnum(MatcherMetaField(*fieldValue), VALUE)).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
@@ -426,6 +437,7 @@ TEST_F(TestParserProto, testEnumNotAvailable)
 
     {
         testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
         EXPECT_CALL(mockVisitor, enterEnum(MatcherMetaField(*fieldValue), 0)).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
@@ -461,6 +473,7 @@ TEST_F(TestParserProto, testArrayBool)
 
     {
         testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
         EXPECT_CALL(mockVisitor, enterArrayBool(MatcherMetaField(*fieldValue), std::vector<bool>({VALUE1, VALUE2, VALUE3, VALUE4}))).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
@@ -496,6 +509,7 @@ TEST_F(TestParserProto, testArrayInt32)
 
     {
         testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
         EXPECT_CALL(mockVisitor, enterArrayInt32(MatcherMetaField(*fieldValue), std::vector<std::int32_t>({VALUE1, VALUE2, VALUE3, VALUE4}))).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
@@ -530,6 +544,7 @@ TEST_F(TestParserProto, testArrayUInt32)
 
     {
         testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
         EXPECT_CALL(mockVisitor, enterArrayUInt32(MatcherMetaField(*fieldValue), std::vector<std::uint32_t>({VALUE1, VALUE2, VALUE3, VALUE4}))).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
@@ -565,6 +580,7 @@ TEST_F(TestParserProto, testArrayInt64)
 
     {
         testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
         EXPECT_CALL(mockVisitor, enterArrayInt64(MatcherMetaField(*fieldValue), std::vector<std::int64_t>({VALUE1, VALUE2, VALUE3, VALUE4}))).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
@@ -599,6 +615,7 @@ TEST_F(TestParserProto, testArrayUInt64)
 
     {
         testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
         EXPECT_CALL(mockVisitor, enterArrayUInt64(MatcherMetaField(*fieldValue), std::vector<std::uint64_t>({VALUE1, VALUE2, VALUE3, VALUE4}))).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
@@ -634,6 +651,7 @@ TEST_F(TestParserProto, testArrayFloat)
 
     {
         testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
         EXPECT_CALL(mockVisitor, enterArrayFloat(MatcherMetaField(*fieldValue), std::vector<float>({VALUE1, VALUE2, VALUE3, VALUE4}))).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
@@ -668,6 +686,7 @@ TEST_F(TestParserProto, testArrayDouble)
 
     {
         testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
         EXPECT_CALL(mockVisitor, enterArrayDouble(MatcherMetaField(*fieldValue), std::vector<double>({VALUE1, VALUE2, VALUE3, VALUE4}))).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
@@ -703,6 +722,7 @@ TEST_F(TestParserProto, testArrayString)
 
     {
         testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
         EXPECT_CALL(mockVisitor, enterArrayString(MatcherMetaField(*fieldValue), std::vector<std::string>({VALUE1, VALUE2, VALUE3, VALUE4}))).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
@@ -738,6 +758,7 @@ TEST_F(TestParserProto, testArrayBytes)
 
     {
         testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
         EXPECT_CALL(mockVisitor, enterArrayBytes(MatcherMetaField(*fieldValue), std::vector<Bytes>({VALUE1, VALUE2, VALUE3, VALUE4}))).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
@@ -790,6 +811,7 @@ TEST_F(TestParserProto, testArrayStruct)
 
     {
         testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
         EXPECT_CALL(mockVisitor, enterArrayStruct(MatcherMetaField(*fieldStruct))).Times(1);
 
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldStructWithoutArray))).Times(1);
@@ -848,6 +870,7 @@ TEST_F(TestParserProto, testArrayEnum)
 
     {
         testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
         EXPECT_CALL(mockVisitor, enterArrayEnum(MatcherMetaField(*fieldValue), std::vector<std::int32_t>({VALUE1, VALUE2, VALUE3, 0}))).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
