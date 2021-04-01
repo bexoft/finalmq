@@ -22,12 +22,16 @@
 
 
 #include "finalmq/serializestruct/ParserStruct.h"
+#include "finalmq/serializevariant/VariantToVarValue.h"
 #include "finalmq/metadata/MetaData.h"
 
 #include <assert.h>
 
 
 namespace finalmq {
+
+
+static const std::string STR_VARVALUE = "finalmq.variant.VarValue";
 
 
 ParserStruct::ParserStruct(IParserVisitor& visitor, const StructBase& structBase)
@@ -97,6 +101,15 @@ void ParserStruct::processField(const StructBase& structBase, const FieldInfo& f
         }
         break;
     case TYPE_STRUCT:
+        if (field.typeName == STR_VARVALUE)
+        {
+            m_visitor.enterStruct(field);
+            const Variant& value = structBase.getValue<Variant>(field.index, field.typeId);
+            VariantToVarValue variantToVarValue(value, m_visitor);
+            variantToVarValue.convert();
+            m_visitor.exitStruct(field);
+        }
+        else
         {
             const StructBase* value = structBase.getData<StructBase>(field.index, field.typeId);
             if (value)
