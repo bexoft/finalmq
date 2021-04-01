@@ -20,25 +20,46 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
+#pragma once
 
-#include "finalmq/metadataserialize/metadata.fmq.h"
+
+#include "finalmq/helpers/BexDefines.h"
+#include "finalmq/variant/Variant.h"
+#include "finalmq/serialize/IParserVisitor.h"
+
+
+#include <deque>
+#include <functional>
+
 
 namespace finalmq {
 
 
-class SYMBOLEXP MetaDataExchange
+namespace variant {
+    class VarValue;
+}
+class SerializerStruct;
+
+class SYMBOLEXP VarValueToVariant
 {
 public:
-    static void importMetaData(const finalmq::SerializeMetaData& metadata);
-    static void exportMetaData(finalmq::SerializeMetaData& metadata);
+    VarValueToVariant(Variant& variant);
 
-    static void importMetaDataJson(const char* json);
-    static void exportMetaDataJson(std::string& json);
-
-    static void importMetaDataProto(const char* proto, ssize_t size);
-    static void exportMetaDataProto(std::string& proto);
+    IParserVisitor& getVisitor();
+    void setExitNotification(std::function<void()> funcExit);
+    void convert();
 
 private:
+    VarValueToVariant(const VarValueToVariant&) = delete;
+    const VarValueToVariant& operator =(const VarValueToVariant&) = delete;
+    VarValueToVariant(const VarValueToVariant&&) = delete;
+    const VarValueToVariant& operator =(const VarValueToVariant&&) = delete;
+
+    void processVarValue(const variant::VarValue& varValue, Variant& variant);
+
+    Variant&                            m_variant;
+    std::shared_ptr<SerializerStruct>   m_serializerStruct;
+    std::shared_ptr<variant::VarValue>  m_varValue;
 };
 
 }   // namespace finalmq

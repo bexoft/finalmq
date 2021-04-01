@@ -22,11 +22,13 @@
 
 
 #include "finalmq/serializevariant/SerializerVariant.h"
+#include "finalmq/serializevariant/VarValueToVariant.h"
 #include "finalmq/serialize/ParserProcessDefaultValues.h"
 #include "finalmq/metadata/MetaData.h"
 #include "finalmq/variant/VariantValueStruct.h"
 #include "finalmq/variant/VariantValueList.h"
 #include "finalmq/variant/VariantValues.h"
+#include "finalmq/metadataserialize/variant.fmq.h"
 
 #include <assert.h>
 #include <algorithm>
@@ -35,28 +37,39 @@
 namespace finalmq {
 
 
+static const std::string STR_VARVALUE = "finalmq.variant.VarValue";
+
+
 SerializerVariant::SerializerVariant(Variant& root, bool enumAsString, bool skipDefaultValues)
     : ParserConverter()
-    , m_internal(root, enumAsString)
+    , m_internal(*this, root, enumAsString)
     , m_parserProcessDefaultValues()
 {
-    m_parserProcessDefaultValues = std::make_unique<ParserProcessDefaultValues>(skipDefaultValues, &m_internal);
-    setVisitor(*m_parserProcessDefaultValues);
+    m_parserProcessDefaultValues = std::make_shared<ParserProcessDefaultValues>(skipDefaultValues, &m_internal);
+    ParserConverter::setVisitor(*m_parserProcessDefaultValues);
 }
 
 
 
-SerializerVariant::Internal::Internal(Variant& root, bool enumAsString)
+SerializerVariant::Internal::Internal(SerializerVariant& outer, Variant& root, bool enumAsString)
     : m_root(root)
     , m_enumAsString(enumAsString)
+    , m_outer(outer)
 {
-    m_root = Variant();
 }
 
 
 // IParserVisitor
 void SerializerVariant::Internal::notifyError(const char* /*str*/, const char* /*message*/)
 {
+}
+
+void SerializerVariant::Internal::startStruct(const MetaStruct& /*stru*/)
+{
+    m_root = Variant();
+    m_root = VariantStruct();
+    m_stack.push_back(&m_root);
+    m_current = m_stack.back();
 }
 
 void SerializerVariant::Internal::finished()
@@ -66,15 +79,27 @@ void SerializerVariant::Internal::finished()
 
 void SerializerVariant::Internal::enterStruct(const MetaField& field)
 {
-    if (m_stack.empty())
+    assert(m_current);
+
+    if (field.typeName == STR_VARVALUE)
     {
-        m_root = VariantStruct();
-        m_stack.push_back(&m_root);
-        m_current = m_stack.back();
+        m_varValueToVariant = nullptr;
+        m_current->add(field.name, Variant());
+        Variant* variant = m_current->getVariant(field.name);
+        assert(variant);
+        m_varValueToVariant = std::make_shared<VarValueToVariant>(*variant);
+        m_outer.ParserConverter::setVisitor(m_varValueToVariant->getVisitor());
+        m_outer.m_parserProcessDefaultValues->setVisitor(m_varValueToVariant->getVisitor());
+        m_varValueToVariant->setExitNotification([this, &field]() {
+            assert(m_varValueToVariant);
+            m_outer.ParserConverter::setVisitor(*m_outer.m_parserProcessDefaultValues);
+            m_outer.m_parserProcessDefaultValues->setVisitor(*this);
+            m_varValueToVariant->convert();
+            m_varValueToVariant->setExitNotification(nullptr);
+        });
     }
     else
     {
-        assert(m_current);
         if (m_current->getType() == TYPE_STRUCT)
         {
             m_current->add(field.name, VariantStruct());
@@ -84,7 +109,7 @@ void SerializerVariant::Internal::enterStruct(const MetaField& field)
         }
         else
         {
-            assert(m_current->getType() == TYPE_ARRAY_STRUCT);
+            assert(m_current->getType() == VARTYPE_LIST);
             m_current->add(VariantStruct());
             VariantList* list = *m_current;
             assert(list);
@@ -125,7 +150,7 @@ void SerializerVariant::Internal::enterArrayStruct(const MetaField& field)
         }
         else
         {
-            assert(m_current->getType() == TYPE_ARRAY_STRUCT);
+            assert(m_current->getType() == VARTYPE_LIST);
             m_current->add(VariantList());
             VariantList* list = *m_current;
             assert(list);
@@ -163,7 +188,7 @@ void SerializerVariant::Internal::add(const MetaField& field, const T& value)
         }
         else
         {
-            assert(m_current->getType() == TYPE_ARRAY_STRUCT);
+            assert(m_current->getType() == VARTYPE_LIST);
             m_current->add(value);
         }
     }
@@ -180,7 +205,7 @@ void SerializerVariant::Internal::add(const MetaField& field, T&& value)
         }
         else
         {
-            assert(m_current->getType() == TYPE_ARRAY_STRUCT);
+            assert(m_current->getType() == VARTYPE_LIST);
             m_current->add(std::move(value));
         }
     }

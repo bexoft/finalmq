@@ -447,11 +447,8 @@ bool ParserProto::parseStruct(const std::string& typeName)
         return false;
     }
 
-    MetaField field{MetaTypeId::TYPE_STRUCT, typeName};
-    field.metaStruct = stru;
-    m_visitor.enterStruct(field);
+    m_visitor.startStruct(*stru);
     bool res = parseStructIntern(*stru);
-    m_visitor.exitStruct(field);
     m_visitor.finished();
     return res;
 }

@@ -45,6 +45,7 @@ enum MetaTypeId : std::int32_t
     TYPE_BYTES      = 9,
     TYPE_STRUCT     = 10,
     TYPE_ENUM       = 11,
+    TYPE_VARIANT    = 12,
 
     OFFSET_ARRAY_FLAG       = 1024,
 

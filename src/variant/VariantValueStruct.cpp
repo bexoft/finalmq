@@ -158,7 +158,7 @@ bool VariantValueStruct::add(const std::string& name, const Variant& variant)
     auto it = find(name);
     if (it == m_value->end())
     {
-        m_value->push_back(std::make_pair(name, variant));
+        m_value->emplace_back(name, variant);
         return true;
     }
     return false;
@@ -169,7 +169,7 @@ bool VariantValueStruct::add(const std::string& name, Variant&& variant)
     auto it = find(name);
     if (it == m_value->end())
     {
-        m_value->push_back(std::make_pair(name, std::move(variant)));
+        m_value->emplace_back(name, std::move(variant));
         return true;
     }
     return false;
@@ -190,7 +190,7 @@ ssize_t VariantValueStruct::size() const
     return m_value->size();
 }
 
-void VariantValueStruct::visit(IVariantVisitor& visitor, Variant& variant, ssize_t index, int level, ssize_t size, const std::string& name)
+void VariantValueStruct::accept(IVariantVisitor& visitor, Variant& variant, ssize_t index, int level, ssize_t size, const std::string& name)
 {
     visitor.enterStruct(variant, VARTYPE_STRUCT, index, level, size, name);
     level++;
@@ -199,7 +199,7 @@ void VariantValueStruct::visit(IVariantVisitor& visitor, Variant& variant, ssize
     for (auto it = m_value->begin(); it != m_value->end(); ++it)  //std::list<std::string, Variant>::iterator????
     {
         Variant& subVariant = it->second;
-        subVariant.visit(visitor, i, level, subsize, it->first);
+        subVariant.accept(visitor, i, level, subsize, it->first);
         i++;
     }
     --level;

@@ -48,6 +48,11 @@
         {"type":"TestEnum","desc":"desc","fields":[
             {"tid":"TYPE_ENUM","type":"Foo","name":"value","desc":"desc","flags":[]}
         ]},
+        {"type":"TestVariant","desc":"desc","fields":[
+            {"tid":"TYPE_VARIANT","type":"","name":"value","desc":"desc","flags":[]},
+            {"tid":"TYPE_INT32","type":"","name":"valueInt32","desc":"desc","flags":[]},
+            {"tid":"TYPE_VARIANT","type":"","name":"value2","desc":"desc","flags":[]}
+        ]},
         {"type":"TestArrayBool","desc":"desc","fields":[
             {"tid":"TYPE_ARRAY_BOOL","type":"","name":"value","desc":"desc","flags":[]}
         ]},

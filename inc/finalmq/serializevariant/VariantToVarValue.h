@@ -20,25 +20,35 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
+#pragma once
 
-#include "finalmq/metadataserialize/metadata.fmq.h"
+#include "finalmq/helpers/BexDefines.h"
+#include "finalmq/variant/Variant.h"
+#include "finalmq/serialize/IParserVisitor.h"
+
 
 namespace finalmq {
 
 
-class SYMBOLEXP MetaDataExchange
+class SYMBOLEXP VariantToVarValue : private IVariantVisitor
 {
 public:
-    static void importMetaData(const finalmq::SerializeMetaData& metadata);
-    static void exportMetaData(finalmq::SerializeMetaData& metadata);
+    VariantToVarValue(const Variant& variant, IParserVisitor& visitor);
 
-    static void importMetaDataJson(const char* json);
-    static void exportMetaDataJson(std::string& json);
-
-    static void importMetaDataProto(const char* proto, ssize_t size);
-    static void exportMetaDataProto(std::string& proto);
+    void convert();
 
 private:
+    // IVariantVisitor
+    virtual void enterLeaf(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name) override;
+    virtual void enterStruct(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name) override;
+    virtual void exitStruct(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name) override;
+    virtual void enterList(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name) override;
+    virtual void exitList(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name) override;
+
+
+    Variant&                    m_variant;
+    IParserVisitor&             m_visitor;
+    static const MetaStruct*    m_struct;
 };
 
 }   // namespace finalmq

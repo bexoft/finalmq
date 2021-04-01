@@ -14,6 +14,7 @@
             {"name":"TYPE_BYTES",               "id":9,     "desc":"desc"},
             {"name":"TYPE_STRUCT",              "id":10,    "desc":"desc"},
             {"name":"TYPE_ENUM",                "id":11,    "desc":"desc"},
+            {"name":"TYPE_VARIANT",             "id":12,    "desc":"desc"},
             {"name":"OFFSET_ARRAY_FLAG",        "id":1024,  "desc":"desc"},
             {"name":"TYPE_ARRAY_BOOL",          "id":1025,  "desc":"desc"},
             {"name":"TYPE_ARRAY_INT32",         "id":1026,  "desc":"desc"},

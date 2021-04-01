@@ -123,7 +123,7 @@ private:
     {
         return 1;
     }
-    virtual void visit(IVariantVisitor& visitor, Variant& variant, ssize_t index, int level, ssize_t size, const std::string& name) override
+    virtual void accept(IVariantVisitor& visitor, Variant& variant, ssize_t index, int level, ssize_t size, const std::string& name) override
     {
         visitor.enterLeaf(variant, VARTYPE, index, level, size, name);
     }

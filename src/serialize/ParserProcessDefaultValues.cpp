@@ -35,6 +35,9 @@
 namespace finalmq {
 
 
+static const std::string STR_VARVALUE = "finalmq.variant.VarValue";
+
+
 ParserProcessDefaultValues::ParserProcessDefaultValues(bool skipDefaultValues, IParserVisitor* visitor)
     : m_visitor(visitor)
     , m_skipDefaultValues(skipDefaultValues)
@@ -55,8 +58,26 @@ void ParserProcessDefaultValues::notifyError(const char* str, const char* messag
     m_visitor->notifyError(str, message);
 }
 
+
+void ParserProcessDefaultValues::startStruct(const MetaStruct& stru)
+{
+    m_struct = &stru;
+    m_stackFieldsDone.emplace_back(stru.getFieldsSize(), false);
+    assert(m_visitor);
+    m_visitor->startStruct(stru);
+}
+
+
 void ParserProcessDefaultValues::finished()
 {
+    if (!m_skipDefaultValues && m_struct)
+    {
+        assert(!m_stackFieldsDone.empty());
+        const std::vector<bool>& fieldsDone = m_stackFieldsDone.back();
+        processDefaultValues(*m_struct, fieldsDone);
+        m_stackFieldsDone.pop_back();
+    }
+
     assert(m_visitor);
     m_visitor->finished();
 }
@@ -67,14 +88,18 @@ void ParserProcessDefaultValues::enterStruct(const MetaField& field)
 
     if (!m_skipDefaultValues)
     {
+        markAsDone(field);
         const MetaStruct* stru = MetaDataGlobal::instance().getStruct(field);
-        if (stru)
+        if (!stru || stru->getTypeName() != STR_VARVALUE)
         {
-            m_stackFieldsDone.emplace_back(stru->getFieldsSize(), false);
-        }
-        else
-        {
-            m_stackFieldsDone.emplace_back(0, false);
+            if (stru)
+            {
+                m_stackFieldsDone.emplace_back(stru->getFieldsSize(), false);
+            }
+            else
+            {
+                m_stackFieldsDone.emplace_back(0, false);
+            }
         }
     }
 
@@ -150,7 +175,7 @@ void ParserProcessDefaultValues::processDefaultValues(const MetaStruct& stru, co
                     {
                         m_visitor->enterStruct(*field);
                         const MetaStruct* substru = MetaDataGlobal::instance().getStruct(*field);
-                        if (substru)
+                        if (substru && (field->typeName != STR_VARVALUE))
                         {
                             std::vector<bool> subfieldsDone(substru->getFieldsSize(), false);
                             processDefaultValues(*substru, subfieldsDone);

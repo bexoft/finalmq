@@ -53,6 +53,7 @@ private:
     private:
         // IParserVisitor
         virtual void notifyError(const char* str, const char* message) override;
+        virtual void startStruct(const MetaStruct& stru) override;
         virtual void finished() override;
 
         virtual void enterStruct(const MetaField& field) override;
@@ -160,6 +161,7 @@ private:
         char*                   m_bufferStart = nullptr;
         char*                   m_buffer = nullptr;
         char*                   m_bufferEnd = nullptr;
+        bool                    m_arrayParent = false;
         std::deque<StructData>  m_stackStruct;
     };
 

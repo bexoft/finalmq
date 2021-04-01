@@ -357,27 +357,26 @@ void SerializerProto::Internal::notifyError(const char* /*str*/, const char* /*m
 
 }
 
+
+
+void SerializerProto::Internal::startStruct(const MetaStruct& /*stru*/)
+{
+}
+
+
 void SerializerProto::Internal::finished()
 {
-
+    resizeBuffer();
 }
 
 
 void SerializerProto::Internal::enterStruct(const MetaField& field)
 {
     int id = field.index + INDEX2ID;
-
-    if (!m_stackStruct.empty())
-    {
-        char* bufferStructStart = serializeStruct(id);
-        bool arrayEntry = m_stackStruct.back().arrayParent;
-        m_stackStruct.emplace_back(bufferStructStart, m_buffer, m_buffer + RESERVE_STRUCT_SIZE, arrayEntry);
-        m_buffer += RESERVE_STRUCT_SIZE;
-    }
-    else
-    {
-        m_stackStruct.emplace_back(nullptr, nullptr, nullptr, false);
-    }
+    char* bufferStructStart = serializeStruct(id);
+    bool arrayEntry = (!m_stackStruct.empty()) ? m_stackStruct.back().arrayParent : m_arrayParent;
+    m_stackStruct.emplace_back(bufferStructStart, m_buffer, m_buffer + RESERVE_STRUCT_SIZE, arrayEntry);
+    m_buffer += RESERVE_STRUCT_SIZE;
 }
 
 ssize_t SerializerProto::Internal::calculateStructSize(ssize_t& structSize)
@@ -471,61 +470,66 @@ void SerializerProto::Internal::exitStruct(const MetaField& /*field*/)
 {
     assert(!m_stackStruct.empty());
     StructData& structData = m_stackStruct.back();
-    if (m_stackStruct.size() == 1)
+    assert(structData.buffer);
+    ssize_t structSize = (m_buffer - structData.buffer) + structData.size;
+    if (structSize == 0 && !structData.allocateNextDataBuffer && !structData.arrayEntry)
     {
-        resizeBuffer();
+        m_buffer = structData.bufferStructStart;
+    }
+    else if (structSize <= STRUCT_SIZE_COPY && !structData.allocateNextDataBuffer)
+    {
+        m_buffer = structData.bufferStructSize;
+        serializeVarint(structSize);
+        memmove(m_buffer, structData.bufferStructSize + RESERVE_STRUCT_SIZE, structSize);
+        m_buffer += structSize;
     }
     else
     {
-        assert(structData.buffer);
-        ssize_t structSize = (m_buffer - structData.buffer) + structData.size;
-        if (structSize == 0 && !structData.allocateNextDataBuffer && !structData.arrayEntry)
-        {
-            m_buffer = structData.bufferStructStart;
-        }
-        else if (structSize <= STRUCT_SIZE_COPY && !structData.allocateNextDataBuffer)
-        {
-            m_buffer = structData.bufferStructSize;
-            serializeVarint(structSize);
-            memmove(m_buffer, structData.bufferStructSize + RESERVE_STRUCT_SIZE, structSize);
-            m_buffer += structSize;
-        }
-        else
-        {
-            ssize_t remainingSize = calculateStructSize(structSize);
+        ssize_t remainingSize = calculateStructSize(structSize);
 
-            char* bufferCurrent = m_buffer;
-            m_buffer = structData.bufferStructSize;
+        char* bufferCurrent = m_buffer;
+        m_buffer = structData.bufferStructSize;
 
-            serializeVarint(structSize);
-            assert(remainingSize <= 7 && remainingSize >= 3);
-            ssize_t remainingSizeFromBuffer = structData.bufferStructSize + RESERVE_STRUCT_SIZE - m_buffer;
-            if (remainingSizeFromBuffer != remainingSize)
-            {
-                streamFatal << "Struct calculations are wrong";
-            }
-            assert(remainingSizeFromBuffer == remainingSize);
-            static constexpr std::uint32_t tagDummy = (DUMMY_ID << 3) | WIRETYPE_VARINT;
-            serializeVarint(tagDummy);
-
-            remainingSize -= 2;
-            fillRemainingStruct(remainingSize);
-            assert(m_buffer == structData.bufferStructSize + RESERVE_STRUCT_SIZE);
-            m_buffer = bufferCurrent;
+        serializeVarint(structSize);
+        assert(remainingSize <= 7 && remainingSize >= 3);
+        ssize_t remainingSizeFromBuffer = structData.bufferStructSize + RESERVE_STRUCT_SIZE - m_buffer;
+        if (remainingSizeFromBuffer != remainingSize)
+        {
+            streamFatal << "Struct calculations are wrong";
         }
+        assert(remainingSizeFromBuffer == remainingSize);
+        static constexpr std::uint32_t tagDummy = (DUMMY_ID << 3) | WIRETYPE_VARINT;
+        serializeVarint(tagDummy);
+
+        remainingSize -= 2;
+        fillRemainingStruct(remainingSize);
+        assert(m_buffer == structData.bufferStructSize + RESERVE_STRUCT_SIZE);
+        m_buffer = bufferCurrent;
     }
     m_stackStruct.pop_back();
 }
 
 void SerializerProto::Internal::enterArrayStruct(const MetaField& /*field*/)
 {
-    assert(!m_stackStruct.empty());
-    m_stackStruct.back().arrayParent = true;
+    if (!m_stackStruct.empty())
+    {
+        m_stackStruct.back().arrayParent = true;
+    }
+    else
+    {
+        m_arrayParent = true;
+    }
 }
 void SerializerProto::Internal::exitArrayStruct(const MetaField& /*field*/)
 {
-    assert(!m_stackStruct.empty());
-    m_stackStruct.back().arrayParent = false;
+    if (!m_stackStruct.empty())
+    {
+        m_stackStruct.back().arrayParent = false;
+    }
+    else
+    {
+        m_arrayParent = false;
+    }
 }
 
 void SerializerProto::Internal::enterBool(const MetaField& field, bool value)

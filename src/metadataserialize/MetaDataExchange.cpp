@@ -155,7 +155,7 @@ void MetaDataExchange::exportMetaDataJson(std::string& json)
 
 
 
-void MetaDataExchange::importMetaDataProto(const char* proto, int size)
+void MetaDataExchange::importMetaDataProto(const char* proto, ssize_t size)
 {
     SerializeMetaData root;
     SerializerStruct serializer(root);

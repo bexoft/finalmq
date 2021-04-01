@@ -61,7 +61,7 @@ struct IVariantValue
     virtual bool add(const Variant& variant) = 0;
     virtual bool add(Variant&& variant) = 0;
     virtual ssize_t size() const = 0;
-    virtual void visit(IVariantVisitor& visitor, Variant& variant, ssize_t index, int level, ssize_t size, const std::string& name) = 0;
+    virtual void accept(IVariantVisitor& visitor, Variant& variant, ssize_t index, int level, ssize_t size, const std::string& name) = 0;
 };
 
 

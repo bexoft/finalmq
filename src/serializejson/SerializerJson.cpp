@@ -66,8 +66,17 @@ void SerializerJson::Internal::notifyError(const char* /*str*/, const char* /*me
 {
 }
 
+void SerializerJson::Internal::startStruct(const MetaStruct& /*stru*/)
+{
+    // outer curly brackets
+    m_jsonBuilder.enterObject();
+}
+
+
 void SerializerJson::Internal::finished()
 {
+    // outer curly brackets
+    m_jsonBuilder.exitObject();
     m_jsonBuilder.finished();
 }
 

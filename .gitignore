@@ -39,3 +39,7 @@ build
 
 *.user
 *.autosave
+
+# Visual Studio files
+CMakeSettings.json
+.vs

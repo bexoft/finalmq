@@ -127,6 +127,11 @@ public:
         return m_fieldInfos;
     }
 
+    inline const MetaStruct& getMetaStruct() const
+    {
+        return m_metaStruct;
+    }
+
 private:
     const MetaStruct&       m_metaStruct;
     std::vector<FieldInfo>  m_fieldInfos;
@@ -152,16 +157,16 @@ public:
     virtual void clear() = 0;
 
     template<class T>
-    T* getData(ssize_t index, int typeId)
+    T* getData(const MetaField& field)
     {
         const StructInfo& structInfo = getStructInfo();
-        const FieldInfo* fieldInfo = structInfo.getField(index);
+        const FieldInfo* fieldInfo = structInfo.getField(field.index);
         if (fieldInfo)
         {
-            const MetaField* field = fieldInfo->getField();
-            if (field)
+            const MetaField* fieldDest = fieldInfo->getField();
+            if (fieldDest)
             {
-                if (field->typeId == typeId)
+                if (fieldDest->typeId == field.typeId && (field.typeName.empty() || field.typeName == fieldDest->typeName))
                 {
                     int offset = fieldInfo->getOffset();
                     return reinterpret_cast<T*>(reinterpret_cast<char*>(this) + offset);
@@ -172,15 +177,15 @@ public:
     }
 
     template<class T>
-    const T* getData(ssize_t index, int typeId) const
+    const T* getData(const MetaField& field) const
     {
-        return const_cast<StructBase*>(this)->getData<T>(index, typeId);
+        return const_cast<StructBase*>(this)->getData<T>(field);
     }
 
     template<class T>
-    const T& getValue(ssize_t index, int typeId) const
+    const T& getValue(const MetaField& field) const
     {
-        const T* data = getData<T>(index, typeId);
+        const T* data = getData<T>(field);
         if (data)
         {
             return *data;

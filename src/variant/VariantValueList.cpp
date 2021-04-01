@@ -163,12 +163,12 @@ bool VariantValueList::add(const std::string& /*name*/, Variant&& /*variant*/)
 
 bool VariantValueList::add(const Variant& variant)
 {
-    m_value->push_back(variant);
+    m_value->emplace_back(variant);
     return true;
 }
 bool VariantValueList::add(Variant&& variant)
 {
-    m_value->push_back(std::move(variant));
+    m_value->emplace_back(std::move(variant));
     return true;
 }
 
@@ -177,7 +177,7 @@ ssize_t VariantValueList::size() const
     return m_value->size();
 }
 
-void VariantValueList::visit(IVariantVisitor& visitor, Variant& variant, ssize_t index, int level, ssize_t size, const std::string& name)
+void VariantValueList::accept(IVariantVisitor& visitor, Variant& variant, ssize_t index, int level, ssize_t size, const std::string& name)
 {
     visitor.enterList(variant, VARTYPE_LIST, index, level, size, name);
     ++level;
@@ -186,7 +186,7 @@ void VariantValueList::visit(IVariantVisitor& visitor, Variant& variant, ssize_t
     for (auto it = m_value->begin(); it != m_value->end(); ++it)
     {
         Variant& subVariant = *it;
-        subVariant.visit(visitor, i, level, subsize, "");
+        subVariant.accept(visitor, i, level, subsize, "");
         i++;
     }
     --level;

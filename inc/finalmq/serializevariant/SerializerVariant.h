@@ -30,20 +30,23 @@
 
 namespace finalmq {
 
+class VarValueToVariant;
+class ParserProcessDefaultValues;
 
 class SYMBOLEXP SerializerVariant : public ParserConverter
 {
 public:
-    SerializerVariant(Variant& root, bool enumAsString = true, bool skipDefaultValues = true);
+    SerializerVariant(Variant& root, bool enumAsString = true, bool skipDefaultValues = false);
 
 private:
     class Internal : public IParserVisitor
     {
     public:
-        Internal(Variant& root, bool enumAsString);
+        Internal(SerializerVariant& outer, Variant& root, bool enumAsString);
     private:
         // IParserVisitor
         virtual void notifyError(const char* str, const char* message) override;
+        virtual void startStruct(const MetaStruct& stru) override;
         virtual void finished() override;
 
         virtual void enterStruct(const MetaField& field) override;
@@ -99,12 +102,14 @@ private:
         Variant*                        m_current = nullptr;
         std::deque<Variant*>            m_stack;
         bool                            m_enumAsString = true;
+        std::shared_ptr<VarValueToVariant> m_varValueToVariant;
+        SerializerVariant&              m_outer;
     };
 
     IParserVisitor& getIParserVisitorForParserConverter(bool skipDefaultValues);
 
-    Internal                            m_internal;
-    std::unique_ptr<IParserVisitor>     m_parserProcessDefaultValues;
+    Internal                                    m_internal;
+    std::shared_ptr<ParserProcessDefaultValues> m_parserProcessDefaultValues;
 };
 
 }   // namespace finalmq
