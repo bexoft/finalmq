@@ -22,6 +22,7 @@
 
 
 #include "finalmq/serializestruct/SerializerStruct.h"
+#include "finalmq/serializevariant/VarValueToVariant.h"
 #include "finalmq/serialize/ParserProcessDefaultValues.h"
 #include "finalmq/metadata/MetaData.h"
 #include "finalmq/variant/VariantValueStruct.h"
@@ -35,9 +36,12 @@
 namespace finalmq {
 
 
+static const std::string STR_VARVALUE = "finalmq.variant.VarValue";
+
+
 SerializerStruct::SerializerStruct(StructBase& root)
     : ParserConverter()
-    , m_internal(root)
+    , m_internal(*this, root)
 {
     setVisitor(m_internal);
 }
@@ -50,8 +54,9 @@ void SerializerStruct::setExitNotification(std::function<void()> funcExit)
 
 
 
-SerializerStruct::Internal::Internal(StructBase& root)
+SerializerStruct::Internal::Internal(SerializerStruct& outer, StructBase& root)
     : m_root(root)
+    , m_outer(outer)
 {
     m_root.clear();
     m_stack.push_back({ &m_root, -1 });
@@ -72,6 +77,7 @@ void SerializerStruct::Internal::notifyError(const char* /*str*/, const char* /*
 
 void SerializerStruct::Internal::startStruct(const MetaStruct& /*stru*/)
 {
+    m_wasStartStructCalled = true;
 }
 
 void SerializerStruct::Internal::finished()
@@ -83,20 +89,48 @@ void SerializerStruct::Internal::enterStruct(const MetaField& field)
 {
     assert(!m_stack.empty());
     assert(m_current);
-    StructBase* sub = nullptr;
-    if (m_current->structBase)
+
+    if (m_wasStartStructCalled && field.typeName == STR_VARVALUE)
     {
-        if (m_current->structArrayIndex == -1)
+        m_varValueToVariant = nullptr;
+        Variant* variant = nullptr;
+        if (m_current->structBase)
         {
-            sub = m_current->structBase->getData<StructBase>(field.index, field.typeId);
+            variant = m_current->structBase->getData<Variant>(field);
+        }
+        if (variant)
+        {
+            m_varValueToVariant = std::make_shared<VarValueToVariant>(*variant);
+            m_outer.ParserConverter::setVisitor(m_varValueToVariant->getVisitor());
+            m_varValueToVariant->setExitNotification([this, &field]() {
+                assert(m_varValueToVariant);
+                m_outer.ParserConverter::setVisitor(*this);
+                m_varValueToVariant->convert();
+                m_varValueToVariant->setExitNotification(nullptr);
+            });
         }
         else
         {
-            sub = m_current->structBase->add(m_current->structArrayIndex);
+            m_current->structBase = nullptr;
         }
     }
-    m_stack.push_back({sub, -1});
-    m_current = &m_stack.back();
+    else
+    {
+        StructBase* sub = nullptr;
+        if (m_current->structBase)
+        {
+            if (m_current->structArrayIndex == -1)
+            {
+                sub = m_current->structBase->getData<StructBase>(field);
+            }
+            else
+            {
+                sub = m_current->structBase->add(m_current->structArrayIndex);
+            }
+        }
+        m_stack.push_back({ sub, -1 });
+        m_current = &m_stack.back();
+    }
 }
 
 void SerializerStruct::Internal::exitStruct(const MetaField& /*field*/)
@@ -140,7 +174,7 @@ void SerializerStruct::Internal::setValue(const MetaField& field, const T& value
     assert(m_current);
     if (m_current->structBase)
     {
-        T* pval = m_current->structBase->getData<T>(field.index, field.typeId);
+        T* pval = m_current->structBase->getData<T>(field);
         if (pval)
         {
             *pval = value;
@@ -154,7 +188,7 @@ void SerializerStruct::Internal::setValue(const MetaField& field, T&& value)
     assert(m_current);
     if (m_current->structBase)
     {
-        T* pval = m_current->structBase->getData<T>(field.index, field.typeId);
+        T* pval = m_current->structBase->getData<T>(field);
         if (pval)
         {
             *pval = std::move(value);

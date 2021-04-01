@@ -43,16 +43,8 @@ ParserStruct::ParserStruct(IParserVisitor& visitor, const StructBase& structBase
 
 bool ParserStruct::parseStruct()
 {
-    const std::string typeName = m_root.getStructInfo().getTypeName();
-    const MetaStruct* stru = MetaDataGlobal::instance().getStruct(typeName);
-    if (!stru)
-    {
-        m_visitor.notifyError(nullptr, "typename not found");
-        m_visitor.finished();
-        return false;
-    }
-
-    m_visitor.startStruct(*stru);
+    const MetaStruct& stru = m_root.getStructInfo().getMetaStruct();
+    m_visitor.startStruct(stru);
     parseStruct(m_root);
     m_visitor.finished();
     return true;
@@ -68,35 +60,35 @@ void ParserStruct::processField(const StructBase& structBase, const FieldInfo& f
     switch (field.typeId)
     {
     case TYPE_BOOL:
-        m_visitor.enterBool(field, structBase.getValue<bool>(field.index, field.typeId));
+        m_visitor.enterBool(field, structBase.getValue<bool>(field));
         break;
     case TYPE_INT32:
-        m_visitor.enterInt32(field, structBase.getValue<std::int32_t>(field.index, field.typeId));
+        m_visitor.enterInt32(field, structBase.getValue<std::int32_t>(field));
         break;
     case TYPE_UINT32:
-        m_visitor.enterUInt32(field, structBase.getValue<std::uint32_t>(field.index, field.typeId));
+        m_visitor.enterUInt32(field, structBase.getValue<std::uint32_t>(field));
         break;
     case TYPE_INT64:
-        m_visitor.enterInt64(field, structBase.getValue<std::int64_t>(field.index, field.typeId));
+        m_visitor.enterInt64(field, structBase.getValue<std::int64_t>(field));
         break;
     case TYPE_UINT64:
-        m_visitor.enterUInt64(field, structBase.getValue<std::uint64_t>(field.index, field.typeId));
+        m_visitor.enterUInt64(field, structBase.getValue<std::uint64_t>(field));
         break;
     case TYPE_FLOAT:
-        m_visitor.enterFloat(field, structBase.getValue<float>(field.index, field.typeId));
+        m_visitor.enterFloat(field, structBase.getValue<float>(field));
         break;
     case TYPE_DOUBLE:
-        m_visitor.enterDouble(field, structBase.getValue<double>(field.index, field.typeId));
+        m_visitor.enterDouble(field, structBase.getValue<double>(field));
         break;
     case TYPE_STRING:
         {
-            const std::string& value = structBase.getValue<std::string>(field.index, field.typeId);
+            const std::string& value = structBase.getValue<std::string>(field);
             m_visitor.enterString(field, value.data(), value.size());
         }
         break;
     case TYPE_BYTES:
         {
-            const Bytes& value = structBase.getValue<Bytes>(field.index, field.typeId);
+            const Bytes& value = structBase.getValue<Bytes>(field);
             m_visitor.enterBytes(field, value.data(), value.size());
         }
         break;
@@ -104,14 +96,14 @@ void ParserStruct::processField(const StructBase& structBase, const FieldInfo& f
         if (field.typeName == STR_VARVALUE)
         {
             m_visitor.enterStruct(field);
-            const Variant& value = structBase.getValue<Variant>(field.index, field.typeId);
+            const Variant& value = structBase.getValue<Variant>(field);
             VariantToVarValue variantToVarValue(value, m_visitor);
             variantToVarValue.convert();
             m_visitor.exitStruct(field);
         }
         else
         {
-            const StructBase* value = structBase.getData<StructBase>(field.index, field.typeId);
+            const StructBase* value = structBase.getData<StructBase>(field);
             if (value)
             {
                 m_visitor.enterStruct(field);
@@ -121,57 +113,57 @@ void ParserStruct::processField(const StructBase& structBase, const FieldInfo& f
         }
         break;
     case TYPE_ENUM:
-        m_visitor.enterEnum(field, structBase.getValue<std::int32_t>(field.index, field.typeId));
+        m_visitor.enterEnum(field, structBase.getValue<std::int32_t>(field));
         break;
     case TYPE_ARRAY_BOOL:
-        m_visitor.enterArrayBool(field, structBase.getValue<std::vector<bool>>(field.index, field.typeId));
+        m_visitor.enterArrayBool(field, structBase.getValue<std::vector<bool>>(field));
         break;
     case TYPE_ARRAY_INT32:
         {
-            const std::vector<std::int32_t>& value = structBase.getValue<std::vector<std::int32_t>>(field.index, field.typeId);
+            const std::vector<std::int32_t>& value = structBase.getValue<std::vector<std::int32_t>>(field);
             m_visitor.enterArrayInt32(field, value.data(), value.size());
         }
         break;
     case TYPE_ARRAY_UINT32:
         {
-            const std::vector<std::uint32_t>& value = structBase.getValue<std::vector<std::uint32_t>>(field.index, field.typeId);
+            const std::vector<std::uint32_t>& value = structBase.getValue<std::vector<std::uint32_t>>(field);
             m_visitor.enterArrayUInt32(field, value.data(), value.size());
         }
         break;
     case TYPE_ARRAY_INT64:
         {
-            const std::vector<std::int64_t>& value = structBase.getValue<std::vector<std::int64_t>>(field.index, field.typeId);
+            const std::vector<std::int64_t>& value = structBase.getValue<std::vector<std::int64_t>>(field);
             m_visitor.enterArrayInt64(field, value.data(), value.size());
         }
         break;
     case TYPE_ARRAY_UINT64:
         {
-            const std::vector<std::uint64_t>& value = structBase.getValue<std::vector<std::uint64_t>>(field.index, field.typeId);
+            const std::vector<std::uint64_t>& value = structBase.getValue<std::vector<std::uint64_t>>(field);
             m_visitor.enterArrayUInt64(field, value.data(), value.size());
         }
         break;
     case TYPE_ARRAY_FLOAT:
         {
-            const std::vector<float>& value = structBase.getValue<std::vector<float>>(field.index, field.typeId);
+            const std::vector<float>& value = structBase.getValue<std::vector<float>>(field);
             m_visitor.enterArrayFloat(field, value.data(), value.size());
         }
         break;
     case TYPE_ARRAY_DOUBLE:
         {
-            const std::vector<double>& value = structBase.getValue<std::vector<double>>(field.index, field.typeId);
+            const std::vector<double>& value = structBase.getValue<std::vector<double>>(field);
             m_visitor.enterArrayDouble(field, value.data(), value.size());
         }
         break;
     case TYPE_ARRAY_STRING:
-        m_visitor.enterArrayString(field, structBase.getValue<std::vector<std::string>>(field.index, field.typeId));
+        m_visitor.enterArrayString(field, structBase.getValue<std::vector<std::string>>(field));
         break;
     case TYPE_ARRAY_BYTES:
-        m_visitor.enterArrayBytes(field, structBase.getValue<std::vector<Bytes>>(field.index, field.typeId));
+        m_visitor.enterArrayBytes(field, structBase.getValue<std::vector<Bytes>>(field));
         break;
     case TYPE_ARRAY_STRUCT:
         {
             m_visitor.enterArrayStruct(field);
-            const void* array = structBase.getData<void>(field.index, field.typeId);
+            const void* array = structBase.getData<void>(field);
             if (array)
             {
                 IArrayStructAdapter* arrayStructAdapter = fieldInfo.getArrayStructAdapter();
@@ -194,7 +186,7 @@ void ParserStruct::processField(const StructBase& structBase, const FieldInfo& f
         break;
     case TYPE_ARRAY_ENUM:
         {
-            const std::vector<std::int32_t>& value = structBase.getValue<std::vector<std::int32_t>>(field.index, field.typeId);
+            const std::vector<std::int32_t>& value = structBase.getValue<std::vector<std::int32_t>>(field);
             m_visitor.enterArrayEnum(field, value.data(), value.size());
         }
         break;

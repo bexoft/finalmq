@@ -25,7 +25,11 @@
 
 
 #include "finalmq/serializestruct/SerializerStruct.h"
+#include "finalmq/variant/VariantValues.h"
+#include "finalmq/variant/VariantValueList.h"
+#include "finalmq/variant/VariantValueStruct.h"
 #include "finalmq/metadata/MetaData.h"
+#include "finalmq/metadataserialize/variant.fmq.h"
 #include "test.fmq.h"
 
 
@@ -54,12 +58,48 @@ public:
 protected:
     virtual void SetUp()
     {
+        const MetaStruct* structTestVariant = MetaDataGlobal::instance().getStruct("test.TestVariant");
+        ASSERT_NE(structTestVariant, nullptr);
+        m_fieldValue = structTestVariant->getFieldByName("value");
+        ASSERT_NE(m_fieldValue, nullptr);
+        ASSERT_EQ(m_fieldValue->typeName, "finalmq.variant.VarValue");
+        m_fieldValue2 = structTestVariant->getFieldByName("value2");
+        ASSERT_NE(m_fieldValue2, nullptr);
+        ASSERT_EQ(m_fieldValue2->typeName, "finalmq.variant.VarValue");
+        m_fieldValueInt32 = structTestVariant->getFieldByName("valueInt32");
+        ASSERT_NE(m_fieldValueInt32, nullptr);
+
+        const MetaStruct* structVarVariant = MetaDataGlobal::instance().getStruct("finalmq.variant.VarValue");
+        ASSERT_NE(structVarVariant, nullptr);
+
+        m_fieldName = structVarVariant->getFieldByName("name");
+        m_fieldType = structVarVariant->getFieldByName("type");
+        m_fieldInt32 = structVarVariant->getFieldByName("valint32");
+        m_fieldString = structVarVariant->getFieldByName("valstring");
+        m_fieldList = structVarVariant->getFieldByName("vallist");
+        m_fieldListWithoutArray = MetaDataGlobal::instance().getArrayField(*m_fieldList);
+
+        ASSERT_NE(m_fieldName, nullptr);
+        ASSERT_NE(m_fieldType, nullptr);
+        ASSERT_NE(m_fieldInt32, nullptr);
+        ASSERT_NE(m_fieldString, nullptr);
+        ASSERT_NE(m_fieldList, nullptr);
+        ASSERT_NE(m_fieldListWithoutArray, nullptr);
     }
 
     virtual void TearDown()
     {
     }
 
+    const MetaField* m_fieldValue = nullptr;
+    const MetaField* m_fieldValue2 = nullptr;
+    const MetaField* m_fieldValueInt32 = nullptr;
+    const MetaField* m_fieldName = nullptr;
+    const MetaField* m_fieldType = nullptr;
+    const MetaField* m_fieldInt32 = nullptr;
+    const MetaField* m_fieldString = nullptr;
+    const MetaField* m_fieldList = nullptr;
+    const MetaField* m_fieldListWithoutArray = nullptr;
 };
 
 
@@ -293,6 +333,202 @@ TEST_F(TestSerializerStruct, testEnumString)
     ASSERT_EQ(root, cmp);
 }
 
+
+
+TEST_F(TestSerializerStruct, testVariantEmptyDefault)
+{
+    test::TestVariant root;
+    std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
+
+    serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestVariant"));
+    serializer->finished();
+
+    test::TestVariant cmp = { };
+    ASSERT_EQ(root == cmp, true);
+}
+
+
+TEST_F(TestSerializerStruct, testVariantEmpty)
+{
+    test::TestVariant root;
+    std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
+
+    serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestVariant"));
+    serializer->enterStruct(*m_fieldValue);
+    serializer->enterEnum(*m_fieldType, variant::VarTypeId::T_NONE);
+    serializer->exitStruct(*m_fieldValue);
+    serializer->finished();
+
+    test::TestVariant cmp = { };
+    ASSERT_EQ(root == cmp, true);
+}
+
+
+TEST_F(TestSerializerStruct, testVariantString)
+{
+    std::string VALUE_STRING = "123";
+
+    test::TestVariant root;
+    std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
+
+    serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestVariant"));
+    serializer->enterStruct(*m_fieldValue);
+    serializer->enterEnum(*m_fieldType, variant::VarTypeId::T_STRING);
+    serializer->enterString(*m_fieldString, VALUE_STRING.data(), VALUE_STRING.size());
+    serializer->exitStruct(*m_fieldValue);
+    serializer->finished();
+
+    test::TestVariant cmp{ VALUE_STRING,  0, {} };
+    ASSERT_EQ(root == cmp, true);
+}
+
+
+TEST_F(TestSerializerStruct, testVariantStruct)
+{
+    test::TestVariant root;
+    std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
+
+    // VariantStruct{ {"value", VariantStruct{
+    serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestVariant"));
+    serializer->enterStruct(*m_fieldValue);
+    serializer->enterEnum(*m_fieldType, variant::VarTypeId::T_STRUCT);
+    serializer->enterArrayStruct(*m_fieldList);
+    // {"key1", VariantList{
+    serializer->enterStruct(*m_fieldListWithoutArray);
+    serializer->enterString(*m_fieldName, "key1", 4);
+    serializer->enterEnum(*m_fieldType, variant::VarTypeId::T_LIST);
+    serializer->enterArrayStruct(*m_fieldList);
+    // 2
+    serializer->enterStruct(*m_fieldListWithoutArray);
+    serializer->enterEnum(*m_fieldType, variant::VarTypeId::T_INT32);
+    serializer->enterInt32(*m_fieldInt32, 2);
+    serializer->exitStruct(*m_fieldListWithoutArray);
+    // , std::string("Hello")
+    serializer->enterStruct(*m_fieldListWithoutArray);
+    serializer->enterEnum(*m_fieldType, variant::VarTypeId::T_STRING);
+    serializer->enterString(*m_fieldString, "Hello", 5);
+    serializer->exitStruct(*m_fieldListWithoutArray);
+    // }
+    serializer->exitArrayStruct(*m_fieldList);
+    serializer->exitStruct(*m_fieldListWithoutArray);
+
+    // {"key2", VariantStruct{
+    serializer->enterStruct(*m_fieldListWithoutArray);
+    serializer->enterString(*m_fieldName, "key2", 4);
+    serializer->enterEnum(*m_fieldType, variant::VarTypeId::T_STRUCT);
+    serializer->enterArrayStruct(*m_fieldList);
+    // {"a", 3},
+    serializer->enterStruct(*m_fieldListWithoutArray);
+    serializer->enterString(*m_fieldName, "a", 1);
+    serializer->enterEnum(*m_fieldType, variant::VarTypeId::T_INT32);
+    serializer->enterInt32(*m_fieldInt32, 3);
+    serializer->exitStruct(*m_fieldListWithoutArray);
+    // {"b", std::string("Hi")}
+    serializer->enterStruct(*m_fieldListWithoutArray);
+    serializer->enterString(*m_fieldName, "b", 1);
+    serializer->enterEnum(*m_fieldType, variant::VarTypeId::T_STRING);
+    serializer->enterString(*m_fieldString, "Hi", 2);
+    serializer->exitStruct(*m_fieldListWithoutArray);
+    // }
+    serializer->exitArrayStruct(*m_fieldList);
+    serializer->exitStruct(*m_fieldListWithoutArray);
+
+    // {
+    serializer->enterStruct(*m_fieldListWithoutArray);
+    serializer->enterString(*m_fieldName, "key3", 4);
+    serializer->enterEnum(*m_fieldType, variant::VarTypeId::T_NONE);
+    serializer->exitStruct(*m_fieldListWithoutArray);
+    // }}
+    serializer->exitArrayStruct(*m_fieldList);
+    serializer->exitStruct(*m_fieldValue);
+    serializer->finished();
+
+    test::TestVariant cmp{ VariantStruct{ {"key1", VariantList{std::int32_t(2), std::string("Hello")}}, {"key2", VariantStruct{{"a", std::int32_t(3)}, {"b", std::string("Hi")}}}, {"key3", Variant()} }, 0, {} };
+    ASSERT_EQ(root == cmp, true);
+}
+
+
+TEST_F(TestSerializerStruct, testVariantStruct2)
+{
+    test::TestVariant root;
+    std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
+
+    // VariantStruct{ {"value", VariantStruct{
+    serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestVariant"));
+    serializer->enterStruct(*m_fieldValue);
+    serializer->enterEnum(*m_fieldType, variant::VarTypeId::T_STRUCT);
+    serializer->enterArrayStruct(*m_fieldList);
+    // {"key1", VariantList{
+    serializer->enterStruct(*m_fieldListWithoutArray);
+    serializer->enterString(*m_fieldName, "key1", 4);
+    serializer->enterEnum(*m_fieldType, variant::VarTypeId::T_LIST);
+    serializer->enterArrayStruct(*m_fieldList);
+    // 2
+    serializer->enterStruct(*m_fieldListWithoutArray);
+    serializer->enterEnum(*m_fieldType, variant::VarTypeId::T_INT32);
+    serializer->enterInt32(*m_fieldInt32, 2);
+    serializer->exitStruct(*m_fieldListWithoutArray);
+    // , std::string("Hello")
+    serializer->enterStruct(*m_fieldListWithoutArray);
+    serializer->enterEnum(*m_fieldType, variant::VarTypeId::T_STRING);
+    serializer->enterString(*m_fieldString, "Hello", 5);
+    serializer->exitStruct(*m_fieldListWithoutArray);
+    // }
+    serializer->exitArrayStruct(*m_fieldList);
+    serializer->exitStruct(*m_fieldListWithoutArray);
+
+    // {"key2", VariantStruct{
+    serializer->enterStruct(*m_fieldListWithoutArray);
+    serializer->enterString(*m_fieldName, "key2", 4);
+    serializer->enterEnum(*m_fieldType, variant::VarTypeId::T_STRUCT);
+    serializer->enterArrayStruct(*m_fieldList);
+    // {"a", 3},
+    serializer->enterStruct(*m_fieldListWithoutArray);
+    serializer->enterString(*m_fieldName, "a", 1);
+    serializer->enterEnum(*m_fieldType, variant::VarTypeId::T_INT32);
+    serializer->enterInt32(*m_fieldInt32, 3);
+    serializer->exitStruct(*m_fieldListWithoutArray);
+    // {"b", std::string("Hi")}
+    serializer->enterStruct(*m_fieldListWithoutArray);
+    serializer->enterString(*m_fieldName, "b", 1);
+    serializer->enterEnum(*m_fieldType, variant::VarTypeId::T_STRING);
+    serializer->enterString(*m_fieldString, "Hi", 2);
+    serializer->exitStruct(*m_fieldListWithoutArray);
+    // }
+    serializer->exitArrayStruct(*m_fieldList);
+    serializer->exitStruct(*m_fieldListWithoutArray);
+
+    // {
+    serializer->enterStruct(*m_fieldListWithoutArray);
+    serializer->enterString(*m_fieldName, "key3", 4);
+    serializer->enterEnum(*m_fieldType, variant::VarTypeId::T_NONE);
+    serializer->exitStruct(*m_fieldListWithoutArray);
+    // }}
+    serializer->exitArrayStruct(*m_fieldList);
+    serializer->exitStruct(*m_fieldValue);
+
+
+    // VariantStruct{ {"value2", VariantStruct{
+    serializer->enterStruct(*m_fieldValue2);
+    serializer->enterEnum(*m_fieldType, variant::VarTypeId::T_STRUCT);
+    serializer->enterArrayStruct(*m_fieldList);
+    // {"key1", "Hello"}
+    serializer->enterStruct(*m_fieldListWithoutArray);
+    serializer->enterString(*m_fieldName, "key1", 4);
+    serializer->enterEnum(*m_fieldType, variant::VarTypeId::T_STRING);
+    serializer->enterString(*m_fieldString, "Hello", 5);
+    serializer->exitStruct(*m_fieldListWithoutArray);
+    serializer->exitArrayStruct(*m_fieldList);
+    serializer->exitStruct(*m_fieldValue2);
+
+    // {"valueInt32", 5}    
+    serializer->enterInt32(*m_fieldValueInt32, 5);
+
+    serializer->finished();
+
+    test::TestVariant cmp{ VariantStruct{ {"key1", VariantList{std::int32_t(2), std::string("Hello")}}, {"key2", VariantStruct{{"a", std::int32_t(3)}, {"b", std::string("Hi")}}}, {"key3", Variant()} }, std::int32_t(5), VariantStruct{ {"key1", std::string("Hello")} } };
+    ASSERT_EQ(root == cmp, true);
+}
 
 
 

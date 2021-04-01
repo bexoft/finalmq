@@ -30,6 +30,8 @@
 
 namespace finalmq {
 
+class VarValueToVariant;
+
 class SYMBOLEXP SerializerStruct : public ParserConverter
 {
 public:
@@ -40,7 +42,7 @@ private:
     class Internal : public IParserVisitor
     {
     public:
-        Internal(StructBase& root);
+        Internal(SerializerStruct& outer, StructBase& root);
         void setExitNotification(std::function<void()> funcExit);
     private:
         // IParserVisitor
@@ -108,6 +110,9 @@ private:
         StackEntry*                     m_current = nullptr;
         std::deque<StackEntry>          m_stack;
         std::function<void()>           m_funcExit;
+        std::shared_ptr<VarValueToVariant> m_varValueToVariant;
+        bool                            m_wasStartStructCalled = false;
+        SerializerStruct&               m_outer;
     };
 
     Internal                            m_internal;
