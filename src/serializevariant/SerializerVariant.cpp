@@ -83,7 +83,7 @@ void SerializerVariant::Internal::enterStruct(const MetaField& field)
 
     if (field.typeName == STR_VARVALUE)
     {
-        assert(m_varValueToVariant == nullptr);
+        m_varValueToVariant = nullptr;
         m_current->add(field.name, Variant());
         Variant* variant = m_current->getVariant(field.name);
         assert(variant);
@@ -96,7 +96,6 @@ void SerializerVariant::Internal::enterStruct(const MetaField& field)
             m_outer.m_parserProcessDefaultValues->setVisitor(*this);
             m_varValueToVariant->convert();
             m_varValueToVariant->setExitNotification(nullptr);
-            m_varValueToVariant = nullptr;
         });
     }
     else

@@ -80,6 +80,7 @@ TEST_F(TestParserStruct, testBool)
 
     {
         testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
         EXPECT_CALL(mockVisitor, enterBool(MatcherMetaField(*fieldValue), VALUE)).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
