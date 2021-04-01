@@ -29,6 +29,7 @@
 #include <memory.h>
 #include <assert.h>
 #include <list>
+#include <deque>
 
 
 namespace finalmq {
@@ -40,7 +41,14 @@ typedef std::pair<char*, ssize_t> BufferRef;
 
 struct IMessage : public IZeroCopyBuffer
 {
+    typedef std::deque<std::pair<std::string, std::string>> Metadata;
+
     virtual ~IMessage() {}
+
+    // metadata
+    virtual Metadata& getAllMetadata() = 0;
+    virtual void addMetadata(const std::string& key, const std::string& value) = 0;
+    virtual const std::string& getMetadata(const std::string& key) = 0;
 
     // for send
     virtual void addSendPayload(const std::string& payload) = 0;

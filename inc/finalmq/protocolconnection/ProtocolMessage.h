@@ -38,6 +38,11 @@ private:
     virtual char* addBuffer(ssize_t size, ssize_t reserve = 0) override;
     virtual void downsizeLastBuffer(ssize_t newSize) override;
 
+    // metadata
+    virtual Metadata& getAllMetadata() override;
+    virtual void addMetadata(const std::string& key, const std::string& value) override;
+    virtual const std::string& getMetadata(const std::string& key) override;
+
     // for send
     virtual void addSendPayload(const std::string& payload) override;
     virtual void addSendPayload(const char* payload, ssize_t size, int reserve = 0) override;
@@ -71,6 +76,9 @@ private:
     virtual IMessagePtr getMessage(int protocolId) const override;
 
 private:
+
+    Metadata                    m_metadata;
+
     // send
     std::list<std::string>      m_headerBuffers;
     std::list<std::string>      m_payloadBuffers;

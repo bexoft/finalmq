@@ -148,6 +148,32 @@ void ProtocolMessage::downsizeLastBuffer(ssize_t newSize)
 }
 
 
+// metadata
+ProtocolMessage::Metadata& ProtocolMessage::getAllMetadata()
+{
+    return m_metadata;
+}
+
+void ProtocolMessage::addMetadata(const std::string& key, const std::string& value)
+{
+    m_metadata.emplace_back(key, value);
+}
+
+const std::string& ProtocolMessage::getMetadata(const std::string& key)
+{
+    for (auto it = m_metadata.begin(); it != m_metadata.end(); ++it)
+    {
+        if (it->first == key)
+        {
+            return it->second;
+        }
+    }
+    static const std::string STR_EMPTY;
+    return STR_EMPTY;
+}
+
+
+
 // for send
 void ProtocolMessage::addSendPayload(const std::string& payload)
 {
