@@ -159,6 +159,11 @@ void ProtocolMessage::addMetadata(const std::string& key, const std::string& val
     m_metadata.emplace_back(key, value);
 }
 
+void ProtocolMessage::addMetadata(std::string&& key, std::string&& value)
+{
+    m_metadata.emplace_back(std::move(key), std::move(value));
+}
+
 const std::string& ProtocolMessage::getMetadata(const std::string& key)
 {
     for (auto it = m_metadata.begin(); it != m_metadata.end(); ++it)

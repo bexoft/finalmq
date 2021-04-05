@@ -140,10 +140,18 @@ void ProtocolDelimiter::receive(const SocketPtr& socket, int bytesToRead)
     {
         memcpy(const_cast<char*>(receiveBuffer.data()), &m_delimiterPartial[0], sizeDelimiterPartial);
     }
-    int res = socket->receive(const_cast<char*>(receiveBuffer.data() + sizeDelimiterPartial), bytesToRead);
-    if (res > 0)
+    ssize_t bytesReceived = 0;
+    int res = 0;
+    do
     {
-        ssize_t bytesReceived = res;
+        res = socket->receive(const_cast<char*>(receiveBuffer.data() + bytesReceived + sizeDelimiterPartial), bytesToRead - bytesReceived);
+        if (res > 0)
+        {
+            bytesReceived += res;
+        }
+    } while (res > 0 && bytesReceived < bytesToRead);
+    if (res >= 0)
+    {
         assert(bytesReceived <= bytesToRead);
         ssize_t sizeOfReceiveBuffer = sizeDelimiterPartial + bytesReceived;
         std::vector<ssize_t> positions = findEndOfMessage(receiveBuffer.data(), sizeOfReceiveBuffer);

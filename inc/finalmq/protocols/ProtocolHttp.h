@@ -40,7 +40,7 @@ public:
 private:
     // IProtocol
     virtual void setCallback(const std::weak_ptr<IProtocolCallback>& callback) override;
-    virtual std::uint32_t getProtocolId() const = 0;
+    virtual std::uint32_t getProtocolId() const override;
     virtual bool areMessagesResendable() const override;
     virtual IMessagePtr createMessage() const override;
     virtual void receive(const SocketPtr& socket, int bytesToRead) override;
@@ -48,6 +48,24 @@ private:
     virtual void socketConnected() override;
     virtual void socketDisconnected() override;
 
+    bool receiveHeaders(ssize_t bytesReceived);
+    void reset();
+
+    enum State
+    {
+        STATE_FIND_FIRST_LINE,
+        STATE_FIND_HEADERS,
+        STATE_CONTENT,
+        STATE_CONTENT_DONE
+    };
+
+    State                               m_state = STATE_FIND_FIRST_LINE;
+    std::string                         m_receiveBuffer;
+    ssize_t                             m_offsetRemaining = 0;
+    ssize_t                             m_sizeRemaining = 0;
+    IMessagePtr                         m_message;
+    ssize_t                             m_contentLength = 0;
+    ssize_t                             m_indexFilled = 0;
     std::weak_ptr<IProtocolCallback>    m_callback;
 };
 

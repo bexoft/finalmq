@@ -152,6 +152,7 @@ IMessagePtr ProtocolSession::convertMessageToProtocol(const IMessagePtr& msg)
             message = m_protocol->createMessage();
             if (msg->getTotalSendPayloadSize() > 0)
             {
+                message->getAllMetadata() = msg->getAllMetadata();
                 ssize_t sizePayload = msg->getTotalSendPayloadSize();
                 char* payload = message->addSendPayload(sizePayload);
                 const std::list<BufferRef>& payloads = msg->getAllSendPayloads();
@@ -298,16 +299,6 @@ hybrid_ptr<IStreamConnectionCallback> ProtocolSession::connected(const IStreamCo
     {
         m_protocol->socketConnected();
     }
-    else
-    {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        IProtocolPtr protocol = m_protocol;
-        lock.unlock();
-        if (protocol)
-        {
-            protocol->socketConnected();
-        }
-    }
     return nullptr;
 }
 
@@ -338,16 +329,6 @@ void ProtocolSession::received(const IStreamConnectionPtr& /*connection*/, const
     if (m_protocol)
     {
         m_protocol->receive(socket, bytesToRead);
-    }
-    else
-    {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        IProtocolPtr protocol = m_protocol;
-        lock.unlock();
-        if (protocol)
-        {
-            protocol->receive(socket, bytesToRead);
-        }
     }
 }
 
