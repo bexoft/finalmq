@@ -29,6 +29,21 @@
 
 namespace finalmq {
 
+
+const std::string ProtocolHttp::FMQ_HTTP = "_fmq_http";
+const std::string ProtocolHttp::FMQ_METHOD = "_fmq_method";
+const std::string ProtocolHttp::FMQ_PROTOCOL = "_fmq_protocol";
+const std::string ProtocolHttp::FMQ_PATH = "_fmq_path";
+const std::string ProtocolHttp::FMQ_QUERY = "_fmq_query";
+const std::string ProtocolHttp::FMQ_STATUS = "_fmq_status";
+const std::string ProtocolHttp::FMQ_STATUSTEXT = "_fmq_status";
+const std::string ProtocolHttp::HTTP_REQUEST = "request";
+const std::string ProtocolHttp::HTTP_RESPONSE = "response";
+    
+static const std::string CONTENT_LENGTH = "Content-Length";
+
+
+
 //---------------------------------------
 // ProtocolStream
 //---------------------------------------
@@ -69,7 +84,7 @@ static void split(const std::string& src, ssize_t indexBegin, ssize_t indexEnd, 
     while (indexBegin < indexEnd)
     {
         size_t pos = src.find_first_of(delimiterstring, indexBegin);
-        if (pos == std::string::npos || pos > indexEnd)
+        if (pos == std::string::npos || static_cast<ssize_t>(pos) > indexEnd)
         {
             pos = indexEnd;
         }
@@ -117,10 +132,10 @@ bool ProtocolHttp::receiveHeaders(ssize_t bytesReceived)
                             if (lineSplit.size() == 3)
                             {
                                 m_message = std::make_shared<ProtocolMessage>(0);
-                                m_message->addMetadata("fmq_http", "response");
-                                m_message->addMetadata("fmq_protocol", std::move(lineSplit[0]));
-                                m_message->addMetadata("fmq_status", std::move(lineSplit[1]));
-                                m_message->addMetadata("fmq_statustext", std::move(lineSplit[2]));
+                                m_message->addMetadata(FMQ_HTTP, std::string(HTTP_RESPONSE));
+                                m_message->addMetadata(FMQ_PROTOCOL, std::move(lineSplit[0]));
+                                m_message->addMetadata(FMQ_STATUS, std::move(lineSplit[1]));
+                                m_message->addMetadata(FMQ_STATUSTEXT, std::move(lineSplit[2]));
                                 m_state = STATE_FIND_HEADERS;
                             }
                             else
@@ -137,17 +152,17 @@ bool ProtocolHttp::receiveHeaders(ssize_t bytesReceived)
                                 std::vector<std::string> pathquerySplit;
                                 split(lineSplit[1], 0, lineSplit[1].size(), '?', pathquerySplit);
                                 m_message = std::make_shared<ProtocolMessage>(0);
-                                m_message->addMetadata("fmq_http", "request");
-                                m_message->addMetadata("fmq_method", std::move(lineSplit[0]));
+                                m_message->addMetadata(FMQ_HTTP, std::string(HTTP_REQUEST));
+                                m_message->addMetadata(FMQ_METHOD, std::move(lineSplit[0]));
                                 if (pathquerySplit.size() >= 1)
                                 {
-                                    m_message->addMetadata("fmq_path", std::move(pathquerySplit[0]));
+                                    m_message->addMetadata(FMQ_PATH, std::move(pathquerySplit[0]));
                                 }
                                 if (pathquerySplit.size() >= 2)
                                 {
-                                    m_message->addMetadata("fmq_query", std::move(pathquerySplit[1]));
+                                    m_message->addMetadata(FMQ_QUERY, std::move(pathquerySplit[1]));
                                 }
-                                m_message->addMetadata("fmq_protocol", std::move(lineSplit[2]));
+                                m_message->addMetadata(FMQ_PROTOCOL, std::move(lineSplit[2]));
                                 m_state = STATE_FIND_HEADERS;
                             }
                             else
@@ -185,7 +200,7 @@ bool ProtocolHttp::receiveHeaders(ssize_t bytesReceived)
                             {
                                 value.erase(value.begin());
                             }
-                            if (lineSplit[0] == "Content-Length")
+                            if (lineSplit[0] == CONTENT_LENGTH)
                             {
                                 m_contentLength = std::atoll(value.c_str());
                             }
@@ -346,6 +361,76 @@ void ProtocolHttp::receive(const SocketPtr& socket, int bytesToRead)
 
 void ProtocolHttp::prepareMessageToSend(IMessagePtr message)
 {
+    std::string firstLine;
+    const std::string& http = message->getMetadata(FMQ_HTTP);
+    if (http == HTTP_REQUEST)
+    {
+        const std::string& method = message->getMetadata(FMQ_METHOD);
+        const std::string& path = message->getMetadata(FMQ_PATH);
+        const std::string& query = message->getMetadata(FMQ_QUERY);
+        firstLine = method;
+        firstLine += ' ';
+        firstLine += path;
+        if (!query.empty())
+        {
+            firstLine += '?';
+            firstLine += query;
+        }
+        firstLine += " HTTP/1.1";
+    }
+    else
+    {
+        const std::string& status = message->getMetadata(FMQ_STATUS);
+        const std::string& statustext = message->getMetadata(FMQ_STATUSTEXT);
+        firstLine = "HTTP/1.1 ";
+        firstLine += status;
+        firstLine += ' ';
+        firstLine += statustext;
+    }
+
+    int sumHeaderSize = firstLine.size() + 4;   // 2 = '\r\n' and last empty line
+    ProtocolMessage::Metadata& metadata = message->getAllMetadata();
+    static const std::string PREFIX_PRIVATE_HEADER = "_fmq_";
+    for (size_t i = 0; i < metadata.size(); ++i)
+    {
+        const std::string& key = metadata[i].first;
+        const std::string& value = metadata[i].second;
+        if (!key.empty() && key.find_first_of(PREFIX_PRIVATE_HEADER) != 0)
+        {
+            sumHeaderSize += key.size() + value.size() + 4;    // 4 = ': ' and '\r\n'
+        }
+    }
+
+    char* headerBuffer = message->addSendHeader(sumHeaderSize);
+    int index = 0;
+    assert(index + firstLine.size() + 2 <= sumHeaderSize);
+    memcpy(headerBuffer + index, firstLine.data(), firstLine.size());
+    index += firstLine.size();
+    memcpy(headerBuffer + index, "\r\n", 2);
+    index += 2;
+
+    for (size_t i = 0; i < metadata.size(); ++i)
+    {
+        const std::string& key = metadata[i].first;
+        const std::string& value = metadata[i].second;
+        if (!key.empty() && key.find_first_of(PREFIX_PRIVATE_HEADER) != 0)
+        {
+            assert(index + key.size() + metadata[i].second.size() + 4 <= sumHeaderSize);
+            memcpy(headerBuffer + index, key.data(), key.size());
+            index += key.size();
+            memcpy(headerBuffer + index, ": ", 2);
+            index += 2;
+            memcpy(headerBuffer + index, value.data(), value.size());
+            index += value.size();
+            memcpy(headerBuffer + index, "\r\n", 2);
+            index += 2;
+        }
+    }
+    assert(index + 2 == sumHeaderSize);
+    memcpy(headerBuffer + index, "\r\n", 2);
+    index += 2;
+    assert(index == sumHeaderSize);
+
     message->prepareMessageToSend();
 }
 

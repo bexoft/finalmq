@@ -48,7 +48,7 @@ struct IMessage : public IZeroCopyBuffer
     // metadata
     virtual Metadata& getAllMetadata() = 0;
     virtual void addMetadata(const std::string& key, const std::string& value) = 0;
-    virtual void addMetadata(std::string&& key, std::string&& value) = 0;
+    virtual void addMetadata(const std::string& key, std::string&& value) = 0;
     virtual const std::string& getMetadata(const std::string& key) = 0;
 
     // for send

@@ -41,6 +41,13 @@ using ::testing::SetArrayArgument;
 using namespace finalmq;
 
 
+MATCHER_P(MatcherReceiveMessage, message, "")
+{
+    return (arg->getAllMetadata() == message->getAllMetadata() &&
+        arg->getReceivePayload().second == message->getReceivePayload().second &&
+        memcmp(arg->getReceivePayload().first, message->getReceivePayload().first, arg->getReceivePayload().second) == 0);
+}
+
 
 
 class TestProtocolHttp: public testing::Test
@@ -76,7 +83,7 @@ protected:
 
 
 
-TEST_F(TestProtocolHttp, testFirstLineIncomplete)
+TEST_F(TestProtocolHttp, testReceiveFirstLineIncomplete)
 {
     EXPECT_CALL(*m_mockCallback, received(_)).Times(0);
     EXPECT_CALL(*m_mockCallback, disconnected()).Times(0);
@@ -87,7 +94,7 @@ TEST_F(TestProtocolHttp, testFirstLineIncomplete)
 }
 
 
-TEST_F(TestProtocolHttp, testFirstLinecomplete)
+TEST_F(TestProtocolHttp, testReceiveFirstLinecomplete)
 {
     EXPECT_CALL(*m_mockCallback, received(_)).Times(0);
     EXPECT_CALL(*m_mockCallback, disconnected()).Times(0);
@@ -104,15 +111,8 @@ TEST_F(TestProtocolHttp, testFirstLinecomplete)
 }
 
 
-MATCHER_P(MatcherReceiveMessage, message, "")
-{
-    return (arg->getAllMetadata() == message->getAllMetadata() &&
-        arg->getReceivePayload().second == message->getReceivePayload().second &&
-        memcmp(arg->getReceivePayload().first, message->getReceivePayload().first, arg->getReceivePayload().second) == 0);
-}
 
-
-TEST_F(TestProtocolHttp, testHeaders)
+TEST_F(TestProtocolHttp, testReceiveHeaders)
 {
     EXPECT_CALL(*m_mockCallback, disconnected()).Times(0);
 
@@ -127,11 +127,11 @@ TEST_F(TestProtocolHttp, testHeaders)
     m_protocol->receive(m_socket, size2);
 
     std::shared_ptr<IMessage> message = std::make_shared<ProtocolMessage>(0);
-    message->addMetadata("fmq_http", "request");
-    message->addMetadata("fmq_method", "GET");
-    message->addMetadata("fmq_path", "/hello");
-    message->addMetadata("fmq_query", "filter=world&lang=en");
-    message->addMetadata("fmq_protocol", "HTTP/1.1");
+    message->addMetadata(ProtocolHttp::FMQ_HTTP, "request");
+    message->addMetadata(ProtocolHttp::FMQ_METHOD, "GET");
+    message->addMetadata(ProtocolHttp::FMQ_PATH, "/hello");
+    message->addMetadata(ProtocolHttp::FMQ_QUERY, "filter=world&lang=en");
+    message->addMetadata(ProtocolHttp::FMQ_PROTOCOL, "HTTP/1.1");
     message->addMetadata("hello", "123");
     EXPECT_CALL(*m_mockCallback, received(MatcherReceiveMessage(message))).Times(1);
     std::string receiveBuffer3 = "\r\n";
@@ -140,16 +140,16 @@ TEST_F(TestProtocolHttp, testHeaders)
     m_protocol->receive(m_socket, size3);
 }
 
-TEST_F(TestProtocolHttp, testPayload)
+TEST_F(TestProtocolHttp, testReceivePayload)
 {
     EXPECT_CALL(*m_mockCallback, disconnected()).Times(0);
 
     std::shared_ptr<IMessage> message = std::make_shared<ProtocolMessage>(0);
-    message->addMetadata("fmq_http", "request");
-    message->addMetadata("fmq_method", "GET");
-    message->addMetadata("fmq_path", "/hello");
-    message->addMetadata("fmq_query", "filter=world&lang=en");
-    message->addMetadata("fmq_protocol", "HTTP/1.1");
+    message->addMetadata(ProtocolHttp::FMQ_HTTP, "request");
+    message->addMetadata(ProtocolHttp::FMQ_METHOD, "GET");
+    message->addMetadata(ProtocolHttp::FMQ_PATH, "/hello");
+    message->addMetadata(ProtocolHttp::FMQ_QUERY, "filter=world&lang=en");
+    message->addMetadata(ProtocolHttp::FMQ_PROTOCOL, "HTTP/1.1");
     message->addMetadata("Content-Length", "10");
     message->resizeReceivePayload(10);
     memcpy(message->getReceivePayload().first, "0123456789", 10);
@@ -161,7 +161,7 @@ TEST_F(TestProtocolHttp, testPayload)
     m_protocol->receive(m_socket, size1);
 }
 
-TEST_F(TestProtocolHttp, testSplitPayload)
+TEST_F(TestProtocolHttp, testReceiveSplitPayload)
 {
     EXPECT_CALL(*m_mockCallback, disconnected()).Times(0);
 
@@ -172,11 +172,11 @@ TEST_F(TestProtocolHttp, testSplitPayload)
     m_protocol->receive(m_socket, size1);
 
     std::shared_ptr<IMessage> message = std::make_shared<ProtocolMessage>(0);
-    message->addMetadata("fmq_http", "request");
-    message->addMetadata("fmq_method", "GET");
-    message->addMetadata("fmq_path", "/hello");
-    message->addMetadata("fmq_query", "filter=world&lang=en");
-    message->addMetadata("fmq_protocol", "HTTP/1.1");
+    message->addMetadata(ProtocolHttp::FMQ_HTTP, "request");
+    message->addMetadata(ProtocolHttp::FMQ_METHOD, "GET");
+    message->addMetadata(ProtocolHttp::FMQ_PATH, "/hello");
+    message->addMetadata(ProtocolHttp::FMQ_QUERY, "filter=world&lang=en");
+    message->addMetadata(ProtocolHttp::FMQ_PROTOCOL, "HTTP/1.1");
     message->addMetadata("Content-Length", "10");
     message->resizeReceivePayload(10);
     memcpy(message->getReceivePayload().first, "0123456789", 10);
@@ -189,7 +189,7 @@ TEST_F(TestProtocolHttp, testSplitPayload)
 }
 
 
-TEST_F(TestProtocolHttp, testPayloadTooBig)
+TEST_F(TestProtocolHttp, testReceivePayloadTooBig)
 {
     EXPECT_CALL(*m_mockCallback, received(_)).Times(0);
     EXPECT_CALL(*m_mockCallback, disconnected()).Times(1);
@@ -200,7 +200,7 @@ TEST_F(TestProtocolHttp, testPayloadTooBig)
     m_protocol->receive(m_socket, size1);
 }
 
-TEST_F(TestProtocolHttp, testSplitPayloadTooBig)
+TEST_F(TestProtocolHttp, testReceiveSplitPayloadTooBig)
 {
     std::string receiveBuffer1 = "GET /hello?filter=world&lang=en HTTP/1.1\r\nContent-Length: 10\r\n\r\n0123456";
     int size1 = receiveBuffer1.size();
@@ -213,5 +213,35 @@ TEST_F(TestProtocolHttp, testSplitPayloadTooBig)
     std::string receiveBuffer2 = "7890";
     int size2 = receiveBuffer2.size();
     m_protocol->receive(m_socket, size2);
+}
+
+
+TEST_F(TestProtocolHttp, testSendPrepareMessage)
+{
+    std::shared_ptr<IMessage> message = std::make_shared<ProtocolMessage>(0);
+    message->addMetadata(ProtocolHttp::FMQ_HTTP, "request");
+    message->addMetadata(ProtocolHttp::FMQ_METHOD, "GET");
+    message->addMetadata(ProtocolHttp::FMQ_PATH, "/hello");
+    message->addMetadata(ProtocolHttp::FMQ_QUERY, "filter=world&lang=en");
+    message->addMetadata(ProtocolHttp::FMQ_PROTOCOL, "HTTP/1.1");
+    message->addMetadata("Content-Length", "10");
+
+    message->addSendPayload(std::string("0123456789"));
+
+    m_protocol->prepareMessageToSend(message);
+
+    const std::list<BufferRef>& buffers = message->getAllSendBuffers();
+    ASSERT_EQ(buffers.size(), 2);
+    auto it1 = buffers.begin();
+    auto it2 = it1;
+    ++it2;
+
+    static const std::string HEADERS = "GET /hello?filter=world&lang=en HTTP/1.1\r\nContent-Length: 10\r\n\r\n";
+    static const std::string PAYLOAD = "0123456789";
+
+    ASSERT_EQ(it1->second, HEADERS.size());
+    ASSERT_EQ(it2->second, PAYLOAD.size());
+    ASSERT_EQ(memcmp(it1->first, HEADERS.data(), HEADERS.size()), 0);
+    ASSERT_EQ(memcmp(it2->first, PAYLOAD.data(), PAYLOAD.size()), 0);
 }
 

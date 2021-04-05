@@ -35,6 +35,16 @@ class SYMBOLEXP ProtocolHttp : public IProtocol
 public:
     enum { PROTOCOL_ID = 4 };
 
+    static const std::string FMQ_HTTP;
+    static const std::string FMQ_METHOD;
+    static const std::string FMQ_PROTOCOL;
+    static const std::string FMQ_PATH;
+    static const std::string FMQ_QUERY;
+    static const std::string FMQ_STATUS;
+    static const std::string FMQ_STATUSTEXT;
+    static const std::string HTTP_REQUEST;
+    static const std::string HTTP_RESPONSE;
+
     ProtocolHttp();
 
 private:

@@ -41,7 +41,7 @@ private:
     // metadata
     virtual Metadata& getAllMetadata() override;
     virtual void addMetadata(const std::string& key, const std::string& value) override;
-    virtual void addMetadata(std::string&& key, std::string&& value) override;
+    virtual void addMetadata(const std::string& key, std::string&& value) override;
     virtual const std::string& getMetadata(const std::string& key) override;
 
     // for send
