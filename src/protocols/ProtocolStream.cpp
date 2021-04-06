@@ -84,7 +84,7 @@ void ProtocolStream::prepareMessageToSend(IMessagePtr message)
     message->prepareMessageToSend();
 }
 
-void ProtocolStream::socketConnected()
+void ProtocolStream::socketConnected(const IProtocolSessionPtr& /*session*/)
 {
     auto callback = m_callback.lock();
     if (callback)

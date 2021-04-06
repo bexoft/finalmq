@@ -41,6 +41,8 @@ struct IProtocolCallback
     virtual void reconnect() = 0;
 };
 
+struct IProtocolSession;
+typedef std::shared_ptr<IProtocolSession> IProtocolSessionPtr;
 
 struct IProtocol
 {
@@ -51,7 +53,7 @@ struct IProtocol
     virtual IMessagePtr createMessage() const = 0;
     virtual void receive(const SocketPtr& socket, int bytesToRead) = 0;
     virtual void prepareMessageToSend(IMessagePtr message) = 0;
-    virtual void socketConnected() = 0;
+    virtual void socketConnected(const IProtocolSessionPtr& session) = 0;
     virtual void socketDisconnected() = 0;
 };
 

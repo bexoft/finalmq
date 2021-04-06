@@ -87,7 +87,6 @@ public:
     ProtocolSessionContainer();
     virtual ~ProtocolSessionContainer();
 
-private:
     // IProtocolSessionContainer
     virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000, FuncPollerLoopTimer funcTimer = {}, const IExecutorPtr& executor = nullptr) override;
     virtual int bind(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const BindProperties& bindProperties = {}, int contentType = 0) override;

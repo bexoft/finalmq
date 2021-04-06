@@ -24,6 +24,7 @@
 #include "finalmq/protocols/ProtocolHttp.h"
 #include "finalmq/protocolconnection/ProtocolMessage.h"
 #include "finalmq/protocolconnection/ProtocolRegistry.h"
+#include "finalmq/protocolconnection/ProtocolSession.h"
 #include "finalmq/streamconnection/Socket.h"
 
 
@@ -89,6 +90,29 @@ static void split(const std::string& src, ssize_t indexBegin, ssize_t indexEnd, 
             pos = indexEnd;
         }
         ssize_t len = pos - indexBegin;
+        assert(len >= 0);
+        dest.emplace_back(&src[indexBegin], len);
+        indexBegin += len + 1;
+    }
+}
+
+static void splitOnce(const std::string& src, ssize_t indexBegin, ssize_t indexEnd, char delimiter, std::vector<std::string>& dest)
+{
+    const char delimiterstring[] = { delimiter, 0 };
+
+    size_t pos = src.find_first_of(delimiterstring, indexBegin);
+    if (pos == std::string::npos || static_cast<ssize_t>(pos) > indexEnd)
+    {
+        pos = indexEnd;
+    }
+    ssize_t len = pos - indexBegin;
+    assert(len >= 0);
+    dest.emplace_back(&src[indexBegin], len);
+    indexBegin += len + 1;
+
+    if (indexBegin < indexEnd)
+    {
+        ssize_t len = indexEnd - indexBegin;
         assert(len >= 0);
         dest.emplace_back(&src[indexBegin], len);
         indexBegin += len + 1;
@@ -192,7 +216,7 @@ bool ProtocolHttp::receiveHeaders(ssize_t bytesReceived)
                     else
                     {
                         std::vector<std::string> lineSplit;
-                        split(m_receiveBuffer, m_offsetRemaining, indexEndLine, ':', lineSplit);
+                        splitOnce(m_receiveBuffer, m_offsetRemaining, indexEndLine, ':', lineSplit);
                         if (lineSplit.size() == 2)
                         {
                             std::string& value = lineSplit[1];
@@ -212,6 +236,7 @@ bool ProtocolHttp::receiveHeaders(ssize_t bytesReceived)
                         }
                         else
                         {
+                            assert(false);
                             ok = false;
                         }
                     }
@@ -389,6 +414,10 @@ void ProtocolHttp::prepareMessageToSend(IMessagePtr message)
     }
 
     int sumHeaderSize = firstLine.size() + 4;   // 2 = '\r\n' and last empty line
+    if (http == HTTP_REQUEST)
+    {
+        sumHeaderSize += m_hostname.size() + 8;     // Host: hostname\r\n
+    }
     ProtocolMessage::Metadata& metadata = message->getAllMetadata();
     static const std::string PREFIX_PRIVATE_HEADER = "_fmq_";
     for (size_t i = 0; i < metadata.size(); ++i)
@@ -408,6 +437,18 @@ void ProtocolHttp::prepareMessageToSend(IMessagePtr message)
     index += firstLine.size();
     memcpy(headerBuffer + index, "\r\n", 2);
     index += 2;
+
+    if (http == HTTP_REQUEST)
+    {
+        // Host: hostname\r\n
+        assert(index + m_hostname.size() + 8 <= sumHeaderSize);
+        memcpy(headerBuffer + index, "Host: ", 6);
+        index += 6;
+        memcpy(headerBuffer + index, m_hostname.data(), m_hostname.size());
+        index += m_hostname.size();
+        memcpy(headerBuffer + index, "\r\n", 2);
+        index += 2;
+    }
 
     for (size_t i = 0; i < metadata.size(); ++i)
     {
@@ -434,8 +475,10 @@ void ProtocolHttp::prepareMessageToSend(IMessagePtr message)
     message->prepareMessageToSend();
 }
 
-void ProtocolHttp::socketConnected()
+void ProtocolHttp::socketConnected(const IProtocolSessionPtr& session)
 {
+    ConnectionData connectionData = session->getConnectionData();
+    m_hostname = connectionData.hostname + ":" + std::to_string(connectionData.port);
     auto callback = m_callback.lock();
     if (callback)
     {

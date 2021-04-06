@@ -46,7 +46,7 @@ private:
     virtual IMessagePtr createMessage() const override;
     virtual void receive(const SocketPtr& socket, int bytesToRead) override;
     virtual void prepareMessageToSend(IMessagePtr message) override;
-    virtual void socketConnected() override;
+    virtual void socketConnected(const IProtocolSessionPtr& session) override;
     virtual void socketDisconnected() override;
 
     std::weak_ptr<IProtocolCallback>    m_callback;

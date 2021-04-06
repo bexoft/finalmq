@@ -297,7 +297,7 @@ hybrid_ptr<IStreamConnectionCallback> ProtocolSession::connected(const IStreamCo
 {
     if (m_protocol)
     {
-        m_protocol->socketConnected();
+        m_protocol->socketConnected(shared_from_this());
     }
     return nullptr;
 }
