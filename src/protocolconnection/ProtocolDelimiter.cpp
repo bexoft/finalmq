@@ -266,7 +266,7 @@ void ProtocolDelimiter::prepareMessageToSend(IMessagePtr message)
     }
 }
 
-void ProtocolDelimiter::socketConnected(const IProtocolSessionPtr& /*session*/)
+void ProtocolDelimiter::socketConnected(IProtocolSession& /*session*/)
 {
     auto callback = m_callback.lock();
     if (callback)

@@ -384,6 +384,9 @@ void ProtocolHttp::receive(const SocketPtr& socket, int bytesToRead)
     }
 }
 
+
+static std::string HEADER_KEEP_ALIVE = "Connection: keep-alive\r\n";
+
 void ProtocolHttp::prepareMessageToSend(IMessagePtr message)
 {
     std::string firstLine;
@@ -416,8 +419,10 @@ void ProtocolHttp::prepareMessageToSend(IMessagePtr message)
     int sumHeaderSize = firstLine.size() + 4;   // 2 = '\r\n' and last empty line
     if (http == HTTP_REQUEST)
     {
-        sumHeaderSize += m_hostname.size() + 8;     // Host: hostname\r\n
+        sumHeaderSize += m_headerHost.size();   // Host: hostname\r\n
     }
+    sumHeaderSize += HEADER_KEEP_ALIVE.size();  // Connection: keep-alive\r\n
+
     ProtocolMessage::Metadata& metadata = message->getAllMetadata();
     static const std::string PREFIX_PRIVATE_HEADER = "_fmq_";
     for (size_t i = 0; i < metadata.size(); ++i)
@@ -441,14 +446,15 @@ void ProtocolHttp::prepareMessageToSend(IMessagePtr message)
     if (http == HTTP_REQUEST)
     {
         // Host: hostname\r\n
-        assert(index + m_hostname.size() + 8 <= sumHeaderSize);
-        memcpy(headerBuffer + index, "Host: ", 6);
-        index += 6;
-        memcpy(headerBuffer + index, m_hostname.data(), m_hostname.size());
-        index += m_hostname.size();
-        memcpy(headerBuffer + index, "\r\n", 2);
-        index += 2;
+        assert(index + m_headerHost.size() <= sumHeaderSize);
+        memcpy(headerBuffer + index, m_headerHost.data(), m_headerHost.size());
+        index += m_headerHost.size();
     }
+
+    // Connection: keep-alive\r\n
+    assert(index + HEADER_KEEP_ALIVE.size() <= sumHeaderSize);
+    memcpy(headerBuffer + index, HEADER_KEEP_ALIVE.data(), HEADER_KEEP_ALIVE.size());
+    index += HEADER_KEEP_ALIVE.size();
 
     for (size_t i = 0; i < metadata.size(); ++i)
     {
@@ -475,10 +481,10 @@ void ProtocolHttp::prepareMessageToSend(IMessagePtr message)
     message->prepareMessageToSend();
 }
 
-void ProtocolHttp::socketConnected(const IProtocolSessionPtr& session)
+void ProtocolHttp::socketConnected(IProtocolSession& session)
 {
-    ConnectionData connectionData = session->getConnectionData();
-    m_hostname = connectionData.hostname + ":" + std::to_string(connectionData.port);
+    ConnectionData connectionData = session.getConnectionData();
+    m_headerHost = "Host: " + connectionData.hostname + ":" + std::to_string(connectionData.port) + "\r\n";
     auto callback = m_callback.lock();
     if (callback)
     {

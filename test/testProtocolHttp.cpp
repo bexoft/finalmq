@@ -236,7 +236,7 @@ TEST_F(TestProtocolHttp, testSendPrepareMessage)
     auto it2 = it1;
     ++it2;
 
-    static const std::string HEADERS = "GET /hello?filter=world&lang=en HTTP/1.1\r\nHost: \r\nContent-Length: 10\r\n\r\n";
+    static const std::string HEADERS = "GET /hello?filter=world&lang=en HTTP/1.1\r\nConnection: keep-alive\r\nContent-Length: 10\r\n\r\n";
     static const std::string PAYLOAD = "0123456789";
 
     ASSERT_EQ(it1->second, HEADERS.size());

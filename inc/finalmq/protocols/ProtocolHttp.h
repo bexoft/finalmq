@@ -55,7 +55,7 @@ private:
     virtual IMessagePtr createMessage() const override;
     virtual void receive(const SocketPtr& socket, int bytesToRead) override;
     virtual void prepareMessageToSend(IMessagePtr message) override;
-    virtual void socketConnected(const IProtocolSessionPtr& session) override;
+    virtual void socketConnected(IProtocolSession& session) override;
     virtual void socketDisconnected() override;
 
     bool receiveHeaders(ssize_t bytesReceived);
@@ -76,7 +76,7 @@ private:
     IMessagePtr                         m_message;
     ssize_t                             m_contentLength = 0;
     ssize_t                             m_indexFilled = 0;
-    std::string                         m_hostname;
+    std::string                         m_headerHost;
     std::weak_ptr<IProtocolCallback>    m_callback;
 };
 

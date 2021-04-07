@@ -106,7 +106,7 @@ void ProtocolHeaderBinarySize::prepareMessageToSend(IMessagePtr message)
     }
 }
 
-void ProtocolHeaderBinarySize::socketConnected(const IProtocolSessionPtr& /*session*/)
+void ProtocolHeaderBinarySize::socketConnected(IProtocolSession& /*session*/)
 {
     auto callback = m_callback.lock();
     if (callback)

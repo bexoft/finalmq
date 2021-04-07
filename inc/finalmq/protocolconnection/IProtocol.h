@@ -53,7 +53,7 @@ struct IProtocol
     virtual IMessagePtr createMessage() const = 0;
     virtual void receive(const SocketPtr& socket, int bytesToRead) = 0;
     virtual void prepareMessageToSend(IMessagePtr message) = 0;
-    virtual void socketConnected(const IProtocolSessionPtr& session) = 0;
+    virtual void socketConnected(IProtocolSession& session) = 0;
     virtual void socketDisconnected() = 0;
 };
 
