@@ -67,11 +67,19 @@ private:
     virtual void received(const IProtocolSessionPtr& session, const IMessagePtr& message)
     {
         IMessagePtr response = session->createMessage();
-        response->addMetadata(ProtocolHttp::FMQ_HTTP, ProtocolHttp::HTTP_RESPONSE);
-        response->addMetadata(ProtocolHttp::FMQ_STATUS, "200");
-        response->addMetadata(ProtocolHttp::FMQ_STATUSTEXT, "OK");
-        response->addMetadata("Content-Length", Variant(message->getMetadata(ProtocolHttp::FMQ_PATH).size()));
-        response->addSendPayload(message->getMetadata(ProtocolHttp::FMQ_PATH));
+        response->addMetainfo(ProtocolHttp::FMQ_HTTP, ProtocolHttp::HTTP_RESPONSE);
+        response->addMetainfo(ProtocolHttp::FMQ_STATUS, "200");
+        response->addMetainfo(ProtocolHttp::FMQ_STATUSTEXT, "OK");
+        const std::string* path = message->getMetainfo(ProtocolHttp::FMQ_PATH);
+        if (path)
+        {
+            response->addMetainfo("Content-Length", Variant(path->size()));
+            response->addSendPayload(*path);
+        }
+        else
+        {
+            response->addMetainfo("Content-Length", "0");
+        }
         session->sendMessage(response);
     }
 

@@ -41,6 +41,7 @@ private:
     virtual void setCallback(const std::weak_ptr<IProtocolCallback>& callback) override;
     virtual std::uint32_t getProtocolId() const = 0;
     virtual bool areMessagesResendable() const override;
+    virtual bool doesSupportMetainfo() const override;
     virtual IMessagePtr createMessage() const override;
     virtual void receive(const SocketPtr& socket, int bytesToRead) override;
     virtual void prepareMessageToSend(IMessagePtr message) override;

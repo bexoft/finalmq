@@ -149,35 +149,58 @@ void ProtocolMessage::downsizeLastBuffer(ssize_t newSize)
 
 
 // metadata
-ProtocolMessage::Metadata& ProtocolMessage::getAllMetadata()
+const ProtocolMessage::Metainfo& ProtocolMessage::getAllMetainfo() const
 {
-    return m_metadata;
+    return m_metainfo;
 }
 
-void ProtocolMessage::addMetadata(const std::string& key, const std::string& value)
+IMessage::Metainfo& ProtocolMessage::getAllMetainfo()
 {
-    m_metadata.emplace_back(key, value);
+    return m_metainfo;
 }
 
-void ProtocolMessage::addMetadata(const std::string& key, std::string&& value)
+void ProtocolMessage::addMetainfo(const std::string& key, const std::string& value)
 {
-    m_metadata.emplace_back(key, std::move(value));
+    m_metainfo.emplace_back(key);
+    m_metainfo.emplace_back(value);
 }
 
-const std::string& ProtocolMessage::getMetadata(const std::string& key)
+void ProtocolMessage::addMetainfo(std::string&& key, std::string&& value)
 {
-    for (auto it = m_metadata.begin(); it != m_metadata.end(); ++it)
+    m_metainfo.push_back(std::move(key));
+    m_metainfo.push_back(std::move(value));
+}
+
+const std::string* ProtocolMessage::getMetainfo(const std::string& key) const
+{
+    return const_cast<ProtocolMessage*>(this)->getMetainfo(key);
+}
+
+
+std::string* ProtocolMessage::getMetainfo(const std::string& key)
+{
+    for (auto it = m_metainfo.begin(); it != m_metainfo.end(); ++it)
     {
-        if (it->first == key)
+        if (*it == key)
         {
-            return it->second;
+            ++it;
+            if (it == m_metainfo.end())
+            {
+                return nullptr;
+            }
+            return &*it;
+        }
+        else
+        {
+            ++it;
+            if (it == m_metainfo.end())
+            {
+                return nullptr;
+            }
         }
     }
-    static const std::string STR_EMPTY;
-    return STR_EMPTY;
+    return nullptr;
 }
-
-
 
 // for send
 void ProtocolMessage::addSendPayload(const std::string& payload)

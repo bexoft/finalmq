@@ -68,6 +68,7 @@ private:
     virtual ConnectionData getConnectionData() const override;
     virtual SocketPtr getSocket() override;
     virtual int getContentType() const override;
+    virtual bool doesSupportMetainfo() const override;
     virtual void disconnect() override;
     virtual bool connect(const std::string& endpoint, const ConnectProperties& connectionProperties = {}) override;
     virtual bool connectProtocol(const std::string& endpoint, const IProtocolPtr& protocol, const ConnectProperties& connectionProperties = {}, int contentType = 0) override;

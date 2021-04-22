@@ -70,6 +70,11 @@ bool ProtocolHeaderBinarySize::areMessagesResendable() const
     return true;
 }
 
+bool ProtocolHeaderBinarySize::doesSupportMetainfo() const
+{
+    return false;
+}
+
 IMessagePtr ProtocolHeaderBinarySize::createMessage() const
 {
     return std::make_shared<ProtocolMessage>(PROTOCOL_ID, HEADERSIZE);

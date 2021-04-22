@@ -50,6 +50,7 @@ struct IProtocol
     virtual void setCallback(const std::weak_ptr<IProtocolCallback>& callback) = 0;
     virtual std::uint32_t getProtocolId() const = 0;
     virtual bool areMessagesResendable() const = 0;
+    virtual bool doesSupportMetainfo() const = 0;
     virtual IMessagePtr createMessage() const = 0;
     virtual void receive(const SocketPtr& socket, int bytesToRead) = 0;
     virtual void prepareMessageToSend(IMessagePtr message) = 0;

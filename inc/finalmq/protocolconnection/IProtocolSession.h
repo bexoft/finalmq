@@ -36,6 +36,7 @@ struct IProtocolSession
     virtual ConnectionData getConnectionData() const = 0;
     virtual SocketPtr getSocket() = 0;
     virtual int getContentType() const = 0;
+    virtual bool doesSupportMetainfo() const = 0;
     virtual void disconnect() = 0;
     virtual bool connect(const std::string& endpoint, const ConnectProperties& connectionProperties = {}) = 0;
     virtual bool connectProtocol(const std::string& endpoint, const IProtocolPtr& protocol, const ConnectProperties& connectionProperties = {}, int contentType = 0) = 0;

@@ -79,7 +79,7 @@ inline static bool shallSend(const remoteentity::Header& header)
 
 
 
-bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase* structBase)
+bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, remoteentity::Header& header, const StructBase* structBase)
 {
     bool ok = true;
     if (shallSend(header))
@@ -90,6 +90,11 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, co
         ok = serialize(*message, session->getContentType(), header, structBase);
         if (ok)
         {
+            if (session->doesSupportMetainfo())
+            {
+                IMessage::Metainfo& metainfo = message->getAllMetainfo();
+                metainfo.insert(metainfo.end(), std::make_move_iterator(header.meta.begin()), std::make_move_iterator(header.meta.end()));
+            }
             ok = session->sendMessage(message);
         }
     }
@@ -110,6 +115,11 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(const IMessage
     {
         assert(it->second);
         structBase = it->second->parse(bufferRef, storeRawData, header, syntaxError);
+        const IMessage::Metainfo& metainfo = message.getAllMetainfo();
+        if (!metainfo.empty())
+        {
+            header.meta.insert(header.meta.end(), metainfo.begin(), metainfo.end());
+        }
     }
 
     return structBase;

@@ -252,7 +252,7 @@ PeerManager::ReadyToSend PeerManager::getRequestHeader(const PeerId& peerId, con
                 typeName = &structBase.getStructInfo().getTypeName();
             }
             assert(typeName);
-            header = {peer.entityId, (peer.entityId == ENTITYID_INVALID) ? peer.entityName : std::string(), m_entityId, MsgMode::MSG_REQUEST, Status::STATUS_OK, *typeName, correlationId};
+            header = { peer.entityId, (peer.entityId == ENTITYID_INVALID) ? peer.entityName : std::string(), m_entityId, MsgMode::MSG_REQUEST, Status::STATUS_OK, *typeName, correlationId, {} };
         }
         else
         {
@@ -460,7 +460,8 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
     }
     else
     {
-        replyReceived(correlationId, Status::STATUS_PEER_DISCONNECTED, nullptr);
+        std::vector<std::string> metainfoEmpty;
+        replyReceived(correlationId, Status::STATUS_PEER_DISCONNECTED, metainfoEmpty, nullptr);
     }
     return ok;
 }
@@ -484,7 +485,61 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
 
 
 
-void RemoteEntity::replyReceived(CorrelationId correlationId, Status status, const StructBasePtr& structBase)
+
+bool RemoteEntity::sendRequest(const PeerId& peerId, std::vector<std::string>&& metainfo, const StructBase& structBase, CorrelationId correlationId)
+{
+    bool ok = false;
+    Header header;
+    IProtocolSessionPtr session;
+
+    // the mutex lock is important for RTS_CONNECT_NOT_AVAILABLE / RTS_READY handling. See connectIntern(PeerId ...)
+    std::unique_lock<std::mutex> lock(m_mutex);
+    PeerManager::ReadyToSend readyToSend = m_peerManager->getRequestHeader(peerId, structBase, correlationId, header, session);
+    lock.unlock();
+
+    if (readyToSend == PeerManager::ReadyToSend::RTS_READY)
+    {
+        assert(session);
+        header.meta = std::move(metainfo);
+        ok = RemoteEntityFormatRegistry::instance().send(session, header, &structBase);
+        if (!ok)
+        {
+            removePeer(peerId, Status::STATUS_SESSION_DISCONNECTED);
+        }
+    }
+    else if (readyToSend == PeerManager::ReadyToSend::RTS_SESSION_NOT_AVAILABLE)
+    {
+        ok = true;
+    }
+    else
+    {
+        std::vector<std::string> metainfoEmpty;
+        replyReceived(correlationId, Status::STATUS_PEER_DISCONNECTED, metainfoEmpty, nullptr);
+    }
+    return ok;
+}
+
+
+bool RemoteEntity::sendEvent(const PeerId& peerId, std::vector<std::string>&& metainfo, const StructBase& structBase)
+{
+    bool ok = sendRequest(peerId, std::move(metainfo), structBase, CORRELATIONID_NONE);
+    return ok;
+}
+
+bool RemoteEntity::sendRequest(const PeerId& peerId, std::vector<std::string>&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply)
+{
+    CorrelationId correlationId = getNextCorrelationId();
+    std::unique_lock<std::mutex> lock(m_mutex);
+    m_requests.emplace(correlationId, std::make_unique<Request>(peerId, std::make_shared<FuncReplyMeta>(std::move(funcReply))));
+    lock.unlock();
+    bool ok = sendRequest(peerId, std::move(metainfo), structBase, correlationId);
+    return ok;
+}
+
+
+
+
+void RemoteEntity::replyReceived(CorrelationId correlationId, Status status, std::vector<std::string>& metainfo, const StructBasePtr& structBase)
 {
     std::unique_ptr<Request> request;
     std::unique_lock<std::mutex> lock(m_mutex);
@@ -497,9 +552,16 @@ void RemoteEntity::replyReceived(CorrelationId correlationId, Status status, con
     }
     lock.unlock();
 
-    if (request && request->func && *request->func)
+    if (request)
     {
-        (*request->func)(request->peerId, status, structBase);
+        if (request->func && *request->func)
+        {
+            (*request->func)(request->peerId, status, structBase);
+        }
+        else if (request->funcMeta && *request->funcMeta)
+        {
+            (*request->funcMeta)(request->peerId, status, metainfo, structBase);
+        }
     }
 }
 
@@ -600,6 +662,11 @@ void RemoteEntity::removePeer(PeerId peerId, remoteentity::Status status)
                 if (request->func && *request->func)
                 {
                     (*request->func)(request->peerId, status, nullptr);
+                }
+                else if (request->funcMeta && *request->funcMeta)
+                {
+                    std::vector<std::string> metainfo;
+                    (*request->funcMeta)(request->peerId, status, metainfo, nullptr);
                 }
             }
         }
@@ -739,11 +806,11 @@ PeerId RemoteEntity::addPeer(const IProtocolSessionPtr& session, EntityId entity
 }
 
 
-void RemoteEntity::receivedRequest(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBasePtr& structBase)
+void RemoteEntity::receivedRequest(const IProtocolSessionPtr& session, remoteentity::Header& header, const StructBasePtr& structBase)
 {
     assert(structBase);
 
-    ReplyContextUPtr replyContext = std::make_unique<ReplyContext>(m_peerManager, session, header.srcid, m_entityId, header.corrid);
+    ReplyContextUPtr replyContext = std::make_unique<ReplyContext>(m_peerManager, session, m_entityId, header);
     assert(replyContext);
 
     std::unique_lock<std::mutex> lock(m_mutex);
@@ -772,16 +839,16 @@ void RemoteEntity::receivedRequest(const IProtocolSessionPtr& session, const rem
     }
 }
 
-void RemoteEntity::receivedReply(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBasePtr& structBase)
+void RemoteEntity::receivedReply(const IProtocolSessionPtr& session, remoteentity::Header& header, const StructBasePtr& structBase)
 {
     bool replyHandled = false;
     if (m_funcReplyEvent)
     {
-        replyHandled = m_funcReplyEvent(header.corrid, header.status, structBase);
+        replyHandled = m_funcReplyEvent(header.corrid, header.status, header.meta, structBase);
     }
     if (!replyHandled)
     {
-        replyReceived(header.corrid, header.status, structBase);
+        replyReceived(header.corrid, header.status, header.meta, structBase);
     }
 
     if (header.status == Status::STATUS_ENTITY_NOT_FOUND &&

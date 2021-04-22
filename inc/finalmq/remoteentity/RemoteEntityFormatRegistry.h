@@ -58,7 +58,7 @@ struct IRemoteEntityFormatRegistry
     virtual ~IRemoteEntityFormatRegistry() {}
     virtual std::shared_ptr<StructBase> parse(const IMessage& message, int contentType, bool storeRawData, remoteentity::Header& header, bool& syntaxError) = 0;
     virtual bool serialize(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase* structBase = nullptr) = 0;
-    virtual bool send(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase* structBase = nullptr) = 0;
+    virtual bool send(const IProtocolSessionPtr& session, remoteentity::Header& header, const StructBase* structBase = nullptr) = 0;
 
     virtual void registerFormat(int contentType, const std::shared_ptr<IRemoteEntityFormat>& format) = 0;
     virtual bool isRegistered(int contentType) const = 0;
@@ -72,7 +72,7 @@ class RemoteEntityFormatRegistryImpl : public IRemoteEntityFormatRegistry
 public:
     virtual std::shared_ptr<StructBase> parse(const IMessage& message, int contentType, bool storeRawData, remoteentity::Header& header, bool& syntaxError) override;
     virtual bool serialize(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase* structBase = nullptr) override;
-    virtual bool send(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase* structBase = nullptr) override;
+    virtual bool send(const IProtocolSessionPtr& session, remoteentity::Header& header, const StructBase* structBase = nullptr) override;
     virtual void registerFormat(int contentType, const std::shared_ptr<IRemoteEntityFormat>& format) override;
     virtual bool isRegistered(int contentType) const override;
 

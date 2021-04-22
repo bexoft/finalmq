@@ -152,7 +152,7 @@ IMessagePtr ProtocolSession::convertMessageToProtocol(const IMessagePtr& msg)
             message = m_protocol->createMessage();
             if (msg->getTotalSendPayloadSize() > 0)
             {
-                message->getAllMetadata() = msg->getAllMetadata();
+                message->getAllMetainfo() = msg->getAllMetainfo();
                 ssize_t sizePayload = msg->getTotalSendPayloadSize();
                 char* payload = message->addSendPayload(sizePayload);
                 const std::list<BufferRef>& payloads = msg->getAllSendPayloads();
@@ -240,6 +240,15 @@ int ProtocolSession::getContentType() const
     return m_contentType;
 }
 
+
+bool ProtocolSession::doesSupportMetainfo() const
+{
+    if (!m_protocol)
+    {
+        return false;
+    }
+    return m_protocol->doesSupportMetainfo();
+}
 
 void ProtocolSession::disconnect()
 {

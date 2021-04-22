@@ -50,6 +50,11 @@ bool ProtocolDelimiter::areMessagesResendable() const
     return true;
 }
 
+bool ProtocolDelimiter::doesSupportMetainfo() const
+{
+    return false;
+}
+
 IMessagePtr ProtocolDelimiter::createMessage() const
 {
     return std::make_shared<ProtocolMessage>(getProtocolId(), 0, m_delimiter.size());

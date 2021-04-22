@@ -56,6 +56,11 @@ bool ProtocolStream::areMessagesResendable() const
     return true;
 }
 
+bool ProtocolStream::doesSupportMetainfo() const
+{
+    return false;
+}
+
 IMessagePtr ProtocolStream::createMessage() const
 {
     return std::make_shared<ProtocolMessage>(PROTOCOL_ID);

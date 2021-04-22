@@ -38,11 +38,13 @@ private:
     virtual char* addBuffer(ssize_t size, ssize_t reserve = 0) override;
     virtual void downsizeLastBuffer(ssize_t newSize) override;
 
-    // metadata
-    virtual Metadata& getAllMetadata() override;
-    virtual void addMetadata(const std::string& key, const std::string& value) override;
-    virtual void addMetadata(const std::string& key, std::string&& value) override;
-    virtual const std::string& getMetadata(const std::string& key) override;
+    // metainfo
+    virtual const Metainfo& getAllMetainfo() const override;
+    virtual Metainfo& getAllMetainfo() override;
+    virtual void addMetainfo(const std::string& key, const std::string& value) override;
+    virtual void addMetainfo(std::string&& key, std::string&& value) override;
+    virtual const std::string* getMetainfo(const std::string& key) const override;
+    virtual std::string* getMetainfo(const std::string& key) override;
 
     // for send
     virtual void addSendPayload(const std::string& payload) override;
@@ -78,7 +80,7 @@ private:
 
 private:
 
-    Metadata                    m_metadata;
+    Metainfo                    m_metainfo;
 
     // send
     std::list<std::string>      m_headerBuffers;

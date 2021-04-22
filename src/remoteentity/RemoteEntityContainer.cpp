@@ -330,7 +330,7 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
         }
         if (replyStatus != Status::STATUS_OK)
         {
-            Header headerReply{header.srcid, "", entityId, MsgMode::MSG_REPLY, replyStatus, "", header.corrid};
+            Header headerReply{ header.srcid, "", entityId, MsgMode::MSG_REPLY, replyStatus, "", header.corrid, {} };
             RemoteEntityFormatRegistry::instance().send(session, headerReply);
         }
     }
