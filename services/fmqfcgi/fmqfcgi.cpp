@@ -145,6 +145,26 @@ public:
         return m_request;
     }
 
+    inline void headerToMetainfo(std::vector<std::string>& metainfo)
+    {
+        metainfo.reserve(200);
+        for (int i = 0; m_request->envp[i] != NULL; i += 1)
+        {
+            const char* line = m_request->envp[i];
+            const char* pos = strchr(line, '=');
+            if (pos)
+            {
+                metainfo.emplace_back(line, (size_t)(pos - line));
+                metainfo.emplace_back(pos + 1);
+            }
+            else
+            {
+                metainfo.emplace_back();
+                metainfo.emplace_back(line);
+            }
+        }
+    }
+
 private:
     Request(const Request&) = delete;
     const Request& operator =(const Request&) = delete;
@@ -742,7 +762,7 @@ public:
                     if (it != m_objectName2sessionAndEntity.end())
                     {
                         SessionAndEntity& sessionAndEntity = it->second;
-                        if (reply)
+                        if (reply && reply->found)
                         {
                             IProtocolPtr protocol;
                             sessionAndEntity.entityId = reply->service.entityid;
@@ -784,7 +804,7 @@ public:
                             entityAndPeerId.entity->disconnect(entityAndPeerId.peerId);
                         }
                         sessionAndEntity.entities.clear();
-                        if (!reply)
+                        if (!reply || !reply->found)
                         {
                             m_objectName2sessionAndEntity.erase(it);
                         }
@@ -851,7 +871,9 @@ public:
             {
                 message.setRawData(typeName, RemoteEntityFormatJson::CONTENT_TYPE, "{}", 2);
             }
-            httpSession->sendRequest(peerId, message, [this, requestPtr] (PeerId peerId, Status status, const std::shared_ptr<StructBase>& reply) {
+            std::vector<std::string> metainfo;
+            requestPtr->headerToMetainfo(metainfo);
+            httpSession->sendRequest(peerId, std::move(metainfo), message, [this, requestPtr] (PeerId peerId, Status status, std::vector<std::string>& metainfo, const std::shared_ptr<StructBase>& reply) {
                 assert(requestPtr);
                 Request& request = *requestPtr;
                 if (reply && reply->getRawContentType() != RemoteEntityFormatJson::CONTENT_TYPE)
@@ -930,10 +952,10 @@ public:
         const char* httpHeaderCreateSession = FCGX_GetParam("HTTP_FMQ_CREATESESSION", request->envp);
         const char* httpHeaderSessionId = FCGX_GetParam("HTTP_FMQ_SESSIONID", request->envp);
 
-//        for(int i=0; request->envp[i] != NULL; i+=1)
-//        {
-//            streamInfo << request->envp[i];
-//        }
+        //for(int i=0; request->envp[i] != NULL; i+=1)
+        //{
+        //    streamInfo << request->envp[i];
+        //}
 
         streamInfo << "----- REQUEST -----";
 

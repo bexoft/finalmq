@@ -121,7 +121,7 @@ struct IRemoteEntity
         std::function<void(PeerId peerId, remoteentity::Status status, std::vector<std::string>& metainfo, const std::shared_ptr<R>& reply)> funcReply)
     {
         assert(funcReply);
-        bool ok = sendRequest(peerId, std::move(metainfo), structBase, [funcReplyMeta{ std::move(funcReply) }](PeerId peerId, remoteentity::Status status, std::vector<std::string>& metainfo, const StructBasePtr& structBase) {
+        bool ok = sendRequest(peerId, std::move(metainfo), structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, remoteentity::Status status, std::vector<std::string>& metainfo, const StructBasePtr& structBase) {
             std::shared_ptr<R> reply;
             bool typeOk = (!structBase || structBase->getStructInfo().getTypeName() == R::structInfo().getTypeName());
             if (status == remoteentity::Status::STATUS_OK && structBase && typeOk)
