@@ -43,7 +43,7 @@ hybrid_ptr<IStreamConnectionCallback> ProtocolBind::connected(const IStreamConne
     IProtocolPtr protocol = m_protocolFactory->createProtocol();
     assert(protocol);
     IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(m_callback, m_executor, protocol, m_protocolSessionList, m_bindProperties, m_contentType);
-    protocolSession->setConnection(connection);
+    protocolSession->setConnection(connection, !protocol->doesSupportSession());
     return std::weak_ptr<IStreamConnectionCallback>(protocolSession);
 }
 
@@ -53,7 +53,7 @@ void ProtocolBind::disconnected(const IStreamConnectionPtr& /*connection*/)
     assert(false);
 }
 
-void ProtocolBind::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& /*socket*/, int /*bytesToRead*/)
+void ProtocolBind::received(const IStreamConnectionPtr& connection, const SocketPtr& /*socket*/, int /*bytesToRead*/)
 {
     // should never be called, because the callback will be overriden by connected
     assert(false);

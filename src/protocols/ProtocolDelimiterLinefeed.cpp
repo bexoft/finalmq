@@ -70,4 +70,5 @@ IProtocolPtr ProtocolDelimiterLinefeedFactory::createProtocol()
     return std::make_shared<ProtocolDelimiterLinefeed>();
 }
 
+
 }   // namespace finalmq

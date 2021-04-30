@@ -39,7 +39,8 @@ struct IProtocolSessionPrivate : public IProtocolSession
 {
     virtual void connect() = 0;
     virtual void createConnection() = 0;
-    virtual int64_t setConnection(const IStreamConnectionPtr& connection) = 0;
+    virtual int64_t setConnection(const IStreamConnectionPtr& connection, bool verified) = 0;
+    virtual void setProtocol(const IProtocolPtr& protocol) = 0;
 };
 
 typedef std::shared_ptr<IProtocolSessionPrivate> IProtocolSessionPrivatePtr;
@@ -69,6 +70,7 @@ private:
     virtual SocketPtr getSocket() override;
     virtual int getContentType() const override;
     virtual bool doesSupportMetainfo() const override;
+    virtual bool needsReply() const override;
     virtual void disconnect() override;
     virtual bool connect(const std::string& endpoint, const ConnectProperties& connectionProperties = {}) override;
     virtual bool connectProtocol(const std::string& endpoint, const IProtocolPtr& protocol, const ConnectProperties& connectionProperties = {}, int contentType = 0) override;
@@ -81,7 +83,8 @@ private:
     // IProtocolSessionPrivate
     virtual void connect() override;
     virtual void createConnection() override;
-    virtual int64_t setConnection(const IStreamConnectionPtr& connection) override;
+    virtual int64_t setConnection(const IStreamConnectionPtr& connection, bool verified) override;
+    virtual void setProtocol(const IProtocolPtr& protocol) override;
 
     // IProtocolCallback
     virtual void connected() override;
@@ -90,8 +93,11 @@ private:
     virtual void socketConnected() override;
     virtual void socketDisconnected() override;
     virtual void reconnect() override;
+    virtual bool findSessionByName(const std::string& sessionName) override;
+    virtual void setSessionName(const std::string& sessionName) override;
 
     IMessagePtr convertMessageToProtocol(const IMessagePtr& msg);
+    void initProtocolValues();
 
     IStreamConnectionPtr                            m_connection;
     hybrid_ptr<IProtocolSessionCallback>            m_callback;
@@ -100,6 +106,11 @@ private:
     int64_t                                         m_sessionId = 0;
     std::weak_ptr<IProtocolSessionList>             m_protocolSessionList;
     int                                             m_contentType = 0;
+    bool                                            m_protocolFlagMessagesResendable = false;
+    bool                                            m_protocolFlagSupportMetainfo = false;
+    bool                                            m_protocolFlagNeedsReply = false;
+    IProtocol::FuncCreateMessage                    m_messageFactory;
+    std::atomic_bool                                m_protocolSet;
 
     std::shared_ptr<IStreamConnectionContainer>     m_streamConnectionContainer;
     std::string                                     m_endpoint;

@@ -66,25 +66,67 @@ bool RemoteEntityFormatRegistryImpl::serialize(IMessage& message, int contentTyp
 }
 
 
-inline static bool shallSend(const remoteentity::Header& header)
+inline static bool shallSend(const remoteentity::Header& header, const IProtocolSessionPtr& session)
 {
     if ((header.mode != MsgMode::MSG_REPLY) ||
-        (/*header.status == Status::STATUS_ENTITY_NOT_FOUND ||*/ header.corrid != CORRELATIONID_NONE))
+        (header.corrid != CORRELATIONID_NONE) || 
+        session->needsReply())
     {
         return true;
     }
     return false;
 }
 
+static const std::string FMQ_STATUS = "_fmq_status";
+static const std::string FMQ_STATUSTEXT = "_fmq_statustext";
+
+
+static void statusToProtocolStatus(remoteentity::Status status, IMessage::Metainfo& metainfo)
+{
+    switch (status)
+    {
+    case Status::STATUS_OK:
+        metainfo.emplace_back(FMQ_STATUS);
+        metainfo.emplace_back("200");
+        metainfo.emplace_back(FMQ_STATUSTEXT);
+        metainfo.emplace_back("OK");
+        break;
+    case Status::STATUS_ENTITY_NOT_FOUND:
+        metainfo.emplace_back(FMQ_STATUS);
+        metainfo.emplace_back("404");
+        metainfo.emplace_back(FMQ_STATUSTEXT);
+        metainfo.emplace_back("Not Found");
+        break;
+    case Status::STATUS_SYNTAX_ERROR:
+        metainfo.emplace_back(FMQ_STATUS);
+        metainfo.emplace_back("400");
+        metainfo.emplace_back(FMQ_STATUSTEXT);
+        metainfo.emplace_back("Bad Request");
+        break;
+    case Status::STATUS_REQUEST_NOT_FOUND:
+    case Status::STATUS_REQUESTTYPE_NOT_KNOWN:
+        metainfo.emplace_back(FMQ_STATUS);
+        metainfo.emplace_back("501");
+        metainfo.emplace_back(FMQ_STATUSTEXT);
+        metainfo.emplace_back("Not Implemented");
+        break;
+    default:
+        metainfo.emplace_back(FMQ_STATUS);
+        metainfo.emplace_back("500");
+        metainfo.emplace_back(FMQ_STATUSTEXT);
+        metainfo.emplace_back("Internal Server Error");
+        break;
+    }
+}
 
 
 
 bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, remoteentity::Header& header, const StructBase* structBase)
 {
     bool ok = true;
-    if (shallSend(header))
+    assert(session);
+    if (shallSend(header, session))
     {
-        assert(session);
         IMessagePtr message = session->createMessage();
         assert(message);
         ok = serialize(*message, session->getContentType(), header, structBase);
@@ -93,6 +135,7 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, re
             if (session->doesSupportMetainfo())
             {
                 IMessage::Metainfo& metainfo = message->getAllMetainfo();
+                statusToProtocolStatus(header.status, metainfo);
                 metainfo.insert(metainfo.end(), std::make_move_iterator(header.meta.begin()), std::make_move_iterator(header.meta.end()));
             }
             ok = session->sendMessage(message);
@@ -102,12 +145,24 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, re
 }
 
 
+const std::string FMQ_PATH = "_fmq_path";
 
 
 std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(const IMessage& message, int contentType, bool storeRawData, Header& header, bool& syntaxError)
 {
     syntaxError = false;
     BufferRef bufferRef = message.getReceivePayload();
+
+    if (bufferRef.second == 0 && !message.getAllMetainfo().empty())
+    {
+        const std::string* path = message.getMetainfo(FMQ_PATH);
+        if (path && !path->empty())
+        {
+            bufferRef.first = const_cast<char*>(path->data());
+            bufferRef.second = path->size();
+        }
+    }
+
     std::shared_ptr<StructBase> structBase;
 
     auto it = m_formats.find(contentType);

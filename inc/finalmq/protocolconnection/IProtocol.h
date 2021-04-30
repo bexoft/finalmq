@@ -24,10 +24,16 @@
 
 #include "finalmq/streamconnection/IMessage.h"
 
+#include <functional>
+
+
 namespace finalmq {
 
 class Socket;
 typedef std::shared_ptr<Socket> SocketPtr;
+
+struct IProtocol;
+typedef std::shared_ptr<IProtocol>  IProtocolPtr;
 
 
 struct IProtocolCallback
@@ -39,19 +45,25 @@ struct IProtocolCallback
     virtual void socketConnected() = 0;
     virtual void socketDisconnected() = 0;
     virtual void reconnect() = 0;
+    virtual bool findSessionByName(const std::string& sessionName) = 0;
+    virtual void setSessionName(const std::string& sessionName) = 0;
 };
 
 struct IProtocolSession;
 typedef std::shared_ptr<IProtocolSession> IProtocolSessionPtr;
 
+
 struct IProtocol
 {
+    typedef std::function<IMessagePtr()> FuncCreateMessage;
     virtual ~IProtocol() {}
     virtual void setCallback(const std::weak_ptr<IProtocolCallback>& callback) = 0;
     virtual std::uint32_t getProtocolId() const = 0;
     virtual bool areMessagesResendable() const = 0;
     virtual bool doesSupportMetainfo() const = 0;
-    virtual IMessagePtr createMessage() const = 0;
+    virtual bool doesSupportSession() const = 0;
+    virtual bool needsReply() const = 0;
+    virtual FuncCreateMessage getMessageFactory() const = 0;
     virtual void receive(const SocketPtr& socket, int bytesToRead) = 0;
     virtual void prepareMessageToSend(IMessagePtr message) = 0;
     virtual void socketConnected(IProtocolSession& session) = 0;
@@ -59,7 +71,6 @@ struct IProtocol
 };
 
 
-typedef std::shared_ptr<IProtocol>  IProtocolPtr;
 
 
 struct IProtocolFactory

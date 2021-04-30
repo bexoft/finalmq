@@ -26,11 +26,14 @@
 #include "finalmq/protocolconnection/IProtocol.h"
 #include "finalmq/helpers/BexDefines.h"
 
+#include <random>
+
 
 namespace finalmq {
 
 
 class SYMBOLEXP ProtocolHttp : public IProtocol
+                             , private std::enable_shared_from_this<ProtocolHttp>
 {
 public:
     enum { PROTOCOL_ID = 4 };
@@ -53,7 +56,9 @@ private:
     virtual std::uint32_t getProtocolId() const override;
     virtual bool areMessagesResendable() const override;
     virtual bool doesSupportMetainfo() const override;
-    virtual IMessagePtr createMessage() const override;
+    virtual bool doesSupportSession() const override;
+    virtual bool needsReply() const override;
+    virtual FuncCreateMessage getMessageFactory() const override;
     virtual void receive(const SocketPtr& socket, int bytesToRead) override;
     virtual void prepareMessageToSend(IMessagePtr message) override;
     virtual void socketConnected(IProtocolSession& session) override;
@@ -61,6 +66,8 @@ private:
 
     bool receiveHeaders(ssize_t bytesReceived);
     void reset();
+    std::string createSessionName();
+    void checkSessionName();
 
     enum State
     {
@@ -70,6 +77,10 @@ private:
         STATE_CONTENT_DONE
     };
 
+    std::random_device                              m_randomDevice;
+    std::mt19937                                    m_randomGenerator;
+    std::uniform_int_distribution<std::uint64_t>    m_randomVariable;
+
     State                               m_state = STATE_FIND_FIRST_LINE;
     std::string                         m_receiveBuffer;
     ssize_t                             m_offsetRemaining = 0;
@@ -78,6 +89,9 @@ private:
     ssize_t                             m_contentLength = 0;
     ssize_t                             m_indexFilled = 0;
     std::string                         m_headerHost;
+    bool                                m_checkSessionName = false;
+    std::string                         m_sessionName;
+    std::uint64_t                       m_nextSessionNameCounter = 1;
     std::weak_ptr<IProtocolCallback>    m_callback;
 };
 

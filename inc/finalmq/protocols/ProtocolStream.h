@@ -42,7 +42,9 @@ private:
     virtual std::uint32_t getProtocolId() const override;
     virtual bool areMessagesResendable() const override;
     virtual bool doesSupportMetainfo() const override;
-    virtual IMessagePtr createMessage() const override;
+    virtual bool doesSupportSession() const override;
+    virtual bool needsReply() const override;
+    virtual FuncCreateMessage getMessageFactory() const override;
     virtual void receive(const SocketPtr& socket, int bytesToRead) override;
     virtual void prepareMessageToSend(IMessagePtr message) override;
     virtual void socketConnected(IProtocolSession& session) override;

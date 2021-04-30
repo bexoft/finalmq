@@ -87,7 +87,7 @@ TEST_F(TestJsonParser, testNull)
     std::string json = "null";
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 
@@ -98,7 +98,7 @@ TEST_F(TestJsonParser, testNullWithSpaces)
     std::string json = "\t\n\r null\t\n\r ";
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 
@@ -128,7 +128,7 @@ TEST_F(TestJsonParser, testTrue)
     std::string json = "true";
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 
@@ -139,7 +139,7 @@ TEST_F(TestJsonParser, testFalse)
     std::string json = "false";
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 
@@ -171,7 +171,7 @@ TEST_F(TestJsonParser, testInt32)
     std::string json = "-1234567";
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 
@@ -183,7 +183,7 @@ TEST_F(TestJsonParser, testInt32WithSpaces)
     std::string json = "\t\n\r -1234567\t\n\r ";
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 
@@ -205,7 +205,7 @@ TEST_F(TestJsonParser, testUInt32)
     std::string json = "1234567";
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 
@@ -228,7 +228,7 @@ TEST_F(TestJsonParser, testInt64)
     std::string json = "-123456789012";
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 
@@ -251,7 +251,7 @@ TEST_F(TestJsonParser, testUInt64)
     std::string json = "123456789012";
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 
@@ -275,7 +275,7 @@ TEST_F(TestJsonParser, testDouble)
     std::string json = "0.123456789012";
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 
@@ -299,7 +299,7 @@ TEST_F(TestJsonParser, testEmptyString)
     EXPECT_CALL(m_mockJsonParserVisitor, finished()).Times(1);
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 
@@ -329,7 +329,7 @@ TEST_F(TestJsonParser, testEmptyStringWithSpaces)
     EXPECT_CALL(m_mockJsonParserVisitor, finished()).Times(1);
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 
@@ -341,7 +341,7 @@ TEST_F(TestJsonParser, testString)
     EXPECT_CALL(m_mockJsonParserVisitor, finished()).Times(1);
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 
@@ -353,7 +353,7 @@ TEST_F(TestJsonParser, testStringSimpleEscape)
     EXPECT_CALL(m_mockJsonParserVisitor, finished()).Times(1);
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 
@@ -374,7 +374,7 @@ TEST_F(TestJsonParser, testStringEscapeU16)
     EXPECT_CALL(m_mockJsonParserVisitor, finished()).Times(1);
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 
@@ -387,7 +387,7 @@ TEST_F(TestJsonParser, testStringEscapeU16Small)
     EXPECT_CALL(m_mockJsonParserVisitor, finished()).Times(1);
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 
@@ -420,7 +420,7 @@ TEST_F(TestJsonParser, testStringEscapeU32)
     EXPECT_CALL(m_mockJsonParserVisitor, finished()).Times(1);
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 
@@ -452,7 +452,7 @@ TEST_F(TestJsonParser, testStringUnknownEscape)
     EXPECT_CALL(m_mockJsonParserVisitor, finished()).Times(1);
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 
@@ -468,7 +468,7 @@ TEST_F(TestJsonParser, testEmptyArray)
     }
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 
@@ -483,7 +483,7 @@ TEST_F(TestJsonParser, testEmptyArrayWithSpaces)
     }
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 
@@ -499,7 +499,7 @@ TEST_F(TestJsonParser, testArrayWithOneValue)
     }
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 TEST_F(TestJsonParser, testArrayWithOneValueWithSpaces)
@@ -514,7 +514,7 @@ TEST_F(TestJsonParser, testArrayWithOneValueWithSpaces)
     }
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 TEST_F(TestJsonParser, testArrayWithTwoValues)
@@ -530,7 +530,7 @@ TEST_F(TestJsonParser, testArrayWithTwoValues)
     }
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 TEST_F(TestJsonParser, testArrayWithTwoValuesWithSpaces)
@@ -546,7 +546,7 @@ TEST_F(TestJsonParser, testArrayWithTwoValuesWithSpaces)
     }
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 TEST_F(TestJsonParser, testArrayTolerateLastCommaTwoValues)
@@ -562,7 +562,7 @@ TEST_F(TestJsonParser, testArrayTolerateLastCommaTwoValues)
     }
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 
@@ -579,7 +579,7 @@ TEST_F(TestJsonParser, testArrayTolerateLastCommaWithSpacesTwoValues)
     }
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 
@@ -595,7 +595,7 @@ TEST_F(TestJsonParser, testArrayTolerateLastCommaOneValue)
     }
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 
@@ -611,7 +611,7 @@ TEST_F(TestJsonParser, testArrayTolerateLastCommaOneValueWithSpaces)
     }
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 
@@ -719,7 +719,7 @@ TEST_F(TestJsonParser, testEmptyObject)
     }
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 
@@ -734,7 +734,7 @@ TEST_F(TestJsonParser, testEmptyObjectWithSpaces)
     }
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 
@@ -751,7 +751,7 @@ TEST_F(TestJsonParser, testObjectWithOneEntry)
     }
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 TEST_F(TestJsonParser, testObjectWithOneEntryWithSpaces)
@@ -767,7 +767,7 @@ TEST_F(TestJsonParser, testObjectWithOneEntryWithSpaces)
     }
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 TEST_F(TestJsonParser, testObjectMissingColen)
@@ -834,7 +834,7 @@ TEST_F(TestJsonParser, testObjectWithOneEntryTolerateLastComma)
     }
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }
 TEST_F(TestJsonParser, testObjectTwoCommas)
@@ -903,6 +903,6 @@ TEST_F(TestJsonParser, testObjectKeyWithEscape)
     }
     const char* res = m_parser->parse(json.c_str());
     EXPECT_NE(res, nullptr);
-    int size = res - json.c_str();
+    ssize_t size = res - json.c_str();
     EXPECT_EQ(size, json.size());
 }

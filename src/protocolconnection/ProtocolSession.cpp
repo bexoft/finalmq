@@ -24,6 +24,8 @@
 #include "finalmq/streamconnection/StreamConnectionContainer.h"
 #include "finalmq/protocolconnection/ProtocolMessage.h"
 
+#include <assert.h>
+
 
 namespace finalmq {
 
@@ -36,6 +38,7 @@ ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, 
     , m_contentType(contentType)
     , m_bindProperties(bindProperties)
 {
+    initProtocolValues();
 }
 
 ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, const std::string& endpoint, const ConnectProperties& connectProperties, int contentType)
@@ -48,6 +51,7 @@ ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, 
     , m_endpoint(endpoint)
     , m_connectionProperties(connectProperties)
 {
+    initProtocolValues();
 }
 
 ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, int contentType)
@@ -58,6 +62,7 @@ ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, 
     , m_contentType(contentType)
     , m_streamConnectionContainer(streamConnectionContainer)
 {
+    initProtocolValues();
 }
 
 
@@ -67,7 +72,7 @@ ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, 
     , m_protocolSessionList(protocolSessionList)
     , m_streamConnectionContainer(streamConnectionContainer)
 {
-
+    m_protocolSet.store(false, std::memory_order_release);
 }
 
 
@@ -78,6 +83,22 @@ ProtocolSession::~ProtocolSession()
 }
 
 
+
+void ProtocolSession::initProtocolValues()
+{
+    assert(m_protocol);
+    {
+        m_protocolFlagMessagesResendable = m_protocol->areMessagesResendable();
+        m_protocolFlagSupportMetainfo = m_protocol->doesSupportMetainfo();
+        m_protocolFlagNeedsReply = m_protocol->needsReply();
+        m_messageFactory = m_protocol->getMessageFactory();
+    }
+    m_protocolSet.store(true, std::memory_order_release);
+}
+
+
+
+
 // IProtocolSessionPrivate
 
 void ProtocolSession::connect()
@@ -85,7 +106,7 @@ void ProtocolSession::connect()
     assert(m_streamConnectionContainer);
     IStreamConnectionPtr connection;
     connection = m_streamConnectionContainer->createConnection(std::weak_ptr<IStreamConnectionCallback>(shared_from_this()));
-    setConnection(connection);
+    setConnection(connection, true);
     m_streamConnectionContainer->connect(connection, m_endpoint, m_connectionProperties);
 }
 
@@ -95,14 +116,15 @@ void ProtocolSession::createConnection()
     assert(m_streamConnectionContainer);
     IStreamConnectionPtr connection;
     connection = m_streamConnectionContainer->createConnection(std::weak_ptr<IStreamConnectionCallback>(shared_from_this()));
-    setConnection(connection);
+    setConnection(connection, true);
 }
 
 
-int64_t ProtocolSession::setConnection(const IStreamConnectionPtr& connection)
+int64_t ProtocolSession::setConnection(const IStreamConnectionPtr& connection, bool verified)
 {
     if (m_protocol)
     {
+        initProtocolValues();
         m_protocol->setCallback(shared_from_this());
     }
     IProtocolSessionListPtr protocolSessionList = m_protocolSessionList.lock();
@@ -113,7 +135,7 @@ int64_t ProtocolSession::setConnection(const IStreamConnectionPtr& connection)
         lock.unlock();
         if (m_sessionId == 0)
         {
-            m_sessionId = protocolSessionList->addProtocolSession(shared_from_this());
+            m_sessionId = protocolSessionList->addProtocolSession(shared_from_this(), verified);
         }
     }
     return m_sessionId;
@@ -125,34 +147,31 @@ int64_t ProtocolSession::setConnection(const IStreamConnectionPtr& connection)
 // IProtocolSession
 IMessagePtr ProtocolSession::createMessage() const
 {
-    if (m_protocol)
+    if (m_protocolSet.load(std::memory_order_acquire) && m_messageFactory)
     {
-        return m_protocol->createMessage();
+        return m_messageFactory();
     }
-    else
-    {
-        return std::make_shared<ProtocolMessage>(0);
-    }
+    return std::make_shared<ProtocolMessage>(0);
 }
 
 IMessagePtr ProtocolSession::convertMessageToProtocol(const IMessagePtr& msg)
 {
     IMessagePtr message = msg;
     if (message->getProtocolId() != m_protocol->getProtocolId() ||
-        (!m_protocol->areMessagesResendable() && message->wasSent()) ||
+        (!m_protocolFlagMessagesResendable && message->wasSent()) ||
         (message->getTotalSendPayloadSize() == 0))
     {
         message = nullptr;
-        if (m_protocol->areMessagesResendable())
+        if (m_protocolFlagMessagesResendable)
         {
             message = msg->getMessage(m_protocol->getProtocolId());
         }
         if (message == nullptr)
         {
-            message = m_protocol->createMessage();
+            message = createMessage();
+            message->getAllMetainfo() = msg->getAllMetainfo();
             if (msg->getTotalSendPayloadSize() > 0)
             {
-                message->getAllMetainfo() = msg->getAllMetainfo();
                 ssize_t sizePayload = msg->getTotalSendPayloadSize();
                 char* payload = message->addSendPayload(sizePayload);
                 const std::list<BufferRef>& payloads = msg->getAllSendPayloads();
@@ -171,7 +190,7 @@ IMessagePtr ProtocolSession::convertMessageToProtocol(const IMessagePtr& msg)
                 char* payload = message->addSendPayload(receivePayload.second);
                 memcpy(payload, receivePayload.first, receivePayload.second);
             }
-            if (m_protocol->areMessagesResendable())
+            if (m_protocolFlagMessagesResendable)
             {
                 msg->addMessage(message);
             }
@@ -183,23 +202,19 @@ IMessagePtr ProtocolSession::convertMessageToProtocol(const IMessagePtr& msg)
 
 bool ProtocolSession::sendMessage(const IMessagePtr& msg)
 {
+    // lock whole function, because the protocol can be changed by setProtocol (lock also over sendMessage, because the prepareMessageToSend could increment a sequential message counter and the order of the counter shall be like the messages that are sent.)
+    std::unique_lock<std::mutex> lock(m_mutex);
+
     if (!m_protocol)
     {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        if (!m_protocol)
-        {
-            m_messages.push_back(msg);
-            return true;
-        }
-        lock.unlock();
+        m_messages.push_back(msg);
+        return true;
     }
 
     IMessagePtr message = convertMessageToProtocol(msg);
 
     assert(message->getTotalSendPayloadSize() > 0);
 
-    // lock also over sendMessage, because the prepareMessageToSend could increment a sequential message counter and the order of the counter shall be like the messages that are sent.
-    std::unique_lock<std::mutex> lock(m_mutex);
     m_protocol->prepareMessageToSend(message);
     IStreamConnectionPtr connection = m_connection;
     if (connection)
@@ -243,11 +258,12 @@ int ProtocolSession::getContentType() const
 
 bool ProtocolSession::doesSupportMetainfo() const
 {
-    if (!m_protocol)
-    {
-        return false;
-    }
-    return m_protocol->doesSupportMetainfo();
+    return m_protocolFlagSupportMetainfo;
+}
+
+bool ProtocolSession::needsReply() const
+{
+    return m_protocolFlagNeedsReply;
 }
 
 void ProtocolSession::disconnect()
@@ -278,6 +294,7 @@ bool ProtocolSession::connect(const std::string& endpoint, const ConnectProperti
 
 bool ProtocolSession::connectProtocol(const std::string& endpoint, const IProtocolPtr& protocol, const ConnectProperties& connectionProperties, int contentType)
 {
+    assert(m_protocol == nullptr);
     assert(m_streamConnectionContainer);
     std::unique_lock<std::mutex> lock(m_mutex);
     assert(m_connection);
@@ -463,5 +480,53 @@ void ProtocolSession::reconnect()
 {
     connect();
 }
+
+
+void ProtocolSession::setProtocol(const IProtocolPtr& protocol)
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    m_protocol = protocol;
+    if (m_protocol)
+    {
+        m_protocol->setCallback(shared_from_this());
+    }
+}
+
+
+bool ProtocolSession::findSessionByName(const std::string& sessionName)
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    std::shared_ptr<IProtocolSessionList> list = m_protocolSessionList.lock();
+    lock.unlock();
+    if (list)
+    {
+        IProtocolSessionPrivatePtr session = list->findSessionByName(sessionName);
+        assert(session.get() != this);
+        if (session)
+        {
+            assert(!session->getSocket());  // the session should be disconnected
+
+            list->removeProtocolSession(m_sessionId);
+            assert(m_protocol);
+            session->setProtocol(m_protocol);
+            m_protocol = nullptr;
+            return true;
+        }
+    }
+    return false;
+}
+
+void ProtocolSession::setSessionName(const std::string& sessionName)
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    std::shared_ptr<IProtocolSessionList> list = m_protocolSessionList.lock();
+    lock.unlock();
+
+    if (list)
+    {
+        list->setSessionName(m_sessionId, sessionName);
+    }
+}
+
 
 }

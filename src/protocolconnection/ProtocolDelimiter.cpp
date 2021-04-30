@@ -55,9 +55,23 @@ bool ProtocolDelimiter::doesSupportMetainfo() const
     return false;
 }
 
-IMessagePtr ProtocolDelimiter::createMessage() const
+bool ProtocolDelimiter::doesSupportSession() const
 {
-    return std::make_shared<ProtocolMessage>(getProtocolId(), 0, m_delimiter.size());
+    return false;
+}
+
+bool ProtocolDelimiter::needsReply() const
+{
+    return false;
+}
+
+IProtocol::FuncCreateMessage ProtocolDelimiter::getMessageFactory() const
+{
+    int sizeDelimiter = m_delimiter.size();
+    int protocolId = getProtocolId();
+    return [protocolId, sizeDelimiter]() {
+        return std::make_shared<ProtocolMessage>(protocolId, 0, sizeDelimiter);
+    };
 }
 
 std::vector<ssize_t> ProtocolDelimiter::findEndOfMessage(const char* buffer, ssize_t size)

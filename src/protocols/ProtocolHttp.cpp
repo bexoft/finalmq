@@ -37,11 +37,12 @@ const std::string ProtocolHttp::FMQ_PROTOCOL = "_fmq_protocol";
 const std::string ProtocolHttp::FMQ_PATH = "_fmq_path";
 const std::string ProtocolHttp::FMQ_QUERY = "_fmq_query";
 const std::string ProtocolHttp::FMQ_STATUS = "_fmq_status";
-const std::string ProtocolHttp::FMQ_STATUSTEXT = "_fmq_status";
+const std::string ProtocolHttp::FMQ_STATUSTEXT = "_fmq_statustext";
 const std::string ProtocolHttp::HTTP_REQUEST = "request";
 const std::string ProtocolHttp::HTTP_RESPONSE = "response";
     
 static const std::string CONTENT_LENGTH = "Content-Length";
+static const std::string HTTP_FMQ_SESSIONID = "HTTP_FMQ_SESSIONID";
 
 
 
@@ -51,6 +52,8 @@ static const std::string CONTENT_LENGTH = "Content-Length";
 
 
 ProtocolHttp::ProtocolHttp()
+    : m_randomDevice()
+    , m_randomGenerator(m_randomDevice())
 {
 
 }
@@ -78,9 +81,21 @@ bool ProtocolHttp::doesSupportMetainfo() const
     return true;
 }
 
-IMessagePtr ProtocolHttp::createMessage() const
+bool ProtocolHttp::doesSupportSession() const
 {
-    return std::make_shared<ProtocolMessage>(PROTOCOL_ID);
+    return true;;
+}
+
+bool ProtocolHttp::needsReply() const
+{
+    return true;
+}
+
+IProtocol::FuncCreateMessage ProtocolHttp::getMessageFactory() const
+{
+    return []() {
+        return std::make_shared<ProtocolMessage>(PROTOCOL_ID);
+    };
 }
 
 
@@ -123,6 +138,104 @@ static void splitOnce(const std::string& src, ssize_t indexBegin, ssize_t indexE
         indexBegin += len + 1;
     }
 }
+
+
+static const char tabDecToHex[] = {
+    '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
+};
+
+static void encode(std::string& dest, const std::string& src)
+{
+    dest.reserve(src.size() * 3);
+    char c;
+    unsigned char uc;
+    const char* chars = src.c_str();
+
+    for (size_t i = 0; i < src.size(); ++i) 
+    {
+        c = src[i];
+        if (isalnum(c) || c == '/' || c == '-' || c == '_' || c == '.' || c == '~')
+        {
+            dest += c;
+        }
+        else 
+        {
+            uc = c;
+            int first = (uc >> 4) & 0x0f;
+            int second = uc & 0x0f;
+            assert(0 <= first && first < 16);
+            assert(0 <= second && second < 16);
+            dest += '%';
+            dest += tabDecToHex[first];
+            dest += tabDecToHex[second];
+        }
+    }
+}
+
+
+static void decode(std::string& dest, const std::string& src)
+{
+    dest.reserve(src.size());
+    char code[3] = { 0 };
+    unsigned long c = 0;
+
+    for (int i = 0; i < src.size(); ++i)
+    {
+        if (src[i] == '%')
+        {
+            ++i;
+            memcpy(code, &src[i], 2);
+            c = strtoul(code, NULL, 16);
+            dest += (char)c;
+            ++i;
+        }
+        else
+        {
+            dest += src[i];
+        }
+    }
+}
+
+
+
+
+std::string ProtocolHttp::createSessionName()
+{
+    std::uint64_t sessionCounter = m_nextSessionNameCounter;
+    ++m_nextSessionNameCounter;
+    std::uint64_t v1 = m_randomVariable(m_randomGenerator);
+    std::uint64_t v2 = m_randomVariable(m_randomGenerator);
+
+    v1 &= 0xffffffff00000000ull;
+    v1 |= (sessionCounter & 0x00000000ffffffffull);
+
+    std::ostringstream oss;
+    oss << std::hex << v2 << v1;
+    std::string sessionName = oss.str();
+    return sessionName;
+}
+
+
+
+void ProtocolHttp::checkSessionName()
+{
+    if (m_checkSessionName)
+    {
+        m_checkSessionName = false;
+        auto callback = m_callback.lock();
+        if (callback)
+        {
+            bool found = callback->findSessionByName(m_sessionName);
+            if (!found)
+            {
+                m_sessionName = createSessionName();
+                callback->setSessionName(m_sessionName);
+            }
+            callback->connected();
+        }
+    }
+}
+
 
 
 bool ProtocolHttp::receiveHeaders(ssize_t bytesReceived)
@@ -185,11 +298,18 @@ bool ProtocolHttp::receiveHeaders(ssize_t bytesReceived)
                                 m_message->addMetainfo(FMQ_METHOD, std::move(lineSplit[0]));
                                 if (pathquerySplit.size() >= 1)
                                 {
-                                    m_message->addMetainfo(FMQ_PATH, std::move(pathquerySplit[0]));
+                                    std::string path;
+                                    decode(path, pathquerySplit[0]);
+                                    m_message->addMetainfo(FMQ_PATH, std::move(path));
                                 }
                                 if (pathquerySplit.size() >= 2)
                                 {
-                                    m_message->addMetainfo(FMQ_QUERY, std::move(pathquerySplit[1]));
+                                    std::vector<std::string> querySplit;
+                                    split(pathquerySplit[1], 0, pathquerySplit[1].size(), '&', querySplit);
+                                    for (size_t i = 0; i < querySplit.size(); ++i)
+                                    {
+                                        m_message->addMetainfo(FMQ_QUERY + std::to_string(i), std::move(querySplit[i]));
+                                    }
                                 }
                                 m_message->addMetainfo(FMQ_PROTOCOL, std::move(lineSplit[2]));
                                 m_state = STATE_FIND_HEADERS;
@@ -205,6 +325,7 @@ bool ProtocolHttp::receiveHeaders(ssize_t bytesReceived)
                 {
                     if (len == 0)
                     {
+                        checkSessionName();
                         if (m_contentLength == 0)
                         {
                             m_state = STATE_CONTENT_DONE;
@@ -232,6 +353,10 @@ bool ProtocolHttp::receiveHeaders(ssize_t bytesReceived)
                             if (lineSplit[0] == CONTENT_LENGTH)
                             {
                                 m_contentLength = std::atoll(value.c_str());
+                            }
+                            if (m_checkSessionName && lineSplit[0] == HTTP_FMQ_SESSIONID)
+                            {
+                                m_sessionName = value;
                             }
                             m_message->addMetainfo(std::move(lineSplit[0]), std::move(lineSplit[1]));
                         }
@@ -403,9 +528,30 @@ void ProtocolHttp::prepareMessageToSend(IMessagePtr message)
         const std::string* query = message->getMetainfo(FMQ_QUERY);
         if (method && path)
         {
+            std::string pathEncode;
+            encode(pathEncode, *path);
             firstLine = *method;
             firstLine += ' ';
-            firstLine += *path;
+            firstLine += pathEncode;
+
+            int i = 0;
+            const std::string* query = message->getMetainfo(FMQ_QUERY + std::to_string(i));
+            while (query != nullptr)
+            {
+                if (i == 0)
+                {
+                    firstLine += '?';
+                }
+                else
+                {
+                    firstLine += '&';
+                }
+                std::string queryEncode;
+                encode(queryEncode, *query);
+                firstLine += queryEncode;
+                ++i;
+                query = message->getMetainfo(FMQ_QUERY + std::to_string(i));
+            }
             if (query && !query->empty())
             {
                 firstLine += '?';
@@ -424,9 +570,17 @@ void ProtocolHttp::prepareMessageToSend(IMessagePtr message)
             firstLine += *status;
             firstLine += ' ';
         }
+        else
+        {
+            firstLine += "200 ";
+        }
         if (statustext)
         {
             firstLine += *statustext;
+        }
+        else
+        {
+            firstLine += "OK";
         }
     }
 
@@ -437,6 +591,8 @@ void ProtocolHttp::prepareMessageToSend(IMessagePtr message)
     }
     sumHeaderSize += HEADER_KEEP_ALIVE.size();  // Connection: keep-alive\r\n
 
+    ssize_t sizeBody = message->getTotalSendPayloadSize();
+    message->addMetainfo(CONTENT_LENGTH, std::to_string(sizeBody));
     ProtocolMessage::Metainfo& metainfo = message->getAllMetainfo();
     static const std::string PREFIX_PRIVATE_HEADER = "_fmq_";
     for (size_t i = 0; i < metainfo.size(); i += 2)
@@ -499,10 +655,18 @@ void ProtocolHttp::socketConnected(IProtocolSession& session)
 {
     ConnectionData connectionData = session.getConnectionData();
     m_headerHost = "Host: " + connectionData.hostname + ":" + std::to_string(connectionData.port) + "\r\n";
-    auto callback = m_callback.lock();
-    if (callback)
+    // for incomming connection -> do the connection event after checking the session ID
+    if (connectionData.incomingConnection)
     {
-        callback->connected();
+        m_checkSessionName = true;
+    }
+    else
+    {
+        auto callback = m_callback.lock();
+        if (callback)
+        {
+            callback->connected();
+        }
     }
 }
 
@@ -536,5 +700,6 @@ IProtocolPtr ProtocolHttpFactory::createProtocol()
 {
     return std::make_shared<ProtocolHttp>();
 }
+
 
 }   // namespace finalmq

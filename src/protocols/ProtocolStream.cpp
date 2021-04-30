@@ -61,9 +61,21 @@ bool ProtocolStream::doesSupportMetainfo() const
     return false;
 }
 
-IMessagePtr ProtocolStream::createMessage() const
+bool ProtocolStream::doesSupportSession() const
 {
-    return std::make_shared<ProtocolMessage>(PROTOCOL_ID);
+    return false;
+}
+
+bool ProtocolStream::needsReply() const
+{
+    return false;
+}
+
+IProtocol::FuncCreateMessage ProtocolStream::getMessageFactory() const
+{
+    return []() {
+        return std::make_shared<ProtocolMessage>(PROTOCOL_ID);
+    };
 }
 
 void ProtocolStream::receive(const SocketPtr& socket, int bytesToRead)

@@ -75,9 +75,21 @@ bool ProtocolHeaderBinarySize::doesSupportMetainfo() const
     return false;
 }
 
-IMessagePtr ProtocolHeaderBinarySize::createMessage() const
+bool ProtocolHeaderBinarySize::doesSupportSession() const
 {
-    return std::make_shared<ProtocolMessage>(PROTOCOL_ID, HEADERSIZE);
+    return false;
+}
+
+bool ProtocolHeaderBinarySize::needsReply() const
+{
+    return false;
+}
+
+IProtocol::FuncCreateMessage ProtocolHeaderBinarySize::getMessageFactory() const
+{
+    return []() {
+        return std::make_shared<ProtocolMessage>(PROTOCOL_ID, HEADERSIZE);
+    };
 }
 
 void ProtocolHeaderBinarySize::receive(const SocketPtr& socket, int bytesToRead)
@@ -150,5 +162,6 @@ IProtocolPtr ProtocolHeaderBinarySizeFactory::createProtocol()
 {
     return std::make_shared<ProtocolHeaderBinarySize>();
 }
+
 
 }   // namespace finalmq
