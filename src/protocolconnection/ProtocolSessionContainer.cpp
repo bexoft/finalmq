@@ -53,7 +53,7 @@ void ProtocolBind::disconnected(const IStreamConnectionPtr& /*connection*/)
     assert(false);
 }
 
-void ProtocolBind::received(const IStreamConnectionPtr& connection, const SocketPtr& /*socket*/, int /*bytesToRead*/)
+void ProtocolBind::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& /*socket*/, int /*bytesToRead*/)
 {
     // should never be called, because the callback will be overriden by connected
     assert(false);

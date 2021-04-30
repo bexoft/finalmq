@@ -40,7 +40,7 @@ std::int64_t ProtocolSessionList::addProtocolSession(IProtocolSessionPrivatePtr 
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     std::int64_t sessionId = m_nextSessionId++;
-    m_connectionId2ProtocolSession[sessionId] = { ProtocolSession, verified };
+    m_connectionId2ProtocolSession[sessionId] = { ProtocolSession, verified, {} };
     lock.unlock();
     return sessionId;
 }

@@ -149,7 +149,6 @@ static void encode(std::string& dest, const std::string& src)
     dest.reserve(src.size() * 3);
     char c;
     unsigned char uc;
-    const char* chars = src.c_str();
 
     for (size_t i = 0; i < src.size(); ++i) 
     {
@@ -179,7 +178,7 @@ static void decode(std::string& dest, const std::string& src)
     char code[3] = { 0 };
     unsigned long c = 0;
 
-    for (int i = 0; i < src.size(); ++i)
+    for (size_t i = 0; i < src.size(); ++i)
     {
         if (src[i] == '%')
         {
@@ -525,7 +524,6 @@ void ProtocolHttp::prepareMessageToSend(IMessagePtr message)
     {
         const std::string* method = message->getMetainfo(FMQ_METHOD);
         const std::string* path = message->getMetainfo(FMQ_PATH);
-        const std::string* query = message->getMetainfo(FMQ_QUERY);
         if (method && path)
         {
             std::string pathEncode;
