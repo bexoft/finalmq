@@ -68,6 +68,7 @@ struct IProtocol
     virtual void prepareMessageToSend(IMessagePtr message) = 0;
     virtual void socketConnected(IProtocolSession& session) = 0;
     virtual void socketDisconnected() = 0;
+    virtual void moveOldProtocolState(IProtocol& protocolOld) = 0;
 };
 
 

@@ -63,11 +63,14 @@ private:
     virtual void prepareMessageToSend(IMessagePtr message) override;
     virtual void socketConnected(IProtocolSession& session) override;
     virtual void socketDisconnected() override;
+    virtual void moveOldProtocolState(IProtocol& protocolOld) override;
+
 
     bool receiveHeaders(ssize_t bytesReceived);
     void reset();
     std::string createSessionName();
     void checkSessionName();
+    void cookiesToSessionIds(const std::string& cookies);
 
     enum State
     {
@@ -77,9 +80,19 @@ private:
         STATE_CONTENT_DONE
     };
 
+    enum StateSessionId
+    {
+        SESSIONID_NONE = 0,
+        SESSIONID_COOKIE = 1,
+        SESSIONID_FMQ = 2
+    };
+
     std::random_device                              m_randomDevice;
     std::mt19937                                    m_randomGenerator;
     std::uniform_int_distribution<std::uint64_t>    m_randomVariable;
+    std::vector<std::string>                        m_headerSendNext;
+    StateSessionId                                  m_stateSessionId = SESSIONID_NONE;
+    std::vector<std::string>                        m_sessionIds;
 
     State                               m_state = STATE_FIND_FIRST_LINE;
     std::string                         m_receiveBuffer;

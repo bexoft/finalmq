@@ -119,6 +119,10 @@ void ProtocolStream::socketDisconnected()
     }
 }
 
+void ProtocolStream::moveOldProtocolState(IProtocol& /*protocolOld*/)
+{
+
+}
 
 
 //---------------------------------------

@@ -141,6 +141,10 @@ void ProtocolHeaderBinarySize::socketDisconnected()
     }
 }
 
+void ProtocolHeaderBinarySize::moveOldProtocolState(IProtocol& /*protocolOld*/)
+{
+
+}
 
 
 //---------------------------------------

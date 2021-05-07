@@ -303,6 +303,10 @@ void ProtocolDelimiter::socketDisconnected()
     }
 }
 
+void ProtocolDelimiter::moveOldProtocolState(IProtocol& /*protocolOld*/)
+{
+
+}
 
 
 }   // namespace finalmq

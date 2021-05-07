@@ -43,7 +43,11 @@ const std::string ProtocolHttp::HTTP_RESPONSE = "response";
     
 static const std::string CONTENT_LENGTH = "Content-Length";
 static const std::string HTTP_FMQ_SESSIONID = "HTTP_FMQ_SESSIONID";
+static const std::string HTTP_COOKIE = "HTTP_COOKIE";
 
+static const std::string HTTP_SET_FMQ_SESSION = "Set-FmqSession";
+static const std::string HTTP_SET_COOKIE = "Set-Cookie";
+static const std::string COOKIE_PREFIX = "fmq=";
 
 
 //---------------------------------------
@@ -224,16 +228,59 @@ void ProtocolHttp::checkSessionName()
         auto callback = m_callback.lock();
         if (callback)
         {
-            bool found = callback->findSessionByName(m_sessionName);
+            bool found = false;
+            for (size_t i = 0; i < m_sessionIds.size() && !found; ++i)
+            {
+                found = callback->findSessionByName(m_sessionIds[i]);
+            }
             if (!found)
             {
                 m_sessionName = createSessionName();
                 callback->setSessionName(m_sessionName);
+                m_headerSendNext.emplace_back(HTTP_SET_FMQ_SESSION);
+                m_headerSendNext.emplace_back(m_sessionName);
+                m_headerSendNext.emplace_back(HTTP_SET_COOKIE);
+                m_headerSendNext.push_back(COOKIE_PREFIX + m_sessionName);
             }
             callback->connected();
         }
     }
 }
+
+
+
+void ProtocolHttp::cookiesToSessionIds(const std::string& cookies)
+{
+    m_sessionIds.clear();
+    size_t posStart = 0;
+    while (posStart != std::string::npos)
+    {
+        size_t posEnd = cookies.find_first_of(';', posStart);
+        std::string cookie;
+        if (posEnd != std::string::npos)
+        {
+            cookie = std::string(cookies, posStart, posEnd - posStart);
+            posStart = posEnd + 1;
+        }
+        else
+        {
+            cookie = std::string(cookies, posStart);
+            posStart = posEnd;
+        }
+
+        size_t pos = cookie.find_first_of("fmq=");
+        if (pos != std::string::npos)
+        {
+            pos += 4;
+            std::string sessionId = { cookie, pos };
+            if (!sessionId.empty())
+            {
+                m_sessionIds.emplace_back(std::move(sessionId));
+            }
+        }
+    }
+}
+
 
 
 
@@ -353,15 +400,31 @@ bool ProtocolHttp::receiveHeaders(ssize_t bytesReceived)
                             {
                                 m_contentLength = std::atoll(value.c_str());
                             }
-                            if (m_checkSessionName && lineSplit[0] == HTTP_FMQ_SESSIONID)
+                            if (m_checkSessionName)
                             {
-                                m_sessionName = value;
+                                if (lineSplit[0] == HTTP_FMQ_SESSIONID)
+                                {
+                                    m_sessionIds.clear();
+                                    if (!value.empty())
+                                    {
+                                        m_sessionIds.push_back(value);
+                                    }
+                                    m_stateSessionId = SESSIONID_FMQ;
+                                }
+                                else if (lineSplit[0] == HTTP_COOKIE)
+                                {
+                                    if (m_stateSessionId == SESSIONID_NONE)
+                                    {
+                                        cookiesToSessionIds(value);
+                                        m_stateSessionId = SESSIONID_COOKIE;
+                                    }
+                                }
                             }
                             m_message->addMetainfo(std::move(lineSplit[0]), std::move(lineSplit[1]));
                         }
                         else if (lineSplit.size() == 1)
                         {
-                            m_message->addMetainfo("", std::move(lineSplit[0]));
+                            m_message->addMetainfo(std::move(lineSplit[0]), "");
                         }
                         else
                         {
@@ -590,8 +653,14 @@ void ProtocolHttp::prepareMessageToSend(IMessagePtr message)
     sumHeaderSize += HEADER_KEEP_ALIVE.size();  // Connection: keep-alive\r\n
 
     ssize_t sizeBody = message->getTotalSendPayloadSize();
-    message->addMetainfo(CONTENT_LENGTH, std::to_string(sizeBody));
     ProtocolMessage::Metainfo& metainfo = message->getAllMetainfo();
+    metainfo.emplace_back(CONTENT_LENGTH);
+    metainfo.push_back(std::to_string(sizeBody));
+    if (!m_headerSendNext.empty())
+    {
+        metainfo.insert(metainfo.end(), m_headerSendNext.begin(), m_headerSendNext.end());
+        m_headerSendNext.clear();
+    }
     static const std::string PREFIX_PRIVATE_HEADER = "_fmq_";
     for (size_t i = 0; i < metainfo.size(); i += 2)
     {
@@ -676,6 +745,16 @@ void ProtocolHttp::socketDisconnected()
         callback->disconnected();
     }
 }
+
+void ProtocolHttp::moveOldProtocolState(IProtocol& /*protocolOld*/)
+{
+    //assert(protocolOld.getProtocolId() == PROTOCOL_ID);
+    //if (protocolOld.getProtocolId() == PROTOCOL_ID)
+    //{
+    //    ProtocolHttp& old = static_cast<ProtocolHttp&>(protocolOld);
+    //}
+}
+
 
 
 

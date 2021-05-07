@@ -49,6 +49,7 @@ private:
     virtual void prepareMessageToSend(IMessagePtr message) override;
     virtual void socketConnected(IProtocolSession& session) override;
     virtual void socketDisconnected() override;
+    virtual void moveOldProtocolState(IProtocol& protocolOld) override;
 
     std::vector<ssize_t> findEndOfMessage(const char* buffer, ssize_t size);
 

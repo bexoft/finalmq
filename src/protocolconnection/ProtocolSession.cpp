@@ -485,6 +485,7 @@ void ProtocolSession::reconnect()
 void ProtocolSession::setProtocol(const IProtocolPtr& protocol)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
+    protocol->moveOldProtocolState(*m_protocol);
     m_protocol = protocol;
     if (m_protocol)
     {
@@ -505,7 +506,6 @@ bool ProtocolSession::findSessionByName(const std::string& sessionName)
         if (session)
         {
             assert(!session->getSocket());  // the session should be disconnected
-
             list->removeProtocolSession(m_sessionId);
             assert(m_protocol);
             session->setProtocol(m_protocol);
