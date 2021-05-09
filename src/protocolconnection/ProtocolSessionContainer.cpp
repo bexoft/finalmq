@@ -44,7 +44,7 @@ hybrid_ptr<IStreamConnectionCallback> ProtocolBind::connected(const IStreamConne
     assert(protocol);
     IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(m_callback, m_executor, protocol, m_protocolSessionList, m_bindProperties, m_contentType);
     protocolSession->setConnection(connection, !protocol->doesSupportSession());
-    return std::weak_ptr<IStreamConnectionCallback>(protocolSession);
+    return std::weak_ptr<IStreamConnectionCallback>(protocol);
 }
 
 void ProtocolBind::disconnected(const IStreamConnectionPtr& /*connection*/)

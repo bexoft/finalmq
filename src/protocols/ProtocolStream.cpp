@@ -71,6 +71,11 @@ bool ProtocolStream::needsReply() const
     return false;
 }
 
+bool ProtocolStream::isMultiConnectionSession() const
+{
+    return false;
+}
+
 IProtocol::FuncCreateMessage ProtocolStream::getMessageFactory() const
 {
     return []() {
@@ -78,7 +83,18 @@ IProtocol::FuncCreateMessage ProtocolStream::getMessageFactory() const
     };
 }
 
-void ProtocolStream::receive(const SocketPtr& socket, int bytesToRead)
+void ProtocolStream::prepareMessageToSend(IMessagePtr message)
+{
+    message->prepareMessageToSend();
+}
+
+void ProtocolStream::moveOldProtocolState(IProtocol& /*protocolOld*/)
+{
+
+}
+
+
+void ProtocolStream::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
 {
     IMessagePtr message = std::make_shared<ProtocolMessage>(0);
     char* payload = message->resizeReceivePayload(bytesToRead);
@@ -96,32 +112,24 @@ void ProtocolStream::receive(const SocketPtr& socket, int bytesToRead)
     }
 }
 
-void ProtocolStream::prepareMessageToSend(IMessagePtr message)
-{
-    message->prepareMessageToSend();
-}
 
-void ProtocolStream::socketConnected(IProtocolSession& /*session*/)
+hybrid_ptr<IStreamConnectionCallback> ProtocolStream::connected(const IStreamConnectionPtr& /*connection*/)
 {
     auto callback = m_callback.lock();
     if (callback)
     {
         callback->connected();
     }
+    return nullptr;
 }
 
-void ProtocolStream::socketDisconnected()
+void ProtocolStream::disconnected(const IStreamConnectionPtr& /*connection*/)
 {
     auto callback = m_callback.lock();
     if (callback)
     {
         callback->disconnected();
     }
-}
-
-void ProtocolStream::moveOldProtocolState(IProtocol& /*protocolOld*/)
-{
-
 }
 
 

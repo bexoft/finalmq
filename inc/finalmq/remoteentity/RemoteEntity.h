@@ -250,6 +250,17 @@ public:
         , m_replySent(false)
         , m_metainfo(std::move(header.meta))
     {
+        if (!m_metainfo.empty())
+        {
+            for (size_t i = 0; i < m_metainfo.size(); i += 2)
+            {
+                if ((m_metainfo[i].compare(0, 10, "_fmq_echo_") == 0) && (i + 1 < m_metainfo.size()))
+                {
+                    m_metainfoReply.push_back(m_metainfo[i]);
+                    m_metainfoReply.push_back(m_metainfo[i + 1]);
+                }
+            }
+        }
     }
 
     ~ReplyContext()
@@ -276,7 +287,7 @@ public:
     {
         if (!m_replySent)
         {
-            remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, remoteentity::Status::STATUS_OK, structBase.getStructInfo().getTypeName(), m_correlationId, {} };
+            remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, remoteentity::Status::STATUS_OK, structBase.getStructInfo().getTypeName(), m_correlationId, std::move(m_metainfoReply) };
             RemoteEntityFormatRegistry::instance().send(m_session, header, &structBase);
             m_replySent = true;
         }
@@ -286,7 +297,8 @@ public:
     {
         if (!m_replySent)
         {
-            remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, remoteentity::Status::STATUS_OK, structBase.getStructInfo().getTypeName(), m_correlationId, metainfo };
+            m_metainfoReply.insert(m_metainfoReply.end(), metainfo.begin(), metainfo.end());
+            remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, remoteentity::Status::STATUS_OK, structBase.getStructInfo().getTypeName(), m_correlationId, std::move(m_metainfoReply) };
             RemoteEntityFormatRegistry::instance().send(m_session, header, &structBase);
             m_replySent = true;
         }
@@ -296,7 +308,12 @@ public:
     {
         if (!m_replySent)
         {
-            remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, remoteentity::Status::STATUS_OK, structBase.getStructInfo().getTypeName(), m_correlationId, std::move(metainfo) };
+            m_metainfoReply.reserve(m_metainfoReply.size() + metainfo.size());
+            for (size_t i = 0; i < metainfo.size(); ++i)
+            {
+                m_metainfoReply.emplace_back(std::move(metainfo[i]));
+            }
+            remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, remoteentity::Status::STATUS_OK, structBase.getStructInfo().getTypeName(), m_correlationId, std::move(m_metainfoReply) };
             RemoteEntityFormatRegistry::instance().send(m_session, header, &structBase);
             m_replySent = true;
         }
@@ -343,7 +360,7 @@ private:
     {
         if (!m_replySent)
         {
-            remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, status, "", m_correlationId, {} };
+            remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, status, "", m_correlationId, std::move(m_metainfoReply) };
             RemoteEntityFormatRegistry::instance().send(m_session, header);
             m_replySent = true;
         }
@@ -371,6 +388,7 @@ private:
     PeerId                          m_peerId = PEERID_INVALID;
     bool                            m_replySent = false;
     std::vector<std::string>        m_metainfo;
+    std::vector<std::string>        m_metainfoReply;
 
     friend class RemoteEntity;
 };

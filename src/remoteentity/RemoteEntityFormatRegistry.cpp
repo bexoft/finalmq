@@ -129,15 +129,39 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, re
     {
         IMessagePtr message = session->createMessage();
         assert(message);
+        if (session->doesSupportMetainfo())
+        {
+            IMessage::Metainfo& metainfo = message->getAllMetainfo();
+            statusToProtocolStatus(header.status, metainfo);
+            metainfo.insert(metainfo.end(), std::make_move_iterator(header.meta.begin()), std::make_move_iterator(header.meta.end()));
+            header.meta.clear();
+        }
+        else if (!header.meta.empty())
+        {
+            IMessage::Metainfo& metainfo = message->getAllMetainfo();
+            std::vector<std::string> metaHeader;
+            metaHeader.reserve(header.meta.size());
+            for (size_t i = 0; i < header.meta.size(); i += 2)
+            {
+                if (i + 1 < header.meta.size())
+                {
+                    if (header.meta[i].compare(0, 5, "_fmq_") == 0)
+                    {
+                        metainfo.emplace_back(std::move(header.meta[i]));
+                        metainfo.emplace_back(std::move(header.meta[i + 1]));
+                    }
+                    else
+                    {
+                        metaHeader.emplace_back(std::move(header.meta[i]));
+                        metaHeader.emplace_back(std::move(header.meta[i + 1]));
+                    }
+                }
+            }
+            header.meta = std::move(metaHeader);
+        }
         ok = serialize(*message, session->getContentType(), header, structBase);
         if (ok)
         {
-            if (session->doesSupportMetainfo())
-            {
-                IMessage::Metainfo& metainfo = message->getAllMetainfo();
-                statusToProtocolStatus(header.status, metainfo);
-                metainfo.insert(metainfo.end(), std::make_move_iterator(header.meta.begin()), std::make_move_iterator(header.meta.end()));
-            }
             ok = session->sendMessage(message);
         }
     }

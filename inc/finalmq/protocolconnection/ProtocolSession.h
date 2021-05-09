@@ -35,12 +35,11 @@ namespace finalmq {
 
 
 struct IProtocolSessionPrivate : public IProtocolSession
-                               , public IStreamConnectionCallback
 {
-    virtual void connect() = 0;
+    virtual bool connect() = 0;
     virtual void createConnection() = 0;
     virtual int64_t setConnection(const IStreamConnectionPtr& connection, bool verified) = 0;
-    virtual void setProtocol(const IProtocolPtr& protocol) = 0;
+    virtual void setProtocolConnection(const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) = 0;
 };
 
 typedef std::shared_ptr<IProtocolSessionPrivate> IProtocolSessionPrivatePtr;
@@ -67,7 +66,7 @@ private:
     virtual bool sendMessage(const IMessagePtr& msg) override;
     virtual std::int64_t getSessionId() const;
     virtual ConnectionData getConnectionData() const override;
-    virtual SocketPtr getSocket() override;
+//    virtual SocketPtr getSocket() override;
     virtual int getContentType() const override;
     virtual bool doesSupportMetainfo() const override;
     virtual bool needsReply() const override;
@@ -75,21 +74,21 @@ private:
     virtual bool connect(const std::string& endpoint, const ConnectProperties& connectionProperties = {}) override;
     virtual bool connectProtocol(const std::string& endpoint, const IProtocolPtr& protocol, const ConnectProperties& connectionProperties = {}, int contentType = 0) override;
 
-    // IStreamConnectionCallback
-    virtual hybrid_ptr<IStreamConnectionCallback> connected(const IStreamConnectionPtr& connection) override;
-    virtual void disconnected(const IStreamConnectionPtr& connection) override;
-    virtual void received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) override;
+    //// IStreamConnectionCallback
+    //virtual hybrid_ptr<IStreamConnectionCallback> connected(const IStreamConnectionPtr& connection) override;
+    //virtual void disconnected(const IStreamConnectionPtr& connection) override;
+    //virtual void received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) override;
 
     // IProtocolSessionPrivate
-    virtual void connect() override;
+    virtual bool connect() override;
     virtual void createConnection() override;
     virtual int64_t setConnection(const IStreamConnectionPtr& connection, bool verified) override;
-    virtual void setProtocol(const IProtocolPtr& protocol) override;
+    virtual void setProtocolConnection(const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) override;
 
     // IProtocolCallback
     virtual void connected() override;
     virtual void disconnected() override;
-    virtual void received(const IMessagePtr& message) override;
+    virtual void received(const IMessagePtr& message, int connectionId) override;
     virtual void socketConnected() override;
     virtual void socketDisconnected() override;
     virtual void reconnect() override;
@@ -98,19 +97,33 @@ private:
 
     IMessagePtr convertMessageToProtocol(const IMessagePtr& msg);
     void initProtocolValues();
+    void cleanupMultiConnection();
+    void sendBufferedMessages();
+    void addSessionToList(bool verified);
 
-    IStreamConnectionPtr                            m_connection;
-    hybrid_ptr<IProtocolSessionCallback>            m_callback;
-    IExecutorPtr                                    m_executor;
-    IProtocolPtr                                    m_protocol;
+    struct ProtocolConnection
+    {
+        IProtocolPtr                                protocol;
+        IStreamConnectionPtr                        connection;
+    };
+
+    hybrid_ptr<IProtocolSessionCallback>                    m_callback;
+    IExecutorPtr                                            m_executor;
+    ProtocolConnection                                      m_protocolConnection;
+    std::unordered_map<std::int64_t, ProtocolConnection>    m_multiConnections;
+
     int64_t                                         m_sessionId = 0;
     std::weak_ptr<IProtocolSessionList>             m_protocolSessionList;
     int                                             m_contentType = 0;
+    std::uint32_t                                   m_protocolId = 0;
     bool                                            m_protocolFlagMessagesResendable = false;
     bool                                            m_protocolFlagSupportMetainfo = false;
     bool                                            m_protocolFlagNeedsReply = false;
+    bool                                            m_protocolFlagIsMultiConnectionSession = false;
     IProtocol::FuncCreateMessage                    m_messageFactory;
     std::atomic_bool                                m_protocolSet;
+    bool                                            m_triggerConnected = false;
+    bool                                            m_incomingConnection = false;
 
     std::shared_ptr<IStreamConnectionContainer>     m_streamConnectionContainer;
     std::string                                     m_endpoint;

@@ -85,25 +85,16 @@ bool ProtocolHeaderBinarySize::needsReply() const
     return false;
 }
 
+bool ProtocolHeaderBinarySize::isMultiConnectionSession() const
+{
+    return false;
+}
+
 IProtocol::FuncCreateMessage ProtocolHeaderBinarySize::getMessageFactory() const
 {
     return []() {
         return std::make_shared<ProtocolMessage>(PROTOCOL_ID, HEADERSIZE);
     };
-}
-
-void ProtocolHeaderBinarySize::receive(const SocketPtr& socket, int bytesToRead)
-{
-    std::deque<IMessagePtr> messages;
-    m_headerHelper.receive(socket, bytesToRead, messages);
-    auto callback = m_callback.lock();
-    if (callback)
-    {
-        for (auto it = messages.begin(); it != messages.end(); ++it)
-        {
-            callback->received(*it);
-        }
-    }
 }
 
 void ProtocolHeaderBinarySize::prepareMessageToSend(IMessagePtr message)
@@ -123,27 +114,43 @@ void ProtocolHeaderBinarySize::prepareMessageToSend(IMessagePtr message)
     }
 }
 
-void ProtocolHeaderBinarySize::socketConnected(IProtocolSession& /*session*/)
+void ProtocolHeaderBinarySize::moveOldProtocolState(IProtocol& /*protocolOld*/)
+{
+
+}
+
+void ProtocolHeaderBinarySize::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
+{
+    std::deque<IMessagePtr> messages;
+    m_headerHelper.receive(socket, bytesToRead, messages);
+    auto callback = m_callback.lock();
+    if (callback)
+    {
+        for (auto it = messages.begin(); it != messages.end(); ++it)
+        {
+            callback->received(*it);
+        }
+    }
+}
+
+
+hybrid_ptr<IStreamConnectionCallback> ProtocolHeaderBinarySize::connected(const IStreamConnectionPtr& /*connection*/)
 {
     auto callback = m_callback.lock();
     if (callback)
     {
         callback->connected();
     }
+    return nullptr;
 }
 
-void ProtocolHeaderBinarySize::socketDisconnected()
+void ProtocolHeaderBinarySize::disconnected(const IStreamConnectionPtr& /*connection*/)
 {
     auto callback = m_callback.lock();
     if (callback)
     {
         callback->disconnected();
     }
-}
-
-void ProtocolHeaderBinarySize::moveOldProtocolState(IProtocol& /*protocolOld*/)
-{
-
 }
 
 

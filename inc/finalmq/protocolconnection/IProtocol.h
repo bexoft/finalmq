@@ -23,6 +23,7 @@
 #pragma once
 
 #include "finalmq/streamconnection/IMessage.h"
+#include "finalmq/streamconnection/StreamConnection.h"
 
 #include <functional>
 
@@ -41,7 +42,7 @@ struct IProtocolCallback
     virtual ~IProtocolCallback() {}
     virtual void connected() = 0;
     virtual void disconnected() = 0;
-    virtual void received(const IMessagePtr& message) = 0;
+    virtual void received(const IMessagePtr& message, int connectionId = 0) = 0;
     virtual void socketConnected() = 0;
     virtual void socketDisconnected() = 0;
     virtual void reconnect() = 0;
@@ -53,7 +54,7 @@ struct IProtocolSession;
 typedef std::shared_ptr<IProtocolSession> IProtocolSessionPtr;
 
 
-struct IProtocol
+struct IProtocol : public IStreamConnectionCallback
 {
     typedef std::function<IMessagePtr()> FuncCreateMessage;
     virtual ~IProtocol() {}
@@ -63,11 +64,12 @@ struct IProtocol
     virtual bool doesSupportMetainfo() const = 0;
     virtual bool doesSupportSession() const = 0;
     virtual bool needsReply() const = 0;
+    virtual bool isMultiConnectionSession() const = 0;
     virtual FuncCreateMessage getMessageFactory() const = 0;
-    virtual void receive(const SocketPtr& socket, int bytesToRead) = 0;
+    //virtual void receive(const SocketPtr& socket, int bytesToRead) = 0;
     virtual void prepareMessageToSend(IMessagePtr message) = 0;
-    virtual void socketConnected(IProtocolSession& session) = 0;
-    virtual void socketDisconnected() = 0;
+    //virtual void socketConnected(IProtocolSession& session) = 0;
+    //virtual void socketDisconnected() = 0;
     virtual void moveOldProtocolState(IProtocol& protocolOld) = 0;
 };
 

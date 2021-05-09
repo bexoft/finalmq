@@ -34,7 +34,7 @@ struct IProtocolSession
     virtual bool sendMessage(const IMessagePtr& msg) = 0;
     virtual std::int64_t getSessionId() const = 0;
     virtual ConnectionData getConnectionData() const = 0;
-    virtual SocketPtr getSocket() = 0;
+//    virtual SocketPtr getSocket() = 0;
     virtual int getContentType() const = 0;
     virtual bool doesSupportMetainfo() const = 0;
     virtual bool needsReply() const = 0;

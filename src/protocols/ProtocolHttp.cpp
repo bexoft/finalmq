@@ -27,6 +27,8 @@
 #include "finalmq/protocolconnection/ProtocolSession.h"
 #include "finalmq/streamconnection/Socket.h"
 
+#include <algorithm>
+
 
 namespace finalmq {
 
@@ -43,8 +45,9 @@ const std::string ProtocolHttp::HTTP_RESPONSE = "response";
     
 static const std::string CONTENT_LENGTH = "Content-Length";
 static const std::string HTTP_FMQ_SESSIONID = "HTTP_FMQ_SESSIONID";
-static const std::string HTTP_COOKIE = "HTTP_COOKIE";
+static const std::string HTTP_COOKIE = "Cookie";
 
+static const std::string HTTP_FMQ_CREATESESSION = "HTTP_FMQ_CREATESESSION";
 static const std::string HTTP_SET_FMQ_SESSION = "Set-FmqSession";
 static const std::string HTTP_SET_COOKIE = "Set-Cookie";
 static const std::string COOKIE_PREFIX = "fmq=";
@@ -95,6 +98,11 @@ bool ProtocolHttp::needsReply() const
     return true;
 }
 
+bool ProtocolHttp::isMultiConnectionSession() const
+{
+    return true;
+}
+
 IProtocol::FuncCreateMessage ProtocolHttp::getMessageFactory() const
 {
     return []() {
@@ -105,10 +113,9 @@ IProtocol::FuncCreateMessage ProtocolHttp::getMessageFactory() const
 
 static void split(const std::string& src, ssize_t indexBegin, ssize_t indexEnd, char delimiter, std::vector<std::string>& dest)
 {
-    const char delimiterstring[] = { delimiter, 0 };
     while (indexBegin < indexEnd)
     {
-        size_t pos = src.find_first_of(delimiterstring, indexBegin);
+        size_t pos = src.find_first_of(delimiter, indexBegin);
         if (pos == std::string::npos || static_cast<ssize_t>(pos) > indexEnd)
         {
             pos = indexEnd;
@@ -122,9 +129,7 @@ static void split(const std::string& src, ssize_t indexBegin, ssize_t indexEnd, 
 
 static void splitOnce(const std::string& src, ssize_t indexBegin, ssize_t indexEnd, char delimiter, std::vector<std::string>& dest)
 {
-    const char delimiterstring[] = { delimiter, 0 };
-
-    size_t pos = src.find_first_of(delimiterstring, indexBegin);
+    size_t pos = src.find_first_of(delimiter, indexBegin);
     if (pos == std::string::npos || static_cast<ssize_t>(pos) > indexEnd)
     {
         pos = indexEnd;
@@ -222,36 +227,40 @@ std::string ProtocolHttp::createSessionName()
 
 void ProtocolHttp::checkSessionName()
 {
-    if (m_checkSessionName)
+    auto callback = m_callback.lock();
+    bool found = m_sessionIdMatches;
+    if (!m_createSession)
     {
-        m_checkSessionName = false;
-        auto callback = m_callback.lock();
-        if (callback)
+        for (size_t i = 0; i < m_sessionNames.size() && !found; ++i)
         {
-            bool found = false;
-            for (size_t i = 0; i < m_sessionIds.size() && !found; ++i)
+            found = callback->findSessionByName(m_sessionNames[i]);
+            if (found)
             {
-                found = callback->findSessionByName(m_sessionIds[i]);
+                m_sessionName = std::move(m_sessionNames[i]);
             }
-            if (!found)
-            {
-                m_sessionName = createSessionName();
-                callback->setSessionName(m_sessionName);
-                m_headerSendNext.emplace_back(HTTP_SET_FMQ_SESSION);
-                m_headerSendNext.emplace_back(m_sessionName);
-                m_headerSendNext.emplace_back(HTTP_SET_COOKIE);
-                m_headerSendNext.push_back(COOKIE_PREFIX + m_sessionName);
-            }
-            callback->connected();
         }
     }
+    if (m_createSession || !found)
+    {
+        m_sessionName = createSessionName();
+        callback = m_callback.lock();
+        if (callback)
+        {
+            callback->setSessionName(m_sessionName);
+        }
+        m_headerSendNext.emplace_back(HTTP_SET_FMQ_SESSION);
+        m_headerSendNext.emplace_back(m_sessionName);
+        m_headerSendNext.emplace_back(HTTP_SET_COOKIE);
+        m_headerSendNext.push_back(COOKIE_PREFIX + m_sessionName);
+    }
+    m_sessionNames.clear();
 }
 
 
 
 void ProtocolHttp::cookiesToSessionIds(const std::string& cookies)
 {
-    m_sessionIds.clear();
+    m_sessionNames.clear();
     size_t posStart = 0;
     while (posStart != std::string::npos)
     {
@@ -268,14 +277,14 @@ void ProtocolHttp::cookiesToSessionIds(const std::string& cookies)
             posStart = posEnd;
         }
 
-        size_t pos = cookie.find_first_of("fmq=");
+        size_t pos = cookie.find("fmq=");
         if (pos != std::string::npos)
         {
             pos += 4;
             std::string sessionId = { cookie, pos };
             if (!sessionId.empty())
             {
-                m_sessionIds.emplace_back(std::move(sessionId));
+                m_sessionNames.emplace_back(std::move(sessionId));
             }
         }
     }
@@ -400,24 +409,39 @@ bool ProtocolHttp::receiveHeaders(ssize_t bytesReceived)
                             {
                                 m_contentLength = std::atoll(value.c_str());
                             }
-                            if (m_checkSessionName)
+                            else if (lineSplit[0] == HTTP_FMQ_CREATESESSION)
                             {
-                                if (lineSplit[0] == HTTP_FMQ_SESSIONID)
+                                m_createSession = true;
+                            }
+                            else if (lineSplit[0] == HTTP_FMQ_SESSIONID)
+                            {
+                                m_sessionNames.clear();
+                                if (!value.empty())
                                 {
-                                    m_sessionIds.clear();
-                                    if (!value.empty())
+                                    // only push, if value is not sessionName -> this protocolinstance is not the right one
+                                    if (!m_sessionName.empty() && m_sessionName == value)
                                     {
-                                        m_sessionIds.push_back(value);
+                                        m_sessionIdMatches = true;
                                     }
-                                    m_stateSessionId = SESSIONID_FMQ;
+                                    m_sessionNames.push_back(value);
                                 }
-                                else if (lineSplit[0] == HTTP_COOKIE)
+                                m_stateSessionId = SESSIONID_FMQ;
+                            }
+                            else if (lineSplit[0] == HTTP_COOKIE)
+                            {
+                                if (m_stateSessionId == SESSIONID_NONE)
                                 {
-                                    if (m_stateSessionId == SESSIONID_NONE)
+                                    cookiesToSessionIds(value);
+                                    // is sessionName in sessionNames, if yes, then this protocol instance is the right one -> clear sessionNames
+                                    if (!m_sessionName.empty())
                                     {
-                                        cookiesToSessionIds(value);
-                                        m_stateSessionId = SESSIONID_COOKIE;
+                                        auto it = std::find(m_sessionNames.begin(), m_sessionNames.end(), m_sessionName);
+                                        if (it != m_sessionNames.end())
+                                        {
+                                            m_sessionIdMatches = true;
+                                        }
                                     }
+                                    m_stateSessionId = SESSIONID_COOKIE;
                                 }
                             }
                             m_message->addMetainfo(std::move(lineSplit[0]), std::move(lineSplit[1]));
@@ -455,10 +479,166 @@ void ProtocolHttp::reset()
     m_indexFilled = 0;
     m_message = nullptr;
     m_state = STATE_FIND_FIRST_LINE;
+    m_stateSessionId = SESSIONID_NONE;
+    m_createSession = false;
+    m_sessionIdMatches = false;
 }
 
 
-void ProtocolHttp::receive(const SocketPtr& socket, int bytesToRead)
+
+static std::string HEADER_KEEP_ALIVE = "Connection: keep-alive\r\n";
+
+void ProtocolHttp::prepareMessageToSend(IMessagePtr message)
+{
+    std::string firstLine;
+    const std::string* http = message->getMetainfo(FMQ_HTTP);
+    if (http && *http == HTTP_REQUEST)
+    {
+        const std::string* method = message->getMetainfo(FMQ_METHOD);
+        const std::string* path = message->getMetainfo(FMQ_PATH);
+        if (method && path)
+        {
+            std::string pathEncode;
+            encode(pathEncode, *path);
+            firstLine = *method;
+            firstLine += ' ';
+            firstLine += pathEncode;
+
+            int i = 0;
+            const std::string* query = message->getMetainfo(FMQ_QUERY + std::to_string(i));
+            while (query != nullptr)
+            {
+                if (i == 0)
+                {
+                    firstLine += '?';
+                }
+                else
+                {
+                    firstLine += '&';
+                }
+                std::string queryEncode;
+                encode(queryEncode, *query);
+                firstLine += queryEncode;
+                ++i;
+                query = message->getMetainfo(FMQ_QUERY + std::to_string(i));
+            }
+            if (query && !query->empty())
+            {
+                firstLine += '?';
+                firstLine += *query;
+            }
+            firstLine += " HTTP/1.1";
+        }
+    }
+    else
+    {
+        const std::string* status = message->getMetainfo(FMQ_STATUS);
+        const std::string* statustext = message->getMetainfo(FMQ_STATUSTEXT);
+        firstLine = "HTTP/1.1 ";
+        if (status)
+        {
+            firstLine += *status;
+            firstLine += ' ';
+        }
+        else
+        {
+            firstLine += "200 ";
+        }
+        if (statustext)
+        {
+            firstLine += *statustext;
+        }
+        else
+        {
+            firstLine += "OK";
+        }
+    }
+
+    size_t sumHeaderSize = firstLine.size() + 4;   // 2 = '\r\n' and last empty line
+    if (http && *http == HTTP_REQUEST)
+    {
+        sumHeaderSize += m_headerHost.size();   // Host: hostname\r\n
+    }
+    sumHeaderSize += HEADER_KEEP_ALIVE.size();  // Connection: keep-alive\r\n
+
+    ssize_t sizeBody = message->getTotalSendPayloadSize();
+    ProtocolMessage::Metainfo& metainfo = message->getAllMetainfo();
+    metainfo.emplace_back(CONTENT_LENGTH);
+    metainfo.push_back(std::to_string(sizeBody));
+    if (!m_headerSendNext.empty())
+    {
+        metainfo.insert(metainfo.end(), m_headerSendNext.begin(), m_headerSendNext.end());
+        m_headerSendNext.clear();
+    }
+    static const std::string PREFIX_PRIVATE_HEADER = "_fmq_";
+    for (size_t i = 0; i < metainfo.size(); i += 2)
+    {
+        const std::string& key = metainfo[i];
+        const std::string& value = metainfo[i+1];
+        if (!key.empty() && key.compare(0, PREFIX_PRIVATE_HEADER.size(), PREFIX_PRIVATE_HEADER) != 0)
+        {
+            sumHeaderSize += key.size() + value.size() + 4;    // 4 = ': ' and '\r\n'
+        }
+    }
+
+    char* headerBuffer = message->addSendHeader(sumHeaderSize);
+    size_t index = 0;
+    assert(index + firstLine.size() + 2 <= sumHeaderSize);
+    memcpy(headerBuffer + index, firstLine.data(), firstLine.size());
+    index += firstLine.size();
+    memcpy(headerBuffer + index, "\r\n", 2);
+    index += 2;
+
+    if (http && *http == HTTP_REQUEST)
+    {
+        // Host: hostname\r\n
+        assert(index + m_headerHost.size() <= sumHeaderSize);
+        memcpy(headerBuffer + index, m_headerHost.data(), m_headerHost.size());
+        index += m_headerHost.size();
+    }
+
+    // Connection: keep-alive\r\n
+    assert(index + HEADER_KEEP_ALIVE.size() <= sumHeaderSize);
+    memcpy(headerBuffer + index, HEADER_KEEP_ALIVE.data(), HEADER_KEEP_ALIVE.size());
+    index += HEADER_KEEP_ALIVE.size();
+
+    for (size_t i = 0; i < metainfo.size(); i += 2)
+    {
+        const std::string& key = metainfo[i];
+        const std::string& value = metainfo[i+1];
+        if (!key.empty() && key.compare(0, PREFIX_PRIVATE_HEADER.size(), PREFIX_PRIVATE_HEADER) != 0)
+        {
+            assert(index + key.size() + value.size() + 4 <= sumHeaderSize);
+            memcpy(headerBuffer + index, key.data(), key.size());
+            index += key.size();
+            memcpy(headerBuffer + index, ": ", 2);
+            index += 2;
+            memcpy(headerBuffer + index, value.data(), value.size());
+            index += value.size();
+            memcpy(headerBuffer + index, "\r\n", 2);
+            index += 2;
+        }
+    }
+    assert(index + 2 == sumHeaderSize);
+    memcpy(headerBuffer + index, "\r\n", 2);
+    index += 2;
+    assert(index == sumHeaderSize);
+
+    message->prepareMessageToSend();
+}
+
+
+void ProtocolHttp::moveOldProtocolState(IProtocol& /*protocolOld*/)
+{
+    //assert(protocolOld.getProtocolId() == PROTOCOL_ID);
+    //if (protocolOld.getProtocolId() == PROTOCOL_ID)
+    //{
+    //    ProtocolHttp& old = static_cast<ProtocolHttp&>(protocolOld);
+    //}
+}
+
+
+void ProtocolHttp::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
 {
     bool ok = true;
 
@@ -560,7 +740,7 @@ void ProtocolHttp::receive(const SocketPtr& socket, int bytesToRead)
             auto callback = m_callback.lock();
             if (callback)
             {
-                callback->received(m_message);
+                callback->received(m_message, m_connectionId);
             }
             reset();
         }
@@ -568,194 +748,27 @@ void ProtocolHttp::receive(const SocketPtr& socket, int bytesToRead)
     else
     {
         reset();
-        auto callback = m_callback.lock();
-        if (callback)
-        {
-            callback->disconnected();
-        }
     }
 }
 
 
-static std::string HEADER_KEEP_ALIVE = "Connection: keep-alive\r\n";
 
-void ProtocolHttp::prepareMessageToSend(IMessagePtr message)
+hybrid_ptr<IStreamConnectionCallback> ProtocolHttp::connected(const IStreamConnectionPtr& connection)
 {
-    std::string firstLine;
-    const std::string* http = message->getMetainfo(FMQ_HTTP);
-    if (http && *http == HTTP_REQUEST)
-    {
-        const std::string* method = message->getMetainfo(FMQ_METHOD);
-        const std::string* path = message->getMetainfo(FMQ_PATH);
-        if (method && path)
-        {
-            std::string pathEncode;
-            encode(pathEncode, *path);
-            firstLine = *method;
-            firstLine += ' ';
-            firstLine += pathEncode;
-
-            int i = 0;
-            const std::string* query = message->getMetainfo(FMQ_QUERY + std::to_string(i));
-            while (query != nullptr)
-            {
-                if (i == 0)
-                {
-                    firstLine += '?';
-                }
-                else
-                {
-                    firstLine += '&';
-                }
-                std::string queryEncode;
-                encode(queryEncode, *query);
-                firstLine += queryEncode;
-                ++i;
-                query = message->getMetainfo(FMQ_QUERY + std::to_string(i));
-            }
-            if (query && !query->empty())
-            {
-                firstLine += '?';
-                firstLine += *query;
-            }
-            firstLine += " HTTP/1.1";
-        }
-    }
-    else
-    {
-        const std::string* status = message->getMetainfo(FMQ_STATUS);
-        const std::string* statustext = message->getMetainfo(FMQ_STATUSTEXT);
-        firstLine = "HTTP/1.1 ";
-        if (status)
-        {
-            firstLine += *status;
-            firstLine += ' ';
-        }
-        else
-        {
-            firstLine += "200 ";
-        }
-        if (statustext)
-        {
-            firstLine += *statustext;
-        }
-        else
-        {
-            firstLine += "OK";
-        }
-    }
-
-    int sumHeaderSize = firstLine.size() + 4;   // 2 = '\r\n' and last empty line
-    if (http && *http == HTTP_REQUEST)
-    {
-        sumHeaderSize += m_headerHost.size();   // Host: hostname\r\n
-    }
-    sumHeaderSize += HEADER_KEEP_ALIVE.size();  // Connection: keep-alive\r\n
-
-    ssize_t sizeBody = message->getTotalSendPayloadSize();
-    ProtocolMessage::Metainfo& metainfo = message->getAllMetainfo();
-    metainfo.emplace_back(CONTENT_LENGTH);
-    metainfo.push_back(std::to_string(sizeBody));
-    if (!m_headerSendNext.empty())
-    {
-        metainfo.insert(metainfo.end(), m_headerSendNext.begin(), m_headerSendNext.end());
-        m_headerSendNext.clear();
-    }
-    static const std::string PREFIX_PRIVATE_HEADER = "_fmq_";
-    for (size_t i = 0; i < metainfo.size(); i += 2)
-    {
-        const std::string& key = metainfo[i];
-        const std::string& value = metainfo[i+1];
-        if (!key.empty() && key.find_first_of(PREFIX_PRIVATE_HEADER) != 0)
-        {
-            sumHeaderSize += key.size() + value.size() + 4;    // 4 = ': ' and '\r\n'
-        }
-    }
-
-    char* headerBuffer = message->addSendHeader(sumHeaderSize);
-    int index = 0;
-    assert(index + firstLine.size() + 2 <= sumHeaderSize);
-    memcpy(headerBuffer + index, firstLine.data(), firstLine.size());
-    index += firstLine.size();
-    memcpy(headerBuffer + index, "\r\n", 2);
-    index += 2;
-
-    if (http && *http == HTTP_REQUEST)
-    {
-        // Host: hostname\r\n
-        assert(index + m_headerHost.size() <= sumHeaderSize);
-        memcpy(headerBuffer + index, m_headerHost.data(), m_headerHost.size());
-        index += m_headerHost.size();
-    }
-
-    // Connection: keep-alive\r\n
-    assert(index + HEADER_KEEP_ALIVE.size() <= sumHeaderSize);
-    memcpy(headerBuffer + index, HEADER_KEEP_ALIVE.data(), HEADER_KEEP_ALIVE.size());
-    index += HEADER_KEEP_ALIVE.size();
-
-    for (size_t i = 0; i < metainfo.size(); i += 2)
-    {
-        const std::string& key = metainfo[i];
-        const std::string& value = metainfo[i+1];
-        if (!key.empty() && key.find_first_of(PREFIX_PRIVATE_HEADER) != 0)
-        {
-            assert(index + key.size() + value.size() + 4 <= sumHeaderSize);
-            memcpy(headerBuffer + index, key.data(), key.size());
-            index += key.size();
-            memcpy(headerBuffer + index, ": ", 2);
-            index += 2;
-            memcpy(headerBuffer + index, value.data(), value.size());
-            index += value.size();
-            memcpy(headerBuffer + index, "\r\n", 2);
-            index += 2;
-        }
-    }
-    assert(index + 2 == sumHeaderSize);
-    memcpy(headerBuffer + index, "\r\n", 2);
-    index += 2;
-    assert(index == sumHeaderSize);
-
-    message->prepareMessageToSend();
-}
-
-void ProtocolHttp::socketConnected(IProtocolSession& session)
-{
-    ConnectionData connectionData = session.getConnectionData();
+    ConnectionData connectionData = connection->getConnectionData();
     m_headerHost = "Host: " + connectionData.hostname + ":" + std::to_string(connectionData.port) + "\r\n";
+    m_connectionId = connectionData.connectionId;
     // for incomming connection -> do the connection event after checking the session ID
     if (connectionData.incomingConnection)
     {
-        m_checkSessionName = true;
+        //        m_checkSessionName = true;
     }
-    else
-    {
-        auto callback = m_callback.lock();
-        if (callback)
-        {
-            callback->connected();
-        }
-    }
+    return nullptr;
 }
 
-void ProtocolHttp::socketDisconnected()
+void ProtocolHttp::disconnected(const IStreamConnectionPtr& /*connection*/)
 {
-    auto callback = m_callback.lock();
-    if (callback)
-    {
-        callback->disconnected();
-    }
 }
-
-void ProtocolHttp::moveOldProtocolState(IProtocol& /*protocolOld*/)
-{
-    //assert(protocolOld.getProtocolId() == PROTOCOL_ID);
-    //if (protocolOld.getProtocolId() == PROTOCOL_ID)
-    //{
-    //    ProtocolHttp& old = static_cast<ProtocolHttp&>(protocolOld);
-    //}
-}
-
-
 
 
 //---------------------------------------

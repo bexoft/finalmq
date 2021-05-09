@@ -105,7 +105,6 @@ void ProtocolSessionList::setSessionName(std::int64_t sessionId, const std::stri
     auto it = m_connectionId2ProtocolSession.find(sessionId);
     if (it != m_connectionId2ProtocolSession.end())
     {
-        assert(!it->second.verified);
         it->second.name = sessionName;
         it->second.verified = true;
     }

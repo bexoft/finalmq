@@ -58,12 +58,13 @@ private:
     virtual bool doesSupportMetainfo() const override;
     virtual bool doesSupportSession() const override;
     virtual bool needsReply() const override;
+    virtual bool isMultiConnectionSession() const override;
     virtual FuncCreateMessage getMessageFactory() const override;
-    virtual void receive(const SocketPtr& socket, int bytesToRead) override;
     virtual void prepareMessageToSend(IMessagePtr message) override;
-    virtual void socketConnected(IProtocolSession& session) override;
-    virtual void socketDisconnected() override;
     virtual void moveOldProtocolState(IProtocol& protocolOld) override;
+    virtual void received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) override;
+    virtual hybrid_ptr<IStreamConnectionCallback> connected(const IStreamConnectionPtr& connection) override;
+    virtual void disconnected(const IStreamConnectionPtr& connection) override;
 
 
     bool receiveHeaders(ssize_t bytesReceived);
@@ -92,7 +93,7 @@ private:
     std::uniform_int_distribution<std::uint64_t>    m_randomVariable;
     std::vector<std::string>                        m_headerSendNext;
     StateSessionId                                  m_stateSessionId = SESSIONID_NONE;
-    std::vector<std::string>                        m_sessionIds;
+    std::vector<std::string>                        m_sessionNames;
 
     State                               m_state = STATE_FIND_FIRST_LINE;
     std::string                         m_receiveBuffer;
@@ -102,7 +103,9 @@ private:
     ssize_t                             m_contentLength = 0;
     ssize_t                             m_indexFilled = 0;
     std::string                         m_headerHost;
-    bool                                m_checkSessionName = false;
+    std::int64_t                        m_connectionId = 0;
+    bool                                m_createSession = false;
+    bool                                m_sessionIdMatches = false;
     std::string                         m_sessionName;
     std::uint64_t                       m_nextSessionNameCounter = 1;
     std::weak_ptr<IProtocolCallback>    m_callback;
