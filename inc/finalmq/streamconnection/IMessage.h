@@ -36,6 +36,7 @@ namespace finalmq {
 
 
 struct IProtocol;
+class Variant;
 
 typedef std::pair<char*, ssize_t> BufferRef;
 
@@ -52,6 +53,14 @@ struct IMessage : public IZeroCopyBuffer
     virtual void addMetainfo(std::string&& key, std::string&& value) = 0;
     virtual const std::string* getMetainfo(const std::string& key) const = 0;
     virtual std::string* getMetainfo(const std::string& key) = 0;
+
+    // controlData
+    virtual Variant& getControlData() = 0;
+    virtual const Variant& getControlData() const = 0;
+
+    // echoData
+    virtual Variant& getEchoData() = 0;
+    virtual const Variant& getEchoData() const = 0;
 
     // for send
     virtual void addSendPayload(const std::string& payload) = 0;

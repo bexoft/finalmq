@@ -22,6 +22,9 @@
 
 #include "finalmq/remoteentity/RemoteEntityFormatRegistry.h"
 #include "finalmq/remoteentity/entitydata.fmq.h"
+#include "finalmq/Variant/Variant.h"
+#include "finalmq/Variant/VariantValueStruct.h"
+#include "finalmq/Variant/VariantValues.h"
 
 
 //#include "finalmq/helpers/ModulenameFinalmq.h"
@@ -81,47 +84,37 @@ static const std::string FMQ_STATUS = "_fmq_status";
 static const std::string FMQ_STATUSTEXT = "_fmq_statustext";
 
 
-static void statusToProtocolStatus(remoteentity::Status status, IMessage::Metainfo& metainfo)
+static void statusToProtocolStatus(remoteentity::Status status, Variant& controlData)
 {
     switch (status)
     {
     case Status::STATUS_OK:
-        metainfo.emplace_back(FMQ_STATUS);
-        metainfo.emplace_back("200");
-        metainfo.emplace_back(FMQ_STATUSTEXT);
-        metainfo.emplace_back("OK");
+        controlData = VariantStruct{ {FMQ_STATUS, 200},
+                                     {FMQ_STATUSTEXT, std::string("OK")} };
         break;
     case Status::STATUS_ENTITY_NOT_FOUND:
-        metainfo.emplace_back(FMQ_STATUS);
-        metainfo.emplace_back("404");
-        metainfo.emplace_back(FMQ_STATUSTEXT);
-        metainfo.emplace_back("Not Found");
+        controlData = VariantStruct{ {FMQ_STATUS, 404},
+                                     {FMQ_STATUSTEXT, std::string("Not Found")} };
         break;
     case Status::STATUS_SYNTAX_ERROR:
-        metainfo.emplace_back(FMQ_STATUS);
-        metainfo.emplace_back("400");
-        metainfo.emplace_back(FMQ_STATUSTEXT);
-        metainfo.emplace_back("Bad Request");
+        controlData = VariantStruct{ {FMQ_STATUS, 400},
+                                     {FMQ_STATUSTEXT, std::string("Bad Request")} };
         break;
     case Status::STATUS_REQUEST_NOT_FOUND:
     case Status::STATUS_REQUESTTYPE_NOT_KNOWN:
-        metainfo.emplace_back(FMQ_STATUS);
-        metainfo.emplace_back("501");
-        metainfo.emplace_back(FMQ_STATUSTEXT);
-        metainfo.emplace_back("Not Implemented");
+        controlData = VariantStruct{ {FMQ_STATUS, 501},
+                                     {FMQ_STATUSTEXT, std::string("Not Implemented")} };
         break;
     default:
-        metainfo.emplace_back(FMQ_STATUS);
-        metainfo.emplace_back("500");
-        metainfo.emplace_back(FMQ_STATUSTEXT);
-        metainfo.emplace_back("Internal Server Error");
+        controlData = VariantStruct{ {FMQ_STATUS, 500},
+                                     {FMQ_STATUSTEXT, std::string("Internal Server Error")} };
         break;
     }
 }
 
 
 
-bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, remoteentity::Header& header, const StructBase* structBase)
+bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, remoteentity::Header& header, Variant&& echoData, const StructBase* structBase)
 {
     bool ok = true;
     assert(session);
@@ -129,35 +122,18 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, re
     {
         IMessagePtr message = session->createMessage();
         assert(message);
+        if (header.mode == MsgMode::MSG_REPLY)
+        {
+            message->getEchoData() = std::move(echoData);
+        }
         if (session->doesSupportMetainfo())
         {
+            Variant& controlData = message->getControlData();
+            statusToProtocolStatus(header.status, controlData);
+
             IMessage::Metainfo& metainfo = message->getAllMetainfo();
-            statusToProtocolStatus(header.status, metainfo);
             metainfo.insert(metainfo.end(), std::make_move_iterator(header.meta.begin()), std::make_move_iterator(header.meta.end()));
             header.meta.clear();
-        }
-        else if (!header.meta.empty())
-        {
-            IMessage::Metainfo& metainfo = message->getAllMetainfo();
-            std::vector<std::string> metaHeader;
-            metaHeader.reserve(header.meta.size());
-            for (size_t i = 0; i < header.meta.size(); i += 2)
-            {
-                if (i + 1 < header.meta.size())
-                {
-                    if (header.meta[i].compare(0, 5, "_fmq_") == 0)
-                    {
-                        metainfo.emplace_back(std::move(header.meta[i]));
-                        metainfo.emplace_back(std::move(header.meta[i + 1]));
-                    }
-                    else
-                    {
-                        metaHeader.emplace_back(std::move(header.meta[i]));
-                        metaHeader.emplace_back(std::move(header.meta[i + 1]));
-                    }
-                }
-            }
-            header.meta = std::move(metaHeader);
         }
         ok = serialize(*message, session->getContentType(), header, structBase);
         if (ok)
@@ -169,17 +145,27 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, re
 }
 
 
+bool RemoteEntityFormatRegistryImpl::addRequestToMessage(IMessage& message, const IProtocolSessionPtr& session, remoteentity::Header& header, const StructBase* structBase)
+{
+    bool ok = true;
+    assert(session);
+    ok = serialize(message, session->getContentType(), header, structBase);
+    return ok;
+}
+
+
+
 const std::string FMQ_PATH = "_fmq_path";
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(const IMessage& message, int contentType, bool storeRawData, Header& header, bool& syntaxError)
+std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(IMessage& message, int contentType, bool storeRawData, Header& header, bool& syntaxError)
 {
     syntaxError = false;
     BufferRef bufferRef = message.getReceivePayload();
 
     if (bufferRef.second == 0 && !message.getAllMetainfo().empty())
     {
-        const std::string* path = message.getMetainfo(FMQ_PATH);
+        const std::string* path = message.getControlData().getData<std::string>(FMQ_PATH);
         if (path && !path->empty())
         {
             bufferRef.first = const_cast<char*>(path->data());
@@ -194,10 +180,24 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(const IMessage
     {
         assert(it->second);
         structBase = it->second->parse(bufferRef, storeRawData, header, syntaxError);
-        const IMessage::Metainfo& metainfo = message.getAllMetainfo();
+        IMessage::Metainfo& metainfo = message.getAllMetainfo();
         if (!metainfo.empty())
         {
-            header.meta.insert(header.meta.end(), metainfo.begin(), metainfo.end());
+            header.meta.insert(header.meta.end(), std::make_move_iterator(metainfo.begin()), std::make_move_iterator(metainfo.end()));
+            metainfo.clear();
+        }
+        Variant& controlData = message.getControlData();
+        if (controlData.getType() == VARTYPE_STRUCT)
+        {
+            VariantStruct* stru = controlData;
+            if (stru)
+            {
+                for (auto it = stru->begin(); it != stru->end(); ++it)
+                {
+                    header.meta.emplace_back(it->first);
+                    header.meta.push_back(it->second);
+                }
+            }
         }
     }
 

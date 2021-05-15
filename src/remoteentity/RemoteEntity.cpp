@@ -244,15 +244,28 @@ PeerManager::ReadyToSend PeerManager::getRequestHeader(const PeerId& peerId, con
         auto& peer = it->second;
         if (peer.session)
         {
-            readyToSend = RTS_READY;
-            session = peer.session;
-            const std::string* typeName = structBase.getRawType();
-            if (typeName == nullptr)
+            if (!peer.session->isSendRequestByPoll())
             {
-                typeName = &structBase.getStructInfo().getTypeName();
+                readyToSend = RTS_READY;
+                session = peer.session;
+                const std::string* typeName = structBase.getRawType();
+                if (typeName == nullptr)
+                {
+                    typeName = &structBase.getStructInfo().getTypeName();
+                }
+                assert(typeName);
+                header = { peer.entityId, (peer.entityId == ENTITYID_INVALID) ? peer.entityName : std::string(), m_entityId, MsgMode::MSG_REQUEST, Status::STATUS_OK, *typeName, correlationId, {} };
             }
-            assert(typeName);
-            header = { peer.entityId, (peer.entityId == ENTITYID_INVALID) ? peer.entityName : std::string(), m_entityId, MsgMode::MSG_REQUEST, Status::STATUS_OK, *typeName, correlationId, {} };
+            else
+            {
+                readyToSend = RTS_STORE_REQUEST_FOR_POLL;
+                if (!peer.requestsMessage)
+                {
+                    peer.requestsMessage = session->createMessage();
+                }
+                assert(peer.requestsMessage);
+                RemoteEntityFormatRegistry::instance().addRequestToMessage(*peer.requestsMessage, session, header, &structBase);
+            }
         }
         else
         {
@@ -448,7 +461,7 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
     if (readyToSend == PeerManager::ReadyToSend::RTS_READY)
     {
         assert(session);
-        ok = RemoteEntityFormatRegistry::instance().send(session, header, &structBase);
+        ok = RemoteEntityFormatRegistry::instance().send(session, header, {}, &structBase);
         if (!ok)
         {
             removePeer(peerId, Status::STATUS_SESSION_DISCONNECTED);
@@ -460,8 +473,10 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
     }
     else
     {
-        std::vector<std::string> metainfoEmpty;
-        replyReceived(correlationId, Status::STATUS_PEER_DISCONNECTED, metainfoEmpty, nullptr);
+        ReceiveData receiveData;
+        receiveData.header.corrid = correlationId;
+        receiveData.header.status = Status::STATUS_PEER_DISCONNECTED;
+        replyReceived(receiveData);
     }
     return ok;
 }
@@ -501,7 +516,7 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, std::vector<std::string>&& 
     {
         assert(session);
         header.meta = std::move(metainfo);
-        ok = RemoteEntityFormatRegistry::instance().send(session, header, &structBase);
+        ok = RemoteEntityFormatRegistry::instance().send(session, header, {}, &structBase);
         if (!ok)
         {
             removePeer(peerId, Status::STATUS_SESSION_DISCONNECTED);
@@ -513,8 +528,10 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, std::vector<std::string>&& 
     }
     else
     {
-        std::vector<std::string> metainfoEmpty;
-        replyReceived(correlationId, Status::STATUS_PEER_DISCONNECTED, metainfoEmpty, nullptr);
+        ReceiveData receiveData;
+        receiveData.header.corrid = correlationId;
+        receiveData.header.status = Status::STATUS_PEER_DISCONNECTED;
+        replyReceived(receiveData);
     }
     return ok;
 }
@@ -539,11 +556,11 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, std::vector<std::string>&& 
 
 
 
-void RemoteEntity::replyReceived(CorrelationId correlationId, Status status, std::vector<std::string>& metainfo, const StructBasePtr& structBase)
+void RemoteEntity::replyReceived(ReceiveData& receiveData)
 {
     std::unique_ptr<Request> request;
     std::unique_lock<std::mutex> lock(m_mutex);
-    auto it = m_requests.find(correlationId);
+    auto it = m_requests.find(receiveData.header.corrid);
     if (it != m_requests.end())
     {
         request = std::move(it->second);
@@ -556,11 +573,11 @@ void RemoteEntity::replyReceived(CorrelationId correlationId, Status status, std
     {
         if (request->func && *request->func)
         {
-            (*request->func)(request->peerId, status, structBase);
+            (*request->func)(request->peerId, receiveData.header.status, receiveData.structBase);
         }
         else if (request->funcMeta && *request->funcMeta)
         {
-            (*request->funcMeta)(request->peerId, status, metainfo, structBase);
+            (*request->funcMeta)(request->peerId, receiveData.header.status, receiveData.header.meta, receiveData.structBase);
         }
     }
 }
@@ -708,7 +725,7 @@ void RemoteEntity::connectIntern(PeerId peerId, const IProtocolSessionPtr& sessi
         if (readyToSend == PeerManager::ReadyToSend::RTS_READY)
         {
             assert(session);
-            ok = RemoteEntityFormatRegistry::instance().send(sessionRet, header, request.structBase.get());
+            ok = RemoteEntityFormatRegistry::instance().send(sessionRet, header, {}, request.structBase.get());
         }
         else
         {
@@ -806,15 +823,15 @@ PeerId RemoteEntity::addPeer(const IProtocolSessionPtr& session, EntityId entity
 }
 
 
-void RemoteEntity::receivedRequest(const IProtocolSessionPtr& session, remoteentity::Header& header, const StructBasePtr& structBase)
+void RemoteEntity::receivedRequest(ReceiveData& receiveData)
 {
-    assert(structBase);
+    assert(receiveData.structBase);
 
-    ReplyContextUPtr replyContext = std::make_unique<ReplyContext>(m_peerManager, session, m_entityId, header);
+    ReplyContextUPtr replyContext = std::make_unique<ReplyContext>(m_peerManager, m_entityId, receiveData);
     assert(replyContext);
 
     std::unique_lock<std::mutex> lock(m_mutex);
-    auto it = m_funcCommands.find(header.type);
+    auto it = m_funcCommands.find(receiveData.header.type);
     if (it == m_funcCommands.end())
     {
         it = m_funcCommands.find("*");
@@ -826,7 +843,7 @@ void RemoteEntity::receivedRequest(const IProtocolSessionPtr& session, remoteent
         assert(func);
         if (*func)
         {
-            (*func)(replyContext, structBase);
+            (*func)(replyContext, receiveData.structBase);
         }
         else
         {
@@ -839,23 +856,23 @@ void RemoteEntity::receivedRequest(const IProtocolSessionPtr& session, remoteent
     }
 }
 
-void RemoteEntity::receivedReply(const IProtocolSessionPtr& session, remoteentity::Header& header, const StructBasePtr& structBase)
+void RemoteEntity::receivedReply(ReceiveData& receiveData)
 {
     bool replyHandled = false;
     if (m_funcReplyEvent)
     {
-        replyHandled = m_funcReplyEvent(header.corrid, header.status, header.meta, structBase);
+        replyHandled = m_funcReplyEvent(receiveData.header.corrid, receiveData.header.status, receiveData.header.meta, receiveData.structBase);
     }
     if (!replyHandled)
     {
-        replyReceived(header.corrid, header.status, header.meta, structBase);
+        replyReceived(receiveData);
     }
 
-    if (header.status == Status::STATUS_ENTITY_NOT_FOUND &&
-        header.srcid != ENTITYID_INVALID)
+    if (receiveData.header.status == Status::STATUS_ENTITY_NOT_FOUND &&
+        receiveData.header.srcid != ENTITYID_INVALID)
     {
         assert(m_peerManager);
-        PeerId peerId = m_peerManager->getPeerId(session->getSessionId(), header.srcid, "");
+        PeerId peerId = m_peerManager->getPeerId(receiveData.session->getSessionId(), receiveData.header.srcid, "");
         removePeer(peerId, Status::STATUS_PEER_DISCONNECTED);
     }
 }

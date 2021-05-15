@@ -70,6 +70,11 @@ bool ProtocolDelimiter::isMultiConnectionSession() const
     return false;
 }
 
+bool ProtocolDelimiter::isSendRequestByPoll() const
+{
+    return false;
+}
+
 IProtocol::FuncCreateMessage ProtocolDelimiter::getMessageFactory() const
 {
     size_t sizeDelimiter = m_delimiter.size();

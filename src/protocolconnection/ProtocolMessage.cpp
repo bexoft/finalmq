@@ -202,6 +202,32 @@ std::string* ProtocolMessage::getMetainfo(const std::string& key)
     return nullptr;
 }
 
+
+// controlData
+Variant& ProtocolMessage::getControlData()
+{
+    return m_controlData;
+}
+
+const Variant& ProtocolMessage::getControlData() const
+{
+    return m_controlData;
+}
+
+
+// echoData
+Variant& ProtocolMessage::getEchoData()
+{
+    return m_echoData;
+}
+
+const Variant& ProtocolMessage::getEchoData() const
+{
+    return m_echoData;
+}
+
+
+
 // for send
 void ProtocolMessage::addSendPayload(const std::string& payload)
 {

@@ -80,6 +80,15 @@ private:
 };
 
 
+struct ReceiveData
+{
+    IProtocolSessionPtr         session;
+    IMessagePtr                 message;
+    remoteentity::Header        header;
+    std::shared_ptr<StructBase> structBase;
+};
+
+
 
 typedef std::function<void(PeerId peerId, remoteentity::Status status, const StructBasePtr& structBase)> FuncReply;
 typedef std::function<void(PeerId peerId, remoteentity::Status status, std::vector<std::string>& metainfo, const StructBasePtr& structBase)> FuncReplyMeta;
@@ -172,8 +181,8 @@ private:
     // methods for RemoteEntityContainer
     virtual void initEntity(EntityId entityId, const std::string& entityName) = 0;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) = 0;
-    virtual void receivedRequest(const IProtocolSessionPtr& session, remoteentity::Header& header, const StructBasePtr& structBase) = 0;
-    virtual void receivedReply(const IProtocolSessionPtr& session, remoteentity::Header& header, const StructBasePtr& structBase) = 0;
+    virtual void receivedRequest(ReceiveData& receiveData) = 0;
+    virtual void receivedReply(ReceiveData& receiveData) = 0;
     virtual void deinit() = 0;
     friend class RemoteEntityContainer;
 };
@@ -189,7 +198,8 @@ public:
     {
         RTS_READY,
         RTS_SESSION_NOT_AVAILABLE,
-        RTS_PEER_NOT_AVAILABLE
+        RTS_PEER_NOT_AVAILABLE,
+        RTS_STORE_REQUEST_FOR_POLL
     };
 
     struct Request
@@ -224,6 +234,7 @@ private:
         std::string         entityName;
         bool                incoming = false;
         std::deque<Request> requests;
+        IMessagePtr         requestsMessage;
     };
 
 
@@ -238,29 +249,20 @@ typedef std::shared_ptr<PeerManager> PeerManagerPtr;
 
 
 
+
 class ReplyContext
 {
 public:
-    inline ReplyContext(const PeerManagerPtr& sessionIdEntityIdToPeerId, const IProtocolSessionPtr& session, EntityId entityIdSrc, remoteentity::Header& header)
+    inline ReplyContext(const PeerManagerPtr& sessionIdEntityIdToPeerId, EntityId entityIdSrc, ReceiveData& receiveData)
         : m_peerManager(sessionIdEntityIdToPeerId)
-        , m_session(session)
-        , m_entityIdDest(header.srcid)
+        , m_session(receiveData.session)
+        , m_entityIdDest(receiveData.header.srcid)
         , m_entityIdSrc(entityIdSrc)
-        , m_correlationId(header.corrid)
+        , m_correlationId(receiveData.header.corrid)
         , m_replySent(false)
-        , m_metainfo(std::move(header.meta))
+        , m_metainfo(std::move(receiveData.header.meta))
+        , m_echoData(std::move(receiveData.message->getEchoData()))
     {
-        if (!m_metainfo.empty())
-        {
-            for (size_t i = 0; i < m_metainfo.size(); i += 2)
-            {
-                if ((m_metainfo[i].compare(0, 10, "_fmq_echo_") == 0) && (i + 1 < m_metainfo.size()))
-                {
-                    m_metainfoReply.push_back(m_metainfo[i]);
-                    m_metainfoReply.push_back(m_metainfo[i + 1]);
-                }
-            }
-        }
     }
 
     ~ReplyContext()
@@ -287,8 +289,8 @@ public:
     {
         if (!m_replySent)
         {
-            remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, remoteentity::Status::STATUS_OK, structBase.getStructInfo().getTypeName(), m_correlationId, std::move(m_metainfoReply) };
-            RemoteEntityFormatRegistry::instance().send(m_session, header, &structBase);
+            remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, remoteentity::Status::STATUS_OK, structBase.getStructInfo().getTypeName(), m_correlationId, {} };
+            RemoteEntityFormatRegistry::instance().send(m_session, header, std::move(m_echoData), &structBase);
             m_replySent = true;
         }
     }
@@ -297,9 +299,8 @@ public:
     {
         if (!m_replySent)
         {
-            m_metainfoReply.insert(m_metainfoReply.end(), metainfo.begin(), metainfo.end());
-            remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, remoteentity::Status::STATUS_OK, structBase.getStructInfo().getTypeName(), m_correlationId, std::move(m_metainfoReply) };
-            RemoteEntityFormatRegistry::instance().send(m_session, header, &structBase);
+            remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, remoteentity::Status::STATUS_OK, structBase.getStructInfo().getTypeName(), m_correlationId, metainfo };
+            RemoteEntityFormatRegistry::instance().send(m_session, header, std::move(m_echoData), &structBase);
             m_replySent = true;
         }
     }
@@ -308,13 +309,8 @@ public:
     {
         if (!m_replySent)
         {
-            m_metainfoReply.reserve(m_metainfoReply.size() + metainfo.size());
-            for (size_t i = 0; i < metainfo.size(); ++i)
-            {
-                m_metainfoReply.emplace_back(std::move(metainfo[i]));
-            }
-            remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, remoteentity::Status::STATUS_OK, structBase.getStructInfo().getTypeName(), m_correlationId, std::move(m_metainfoReply) };
-            RemoteEntityFormatRegistry::instance().send(m_session, header, &structBase);
+            remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, remoteentity::Status::STATUS_OK, structBase.getStructInfo().getTypeName(), m_correlationId, std::move(metainfo) };
+            RemoteEntityFormatRegistry::instance().send(m_session, header, std::move(m_echoData), &structBase);
             m_replySent = true;
         }
     }
@@ -360,8 +356,8 @@ private:
     {
         if (!m_replySent)
         {
-            remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, status, "", m_correlationId, std::move(m_metainfoReply) };
-            RemoteEntityFormatRegistry::instance().send(m_session, header);
+            remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, status, "", m_correlationId, {} };
+            RemoteEntityFormatRegistry::instance().send(m_session, header, std::move(m_echoData));
             m_replySent = true;
         }
     }
@@ -388,7 +384,7 @@ private:
     PeerId                          m_peerId = PEERID_INVALID;
     bool                            m_replySent = false;
     std::vector<std::string>        m_metainfo;
-    std::vector<std::string>        m_metainfoReply;
+    Variant                         m_echoData;
 
     friend class RemoteEntity;
 };
@@ -430,15 +426,15 @@ public:
 private:
     virtual void initEntity(EntityId entityId, const std::string& entityName) override;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) override;
-    virtual void receivedRequest(const IProtocolSessionPtr& session, remoteentity::Header& header, const StructBasePtr& structBase) override;
-    virtual void receivedReply(const IProtocolSessionPtr& session, remoteentity::Header& header, const StructBasePtr& structBase) override;
+    virtual void receivedRequest(ReceiveData& receiveData) override;
+    virtual void receivedReply(ReceiveData& receiveData) override;
     virtual void deinit() override;
 
     PeerId addPeer(const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName, bool incoming, bool& added);
     PeerId connectIntern(const IProtocolSessionPtr& session, const std::string& entityName, EntityId, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect);
     void connectIntern(PeerId peerId, const IProtocolSessionPtr& session, const std::string& entityName, EntityId entityId);
     void removePeer(PeerId peerId, remoteentity::Status status);
-    void replyReceived(CorrelationId correlationId, remoteentity::Status status, std::vector<std::string>& metainfo, const StructBasePtr& structBase);
+    void replyReceived(ReceiveData& receiveData);
     void sendConnectEntity(PeerId peerId, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect);
 
     struct Request
@@ -458,7 +454,7 @@ private:
         std::shared_ptr<FuncReplyMeta>  funcMeta;
     };
 
-    EntityId                            m_entityId = 0;
+    EntityId                            m_entityId{ ENTITYID_INVALID };
     std::string                         m_entityName;
 
     FuncReplyEvent                      m_funcReplyEvent;

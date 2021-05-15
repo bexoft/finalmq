@@ -70,6 +70,8 @@ private:
     virtual int getContentType() const override;
     virtual bool doesSupportMetainfo() const override;
     virtual bool needsReply() const override;
+    virtual bool isMultiConnectionSession() const override;
+    virtual bool isSendRequestByPoll() const override;
     virtual void disconnect() override;
     virtual bool connect(const std::string& endpoint, const ConnectProperties& connectionProperties = {}) override;
     virtual bool connectProtocol(const std::string& endpoint, const IProtocolPtr& protocol, const ConnectProperties& connectionProperties = {}, int contentType = 0) override;
@@ -88,7 +90,7 @@ private:
     // IProtocolCallback
     virtual void connected() override;
     virtual void disconnected() override;
-    virtual void received(const IMessagePtr& message, int connectionId) override;
+    virtual void received(const IMessagePtr& message, std::int64_t connectionId) override;
     virtual void socketConnected() override;
     virtual void socketDisconnected() override;
     virtual void reconnect() override;
@@ -120,6 +122,7 @@ private:
     bool                                            m_protocolFlagSupportMetainfo = false;
     bool                                            m_protocolFlagNeedsReply = false;
     bool                                            m_protocolFlagIsMultiConnectionSession = false;
+    bool                                            m_protocolFlagIsSendRequestByPoll = false;
     IProtocol::FuncCreateMessage                    m_messageFactory;
     std::atomic_bool                                m_protocolSet;
     bool                                            m_triggerConnected = false;

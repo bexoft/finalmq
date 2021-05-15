@@ -97,9 +97,9 @@ public:
             std::shared_ptr<IVariantValue>& value = variant->m_value;
             if (value)
             {
-                if (m_value->getType() == VariantValueTypeInfo<T>::VARTYPE)
+                if (value->getType() == VariantValueTypeInfo<T>::VARTYPE)
                 {
-                    return static_cast<T*>(m_value->getData());
+                    return static_cast<T*>(value->getData());
                 }
             }
         }

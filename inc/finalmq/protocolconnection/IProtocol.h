@@ -42,7 +42,7 @@ struct IProtocolCallback
     virtual ~IProtocolCallback() {}
     virtual void connected() = 0;
     virtual void disconnected() = 0;
-    virtual void received(const IMessagePtr& message, int connectionId = 0) = 0;
+    virtual void received(const IMessagePtr& message, std::int64_t connectionId = 0) = 0;
     virtual void socketConnected() = 0;
     virtual void socketDisconnected() = 0;
     virtual void reconnect() = 0;
@@ -65,6 +65,7 @@ struct IProtocol : public IStreamConnectionCallback
     virtual bool doesSupportSession() const = 0;
     virtual bool needsReply() const = 0;
     virtual bool isMultiConnectionSession() const = 0;
+    virtual bool isSendRequestByPoll() const = 0;
     virtual FuncCreateMessage getMessageFactory() const = 0;
     //virtual void receive(const SocketPtr& socket, int bytesToRead) = 0;
     virtual void prepareMessageToSend(IMessagePtr message) = 0;

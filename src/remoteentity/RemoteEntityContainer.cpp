@@ -278,14 +278,14 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     assert(message);
 
     bool syntaxError = false;
-    Header header;
-    std::shared_ptr<StructBase> structBase = RemoteEntityFormatRegistry::instance().parse(*message, session->getContentType(), m_storeRawDataInReceiveStruct, header, syntaxError);
+    ReceiveData receiveData{session, message};
+    receiveData.structBase = RemoteEntityFormatRegistry::instance().parse(*message, session->getContentType(), m_storeRawDataInReceiveStruct, receiveData.header, syntaxError);
 
     std::unique_lock<std::mutex> lock(m_mutex);
-    EntityId entityId = header.destid;
-    if (entityId == ENTITYID_INVALID)
+    EntityId entityId = receiveData.header.destid;
+    if (entityId == ENTITYID_INVALID || (entityId == ENTITYID_DEFAULT && !receiveData.header.destname.empty()))
     {
-        auto itName = m_name2entityId.find(header.destname);
+        auto itName = m_name2entityId.find(receiveData.header.destname);
         if (itName != m_name2entityId.end())
         {
             entityId = itName->second;
@@ -303,16 +303,16 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     lock.unlock();
 
     auto entity = remoteEntity.lock();
-    if (header.mode == MsgMode::MSG_REQUEST)
+    if (receiveData.header.mode == MsgMode::MSG_REQUEST)
     {
         Status replyStatus = Status::STATUS_OK;
         if (!syntaxError)
         {
             if (entity)
             {
-                if (structBase)
+                if (receiveData.structBase)
                 {
-                    entity->receivedRequest(session, header, structBase);
+                    entity->receivedRequest(receiveData);
                 }
                 else
                 {
@@ -330,19 +330,19 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
         }
         if (replyStatus != Status::STATUS_OK)
         {
-            Header headerReply{ header.srcid, "", entityId, MsgMode::MSG_REPLY, replyStatus, "", header.corrid, {} };
-            RemoteEntityFormatRegistry::instance().send(session, headerReply);
+            Header headerReply{ receiveData.header.srcid, "", entityId, MsgMode::MSG_REPLY, replyStatus, "", receiveData.header.corrid, {} };
+            RemoteEntityFormatRegistry::instance().send(session, headerReply, std::move(message->getEchoData()));
         }
     }
-    else if (header.mode == MsgMode::MSG_REPLY)
+    else if (receiveData.header.mode == MsgMode::MSG_REPLY)
     {
         if (entity)
         {
-            if (!structBase && header.status == Status::STATUS_OK && !header.type.empty())
+            if (!receiveData.structBase && receiveData.header.status == Status::STATUS_OK && !receiveData.header.type.empty())
             {
-                header.status = Status::STATUS_REPLYTYPE_NOT_KNOWN;
+                receiveData.header.status = Status::STATUS_REPLYTYPE_NOT_KNOWN;
             }
-            entity->receivedReply(session, header, structBase);
+            entity->receivedReply(receiveData);
         }
     }
 }

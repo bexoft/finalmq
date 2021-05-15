@@ -39,7 +39,8 @@ namespace remoteentity {
 
 
 using EntityId = std::uint64_t;
-static constexpr EntityId ENTITYID_INVALID = 0;  // should be 0, so that it matches with the deserialized default value.
+static constexpr EntityId ENTITYID_DEFAULT = 0;
+static constexpr EntityId ENTITYID_INVALID = 0xffffffffffffffffull;
 
 using CorrelationId = std::uint64_t;
 static constexpr CorrelationId CORRELATIONID_NONE = 0;
@@ -56,9 +57,10 @@ struct IRemoteEntityFormat
 struct IRemoteEntityFormatRegistry
 {
     virtual ~IRemoteEntityFormatRegistry() {}
-    virtual std::shared_ptr<StructBase> parse(const IMessage& message, int contentType, bool storeRawData, remoteentity::Header& header, bool& syntaxError) = 0;
+    virtual std::shared_ptr<StructBase> parse(IMessage& message, int contentType, bool storeRawData, remoteentity::Header& header, bool& syntaxError) = 0;
     virtual bool serialize(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase* structBase = nullptr) = 0;
-    virtual bool send(const IProtocolSessionPtr& session, remoteentity::Header& header, const StructBase* structBase = nullptr) = 0;
+    virtual bool send(const IProtocolSessionPtr& session, remoteentity::Header& header, Variant&& echoData, const StructBase* structBase = nullptr) = 0;
+    virtual bool addRequestToMessage(IMessage& message, const IProtocolSessionPtr& session, remoteentity::Header& header, const StructBase* structBase) = 0;
 
     virtual void registerFormat(int contentType, const std::shared_ptr<IRemoteEntityFormat>& format) = 0;
     virtual bool isRegistered(int contentType) const = 0;
@@ -70,9 +72,10 @@ struct IRemoteEntityFormatRegistry
 class RemoteEntityFormatRegistryImpl : public IRemoteEntityFormatRegistry
 {
 public:
-    virtual std::shared_ptr<StructBase> parse(const IMessage& message, int contentType, bool storeRawData, remoteentity::Header& header, bool& syntaxError) override;
+    virtual std::shared_ptr<StructBase> parse(IMessage& message, int contentType, bool storeRawData, remoteentity::Header& header, bool& syntaxError) override;
     virtual bool serialize(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase* structBase = nullptr) override;
-    virtual bool send(const IProtocolSessionPtr& session, remoteentity::Header& header, const StructBase* structBase = nullptr) override;
+    virtual bool send(const IProtocolSessionPtr& session, remoteentity::Header& header, Variant&& echoData, const StructBase* structBase = nullptr) override;
+    virtual bool addRequestToMessage(IMessage& message, const IProtocolSessionPtr& session, remoteentity::Header& header, const StructBase* structBase) override;
     virtual void registerFormat(int contentType, const std::shared_ptr<IRemoteEntityFormat>& format) override;
     virtual bool isRegistered(int contentType) const override;
 

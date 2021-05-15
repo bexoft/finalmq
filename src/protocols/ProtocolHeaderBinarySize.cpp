@@ -90,6 +90,11 @@ bool ProtocolHeaderBinarySize::isMultiConnectionSession() const
     return false;
 }
 
+bool ProtocolHeaderBinarySize::isSendRequestByPoll() const
+{
+    return false;
+}
+
 IProtocol::FuncCreateMessage ProtocolHeaderBinarySize::getMessageFactory() const
 {
     return []() {

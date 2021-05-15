@@ -96,6 +96,7 @@ void ProtocolSession::initProtocolValues()
     m_protocolFlagSupportMetainfo = protocol->doesSupportMetainfo();
     m_protocolFlagNeedsReply = protocol->needsReply();
     m_protocolFlagIsMultiConnectionSession = protocol->isMultiConnectionSession();
+    m_protocolFlagIsSendRequestByPoll = protocol->isSendRequestByPoll();
     m_messageFactory = protocol->getMessageFactory();
 
     m_protocolSet.store(true, std::memory_order_release);
@@ -214,17 +215,14 @@ bool ProtocolSession::sendMessage(const IMessagePtr& msg)
     ProtocolConnection protocolConnection = m_protocolConnection;
     if (m_protocolFlagIsMultiConnectionSession)
     {
-        std::string* strConnectionId = msg->getMetainfo(FMQ_CONNECTION_ID);
-        if (strConnectionId)
+        Variant& echoData = msg->getEchoData();
+        std::int64_t connectionId = echoData.getDataValue<std::int64_t>(FMQ_CONNECTION_ID);
+        if (connectionId != protocolConnection.connection->getConnectionId())
         {
-            std::int64_t connectionId = atoll(strConnectionId->c_str());
-            if (connectionId != protocolConnection.connection->getConnectionId())
+            auto it = m_multiConnections.find(connectionId);
+            if (it != m_multiConnections.end())
             {
-                auto it = m_multiConnections.find(connectionId);
-                if (it != m_multiConnections.end())
-                {
-                    protocolConnection = it->second;
-                }
+                protocolConnection = it->second;
             }
         }
     }
@@ -299,6 +297,16 @@ bool ProtocolSession::doesSupportMetainfo() const
 bool ProtocolSession::needsReply() const
 {
     return m_protocolFlagNeedsReply;
+}
+
+bool ProtocolSession::isMultiConnectionSession() const
+{
+    return m_protocolFlagIsMultiConnectionSession;
+}
+
+bool ProtocolSession::isSendRequestByPoll() const
+{
+    return m_protocolFlagIsSendRequestByPoll;
 }
 
 void ProtocolSession::disconnect()
@@ -445,11 +453,19 @@ void ProtocolSession::disconnected()
 
 
 
-void ProtocolSession::received(const IMessagePtr& message, int connectionId)
+void ProtocolSession::received(const IMessagePtr& message, std::int64_t connectionId)
 {
     if (m_protocolFlagIsMultiConnectionSession && connectionId && connectionId != m_protocolConnection.connection->getConnectionId())
     {
-        message->addMetainfo(FMQ_CONNECTION_ID, std::to_string(connectionId));
+        Variant& echoData = message->getEchoData();
+        if (echoData.getType() == VARTYPE_NONE)
+        {
+            echoData = VariantStruct{ {FMQ_CONNECTION_ID, connectionId} };
+        }
+        else
+        {
+            echoData.add(FMQ_CONNECTION_ID, connectionId);
+        }
     }
     if (m_executor)
     {

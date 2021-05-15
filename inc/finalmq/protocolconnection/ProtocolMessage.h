@@ -24,6 +24,11 @@
 
 #include "finalmq/streamconnection/IMessage.h"
 #include "finalmq/protocolconnection/IProtocol.h"
+#include "finalmq/variant/variant.h"
+#include "finalmq/variant/VariantValues.h"
+#include "finalmq/variant/VariantValueStruct.h"
+#include "finalmq/variant/VariantValueList.h"
+
 
 #include <unordered_map>
 
@@ -45,6 +50,14 @@ private:
     virtual void addMetainfo(std::string&& key, std::string&& value) override;
     virtual const std::string* getMetainfo(const std::string& key) const override;
     virtual std::string* getMetainfo(const std::string& key) override;
+
+    // controlData
+    virtual Variant& getControlData() override;
+    virtual const Variant& getControlData() const override;
+
+    // echoData
+    virtual Variant& getEchoData() override;
+    virtual const Variant& getEchoData() const override;
 
     // for send
     virtual void addSendPayload(const std::string& payload) override;
@@ -81,6 +94,8 @@ private:
 private:
 
     Metainfo                    m_metainfo;
+    Variant                     m_controlData;
+    Variant                     m_echoData;
 
     // send
     std::list<std::string>      m_headerBuffers;

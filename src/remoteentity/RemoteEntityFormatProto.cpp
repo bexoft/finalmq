@@ -74,6 +74,7 @@ void RemoteEntityFormatProto::serialize(IMessage& message, const Header& header,
 
     if (structBase)
     {
+        char* bufferSizePayload = message.addSendPayload(4);
         if (structBase->getRawContentType() == CONTENT_TYPE)
         {
             const std::string* rawData = structBase->getRawData();
@@ -87,6 +88,15 @@ void RemoteEntityFormatProto::serialize(IMessage& message, const Header& header,
             ParserStruct parserData(serializerData, *structBase);
             parserData.parseStruct();
         }
+        ssize_t sizePayload = message.getTotalSendPayloadSize() - 4 - sizeHeader - 4;
+        assert(sizePayload >= 0);
+        *bufferSizePayload = static_cast<unsigned char>(sizePayload);
+        ++bufferSizePayload;
+        *bufferSizePayload = static_cast<unsigned char>(sizePayload >> 8);
+        ++bufferSizePayload;
+        *bufferSizePayload = static_cast<unsigned char>(sizePayload >> 16);
+        ++bufferSizePayload;
+        *bufferSizePayload = static_cast<unsigned char>(sizePayload >> 24);
     }
 }
 
@@ -127,34 +137,60 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const BufferRef& buff
 
     if (ok && !header.type.empty())
     {
-        data = StructFactoryRegistry::instance().createStruct(header.type);
-
-        ssize_t sizeData = sizePayload - sizeHeader;
+        ssize_t sizeRemaining = sizePayload - sizeHeader;
         buffer += sizeHeader;
 
-        if (data)
+        if (sizeRemaining < 4)
         {
-            assert(sizeData >= 0);
-            SerializerStruct serializerData(*data);
-            ParserProto parserData(serializerData, buffer, sizeData);
-            ok = parserData.parseStruct(header.type);
-            if (!ok)
-            {
-                syntaxError = true;
-                data = nullptr;
-            }
-        }
-        else
-        {
-            if (storeRawData)
-            {
-                data = std::make_shared<remoteentity::RawDataMessage>();
-            }
+            ok = false;
         }
 
-        if (storeRawData && data)
+        ssize_t sizeDataInStream = 0;
+        if (ok)
         {
-            data->setRawData(header.type, CONTENT_TYPE, buffer, sizeData);
+            sizeDataInStream = (unsigned char)*buffer;
+            ++buffer;
+            sizeDataInStream |= ((unsigned char)*buffer) << 8;
+            ++buffer;
+            sizeDataInStream |= ((unsigned char)*buffer) << 16;
+            ++buffer;
+            sizeDataInStream |= ((unsigned char)*buffer) << 24;
+            ++buffer;
+            sizeRemaining -= 4;
+        }
+
+        if (sizeDataInStream > sizeRemaining)
+        {
+            ok = false;
+        }
+
+        if (ok)
+        {
+            data = StructFactoryRegistry::instance().createStruct(header.type);
+            if (data)
+            {
+                assert(sizeDataInStream >= 0);
+                SerializerStruct serializerData(*data);
+                ParserProto parserData(serializerData, buffer, sizeDataInStream);
+                ok = parserData.parseStruct(header.type);
+                if (!ok)
+                {
+                    syntaxError = true;
+                    data = nullptr;
+                }
+            }
+            else
+            {
+                if (storeRawData)
+                {
+                    data = std::make_shared<remoteentity::RawDataMessage>();
+                }
+            }
+
+            if (storeRawData && data)
+            {
+                data->setRawData(header.type, CONTENT_TYPE, buffer, sizeDataInStream);
+            }
         }
     }
 

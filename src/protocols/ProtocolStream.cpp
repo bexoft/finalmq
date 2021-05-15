@@ -76,6 +76,11 @@ bool ProtocolStream::isMultiConnectionSession() const
     return false;
 }
 
+bool ProtocolStream::isSendRequestByPoll() const
+{
+    return false;
+}
+
 IProtocol::FuncCreateMessage ProtocolStream::getMessageFactory() const
 {
     return []() {
