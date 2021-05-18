@@ -235,8 +235,6 @@ bool ProtocolSession::sendMessage(const IMessagePtr& msg)
 
     IMessagePtr message = convertMessageToProtocol(msg);
 
-    assert(message->getTotalSendPayloadSize() > 0);
-
     protocolConnection.protocol->prepareMessageToSend(message);
     IStreamConnectionPtr connection = protocolConnection.connection;
     if (connection)
@@ -423,22 +421,25 @@ void ProtocolSession::connected()
 
 void ProtocolSession::disconnected()
 {
-    if (m_executor)
+    if (!m_protocolFlagIsMultiConnectionSession || m_triggerConnected)
     {
-        m_executor->addAction([this] () {
+        if (m_executor)
+        {
+            m_executor->addAction([this]() {
+                auto callback = m_callback.lock();
+                if (callback)
+                {
+                    callback->disconnected(shared_from_this());
+                }
+                });
+        }
+        else
+        {
             auto callback = m_callback.lock();
             if (callback)
             {
                 callback->disconnected(shared_from_this());
             }
-        });
-    }
-    else
-    {
-        auto callback = m_callback.lock();
-        if (callback)
-        {
-            callback->disconnected(shared_from_this());
         }
     }
     std::unique_lock<std::mutex> lock(m_mutex);

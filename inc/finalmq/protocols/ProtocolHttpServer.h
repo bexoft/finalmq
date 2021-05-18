@@ -32,8 +32,8 @@
 namespace finalmq {
 
 
-class SYMBOLEXP ProtocolHttp : public IProtocol
-                             , private std::enable_shared_from_this<ProtocolHttp>
+class SYMBOLEXP ProtocolHttpServer : public IProtocol
+                             , private std::enable_shared_from_this<ProtocolHttpServer>
 {
 public:
     enum { PROTOCOL_ID = 4 };
@@ -48,7 +48,7 @@ public:
     static const std::string HTTP_REQUEST;
     static const std::string HTTP_RESPONSE;
 
-    ProtocolHttp();
+    ProtocolHttpServer();
 
 private:
     // IProtocol
@@ -113,7 +113,7 @@ private:
 };
 
 
-class SYMBOLEXP ProtocolHttpFactory : public IProtocolFactory
+class SYMBOLEXP ProtocolHttpServerFactory : public IProtocolFactory
 {
 public:
 

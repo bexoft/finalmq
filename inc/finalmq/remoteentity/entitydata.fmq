@@ -42,8 +42,8 @@
             {"tid":"TYPE_UINT64",       "type":"",          "name":"entityid",     "desc":"The entity ID of the sender of ConnectivityReply","flags":["METAFLAG_PROTO_VARINT"]},
             {"tid":"TYPE_STRING",       "type":"",          "name":"entityName",   "desc":"The entity name of the sender of ConnectivityReply","flags":[]}
         ]},
-        {"type":"DisconnectEntity","desc":"The entity that will be removed will send DisconnectEntity to all its peers.","fields":[
-        ]}
+        {"type":"DisconnectEntity","desc":"The entity that will be removed will send DisconnectEntity to all its peers.","fields":[]},
+        {"type":"LongPoll","desc":"Use the LongPoll for protocols which do not support bidirectional request communication.","fields":[]}
     ]
 }
 

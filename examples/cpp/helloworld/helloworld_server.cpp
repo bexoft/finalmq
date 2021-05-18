@@ -26,7 +26,7 @@
 #include "finalmq/remoteentity/RemoteEntityFormatJson.h"
 #include "finalmq/protocols/ProtocolHeaderBinarySize.h"
 #include "finalmq/protocols/ProtocolDelimiterLinefeed.h"
-#include "finalmq/protocols/ProtocolHttp.h"
+#include "finalmq/protocols/ProtocolHttpServer.h"
 #include "finalmq/logger/Logger.h"
 
 // the definition of the messages are in the file helloworld.fmq
@@ -46,7 +46,7 @@ using finalmq::PeerEvent;
 using finalmq::ReplyContextUPtr;
 using finalmq::ProtocolHeaderBinarySizeFactory;
 using finalmq::ProtocolDelimiterLinefeedFactory;
-using finalmq::ProtocolHttpFactory;
+using finalmq::ProtocolHttpServerFactory;
 using finalmq::IProtocolSessionPtr;
 using finalmq::ConnectionData;
 using finalmq::ConnectionEvent;
@@ -81,6 +81,8 @@ public:
             {
                 reply.greetings.emplace_back(prefix + request->persons[i].name);
             }
+
+//            PeerId peerid = replyContext->peerId();
 
             // send reply
             replyContext->reply(std::move(reply));
@@ -137,7 +139,7 @@ int main()
 
     // Open listener port 8080 with http.
     // content type in payload: JSON
-    entityContainer.bind("tcp://*:8080", std::make_shared<ProtocolHttpFactory>(), RemoteEntityFormatJson::CONTENT_TYPE);
+    entityContainer.bind("tcp://*:8080", std::make_shared<ProtocolHttpServerFactory>(), RemoteEntityFormatJson::CONTENT_TYPE);
 
     // note:
     // multiple access points (listening ports) can be activated by calling bind() several times.

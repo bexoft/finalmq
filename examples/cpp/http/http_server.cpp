@@ -22,9 +22,10 @@
 
 
 #include "finalmq/protocolconnection/ProtocolSessionContainer.h"
-#include "finalmq/protocols/ProtocolHttp.h"
+#include "finalmq/protocols/ProtocolHttpServer.h"
 #include "finalmq/variant/Variant.h"
 #include "finalmq/variant/VariantValues.h"
+#include "finalmq/variant/VariantValueStruct.h"
 #include "finalmq/logger/Logger.h"
 
 
@@ -35,13 +36,14 @@
 using finalmq::IMessagePtr;
 using finalmq::IProtocolSessionCallback;
 using finalmq::ProtocolSessionContainer;
-using finalmq::ProtocolHttp;
-using finalmq::ProtocolHttpFactory;
+using finalmq::ProtocolHttpServer;
+using finalmq::ProtocolHttpServerFactory;
 using finalmq::IProtocolSessionPtr;
 using finalmq::ConnectionData;
 using finalmq::Logger;
 using finalmq::LogContext;
 using finalmq::Variant;
+using finalmq::VariantStruct;
 
 
 
@@ -67,18 +69,15 @@ private:
     virtual void received(const IProtocolSessionPtr& session, const IMessagePtr& message)
     {
         IMessagePtr response = session->createMessage();
-        response->addMetainfo(ProtocolHttp::FMQ_HTTP, ProtocolHttp::HTTP_RESPONSE);
-        response->addMetainfo(ProtocolHttp::FMQ_STATUS, "200");
-        response->addMetainfo(ProtocolHttp::FMQ_STATUSTEXT, "OK");
-        const std::string* path = message->getMetainfo(ProtocolHttp::FMQ_PATH);
+        Variant& controlData = message->getControlData();
+        controlData = VariantStruct{ {ProtocolHttpServer::FMQ_HTTP, ProtocolHttpServer::HTTP_RESPONSE},
+                                     {ProtocolHttpServer::FMQ_STATUS, 200},
+                                     {ProtocolHttpServer::FMQ_STATUSTEXT, std::string("OK")} };
+
+        const std::string* path = message->getMetainfo(ProtocolHttpServer::FMQ_PATH);
         if (path)
         {
-            response->addMetainfo("Content-Length", Variant(path->size()));
             response->addSendPayload(*path);
-        }
-        else
-        {
-            response->addMetainfo("Content-Length", "0");
         }
         session->sendMessage(response);
     }
@@ -124,7 +123,7 @@ int main()
 
     // Open listener port 7777 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
     // content type in payload: protobuf
-    sessionContainer.bind("tcp://*:7777", &server, std::make_shared<ProtocolHttpFactory>());
+    sessionContainer.bind("tcp://*:7777", &server, std::make_shared<ProtocolHttpServerFactory>());
 
 
     // run

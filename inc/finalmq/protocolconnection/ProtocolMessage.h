@@ -24,7 +24,7 @@
 
 #include "finalmq/streamconnection/IMessage.h"
 #include "finalmq/protocolconnection/IProtocol.h"
-#include "finalmq/variant/variant.h"
+#include "finalmq/variant/Variant.h"
 #include "finalmq/variant/VariantValues.h"
 #include "finalmq/variant/VariantValueStruct.h"
 #include "finalmq/variant/VariantValueList.h"

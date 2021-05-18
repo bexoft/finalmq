@@ -17,7 +17,7 @@ else()
 endif()
 
 
-# Add compile flags to determine coverage
+# Add compile flags to determine coverage   
 if (FINALMQ_BUILD_COVERAGE)
     SET(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage -O0")
     SET(GCC_COVERAGE_LINK_FLAGS    "-lgcov")

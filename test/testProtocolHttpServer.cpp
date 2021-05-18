@@ -23,7 +23,7 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
-#include "finalmq/protocols/ProtocolHttp.h"
+#include "finalmq/protocols/ProtocolHttpServer.h"
 #include "finalmq//protocolconnection/ProtocolMessage.h"
 #include "MockIProtocolCallback.h"
 #include "finalmq/helpers/OperatingSystem.h"
@@ -75,7 +75,7 @@ protected:
     }
 
     MockIOperatingSystem*                   m_mockMockOperatingSystem = nullptr;
-    ProtocolHttp                            m_http;
+    ProtocolHttpServer                            m_http;
     IProtocol*                              m_protocol = nullptr;
     std::shared_ptr<MockIProtocolCallback>  m_mockCallback = std::make_shared<MockIProtocolCallback>();
     std::shared_ptr<Socket>                 m_socket = std::make_shared<Socket>();
@@ -128,12 +128,12 @@ TEST_F(TestProtocolHttp, testReceiveHeaders)
 
     std::shared_ptr<IMessage> message = std::make_shared<ProtocolMessage>(0);
     Variant& controlData = message->getControlData();
-    controlData = VariantStruct{ {ProtocolHttp::FMQ_HTTP, std::string("request")},
-                                 {ProtocolHttp::FMQ_METHOD, std::string("GET")},
-                                 {ProtocolHttp::FMQ_PATH, std::string("/hello")},
-                                 {ProtocolHttp::FMQ_QUERY + "0", std::string("filter=world")},
-                                 {ProtocolHttp::FMQ_QUERY + "1", std::string("lang=en")},
-                                 {ProtocolHttp::FMQ_PROTOCOL, std::string("HTTP/1.1")} };
+    controlData = VariantStruct{ {ProtocolHttpServer::FMQ_HTTP, std::string("request")},
+                                 {ProtocolHttpServer::FMQ_METHOD, std::string("GET")},
+                                 {ProtocolHttpServer::FMQ_PATH, std::string("/hello")},
+                                 {ProtocolHttpServer::FMQ_QUERY + "0", std::string("filter=world")},
+                                 {ProtocolHttpServer::FMQ_QUERY + "1", std::string("lang=en")},
+                                 {ProtocolHttpServer::FMQ_PROTOCOL, std::string("HTTP/1.1")} };
     message->addMetainfo("hello", "123");
     EXPECT_CALL(*m_mockCallback, received(MatcherReceiveMessage(message), _)).Times(1);
     std::string receiveBuffer3 = "\r\n";
@@ -149,12 +149,12 @@ TEST_F(TestProtocolHttp, testReceivePayload)
 
     std::shared_ptr<IMessage> message = std::make_shared<ProtocolMessage>(0);
     Variant& controlData = message->getControlData();
-    controlData = VariantStruct{ {ProtocolHttp::FMQ_HTTP, std::string("request")},
-                                 {ProtocolHttp::FMQ_METHOD, std::string("GET")},
-                                 {ProtocolHttp::FMQ_PATH, std::string("/hello")},
-                                 {ProtocolHttp::FMQ_QUERY + "0", std::string("filter=world")},
-                                 {ProtocolHttp::FMQ_QUERY + "1", std::string("lang=en")},
-                                 {ProtocolHttp::FMQ_PROTOCOL, std::string("HTTP/1.1")} };
+    controlData = VariantStruct{ {ProtocolHttpServer::FMQ_HTTP, std::string("request")},
+                                 {ProtocolHttpServer::FMQ_METHOD, std::string("GET")},
+                                 {ProtocolHttpServer::FMQ_PATH, std::string("/hello")},
+                                 {ProtocolHttpServer::FMQ_QUERY + "0", std::string("filter=world")},
+                                 {ProtocolHttpServer::FMQ_QUERY + "1", std::string("lang=en")},
+                                 {ProtocolHttpServer::FMQ_PROTOCOL, std::string("HTTP/1.1")} };
     message->addMetainfo("Content-Length", "10");
     message->resizeReceivePayload(10);
     memcpy(message->getReceivePayload().first, "0123456789", 10);
@@ -180,12 +180,12 @@ TEST_F(TestProtocolHttp, testReceiveSplitPayload)
 
     std::shared_ptr<IMessage> message = std::make_shared<ProtocolMessage>(0);
     Variant& controlData = message->getControlData();
-    controlData = VariantStruct{ {ProtocolHttp::FMQ_HTTP, std::string("request")},
-                                 {ProtocolHttp::FMQ_METHOD, std::string("GET")},
-                                 {ProtocolHttp::FMQ_PATH, std::string("/hello")},
-                                 {ProtocolHttp::FMQ_QUERY + "0", std::string("filter=world")},
-                                 {ProtocolHttp::FMQ_QUERY + "1", std::string("lang=en")},
-                                 {ProtocolHttp::FMQ_PROTOCOL, std::string("HTTP/1.1")} };
+    controlData = VariantStruct{ {ProtocolHttpServer::FMQ_HTTP, std::string("request")},
+                                 {ProtocolHttpServer::FMQ_METHOD, std::string("GET")},
+                                 {ProtocolHttpServer::FMQ_PATH, std::string("/hello")},
+                                 {ProtocolHttpServer::FMQ_QUERY + "0", std::string("filter=world")},
+                                 {ProtocolHttpServer::FMQ_QUERY + "1", std::string("lang=en")},
+                                 {ProtocolHttpServer::FMQ_PROTOCOL, std::string("HTTP/1.1")} };
     message->addMetainfo("Content-Length", "10");
     message->resizeReceivePayload(10);
     memcpy(message->getReceivePayload().first, "0123456789", 10);
@@ -229,12 +229,12 @@ TEST_F(TestProtocolHttp, testSendPrepareMessage)
 {
     std::shared_ptr<IMessage> message = std::make_shared<ProtocolMessage>(0);
     Variant& controlData = message->getControlData();
-    controlData = VariantStruct{ {ProtocolHttp::FMQ_HTTP, std::string("request")},
-                                 {ProtocolHttp::FMQ_METHOD, std::string("GET")},
-                                 {ProtocolHttp::FMQ_PATH, std::string("/hello")},
-                                 {ProtocolHttp::FMQ_QUERY + "0", std::string("filter=world")},
-                                 {ProtocolHttp::FMQ_QUERY + "1", std::string("lang=en")},
-                                 {ProtocolHttp::FMQ_PROTOCOL, std::string("HTTP/1.1")} };
+    controlData = VariantStruct{ {ProtocolHttpServer::FMQ_HTTP, std::string("request")},
+                                 {ProtocolHttpServer::FMQ_METHOD, std::string("GET")},
+                                 {ProtocolHttpServer::FMQ_PATH, std::string("/hello")},
+                                 {ProtocolHttpServer::FMQ_QUERY + "0", std::string("filter=world")},
+                                 {ProtocolHttpServer::FMQ_QUERY + "1", std::string("lang=en")},
+                                 {ProtocolHttpServer::FMQ_PROTOCOL, std::string("HTTP/1.1")} };
 
     message->addSendPayload(std::string("0123456789"));
 

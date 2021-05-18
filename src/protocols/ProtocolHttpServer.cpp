@@ -21,11 +21,13 @@
 //SOFTWARE.
 
 
-#include "finalmq/protocols/ProtocolHttp.h"
+#include "finalmq/protocols/ProtocolHttpServer.h"
 #include "finalmq/protocolconnection/ProtocolMessage.h"
 #include "finalmq/protocolconnection/ProtocolRegistry.h"
 #include "finalmq/protocolconnection/ProtocolSession.h"
 #include "finalmq/streamconnection/Socket.h"
+
+#include "finalmq/helpers/ModulenameFinalmq.h"
 
 #include <algorithm>
 
@@ -33,15 +35,15 @@
 namespace finalmq {
 
 
-const std::string ProtocolHttp::FMQ_HTTP = "_fmq_http";
-const std::string ProtocolHttp::FMQ_METHOD = "_fmq_method";
-const std::string ProtocolHttp::FMQ_PROTOCOL = "_fmq_protocol";
-const std::string ProtocolHttp::FMQ_PATH = "_fmq_path";
-const std::string ProtocolHttp::FMQ_QUERY = "_fmq_query";
-const std::string ProtocolHttp::FMQ_STATUS = "_fmq_status";
-const std::string ProtocolHttp::FMQ_STATUSTEXT = "_fmq_statustext";
-const std::string ProtocolHttp::HTTP_REQUEST = "request";
-const std::string ProtocolHttp::HTTP_RESPONSE = "response";
+const std::string ProtocolHttpServer::FMQ_HTTP = "_fmq_http";
+const std::string ProtocolHttpServer::FMQ_METHOD = "_fmq_method";
+const std::string ProtocolHttpServer::FMQ_PROTOCOL = "_fmq_protocol";
+const std::string ProtocolHttpServer::FMQ_PATH = "_fmq_path";
+const std::string ProtocolHttpServer::FMQ_QUERY = "_fmq_query";
+const std::string ProtocolHttpServer::FMQ_STATUS = "_fmq_status";
+const std::string ProtocolHttpServer::FMQ_STATUSTEXT = "_fmq_statustext";
+const std::string ProtocolHttpServer::HTTP_REQUEST = "request";
+const std::string ProtocolHttpServer::HTTP_RESPONSE = "response";
     
 static const std::string CONTENT_LENGTH = "Content-Length";
 static const std::string HTTP_FMQ_SESSIONID = "HTTP_FMQ_SESSIONID";
@@ -58,7 +60,7 @@ static const std::string COOKIE_PREFIX = "fmq=";
 //---------------------------------------
 
 
-ProtocolHttp::ProtocolHttp()
+ProtocolHttpServer::ProtocolHttpServer()
     : m_randomDevice()
     , m_randomGenerator(m_randomDevice())
 {
@@ -68,47 +70,47 @@ ProtocolHttp::ProtocolHttp()
 
 
 // IProtocol
-void ProtocolHttp::setCallback(const std::weak_ptr<IProtocolCallback>& callback)
+void ProtocolHttpServer::setCallback(const std::weak_ptr<IProtocolCallback>& callback)
 {
     m_callback = callback;
 }
 
-std::uint32_t ProtocolHttp::getProtocolId() const
+std::uint32_t ProtocolHttpServer::getProtocolId() const
 {
     return PROTOCOL_ID;
 }
 
-bool ProtocolHttp::areMessagesResendable() const
+bool ProtocolHttpServer::areMessagesResendable() const
 {
     return false;
 }
 
-bool ProtocolHttp::doesSupportMetainfo() const
+bool ProtocolHttpServer::doesSupportMetainfo() const
 {
     return true;
 }
 
-bool ProtocolHttp::doesSupportSession() const
+bool ProtocolHttpServer::doesSupportSession() const
 {
     return true;;
 }
 
-bool ProtocolHttp::needsReply() const
+bool ProtocolHttpServer::needsReply() const
 {
     return true;
 }
 
-bool ProtocolHttp::isMultiConnectionSession() const
+bool ProtocolHttpServer::isMultiConnectionSession() const
 {
     return true;
 }
 
-bool ProtocolHttp::isSendRequestByPoll() const
+bool ProtocolHttpServer::isSendRequestByPoll() const
 {
     return true;
 }
 
-IProtocol::FuncCreateMessage ProtocolHttp::getMessageFactory() const
+IProtocol::FuncCreateMessage ProtocolHttpServer::getMessageFactory() const
 {
     return []() {
         return std::make_shared<ProtocolMessage>(PROTOCOL_ID);
@@ -212,7 +214,7 @@ static void decode(std::string& dest, const std::string& src)
 
 
 
-std::string ProtocolHttp::createSessionName()
+std::string ProtocolHttpServer::createSessionName()
 {
     std::uint64_t sessionCounter = m_nextSessionNameCounter;
     ++m_nextSessionNameCounter;
@@ -230,7 +232,7 @@ std::string ProtocolHttp::createSessionName()
 
 
 
-void ProtocolHttp::checkSessionName()
+void ProtocolHttpServer::checkSessionName()
 {
     auto callback = m_callback.lock();
     bool found = m_sessionIdMatches;
@@ -239,15 +241,19 @@ void ProtocolHttp::checkSessionName()
         for (size_t i = 0; i < m_sessionNames.size() && !found; ++i)
         {
             found = callback->findSessionByName(m_sessionNames[i]);
+            streamInfo << this << " findSessionByName: " << found;
             if (found)
             {
+                streamInfo << this << " name before: " << m_sessionName;
                 m_sessionName = std::move(m_sessionNames[i]);
             }
         }
     }
+    streamInfo << this << " name: " << m_sessionName;
     if (m_createSession || !found)
     {
         m_sessionName = createSessionName();
+        streamInfo << this << " create session: " << m_sessionName;
         callback = m_callback.lock();
         if (callback)
         {
@@ -263,7 +269,7 @@ void ProtocolHttp::checkSessionName()
 
 
 
-void ProtocolHttp::cookiesToSessionIds(const std::string& cookies)
+void ProtocolHttpServer::cookiesToSessionIds(const std::string& cookies)
 {
     m_sessionNames.clear();
     size_t posStart = 0;
@@ -289,14 +295,14 @@ void ProtocolHttp::cookiesToSessionIds(const std::string& cookies)
             std::string sessionId = { cookie, pos };
             if (!sessionId.empty())
             {
-                if (m_sessionNames.empty())
-                {
+                //if (m_sessionNames.empty())
+                //{
                     m_sessionNames.emplace_back(std::move(sessionId));
-                }
-                else
-                {
-                    m_sessionNames[0] = std::move(sessionId);
-                }
+                //}
+                //else
+                //{
+                //    m_sessionNames[0] = std::move(sessionId);
+                //}
             }
         }
     }
@@ -305,7 +311,7 @@ void ProtocolHttp::cookiesToSessionIds(const std::string& cookies)
 
 
 
-bool ProtocolHttp::receiveHeaders(ssize_t bytesReceived)
+bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
 {
     bool ok = true;
     bytesReceived += m_sizeRemaining;
@@ -446,6 +452,10 @@ bool ProtocolHttp::receiveHeaders(ssize_t bytesReceived)
                                 if (m_stateSessionId == SESSIONID_NONE)
                                 {
                                     cookiesToSessionIds(value);
+                                    if (!m_sessionNames.empty())
+                                    {
+                                        streamInfo << this << " input cookie: " << m_sessionNames[0];
+                                    }
                                     // is sessionName in sessionNames, if yes, then this protocol instance is the right one -> clear sessionNames
                                     if (!m_sessionName.empty())
                                     {
@@ -453,6 +463,7 @@ bool ProtocolHttp::receiveHeaders(ssize_t bytesReceived)
                                         if (it != m_sessionNames.end())
                                         {
                                             m_sessionIdMatches = true;
+                                            streamInfo << this << "this is the session";
                                         }
                                     }
                                     m_stateSessionId = SESSIONID_COOKIE;
@@ -485,7 +496,7 @@ bool ProtocolHttp::receiveHeaders(ssize_t bytesReceived)
 }
 
 
-void ProtocolHttp::reset()
+void ProtocolHttpServer::reset()
 {
     m_offsetRemaining = 0;
     m_sizeRemaining = 0;
@@ -502,8 +513,10 @@ void ProtocolHttp::reset()
 
 static std::string HEADER_KEEP_ALIVE = "Connection: keep-alive\r\n";
 
-void ProtocolHttp::prepareMessageToSend(IMessagePtr message)
+void ProtocolHttpServer::prepareMessageToSend(IMessagePtr message)
 {
+    std::string echoData = message->getEchoData();
+    streamInfo << this << " prepareMessageToSend: " << echoData;
     std::string firstLine;
     const Variant& controlData = message->getControlData();
     const std::string* http = controlData.getData<std::string>(FMQ_HTTP);
@@ -640,17 +653,17 @@ void ProtocolHttp::prepareMessageToSend(IMessagePtr message)
 }
 
 
-void ProtocolHttp::moveOldProtocolState(IProtocol& /*protocolOld*/)
+void ProtocolHttpServer::moveOldProtocolState(IProtocol& /*protocolOld*/)
 {
     //assert(protocolOld.getProtocolId() == PROTOCOL_ID);
     //if (protocolOld.getProtocolId() == PROTOCOL_ID)
     //{
-    //    ProtocolHttp& old = static_cast<ProtocolHttp&>(protocolOld);
+    //    ProtocolHttpServer& old = static_cast<ProtocolHttpServer&>(protocolOld);
     //}
 }
 
 
-void ProtocolHttp::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
+void ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
 {
     bool ok = true;
 
@@ -765,7 +778,7 @@ void ProtocolHttp::received(const IStreamConnectionPtr& /*connection*/, const So
 
 
 
-hybrid_ptr<IStreamConnectionCallback> ProtocolHttp::connected(const IStreamConnectionPtr& connection)
+hybrid_ptr<IStreamConnectionCallback> ProtocolHttpServer::connected(const IStreamConnectionPtr& connection)
 {
     ConnectionData connectionData = connection->getConnectionData();
     m_headerHost = "Host: " + connectionData.hostname + ":" + std::to_string(connectionData.port) + "\r\n";
@@ -778,7 +791,7 @@ hybrid_ptr<IStreamConnectionCallback> ProtocolHttp::connected(const IStreamConne
     return nullptr;
 }
 
-void ProtocolHttp::disconnected(const IStreamConnectionPtr& /*connection*/)
+void ProtocolHttpServer::disconnected(const IStreamConnectionPtr& /*connection*/)
 {
 }
 
@@ -788,19 +801,19 @@ void ProtocolHttp::disconnected(const IStreamConnectionPtr& /*connection*/)
 //---------------------------------------
 
 
-struct RegisterProtocolHttpFactory
+struct RegisterProtocolHttpServerFactory
 {
-    RegisterProtocolHttpFactory()
+    RegisterProtocolHttpServerFactory()
     {
-        ProtocolRegistry::instance().registerProtocolFactory(ProtocolHttp::PROTOCOL_ID, std::make_shared<ProtocolHttpFactory>());
+        ProtocolRegistry::instance().registerProtocolFactory(ProtocolHttpServer::PROTOCOL_ID, std::make_shared<ProtocolHttpServerFactory>());
     }
-} g_registerProtocolHttpFactory;
+} g_registerProtocolHttpServerFactory;
 
 
 // IProtocolFactory
-IProtocolPtr ProtocolHttpFactory::createProtocol()
+IProtocolPtr ProtocolHttpServerFactory::createProtocol()
 {
-    return std::make_shared<ProtocolHttp>();
+    return std::make_shared<ProtocolHttpServer>();
 }
 
 

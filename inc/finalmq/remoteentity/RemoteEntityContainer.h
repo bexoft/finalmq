@@ -76,6 +76,8 @@ typedef std::shared_ptr<IRemoteEntityContainer> IRemoteEntityContainerPtr;
 
 
 
+
+
 class SYMBOLEXP RemoteEntityContainer : public IRemoteEntityContainer
                                       , public IProtocolSessionCallback
 {
@@ -106,6 +108,7 @@ private:
     virtual void socketConnected(const IProtocolSessionPtr& session) override;
     virtual void socketDisconnected(const IProtocolSessionPtr& session) override;
 
+    void handleLongPoll(const ReceiveData& receiveData);
     inline void triggerConnectionEvent(const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) const;
     void deinit();
 
@@ -115,6 +118,7 @@ private:
     EntityId                                                    m_nextEntityId = 1;
     std::shared_ptr<FuncConnectionEvent>                        m_funcConnectionEvent;
     bool                                                        m_storeRawDataInReceiveStruct = false;
+    std::shared_ptr<ISessionRequestsMessage>                    m_sessionRequestsMessage;
     mutable std::mutex                                          m_mutex;
 };
 

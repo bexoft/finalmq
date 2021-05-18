@@ -22,9 +22,9 @@
 
 #include "finalmq/remoteentity/RemoteEntityFormatRegistry.h"
 #include "finalmq/remoteentity/entitydata.fmq.h"
-#include "finalmq/Variant/Variant.h"
-#include "finalmq/Variant/VariantValueStruct.h"
-#include "finalmq/Variant/VariantValues.h"
+#include "finalmq/variant/Variant.h"
+#include "finalmq/variant/VariantValueStruct.h"
+#include "finalmq/variant/VariantValues.h"
 
 
 //#include "finalmq/helpers/ModulenameFinalmq.h"
@@ -80,8 +80,10 @@ inline static bool shallSend(const remoteentity::Header& header, const IProtocol
     return false;
 }
 
+static const std::string FMQ_HTTP = "_fmq_http";
 static const std::string FMQ_STATUS = "_fmq_status";
 static const std::string FMQ_STATUSTEXT = "_fmq_statustext";
+static const std::string HTTP_RESPONSE = "response";
 
 
 static void statusToProtocolStatus(remoteentity::Status status, Variant& controlData)
@@ -89,24 +91,29 @@ static void statusToProtocolStatus(remoteentity::Status status, Variant& control
     switch (status)
     {
     case Status::STATUS_OK:
-        controlData = VariantStruct{ {FMQ_STATUS, 200},
+        controlData = VariantStruct{ {FMQ_HTTP, HTTP_RESPONSE},
+                                     {FMQ_STATUS, 200},
                                      {FMQ_STATUSTEXT, std::string("OK")} };
         break;
     case Status::STATUS_ENTITY_NOT_FOUND:
-        controlData = VariantStruct{ {FMQ_STATUS, 404},
+        controlData = VariantStruct{ {FMQ_HTTP, HTTP_RESPONSE},
+                                     {FMQ_STATUS, 404},
                                      {FMQ_STATUSTEXT, std::string("Not Found")} };
         break;
     case Status::STATUS_SYNTAX_ERROR:
-        controlData = VariantStruct{ {FMQ_STATUS, 400},
+        controlData = VariantStruct{ {FMQ_HTTP, HTTP_RESPONSE},
+                                     {FMQ_STATUS, 400},
                                      {FMQ_STATUSTEXT, std::string("Bad Request")} };
         break;
     case Status::STATUS_REQUEST_NOT_FOUND:
     case Status::STATUS_REQUESTTYPE_NOT_KNOWN:
-        controlData = VariantStruct{ {FMQ_STATUS, 501},
+        controlData = VariantStruct{ {FMQ_HTTP, HTTP_RESPONSE},
+                                     {FMQ_STATUS, 501},
                                      {FMQ_STATUSTEXT, std::string("Not Implemented")} };
         break;
     default:
-        controlData = VariantStruct{ {FMQ_STATUS, 500},
+        controlData = VariantStruct{ {FMQ_HTTP, HTTP_RESPONSE},
+                                     {FMQ_STATUS, 500},
                                      {FMQ_STATUSTEXT, std::string("Internal Server Error")} };
         break;
     }
@@ -145,7 +152,7 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, re
 }
 
 
-bool RemoteEntityFormatRegistryImpl::addRequestToMessage(IMessage& message, const IProtocolSessionPtr& session, remoteentity::Header& header, const StructBase* structBase)
+bool RemoteEntityFormatRegistryImpl::addRequestToMessage(IMessage& message, const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase* structBase)
 {
     bool ok = true;
     assert(session);

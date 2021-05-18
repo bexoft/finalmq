@@ -80,12 +80,12 @@ void RemoteEntityFormatJson::serialize(IMessage& message, const Header& header, 
             SerializerJson serializerData(message);
             ParserStruct parserData(serializerData, *structBase);
             parserData.parseStruct();
-            message.addSendPayload("]", 1);
+            message.addSendPayload("]\t", 2);
         }
     }
     else
     {
-        message.addSendPayload(",\t{}]", 5);
+        message.addSendPayload(",\t{}]\t", 6);
     }
 }
 

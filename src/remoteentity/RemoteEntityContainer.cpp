@@ -76,11 +76,95 @@ const EnumInfo ConnectionEvent::_enumInfo = {
 
 ///////////////////////////////////
 
+class SessionRequestsMessage : public ISessionRequestsMessage
+{
+public:
+private:
+
+    virtual bool putMessage(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase& structBase) override
+    {
+        bool ok = false;
+        std::unique_lock<std::mutex> lock(m_mutex);
+        auto it = m_longpollSessions.find(session->getSessionId());
+        if (it != m_longpollSessions.end())
+        {
+            IMessagePtr message = session->createMessage();
+            message->getEchoData() = std::move(it->second);
+            m_longpollSessions.erase(it);
+            lock.unlock();
+
+            assert(message);
+            ok = RemoteEntityFormatRegistry::instance().addRequestToMessage(*message, session, header, &structBase);
+            if (ok)
+            {
+                session->sendMessage(message);
+            }
+        }
+        else
+        {
+            IMessagePtr& message = m_messages[session->getSessionId()];
+            if (message == nullptr)
+            {
+                message = session->createMessage();
+            }
+            assert(message);
+            ok = RemoteEntityFormatRegistry::instance().addRequestToMessage(*message, session, header, &structBase);
+        }
+        return ok;
+    }
+    
+    virtual void removeSession(std::int64_t sessionId) override
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        m_messages.erase(sessionId);
+        m_longpollSessions.erase(sessionId);
+    }
+
+    virtual void longpoll(const IProtocolSessionPtr& session, Variant&& echoData) override
+    {
+        IMessagePtr message;
+        std::unique_lock<std::mutex> lock(m_mutex);
+        auto it = m_messages.find(session->getSessionId());
+        if (it != m_messages.end())
+        {
+            message = it->second;
+            m_messages.erase(it);
+        }
+        lock.unlock();
+        if (message)
+        {
+            message->getEchoData() = std::move(echoData);
+            session->sendMessage(message);
+        }
+        else
+        {
+            lock.lock();
+            auto it = m_longpollSessions.find(session->getSessionId());
+            if (it != m_longpollSessions.end())
+            {
+                message = session->createMessage();
+                message->getEchoData() = std::move(it->second);
+                it->second = std::move(echoData);
+                lock.unlock();
+                session->sendMessage(message);
+            }
+            else
+            {
+                m_longpollSessions[session->getSessionId()] = std::move(echoData);
+            }
+        }
+    }
+
+    std::unordered_map<std::int64_t, IMessagePtr> m_messages;
+    std::unordered_map<std::int64_t, Variant> m_longpollSessions;
+    std::mutex  m_mutex;
+};
+
 
 RemoteEntityContainer::RemoteEntityContainer()
     : m_protocolSessionContainer(std::make_unique<ProtocolSessionContainer>())
+    , m_sessionRequestsMessage(std::make_shared<SessionRequestsMessage>())
 {
-
 }
 
 RemoteEntityContainer::~RemoteEntityContainer()
@@ -177,7 +261,7 @@ EntityId RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> remoteE
         m_name2entityId[name] = entityId;
     }
 
-    re->initEntity(entityId, name);
+    re->initEntity(entityId, name, m_sessionRequestsMessage);
     m_entityId2entity[entityId] = remoteEntity;
 
     return entityId;
@@ -269,6 +353,16 @@ void RemoteEntityContainer::disconnected(const IProtocolSessionPtr& session)
             entity->sessionDisconnected(session);
         }
     }
+
+    // remove pending requests from m_sessionRequestsMessage. they were not fetched by the long poll
+    m_sessionRequestsMessage->removeSession(session->getSessionId());
+}
+
+
+void RemoteEntityContainer::handleLongPoll(const ReceiveData& receiveData)
+{
+    assert(receiveData.session);
+    m_sessionRequestsMessage->longpoll(receiveData.session, std::move(receiveData.message->getEchoData()));
 }
 
 
@@ -278,7 +372,7 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     assert(message);
 
     bool syntaxError = false;
-    ReceiveData receiveData{session, message};
+    ReceiveData receiveData{ session, message, {}, {} };
     receiveData.structBase = RemoteEntityFormatRegistry::instance().parse(*message, session->getContentType(), m_storeRawDataInReceiveStruct, receiveData.header, syntaxError);
 
     std::unique_lock<std::mutex> lock(m_mutex);
@@ -302,13 +396,23 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     }
     lock.unlock();
 
+    const std::string& type = receiveData.header.type;
+
     auto entity = remoteEntity.lock();
     if (receiveData.header.mode == MsgMode::MSG_REQUEST)
     {
         Status replyStatus = Status::STATUS_OK;
         if (!syntaxError)
         {
-            if (entity)
+            static const std::string LONG_POLL = "finalmq.remoteentity.LongPoll";
+            if (type.size() == LONG_POLL.size() &&
+                type[LONG_POLL.size() - 1] == 'l' &&
+                type[LONG_POLL.size() - 2] == 'l' &&
+                type == LONG_POLL)
+            {
+                handleLongPoll(receiveData);
+            }
+            else if (entity)
             {
                 if (receiveData.structBase)
                 {
@@ -338,7 +442,7 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     {
         if (entity)
         {
-            if (!receiveData.structBase && receiveData.header.status == Status::STATUS_OK && !receiveData.header.type.empty())
+            if (!receiveData.structBase && receiveData.header.status == Status::STATUS_OK && !type.empty())
             {
                 receiveData.header.status = Status::STATUS_REPLYTYPE_NOT_KNOWN;
             }
