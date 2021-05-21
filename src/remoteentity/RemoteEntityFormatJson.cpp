@@ -148,20 +148,33 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
         endHeader = &buffer[ixEndHeader];
         ssize_t ixStartCommand = findLast(buffer, ixEndHeader, '/');    //9
         assert(ixStartCommand >= 0);
-        if (ixStartCommand > 1)
+        if (ixStartCommand != 0)
         {
-            header.destname = {&buffer[1], &buffer[ixStartCommand]};
-        }
-        ssize_t ixCorrelationId = findLast(buffer, ixEndHeader, '#');   //26
-        if (ixCorrelationId != -1)
-        {
-            header.corrid = strtoll(&buffer[ixCorrelationId+1], nullptr, 10);
+            header.destname = { &buffer[1], &buffer[ixStartCommand] };
+            ssize_t ixCorrelationId = findLast(buffer, ixEndHeader, '#');   //26
+            if (ixCorrelationId != -1)
+            {
+                header.corrid = strtoll(&buffer[ixCorrelationId + 1], nullptr, 10);
+            }
+            else
+            {
+                ixCorrelationId = ixEndHeader;
+            }
+            header.type = { &buffer[ixStartCommand + 1], &buffer[ixCorrelationId] };
         }
         else
         {
-            ixCorrelationId = ixEndHeader;
+            ssize_t ixCorrelationId = findLast(buffer, ixEndHeader, '#');   //26
+            if (ixCorrelationId != -1)
+            {
+                header.corrid = strtoll(&buffer[ixCorrelationId + 1], nullptr, 10);
+            }
+            else
+            {
+                ixCorrelationId = ixEndHeader;
+            }
+            header.destname = { &buffer[ixStartCommand + 1], &buffer[ixCorrelationId] };
         }
-        header.type = {&buffer[ixStartCommand+1], &buffer[ixCorrelationId]};
 
         header.mode = MsgMode::MSG_REQUEST;
     }

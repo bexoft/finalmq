@@ -106,10 +106,10 @@ private:
     std::string                         m_headerHost;
     std::int64_t                        m_connectionId = 0;
     bool                                m_createSession = false;
-    bool                                m_sessionIdMatches = false;
     std::string                         m_sessionName;
-    std::uint64_t                       m_nextSessionNameCounter = 1;
     std::weak_ptr<IProtocolCallback>    m_callback;
+
+    static std::atomic_int64_t          m_nextSessionNameCounter;
 };
 
 

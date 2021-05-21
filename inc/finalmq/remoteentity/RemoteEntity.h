@@ -61,6 +61,7 @@ struct ISessionRequestsMessage
 {
     virtual ~ISessionRequestsMessage() {}
     virtual bool putMessage(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase& structBase) = 0;
+    virtual void connectSession(std::int64_t sessionId) = 0;
     virtual void removeSession(std::int64_t sessionId) = 0;
 
     virtual void longpoll(const IProtocolSessionPtr& session, Variant&& echoData) = 0;
@@ -360,7 +361,6 @@ public:
     {
         return m_metainfo;
     }
-
 
 private:
     void reply(remoteentity::Status status)

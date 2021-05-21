@@ -112,6 +112,9 @@ private:
     inline void triggerConnectionEvent(const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) const;
     void deinit();
 
+    static bool isTimerExpired(std::chrono::time_point<std::chrono::system_clock>& lastTime, int interval);
+
+
     std::unique_ptr<IProtocolSessionContainer>                  m_protocolSessionContainer;
     std::unordered_map<std::string, EntityId>                   m_name2entityId;
     std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>>     m_entityId2entity;
@@ -119,6 +122,7 @@ private:
     std::shared_ptr<FuncConnectionEvent>                        m_funcConnectionEvent;
     bool                                                        m_storeRawDataInReceiveStruct = false;
     std::shared_ptr<ISessionRequestsMessage>                    m_sessionRequestsMessage;
+    std::chrono::time_point<std::chrono::system_clock>          m_lastCheckTime;
     mutable std::mutex                                          m_mutex;
 };
 

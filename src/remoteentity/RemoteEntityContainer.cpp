@@ -85,38 +85,47 @@ private:
     {
         bool ok = false;
         std::unique_lock<std::mutex> lock(m_mutex);
+        // send only to connected session
         auto it = m_longpollSessions.find(session->getSessionId());
         if (it != m_longpollSessions.end())
         {
-            IMessagePtr message = session->createMessage();
-            message->getEchoData() = std::move(it->second);
-            m_longpollSessions.erase(it);
-            lock.unlock();
-
-            assert(message);
-            ok = RemoteEntityFormatRegistry::instance().addRequestToMessage(*message, session, header, &structBase);
-            if (ok)
+            LongPollSession& longpollSession = it->second;
+            if (longpollSession.pollwaiting)
             {
-                session->sendMessage(message);
+                longpollSession.pollwaiting = false;
+                assert(longpollSession.message == nullptr);
+                IMessagePtr message = session->createMessage();
+                message->getEchoData() = std::move(longpollSession.echoData);
+                lock.unlock();
+                assert(message);
+                ok = RemoteEntityFormatRegistry::instance().addRequestToMessage(*message, session, header, &structBase);
+                if (ok)
+                {
+                    session->sendMessage(message);
+                }
             }
-        }
-        else
-        {
-            IMessagePtr& message = m_messages[session->getSessionId()];
-            if (message == nullptr)
+            else
             {
-                message = session->createMessage();
+                if (longpollSession.message == nullptr)
+                {
+                    longpollSession.message = session->createMessage();
+                }
+                assert(longpollSession.message);
+                ok = RemoteEntityFormatRegistry::instance().addRequestToMessage(*longpollSession.message, session, header, &structBase);
             }
-            assert(message);
-            ok = RemoteEntityFormatRegistry::instance().addRequestToMessage(*message, session, header, &structBase);
         }
         return ok;
     }
     
+    virtual void connectSession(std::int64_t sessionId) override
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        m_longpollSessions[sessionId];
+    }
+
     virtual void removeSession(std::int64_t sessionId) override
     {
         std::unique_lock<std::mutex> lock(m_mutex);
-        m_messages.erase(sessionId);
         m_longpollSessions.erase(sessionId);
     }
 
@@ -124,39 +133,52 @@ private:
     {
         IMessagePtr message;
         std::unique_lock<std::mutex> lock(m_mutex);
-        auto it = m_messages.find(session->getSessionId());
-        if (it != m_messages.end())
+        auto it = m_longpollSessions.find(session->getSessionId());
+        if (it != m_longpollSessions.end())
         {
-            message = it->second;
-            m_messages.erase(it);
-        }
-        lock.unlock();
-        if (message)
-        {
-            message->getEchoData() = std::move(echoData);
-            session->sendMessage(message);
-        }
-        else
-        {
-            lock.lock();
-            auto it = m_longpollSessions.find(session->getSessionId());
-            if (it != m_longpollSessions.end())
+            LongPollSession& longpollSession = it->second;
+            if (longpollSession.message)
             {
-                message = session->createMessage();
-                message->getEchoData() = std::move(it->second);
-                it->second = std::move(echoData);
+                message = longpollSession.message;
+                longpollSession.message = nullptr;
                 lock.unlock();
+                message->getEchoData() = std::move(echoData);
                 session->sendMessage(message);
             }
             else
             {
-                m_longpollSessions[session->getSessionId()] = std::move(echoData);
+                if (longpollSession.pollwaiting)
+                {
+                    message = session->createMessage();
+                    message->getEchoData() = std::move(longpollSession.echoData);
+                    longpollSession.echoData = std::move(echoData);
+                    lock.unlock();
+                    session->sendMessage(message);
+                }
+                else
+                {
+                    longpollSession.echoData = std::move(echoData);
+                    longpollSession.pollwaiting = true;
+                }
             }
+        }
+        else
+        {
+            message = session->createMessage();
+            message->getEchoData() = std::move(echoData);
+            lock.unlock();
+            session->sendMessage(message);
         }
     }
 
-    std::unordered_map<std::int64_t, IMessagePtr> m_messages;
-    std::unordered_map<std::int64_t, Variant> m_longpollSessions;
+    struct LongPollSession
+    {
+        IMessagePtr message;
+        Variant     echoData;
+        bool        pollwaiting = false;
+    };
+
+    std::unordered_map<std::int64_t, LongPollSession> m_longpollSessions;
     std::mutex  m_mutex;
 };
 
@@ -200,10 +222,50 @@ void RemoteEntityContainer::deinit()
 
 // IRemoteEntityContainer
 
+
+bool RemoteEntityContainer::isTimerExpired(std::chrono::time_point<std::chrono::system_clock>& lastTime, int interval)
+{
+    bool expired = false;
+    std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+
+    std::chrono::duration<double> dur = now - lastTime;
+    int delta = static_cast<int>(dur.count() * 1000);
+    if (delta >= interval)
+    {
+        lastTime = now;
+        expired = true;
+    }
+    else if (delta < 0)
+    {
+        lastTime = now;
+    }
+
+    return expired;
+}
+
+static const int INTERVAL_CHECK = 5000;
+
+
 void RemoteEntityContainer::init(int cycleTime, int checkReconnectInterval, FuncPollerLoopTimer funcTimer, const IExecutorPtr& executor, bool storeRawDataInReceiveStruct)
 {
     m_storeRawDataInReceiveStruct = storeRawDataInReceiveStruct;
-    m_protocolSessionContainer->init(cycleTime, checkReconnectInterval, std::move(funcTimer), executor);
+    m_protocolSessionContainer->init(cycleTime, checkReconnectInterval, [this, funcTimer = std::move(funcTimer)]() {
+        if (funcTimer)
+        {
+            funcTimer();
+        }
+        if (isTimerExpired(m_lastCheckTime, INTERVAL_CHECK))
+        {
+
+        }
+    }, executor);
+
+    //registerEntity([this]() {
+    //    std::shared_ptr<RemoteEntity> entity = std::make_shared<RemoteEntity>();
+    //    entity->registerCommand<COMMAND>([this](ReplyContextUPtr& replyContext, const std::shared_ptr<COMMAND>& request) {
+    //    });
+    //    return entity;
+    //}(), "fmq");
 }
 
 int RemoteEntityContainer::bind(const std::string& endpoint, IProtocolFactoryPtr protocolFactory, int contentType, const BindProperties& bindProperties)
@@ -329,6 +391,7 @@ inline void RemoteEntityContainer::triggerConnectionEvent(const IProtocolSession
 // IProtocolSessionCallback
 void RemoteEntityContainer::connected(const IProtocolSessionPtr& session)
 {
+    m_sessionRequestsMessage->connectSession(session->getSessionId());
     triggerConnectionEvent(session, ConnectionEvent::CONNECTIONEVENT_CONNECTED);
 }
 
@@ -375,78 +438,78 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     ReceiveData receiveData{ session, message, {}, {} };
     receiveData.structBase = RemoteEntityFormatRegistry::instance().parse(*message, session->getContentType(), m_storeRawDataInReceiveStruct, receiveData.header, syntaxError);
 
-    std::unique_lock<std::mutex> lock(m_mutex);
-    EntityId entityId = receiveData.header.destid;
-    if (entityId == ENTITYID_INVALID || (entityId == ENTITYID_DEFAULT && !receiveData.header.destname.empty()))
+    static const std::string LONG_POLL = "LongPoll";
+    if (receiveData.header.destname == LONG_POLL)
     {
-        auto itName = m_name2entityId.find(receiveData.header.destname);
-        if (itName != m_name2entityId.end())
-        {
-            entityId = itName->second;
-        }
+        handleLongPoll(receiveData);
     }
-    hybrid_ptr<IRemoteEntity> remoteEntity;
-    if (entityId != ENTITYID_INVALID)
+    else
     {
-        auto it = m_entityId2entity.find(entityId);
-        if (it != m_entityId2entity.end())
+        std::unique_lock<std::mutex> lock(m_mutex);
+        EntityId entityId = receiveData.header.destid;
+        if (entityId == ENTITYID_INVALID || (entityId == ENTITYID_DEFAULT && !receiveData.header.destname.empty()))
         {
-            remoteEntity = it->second;
-        }
-    }
-    lock.unlock();
-
-    const std::string& type = receiveData.header.type;
-
-    auto entity = remoteEntity.lock();
-    if (receiveData.header.mode == MsgMode::MSG_REQUEST)
-    {
-        Status replyStatus = Status::STATUS_OK;
-        if (!syntaxError)
-        {
-            static const std::string LONG_POLL = "finalmq.remoteentity.LongPoll";
-            if (type.size() == LONG_POLL.size() &&
-                type[LONG_POLL.size() - 1] == 'l' &&
-                type[LONG_POLL.size() - 2] == 'l' &&
-                type == LONG_POLL)
+            auto itName = m_name2entityId.find(receiveData.header.destname);
+            if (itName != m_name2entityId.end())
             {
-                handleLongPoll(receiveData);
+                entityId = itName->second;
             }
-            else if (entity)
+        }
+        hybrid_ptr<IRemoteEntity> remoteEntity;
+        if (entityId != ENTITYID_INVALID)
+        {
+            auto it = m_entityId2entity.find(entityId);
+            if (it != m_entityId2entity.end())
             {
-                if (receiveData.structBase)
+                remoteEntity = it->second;
+            }
+        }
+        lock.unlock();
+
+        const std::string& type = receiveData.header.type;
+
+        auto entity = remoteEntity.lock();
+        if (receiveData.header.mode == MsgMode::MSG_REQUEST)
+        {
+            Status replyStatus = Status::STATUS_OK;
+            if (!syntaxError)
+            {
+                if (entity)
                 {
-                    entity->receivedRequest(receiveData);
+                    if (receiveData.structBase)
+                    {
+                        entity->receivedRequest(receiveData);
+                    }
+                    else
+                    {
+                        replyStatus = Status::STATUS_REQUESTTYPE_NOT_KNOWN;
+                    }
                 }
                 else
                 {
-                    replyStatus = Status::STATUS_REQUESTTYPE_NOT_KNOWN;
+                    replyStatus = Status::STATUS_ENTITY_NOT_FOUND;
                 }
             }
             else
             {
-                replyStatus = Status::STATUS_ENTITY_NOT_FOUND;
+                replyStatus = Status::STATUS_SYNTAX_ERROR;
             }
-        }
-        else
-        {
-            replyStatus = Status::STATUS_SYNTAX_ERROR;
-        }
-        if (replyStatus != Status::STATUS_OK)
-        {
-            Header headerReply{ receiveData.header.srcid, "", entityId, MsgMode::MSG_REPLY, replyStatus, "", receiveData.header.corrid, {} };
-            RemoteEntityFormatRegistry::instance().send(session, headerReply, std::move(message->getEchoData()));
-        }
-    }
-    else if (receiveData.header.mode == MsgMode::MSG_REPLY)
-    {
-        if (entity)
-        {
-            if (!receiveData.structBase && receiveData.header.status == Status::STATUS_OK && !type.empty())
+            if (replyStatus != Status::STATUS_OK)
             {
-                receiveData.header.status = Status::STATUS_REPLYTYPE_NOT_KNOWN;
+                Header headerReply{ receiveData.header.srcid, "", entityId, MsgMode::MSG_REPLY, replyStatus, "", receiveData.header.corrid, {} };
+                RemoteEntityFormatRegistry::instance().send(session, headerReply, std::move(message->getEchoData()));
             }
-            entity->receivedReply(receiveData);
+        }
+        else if (receiveData.header.mode == MsgMode::MSG_REPLY)
+        {
+            if (entity)
+            {
+                if (!receiveData.structBase && receiveData.header.status == Status::STATUS_OK && !type.empty())
+                {
+                    receiveData.header.status = Status::STATUS_REPLYTYPE_NOT_KNOWN;
+                }
+                entity->receivedReply(receiveData);
+            }
         }
     }
 }

@@ -60,6 +60,8 @@ static const std::string COOKIE_PREFIX = "fmq=";
 //---------------------------------------
 
 
+std::atomic_int64_t ProtocolHttpServer::m_nextSessionNameCounter = 1;
+
 ProtocolHttpServer::ProtocolHttpServer()
     : m_randomDevice()
     , m_randomGenerator(m_randomDevice())
@@ -216,16 +218,12 @@ static void decode(std::string& dest, const std::string& src)
 
 std::string ProtocolHttpServer::createSessionName()
 {
-    std::uint64_t sessionCounter = m_nextSessionNameCounter;
-    ++m_nextSessionNameCounter;
+    std::uint64_t sessionCounter = m_nextSessionNameCounter.fetch_add(1);
     std::uint64_t v1 = m_randomVariable(m_randomGenerator);
     std::uint64_t v2 = m_randomVariable(m_randomGenerator);
 
-    v1 &= 0xffffffff00000000ull;
-    v1 |= (sessionCounter & 0x00000000ffffffffull);
-
     std::ostringstream oss;
-    oss << std::hex << v2 << v1;
+    oss << std::hex << v2 << v1 << '.' << std::dec <<sessionCounter;
     std::string sessionName = oss.str();
     return sessionName;
 }
@@ -235,17 +233,49 @@ std::string ProtocolHttpServer::createSessionName()
 void ProtocolHttpServer::checkSessionName()
 {
     auto callback = m_callback.lock();
-    bool found = m_sessionIdMatches;
+    bool found = false;
     if (!m_createSession)
     {
-        for (size_t i = 0; i < m_sessionNames.size() && !found; ++i)
+        std::vector<std::string> sessionMatched;
+        for (size_t i = 0; i < m_sessionNames.size(); ++i)
         {
-            found = callback->findSessionByName(m_sessionNames[i]);
-            streamInfo << this << " findSessionByName: " << found;
-            if (found)
+            bool foundInNames = callback->findSessionByName(m_sessionNames[i]);
+            streamInfo << this << " findSessionByName: " << foundInNames;
+            if (foundInNames)
+            {
+                sessionMatched.push_back(std::move(m_sessionNames[i]));
+            }
+        }
+        std::string sessionFound;
+        if (sessionMatched.size() == 1)
+        {
+            sessionFound = std::move(sessionMatched[0]);
+        }
+        else
+        {
+            std::int64_t counterMax = 0;
+            for (size_t i = 0; i < sessionMatched.size(); ++i)
+            {
+                std::string& session = sessionMatched[i];
+                size_t pos = session.find_first_of('.');
+                if (pos != std::string::npos)
+                {
+                    std::int64_t counter = atoll(&session[pos + 1]);
+                    if (counter > counterMax)
+                    {
+                        counterMax = counter;
+                        sessionFound = std::move(session);
+                    }
+                }
+            }
+        }
+        if (!sessionFound.empty())
+        {
+            found = true;
+            if (m_sessionName != sessionFound)
             {
                 streamInfo << this << " name before: " << m_sessionName;
-                m_sessionName = std::move(m_sessionNames[i]);
+                m_sessionName = std::move(sessionFound);
             }
         }
     }
@@ -262,7 +292,7 @@ void ProtocolHttpServer::checkSessionName()
         m_headerSendNext.emplace_back(HTTP_SET_FMQ_SESSION);
         m_headerSendNext.emplace_back(m_sessionName);
         m_headerSendNext.emplace_back(HTTP_SET_COOKIE);
-        m_headerSendNext.push_back(COOKIE_PREFIX + m_sessionName);
+        m_headerSendNext.push_back(COOKIE_PREFIX + m_sessionName + "; path=/");
     }
     m_sessionNames.clear();
 }
@@ -438,11 +468,6 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
                                 m_sessionNames.clear();
                                 if (!value.empty())
                                 {
-                                    // only push, if value is not sessionName -> this protocolinstance is not the right one
-                                    if (!m_sessionName.empty() && m_sessionName == value)
-                                    {
-                                        m_sessionIdMatches = true;
-                                    }
                                     m_sessionNames.push_back(value);
                                 }
                                 m_stateSessionId = SESSIONID_FMQ;
@@ -455,16 +480,6 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
                                     if (!m_sessionNames.empty())
                                     {
                                         streamInfo << this << " input cookie: " << m_sessionNames[0];
-                                    }
-                                    // is sessionName in sessionNames, if yes, then this protocol instance is the right one -> clear sessionNames
-                                    if (!m_sessionName.empty())
-                                    {
-                                        auto it = std::find(m_sessionNames.begin(), m_sessionNames.end(), m_sessionName);
-                                        if (it != m_sessionNames.end())
-                                        {
-                                            m_sessionIdMatches = true;
-                                            streamInfo << this << "this is the session";
-                                        }
                                     }
                                     m_stateSessionId = SESSIONID_COOKIE;
                                 }
@@ -506,7 +521,7 @@ void ProtocolHttpServer::reset()
     m_state = STATE_FIND_FIRST_LINE;
     m_stateSessionId = SESSIONID_NONE;
     m_createSession = false;
-    m_sessionIdMatches = false;
+    m_sessionNames.clear();
 }
 
 

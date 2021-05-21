@@ -129,7 +129,7 @@ private:
     void handleConnectionEvents(const IStreamConnectionPrivatePtr& connection, const SocketPtr& socket, const DescriptorInfo& info);
     void handleBindEvents(const DescriptorInfo& info);
     void handleReceive(const IStreamConnectionPrivatePtr& connection, const SocketPtr& socket, int bytesToRead);
-    bool isTimerExpired(std::chrono::time_point<std::chrono::system_clock>& lastTime, int interval);
+    static bool isTimerExpired(std::chrono::time_point<std::chrono::system_clock>& lastTime, int interval);
     void doReconnect();
 
     std::shared_ptr<IPoller>                                        m_poller;
