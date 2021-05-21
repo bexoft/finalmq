@@ -48,6 +48,7 @@ struct IProtocolCallback
     virtual void reconnect() = 0;
     virtual bool findSessionByName(const std::string& sessionName) = 0;
     virtual void setSessionName(const std::string& sessionName) = 0;
+    virtual void pollRequest(std::int64_t connectionId) = 0;
 };
 
 struct IProtocolSession;
@@ -72,6 +73,7 @@ struct IProtocol : public IStreamConnectionCallback
     //virtual void socketConnected(IProtocolSession& session) = 0;
     //virtual void socketDisconnected() = 0;
     virtual void moveOldProtocolState(IProtocol& protocolOld) = 0;
+    virtual IMessagePtr pollReply(std::deque<IMessagePtr>&& messages) = 0;
 };
 
 

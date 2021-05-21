@@ -65,6 +65,7 @@ struct ISessionRequestsMessage
     virtual void removeSession(std::int64_t sessionId) = 0;
 
     virtual void longpoll(const IProtocolSessionPtr& session, Variant&& echoData) = 0;
+    virtual void checkSession() = 0;
 };
 
 

@@ -159,6 +159,12 @@ void ProtocolHeaderBinarySize::disconnected(const IStreamConnectionPtr& /*connec
 }
 
 
+IMessagePtr ProtocolHeaderBinarySize::pollReply(std::deque<IMessagePtr>&& /*messages*/)
+{
+    return {};
+}
+
+
 //---------------------------------------
 // ProtocolHeaderBinarySizeFactory
 //---------------------------------------
@@ -178,6 +184,7 @@ IProtocolPtr ProtocolHeaderBinarySizeFactory::createProtocol()
 {
     return std::make_shared<ProtocolHeaderBinarySize>();
 }
+
 
 
 }   // namespace finalmq

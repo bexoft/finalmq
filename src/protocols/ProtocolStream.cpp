@@ -138,6 +138,14 @@ void ProtocolStream::disconnected(const IStreamConnectionPtr& /*connection*/)
 }
 
 
+IMessagePtr ProtocolStream::pollReply(std::deque<IMessagePtr>&& /*messages*/)
+{
+    return {};
+}
+
+
+
+
 //---------------------------------------
 // ProtocolStreamFactory
 //---------------------------------------

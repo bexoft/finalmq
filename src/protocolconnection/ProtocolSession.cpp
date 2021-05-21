@@ -166,7 +166,7 @@ IMessagePtr ProtocolSession::convertMessageToProtocol(const IMessagePtr& msg)
     IMessagePtr message = msg;
     if (message->getProtocolId() != m_protocolId ||
         (!m_protocolFlagMessagesResendable && message->wasSent()) ||
-        (message->getTotalSendPayloadSize() == 0))
+        (message->getTotalSendPayloadSize() == 0 && msg->getReceivePayload().second > 0))
     {
         message = nullptr;
         if (m_protocolFlagMessagesResendable)
@@ -207,42 +207,85 @@ IMessagePtr ProtocolSession::convertMessageToProtocol(const IMessagePtr& msg)
     return message;
 }
 
-bool ProtocolSession::sendMessage(const IMessagePtr& msg)
+
+
+void ProtocolSession::getProtocolConnectionFromConnectionId(ProtocolConnection& protocolConnection, std::int64_t connectionId)
 {
+    if (connectionId != 0 && connectionId != protocolConnection.connection->getConnectionId())
+    {
+        protocolConnection.protocol = nullptr;
+        protocolConnection.connection = nullptr;
+        auto it = m_multiConnections.find(connectionId);
+        if (it != m_multiConnections.end())
+        {
+            protocolConnection = it->second;
+        }
+    }
+}
+
+
+bool ProtocolSession::sendMessage(const IMessagePtr& msg, bool isReply)
+{
+    bool ok = false;
     // lock whole function, because the protocol can be changed by setProtocol (lock also over sendMessage, because the prepareMessageToSend could increment a sequential message counter and the order of the counter shall be like the messages that are sent.)
     std::unique_lock<std::mutex> lock(m_mutex);
 
-    ProtocolConnection protocolConnection = m_protocolConnection;
-    if (m_protocolFlagIsMultiConnectionSession)
+    if (!isReply && m_protocolFlagIsSendRequestByPoll)
     {
-        Variant& echoData = msg->getEchoData();
-        std::int64_t connectionId = echoData.getDataValue<std::int64_t>(FMQ_CONNECTION_ID);
-        if (connectionId != protocolConnection.connection->getConnectionId())
+        if (m_pollWaiting)
         {
-            auto it = m_multiConnections.find(connectionId);
-            if (it != m_multiConnections.end())
+            m_pollWaiting = false;
+            ProtocolConnection protocolConnection = m_protocolConnection;
+            if (m_protocolFlagIsMultiConnectionSession)
             {
-                protocolConnection = it->second;
+                getProtocolConnectionFromConnectionId(protocolConnection, m_pollConnectionId);
+            }
+            std::int64_t connectionId = m_pollConnectionId;
+            m_pollConnectionId = 0;
+            lock.unlock();
+            if (protocolConnection.protocol)
+            {
+                IMessagePtr reply = protocolConnection.protocol->pollReply({ msg });
+                ok = sendMessageLocked(reply, connectionId);
+            }
+            if (!ok)
+            {
+                lock.lock();
+                m_pollMessages.push_back(msg);
+                lock.unlock();
+                ok = true;
             }
         }
+        else
+        {
+            m_pollMessages.push_back(msg);
+            ok = true;
+        }
+        return ok;
     }
-
-    if (!protocolConnection.protocol || (m_endpoint.empty() && !m_incomingConnection))
+    else
     {
-        m_messages.push_back(msg);
-        return true;
-    }
+        if (!m_protocolConnection.protocol || (m_endpoint.empty() && !m_incomingConnection))
+        {
+            m_messagesBuffered.push_back(msg);
+            return true;
+        }
 
-    IMessagePtr message = convertMessageToProtocol(msg);
+        std::int64_t connectionId = 0;
+        if (m_protocolFlagIsMultiConnectionSession)
+        {
+            Variant& echoData = msg->getEchoData();
+            connectionId = echoData.getDataValue<std::int64_t>(FMQ_CONNECTION_ID);
+        }
 
-    protocolConnection.protocol->prepareMessageToSend(message);
-    IStreamConnectionPtr connection = protocolConnection.connection;
-    if (connection)
-    {
-        return connection->sendMessage(message);
+        ok = sendMessageNoLock(msg, connectionId);
     }
-    return false;
+    return ok;
 }
+
+
+
+
 
 std::int64_t ProtocolSession::getSessionId() const
 {
@@ -330,14 +373,11 @@ void ProtocolSession::disconnect()
 
 void ProtocolSession::sendBufferedMessages()
 {
-    for (size_t i = 0; i < m_messages.size(); ++i)
+    for (size_t i = 0; i < m_messagesBuffered.size(); ++i)
     {
-        IMessagePtr message = convertMessageToProtocol(m_messages[i]);
-        assert(message->getTotalSendPayloadSize() > 0);
-        m_protocolConnection.protocol->prepareMessageToSend(message);
-        m_protocolConnection.connection->sendMessage(message);
+        sendMessageNoLock(m_messagesBuffered[i], 0);
     }
-    m_messages.clear();
+    m_messagesBuffered.clear();
 }
 
 
@@ -624,6 +664,87 @@ void ProtocolSession::setSessionName(const std::string& sessionName)
         connected();    // we are in the poller loop  thread
     }
 }
+
+
+
+void ProtocolSession::pollRequest(std::int64_t connectionId)
+{
+    if (m_pollWaiting)
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        std::int64_t connectionIdOld = m_pollConnectionId;
+        m_pollConnectionId = connectionId;
+        ProtocolConnection protocolConnection = m_protocolConnection;
+        if (m_protocolFlagIsMultiConnectionSession)
+        {
+            getProtocolConnectionFromConnectionId(protocolConnection, connectionIdOld);
+        }
+        lock.unlock();
+        if (protocolConnection.protocol)
+        {
+            IMessagePtr reply = protocolConnection.protocol->pollReply({});
+            sendMessageLocked(reply, connectionIdOld);
+        }
+    }
+    else
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        if (!m_pollMessages.empty())
+        {
+            ProtocolConnection protocolConnection = m_protocolConnection;
+            if (m_protocolFlagIsMultiConnectionSession)
+            {
+                getProtocolConnectionFromConnectionId(protocolConnection, connectionId);
+            }
+            std::deque<IMessagePtr> messages;
+            if (protocolConnection.protocol)
+            {
+                messages = std::move(m_pollMessages);
+                m_pollMessages.clear();
+            }
+            lock.unlock();
+            if (protocolConnection.protocol)
+            {
+                IMessagePtr reply = protocolConnection.protocol->pollReply(std::move(messages));
+                sendMessageLocked(reply, connectionId);
+            }
+        }
+        else
+        {
+            m_pollConnectionId = connectionId;
+            m_pollWaiting = true;
+        }
+    }
+}
+
+
+
+bool ProtocolSession::sendMessageLocked(const IMessagePtr& message, std::int64_t connectionId)
+{
+    // lock also over sendMessage, because the prepareMessageToSend could increment a sequential message counter and the order of the counter shall be like the messages that are sent.
+    std::unique_lock<std::mutex> lock(m_mutex);
+    return sendMessageNoLock(message, connectionId);
+}
+
+bool ProtocolSession::sendMessageNoLock(const IMessagePtr& message, std::int64_t connectionId)
+{
+    // the mutex must be locked before calling sendMessage, lock also over sendMessage, because the prepareMessageToSend could increment a sequential message counter and the order of the counter shall be like the messages that are sent.
+    bool ok = false;
+    ProtocolConnection protocolConnection = m_protocolConnection;
+    if (m_protocolFlagIsMultiConnectionSession && connectionId != 0)
+    {
+        getProtocolConnectionFromConnectionId(protocolConnection, connectionId);
+    }
+    IMessagePtr messageProtocol = convertMessageToProtocol(message);
+    protocolConnection.protocol->prepareMessageToSend(messageProtocol);
+    IStreamConnectionPtr connection = protocolConnection.connection;
+    if (connection)
+    {
+        ok = connection->sendMessage(messageProtocol);
+    }
+    return ok;
+}
+
 
 
 }

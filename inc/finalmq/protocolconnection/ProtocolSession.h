@@ -23,6 +23,7 @@
 #pragma once
 
 #include "finalmq/streamconnection/StreamConnection.h"
+#include "finalmq/variant/Variant.h"
 #include "finalmq/helpers/IExecutor.h"
 #include "IProtocol.h"
 #include "ProtocolSessionList.h"
@@ -63,10 +64,9 @@ public:
 private:
     // IProtocolSession
     virtual IMessagePtr createMessage() const override;
-    virtual bool sendMessage(const IMessagePtr& msg) override;
+    virtual bool sendMessage(const IMessagePtr& msg, bool isReply = false) override;
     virtual std::int64_t getSessionId() const;
     virtual ConnectionData getConnectionData() const override;
-//    virtual SocketPtr getSocket() override;
     virtual int getContentType() const override;
     virtual bool doesSupportMetainfo() const override;
     virtual bool needsReply() const override;
@@ -96,18 +96,22 @@ private:
     virtual void reconnect() override;
     virtual bool findSessionByName(const std::string& sessionName) override;
     virtual void setSessionName(const std::string& sessionName) override;
-
-    IMessagePtr convertMessageToProtocol(const IMessagePtr& msg);
-    void initProtocolValues();
-    void cleanupMultiConnection();
-    void sendBufferedMessages();
-    void addSessionToList(bool verified);
+    virtual void pollRequest(std::int64_t connectionId) override;
 
     struct ProtocolConnection
     {
         IProtocolPtr                                protocol;
         IStreamConnectionPtr                        connection;
     };
+
+    IMessagePtr convertMessageToProtocol(const IMessagePtr& msg);
+    void initProtocolValues();
+    void cleanupMultiConnection();
+    void sendBufferedMessages();
+    void addSessionToList(bool verified);
+    void getProtocolConnectionFromConnectionId(ProtocolConnection& protocolConnection, std::int64_t connectionId);
+    bool sendMessageLocked(const IMessagePtr& message, std::int64_t connectionId);
+    bool sendMessageNoLock(const IMessagePtr& message, std::int64_t connectionId);
 
     hybrid_ptr<IProtocolSessionCallback>                    m_callback;
     IExecutorPtr                                            m_executor;
@@ -134,7 +138,12 @@ private:
     BindProperties                                  m_bindProperties;
     ConnectProperties                               m_connectionProperties;
 
-    std::deque<IMessagePtr>                         m_messages;
+    std::deque<IMessagePtr>                         m_messagesBuffered;
+
+    std::deque<IMessagePtr>                         m_pollMessages;
+    bool                                            m_pollWaiting = false;
+    std::int64_t                                    m_pollConnectionId = 0;
+
 
     mutable std::mutex                              m_mutex;
 };

@@ -496,22 +496,22 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
             header.meta = std::move(*metainfo);
         }
         assert(session);
-        if (!session->isSendRequestByPoll())
-        {
+        //if (!session->isSendRequestByPoll())
+        //{
             ok = RemoteEntityFormatRegistry::instance().send(session, header, {}, &structBase);
-        }
-        else
-        {
-            auto sessionRequestsMessage = m_sessionRequestsMessage.lock();
-            if (sessionRequestsMessage)
-            {
-                ok = sessionRequestsMessage->putMessage(session, header, structBase);
-            }
-            else
-            {
-                ok = false;
-            }
-        }
+        //}
+        //else
+        //{
+        //    auto sessionRequestsMessage = m_sessionRequestsMessage.lock();
+        //    if (sessionRequestsMessage)
+        //    {
+        //        ok = sessionRequestsMessage->putMessage(session, header, structBase);
+        //    }
+        //    else
+        //    {
+        //        ok = false;
+        //    }
+        //}
     }
     else if (readyToSend == PeerManager::ReadyToSend::RTS_SESSION_NOT_AVAILABLE)
     {

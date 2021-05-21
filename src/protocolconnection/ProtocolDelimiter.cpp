@@ -325,4 +325,10 @@ void ProtocolDelimiter::disconnected(const IStreamConnectionPtr& /*connection*/)
 }
 
 
+IMessagePtr ProtocolDelimiter::pollReply(std::deque<IMessagePtr>&& /*messages*/)
+{
+    return {};
+}
+
+
 }   // namespace finalmq

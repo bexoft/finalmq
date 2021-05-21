@@ -77,6 +77,8 @@ struct IMessage : public IZeroCopyBuffer
     virtual ssize_t getTotalSendBufferSize() const = 0;
     virtual const std::list<BufferRef>& getAllSendPayloads() const = 0;
     virtual ssize_t getTotalSendPayloadSize() const = 0;
+    virtual void moveSendBuffers(std::list<std::string>&& payloadBuffers, const std::list<BufferRef>& payloads) = 0;
+    virtual std::list<std::string>& getSendPayloadBuffers() = 0;
 
     // for the protocol to add a header
     virtual void addSendHeader(const std::string& header) = 0;

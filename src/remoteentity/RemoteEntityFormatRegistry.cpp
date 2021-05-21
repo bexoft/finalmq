@@ -135,17 +135,23 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, re
         }
         if (session->doesSupportMetainfo())
         {
-            Variant& controlData = message->getControlData();
-            statusToProtocolStatus(header.status, controlData);
+            if (header.mode == MsgMode::MSG_REPLY)
+            {
+                Variant& controlData = message->getControlData();
+                statusToProtocolStatus(header.status, controlData);
+            }
 
-            IMessage::Metainfo& metainfo = message->getAllMetainfo();
-            metainfo.insert(metainfo.end(), std::make_move_iterator(header.meta.begin()), std::make_move_iterator(header.meta.end()));
-            header.meta.clear();
+            if (!session->isSendRequestByPoll() || header.mode == MsgMode::MSG_REPLY)
+            {
+                IMessage::Metainfo& metainfo = message->getAllMetainfo();
+                metainfo.insert(metainfo.end(), std::make_move_iterator(header.meta.begin()), std::make_move_iterator(header.meta.end()));
+                header.meta.clear();
+            }
         }
         ok = serialize(*message, session->getContentType(), header, structBase);
         if (ok)
         {
-            ok = session->sendMessage(message);
+            ok = session->sendMessage(message, (header.mode == MsgMode::MSG_REPLY));
         }
     }
     return ok;

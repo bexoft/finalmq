@@ -74,6 +74,8 @@ private:
     virtual ssize_t getTotalSendBufferSize() const override;
     virtual const std::list<BufferRef>& getAllSendPayloads() const override;
     virtual ssize_t getTotalSendPayloadSize() const override;
+    virtual void moveSendBuffers(std::list<std::string>&& payloadBuffers, const std::list<BufferRef>& payloads) override;
+    virtual std::list<std::string>& getSendPayloadBuffers() override;
 
     // for the protocol to add a header
     virtual void addSendHeader(const std::string& header) override;

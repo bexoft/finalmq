@@ -52,6 +52,7 @@ private:
     virtual void received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) override;
     virtual hybrid_ptr<IStreamConnectionCallback> connected(const IStreamConnectionPtr& connection) override;
     virtual void disconnected(const IStreamConnectionPtr& connection) override;
+    virtual IMessagePtr pollReply(std::deque<IMessagePtr>&& messages) override;
 
     std::weak_ptr<IProtocolCallback>    m_callback;
 };

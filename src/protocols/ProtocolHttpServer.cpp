@@ -60,7 +60,7 @@ static const std::string COOKIE_PREFIX = "fmq=";
 //---------------------------------------
 
 
-std::atomic_int64_t ProtocolHttpServer::m_nextSessionNameCounter = 1;
+std::atomic_int64_t ProtocolHttpServer::m_nextSessionNameCounter{ 1 };
 
 ProtocolHttpServer::ProtocolHttpServer()
     : m_randomDevice()
@@ -406,6 +406,11 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
                                 {
                                     std::string path;
                                     decode(path, pathquerySplit[0]);
+                                    static const std::string LONG_POLL = "/longpoll";
+                                    if (path == LONG_POLL)
+                                    {
+                                        m_longpoll = true;
+                                    }
                                     controlData.add(FMQ_PATH, std::move(path));
                                 }
                                 if (pathquerySplit.size() >= 2)
@@ -522,6 +527,7 @@ void ProtocolHttpServer::reset()
     m_stateSessionId = SESSIONID_NONE;
     m_createSession = false;
     m_sessionNames.clear();
+    m_longpoll = false;
 }
 
 
@@ -530,8 +536,6 @@ static std::string HEADER_KEEP_ALIVE = "Connection: keep-alive\r\n";
 
 void ProtocolHttpServer::prepareMessageToSend(IMessagePtr message)
 {
-    std::string echoData = message->getEchoData();
-    streamInfo << this << " prepareMessageToSend: " << echoData;
     std::string firstLine;
     const Variant& controlData = message->getControlData();
     const std::string* http = controlData.getData<std::string>(FMQ_HTTP);
@@ -780,7 +784,14 @@ void ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, co
             auto callback = m_callback.lock();
             if (callback)
             {
-                callback->received(m_message, m_connectionId);
+                if (m_longpoll)
+                {
+                    callback->pollRequest(m_connectionId);
+                }
+                else
+                {
+                    callback->received(m_message, m_connectionId);
+                }
             }
             reset();
         }
@@ -790,6 +801,7 @@ void ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, co
         reset();
     }
 }
+
 
 
 
@@ -808,6 +820,22 @@ hybrid_ptr<IStreamConnectionCallback> ProtocolHttpServer::connected(const IStrea
 
 void ProtocolHttpServer::disconnected(const IStreamConnectionPtr& /*connection*/)
 {
+}
+
+
+
+IMessagePtr ProtocolHttpServer::pollReply(std::deque<IMessagePtr>&& messages)
+{
+    IMessagePtr message = getMessageFactory()();
+
+    for (auto it = messages.begin(); it != messages.end(); ++it)
+    {
+        IMessagePtr& msg = *it;
+        const std::list<BufferRef>& payloads = msg->getAllSendPayloads();
+        std::list<std::string>& payloadBuffers = msg->getSendPayloadBuffers();
+        message->moveSendBuffers(std::move(payloadBuffers), payloads);
+    }
+    return message;
 }
 
 
@@ -830,6 +858,8 @@ IProtocolPtr ProtocolHttpServerFactory::createProtocol()
 {
     return std::make_shared<ProtocolHttpServer>();
 }
+
+
 
 
 }   // namespace finalmq

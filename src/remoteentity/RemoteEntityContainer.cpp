@@ -171,6 +171,11 @@ private:
         }
     }
 
+    virtual void checkSession() override
+    {
+
+    }
+
     struct LongPollSession
     {
         IMessagePtr message;
@@ -256,7 +261,7 @@ void RemoteEntityContainer::init(int cycleTime, int checkReconnectInterval, Func
         }
         if (isTimerExpired(m_lastCheckTime, INTERVAL_CHECK))
         {
-
+            m_sessionRequestsMessage->checkSession();
         }
     }, executor);
 
