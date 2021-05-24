@@ -109,7 +109,7 @@ private:
     void cleanupMultiConnection();
     void sendBufferedMessages();
     void addSessionToList(bool verified);
-    void getProtocolConnectionFromConnectionId(ProtocolConnection& protocolConnection, std::int64_t connectionId);
+    void getProtocolConnectionFromConnectionId(const ProtocolConnection*& protocolConnection, std::int64_t connectionId);
     bool sendMessageLocked(const IMessagePtr& message, std::int64_t connectionId);
     bool sendMessageNoLock(const IMessagePtr& message, std::int64_t connectionId);
 
