@@ -110,8 +110,7 @@ private:
     void sendBufferedMessages();
     void addSessionToList(bool verified);
     void getProtocolConnectionFromConnectionId(const ProtocolConnection*& protocolConnection, std::int64_t connectionId);
-    bool sendMessageLocked(const IMessagePtr& message, std::int64_t connectionId);
-    bool sendMessageNoLock(const IMessagePtr& message, std::int64_t connectionId);
+    bool sendMessage(const IMessagePtr& message, const ProtocolConnection* protocolConnection);
 
     hybrid_ptr<IProtocolSessionCallback>                    m_callback;
     IExecutorPtr                                            m_executor;
@@ -141,6 +140,7 @@ private:
     std::deque<IMessagePtr>                         m_messagesBuffered;
 
     std::deque<IMessagePtr>                         m_pollMessages;
+    IMessagePtr                                     m_pollReply;
     bool                                            m_pollWaiting = false;
     std::int64_t                                    m_pollConnectionId = 0;
 
