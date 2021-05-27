@@ -70,7 +70,7 @@ public:
         // handle the HelloRequest
         // this is fun - try to access the server with the json interface at port 8888:
         // telnet localhost 8888  (or: netcat localhost 8888)
-        // /MyService/helloworld.HelloRequest#4711{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
+        // /MyService/helloworld.HelloRequest!4711{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
         registerCommand<HelloRequest>([] (ReplyContextUPtr& replyContext, const std::shared_ptr<HelloRequest>& request) {
             assert(request);
 

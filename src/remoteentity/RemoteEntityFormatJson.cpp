@@ -139,7 +139,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
     if (buffer[0] == '/')
     {
         // 012345678901234567890123456789
-        // /MyServer/test.TestRequest#1{}
+        // /MyServer/test.TestRequest!1{}
         ssize_t ixEndHeader = findFirst(buffer, sizeBuffer, '{');   //28
         if (ixEndHeader == -1)
         {
@@ -151,7 +151,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
         if (ixStartCommand != 0)
         {
             header.destname = { &buffer[1], &buffer[ixStartCommand] };
-            ssize_t ixCorrelationId = findLast(buffer, ixEndHeader, '#');   //26
+            ssize_t ixCorrelationId = findLast(buffer, ixEndHeader, '!');   //26
             if (ixCorrelationId != -1)
             {
                 header.corrid = strtoll(&buffer[ixCorrelationId + 1], nullptr, 10);
@@ -164,7 +164,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
         }
         else
         {
-            ssize_t ixCorrelationId = findLast(buffer, ixEndHeader, '#');   //26
+            ssize_t ixCorrelationId = findLast(buffer, ixEndHeader, '!');   //26
             if (ixCorrelationId != -1)
             {
                 header.corrid = strtoll(&buffer[ixCorrelationId + 1], nullptr, 10);

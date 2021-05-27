@@ -459,6 +459,14 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
             {
                 entityId = itName->second;
             }
+            else
+            {
+                itName = m_name2entityId.find("*");
+                if (itName != m_name2entityId.end())
+                {
+                    entityId = itName->second;
+                }
+            }
         }
         hybrid_ptr<IRemoteEntity> remoteEntity;
         if (entityId != ENTITYID_INVALID)
