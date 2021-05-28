@@ -86,7 +86,7 @@ static const std::string FMQ_STATUSTEXT = "_fmq_statustext";
 static const std::string HTTP_RESPONSE = "response";
 
 
-static void statusToProtocolStatus(remoteentity::Status status, Variant& controlData)
+static void statusToProtocolStatus(remoteentity::Status status, Variant& controlData, const IProtocolSessionPtr& session)
 {
     switch (status)
     {
@@ -110,6 +110,20 @@ static void statusToProtocolStatus(remoteentity::Status status, Variant& control
         controlData = VariantStruct{ {FMQ_HTTP, HTTP_RESPONSE},
                                      {FMQ_STATUS, 501},
                                      {FMQ_STATUSTEXT, std::string("Not Implemented")} };
+        break;
+    case Status::STATUS_NO_REPLY:
+        if (session->needsReply())
+        {
+            controlData = VariantStruct{ {FMQ_HTTP, HTTP_RESPONSE},
+                                         {FMQ_STATUS, 200},
+                                         {FMQ_STATUSTEXT, std::string("OK")} };
+        }
+        else
+        {
+            controlData = VariantStruct{ {FMQ_HTTP, HTTP_RESPONSE},
+                                         {FMQ_STATUS, 500},
+                                         {FMQ_STATUSTEXT, std::string("Internal Server Error")} };
+        }
         break;
     default:
         controlData = VariantStruct{ {FMQ_HTTP, HTTP_RESPONSE},
@@ -139,7 +153,7 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, re
             if (header.mode == MsgMode::MSG_REPLY)
             {
                 Variant& controlData = message->getControlData();
-                statusToProtocolStatus(header.status, controlData);
+                statusToProtocolStatus(header.status, controlData, session);
                 if (structBase && structBase->getStructInfo().getTypeName() == remoteentity::Bytes::structInfo().getTypeName())
                 {
                     pureData = &static_cast<const remoteentity::Bytes*>(structBase)->data;

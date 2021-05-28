@@ -351,7 +351,6 @@ public:
         return m_metainfo;
     }
 
-private:
     void reply(remoteentity::Status status)
     {
         if (!m_replySent)
@@ -362,6 +361,7 @@ private:
         }
     }
 
+private:
     inline const IProtocolSessionPtr& session() const
     {
         return m_session;

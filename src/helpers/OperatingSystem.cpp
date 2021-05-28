@@ -46,6 +46,16 @@ namespace finalmq {
 
 
     // IOperatingSystem
+    int OperatingSystemImpl::open(const char* filename, int flags)
+    {
+        return ::open(filename, flags);
+    }
+
+    int OperatingSystemImpl::fstat(int fd, struct stat* buf)
+    {
+        return ::fstat(fd, buf);
+    }
+
     int OperatingSystemImpl::close(int fd)
     {
 #if defined(WIN32)
