@@ -127,6 +127,7 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, re
     assert(session);
     if (shallSend(header, session))
     {
+        const finalmq::Bytes* pureData = nullptr;
         IMessagePtr message = session->createMessage();
         assert(message);
         if (header.mode == MsgMode::MSG_REPLY)
@@ -139,6 +140,10 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, re
             {
                 Variant& controlData = message->getControlData();
                 statusToProtocolStatus(header.status, controlData);
+                if (structBase && structBase->getStructInfo().getTypeName() == remoteentity::Bytes::structInfo().getTypeName())
+                {
+                    pureData = &static_cast<const remoteentity::Bytes*>(structBase)->data;
+                }
             }
 
             if (!session->isSendRequestByPoll() || header.mode == MsgMode::MSG_REPLY)
@@ -148,7 +153,15 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, re
                 header.meta.clear();
             }
         }
-        ok = serialize(*message, session->getContentType(), header, structBase);
+        if (pureData == nullptr)
+        {
+            ok = serialize(*message, session->getContentType(), header, structBase);
+        }
+        else
+        {
+            ok = true;
+            message->addSendPayload(pureData->data(), pureData->size());
+        }
         if (ok)
         {
             ok = session->sendMessage(message, (header.mode == MsgMode::MSG_REPLY));
@@ -165,6 +178,32 @@ bool RemoteEntityFormatRegistryImpl::addRequestToMessage(IMessage& message, cons
     ok = serialize(message, session->getContentType(), header, structBase);
     return ok;
 }
+
+
+
+static void metainfoToHeader(IMessage& message, Header& header)
+{
+    IMessage::Metainfo& metainfo = message.getAllMetainfo();
+    if (!metainfo.empty())
+    {
+        header.meta.insert(header.meta.end(), std::make_move_iterator(metainfo.begin()), std::make_move_iterator(metainfo.end()));
+        metainfo.clear();
+    }
+    Variant& controlData = message.getControlData();
+    if (controlData.getType() == VARTYPE_STRUCT)
+    {
+        VariantStruct* stru = controlData;
+        if (stru)
+        {
+            for (auto it = stru->begin(); it != stru->end(); ++it)
+            {
+                header.meta.emplace_back(it->first);
+                header.meta.push_back(it->second);
+            }
+        }
+    }
+}
+
 
 
 
@@ -193,29 +232,34 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(IMessage& mess
     {
         assert(it->second);
         structBase = it->second->parse(bufferRef, storeRawData, header, syntaxError);
-        IMessage::Metainfo& metainfo = message.getAllMetainfo();
-        if (!metainfo.empty())
-        {
-            header.meta.insert(header.meta.end(), std::make_move_iterator(metainfo.begin()), std::make_move_iterator(metainfo.end()));
-            metainfo.clear();
-        }
-        Variant& controlData = message.getControlData();
-        if (controlData.getType() == VARTYPE_STRUCT)
-        {
-            VariantStruct* stru = controlData;
-            if (stru)
-            {
-                for (auto it = stru->begin(); it != stru->end(); ++it)
-                {
-                    header.meta.emplace_back(it->first);
-                    header.meta.push_back(it->second);
-                }
-            }
-        }
+        metainfoToHeader(message, header);
     }
 
     return structBase;
 }
+
+
+
+std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parsePureData(IMessage& message, Header& header)
+{
+    BufferRef bufferRef = message.getReceivePayload();
+
+    const std::string* path = message.getControlData().getData<std::string>(FMQ_PATH);
+    if (path && !path->empty())
+    {
+        header.destname = *path;
+    }
+
+    std::shared_ptr<remoteentity::Bytes> structBytes = std::make_shared<remoteentity::Bytes>();
+    BufferRef rec = message.getReceivePayload();
+    structBytes->data = { rec.first, rec.first + rec.second };
+    header.type = remoteentity::Bytes::structInfo().getTypeName();
+
+    metainfoToHeader(message, header);
+
+    return structBytes;
+}
+
 
 
 

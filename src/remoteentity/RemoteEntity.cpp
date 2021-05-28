@@ -784,11 +784,10 @@ bool RemoteEntity::isEntityRegistered() const
 
 
 
-void RemoteEntity::initEntity(EntityId entityId, const std::string& entityName, const std::weak_ptr<ISessionRequestsMessage>& sessionRequestsMessage)
+void RemoteEntity::initEntity(EntityId entityId, const std::string& entityName)
 {
     m_entityId = entityId;
     m_entityName = entityName;
-    m_sessionRequestsMessage = sessionRequestsMessage;
     m_peerManager->setEntityId(entityId);
 }
 
@@ -807,8 +806,6 @@ void RemoteEntity::sessionDisconnected(const IProtocolSessionPtr& session)
 
 void RemoteEntity::receivedRequest(ReceiveData& receiveData)
 {
-    assert(receiveData.structBase);
-
     ReplyContextUPtr replyContext = std::make_unique<ReplyContext>(m_peerManager, m_entityId, receiveData);
     assert(replyContext);
 

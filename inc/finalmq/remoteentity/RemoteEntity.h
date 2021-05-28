@@ -57,18 +57,6 @@ class ReplyContext;
 typedef std::unique_ptr<ReplyContext> ReplyContextUPtr;
 
 
-struct ISessionRequestsMessage
-{
-    virtual ~ISessionRequestsMessage() {}
-    virtual bool putMessage(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase& structBase) = 0;
-    virtual void connectSession(std::int64_t sessionId) = 0;
-    virtual void removeSession(std::int64_t sessionId) = 0;
-
-    virtual void longpoll(const IProtocolSessionPtr& session, Variant&& echoData) = 0;
-    virtual void checkSession() = 0;
-};
-
-
 
 class SYMBOLEXP PeerEvent
 {
@@ -191,7 +179,7 @@ struct IRemoteEntity
 
 private:
     // methods for RemoteEntityContainer
-    virtual void initEntity(EntityId entityId, const std::string& entityName, const std::weak_ptr<ISessionRequestsMessage>& sessionRequestsMessage) = 0;
+    virtual void initEntity(EntityId entityId, const std::string& entityName) = 0;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) = 0;
     virtual void receivedRequest(ReceiveData& receiveData) = 0;
     virtual void receivedReply(ReceiveData& receiveData) = 0;
@@ -280,7 +268,7 @@ public:
 
     ~ReplyContext()
     {
-        if (!m_replySent && m_correlationId != CORRELATIONID_NONE)
+        if (!m_replySent)
         {
             reply(remoteentity::Status::STATUS_NO_REPLY);
         }
@@ -435,7 +423,7 @@ public:
     virtual void registerReplyEvent(FuncReplyEvent funcReplyEvent) override;
 
 private:
-    virtual void initEntity(EntityId entityId, const std::string& entityName, const std::weak_ptr<ISessionRequestsMessage>& sessionRequestsMessage) override;
+    virtual void initEntity(EntityId entityId, const std::string& entityName) override;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) override;
     virtual void receivedRequest(ReceiveData& receiveData) override;
     virtual void receivedReply(ReceiveData& receiveData) override;
@@ -471,7 +459,6 @@ private:
     std::unordered_map<CorrelationId, std::unique_ptr<Request>> m_requests;
     std::unordered_map<std::string, std::shared_ptr<FuncCommand>> m_funcCommands;
     std::shared_ptr<PeerManager>        m_peerManager;
-    std::weak_ptr<ISessionRequestsMessage> m_sessionRequestsMessage;
     mutable std::atomic_uint64_t        m_nextCorrelationId{1};
     mutable std::mutex                  m_mutex;
 };

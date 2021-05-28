@@ -65,6 +65,7 @@ struct IRemoteEntityContainer
     virtual void terminatePollerLoop() = 0;
 
     virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, const std::string& name = "") = 0;
+    virtual void addPureDataPaths(std::vector<std::string>& paths) = 0;
     virtual void unregisterEntity(EntityId entityId) = 0;
     virtual void registerConnectionEvent(FuncConnectionEvent funcConnectionEvent) = 0;
 
@@ -94,6 +95,7 @@ public:
     virtual void terminatePollerLoop() override;
 
     virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, const std::string& name = "") override;
+    virtual void addPureDataPaths(std::vector<std::string>& paths) override;
     virtual void unregisterEntity(EntityId entityId) override;
     virtual void registerConnectionEvent(FuncConnectionEvent funcConnectionEvent) override;
 
@@ -108,9 +110,9 @@ private:
     virtual void socketConnected(const IProtocolSessionPtr& session) override;
     virtual void socketDisconnected(const IProtocolSessionPtr& session) override;
 
-    void handleLongPoll(const ReceiveData& receiveData);
     inline void triggerConnectionEvent(const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) const;
     void deinit();
+    bool isPureDataPath(const std::string& path);
 
     static bool isTimerExpired(std::chrono::time_point<std::chrono::system_clock>& lastTime, int interval);
 
@@ -121,8 +123,9 @@ private:
     EntityId                                                    m_nextEntityId = 1;
     std::shared_ptr<FuncConnectionEvent>                        m_funcConnectionEvent;
     bool                                                        m_storeRawDataInReceiveStruct = false;
-    std::shared_ptr<ISessionRequestsMessage>                    m_sessionRequestsMessage;
     std::chrono::time_point<std::chrono::system_clock>          m_lastCheckTime;
+    std::list<std::string>                                      m_pureDataPaths;
+    std::list<std::string>                                      m_pureDataPathPrefixes;
     mutable std::mutex                                          m_mutex;
 };
 

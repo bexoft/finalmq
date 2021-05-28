@@ -62,6 +62,8 @@ using finalmq::ConnectionEvent;
 using finalmq::FmqRegistryClient;
 using finalmq::Logger;
 using finalmq::LogContext;
+using finalmq::StructBasePtr;
+using finalmq::remoteentity::Bytes;
 using timer::StartRequest;
 using timer::StopRequest;
 using timer::TimerEvent;
@@ -143,6 +145,35 @@ private:
 };
 
 
+
+
+class EntityFileServer : public RemoteEntity
+{
+public:
+    EntityFileServer()
+    {
+        // register peer events to see when a remote entity connects or disconnects.
+        registerPeerEvent([](PeerId peerId, PeerEvent peerEvent, bool incoming) {
+            std::cout << "peer event " << peerEvent.toString() << std::endl;
+            });
+
+        registerCommandFunction("*", [this](ReplyContextUPtr& replyContext, const StructBasePtr& structBase) {
+            std::string* path = replyContext->getMetainfo("_fmq_path");
+            if (path && !path->empty())
+            {
+                if (*path == "/hello/test.json")
+                {
+                    std::string data = "{\"name\":\"Albert\"}";
+                    replyContext->reply(Bytes{ {data.data(), data.data() + data.size()} });
+                }
+            }
+        });
+    }
+};
+
+
+
+
 int main()
 {
     // display log traces
@@ -169,6 +200,10 @@ int main()
     EntityServer entityServer;
     entityServer.startThread();
     entityContainer.registerEntity(&entityServer, "TimerEntity");
+
+    EntityFileServer entityFileServer;
+    entityContainer.registerEntity(&entityFileServer, "*");
+
 
     // Open listener port 7711 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
     // content type in payload: protobuf
