@@ -62,12 +62,9 @@ using finalmq::ConnectionEvent;
 using finalmq::FmqRegistryClient;
 using finalmq::Logger;
 using finalmq::LogContext;
-using finalmq::StructBasePtr;
-using finalmq::remoteentity::Bytes;
 using timer::StartRequest;
 using timer::StopRequest;
 using timer::TimerEvent;
-
 
 
 #define MODULENAME  "timer_server"
@@ -145,12 +142,16 @@ private:
 };
 
 
-
+#include <fcntl.h>
+using finalmq::OperatingSystem;
+using finalmq::StructBasePtr;
+using finalmq::remoteentity::Bytes;
 
 class EntityFileServer : public RemoteEntity
 {
 public:
-    EntityFileServer()
+    EntityFileServer(const std::string& baseDirectory = ".")
+        : m_baseDirectory(baseDirectory)
     {
         // register peer events to see when a remote entity connects or disconnects.
         registerPeerEvent([](PeerId peerId, PeerEvent peerEvent, bool incoming) {
@@ -161,14 +162,66 @@ public:
             std::string* path = replyContext->getMetainfo("_fmq_path");
             if (path && !path->empty())
             {
-                if (*path == "/hello/test.json")
+                std::string filename = m_baseDirectory + *path;
+                int fd = OperatingSystem::instance().open(filename.c_str(), O_RDONLY | O_BINARY);
+                if (fd != -1)
                 {
-                    std::string data = "{\"name\":\"Albert\"}";
-                    replyContext->reply(Bytes{ {data.data(), data.data() + data.size()} });
+                    struct stat statdata;
+                    memset(&statdata, 0, sizeof(statdata));
+                    OperatingSystem::instance().fstat(fd, &statdata);
+
+                    Bytes reply;
+                    reply.data.resize(statdata.st_size);
+
+                    char* buf = reply.data.data();
+                    int len = reply.data.size();
+                    int err = 0;
+                    int lenReceived = 0;
+                    bool ex = false;
+                    while (!ex)
+                    {
+                        do
+                        {
+                            err = OperatingSystem::instance().read(fd, buf, len);
+                        } while (err == -1 && OperatingSystem::instance().getLastError() == SOCKETERROR(EINTR));
+
+                        if (err > 0)
+                        {
+                            buf += err;
+                            len -= err;
+                            lenReceived += err;
+                            err = 0;
+                            assert(len >= 0);
+                            if (len == 0)
+                            {
+                                ex = true;
+                            }
+                        }
+                        else
+                        {
+                            ex = true;
+                        }
+                    }
+                    if (err == 0)
+                    {
+                        replyContext->reply(reply);
+                    }
+                    else
+                    {
+                        replyContext->reply(finalmq::remoteentity::Status::STATUS_ENTITY_NOT_FOUND);
+                    }
+                }
+                else
+                {
+                    // not found
+                    replyContext->reply(finalmq::remoteentity::Status::STATUS_ENTITY_NOT_FOUND);
                 }
             }
         });
     }
+
+private:
+    std::string     m_baseDirectory;
 };
 
 
@@ -201,7 +254,7 @@ int main()
     entityServer.startThread();
     entityContainer.registerEntity(&entityServer, "TimerEntity");
 
-    EntityFileServer entityFileServer;
+    EntityFileServer entityFileServer("htdocs");
     entityContainer.registerEntity(&entityFileServer, "*");
 
 

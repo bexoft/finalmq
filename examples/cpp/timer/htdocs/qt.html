@@ -1,0 +1,396 @@
+<html>                                                                          
+
+
+<head>                                                                          
+
+<script type="text/javascript" src="json2.js"></script>
+<script type="text/javascript" src="fmq.js"></script>
+
+                                                                                
+<script type="text/javascript" >
+
+//////////////////////////////////////////////////////////////////////
+
+
+var g_fmqEntity = new FmqEntity();
+var g_layers = [true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true];
+
+function getProperty(properties, key)
+{
+	for (var i = 0; i < properties.length; i++)
+	{
+		var prop = properties[i];
+		if (prop.name == key)
+		{
+			return prop['value'];
+		}
+	}
+	return null;
+}
+
+
+function isDerivedFrom(obj, className)
+{
+	for (var i = 0; i < obj.classchain.length; i++)
+	{
+		var classNameIter = obj.classchain[i];
+		if (classNameIter == className)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+function insertProperties(id, obj)
+{
+	propstext = '';
+	for (var i = 0; i < obj.properties.length; i++)
+	{
+		var prop = obj.properties[i];
+		propstext += prop.name + '=' + prop.value+';';
+	}
+	insertComment(id, propstext);
+}
+
+
+function iterateObjects(obj, level, idParent, parentWidget)
+{
+	var showLayer = (level >= g_layers.length) || g_layers[level];
+	var id = idParent;
+	var nextParentWidget = null;
+	if (isDerivedFrom(obj, 'QAbstractButton'))
+	{
+		var x = getProperty(obj.properties, 'x');
+		var y = getProperty(obj.properties, 'y');
+		var width = getProperty(obj.properties, 'width');
+		var height = getProperty(obj.properties, 'height');
+		var visible = getProperty(obj.properties, 'visible');
+		nextParentWidget = obj;
+		
+		if (visible == 'true')
+		{
+			id = insertButton(idParent, x, y, width, height, getProperty(obj.properties, 'objectName'), showLayer);
+			insertText(id, obj.classchain[0], showLayer)
+			insertText(id, '<br>', showLayer)
+			insertText(id, getProperty(obj.properties, 'objectName'), showLayer)
+			insertText(id, '<br>', showLayer)
+			insertText(id, getProperty(obj.properties, 'text'), showLayer)
+			insertProperties(id, obj);
+		}
+	}
+	else if (isDerivedFrom(obj, 'QWidget'))
+	{
+		var x = getProperty(obj.properties, 'x');
+		var y = getProperty(obj.properties, 'y');
+		var width = getProperty(obj.properties, 'width');
+		var height = getProperty(obj.properties, 'height');
+		var visible = getProperty(obj.properties, 'visible');
+		nextParentWidget = obj;
+		
+		if (visible == 'true')
+		{
+			id = insertBox(idParent, x, y, width, height, showLayer);
+			insertText(id, obj.classchain[0], showLayer)
+			insertText(id, '<br>', showLayer)
+			insertText(id, getProperty(obj.properties, 'objectName'), showLayer)
+			insertText(id, '<br>', showLayer)
+			insertText(id, getProperty(obj.properties, 'text'), showLayer)
+			if (getProperty(obj.properties, 'html'))
+			{
+				insertText(id, '<br>', showLayer)
+				insertText(id, getProperty(obj.properties, 'html'), showLayer)
+			}
+			insertProperties(id, obj);
+		}
+	}
+	else if (isDerivedFrom(obj, 'QLayout'))
+	{
+		var visible = 'false';
+		if (parentWidget)
+		{
+			visible = getProperty(parentWidget.properties, 'visible');
+		}
+		if (visible == 'true')
+		{
+			var x = getProperty(obj.properties, 'x');
+			var y = getProperty(obj.properties, 'y');
+			var width = getProperty(obj.properties, 'width');
+			var height = getProperty(obj.properties, 'height');
+			var enabled = getProperty(obj.properties, 'enabled');
+			
+			if (enabled == '1')
+			{
+				id = insertBox(idParent, x, y, width, height, showLayer);
+				insertText(id, obj.classchain[0], showLayer)
+				insertText(id, '<br>', showLayer)
+				insertText(id, getProperty(obj.properties, 'objectName'), showLayer)
+				insertProperties(id, obj);
+			}
+		}
+	}
+	
+	if (nextParentWidget)
+	{
+		parentWidget = nextParentWidget;
+	}
+	
+	for (var i = 0; i < obj.children.length; i++)
+	{
+		var child = obj.children[i];
+		if (isDerivedFrom(child, 'QLayout'))
+		{
+			iterateObjects(child, level + 1, id, parentWidget);
+		}
+	}
+	for (var i = 0; i < obj.children.length; i++)
+	{
+		var child = obj.children[i];
+		if (!isDerivedFrom(child, 'QAbstractButton') && !isDerivedFrom(child, 'QLayout'))
+		{
+			iterateObjects(child, level + 1, id, parentWidget);
+		}
+	}
+	for (var i = 0; i < obj.children.length; i++)
+	{
+		var child = obj.children[i];
+		if (isDerivedFrom(child, 'QAbstractButton'))
+		{
+			iterateObjects(child, level + 1, id, parentWidget);
+		}
+	}
+}
+
+var g_displayScreen = true;
+
+function poll()
+{
+	getObjectTree();
+	
+	if (g_displayScreen)
+	{
+		getScreenshot();
+	}
+	else
+	{
+		document.getElementById('image').innerHTML = '';
+	}
+}
+
+function getObjectTree()
+{
+    g_fmqEntity.requestReply('QtService', 'finalmq.qt.GetObjectTreeRequest', null, function(outparams) {
+        if (outparams.replystatus == 'STATUS_OK')
+        {
+			document.getElementById('root').innerHTML = '';
+            iterateObjects(outparams.root, 0, 'root', null);
+        }
+    });
+}
+
+function getScreenshot()
+{
+    g_fmqEntity.requestReply('QtService', 'finalmq.qt.GetScreenshotRequest', null, function(outparams) {
+        if (outparams.replystatus == 'STATUS_OK')
+        {
+			document.getElementById('image').innerHTML = '<img style="position:absolute; left:'+outparams.x+'; top:'+outparams.y+'; width:'+outparams.width+'; height:'+outparams.height+';" src="data:image/png;base64,'+outparams.screen+'"></img>'
+        }
+    });
+}
+
+
+function pressButton(objectName)
+{
+	var inparams = {objectName:objectName};
+    g_fmqEntity.requestReply('QtService', 'finalmq.qt.PressButtonRequest', inparams, function(outparams) {
+		var t=0;
+	});
+}
+
+
+function fmqReady()
+{
+	poll();
+	setInterval(poll, 2000);
+}
+
+
+function pageLoad()
+{
+    g_fmqEntity.createEntity(function() {
+        fmqReady();
+    });
+}
+
+function pageUnload()
+{
+    g_fmqEntity.removeEntity(function() {});
+}
+
+var nextItemId = 0;
+
+function insertBox(idParent, x, y, w, h, showLayer)
+{
+	nextItemId++;
+	var id = 'itemid' + nextItemId;
+	var box = createBox(x, y, w, h, id, showLayer);
+	insertItem(idParent, box);
+	return id;
+}
+
+function insertButton(idParent, x, y, w, h, objectName, showLayer)
+{
+	nextItemId++;
+	var id = 'itemid' + nextItemId;
+	var button = createButton(x, y, w, h, id, objectName, showLayer);
+	insertItem(idParent, button);
+	return id;
+}
+
+function insertText(idParent, text, showLayer)
+{
+	if (showLayer)
+	{
+		insertItem(idParent, text);
+	}
+	else
+	{
+		insertComment(idParent, text)
+	}
+}
+
+function insertComment(idParent, text)
+{
+	insertItem(idParent, '<!--'+text+'-->');
+}
+
+function insertItem(idParent, item)
+{
+	document.getElementById(idParent).innerHTML += item;
+}
+                                       
+function createBox(x, y, w, h, id, showLayer)
+{	
+	var borderstyle = (showLayer) ? 'solid' : 'none';
+	var style = 'position:absolute; color:rgb(0,155,155); left:'+x+'px; top:'+y+'px; width:'+w+'px; height:'+h+'px; border-width:1px; border-style:'+borderstyle+';';
+	var box = '<div style="'+style+'" id="'+id+'"></div>';
+	return box;
+}
+
+function createButton(x, y, w, h, id, objectName, showLayer)
+{
+	var opacity = (showLayer) ? 0.5 : 0;
+	var style = 'position:absolute; opacity:'+opacity+'; left:'+x+'px; top:'+y+'px; width:'+w+'px; height:'+h+'px;';
+	var button = '<button style="'+style+'" id="'+id+'" onmousedown="pressButton(\''+objectName+'\')"></button>';
+	return button;
+}
+
+												 
+function handleCheckboxScreen(checkbox)
+{
+	var checked = checkbox.checked;
+	g_displayScreen = false;
+	if (checked)
+	{
+		g_displayScreen = true;
+	}
+}
+												 
+												 
+function handleCheckboxLayer(checkbox, layer)
+{
+	var checked = checkbox.checked;
+	g_layers[layer] = checked;
+}
+												 
+												 
+</script>                                                                       
+                                                                          
+</head>
+
+                                                               
+<body>                                                                          
+
+<body onload="pageLoad()" onunload="pageUnload()">
+<div style="position:absolute; top:0; left:0; width:100%; height:100%;">
+	<div style="position:absolute; top:0; left:0; width:100%; height:100%;" id="image">
+	</div>
+	<div style="position:absolute; top:0; left:0; width:100%; height:100%;" id="root">
+	</div>
+	<table style="position:absolute; top:20%; left:0%;">
+	<tr>
+		<td><input type="checkbox" id="cbscreen" onchange="handleCheckboxScreen(this)" checked></td>
+		<td>Screen</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer1" onchange="handleCheckboxLayer(this, 1)" checked></td>
+		<td>Layer 1</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer2" onchange="handleCheckboxLayer(this, 2)" checked></td>
+		<td>Layer 2</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer3" onchange="handleCheckboxLayer(this, 3)" checked></td>
+		<td>Layer 3</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer4"  onchange="handleCheckboxLayer(this, 4)"checked></td>
+		<td>Layer 4</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer5"  onchange="handleCheckboxLayer(this, 5)"checked></td>
+		<td>Layer 5</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer6"  onchange="handleCheckboxLayer(this, 6)"checked></td>
+		<td>Layer 6</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer7" onchange="handleCheckboxLayer(this, 7)" checked></td>
+		<td>Layer 7</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer8" onchange="handleCheckboxLayer(this, 8)" checked></td>
+		<td>Layer 8</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer9" onchange="handleCheckboxLayer(this, 9)" checked></td>
+		<td>Layer 9</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer10" onchange="handleCheckboxLayer(this, 10)" checked></td>
+		<td>Layer 10</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer11" onchange="handleCheckboxLayer(this, 11)" checked></td>
+		<td>Layer 11</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer12" onchange="handleCheckboxLayer(this, 12)" checked></td>
+		<td>Layer 12</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer13" onchange="handleCheckboxLayer(this, 13)" checked></td>
+		<td>Layer 13</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer14" onchange="handleCheckboxLayer(this, 14)" checked></td>
+		<td>Layer 14</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer15" onchange="handleCheckboxLayer(this, 15)" checked></td>
+		<td>Layer 15</td>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="cblayer16" onchange="handleCheckboxLayer(this, 16)" checked></td>
+		<td>Layer 16</td>
+	</tr>
+	</table>
+</div>
+
+</body>
+
+
+</html>
+       

@@ -103,6 +103,92 @@ public:
 };
 
 
+
+#include <fcntl.h>
+using finalmq::OperatingSystem;
+using finalmq::StructBasePtr;
+using finalmq::remoteentity::Bytes;
+
+class EntityFileServer : public RemoteEntity
+{
+public:
+    EntityFileServer(const std::string& baseDirectory = ".")
+        : m_baseDirectory(baseDirectory)
+    {
+        // register peer events to see when a remote entity connects or disconnects.
+        registerPeerEvent([](PeerId peerId, PeerEvent peerEvent, bool incoming) {
+            std::cout << "peer event " << peerEvent.toString() << std::endl;
+            });
+
+        registerCommandFunction("*", [this](ReplyContextUPtr& replyContext, const StructBasePtr& structBase) {
+            std::string* path = replyContext->getMetainfo("_fmq_path");
+            if (path && !path->empty())
+            {
+                std::string filename = m_baseDirectory + *path;
+                int fd = OperatingSystem::instance().open(filename.c_str(), O_RDONLY | O_BINARY);
+                if (fd != -1)
+                {
+                    struct stat statdata;
+                    memset(&statdata, 0, sizeof(statdata));
+                    OperatingSystem::instance().fstat(fd, &statdata);
+
+                    Bytes reply;
+                    reply.data.resize(statdata.st_size);
+
+                    char* buf = reply.data.data();
+                    int len = reply.data.size();
+                    int err = 0;
+                    int lenReceived = 0;
+                    bool ex = false;
+                    while (!ex)
+                    {
+                        do
+                        {
+                            err = OperatingSystem::instance().read(fd, buf, len);
+                        } while (err == -1 && OperatingSystem::instance().getLastError() == SOCKETERROR(EINTR));
+
+                        if (err > 0)
+                        {
+                            buf += err;
+                            len -= err;
+                            lenReceived += err;
+                            err = 0;
+                            assert(len >= 0);
+                            if (len == 0)
+                            {
+                                ex = true;
+                            }
+                        }
+                        else
+                        {
+                            ex = true;
+                        }
+                    }
+                    if (err == 0)
+                    {
+                        replyContext->reply(reply);
+                    }
+                    else
+                    {
+                        replyContext->reply(finalmq::remoteentity::Status::STATUS_ENTITY_NOT_FOUND);
+                    }
+                }
+                else
+                {
+                    // not found
+                    replyContext->reply(finalmq::remoteentity::Status::STATUS_ENTITY_NOT_FOUND);
+                }
+            }
+            });
+    }
+
+private:
+    std::string     m_baseDirectory;
+};
+
+
+
+
 int main()
 {
     // display log traces
@@ -128,6 +214,9 @@ int main()
     // note: multiple entities can be registered.
     EntityServer entityServer;
     entityContainer.registerEntity(&entityServer, "MyService");
+
+    EntityFileServer entityFileServer("htdocs");
+    entityContainer.registerEntity(&entityFileServer, "*");
 
     // Open listener port 7777 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
     // content type in payload: protobuf
