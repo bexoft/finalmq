@@ -87,7 +87,7 @@ private:
     void serializeHeaderToMetainfo(IMessage& message, const remoteentity::Header& header);
     void parseMetainfo(IMessage& message, remoteentity::Header& header);
     bool serialize(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase* structBase = nullptr);
-    bool serializeData(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase* structBase);
+    bool serializeData(IMessage& message, int contentType, const StructBase* structBase);
 
     std::unordered_map<int, std::shared_ptr<IRemoteEntityFormat>> m_formats;
 };

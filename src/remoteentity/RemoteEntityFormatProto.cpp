@@ -103,7 +103,7 @@ void RemoteEntityFormatProto::serialize(IMessage& message, const Header& header,
 
 void RemoteEntityFormatProto::serializeData(IMessage& message, const StructBase* structBase)
 {
-    char* bufferSizeHeader = message.addSendPayload(2048);
+    message.addSendPayload(2048);
     message.downsizeLastSendPayload(0);
 
     if (structBase)

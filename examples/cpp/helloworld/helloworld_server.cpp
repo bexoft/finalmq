@@ -125,7 +125,11 @@ public:
             if (path && !path->empty())
             {
                 std::string filename = m_baseDirectory + *path;
-                int fd = OperatingSystem::instance().open(filename.c_str(), O_RDONLY | O_BINARY);
+                int flags = O_RDONLY;
+#ifdef WIN32
+                flags |= O_BINARY;
+#endif
+                int fd = OperatingSystem::instance().open(filename.c_str(), flags);
                 if (fd != -1)
                 {
                     struct stat statdata;

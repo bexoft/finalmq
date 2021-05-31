@@ -95,7 +95,7 @@ void RemoteEntityFormatRegistryImpl::serializeHeaderToMetainfo(IMessage& message
 }
 
 
-bool RemoteEntityFormatRegistryImpl::serializeData(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase* structBase)
+bool RemoteEntityFormatRegistryImpl::serializeData(IMessage& message, int contentType, const StructBase* structBase)
 {
     auto it = m_formats.find(contentType);
     if (it != m_formats.end())
@@ -218,7 +218,7 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, re
             }
             else
             {
-                ok = serializeData(*message, session->getContentType(), header, structBase);
+                ok = serializeData(*message, session->getContentType(), structBase);
             }
         }
         else
@@ -304,7 +304,7 @@ void RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, remoteenti
         }
         //endHeader = &buffer[ixEndHeader];
         ssize_t ixStartCommand = path.find_last_of('/', ixEndHeader);    //9
-        if (ixStartCommand != 0 && ixStartCommand != std::string::npos)
+        if (ixStartCommand != 0 && ixStartCommand != (ssize_t)std::string::npos)
         {
             header.destname = { &path[ixStartDestName], &path[ixStartCommand] };
             header.type = { &path[ixStartCommand + 1], &path[ixEndHeader] };
@@ -414,8 +414,6 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(IMessage& mess
 
 std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parsePureData(IMessage& message, Header& header)
 {
-    BufferRef bufferRef = message.getReceivePayload();
-
     std::string* path = message.getMetainfo(FMQ_PATH);
     if (path && !path->empty())
     {

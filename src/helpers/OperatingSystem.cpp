@@ -29,13 +29,12 @@
 #include <io.h>
 #pragma warning(disable: 4996)
 #else
-#include <sys/unistd.h>
 #include <errno.h>
 #include <netinet/tcp.h>
 #include <fcntl.h>
 #include <sys/unistd.h>
 #include <sys/stat.h>
-#include <sys/types.h>
+//#include <sys/types.h>
 #endif
 
 
@@ -53,7 +52,7 @@ namespace finalmq {
         return ::open(filename, flags);
     }
 
-    int OperatingSystemImpl::fstat(int fd, struct ::stat* buf)
+    int OperatingSystemImpl::fstat(int fd, struct stat* buf)
     {
         return ::fstat(fd, buf);
     }
