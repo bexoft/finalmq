@@ -35,22 +35,22 @@
 namespace finalmq {
 
 
-const std::string ProtocolHttpServer::FMQ_HTTP = "_fmq_http";
-const std::string ProtocolHttpServer::FMQ_METHOD = "_fmq_method";
-const std::string ProtocolHttpServer::FMQ_PROTOCOL = "_fmq_protocol";
-const std::string ProtocolHttpServer::FMQ_PATH = "_fmq_path";
-const std::string ProtocolHttpServer::FMQ_QUERY = "_fmq_query";
-const std::string ProtocolHttpServer::FMQ_STATUS = "_fmq_status";
-const std::string ProtocolHttpServer::FMQ_STATUSTEXT = "_fmq_statustext";
+const std::string ProtocolHttpServer::FMQ_HTTP = "fmq_http";
+const std::string ProtocolHttpServer::FMQ_METHOD = "fmq_method";
+const std::string ProtocolHttpServer::FMQ_PROTOCOL = "fmq_protocol";
+const std::string ProtocolHttpServer::FMQ_PATH = "fmq_path";
+const std::string ProtocolHttpServer::FMQ_QUERY = "fmq_query";
+const std::string ProtocolHttpServer::FMQ_STATUS = "fmq_status";
+const std::string ProtocolHttpServer::FMQ_STATUSTEXT = "fmq_statustext";
 const std::string ProtocolHttpServer::HTTP_REQUEST = "request";
 const std::string ProtocolHttpServer::HTTP_RESPONSE = "response";
     
 static const std::string CONTENT_LENGTH = "Content-Length";
-static const std::string HTTP_FMQ_SESSIONID = "HTTP_FMQ_SESSIONID";
+static const std::string FMQ_SESSIONID = "fmq_sessionid";
 static const std::string HTTP_COOKIE = "Cookie";
 
-static const std::string HTTP_FMQ_CREATESESSION = "HTTP_FMQ_CREATESESSION";
-static const std::string HTTP_SET_FMQ_SESSION = "Set-FmqSession";
+static const std::string FMQ_CREATESESSION = "fmq_createsession";
+static const std::string FMQ_SET_SESSION = "fmq_setsession";
 static const std::string HTTP_SET_COOKIE = "Set-Cookie";
 static const std::string COOKIE_PREFIX = "fmq=";
 
@@ -289,10 +289,8 @@ void ProtocolHttpServer::checkSessionName()
         {
             callback->setSessionName(m_sessionName);
         }
-        m_headerSendNext.emplace_back(HTTP_SET_FMQ_SESSION);
-        m_headerSendNext.emplace_back(m_sessionName);
-        m_headerSendNext.emplace_back(HTTP_SET_COOKIE);
-        m_headerSendNext.push_back(COOKIE_PREFIX + m_sessionName + "; path=/");
+        m_headerSendNext[FMQ_SET_SESSION] = m_sessionName;
+        m_headerSendNext[HTTP_SET_COOKIE] = COOKIE_PREFIX + m_sessionName + "; path=/";
     }
     m_sessionNames.clear();
 }
@@ -398,10 +396,10 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
                                 std::vector<std::string> pathquerySplit;
                                 split(lineSplit[1], 0, lineSplit[1].size(), '?', pathquerySplit);
                                 m_message = std::make_shared<ProtocolMessage>(0);
-                                Variant& controlData = m_message->getControlData();
-                                controlData = VariantStruct{ {FMQ_HTTP, std::string(HTTP_REQUEST)},
-                                                             {FMQ_METHOD, std::move(lineSplit[0])},
-                                                             {FMQ_PROTOCOL, std::move(lineSplit[2])} };
+                                IMessage::Metainfo& metainfo = m_message->getAllMetainfo();
+                                metainfo[FMQ_HTTP] = HTTP_REQUEST;
+                                metainfo[FMQ_METHOD] = std::move(lineSplit[0]);
+                                metainfo[FMQ_PROTOCOL] = std::move(lineSplit[2]);
                                 if (pathquerySplit.size() >= 1)
                                 {
                                     std::string path;
@@ -411,7 +409,7 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
                                     {
                                         m_longpoll = true;
                                     }
-                                    controlData.add(FMQ_PATH, std::move(path));
+                                    metainfo[FMQ_PATH] = std::move(path);
                                 }
                                 if (pathquerySplit.size() >= 2)
                                 {
@@ -419,7 +417,7 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
                                     split(pathquerySplit[1], 0, pathquerySplit[1].size(), '&', querySplit);
                                     for (size_t i = 0; i < querySplit.size(); ++i)
                                     {
-                                        controlData.add(FMQ_QUERY + std::to_string(i), std::move(querySplit[i]));
+                                        metainfo[FMQ_QUERY + std::to_string(i)] = std::move(querySplit[i]);
                                     }
                                 }
                                 m_state = STATE_FIND_HEADERS;
@@ -464,11 +462,11 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
                             {
                                 m_contentLength = std::atoll(value.c_str());
                             }
-                            else if (lineSplit[0] == HTTP_FMQ_CREATESESSION)
+                            else if (lineSplit[0] == FMQ_CREATESESSION)
                             {
                                 m_createSession = true;
                             }
-                            else if (lineSplit[0] == HTTP_FMQ_SESSIONID)
+                            else if (lineSplit[0] == FMQ_SESSIONID)
                             {
                                 m_sessionNames.clear();
                                 if (!value.empty())
@@ -610,17 +608,16 @@ void ProtocolHttpServer::prepareMessageToSend(IMessagePtr message)
 
     ssize_t sizeBody = message->getTotalSendPayloadSize();
     ProtocolMessage::Metainfo& metainfo = message->getAllMetainfo();
-    metainfo.emplace_back(CONTENT_LENGTH);
-    metainfo.push_back(std::to_string(sizeBody));
+    metainfo[CONTENT_LENGTH] = std::to_string(sizeBody);
     if (!m_headerSendNext.empty())
     {
-        metainfo.insert(metainfo.end(), m_headerSendNext.begin(), m_headerSendNext.end());
+        metainfo.insert(m_headerSendNext.begin(), m_headerSendNext.end());
         m_headerSendNext.clear();
     }
-    for (size_t i = 0; i < metainfo.size(); i += 2)
+    for (auto it = metainfo.begin(); it != metainfo.end(); ++it)
     {
-        const std::string& key = metainfo[i];
-        const std::string& value = metainfo[i+1];
+        const std::string& key = it->first;
+        const std::string& value = it->second;
         if (!key.empty())
         {
             sumHeaderSize += key.size() + value.size() + 4;    // 4 = ': ' and '\r\n'
@@ -648,10 +645,10 @@ void ProtocolHttpServer::prepareMessageToSend(IMessagePtr message)
     memcpy(headerBuffer + index, HEADER_KEEP_ALIVE.data(), HEADER_KEEP_ALIVE.size());
     index += HEADER_KEEP_ALIVE.size();
 
-    for (size_t i = 0; i < metainfo.size(); i += 2)
+    for (auto it = metainfo.begin(); it != metainfo.end(); ++it)
     {
-        const std::string& key = metainfo[i];
-        const std::string& value = metainfo[i+1];
+        const std::string& key = it->first;
+        const std::string& value = it->second;
         if (!key.empty())
         {
             assert(index + key.size() + value.size() + 4 <= sumHeaderSize);

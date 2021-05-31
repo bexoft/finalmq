@@ -50,7 +50,7 @@ MATCHER_P(MatcherReceiveMessage, message, "")
 
 
 
-class TestProtocolHttp: public testing::Test
+class TestProtocolHttpServer: public testing::Test
 {
 protected:
     virtual void SetUp()
@@ -83,7 +83,7 @@ protected:
 
 
 
-TEST_F(TestProtocolHttp, testReceiveFirstLineIncomplete)
+TEST_F(TestProtocolHttpServer, testReceiveFirstLineIncomplete)
 {
     EXPECT_CALL(*m_mockCallback, received(_, _)).Times(0);
     EXPECT_CALL(*m_mockCallback, disconnected()).Times(0);
@@ -94,7 +94,7 @@ TEST_F(TestProtocolHttp, testReceiveFirstLineIncomplete)
 }
 
 
-TEST_F(TestProtocolHttp, testReceiveFirstLinecomplete)
+TEST_F(TestProtocolHttpServer, testReceiveFirstLinecomplete)
 {
     EXPECT_CALL(*m_mockCallback, received(_, _)).Times(0);
     EXPECT_CALL(*m_mockCallback, disconnected()).Times(0);
@@ -112,7 +112,7 @@ TEST_F(TestProtocolHttp, testReceiveFirstLinecomplete)
 
 
 
-TEST_F(TestProtocolHttp, testReceiveHeaders)
+TEST_F(TestProtocolHttpServer, testReceiveHeaders)
 {
     EXPECT_CALL(*m_mockCallback, disconnected()).Times(0);
 
@@ -127,13 +127,14 @@ TEST_F(TestProtocolHttp, testReceiveHeaders)
     m_protocol->received(nullptr, m_socket, size2);
 
     std::shared_ptr<IMessage> message = std::make_shared<ProtocolMessage>(0);
-    Variant& controlData = message->getControlData();
-    controlData = VariantStruct{ {ProtocolHttpServer::FMQ_HTTP, std::string("request")},
-                                 {ProtocolHttpServer::FMQ_METHOD, std::string("GET")},
-                                 {ProtocolHttpServer::FMQ_PATH, std::string("/hello")},
-                                 {ProtocolHttpServer::FMQ_QUERY + "0", std::string("filter=world")},
-                                 {ProtocolHttpServer::FMQ_QUERY + "1", std::string("lang=en")},
-                                 {ProtocolHttpServer::FMQ_PROTOCOL, std::string("HTTP/1.1")} };
+    IMessage::Metainfo& metainfo = message->getAllMetainfo();
+    metainfo[ProtocolHttpServer::FMQ_HTTP] = "request";
+    metainfo[ProtocolHttpServer::FMQ_METHOD] = "GET";
+    metainfo[ProtocolHttpServer::FMQ_PATH] = "/hello";
+    metainfo[ProtocolHttpServer::FMQ_QUERY + "0"] = "filter=world";
+    metainfo[ProtocolHttpServer::FMQ_QUERY + "1"] = "lang=en";
+    metainfo[ProtocolHttpServer::FMQ_PROTOCOL] = "HTTP/1.1";
+
     message->addMetainfo("hello", "123");
     EXPECT_CALL(*m_mockCallback, received(MatcherReceiveMessage(message), _)).Times(1);
     std::string receiveBuffer3 = "\r\n";
@@ -143,18 +144,19 @@ TEST_F(TestProtocolHttp, testReceiveHeaders)
     m_protocol->received(nullptr, m_socket, size3);
 }
 
-TEST_F(TestProtocolHttp, testReceivePayload)
+TEST_F(TestProtocolHttpServer, testReceivePayload)
 {
     EXPECT_CALL(*m_mockCallback, disconnected()).Times(0);
 
     std::shared_ptr<IMessage> message = std::make_shared<ProtocolMessage>(0);
-    Variant& controlData = message->getControlData();
-    controlData = VariantStruct{ {ProtocolHttpServer::FMQ_HTTP, std::string("request")},
-                                 {ProtocolHttpServer::FMQ_METHOD, std::string("GET")},
-                                 {ProtocolHttpServer::FMQ_PATH, std::string("/hello")},
-                                 {ProtocolHttpServer::FMQ_QUERY + "0", std::string("filter=world")},
-                                 {ProtocolHttpServer::FMQ_QUERY + "1", std::string("lang=en")},
-                                 {ProtocolHttpServer::FMQ_PROTOCOL, std::string("HTTP/1.1")} };
+    IMessage::Metainfo& metainfo = message->getAllMetainfo();
+    metainfo[ProtocolHttpServer::FMQ_HTTP] = "request";
+    metainfo[ProtocolHttpServer::FMQ_METHOD] = "GET";
+    metainfo[ProtocolHttpServer::FMQ_PATH] = "/hello";
+    metainfo[ProtocolHttpServer::FMQ_QUERY + "0"] = "filter=world";
+    metainfo[ProtocolHttpServer::FMQ_QUERY + "1"] = "lang=en";
+    metainfo[ProtocolHttpServer::FMQ_PROTOCOL] = "HTTP/1.1";
+
     message->addMetainfo("Content-Length", "10");
     message->resizeReceivePayload(10);
     memcpy(message->getReceivePayload().first, "0123456789", 10);
@@ -167,7 +169,7 @@ TEST_F(TestProtocolHttp, testReceivePayload)
     m_protocol->received(nullptr, m_socket, size1);
 }
 
-TEST_F(TestProtocolHttp, testReceiveSplitPayload)
+TEST_F(TestProtocolHttpServer, testReceiveSplitPayload)
 {
     EXPECT_CALL(*m_mockCallback, disconnected()).Times(0);
 
@@ -179,13 +181,14 @@ TEST_F(TestProtocolHttp, testReceiveSplitPayload)
     m_protocol->received(nullptr, m_socket, size1);
 
     std::shared_ptr<IMessage> message = std::make_shared<ProtocolMessage>(0);
-    Variant& controlData = message->getControlData();
-    controlData = VariantStruct{ {ProtocolHttpServer::FMQ_HTTP, std::string("request")},
-                                 {ProtocolHttpServer::FMQ_METHOD, std::string("GET")},
-                                 {ProtocolHttpServer::FMQ_PATH, std::string("/hello")},
-                                 {ProtocolHttpServer::FMQ_QUERY + "0", std::string("filter=world")},
-                                 {ProtocolHttpServer::FMQ_QUERY + "1", std::string("lang=en")},
-                                 {ProtocolHttpServer::FMQ_PROTOCOL, std::string("HTTP/1.1")} };
+    IMessage::Metainfo& metainfo = message->getAllMetainfo();
+    metainfo[ProtocolHttpServer::FMQ_HTTP] = "request";
+    metainfo[ProtocolHttpServer::FMQ_METHOD] = "GET";
+    metainfo[ProtocolHttpServer::FMQ_PATH] = "/hello";
+    metainfo[ProtocolHttpServer::FMQ_QUERY + "0"] = "filter=world";
+    metainfo[ProtocolHttpServer::FMQ_QUERY + "1"] = "lang=en";
+    metainfo[ProtocolHttpServer::FMQ_PROTOCOL] = "HTTP/1.1";
+
     message->addMetainfo("Content-Length", "10");
     message->resizeReceivePayload(10);
     memcpy(message->getReceivePayload().first, "0123456789", 10);
@@ -198,7 +201,7 @@ TEST_F(TestProtocolHttp, testReceiveSplitPayload)
 }
 
 
-TEST_F(TestProtocolHttp, testReceivePayloadTooBig)
+TEST_F(TestProtocolHttpServer, testReceivePayloadTooBig)
 {
     EXPECT_CALL(*m_mockCallback, received(_, _)).Times(0);
 
@@ -209,7 +212,7 @@ TEST_F(TestProtocolHttp, testReceivePayloadTooBig)
     m_protocol->received(nullptr, m_socket, size1);
 }
 
-TEST_F(TestProtocolHttp, testReceiveSplitPayloadTooBig)
+TEST_F(TestProtocolHttpServer, testReceiveSplitPayloadTooBig)
 {
     std::string receiveBuffer1 = "GET /hello?filter=world&lang=en HTTP/1.1\r\nContent-Length: 10\r\n\r\n0123456";
     int size1 = receiveBuffer1.size();
@@ -225,7 +228,7 @@ TEST_F(TestProtocolHttp, testReceiveSplitPayloadTooBig)
 }
 
 
-TEST_F(TestProtocolHttp, testSendPrepareMessage)
+TEST_F(TestProtocolHttpServer, testSendPrepareMessage)
 {
     std::shared_ptr<IMessage> message = std::make_shared<ProtocolMessage>(0);
     Variant& controlData = message->getControlData();

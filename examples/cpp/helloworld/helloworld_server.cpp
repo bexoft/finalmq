@@ -121,7 +121,7 @@ public:
             });
 
         registerCommandFunction("*", [this](ReplyContextUPtr& replyContext, const StructBasePtr& structBase) {
-            std::string* path = replyContext->getMetainfo("_fmq_path");
+            std::string* path = replyContext->getMetainfo("fmq_path");
             if (path && !path->empty())
             {
                 std::string filename = m_baseDirectory + *path;

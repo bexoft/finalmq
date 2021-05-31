@@ -101,6 +101,40 @@ void RemoteEntityFormatProto::serialize(IMessage& message, const Header& header,
 }
 
 
+void RemoteEntityFormatProto::serializeData(IMessage& message, const StructBase* structBase)
+{
+    char* bufferSizeHeader = message.addSendPayload(2048);
+    message.downsizeLastSendPayload(0);
+
+    if (structBase)
+    {
+        char* bufferSizePayload = message.addSendPayload(4);
+        if (structBase->getRawContentType() == CONTENT_TYPE)
+        {
+            const std::string* rawData = structBase->getRawData();
+            assert(rawData);
+            char* payload = message.addSendPayload(rawData->size());
+            memcpy(payload, rawData->data(), rawData->size());
+        }
+        else
+        {
+            SerializerProto serializerData(message);
+            ParserStruct parserData(serializerData, *structBase);
+            parserData.parseStruct();
+        }
+        ssize_t sizePayload = message.getTotalSendPayloadSize() - 4;
+        assert(sizePayload >= 0);
+        *bufferSizePayload = static_cast<unsigned char>(sizePayload);
+        ++bufferSizePayload;
+        *bufferSizePayload = static_cast<unsigned char>(sizePayload >> 8);
+        ++bufferSizePayload;
+        *bufferSizePayload = static_cast<unsigned char>(sizePayload >> 16);
+        ++bufferSizePayload;
+        *bufferSizePayload = static_cast<unsigned char>(sizePayload >> 24);
+    }
+}
+
+
 std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const BufferRef& bufferRef, bool storeRawData, Header& header, bool& syntaxError)
 {
     syntaxError = false;
@@ -196,6 +230,84 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const BufferRef& buff
 
     return data;
 }
+
+
+
+std::shared_ptr<StructBase> RemoteEntityFormatProto::parseData(const BufferRef& bufferRef, bool storeRawData, const std::string& type, bool& syntaxError)
+{
+    syntaxError = false;
+    const char* buffer = bufferRef.first;
+    ssize_t sizeBuffer = bufferRef.second;
+    if (sizeBuffer < 4)
+    {
+        streamError << "buffer size too small: " << sizeBuffer;
+        return nullptr;
+    }
+
+    std::shared_ptr<StructBase> data;
+
+    if (!type.empty())
+    {
+        bool ok = true;
+        ssize_t sizeRemaining = sizeBuffer;
+
+        if (sizeBuffer < 4)
+        {
+            ok = false;
+        }
+
+        ssize_t sizeDataInStream = 0;
+        if (ok)
+        {
+            sizeDataInStream = (unsigned char)*buffer;
+            ++buffer;
+            sizeDataInStream |= ((unsigned char)*buffer) << 8;
+            ++buffer;
+            sizeDataInStream |= ((unsigned char)*buffer) << 16;
+            ++buffer;
+            sizeDataInStream |= ((unsigned char)*buffer) << 24;
+            ++buffer;
+            sizeRemaining -= 4;
+        }
+
+        if (sizeDataInStream > sizeRemaining)
+        {
+            ok = false;
+        }
+
+        if (ok)
+        {
+            data = StructFactoryRegistry::instance().createStruct(type);
+            if (data)
+            {
+                assert(sizeDataInStream >= 0);
+                SerializerStruct serializerData(*data);
+                ParserProto parserData(serializerData, buffer, sizeDataInStream);
+                ok = parserData.parseStruct(type);
+                if (!ok)
+                {
+                    syntaxError = true;
+                    data = nullptr;
+                }
+            }
+            else
+            {
+                if (storeRawData)
+                {
+                    data = std::make_shared<remoteentity::RawDataMessage>();
+                }
+            }
+
+            if (storeRawData && data)
+            {
+                data->setRawData(type, CONTENT_TYPE, buffer, sizeDataInStream);
+            }
+        }
+    }
+
+    return data;
+}
+
 
 
 

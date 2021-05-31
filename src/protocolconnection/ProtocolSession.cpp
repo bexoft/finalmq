@@ -29,7 +29,7 @@
 
 namespace finalmq {
 
-const static std::string FMQ_CONNECTION_ID = "_fmq_echo_connid";
+const static std::string FMQ_CONNECTION_ID = "fmq_echo_connid";
 
 
 

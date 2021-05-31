@@ -93,7 +93,7 @@ private:
     std::random_device                              m_randomDevice;
     std::mt19937                                    m_randomGenerator;
     std::uniform_int_distribution<std::uint64_t>    m_randomVariable;
-    std::vector<std::string>                        m_headerSendNext;
+    IMessage::Metainfo                              m_headerSendNext;
     StateSessionId                                  m_stateSessionId = SESSIONID_NONE;
     std::vector<std::string>                        m_sessionNames;
 

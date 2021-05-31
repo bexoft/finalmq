@@ -161,14 +161,12 @@ IMessage::Metainfo& ProtocolMessage::getAllMetainfo()
 
 void ProtocolMessage::addMetainfo(const std::string& key, const std::string& value)
 {
-    m_metainfo.emplace_back(key);
-    m_metainfo.emplace_back(value);
+    m_metainfo[key] = value;
 }
 
 void ProtocolMessage::addMetainfo(std::string&& key, std::string&& value)
 {
-    m_metainfo.push_back(std::move(key));
-    m_metainfo.push_back(std::move(value));
+    m_metainfo[std::move(key)] = std::move(value);
 }
 
 const std::string* ProtocolMessage::getMetainfo(const std::string& key) const
@@ -179,25 +177,10 @@ const std::string* ProtocolMessage::getMetainfo(const std::string& key) const
 
 std::string* ProtocolMessage::getMetainfo(const std::string& key)
 {
-    for (auto it = m_metainfo.begin(); it != m_metainfo.end(); ++it)
+    auto it = m_metainfo.find(key);
+    if (it != m_metainfo.end())
     {
-        if (*it == key)
-        {
-            ++it;
-            if (it == m_metainfo.end())
-            {
-                return nullptr;
-            }
-            return &*it;
-        }
-        else
-        {
-            ++it;
-            if (it == m_metainfo.end())
-            {
-                return nullptr;
-            }
-        }
+        return &it->second;
     }
     return nullptr;
 }

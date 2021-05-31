@@ -347,7 +347,7 @@ bool RemoteEntityContainer::isPureDataPath(const std::string& path)
 
 
 
-static const std::string FMQ_PATH = "_fmq_path";
+static const std::string FMQ_PATH = "fmq_path";
 
 void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const IMessagePtr& message)
 {
@@ -371,7 +371,14 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     ReceiveData receiveData{ session, message, {}, {} };
     if (!pureData)
     {
-        receiveData.structBase = RemoteEntityFormatRegistry::instance().parse(*message, session->getContentType(), m_storeRawDataInReceiveStruct, receiveData.header, syntaxError);
+        if (!session->doesSupportMetainfo())
+        {
+            receiveData.structBase = RemoteEntityFormatRegistry::instance().parse(*message, session->getContentType(), m_storeRawDataInReceiveStruct, receiveData.header, syntaxError);
+        }
+        else
+        {
+            receiveData.structBase = RemoteEntityFormatRegistry::instance().parseHeaderInMetainfo(*message, session->getContentType(), m_storeRawDataInReceiveStruct, receiveData.header, syntaxError);
+        }
     }
     else
     {

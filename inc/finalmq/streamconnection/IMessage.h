@@ -29,7 +29,7 @@
 #include <memory.h>
 #include <assert.h>
 #include <list>
-#include <deque>
+#include <unordered_map>
 
 
 namespace finalmq {
@@ -42,7 +42,7 @@ typedef std::pair<char*, ssize_t> BufferRef;
 
 struct IMessage : public IZeroCopyBuffer
 {
-    typedef std::deque<std::string> Metainfo;   // even index = key, odd index = value
+    typedef std::unordered_map<std::string, std::string> Metainfo;   // key, value
 
     virtual ~IMessage() {}
 

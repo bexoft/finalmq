@@ -89,6 +89,35 @@ void RemoteEntityFormatJson::serialize(IMessage& message, const Header& header, 
     }
 }
 
+
+void RemoteEntityFormatJson::serializeData(IMessage& message, const StructBase* structBase)
+{
+    message.addSendPayload("", 0, JSONBLOCKSIZE);
+
+    if (structBase)
+    {
+        // payload
+        if (structBase->getRawContentType() == CONTENT_TYPE)
+        {
+            const std::string* rawData = structBase->getRawData();
+            assert(rawData);
+            char* payload = message.addSendPayload(rawData->size() + 1);
+            memcpy(payload, rawData->data(), rawData->size());
+        }
+        else
+        {
+            SerializerJson serializerData(message);
+            ParserStruct parserData(serializerData, *structBase);
+            parserData.parseStruct();
+        }
+    }
+    else
+    {
+        message.addSendPayload("{}", 2);
+    }
+}
+
+
 static ssize_t findFirst(const char* buffer, ssize_t size, char c)
 {
     for (ssize_t i = 0; i < size; ++i)
@@ -229,6 +258,60 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
 
     return data;
 }
+
+
+
+std::shared_ptr<StructBase> RemoteEntityFormatJson::parseData(const BufferRef& bufferRef, bool storeRawData, const std::string& type, bool& syntaxError)
+{
+    syntaxError = false;
+    const char* buffer = bufferRef.first;
+    ssize_t sizeBuffer = bufferRef.second;
+
+    if (sizeBuffer == 0)
+    {
+        return nullptr;
+    }
+
+    std::shared_ptr<StructBase> data;
+
+    if (!type.empty())
+    {
+        data = StructFactoryRegistry::instance().createStruct(type);
+        ssize_t sizeData = sizeBuffer;
+        assert(sizeData >= 0);
+
+        if (data)
+        {
+            if (sizeData > 0)
+            {
+                SerializerStruct serializerData(*data);
+                ParserJson parserData(serializerData, buffer, sizeData);
+                const char* endData = parserData.parseStruct(type);
+                if (!endData)
+                {
+                    syntaxError = true;
+                    data = nullptr;
+                }
+            }
+        }
+        else
+        {
+            if (storeRawData)
+            {
+                data = std::make_shared<remoteentity::RawDataMessage>();
+            }
+        }
+
+        if (storeRawData && data)
+        {
+            data->setRawData(type, CONTENT_TYPE, buffer, sizeData);
+        }
+    }
+
+    return data;
+}
+
+
 
 
 
