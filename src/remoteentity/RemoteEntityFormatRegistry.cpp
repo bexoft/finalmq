@@ -355,6 +355,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainf
     syntaxError = false;
     BufferRef bufferRef = message.getReceivePayload();
 
+    // special feature for the browser: json data can be written into the path
     if (bufferRef.second == 0)
     {
         std::string* path = message.getMetainfo(FMQ_PATH);
@@ -386,16 +387,6 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(IMessage& mess
 {
     syntaxError = false;
     BufferRef bufferRef = message.getReceivePayload();
-
-    if (bufferRef.second == 0)
-    {
-        std::string* path = message.getMetainfo(FMQ_PATH);
-        if (path && !path->empty())
-        {
-            bufferRef.first = const_cast<char*>(path->data());
-            bufferRef.second = path->size();
-        }
-    }
 
     std::shared_ptr<StructBase> structBase;
 

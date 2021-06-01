@@ -66,22 +66,7 @@ void RemoteEntityFormatJson::serialize(IMessage& message, const Header& header, 
         // delimiter between header and payload
         message.addSendPayload(",\t", 2, JSONBLOCKSIZE);
 
-        // payload
-        if (structBase->getRawContentType() == CONTENT_TYPE)
-        {
-            const std::string* rawData = structBase->getRawData();
-            assert(rawData);
-            char* payload = message.addSendPayload(rawData->size() + 1);
-            memcpy(payload, rawData->data(), rawData->size());
-            payload[rawData->size()] = ']';
-        }
-        else
-        {
-            SerializerJson serializerData(message);
-            ParserStruct parserData(serializerData, *structBase);
-            parserData.parseStruct();
-            message.addSendPayload("]\t", 2);
-        }
+        serializeData(message, structBase);
     }
     else
     {
@@ -92,8 +77,6 @@ void RemoteEntityFormatJson::serialize(IMessage& message, const Header& header, 
 
 void RemoteEntityFormatJson::serializeData(IMessage& message, const StructBase* structBase)
 {
-    message.addSendPayload("", 0, JSONBLOCKSIZE);
-
     if (structBase)
     {
         // payload
@@ -101,7 +84,7 @@ void RemoteEntityFormatJson::serializeData(IMessage& message, const StructBase* 
         {
             const std::string* rawData = structBase->getRawData();
             assert(rawData);
-            char* payload = message.addSendPayload(rawData->size() + 1);
+            char* payload = message.addSendPayload(rawData->size());
             memcpy(payload, rawData->data(), rawData->size());
         }
         else
@@ -146,7 +129,7 @@ static ssize_t findLast(const char* buffer, ssize_t size, char c)
 std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& bufferRef, bool storeRawData, Header& header, bool& syntaxError)
 {
     syntaxError = false;
-    const char* buffer = bufferRef.first;
+    char* buffer = bufferRef.first;
     ssize_t sizeBuffer = bufferRef.second;
 
     if (sizeBuffer == 0)
@@ -212,15 +195,17 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
         SerializerStruct serializerHeader(header);
         ParserJson parserHeader(serializerHeader, buffer, sizeBuffer);
         endHeader = parserHeader.parseStruct(header.getStructInfo().getTypeName());
-        // skip comma
-        ++endHeader;
+        if (endHeader)
+        {
+            // skip comma
+            ++endHeader;
+        }
     }
 
     std::shared_ptr<StructBase> data;
 
-    if (endHeader && !header.type.empty())
+    if (endHeader)
     {
-        data = StructFactoryRegistry::instance().createStruct(header.type);
         assert(endHeader);
         ssize_t sizeHeader = endHeader - buffer;
         assert(sizeHeader >= 0);
@@ -228,32 +213,8 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
         ssize_t sizeData = sizeBuffer - sizeHeader;
         assert(sizeData >= 0);
 
-        if (data)
-        {
-            if (sizeData > 0)
-            {
-                SerializerStruct serializerData(*data);
-                ParserJson parserData(serializerData, buffer, sizeData);
-                const char* endData = parserData.parseStruct(header.type);
-                if (!endData)
-                {
-                    syntaxError = true;
-                    data = nullptr;
-                }
-            }
-        }
-        else
-        {
-            if (storeRawData)
-            {
-                data = std::make_shared<remoteentity::RawDataMessage>();
-            }
-        }
-
-        if (storeRawData && data)
-        {
-            data->setRawData(header.type, CONTENT_TYPE, buffer, sizeData);
-        }
+        BufferRef bufferRefData = {buffer, sizeData};
+        data = parseData(bufferRefData, storeRawData, header.type, syntaxError);
     }
 
     return data;
