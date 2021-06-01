@@ -54,6 +54,9 @@ static const std::string FMQ_SET_SESSION = "fmq_setsession";
 static const std::string HTTP_SET_COOKIE = "Set-Cookie";
 static const std::string COOKIE_PREFIX = "fmq=";
 
+static const std::string FMQ_LONGPOLL = "/fmq/longpoll";
+static const std::string FMQ_PING = "/fmq/ping";
+
 
 //---------------------------------------
 // ProtocolStream
@@ -404,12 +407,8 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
                                 {
                                     std::string path;
                                     decode(path, pathquerySplit[0]);
-                                    static const std::string LONG_POLL = "/longpoll";
-                                    if (path == LONG_POLL)
-                                    {
-                                        m_longpoll = true;
-                                    }
-                                    metainfo[FMQ_PATH] = std::move(path);
+                                    m_path = &metainfo[FMQ_PATH];
+                                    *m_path = std::move(path);
                                 }
                                 if (pathquerySplit.size() >= 2)
                                 {
@@ -525,7 +524,7 @@ void ProtocolHttpServer::reset()
     m_stateSessionId = SESSIONID_NONE;
     m_createSession = false;
     m_sessionNames.clear();
-    m_longpoll = false;
+    m_path = nullptr;
 }
 
 
@@ -679,6 +678,31 @@ void ProtocolHttpServer::moveOldProtocolState(IProtocol& /*protocolOld*/)
 }
 
 
+
+
+bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolCallback>& callback)
+{
+    assert(callback);
+    bool handled = false;
+    if (m_path)
+    {
+        if (*m_path == FMQ_LONGPOLL)
+        {
+            handled = true;
+            callback->pollRequest(m_connectionId);
+        }
+        else if (*m_path == FMQ_PING)
+        {
+            handled = true;
+            callback->reply(getMessageFactory()(), m_connectionId);
+        }
+    }
+
+    return handled;
+}
+
+
+
 void ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
 {
     bool ok = true;
@@ -781,11 +805,8 @@ void ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, co
             auto callback = m_callback.lock();
             if (callback)
             {
-                if (m_longpoll)
-                {
-                    callback->pollRequest(m_connectionId);
-                }
-                else
+                bool handled = handleInternalCommands(callback);
+                if (!handled)
                 {
                     callback->received(m_message, m_connectionId);
                 }

@@ -731,6 +731,16 @@ void ProtocolSession::pollRequest(std::int64_t connectionId)
 }
 
 
+void ProtocolSession::reply(const IMessagePtr& message, std::int64_t connectionId)
+{
+    const ProtocolConnection* protocolConnection = &m_protocolConnection;
+    if (m_protocolFlagIsMultiConnectionSession)
+    {
+        getProtocolConnectionFromConnectionId(protocolConnection, connectionId);
+    }
+
+    sendMessage(message, protocolConnection);
+}
 
 
 bool ProtocolSession::sendMessage(const IMessagePtr& message, const ProtocolConnection* protocolConnection)

@@ -41,6 +41,7 @@ public:
     MOCK_METHOD(bool, findSessionByName, (const std::string& sessionName), (override));
     MOCK_METHOD(void, setSessionName, (const std::string& sessionName), (override));
     MOCK_METHOD(void, pollRequest, (std::int64_t connectionId), (override));
+    MOCK_METHOD(void, reply, (const IMessagePtr& message, std::int64_t connectionId), (override));
 };
 
 }   // namespace finalmq

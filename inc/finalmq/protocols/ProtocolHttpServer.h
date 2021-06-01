@@ -74,6 +74,7 @@ private:
     std::string createSessionName();
     void checkSessionName();
     void cookiesToSessionIds(const std::string& cookies);
+    bool handleInternalCommands(const std::shared_ptr<IProtocolCallback>& callback);
 
     enum State
     {
@@ -110,8 +111,8 @@ private:
     std::string                         m_sessionName;
     std::weak_ptr<IProtocolCallback>    m_callback;
 
-    // longpoll
-    bool                                m_longpoll = false;
+    // path
+    std::string*                        m_path = nullptr;
 
     static std::atomic_int64_t          m_nextSessionNameCounter;
 };

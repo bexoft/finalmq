@@ -19,13 +19,16 @@ function printGreetings(outparams)
     var greetings = outparams.greetings;
     var title = '<h1>Greetings</h1>';
     var table = '<table border="1">';
-    for (i=0; i<greetings.length; i++)
-    {
-        var greeting = greetings[i];
-        table += '<tr>';
-        table += '<td width="320" align="left">' + greeting +'</td>';
-        table += '</tr>';
-    }
+	if (greetings)
+	{
+		for (i=0; i<greetings.length; i++)
+		{
+			var greeting = greetings[i];
+			table += '<tr>';
+			table += '<td width="320" align="left">' + greeting +'</td>';
+			table += '</tr>';
+		}
+	}
     table += '</table>';
     var el = document.getElementById('testcontainer');
     el.innerHTML = title + '<br>' + table;

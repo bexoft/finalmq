@@ -97,6 +97,7 @@ private:
     virtual bool findSessionByName(const std::string& sessionName) override;
     virtual void setSessionName(const std::string& sessionName) override;
     virtual void pollRequest(std::int64_t connectionId) override;
+    virtual void reply(const IMessagePtr& message, std::int64_t connectionId) override;
 
     struct ProtocolConnection
     {

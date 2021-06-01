@@ -16,10 +16,7 @@ class FmqSession
     _setHostname(hostname)
     {
         this._hostname = hostname;
-        if (this._hostname != '')
-        {
-            this._hostname += '/';
-        }
+        this._hostname += '/';
     }
 
     _createRequest()
@@ -38,52 +35,50 @@ class FmqSession
 	    return xmlhttp;
     }
 
-    _getCommand(responseText)
+    _getParams(responseText)
     {
-        return eval('(' + responseText + ')');
+		if (responseText != '')
+		{
+			try {
+				return eval('(' + responseText + ')');
+			}
+			finally {
+			}
+		}
+		
+		return {responseText:responseText};
     }
-
 
     _updateSessionId(xmlhttp)
     {
-        var sessionId = xmlhttp.getResponseHeader('Set-fmqfcgi-Sessionid');
+        var sessionId = xmlhttp.getResponseHeader('fmq_setsession');
         if (sessionId)
         {
             this._sessionId = sessionId;
         }
     }
 
-	_createPayloadRequest(objectname, funcname, inparams)
+	_createPayload(inparams)
 	{
-        var jsonInParams = (inparams == null) ? "{}" : JSON.stringify(inparams);
-		var header = {destname:objectname, mode:"MODE_REQUEST", type:funcname};
-		var jsonHeader = JSON.stringify(header);
-		var payload = '[' + jsonHeader + ',\t' + jsonInParams + ']\t';
+        var payload = (inparams == null) ? "{}" : JSON.stringify(inparams);
 		return payload;
 	}
-
-	_createPayloadReply(correlationId, funcname, inparams)
+	
+	_header(xmlhttp)
 	{
-        var jsonInParams = (inparams == null) ? "{}" : JSON.stringify(inparams);
-		var header = {mode:"MODE_REPLY", corrid:correlationId, type:funcname};
-		var jsonHeader = JSON.stringify(header);
-		var payload = '[' + jsonHeader + ',\t' + jsonInParams + ']\t';
-		return payload;
-	}
-
-	_createPayloadReplyStatus(correlationId, status)
-	{
-		var header = {mode:"MODE_REPLY", corrid:correlationId, status:status};
-		var jsonHeader = JSON.stringify(header);
-		var payload = '[' + jsonHeader + ',\t{}]\t';
-		return payload;
+		var header = {mode: xmlhttp.getResponseHeader('fmq_re_mode'),
+					  corrid: xmlhttp.getResponseHeader('fmq_re_corrid'),
+					  status: xmlhttp.getResponseHeader('fmq_re_status'),
+					  type: xmlhttp.getResponseHeader('fmq_re_type'),
+					  srcid: xmlhttp.getResponseHeader('fmq_re_srcid')};
+		return header;
 	}
 
     requestReply(objectname, funcname, inparams, funcresult, context)
     {
-        if (this._sessionId.length == 0)
+        if (this._sessionId.length == 0 && objectname != 'fmq')
         {
-//!!!            return;
+            return;
         } 
         var xmlhttp = this._createRequest();
         xmlhttp.funcresult = funcresult;
@@ -95,46 +90,39 @@ class FmqSession
 	            if (xmlhttp.readyState == 4 && xmlhttp.status == 200)                             
 	            {                                                                           
                     xmlhttp._this._updateSessionId(xmlhttp);
-		        	var command = xmlhttp._this._getCommand(xmlhttp.responseText);
-	                var cmd = command[0];
-	                var params = command[1];
-					if (cmd.status)
-					{
-						params.replystatus = cmd.status;
-					}
-					else
-					{
-						params.replystatus = 'STATUS_OK';
-					}
+	                var header = xmlhttp._this._header(xmlhttp);
+	                var params = xmlhttp._this._getParams(xmlhttp.responseText);
+					params.replystatus = header.status;
+					params.replytype = header.type;
 	                xmlhttp.funcresult(params, xmlhttp._context);
 	            }
 	        }
         }
-        xmlhttp.open('POST', this._hostname, (funcresult == null) ? false : true);
-        xmlhttp.setRequestHeader('FMQ_SESSIONID', this._sessionId);
-		var payload = this._createPayloadRequest(objectname, funcname, inparams);
+        xmlhttp.open('POST', this._hostname + objectname + '/' + funcname, (funcresult == null) ? false : true);
+        xmlhttp.setRequestHeader('fmq_sessionid', this._sessionId);
+		var payload = this._createPayload(inparams);
         xmlhttp.send(payload);
 	    if (funcresult == null)
 	    {
             this._updateSessionId(xmlhttp);
-	        var command = this._getCommand(xmlhttp.responseText);
-	        var cmd = command[0];
-	        var params = command[1];
-            params.replystatus = cmd.status;
+			var header = this._header(xmlhttp);
+            var params = xmlhttp._this._getParams(xmlhttp.responseText);
+			params.replystatus = header.status;
+			params.replytype = header.type;
 	        return params;
 	    }
     }
 
-    sendEvent(objectname, funcname, inparams)
+    sendEvent(inparams)
     {
         if (this._sessionId.length == 0)
         {
             return;
         } 
         var xmlhttp = this._createRequest();
-        xmlhttp.open('POST', this._hostname, true);
-        xmlhttp.setRequestHeader('FMQ_SESSIONID', this._sessionId)
-		var payload = this._createPayloadRequest(objectname, funcname, inparams);
+        xmlhttp.open('POST', this._hostname + objectname + '/' + funcname, true);
+        xmlhttp.setRequestHeader('fmq_sessionid', this._sessionId)
+		var payload = this._createPayload(inparams);
         xmlhttp.send(payload);
     }
 
@@ -147,9 +135,11 @@ class FmqSession
         if (correlationId != 0)
         {
             var xmlhttp = this._createRequest();
-            xmlhttp.open('POST', this._hostname, true);
-            xmlhttp.setRequestHeader('FMQ_SESSIONID', this._sessionId)
-			var payload = this._createPayloadReply(correlationId, funcname, inparams);
+            xmlhttp.open('POST', this._hostname + objectname + '/' + funcname, true);
+            xmlhttp.setRequestHeader('fmq_sessionid', this._sessionId)
+			xmlhttp.setRequestHeader('fmq_re_mode', 'MSG_REPLY');
+			xmlhttp.setRequestHeader('fmq_re_corrid', correlationId);
+			var payload = this._createPayload(inparams);
             xmlhttp.send(payload);
         }
     }
@@ -164,16 +154,19 @@ class FmqSession
         {
             var xmlhttp = this._createRequest();
             xmlhttp.open('POST', this._hostname + 'root.fmq', true);
-            xmlhttp.setRequestHeader('FMQ_SESSIONID', this._sessionId)
-			var payload = this._createPayloadReplyStatus(correlationId, status);
-            xmlhttp.send(payload);
+            xmlhttp.setRequestHeader('fmq_sessionid', this._sessionId)
+			xmlhttp.setRequestHeader('fmq_re_mode', 'MSG_REPLY');
+			xmlhttp.setRequestHeader('fmq_re_corrid', correlationId);
+			xmlhttp.setRequestHeader('fmq_re_status', status);
+            xmlhttp.send('');
         }
     }
 
     createSession(funcresult)
     {
-		this.requestReply('MyService', 'finalmq.remoteentity.ConnectEntity', null, funcresult);
+		this.requestReply('fmq', 'ping', null, funcresult);
     }
+	
 /*
     removeSession(funcresult)
     {
@@ -262,7 +255,7 @@ class FmqSession
             }
         }
         xmlhttp.open("POST", this._hostname + 'root.fmq', true);
-        xmlhttp.setRequestHeader('FMQ_SESSIONID', this._sessionId)
+        xmlhttp.setRequestHeader('fmq_sessionid', this._sessionId)
         if (this._serverDisconnected)
         {
             xmlhttp.send('longpoll=0');
