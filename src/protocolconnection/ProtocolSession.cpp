@@ -353,23 +353,7 @@ bool ProtocolSession::isSendRequestByPoll() const
 
 void ProtocolSession::disconnect()
 {
-    std::unique_lock<std::mutex> lock(m_mutex);
-    IStreamConnectionPtr connection = m_protocolConnection.connection;
-    lock.unlock();
-    if (connection)
-    {
-        connection->disconnect();
-    }
-    else
-    {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        IProtocolSessionListPtr protocolSessionList = m_protocolSessionList.lock();
-        lock.unlock();
-        if (protocolSessionList)
-        {
-            protocolSessionList->removeProtocolSession(m_sessionId);
-        }
-    }
+    disconnected();
 }
 
 void ProtocolSession::sendBufferedMessages()
@@ -440,37 +424,19 @@ bool ProtocolSession::connectProtocol(const std::string& endpoint, const IProtoc
 // IProtocolCallback
 void ProtocolSession::connected()
 {
-    if (m_executor)
+    std::unique_lock<std::mutex> lock(m_mutex);
+    if (!m_triggerConnected)
     {
-        m_executor->addAction([this] () {
-            auto callback = m_callback.lock();
-            if (callback)
-            {
-                callback->connected(shared_from_this());
-            }
-        });
-    }
-    else
-    {
-        auto callback = m_callback.lock();
-        if (callback)
-        {
-            callback->connected(shared_from_this());
-        }
-    }
-}
+        m_triggerConnected = true;
+        lock.unlock();
 
-void ProtocolSession::disconnected()
-{
-    if (!m_protocolFlagIsMultiConnectionSession || m_triggerConnected)
-    {
         if (m_executor)
         {
             m_executor->addAction([this]() {
                 auto callback = m_callback.lock();
                 if (callback)
                 {
-                    callback->disconnected(shared_from_this());
+                    callback->connected(shared_from_this());
                 }
                 });
         }
@@ -479,16 +445,64 @@ void ProtocolSession::disconnected()
             auto callback = m_callback.lock();
             if (callback)
             {
-                callback->disconnected(shared_from_this());
+                callback->connected(shared_from_this());
             }
         }
     }
+}
+
+void ProtocolSession::disconnected()
+{
     std::unique_lock<std::mutex> lock(m_mutex);
-    IProtocolSessionListPtr protocolSessionList = m_protocolSessionList.lock();
-    lock.unlock();
-    if (protocolSessionList)
+    if (!m_triggerDisconnected)
     {
-        protocolSessionList->removeProtocolSession(m_sessionId);
+        m_triggerDisconnected = true;
+        std::vector<IStreamConnectionPtr> connections;
+        IProtocolSessionListPtr protocolSessionList = m_protocolSessionList.lock();
+        if (m_protocolConnection.connection)
+        {
+            connections.push_back(m_protocolConnection.connection);
+        }
+        for (auto it = m_multiConnections.begin(); it != m_multiConnections.end(); ++it)
+        {
+            if (it->second.connection)
+            {
+                connections.push_back(it->second.connection);
+            }
+        }
+        bool doDisconnected = m_triggerConnected || !m_endpoint.empty();
+        lock.unlock();
+
+        for (size_t i = 0; i < connections.size(); ++i)
+        {
+            connections[i]->disconnect();
+        }
+
+        if (doDisconnected)
+        {
+            if (m_executor)
+            {
+                m_executor->addAction([this]() {
+                    auto callback = m_callback.lock();
+                    if (callback)
+                    {
+                        callback->disconnected(shared_from_this());
+                    }
+                    });
+            }
+            else
+            {
+                auto callback = m_callback.lock();
+                if (callback)
+                {
+                    callback->disconnected(shared_from_this());
+                }
+            }
+        }
+        if (protocolSessionList)
+        {
+            protocolSessionList->removeProtocolSession(m_sessionId);
+        }
     }
 }
 
@@ -657,13 +671,7 @@ void ProtocolSession::setSessionName(const std::string& sessionName)
         list->setSessionName(m_sessionId, sessionName);
     }
 
-    lock.lock();
-    if (!m_triggerConnected)
-    {
-        m_triggerConnected = true;
-        lock.unlock();
-        connected();    // we are in the poller loop  thread
-    }
+    connected();    // we are in the poller loop  thread
 }
 
 
@@ -741,6 +749,7 @@ void ProtocolSession::reply(const IMessagePtr& message, std::int64_t connectionI
 
     sendMessage(message, protocolConnection);
 }
+
 
 
 bool ProtocolSession::sendMessage(const IMessagePtr& message, const ProtocolConnection* protocolConnection)

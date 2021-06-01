@@ -313,7 +313,7 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testSendLateConnectBind)
 
 TEST_F(TestIntegrationProtocolStreamSessionContainer, testCreateConnectionDisconnect)
 {
-    auto& expectDisconnectedClient = EXPECT_CALL(*m_mockClientCallback, disconnected(_)).Times(1);
+    EXPECT_CALL(*m_mockClientCallback, disconnected(_)).Times(0);
 
     IProtocolSessionPtr connection = m_sessionContainer->createSession(m_mockClientCallback, std::make_shared<ProtocolStream>());
     IProtocolSessionPtr session = m_sessionContainer->getSession(connection->getSessionId());
@@ -324,8 +324,6 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testCreateConnectionDiscon
     connection->sendMessage(message);
 
     connection->disconnect();
-
-    waitTillDone(expectDisconnectedClient, 5000);
 
     EXPECT_EQ(connection->getConnectionData().connectionState, ConnectionState::CONNECTIONSTATE_DISCONNECTED);
     EXPECT_EQ(m_sessionContainer->getSession(connection->getSessionId()), nullptr);

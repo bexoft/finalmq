@@ -56,6 +56,7 @@ static const std::string COOKIE_PREFIX = "fmq=";
 
 static const std::string FMQ_LONGPOLL = "/fmq/longpoll";
 static const std::string FMQ_PING = "/fmq/ping";
+static const std::string FMQ_REMOVESESSION = "/fmq/removesession";
 
 
 //---------------------------------------
@@ -694,6 +695,12 @@ bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolC
         else if (*m_path == FMQ_PING)
         {
             handled = true;
+            callback->reply(getMessageFactory()(), m_connectionId);
+        }
+        else if (*m_path == FMQ_REMOVESESSION)
+        {
+            handled = true;
+            callback->disconnected();
             callback->reply(getMessageFactory()(), m_connectionId);
         }
     }
