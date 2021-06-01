@@ -12,20 +12,15 @@
 //////////////////////////////////////////////////////////////////////
 
 
-class TimerEntity extends FmqEntity
+class TimerCallback
 {
-    constructor()
-    {
-        super();
-    }
-
-    timer_TimerEvent(src, correlationId, params)
+    timer_TimerEvent(correlationId, params)
     {
         var el = document.getElementById('testcontainer');
         el.innerHTML += '<tr><td width="320" align="left">' + params.time +'</td></tr>';
     }
 
-    finalmq_disconnected(src, correlationId, params)
+    finalmq_disconnected(correlationId, params)
     {
         var el = document.getElementById('testcontainer');
         el.innerHTML += '<tr><td width="320" align="left">disconnected</td></tr>';
@@ -47,7 +42,8 @@ class TimerEntity extends FmqEntity
 }
 
 
-var g_entity = new TimerEntity();
+var g_fmqSession = new FmqSession();
+var g_fmqTimerService = null;
 
 
 
@@ -58,8 +54,9 @@ function entityReady()
 
 function pageLoad()
 {
-    g_entity.createEntity(function() {
-        entityReady();
+    g_fmqSession.createSession(function() {
+		g_fmqTimerService = g_fmqSession.createEntity('TimerEntity');
+		g_fmqTimerService.connect(new TimerCallback());
     });
 }
 

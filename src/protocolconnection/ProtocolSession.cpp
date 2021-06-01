@@ -353,6 +353,28 @@ bool ProtocolSession::isSendRequestByPoll() const
 
 void ProtocolSession::disconnect()
 {
+    std::vector<IStreamConnectionPtr> connections;
+
+    std::unique_lock<std::mutex> lock(m_mutex);
+    IProtocolSessionListPtr protocolSessionList = m_protocolSessionList.lock();
+    if (m_protocolConnection.connection)
+    {
+        connections.push_back(m_protocolConnection.connection);
+    }
+    for (auto it = m_multiConnections.begin(); it != m_multiConnections.end(); ++it)
+    {
+        if (it->second.connection)
+        {
+            connections.push_back(it->second.connection);
+        }
+    }
+    lock.unlock();
+
+    for (size_t i = 0; i < connections.size(); ++i)
+    {
+        connections[i]->disconnect();
+    }
+
     disconnected();
 }
 
@@ -454,55 +476,36 @@ void ProtocolSession::connected()
 void ProtocolSession::disconnected()
 {
     std::unique_lock<std::mutex> lock(m_mutex);
-    if (!m_triggerDisconnected)
+    IProtocolSessionListPtr protocolSessionList = m_protocolSessionList.lock();
+    bool doDisconnected = (!m_triggerDisconnected) && (m_triggerConnected || !m_endpoint.empty());
+    m_triggerDisconnected = true;
+    lock.unlock();
+
+    if (doDisconnected)
     {
-        m_triggerDisconnected = true;
-        std::vector<IStreamConnectionPtr> connections;
-        IProtocolSessionListPtr protocolSessionList = m_protocolSessionList.lock();
-        if (m_protocolConnection.connection)
+        if (m_executor)
         {
-            connections.push_back(m_protocolConnection.connection);
-        }
-        for (auto it = m_multiConnections.begin(); it != m_multiConnections.end(); ++it)
-        {
-            if (it->second.connection)
-            {
-                connections.push_back(it->second.connection);
-            }
-        }
-        bool doDisconnected = m_triggerConnected || !m_endpoint.empty();
-        lock.unlock();
-
-        for (size_t i = 0; i < connections.size(); ++i)
-        {
-            connections[i]->disconnect();
-        }
-
-        if (doDisconnected)
-        {
-            if (m_executor)
-            {
-                m_executor->addAction([this]() {
-                    auto callback = m_callback.lock();
-                    if (callback)
-                    {
-                        callback->disconnected(shared_from_this());
-                    }
-                    });
-            }
-            else
-            {
+            m_executor->addAction([this]() {
                 auto callback = m_callback.lock();
                 if (callback)
                 {
                     callback->disconnected(shared_from_this());
                 }
+                });
+        }
+        else
+        {
+            auto callback = m_callback.lock();
+            if (callback)
+            {
+                callback->disconnected(shared_from_this());
             }
         }
-        if (protocolSessionList)
-        {
-            protocolSessionList->removeProtocolSession(m_sessionId);
-        }
+    }
+
+    if (protocolSessionList)
+    {
+        protocolSessionList->removeProtocolSession(m_sessionId);
     }
 }
 

@@ -67,6 +67,8 @@ void RemoteEntityFormatJson::serialize(IMessage& message, const Header& header, 
         message.addSendPayload(",\t", 2, JSONBLOCKSIZE);
 
         serializeData(message, structBase);
+
+        message.addSendPayload("]\t", 2, JSONBLOCKSIZE);
     }
     else
     {

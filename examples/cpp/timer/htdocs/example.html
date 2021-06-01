@@ -12,7 +12,7 @@
 //////////////////////////////////////////////////////////////////////
 
 var g_fmqSession = new FmqSession();
-
+var g_fmqMyService = null;
 
 function printGreetings(outparams)
 {
@@ -38,8 +38,8 @@ function printGreetings(outparams)
 function fmqReady()
 {
     var inparams = {persons:[{name:"Bonnie"},{name:"Clyde"}]};
-    outparams = g_fmqSession.requestReply('MyService', 'helloworld.HelloRequest', inparams, function(outparams) {
-        if (outparams.replystatus == 'STATUS_OK')
+    outparams = g_fmqMyService.requestReply('helloworld.HelloRequest', inparams, function(outparams) {
+        if (outparams.fmqheader.status == 'STATUS_OK')
         {
             printGreetings(outparams);
         }
@@ -50,6 +50,7 @@ function fmqReady()
 function pageLoad()
 {
     g_fmqSession.createSession(function() {
+		g_fmqMyService = g_fmqSession.createEntity('MyService');
         fmqReady();
     });
 }
