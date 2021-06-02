@@ -48,8 +48,10 @@ struct IProtocolCallback
     virtual void reconnect() = 0;
     virtual bool findSessionByName(const std::string& sessionName) = 0;
     virtual void setSessionName(const std::string& sessionName) = 0;
-    virtual void pollRequest(std::int64_t connectionId) = 0;
+    virtual void pollRequest(std::int64_t connectionId, int timeout) = 0;
     virtual void reply(const IMessagePtr& message, std::int64_t connectionId) = 0;
+    virtual void setActivityTimeout(int timeout) = 0;
+    virtual void setPollMaxRequests(int maxRequests) = 0;
 };
 
 struct IProtocolSession;

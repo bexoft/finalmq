@@ -65,6 +65,7 @@ protected:
         m_socket->create(0, 0, 0);
 
         m_protocol = &m_http;
+        EXPECT_CALL(*m_mockCallback, setActivityTimeout(_));
         m_protocol->setCallback(m_mockCallback);
     }
 
@@ -75,7 +76,7 @@ protected:
     }
 
     MockIOperatingSystem*                   m_mockMockOperatingSystem = nullptr;
-    ProtocolHttpServer                            m_http;
+    ProtocolHttpServer                      m_http;
     IProtocol*                              m_protocol = nullptr;
     std::shared_ptr<MockIProtocolCallback>  m_mockCallback = std::make_shared<MockIProtocolCallback>();
     std::shared_ptr<Socket>                 m_socket = std::make_shared<Socket>();

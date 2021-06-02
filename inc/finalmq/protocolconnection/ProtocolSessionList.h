@@ -37,7 +37,7 @@ struct IProtocolSessionList
     virtual ~IProtocolSessionList() {}
     virtual std::int64_t addProtocolSession(IProtocolSessionPrivatePtr ProtocolSession, bool verified) = 0;
     virtual void removeProtocolSession(std::int64_t sessionId) = 0;
-    virtual std::vector< IProtocolSessionPtr > getAllSessions() const = 0;
+    virtual std::vector< IProtocolSessionPrivatePtr > getAllSessions() const = 0;
     virtual IProtocolSessionPtr getSession(std::int64_t sessionId) const = 0;
     virtual IProtocolSessionPrivatePtr findSessionByName(const std::string& sessionName) const = 0;
     virtual void setSessionName(std::int64_t sessionId, const std::string& sessionName) = 0;
@@ -55,7 +55,7 @@ public:
 private:
     virtual std::int64_t addProtocolSession(IProtocolSessionPrivatePtr ProtocolSession, bool verified) override;
     virtual void removeProtocolSession(std::int64_t sessionId) override;
-    virtual std::vector< IProtocolSessionPtr > getAllSessions() const override;
+    virtual std::vector< IProtocolSessionPrivatePtr > getAllSessions() const override;
     virtual IProtocolSessionPtr getSession(std::int64_t sessionId) const override;
     virtual IProtocolSessionPrivatePtr findSessionByName(const std::string& sessionName) const override;
     virtual void setSessionName(std::int64_t sessionId, const std::string& sessionName) override;

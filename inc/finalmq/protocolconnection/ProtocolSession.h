@@ -41,12 +41,54 @@ struct IProtocolSessionPrivate : public IProtocolSession
     virtual void createConnection() = 0;
     virtual int64_t setConnection(const IStreamConnectionPtr& connection, bool verified) = 0;
     virtual void setProtocolConnection(const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) = 0;
+    virtual void cycleTime() = 0;
 };
 
 typedef std::shared_ptr<IProtocolSessionPrivate> IProtocolSessionPrivatePtr;
 
 
 struct IStreamConnectionContainer;
+
+
+class PollingTimer
+{
+public:
+    void setTimeout(int timeout)
+    {
+        m_timeoutMs = timeout;
+        m_timer = std::chrono::system_clock::now();
+    }
+
+    void stop()
+    {
+        m_timeoutMs = -1;
+    }
+
+    bool isExpired()
+    {
+        bool expired = false;
+        if (m_timeoutMs != -1)
+        {
+            std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+            std::chrono::duration<double> dur = now - m_timer;
+            long long delta = static_cast<long long>(dur.count() * 1000);
+            if (delta > m_timeoutMs)
+            {
+                expired = true;
+            }
+            else if (delta < 0)
+            {
+                m_timer = now;
+            }
+        }
+        return expired;
+    }
+
+private:
+    int m_timeoutMs = -1;
+    std::chrono::time_point<std::chrono::system_clock> m_timer = std::chrono::system_clock::now();
+};
+
 
 
 class ProtocolSession : public IProtocolSessionPrivate
@@ -86,6 +128,7 @@ private:
     virtual void createConnection() override;
     virtual int64_t setConnection(const IStreamConnectionPtr& connection, bool verified) override;
     virtual void setProtocolConnection(const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) override;
+    virtual void cycleTime() override;
 
     // IProtocolCallback
     virtual void connected() override;
@@ -96,8 +139,10 @@ private:
     virtual void reconnect() override;
     virtual bool findSessionByName(const std::string& sessionName) override;
     virtual void setSessionName(const std::string& sessionName) override;
-    virtual void pollRequest(std::int64_t connectionId) override;
+    virtual void pollRequest(std::int64_t connectionId, int timeout) override;
     virtual void reply(const IMessagePtr& message, std::int64_t connectionId) override;
+    virtual void setActivityTimeout(int timeout) override;
+    virtual void setPollMaxRequests(int maxRequests) override;
 
     struct ProtocolConnection
     {
@@ -145,7 +190,11 @@ private:
     IMessagePtr                                     m_pollReply;
     bool                                            m_pollWaiting = false;
     std::int64_t                                    m_pollConnectionId = 0;
+    PollingTimer                                    m_pollTimer;
+    int                                             m_pollMaxRequests = 10000;
 
+    int                                             m_activityTimeout = -1;
+    PollingTimer                                    m_activityTimer;
 
     mutable std::mutex                              m_mutex;
 };

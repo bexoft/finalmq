@@ -79,7 +79,19 @@ ProtocolSessionContainer::~ProtocolSessionContainer()
 void ProtocolSessionContainer::init(int cycleTime, int checkReconnectInterval, FuncPollerLoopTimer funcTimer, const IExecutorPtr& executor)
 {
     m_executor = executor;
-    m_streamConnectionContainer->init(cycleTime, checkReconnectInterval, std::move(funcTimer));
+    m_streamConnectionContainer->init(cycleTime, checkReconnectInterval, [this, funcTimer = std::move(funcTimer)](){
+        if (funcTimer)
+        {
+            funcTimer();
+        }
+        std::vector< IProtocolSessionPrivatePtr > sessions = m_protocolSessionList->getAllSessions();
+        for (size_t i = 0; i < sessions.size(); ++i)
+        {
+            const IProtocolSessionPrivatePtr& session = sessions[i];
+            assert(session);
+            session->cycleTime();
+        }
+    });
     if (m_executor)
     {
         m_thread = std::thread([this]() { m_streamConnectionContainer->run(); });
@@ -142,8 +154,8 @@ IProtocolSessionPtr ProtocolSessionContainer::createSession(hybrid_ptr<IProtocol
 
 std::vector< IProtocolSessionPtr > ProtocolSessionContainer::getAllSessions() const
 {
-    std::vector< IProtocolSessionPtr > protocolSessions = m_protocolSessionList->getAllSessions();
-    return protocolSessions;
+    std::vector< IProtocolSessionPrivatePtr > protocolSessions = m_protocolSessionList->getAllSessions();
+    return { std::make_move_iterator(protocolSessions.begin()), std::make_move_iterator(protocolSessions.end()) };
 }
 
 IProtocolSessionPtr ProtocolSessionContainer::getSession(std::int64_t sessionId) const

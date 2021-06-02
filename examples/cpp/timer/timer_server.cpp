@@ -112,7 +112,7 @@ public:
             while (true)
             {
                 // send event every 1 second
-                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
                 // send, only if active
                 if (m_timerActive)
@@ -287,7 +287,7 @@ int main()
     FmqRegistryClient fmqRegistryClient(&entityContainer);
     fmqRegistryClient.registerService({"TimerService", "TimerEntity", finalmq::ENTITYID_INVALID,
                                        {{finalmq::fmqreg::SocketProtocol::SOCKET_TCP, finalmq::ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityFormatProto::CONTENT_TYPE, false, "tcp://*:7711"},
-                                        {finalmq::fmqreg::SocketProtocol::SOCKET_TCP, finalmq::ProtocolDelimiterLinefeed::PROTOCOL_ID,        RemoteEntityFormatJson::CONTENT_TYPE,  false, "tcp://*:8811"}}});
+                                        {finalmq::fmqreg::SocketProtocol::SOCKET_TCP, finalmq::ProtocolDelimiterLinefeed::PROTOCOL_ID, RemoteEntityFormatJson::CONTENT_TYPE,  false, "tcp://*:8811"}}});
 
     // run
     entityContainer.run();

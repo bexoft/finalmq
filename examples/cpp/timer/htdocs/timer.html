@@ -20,20 +20,22 @@ class TimerEntity extends FmqEntity
         el.innerHTML += '<tr><td width="320" align="left">' + params.time +'</td></tr>';
     }
 
-    finalmq_disconnected(correlationId, params)
+    sessionDisconnected()
     {
-        var el = document.getElementById('testcontainer');
-        el.innerHTML += '<tr><td width="320" align="left">disconnected</td></tr>';
-
-        setTimeout(function (_this, src) { _this.sendEvent(src, '', {}) }, 5000, this, src);
+        document.getElementById('testcontainer').innerHTML += '<tr><td width="320" align="left">session disconnected</td></tr>';
     }
 
-    serverdisconnected()
+    sessionConnected()
+    {
+        document.getElementById('testcontainer').innerHTML += '<tr><td width="320" align="left">session connected</td></tr>';
+    }
+
+    serverDisconnected()
     {
         document.getElementById('testcontainer').innerHTML += '<tr><td width="320" align="left">server disconnected</td></tr>';
     }
 
-    serverconnected()
+    serverConnected()
     {
         document.getElementById('testcontainer').innerHTML += '<tr><td width="320" align="left">server connected</td></tr>';
     }
@@ -44,10 +46,6 @@ var g_fmqSession = new FmqSession();
 var g_fmqTimerService = null;
 
 
-
-function entityReady()
-{
-}
 
 
 function pageLoad()

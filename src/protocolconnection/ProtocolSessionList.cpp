@@ -52,9 +52,9 @@ void ProtocolSessionList::removeProtocolSession(std::int64_t sessionId)
     lock.unlock();
 }
 
-std::vector< IProtocolSessionPtr > ProtocolSessionList::getAllSessions() const
+std::vector< IProtocolSessionPrivatePtr > ProtocolSessionList::getAllSessions() const
 {
-    std::vector< IProtocolSessionPtr > protocolSessions;
+    std::vector< IProtocolSessionPrivatePtr > protocolSessions;
     std::unique_lock<std::mutex> lock(m_mutex);
     protocolSessions.reserve(m_connectionId2ProtocolSession.size());
     for (auto it = m_connectionId2ProtocolSession.begin(); it != m_connectionId2ProtocolSession.end(); ++it)

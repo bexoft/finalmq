@@ -56,6 +56,7 @@ static const std::string COOKIE_PREFIX = "fmq=";
 
 static const std::string FMQ_LONGPOLL = "/fmq/longpoll";
 static const std::string FMQ_PING = "/fmq/ping";
+static const std::string FMQ_CONFIG = "/fmq/config";
 static const std::string FMQ_REMOVESESSION = "/fmq/removesession";
 
 
@@ -79,6 +80,11 @@ ProtocolHttpServer::ProtocolHttpServer()
 void ProtocolHttpServer::setCallback(const std::weak_ptr<IProtocolCallback>& callback)
 {
     m_callback = callback;
+    std::shared_ptr<IProtocolCallback> cb = callback.lock();
+    if (cb)
+    {
+        cb->setActivityTimeout(10 * 60000);
+    }
 }
 
 std::uint32_t ProtocolHttpServer::getProtocolId() const
@@ -413,11 +419,28 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
                                 }
                                 if (pathquerySplit.size() >= 2)
                                 {
+                                    static const std::string& STR_QUERY = "query";
+                                    Variant& controlData = m_message->getControlData();
+                                    controlData = VariantStruct{ {STR_QUERY, VariantStruct{}} };
+                                    Variant* varQuery = controlData.getVariant(STR_QUERY);
+                                    assert(varQuery);
                                     std::vector<std::string> querySplit;
                                     split(pathquerySplit[1], 0, pathquerySplit[1].size(), '&', querySplit);
                                     for (size_t i = 0; i < querySplit.size(); ++i)
                                     {
-                                        metainfo[FMQ_QUERY + std::to_string(i)] = std::move(querySplit[i]);
+                                        std::string queryTotal;
+                                        decode(queryTotal, querySplit[i]);
+                                        std::vector<std::string> queryNameValue;
+                                        split(queryTotal, 0, queryTotal.size(), '=', queryNameValue);
+                                        if (queryNameValue.size() == 1)
+                                        {
+                                            varQuery->add(queryNameValue[0], std::string{});
+                                        }
+                                        else if (queryNameValue.size() >= 2)
+                                        {
+                                            varQuery->add(queryNameValue[0], queryNameValue[1]);
+                                        }
+                                        metainfo[FMQ_QUERY + std::to_string(i)] = std::move(queryTotal);
                                     }
                                 }
                                 m_state = STATE_FIND_HEADERS;
@@ -689,12 +712,29 @@ bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolC
     {
         if (*m_path == FMQ_LONGPOLL)
         {
+            assert(m_message);
             handled = true;
-            callback->pollRequest(m_connectionId);
+            std::int32_t timeout = m_message->getControlData().getDataValue<std::int32_t>("query.timeout");
+            callback->pollRequest(m_connectionId, timeout);
         }
         else if (*m_path == FMQ_PING)
         {
             handled = true;
+            callback->reply(getMessageFactory()(), m_connectionId);
+        }
+        else if (*m_path == FMQ_CONFIG)
+        {
+            handled = true;
+            const Variant* timeout = m_message->getControlData().getVariant("query.activitytimeout");
+            if (timeout)
+            {
+                callback->setActivityTimeout(*timeout);
+            }
+            const Variant* pollMaxRequests = m_message->getControlData().getVariant("query.pollmaxrequests");
+            if (pollMaxRequests)
+            {
+                callback->setPollMaxRequests(*pollMaxRequests);
+            }
             callback->reply(getMessageFactory()(), m_connectionId);
         }
         else if (*m_path == FMQ_REMOVESESSION)

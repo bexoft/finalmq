@@ -43,7 +43,7 @@ class FmqSession
     {
         this._hostname = '';
         this._sessionId = '';
-        this._serverDisconnected = true;
+        this._flagServerDisconnected = true;
         this._entities = [];
         if (hostname)
         {
@@ -103,7 +103,12 @@ class FmqSession
         var sessionId = xmlhttp.getResponseHeader('fmq_setsession');
         if (sessionId)
         {
+			if (this._sessionId != '')
+			{
+				this._sessionDisconnected();
+			}
             this._sessionId = sessionId;
+			this._sessionConnected();
         }
     }
 
@@ -242,26 +247,48 @@ class FmqSession
 		return entity;
 	}
 	
-	serverdisconnected()
+	_sessionDisconnected()
 	{
 		for (var i = 0; i < this._entities.length; i++)
 		{
-			if (this._entities[i].serverdisconnected)
+			if (this._entities[i].sessionDisconnected)
 			{
-				this._entities[i].serverdisconnected();
+				this._entities[i].sessionDisconnected();
 			}
 		}
 	}
 	
-	serverconnected()
+	_sessionConnected()
 	{
 		for (var i = 0; i < this._entities.length; i++)
 		{
-			if (this._entities[i].serverconnected)
+			if (this._entities[i].sessionConnected)
 			{
-				this._entities[i].serverconnected();
+				this._entities[i].sessionConnected();
 			}
 			this._entities[i].connect();
+		}
+	}
+	
+	_serverDisconnected()
+	{
+		for (var i = 0; i < this._entities.length; i++)
+		{
+			if (this._entities[i].serverDisconnected)
+			{
+				this._entities[i].serverDisconnected();
+			}
+		}
+	}
+	
+	_serverConnected()
+	{
+		for (var i = 0; i < this._entities.length; i++)
+		{
+			if (this._entities[i].serverConnected)
+			{
+				this._entities[i].serverConnected();
+			}
 		}
 	}
 	
@@ -283,12 +310,9 @@ class FmqSession
                     xmlhttp._this._updateSessionId(xmlhttp);
                     xmlhttp._this._longpoll();
 
-					if (!err && xmlhttp._this._serverDisconnected)
+					if (!err && xmlhttp._this._flagServerDisconnected)
 					{
-						if (xmlhttp._this.serverconnected)
-						{
-							xmlhttp._this.serverconnected();
-						}
+						xmlhttp._this._serverConnected();
 					}
 
                     var responses = xmlhttp.responseText.split(']\t');
@@ -322,30 +346,27 @@ class FmqSession
                     setTimeout(function (_this) { _this._longpoll(); }, 5000, xmlhttp._this);
                 }
 
-                if (err && !xmlhttp._this._serverDisconnected)
+                if (err && !xmlhttp._this._flagServerDisconnected)
                 {
-                    if (xmlhttp._this.serverdisconnected)
-                    {
-                        xmlhttp._this.serverdisconnected();
-                    }
+                    xmlhttp._this._serverDisconnected();
                 }
-                xmlhttp._this._serverDisconnected = err;
+                xmlhttp._this._flagServerDisconnected = err;
             }
         }
-        xmlhttp.open("POST", this._hostname + '/fmq/longpoll', true);
+		
+		var path = this._hostname + '/fmq/longpoll'
+        if (this._flagServerDisconnected)
+		{
+			path += '?timeout=0';
+		}
+		else
+		{
+			path += '?timeout=20000';
+		}
+		
+        xmlhttp.open("POST", path, true);
         xmlhttp.setRequestHeader('fmq_sessionid', this._sessionId);
         xmlhttp.send('');
-		
-/*
-        if (this._serverDisconnected)
-        {
-            xmlhttp.send('longpoll=0');
-        }
-        else
-        {
-            xmlhttp.send('longpoll=20');
-        }
-*/
     }
 }
 
