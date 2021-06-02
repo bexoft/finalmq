@@ -24,6 +24,7 @@
 #include "finalmq/remoteentity/RemoteEntityContainer.h"
 #include "finalmq/remoteentity/RemoteEntityFormatProto.h"
 #include "finalmq/remoteentity/RemoteEntityFormatJson.h"
+#include "finalmq/remoteentity/EntityFileService.h"
 #include "finalmq/protocols/ProtocolHeaderBinarySize.h"
 #include "finalmq/protocols/ProtocolDelimiterLinefeed.h"
 #include "finalmq/protocols/ProtocolHttpServer.h"
@@ -41,6 +42,7 @@ using finalmq::RemoteEntityContainer;
 using finalmq::RemoteEntityFormatProto;
 using finalmq::RemoteEntityFormatJson;
 using finalmq::IRemoteEntityContainer;
+using finalmq::EntityFileServer;
 using finalmq::PeerId;
 using finalmq::PeerEvent;
 using finalmq::ReplyContextUPtr;
@@ -102,93 +104,6 @@ public:
     }
 };
 
-
-
-#include <fcntl.h>
-using finalmq::OperatingSystem;
-using finalmq::StructBasePtr;
-using finalmq::remoteentity::Bytes;
-
-class EntityFileServer : public RemoteEntity
-{
-public:
-    EntityFileServer(const std::string& baseDirectory = ".")
-        : m_baseDirectory(baseDirectory)
-    {
-        // register peer events to see when a remote entity connects or disconnects.
-        registerPeerEvent([](PeerId peerId, PeerEvent peerEvent, bool incoming) {
-            std::cout << "peer event " << peerEvent.toString() << std::endl;
-            });
-
-        registerCommandFunction("*", [this](ReplyContextUPtr& replyContext, const StructBasePtr& structBase) {
-            std::string* path = replyContext->getMetainfo("fmq_path");
-            if (path && !path->empty())
-            {
-                std::string filename = m_baseDirectory + *path;
-                int flags = O_RDONLY;
-#ifdef WIN32
-                flags |= O_BINARY;
-#endif
-                int fd = OperatingSystem::instance().open(filename.c_str(), flags);
-                if (fd != -1)
-                {
-                    struct stat statdata;
-                    memset(&statdata, 0, sizeof(statdata));
-                    OperatingSystem::instance().fstat(fd, &statdata);
-
-                    Bytes reply;
-                    reply.data.resize(statdata.st_size);
-
-                    char* buf = reply.data.data();
-                    int len = reply.data.size();
-                    int err = 0;
-                    int lenReceived = 0;
-                    bool ex = false;
-                    while (!ex)
-                    {
-                        do
-                        {
-                            err = OperatingSystem::instance().read(fd, buf, len);
-                        } while (err == -1 && OperatingSystem::instance().getLastError() == SOCKETERROR(EINTR));
-
-                        if (err > 0)
-                        {
-                            buf += err;
-                            len -= err;
-                            lenReceived += err;
-                            err = 0;
-                            assert(len >= 0);
-                            if (len == 0)
-                            {
-                                ex = true;
-                            }
-                        }
-                        else
-                        {
-                            ex = true;
-                        }
-                    }
-                    if (err == 0)
-                    {
-                        replyContext->reply(reply);
-                    }
-                    else
-                    {
-                        replyContext->reply(finalmq::remoteentity::Status::STATUS_ENTITY_NOT_FOUND);
-                    }
-                }
-                else
-                {
-                    // not found
-                    replyContext->reply(finalmq::remoteentity::Status::STATUS_ENTITY_NOT_FOUND);
-                }
-            }
-            });
-    }
-
-private:
-    std::string     m_baseDirectory;
-};
 
 
 
