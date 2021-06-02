@@ -7,7 +7,6 @@ class FmqEntity
 		this._session = session;
         this._name = name;
 		this._id = 0;
-		this._callback = null;
     }
 	
     requestReply(funcname, inparams, funcresult, context)
@@ -25,9 +24,8 @@ class FmqEntity
 		return this._session.sendEvent(correlationId, funcname, inparams)
     }
 	
-	connect(callback)
+	connect()
 	{
-		this._callback = callback;
 		this.requestReply('finalmq.remoteentity.ConnectEntity', null, function(outparams, context) {
 			if (outparams.fmqheader.status == 'STATUS_OK')
 			{
@@ -177,36 +175,38 @@ class FmqSession
         xmlhttp.send(payload);
     }
 
-    reply(correlationId, funcname, inparams)
+    reply(entityId, correlationId, funcname, inparams)
     {
-        if (this._sessionId.length == 0)
+        if (this._sessionId.length == 0 || !correlationId)
         {
             return;
         } 
         if (correlationId != 0)
         {
             var xmlhttp = this._createRequest();
-            xmlhttp.open('POST', this._hostname + '/' + objectname + '/' + funcname, true);
+            xmlhttp.open('POST', this._hostname, true);
             xmlhttp.setRequestHeader('fmq_sessionid', this._sessionId)
 			xmlhttp.setRequestHeader('fmq_re_mode', 'MSG_REPLY');
+			xmlhttp.setRequestHeader('fmq_re_destid', entityId);
 			xmlhttp.setRequestHeader('fmq_re_corrid', correlationId);
 			var payload = this._createPayload(inparams);
             xmlhttp.send(payload);
         }
     }
 
-    replyStatus(correlationId, status)
+    replyStatus(entityId, correlationId, status)
     {
-        if (this._sessionId.length == 0)
+        if (this._sessionId.length == 0 || !correlationId)
         {
             return;
         } 
         if (correlationId != 0)
         {
             var xmlhttp = this._createRequest();
-            xmlhttp.open('POST', this._hostname + '/' + objectname + '/' + funcname, true);
+            xmlhttp.open('POST', this._hostname, true);
             xmlhttp.setRequestHeader('fmq_sessionid', this._sessionId)
 			xmlhttp.setRequestHeader('fmq_re_mode', 'MSG_REPLY');
+			xmlhttp.setRequestHeader('fmq_re_destid', entityId);
 			xmlhttp.setRequestHeader('fmq_re_corrid', correlationId);
 			xmlhttp.setRequestHeader('fmq_re_status', status);
             xmlhttp.send('');
@@ -226,11 +226,43 @@ class FmqSession
 		this.requestReply('fmq', 'removesession');
     }
 
-	createEntity(name)
+	createEntity(name, entityClass)
 	{
-		var entity = new FmqEntity(this, name);
+		var entity = null;
+		if (entityClass)
+		{
+			entity = new entityClass(this, name);
+		}
+		else
+		{
+			entity = new FmqEntity(this, name);
+		}
 		this._entities.push(entity);
+		entity.connect();
 		return entity;
+	}
+	
+	serverdisconnected()
+	{
+		for (var i = 0; i < this._entities.length; i++)
+		{
+			if (this._entities[i].serverdisconnected)
+			{
+				this._entities[i].serverdisconnected();
+			}
+		}
+	}
+	
+	serverconnected()
+	{
+		for (var i = 0; i < this._entities.length; i++)
+		{
+			if (this._entities[i].serverconnected)
+			{
+				this._entities[i].serverconnected();
+			}
+			this._entities[i].connect();
+		}
 	}
 	
     _longpoll()
@@ -251,6 +283,14 @@ class FmqSession
                     xmlhttp._this._updateSessionId(xmlhttp);
                     xmlhttp._this._longpoll();
 
+					if (!err && xmlhttp._this._serverDisconnected)
+					{
+						if (xmlhttp._this.serverconnected)
+						{
+							xmlhttp._this.serverconnected();
+						}
+					}
+
                     var responses = xmlhttp.responseText.split(']\t');
                     for (var i = 0; i < responses.length; ++i)
                     {
@@ -265,13 +305,13 @@ class FmqSession
 							params.httpstatus = xmlhttp.status;
                             var methodName = header.type.replace(/\./g, '_');  // replace all '.' by '_'
 							var entity = xmlhttp._this._getEntity(header.srcid);
-							if (entity._callback && entity._callback[methodName])
+							if (entity && entity[methodName])
 							{
-                                entity._callback[methodName](header.corrid, params);
+                                entity[methodName](header.corrid, params);
 							}
 							else
 							{
-                                xmlhttp._this.replyStatus(header.corrid, 'STATUS_REQUEST_NOT_FOUND');
+                                xmlhttp._this.replyStatus(header.srcid, header.corrid, 'STATUS_REQUEST_NOT_FOUND');
 							}
                         }
                     }
@@ -287,13 +327,6 @@ class FmqSession
                     if (xmlhttp._this.serverdisconnected)
                     {
                         xmlhttp._this.serverdisconnected();
-                    }
-                }
-                if (!err && xmlhttp._this._serverDisconnected)
-                {
-                    if (xmlhttp._this.serverreconnected)
-                    {
-                        xmlhttp._this.serverreconnected();
                     }
                 }
                 xmlhttp._this._serverDisconnected = err;
