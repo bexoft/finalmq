@@ -114,6 +114,7 @@ private:
     virtual bool needsReply() const override;
     virtual bool isMultiConnectionSession() const override;
     virtual bool isSendRequestByPoll() const override;
+    virtual bool doesSupportFileTransfer() const override;
     virtual void disconnect() override;
     virtual bool connect(const std::string& endpoint, const ConnectProperties& connectionProperties = {}) override;
     virtual bool connectProtocol(const std::string& endpoint, const IProtocolPtr& protocol, const ConnectProperties& connectionProperties = {}, int contentType = 0) override;
@@ -172,6 +173,7 @@ private:
     bool                                            m_protocolFlagNeedsReply = false;
     bool                                            m_protocolFlagIsMultiConnectionSession = false;
     bool                                            m_protocolFlagIsSendRequestByPoll = false;
+    bool                                            m_protocolFlagSupportFileTransfer = false;
     IProtocol::FuncCreateMessage                    m_messageFactory;
     std::atomic_bool                                m_protocolSet;
     bool                                            m_triggerConnected = false;

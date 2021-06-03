@@ -168,9 +168,19 @@ static void statusToProtocolStatus(remoteentity::Status status, Variant& control
     }
 }
 
+static void metainfoToHeader(remoteentity::Header& header, IMessage::Metainfo& metainfo)
+{
+    header.meta.reserve(metainfo.size() * 2);
+    for (auto it = metainfo.begin(); it != metainfo.end(); ++it)
+    {
+        header.meta.emplace_back(it->first);
+        header.meta.emplace_back(std::move(it->second));
+    }
+    metainfo.clear();
+}
 
 
-bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, remoteentity::Header& header, Variant&& echoData, const StructBase* structBase)
+bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, remoteentity::Header& header, Variant&& echoData, const StructBase* structBase, IMessage::Metainfo* metainfo)
 {
     bool ok = true;
     assert(session);
@@ -183,6 +193,7 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, re
         {
             message->getEchoData() = std::move(echoData);
         }
+        bool writeMetainfoToHeader = metainfo;
         if (session->doesSupportMetainfo())
         {
             if (header.mode == MsgMode::MSG_REPLY)
@@ -196,20 +207,22 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, re
             }
 
             // not a poll request
-            if (!session->isSendRequestByPoll() || header.mode == MsgMode::MSG_REPLY)
+            if (metainfo && (!session->isSendRequestByPoll() || header.mode == MsgMode::MSG_REPLY))
             {
-                IMessage::Metainfo& metainfo = message->getAllMetainfo();
-                ssize_t size = header.meta.size();
-                --size;
-                for (ssize_t i = 0; i < size; i += 2)
-                {
-                    metainfo[std::move(header.meta[i])] = header.meta[i + 1];
-                }
-                header.meta.clear();
+                IMessage::Metainfo& metainfoMessage = message->getAllMetainfo();
+                metainfoMessage.insert(std::make_move_iterator(metainfo->begin()), std::make_move_iterator(metainfo->end()));
+                metainfo->clear();
+                writeMetainfoToHeader = false;
             }
 
             serializeHeaderToMetainfo(*message, header);
         }
+
+        if (writeMetainfoToHeader && metainfo)
+        {
+            metainfoToHeader(header, *metainfo);
+        }
+
         if (pureData == nullptr)
         {
             if (!session->doesSupportMetainfo() || (session->isSendRequestByPoll() && header.mode == MsgMode::MSG_REQUEST))
@@ -235,41 +248,20 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, re
 }
 
 
-bool RemoteEntityFormatRegistryImpl::addRequestToMessage(IMessage& message, const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase* structBase)
+
+static void metainfoToMessage(IMessage& message, std::vector<std::string>& meta)
 {
-    bool ok = true;
-    assert(session);
-    ok = serialize(message, session->getContentType(), header, structBase);
-    return ok;
-}
-
-
-
-static void metainfoToHeader(IMessage& message, Header& header)
-{
+    size_t size = meta.size();
+    if (size > 0)
+    {
+        --size;
+    }
     IMessage::Metainfo& metainfo = message.getAllMetainfo();
-    if (!metainfo.empty())
+    for (size_t i = 0; i < size; i += 2)
     {
-        for (auto it = metainfo.begin(); it != metainfo.end(); ++it)
-        {
-            header.meta.emplace_back(std::move(it->first));
-            header.meta.emplace_back(std::move(it->second));
-        }
-        metainfo.clear();
+        metainfo[std::move(meta[i])] = std::move(meta[i + 1]);
     }
-    Variant& controlData = message.getControlData();
-    if (controlData.getType() == VARTYPE_STRUCT)
-    {
-        VariantStruct* stru = controlData;
-        if (stru)
-        {
-            for (auto it = stru->begin(); it != stru->end(); ++it)
-            {
-                header.meta.emplace_back(it->first);
-                header.meta.push_back(it->second);
-            }
-        }
-    }
+    meta.clear();
 }
 
 
@@ -377,7 +369,6 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainf
     {
         assert(it->second);
         structBase = it->second->parseData(bufferRef, storeRawData, header.type, syntaxError);
-        metainfoToHeader(message, header);
     }
 
     return structBase;
@@ -395,7 +386,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(IMessage& mess
     {
         assert(it->second);
         structBase = it->second->parse(bufferRef, storeRawData, header, syntaxError);
-        metainfoToHeader(message, header);
+        metainfoToMessage(message, header.meta);
     }
 
     return structBase;
@@ -415,8 +406,6 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parsePureData(IMessa
     BufferRef rec = message.getReceivePayload();
     structBytes->data = { rec.first, rec.first + rec.second };
     header.type = remoteentity::Bytes::structInfo().getTypeName();
-
-    metainfoToHeader(message, header);
 
     return structBytes;
 }

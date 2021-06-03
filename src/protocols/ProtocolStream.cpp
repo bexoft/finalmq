@@ -81,6 +81,11 @@ bool ProtocolStream::isSendRequestByPoll() const
     return false;
 }
 
+bool ProtocolStream::doesSupportFileTransfer() const
+{
+    return false;
+}
+
 IProtocol::FuncCreateMessage ProtocolStream::getMessageFactory() const
 {
     return []() {

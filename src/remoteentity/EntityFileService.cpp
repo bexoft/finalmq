@@ -88,61 +88,69 @@ bool FileTransferReply::replyFile(ReplyContextUPtr& replyContext)
         if (res == 0)
         {
             handeled = true;
-            int sizeFile = statdata.st_size;
 
-            MoveObjectByCopy<ReplyContextUPtr> replyContextShell(replyContext);
-            m_executor->addAction([filename, sizeFile, replyContextShell]() {
-                int flags = O_RDONLY;
+//            if (replyContext->doesSupportFileTransfer())
+//            {
+//                replyContext->reply(filename);
+//            }
+//            else
+//            {
+                int sizeFile = statdata.st_size;
+
+                MoveObjectByCopy<ReplyContextUPtr> replyContextShell(replyContext);
+                m_executor->addAction([filename, sizeFile, replyContextShell]() {
+                    int flags = O_RDONLY;
 #ifdef WIN32
-                flags |= O_BINARY;
+                    flags |= O_BINARY;
 #endif
-                int fd = OperatingSystem::instance().open(filename.c_str(), flags);
-                if (fd != -1)
-                {
-                    remoteentity::Bytes reply;
-                    reply.data.resize(sizeFile);
-
-                    char* buf = reply.data.data();
-                    int len = reply.data.size();
-                    int err = 0;
-                    int lenReceived = 0;
-                    bool ex = false;
-                    while (!ex)
+                    int fd = OperatingSystem::instance().open(filename.c_str(), flags);
+                    if (fd != -1)
                     {
-                        do
-                        {
-                            err = OperatingSystem::instance().read(fd, buf, len);
-                        } while (err == -1 && OperatingSystem::instance().getLastError() == SOCKETERROR(EINTR));
+                        remoteentity::Bytes reply;
+                        reply.data.resize(sizeFile);
 
-                        if (err > 0)
+                        char* buf = reply.data.data();
+                        int len = reply.data.size();
+                        int err = 0;
+                        int lenReceived = 0;
+                        bool ex = false;
+                        while (!ex)
                         {
-                            buf += err;
-                            len -= err;
-                            lenReceived += err;
-                            err = 0;
-                            assert(len >= 0);
-                            if (len == 0)
+                            do
+                            {
+                                err = OperatingSystem::instance().read(fd, buf, len);
+                            } while (err == -1 && OperatingSystem::instance().getLastError() == SOCKETERROR(EINTR));
+
+                            if (err > 0)
+                            {
+                                buf += err;
+                                len -= err;
+                                lenReceived += err;
+                                err = 0;
+                                assert(len >= 0);
+                                if (len == 0)
+                                {
+                                    ex = true;
+                                }
+                            }
+                            else
                             {
                                 ex = true;
                             }
                         }
-                        else
+                        if (lenReceived < reply.data.size())
                         {
-                            ex = true;
+                            reply.data.resize(lenReceived);
                         }
+                        (*replyContextShell)->reply(reply);
                     }
-                    if (lenReceived < reply.data.size())
+                    else
                     {
-                        reply.data.resize(lenReceived);
+                        // not found
+                        (*replyContextShell)->reply(finalmq::remoteentity::Status::STATUS_ENTITY_NOT_FOUND);
                     }
-                    (*replyContextShell)->reply(reply);
-                }
-                else
-                {
-                    // not found
-                    (*replyContextShell)->reply(finalmq::remoteentity::Status::STATUS_ENTITY_NOT_FOUND);
-                }
-            });
+                });
+//            }
         }
     }
     return handeled;

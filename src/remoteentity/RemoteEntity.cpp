@@ -478,7 +478,7 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
 
 
 
-bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId, std::vector<std::string>* metainfo)
+bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId, IMessage::Metainfo* metainfo)
 {
     bool ok = false;
     Header header;
@@ -491,27 +491,8 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
 
     if (readyToSend == PeerManager::ReadyToSend::RTS_READY)
     {
-        if (metainfo)
-        {
-            header.meta = std::move(*metainfo);
-        }
         assert(session);
-        //if (!session->isSendRequestByPoll())
-        //{
-            ok = RemoteEntityFormatRegistry::instance().send(session, header, {}, &structBase);
-        //}
-        //else
-        //{
-        //    auto sessionRequestsMessage = m_sessionRequestsMessage.lock();
-        //    if (sessionRequestsMessage)
-        //    {
-        //        ok = sessionRequestsMessage->putMessage(session, header, structBase);
-        //    }
-        //    else
-        //    {
-        //        ok = false;
-        //    }
-        //}
+        ok = RemoteEntityFormatRegistry::instance().send(session, header, {}, &structBase, metainfo);
     }
     else if (readyToSend == PeerManager::ReadyToSend::RTS_SESSION_NOT_AVAILABLE)
     {
@@ -528,13 +509,13 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
 }
 
 
-bool RemoteEntity::sendEvent(const PeerId& peerId, std::vector<std::string>&& metainfo, const StructBase& structBase)
+bool RemoteEntity::sendEvent(const PeerId& peerId, IMessage::Metainfo&& metainfo, const StructBase& structBase)
 {
     bool ok = sendRequest(peerId, structBase, CORRELATIONID_NONE, &metainfo);
     return ok;
 }
 
-bool RemoteEntity::sendRequest(const PeerId& peerId, std::vector<std::string>&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply)
+bool RemoteEntity::sendRequest(const PeerId& peerId, IMessage::Metainfo&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply)
 {
     CorrelationId correlationId = getNextCorrelationId();
     std::unique_lock<std::mutex> lock(m_mutex);
@@ -568,7 +549,7 @@ void RemoteEntity::replyReceived(ReceiveData& receiveData)
         }
         else if (request->funcMeta && *request->funcMeta)
         {
-            (*request->funcMeta)(request->peerId, receiveData.header.status, receiveData.header.meta, receiveData.structBase);
+            (*request->funcMeta)(request->peerId, receiveData.header.status, receiveData.message->getAllMetainfo(), receiveData.structBase);
         }
     }
 }
@@ -673,8 +654,7 @@ void RemoteEntity::removePeer(PeerId peerId, remoteentity::Status status)
                 }
                 else if (request->funcMeta && *request->funcMeta)
                 {
-                    std::vector<std::string> metainfo;
-                    (*request->funcMeta)(request->peerId, status, metainfo, nullptr);
+                    (*request->funcMeta)(request->peerId, status, IMessage::Metainfo{}, nullptr);
                 }
             }
         }
@@ -840,7 +820,7 @@ void RemoteEntity::receivedReply(ReceiveData& receiveData)
     bool replyHandled = false;
     if (m_funcReplyEvent)
     {
-        replyHandled = m_funcReplyEvent(receiveData.header.corrid, receiveData.header.status, receiveData.header.meta, receiveData.structBase);
+        replyHandled = m_funcReplyEvent(receiveData.header.corrid, receiveData.header.status, receiveData.message->getAllMetainfo(), receiveData.structBase);
     }
     if (!replyHandled)
     {

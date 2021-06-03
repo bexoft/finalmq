@@ -92,10 +92,10 @@ struct ReceiveData
 
 
 typedef std::function<void(PeerId peerId, remoteentity::Status status, const StructBasePtr& structBase)> FuncReply;
-typedef std::function<void(PeerId peerId, remoteentity::Status status, std::vector<std::string>& metainfo, const StructBasePtr& structBase)> FuncReplyMeta;
+typedef std::function<void(PeerId peerId, remoteentity::Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase)> FuncReplyMeta;
 typedef std::function<void(ReplyContextUPtr& replyContext, const StructBasePtr& structBase)> FuncCommand;
 typedef std::function<void(PeerId peerId, PeerEvent peerEvent, bool incoming)> FuncPeerEvent;
-typedef std::function<bool(CorrelationId correlationId, remoteentity::Status status, std::vector<std::string>& metainfo, const StructBasePtr& structBase)> FuncReplyEvent; // return bool reply handled -> skip looking for reply lambda.
+typedef std::function<bool(CorrelationId correlationId, remoteentity::Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase)> FuncReplyEvent; // return bool reply handled -> skip looking for reply lambda.
 typedef std::function<void(PeerId peerId, remoteentity::Status status)> FuncReplyConnect;
 
 struct IRemoteEntity
@@ -128,10 +128,10 @@ struct IRemoteEntity
     bool requestReply(const PeerId& peerId,
         std::vector<std::string>&& metainfo,
         const StructBase& structBase,
-        std::function<void(PeerId peerId, remoteentity::Status status, std::vector<std::string>& metainfo, const std::shared_ptr<R>& reply)> funcReply)
+        std::function<void(PeerId peerId, remoteentity::Status status, IMessage::Metainfo& metainfo, const std::shared_ptr<R>& reply)> funcReply)
     {
         assert(funcReply);
-        bool ok = sendRequest(peerId, std::move(metainfo), structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, remoteentity::Status status, std::vector<std::string>& metainfo, const StructBasePtr& structBase) {
+        bool ok = sendRequest(peerId, std::move(metainfo), structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, remoteentity::Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase) {
             std::shared_ptr<R> reply;
             bool typeOk = (!structBase || structBase->getStructInfo().getTypeName() == R::structInfo().getTypeName());
             if (status == remoteentity::Status::STATUS_OK && structBase && typeOk)
@@ -154,7 +154,7 @@ struct IRemoteEntity
     }
 
     virtual bool sendEvent(const PeerId& peerId, const StructBase& structBase) = 0;
-    virtual bool sendEvent(const PeerId& peerId, std::vector<std::string>&& metainfo, const StructBase& structBase) = 0;
+    virtual bool sendEvent(const PeerId& peerId, IMessage::Metainfo&& metainfo, const StructBase& structBase) = 0;
     virtual PeerId connect(const IProtocolSessionPtr& session, const std::string& entityName, FuncReplyConnect funcReplyConnect = {}) = 0;
     virtual PeerId connect(const IProtocolSessionPtr& session, EntityId entityId, FuncReplyConnect funcReplyConnect = {}) = 0;
     virtual void disconnect(PeerId peerId) = 0;
@@ -170,9 +170,9 @@ struct IRemoteEntity
     virtual void connect(PeerId peerId, const IProtocolSessionPtr& session, const std::string& entityName, EntityId entityId) = 0;
     virtual void registerCommandFunction(const std::string& functionName, FuncCommand funcCommand) = 0;
     virtual CorrelationId getNextCorrelationId() const = 0;
-    virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId, std::vector<std::string>* metainfo = nullptr) = 0;
+    virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId, IMessage::Metainfo* metainfo = nullptr) = 0;
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) = 0;
-    virtual bool sendRequest(const PeerId& peerId, std::vector<std::string>&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply) = 0;
+    virtual bool sendRequest(const PeerId& peerId, IMessage::Metainfo&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply) = 0;
     virtual bool isEntityRegistered() const = 0;
     // A callback for every received reply. With this callback a match with the correlation ID can be done by the application.
     virtual void registerReplyEvent(FuncReplyEvent funcReplyEvent) = 0;
@@ -261,7 +261,7 @@ public:
         , m_entityIdSrc(entityIdSrc)
         , m_correlationId(receiveData.header.corrid)
         , m_replySent(false)
-        , m_metainfo(std::move(receiveData.header.meta))
+        , m_metainfo(std::move(receiveData.message->getAllMetainfo()))
         , m_echoData(std::move(receiveData.message->getEchoData()))
     {
     }
@@ -296,22 +296,12 @@ public:
         }
     }
 
-    void reply(const StructBase& structBase, const std::vector<std::string>& metainfo)
+    void reply(const StructBase& structBase, IMessage::Metainfo&& metainfo)
     {
         if (!m_replySent)
         {
-            remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, remoteentity::Status::STATUS_OK, structBase.getStructInfo().getTypeName(), m_correlationId, metainfo };
-            RemoteEntityFormatRegistry::instance().send(m_session, header, std::move(m_echoData), &structBase);
-            m_replySent = true;
-        }
-    }
-
-    void reply(const StructBase& structBase, std::vector<std::string>&& metainfo)
-    {
-        if (!m_replySent)
-        {
-            remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, remoteentity::Status::STATUS_OK, structBase.getStructInfo().getTypeName(), m_correlationId, std::move(metainfo) };
-            RemoteEntityFormatRegistry::instance().send(m_session, header, std::move(m_echoData), &structBase);
+            remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, remoteentity::Status::STATUS_OK, structBase.getStructInfo().getTypeName(), m_correlationId, {} };
+            RemoteEntityFormatRegistry::instance().send(m_session, header, std::move(m_echoData), &structBase, & metainfo);
             m_replySent = true;
         }
     }
@@ -323,30 +313,15 @@ public:
 
     std::string* getMetainfo(const std::string& key)
     {
-        for (auto it = m_metainfo.begin(); it != m_metainfo.end(); ++it)
+        auto it = m_metainfo.find(key);
+        if (it != m_metainfo.end())
         {
-            if (*it == key)
-            {
-                ++it;
-                if (it == m_metainfo.end())
-                {
-                    return nullptr;
-                }
-                return &*it;
-            }
-            else
-            {
-                ++it;
-                if (it == m_metainfo.end())
-                {
-                    return nullptr;
-                }
-            }
+            return &it->second;
         }
         return nullptr;
     }
 
-    std::vector<std::string>& getAllMetainfo()
+    IMessage::Metainfo& getAllMetainfo()
     {
         return m_metainfo;
     }
@@ -359,6 +334,11 @@ public:
             RemoteEntityFormatRegistry::instance().send(m_session, header, std::move(m_echoData));
             m_replySent = true;
         }
+    }
+
+    bool doesSupportFileTransfer() const
+    {
+        return m_session->doesSupportFileTransfer();
     }
 
 private:
@@ -383,7 +363,7 @@ private:
     CorrelationId                   m_correlationId = CORRELATIONID_NONE;
     PeerId                          m_peerId = PEERID_INVALID;
     bool                            m_replySent = false;
-    std::vector<std::string>        m_metainfo;
+    IMessage::Metainfo              m_metainfo;
     Variant                         m_echoData;
 
     friend class RemoteEntity;
@@ -402,7 +382,7 @@ public:
 public:
     // IRemoteEntity
     virtual bool sendEvent(const PeerId& peerId, const StructBase& structBase) override;
-    virtual bool sendEvent(const PeerId& peerId, std::vector<std::string>&& metainfo, const StructBase& structBase) override;
+    virtual bool sendEvent(const PeerId& peerId, IMessage::Metainfo&& metainfo, const StructBase& structBase) override;
     virtual PeerId connect(const IProtocolSessionPtr& session, const std::string& entityName, FuncReplyConnect funcReplyConnect = {}) override;
     virtual PeerId connect(const IProtocolSessionPtr& session, EntityId entityId, FuncReplyConnect funcReplyConnect = {}) override;
     virtual void disconnect(PeerId peerId) override;
@@ -416,9 +396,9 @@ public:
     virtual void connect(PeerId peerId, const IProtocolSessionPtr& session, const std::string& entityName, EntityId entityId) override;
     virtual void registerCommandFunction(const std::string& functionName, FuncCommand funcCommand) override;
     virtual CorrelationId getNextCorrelationId() const override;
-    virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId, std::vector<std::string>* metainfo = nullptr) override;
+    virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId, IMessage::Metainfo* metainfo = nullptr) override;
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) override;
-    virtual bool sendRequest(const PeerId& peerId, std::vector<std::string>&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply) override;
+    virtual bool sendRequest(const PeerId& peerId, IMessage::Metainfo&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply) override;
     virtual bool isEntityRegistered() const override;
     virtual void registerReplyEvent(FuncReplyEvent funcReplyEvent) override;
 

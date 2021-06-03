@@ -95,6 +95,11 @@ bool ProtocolHeaderBinarySize::isSendRequestByPoll() const
     return false;
 }
 
+bool ProtocolHeaderBinarySize::doesSupportFileTransfer() const
+{
+    return false;
+}
+
 IProtocol::FuncCreateMessage ProtocolHeaderBinarySize::getMessageFactory() const
 {
     return []() {

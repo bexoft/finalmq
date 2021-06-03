@@ -70,6 +70,7 @@ struct IProtocol : public IStreamConnectionCallback
     virtual bool needsReply() const = 0;
     virtual bool isMultiConnectionSession() const = 0;
     virtual bool isSendRequestByPoll() const = 0;
+    virtual bool doesSupportFileTransfer() const = 0;
     virtual FuncCreateMessage getMessageFactory() const = 0;
     //virtual void receive(const SocketPtr& socket, int bytesToRead) = 0;
     virtual void prepareMessageToSend(IMessagePtr message) = 0;

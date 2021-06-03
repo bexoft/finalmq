@@ -75,6 +75,11 @@ bool ProtocolDelimiter::isSendRequestByPoll() const
     return false;
 }
 
+bool ProtocolDelimiter::doesSupportFileTransfer() const
+{
+    return false;
+}
+
 IProtocol::FuncCreateMessage ProtocolDelimiter::getMessageFactory() const
 {
     size_t sizeDelimiter = m_delimiter.size();

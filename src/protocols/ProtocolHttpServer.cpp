@@ -122,6 +122,11 @@ bool ProtocolHttpServer::isSendRequestByPoll() const
     return true;
 }
 
+bool ProtocolHttpServer::doesSupportFileTransfer() const
+{
+    return true;
+}
+
 IProtocol::FuncCreateMessage ProtocolHttpServer::getMessageFactory() const
 {
     return []() {

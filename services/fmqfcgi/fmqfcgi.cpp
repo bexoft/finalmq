@@ -60,6 +60,7 @@ using finalmq::fmqreg::Endpoint;
 using finalmq::remoteentity::RawDataMessage;
 using finalmq::PeerEvent;
 using finalmq::StructBase;
+using finalmq::IMessage;
 
 
 static const int LONGPOLL_RELEASE_INTERVAL = 20000;
@@ -145,22 +146,19 @@ public:
         return m_request;
     }
 
-    inline void headerToMetainfo(std::vector<std::string>& metainfo)
+    inline void headerToMetainfo(IMessage::Metainfo& metainfo)
     {
-        metainfo.reserve(200);
         for (int i = 0; m_request->envp[i] != NULL; i += 1)
         {
             const char* line = m_request->envp[i];
             const char* pos = strchr(line, '=');
             if (pos)
             {
-                metainfo.emplace_back(line, (size_t)(pos - line));
-                metainfo.emplace_back(pos + 1);
+                metainfo[std::string(line, (size_t)(pos - line))] = std::string(pos + 1);
             }
             else
             {
-                metainfo.emplace_back();
-                metainfo.emplace_back(line);
+                metainfo[std::string(line)] = "";
             }
         }
     }
@@ -871,9 +869,9 @@ public:
             {
                 message.setRawData(typeName, RemoteEntityFormatJson::CONTENT_TYPE, "{}", 2);
             }
-            std::vector<std::string> metainfo;
+            IMessage::Metainfo metainfo;
             requestPtr->headerToMetainfo(metainfo);
-            httpSession->sendRequest(peerId, std::move(metainfo), message, [this, requestPtr] (PeerId peerId, Status status, std::vector<std::string>& metainfo, const std::shared_ptr<StructBase>& reply) {
+            httpSession->sendRequest(peerId, std::move(metainfo), message, [this, requestPtr] (PeerId peerId, Status status, IMessage::Metainfo& metainfo, const std::shared_ptr<StructBase>& reply) {
                 assert(requestPtr);
                 Request& request = *requestPtr;
                 if (reply && reply->getRawContentType() != RemoteEntityFormatJson::CONTENT_TYPE)

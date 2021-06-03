@@ -97,6 +97,7 @@ void ProtocolSession::initProtocolValues()
     m_protocolFlagNeedsReply = protocol->needsReply();
     m_protocolFlagIsMultiConnectionSession = protocol->isMultiConnectionSession();
     m_protocolFlagIsSendRequestByPoll = protocol->isSendRequestByPoll();
+    m_protocolFlagSupportFileTransfer = protocol->doesSupportFileTransfer();
     m_messageFactory = protocol->getMessageFactory();
 
     m_protocolSet.store(true, std::memory_order_release);
@@ -358,6 +359,11 @@ bool ProtocolSession::isMultiConnectionSession() const
 bool ProtocolSession::isSendRequestByPoll() const
 {
     return m_protocolFlagIsSendRequestByPoll;
+}
+
+bool ProtocolSession::doesSupportFileTransfer() const
+{
+    return m_protocolFlagSupportFileTransfer;
 }
 
 void ProtocolSession::disconnect()
