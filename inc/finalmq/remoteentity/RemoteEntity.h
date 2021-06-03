@@ -55,7 +55,7 @@ static constexpr PeerId PEERID_INVALID = 0;
 
 
 class ReplyContext;
-typedef std::unique_ptr<ReplyContext> ReplyContextUPtr;
+typedef std::shared_ptr<ReplyContext> ReplyContextPtr;
 
 
 
@@ -94,7 +94,7 @@ struct ReceiveData
 
 typedef std::function<void(PeerId peerId, remoteentity::Status status, const StructBasePtr& structBase)> FuncReply;
 typedef std::function<void(PeerId peerId, remoteentity::Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase)> FuncReplyMeta;
-typedef std::function<void(ReplyContextUPtr& replyContext, const StructBasePtr& structBase)> FuncCommand;
+typedef std::function<void(ReplyContextPtr& replyContext, const StructBasePtr& structBase)> FuncCommand;
 typedef std::function<void(PeerId peerId, PeerEvent peerEvent, bool incoming)> FuncPeerEvent;
 typedef std::function<bool(CorrelationId correlationId, remoteentity::Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase)> FuncReplyEvent; // return bool reply handled -> skip looking for reply lambda.
 typedef std::function<void(PeerId peerId, remoteentity::Status status)> FuncReplyConnect;
@@ -149,7 +149,7 @@ struct IRemoteEntity
     }
 
     template<class R>
-    void registerCommand(std::function<void(ReplyContextUPtr& replyContext, const std::shared_ptr<R>& request)> funcCommand)
+    void registerCommand(std::function<void(ReplyContextPtr& replyContext, const std::shared_ptr<R>& request)> funcCommand)
     {
         registerCommandFunction(R::structInfo().getTypeName(), reinterpret_cast<FuncCommand&>(funcCommand));
     }
@@ -252,7 +252,7 @@ typedef std::shared_ptr<PeerManager> PeerManagerPtr;
 
 
 
-class ReplyContext
+class ReplyContext : public std::enable_shared_from_this<ReplyContext>
 {
 public:
     inline ReplyContext(const PeerManagerPtr& sessionIdEntityIdToPeerId, EntityId entityIdSrc, ReceiveData& receiveData, const std::shared_ptr<FileTransferReply>& fileTransferReply)
@@ -288,30 +288,29 @@ public:
         return m_peerId;
     }
 
-    void reply(const StructBase& structBase)
+    void reply(const StructBase& structBase, IMessage::Metainfo* metainfo = nullptr)
     {
         if (!m_replySent)
         {
             remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, remoteentity::Status::STATUS_OK, structBase.getStructInfo().getTypeName(), m_correlationId, {} };
-            RemoteEntityFormatRegistry::instance().send(m_session, header, std::move(m_echoData), &structBase);
+            RemoteEntityFormatRegistry::instance().send(m_session, header, std::move(m_echoData), &structBase, metainfo);
             m_replySent = true;
         }
     }
 
-    void reply(const StructBase& structBase, IMessage::Metainfo&& metainfo)
+    bool replyFile(const std::string& filename, IMessage::Metainfo* metainfo = nullptr)
     {
-        if (!m_replySent)
-        {
-            remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, remoteentity::Status::STATUS_OK, structBase.getStructInfo().getTypeName(), m_correlationId, {} };
-            RemoteEntityFormatRegistry::instance().send(m_session, header, std::move(m_echoData), &structBase, & metainfo);
-            m_replySent = true;
-        }
+        bool handeled = m_fileTransferReply->replyFile(shared_from_this(), filename, metainfo);
+        return handeled;
     }
 
-    //void replyFile(const std::string& filename)
-    //{
-    //    m_fileTransferReply->replyFile( )
-    //}
+    void replyMemory(const char* buffer, size_t size, IMessage::Metainfo* metainfo = nullptr)
+    {
+        remoteentity::Bytes replyBytes;
+        replyBytes.data.resize(size);
+        memcpy(const_cast<BytesElement*>(replyBytes.data.data()), buffer, size);
+        reply(replyBytes, metainfo);
+    }
 
     inline CorrelationId correlationId() const
     {

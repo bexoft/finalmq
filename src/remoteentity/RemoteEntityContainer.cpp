@@ -147,7 +147,7 @@ void RemoteEntityContainer::init(int cycleTime, int checkReconnectInterval, Func
 
     //registerEntity([this]() {
     //    std::shared_ptr<RemoteEntity> entity = std::make_shared<RemoteEntity>();
-    //    entity->registerCommand<COMMAND>([this](ReplyContextUPtr& replyContext, const std::shared_ptr<COMMAND>& request) {
+    //    entity->registerCommand<COMMAND>([this](ReplyContextPtr& replyContext, const std::shared_ptr<COMMAND>& request) {
     //    });
     //    return entity;
     //}(), "fmq");

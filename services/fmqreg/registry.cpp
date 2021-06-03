@@ -27,7 +27,7 @@
 
 using finalmq::PeerId;
 using finalmq::PeerEvent;
-using finalmq::ReplyContextUPtr;
+using finalmq::ReplyContextPtr;
 using finalmq::fmqreg::RegisterService;
 using finalmq::fmqreg::GetService;
 using finalmq::fmqreg::GetServiceReply;
@@ -42,12 +42,12 @@ Registry::Registry()
         streamInfo << "peer event " << peerEvent.toString();
     });
 
-    registerCommand<RegisterService>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<RegisterService>& request) {
+    registerCommand<RegisterService>([this] (ReplyContextPtr& replyContext, const std::shared_ptr<RegisterService>& request) {
         assert(request);
         m_services[request->service.name] = request->service;
     });
 
-    registerCommand<GetService>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<GetService>& request) {
+    registerCommand<GetService>([this] (ReplyContextPtr& replyContext, const std::shared_ptr<GetService>& request) {
         assert(request);
         auto it = m_services.find(request->name);
         if (it != m_services.end())

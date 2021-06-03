@@ -41,7 +41,7 @@ using finalmq::RemoteEntityContainer;
 using finalmq::IRemoteEntityContainer;
 using finalmq::PeerId;
 using finalmq::PeerEvent;
-using finalmq::ReplyContextUPtr;
+using finalmq::ReplyContextPtr;
 using finalmq::ProtocolHeaderBinarySizeFactory;
 using finalmq::ProtocolDelimiterLinefeedFactory;
 using finalmq::IProtocolSessionPtr;

@@ -25,6 +25,7 @@
 
 #include "finalmq/helpers/BexDefines.h"
 #include "finalmq/helpers/Executor.h"
+#include "finalmq/streamconnection/IMessage.h"
 
 #include <memory>
 #include <string>
@@ -34,7 +35,7 @@
 namespace finalmq {
 
 class ReplyContext;
-typedef std::unique_ptr<ReplyContext> ReplyContextUPtr;
+typedef std::shared_ptr<ReplyContext> ReplyContextPtr;
 
 class SYMBOLEXP FileTransferReply
 {
@@ -42,7 +43,7 @@ public:
     FileTransferReply(int numberOfWorkerThreads = 2);
     ~FileTransferReply();
 
-    bool replyFile(ReplyContextUPtr& replyContext, const std::string& filename);
+    bool replyFile(ReplyContextPtr& replyContext, const std::string& filename, IMessage::Metainfo* metainfo = nullptr);
 
 private:
     std::string                 m_baseDirectory;

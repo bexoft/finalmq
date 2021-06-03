@@ -430,7 +430,7 @@ IProtocolSessionPtr PeerManager::getSession(PeerId peerId) const
 RemoteEntity::RemoteEntity()
     : m_peerManager(std::make_shared<PeerManager>())
 {
-    registerCommand<ConnectEntity>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<ConnectEntity>& request) {
+    registerCommand<ConnectEntity>([this] (ReplyContextPtr& replyContext, const std::shared_ptr<ConnectEntity>& request) {
         assert(request);
         bool added{};
         m_peerManager->addPeer(replyContext->session(), replyContext->entityId(), request->entityName, true, added, [this, &replyContext]() {
@@ -438,7 +438,7 @@ RemoteEntity::RemoteEntity()
             replyContext->reply(ConnectEntityReply(m_entityId, m_entityName));
         });
     });
-    registerCommand<DisconnectEntity>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<DisconnectEntity>& /*request*/) {
+    registerCommand<DisconnectEntity>([this] (ReplyContextPtr& replyContext, const std::shared_ptr<DisconnectEntity>& /*request*/) {
         PeerId peerId = replyContext->peerId();
         removePeer(peerId, Status::STATUS_PEER_DISCONNECTED);
     });
@@ -767,6 +767,7 @@ bool RemoteEntity::isEntityRegistered() const
 
 void RemoteEntity::initEntity(EntityId entityId, const std::string& entityName, const std::shared_ptr<FileTransferReply>& fileTransferReply)
 {
+    m_fileTransferReply = fileTransferReply;
     m_entityId = entityId;
     m_entityName = entityName;
     m_peerManager->setEntityId(entityId);
@@ -787,7 +788,7 @@ void RemoteEntity::sessionDisconnected(const IProtocolSessionPtr& session)
 
 void RemoteEntity::receivedRequest(ReceiveData& receiveData)
 {
-    ReplyContextUPtr replyContext = std::make_unique<ReplyContext>(m_peerManager, m_entityId, receiveData, m_fileTransferReply);
+    ReplyContextPtr replyContext = std::make_shared<ReplyContext>(m_peerManager, m_entityId, receiveData, m_fileTransferReply);
     assert(replyContext);
 
     std::unique_lock<std::mutex> lock(m_mutex);

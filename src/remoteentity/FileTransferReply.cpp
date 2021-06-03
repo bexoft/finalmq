@@ -52,28 +52,8 @@ FileTransferReply::~FileTransferReply()
 }
 
 
-template<class T>
-class MoveObjectByCopy
-{
-public:
-    MoveObjectByCopy(T& moveObject)
-    {
-        m_moveObject = std::move(moveObject);
-    }
-    MoveObjectByCopy(const MoveObjectByCopy& rhs)
-    {
-        m_moveObject = std::move(const_cast<MoveObjectByCopy&>(rhs).m_moveObject);
-    }
-    const T& operator *() const
-    {
-        return m_moveObject;
-    }
-private:
-    T   m_moveObject;
-};
 
-
-bool FileTransferReply::replyFile(ReplyContextUPtr& replyContext, const std::string& filename)
+bool FileTransferReply::replyFile(ReplyContextPtr& replyContext, const std::string& filename, IMessage::Metainfo* metainfo)
 {
     bool handeled = false;
 
@@ -93,8 +73,14 @@ bool FileTransferReply::replyFile(ReplyContextUPtr& replyContext, const std::str
 //            {
             int sizeFile = statdata.st_size;
 
-            MoveObjectByCopy<ReplyContextUPtr> replyContextShell(replyContext);
-            m_executor->addAction([filename, sizeFile, replyContextShell]() {
+            std::shared_ptr<IMessage::Metainfo> mi;
+            if (metainfo)
+            {
+                mi = std::make_shared<IMessage::Metainfo>(std::move(*metainfo));
+                metainfo->clear();
+            }
+
+            m_executor->addAction([filename, sizeFile, replyContext, mi]() {
                 int flags = O_RDONLY;
 #ifdef WIN32
                 flags |= O_BINARY;
@@ -138,12 +124,12 @@ bool FileTransferReply::replyFile(ReplyContextUPtr& replyContext, const std::str
                     {
                         reply.data.resize(lenReceived);
                     }
-                    (*replyContextShell)->reply(reply);
+                    replyContext->reply(reply, mi.get());
                 }
                 else
                 {
                     // not found
-                    (*replyContextShell)->reply(finalmq::remoteentity::Status::STATUS_ENTITY_NOT_FOUND);
+                    replyContext->reply(finalmq::remoteentity::Status::STATUS_ENTITY_NOT_FOUND);
                 }
             });
 //      }

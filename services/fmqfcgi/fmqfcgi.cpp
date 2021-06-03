@@ -50,7 +50,7 @@ using finalmq::EntityId;
 using finalmq::CorrelationId;
 using finalmq::IProtocolSessionPtr;
 using finalmq::IProtocolPtr;
-using finalmq::ReplyContextUPtr;
+using finalmq::ReplyContextPtr;
 using finalmq::Logger;
 using finalmq::LogContext;
 using finalmq::FmqRegistryClient;
@@ -210,7 +210,7 @@ public:
             }
         });
 
-        registerCommandFunction("*", [this] (ReplyContextUPtr& replyContext, const finalmq::StructBasePtr& structBase) {
+        registerCommandFunction("*", [this] (ReplyContextPtr& replyContext, const finalmq::StructBasePtr& structBase) {
             assert(structBase);
             std::unique_lock<std::mutex> lock(m_mutex);
             finalmq::CorrelationId correlationIdHttp = finalmq::CORRELATIONID_NONE;
@@ -398,7 +398,7 @@ public:
         return expired;
     }
 
-    ReplyContextUPtr getReplyContext(CorrelationId correlationId)
+    ReplyContextPtr getReplyContext(CorrelationId correlationId)
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         auto it = m_pendingEntityReplies.find(correlationId);
@@ -415,7 +415,7 @@ private:
     finalmq::CorrelationId                  m_nextCorrelationId = 1;
     std::string                             m_httpSessionId;
 
-    std::unordered_map<finalmq::CorrelationId, ReplyContextUPtr> m_pendingEntityReplies;
+    std::unordered_map<finalmq::CorrelationId, ReplyContextPtr> m_pendingEntityReplies;
     std::deque<std::string>                 m_requestEntries;
     RequestPtr                              m_longpoll;
     long long                               m_longpollDurationMs;
@@ -902,7 +902,7 @@ public:
         ssize_t posParameters = getRequestData(value, strCorrelationId, typeName);
         CorrelationId correclationId = std::atoll(strCorrelationId.c_str());
 
-        ReplyContextUPtr replyContext = httpSession->getReplyContext(correclationId);
+        ReplyContextPtr replyContext = httpSession->getReplyContext(correclationId);
         if (replyContext)
         {
             RawDataMessage message;

@@ -41,7 +41,7 @@ using finalmq::RemoteEntityFormatJson;
 using finalmq::IRemoteEntityContainer;
 using finalmq::PeerId;
 using finalmq::PeerEvent;
-using finalmq::ReplyContextUPtr;
+using finalmq::ReplyContextPtr;
 using finalmq::ProtocolHeaderBinarySizeFactory;
 using finalmq::ProtocolDelimiterLinefeedFactory;
 using finalmq::FmqRegistryClient;
@@ -188,7 +188,7 @@ public:
         registerPeerEvent([](PeerId peerId, PeerEvent peerEvent, bool incoming) {
         });
 
-        registerCommand<GetObjectTreeRequest>([](ReplyContextUPtr& replyContext, const std::shared_ptr<GetObjectTreeRequest>& request) {
+        registerCommand<GetObjectTreeRequest>([](ReplyContextPtr& replyContext, const std::shared_ptr<GetObjectTreeRequest>& request) {
             assert(request);
 
             GetObjectTreeReply reply;
@@ -204,7 +204,7 @@ public:
 
             });
 
-        registerCommand<PressButtonRequest>([](ReplyContextUPtr& replyContext, const std::shared_ptr<PressButtonRequest>& request) {
+        registerCommand<PressButtonRequest>([](ReplyContextPtr& replyContext, const std::shared_ptr<PressButtonRequest>& request) {
             assert(request);
 
             QString objectName = request->objectName.c_str();
@@ -223,7 +223,7 @@ public:
             }
         });
 
-        registerCommand<GetScreenshotRequest>([](ReplyContextUPtr& replyContext, const std::shared_ptr<GetScreenshotRequest>& request) {
+        registerCommand<GetScreenshotRequest>([](ReplyContextPtr& replyContext, const std::shared_ptr<GetScreenshotRequest>& request) {
             assert(request);
 
             QWidget* visibleWidget = nullptr;

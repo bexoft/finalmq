@@ -34,14 +34,15 @@ EntityFileServer::EntityFileServer(const std::string& baseDirectory, int numberO
     : m_baseDirectory(baseDirectory)
     , m_fileTransfer(numberOfWorkerThreads)
 {
-    registerCommandFunction("*", [this](ReplyContextUPtr& replyContext, const StructBasePtr& /*structBase*/) {
+    registerCommandFunction("*", [this](ReplyContextPtr& replyContext, const StructBasePtr& /*structBase*/) {
         bool handeled = false;
         std::string* path = replyContext->getMetainfo("fmq_path");
         if (path && !path->empty())
         {
             std::string filename = m_baseDirectory + *path;
-            handeled = m_fileTransfer.replyFile(replyContext, filename);
+            handeled = replyContext->replyFile(filename);
         }
+
         if (!handeled)
         {
             // not found
@@ -51,17 +52,6 @@ EntityFileServer::EntityFileServer(const std::string& baseDirectory, int numberO
 }
 
 
-//std::string* path = replyContext->getMetainfo("fmq_path");
-//if (path && !path->empty())
-//{
-//    std::string filename = m_baseDirectory + *path;
-//    replyContext->replyFile(filename);
-//}
-//else
-//{
-//    // not found
-//    replyContext->reply(finalmq::remoteentity::Status::STATUS_ENTITY_NOT_FOUND);
-//}
 
 
 
