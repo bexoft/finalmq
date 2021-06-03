@@ -52,6 +52,11 @@ namespace finalmq {
         return ::open(filename, flags);
     }
 
+    int OperatingSystemImpl::stat(const char* filename, struct stat* buf)
+    {
+        return ::stat(filename, buf);
+    }
+
     int OperatingSystemImpl::fstat(int fd, struct stat* buf)
     {
         return ::fstat(fd, buf);

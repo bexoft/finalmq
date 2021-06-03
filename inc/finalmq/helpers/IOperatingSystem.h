@@ -34,6 +34,7 @@ namespace finalmq {
     {
         virtual ~IOperatingSystem() {}
         virtual int open(const char* filename, int flags) = 0;
+        virtual int stat(const char* filename, struct stat* buf) = 0;
         virtual int fstat(int fd, struct stat* buf) = 0;
         virtual int close(int fd) = 0;
         virtual int closeSocket(SOCKET fd) = 0;

@@ -44,6 +44,27 @@ void Executor::runAvailableActions()
     }
 }
 
+void Executor::runOneAvailableAction()
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    std::function<void()> action;
+    if (!m_actions.empty())
+    {
+        action = std::move(m_actions.front());
+        m_actions.pop_front();
+    }
+    bool stillActions = (!m_actions.empty());
+    lock.unlock();
+    if (stillActions)
+    {
+        m_newActions = true;
+    }
+    if (action)
+    {
+        action();
+    }
+}
+
 void Executor::addAction(std::function<void()> func)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
@@ -62,8 +83,13 @@ void Executor::run()
     while (!m_terminate)
     {
         m_newActions.wait();
-        runAvailableActions();
+        if (!m_terminate)
+        {
+            runOneAvailableAction();
+        }
     }
+    // release possible other threads
+    m_newActions = true;
 }
 
 void Executor::terminate()

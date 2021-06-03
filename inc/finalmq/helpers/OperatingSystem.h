@@ -59,6 +59,7 @@ namespace finalmq {
     private:
         // IOperatingSystem
         virtual int open(const char* filename, int flags) override;
+        virtual int stat(const char* filename, struct stat* buf) override;
         virtual int fstat(int fd, struct ::stat* buf) override;
         virtual int close(int fd) override;
         virtual int closeSocket(SOCKET fd) override;

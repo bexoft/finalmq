@@ -31,12 +31,15 @@ namespace finalmq {
 class SYMBOLEXP FileTransferReply
 {
 public:
-    FileTransferReply(const std::string& baseDirectory = ".");
+    FileTransferReply(const std::string& baseDirectory = ".", int numberOfWorkerThreads = 4);
+    ~FileTransferReply();
 
-    bool replyFile(const ReplyContextUPtr& replyContext);
+    bool replyFile(ReplyContextUPtr& replyContext);
 
 private:
-    std::string     m_baseDirectory;
+    std::string                 m_baseDirectory;
+    std::unique_ptr<IExecutor>  m_executor;
+    std::vector<std::thread>    m_threads;
 };
 
 
@@ -44,7 +47,7 @@ private:
 class SYMBOLEXP EntityFileServer : public RemoteEntity
 {
 public:
-    EntityFileServer(const std::string& baseDirectory = ".");
+    EntityFileServer(const std::string& baseDirectory = ".", int numberOfWorkerThreads = 4);
 
 private:
     FileTransferReply   m_fileTransfer;
