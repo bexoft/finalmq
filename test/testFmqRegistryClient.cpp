@@ -52,9 +52,9 @@ class EntityServer : public RemoteEntity
 public:
     EntityServer()
     {
-        registerCommand<test::TestRequest>([this] (const ReplyContextPtr& replyContext, const std::shared_ptr<test::TestRequest>& request) {
+        registerCommand<test::TestRequest>([this] (const RequestContextPtr& requestContext, const std::shared_ptr<test::TestRequest>& request) {
             assert(request);
-            replyContext->reply(test::TestReply("test reply"));
+            requestContext->reply(test::TestReply("test reply"));
         });
     }
 };

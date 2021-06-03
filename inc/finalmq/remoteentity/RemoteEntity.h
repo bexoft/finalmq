@@ -54,8 +54,8 @@ static constexpr PeerId PEERID_INVALID = 0;
 
 
 
-class ReplyContext;
-typedef std::shared_ptr<ReplyContext> ReplyContextPtr;
+class RequestContext;
+typedef std::shared_ptr<RequestContext> RequestContextPtr;
 
 
 
@@ -94,7 +94,7 @@ struct ReceiveData
 
 typedef std::function<void(PeerId peerId, remoteentity::Status status, const StructBasePtr& structBase)> FuncReply;
 typedef std::function<void(PeerId peerId, remoteentity::Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase)> FuncReplyMeta;
-typedef std::function<void(ReplyContextPtr& replyContext, const StructBasePtr& structBase)> FuncCommand;
+typedef std::function<void(RequestContextPtr& requestContext, const StructBasePtr& structBase)> FuncCommand;
 typedef std::function<void(PeerId peerId, PeerEvent peerEvent, bool incoming)> FuncPeerEvent;
 typedef std::function<bool(CorrelationId correlationId, remoteentity::Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase)> FuncReplyEvent; // return bool reply handled -> skip looking for reply lambda.
 typedef std::function<void(PeerId peerId, remoteentity::Status status)> FuncReplyConnect;
@@ -149,7 +149,7 @@ struct IRemoteEntity
     }
 
     template<class R>
-    void registerCommand(std::function<void(const ReplyContextPtr& replyContext, const std::shared_ptr<R>& request)> funcCommand)
+    void registerCommand(std::function<void(const RequestContextPtr& requestContext, const std::shared_ptr<R>& request)> funcCommand)
     {
         registerCommandFunction(R::structInfo().getTypeName(), reinterpret_cast<FuncCommand&>(funcCommand));
     }
@@ -252,10 +252,10 @@ typedef std::shared_ptr<PeerManager> PeerManagerPtr;
 
 
 
-class ReplyContext : public std::enable_shared_from_this<ReplyContext>
+class RequestContext : public std::enable_shared_from_this<RequestContext>
 {
 public:
-    inline ReplyContext(const PeerManagerPtr& sessionIdEntityIdToPeerId, EntityId entityIdSrc, ReceiveData& receiveData, const std::shared_ptr<FileTransferReply>& fileTransferReply)
+    inline RequestContext(const PeerManagerPtr& sessionIdEntityIdToPeerId, EntityId entityIdSrc, ReceiveData& receiveData, const std::shared_ptr<FileTransferReply>& fileTransferReply)
         : m_peerManager(sessionIdEntityIdToPeerId)
         , m_session(receiveData.session)
         , m_entityIdDest(receiveData.header.srcid)
@@ -268,7 +268,7 @@ public:
     {
     }
 
-    ~ReplyContext()
+    ~RequestContext()
     {
         if (!m_replySent)
         {
@@ -357,10 +357,10 @@ private:
         return m_entityIdDest;
     }
 
-    ReplyContext(const ReplyContext&) = delete;
-    const ReplyContext& operator =(const ReplyContext&) = delete;
-    ReplyContext(const ReplyContext&&) = delete;
-    const ReplyContext& operator =(const ReplyContext&&) = delete;
+    RequestContext(const RequestContext&) = delete;
+    const RequestContext& operator =(const RequestContext&) = delete;
+    RequestContext(const RequestContext&&) = delete;
+    const RequestContext& operator =(const RequestContext&&) = delete;
 private:
     PeerManagerPtr                  m_peerManager;
     IProtocolSessionPtr             m_session;

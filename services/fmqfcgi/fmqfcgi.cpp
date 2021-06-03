@@ -50,7 +50,7 @@ using finalmq::EntityId;
 using finalmq::CorrelationId;
 using finalmq::IProtocolSessionPtr;
 using finalmq::IProtocolPtr;
-using finalmq::ReplyContextPtr;
+using finalmq::RequestContextPtr;
 using finalmq::Logger;
 using finalmq::LogContext;
 using finalmq::FmqRegistryClient;
@@ -210,17 +210,17 @@ public:
             }
         });
 
-        registerCommandFunction("*", [this] (ReplyContextPtr& replyContext, const finalmq::StructBasePtr& structBase) {
+        registerCommandFunction("*", [this] (RequestContextPtr& requestContext, const finalmq::StructBasePtr& structBase) {
             assert(structBase);
             std::unique_lock<std::mutex> lock(m_mutex);
             finalmq::CorrelationId correlationIdHttp = finalmq::CORRELATIONID_NONE;
-            if (replyContext->correlationId() != finalmq::CORRELATIONID_NONE)
+            if (requestContext->correlationId() != finalmq::CORRELATIONID_NONE)
             {
                 correlationIdHttp = m_nextCorrelationId;
                 ++m_nextCorrelationId;
-                m_pendingEntityReplies[correlationIdHttp] = std::move(replyContext);
+                m_pendingEntityReplies[correlationIdHttp] = std::move(requestContext);
             }
-            putRequestEntry(replyContext->peerId(), correlationIdHttp, *structBase);
+            putRequestEntry(requestContext->peerId(), correlationIdHttp, *structBase);
         });
     }
 
@@ -398,7 +398,7 @@ public:
         return expired;
     }
 
-    ReplyContextPtr getReplyContext(CorrelationId correlationId)
+    RequestContextPtr getRequestContext(CorrelationId correlationId)
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         auto it = m_pendingEntityReplies.find(correlationId);
@@ -415,7 +415,7 @@ private:
     finalmq::CorrelationId                  m_nextCorrelationId = 1;
     std::string                             m_httpSessionId;
 
-    std::unordered_map<finalmq::CorrelationId, ReplyContextPtr> m_pendingEntityReplies;
+    std::unordered_map<finalmq::CorrelationId, RequestContextPtr> m_pendingEntityReplies;
     std::deque<std::string>                 m_requestEntries;
     RequestPtr                              m_longpoll;
     long long                               m_longpollDurationMs;
@@ -902,8 +902,8 @@ public:
         ssize_t posParameters = getRequestData(value, strCorrelationId, typeName);
         CorrelationId correclationId = std::atoll(strCorrelationId.c_str());
 
-        ReplyContextPtr replyContext = httpSession->getReplyContext(correclationId);
-        if (replyContext)
+        RequestContextPtr requestContext = httpSession->getRequestContext(correclationId);
+        if (requestContext)
         {
             RawDataMessage message;
             ssize_t size = value.second - posParameters;
@@ -915,7 +915,7 @@ public:
             {
                 message.setRawData(typeName, RemoteEntityFormatJson::CONTENT_TYPE, "{}", 2);
             }
-            replyContext->reply(message);
+            requestContext->reply(message);
         }
     }
 

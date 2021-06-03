@@ -430,16 +430,16 @@ IProtocolSessionPtr PeerManager::getSession(PeerId peerId) const
 RemoteEntity::RemoteEntity()
     : m_peerManager(std::make_shared<PeerManager>())
 {
-    registerCommand<ConnectEntity>([this] (const ReplyContextPtr& replyContext, const std::shared_ptr<ConnectEntity>& request) {
+    registerCommand<ConnectEntity>([this] (const RequestContextPtr& requestContext, const std::shared_ptr<ConnectEntity>& request) {
         assert(request);
         bool added{};
-        m_peerManager->addPeer(replyContext->session(), replyContext->entityId(), request->entityName, true, added, [this, &replyContext]() {
+        m_peerManager->addPeer(requestContext->session(), requestContext->entityId(), request->entityName, true, added, [this, &requestContext]() {
             // send reply before the connect peer event is triggered. So that the peer gets first the connect reply and afterwards a possible greeting message maybe triggered by the connect peer event.
-            replyContext->reply(ConnectEntityReply(m_entityId, m_entityName));
+            requestContext->reply(ConnectEntityReply(m_entityId, m_entityName));
         });
     });
-    registerCommand<DisconnectEntity>([this] (const ReplyContextPtr& replyContext, const std::shared_ptr<DisconnectEntity>& /*request*/) {
-        PeerId peerId = replyContext->peerId();
+    registerCommand<DisconnectEntity>([this] (const RequestContextPtr& requestContext, const std::shared_ptr<DisconnectEntity>& /*request*/) {
+        PeerId peerId = requestContext->peerId();
         removePeer(peerId, Status::STATUS_PEER_DISCONNECTED);
     });
 }
@@ -788,8 +788,8 @@ void RemoteEntity::sessionDisconnected(const IProtocolSessionPtr& session)
 
 void RemoteEntity::receivedRequest(ReceiveData& receiveData)
 {
-    ReplyContextPtr replyContext = std::make_shared<ReplyContext>(m_peerManager, m_entityId, receiveData, m_fileTransferReply);
-    assert(replyContext);
+    RequestContextPtr requestContext = std::make_shared<RequestContext>(m_peerManager, m_entityId, receiveData, m_fileTransferReply);
+    assert(requestContext);
 
     std::unique_lock<std::mutex> lock(m_mutex);
     auto it = m_funcCommands.find(receiveData.header.type);
@@ -804,16 +804,16 @@ void RemoteEntity::receivedRequest(ReceiveData& receiveData)
         assert(func);
         if (*func)
         {
-            (*func)(replyContext, receiveData.structBase);
+            (*func)(requestContext, receiveData.structBase);
         }
         else
         {
-            replyContext->reply(Status::STATUS_REQUEST_NOT_FOUND);
+            requestContext->reply(Status::STATUS_REQUEST_NOT_FOUND);
         }
     }
     else
     {
-        replyContext->reply(Status::STATUS_REQUEST_NOT_FOUND);
+        requestContext->reply(Status::STATUS_REQUEST_NOT_FOUND);
     }
 }
 

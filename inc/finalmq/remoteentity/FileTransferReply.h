@@ -35,8 +35,8 @@
 
 namespace finalmq {
 
-class ReplyContext;
-typedef std::shared_ptr<ReplyContext> ReplyContextPtr;
+class RequestContext;
+typedef std::shared_ptr<RequestContext> RequestContextPtr;
 
 class SYMBOLEXP FileTransferReply
 {
@@ -44,7 +44,7 @@ public:
     FileTransferReply(int numberOfWorkerThreads = 2);
     ~FileTransferReply();
 
-    bool replyFile(const ReplyContextPtr& replyContext, const std::string& filename, IMessage::Metainfo* metainfo = nullptr);
+    bool replyFile(const RequestContextPtr& requestContext, const std::string& filename, IMessage::Metainfo* metainfo = nullptr);
 
 private:
     std::string                 m_baseDirectory;

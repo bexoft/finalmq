@@ -53,7 +53,7 @@ FileTransferReply::~FileTransferReply()
 
 
 
-bool FileTransferReply::replyFile(const ReplyContextPtr& replyContext, const std::string& filename, IMessage::Metainfo* metainfo)
+bool FileTransferReply::replyFile(const RequestContextPtr& requestContext, const std::string& filename, IMessage::Metainfo* metainfo)
 {
     bool handeled = false;
 
@@ -65,9 +65,9 @@ bool FileTransferReply::replyFile(const ReplyContextPtr& replyContext, const std
     {
         handeled = true;
 
-//            if (replyContext->doesSupportFileTransfer())
+//            if (requestContext->doesSupportFileTransfer())
 //            {
-//                replyContext->reply(filename);
+//                requestContext->reply(filename);
 //            }
 //            else
 //            {
@@ -80,7 +80,7 @@ bool FileTransferReply::replyFile(const ReplyContextPtr& replyContext, const std
                 metainfo->clear();
             }
 
-            m_executor->addAction([filename, sizeFile, replyContext, mi]() {
+            m_executor->addAction([filename, sizeFile, requestContext, mi]() {
                 int flags = O_RDONLY;
 #ifdef WIN32
                 flags |= O_BINARY;
@@ -124,12 +124,12 @@ bool FileTransferReply::replyFile(const ReplyContextPtr& replyContext, const std
                     {
                         reply.data.resize(lenReceived);
                     }
-                    replyContext->reply(reply, mi.get());
+                    requestContext->reply(reply, mi.get());
                 }
                 else
                 {
                     // not found
-                    replyContext->reply(finalmq::remoteentity::Status::STATUS_ENTITY_NOT_FOUND);
+                    requestContext->reply(finalmq::remoteentity::Status::STATUS_ENTITY_NOT_FOUND);
                 }
             });
 //      }

@@ -54,7 +54,7 @@ using finalmq::IRemoteEntityContainer;
 using finalmq::EntityFileServer;
 using finalmq::PeerId;
 using finalmq::PeerEvent;
-using finalmq::ReplyContextPtr;
+using finalmq::RequestContextPtr;
 using finalmq::ProtocolHeaderBinarySizeFactory;
 using finalmq::ProtocolDelimiterLinefeedFactory;
 using finalmq::ProtocolHttpServerFactory;
@@ -96,12 +96,12 @@ public:
             std::cout << "peer event " << peerEvent.toString() << std::endl;
         });
 
-        registerCommand<StartRequest>([this] (const ReplyContextPtr& replyContext, const std::shared_ptr<StartRequest>& request) {
+        registerCommand<StartRequest>([this] (const RequestContextPtr& requestContext, const std::shared_ptr<StartRequest>& request) {
             assert(request);
             m_timerActive = true;
         });
 
-        registerCommand<StopRequest>([this] (const ReplyContextPtr& replyContext, const std::shared_ptr<StopRequest>& request) {
+        registerCommand<StopRequest>([this] (const RequestContextPtr& requestContext, const std::shared_ptr<StopRequest>& request) {
             assert(request);
             m_timerActive = false;
         });

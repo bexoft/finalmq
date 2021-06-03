@@ -45,7 +45,7 @@ using finalmq::IRemoteEntityContainer;
 using finalmq::EntityFileServer;
 using finalmq::PeerId;
 using finalmq::PeerEvent;
-using finalmq::ReplyContextPtr;
+using finalmq::RequestContextPtr;
 using finalmq::ProtocolHeaderBinarySizeFactory;
 using finalmq::ProtocolDelimiterLinefeedFactory;
 using finalmq::ProtocolHttpServerFactory;
@@ -73,7 +73,7 @@ public:
         // this is fun - try to access the server with the json interface at port 8888:
         // telnet localhost 8888  (or: netcat localhost 8888)
         // /MyService/helloworld.HelloRequest!4711{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
-        registerCommand<HelloRequest>([] (const ReplyContextPtr& replyContext, const std::shared_ptr<HelloRequest>& request) {
+        registerCommand<HelloRequest>([] (const RequestContextPtr& requestContext, const std::shared_ptr<HelloRequest>& request) {
             assert(request);
 
             // prepare the reply
@@ -84,18 +84,18 @@ public:
                 reply.greetings.emplace_back(prefix + request->persons[i].name);
             }
 
-//            PeerId peerid = replyContext->peerId();
+//            PeerId peerid = requestContext->peerId();
 
             // send reply
-            replyContext->reply(std::move(reply));
+            requestContext->reply(std::move(reply));
 
             // note:
             // The reply does not have to be sent immediately:
-            // The replyContext is a unique_ptr, it can be moved to another unique_ptr,
+            // The requestContext is a unique_ptr, it can be moved to another unique_ptr,
             // so that the reply can be called later.
 
             // note:
-            // The replyContext has the method replyContext->peerId()
+            // The requestContext has the method requestContext->peerId()
             // The returned peerId can be used for calling requestReply() or sendEvent().
             // So, also a server entity can act as a client and can send requestReply()
             // to the peer entity that is calling this request.
