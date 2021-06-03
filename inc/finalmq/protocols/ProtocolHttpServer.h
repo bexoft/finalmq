@@ -24,7 +24,7 @@
 
 #include "finalmq/streamconnection/IMessage.h"
 #include "finalmq/protocolconnection/IProtocol.h"
-#include "finalmq/helpers/BexDefines.h"
+#include "finalmq/helpers/FmqDefines.h"
 
 #include <random>
 

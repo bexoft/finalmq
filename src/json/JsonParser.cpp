@@ -21,7 +21,7 @@
 //SOFTWARE.
 
 #include "finalmq/json/JsonParser.h"
-#include "finalmq/helpers/BexDefines.h"
+#include "finalmq/helpers/FmqDefines.h"
 
 #include <string>
 #include <climits>

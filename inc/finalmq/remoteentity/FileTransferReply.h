@@ -23,7 +23,7 @@
 #pragma once
 
 
-#include "finalmq/helpers/BexDefines.h"
+#include "finalmq/helpers/FmqDefines.h"
 #include "finalmq/helpers/Executor.h"
 #include "finalmq/streamconnection/IMessage.h"
 

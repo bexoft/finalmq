@@ -23,7 +23,7 @@
 #pragma once
 
 #include "MetaField.h"
-#include "finalmq/helpers/BexDefines.h"
+#include "finalmq/helpers/FmqDefines.h"
 
 #include <vector>
 #include <list>

@@ -23,7 +23,7 @@
 #pragma once
 
 #include <condition_variable>
-#include "finalmq/helpers/BexDefines.h"
+#include "finalmq/helpers/FmqDefines.h"
 
 namespace finalmq {
 

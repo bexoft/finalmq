@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include "finalmq/helpers/BexDefines.h"
+#include "finalmq/helpers/FmqDefines.h"
 #include "finalmq/variant/Variant.h"
 #include "finalmq/serialize/IParserVisitor.h"
 
