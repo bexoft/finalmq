@@ -654,7 +654,8 @@ void RemoteEntity::removePeer(PeerId peerId, remoteentity::Status status)
                 }
                 else if (request->funcMeta && *request->funcMeta)
                 {
-                    (*request->funcMeta)(request->peerId, status, IMessage::Metainfo{}, nullptr);
+                    IMessage::Metainfo metainfoEmty;
+                    (*request->funcMeta)(request->peerId, status, metainfoEmty, nullptr);
                 }
             }
         }
