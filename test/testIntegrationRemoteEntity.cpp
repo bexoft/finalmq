@@ -49,7 +49,7 @@ using namespace test;
 class MockEvents
 {
 public:
-    MOCK_METHOD(void, testRequest, (ReplyContextUPtr& replyContext, const std::shared_ptr<TestRequest>& request));
+    MOCK_METHOD(void, testRequest, (const ReplyContextPtr& replyContext, const std::shared_ptr<TestRequest>& request));
     MOCK_METHOD(void, testReply, (PeerId peerId, remoteentity::Status status, const std::shared_ptr<TestReply>& reply));
     MOCK_METHOD(void, peerEvent, (PeerId peerId, PeerEvent peerEvent, bool incoming));
     MOCK_METHOD(void, connEvent, (const IProtocolSessionPtr& session, ConnectionEvent connectionEvent));
@@ -95,7 +95,7 @@ public:
     EntityServer(MockEvents& mockEvents)
         : m_mockEvents(mockEvents)
     {
-        registerCommand<TestRequest>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<TestRequest>& request) {
+        registerCommand<TestRequest>([this] (const ReplyContextPtr& replyContext, const std::shared_ptr<TestRequest>& request) {
             assert(request);
             m_mockEvents.testRequest(replyContext, request);
             ASSERT_EQ(request->datarequest, DATA_REQUEST);

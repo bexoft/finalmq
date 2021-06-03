@@ -149,7 +149,7 @@ struct IRemoteEntity
     }
 
     template<class R>
-    void registerCommand(std::function<void(ReplyContextPtr& replyContext, const std::shared_ptr<R>& request)> funcCommand)
+    void registerCommand(std::function<void(const ReplyContextPtr& replyContext, const std::shared_ptr<R>& request)> funcCommand)
     {
         registerCommandFunction(R::structInfo().getTypeName(), reinterpret_cast<FuncCommand&>(funcCommand));
     }

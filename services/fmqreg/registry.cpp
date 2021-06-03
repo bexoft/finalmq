@@ -42,12 +42,12 @@ Registry::Registry()
         streamInfo << "peer event " << peerEvent.toString();
     });
 
-    registerCommand<RegisterService>([this] (ReplyContextPtr& replyContext, const std::shared_ptr<RegisterService>& request) {
+    registerCommand<RegisterService>([this] (const ReplyContextPtr& replyContext, const std::shared_ptr<RegisterService>& request) {
         assert(request);
         m_services[request->service.name] = request->service;
     });
 
-    registerCommand<GetService>([this] (ReplyContextPtr& replyContext, const std::shared_ptr<GetService>& request) {
+    registerCommand<GetService>([this] (const ReplyContextPtr& replyContext, const std::shared_ptr<GetService>& request) {
         assert(request);
         auto it = m_services.find(request->name);
         if (it != m_services.end())

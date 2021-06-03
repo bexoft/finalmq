@@ -430,7 +430,7 @@ IProtocolSessionPtr PeerManager::getSession(PeerId peerId) const
 RemoteEntity::RemoteEntity()
     : m_peerManager(std::make_shared<PeerManager>())
 {
-    registerCommand<ConnectEntity>([this] (ReplyContextPtr& replyContext, const std::shared_ptr<ConnectEntity>& request) {
+    registerCommand<ConnectEntity>([this] (const ReplyContextPtr& replyContext, const std::shared_ptr<ConnectEntity>& request) {
         assert(request);
         bool added{};
         m_peerManager->addPeer(replyContext->session(), replyContext->entityId(), request->entityName, true, added, [this, &replyContext]() {
@@ -438,7 +438,7 @@ RemoteEntity::RemoteEntity()
             replyContext->reply(ConnectEntityReply(m_entityId, m_entityName));
         });
     });
-    registerCommand<DisconnectEntity>([this] (ReplyContextPtr& replyContext, const std::shared_ptr<DisconnectEntity>& /*request*/) {
+    registerCommand<DisconnectEntity>([this] (const ReplyContextPtr& replyContext, const std::shared_ptr<DisconnectEntity>& /*request*/) {
         PeerId peerId = replyContext->peerId();
         removePeer(peerId, Status::STATUS_PEER_DISCONNECTED);
     });

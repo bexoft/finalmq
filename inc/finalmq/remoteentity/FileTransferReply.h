@@ -30,6 +30,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <thread>
 
 
 namespace finalmq {
@@ -43,7 +44,7 @@ public:
     FileTransferReply(int numberOfWorkerThreads = 2);
     ~FileTransferReply();
 
-    bool replyFile(ReplyContextPtr& replyContext, const std::string& filename, IMessage::Metainfo* metainfo = nullptr);
+    bool replyFile(const ReplyContextPtr& replyContext, const std::string& filename, IMessage::Metainfo* metainfo = nullptr);
 
 private:
     std::string                 m_baseDirectory;

@@ -188,7 +188,7 @@ public:
         registerPeerEvent([](PeerId peerId, PeerEvent peerEvent, bool incoming) {
         });
 
-        registerCommand<GetObjectTreeRequest>([](ReplyContextPtr& replyContext, const std::shared_ptr<GetObjectTreeRequest>& request) {
+        registerCommand<GetObjectTreeRequest>([](const ReplyContextPtr& replyContext, const std::shared_ptr<GetObjectTreeRequest>& request) {
             assert(request);
 
             GetObjectTreeReply reply;
@@ -204,7 +204,7 @@ public:
 
             });
 
-        registerCommand<PressButtonRequest>([](ReplyContextPtr& replyContext, const std::shared_ptr<PressButtonRequest>& request) {
+        registerCommand<PressButtonRequest>([](const ReplyContextPtr& replyContext, const std::shared_ptr<PressButtonRequest>& request) {
             assert(request);
 
             QString objectName = request->objectName.c_str();
@@ -223,7 +223,7 @@ public:
             }
         });
 
-        registerCommand<GetScreenshotRequest>([](ReplyContextPtr& replyContext, const std::shared_ptr<GetScreenshotRequest>& request) {
+        registerCommand<GetScreenshotRequest>([](const ReplyContextPtr& replyContext, const std::shared_ptr<GetScreenshotRequest>& request) {
             assert(request);
 
             QWidget* visibleWidget = nullptr;

@@ -53,7 +53,7 @@ FileTransferReply::~FileTransferReply()
 
 
 
-bool FileTransferReply::replyFile(ReplyContextPtr& replyContext, const std::string& filename, IMessage::Metainfo* metainfo)
+bool FileTransferReply::replyFile(const ReplyContextPtr& replyContext, const std::string& filename, IMessage::Metainfo* metainfo)
 {
     bool handeled = false;
 

@@ -96,12 +96,12 @@ public:
             std::cout << "peer event " << peerEvent.toString() << std::endl;
         });
 
-        registerCommand<StartRequest>([this] (ReplyContextPtr& replyContext, const std::shared_ptr<StartRequest>& request) {
+        registerCommand<StartRequest>([this] (const ReplyContextPtr& replyContext, const std::shared_ptr<StartRequest>& request) {
             assert(request);
             m_timerActive = true;
         });
 
-        registerCommand<StopRequest>([this] (ReplyContextPtr& replyContext, const std::shared_ptr<StopRequest>& request) {
+        registerCommand<StopRequest>([this] (const ReplyContextPtr& replyContext, const std::shared_ptr<StopRequest>& request) {
             assert(request);
             m_timerActive = false;
         });

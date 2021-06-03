@@ -83,7 +83,7 @@ int main()
 
     // It is possible to register a command in the constructor of a derived RemoteEntity.
     // But here, it is shown that also a register is possible from outside.
-    entityClient.registerCommand<TimerEvent>([] (ReplyContextPtr& replyContext, const std::shared_ptr<TimerEvent>& request) {
+    entityClient.registerCommand<TimerEvent>([] (const ReplyContextPtr& replyContext, const std::shared_ptr<TimerEvent>& request) {
         std::cout << "time: " << request->time << std::endl;
     });
     EntityId entityId = entityContainer.registerEntity(&entityClient);
