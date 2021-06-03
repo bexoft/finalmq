@@ -20,48 +20,35 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#include "finalmq/remoteentity/EntityFileService.h"
+#pragma once
 
-#include <fcntl.h>
+
+#include "finalmq/helpers/BexDefines.h"
+#include "finalmq/helpers/Executor.h"
+
+#include <memory>
+#include <string>
+#include <vector>
 
 
 namespace finalmq {
 
+class ReplyContext;
+typedef std::unique_ptr<ReplyContext> ReplyContextUPtr;
 
-
-
-EntityFileServer::EntityFileServer(const std::string& baseDirectory, int numberOfWorkerThreads)
-    : m_baseDirectory(baseDirectory)
-    , m_fileTransfer(numberOfWorkerThreads)
+class SYMBOLEXP FileTransferReply
 {
-    registerCommandFunction("*", [this](ReplyContextUPtr& replyContext, const StructBasePtr& /*structBase*/) {
-        bool handeled = false;
-        std::string* path = replyContext->getMetainfo("fmq_path");
-        if (path && !path->empty())
-        {
-            std::string filename = m_baseDirectory + *path;
-            handeled = m_fileTransfer.replyFile(replyContext, filename);
-        }
-        if (!handeled)
-        {
-            // not found
-            replyContext->reply(finalmq::remoteentity::Status::STATUS_ENTITY_NOT_FOUND);
-        }
-    });
-}
+public:
+    FileTransferReply(int numberOfWorkerThreads = 2);
+    ~FileTransferReply();
 
+    bool replyFile(ReplyContextUPtr& replyContext, const std::string& filename);
 
-//std::string* path = replyContext->getMetainfo("fmq_path");
-//if (path && !path->empty())
-//{
-//    std::string filename = m_baseDirectory + *path;
-//    replyContext->replyFile(filename);
-//}
-//else
-//{
-//    // not found
-//    replyContext->reply(finalmq::remoteentity::Status::STATUS_ENTITY_NOT_FOUND);
-//}
+private:
+    std::string                 m_baseDirectory;
+    std::unique_ptr<IExecutor>  m_executor;
+    std::vector<std::thread>    m_threads;
+};
 
 
 

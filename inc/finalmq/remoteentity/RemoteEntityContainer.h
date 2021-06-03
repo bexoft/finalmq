@@ -23,6 +23,8 @@
 #pragma once
 
 #include "finalmq/remoteentity/RemoteEntity.h"
+#include "finalmq/remoteentity/FileTransferReply.h"
+
 
 namespace finalmq {
 
@@ -126,6 +128,7 @@ private:
     std::chrono::time_point<std::chrono::system_clock>          m_lastCheckTime;
     std::list<std::string>                                      m_pureDataPaths;
     std::list<std::string>                                      m_pureDataPathPrefixes;
+    std::shared_ptr<FileTransferReply>                          m_fileTransferReply;
     mutable std::mutex                                          m_mutex;
 };
 

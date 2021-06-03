@@ -24,6 +24,7 @@
 
 #include "finalmq/protocolconnection/ProtocolSessionContainer.h"
 #include "finalmq/remoteentity/RemoteEntityFormatRegistry.h"
+#include "finalmq/remoteentity/FileTransferReply.h"
 #include "finalmq/remoteentity/entitydata.fmq.h"
 
 
@@ -179,7 +180,7 @@ struct IRemoteEntity
 
 private:
     // methods for RemoteEntityContainer
-    virtual void initEntity(EntityId entityId, const std::string& entityName) = 0;
+    virtual void initEntity(EntityId entityId, const std::string& entityName, const std::shared_ptr<FileTransferReply>& fileTransferReply) = 0;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) = 0;
     virtual void receivedRequest(ReceiveData& receiveData) = 0;
     virtual void receivedReply(ReceiveData& receiveData) = 0;
@@ -254,7 +255,7 @@ typedef std::shared_ptr<PeerManager> PeerManagerPtr;
 class ReplyContext
 {
 public:
-    inline ReplyContext(const PeerManagerPtr& sessionIdEntityIdToPeerId, EntityId entityIdSrc, ReceiveData& receiveData)
+    inline ReplyContext(const PeerManagerPtr& sessionIdEntityIdToPeerId, EntityId entityIdSrc, ReceiveData& receiveData, const std::shared_ptr<FileTransferReply>& fileTransferReply)
         : m_peerManager(sessionIdEntityIdToPeerId)
         , m_session(receiveData.session)
         , m_entityIdDest(receiveData.header.srcid)
@@ -263,6 +264,7 @@ public:
         , m_replySent(false)
         , m_metainfo(std::move(receiveData.message->getAllMetainfo()))
         , m_echoData(std::move(receiveData.message->getEchoData()))
+        , m_fileTransferReply(fileTransferReply)
     {
     }
 
@@ -305,6 +307,11 @@ public:
             m_replySent = true;
         }
     }
+
+    //void replyFile(const std::string& filename)
+    //{
+    //    m_fileTransferReply->replyFile( )
+    //}
 
     inline CorrelationId correlationId() const
     {
@@ -365,6 +372,7 @@ private:
     bool                            m_replySent = false;
     IMessage::Metainfo              m_metainfo;
     Variant                         m_echoData;
+    std::shared_ptr<FileTransferReply>  m_fileTransferReply;
 
     friend class RemoteEntity;
 };
@@ -403,7 +411,7 @@ public:
     virtual void registerReplyEvent(FuncReplyEvent funcReplyEvent) override;
 
 private:
-    virtual void initEntity(EntityId entityId, const std::string& entityName) override;
+    virtual void initEntity(EntityId entityId, const std::string& entityName, const std::shared_ptr<FileTransferReply>& fileTransferReply) override;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) override;
     virtual void receivedRequest(ReceiveData& receiveData) override;
     virtual void receivedReply(ReceiveData& receiveData) override;
@@ -439,6 +447,7 @@ private:
     std::unordered_map<CorrelationId, std::unique_ptr<Request>> m_requests;
     std::unordered_map<std::string, std::shared_ptr<FuncCommand>> m_funcCommands;
     std::shared_ptr<PeerManager>        m_peerManager;
+    std::shared_ptr<FileTransferReply>  m_fileTransferReply;
     mutable std::atomic_uint64_t        m_nextCorrelationId{1};
     mutable std::mutex                  m_mutex;
 };

@@ -23,25 +23,10 @@
 #pragma once
 
 #include "finalmq/remoteentity/RemoteEntity.h"
+#include "finalmq/remoteentity/FileTransferReply.h"
 
 
 namespace finalmq {
-
-
-class SYMBOLEXP FileTransferReply
-{
-public:
-    FileTransferReply(const std::string& baseDirectory = ".", int numberOfWorkerThreads = 4);
-    ~FileTransferReply();
-
-    bool replyFile(ReplyContextUPtr& replyContext);
-
-private:
-    std::string                 m_baseDirectory;
-    std::unique_ptr<IExecutor>  m_executor;
-    std::vector<std::thread>    m_threads;
-};
-
 
 
 class SYMBOLEXP EntityFileServer : public RemoteEntity
@@ -50,6 +35,7 @@ public:
     EntityFileServer(const std::string& baseDirectory = ".", int numberOfWorkerThreads = 4);
 
 private:
+    std::string         m_baseDirectory;
     FileTransferReply   m_fileTransfer;
 };
 

@@ -765,7 +765,7 @@ bool RemoteEntity::isEntityRegistered() const
 
 
 
-void RemoteEntity::initEntity(EntityId entityId, const std::string& entityName)
+void RemoteEntity::initEntity(EntityId entityId, const std::string& entityName, const std::shared_ptr<FileTransferReply>& fileTransferReply)
 {
     m_entityId = entityId;
     m_entityName = entityName;
@@ -787,7 +787,7 @@ void RemoteEntity::sessionDisconnected(const IProtocolSessionPtr& session)
 
 void RemoteEntity::receivedRequest(ReceiveData& receiveData)
 {
-    ReplyContextUPtr replyContext = std::make_unique<ReplyContext>(m_peerManager, m_entityId, receiveData);
+    ReplyContextUPtr replyContext = std::make_unique<ReplyContext>(m_peerManager, m_entityId, receiveData, m_fileTransferReply);
     assert(replyContext);
 
     std::unique_lock<std::mutex> lock(m_mutex);
