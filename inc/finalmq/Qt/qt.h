@@ -41,7 +41,7 @@ using finalmq::RemoteEntityFormatJson;
 using finalmq::IRemoteEntityContainer;
 using finalmq::PeerId;
 using finalmq::PeerEvent;
-using finalmq::ReplyContextUPtr;
+using finalmq::RequestContextPtr;
 using finalmq::ProtocolHeaderBinarySizeFactory;
 using finalmq::ProtocolDelimiterLinefeedFactory;
 using finalmq::FmqRegistryClient;
@@ -188,7 +188,7 @@ public:
         registerPeerEvent([](PeerId peerId, PeerEvent peerEvent, bool incoming) {
         });
 
-        registerCommand<GetObjectTreeRequest>([](ReplyContextUPtr& replyContext, const std::shared_ptr<GetObjectTreeRequest>& request) {
+        registerCommand<GetObjectTreeRequest>([](const RequestContextPtr& requestContext, const std::shared_ptr<GetObjectTreeRequest>& request) {
             assert(request);
 
             GetObjectTreeReply reply;
@@ -200,11 +200,11 @@ public:
                 ObjectIterator::accept(fillObjectTree, *widgetList[i], 1);
             }
             // send reply
-            replyContext->reply(std::move(reply));
+            requestContext->reply(std::move(reply));
 
             });
 
-        registerCommand<PressButtonRequest>([](ReplyContextUPtr& replyContext, const std::shared_ptr<PressButtonRequest>& request) {
+        registerCommand<PressButtonRequest>([](const RequestContextPtr& requestContext, const std::shared_ptr<PressButtonRequest>& request) {
             assert(request);
 
             QString objectName = request->objectName.c_str();
@@ -223,7 +223,7 @@ public:
             }
         });
 
-        registerCommand<GetScreenshotRequest>([](ReplyContextUPtr& replyContext, const std::shared_ptr<GetScreenshotRequest>& request) {
+        registerCommand<GetScreenshotRequest>([](const RequestContextPtr& requestContext, const std::shared_ptr<GetScreenshotRequest>& request) {
             assert(request);
 
             QWidget* visibleWidget = nullptr;
@@ -244,12 +244,12 @@ public:
                 buffer.open(QIODevice::WriteOnly);
                 pixmap.save(&buffer, "PNG");
                 GetScreenshotReply reply{ {array.data(), array.data() + array.size()}, visibleWidget->x(), visibleWidget->y(), visibleWidget->width(), visibleWidget->height() };
-                replyContext->reply(reply);
+                requestContext->reply(reply);
             }
             else
             {
                 GetScreenshotReply reply{};
-                replyContext->reply(reply);
+                requestContext->reply(reply);
             }
         });
     }

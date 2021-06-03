@@ -44,7 +44,7 @@ StreamConnection::StreamConnection(const ConnectionData& connectionData, std::sh
 bool StreamConnection::sendMessage(const IMessagePtr& msg)
 {
     assert(msg);
-    int ret = false;
+    bool ret = false;
     std::unique_lock<std::mutex> lock(m_mutex);
     if (m_socketPrivate)
     {
@@ -60,30 +60,33 @@ bool StreamConnection::sendMessage(const IMessagePtr& msg)
             }
             else
             {
+#if 0
                 m_pendingMessages.push_back({msg, payloads.begin(), 0});
                 m_poller->enableWrite(m_socketPrivate->getSocketDescriptor());
-//                bool ex = false;
-//                int i = 0;
-//                for (auto it = payloads.begin(); it != payloads.end() && !ex; ++i)
-//                {
-//                    const BufferRef& payload = *it;
-//                    ++it;
-//                    bool last = (it == payloads.end());
-//                    int flags = last ? 0 : MSG_MORE;    // win32: MSG_PARTIAL
-//                    int err = m_socketPrivate->send(payload.first, payload.second, flags);
-//                    if (err != payload.second)
-//                    {
-//                        if (err < 0)
-//                        {
-//                            err = 0;
-//                        }
-//                        assert(err < payload.second);
-//                        --it;
-//                        m_pendingMessages.push_back({msg, it, err});
-//                        m_poller->enableWrite(m_socketPrivate->getSocketDescriptor());
-//                        ex = true;
-//                    }
-//                }
+#else
+                bool ex = false;
+                int i = 0;
+                for (auto it = payloads.begin(); it != payloads.end() && !ex; ++i)
+                {
+                    const BufferRef& payload = *it;
+                    ++it;
+                    bool last = (it == payloads.end());
+                    int flags = last ? 0 : MSG_MORE;    // win32: MSG_PARTIAL
+                    int err = m_socketPrivate->send(payload.first, payload.second, flags);
+                    if (err != payload.second)
+                    {
+                        if (err < 0)
+                        {
+                            err = 0;
+                        }
+                        assert(err < payload.second);
+                        --it;
+                        m_pendingMessages.push_back({msg, it, err});
+                        m_poller->enableWrite(m_socketPrivate->getSocketDescriptor());
+                        ex = true;
+                    }
+                }
+#endif
             }
         }
     }

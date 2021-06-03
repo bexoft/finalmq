@@ -1,0 +1,81 @@
+<html>                                                                          
+
+
+<head>                                                                          
+
+<script type="text/javascript" src="json2.js"></script>
+<script type="text/javascript" src="fmq.js"></script>
+
+                                                                                
+<script type="text/javascript" >
+
+//////////////////////////////////////////////////////////////////////
+
+
+class TimerEntity extends FmqEntity
+{
+    timer_TimerEvent(correlationId, params)
+    {
+        var el = document.getElementById('testcontainer');
+        el.innerHTML += '<tr><td width="320" align="left">' + params.time +'</td></tr>';
+    }
+
+    sessionDisconnected()
+    {
+        document.getElementById('testcontainer').innerHTML += '<tr><td width="320" align="left">session disconnected</td></tr>';
+    }
+
+    sessionConnected()
+    {
+        document.getElementById('testcontainer').innerHTML += '<tr><td width="320" align="left">session connected</td></tr>';
+    }
+
+    serverDisconnected()
+    {
+        document.getElementById('testcontainer').innerHTML += '<tr><td width="320" align="left">server disconnected</td></tr>';
+    }
+
+    serverConnected()
+    {
+        document.getElementById('testcontainer').innerHTML += '<tr><td width="320" align="left">server connected</td></tr>';
+    }
+}
+
+
+var g_fmqSession = new FmqSession();
+var g_fmqTimerService = null;
+
+
+
+
+function pageLoad()
+{
+    g_fmqSession.createSession(function() {
+		g_fmqTimerService = g_fmqSession.createEntity('TimerEntity', TimerEntity);
+    });
+}
+
+function pageUnload()
+{
+    g_entity.removeEntity(function() {});
+}
+
+                                                                           
+</script>                                                                       
+                                                                          
+</head>
+
+                                                               
+<body>                                                                          
+
+<body onload="pageLoad()" onunload="pageUnload()">
+
+<table border="1" id="testcontainer">
+</table>
+
+
+</body>
+
+
+</html>
+       

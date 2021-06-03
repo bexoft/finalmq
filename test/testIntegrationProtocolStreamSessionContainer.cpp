@@ -270,6 +270,9 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testBindLateConnect)
     auto& expectReceive = EXPECT_CALL(*m_mockServerCallback, received(_, ReceivedMessage(MESSAGE1_BUFFER))).Times(1);
 
     IProtocolSessionPtr connection = m_sessionContainer->createSession(m_mockClientCallback, std::make_shared<ProtocolStream>());
+    IProtocolSessionPtr session = m_sessionContainer->getSession(connection->getSessionId());
+    EXPECT_EQ(session, connection);
+
     IMessagePtr message = connection->createMessage();
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
@@ -288,6 +291,8 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testSendLateConnectBind)
     auto& expectReceive = EXPECT_CALL(*m_mockServerCallback, received(_, ReceivedMessage(MESSAGE1_BUFFER))).Times(1);
 
     IProtocolSessionPtr connection = m_sessionContainer->createSession(m_mockClientCallback, std::make_shared<ProtocolStream>());
+    IProtocolSessionPtr session = m_sessionContainer->getSession(connection->getSessionId());
+    EXPECT_EQ(session, connection);
     IMessagePtr message = connection->createMessage();
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
@@ -308,18 +313,19 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testSendLateConnectBind)
 
 TEST_F(TestIntegrationProtocolStreamSessionContainer, testCreateConnectionDisconnect)
 {
-    auto& expectDisconnectedClient = EXPECT_CALL(*m_mockClientCallback, disconnected(_)).Times(1);
+    EXPECT_CALL(*m_mockClientCallback, disconnected(_)).Times(0);
 
     IProtocolSessionPtr connection = m_sessionContainer->createSession(m_mockClientCallback, std::make_shared<ProtocolStream>());
+    IProtocolSessionPtr session = m_sessionContainer->getSession(connection->getSessionId());
+    EXPECT_EQ(session, connection);
+
     IMessagePtr message = connection->createMessage();
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
 
     connection->disconnect();
 
-    waitTillDone(expectDisconnectedClient, 5000);
-
-    EXPECT_EQ(connection->getConnectionData().connectionState, ConnectionState::CONNECTIONSTATE_DISCONNECTED);
+//    EXPECT_EQ(connection->getConnectionData().connectionState, ConnectionState::CONNECTIONSTATE_DISCONNECTED);
     EXPECT_EQ(m_sessionContainer->getSession(connection->getSessionId()), nullptr);
 }
 
@@ -340,6 +346,9 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testBindLateConnectProtoco
     auto& expectReceive = EXPECT_CALL(*m_mockServerCallback, received(_, ReceivedMessage(MESSAGE1_BUFFER))).Times(1);
 
     IProtocolSessionPtr connection = m_sessionContainer->createSession(m_mockClientCallback);
+    IProtocolSessionPtr session = m_sessionContainer->getSession(connection->getSessionId());
+    EXPECT_EQ(session, connection);
+
     IMessagePtr message = connection->createMessage();
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
@@ -359,6 +368,9 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testSendLateConnectProtoco
     auto& expectReceive = EXPECT_CALL(*m_mockServerCallback, received(_, ReceivedMessage(MESSAGE1_BUFFER))).Times(1);
 
     IProtocolSessionPtr connection = m_sessionContainer->createSession(m_mockClientCallback);
+    IProtocolSessionPtr session = m_sessionContainer->getSession(connection->getSessionId());
+    EXPECT_EQ(session, connection);
+
     IMessagePtr message = connection->createMessage();
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
@@ -379,17 +391,17 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testSendLateConnectProtoco
 
 TEST_F(TestIntegrationProtocolStreamSessionContainer, testCreateConnectionWithoutProtocolDisconnect)
 {
-    auto& expectDisconnectedClient = EXPECT_CALL(*m_mockClientCallback, disconnected(_)).Times(1);
+    EXPECT_CALL(*m_mockClientCallback, disconnected(_)).Times(0);
 
     IProtocolSessionPtr connection = m_sessionContainer->createSession(m_mockClientCallback);
+    IProtocolSessionPtr session = m_sessionContainer->getSession(connection->getSessionId());
+    EXPECT_EQ(session, connection);
+
     IMessagePtr message = connection->createMessage();
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
 
     connection->disconnect();
 
-    waitTillDone(expectDisconnectedClient, 5000);
-
-    EXPECT_EQ(connection->getConnectionData().connectionState, ConnectionState::CONNECTIONSTATE_DISCONNECTED);
     EXPECT_EQ(m_sessionContainer->getSession(connection->getSessionId()), nullptr);
 }

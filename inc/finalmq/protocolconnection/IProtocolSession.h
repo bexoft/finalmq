@@ -31,11 +31,15 @@ struct IProtocolSession
 {
     virtual ~IProtocolSession() {}
     virtual IMessagePtr createMessage() const = 0;
-    virtual bool sendMessage(const IMessagePtr& msg) = 0;
+    virtual bool sendMessage(const IMessagePtr& msg, bool isReply = false) = 0;
     virtual std::int64_t getSessionId() const = 0;
     virtual ConnectionData getConnectionData() const = 0;
-    virtual SocketPtr getSocket() = 0;
     virtual int getContentType() const = 0;
+    virtual bool doesSupportMetainfo() const = 0;
+    virtual bool needsReply() const = 0;
+    virtual bool isMultiConnectionSession() const = 0;
+    virtual bool isSendRequestByPoll() const = 0;
+    virtual bool doesSupportFileTransfer() const = 0;
     virtual void disconnect() = 0;
     virtual bool connect(const std::string& endpoint, const ConnectProperties& connectionProperties = {}) = 0;
     virtual bool connectProtocol(const std::string& endpoint, const IProtocolPtr& protocol, const ConnectProperties& connectionProperties = {}, int contentType = 0) = 0;

@@ -39,6 +39,7 @@ public:
 private:
     virtual void registerActionNotification(std::function<void()> func) override;
     virtual void runAvailableActions() override;
+    virtual void runOneAvailableAction() override;
     virtual void addAction(std::function<void()> func) override;
     virtual void run() override;
     virtual void terminate() override;

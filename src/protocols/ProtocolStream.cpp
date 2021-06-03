@@ -56,12 +56,55 @@ bool ProtocolStream::areMessagesResendable() const
     return true;
 }
 
-IMessagePtr ProtocolStream::createMessage() const
+bool ProtocolStream::doesSupportMetainfo() const
 {
-    return std::make_shared<ProtocolMessage>(PROTOCOL_ID);
+    return false;
 }
 
-void ProtocolStream::receive(const SocketPtr& socket, int bytesToRead)
+bool ProtocolStream::doesSupportSession() const
+{
+    return false;
+}
+
+bool ProtocolStream::needsReply() const
+{
+    return false;
+}
+
+bool ProtocolStream::isMultiConnectionSession() const
+{
+    return false;
+}
+
+bool ProtocolStream::isSendRequestByPoll() const
+{
+    return false;
+}
+
+bool ProtocolStream::doesSupportFileTransfer() const
+{
+    return false;
+}
+
+IProtocol::FuncCreateMessage ProtocolStream::getMessageFactory() const
+{
+    return []() {
+        return std::make_shared<ProtocolMessage>(PROTOCOL_ID);
+    };
+}
+
+void ProtocolStream::prepareMessageToSend(IMessagePtr message)
+{
+    message->prepareMessageToSend();
+}
+
+void ProtocolStream::moveOldProtocolState(IProtocol& /*protocolOld*/)
+{
+
+}
+
+
+void ProtocolStream::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
 {
     IMessagePtr message = std::make_shared<ProtocolMessage>(0);
     char* payload = message->resizeReceivePayload(bytesToRead);
@@ -79,21 +122,18 @@ void ProtocolStream::receive(const SocketPtr& socket, int bytesToRead)
     }
 }
 
-void ProtocolStream::prepareMessageToSend(IMessagePtr message)
-{
-    message->prepareMessageToSend();
-}
 
-void ProtocolStream::socketConnected()
+hybrid_ptr<IStreamConnectionCallback> ProtocolStream::connected(const IStreamConnectionPtr& /*connection*/)
 {
     auto callback = m_callback.lock();
     if (callback)
     {
         callback->connected();
     }
+    return nullptr;
 }
 
-void ProtocolStream::socketDisconnected()
+void ProtocolStream::disconnected(const IStreamConnectionPtr& /*connection*/)
 {
     auto callback = m_callback.lock();
     if (callback)
@@ -101,6 +141,13 @@ void ProtocolStream::socketDisconnected()
         callback->disconnected();
     }
 }
+
+
+IMessagePtr ProtocolStream::pollReply(std::deque<IMessagePtr>&& /*messages*/)
+{
+    return {};
+}
+
 
 
 

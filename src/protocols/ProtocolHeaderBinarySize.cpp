@@ -70,23 +70,41 @@ bool ProtocolHeaderBinarySize::areMessagesResendable() const
     return true;
 }
 
-IMessagePtr ProtocolHeaderBinarySize::createMessage() const
+bool ProtocolHeaderBinarySize::doesSupportMetainfo() const
 {
-    return std::make_shared<ProtocolMessage>(PROTOCOL_ID, HEADERSIZE);
+    return false;
 }
 
-void ProtocolHeaderBinarySize::receive(const SocketPtr& socket, int bytesToRead)
+bool ProtocolHeaderBinarySize::doesSupportSession() const
 {
-    std::deque<IMessagePtr> messages;
-    m_headerHelper.receive(socket, bytesToRead, messages);
-    auto callback = m_callback.lock();
-    if (callback)
-    {
-        for (auto it = messages.begin(); it != messages.end(); ++it)
-        {
-            callback->received(*it);
-        }
-    }
+    return false;
+}
+
+bool ProtocolHeaderBinarySize::needsReply() const
+{
+    return false;
+}
+
+bool ProtocolHeaderBinarySize::isMultiConnectionSession() const
+{
+    return false;
+}
+
+bool ProtocolHeaderBinarySize::isSendRequestByPoll() const
+{
+    return false;
+}
+
+bool ProtocolHeaderBinarySize::doesSupportFileTransfer() const
+{
+    return false;
+}
+
+IProtocol::FuncCreateMessage ProtocolHeaderBinarySize::getMessageFactory() const
+{
+    return []() {
+        return std::make_shared<ProtocolMessage>(PROTOCOL_ID, HEADERSIZE);
+    };
 }
 
 void ProtocolHeaderBinarySize::prepareMessageToSend(IMessagePtr message)
@@ -106,16 +124,37 @@ void ProtocolHeaderBinarySize::prepareMessageToSend(IMessagePtr message)
     }
 }
 
-void ProtocolHeaderBinarySize::socketConnected()
+void ProtocolHeaderBinarySize::moveOldProtocolState(IProtocol& /*protocolOld*/)
+{
+
+}
+
+void ProtocolHeaderBinarySize::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
+{
+    std::deque<IMessagePtr> messages;
+    m_headerHelper.receive(socket, bytesToRead, messages);
+    auto callback = m_callback.lock();
+    if (callback)
+    {
+        for (auto it = messages.begin(); it != messages.end(); ++it)
+        {
+            callback->received(*it);
+        }
+    }
+}
+
+
+hybrid_ptr<IStreamConnectionCallback> ProtocolHeaderBinarySize::connected(const IStreamConnectionPtr& /*connection*/)
 {
     auto callback = m_callback.lock();
     if (callback)
     {
         callback->connected();
     }
+    return nullptr;
 }
 
-void ProtocolHeaderBinarySize::socketDisconnected()
+void ProtocolHeaderBinarySize::disconnected(const IStreamConnectionPtr& /*connection*/)
 {
     auto callback = m_callback.lock();
     if (callback)
@@ -124,6 +163,11 @@ void ProtocolHeaderBinarySize::socketDisconnected()
     }
 }
 
+
+IMessagePtr ProtocolHeaderBinarySize::pollReply(std::deque<IMessagePtr>&& /*messages*/)
+{
+    return {};
+}
 
 
 //---------------------------------------
@@ -145,5 +189,7 @@ IProtocolPtr ProtocolHeaderBinarySizeFactory::createProtocol()
 {
     return std::make_shared<ProtocolHeaderBinarySize>();
 }
+
+
 
 }   // namespace finalmq

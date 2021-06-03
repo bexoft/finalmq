@@ -45,7 +45,7 @@ typedef sockaddr            t_sockaddr;
 #endif
 
 
-#include "finalmq/helpers/BexDefines.h"
+#include "finalmq/helpers/FmqDefines.h"
 #include "finalmq/helpers/IOperatingSystem.h"
 
 
@@ -58,6 +58,9 @@ namespace finalmq {
 
     private:
         // IOperatingSystem
+        virtual int open(const char* filename, int flags) override;
+        virtual int stat(const char* filename, struct stat* buf) override;
+        virtual int fstat(int fd, struct ::stat* buf) override;
         virtual int close(int fd) override;
         virtual int closeSocket(SOCKET fd) override;
         virtual SOCKET socket(int af, int type, int protocol) override;
@@ -67,10 +70,10 @@ namespace finalmq {
         virtual int connect(SOCKET fd, const struct sockaddr* name, socklen_t namelen) override;
         virtual int setsockopt(SOCKET fd, int level, int optname, const char* optval, int optlen) override;
         virtual int getsockname(SOCKET fd, struct sockaddr* name, socklen_t* namelen) override;
-        virtual int write(int fd, const void* buffer, int len) override;
-        virtual int read(int fd, void* buffer, int len) override;
-        virtual int send(SOCKET fd, const void* buffer, int len, int flags) override;
-        virtual int recv(SOCKET fd, void* buffer, int len, int flags) override;
+        virtual int write(int fd, const char* buffer, int len) override;
+        virtual int read(int fd, char* buffer, int len) override;
+        virtual int send(SOCKET fd, const char* buffer, int len, int flags) override;
+        virtual int recv(SOCKET fd, char* buffer, int len, int flags) override;
         virtual int getLastError() override;
         virtual int select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, struct timeval* timeout) override;
 #if !defined(WIN32) && !defined(__MINGW32__)

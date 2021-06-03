@@ -32,6 +32,9 @@ namespace finalmq {
 class MockIOperatingSystem : public IOperatingSystem
 {
 public:
+    MOCK_METHOD(int, open, (const char* filename, int flags), (override));
+    MOCK_METHOD(int, stat, (const char* filename, struct stat* buf), (override));
+    MOCK_METHOD(int, fstat, (int fd, struct stat* buf), (override));
     MOCK_METHOD(int, close, (int fd), (override));
     MOCK_METHOD(int, closeSocket, (SOCKET fd), (override));
     MOCK_METHOD(SOCKET, socket, (int af, int type, int protocol), (override));
@@ -41,10 +44,10 @@ public:
     MOCK_METHOD(int, connect, (SOCKET fd, const struct sockaddr* name, socklen_t namelen), (override));
     MOCK_METHOD(int, setsockopt, (SOCKET fd, int level, int optname, const char* optval, int optlen), (override));
     MOCK_METHOD(int, getsockname, (SOCKET fd, struct sockaddr* name, socklen_t* namelen), (override));
-    MOCK_METHOD(int, write, (int fd, const void* buffer, int len), (override));
-    MOCK_METHOD(int, read, (int fd, void* buffer, int len), (override));
-    MOCK_METHOD(int, send, (SOCKET fd, const void* buffer, int len, int flags), (override));
-    MOCK_METHOD(int, recv, (SOCKET fd, void* buffer, int len, int flags), (override));
+    MOCK_METHOD(int, write, (int fd, const char* buffer, int len), (override));
+    MOCK_METHOD(int, read, (int fd, char* buffer, int len), (override));
+    MOCK_METHOD(int, send, (SOCKET fd, const char* buffer, int len, int flags), (override));
+    MOCK_METHOD(int, recv, (SOCKET fd, char* buffer, int len, int flags), (override));
     MOCK_METHOD(int, getLastError, (), (override));
     MOCK_METHOD(int, select, (int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, struct timeval* timeout), (override));
 #if !defined(WIN32) && !defined(__MINGW32__)

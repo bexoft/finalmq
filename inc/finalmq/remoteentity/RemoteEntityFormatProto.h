@@ -34,7 +34,9 @@ public:
 
 private:
     virtual std::shared_ptr<StructBase> parse(const BufferRef& bufferRef, bool storeRawData, remoteentity::Header& header, bool& syntaxError) override;
+    virtual std::shared_ptr<StructBase> parseData(const BufferRef& bufferRef, bool storeRawData, const std::string& type, bool& syntaxError) override;
     virtual void serialize(IMessage& message, const remoteentity::Header& header, const StructBase* structBase = nullptr) override;
+    virtual void serializeData(IMessage& message, const StructBase* structBase = nullptr) override;
 };
 
 

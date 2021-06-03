@@ -23,7 +23,7 @@
 
 #include "finalmq/serializeproto/ParserProto.h"
 #include "finalmq/metadata/MetaData.h"
-#include "finalmq/helpers/BexDefines.h"
+#include "finalmq/helpers/FmqDefines.h"
 
 
 #include <assert.h>

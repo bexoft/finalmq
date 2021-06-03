@@ -24,8 +24,10 @@
 #include "finalmq/remoteentity/RemoteEntityContainer.h"
 #include "finalmq/remoteentity/RemoteEntityFormatProto.h"
 #include "finalmq/remoteentity/RemoteEntityFormatJson.h"
+#include "finalmq/remoteentity/EntityFileService.h"
 #include "finalmq/protocols/ProtocolHeaderBinarySize.h"
 #include "finalmq/protocols/ProtocolDelimiterLinefeed.h"
+#include "finalmq/protocols/ProtocolHttpServer.h"
 #include "finalmq/logger/Logger.h"
 
 // the definition of the messages are in the file helloworld.fmq
@@ -40,11 +42,13 @@ using finalmq::RemoteEntityContainer;
 using finalmq::RemoteEntityFormatProto;
 using finalmq::RemoteEntityFormatJson;
 using finalmq::IRemoteEntityContainer;
+using finalmq::EntityFileServer;
 using finalmq::PeerId;
 using finalmq::PeerEvent;
-using finalmq::ReplyContextUPtr;
+using finalmq::RequestContextPtr;
 using finalmq::ProtocolHeaderBinarySizeFactory;
 using finalmq::ProtocolDelimiterLinefeedFactory;
+using finalmq::ProtocolHttpServerFactory;
 using finalmq::IProtocolSessionPtr;
 using finalmq::ConnectionData;
 using finalmq::ConnectionEvent;
@@ -68,8 +72,8 @@ public:
         // handle the HelloRequest
         // this is fun - try to access the server with the json interface at port 8888:
         // telnet localhost 8888  (or: netcat localhost 8888)
-        // /MyService/helloworld.HelloRequest#4711{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
-        registerCommand<HelloRequest>([] (ReplyContextUPtr& replyContext, const std::shared_ptr<HelloRequest>& request) {
+        // /MyService/helloworld.HelloRequest!4711{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
+        registerCommand<HelloRequest>([] (const RequestContextPtr& requestContext, const std::shared_ptr<HelloRequest>& request) {
             assert(request);
 
             // prepare the reply
@@ -80,16 +84,18 @@ public:
                 reply.greetings.emplace_back(prefix + request->persons[i].name);
             }
 
+//            PeerId peerid = requestContext->peerId();
+
             // send reply
-            replyContext->reply(std::move(reply));
+            requestContext->reply(std::move(reply));
 
             // note:
             // The reply does not have to be sent immediately:
-            // The replyContext is a unique_ptr, it can be moved to another unique_ptr,
+            // The requestContext is a unique_ptr, it can be moved to another unique_ptr,
             // so that the reply can be called later.
 
             // note:
-            // The replyContext has the method replyContext->peerId()
+            // The requestContext has the method requestContext->peerId()
             // The returned peerId can be used for calling requestReply() or sendEvent().
             // So, also a server entity can act as a client and can send requestReply()
             // to the peer entity that is calling this request.
@@ -97,6 +103,9 @@ public:
         });
     }
 };
+
+
+
 
 
 int main()
@@ -125,6 +134,9 @@ int main()
     EntityServer entityServer;
     entityContainer.registerEntity(&entityServer, "MyService");
 
+    EntityFileServer entityFileServer("htdocs");
+    entityContainer.registerEntity(&entityFileServer, "*");
+
     // Open listener port 7777 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
     // content type in payload: protobuf
     entityContainer.bind("tcp://*:7777", std::make_shared<ProtocolHeaderBinarySizeFactory>(), RemoteEntityFormatProto::CONTENT_TYPE);
@@ -132,6 +144,10 @@ int main()
     // Open listener port 8888 with delimiter framing protocol ProtocolDelimiterLinefeed ('\n' is end of frame).
     // content type in payload: JSON
     entityContainer.bind("tcp://*:8888", std::make_shared<ProtocolDelimiterLinefeedFactory>(), RemoteEntityFormatJson::CONTENT_TYPE);
+
+    // Open listener port 8080 with http.
+    // content type in payload: JSON
+    entityContainer.bind("tcp://*:8080", std::make_shared<ProtocolHttpServerFactory>(), RemoteEntityFormatJson::CONTENT_TYPE);
 
     // note:
     // multiple access points (listening ports) can be activated by calling bind() several times.

@@ -50,9 +50,43 @@ bool ProtocolDelimiter::areMessagesResendable() const
     return true;
 }
 
-IMessagePtr ProtocolDelimiter::createMessage() const
+bool ProtocolDelimiter::doesSupportMetainfo() const
 {
-    return std::make_shared<ProtocolMessage>(getProtocolId(), 0, m_delimiter.size());
+    return false;
+}
+
+bool ProtocolDelimiter::doesSupportSession() const
+{
+    return false;
+}
+
+bool ProtocolDelimiter::needsReply() const
+{
+    return false;
+}
+
+bool ProtocolDelimiter::isMultiConnectionSession() const
+{
+    return false;
+}
+
+bool ProtocolDelimiter::isSendRequestByPoll() const
+{
+    return false;
+}
+
+bool ProtocolDelimiter::doesSupportFileTransfer() const
+{
+    return false;
+}
+
+IProtocol::FuncCreateMessage ProtocolDelimiter::getMessageFactory() const
+{
+    size_t sizeDelimiter = m_delimiter.size();
+    int protocolId = getProtocolId();
+    return [protocolId, sizeDelimiter]() {
+        return std::make_shared<ProtocolMessage>(protocolId, 0, sizeDelimiter);
+    };
 }
 
 std::vector<ssize_t> ProtocolDelimiter::findEndOfMessage(const char* buffer, ssize_t size)
@@ -131,7 +165,31 @@ std::vector<ssize_t> ProtocolDelimiter::findEndOfMessage(const char* buffer, ssi
 
 
 
-void ProtocolDelimiter::receive(const SocketPtr& socket, int bytesToRead)
+
+void ProtocolDelimiter::prepareMessageToSend(IMessagePtr message)
+{
+    if (!message->wasSent())
+    {
+        const std::list<BufferRef>& buffers = message->getAllSendBuffers();
+        if (!buffers.empty() && !m_delimiter.empty())
+        {
+            const BufferRef& buffer = *buffers.rbegin();
+            assert(buffer.second >= static_cast<ssize_t>(m_delimiter.size()));
+            memcpy(buffer.first + buffer.second - m_delimiter.size(), m_delimiter.data(), m_delimiter.size());
+            message->prepareMessageToSend();
+        }
+    }
+}
+
+
+void ProtocolDelimiter::moveOldProtocolState(IProtocol& /*protocolOld*/)
+{
+
+}
+
+
+
+void ProtocolDelimiter::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
 {
     std::string receiveBuffer;
     ssize_t sizeDelimiterPartial = m_delimiterPartial.size();
@@ -140,10 +198,18 @@ void ProtocolDelimiter::receive(const SocketPtr& socket, int bytesToRead)
     {
         memcpy(const_cast<char*>(receiveBuffer.data()), &m_delimiterPartial[0], sizeDelimiterPartial);
     }
-    int res = socket->receive(const_cast<char*>(receiveBuffer.data() + sizeDelimiterPartial), bytesToRead);
-    if (res > 0)
+    ssize_t bytesReceived = 0;
+    int res = 0;
+    do
     {
-        ssize_t bytesReceived = res;
+        res = socket->receive(const_cast<char*>(receiveBuffer.data() + bytesReceived + sizeDelimiterPartial), bytesToRead - bytesReceived);
+        if (res > 0)
+        {
+            bytesReceived += res;
+        }
+    } while (res > 0 && bytesReceived < bytesToRead);
+    if (res >= 0)
+    {
         assert(bytesReceived <= bytesToRead);
         ssize_t sizeOfReceiveBuffer = sizeDelimiterPartial + bytesReceived;
         std::vector<ssize_t> positions = findEndOfMessage(receiveBuffer.data(), sizeOfReceiveBuffer);
@@ -243,31 +309,18 @@ void ProtocolDelimiter::receive(const SocketPtr& socket, int bytesToRead)
 }
 
 
-void ProtocolDelimiter::prepareMessageToSend(IMessagePtr message)
-{
-    if (!message->wasSent())
-    {
-        const std::list<BufferRef>& buffers = message->getAllSendBuffers();
-        if (!buffers.empty() && !m_delimiter.empty())
-        {
-            const BufferRef& buffer = *buffers.rbegin();
-            assert(buffer.second >= static_cast<ssize_t>(m_delimiter.size()));
-            memcpy(buffer.first + buffer.second - m_delimiter.size(), m_delimiter.data(), m_delimiter.size());
-            message->prepareMessageToSend();
-        }
-    }
-}
 
-void ProtocolDelimiter::socketConnected()
+hybrid_ptr<IStreamConnectionCallback> ProtocolDelimiter::connected(const IStreamConnectionPtr& /*connection*/)
 {
     auto callback = m_callback.lock();
     if (callback)
     {
         callback->connected();
     }
+    return nullptr;
 }
 
-void ProtocolDelimiter::socketDisconnected()
+void ProtocolDelimiter::disconnected(const IStreamConnectionPtr& /*connection*/)
 {
     auto callback = m_callback.lock();
     if (callback)
@@ -276,6 +329,11 @@ void ProtocolDelimiter::socketDisconnected()
     }
 }
 
+
+IMessagePtr ProtocolDelimiter::pollReply(std::deque<IMessagePtr>&& /*messages*/)
+{
+    return {};
+}
 
 
 }   // namespace finalmq

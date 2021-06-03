@@ -24,12 +24,18 @@
 
 #include "SocketDescriptor.h"
 
+
+struct stat;
+
 namespace finalmq {
 
 
     struct IOperatingSystem
     {
         virtual ~IOperatingSystem() {}
+        virtual int open(const char* filename, int flags) = 0;
+        virtual int stat(const char* filename, struct stat* buf) = 0;
+        virtual int fstat(int fd, struct stat* buf) = 0;
         virtual int close(int fd) = 0;
         virtual int closeSocket(SOCKET fd) = 0;
         virtual SOCKET socket(int af, int type, int protocol) = 0;
@@ -39,10 +45,10 @@ namespace finalmq {
         virtual int connect(SOCKET fd, const struct sockaddr* name, socklen_t namelen) = 0;
         virtual int setsockopt(SOCKET fd, int level, int optname, const char* optval, int optlen) = 0;
         virtual int getsockname(SOCKET fd, struct sockaddr* name, socklen_t* namelen) = 0;
-        virtual int write(int fd, const void* buffer, int len) = 0;
-        virtual int read(int fd, void* buffer, int len) = 0;
-        virtual int send(SOCKET fd, const void* buffer, int len, int flags) = 0;
-        virtual int recv(SOCKET fd, void* buffer, int len, int flags) = 0;
+        virtual int write(int fd, const char* buffer, int len) = 0;
+        virtual int read(int fd, char* buffer, int len) = 0;
+        virtual int send(SOCKET fd, const char* buffer, int len, int flags) = 0;
+        virtual int recv(SOCKET fd, char* buffer, int len, int flags) = 0;
         virtual int getLastError() = 0;
         virtual int select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, struct timeval* timeout) = 0;
 #if !defined(WIN32) && !defined(__MINGW32__)

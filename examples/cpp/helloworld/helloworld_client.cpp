@@ -59,6 +59,36 @@ using helloworld::Address;
 
 
 
+#define LOOP 10000
+
+void triggerRequest(RemoteEntity& entityClient, PeerId peerId, const std::chrono::time_point<std::chrono::system_clock>& starttime, int index)
+{
+    entityClient.requestReply<HelloReply>(peerId,
+        HelloRequest{ { {"Bonnie","Parker",Sex::FEMALE,1910,{"somestreet", 12,76875,"Rowena","USA"}} } },
+        [&entityClient, peerId, &starttime, index](PeerId peerId, Status status, const std::shared_ptr<HelloReply>& reply) {
+            if (reply)
+            {
+                if (index == LOOP - 1)
+                {
+                    auto now = std::chrono::system_clock::now();
+                    std::chrono::duration<double> dur = now - starttime;
+                    long long delta = static_cast<long long>(dur.count() * 1000);
+                    std::cout << "time for " << LOOP << " sequential requests: " << delta << "ms" << std::endl;
+                }
+                else
+                {
+                    triggerRequest(entityClient, peerId, starttime, index + 1);
+                }
+            }
+            else
+            {
+                std::cout << "REPLY error: " << status.toString() << std::endl;
+            }
+        });
+}
+
+
+
 int main()
 {
     // display log traces
@@ -115,8 +145,8 @@ int main()
     // A peer entity is been identified by its peerId.
     // each request has its own lambda. The lambda is been called when the corresponding reply is received.
     entityClient.requestReply<HelloReply>(peerId,
-                HelloRequest{{ /*{"Bonnie","Parker",Sex::FEMALE,1910,{"somestreet",   12,76875,"Rowena","USA"}},
-                               {"Clyde", "Barrow",Sex::MALE,  1909,{"anotherstreet",32,37385,"Telico","USA"}}*/ }},
+                HelloRequest{{ {"Bonnie","Parker",Sex::FEMALE,1910,{"somestreet",   12,76875,"Rowena","USA"}},
+                               {"Clyde", "Barrow",Sex::MALE,  1909,{"anotherstreet",32,37385,"Telico","USA"}} }},
                 [] (PeerId peerId, Status status, const std::shared_ptr<HelloReply>& reply) {
         if (reply)
         {
@@ -152,9 +182,9 @@ int main()
         }
     });
 
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
-    // performance measurement
-#define LOOP 10000
+    // performance measurement of throughput
     auto starttime = std::chrono::system_clock::now();
     for (int i = 0; i < LOOP; ++i)
     {
@@ -171,7 +201,7 @@ int main()
                     auto now = std::chrono::system_clock::now();
                     std::chrono::duration<double> dur = now - starttime;
                     long long delta = static_cast<long long>(dur.count() * 1000);
-                    std::cout << "time for " << LOOP << " requests: " << delta << "ms" << std::endl;
+                    std::cout << "time for " << LOOP << " parallel requests: " << delta << "ms" << std::endl;
                 }
             }
             else
@@ -181,6 +211,11 @@ int main()
         });
     }
 
+    std::this_thread::sleep_for(std::chrono::milliseconds(4000));
+
+    // performance measurement of latency
+    starttime = std::chrono::system_clock::now();
+    triggerRequest(entityClient, peerId, starttime, 0);
 
     // wait 20s
     std::this_thread::sleep_for(std::chrono::milliseconds(20000));

@@ -22,6 +22,7 @@
 
 
 #include "finalmq/protocolconnection/ProtocolSessionList.h"
+#include "finalmq/protocolconnection/ProtocolSession.h"
 
 
 namespace finalmq {
@@ -35,11 +36,11 @@ ProtocolSessionList::~ProtocolSessionList()
 {
 }
 
-std::int64_t ProtocolSessionList::addProtocolSession(IProtocolSessionPtr ProtocolSession)
+std::int64_t ProtocolSessionList::addProtocolSession(IProtocolSessionPrivatePtr ProtocolSession, bool verified)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     std::int64_t sessionId = m_nextSessionId++;
-    m_connectionId2ProtocolSession[sessionId] = ProtocolSession;
+    m_connectionId2ProtocolSession[sessionId] = { ProtocolSession, verified, {} };
     lock.unlock();
     return sessionId;
 }
@@ -51,17 +52,20 @@ void ProtocolSessionList::removeProtocolSession(std::int64_t sessionId)
     lock.unlock();
 }
 
-std::vector< IProtocolSessionPtr > ProtocolSessionList::getAllSessions() const
+std::vector< IProtocolSessionPrivatePtr > ProtocolSessionList::getAllSessions() const
 {
-    std::vector< IProtocolSessionPtr > ProtocolSessions;
+    std::vector< IProtocolSessionPrivatePtr > protocolSessions;
     std::unique_lock<std::mutex> lock(m_mutex);
-    ProtocolSessions.reserve(m_connectionId2ProtocolSession.size());
+    protocolSessions.reserve(m_connectionId2ProtocolSession.size());
     for (auto it = m_connectionId2ProtocolSession.begin(); it != m_connectionId2ProtocolSession.end(); ++it)
     {
-        ProtocolSessions.push_back(it->second);
+        if (it->second.verified)
+        {
+            protocolSessions.emplace_back(it->second.session);
+        }
     }
     lock.unlock();
-    return ProtocolSessions;
+    return protocolSessions;
 }
 
 IProtocolSessionPtr ProtocolSessionList::getSession(std::int64_t sessionId) const
@@ -70,9 +74,42 @@ IProtocolSessionPtr ProtocolSessionList::getSession(std::int64_t sessionId) cons
     auto it = m_connectionId2ProtocolSession.find(sessionId);
     if (it != m_connectionId2ProtocolSession.end())
     {
-        return it->second;
+        if (it->second.verified)
+        {
+            return it->second.session;
+        }
     }
     return nullptr;
 }
+
+
+IProtocolSessionPrivatePtr ProtocolSessionList::findSessionByName(const std::string& sessionName) const
+{
+    IProtocolSessionPrivatePtr protocolSessions;
+    std::unique_lock<std::mutex> lock(m_mutex);
+    for (auto it = m_connectionId2ProtocolSession.begin(); it != m_connectionId2ProtocolSession.end(); ++it)
+    {
+        if (it->second.verified && it->second.name == sessionName)
+        {
+            return it->second.session;
+        }
+    }
+    lock.unlock();
+    return nullptr;
+}
+
+
+void ProtocolSessionList::setSessionName(std::int64_t sessionId, const std::string& sessionName)
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    auto it = m_connectionId2ProtocolSession.find(sessionId);
+    if (it != m_connectionId2ProtocolSession.end())
+    {
+        it->second.name = sessionName;
+        it->second.verified = true;
+    }
+}
+
+
 
 }   // namespace finalmq

@@ -22,6 +22,7 @@
 
 #include "finalmq/remoteentity/RemoteEntityContainer.h"
 #include "finalmq/helpers/ModulenameFinalmq.h"
+#include "finalmq/variant/VariantValues.h"
 
 #include "finalmq/remoteentity/entitydata.fmq.h"
 
@@ -76,11 +77,10 @@ const EnumInfo ConnectionEvent::_enumInfo = {
 
 ///////////////////////////////////
 
-
 RemoteEntityContainer::RemoteEntityContainer()
     : m_protocolSessionContainer(std::make_unique<ProtocolSessionContainer>())
+    , m_fileTransferReply(std::make_shared<FileTransferReply>())
 {
-
 }
 
 RemoteEntityContainer::~RemoteEntityContainer()
@@ -116,10 +116,41 @@ void RemoteEntityContainer::deinit()
 
 // IRemoteEntityContainer
 
+
+bool RemoteEntityContainer::isTimerExpired(std::chrono::time_point<std::chrono::system_clock>& lastTime, int interval)
+{
+    bool expired = false;
+    std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+
+    std::chrono::duration<double> dur = now - lastTime;
+    int delta = static_cast<int>(dur.count() * 1000);
+    if (delta >= interval)
+    {
+        lastTime = now;
+        expired = true;
+    }
+    else if (delta < 0)
+    {
+        lastTime = now;
+    }
+
+    return expired;
+}
+
+static const int INTERVAL_CHECK = 5000;
+
+
 void RemoteEntityContainer::init(int cycleTime, int checkReconnectInterval, FuncPollerLoopTimer funcTimer, const IExecutorPtr& executor, bool storeRawDataInReceiveStruct)
 {
     m_storeRawDataInReceiveStruct = storeRawDataInReceiveStruct;
     m_protocolSessionContainer->init(cycleTime, checkReconnectInterval, std::move(funcTimer), executor);
+
+    //registerEntity([this]() {
+    //    std::shared_ptr<RemoteEntity> entity = std::make_shared<RemoteEntity>();
+    //    entity->registerCommand<COMMAND>([this](const RequestContextPtr& requestContext, const std::shared_ptr<COMMAND>& request) {
+    //    });
+    //    return entity;
+    //}(), "fmq");
 }
 
 int RemoteEntityContainer::bind(const std::string& endpoint, IProtocolFactoryPtr protocolFactory, int contentType, const BindProperties& bindProperties)
@@ -177,11 +208,33 @@ EntityId RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> remoteE
         m_name2entityId[name] = entityId;
     }
 
-    re->initEntity(entityId, name);
+    re->initEntity(entityId, name, m_fileTransferReply);
     m_entityId2entity[entityId] = remoteEntity;
 
     return entityId;
 }
+
+
+void RemoteEntityContainer::addPureDataPaths(std::vector<std::string>& paths)
+{
+    for (size_t i = 0; i < paths.size(); ++i)
+    {
+        const std::string& path = paths[i];
+        if (!path.empty())
+        {
+            if (path[path.size() - 1] == '*')
+            {
+                m_pureDataPathPrefixes.emplace_back(path.data(), path.size() - 1);
+            }
+            else
+            {
+                m_pureDataPaths.emplace_back(path);
+            }
+        }
+    }
+}
+
+
 
 void RemoteEntityContainer::unregisterEntity(EntityId entityId)
 {
@@ -272,20 +325,76 @@ void RemoteEntityContainer::disconnected(const IProtocolSessionPtr& session)
 }
 
 
+bool RemoteEntityContainer::isPureDataPath(const std::string& path)
+{
+    for (auto it = m_pureDataPathPrefixes.begin(); it != m_pureDataPathPrefixes.end(); ++it)
+    {
+        const std::string& prefix = *it;
+        if (path.size() >= prefix.size() && path.compare(0, prefix.size(), prefix) == 0)
+        {
+            return true;
+        }
+    }
+    for (auto it = m_pureDataPaths.begin(); it != m_pureDataPaths.end(); ++it)
+    {
+        const std::string& pathCompare = *it;
+        if (path == pathCompare)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+
+static const std::string FMQ_PATH = "fmq_path";
+
 void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const IMessagePtr& message)
 {
     assert(session);
     assert(message);
 
+    bool pureData = false;
+    if (session->doesSupportMetainfo())
+    {
+        const std::string* path = message->getControlData().getData<std::string>(FMQ_PATH);
+        if (path)
+        {
+            if (isPureDataPath(*path))
+            {
+                pureData = true;
+            }
+        }
+    }
+
     bool syntaxError = false;
-    Header header;
-    std::shared_ptr<StructBase> structBase = RemoteEntityFormatRegistry::instance().parse(*message, session->getContentType(), m_storeRawDataInReceiveStruct, header, syntaxError);
+    ReceiveData receiveData{ session, message, {}, {} };
+    if (!pureData)
+    {
+        if (!session->doesSupportMetainfo())
+        {
+            receiveData.structBase = RemoteEntityFormatRegistry::instance().parse(*message, session->getContentType(), m_storeRawDataInReceiveStruct, receiveData.header, syntaxError);
+        }
+        else
+        {
+            receiveData.structBase = RemoteEntityFormatRegistry::instance().parseHeaderInMetainfo(*message, session->getContentType(), m_storeRawDataInReceiveStruct, receiveData.header, syntaxError);
+        }
+    }
+    else
+    {
+        receiveData.structBase = RemoteEntityFormatRegistry::instance().parsePureData(*message, receiveData.header);
+    }
 
     std::unique_lock<std::mutex> lock(m_mutex);
-    EntityId entityId = header.destid;
-    if (entityId == ENTITYID_INVALID)
+    EntityId entityId = receiveData.header.destid;
+    if (entityId == ENTITYID_INVALID || (entityId == ENTITYID_DEFAULT && !receiveData.header.destname.empty()))
     {
-        auto itName = m_name2entityId.find(header.destname);
+        auto itName = m_name2entityId.find(receiveData.header.destname);
+        if (itName == m_name2entityId.end())
+        {
+            itName = m_name2entityId.find("*");
+        }
         if (itName != m_name2entityId.end())
         {
             entityId = itName->second;
@@ -302,22 +411,17 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     }
     lock.unlock();
 
+    const std::string& type = receiveData.header.type;
+
     auto entity = remoteEntity.lock();
-    if (header.mode == MsgMode::MSG_REQUEST)
+    if (receiveData.header.mode == MsgMode::MSG_REQUEST)
     {
         Status replyStatus = Status::STATUS_OK;
         if (!syntaxError)
         {
             if (entity)
             {
-                if (structBase)
-                {
-                    entity->receivedRequest(session, header, structBase);
-                }
-                else
-                {
-                    replyStatus = Status::STATUS_REQUESTTYPE_NOT_KNOWN;
-                }
+                entity->receivedRequest(receiveData);
             }
             else
             {
@@ -330,19 +434,19 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
         }
         if (replyStatus != Status::STATUS_OK)
         {
-            Header headerReply{header.srcid, "", entityId, MsgMode::MSG_REPLY, replyStatus, "", header.corrid};
-            RemoteEntityFormatRegistry::instance().send(session, headerReply);
+            Header headerReply{ receiveData.header.srcid, "", entityId, MsgMode::MSG_REPLY, replyStatus, "", receiveData.header.corrid, {} };
+            RemoteEntityFormatRegistry::instance().send(session, headerReply, std::move(message->getEchoData()));
         }
     }
-    else if (header.mode == MsgMode::MSG_REPLY)
+    else if (receiveData.header.mode == MsgMode::MSG_REPLY)
     {
         if (entity)
         {
-            if (!structBase && header.status == Status::STATUS_OK && !header.type.empty())
+            if (!receiveData.structBase && receiveData.header.status == Status::STATUS_OK && !type.empty())
             {
-                header.status = Status::STATUS_REPLYTYPE_NOT_KNOWN;
+                receiveData.header.status = Status::STATUS_REPLYTYPE_NOT_KNOWN;
             }
-            entity->receivedReply(session, header, structBase);
+            entity->receivedReply(receiveData);
         }
     }
 }

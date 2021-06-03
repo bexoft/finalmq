@@ -29,11 +29,12 @@
 #include <io.h>
 #pragma warning(disable: 4996)
 #else
-#include <sys/unistd.h>
 #include <errno.h>
 #include <netinet/tcp.h>
 #include <fcntl.h>
 #include <sys/unistd.h>
+#include <sys/stat.h>
+//#include <sys/types.h>
 #endif
 
 
@@ -46,6 +47,21 @@ namespace finalmq {
 
 
     // IOperatingSystem
+    int OperatingSystemImpl::open(const char* filename, int flags)
+    {
+        return ::open(filename, flags);
+    }
+
+    int OperatingSystemImpl::stat(const char* filename, struct stat* buf)
+    {
+        return ::stat(filename, buf);
+    }
+
+    int OperatingSystemImpl::fstat(int fd, struct stat* buf)
+    {
+        return ::fstat(fd, buf);
+    }
+
     int OperatingSystemImpl::close(int fd)
     {
 #if defined(WIN32)
@@ -102,17 +118,17 @@ namespace finalmq {
     }
 
 
-    int OperatingSystemImpl::write(int fd, const void* buffer, int len)
+    int OperatingSystemImpl::write(int fd, const char* buffer, int len)
     {
         return ::write(fd, buffer, len);
     }
 
-    int OperatingSystemImpl::read(int fd, void* buffer, int len)
+    int OperatingSystemImpl::read(int fd, char* buffer, int len)
     {
         return ::read(fd, buffer, len);
     }
 
-    int OperatingSystemImpl::send(SOCKET fd, const void* buffer, int len, int flags)
+    int OperatingSystemImpl::send(SOCKET fd, const char* buffer, int len, int flags)
     {
 #if defined(WIN32) || defined(__MINGW32__)
         return ::send(fd, static_cast<const char*>(buffer), len, flags);
@@ -121,7 +137,7 @@ namespace finalmq {
 #endif
     }
 
-    int OperatingSystemImpl::recv(SOCKET fd, void* buffer, int len, int flags)
+    int OperatingSystemImpl::recv(SOCKET fd, char* buffer, int len, int flags)
     {
 #if defined(WIN32) || defined(__MINGW32__)
         return ::recv(fd, static_cast<char*>(buffer), len, flags);

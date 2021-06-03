@@ -24,7 +24,7 @@
 
 #include "finalmq/streamconnection/IMessage.h"
 #include "finalmq/protocolconnection/IProtocol.h"
-#include "finalmq/helpers/BexDefines.h"
+#include "finalmq/helpers/FmqDefines.h"
 #include <vector>
 
 
@@ -41,11 +41,19 @@ private:
     virtual void setCallback(const std::weak_ptr<IProtocolCallback>& callback) override;
     virtual std::uint32_t getProtocolId() const = 0;
     virtual bool areMessagesResendable() const override;
-    virtual IMessagePtr createMessage() const override;
-    virtual void receive(const SocketPtr& socket, int bytesToRead) override;
+    virtual bool doesSupportMetainfo() const override;
+    virtual bool doesSupportSession() const override;
+    virtual bool needsReply() const override;
+    virtual bool isMultiConnectionSession() const override;
+    virtual bool isSendRequestByPoll() const override;
+    virtual bool doesSupportFileTransfer() const override;
+    virtual FuncCreateMessage getMessageFactory() const override;
     virtual void prepareMessageToSend(IMessagePtr message) override;
-    virtual void socketConnected() override;
-    virtual void socketDisconnected() override;
+    virtual void moveOldProtocolState(IProtocol& protocolOld) override;
+    virtual void received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) override;
+    virtual hybrid_ptr<IStreamConnectionCallback> connected(const IStreamConnectionPtr& connection) override;
+    virtual void disconnected(const IStreamConnectionPtr& connection) override;
+    virtual IMessagePtr pollReply(std::deque<IMessagePtr>&& messages) override;
 
     std::vector<ssize_t> findEndOfMessage(const char* buffer, ssize_t size);
 

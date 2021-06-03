@@ -31,8 +31,10 @@
 #include "finalmq/remoteentity/RemoteEntityFormatProto.h"
 #include "finalmq/remoteentity/RemoteEntityFormatJson.h"
 #include "finalmq/remoteentity/FmqRegistryClient.h"
+#include "finalmq/remoteentity/EntityFileService.h"
 #include "finalmq/protocols/ProtocolHeaderBinarySize.h"
 #include "finalmq/protocols/ProtocolDelimiterLinefeed.h"
+#include "finalmq/protocols/ProtocolHttpServer.h"
 #include "finalmq/logger/Logger.h"
 
 // the definition of the messages are in the file timer.fmq
@@ -49,11 +51,13 @@ using finalmq::RemoteEntityContainer;
 using finalmq::RemoteEntityFormatProto;
 using finalmq::RemoteEntityFormatJson;
 using finalmq::IRemoteEntityContainer;
+using finalmq::EntityFileServer;
 using finalmq::PeerId;
 using finalmq::PeerEvent;
-using finalmq::ReplyContextUPtr;
+using finalmq::RequestContextPtr;
 using finalmq::ProtocolHeaderBinarySizeFactory;
 using finalmq::ProtocolDelimiterLinefeedFactory;
+using finalmq::ProtocolHttpServerFactory;
 using finalmq::IProtocolSessionPtr;
 using finalmq::ConnectionData;
 using finalmq::ConnectionEvent;
@@ -63,7 +67,6 @@ using finalmq::LogContext;
 using timer::StartRequest;
 using timer::StopRequest;
 using timer::TimerEvent;
-
 
 
 #define MODULENAME  "timer_server"
@@ -93,12 +96,12 @@ public:
             std::cout << "peer event " << peerEvent.toString() << std::endl;
         });
 
-        registerCommand<StartRequest>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<StartRequest>& request) {
+        registerCommand<StartRequest>([this] (const RequestContextPtr& requestContext, const std::shared_ptr<StartRequest>& request) {
             assert(request);
             m_timerActive = true;
         });
 
-        registerCommand<StopRequest>([this] (ReplyContextUPtr& replyContext, const std::shared_ptr<StopRequest>& request) {
+        registerCommand<StopRequest>([this] (const RequestContextPtr& requestContext, const std::shared_ptr<StopRequest>& request) {
             assert(request);
             m_timerActive = false;
         });
@@ -126,7 +129,7 @@ public:
                     std::vector<PeerId> peers = getAllPeers();
                     for (size_t i = 0; i < peers.size(); ++i)
                     {
-                        streamInfo << "sendEvent " << timerEvent.time;
+                        //streamInfo << "sendEvent " << timerEvent.time;
                         sendEvent(peers[i], timerEvent);
                     }
                 }
@@ -139,6 +142,8 @@ private:
     bool            m_timerActive = true;
     std::thread     m_thread;
 };
+
+
 
 
 int main()
@@ -168,6 +173,10 @@ int main()
     entityServer.startThread();
     entityContainer.registerEntity(&entityServer, "TimerEntity");
 
+    EntityFileServer entityFileServer("htdocs");
+    entityContainer.registerEntity(&entityFileServer, "*");
+
+
     // Open listener port 7711 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
     // content type in payload: protobuf
     entityContainer.bind("tcp://*:7711", std::make_shared<ProtocolHeaderBinarySizeFactory>(), RemoteEntityFormatProto::CONTENT_TYPE);
@@ -175,6 +184,10 @@ int main()
     // Open listener port 8811 with delimiter framing protocol ProtocolDelimiterLinefeed ('\n' is end of frame).
     // content type in payload: JSON
     entityContainer.bind("tcp://*:8811", std::make_shared<ProtocolDelimiterLinefeedFactory>(), RemoteEntityFormatJson::CONTENT_TYPE);
+
+    // Open listener port 8080 with http.
+    // content type in payload: JSON
+    entityContainer.bind("tcp://*:8080", std::make_shared<ProtocolHttpServerFactory>(), RemoteEntityFormatJson::CONTENT_TYPE);
 
     // note:
     // multiple access points (listening ports) can be activated by calling bind() several times.
@@ -189,7 +202,7 @@ int main()
     FmqRegistryClient fmqRegistryClient(&entityContainer);
     fmqRegistryClient.registerService({"TimerService", "TimerEntity", finalmq::ENTITYID_INVALID,
                                        {{finalmq::fmqreg::SocketProtocol::SOCKET_TCP, finalmq::ProtocolHeaderBinarySize::PROTOCOL_ID, RemoteEntityFormatProto::CONTENT_TYPE, false, "tcp://*:7711"},
-                                        {finalmq::fmqreg::SocketProtocol::SOCKET_TCP, finalmq::ProtocolDelimiterLinefeed::PROTOCOL_ID,        RemoteEntityFormatJson::CONTENT_TYPE,  false, "tcp://*:8811"}}});
+                                        {finalmq::fmqreg::SocketProtocol::SOCKET_TCP, finalmq::ProtocolDelimiterLinefeed::PROTOCOL_ID, RemoteEntityFormatJson::CONTENT_TYPE,  false, "tcp://*:8811"}}});
 
     // run
     entityContainer.run();

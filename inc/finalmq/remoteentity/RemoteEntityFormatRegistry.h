@@ -39,7 +39,8 @@ namespace remoteentity {
 
 
 using EntityId = std::uint64_t;
-static constexpr EntityId ENTITYID_INVALID = 0;  // should be 0, so that it matches with the deserialized default value.
+static constexpr EntityId ENTITYID_DEFAULT = 0;
+static constexpr EntityId ENTITYID_INVALID = 0x7fffffffffffffffull;
 
 using CorrelationId = std::uint64_t;
 static constexpr CorrelationId CORRELATIONID_NONE = 0;
@@ -49,16 +50,19 @@ struct IRemoteEntityFormat
 {
     virtual ~IRemoteEntityFormat() {}
     virtual std::shared_ptr<StructBase> parse(const BufferRef& bufferRef, bool storeRawData, remoteentity::Header& header, bool& syntaxError) = 0;
+    virtual std::shared_ptr<StructBase> parseData(const BufferRef& bufferRef, bool storeRawData, const std::string& type, bool& syntaxError) = 0;
     virtual void serialize(IMessage& message, const remoteentity::Header& header, const StructBase* structBase = nullptr) = 0;
+    virtual void serializeData(IMessage& message, const StructBase* structBase = nullptr) = 0;
 };
 
 
 struct IRemoteEntityFormatRegistry
 {
     virtual ~IRemoteEntityFormatRegistry() {}
-    virtual std::shared_ptr<StructBase> parse(const IMessage& message, int contentType, bool storeRawData, remoteentity::Header& header, bool& syntaxError) = 0;
-    virtual bool serialize(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase* structBase = nullptr) = 0;
-    virtual bool send(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase* structBase = nullptr) = 0;
+    virtual std::shared_ptr<StructBase> parse(IMessage& message, int contentType, bool storeRawData, remoteentity::Header& header, bool& syntaxError) = 0;
+    virtual std::shared_ptr<StructBase> parseHeaderInMetainfo(IMessage& message, int contentType, bool storeRawData, remoteentity::Header& header, bool& syntaxError) = 0;
+    virtual std::shared_ptr<StructBase> parsePureData(IMessage& message, remoteentity::Header& header) = 0;
+    virtual bool send(const IProtocolSessionPtr& session, remoteentity::Header& header, Variant&& echoData, const StructBase* structBase = nullptr, IMessage::Metainfo* metainfo = nullptr) = 0;
 
     virtual void registerFormat(int contentType, const std::shared_ptr<IRemoteEntityFormat>& format) = 0;
     virtual bool isRegistered(int contentType) const = 0;
@@ -70,13 +74,19 @@ struct IRemoteEntityFormatRegistry
 class RemoteEntityFormatRegistryImpl : public IRemoteEntityFormatRegistry
 {
 public:
-    virtual std::shared_ptr<StructBase> parse(const IMessage& message, int contentType, bool storeRawData, remoteentity::Header& header, bool& syntaxError) override;
-    virtual bool serialize(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase* structBase = nullptr) override;
-    virtual bool send(const IProtocolSessionPtr& session, const remoteentity::Header& header, const StructBase* structBase = nullptr) override;
+    virtual std::shared_ptr<StructBase> parse(IMessage& message, int contentType, bool storeRawData, remoteentity::Header& header, bool& syntaxError) override;
+    virtual std::shared_ptr<StructBase> parseHeaderInMetainfo(IMessage& message, int contentType, bool storeRawData, remoteentity::Header& header, bool& syntaxError) override;
+    virtual std::shared_ptr<StructBase> parsePureData(IMessage& message, remoteentity::Header& header) override;
+    virtual bool send(const IProtocolSessionPtr& session, remoteentity::Header& header, Variant&& echoData, const StructBase* structBase = nullptr, IMessage::Metainfo* metainfo = nullptr) override;
     virtual void registerFormat(int contentType, const std::shared_ptr<IRemoteEntityFormat>& format) override;
     virtual bool isRegistered(int contentType) const override;
 
 private:
+    void serializeHeaderToMetainfo(IMessage& message, const remoteentity::Header& header);
+    void parseMetainfo(IMessage& message, remoteentity::Header& header);
+    bool serialize(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase* structBase = nullptr);
+    bool serializeData(IMessage& message, int contentType, const StructBase* structBase);
+
     std::unordered_map<int, std::shared_ptr<IRemoteEntityFormat>> m_formats;
 };
 

@@ -24,7 +24,7 @@
 #include "gmock/gmock.h"
 
 
-#include "finalmq/helpers/BexDefines.h"
+#include "finalmq/helpers/FmqDefines.h"
 #include "finalmq/json/JsonBuilder.h"
 #include "MockIZeroCopyBuffer.h"
 

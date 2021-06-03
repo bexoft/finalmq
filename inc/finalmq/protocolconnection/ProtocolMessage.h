@@ -24,6 +24,11 @@
 
 #include "finalmq/streamconnection/IMessage.h"
 #include "finalmq/protocolconnection/IProtocol.h"
+#include "finalmq/variant/Variant.h"
+#include "finalmq/variant/VariantValues.h"
+#include "finalmq/variant/VariantValueStruct.h"
+#include "finalmq/variant/VariantValueList.h"
+
 
 #include <unordered_map>
 
@@ -37,6 +42,22 @@ public:
 private:
     virtual char* addBuffer(ssize_t size, ssize_t reserve = 0) override;
     virtual void downsizeLastBuffer(ssize_t newSize) override;
+
+    // metainfo
+    virtual const Metainfo& getAllMetainfo() const override;
+    virtual Metainfo& getAllMetainfo() override;
+    virtual void addMetainfo(const std::string& key, const std::string& value) override;
+    virtual void addMetainfo(std::string&& key, std::string&& value) override;
+    virtual const std::string* getMetainfo(const std::string& key) const override;
+    virtual std::string* getMetainfo(const std::string& key) override;
+
+    // controlData
+    virtual Variant& getControlData() override;
+    virtual const Variant& getControlData() const override;
+
+    // echoData
+    virtual Variant& getEchoData() override;
+    virtual const Variant& getEchoData() const override;
 
     // for send
     virtual void addSendPayload(const std::string& payload) override;
@@ -53,6 +74,8 @@ private:
     virtual ssize_t getTotalSendBufferSize() const override;
     virtual const std::list<BufferRef>& getAllSendPayloads() const override;
     virtual ssize_t getTotalSendPayloadSize() const override;
+    virtual void moveSendBuffers(std::list<std::string>&& payloadBuffers, const std::list<BufferRef>& payloads) override;
+    virtual std::list<std::string>& getSendPayloadBuffers() override;
 
     // for the protocol to add a header
     virtual void addSendHeader(const std::string& header) override;
@@ -71,6 +94,11 @@ private:
     virtual IMessagePtr getMessage(int protocolId) const override;
 
 private:
+
+    Metainfo                    m_metainfo;
+    Variant                     m_controlData;
+    Variant                     m_echoData;
+
     // send
     std::list<std::string>      m_headerBuffers;
     std::list<std::string>      m_payloadBuffers;

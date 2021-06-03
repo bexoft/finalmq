@@ -24,7 +24,7 @@
 
 
 #include "MetaType.h"
-#include "finalmq/helpers/BexDefines.h"
+#include "finalmq/helpers/FmqDefines.h"
 
 #include <string>
 #include <memory>

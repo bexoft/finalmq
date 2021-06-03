@@ -34,6 +34,7 @@ struct IExecutor
     virtual ~IExecutor() {}
     virtual void registerActionNotification(std::function<void()> func) = 0;
     virtual void runAvailableActions() = 0;
+    virtual void runOneAvailableAction() = 0;
     virtual void addAction(std::function<void()> func) = 0;
     virtual void run() = 0;
     virtual void terminate() = 0;
