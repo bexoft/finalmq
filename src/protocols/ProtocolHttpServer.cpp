@@ -39,7 +39,7 @@ const std::string ProtocolHttpServer::FMQ_HTTP = "fmq_http";
 const std::string ProtocolHttpServer::FMQ_METHOD = "fmq_method";
 const std::string ProtocolHttpServer::FMQ_PROTOCOL = "fmq_protocol";
 const std::string ProtocolHttpServer::FMQ_PATH = "fmq_path";
-const std::string ProtocolHttpServer::FMQ_QUERY = "fmq_query";
+const std::string ProtocolHttpServer::FMQ_QUERY_PREFIX = "FMQQUERY_";
 const std::string ProtocolHttpServer::FMQ_STATUS = "fmq_status";
 const std::string ProtocolHttpServer::FMQ_STATUSTEXT = "fmq_statustext";
 const std::string ProtocolHttpServer::HTTP_REQUEST = "request";
@@ -338,14 +338,7 @@ void ProtocolHttpServer::cookiesToSessionIds(const std::string& cookies)
             std::string sessionId = { cookie, pos };
             if (!sessionId.empty())
             {
-                //if (m_sessionNames.empty())
-                //{
-                    m_sessionNames.emplace_back(std::move(sessionId));
-                //}
-                //else
-                //{
-                //    m_sessionNames[0] = std::move(sessionId);
-                //}
+                m_sessionNames.emplace_back(std::move(sessionId));
             }
         }
     }
@@ -424,11 +417,6 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
                                 }
                                 if (pathquerySplit.size() >= 2)
                                 {
-                                    static const std::string& STR_QUERY = "query";
-                                    Variant& controlData = m_message->getControlData();
-                                    controlData = VariantStruct{ {STR_QUERY, VariantStruct{}} };
-                                    Variant* varQuery = controlData.getVariant(STR_QUERY);
-                                    assert(varQuery);
                                     std::vector<std::string> querySplit;
                                     split(pathquerySplit[1], 0, pathquerySplit[1].size(), '&', querySplit);
                                     for (size_t i = 0; i < querySplit.size(); ++i)
@@ -439,13 +427,12 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
                                         split(queryTotal, 0, queryTotal.size(), '=', queryNameValue);
                                         if (queryNameValue.size() == 1)
                                         {
-                                            varQuery->add(queryNameValue[0], std::string{});
+                                            metainfo[FMQ_QUERY_PREFIX + queryNameValue[0]] = std::string();
                                         }
                                         else if (queryNameValue.size() >= 2)
                                         {
-                                            varQuery->add(queryNameValue[0], queryNameValue[1]);
+                                            metainfo[FMQ_QUERY_PREFIX + queryNameValue[0]] = std::move(queryNameValue[1]);
                                         }
-                                        metainfo[FMQ_QUERY + std::to_string(i)] = std::move(queryTotal);
                                     }
                                 }
                                 m_state = STATE_FIND_HEADERS;
@@ -577,29 +564,30 @@ void ProtocolHttpServer::prepareMessageToSend(IMessagePtr message)
             firstLine += ' ';
             firstLine += pathEncode;
 
-            int i = 0;
-            const std::string* query = controlData.getData<std::string>(FMQ_QUERY + std::to_string(i));
-            while (query != nullptr)
+            const VariantStruct* queries = controlData.getData<VariantStruct>("queries");
+            if (queries)
             {
-                if (i == 0)
+                for (auto it = queries->begin(); it != queries->end(); ++it)
                 {
-                    firstLine += '?';
+                    if (it == queries->begin())
+                    {
+                        firstLine += '?';
+                    }
+                    else
+                    {
+                        firstLine += '&';
+                    }
+                    std::string key;
+                    std::string value;
+
+                    encode(key, it->first);
+                    encode(value, it->second);
+                    firstLine += key;
+                    firstLine += '=';
+                    firstLine += value;
                 }
-                else
-                {
-                    firstLine += '&';
-                }
-                std::string queryEncode;
-                encode(queryEncode, *query);
-                firstLine += queryEncode;
-                ++i;
-                query = controlData.getData<std::string>(FMQ_QUERY + std::to_string(i));
             }
-            if (query && !query->empty())
-            {
-                firstLine += '?';
-                firstLine += *query;
-            }
+
             firstLine += " HTTP/1.1";
         }
     }
@@ -719,7 +707,12 @@ bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolC
         {
             assert(m_message);
             handled = true;
-            std::int32_t timeout = m_message->getControlData().getDataValue<std::int32_t>("query.timeout");
+            std::int32_t timeout = 0;
+            const std::string* strTimeout = m_message->getMetainfo("FMQQUERY_timeout");
+            if (strTimeout)
+            {
+                timeout = std::atoi(strTimeout->c_str());
+            }
             callback->pollRequest(m_connectionId, timeout);
         }
         else if (*m_path == FMQ_PING)
@@ -730,15 +723,15 @@ bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolC
         else if (*m_path == FMQ_CONFIG)
         {
             handled = true;
-            const Variant* timeout = m_message->getControlData().getVariant("query.activitytimeout");
+            const std::string* timeout = m_message->getMetainfo("FMQQUERY_activitytimeout");
             if (timeout)
             {
-                callback->setActivityTimeout(*timeout);
+                callback->setActivityTimeout(std::atoi(timeout->c_str()));
             }
-            const Variant* pollMaxRequests = m_message->getControlData().getVariant("query.pollmaxrequests");
+            const std::string* pollMaxRequests = m_message->getMetainfo("FMQQUERY_pollmaxrequests");
             if (pollMaxRequests)
             {
-                callback->setPollMaxRequests(*pollMaxRequests);
+                callback->setPollMaxRequests(std::atoi(pollMaxRequests->c_str()));
             }
             callback->reply(getMessageFactory()(), m_connectionId);
         }

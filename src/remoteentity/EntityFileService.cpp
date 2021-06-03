@@ -110,7 +110,7 @@ bool FileTransferReply::replyFile(ReplyContextUPtr& replyContext)
                         reply.data.resize(sizeFile);
 
                         char* buf = reply.data.data();
-                        int len = reply.data.size();
+                        int len = static_cast<int>(reply.data.size());
                         int err = 0;
                         int lenReceived = 0;
                         bool ex = false;
@@ -138,7 +138,7 @@ bool FileTransferReply::replyFile(ReplyContextUPtr& replyContext)
                                 ex = true;
                             }
                         }
-                        if (lenReceived < reply.data.size())
+                        if (lenReceived < static_cast<int>(reply.data.size()))
                         {
                             reply.data.resize(lenReceived);
                         }

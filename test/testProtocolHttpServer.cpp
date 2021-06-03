@@ -132,8 +132,8 @@ TEST_F(TestProtocolHttpServer, testReceiveHeaders)
     metainfo[ProtocolHttpServer::FMQ_HTTP] = "request";
     metainfo[ProtocolHttpServer::FMQ_METHOD] = "GET";
     metainfo[ProtocolHttpServer::FMQ_PATH] = "/hello";
-    metainfo[ProtocolHttpServer::FMQ_QUERY + "0"] = "filter=world";
-    metainfo[ProtocolHttpServer::FMQ_QUERY + "1"] = "lang=en";
+    metainfo[ProtocolHttpServer::FMQ_QUERY_PREFIX + "filter"] = "world";
+    metainfo[ProtocolHttpServer::FMQ_QUERY_PREFIX + "lang"] = "en";
     metainfo[ProtocolHttpServer::FMQ_PROTOCOL] = "HTTP/1.1";
 
     message->addMetainfo("hello", "123");
@@ -154,8 +154,8 @@ TEST_F(TestProtocolHttpServer, testReceivePayload)
     metainfo[ProtocolHttpServer::FMQ_HTTP] = "request";
     metainfo[ProtocolHttpServer::FMQ_METHOD] = "GET";
     metainfo[ProtocolHttpServer::FMQ_PATH] = "/hello";
-    metainfo[ProtocolHttpServer::FMQ_QUERY + "0"] = "filter=world";
-    metainfo[ProtocolHttpServer::FMQ_QUERY + "1"] = "lang=en";
+    metainfo[ProtocolHttpServer::FMQ_QUERY_PREFIX + "filter"] = "world";
+    metainfo[ProtocolHttpServer::FMQ_QUERY_PREFIX + "lang"] = "en";
     metainfo[ProtocolHttpServer::FMQ_PROTOCOL] = "HTTP/1.1";
 
     message->addMetainfo("Content-Length", "10");
@@ -186,8 +186,8 @@ TEST_F(TestProtocolHttpServer, testReceiveSplitPayload)
     metainfo[ProtocolHttpServer::FMQ_HTTP] = "request";
     metainfo[ProtocolHttpServer::FMQ_METHOD] = "GET";
     metainfo[ProtocolHttpServer::FMQ_PATH] = "/hello";
-    metainfo[ProtocolHttpServer::FMQ_QUERY + "0"] = "filter=world";
-    metainfo[ProtocolHttpServer::FMQ_QUERY + "1"] = "lang=en";
+    metainfo[ProtocolHttpServer::FMQ_QUERY_PREFIX + "filter"] = "world";
+    metainfo[ProtocolHttpServer::FMQ_QUERY_PREFIX + "lang"] = "en";
     metainfo[ProtocolHttpServer::FMQ_PROTOCOL] = "HTTP/1.1";
 
     message->addMetainfo("Content-Length", "10");
@@ -236,10 +236,8 @@ TEST_F(TestProtocolHttpServer, testSendPrepareMessage)
     controlData = VariantStruct{ {ProtocolHttpServer::FMQ_HTTP, std::string("request")},
                                  {ProtocolHttpServer::FMQ_METHOD, std::string("GET")},
                                  {ProtocolHttpServer::FMQ_PATH, std::string("/hello")},
-                                 {ProtocolHttpServer::FMQ_QUERY + "0", std::string("filter=world")},
-                                 {ProtocolHttpServer::FMQ_QUERY + "1", std::string("lang=en")},
-                                 {ProtocolHttpServer::FMQ_PROTOCOL, std::string("HTTP/1.1")} };
-
+                                 {"queries", VariantStruct{{"filter", std::string("world")},{"lang", std::string("en")}}} };
+        
     message->addSendPayload(std::string("0123456789"));
 
     m_protocol->prepareMessageToSend(message);
@@ -250,7 +248,7 @@ TEST_F(TestProtocolHttpServer, testSendPrepareMessage)
     auto it2 = it1;
     ++it2;
 
-    static const std::string HEADERS = "GET /hello?filter%3Dworld&lang%3Den HTTP/1.1\r\nConnection: keep-alive\r\nContent-Length: 10\r\n\r\n";
+    static const std::string HEADERS = "GET /hello?filter=world&lang=en HTTP/1.1\r\nConnection: keep-alive\r\nContent-Length: 10\r\n\r\n";
     static const std::string PAYLOAD = "0123456789";
 
     ASSERT_EQ(it1->second, HEADERS.size());
