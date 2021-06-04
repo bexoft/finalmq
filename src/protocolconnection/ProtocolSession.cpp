@@ -137,6 +137,7 @@ int64_t ProtocolSession::setConnection(const IStreamConnectionPtr& connection, b
     {
         initProtocolValues();
         m_protocolConnection.protocol->setCallback(shared_from_this());
+        m_protocolConnection.protocol->setConnection(connection);
     }
     if (connection)
     {
@@ -231,7 +232,7 @@ void ProtocolSession::getProtocolConnectionFromConnectionId(const ProtocolConnec
 bool ProtocolSession::sendMessage(const IMessagePtr& msg, bool isReply)
 {
     bool ok = false;
-    // lock whole function, because the protocol can be changed by setProtocol (lock also over sendMessage, because the prepareMessageToSend could increment a sequential message counter and the order of the counter shall be like the messages that are sent.)
+    // lock whole function, because the protocol can be changed by setProtocol (lock also over sendMessage, because the protocol could increment a sequential message counter and the order of the counter shall be like the messages that are sent.)
     std::unique_lock<std::mutex> lock(m_mutex);
 
     if (!isReply && m_protocolFlagIsSendRequestByPoll)
@@ -447,6 +448,7 @@ bool ProtocolSession::connectProtocol(const std::string& endpoint, const IProtoc
     m_protocolConnection.protocol = protocol;
     initProtocolValues();
     m_protocolConnection.protocol->setCallback(shared_from_this());
+    m_protocolConnection.protocol->setConnection(connection);
     m_protocolConnection.connection = connection;
     sendBufferedMessages();
     lock.unlock();
@@ -621,6 +623,11 @@ void ProtocolSession::reconnect()
     IStreamConnectionPtr connection = m_streamConnectionContainer->createConnection(std::weak_ptr<IStreamConnectionCallback>(m_protocolConnection.protocol));
     std::unique_lock<std::mutex> lock(m_mutex);
     m_protocolConnection.connection = connection;
+    
+    // do not set the connection here: m_protocolConnection.protocol->setConnection(connection);
+    // protocols that call reconnect (client) shall get the connection from IStreamConnectionCallback::connected()
+    // inside the protocol m_connection must be protected by a protocol mutex
+
     lock.unlock();
     m_streamConnectionContainer->connect(connection, m_endpoint, m_connectionProperties);
 }
@@ -718,6 +725,11 @@ bool ProtocolSession::findSessionByName(const std::string& sessionName)
 void ProtocolSession::setSessionName(const std::string& sessionName)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
+    m_messagesBuffered.clear();
+    m_pollMessages.clear();
+    m_pollReply = nullptr;
+    m_pollWaiting = false;
+    m_pollConnectionId = 0;
     std::shared_ptr<IProtocolSessionList> list = m_protocolSessionList.lock();
     lock.unlock();
 
@@ -799,20 +811,13 @@ void ProtocolSession::pollRequest(std::int64_t connectionId, int timeout)
 }
 
 
-void ProtocolSession::reply(const IMessagePtr& message, std::int64_t connectionId)
+void ProtocolSession::activity()
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     if (m_incomingConnection)
     {
         m_activityTimer.setTimeout(m_activityTimeout);
     }
-    const ProtocolConnection* protocolConnection = &m_protocolConnection;
-    if (m_protocolFlagIsMultiConnectionSession)
-    {
-        getProtocolConnectionFromConnectionId(protocolConnection, connectionId);
-    }
-
-    sendMessage(message, protocolConnection);
 }
 
 
@@ -830,19 +835,13 @@ void ProtocolSession::setPollMaxRequests(int maxRequests)
 
 bool ProtocolSession::sendMessage(const IMessagePtr& message, const ProtocolConnection* protocolConnection)
 {
-    // the mutex must be locked before calling sendMessage, lock also over sendMessage, because the prepareMessageToSend could increment a sequential message counter and the order of the counter shall be like the messages that are sent.
+    // the mutex must be locked before calling sendMessage, lock also over sendMessage, because the protocol could increment a sequential message counter and the order of the counter shall be like the messages that are sent.
     bool ok = false;
     if (protocolConnection)
     {
+        assert(protocolConnection->connection);
         IMessagePtr messageProtocol = convertMessageToProtocol(message);
-        if (!messageProtocol->wasSent())
-        {
-            protocolConnection->protocol->prepareMessageToSend(messageProtocol);
-        }
-        if (protocolConnection->connection)
-        {
-            ok = protocolConnection->connection->sendMessage(messageProtocol);
-        }
+        ok = protocolConnection->protocol->sendMessage(messageProtocol);
     }
     return ok;
 }

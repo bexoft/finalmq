@@ -22,6 +22,8 @@
 
 #include "finalmq/remoteentity/FileTransferReply.h"
 #include "finalmq/remoteentity/RemoteEntity.h"
+#include "finalmq/variant/VariantValueStruct.h"
+#include "finalmq/variant/VariantValues.h"
 
 #include <fcntl.h>
 
@@ -65,12 +67,13 @@ bool FileTransferReply::replyFile(const RequestContextPtr& requestContext, const
     {
         handeled = true;
 
-//            if (requestContext->doesSupportFileTransfer())
-//            {
-//                requestContext->reply(filename);
-//            }
-//            else
-//            {
+        if (requestContext->doesSupportFileTransfer())
+        {
+            Variant controlData = VariantStruct{ {"filetransfer", filename} };
+            requestContext->reply(controlData);
+        }
+        else
+        {
             int sizeFile = statdata.st_size;
 
             std::shared_ptr<IMessage::Metainfo> mi;
@@ -132,7 +135,7 @@ bool FileTransferReply::replyFile(const RequestContextPtr& requestContext, const
                     requestContext->reply(finalmq::remoteentity::Status::STATUS_ENTITY_NOT_FOUND);
                 }
             });
-//      }
+        }
     }
     return handeled;
 }

@@ -62,7 +62,7 @@ struct IRemoteEntityFormatRegistry
     virtual std::shared_ptr<StructBase> parse(IMessage& message, int contentType, bool storeRawData, remoteentity::Header& header, bool& syntaxError) = 0;
     virtual std::shared_ptr<StructBase> parseHeaderInMetainfo(IMessage& message, int contentType, bool storeRawData, remoteentity::Header& header, bool& syntaxError) = 0;
     virtual std::shared_ptr<StructBase> parsePureData(IMessage& message, remoteentity::Header& header) = 0;
-    virtual bool send(const IProtocolSessionPtr& session, remoteentity::Header& header, Variant&& echoData, const StructBase* structBase = nullptr, IMessage::Metainfo* metainfo = nullptr) = 0;
+    virtual bool send(const IProtocolSessionPtr& session, remoteentity::Header& header, Variant&& echoData, const StructBase* structBase = nullptr, IMessage::Metainfo* metainfo = nullptr, Variant* controlData = nullptr) = 0;
 
     virtual void registerFormat(int contentType, const std::shared_ptr<IRemoteEntityFormat>& format) = 0;
     virtual bool isRegistered(int contentType) const = 0;
@@ -77,7 +77,7 @@ public:
     virtual std::shared_ptr<StructBase> parse(IMessage& message, int contentType, bool storeRawData, remoteentity::Header& header, bool& syntaxError) override;
     virtual std::shared_ptr<StructBase> parseHeaderInMetainfo(IMessage& message, int contentType, bool storeRawData, remoteentity::Header& header, bool& syntaxError) override;
     virtual std::shared_ptr<StructBase> parsePureData(IMessage& message, remoteentity::Header& header) override;
-    virtual bool send(const IProtocolSessionPtr& session, remoteentity::Header& header, Variant&& echoData, const StructBase* structBase = nullptr, IMessage::Metainfo* metainfo = nullptr) override;
+    virtual bool send(const IProtocolSessionPtr& session, remoteentity::Header& header, Variant&& echoData, const StructBase* structBase = nullptr, IMessage::Metainfo* metainfo = nullptr, Variant* controlData = nullptr) override;
     virtual void registerFormat(int contentType, const std::shared_ptr<IRemoteEntityFormat>& format) override;
     virtual bool isRegistered(int contentType) const override;
 

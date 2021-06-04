@@ -25,6 +25,7 @@
 #include "finalmq/streamconnection/IMessage.h"
 #include "finalmq/protocolconnection/IProtocol.h"
 #include "finalmq/helpers/FmqDefines.h"
+#include "finalmq/helpers/Executor.h"
 
 #include <random>
 
@@ -33,7 +34,7 @@ namespace finalmq {
 
 
 class SYMBOLEXP ProtocolHttpServer : public IProtocol
-                             , private std::enable_shared_from_this<ProtocolHttpServer>
+                                   , private std::enable_shared_from_this<ProtocolHttpServer>
 {
 public:
     enum { PROTOCOL_ID = 4 };
@@ -49,10 +50,12 @@ public:
     static const std::string HTTP_RESPONSE;
 
     ProtocolHttpServer();
+    virtual ~ProtocolHttpServer();
 
 private:
     // IProtocol
     virtual void setCallback(const std::weak_ptr<IProtocolCallback>& callback) override;
+    virtual void setConnection(const IStreamConnectionPtr& connection) override;
     virtual std::uint32_t getProtocolId() const override;
     virtual bool areMessagesResendable() const override;
     virtual bool doesSupportMetainfo() const override;
@@ -62,7 +65,7 @@ private:
     virtual bool isSendRequestByPoll() const override;
     virtual bool doesSupportFileTransfer() const override;
     virtual FuncCreateMessage getMessageFactory() const override;
-    virtual void prepareMessageToSend(IMessagePtr message) override;
+    virtual bool sendMessage(IMessagePtr message) override;
     virtual void moveOldProtocolState(IProtocol& protocolOld) override;
     virtual void received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) override;
     virtual hybrid_ptr<IStreamConnectionCallback> connected(const IStreamConnectionPtr& connection) override;
@@ -111,6 +114,9 @@ private:
     bool                                m_createSession = false;
     std::string                         m_sessionName;
     std::weak_ptr<IProtocolCallback>    m_callback;
+    IStreamConnectionPtr                m_connection;
+    std::unique_ptr<IExecutor>          m_executor;
+    std::thread                         m_threadExecutor;
 
     // path
     std::string*                        m_path = nullptr;

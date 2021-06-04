@@ -358,7 +358,7 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     bool pureData = false;
     if (session->doesSupportMetainfo())
     {
-        const std::string* path = message->getControlData().getData<std::string>(FMQ_PATH);
+        const std::string* path = message->getMetainfo(FMQ_PATH);
         if (path)
         {
             if (isPureDataPath(*path))

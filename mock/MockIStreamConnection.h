@@ -23,27 +23,24 @@
 #pragma once
 
 
-#include "finalmq/protocolconnection/IProtocol.h"
+#include "finalmq/streamconnection/ConnectionData.h"
+
 
 #include "gmock/gmock.h"
 
 namespace finalmq {
 
-class MockIProtocolCallback : public IProtocolCallback
+
+
+class MockIStreamConnection : public IStreamConnection
 {
 public:
-    MOCK_METHOD(void, connected, (), (override));
-    MOCK_METHOD(void, disconnected, (), (override));
-    MOCK_METHOD(void, received, (const IMessagePtr& message, std::int64_t connectionId), (override));
-    MOCK_METHOD(void, socketConnected, (), (override));
-    MOCK_METHOD(void, socketDisconnected, (), (override));
-    MOCK_METHOD(void, reconnect, (), (override));
-    MOCK_METHOD(bool, findSessionByName, (const std::string& sessionName), (override));
-    MOCK_METHOD(void, setSessionName, (const std::string& sessionName), (override));
-    MOCK_METHOD(void, pollRequest, (std::int64_t connectionId, int timeout), (override));
-    MOCK_METHOD(void, activity, (), (override));
-    MOCK_METHOD(void, setActivityTimeout, (int timeout), (override));
-    MOCK_METHOD(void, setPollMaxRequests, (int maxRequests), (override));
+    MOCK_METHOD(bool, sendMessage, (const IMessagePtr& msg), (override));
+    MOCK_METHOD(ConnectionData, getConnectionData, (), (const override));
+    MOCK_METHOD(ConnectionState, getConnectionState, (), (const override));
+    MOCK_METHOD(std::int64_t, getConnectionId, (), (const override));
+    MOCK_METHOD(SocketPtr, getSocket, (), (override));
+    MOCK_METHOD(void, disconnect, (), (override));
 };
 
-}   // namespace finalmq
+}

@@ -98,5 +98,9 @@ void Executor::terminate()
     m_newActions = true;
 }
 
+bool Executor::isTerminating() const
+{
+    return m_terminate;
+}
 
 } // namespace finalmq

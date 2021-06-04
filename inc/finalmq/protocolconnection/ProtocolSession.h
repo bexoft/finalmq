@@ -141,7 +141,7 @@ private:
     virtual bool findSessionByName(const std::string& sessionName) override;
     virtual void setSessionName(const std::string& sessionName) override;
     virtual void pollRequest(std::int64_t connectionId, int timeout) override;
-    virtual void reply(const IMessagePtr& message, std::int64_t connectionId) override;
+    virtual void activity() override;
     virtual void setActivityTimeout(int timeout) override;
     virtual void setPollMaxRequests(int maxRequests) override;
 

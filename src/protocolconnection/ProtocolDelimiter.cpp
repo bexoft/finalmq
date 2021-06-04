@@ -45,6 +45,11 @@ void ProtocolDelimiter::setCallback(const std::weak_ptr<IProtocolCallback>& call
     m_callback = callback;
 }
 
+void ProtocolDelimiter::setConnection(const IStreamConnectionPtr& connection)
+{
+    m_connection = connection;
+}
+
 bool ProtocolDelimiter::areMessagesResendable() const
 {
     return true;
@@ -166,7 +171,7 @@ std::vector<ssize_t> ProtocolDelimiter::findEndOfMessage(const char* buffer, ssi
 
 
 
-void ProtocolDelimiter::prepareMessageToSend(IMessagePtr message)
+bool ProtocolDelimiter::sendMessage(IMessagePtr message)
 {
     if (!message->wasSent())
     {
@@ -179,6 +184,8 @@ void ProtocolDelimiter::prepareMessageToSend(IMessagePtr message)
             message->prepareMessageToSend();
         }
     }
+    assert(m_connection);
+    return m_connection->sendMessage(message);
 }
 
 
@@ -202,7 +209,7 @@ void ProtocolDelimiter::received(const IStreamConnectionPtr& /*connection*/, con
     int res = 0;
     do
     {
-        res = socket->receive(const_cast<char*>(receiveBuffer.data() + bytesReceived + sizeDelimiterPartial), bytesToRead - bytesReceived);
+        res = socket->receive(const_cast<char*>(receiveBuffer.data() + bytesReceived + sizeDelimiterPartial), static_cast<int>(bytesToRead - bytesReceived));
         if (res > 0)
         {
             bytesReceived += res;

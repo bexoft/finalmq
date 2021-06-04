@@ -180,7 +180,7 @@ static void metainfoToHeader(remoteentity::Header& header, IMessage::Metainfo& m
 }
 
 
-bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, remoteentity::Header& header, Variant&& echoData, const StructBase* structBase, IMessage::Metainfo* metainfo)
+bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, remoteentity::Header& header, Variant&& echoData, const StructBase* structBase, IMessage::Metainfo* metainfo, Variant* controlData)
 {
     bool ok = true;
     assert(session);
@@ -223,6 +223,23 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, re
             metainfoToHeader(header, *metainfo);
         }
 
+        if (controlData)
+        {
+            if (controlData->getType() != VARTYPE_STRUCT)
+            {
+                message->getControlData() = std::move(*controlData);
+            }
+            else
+            {
+                VariantStruct* varstruct = message->getControlData().getData<VariantStruct>("");
+                VariantStruct* varstruct2 = controlData->getData<VariantStruct>("");
+                if (varstruct && varstruct2)
+                {
+                    varstruct->insert(varstruct->begin(), std::make_move_iterator(varstruct2->begin()), std::make_move_iterator(varstruct2->end()));
+                    varstruct2->clear();
+                }
+            }
+        }
         if (pureData == nullptr)
         {
             if (!session->doesSupportMetainfo() || (session->isSendRequestByPoll() && header.mode == MsgMode::MSG_REQUEST))

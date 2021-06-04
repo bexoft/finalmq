@@ -43,6 +43,7 @@ private:
     virtual void addAction(std::function<void()> func) override;
     virtual void run() override;
     virtual void terminate() override;
+    virtual bool isTerminating() const override;
 
 private:
     std::deque<std::function<void()>>   m_actions;

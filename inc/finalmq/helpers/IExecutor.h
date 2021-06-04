@@ -38,6 +38,7 @@ struct IExecutor
     virtual void addAction(std::function<void()> func) = 0;
     virtual void run() = 0;
     virtual void terminate() = 0;
+    virtual bool isTerminating() const = 0;
 };
 
 typedef std::shared_ptr<IExecutor>  IExecutorPtr;

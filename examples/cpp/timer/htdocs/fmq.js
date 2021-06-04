@@ -220,7 +220,7 @@ class FmqSession
 
     createSession(funcresult)
     {
-		this.requestReply('fmq', 'ping', null, function(outparams, context) {
+		this.requestReply('fmq', 'createsession', null, function(outparams, context) {
 			context.funcresult(outparams);
 			context._this._longpoll();
 		}, {_this:this, funcresult:funcresult});
