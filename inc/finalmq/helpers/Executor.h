@@ -26,7 +26,9 @@
 #include "finalmq/helpers/IExecutor.h"
 
 #include <deque>
+#include <vector>
 #include <atomic>
+#include <thread>
 
 
 namespace finalmq {
@@ -52,6 +54,43 @@ private:
     CondVar                             m_newActions;
     std::function<void()>               m_funcNotify;
     std::mutex                          m_mutex;
+};
+
+
+
+class SYMBOLEXP ExecutorWorker : public IExecutorWorker
+{
+public:
+    ExecutorWorker(int numberOfWorkerThreads = 4);
+    virtual ~ExecutorWorker();
+
+private:
+    virtual void addAction(std::function<void()> func) override;
+    virtual bool isTerminating() const override;
+
+    std::unique_ptr<IExecutor>  m_executor;
+    std::vector<std::thread>    m_threads;
+};
+
+
+
+class SYMBOLEXP GlobalExecutorWorker
+{
+public:
+    inline static IExecutorWorker& instance()
+    {
+        if (!m_instance)
+        {
+            m_instance = std::make_unique<ExecutorWorker>();
+        }
+        return *m_instance;
+    }
+    static void setInstance(std::unique_ptr<IExecutorWorker>& instance);
+
+private:
+    GlobalExecutorWorker() = delete;
+
+    static std::unique_ptr<IExecutorWorker> m_instance;
 };
 
 

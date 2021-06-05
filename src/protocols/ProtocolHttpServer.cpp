@@ -73,18 +73,12 @@ std::atomic_int64_t ProtocolHttpServer::m_nextSessionNameCounter{ 1 };
 ProtocolHttpServer::ProtocolHttpServer()
     : m_randomDevice()
     , m_randomGenerator(m_randomDevice())
-    , m_executor(std::make_unique<Executor>())
 {
 
 }
 
 ProtocolHttpServer::~ProtocolHttpServer()
 {
-    m_executor->terminate();
-    if (m_threadExecutor.joinable())
-    {
-        m_threadExecutor.join();
-    }
 }
 
 
@@ -737,12 +731,8 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
 
     if (ok && filename)
     {
-        if (!m_threadExecutor.joinable())
-        {
-            m_threadExecutor = std::thread([this]() { m_executor->run(); });
-        }
         std::string file = *filename;
-        m_executor->addAction([this, file, filesize]() {
+        GlobalExecutorWorker::instance().addAction([this, file, filesize]() {
             int flags = O_RDONLY;
 #ifdef WIN32
             flags |= O_BINARY;
@@ -771,11 +761,7 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
                         {
                             messageData->downsizeLastSendPayload(err);
                         }
-                        bool ok = false;
-                        if (!m_executor->isTerminating())
-                        {
-                            ok = m_connection->sendMessage(messageData);
-                        }
+                        bool ok = m_connection->sendMessage(messageData);
                         buf += err;
                         len -= err;
                         lenReceived += err;

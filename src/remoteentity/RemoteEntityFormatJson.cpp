@@ -128,6 +128,10 @@ static ssize_t findLast(const char* buffer, ssize_t size, char c)
 }
 
 
+static const std::string FMQ_PATH = "fmq_path";
+
+
+
 std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& bufferRef, bool storeRawData, Header& header, bool& syntaxError)
 {
     syntaxError = false;
@@ -193,7 +197,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
 
         std::string path = { &buffer[0], &buffer[ixCorrelationId] };
         path.erase(path.find_last_not_of(" \n\r\t") + 1);
-        header.meta.emplace_back("fmq_path");
+        header.meta.emplace_back(FMQ_PATH);
         header.meta.emplace_back(std::move(path));
 
         header.mode = MsgMode::MSG_REQUEST;
@@ -208,6 +212,8 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
             // skip comma
             ++endHeader;
         }
+        header.meta.emplace_back(FMQ_PATH);
+        header.meta.emplace_back(header.destname);
     }
 
     std::shared_ptr<StructBase> data;

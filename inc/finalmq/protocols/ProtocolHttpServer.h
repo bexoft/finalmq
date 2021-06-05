@@ -115,8 +115,6 @@ private:
     std::string                         m_sessionName;
     std::weak_ptr<IProtocolCallback>    m_callback;
     IStreamConnectionPtr                m_connection;
-    std::unique_ptr<IExecutor>          m_executor;
-    std::thread                         m_threadExecutor;
 
     // path
     std::string*                        m_path = nullptr;

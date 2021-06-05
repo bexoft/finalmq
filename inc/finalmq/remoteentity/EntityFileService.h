@@ -32,11 +32,10 @@ namespace finalmq {
 class SYMBOLEXP EntityFileServer : public RemoteEntity
 {
 public:
-    EntityFileServer(const std::string& baseDirectory = ".", int numberOfWorkerThreads = 4);
+    EntityFileServer(const std::string& baseDirectory = ".");
 
 private:
     std::string         m_baseDirectory;
-    FileTransferReply   m_fileTransfer;
 };
 
 

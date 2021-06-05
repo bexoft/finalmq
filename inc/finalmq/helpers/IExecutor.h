@@ -44,4 +44,14 @@ struct IExecutor
 typedef std::shared_ptr<IExecutor>  IExecutorPtr;
 
 
+struct IExecutorWorker
+{
+    virtual ~IExecutorWorker() {}
+    virtual void addAction(std::function<void()> func) = 0;
+    virtual bool isTerminating() const = 0;
+};
+
+typedef std::shared_ptr<IExecutorWorker>  IExecutorWorkerPtr;
+
+
 } // namespace finalmq

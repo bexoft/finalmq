@@ -24,6 +24,8 @@
 #include "finalmq/streamconnection/StreamConnectionContainer.h"
 #include "finalmq/streamconnection/Socket.h"
 #include "finalmq/streamconnection/AddressHelpers.h"
+#include "finalmq/helpers/Executor.h"
+
 
 #if defined(WIN32) || defined(__MINGW32__)
 #include "finalmq/poller/PollerImplSelect.h"
@@ -103,64 +105,6 @@ IStreamConnectionPrivatePtr StreamConnectionContainer::findConnectionById(std::i
 
 
 
-// AddressResolver
-
-AddressResolver::~AddressResolver()
-{
-    if (m_thread)
-    {
-        m_terminate = true;
-        m_release = true;
-        m_thread->join();
-    }
-}
-
-void AddressResolver::init()
-{
-    assert(!m_thread);
-    m_thread = std::make_unique<std::thread>([this] () { run(); });
-}
-
-void AddressResolver::resolveHost(const std::string& hostname, FuncResolved funcResolved)
-{
-    std::unique_lock<std::mutex> lock(m_mutex);
-    m_requests.emplace_back(std::make_unique<ResolveRequest>(hostname, std::move(funcResolved)));
-    lock.unlock();
-    m_release = true;
-}
-
-void AddressResolver::run()
-{
-    while (!m_terminate)
-    {
-        m_release.wait();
-        if (!m_terminate)
-        {
-            std::unique_lock<std::mutex> lock(m_mutex);
-            std::deque<std::unique_ptr<ResolveRequest>> requests = std::move(m_requests);
-            m_requests.clear();
-            lock.unlock();
-            for (size_t i = 0; i < requests.size(); ++i)
-            {
-                assert(requests[i]);
-                const ResolveRequest& request = *requests[i];
-                bool ok = false;
-                struct in_addr addr;
-                struct hostent* hp = gethostbyname(request.hostname.c_str());
-                if (hp)
-                {
-                    ok = true;
-                    addr = *((struct in_addr *)(hp->h_addr));
-                }
-                if (request.funcResolved)
-                {
-                    request.funcResolved(ok, addr);
-                }
-            }
-        }
-    }
-}
-
 
 
 // IStreamConnectionContainer
@@ -172,7 +116,6 @@ void StreamConnectionContainer::init(int cycleTime, int checkReconnectInterval, 
     m_cycleTime = cycleTime;
     m_checkReconnectInterval = checkReconnectInterval;
     m_poller->init();
-    m_addressResolver.init();
 }
 
 
@@ -353,9 +296,14 @@ bool StreamConnectionContainer::connect(const IStreamConnectionPtr& streamConnec
     if (doAsyncGetHostByName)
     {
         ret = true;
-        m_addressResolver.resolveHost(connectionData.hostname, [this, connection, connectionData, connectionProperties] (bool ok, const in_addr& addr) mutable {
-            if (ok)
+        std::string hostname = connectionData.hostname;
+        GlobalExecutorWorker::instance().addAction([this, connectionData, connection, connectionProperties]() mutable {
+            bool ok = false;
+            struct in_addr addr;
+            struct hostent* hp = gethostbyname(connectionData.hostname.c_str());
+            if (hp)
             {
+                addr = *((struct in_addr*)(hp->h_addr));
                 struct sockaddr_in addrTcp;
                 memset(&addrTcp, 0, sizeof(sockaddr_in));
                 addrTcp.sin_family = connectionData.af;

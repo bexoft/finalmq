@@ -108,6 +108,7 @@ void RemoteEntityFormatProto::serializeData(IMessage& message, const StructBase*
     }
 }
 
+static const std::string FMQ_PATH = "fmq_path";
 
 std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const BufferRef& bufferRef, bool storeRawData, Header& header, bool& syntaxError)
 {
@@ -140,6 +141,8 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const BufferRef& buff
         SerializerStruct serializerHeader(header);
         ParserProto parserHeader(serializerHeader, buffer, sizeHeader);
         ok = parserHeader.parseStruct(Header::structInfo().getTypeName());
+        header.meta.emplace_back(FMQ_PATH);
+        header.meta.emplace_back(header.destname);
     }
 
     std::shared_ptr<StructBase> data;
