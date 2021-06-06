@@ -41,6 +41,7 @@ struct IProtocolSessionPrivate : public IProtocolSession
     virtual void createConnection() = 0;
     virtual int64_t setConnection(const IStreamConnectionPtr& connection, bool verified) = 0;
     virtual void setProtocolConnection(const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) = 0;
+    virtual void setSessionNameInternal(const std::string& sessionName) = 0;
     virtual void cycleTime() = 0;
 };
 
@@ -129,6 +130,7 @@ private:
     virtual void createConnection() override;
     virtual int64_t setConnection(const IStreamConnectionPtr& connection, bool verified) override;
     virtual void setProtocolConnection(const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) override;
+    virtual void setSessionNameInternal(const std::string& sessionName) override;
     virtual void cycleTime() override;
 
     // IProtocolCallback
@@ -138,8 +140,8 @@ private:
     virtual void socketConnected() override;
     virtual void socketDisconnected() override;
     virtual void reconnect() override;
-    virtual bool findSessionByName(const std::string& sessionName) override;
-    virtual void setSessionName(const std::string& sessionName) override;
+    virtual bool findSessionByName(const std::string& sessionName, const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) override;
+    virtual void setSessionName(const std::string& sessionName, const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) override;
     virtual void pollRequest(std::int64_t connectionId, int timeout) override;
     virtual void activity() override;
     virtual void setActivityTimeout(int timeout) override;
@@ -197,6 +199,9 @@ private:
 
     int                                             m_activityTimeout = -1;
     PollingTimer                                    m_activityTimer;
+
+    bool                                            m_verified = false;
+    std::string                                     m_sessionName;
 
     mutable std::mutex                              m_mutex;
 };

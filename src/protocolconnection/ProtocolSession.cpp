@@ -423,6 +423,7 @@ void ProtocolSession::addSessionToList(bool verified)
     if (m_sessionId == 0)
     {
         std::unique_lock<std::mutex> lock(m_mutex);
+        m_verified = verified;
         IProtocolSessionListPtr protocolSessionList = m_protocolSessionList.lock();
         lock.unlock();
         if (protocolSessionList)
@@ -650,25 +651,6 @@ void ProtocolSession::cleanupMultiConnection()
 }
 
 
-void ProtocolSession::setProtocolConnection(const IProtocolPtr& protocol, const IStreamConnectionPtr& connection)
-{
-    assert(protocol);
-    assert(connection);
-    std::unique_lock<std::mutex> lock(m_mutex);
-    if (m_protocolFlagIsMultiConnectionSession)
-    {
-        cleanupMultiConnection();
-        m_multiConnections[connection->getConnectionId()] = { protocol , connection };
-    }
-    else
-    {
-        protocol->moveOldProtocolState(*m_protocolConnection.protocol);
-        m_protocolConnection.protocol = protocol;
-        m_protocolConnection.connection = connection;
-    }
-    protocol->setCallback(shared_from_this());
-}
-
 
 void ProtocolSession::cycleTime()
 {
@@ -696,9 +678,28 @@ void ProtocolSession::cycleTime()
     }
 }
 
+void ProtocolSession::setProtocolConnection(const IProtocolPtr& protocol, const IStreamConnectionPtr& connection)
+{
+    assert(protocol);
+    assert(connection);
+    std::unique_lock<std::mutex> lock(m_mutex);
+    if (m_protocolFlagIsMultiConnectionSession)
+    {
+        cleanupMultiConnection();
+        m_multiConnections[connection->getConnectionId()] = { protocol , connection };
+    }
+    else
+    {
+        protocol->moveOldProtocolState(*m_protocolConnection.protocol);
+        m_protocolConnection.protocol = protocol;
+        m_protocolConnection.connection = connection;
+    }
+    protocol->setCallback(shared_from_this());
+}
 
 
-bool ProtocolSession::findSessionByName(const std::string& sessionName)
+
+bool ProtocolSession::findSessionByName(const std::string& sessionName, const IProtocolPtr& protocol, const IStreamConnectionPtr& connection)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     std::shared_ptr<IProtocolSessionList> list = m_protocolSessionList.lock();
@@ -710,11 +711,20 @@ bool ProtocolSession::findSessionByName(const std::string& sessionName)
         {
             if (session.get() != this)
             {
-                disconnected(); // we are in the poller loop  thread
-                assert(m_protocolConnection.protocol);
-                session->setProtocolConnection(m_protocolConnection.protocol, m_protocolConnection.connection);
-                m_protocolConnection.protocol = nullptr;
-                return true;
+                if (m_verified)
+                {
+                    session->setProtocolConnection(protocol, connection);
+                }
+                else
+                {
+                    assert(protocol == m_protocolConnection.protocol);
+                    assert(connection == m_protocolConnection.connection);
+                    disconnected(); // we are in the poller loop  thread
+                    assert(m_protocolConnection.protocol);
+                    session->setProtocolConnection(m_protocolConnection.protocol, m_protocolConnection.connection);
+                    m_protocolConnection.protocol = nullptr;
+                    return true;
+                }
             }
             return true;
         }
@@ -722,23 +732,51 @@ bool ProtocolSession::findSessionByName(const std::string& sessionName)
     return false;
 }
 
-void ProtocolSession::setSessionName(const std::string& sessionName)
+void ProtocolSession::setSessionNameInternal(const std::string& sessionName)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
-    m_messagesBuffered.clear();
-    m_pollMessages.clear();
-    m_pollReply = nullptr;
-    m_pollWaiting = false;
-    m_pollConnectionId = 0;
     std::shared_ptr<IProtocolSessionList> list = m_protocolSessionList.lock();
     lock.unlock();
 
     if (list)
     {
-        list->setSessionName(m_sessionId, sessionName);
+        bool setSuccessful = list->setSessionName(m_sessionId, sessionName);
+        if (setSuccessful)
+        {
+            lock.lock();
+            m_verified = true;
+            m_sessionName = sessionName;
+            lock.unlock();
+            connected();    // we are in the poller loop  thread
+        }
     }
+}
 
-    connected();    // we are in the poller loop  thread
+
+void ProtocolSession::setSessionName(const std::string& sessionName, const IProtocolPtr& protocol, const IStreamConnectionPtr& connection)
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    std::shared_ptr<IProtocolSessionList> list = m_protocolSessionList.lock();
+    lock.unlock();
+
+    if (list)
+    {
+        bool setSuccessful = list->setSessionName(m_sessionId, sessionName);
+        if (setSuccessful)
+        {
+            lock.lock();
+            m_verified = true;
+            m_sessionName = sessionName;
+            lock.unlock();
+            connected();    // we are in the poller loop  thread
+        }
+        else
+        {
+            IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(m_callback, m_executor, protocol, m_protocolSessionList, m_bindProperties, m_contentType);
+            protocolSession->setConnection(connection, false);
+            protocolSession->setSessionNameInternal(sessionName);
+        }
+    }
 }
 
 

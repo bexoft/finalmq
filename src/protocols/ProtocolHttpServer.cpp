@@ -272,7 +272,8 @@ void ProtocolHttpServer::checkSessionName()
             std::vector<std::string> sessionMatched;
             for (size_t i = 0; i < m_sessionNames.size(); ++i)
             {
-                bool foundInNames = callback->findSessionByName(m_sessionNames[i]);
+                assert(m_connection);
+                bool foundInNames = callback->findSessionByName(m_sessionNames[i], shared_from_this(), m_connection);
                 streamInfo << this << " findSessionByName: " << foundInNames;
                 if (foundInNames)
                 {
@@ -317,7 +318,8 @@ void ProtocolHttpServer::checkSessionName()
         {
             m_sessionName = createSessionName();
             streamInfo << this << " create session: " << m_sessionName;
-            callback->setSessionName(m_sessionName);
+            assert(m_connection);
+            callback->setSessionName(m_sessionName, shared_from_this(), m_connection);
             m_headerSendNext[FMQ_SET_SESSION] = m_sessionName;
             m_headerSendNext[HTTP_SET_COOKIE] = COOKIE_PREFIX + m_sessionName + "; path=/";
         }
@@ -727,12 +729,18 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
     message->prepareMessageToSend();
 
     assert(m_connection);
-    bool ok =  m_connection->sendMessage(message);
+    bool ok = m_connection->sendMessage(message);
 
     if (ok && filename)
     {
         std::string file = *filename;
-        GlobalExecutorWorker::instance().addAction([this, file, filesize]() {
+        std::weak_ptr<ProtocolHttpServer> pThisWeak = shared_from_this();
+        GlobalExecutorWorker::instance().addAction([pThisWeak, file, filesize]() {
+            std::shared_ptr<ProtocolHttpServer> pThis = pThisWeak.lock();
+            if (!pThis)
+            {
+                return;
+            }
             int flags = O_RDONLY;
 #ifdef WIN32
             flags |= O_BINARY;
@@ -761,7 +769,7 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
                         {
                             messageData->downsizeLastSendPayload(err);
                         }
-                        bool ok = m_connection->sendMessage(messageData);
+                        bool ok = pThis->m_connection->sendMessage(messageData);
                         buf += err;
                         len -= err;
                         lenReceived += err;
@@ -779,12 +787,12 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
                 }
                 if (lenReceived < filesize)
                 {
-                    m_connection->disconnect();
+                    pThis->m_connection->disconnect();
                 }
             }
             else
             {
-                m_connection->disconnect();
+                pThis->m_connection->disconnect();
             }
         });
     }

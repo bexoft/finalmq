@@ -38,8 +38,8 @@ public:
     MOCK_METHOD(void, socketConnected, (), (override));
     MOCK_METHOD(void, socketDisconnected, (), (override));
     MOCK_METHOD(void, reconnect, (), (override));
-    MOCK_METHOD(bool, findSessionByName, (const std::string& sessionName), (override));
-    MOCK_METHOD(void, setSessionName, (const std::string& sessionName), (override));
+    MOCK_METHOD(bool, findSessionByName, (const std::string& sessionName, const IProtocolPtr& protocol, const IStreamConnectionPtr& connection), (override));
+    MOCK_METHOD(void, setSessionName, (const std::string& sessionName, const IProtocolPtr& protocol, const IStreamConnectionPtr& connection), (override));
     MOCK_METHOD(void, pollRequest, (std::int64_t connectionId, int timeout), (override));
     MOCK_METHOD(void, activity, (), (override));
     MOCK_METHOD(void, setActivityTimeout, (int timeout), (override));
