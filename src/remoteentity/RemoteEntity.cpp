@@ -734,7 +734,7 @@ void RemoteEntity::registerCommandFunction(const std::string& functionName, Func
 {
     std::shared_ptr<FuncCommand> func = std::make_shared<FuncCommand>(std::move(funcCommand));
     std::unique_lock<std::mutex> lock(m_mutex);
-    m_funcCommands.emplace(functionName, func);
+    m_funcCommands[functionName] = func;
 }
 
 

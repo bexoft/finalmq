@@ -30,10 +30,13 @@ namespace finalmq {
 
 
 
-EntityFileServer::EntityFileServer(const std::string& baseDirectory, int numberOfWorkerThreads)
+EntityFileServer::EntityFileServer(const std::string& baseDirectory)
     : m_baseDirectory(baseDirectory)
-    , m_fileTransfer(numberOfWorkerThreads)
 {
+    registerCommand<remoteentity::ConnectEntity>([this](const RequestContextPtr& requestContext, const std::shared_ptr<remoteentity::ConnectEntity>& /*request*/) {
+        requestContext->reply(remoteentity::Status::STATUS_ENTITY_NOT_FOUND);
+    });
+
     registerCommandFunction("*", [this](RequestContextPtr& requestContext, const StructBasePtr& /*structBase*/) {
         bool handeled = false;
         std::string* path = requestContext->getMetainfo("fmq_path");

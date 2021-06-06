@@ -39,6 +39,7 @@ public:
 private:
     // IProtocol
     virtual void setCallback(const std::weak_ptr<IProtocolCallback>& callback) override;
+    virtual void setConnection(const IStreamConnectionPtr& connection) override;
     virtual std::uint32_t getProtocolId() const override;
     virtual bool areMessagesResendable() const override;
     virtual bool doesSupportMetainfo() const override;
@@ -48,7 +49,7 @@ private:
     virtual bool isSendRequestByPoll() const override;
     virtual bool doesSupportFileTransfer() const override;
     virtual FuncCreateMessage getMessageFactory() const override;
-    virtual void prepareMessageToSend(IMessagePtr message) override;
+    virtual bool sendMessage(IMessagePtr message) override;
     virtual void moveOldProtocolState(IProtocol& protocolOld) override;
     virtual void received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) override;
     virtual hybrid_ptr<IStreamConnectionCallback> connected(const IStreamConnectionPtr& connection) override;
@@ -56,6 +57,7 @@ private:
     virtual IMessagePtr pollReply(std::deque<IMessagePtr>&& messages) override;
 
     std::weak_ptr<IProtocolCallback>    m_callback;
+    IStreamConnectionPtr                m_connection;
 };
 
 

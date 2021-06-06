@@ -22,6 +22,9 @@
 
 #include "finalmq/remoteentity/FileTransferReply.h"
 #include "finalmq/remoteentity/RemoteEntity.h"
+#include "finalmq/helpers/Executor.h"
+#include "finalmq/variant/VariantValueStruct.h"
+#include "finalmq/variant/VariantValues.h"
 
 #include <fcntl.h>
 
@@ -30,27 +33,13 @@ namespace finalmq {
 
 
 
-FileTransferReply::FileTransferReply(int numberOfWorkerThreads)
-    : m_executor(std::make_unique<Executor>())
+FileTransferReply::FileTransferReply()
 {
-    for (int i = 0; i < numberOfWorkerThreads; ++i)
-    {
-        m_threads.emplace_back(std::thread([this]() {
-            m_executor->run();
-        }));
-    }
 }
-
 
 FileTransferReply::~FileTransferReply()
 {
-    m_executor->terminate();
-    for (size_t i = 0; i < m_threads.size(); ++i)
-    {
-        m_threads[i].join();
-    }
 }
-
 
 
 bool FileTransferReply::replyFile(const RequestContextPtr& requestContext, const std::string& filename, IMessage::Metainfo* metainfo)
@@ -65,12 +54,13 @@ bool FileTransferReply::replyFile(const RequestContextPtr& requestContext, const
     {
         handeled = true;
 
-//            if (requestContext->doesSupportFileTransfer())
-//            {
-//                requestContext->reply(filename);
-//            }
-//            else
-//            {
+        if (requestContext->doesSupportFileTransfer())
+        {
+            Variant controlData = VariantStruct{ {"filetransfer", filename} };
+            requestContext->reply(controlData);
+        }
+        else
+        {
             int sizeFile = statdata.st_size;
 
             std::shared_ptr<IMessage::Metainfo> mi;
@@ -80,7 +70,7 @@ bool FileTransferReply::replyFile(const RequestContextPtr& requestContext, const
                 metainfo->clear();
             }
 
-            m_executor->addAction([filename, sizeFile, requestContext, mi]() {
+            GlobalExecutorWorker::instance().addAction([filename, sizeFile, requestContext, mi]() {
                 int flags = O_RDONLY;
 #ifdef WIN32
                 flags |= O_BINARY;
@@ -132,7 +122,7 @@ bool FileTransferReply::replyFile(const RequestContextPtr& requestContext, const
                     requestContext->reply(finalmq::remoteentity::Status::STATUS_ENTITY_NOT_FOUND);
                 }
             });
-//      }
+        }
     }
     return handeled;
 }

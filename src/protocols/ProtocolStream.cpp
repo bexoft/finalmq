@@ -26,6 +26,7 @@
 #include "finalmq/protocolconnection/ProtocolRegistry.h"
 #include "finalmq/streamconnection/Socket.h"
 
+#include <assert.h>
 
 namespace finalmq {
 
@@ -44,6 +45,11 @@ ProtocolStream::ProtocolStream()
 void ProtocolStream::setCallback(const std::weak_ptr<IProtocolCallback>& callback)
 {
     m_callback = callback;
+}
+
+void ProtocolStream::setConnection(const IStreamConnectionPtr& connection)
+{
+    m_connection = connection;
 }
 
 std::uint32_t ProtocolStream::getProtocolId() const
@@ -93,9 +99,14 @@ IProtocol::FuncCreateMessage ProtocolStream::getMessageFactory() const
     };
 }
 
-void ProtocolStream::prepareMessageToSend(IMessagePtr message)
+bool ProtocolStream::sendMessage(IMessagePtr message)
 {
-    message->prepareMessageToSend();
+    if (!message->wasSent())
+    {
+        message->prepareMessageToSend();
+    }
+    assert(m_connection);
+    return m_connection->sendMessage(message);
 }
 
 void ProtocolStream::moveOldProtocolState(IProtocol& /*protocolOld*/)

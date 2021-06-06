@@ -98,5 +98,55 @@ void Executor::terminate()
     m_newActions = true;
 }
 
+bool Executor::isTerminating() const
+{
+    return m_terminate;
+}
+
+
+
+//////////////////////////////////////////////////
+
+
+ExecutorWorker::ExecutorWorker(int numberOfWorkerThreads)
+    : m_executor(std::make_unique<Executor>())
+{
+    for (int i = 0; i < numberOfWorkerThreads; ++i)
+    {
+        m_threads.emplace_back(std::thread([this]() {
+            m_executor->run();
+        }));
+    }
+}
+
+ExecutorWorker::~ExecutorWorker()
+{
+    m_executor->terminate();
+    for (size_t i = 0; i < m_threads.size(); ++i)
+    {
+        m_threads[i].join();
+    }
+}
+
+void ExecutorWorker::addAction(std::function<void()> func)
+{
+    m_executor->addAction(std::move(func));
+}
+
+bool ExecutorWorker::isTerminating() const
+{
+    return m_executor->isTerminating();
+}
+
+
+/////////////////////////////////////////////////////
+
+std::unique_ptr<IExecutorWorker> GlobalExecutorWorker::m_instance;
+
+void GlobalExecutorWorker::setInstance(std::unique_ptr<IExecutorWorker>& instance)
+{
+    m_instance = std::move(instance);
+}
+
 
 } // namespace finalmq

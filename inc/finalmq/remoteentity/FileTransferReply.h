@@ -24,13 +24,7 @@
 
 
 #include "finalmq/helpers/FmqDefines.h"
-#include "finalmq/helpers/Executor.h"
 #include "finalmq/streamconnection/IMessage.h"
-
-#include <memory>
-#include <string>
-#include <vector>
-#include <thread>
 
 
 namespace finalmq {
@@ -41,15 +35,13 @@ typedef std::shared_ptr<RequestContext> RequestContextPtr;
 class SYMBOLEXP FileTransferReply
 {
 public:
-    FileTransferReply(int numberOfWorkerThreads = 2);
+    FileTransferReply();
     ~FileTransferReply();
 
     bool replyFile(const RequestContextPtr& requestContext, const std::string& filename, IMessage::Metainfo* metainfo = nullptr);
 
 private:
     std::string                 m_baseDirectory;
-    std::unique_ptr<IExecutor>  m_executor;
-    std::vector<std::thread>    m_threads;
 };
 
 

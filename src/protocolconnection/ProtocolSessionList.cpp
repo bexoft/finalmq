@@ -99,15 +99,21 @@ IProtocolSessionPrivatePtr ProtocolSessionList::findSessionByName(const std::str
 }
 
 
-void ProtocolSessionList::setSessionName(std::int64_t sessionId, const std::string& sessionName)
+bool ProtocolSessionList::setSessionName(std::int64_t sessionId, const std::string& sessionName)
 {
+    bool ok = false;
     std::unique_lock<std::mutex> lock(m_mutex);
     auto it = m_connectionId2ProtocolSession.find(sessionId);
     if (it != m_connectionId2ProtocolSession.end())
     {
-        it->second.name = sessionName;
-        it->second.verified = true;
+        if (!it->second.verified)
+        {
+            ok = true;
+            it->second.name = sessionName;
+            it->second.verified = true;
+        }
     }
+    return ok;
 }
 
 

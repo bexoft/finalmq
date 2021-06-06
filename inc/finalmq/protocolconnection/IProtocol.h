@@ -46,12 +46,13 @@ struct IProtocolCallback
     virtual void socketConnected() = 0;
     virtual void socketDisconnected() = 0;
     virtual void reconnect() = 0;
-    virtual bool findSessionByName(const std::string& sessionName) = 0;
-    virtual void setSessionName(const std::string& sessionName) = 0;
+    virtual bool findSessionByName(const std::string& sessionName, const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) = 0;
+    virtual void setSessionName(const std::string& sessionName, const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) = 0;
     virtual void pollRequest(std::int64_t connectionId, int timeout) = 0;
-    virtual void reply(const IMessagePtr& message, std::int64_t connectionId) = 0;
+    virtual void activity() = 0;
     virtual void setActivityTimeout(int timeout) = 0;
     virtual void setPollMaxRequests(int maxRequests) = 0;
+    virtual void disconnectedMultiConnection(const IStreamConnectionPtr& connection) = 0;
 };
 
 struct IProtocolSession;
@@ -63,6 +64,7 @@ struct IProtocol : public IStreamConnectionCallback
     typedef std::function<IMessagePtr()> FuncCreateMessage;
     virtual ~IProtocol() {}
     virtual void setCallback(const std::weak_ptr<IProtocolCallback>& callback) = 0;
+    virtual void setConnection(const IStreamConnectionPtr& connection) = 0;
     virtual std::uint32_t getProtocolId() const = 0;
     virtual bool areMessagesResendable() const = 0;
     virtual bool doesSupportMetainfo() const = 0;
@@ -72,10 +74,7 @@ struct IProtocol : public IStreamConnectionCallback
     virtual bool isSendRequestByPoll() const = 0;
     virtual bool doesSupportFileTransfer() const = 0;
     virtual FuncCreateMessage getMessageFactory() const = 0;
-    //virtual void receive(const SocketPtr& socket, int bytesToRead) = 0;
-    virtual void prepareMessageToSend(IMessagePtr message) = 0;
-    //virtual void socketConnected(IProtocolSession& session) = 0;
-    //virtual void socketDisconnected() = 0;
+    virtual bool sendMessage(IMessagePtr message) = 0;
     virtual void moveOldProtocolState(IProtocol& protocolOld) = 0;
     virtual IMessagePtr pollReply(std::deque<IMessagePtr>&& messages) = 0;
 };

@@ -279,8 +279,8 @@ bool StreamConnection::changeStateForDisconnect()
         assert(m_socketPrivate);
         m_connectionData.connectionState = ConnectionState::CONNECTIONSTATE_DISCONNECTED;
         m_poller->removeSocket(m_socketPrivate->getSocketDescriptor());
-        m_socketPrivate = nullptr;
         std::unique_lock<std::mutex> lock(m_mutex);
+        m_socketPrivate = nullptr;
         m_socket = nullptr;
     }
     return removeConnection;

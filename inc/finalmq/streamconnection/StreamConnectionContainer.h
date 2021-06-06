@@ -35,8 +35,6 @@
 #include "StreamConnection.h"
 #include "finalmq/helpers/CondVar.h"
 
-#include <thread>
-
 
 
 namespace finalmq {
@@ -59,35 +57,6 @@ struct IStreamConnectionContainer
     virtual void terminatePollerLoop() = 0;
 };
 
-
-class AddressResolver
-{
-public:
-    typedef std::function<void(bool ok, const in_addr& addr)> FuncResolved;
-
-    ~AddressResolver();
-    void init();
-    void resolveHost(const std::string& hostname, FuncResolved funcResolved);
-    void run();
-
-private:
-    struct ResolveRequest
-    {
-        ResolveRequest(const std::string& hostname_, FuncResolved&& funcResolved_)
-            : hostname(hostname_)
-            , funcResolved(std::move(funcResolved_))
-        {
-        }
-        std::string  hostname;
-        FuncResolved funcResolved;
-    };
-
-    std::deque<std::unique_ptr<ResolveRequest>> m_requests;
-    CondVar                         m_release;
-    bool                            m_terminate = false;
-    std::unique_ptr<std::thread>    m_thread;
-    mutable std::mutex              m_mutex;
-};
 
 
 
@@ -140,7 +109,6 @@ private:
     bool                                                            m_terminatePollerLoop = false;
     int                                                             m_cycleTime = 100;
     int                                                             m_checkReconnectInterval = 1000;
-    AddressResolver                                                 m_addressResolver;
     FuncPollerLoopTimer                                             m_funcTimer;
     mutable std::mutex                                              m_mutex;
 

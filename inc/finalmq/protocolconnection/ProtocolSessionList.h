@@ -40,7 +40,7 @@ struct IProtocolSessionList
     virtual std::vector< IProtocolSessionPrivatePtr > getAllSessions() const = 0;
     virtual IProtocolSessionPtr getSession(std::int64_t sessionId) const = 0;
     virtual IProtocolSessionPrivatePtr findSessionByName(const std::string& sessionName) const = 0;
-    virtual void setSessionName(std::int64_t sessionId, const std::string& sessionName) = 0;
+    virtual bool setSessionName(std::int64_t sessionId, const std::string& sessionName) = 0;
 };
 
 typedef std::shared_ptr<IProtocolSessionList> IProtocolSessionListPtr;
@@ -58,7 +58,7 @@ private:
     virtual std::vector< IProtocolSessionPrivatePtr > getAllSessions() const override;
     virtual IProtocolSessionPtr getSession(std::int64_t sessionId) const override;
     virtual IProtocolSessionPrivatePtr findSessionByName(const std::string& sessionName) const override;
-    virtual void setSessionName(std::int64_t sessionId, const std::string& sessionName) override;
+    virtual bool setSessionName(std::int64_t sessionId, const std::string& sessionName) override;
 
     struct SessionData
     {

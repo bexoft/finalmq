@@ -30,6 +30,7 @@
 #include "finalmq/streamconnection/Socket.h"
 
 #include "MockIOperatingSystem.h"
+#include "MockIStreamConnection.h"
 
 
 using ::testing::_;
@@ -55,16 +56,16 @@ class TestProtocolHttpServer: public testing::Test
 protected:
     virtual void SetUp()
     {
-        m_mockMockOperatingSystem = new MockIOperatingSystem;
-        std::unique_ptr<IOperatingSystem> iOperatingSystem(m_mockMockOperatingSystem);
+        m_mockOperatingSystem = new MockIOperatingSystem;
+        std::unique_ptr<IOperatingSystem> iOperatingSystem(m_mockOperatingSystem);
         OperatingSystem::setInstance(iOperatingSystem);
 
-        EXPECT_CALL(*m_mockMockOperatingSystem, socket(0, 0, 0)).WillOnce(Return(3));
-        EXPECT_CALL(*m_mockMockOperatingSystem, setNonBlocking(3, true)).WillOnce(Return(3));
-        EXPECT_CALL(*m_mockMockOperatingSystem, setLinger(3, true, 0)).WillOnce(Return(3));
+        EXPECT_CALL(*m_mockOperatingSystem, socket(0, 0, 0)).WillOnce(Return(3));
+        EXPECT_CALL(*m_mockOperatingSystem, setNonBlocking(3, true)).WillOnce(Return(3));
+        EXPECT_CALL(*m_mockOperatingSystem, setLinger(3, true, 0)).WillOnce(Return(3));
         m_socket->create(0, 0, 0);
 
-        m_protocol = &m_http;
+        m_protocol = std::make_shared<ProtocolHttpServer>();
         EXPECT_CALL(*m_mockCallback, setActivityTimeout(_));
         m_protocol->setCallback(m_mockCallback);
     }
@@ -75,10 +76,10 @@ protected:
         OperatingSystem::setInstance(resetOperatingSystem);
     }
 
-    MockIOperatingSystem*                   m_mockMockOperatingSystem = nullptr;
-    ProtocolHttpServer                      m_http;
-    IProtocol*                              m_protocol = nullptr;
+    MockIOperatingSystem*                   m_mockOperatingSystem = nullptr;
+    IProtocolPtr                            m_protocol = nullptr;
     std::shared_ptr<MockIProtocolCallback>  m_mockCallback = std::make_shared<MockIProtocolCallback>();
+    std::shared_ptr<MockIStreamConnection>  m_mockStreamConnection = std::make_shared<MockIStreamConnection>();
     std::shared_ptr<Socket>                 m_socket = std::make_shared<Socket>();
 };
 
@@ -90,7 +91,7 @@ TEST_F(TestProtocolHttpServer, testReceiveFirstLineIncomplete)
     EXPECT_CALL(*m_mockCallback, disconnected()).Times(0);
     std::string receiveBuffer = "GET /hello HTTP/1.1\r";
     int size = receiveBuffer.size();
-    EXPECT_CALL(*m_mockMockOperatingSystem, recv(_, _, size, 0)).Times(1).WillOnce(DoAll(SetArrayArgument<1>(receiveBuffer.data(), receiveBuffer.data()+size), Return(size)));
+    EXPECT_CALL(*m_mockOperatingSystem, recv(_, _, size, 0)).Times(1).WillOnce(DoAll(SetArrayArgument<1>(receiveBuffer.data(), receiveBuffer.data()+size), Return(size)));
     m_protocol->received(nullptr, m_socket, size);
 }
 
@@ -102,12 +103,12 @@ TEST_F(TestProtocolHttpServer, testReceiveFirstLinecomplete)
 
     std::string receiveBuffer1 = "GET /hello HTTP/1.1\r";
     int size1 = receiveBuffer1.size();
-    EXPECT_CALL(*m_mockMockOperatingSystem, recv(_, _, size1, 0)).Times(1).WillOnce(DoAll(SetArrayArgument<1>(receiveBuffer1.data(), receiveBuffer1.data() + size1), Return(size1)));
+    EXPECT_CALL(*m_mockOperatingSystem, recv(_, _, size1, 0)).Times(1).WillOnce(DoAll(SetArrayArgument<1>(receiveBuffer1.data(), receiveBuffer1.data() + size1), Return(size1)));
     m_protocol->received(nullptr, m_socket, size1);
 
     std::string receiveBuffer2 = "\n";
     int size2 = receiveBuffer2.size();
-    EXPECT_CALL(*m_mockMockOperatingSystem, recv(_, _, size2, 0)).Times(1).WillOnce(DoAll(SetArrayArgument<1>(receiveBuffer2.data(), receiveBuffer2.data() + size2), Return(size2)));
+    EXPECT_CALL(*m_mockOperatingSystem, recv(_, _, size2, 0)).Times(1).WillOnce(DoAll(SetArrayArgument<1>(receiveBuffer2.data(), receiveBuffer2.data() + size2), Return(size2)));
     m_protocol->received(nullptr, m_socket, size2);
 }
 
@@ -119,12 +120,12 @@ TEST_F(TestProtocolHttpServer, testReceiveHeaders)
 
     std::string receiveBuffer1 = "GET /hello?filter=world&lang=en HTTP/1.1\r\nhello: ";
     int size1 = receiveBuffer1.size();
-    EXPECT_CALL(*m_mockMockOperatingSystem, recv(_, _, size1, 0)).Times(1).WillOnce(DoAll(SetArrayArgument<1>(receiveBuffer1.data(), receiveBuffer1.data() + size1), Return(size1)));
+    EXPECT_CALL(*m_mockOperatingSystem, recv(_, _, size1, 0)).Times(1).WillOnce(DoAll(SetArrayArgument<1>(receiveBuffer1.data(), receiveBuffer1.data() + size1), Return(size1)));
     m_protocol->received(nullptr, m_socket, size1);
 
     std::string receiveBuffer2 = "123\r\n";
     int size2 = receiveBuffer2.size();
-    EXPECT_CALL(*m_mockMockOperatingSystem, recv(_, _, size2, 0)).Times(1).WillOnce(DoAll(SetArrayArgument<1>(receiveBuffer2.data(), receiveBuffer2.data() + size2), Return(size2)));
+    EXPECT_CALL(*m_mockOperatingSystem, recv(_, _, size2, 0)).Times(1).WillOnce(DoAll(SetArrayArgument<1>(receiveBuffer2.data(), receiveBuffer2.data() + size2), Return(size2)));
     m_protocol->received(nullptr, m_socket, size2);
 
     std::shared_ptr<IMessage> message = std::make_shared<ProtocolMessage>(0);
@@ -140,8 +141,9 @@ TEST_F(TestProtocolHttpServer, testReceiveHeaders)
     EXPECT_CALL(*m_mockCallback, received(MatcherReceiveMessage(message), _)).Times(1);
     std::string receiveBuffer3 = "\r\n";
     int size3 = receiveBuffer3.size();
-    EXPECT_CALL(*m_mockCallback, setSessionName(_)).Times(1);
-    EXPECT_CALL(*m_mockMockOperatingSystem, recv(_, _, size3, 0)).Times(1).WillOnce(DoAll(SetArrayArgument<1>(receiveBuffer3.data(), receiveBuffer3.data() + size3), Return(size3)));
+    m_protocol->setConnection(m_mockStreamConnection);
+    EXPECT_CALL(*m_mockCallback, setSessionName(_, _, _)).Times(1);
+    EXPECT_CALL(*m_mockOperatingSystem, recv(_, _, size3, 0)).Times(1).WillOnce(DoAll(SetArrayArgument<1>(receiveBuffer3.data(), receiveBuffer3.data() + size3), Return(size3)));
     m_protocol->received(nullptr, m_socket, size3);
 }
 
@@ -165,8 +167,9 @@ TEST_F(TestProtocolHttpServer, testReceivePayload)
 
     std::string receiveBuffer1 = "GET /hello?filter=world&lang=en HTTP/1.1\r\nContent-Length: 10\r\n\r\n0123456789";
     int size1 = receiveBuffer1.size();
-    EXPECT_CALL(*m_mockMockOperatingSystem, recv(_, _, size1, 0)).Times(1).WillOnce(DoAll(SetArrayArgument<1>(receiveBuffer1.data(), receiveBuffer1.data() + size1), Return(size1)));
-    EXPECT_CALL(*m_mockCallback, setSessionName(_)).Times(1);
+    m_protocol->setConnection(m_mockStreamConnection);
+    EXPECT_CALL(*m_mockOperatingSystem, recv(_, _, size1, 0)).Times(1).WillOnce(DoAll(SetArrayArgument<1>(receiveBuffer1.data(), receiveBuffer1.data() + size1), Return(size1)));
+    EXPECT_CALL(*m_mockCallback, setSessionName(_, _, _)).Times(1);
     m_protocol->received(nullptr, m_socket, size1);
 }
 
@@ -177,8 +180,9 @@ TEST_F(TestProtocolHttpServer, testReceiveSplitPayload)
 
     std::string receiveBuffer1 = "GET /hello?filter=world&lang=en HTTP/1.1\r\nContent-Length: 10\r\n\r\n0123456";
     int size1 = receiveBuffer1.size();
-    EXPECT_CALL(*m_mockMockOperatingSystem, recv(_, _, size1, 0)).Times(1).WillOnce(DoAll(SetArrayArgument<1>(receiveBuffer1.data(), receiveBuffer1.data() + size1), Return(size1)));
-    EXPECT_CALL(*m_mockCallback, setSessionName(_)).Times(1);
+    m_protocol->setConnection(m_mockStreamConnection);
+    EXPECT_CALL(*m_mockOperatingSystem, recv(_, _, size1, 0)).Times(1).WillOnce(DoAll(SetArrayArgument<1>(receiveBuffer1.data(), receiveBuffer1.data() + size1), Return(size1)));
+    EXPECT_CALL(*m_mockCallback, setSessionName(_, _, _)).Times(1);
     m_protocol->received(nullptr, m_socket, size1);
 
     std::shared_ptr<IMessage> message = std::make_shared<ProtocolMessage>(0);
@@ -197,7 +201,7 @@ TEST_F(TestProtocolHttpServer, testReceiveSplitPayload)
 
     std::string receiveBuffer2 = "789";
     int size2 = receiveBuffer2.size();
-    EXPECT_CALL(*m_mockMockOperatingSystem, recv(_, _, size2, 0)).Times(1).WillOnce(DoAll(SetArrayArgument<1>(receiveBuffer2.data(), receiveBuffer2.data() + size2), Return(size2)));
+    EXPECT_CALL(*m_mockOperatingSystem, recv(_, _, size2, 0)).Times(1).WillOnce(DoAll(SetArrayArgument<1>(receiveBuffer2.data(), receiveBuffer2.data() + size2), Return(size2)));
     m_protocol->received(nullptr, m_socket, size2);
 }
 
@@ -208,8 +212,9 @@ TEST_F(TestProtocolHttpServer, testReceivePayloadTooBig)
 
     std::string receiveBuffer1 = "GET /hello?filter=world&lang=en HTTP/1.1\r\nContent-Length: 10\r\n\r\n01234567890";
     int size1 = receiveBuffer1.size();
-    EXPECT_CALL(*m_mockMockOperatingSystem, recv(_, _, size1, 0)).Times(1).WillOnce(DoAll(SetArrayArgument<1>(receiveBuffer1.data(), receiveBuffer1.data() + size1), Return(size1)));
-    EXPECT_CALL(*m_mockCallback, setSessionName(_)).Times(1);
+    m_protocol->setConnection(m_mockStreamConnection);
+    EXPECT_CALL(*m_mockOperatingSystem, recv(_, _, size1, 0)).Times(1).WillOnce(DoAll(SetArrayArgument<1>(receiveBuffer1.data(), receiveBuffer1.data() + size1), Return(size1)));
+    EXPECT_CALL(*m_mockStreamConnection, disconnect()).Times(1);
     m_protocol->received(nullptr, m_socket, size1);
 }
 
@@ -217,8 +222,9 @@ TEST_F(TestProtocolHttpServer, testReceiveSplitPayloadTooBig)
 {
     std::string receiveBuffer1 = "GET /hello?filter=world&lang=en HTTP/1.1\r\nContent-Length: 10\r\n\r\n0123456";
     int size1 = receiveBuffer1.size();
-    EXPECT_CALL(*m_mockMockOperatingSystem, recv(_, _, size1, 0)).Times(1).WillOnce(DoAll(SetArrayArgument<1>(receiveBuffer1.data(), receiveBuffer1.data() + size1), Return(size1)));
-    EXPECT_CALL(*m_mockCallback, setSessionName(_)).Times(1);
+    m_protocol->setConnection(m_mockStreamConnection);
+    EXPECT_CALL(*m_mockOperatingSystem, recv(_, _, size1, 0)).Times(1).WillOnce(DoAll(SetArrayArgument<1>(receiveBuffer1.data(), receiveBuffer1.data() + size1), Return(size1)));
+    EXPECT_CALL(*m_mockStreamConnection, disconnect()).Times(1);
     m_protocol->received(nullptr, m_socket, size1);
 
     EXPECT_CALL(*m_mockCallback, received(_, _)).Times(0);
@@ -229,7 +235,7 @@ TEST_F(TestProtocolHttpServer, testReceiveSplitPayloadTooBig)
 }
 
 
-TEST_F(TestProtocolHttpServer, testSendPrepareMessage)
+TEST_F(TestProtocolHttpServer, testSendMessage)
 {
     std::shared_ptr<IMessage> message = std::make_shared<ProtocolMessage>(0);
     Variant& controlData = message->getControlData();
@@ -240,7 +246,9 @@ TEST_F(TestProtocolHttpServer, testSendPrepareMessage)
         
     message->addSendPayload(std::string("0123456789"));
 
-    m_protocol->prepareMessageToSend(message);
+    EXPECT_CALL(*m_mockStreamConnection, sendMessage(message));
+    m_protocol->setConnection(m_mockStreamConnection);
+    m_protocol->sendMessage(message);
 
     const std::list<BufferRef>& buffers = message->getAllSendBuffers();
     ASSERT_EQ(buffers.size(), 2);

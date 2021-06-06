@@ -22,22 +22,25 @@
 
 #pragma once
 
-#include "finalmq/remoteentity/RemoteEntity.h"
-#include "finalmq/remoteentity/FileTransferReply.h"
 
+#include "finalmq/streamconnection/ConnectionData.h"
+
+
+#include "gmock/gmock.h"
 
 namespace finalmq {
 
 
-class SYMBOLEXP EntityFileServer : public RemoteEntity
+
+class MockIStreamConnection : public IStreamConnection
 {
 public:
-    EntityFileServer(const std::string& baseDirectory = ".");
-
-private:
-    std::string         m_baseDirectory;
+    MOCK_METHOD(bool, sendMessage, (const IMessagePtr& msg), (override));
+    MOCK_METHOD(ConnectionData, getConnectionData, (), (const override));
+    MOCK_METHOD(ConnectionState, getConnectionState, (), (const override));
+    MOCK_METHOD(std::int64_t, getConnectionId, (), (const override));
+    MOCK_METHOD(SocketPtr, getSocket, (), (override));
+    MOCK_METHOD(void, disconnect, (), (override));
 };
 
-
-
-}   // namespace finalmq
+}

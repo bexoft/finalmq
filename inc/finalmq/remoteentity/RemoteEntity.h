@@ -298,6 +298,26 @@ public:
         }
     }
 
+    void reply(Variant& controlData, IMessage::Metainfo* metainfo = nullptr)
+    {
+        if (!m_replySent)
+        {
+            remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, remoteentity::Status::STATUS_OK, {}, m_correlationId, {} };
+            RemoteEntityFormatRegistry::instance().send(m_session, header, std::move(m_echoData), nullptr, metainfo, &controlData);
+            m_replySent = true;
+        }
+    }
+
+    void reply(remoteentity::Status status)
+    {
+        if (!m_replySent)
+        {
+            remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, status, "", m_correlationId, {} };
+            RemoteEntityFormatRegistry::instance().send(m_session, header, std::move(m_echoData));
+            m_replySent = true;
+        }
+    }
+
     bool replyFile(const std::string& filename, IMessage::Metainfo* metainfo = nullptr)
     {
         bool handeled = m_fileTransferReply->replyFile(shared_from_this(), filename, metainfo);
@@ -330,16 +350,6 @@ public:
     IMessage::Metainfo& getAllMetainfo()
     {
         return m_metainfo;
-    }
-
-    void reply(remoteentity::Status status)
-    {
-        if (!m_replySent)
-        {
-            remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, status, "", m_correlationId, {} };
-            RemoteEntityFormatRegistry::instance().send(m_session, header, std::move(m_echoData));
-            m_replySent = true;
-        }
     }
 
     bool doesSupportFileTransfer() const

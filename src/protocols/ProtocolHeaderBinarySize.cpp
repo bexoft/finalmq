@@ -27,6 +27,7 @@
 #include "finalmq/streamconnection/Socket.h"
 
 #include <atomic>
+#include <assert.h>
 
 namespace finalmq {
 
@@ -58,6 +59,11 @@ ProtocolHeaderBinarySize::ProtocolHeaderBinarySize()
 void ProtocolHeaderBinarySize::setCallback(const std::weak_ptr<IProtocolCallback>& callback)
 {
     m_callback = callback;
+}
+
+void ProtocolHeaderBinarySize::setConnection(const IStreamConnectionPtr& connection)
+{
+    m_connection = connection;
 }
 
 std::uint32_t ProtocolHeaderBinarySize::getProtocolId() const
@@ -107,7 +113,7 @@ IProtocol::FuncCreateMessage ProtocolHeaderBinarySize::getMessageFactory() const
     };
 }
 
-void ProtocolHeaderBinarySize::prepareMessageToSend(IMessagePtr message)
+bool ProtocolHeaderBinarySize::sendMessage(IMessagePtr message)
 {
     if (!message->wasSent())
     {
@@ -122,6 +128,8 @@ void ProtocolHeaderBinarySize::prepareMessageToSend(IMessagePtr message)
         }
         message->prepareMessageToSend();
     }
+    assert(m_connection);
+    return m_connection->sendMessage(message);
 }
 
 void ProtocolHeaderBinarySize::moveOldProtocolState(IProtocol& /*protocolOld*/)
