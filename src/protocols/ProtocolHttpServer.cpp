@@ -89,7 +89,7 @@ void ProtocolHttpServer::setCallback(const std::weak_ptr<IProtocolCallback>& cal
     std::shared_ptr<IProtocolCallback> cb = callback.lock();
     if (cb)
     {
-        cb->setActivityTimeout(10 * 60000);
+        cb->setActivityTimeout(5 * 60000);
     }
 }
 
@@ -1007,8 +1007,13 @@ hybrid_ptr<IStreamConnectionCallback> ProtocolHttpServer::connected(const IStrea
     return nullptr;
 }
 
-void ProtocolHttpServer::disconnected(const IStreamConnectionPtr& /*connection*/)
+void ProtocolHttpServer::disconnected(const IStreamConnectionPtr& connection)
 {
+    auto callback = m_callback.lock();
+    if (callback)
+    {
+        callback->disconnectedMultiConnection(connection);
+    }
 }
 
 

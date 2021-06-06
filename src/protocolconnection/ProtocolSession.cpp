@@ -635,23 +635,6 @@ void ProtocolSession::reconnect()
 
 
 
-void ProtocolSession::cleanupMultiConnection()
-{
-    for (auto it = m_multiConnections.begin(); it != m_multiConnections.end(); )
-    {
-        if (!it->second.connection->getSocket())
-        {
-            it = m_multiConnections.erase(it);
-        }
-        else
-        {
-            ++it;
-        }
-    }
-}
-
-
-
 void ProtocolSession::cycleTime()
 {
     std::unique_lock<std::mutex> lock(m_mutex);
@@ -678,6 +661,23 @@ void ProtocolSession::cycleTime()
     }
 }
 
+
+void ProtocolSession::cleanupMultiConnection()
+{
+    for (auto it = m_multiConnections.begin(); it != m_multiConnections.end(); )
+    {
+        if (!it->second.connection->getSocket())
+        {
+            it = m_multiConnections.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+}
+
+
 void ProtocolSession::setProtocolConnection(const IProtocolPtr& protocol, const IStreamConnectionPtr& connection)
 {
     assert(protocol);
@@ -685,8 +685,13 @@ void ProtocolSession::setProtocolConnection(const IProtocolPtr& protocol, const 
     std::unique_lock<std::mutex> lock(m_mutex);
     if (m_protocolFlagIsMultiConnectionSession)
     {
-        cleanupMultiConnection();
-        m_multiConnections[connection->getConnectionId()] = { protocol , connection };
+        std::int64_t connectionId = connection->getConnectionId();
+        auto it = m_multiConnections.find(connectionId);
+        if (it == m_multiConnections.end())
+        {
+            cleanupMultiConnection();
+            m_multiConnections[connectionId] = { protocol , connection };
+        }
     }
     else
     {
@@ -867,6 +872,15 @@ void ProtocolSession::setActivityTimeout(int timeout)
 void ProtocolSession::setPollMaxRequests(int maxRequests)
 {
     m_pollMaxRequests = maxRequests;
+}
+
+
+void ProtocolSession::disconnectedMultiConnection(const IStreamConnectionPtr& /*connection*/)
+{
+    if (!m_verified)
+    {
+        disconnected();
+    }
 }
 
 

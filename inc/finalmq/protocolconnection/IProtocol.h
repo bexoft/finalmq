@@ -52,6 +52,7 @@ struct IProtocolCallback
     virtual void activity() = 0;
     virtual void setActivityTimeout(int timeout) = 0;
     virtual void setPollMaxRequests(int maxRequests) = 0;
+    virtual void disconnectedMultiConnection(const IStreamConnectionPtr& connection) = 0;
 };
 
 struct IProtocolSession;

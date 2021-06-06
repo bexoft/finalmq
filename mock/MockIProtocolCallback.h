@@ -44,6 +44,7 @@ public:
     MOCK_METHOD(void, activity, (), (override));
     MOCK_METHOD(void, setActivityTimeout, (int timeout), (override));
     MOCK_METHOD(void, setPollMaxRequests, (int maxRequests), (override));
+    MOCK_METHOD(void, disconnectedMultiConnection, (const IStreamConnectionPtr& connection), (override));
 };
 
 }   // namespace finalmq

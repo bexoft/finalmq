@@ -146,6 +146,7 @@ private:
     virtual void activity() override;
     virtual void setActivityTimeout(int timeout) override;
     virtual void setPollMaxRequests(int maxRequests) override;
+    virtual void disconnectedMultiConnection(const IStreamConnectionPtr& connection) override;
 
     struct ProtocolConnection
     {
@@ -155,11 +156,11 @@ private:
 
     IMessagePtr convertMessageToProtocol(const IMessagePtr& msg);
     void initProtocolValues();
-    void cleanupMultiConnection();
     void sendBufferedMessages();
     void addSessionToList(bool verified);
     void getProtocolConnectionFromConnectionId(const ProtocolConnection*& protocolConnection, std::int64_t connectionId);
     bool sendMessage(const IMessagePtr& message, const ProtocolConnection* protocolConnection);
+    void cleanupMultiConnection();
 
     hybrid_ptr<IProtocolSessionCallback>                    m_callback;
     IExecutorPtr                                            m_executor;
