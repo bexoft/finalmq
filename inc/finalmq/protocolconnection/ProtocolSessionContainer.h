@@ -47,6 +47,7 @@ struct IProtocolSessionContainer
     virtual IProtocolSessionPtr getSession(std::int64_t sessionId) const = 0;
     virtual void run() = 0;
     virtual void terminatePollerLoop() = 0;
+    virtual IExecutorPtr getExecutor() const = 0;
 };
 
 typedef std::shared_ptr<IProtocolSessionContainer> IProtocolSessionContainerPtr;
@@ -59,7 +60,7 @@ struct IStreamConnectionContainer;
 class ProtocolBind : public IStreamConnectionCallback
 {
 public:
-    ProtocolBind(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, IProtocolFactoryPtr protocolFactory, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const BindProperties& bindProperties = {}, int contentType = 0);
+    ProtocolBind(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, IProtocolFactoryPtr protocolFactory, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const BindProperties& bindProperties = {}, int contentType = 0);
 
 private:
     // IStreamConnectionCallback
@@ -69,6 +70,7 @@ private:
 
     hybrid_ptr<IProtocolSessionCallback>    m_callback;
     IExecutorPtr                            m_executor;
+    IExecutorPtr                            m_executorPollerThread;
     IProtocolFactoryPtr                     m_protocolFactory;
     std::weak_ptr<IProtocolSessionList>     m_protocolSessionList;
     BindProperties                          m_bindProperties;
@@ -98,12 +100,15 @@ public:
     virtual IProtocolSessionPtr getSession(std::int64_t sessionId) const override;
     virtual void run() override;
     virtual void terminatePollerLoop() override;
+    virtual IExecutorPtr getExecutor() const override;
 
 private:
     IProtocolSessionListPtr                                     m_protocolSessionList;
     std::unordered_map<std::string,  ProtocolBindPtr>           m_endpoint2Bind;
     std::shared_ptr<IStreamConnectionContainer>                 m_streamConnectionContainer;
+    int                                                         m_counterTimer = 0;
     IExecutorPtr                                                m_executor;
+    IExecutorPtr                                                m_executorPollerThread;
     std::thread                                                 m_thread;
     mutable std::mutex                                          m_mutex;
 };

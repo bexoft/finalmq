@@ -53,7 +53,11 @@ StreamConnectionContainer::StreamConnectionContainer()
 #else
     : m_poller(std::make_shared<PollerImplEpoll>())
 #endif
+    , m_executorPollerThread(std::make_shared<Executor>())
 {
+    m_executorPollerThread->registerActionNotification([this]() {
+        m_poller->releaseWait();
+    });
 }
 
 StreamConnectionContainer::~StreamConnectionContainer()
@@ -416,13 +420,19 @@ void StreamConnectionContainer::terminatePollerLoop()
 }
 
 
+IExecutorPtr StreamConnectionContainer::getPollerThreadExecutor() const
+{
+    return m_executorPollerThread;
+}
+
+
 
 IStreamConnectionPrivatePtr StreamConnectionContainer::addConnection(const SocketPtr& socket, ConnectionData& connectionData, hybrid_ptr<IStreamConnectionCallback> callback)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     std::int64_t connectionId = m_nextConnectionId++;
     connectionData.connectionId = connectionId;
-    IStreamConnectionPrivatePtr connection = std::make_shared<StreamConnection>(connectionData, socket, m_poller, callback);
+    IStreamConnectionPrivatePtr connection = std::make_shared<StreamConnection>(connectionData, socket, m_poller, m_executorPollerThread, callback);
     m_connectionId2Connection[connectionId] = connection;
     if (connectionData.sd != INVALID_SOCKET)
     {
@@ -716,6 +726,8 @@ void StreamConnectionContainer::pollerLoop()
 
         if (result.releaseWait)
         {
+            m_executorPollerThread->runAvailableActions();
+
             std::vector<IStreamConnectionPrivatePtr> connectionsDisconnect;
             std::unique_lock<std::mutex> lock(m_mutex);
             connectionsDisconnect.reserve(m_connectionId2Connection.size());

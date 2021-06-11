@@ -226,9 +226,9 @@ class FmqSession
 		}, {_this:this, funcresult:funcresult});
     }
 	
-    removeSession(funcresult)
+    removeSession()
     {
-		this.requestReply('fmq', 'removesession', null, funcresult);
+		this.requestReply('fmq', 'removesession');
     }
 
 	createEntity(name, entityClass)

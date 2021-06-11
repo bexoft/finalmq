@@ -65,6 +65,7 @@ struct IRemoteEntityContainer
     virtual IProtocolSessionPtr connect(const std::string& endpoint, const IProtocolPtr& protocol, int contentType, const ConnectProperties& connectProperties = {}) = 0;
     virtual void run() = 0;
     virtual void terminatePollerLoop() = 0;
+    virtual IExecutorPtr getExecutor() const = 0;
 
     virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, const std::string& name = "") = 0;
     virtual void addPureDataPaths(std::vector<std::string>& paths) = 0;
@@ -95,6 +96,7 @@ public:
     virtual IProtocolSessionPtr connect(const std::string& endpoint, const IProtocolPtr& protocol, int contentType, const ConnectProperties& connectProperties = {}) override;
     virtual void run() override;
     virtual void terminatePollerLoop() override;
+    virtual IExecutorPtr getExecutor() const override;
 
     virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, const std::string& name = "") override;
     virtual void addPureDataPaths(std::vector<std::string>& paths) override;
@@ -129,6 +131,7 @@ private:
     std::list<std::string>                                      m_pureDataPaths;
     std::list<std::string>                                      m_pureDataPathPrefixes;
     std::shared_ptr<FileTransferReply>                          m_fileTransferReply;
+    IExecutorPtr                                                m_executor;
     mutable std::mutex                                          m_mutex;
 };
 

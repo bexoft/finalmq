@@ -29,11 +29,12 @@
 namespace finalmq {
 
 
-StreamConnection::StreamConnection(const ConnectionData& connectionData, std::shared_ptr<Socket> socket, const IPollerPtr& poller, hybrid_ptr<IStreamConnectionCallback> callback)
+StreamConnection::StreamConnection(const ConnectionData& connectionData, std::shared_ptr<Socket> socket, const IPollerPtr& poller, const IExecutorPtr& executorPollerThread, hybrid_ptr<IStreamConnectionCallback> callback)
     : m_connectionData(connectionData)
     , m_socketPrivate(socket)
     , m_socket(socket)
     , m_poller(poller)
+    , m_executorPollerThread(executorPollerThread)
     , m_callback(callback)
 {
 

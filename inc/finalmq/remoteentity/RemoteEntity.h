@@ -63,7 +63,7 @@ class SYMBOLEXP PeerEvent
 {
 public:
     enum Enum : std::int32_t {
-        PEER_CONNECTING = 0,
+//        PEER_CONNECTING = 0,
         PEER_CONNECTED = 1,
         PEER_DISCONNECTED = 2
     };
@@ -178,9 +178,11 @@ struct IRemoteEntity
     // A callback for every received reply. With this callback a match with the correlation ID can be done by the application.
     virtual void registerReplyEvent(FuncReplyEvent funcReplyEvent) = 0;
 
+    virtual IExecutorPtr getExecutor() const = 0;
+
 private:
     // methods for RemoteEntityContainer
-    virtual void initEntity(EntityId entityId, const std::string& entityName, const std::shared_ptr<FileTransferReply>& fileTransferReply) = 0;
+    virtual void initEntity(EntityId entityId, const std::string& entityName, const std::shared_ptr<FileTransferReply>& fileTransferReply, const IExecutorPtr& executorPollerThread) = 0;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) = 0;
     virtual void receivedRequest(ReceiveData& receiveData) = 0;
     virtual void receivedReply(ReceiveData& receiveData) = 0;
@@ -418,9 +420,10 @@ public:
     virtual bool sendRequest(const PeerId& peerId, IMessage::Metainfo&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply) override;
     virtual bool isEntityRegistered() const override;
     virtual void registerReplyEvent(FuncReplyEvent funcReplyEvent) override;
+    virtual IExecutorPtr getExecutor() const override;
 
 private:
-    virtual void initEntity(EntityId entityId, const std::string& entityName, const std::shared_ptr<FileTransferReply>& fileTransferReply) override;
+    virtual void initEntity(EntityId entityId, const std::string& entityName, const std::shared_ptr<FileTransferReply>& fileTransferReply, const IExecutorPtr& executor) override;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) override;
     virtual void receivedRequest(ReceiveData& receiveData) override;
     virtual void receivedReply(ReceiveData& receiveData) override;
@@ -457,6 +460,7 @@ private:
     std::unordered_map<std::string, std::shared_ptr<FuncCommand>> m_funcCommands;
     std::shared_ptr<PeerManager>        m_peerManager;
     std::shared_ptr<FileTransferReply>  m_fileTransferReply;
+    IExecutorPtr                        m_executor;
     mutable std::atomic_uint64_t        m_nextCorrelationId{1};
     mutable std::mutex                  m_mutex;
 };

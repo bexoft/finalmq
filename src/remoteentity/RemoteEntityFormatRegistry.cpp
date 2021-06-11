@@ -306,8 +306,8 @@ void RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, remoteenti
         {
             ixStartDestName = 1;
         }
-        ssize_t ixEndHeader = path.find_first_of('{');   //28
-        if (ixEndHeader == -1)
+        size_t ixEndHeader = path.find_first_of('{');   //28
+        if (ixEndHeader == std::string::npos)
         {
             ixEndHeader = path.size();
         }

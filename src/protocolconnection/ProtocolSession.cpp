@@ -33,9 +33,10 @@ const static std::string FMQ_CONNECTION_ID = "fmq_echo_connid";
 
 
 
-ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const BindProperties& bindProperties, int contentType)
+ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const BindProperties& bindProperties, int contentType)
     : m_callback(callback)
     , m_executor(executor)
+    , m_executorPollerThread(executorPollerThread)
     , m_protocolConnection{ protocol, nullptr }
     , m_protocolSessionList(protocolSessionList)
     , m_contentType(contentType)
@@ -44,9 +45,10 @@ ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, 
     initProtocolValues();
 }
 
-ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, const std::string& endpoint, const ConnectProperties& connectProperties, int contentType)
+ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, const std::string& endpoint, const ConnectProperties& connectProperties, int contentType)
     : m_callback(callback)
     , m_executor(executor)
+    , m_executorPollerThread(executorPollerThread)
     , m_protocolConnection{ protocol, nullptr }
     , m_protocolSessionList(protocolSessionList)
     , m_contentType(contentType)
@@ -57,9 +59,10 @@ ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, 
     initProtocolValues();
 }
 
-ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, int contentType)
+ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, int contentType)
     : m_callback(callback)
     , m_executor(executor)
+    , m_executorPollerThread(executorPollerThread)
     , m_protocolConnection{ protocol, nullptr }
     , m_protocolSessionList(protocolSessionList)
     , m_contentType(contentType)
@@ -69,9 +72,10 @@ ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, 
 }
 
 
-ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer)
+ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer)
     : m_callback(callback)
     , m_executor(executor)
+    , m_executorPollerThread(executorPollerThread)
     , m_protocolSessionList(protocolSessionList)
     , m_streamConnectionContainer(streamConnectionContainer)
 {
@@ -262,6 +266,31 @@ bool ProtocolSession::sendMessage(const IMessagePtr& msg, bool isReply)
             }
             ok = true;
         }
+        else if (m_pushWaiting)
+        {
+            assert(m_pushReply == nullptr);
+            const ProtocolConnection* protocolConnection = &m_protocolConnection;
+            if (m_protocolFlagIsMultiConnectionSession)
+            {
+                getProtocolConnectionFromConnectionId(protocolConnection, m_pushConnectionId);
+            }
+            if (protocolConnection)
+            {
+                m_pushReply = protocolConnection->protocol->pushReply({ msg });
+                ok = sendMessage(m_pushReply, protocolConnection);
+                if (ok)
+                {
+                    m_pushReply = nullptr;
+                }
+            }
+            else
+            {
+                m_pushWaiting = false;
+                m_pushConnectionId = 0;
+                m_pollMessages.push_back(msg);
+            }
+            ok = true;
+        }
         else
         {
             m_pollMessages.push_back(msg);
@@ -391,7 +420,21 @@ void ProtocolSession::disconnect()
         connections[i]->disconnect();
     }
 
-    disconnected();
+    if (protocolSessionList)
+    {
+        protocolSessionList->removeProtocolSession(m_sessionId);
+    }
+
+    assert(m_executorPollerThread);
+
+    std::weak_ptr<ProtocolSession> pThisWeak = shared_from_this();
+    m_executorPollerThread->addAction([pThisWeak]() {
+        std::shared_ptr<ProtocolSession> pThis = pThisWeak.lock();
+        if (pThis)
+        {
+            pThis->disconnected();
+        }
+    });
 }
 
 void ProtocolSession::sendBufferedMessages()
@@ -459,6 +502,11 @@ bool ProtocolSession::connectProtocol(const std::string& endpoint, const IProtoc
 }
 
 
+IExecutorPtr ProtocolSession::getExecutor() const
+{
+    return m_executor ? m_executor : m_executorPollerThread;
+}
+
 
 
 // IProtocolCallback
@@ -472,13 +520,18 @@ void ProtocolSession::connected()
 
         if (m_executor)
         {
-            m_executor->addAction([this]() {
-                auto callback = m_callback.lock();
-                if (callback)
+            std::weak_ptr<ProtocolSession> pThisWeak = shared_from_this();
+            m_executor->addAction([pThisWeak]() {
+                std::shared_ptr<ProtocolSession> pThis = pThisWeak.lock();
+                if (pThis)
                 {
-                    callback->connected(shared_from_this());
+                    auto callback = pThis->m_callback.lock();
+                    if (callback)
+                    {
+                        callback->connected(pThis);
+                    }
                 }
-                });
+            });
         }
         else
         {
@@ -494,6 +547,41 @@ void ProtocolSession::connected()
 void ProtocolSession::disconnected()
 {
     std::unique_lock<std::mutex> lock(m_mutex);
+    if (m_pollWaiting)
+    {
+        assert(m_pollReply == nullptr);
+        const ProtocolConnection* protocolConnection = &m_protocolConnection;
+        if (m_protocolFlagIsMultiConnectionSession)
+        {
+            getProtocolConnectionFromConnectionId(protocolConnection, m_pollConnectionId);
+        }
+        if (protocolConnection)
+        {
+            IMessagePtr reply = protocolConnection->protocol->pollReply({});
+            sendMessage(reply, protocolConnection);
+            m_pollWaiting = false;
+            m_pollConnectionId = 0;
+        }
+    }
+    if (m_pushWaiting)
+    {
+        assert(m_pollReply == nullptr);
+        const ProtocolConnection* protocolConnection = &m_protocolConnection;
+        if (m_protocolFlagIsMultiConnectionSession)
+        {
+            getProtocolConnectionFromConnectionId(protocolConnection, m_pushConnectionId);
+        }
+        if (protocolConnection)
+        {
+            IMessagePtr reply = protocolConnection->protocol->pushReply({});
+            Variant& controlData = reply->getControlData();
+            controlData = VariantStruct{ {"fmq_push_stop", true} };
+            sendMessage(reply, protocolConnection);
+            m_pushWaiting = false;
+            m_pushConnectionId = 0;
+        }
+    }
+
     IProtocolSessionListPtr protocolSessionList = m_protocolSessionList.lock();
     bool doDisconnected = (!m_triggerDisconnected) && (m_triggerConnected || !m_endpoint.empty());
     m_triggerDisconnected = true;
@@ -503,13 +591,18 @@ void ProtocolSession::disconnected()
     {
         if (m_executor)
         {
-            m_executor->addAction([this]() {
-                auto callback = m_callback.lock();
-                if (callback)
+            std::weak_ptr<ProtocolSession> pThisWeak = shared_from_this();
+            m_executor->addAction([pThisWeak]() {
+                std::shared_ptr<ProtocolSession> pThis = pThisWeak.lock();
+                if (pThis)
                 {
-                    callback->disconnected(shared_from_this());
+                    auto callback = pThis->m_callback.lock();
+                    if (callback)
+                    {
+                        callback->disconnected(pThis);
+                    }
                 }
-                });
+            });
         }
         else
         {
@@ -555,11 +648,16 @@ void ProtocolSession::received(const IMessagePtr& message, std::int64_t connecti
 
     if (m_executor)
     {
-        m_executor->addAction([this, message] () {
-            auto callback = m_callback.lock();
-            if (callback)
+        std::weak_ptr<ProtocolSession> pThisWeak = shared_from_this();
+        m_executor->addAction([pThisWeak, message]() {
+            std::shared_ptr<ProtocolSession> pThis = pThisWeak.lock();
+            if (pThis)
             {
-                callback->received(shared_from_this(), message);
+                auto callback = pThis->m_callback.lock();
+                if (callback)
+                {
+                    callback->received(pThis, message);
+                }
             }
         });
     }
@@ -577,11 +675,16 @@ void ProtocolSession::socketConnected()
 {
     if (m_executor)
     {
-        m_executor->addAction([this] () {
-            auto callback = m_callback.lock();
-            if (callback)
+        std::weak_ptr<ProtocolSession> pThisWeak = shared_from_this();
+        m_executor->addAction([pThisWeak]() {
+            std::shared_ptr<ProtocolSession> pThis = pThisWeak.lock();
+            if (pThis)
             {
-                callback->socketConnected(shared_from_this());
+                auto callback = pThis->m_callback.lock();
+                if (callback)
+                {
+                    callback->socketConnected(pThis);
+                }
             }
         });
     }
@@ -599,11 +702,16 @@ void ProtocolSession::socketDisconnected()
 {
     if (m_executor)
     {
-        m_executor->addAction([this] () {
-            auto callback = m_callback.lock();
-            if (callback)
+        std::weak_ptr<ProtocolSession> pThisWeak = shared_from_this();
+        m_executor->addAction([pThisWeak]() {
+            std::shared_ptr<ProtocolSession> pThis = pThisWeak.lock();
+            if (pThis)
             {
-                callback->socketDisconnected(shared_from_this());
+                auto callback = pThis->m_callback.lock();
+                if (callback)
+                {
+                    callback->socketDisconnected(pThis);
+                }
             }
         });
     }
@@ -777,7 +885,7 @@ void ProtocolSession::setSessionName(const std::string& sessionName, const IProt
         }
         else
         {
-            IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(m_callback, m_executor, protocol, m_protocolSessionList, m_bindProperties, m_contentType);
+            IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(m_callback, m_executor, m_executorPollerThread, protocol, m_protocolSessionList, m_bindProperties, m_contentType);
             protocolSession->setConnection(connection, false);
             protocolSession->setSessionNameInternal(sessionName);
         }
@@ -854,6 +962,74 @@ void ProtocolSession::pollRequest(std::int64_t connectionId, int timeout)
 }
 
 
+void ProtocolSession::pushRequest(std::int64_t connectionId)
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    if (m_incomingConnection)
+    {
+        m_activityTimer.setTimeout(m_activityTimeout);
+    }
+    if (m_pushWaiting)
+    {
+        assert(m_pushReply == nullptr);
+        std::int64_t connectionIdOld = m_pollConnectionId;
+        m_pollConnectionId = connectionId;
+        const ProtocolConnection* protocolConnection = &m_protocolConnection;
+        if (m_protocolFlagIsMultiConnectionSession)
+        {
+            getProtocolConnectionFromConnectionId(protocolConnection, connectionIdOld);
+        }
+        if (protocolConnection)
+        {
+            IMessagePtr reply = protocolConnection->protocol->pushReply({});
+            Variant& controlData = reply->getControlData();
+            controlData = VariantStruct{ {"fmq_push_stop", true} };
+            sendMessage(reply, protocolConnection);
+        }
+    }
+    else
+    {
+        m_pushWaiting = true;
+        m_pushConnectionId = connectionId;
+        if (m_pushReply)
+        {
+            const ProtocolConnection* protocolConnection = &m_protocolConnection;
+            if (m_protocolFlagIsMultiConnectionSession)
+            {
+                getProtocolConnectionFromConnectionId(protocolConnection, connectionId);
+            }
+            bool ok = sendMessage(m_pushReply, protocolConnection);
+            if (ok)
+            {
+                m_pushReply = nullptr;
+            }
+        }
+        else if (!m_pollMessages.empty())
+        {
+            const ProtocolConnection* protocolConnection = &m_protocolConnection;
+            if (m_protocolFlagIsMultiConnectionSession)
+            {
+                getProtocolConnectionFromConnectionId(protocolConnection, connectionId);
+            }
+            std::deque<IMessagePtr> messages;
+            if (protocolConnection)
+            {
+                messages = std::move(m_pollMessages);
+                m_pollMessages.clear();
+                m_pushReply = protocolConnection->protocol->pushReply(std::move(messages));
+                int ok = sendMessage(m_pushReply, protocolConnection);
+                if (ok)
+                {
+                    m_pushReply = nullptr;
+                }
+            }
+        }
+    }
+}
+
+
+
+
 void ProtocolSession::activity()
 {
     std::unique_lock<std::mutex> lock(m_mutex);
@@ -875,8 +1051,22 @@ void ProtocolSession::setPollMaxRequests(int maxRequests)
 }
 
 
-void ProtocolSession::disconnectedMultiConnection(const IStreamConnectionPtr& /*connection*/)
+void ProtocolSession::disconnectedMultiConnection(const IStreamConnectionPtr& connection)
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
+    std::int64_t connectionId = connection->getConnectionId();
+    if (m_pollWaiting && m_pollConnectionId == connectionId)
+    {
+        m_pollWaiting = false;
+        m_pollConnectionId = 0;
+    }
+    if (m_pushWaiting && m_pushConnectionId == connectionId)
+    {
+        m_pushWaiting = false;
+        m_pushConnectionId = 0;
+    }
+    lock.unlock();
+
     if (!m_verified)
     {
         disconnected();
