@@ -34,8 +34,8 @@ StreamConnection::StreamConnection(const ConnectionData& connectionData, std::sh
     , m_socketPrivate(socket)
     , m_socket(socket)
     , m_poller(poller)
-    , m_executorPollerThread(executorPollerThread)
     , m_callback(callback)
+    , m_executorPollerThread(executorPollerThread)
 {
 
     m_lastReconnectTime = std::chrono::system_clock::now();

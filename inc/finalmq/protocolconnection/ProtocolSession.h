@@ -144,7 +144,7 @@ private:
     virtual bool findSessionByName(const std::string& sessionName, const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) override;
     virtual void setSessionName(const std::string& sessionName, const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) override;
     virtual void pollRequest(std::int64_t connectionId, int timeout) override;
-    virtual void pushRequest(std::int64_t connectionId) override;
+    virtual void pushRequest(std::int64_t connectionId, int timeout) override;
     virtual void activity() override;
     virtual void setActivityTimeout(int timeout) override;
     virtual void setPollMaxRequests(int maxRequests) override;
@@ -163,6 +163,8 @@ private:
     void getProtocolConnectionFromConnectionId(const ProtocolConnection*& protocolConnection, std::int64_t connectionId);
     bool sendMessage(const IMessagePtr& message, const ProtocolConnection* protocolConnection);
     void cleanupMultiConnection();
+    void pollRelease();
+    void pushRelease();
 
     hybrid_ptr<IProtocolSessionCallback>                    m_callback;
     IExecutorPtr                                            m_executor;
@@ -205,6 +207,7 @@ private:
     IMessagePtr                                     m_pushReply;
     bool                                            m_pushWaiting = false;
     std::int64_t                                    m_pushConnectionId = 0;
+    PollingTimer                                    m_pushTimer;
 
     int                                             m_activityTimeout = -1;
     PollingTimer                                    m_activityTimer;

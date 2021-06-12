@@ -63,9 +63,8 @@ class SYMBOLEXP PeerEvent
 {
 public:
     enum Enum : std::int32_t {
-//        PEER_CONNECTING = 0,
-        PEER_CONNECTED = 1,
-        PEER_DISCONNECTED = 2
+        PEER_CONNECTED = 0,
+        PEER_DISCONNECTED = 1
     };
 
     PeerEvent();

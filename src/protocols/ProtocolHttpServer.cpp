@@ -32,6 +32,7 @@
 #include <algorithm>
 #include <assert.h>
 #include <fcntl.h>
+#include <stdlib.h>
 
 
 namespace finalmq {
@@ -720,8 +721,11 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
             firstLine = "\r\n";
         }
         char buffer[50];
-        int res = _itoa_s(sizeChunkedData, buffer, sizeof(buffer), 16);
-        assert(res == 0);
+#ifdef WIN32
+        _itoa_s(sizeChunkedData, buffer, sizeof(buffer), 16);
+#else
+        snprintf(buffer, sizeof(buffer), "%X", sizeChunkedData);
+#endif
         firstLine += buffer;
         for (auto& c : firstLine)
         {
@@ -894,6 +898,12 @@ bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolC
             m_multipart = 1;
             assert(m_message);
             handled = true;
+            std::int32_t timeout = 0;
+            const std::string* strTimeout = m_message->getMetainfo("FMQQUERY_timeout");
+            if (strTimeout)
+            {
+                timeout = std::atoi(strTimeout->c_str());
+            }
             IMessagePtr message = getMessageFactory()();
             std::string contentType = "multipart/x-mixed-replace; boundary=";
             contentType += FMQ_MULTIPART_BOUNDARY;
@@ -901,7 +911,7 @@ bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolC
             message->addMetainfo("Transfer-Encoding", "chunked");
             sendMessage(message);
             m_multipart = 2;
-            callback->pushRequest(m_connectionId);
+            callback->pushRequest(m_connectionId, timeout);
         }
         else if (*m_path == FMQ_PATH_PING)
         {

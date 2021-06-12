@@ -547,40 +547,8 @@ void ProtocolSession::connected()
 void ProtocolSession::disconnected()
 {
     std::unique_lock<std::mutex> lock(m_mutex);
-    if (m_pollWaiting)
-    {
-        assert(m_pollReply == nullptr);
-        const ProtocolConnection* protocolConnection = &m_protocolConnection;
-        if (m_protocolFlagIsMultiConnectionSession)
-        {
-            getProtocolConnectionFromConnectionId(protocolConnection, m_pollConnectionId);
-        }
-        if (protocolConnection)
-        {
-            IMessagePtr reply = protocolConnection->protocol->pollReply({});
-            sendMessage(reply, protocolConnection);
-            m_pollWaiting = false;
-            m_pollConnectionId = 0;
-        }
-    }
-    if (m_pushWaiting)
-    {
-        assert(m_pollReply == nullptr);
-        const ProtocolConnection* protocolConnection = &m_protocolConnection;
-        if (m_protocolFlagIsMultiConnectionSession)
-        {
-            getProtocolConnectionFromConnectionId(protocolConnection, m_pushConnectionId);
-        }
-        if (protocolConnection)
-        {
-            IMessagePtr reply = protocolConnection->protocol->pushReply({});
-            Variant& controlData = reply->getControlData();
-            controlData = VariantStruct{ {"fmq_push_stop", true} };
-            sendMessage(reply, protocolConnection);
-            m_pushWaiting = false;
-            m_pushConnectionId = 0;
-        }
-    }
+    pollRelease();
+    pushRelease();
 
     IProtocolSessionListPtr protocolSessionList = m_protocolSessionList.lock();
     bool doDisconnected = (!m_triggerDisconnected) && (m_triggerConnected || !m_endpoint.empty());
@@ -748,19 +716,11 @@ void ProtocolSession::cycleTime()
     std::unique_lock<std::mutex> lock(m_mutex);
     if (m_pollWaiting && m_pollTimer.isExpired())
     {
-        assert(m_pollReply == nullptr);
-        const ProtocolConnection* protocolConnection = &m_protocolConnection;
-        if (m_protocolFlagIsMultiConnectionSession)
-        {
-            getProtocolConnectionFromConnectionId(protocolConnection, m_pollConnectionId);
-        }
-        if (protocolConnection)
-        {
-            IMessagePtr reply = protocolConnection->protocol->pollReply({});
-            sendMessage(reply, protocolConnection);
-        }
-        m_pollWaiting = false;
-        m_pollConnectionId = 0;
+        pollRelease();
+    }
+    if (m_pushWaiting && m_pushTimer.isExpired())
+    {
+        pushRelease();
     }
     if (m_activityTimer.isExpired())
     {
@@ -901,83 +861,81 @@ void ProtocolSession::pollRequest(std::int64_t connectionId, int timeout)
     {
         m_activityTimer.setTimeout(m_activityTimeout);
     }
-    if (m_pollWaiting)
+    pollRelease();
+    assert(!m_pollWaiting);
+    if (m_pollReply)
     {
-        assert(m_pollReply == nullptr);
-        std::int64_t connectionIdOld = m_pollConnectionId;
-        m_pollConnectionId = connectionId;
         const ProtocolConnection* protocolConnection = &m_protocolConnection;
         if (m_protocolFlagIsMultiConnectionSession)
         {
-            getProtocolConnectionFromConnectionId(protocolConnection, connectionIdOld);
+            getProtocolConnectionFromConnectionId(protocolConnection, connectionId);
+        }
+        bool ok = sendMessage(m_pollReply, protocolConnection);
+        if (ok)
+        {
+            m_pollReply = nullptr;
+        }
+    }
+    else if (!m_pollMessages.empty() || timeout == 0)
+    {
+        const ProtocolConnection* protocolConnection = &m_protocolConnection;
+        if (m_protocolFlagIsMultiConnectionSession)
+        {
+            getProtocolConnectionFromConnectionId(protocolConnection, connectionId);
+        }
+        std::deque<IMessagePtr> messages;
+        if (protocolConnection)
+        {
+            messages = std::move(m_pollMessages);
+            m_pollMessages.clear();
+            m_pollReply = protocolConnection->protocol->pollReply(std::move(messages));
+            int ok = sendMessage(m_pollReply, protocolConnection);
+            if (ok)
+            {
+                m_pollReply = nullptr;
+            }
+        }
+    }
+    else
+    {
+        m_pollConnectionId = connectionId;
+        m_pollWaiting = true;
+        m_pollTimer.setTimeout(timeout);
+    }
+}
+
+
+
+void ProtocolSession::pollRelease()
+{
+    if (m_pollWaiting)
+    {
+        assert(m_pollReply == nullptr);
+        const ProtocolConnection* protocolConnection = &m_protocolConnection;
+        if (m_protocolFlagIsMultiConnectionSession)
+        {
+            getProtocolConnectionFromConnectionId(protocolConnection, m_pollConnectionId);
         }
         if (protocolConnection)
         {
             IMessagePtr reply = protocolConnection->protocol->pollReply({});
             sendMessage(reply, protocolConnection);
         }
-    }
-    else
-    {
-        if (m_pollReply)
-        {
-            const ProtocolConnection* protocolConnection = &m_protocolConnection;
-            if (m_protocolFlagIsMultiConnectionSession)
-            {
-                getProtocolConnectionFromConnectionId(protocolConnection, connectionId);
-            }
-            bool ok = sendMessage(m_pollReply, protocolConnection);
-            if (ok)
-            {
-                m_pollReply = nullptr;
-            }
-        }
-        else if (!m_pollMessages.empty() || timeout == 0)
-        {
-            const ProtocolConnection* protocolConnection = &m_protocolConnection;
-            if (m_protocolFlagIsMultiConnectionSession)
-            {
-                getProtocolConnectionFromConnectionId(protocolConnection, connectionId);
-            }
-            std::deque<IMessagePtr> messages;
-            if (protocolConnection)
-            {
-                messages = std::move(m_pollMessages);
-                m_pollMessages.clear();
-                m_pollReply = protocolConnection->protocol->pollReply(std::move(messages));
-                int ok = sendMessage(m_pollReply, protocolConnection);
-                if (ok)
-                {
-                    m_pollReply = nullptr;
-                }
-            }
-        }
-        else
-        {
-            m_pollConnectionId = connectionId;
-            m_pollWaiting = true;
-            m_pollTimer.setTimeout(timeout);
-        }
+        m_pollWaiting = false;
+        m_pollConnectionId = 0;
     }
 }
 
 
-void ProtocolSession::pushRequest(std::int64_t connectionId)
+void ProtocolSession::pushRelease()
 {
-    std::unique_lock<std::mutex> lock(m_mutex);
-    if (m_incomingConnection)
-    {
-        m_activityTimer.setTimeout(m_activityTimeout);
-    }
     if (m_pushWaiting)
     {
         assert(m_pushReply == nullptr);
-        std::int64_t connectionIdOld = m_pollConnectionId;
-        m_pollConnectionId = connectionId;
         const ProtocolConnection* protocolConnection = &m_protocolConnection;
         if (m_protocolFlagIsMultiConnectionSession)
         {
-            getProtocolConnectionFromConnectionId(protocolConnection, connectionIdOld);
+            getProtocolConnectionFromConnectionId(protocolConnection, m_pushConnectionId);
         }
         if (protocolConnection)
         {
@@ -985,45 +943,65 @@ void ProtocolSession::pushRequest(std::int64_t connectionId)
             Variant& controlData = reply->getControlData();
             controlData = VariantStruct{ {"fmq_push_stop", true} };
             sendMessage(reply, protocolConnection);
+            m_pushWaiting = false;
+            m_pushConnectionId = 0;
         }
     }
-    else
+}
+
+
+
+void ProtocolSession::pushRequest(std::int64_t connectionId, int timeout)
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    if (m_incomingConnection)
     {
-        m_pushWaiting = true;
-        m_pushConnectionId = connectionId;
-        if (m_pushReply)
+        m_activityTimer.setTimeout(m_activityTimeout);
+    }
+    pushRelease();
+    assert(!m_pushWaiting);
+    if (m_pushReply)
+    {
+        const ProtocolConnection* protocolConnection = &m_protocolConnection;
+        if (m_protocolFlagIsMultiConnectionSession)
         {
-            const ProtocolConnection* protocolConnection = &m_protocolConnection;
-            if (m_protocolFlagIsMultiConnectionSession)
-            {
-                getProtocolConnectionFromConnectionId(protocolConnection, connectionId);
-            }
-            bool ok = sendMessage(m_pushReply, protocolConnection);
+            getProtocolConnectionFromConnectionId(protocolConnection, connectionId);
+        }
+        bool ok = sendMessage(m_pushReply, protocolConnection);
+        if (ok)
+        {
+            m_pushReply = nullptr;
+        }
+    }
+    else if (!m_pollMessages.empty())
+    {
+        const ProtocolConnection* protocolConnection = &m_protocolConnection;
+        if (m_protocolFlagIsMultiConnectionSession)
+        {
+            getProtocolConnectionFromConnectionId(protocolConnection, connectionId);
+        }
+        std::deque<IMessagePtr> messages;
+        if (protocolConnection)
+        {
+            messages = std::move(m_pollMessages);
+            m_pollMessages.clear();
+            m_pushReply = protocolConnection->protocol->pushReply(std::move(messages));
+            int ok = sendMessage(m_pushReply, protocolConnection);
             if (ok)
             {
                 m_pushReply = nullptr;
             }
         }
-        else if (!m_pollMessages.empty())
-        {
-            const ProtocolConnection* protocolConnection = &m_protocolConnection;
-            if (m_protocolFlagIsMultiConnectionSession)
-            {
-                getProtocolConnectionFromConnectionId(protocolConnection, connectionId);
-            }
-            std::deque<IMessagePtr> messages;
-            if (protocolConnection)
-            {
-                messages = std::move(m_pollMessages);
-                m_pollMessages.clear();
-                m_pushReply = protocolConnection->protocol->pushReply(std::move(messages));
-                int ok = sendMessage(m_pushReply, protocolConnection);
-                if (ok)
-                {
-                    m_pushReply = nullptr;
-                }
-            }
-        }
+    }
+    m_pushWaiting = true;
+    m_pushConnectionId = connectionId;
+    if (timeout != 0)
+    {
+        m_pushTimer.setTimeout(timeout);
+    }
+    else
+    {
+        pushRelease();
     }
 }
 
