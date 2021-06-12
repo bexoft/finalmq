@@ -81,6 +81,7 @@ RemoteEntityContainer::RemoteEntityContainer()
     : m_protocolSessionContainer(std::make_unique<ProtocolSessionContainer>())
     , m_fileTransferReply(std::make_shared<FileTransferReply>())
 {
+    m_executor = m_protocolSessionContainer->getExecutor();
 }
 
 RemoteEntityContainer::~RemoteEntityContainer()
@@ -180,6 +181,11 @@ void RemoteEntityContainer::terminatePollerLoop()
     m_protocolSessionContainer->terminatePollerLoop();
 }
 
+IExecutorPtr RemoteEntityContainer::getExecutor() const
+{
+    return m_executor;
+}
+
 
 EntityId RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, const std::string& name)
 {
@@ -208,7 +214,7 @@ EntityId RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> remoteE
         m_name2entityId[name] = entityId;
     }
 
-    re->initEntity(entityId, name, m_fileTransferReply);
+    re->initEntity(entityId, name, m_fileTransferReply, m_executor);
     m_entityId2entity[entityId] = remoteEntity;
 
     return entityId;

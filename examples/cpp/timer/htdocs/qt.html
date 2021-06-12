@@ -12,7 +12,8 @@
 //////////////////////////////////////////////////////////////////////
 
 
-var g_fmqEntity = new FmqEntity();
+var g_fmqSession = new FmqSession();
+var g_fmqQtService = null;
 var g_layers = [true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true];
 
 function getProperty(properties, key)
@@ -179,8 +180,8 @@ function poll()
 
 function getObjectTree()
 {
-    g_fmqEntity.requestReply('QtService', 'finalmq.qt.GetObjectTreeRequest', null, function(outparams) {
-        if (outparams.replystatus == 'STATUS_OK')
+    g_fmqQtService.requestReply('finalmq.qt.GetObjectTreeRequest', null, function(outparams) {
+        if (outparams.fmqheader.status == 'STATUS_OK')
         {
 			document.getElementById('root').innerHTML = '';
             iterateObjects(outparams.root, 0, 'root', null);
@@ -190,8 +191,8 @@ function getObjectTree()
 
 function getScreenshot()
 {
-    g_fmqEntity.requestReply('QtService', 'finalmq.qt.GetScreenshotRequest', null, function(outparams) {
-        if (outparams.replystatus == 'STATUS_OK')
+    g_fmqQtService.requestReply('finalmq.qt.GetScreenshotRequest', null, function(outparams) {
+        if (outparams.fmqheader.status == 'STATUS_OK')
         {
 			document.getElementById('image').innerHTML = '<img style="position:absolute; left:'+outparams.x+'; top:'+outparams.y+'; width:'+outparams.width+'; height:'+outparams.height+';" src="data:image/png;base64,'+outparams.screen+'"></img>'
         }
@@ -202,7 +203,7 @@ function getScreenshot()
 function pressButton(objectName)
 {
 	var inparams = {objectName:objectName};
-    g_fmqEntity.requestReply('QtService', 'finalmq.qt.PressButtonRequest', inparams, function(outparams) {
+    g_fmqQtService.requestReply('finalmq.qt.PressButtonRequest', inparams, function(outparams) {
 		var t=0;
 	});
 }
@@ -217,14 +218,15 @@ function fmqReady()
 
 function pageLoad()
 {
-    g_fmqEntity.createEntity(function() {
+    g_fmqSession.createSession(function() {
+		g_fmqQtService = g_fmqSession.createEntity('QtService');
         fmqReady();
     });
 }
 
 function pageUnload()
 {
-    g_fmqEntity.removeEntity(function() {});
+    g_fmqSession.removeSession();
 }
 
 var nextItemId = 0;

@@ -158,8 +158,8 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
     {
         // 012345678901234567890123456789
         // /MyServer/test.TestRequest!1{}
-        ssize_t ixEndHeader = findFirst(buffer, sizeBuffer, '{');   //28
-            if (ixEndHeader == -1)
+        size_t ixEndHeader = findFirst(buffer, sizeBuffer, '{');   //28
+        if (ixEndHeader == std::string::npos)
         {
             ixEndHeader = sizeBuffer;
         }
@@ -241,11 +241,6 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parseData(const BufferRef& b
     syntaxError = false;
     const char* buffer = bufferRef.first;
     ssize_t sizeBuffer = bufferRef.second;
-
-    if (sizeBuffer == 0)
-    {
-        return nullptr;
-    }
 
     std::shared_ptr<StructBase> data;
 

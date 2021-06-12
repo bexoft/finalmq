@@ -177,6 +177,11 @@ IMessagePtr ProtocolHeaderBinarySize::pollReply(std::deque<IMessagePtr>&& /*mess
     return {};
 }
 
+IMessagePtr ProtocolHeaderBinarySize::pushReply(std::deque<IMessagePtr>&& /*messages*/)
+{
+    return {};
+}
+
 
 //---------------------------------------
 // ProtocolHeaderBinarySizeFactory

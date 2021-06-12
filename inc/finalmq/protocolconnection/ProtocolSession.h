@@ -97,10 +97,10 @@ class ProtocolSession : public IProtocolSessionPrivate
                       , public std::enable_shared_from_this<ProtocolSession>
 {
 public:
-    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const BindProperties& bindProperties, int contentType);
-    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, const std::string& endpoint, const ConnectProperties& connectProperties, int contentType);
-    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, int contentType);
-    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer);
+    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const BindProperties& bindProperties, int contentType);
+    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, const std::string& endpoint, const ConnectProperties& connectProperties, int contentType);
+    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, int contentType);
+    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer);
 
     virtual ~ProtocolSession();
 
@@ -119,6 +119,7 @@ private:
     virtual void disconnect() override;
     virtual bool connect(const std::string& endpoint, const ConnectProperties& connectionProperties = {}) override;
     virtual bool connectProtocol(const std::string& endpoint, const IProtocolPtr& protocol, const ConnectProperties& connectionProperties = {}, int contentType = 0) override;
+    virtual IExecutorPtr getExecutor() const override;
 
     //// IStreamConnectionCallback
     //virtual hybrid_ptr<IStreamConnectionCallback> connected(const IStreamConnectionPtr& connection) override;
@@ -143,6 +144,7 @@ private:
     virtual bool findSessionByName(const std::string& sessionName, const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) override;
     virtual void setSessionName(const std::string& sessionName, const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) override;
     virtual void pollRequest(std::int64_t connectionId, int timeout) override;
+    virtual void pushRequest(std::int64_t connectionId, int timeout) override;
     virtual void activity() override;
     virtual void setActivityTimeout(int timeout) override;
     virtual void setPollMaxRequests(int maxRequests) override;
@@ -161,9 +163,12 @@ private:
     void getProtocolConnectionFromConnectionId(const ProtocolConnection*& protocolConnection, std::int64_t connectionId);
     bool sendMessage(const IMessagePtr& message, const ProtocolConnection* protocolConnection);
     void cleanupMultiConnection();
+    void pollRelease();
+    void pushRelease();
 
     hybrid_ptr<IProtocolSessionCallback>                    m_callback;
     IExecutorPtr                                            m_executor;
+    IExecutorPtr                                            m_executorPollerThread;
     ProtocolConnection                                      m_protocolConnection;
     std::unordered_map<std::int64_t, ProtocolConnection>    m_multiConnections;
 
@@ -192,11 +197,17 @@ private:
     std::deque<IMessagePtr>                         m_messagesBuffered;
 
     std::deque<IMessagePtr>                         m_pollMessages;
+    
     IMessagePtr                                     m_pollReply;
     bool                                            m_pollWaiting = false;
     std::int64_t                                    m_pollConnectionId = 0;
     PollingTimer                                    m_pollTimer;
     int                                             m_pollMaxRequests = 10000;
+
+    IMessagePtr                                     m_pushReply;
+    bool                                            m_pushWaiting = false;
+    std::int64_t                                    m_pushConnectionId = 0;
+    PollingTimer                                    m_pushTimer;
 
     int                                             m_activityTimeout = -1;
     PollingTimer                                    m_activityTimer;

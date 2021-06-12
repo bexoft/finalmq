@@ -71,6 +71,7 @@ private:
     virtual hybrid_ptr<IStreamConnectionCallback> connected(const IStreamConnectionPtr& connection) override;
     virtual void disconnected(const IStreamConnectionPtr& connection) override;
     virtual IMessagePtr pollReply(std::deque<IMessagePtr>&& messages) override;
+    virtual IMessagePtr pushReply(std::deque<IMessagePtr>&& messages) override;
 
 
     bool receiveHeaders(ssize_t bytesReceived);
@@ -115,6 +116,7 @@ private:
     std::string                         m_sessionName;
     std::weak_ptr<IProtocolCallback>    m_callback;
     IStreamConnectionPtr                m_connection;
+    int                                 m_multipart = 0;
 
     // path
     std::string*                        m_path = nullptr;

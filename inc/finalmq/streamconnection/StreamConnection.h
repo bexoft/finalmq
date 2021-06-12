@@ -29,6 +29,7 @@
 #include "finalmq/helpers/hybrid_ptr.h"
 #include "finalmq/streamconnection/IMessage.h"
 #include "finalmq/helpers/CondVar.h"
+#include "finalmq/helpers/IExecutor.h"
 
 #include <memory>
 #include <vector>
@@ -108,7 +109,7 @@ typedef std::shared_ptr<IStreamConnectionPrivate> IStreamConnectionPrivatePtr;
 class SYMBOLEXP StreamConnection : public IStreamConnectionPrivate
 {
 public:
-    StreamConnection(const ConnectionData& connectionData, std::shared_ptr<Socket> socket, const IPollerPtr& poller, hybrid_ptr<IStreamConnectionCallback> callback);
+    StreamConnection(const ConnectionData& connectionData, std::shared_ptr<Socket> socket, const IPollerPtr& poller, const IExecutorPtr& executorPollerThread, hybrid_ptr<IStreamConnectionCallback> callback);
 
 private:
     // IStreamConnection
@@ -145,10 +146,11 @@ private:
     SocketPtr                   m_socket;
     IPollerPtr                  m_poller;
     std::list<MessageSendState> m_pendingMessages;
-    bool                        m_disconnectFlag = false;
+    std::atomic<bool>           m_disconnectFlag{};
     hybrid_ptr<IStreamConnectionCallback> m_callback;
 
     std::chrono::time_point<std::chrono::system_clock> m_lastReconnectTime;
+    IExecutorPtr                m_executorPollerThread;
 
     mutable std::mutex          m_mutex;
 };

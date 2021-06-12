@@ -34,6 +34,7 @@
 #include "Socket.h"
 #include "StreamConnection.h"
 #include "finalmq/helpers/CondVar.h"
+#include "finalmq/helpers/IExecutor.h"
 
 
 
@@ -55,6 +56,7 @@ struct IStreamConnectionContainer
     virtual IStreamConnectionPtr getConnection(std::int64_t connectionId) const = 0;
     virtual void run() = 0;
     virtual void terminatePollerLoop() = 0;
+    virtual IExecutorPtr getPollerThreadExecutor() const = 0;
 };
 
 
@@ -78,6 +80,7 @@ private:
     virtual IStreamConnectionPtr getConnection(std::int64_t connectionId) const override;
     virtual void run() override;
     virtual void terminatePollerLoop() override;
+    virtual IExecutorPtr getPollerThreadExecutor() const override;
 
     void pollerLoop();
 
@@ -110,6 +113,7 @@ private:
     int                                                             m_cycleTime = 100;
     int                                                             m_checkReconnectInterval = 1000;
     FuncPollerLoopTimer                                             m_funcTimer;
+    IExecutorPtr                                                    m_executorPollerThread;
     mutable std::mutex                                              m_mutex;
 
     std::chrono::time_point<std::chrono::system_clock>              m_lastReconnectTime;

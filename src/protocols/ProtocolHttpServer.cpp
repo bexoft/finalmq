@@ -32,6 +32,7 @@
 #include <algorithm>
 #include <assert.h>
 #include <fcntl.h>
+#include <stdlib.h>
 
 
 namespace finalmq {
@@ -57,10 +58,12 @@ static const std::string HTTP_SET_COOKIE = "Set-Cookie";
 static const std::string COOKIE_PREFIX = "fmq=";
 
 static const std::string FMQ_PATH_LONGPOLL = "/fmq/longpoll";
+static const std::string FMQ_PATH_PUSH = "/fmq/push";
 static const std::string FMQ_PATH_PING = "/fmq/ping";
 static const std::string FMQ_PATH_CONFIG = "/fmq/config";
 static const std::string FMQ_PATH_CREATESESSION = "/fmq/createsession";
 static const std::string FMQ_PATH_REMOVESESSION = "/fmq/removesession";
+static const std::string FMQ_MULTIPART_BOUNDARY = "B9BMAhxAhY.mQw1IDRBA";
 
 
 //---------------------------------------
@@ -568,6 +571,15 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
     assert(!message->wasSent());
     std::string firstLine;
     const Variant& controlData = message->getControlData();
+    bool pushStop = false;
+    if (m_multipart)
+    {
+        const bool* pPushStop = controlData.getData<bool>("fmq_push_stop");
+        if (pPushStop && *pPushStop)
+        {
+            pushStop = *pPushStop;
+        }
+    }
     const std::string* filename = controlData.getData<std::string>("filetransfer");
     ssize_t filesize = -1;
     if (filename)
@@ -582,85 +594,92 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
         }
     }
     const std::string* http = controlData.getData<std::string>(FMQ_HTTP);
-    if (http && *http == HTTP_REQUEST)
+    if (m_multipart < 2)
     {
-        if (filename && filesize == -1)
+        if (http && *http == HTTP_REQUEST)
         {
-            filesize = 0;
-        }
-        const std::string* method = controlData.getData<std::string>(FMQ_METHOD);
-        const std::string* path = controlData.getData<std::string>(FMQ_PATH);
-        if (method && path)
-        {
-            std::string pathEncode;
-            encode(pathEncode, *path);
-            firstLine = *method;
-            firstLine += ' ';
-            firstLine += pathEncode;
-
-            const VariantStruct* queries = controlData.getData<VariantStruct>("queries");
-            if (queries)
+            if (filename && filesize == -1)
             {
-                for (auto it = queries->begin(); it != queries->end(); ++it)
-                {
-                    if (it == queries->begin())
-                    {
-                        firstLine += '?';
-                    }
-                    else
-                    {
-                        firstLine += '&';
-                    }
-                    std::string key;
-                    std::string value;
-
-                    encode(key, it->first);
-                    encode(value, it->second);
-                    firstLine += key;
-                    firstLine += '=';
-                    firstLine += value;
-                }
+                filesize = 0;
             }
+            const std::string* method = controlData.getData<std::string>(FMQ_METHOD);
+            const std::string* path = controlData.getData<std::string>(FMQ_PATH);
+            if (method && path)
+            {
+                std::string pathEncode;
+                encode(pathEncode, *path);
+                firstLine = *method;
+                firstLine += ' ';
+                firstLine += pathEncode;
 
-            firstLine += " HTTP/1.1";
+                const VariantStruct* queries = controlData.getData<VariantStruct>("queries");
+                if (queries)
+                {
+                    for (auto it = queries->begin(); it != queries->end(); ++it)
+                    {
+                        if (it == queries->begin())
+                        {
+                            firstLine += '?';
+                        }
+                        else
+                        {
+                            firstLine += '&';
+                        }
+                        std::string key;
+                        std::string value;
+
+                        encode(key, it->first);
+                        encode(value, it->second);
+                        firstLine += key;
+                        firstLine += '=';
+                        firstLine += value;
+                    }
+                }
+
+                firstLine += " HTTP/1.1";
+            }
+        }
+        else
+        {
+            std::string status = controlData.getDataValue<std::string>(FMQ_STATUS);
+            const std::string* statustext = controlData.getData<std::string>(FMQ_STATUSTEXT);
+            if (filename && filesize == -1)
+            {
+                status = "404";
+                static const std::string FILE_NOT_FOUND = "file not found";
+                statustext = &FILE_NOT_FOUND;
+            }
+            firstLine = "HTTP/1.1 ";
+            if (!status.empty())
+            {
+                firstLine += status;
+                firstLine += ' ';
+            }
+            else
+            {
+                firstLine += "200 ";
+            }
+            if (statustext)
+            {
+                firstLine += *statustext;
+            }
+            else
+            {
+                firstLine += "OK";
+            }
         }
     }
-    else
+
+    size_t sumHeaderSize = 0;
+    if (m_multipart < 2)
     {
-        std::string status = controlData.getDataValue<std::string>(FMQ_STATUS);
-        const std::string* statustext = controlData.getData<std::string>(FMQ_STATUSTEXT);
-        if (filename && filesize == -1)
-        {
-            status = "404";
-            static const std::string FILE_NOT_FOUND = "file not found";
-            statustext = &FILE_NOT_FOUND;
-        }
-        firstLine = "HTTP/1.1 ";
-        if (!status.empty())
-        {
-            firstLine += status;
-            firstLine += ' ';
-        }
-        else
-        {
-            firstLine += "200 ";
-        }
-        if (statustext)
-        {
-            firstLine += *statustext;
-        }
-        else
-        {
-            firstLine += "OK";
-        }
+        sumHeaderSize += firstLine.size() + 2 + 2;   // 2 = '\r\n' and 2 = last empty line
+        sumHeaderSize += HEADER_KEEP_ALIVE.size();  // Connection: keep-alive\r\n
     }
-
-    size_t sumHeaderSize = firstLine.size() + 4;   // 2 = '\r\n' and last empty line
     if (http && *http == HTTP_REQUEST)
     {
         sumHeaderSize += m_headerHost.size();   // Host: hostname\r\n
     }
-    sumHeaderSize += HEADER_KEEP_ALIVE.size();  // Connection: keep-alive\r\n
 
     ssize_t sizeBody = message->getTotalSendPayloadSize();
     if (filesize != -1)
@@ -669,7 +688,10 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
     }
 
     ProtocolMessage::Metainfo& metainfo = message->getAllMetainfo();
-    metainfo[CONTENT_LENGTH] = std::to_string(sizeBody);
+    if (m_multipart == 0)
+    {
+        metainfo[CONTENT_LENGTH] = std::to_string(sizeBody);
+    }
     if (!m_headerSendNext.empty())
     {
         metainfo.insert(m_headerSendNext.begin(), m_headerSendNext.end());
@@ -683,6 +705,33 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
         {
             sumHeaderSize += key.size() + value.size() + 4;    // 4 = ': ' and '\r\n'
         }
+    }
+
+    if (m_multipart >= 2)
+    {
+        assert(sumHeaderSize == 0);
+        int sizeChunkedData = sizeBody;
+        firstLine.clear();
+        if (m_multipart == 2 || m_multipart == 3)
+        {
+            m_multipart = 4;
+        }
+        else
+        {
+            firstLine = "\r\n";
+        }
+        char buffer[50];
+#ifdef WIN32
+        _itoa_s(sizeChunkedData, buffer, sizeof(buffer), 16);
+#else
+        snprintf(buffer, sizeof(buffer), "%X", sizeChunkedData);
+#endif
+        firstLine += buffer;
+        for (auto& c : firstLine)
+        {
+            c = toupper(c);
+        }
+        sumHeaderSize += firstLine.size() + 2;  // "\r\n"
     }
 
     char* headerBuffer = message->addSendHeader(sumHeaderSize);
@@ -702,9 +751,12 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
     }
 
     // Connection: keep-alive\r\n
-    assert(index + HEADER_KEEP_ALIVE.size() <= sumHeaderSize);
-    memcpy(headerBuffer + index, HEADER_KEEP_ALIVE.data(), HEADER_KEEP_ALIVE.size());
-    index += HEADER_KEEP_ALIVE.size();
+    if (m_multipart < 2)
+    {
+        assert(index + HEADER_KEEP_ALIVE.size() <= sumHeaderSize);
+        memcpy(headerBuffer + index, HEADER_KEEP_ALIVE.data(), HEADER_KEEP_ALIVE.size());
+        index += HEADER_KEEP_ALIVE.size();
+    }
 
     for (auto it = metainfo.begin(); it != metainfo.end(); ++it)
     {
@@ -723,13 +775,23 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
             index += 2;
         }
     }
-    assert(index + 2 == sumHeaderSize);
-    memcpy(headerBuffer + index, "\r\n", 2);
+    if (m_multipart < 2)
+    {
+        assert(index + 2 == sumHeaderSize);
+        memcpy(headerBuffer + index, "\r\n", 2);
+    }
+
+    if (pushStop)
+    {
+        message->addSendPayload("\r\n0\r\n\r\n");
+        m_multipart = 0;
+    }
 
     message->prepareMessageToSend();
 
     assert(m_connection);
     bool ok = m_connection->sendMessage(message);
+
 
     if (ok && filename)
     {
@@ -830,6 +892,26 @@ bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolC
                 timeout = std::atoi(strTimeout->c_str());
             }
             callback->pollRequest(m_connectionId, timeout);
+        }
+        else if (*m_path == FMQ_PATH_PUSH)
+        {
+            m_multipart = 1;
+            assert(m_message);
+            handled = true;
+            std::int32_t timeout = 0;
+            const std::string* strTimeout = m_message->getMetainfo("FMQQUERY_timeout");
+            if (strTimeout)
+            {
+                timeout = std::atoi(strTimeout->c_str());
+            }
+            IMessagePtr message = getMessageFactory()();
+            std::string contentType = "multipart/x-mixed-replace; boundary=";
+            contentType += FMQ_MULTIPART_BOUNDARY;
+            message->addMetainfo("Content-Type", contentType);
+            message->addMetainfo("Transfer-Encoding", "chunked");
+            sendMessage(message);
+            m_multipart = 2;
+            callback->pushRequest(m_connectionId, timeout);
         }
         else if (*m_path == FMQ_PATH_PING)
         {
@@ -1028,6 +1110,48 @@ IMessagePtr ProtocolHttpServer::pollReply(std::deque<IMessagePtr>&& messages)
         const std::list<BufferRef>& payloads = msg->getAllSendPayloads();
         std::list<std::string>& payloadBuffers = msg->getSendPayloadBuffers();
         message->moveSendBuffers(std::move(payloadBuffers), payloads);
+    }
+    return message;
+}
+
+
+IMessagePtr ProtocolHttpServer::pushReply(std::deque<IMessagePtr>&& messages)
+{
+    IMessagePtr message = getMessageFactory()();
+
+    if (!messages.empty())
+    {
+        for (auto it = messages.begin(); it != messages.end(); ++it)
+        {
+            std::string payload;
+            if (m_multipart == 2)
+            {
+                m_multipart = 3;
+                payload += "--" + FMQ_MULTIPART_BOUNDARY;
+            }
+            payload += "\r\n\r\n";
+            message->addSendPayload(payload);
+            IMessagePtr& msg = *it;
+            const std::list<BufferRef>& payloads = msg->getAllSendPayloads();
+            std::list<std::string>& payloadBuffers = msg->getSendPayloadBuffers();
+            message->moveSendBuffers(std::move(payloadBuffers), payloads);
+            payload = "\r\n--" + FMQ_MULTIPART_BOUNDARY;
+            message->addSendPayload(payload);
+        }
+    }
+    else
+    {
+        std::string payload;
+        if (m_multipart == 2)
+        {
+            m_multipart = 3;
+            payload += "--" + FMQ_MULTIPART_BOUNDARY + "--\r\n";
+        }
+        else
+        {
+            payload += "--\r\n";
+        }
+        message->addSendPayload(payload);
     }
     return message;
 }

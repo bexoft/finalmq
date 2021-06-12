@@ -43,6 +43,7 @@ struct IProtocolSession
     virtual void disconnect() = 0;
     virtual bool connect(const std::string& endpoint, const ConnectProperties& connectionProperties = {}) = 0;
     virtual bool connectProtocol(const std::string& endpoint, const IProtocolPtr& protocol, const ConnectProperties& connectionProperties = {}, int contentType = 0) = 0;
+    virtual IExecutorPtr getExecutor() const = 0;
 };
 
 //struct IProtocolSession;

@@ -26,8 +26,6 @@
 #include "finalmq/remoteentity/RemoteEntityFormatProto.h"
 #include "finalmq/remoteentity/RemoteEntityFormatJson.h"
 #include "finalmq/remoteentity/FmqRegistryClient.h"
-#include "finalmq/protocols/ProtocolHeaderBinarySize.h"
-#include "finalmq/protocols/ProtocolDelimiterLinefeed.h"
 
 
 #include "finalmq/Qt/qtdata.fmq.h"
@@ -42,8 +40,6 @@ using finalmq::IRemoteEntityContainer;
 using finalmq::PeerId;
 using finalmq::PeerEvent;
 using finalmq::RequestContextPtr;
-using finalmq::ProtocolHeaderBinarySizeFactory;
-using finalmq::ProtocolDelimiterLinefeedFactory;
 using finalmq::FmqRegistryClient;
 using finalmq::qt::GetObjectTreeRequest;
 using finalmq::qt::GetObjectTreeReply;
@@ -156,7 +152,7 @@ private:
         }
     }
 
-    virtual void exitObject(QObject& object, int level) override
+    virtual void exitObject(QObject& /*object*/, int level) override
     {
         if (level >= 1)
         {
@@ -184,10 +180,6 @@ class QtServer : public RemoteEntity
 public:
     QtServer()
     {
-        // register peer events to see when a remote entity connects or disconnects.
-        registerPeerEvent([](PeerId peerId, PeerEvent peerEvent, bool incoming) {
-        });
-
         registerCommand<GetObjectTreeRequest>([](const RequestContextPtr& requestContext, const std::shared_ptr<GetObjectTreeRequest>& request) {
             assert(request);
 
@@ -202,9 +194,9 @@ public:
             // send reply
             requestContext->reply(std::move(reply));
 
-            });
+        });
 
-        registerCommand<PressButtonRequest>([](const RequestContextPtr& requestContext, const std::shared_ptr<PressButtonRequest>& request) {
+        registerCommand<PressButtonRequest>([](const RequestContextPtr& /*requestContext*/, const std::shared_ptr<PressButtonRequest>& request) {
             assert(request);
 
             QString objectName = request->objectName.c_str();

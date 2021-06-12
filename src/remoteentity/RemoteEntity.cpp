@@ -331,9 +331,13 @@ PeerId PeerManager::addPeer(const IProtocolSessionPtr& session, EntityId entityI
         }
 
         // fire peer event CONNECTED
-        if (funcPeerEvent && *funcPeerEvent)
+        if (incoming)
         {
-            (*funcPeerEvent)(peerId, incoming ? PeerEvent::PEER_CONNECTED : PeerEvent::PEER_CONNECTING, incoming);
+            if (funcPeerEvent && *funcPeerEvent)
+            {
+//                (*funcPeerEvent)(peerId, incoming ? PeerEvent::PEER_CONNECTED : PeerEvent::PEER_CONNECTING, incoming);
+                (*funcPeerEvent)(peerId, PeerEvent::PEER_CONNECTED, incoming);
+            }
         }
     }
     else
@@ -355,14 +359,14 @@ PeerId PeerManager::addPeer()
     ++m_nextPeerId;
     m_peers[peerId] = std::make_shared<Peer>();
 
-    std::shared_ptr<FuncPeerEvent> funcPeerEvent = m_funcPeerEvent;
+    //std::shared_ptr<FuncPeerEvent> funcPeerEvent = m_funcPeerEvent;
     lock.unlock();
 
-    // fire peer event CONNECTED
-    if (funcPeerEvent && *funcPeerEvent)
-    {
-        (*funcPeerEvent)(peerId, PeerEvent::PEER_CONNECTING, false);
-    }
+    //// fire peer event CONNECTED
+    //if (funcPeerEvent && *funcPeerEvent)
+    //{
+    //    (*funcPeerEvent)(peerId, PeerEvent::PEER_CONNECTING, false);
+    //}
 
     return peerId;
 }
@@ -561,6 +565,10 @@ void RemoteEntity::registerReplyEvent(FuncReplyEvent funcReplyEvent)
 }
 
 
+IExecutorPtr RemoteEntity::getExecutor() const
+{
+    return m_executor;
+}
 
 
 
@@ -765,12 +773,13 @@ bool RemoteEntity::isEntityRegistered() const
 
 
 
-void RemoteEntity::initEntity(EntityId entityId, const std::string& entityName, const std::shared_ptr<FileTransferReply>& fileTransferReply)
+void RemoteEntity::initEntity(EntityId entityId, const std::string& entityName, const std::shared_ptr<FileTransferReply>& fileTransferReply, const IExecutorPtr& executor)
 {
     m_fileTransferReply = fileTransferReply;
     m_entityId = entityId;
     m_entityName = entityName;
     m_peerManager->setEntityId(entityId);
+    m_executor = executor;
 }
 
 
