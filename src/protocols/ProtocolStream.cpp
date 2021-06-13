@@ -34,6 +34,9 @@ namespace finalmq {
 // ProtocolStream
 //---------------------------------------
 
+const int ProtocolStream::PROTOCOL_ID = 1;
+const std::string ProtocolStream::PROTOCOL_NAME = "stream";
+
 
 ProtocolStream::ProtocolStream()
 {
@@ -175,7 +178,7 @@ struct RegisterProtocolStreamFactory
 {
     RegisterProtocolStreamFactory()
     {
-        ProtocolRegistry::instance().registerProtocolFactory(ProtocolStream::PROTOCOL_ID, std::make_shared<ProtocolStreamFactory>());
+        ProtocolRegistry::instance().registerProtocolFactory(ProtocolStream::PROTOCOL_NAME, ProtocolStream::PROTOCOL_ID, std::make_shared<ProtocolStreamFactory>());
     }
 } g_registerProtocolStreamFactory;
 

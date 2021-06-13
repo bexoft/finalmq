@@ -38,10 +38,10 @@ struct IProtocolSessionContainer
     virtual ~IProtocolSessionContainer() {}
 
     virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000, FuncPollerLoopTimer funcTimer = {}, const IExecutorPtr& executor = nullptr) = 0;
-    virtual int bind(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const BindProperties& bindProperties = {}, int contentType = 0) = 0;
+    virtual int bind(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const BindProperties& bindProperties = {}, int contentType = 0) = 0;
     virtual void unbind(const std::string& endpoint) = 0;
-    virtual IProtocolSessionPtr connect(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const ConnectProperties& connectProperties = {}, int contentType = 0) = 0;
-    virtual IProtocolSessionPtr createSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, int contentType = 0) = 0;
+    virtual IProtocolSessionPtr connect(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const ConnectProperties& connectProperties = {}, int contentType = 0) = 0;
+//    virtual IProtocolSessionPtr createSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, int contentType = 0) = 0;
     virtual IProtocolSessionPtr createSession(hybrid_ptr<IProtocolSessionCallback> callback) = 0;
     virtual std::vector< IProtocolSessionPtr > getAllSessions() const = 0;
     virtual IProtocolSessionPtr getSession(std::int64_t sessionId) const = 0;
@@ -91,10 +91,10 @@ public:
 
     // IProtocolSessionContainer
     virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000, FuncPollerLoopTimer funcTimer = {}, const IExecutorPtr& executor = nullptr) override;
-    virtual int bind(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const BindProperties& bindProperties = {}, int contentType = 0) override;
+    virtual int bind(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const BindProperties& bindProperties = {}, int contentType = 0) override;
     virtual void unbind(const std::string& endpoint) override;
-    virtual IProtocolSessionPtr connect(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const ConnectProperties& connectProperties = {}, int contentType = 0) override;
-    virtual IProtocolSessionPtr createSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, int contentType = 0) override;
+    virtual IProtocolSessionPtr connect(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const ConnectProperties& connectProperties = {}, int contentType = 0) override;
+//    virtual IProtocolSessionPtr createSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, int contentType = 0) override;
     virtual IProtocolSessionPtr createSession(hybrid_ptr<IProtocolSessionCallback> callback) override;
     virtual std::vector< IProtocolSessionPtr > getAllSessions() const override;
     virtual IProtocolSessionPtr getSession(std::int64_t sessionId) const override;

@@ -139,8 +139,8 @@ TEST_F(TestIntegrationRemoteEntity, testProto)
     entityContainerServer.registerEntity(&entityServer, "MyServer");
     entityContainerClient.registerEntity(&entityClient);
 
-    entityContainerServer.bind("tcp://*:7788", std::make_shared<ProtocolHeaderBinarySizeFactory>(), RemoteEntityFormatProto::CONTENT_TYPE);
-    IProtocolSessionPtr sessionClient = entityContainerClient.connect("tcp://localhost:7788", std::make_shared<ProtocolHeaderBinarySize>(), RemoteEntityFormatProto::CONTENT_TYPE);
+    entityContainerServer.bind("tcp://*:7788:headersize", RemoteEntityFormatProto::CONTENT_TYPE);
+    IProtocolSessionPtr sessionClient = entityContainerClient.connect("tcp://localhost:7788:headersize", RemoteEntityFormatProto::CONTENT_TYPE);
 
     EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
     EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
@@ -200,8 +200,8 @@ TEST_F(TestIntegrationRemoteEntity, testJson)
     entityContainerServer.registerEntity(&entityServer, "MyServer");
     entityContainerClient.registerEntity(&entityClient);
 
-    entityContainerServer.bind("tcp://*:7788", std::make_shared<ProtocolDelimiterLinefeedFactory>(), RemoteEntityFormatJson::CONTENT_TYPE);
-    IProtocolSessionPtr sessionClient = entityContainerClient.connect("tcp://localhost:7788", std::make_shared<ProtocolDelimiterLinefeed>(), RemoteEntityFormatJson::CONTENT_TYPE);
+    entityContainerServer.bind("tcp://*:7788:headersize", RemoteEntityFormatJson::CONTENT_TYPE);
+    IProtocolSessionPtr sessionClient = entityContainerClient.connect("tcp://localhost:7788:headersize", RemoteEntityFormatJson::CONTENT_TYPE);
 
     EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
     EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
@@ -257,8 +257,8 @@ TEST_F(TestIntegrationRemoteEntity, testSslProto)
     entityContainerServer.registerEntity(&entityServer, "MyServer");
     entityContainerClient.registerEntity(&entityClient);
 
-    entityContainerServer.bind("tcp://*:7788", std::make_shared<ProtocolHeaderBinarySizeFactory>(), RemoteEntityFormatProto::CONTENT_TYPE, {{true, "ssltest.cert.pem", "ssltest.key.pem"}});
-    IProtocolSessionPtr sessionClient = entityContainerClient.connect("tcp://localhost:7788", std::make_shared<ProtocolHeaderBinarySize>(), RemoteEntityFormatProto::CONTENT_TYPE, {{true}});
+    entityContainerServer.bind("tcp://*:7788:headersize", RemoteEntityFormatProto::CONTENT_TYPE, {{true, "ssltest.cert.pem", "ssltest.key.pem"}});
+    IProtocolSessionPtr sessionClient = entityContainerClient.connect("tcp://localhost:7788:headersize", RemoteEntityFormatProto::CONTENT_TYPE, {{true}});
 
     EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
     EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
@@ -315,7 +315,7 @@ TEST_F(TestIntegrationRemoteEntity, testProtoLateConnect)
     entityContainerServer.registerEntity(&entityServer, "MyServer");
     entityContainerClient.registerEntity(&entityClient);
 
-    entityContainerServer.bind("tcp://*:7788", std::make_shared<ProtocolHeaderBinarySizeFactory>(), RemoteEntityFormatProto::CONTENT_TYPE);
+    entityContainerServer.bind("tcp://*:7788:headersize", RemoteEntityFormatProto::CONTENT_TYPE);
 
     EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
     EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
@@ -339,7 +339,7 @@ TEST_F(TestIntegrationRemoteEntity, testProtoLateConnect)
         });
     }
 
-    IProtocolSessionPtr sessionClient = entityContainerClient.connect("tcp://localhost:7788", std::make_shared<ProtocolHeaderBinarySize>(), RemoteEntityFormatProto::CONTENT_TYPE);
+    IProtocolSessionPtr sessionClient = entityContainerClient.connect("tcp://localhost:7788:headersize", RemoteEntityFormatProto::CONTENT_TYPE);
 
     EXPECT_CALL(mockEventsClient, connectReply(_, remoteentity::Status(remoteentity::Status::STATUS_OK))).Times(1);
     entityClient.connect(peerId, sessionClient, "MyServer");

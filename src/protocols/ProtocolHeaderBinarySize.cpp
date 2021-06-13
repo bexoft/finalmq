@@ -31,6 +31,9 @@
 
 namespace finalmq {
 
+const int ProtocolHeaderBinarySize::PROTOCOL_ID = 2;
+const std::string ProtocolHeaderBinarySize::PROTOCOL_NAME = "headersize";
+
 
 static const int HEADERSIZE = 4;
 
@@ -191,7 +194,7 @@ struct RegisterProtocolHeaderBinarySizeFactory
 {
     RegisterProtocolHeaderBinarySizeFactory()
     {
-        ProtocolRegistry::instance().registerProtocolFactory(ProtocolHeaderBinarySize::PROTOCOL_ID, std::make_shared<ProtocolHeaderBinarySizeFactory>());
+        ProtocolRegistry::instance().registerProtocolFactory(ProtocolHeaderBinarySize::PROTOCOL_NAME, ProtocolHeaderBinarySize::PROTOCOL_ID, std::make_shared<ProtocolHeaderBinarySizeFactory>());
     }
 } g_registerProtocolHeaderBinarySizeFactory;
 

@@ -25,9 +25,6 @@
 #include "finalmq/remoteentity/RemoteEntityFormatProto.h"
 #include "finalmq/remoteentity/RemoteEntityFormatJson.h"
 #include "finalmq/remoteentity/EntityFileService.h"
-#include "finalmq/protocols/ProtocolHeaderBinarySize.h"
-#include "finalmq/protocols/ProtocolDelimiterLinefeed.h"
-#include "finalmq/protocols/ProtocolHttpServer.h"
 #include "finalmq/logger/Logger.h"
 
 // the definition of the messages are in the file helloworld.fmq
@@ -46,9 +43,6 @@ using finalmq::EntityFileServer;
 using finalmq::PeerId;
 using finalmq::PeerEvent;
 using finalmq::RequestContextPtr;
-using finalmq::ProtocolHeaderBinarySizeFactory;
-using finalmq::ProtocolDelimiterLinefeedFactory;
-using finalmq::ProtocolHttpServerFactory;
 using finalmq::IProtocolSessionPtr;
 using finalmq::ConnectionData;
 using finalmq::ConnectionEvent;
@@ -139,21 +133,21 @@ int main()
 
     // Open listener port 7777 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
     // content type in payload: protobuf
-    entityContainer.bind("tcp://*:7777", std::make_shared<ProtocolHeaderBinarySizeFactory>(), RemoteEntityFormatProto::CONTENT_TYPE);
+    entityContainer.bind("tcp://*:7777:headersize", RemoteEntityFormatProto::CONTENT_TYPE);
 
     // Open listener port 8888 with delimiter framing protocol ProtocolDelimiterLinefeed ('\n' is end of frame).
     // content type in payload: JSON
-    entityContainer.bind("tcp://*:8888", std::make_shared<ProtocolDelimiterLinefeedFactory>(), RemoteEntityFormatJson::CONTENT_TYPE);
+    entityContainer.bind("tcp://*:8888:delimiter_lf", RemoteEntityFormatJson::CONTENT_TYPE);
 
     // Open listener port 8080 with http.
     // content type in payload: JSON
-    entityContainer.bind("tcp://*:8080", std::make_shared<ProtocolHttpServerFactory>(), RemoteEntityFormatJson::CONTENT_TYPE);
+    entityContainer.bind("tcp://*:8080:httpserver", RemoteEntityFormatJson::CONTENT_TYPE);
 
     // note:
     // multiple access points (listening ports) can be activated by calling bind() several times.
     // For Unix Domain Sockets use: "ipc://socketname"
     // For SSL/TLS encryption use BindProperties e.g.:
-    // entityContainer->bind("tcp://*:7777", std::make_shared<ProtocolHeaderBinarySizeFactory>(),
+    // entityContainer->bind("tcp://*:7777:headersize", 
     //                       RemoteEntityFormatProto::CONTENT_TYPE,
     //                       {{true, "myservercertificate.cert.pem", "myservercertificate.key.pem"}});
     // And by the way, also connect()s are possible for an EntityContainer. An EntityContainer can be client and server at the same time.

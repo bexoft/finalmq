@@ -766,21 +766,16 @@ public:
                             sessionAndEntity.entityId = reply->service.entityid;
                             sessionAndEntity.entityName = reply->service.entityname;
                             std::vector<finalmq::fmqreg::Endpoint>& endpointEntries = reply->service.endpoints;
-                            for (size_t i = 0; i < endpointEntries.size() && !protocol; ++i)
+                            for (size_t i = 0; i < endpointEntries.size() && endpoint.empty(); ++i)
                             {
                                 const Endpoint& endpointEntry = endpointEntries[i];
-                                endpoint = endpointEntry.endpoint;
                                 if (!endpointEntry.ssl &&
                                     endpointEntry.contenttype == RemoteEntityFormatJson::CONTENT_TYPE)
                                 {
-                                    finalmq::IProtocolFactoryPtr factory = finalmq::ProtocolRegistry::instance().getProtocolFactory(endpointEntry.framingprotocol);
-                                    if (factory)
-                                    {
-                                        protocol = factory->createProtocol();
-                                    }
+                                    endpoint = endpointEntry.endpoint;
                                 }
                             }
-                            if (protocol)
+                            if (!endpoint.empty())
                             {
                                 IProtocolSessionPtr& session = m_endpoint2session[endpoint];
                                 if (!session || session->getConnectionData().connectionState == finalmq::ConnectionState::CONNECTIONSTATE_DISCONNECTED)
@@ -791,7 +786,7 @@ public:
                                     {
                                         endpoint.replace(pos, std::string("*").length(), "127.0.0.1");
                                     }
-                                    session = m_entityContainer->connect(endpoint, protocol, RemoteEntityFormatJson::CONTENT_TYPE, {{}, RECONNECT_INTERVAL, 0});
+                                    session = m_entityContainer->connect(endpoint, RemoteEntityFormatJson::CONTENT_TYPE, {{}, RECONNECT_INTERVAL, 0});
                                 }
                                 sessionAndEntity.session = session;
                             }

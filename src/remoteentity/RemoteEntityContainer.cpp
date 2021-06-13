@@ -154,9 +154,9 @@ void RemoteEntityContainer::init(int cycleTime, int checkReconnectInterval, Func
     //}(), "fmq");
 }
 
-int RemoteEntityContainer::bind(const std::string& endpoint, IProtocolFactoryPtr protocolFactory, int contentType, const BindProperties& bindProperties)
+int RemoteEntityContainer::bind(const std::string& endpoint, int contentType, const BindProperties& bindProperties)
 {
-    return m_protocolSessionContainer->bind(endpoint, this, protocolFactory, bindProperties, contentType);
+    return m_protocolSessionContainer->bind(endpoint, this, bindProperties, contentType);
 }
 
 void RemoteEntityContainer::unbind(const std::string& endpoint)
@@ -164,9 +164,9 @@ void RemoteEntityContainer::unbind(const std::string& endpoint)
     m_protocolSessionContainer->unbind(endpoint);
 }
 
-IProtocolSessionPtr RemoteEntityContainer::connect(const std::string& endpoint, const IProtocolPtr& protocol, int contentType, const ConnectProperties& connectProperties)
+IProtocolSessionPtr RemoteEntityContainer::connect(const std::string& endpoint, int contentType, const ConnectProperties& connectProperties)
 {
-    return m_protocolSessionContainer->connect(endpoint, this, protocol, connectProperties, contentType);
+    return m_protocolSessionContainer->connect(endpoint, this, connectProperties, contentType);
 }
 
 

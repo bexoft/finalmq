@@ -123,7 +123,7 @@ int main()
 
     // Open listener port 7777 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
     // content type in payload: protobuf
-    sessionContainer.bind("tcp://*:7777", &server, std::make_shared<ProtocolHttpServerFactory>());
+    sessionContainer.bind("tcp://*:7777:httpserver", &server);
 
 
     // run

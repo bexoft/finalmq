@@ -39,9 +39,9 @@ void ConnectionHub::init(int cycleTime, int checkReconnectInterval)
     m_protocolSessionContainer->init(cycleTime, checkReconnectInterval);
 }
 
-int ConnectionHub::bind(const std::string& endpoint, IProtocolFactoryPtr protocolFactory, const BindProperties& bindProperties)
+int ConnectionHub::bind(const std::string& endpoint, const BindProperties& bindProperties)
 {
-    return m_protocolSessionContainer->bind(endpoint, this, protocolFactory, bindProperties);
+    return m_protocolSessionContainer->bind(endpoint, this, bindProperties);
 }
 
 void ConnectionHub::unbind(const std::string& endpoint)
@@ -49,9 +49,9 @@ void ConnectionHub::unbind(const std::string& endpoint)
     m_protocolSessionContainer->unbind(endpoint);
 }
 
-IProtocolSessionPtr ConnectionHub::connect(const std::string& endpoint, const IProtocolPtr& protocol, const ConnectProperties& connectProperties)
+IProtocolSessionPtr ConnectionHub::connect(const std::string& endpoint, const ConnectProperties& connectProperties)
 {
-    IProtocolSessionPtr session = m_protocolSessionContainer->connect(endpoint, this, protocol, connectProperties);
+    IProtocolSessionPtr session = m_protocolSessionContainer->connect(endpoint, this, connectProperties);
     return session;
 }
 

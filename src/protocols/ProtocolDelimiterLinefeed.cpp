@@ -33,6 +33,9 @@ namespace finalmq {
 // ProtocolStream
 //---------------------------------------
 
+const int ProtocolDelimiterLinefeed::PROTOCOL_ID = 3;
+const std::string ProtocolDelimiterLinefeed::PROTOCOL_NAME = "delimiter_lf";
+
 
 ProtocolDelimiterLinefeed::ProtocolDelimiterLinefeed()
     : ProtocolDelimiter("\n")
@@ -59,7 +62,7 @@ struct RegisterProtocolDelimiterLinefeedFactory
 {
     RegisterProtocolDelimiterLinefeedFactory()
     {
-        ProtocolRegistry::instance().registerProtocolFactory(ProtocolDelimiterLinefeed::PROTOCOL_ID, std::make_shared<ProtocolDelimiterLinefeedFactory>());
+        ProtocolRegistry::instance().registerProtocolFactory(ProtocolDelimiterLinefeed::PROTOCOL_NAME, ProtocolDelimiterLinefeed::PROTOCOL_ID, std::make_shared<ProtocolDelimiterLinefeedFactory>());
     }
 } g_registerProtocolDelimiterLinefeedFactory;
 

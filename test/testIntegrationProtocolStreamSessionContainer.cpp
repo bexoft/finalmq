@@ -50,7 +50,6 @@ public:
 protected:
     virtual void SetUp()
     {
-        m_factoryProtocol = std::make_shared<ProtocolStreamFactory>();
         m_mockClientCallback = std::make_shared<MockIProtocolSessionCallback>();
         m_mockServerCallback = std::make_shared<MockIProtocolSessionCallback>();
         m_sessionContainer = std::make_unique<ProtocolSessionContainer>();
@@ -71,7 +70,6 @@ protected:
     std::shared_ptr<IProtocolSessionContainer>              m_sessionContainer;
     std::shared_ptr<MockIProtocolSessionCallback>           m_mockClientCallback;
     std::shared_ptr<MockIProtocolSessionCallback>           m_mockServerCallback;
-    std::shared_ptr<IProtocolFactory>                       m_factoryProtocol;
 
     std::unique_ptr<std::thread>                            m_thread;
 //    std::vector<std::string>                                m_messagesClient;
@@ -90,16 +88,16 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testStartAndStopThreadInte
 
 TEST_F(TestIntegrationProtocolStreamSessionContainer, testBind)
 {
-    int res = m_sessionContainer->bind("tcp://localhost:3333", m_mockServerCallback, m_factoryProtocol);
+    int res = m_sessionContainer->bind("tcp://localhost:3333:stream", m_mockServerCallback);
     EXPECT_EQ(res, 0);
 }
 
 
 TEST_F(TestIntegrationProtocolStreamSessionContainer, testUnbind)
 {
-    int res = m_sessionContainer->bind("tcp://*:3333", m_mockServerCallback, m_factoryProtocol);
+    int res = m_sessionContainer->bind("tcp://*:3333:stream", m_mockServerCallback);
     EXPECT_EQ(res, 0);
-    m_sessionContainer->unbind("tcp://*:3333");
+    m_sessionContainer->unbind("tcp://*:3333:stream");
 }
 
 MATCHER_P(ReceivedMessage, msg, "")
@@ -111,7 +109,7 @@ MATCHER_P(ReceivedMessage, msg, "")
 
 TEST_F(TestIntegrationProtocolStreamSessionContainer, testBindConnect)
 {
-    int res = m_sessionContainer->bind("tcp://*:3333", m_mockServerCallback, m_factoryProtocol);
+    int res = m_sessionContainer->bind("tcp://*:3333:stream", m_mockServerCallback);
     EXPECT_EQ(res, 0);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
@@ -122,7 +120,7 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testBindConnect)
     EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
     auto& expectReceive = EXPECT_CALL(*m_mockServerCallback, received(_, ReceivedMessage(MESSAGE1_BUFFER))).Times(1);
 
-    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333", m_mockClientCallback, std::make_shared<ProtocolStream>());
+    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333:stream", m_mockClientCallback);
     IMessagePtr message = connection->createMessage();
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
@@ -139,11 +137,11 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testConnectBind)
     auto& expectConnected = EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(1);
     EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
 
-    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333", m_mockClientCallback, std::make_shared<ProtocolStream>(), {{}, 1});
+    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333:stream", m_mockClientCallback, {{}, 1});
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
-    int res = m_sessionContainer->bind("tcp://*:3333", m_mockServerCallback, m_factoryProtocol);
+    int res = m_sessionContainer->bind("tcp://*:3333:stream", m_mockServerCallback);
     EXPECT_EQ(res, 0);
 
     waitTillDone(expectConnected, 5000);
@@ -159,14 +157,14 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testSendConnectBind)
     EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
     auto& expectReceive = EXPECT_CALL(*m_mockServerCallback, received(_, ReceivedMessage(MESSAGE1_BUFFER))).Times(1);
 
-    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333", m_mockClientCallback, std::make_shared<ProtocolStream>(), {{}, 1});
+    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333:stream", m_mockClientCallback, {{}, 1});
     IMessagePtr message = connection->createMessage();
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
-    int res = m_sessionContainer->bind("tcp://*:3333", m_mockServerCallback, m_factoryProtocol);
+    int res = m_sessionContainer->bind("tcp://*:3333:stream", m_mockServerCallback);
     EXPECT_EQ(res, 0);
 
     waitTillDone(expectReceive, 5000);
@@ -182,7 +180,7 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testReconnectExpires)
     EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(0);
     auto& expectDisconnected = EXPECT_CALL(*m_mockClientCallback, disconnected(_)).Times(1);
 
-    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333", m_mockClientCallback, std::make_shared<ProtocolStream>(), {{}, 1, 1});
+    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333:stream", m_mockClientCallback, {{}, 1, 1});
     IMessagePtr message = connection->createMessage();
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
@@ -204,12 +202,12 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testBindConnectDisconnect)
     auto& expectDisconnectedClient = EXPECT_CALL(*m_mockClientCallback, disconnected(_)).Times(1);
     auto& expectDisconnectedServer = EXPECT_CALL(*m_mockServerCallback, disconnected(_)).Times(1);
 
-    int res = m_sessionContainer->bind("tcp://*:3333", m_mockServerCallback, m_factoryProtocol);
+    int res = m_sessionContainer->bind("tcp://*:3333:stream", m_mockServerCallback);
     EXPECT_EQ(res, 0);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
-    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333", m_mockClientCallback, std::make_shared<ProtocolStream>());
+    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333:stream", m_mockClientCallback);
     IMessagePtr message = connection->createMessage();
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
@@ -228,7 +226,7 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testBindConnectDisconnect)
 
 TEST_F(TestIntegrationProtocolStreamSessionContainer, testGetAllConnections)
 {
-    int res = m_sessionContainer->bind("tcp://*:3333", m_mockServerCallback, m_factoryProtocol);
+    int res = m_sessionContainer->bind("tcp://*:3333:stream", m_mockServerCallback);
     EXPECT_EQ(res, 0);
 
     IProtocolSessionPtr connConnect;
@@ -238,7 +236,7 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testGetAllConnections)
     auto& expectConnectedServer = EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1)
                                             .WillOnce(testing::SaveArg<0>(&connBind));
 
-    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333", m_mockClientCallback, std::make_shared<ProtocolStream>());
+    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333:stream", m_mockClientCallback);
 
     waitTillDone(expectConnectedClient, 5000);
     waitTillDone(expectConnectedServer, 5000);
@@ -258,7 +256,7 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testGetAllConnections)
 
 TEST_F(TestIntegrationProtocolStreamSessionContainer, testBindLateConnect)
 {
-    int res = m_sessionContainer->bind("tcp://*:3333", m_mockServerCallback, m_factoryProtocol);
+    int res = m_sessionContainer->bind("tcp://*:3333:stream", m_mockServerCallback);
     EXPECT_EQ(res, 0);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
@@ -269,7 +267,7 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testBindLateConnect)
     EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
     auto& expectReceive = EXPECT_CALL(*m_mockServerCallback, received(_, ReceivedMessage(MESSAGE1_BUFFER))).Times(1);
 
-    IProtocolSessionPtr connection = m_sessionContainer->createSession(m_mockClientCallback, std::make_shared<ProtocolStream>());
+    IProtocolSessionPtr connection = m_sessionContainer->createSession(m_mockClientCallback);
     IProtocolSessionPtr session = m_sessionContainer->getSession(connection->getSessionId());
     EXPECT_EQ(session, connection);
 
@@ -277,7 +275,7 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testBindLateConnect)
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
 
-    connection->connect("tcp://localhost:3333");
+    connection->connect("tcp://localhost:3333:stream");
 
     waitTillDone(expectReceive, 5000);
 
@@ -290,18 +288,18 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testSendLateConnectBind)
     EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
     auto& expectReceive = EXPECT_CALL(*m_mockServerCallback, received(_, ReceivedMessage(MESSAGE1_BUFFER))).Times(1);
 
-    IProtocolSessionPtr connection = m_sessionContainer->createSession(m_mockClientCallback, std::make_shared<ProtocolStream>());
+    IProtocolSessionPtr connection = m_sessionContainer->createSession(m_mockClientCallback);
     IProtocolSessionPtr session = m_sessionContainer->getSession(connection->getSessionId());
     EXPECT_EQ(session, connection);
     IMessagePtr message = connection->createMessage();
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
 
-    connection->connect("tcp://localhost:3333", {{}, 1});
+    connection->connect("tcp://localhost:3333:stream", {{}, 1});
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
-    int res = m_sessionContainer->bind("tcp://*:3333", m_mockServerCallback, m_factoryProtocol);
+    int res = m_sessionContainer->bind("tcp://*:3333:stream", m_mockServerCallback);
     EXPECT_EQ(res, 0);
 
     waitTillDone(expectReceive, 5000);
@@ -315,7 +313,7 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testCreateConnectionDiscon
 {
     EXPECT_CALL(*m_mockClientCallback, disconnected(_)).Times(0);
 
-    IProtocolSessionPtr connection = m_sessionContainer->createSession(m_mockClientCallback, std::make_shared<ProtocolStream>());
+    IProtocolSessionPtr connection = m_sessionContainer->createSession(m_mockClientCallback);
     IProtocolSessionPtr session = m_sessionContainer->getSession(connection->getSessionId());
     EXPECT_EQ(session, connection);
 
@@ -334,7 +332,7 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testCreateConnectionDiscon
 
 TEST_F(TestIntegrationProtocolStreamSessionContainer, testBindLateConnectProtocol)
 {
-    int res = m_sessionContainer->bind("tcp://*:3333", m_mockServerCallback, m_factoryProtocol);
+    int res = m_sessionContainer->bind("tcp://*:3333:stream", m_mockServerCallback);
     EXPECT_EQ(res, 0);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
@@ -353,7 +351,7 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testBindLateConnectProtoco
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
 
-    connection->connectProtocol("tcp://localhost:3333", std::make_shared<ProtocolStream>());
+    connection->connect("tcp://localhost:3333:stream");
 
     waitTillDone(expectConnected, 5000);
     waitTillDone(expectReceive, 5000);
@@ -375,11 +373,11 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testSendLateConnectProtoco
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
 
-    connection->connectProtocol("tcp://localhost:3333", std::make_shared<ProtocolStream>(), {{}, 1});
+    connection->connect("tcp://localhost:3333:stream", {{}, 1});
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
-    int res = m_sessionContainer->bind("tcp://*:3333", m_mockServerCallback, m_factoryProtocol);
+    int res = m_sessionContainer->bind("tcp://*:3333:stream", m_mockServerCallback);
     EXPECT_EQ(res, 0);
 
     waitTillDone(expectReceive, 5000);
