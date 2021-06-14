@@ -23,6 +23,7 @@
 #include "finalmq/protocolconnection/ProtocolSession.h"
 #include "finalmq/streamconnection/StreamConnectionContainer.h"
 #include "finalmq/protocolconnection/ProtocolMessage.h"
+#include "finalmq/protocolconnection/ProtocolRegistry.h"
 
 #include <assert.h>
 
@@ -45,7 +46,7 @@ ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, 
     initProtocolValues();
 }
 
-ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, const std::string& endpoint, const ConnectProperties& connectProperties, int contentType)
+ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, const std::string& endpointStreamConnection, const ConnectProperties& connectProperties, int contentType)
     : m_callback(callback)
     , m_executor(executor)
     , m_executorPollerThread(executorPollerThread)
@@ -53,24 +54,24 @@ ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, 
     , m_protocolSessionList(protocolSessionList)
     , m_contentType(contentType)
     , m_streamConnectionContainer(streamConnectionContainer)
-    , m_endpoint(endpoint)
+    , m_endpointStreamConnection(endpointStreamConnection)
     , m_connectionProperties(connectProperties)
 {
     initProtocolValues();
 }
 
-ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, int contentType)
-    : m_callback(callback)
-    , m_executor(executor)
-    , m_executorPollerThread(executorPollerThread)
-    , m_protocolConnection{ protocol, nullptr }
-    , m_protocolSessionList(protocolSessionList)
-    , m_contentType(contentType)
-    , m_streamConnectionContainer(streamConnectionContainer)
-{
-    initProtocolValues();
-}
-
+//ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, int contentType)
+//    : m_callback(callback)
+//    , m_executor(executor)
+//    , m_executorPollerThread(executorPollerThread)
+//    , m_protocolConnection{ protocol, nullptr }
+//    , m_protocolSessionList(protocolSessionList)
+//    , m_contentType(contentType)
+//    , m_streamConnectionContainer(streamConnectionContainer)
+//{
+//    initProtocolValues();
+//}
+//
 
 ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer)
     : m_callback(callback)
@@ -118,7 +119,7 @@ bool ProtocolSession::connect()
     assert(m_protocolConnection.protocol);
     IStreamConnectionPtr connection = m_streamConnectionContainer->createConnection(std::weak_ptr<IStreamConnectionCallback>(m_protocolConnection.protocol));
     setConnection(connection, true);
-    bool res = m_streamConnectionContainer->connect(connection, m_endpoint, m_connectionProperties);
+    bool res = m_streamConnectionContainer->connect(connection, m_endpointStreamConnection, m_connectionProperties);
     return res;
 }
 
@@ -305,7 +306,7 @@ bool ProtocolSession::sendMessage(const IMessagePtr& msg, bool isReply)
     }
     else
     {
-        if (!m_protocolConnection.protocol || (m_endpoint.empty() && !m_incomingConnection))
+        if (!m_protocolConnection.protocol || (m_endpointStreamConnection.empty() && !m_incomingConnection))
         {
             m_messagesBuffered.push_back(msg);
             return true;
@@ -447,19 +448,19 @@ void ProtocolSession::sendBufferedMessages()
 }
 
 
-bool ProtocolSession::connect(const std::string& endpoint, const ConnectProperties& connectionProperties)
-{
-    assert(m_protocolConnection.protocol);
-
-    std::unique_lock<std::mutex> lock(m_mutex);
-    m_endpoint = endpoint;
-    m_connectionProperties = connectionProperties;
-    sendBufferedMessages();
-    lock.unlock();
-
-    bool res = m_streamConnectionContainer->connect(m_protocolConnection.connection, m_endpoint, m_connectionProperties);
-    return res;
-}
+//bool ProtocolSession::connect(const std::string& endpoint, const ConnectProperties& connectionProperties)
+//{
+//    assert(m_protocolConnection.protocol);
+//
+//    std::unique_lock<std::mutex> lock(m_mutex);
+//    m_endpoint = endpoint;
+//    m_connectionProperties = connectionProperties;
+//    sendBufferedMessages();
+//    lock.unlock();
+//
+//    bool res = m_streamConnectionContainer->connect(m_protocolConnection.connection, m_endpoint, m_connectionProperties);
+//    return res;
+//}
 
 void ProtocolSession::addSessionToList(bool verified)
 {
@@ -477,8 +478,24 @@ void ProtocolSession::addSessionToList(bool verified)
 }
 
 
-bool ProtocolSession::connectProtocol(const std::string& endpoint, const IProtocolPtr& protocol, const ConnectProperties& connectionProperties, int contentType)
+bool ProtocolSession::connect(const std::string& endpoint, const ConnectProperties& connectionProperties, int contentType)
 {
+    size_t ixEndpoint = endpoint.find_last_of(':');
+    if (ixEndpoint == std::string::npos)
+    {
+        return false;
+    }
+    std::string protocolName = endpoint.substr(ixEndpoint+1, endpoint.size() - (ixEndpoint + 1));
+    IProtocolFactoryPtr protocolFactory = ProtocolRegistry::instance().getProtocolFactory(protocolName);
+    if (!protocolFactory)
+    {
+        return false;
+    }
+
+    IProtocolPtr protocol = protocolFactory->createProtocol();
+    assert(protocol);
+
+
     assert(m_protocolConnection.protocol == nullptr);
     assert(m_streamConnectionContainer);
 
@@ -486,7 +503,7 @@ bool ProtocolSession::connectProtocol(const std::string& endpoint, const IProtoc
 
     std::unique_lock<std::mutex> lock(m_mutex);
     assert(m_protocolConnection.connection == nullptr);
-    m_endpoint = endpoint;
+    m_endpointStreamConnection = endpoint.substr(0, ixEndpoint);
     m_connectionProperties = connectionProperties;
     m_contentType = contentType;
     m_protocolConnection.protocol = protocol;
@@ -497,7 +514,7 @@ bool ProtocolSession::connectProtocol(const std::string& endpoint, const IProtoc
     sendBufferedMessages();
     lock.unlock();
 
-    bool res = m_streamConnectionContainer->connect(connection, m_endpoint, m_connectionProperties);
+    bool res = m_streamConnectionContainer->connect(connection, m_endpointStreamConnection, m_connectionProperties);
     return res;
 }
 
@@ -551,7 +568,7 @@ void ProtocolSession::disconnected()
     pushRelease();
 
     IProtocolSessionListPtr protocolSessionList = m_protocolSessionList.lock();
-    bool doDisconnected = (!m_triggerDisconnected) && (m_triggerConnected || !m_endpoint.empty());
+    bool doDisconnected = (!m_triggerDisconnected) && (m_triggerConnected || !m_endpointStreamConnection.empty());
     m_triggerDisconnected = true;
     lock.unlock();
 
@@ -706,7 +723,7 @@ void ProtocolSession::reconnect()
     // inside the protocol m_connection must be protected by a protocol mutex
 
     lock.unlock();
-    m_streamConnectionContainer->connect(connection, m_endpoint, m_connectionProperties);
+    m_streamConnectionContainer->connect(connection, m_endpointStreamConnection, m_connectionProperties);
 }
 
 

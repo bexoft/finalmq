@@ -71,9 +71,8 @@ static ssize_t pickEndpointEntry(const std::vector<fmqreg::Endpoint>& endpoints,
         const fmqreg::Endpoint& endpoint = endpoints[i];
         if (endpoint.ssl == ssl)
         {
-            IProtocolFactoryPtr factory = ProtocolRegistry::instance().getProtocolFactory(endpoint.framingprotocol);
             bool contentTypeKnown = RemoteEntityFormatRegistry::instance().isRegistered(endpoint.contenttype);
-            if (factory && contentTypeKnown)
+            if (contentTypeKnown)
             {
                 if (endpoint.socketprotocol == fmqreg::SocketProtocol::SOCKET_TCP)
                 {
@@ -149,14 +148,9 @@ public:
                             endpoint.replace(pos, std::string("*").length(), m_hostname);
                         }
 
-                        IProtocolFactoryPtr factory = ProtocolRegistry::instance().getProtocolFactory(endpointEntry.framingprotocol);
-
-                        if (factory)
-                        {
-                            connectDone = true;
-                            IProtocolSessionPtr session = remoteEntityContainer->connect(endpoint, factory->createProtocol(), endpointEntry.contenttype, m_connectProperties);
-                            re->connect(m_peerId, session, reply->service.entityname, reply->service.entityid);
-                        }
+                        connectDone = true;
+                        IProtocolSessionPtr session = remoteEntityContainer->connect(endpoint, m_connectProperties);
+                        re->connect(m_peerId, session, reply->service.entityname, reply->service.entityid);
                     }
                 }
                 else
@@ -328,11 +322,12 @@ IProtocolSessionPtr FmqRegistryClient::createRegistrySession(const std::string& 
     endpoint += hostname;
     endpoint += ":";
     endpoint += PORTNUMBER_PROTO;
+    endpoint += ":headersize:protobuf";
     IProtocolSessionPtr session;
     auto remoteEntityContainer = m_remoteEntityContainer.lock();
     if (remoteEntityContainer)
     {
-        session = remoteEntityContainer->connect(endpoint, std::make_shared<ProtocolHeaderBinarySize>(), RemoteEntityFormatProto::CONTENT_TYPE, connectProperties);
+        session = remoteEntityContainer->connect(endpoint, connectProperties);
     }
     return session;
 }

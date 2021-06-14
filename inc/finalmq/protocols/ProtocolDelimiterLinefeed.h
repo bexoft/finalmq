@@ -31,7 +31,8 @@ namespace finalmq {
 class SYMBOLEXP ProtocolDelimiterLinefeed : public ProtocolDelimiter
 {
 public:
-    enum { PROTOCOL_ID = 3 };
+    static const int PROTOCOL_ID;           // 3
+    static const std::string PROTOCOL_NAME; // delimiter_lf
 
     ProtocolDelimiterLinefeed();
 

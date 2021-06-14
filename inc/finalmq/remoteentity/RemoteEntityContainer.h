@@ -60,9 +60,9 @@ struct IRemoteEntityContainer
     virtual ~IRemoteEntityContainer() {}
 
     virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000, FuncPollerLoopTimer funcTimer = {}, const IExecutorPtr& executor = nullptr, bool storeRawDataInReceiveStruct = false) = 0;
-    virtual int bind(const std::string& endpoint, const IProtocolFactoryPtr protocolFactory, int contentType, const BindProperties& bindProperties = {}) = 0;
+    virtual int bind(const std::string& endpoint, const BindProperties& bindProperties = {}) = 0;
     virtual void unbind(const std::string& endpoint) = 0;
-    virtual IProtocolSessionPtr connect(const std::string& endpoint, const IProtocolPtr& protocol, int contentType, const ConnectProperties& connectProperties = {}) = 0;
+    virtual IProtocolSessionPtr connect(const std::string& endpoint, const ConnectProperties& connectProperties = {}) = 0;
     virtual void run() = 0;
     virtual void terminatePollerLoop() = 0;
     virtual IExecutorPtr getExecutor() const = 0;
@@ -91,9 +91,9 @@ public:
 
     // IRemoteEntityContainer
     virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000, FuncPollerLoopTimer funcTimer = {}, const IExecutorPtr& executor = nullptr, bool storeRawDataInReceiveStruct = false) override;
-    virtual int bind(const std::string& endpoint, const IProtocolFactoryPtr protocolFactory, int contentType, const BindProperties& bindProperties = {}) override;
+    virtual int bind(const std::string& endpoint, const BindProperties& bindProperties = {}) override;
     virtual void unbind(const std::string& endpoint) override;
-    virtual IProtocolSessionPtr connect(const std::string& endpoint, const IProtocolPtr& protocol, int contentType, const ConnectProperties& connectProperties = {}) override;
+    virtual IProtocolSessionPtr connect(const std::string& endpoint, const ConnectProperties& connectProperties = {}) override;
     virtual void run() override;
     virtual void terminatePollerLoop() override;
     virtual IExecutorPtr getExecutor() const override;

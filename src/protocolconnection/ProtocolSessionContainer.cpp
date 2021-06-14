@@ -22,6 +22,7 @@
 
 #include "finalmq/protocolconnection/ProtocolSessionContainer.h"
 #include "finalmq/streamconnection/StreamConnectionContainer.h"
+#include "finalmq/protocolconnection/ProtocolRegistry.h"
 
 
 namespace finalmq {
@@ -102,8 +103,22 @@ void ProtocolSessionContainer::init(int cycleTime, int checkReconnectInterval, F
     }
 }
 
-int ProtocolSessionContainer::bind(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, IProtocolFactoryPtr protocolFactory, const BindProperties& bindProperties, int contentType)
+int ProtocolSessionContainer::bind(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const BindProperties& bindProperties, int contentType)
 {
+    size_t ixEndpoint = endpoint.find_last_of(':');
+    if (ixEndpoint == std::string::npos)
+    {
+        return -1;
+    }
+    std::string protocolName = endpoint.substr(ixEndpoint + 1, endpoint.size() - (ixEndpoint + 1));
+    IProtocolFactoryPtr protocolFactory = ProtocolRegistry::instance().getProtocolFactory(protocolName);
+    if (!protocolFactory)
+    {
+        return -1;
+    }
+
+    std::string endpointStreamConnection = endpoint.substr(0, ixEndpoint);
+
     int err = 0;
     std::unique_lock<std::mutex> lock(m_mutex);
     auto it = m_endpoint2Bind.find(endpoint);
@@ -113,7 +128,7 @@ int ProtocolSessionContainer::bind(const std::string& endpoint, hybrid_ptr<IProt
         m_endpoint2Bind[endpoint] = bind;
         lock.unlock();
 
-        err = m_streamConnectionContainer->bind(endpoint, bind, bindProperties);
+        err = m_streamConnectionContainer->bind(endpointStreamConnection, bind, bindProperties);
     }
     return err;
 }
@@ -129,23 +144,39 @@ void ProtocolSessionContainer::unbind(const std::string& endpoint)
     }
 }
 
-IProtocolSessionPtr ProtocolSessionContainer::connect(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, const ConnectProperties& connectProperties, int contentType)
+IProtocolSessionPtr ProtocolSessionContainer::connect(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const ConnectProperties& connectProperties, int contentType)
 {
+    size_t ixEndpoint = endpoint.find_last_of(':');
+    if (ixEndpoint == std::string::npos)
+    {
+        return nullptr;
+    }
+    std::string protocolName = endpoint.substr(ixEndpoint + 1, endpoint.size() - (ixEndpoint + 1));
+    IProtocolFactoryPtr protocolFactory = ProtocolRegistry::instance().getProtocolFactory(protocolName);
+    if (!protocolFactory)
+    {
+        return nullptr;
+    }
+
+    IProtocolPtr protocol = protocolFactory->createProtocol();
     assert(protocol);
-    IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(callback, m_executor, m_executorPollerThread, protocol, m_protocolSessionList, m_streamConnectionContainer, endpoint, connectProperties, contentType);
+
+    std::string endpointStreamConnection = endpoint.substr(0, ixEndpoint);
+
+    IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(callback, m_executor, m_executorPollerThread, protocol, m_protocolSessionList, m_streamConnectionContainer, endpointStreamConnection, connectProperties, contentType);
     protocolSession->connect();
     return protocolSession;
 }
 
 
-IProtocolSessionPtr ProtocolSessionContainer::createSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, int contentType)
-{
-    assert(protocol);
-    IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(callback, m_executor, m_executorPollerThread, protocol, m_protocolSessionList, m_streamConnectionContainer, contentType);
-    protocolSession->createConnection();
-    return protocolSession;
-}
-
+//IProtocolSessionPtr ProtocolSessionContainer::createSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, int contentType)
+//{
+//    assert(protocol);
+//    IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(callback, m_executor, m_executorPollerThread, protocol, m_protocolSessionList, m_streamConnectionContainer, contentType);
+//    protocolSession->createConnection();
+//    return protocolSession;
+//}
+//
 
 IProtocolSessionPtr ProtocolSessionContainer::createSession(hybrid_ptr<IProtocolSessionCallback> callback)
 {

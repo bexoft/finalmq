@@ -28,16 +28,28 @@ namespace finalmq {
 
 
 
-void ProtocolRegistryImpl::registerProtocolFactory(int protocolId, const IProtocolFactoryPtr& protocolFactory)
+void ProtocolRegistryImpl::registerProtocolFactory(const std::string& protocolName, int protocolId, const IProtocolFactoryPtr& protocolFactory)
 {
-    m_protocolFactories[protocolId] = protocolFactory;
+    m_protocolNameToFactory[protocolName] = protocolFactory;
+    m_protocolIdToFactory[protocolId] = protocolFactory;
+}
+
+
+IProtocolFactoryPtr ProtocolRegistryImpl::getProtocolFactory(const std::string& protocolName) const
+{
+    auto it = m_protocolNameToFactory.find(protocolName);
+    if (it != m_protocolNameToFactory.end())
+    {
+        return it->second;
+    }
+    return nullptr;
 }
 
 
 IProtocolFactoryPtr ProtocolRegistryImpl::getProtocolFactory(int protocolId) const
 {
-    auto it = m_protocolFactories.find(protocolId);
-    if (it != m_protocolFactories.end())
+    auto it = m_protocolIdToFactory.find(protocolId);
+    if (it != m_protocolIdToFactory.end())
     {
         return it->second;
     }

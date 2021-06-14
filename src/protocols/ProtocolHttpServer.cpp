@@ -37,6 +37,9 @@
 
 namespace finalmq {
 
+const int ProtocolHttpServer::PROTOCOL_ID = 4;
+const std::string ProtocolHttpServer::PROTOCOL_NAME = "httpserver";
+
 
 const std::string ProtocolHttpServer::FMQ_HTTP = "fmq_http";
 const std::string ProtocolHttpServer::FMQ_METHOD = "fmq_method";
@@ -710,7 +713,7 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
     if (m_multipart >= 2)
     {
         assert(sumHeaderSize == 0);
-        int sizeChunkedData = sizeBody;
+        int sizeChunkedData = static_cast<int>(sizeBody);
         firstLine.clear();
         if (m_multipart == 2 || m_multipart == 3)
         {
@@ -1166,7 +1169,7 @@ struct RegisterProtocolHttpServerFactory
 {
     RegisterProtocolHttpServerFactory()
     {
-        ProtocolRegistry::instance().registerProtocolFactory(ProtocolHttpServer::PROTOCOL_ID, std::make_shared<ProtocolHttpServerFactory>());
+        ProtocolRegistry::instance().registerProtocolFactory(ProtocolHttpServer::PROTOCOL_NAME, ProtocolHttpServer::PROTOCOL_ID, std::make_shared<ProtocolHttpServerFactory>());
     }
 } g_registerProtocolHttpServerFactory;
 

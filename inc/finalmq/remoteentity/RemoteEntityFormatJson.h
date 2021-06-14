@@ -28,10 +28,11 @@
 namespace finalmq {
 
 
-class RemoteEntityFormatJson : public IRemoteEntityFormat
+class SYMBOLEXP RemoteEntityFormatJson : public IRemoteEntityFormat
 {
 public:
-    enum {CONTENT_TYPE = 2};
+    static const int CONTENT_TYPE;              // 2
+    static const std::string CONTENT_TYPE_NAME; // json
 
 private:
     virtual std::shared_ptr<StructBase> parse(const BufferRef& bufferRef, bool storeRawData, remoteentity::Header& header, bool& syntaxError) override;

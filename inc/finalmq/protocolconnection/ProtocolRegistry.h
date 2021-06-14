@@ -42,7 +42,8 @@ struct IProtocolRegistry
 {
     virtual ~IProtocolRegistry() {}
 
-    virtual void registerProtocolFactory(int protocolId, const IProtocolFactoryPtr& protocolFactory) = 0;
+    virtual void registerProtocolFactory(const std::string& protocolName, int protocolId, const IProtocolFactoryPtr& protocolFactory) = 0;
+    virtual IProtocolFactoryPtr getProtocolFactory(const std::string& protocolName) const = 0;
     virtual IProtocolFactoryPtr getProtocolFactory(int protocolId) const = 0;
 };
 
@@ -52,11 +53,13 @@ struct IProtocolRegistry
 class ProtocolRegistryImpl : public IProtocolRegistry
 {
 public:
-    virtual void registerProtocolFactory(int remoteEntityProtocolId, const IProtocolFactoryPtr& protocolFactory) override;
-    virtual IProtocolFactoryPtr getProtocolFactory(int remoteEntityProtocolId) const override;
+    virtual void registerProtocolFactory(const std::string& protocolName, int remoteEntityProtocolId, const IProtocolFactoryPtr& protocolFactory) override;
+    virtual IProtocolFactoryPtr getProtocolFactory(const std::string& protocolName) const override;
+    virtual IProtocolFactoryPtr getProtocolFactory(int protocolId) const override;
 
 private:
-    std::unordered_map<int, IProtocolFactoryPtr> m_protocolFactories;
+    std::unordered_map<std::string, IProtocolFactoryPtr>    m_protocolNameToFactory;
+    std::unordered_map<int, IProtocolFactoryPtr>            m_protocolIdToFactory;
 };
 
 
