@@ -88,11 +88,11 @@ int main()
 
     // Open listener port 18180 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
     // content type in payload: protobuf
-    entityContainer.bind("tcp://*:" PORTNUMBER_PROTO ":headersize", RemoteEntityFormatProto::CONTENT_TYPE);
+    entityContainer.bind("tcp://*:" PORTNUMBER_PROTO ":headersize:protobuf");
 
     // Open listener port 18181 with delimiter framing protocol ProtocolDelimiterLinefeed ('\n' is end of frame).
     // content type in payload: JSON
-    entityContainer.bind("tcp://*:" PORTNUMBER_JSON ":delimiter_lf", RemoteEntityFormatJson::CONTENT_TYPE);
+    entityContainer.bind("tcp://*:" PORTNUMBER_JSON ":delimiter_lf:json");
 
     // run
     entityContainer.run();

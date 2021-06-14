@@ -42,11 +42,15 @@ using finalmq::remoteentity::Header;
 namespace finalmq {
 
 
+const int RemoteEntityFormatProto::CONTENT_TYPE = 1;
+const std::string RemoteEntityFormatProto::CONTENT_TYPE_NAME = "protobuf";
+
+
 struct RegisterFormatProto
 {
     RegisterFormatProto()
     {
-        RemoteEntityFormatRegistry::instance().registerFormat(RemoteEntityFormatProto::CONTENT_TYPE, std::make_shared<RemoteEntityFormatProto>());
+        RemoteEntityFormatRegistry::instance().registerFormat(RemoteEntityFormatProto::CONTENT_TYPE_NAME, RemoteEntityFormatProto::CONTENT_TYPE, std::make_shared<RemoteEntityFormatProto>());
     }
 } g_registerFormatProto;
 

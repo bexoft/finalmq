@@ -34,8 +34,8 @@ namespace finalmq {
 class SYMBOLEXP ProtocolHeaderBinarySize : public IProtocol
 {
 public:
-    static const int PROTOCOL_ID;
-    static const std::string PROTOCOL_NAME;
+    static const int PROTOCOL_ID;           // 2
+    static const std::string PROTOCOL_NAME; // headersize
 
     ProtocolHeaderBinarySize();
 

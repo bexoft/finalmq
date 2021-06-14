@@ -54,16 +54,17 @@ static const std::string MSG_REPLY = "MSG_REPLY";
 
 
 
-void RemoteEntityFormatRegistryImpl::registerFormat(int contentType, const std::shared_ptr<IRemoteEntityFormat>& format)
+void RemoteEntityFormatRegistryImpl::registerFormat(const std::string& contentTypeName, int contentType, const std::shared_ptr<IRemoteEntityFormat>& format)
 {
-    m_formats[contentType] = format;
+    m_contentTypeToFormat[contentType] = format;
+    m_contentTypeNameToContentType[contentTypeName] = contentType;
 }
 
 
 bool RemoteEntityFormatRegistryImpl::isRegistered(int contentType) const
 {
-    auto it = m_formats.find(contentType);
-    if (it != m_formats.end())
+    auto it = m_contentTypeToFormat.find(contentType);
+    if (it != m_contentTypeToFormat.end())
     {
         return true;
     }
@@ -71,10 +72,23 @@ bool RemoteEntityFormatRegistryImpl::isRegistered(int contentType) const
 }
 
 
+int RemoteEntityFormatRegistryImpl::getContentType(const std::string& contentTypeName) const
+{
+    auto it = m_contentTypeNameToContentType.find(contentTypeName);
+    if (it != m_contentTypeNameToContentType.end())
+    {
+        return it->second;
+    }
+    return 0;
+}
+
+
+
+
 bool RemoteEntityFormatRegistryImpl::serialize(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase* structBase)
 {
-    auto it = m_formats.find(contentType);
-    if (it != m_formats.end())
+    auto it = m_contentTypeToFormat.find(contentType);
+    if (it != m_contentTypeToFormat.end())
     {
         assert(it->second);
         it->second->serialize(message, header, structBase);
@@ -97,8 +111,8 @@ void RemoteEntityFormatRegistryImpl::serializeHeaderToMetainfo(IMessage& message
 
 bool RemoteEntityFormatRegistryImpl::serializeData(IMessage& message, int contentType, const StructBase* structBase)
 {
-    auto it = m_formats.find(contentType);
-    if (it != m_formats.end())
+    auto it = m_contentTypeToFormat.find(contentType);
+    if (it != m_contentTypeToFormat.end())
     {
         assert(it->second);
         it->second->serializeData(message, structBase);
@@ -381,8 +395,8 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainf
 
     std::shared_ptr<StructBase> structBase;
 
-    auto it = m_formats.find(contentType);
-    if (it != m_formats.end())
+    auto it = m_contentTypeToFormat.find(contentType);
+    if (it != m_contentTypeToFormat.end())
     {
         assert(it->second);
         structBase = it->second->parseData(bufferRef, storeRawData, header.type, syntaxError);
@@ -398,8 +412,8 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(IMessage& mess
 
     std::shared_ptr<StructBase> structBase;
 
-    auto it = m_formats.find(contentType);
-    if (it != m_formats.end())
+    auto it = m_contentTypeToFormat.find(contentType);
+    if (it != m_contentTypeToFormat.end())
     {
         assert(it->second);
         structBase = it->second->parse(bufferRef, storeRawData, header, syntaxError);

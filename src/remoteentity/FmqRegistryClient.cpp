@@ -149,7 +149,7 @@ public:
                         }
 
                         connectDone = true;
-                        IProtocolSessionPtr session = remoteEntityContainer->connect(endpoint, endpointEntry.contenttype, m_connectProperties);
+                        IProtocolSessionPtr session = remoteEntityContainer->connect(endpoint, m_connectProperties);
                         re->connect(m_peerId, session, reply->service.entityname, reply->service.entityid);
                     }
                 }
@@ -322,12 +322,12 @@ IProtocolSessionPtr FmqRegistryClient::createRegistrySession(const std::string& 
     endpoint += hostname;
     endpoint += ":";
     endpoint += PORTNUMBER_PROTO;
-    endpoint += ":headersize";
+    endpoint += ":headersize:protobuf";
     IProtocolSessionPtr session;
     auto remoteEntityContainer = m_remoteEntityContainer.lock();
     if (remoteEntityContainer)
     {
-        session = remoteEntityContainer->connect(endpoint, RemoteEntityFormatProto::CONTENT_TYPE, connectProperties);
+        session = remoteEntityContainer->connect(endpoint, connectProperties);
     }
     return session;
 }

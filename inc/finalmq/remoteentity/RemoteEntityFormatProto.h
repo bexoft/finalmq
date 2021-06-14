@@ -27,11 +27,12 @@
 
 namespace finalmq {
 
-class RemoteEntityFormatProto : public IRemoteEntityFormat
+class SYMBOLEXP RemoteEntityFormatProto : public IRemoteEntityFormat
 {
 public:
-    enum {CONTENT_TYPE = 1};
-
+    static const int CONTENT_TYPE;              // 1
+    static const std::string CONTENT_TYPE_NAME; // protobuf
+    
 private:
     virtual std::shared_ptr<StructBase> parse(const BufferRef& bufferRef, bool storeRawData, remoteentity::Header& header, bool& syntaxError) override;
     virtual std::shared_ptr<StructBase> parseData(const BufferRef& bufferRef, bool storeRawData, const std::string& type, bool& syntaxError) override;

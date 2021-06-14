@@ -26,10 +26,6 @@
 #include "gmock/gmock.h"
 
 #include "finalmq/remoteentity/RemoteEntityContainer.h"
-#include "finalmq/remoteentity/RemoteEntityFormatProto.h"
-#include "finalmq/remoteentity/RemoteEntityFormatJson.h"
-#include "finalmq/protocols/ProtocolHeaderBinarySize.h"
-#include "finalmq/protocols/ProtocolDelimiterLinefeed.h"
 #include "finalmq/logger/Logger.h"
 #include "test.fmq.h"
 
@@ -139,8 +135,8 @@ TEST_F(TestIntegrationRemoteEntity, testProto)
     entityContainerServer.registerEntity(&entityServer, "MyServer");
     entityContainerClient.registerEntity(&entityClient);
 
-    entityContainerServer.bind("tcp://*:7788:headersize", RemoteEntityFormatProto::CONTENT_TYPE);
-    IProtocolSessionPtr sessionClient = entityContainerClient.connect("tcp://localhost:7788:headersize", RemoteEntityFormatProto::CONTENT_TYPE);
+    entityContainerServer.bind("tcp://*:7788:headersize:protobuf");
+    IProtocolSessionPtr sessionClient = entityContainerClient.connect("tcp://localhost:7788:headersize:protobuf");
 
     EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
     EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
@@ -200,8 +196,8 @@ TEST_F(TestIntegrationRemoteEntity, testJson)
     entityContainerServer.registerEntity(&entityServer, "MyServer");
     entityContainerClient.registerEntity(&entityClient);
 
-    entityContainerServer.bind("tcp://*:7788:headersize", RemoteEntityFormatJson::CONTENT_TYPE);
-    IProtocolSessionPtr sessionClient = entityContainerClient.connect("tcp://localhost:7788:headersize", RemoteEntityFormatJson::CONTENT_TYPE);
+    entityContainerServer.bind("tcp://*:7788:headersize:json");
+    IProtocolSessionPtr sessionClient = entityContainerClient.connect("tcp://localhost:7788:headersize:json");
 
     EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
     EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
@@ -257,8 +253,8 @@ TEST_F(TestIntegrationRemoteEntity, testSslProto)
     entityContainerServer.registerEntity(&entityServer, "MyServer");
     entityContainerClient.registerEntity(&entityClient);
 
-    entityContainerServer.bind("tcp://*:7788:headersize", RemoteEntityFormatProto::CONTENT_TYPE, {{true, "ssltest.cert.pem", "ssltest.key.pem"}});
-    IProtocolSessionPtr sessionClient = entityContainerClient.connect("tcp://localhost:7788:headersize", RemoteEntityFormatProto::CONTENT_TYPE, {{true}});
+    entityContainerServer.bind("tcp://*:7788:headersize:protobuf", {{true, "ssltest.cert.pem", "ssltest.key.pem"}});
+    IProtocolSessionPtr sessionClient = entityContainerClient.connect("tcp://localhost:7788:headersize:protobuf", {{true}});
 
     EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
     EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
@@ -315,7 +311,7 @@ TEST_F(TestIntegrationRemoteEntity, testProtoLateConnect)
     entityContainerServer.registerEntity(&entityServer, "MyServer");
     entityContainerClient.registerEntity(&entityClient);
 
-    entityContainerServer.bind("tcp://*:7788:headersize", RemoteEntityFormatProto::CONTENT_TYPE);
+    entityContainerServer.bind("tcp://*:7788:headersize:protobuf");
 
     EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
     EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
@@ -339,7 +335,7 @@ TEST_F(TestIntegrationRemoteEntity, testProtoLateConnect)
         });
     }
 
-    IProtocolSessionPtr sessionClient = entityContainerClient.connect("tcp://localhost:7788:headersize", RemoteEntityFormatProto::CONTENT_TYPE);
+    IProtocolSessionPtr sessionClient = entityContainerClient.connect("tcp://localhost:7788:headersize:protobuf");
 
     EXPECT_CALL(mockEventsClient, connectReply(_, remoteentity::Status(remoteentity::Status::STATUS_OK))).Times(1);
     entityClient.connect(peerId, sessionClient, "MyServer");

@@ -154,9 +154,22 @@ void RemoteEntityContainer::init(int cycleTime, int checkReconnectInterval, Func
     //}(), "fmq");
 }
 
-int RemoteEntityContainer::bind(const std::string& endpoint, int contentType, const BindProperties& bindProperties)
+int RemoteEntityContainer::bind(const std::string& endpoint, const BindProperties& bindProperties)
 {
-    return m_protocolSessionContainer->bind(endpoint, this, bindProperties, contentType);
+    size_t ixEndpoint = endpoint.find_last_of(':');
+    if (ixEndpoint == std::string::npos)
+    {
+        return -1;
+    }
+    std::string contentTypeName = endpoint.substr(ixEndpoint + 1, endpoint.size() - (ixEndpoint + 1));
+    int contentType = RemoteEntityFormatRegistry::instance().getContentType(contentTypeName);
+    if (contentType == 0)
+    {
+        return -1;
+    }
+    std::string endpointProtocol = endpoint.substr(0, ixEndpoint);
+
+    return m_protocolSessionContainer->bind(endpointProtocol, this, bindProperties, contentType);
 }
 
 void RemoteEntityContainer::unbind(const std::string& endpoint)
@@ -164,9 +177,22 @@ void RemoteEntityContainer::unbind(const std::string& endpoint)
     m_protocolSessionContainer->unbind(endpoint);
 }
 
-IProtocolSessionPtr RemoteEntityContainer::connect(const std::string& endpoint, int contentType, const ConnectProperties& connectProperties)
+IProtocolSessionPtr RemoteEntityContainer::connect(const std::string& endpoint, const ConnectProperties& connectProperties)
 {
-    return m_protocolSessionContainer->connect(endpoint, this, connectProperties, contentType);
+    size_t ixEndpoint = endpoint.find_last_of(':');
+    if (ixEndpoint == std::string::npos)
+    {
+        return nullptr;
+    }
+    std::string contentTypeName = endpoint.substr(ixEndpoint + 1, endpoint.size() - (ixEndpoint + 1));
+    int contentType = RemoteEntityFormatRegistry::instance().getContentType(contentTypeName);
+    if (contentType == 0)
+    {
+        return nullptr;
+    }
+    std::string endpointProtocol = endpoint.substr(0, ixEndpoint);
+
+    return m_protocolSessionContainer->connect(endpointProtocol, this, connectProperties, contentType);
 }
 
 

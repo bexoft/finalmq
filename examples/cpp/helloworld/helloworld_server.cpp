@@ -22,8 +22,6 @@
 
 
 #include "finalmq/remoteentity/RemoteEntityContainer.h"
-#include "finalmq/remoteentity/RemoteEntityFormatProto.h"
-#include "finalmq/remoteentity/RemoteEntityFormatJson.h"
 #include "finalmq/remoteentity/EntityFileService.h"
 #include "finalmq/logger/Logger.h"
 
@@ -36,8 +34,6 @@
 
 using finalmq::RemoteEntity;
 using finalmq::RemoteEntityContainer;
-using finalmq::RemoteEntityFormatProto;
-using finalmq::RemoteEntityFormatJson;
 using finalmq::IRemoteEntityContainer;
 using finalmq::EntityFileServer;
 using finalmq::PeerId;
@@ -133,15 +129,15 @@ int main()
 
     // Open listener port 7777 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
     // content type in payload: protobuf
-    entityContainer.bind("tcp://*:7777:headersize", RemoteEntityFormatProto::CONTENT_TYPE);
+    entityContainer.bind("tcp://*:7777:headersize:protobuf");
 
     // Open listener port 8888 with delimiter framing protocol ProtocolDelimiterLinefeed ('\n' is end of frame).
     // content type in payload: JSON
-    entityContainer.bind("tcp://*:8888:delimiter_lf", RemoteEntityFormatJson::CONTENT_TYPE);
+    entityContainer.bind("tcp://*:8888:delimiter_lf:json");
 
     // Open listener port 8080 with http.
     // content type in payload: JSON
-    entityContainer.bind("tcp://*:8080:httpserver", RemoteEntityFormatJson::CONTENT_TYPE);
+    entityContainer.bind("tcp://*:8080:httpserver:json");
 
     // note:
     // multiple access points (listening ports) can be activated by calling bind() several times.

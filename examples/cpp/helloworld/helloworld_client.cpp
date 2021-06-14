@@ -129,7 +129,7 @@ int main()
     // A client can be started before the server is started. The connect is been retried in the background till the server
     // becomes available. Use the ConnectProperties to change the reconnect properties
     // (default is: try to connect every 5s forever till the server becomes available).
-    IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:7777:headersize", RemoteEntityFormatProto::CONTENT_TYPE);
+    IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:7777:headersize:protobuf");
 
     // connect entityClient to remote server entity "MyService" with the created TCP session.
     // The returned peerId identifies the peer entity.

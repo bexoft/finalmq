@@ -39,11 +39,15 @@ using finalmq::remoteentity::Header;
 
 namespace finalmq {
 
+const int RemoteEntityFormatJson::CONTENT_TYPE = 2;
+const std::string RemoteEntityFormatJson::CONTENT_TYPE_NAME = "json";
+
+
 struct RegisterFormatJson
 {
     RegisterFormatJson()
     {
-        RemoteEntityFormatRegistry::instance().registerFormat(RemoteEntityFormatJson::CONTENT_TYPE, std::make_shared<RemoteEntityFormatJson>());
+        RemoteEntityFormatRegistry::instance().registerFormat(RemoteEntityFormatJson::CONTENT_TYPE_NAME, RemoteEntityFormatJson::CONTENT_TYPE, std::make_shared<RemoteEntityFormatJson>());
     }
 } g_registerFormatJson;
 
