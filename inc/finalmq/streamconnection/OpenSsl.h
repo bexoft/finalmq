@@ -26,6 +26,9 @@
 
 #include <string>
 
+#ifdef USE_OPENSSL
+#include "openssl/ossl_typ.h"
+#endif
 
 namespace finalmq {
 
@@ -37,7 +40,11 @@ struct CertificateData
     std::string caFile;                 // SSL_CTX_load_verify_location, pem
     std::string caPath;                 // SSL_CTX_load_verify_location, pem
     std::string certificateChainFile;   // SSL_CTX_use_certificate_chain_file, pem
-    std::string clientCaFile;           // SSL_load_client_CA_file, pem, SSL_CTX_set_client_CA_list, SSL_CTX_set_verify
+    std::string clientCaFile;           // SSL_load_client_CA_file, pem, SSL_CTX_set_client_CA_list
+    int verifyMode = 0;
+#ifdef USE_OPENSSL
+    std::function<int(int, X509_STORE_CTX*)> verifyCallback;
+#endif
 };
 
 }   // namespace finalmq

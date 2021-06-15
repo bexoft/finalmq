@@ -664,14 +664,18 @@ bool StreamConnectionContainer::sslAccepting(SslAcceptingData& sslAcceptingData)
 
     if (state == SslSocket::IoState::SUCCESS)
     {
-        SocketDescriptorPtr sd = sslAcceptingData.socket->getSocketDescriptor();
-        assert(sd);
         sslAcceptingData.connectionData.sd = sd->getDescriptor();
         AddressHelpers::addr2peer((sockaddr*)sslAcceptingData.connectionData.sockaddr.c_str(), sslAcceptingData.connectionData);
 
         IStreamConnectionPrivatePtr connection = addConnection(sslAcceptingData.socket, sslAcceptingData.connectionData, sslAcceptingData.callback);
         connection->connected(connection);
     }
+
+    if (state == SslSocket::IoState::SSL_ERROR)
+    {
+        m_poller->removeSocket(sd);
+    }
+
     if (state == SslSocket::IoState::SUCCESS || state == SslSocket::IoState::SSL_ERROR)
     {
         m_sslAcceptings.erase(sd->getDescriptor());
