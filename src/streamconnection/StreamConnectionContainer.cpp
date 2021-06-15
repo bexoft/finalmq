@@ -54,6 +54,7 @@ StreamConnectionContainer::StreamConnectionContainer()
     : m_poller(std::make_shared<PollerImplEpoll>())
 #endif
     , m_executorPollerThread(std::make_shared<Executor>())
+    , m_executorWorker(std::make_unique<ExecutorWorker>(1))
 {
     m_executorPollerThread->registerActionNotification([this]() {
         m_poller->releaseWait();
@@ -62,6 +63,7 @@ StreamConnectionContainer::StreamConnectionContainer()
 
 StreamConnectionContainer::~StreamConnectionContainer()
 {
+    m_executorWorker = nullptr;
     terminatePollerLoop();
 }
 
@@ -301,7 +303,7 @@ bool StreamConnectionContainer::connect(const IStreamConnectionPtr& streamConnec
     {
         ret = true;
         std::string hostname = connectionData.hostname;
-        GlobalExecutorWorker::instance().addAction([this, connectionData, connection, connectionProperties]() mutable {
+        m_executorWorker->addAction([this, connectionData, connection, connectionProperties]() mutable {
             bool ok = false;
             struct in_addr addr;
             struct hostent* hp = gethostbyname(connectionData.hostname.c_str());

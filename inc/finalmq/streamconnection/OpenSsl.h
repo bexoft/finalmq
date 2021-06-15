@@ -35,15 +35,15 @@ namespace finalmq {
 struct CertificateData
 {
     bool ssl = false;
+    int verifyMode = 0;                 // SSL_CTX_set_verify: SSL_VERIFY_NONE, SSL_VERIFY_PEER, SSL_VERIFY_FAIL_IF_NO_PEER_CERT, SSL_VERIFY_CLIENT_ONCE
     std::string certificateFile;        // SSL_CTX_use_certificate_file, pem
     std::string privateKeyFile;         // SSL_CTX_use_PrivateKey_file, pem
     std::string caFile;                 // SSL_CTX_load_verify_location, pem
     std::string caPath;                 // SSL_CTX_load_verify_location, pem
     std::string certificateChainFile;   // SSL_CTX_use_certificate_chain_file, pem
     std::string clientCaFile;           // SSL_load_client_CA_file, pem, SSL_CTX_set_client_CA_list
-    int verifyMode = 0;
 #ifdef USE_OPENSSL
-    std::function<int(int, X509_STORE_CTX*)> verifyCallback;
+    std::function<int(int, X509_STORE_CTX*)> verifyCallback;    // SSL_CTX_set_verify
 #endif
 };
 

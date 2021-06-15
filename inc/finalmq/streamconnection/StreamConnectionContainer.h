@@ -114,6 +114,7 @@ private:
     int                                                             m_checkReconnectInterval = 1000;
     FuncPollerLoopTimer                                             m_funcTimer;
     IExecutorPtr                                                    m_executorPollerThread;
+    std::unique_ptr<IExecutorWorker>                                m_executorWorker;
     mutable std::mutex                                              m_mutex;
 
     std::chrono::time_point<std::chrono::system_clock>              m_lastReconnectTime;

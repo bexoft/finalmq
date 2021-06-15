@@ -61,12 +61,14 @@ private:
 class SYMBOLEXP ExecutorWorker : public IExecutorWorker
 {
 public:
-    ExecutorWorker(int numberOfWorkerThreads = 4);
+    explicit ExecutorWorker(int numberOfWorkerThreads = 4);
     virtual ~ExecutorWorker();
 
 private:
     virtual void addAction(std::function<void()> func) override;
+    virtual void terminate() override;
     virtual bool isTerminating() const override;
+    virtual void join() override;
 
     std::unique_ptr<IExecutor>  m_executor;
     std::vector<std::thread>    m_threads;
