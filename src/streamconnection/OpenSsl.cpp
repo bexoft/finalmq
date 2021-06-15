@@ -93,9 +93,10 @@ std::shared_ptr<SslContext> OpenSslImpl::configContext(SSL_CTX* ctx, const Certi
         if (list)
         {
             SSL_CTX_set_client_CA_list(ctx, list);
-            SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, nullptr);
         }
     }
+    typedef int VerifyCallback(int, X509_STORE_CTX*);
+    SSL_CTX_set_verify(ctx, certificateData.verifyMode, certificateData.verifyCallback.target<VerifyCallback>());
 
     return sslContext;
 }

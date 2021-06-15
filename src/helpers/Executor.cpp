@@ -122,10 +122,7 @@ ExecutorWorker::ExecutorWorker(int numberOfWorkerThreads)
 ExecutorWorker::~ExecutorWorker()
 {
     m_executor->terminate();
-    for (size_t i = 0; i < m_threads.size(); ++i)
-    {
-        m_threads[i].join();
-    }
+    join();
 }
 
 void ExecutorWorker::addAction(std::function<void()> func)
@@ -133,9 +130,22 @@ void ExecutorWorker::addAction(std::function<void()> func)
     m_executor->addAction(std::move(func));
 }
 
+void ExecutorWorker::terminate()
+{
+    m_executor->terminate();
+}
+
 bool ExecutorWorker::isTerminating() const
 {
     return m_executor->isTerminating();
+}
+
+void ExecutorWorker::join()
+{
+    for (size_t i = 0; i < m_threads.size(); ++i)
+    {
+        m_threads[i].join();
+    }
 }
 
 

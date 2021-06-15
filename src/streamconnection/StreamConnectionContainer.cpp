@@ -54,6 +54,7 @@ StreamConnectionContainer::StreamConnectionContainer()
     : m_poller(std::make_shared<PollerImplEpoll>())
 #endif
     , m_executorPollerThread(std::make_shared<Executor>())
+    , m_executorWorker(std::make_unique<ExecutorWorker>(1))
 {
     m_executorPollerThread->registerActionNotification([this]() {
         m_poller->releaseWait();
@@ -62,6 +63,7 @@ StreamConnectionContainer::StreamConnectionContainer()
 
 StreamConnectionContainer::~StreamConnectionContainer()
 {
+    m_executorWorker = nullptr;
     terminatePollerLoop();
 }
 
@@ -301,7 +303,7 @@ bool StreamConnectionContainer::connect(const IStreamConnectionPtr& streamConnec
     {
         ret = true;
         std::string hostname = connectionData.hostname;
-        GlobalExecutorWorker::instance().addAction([this, connectionData, connection, connectionProperties]() mutable {
+        m_executorWorker->addAction([this, connectionData, connection, connectionProperties]() mutable {
             bool ok = false;
             struct in_addr addr;
             struct hostent* hp = gethostbyname(connectionData.hostname.c_str());
@@ -664,14 +666,18 @@ bool StreamConnectionContainer::sslAccepting(SslAcceptingData& sslAcceptingData)
 
     if (state == SslSocket::IoState::SUCCESS)
     {
-        SocketDescriptorPtr sd = sslAcceptingData.socket->getSocketDescriptor();
-        assert(sd);
         sslAcceptingData.connectionData.sd = sd->getDescriptor();
         AddressHelpers::addr2peer((sockaddr*)sslAcceptingData.connectionData.sockaddr.c_str(), sslAcceptingData.connectionData);
 
         IStreamConnectionPrivatePtr connection = addConnection(sslAcceptingData.socket, sslAcceptingData.connectionData, sslAcceptingData.callback);
         connection->connected(connection);
     }
+
+    if (state == SslSocket::IoState::SSL_ERROR)
+    {
+        m_poller->removeSocket(sd);
+    }
+
     if (state == SslSocket::IoState::SUCCESS || state == SslSocket::IoState::SSL_ERROR)
     {
         m_sslAcceptings.erase(sd->getDescriptor());

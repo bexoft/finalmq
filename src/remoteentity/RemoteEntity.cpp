@@ -67,9 +67,8 @@ void PeerEvent::fromString(const std::string& name)
 }
 const EnumInfo PeerEvent::_enumInfo = {
     "PeerEvent", "", {
-        {"PEER_CONNECTING", 0, ""},
-        {"PEER_CONNECTED", 1, ""},
-        {"PEER_DISCONNECTED", 2, ""},
+        {"PEER_CONNECTED", 0, ""},
+        {"PEER_DISCONNECTED", 1, ""},
      }
 };
 

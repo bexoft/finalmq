@@ -38,7 +38,7 @@ bool waitTillDone(testing::internal::ExpectationBase& expectation, int waittime)
     for (int i = 0; i < waittime; ++i)
     {
         testing::internal::g_gmock_mutex.Lock();
-        bool ok = expectation.IsSatisfied();
+        bool ok = expectation.IsSaturated();
         testing::internal::g_gmock_mutex.Unlock();
         if (ok)
         {

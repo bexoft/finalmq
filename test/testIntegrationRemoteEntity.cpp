@@ -253,8 +253,8 @@ TEST_F(TestIntegrationRemoteEntity, testSslProto)
     entityContainerServer.registerEntity(&entityServer, "MyServer");
     entityContainerClient.registerEntity(&entityClient);
 
-    entityContainerServer.bind("tcp://*:7788:headersize:protobuf", {{true, "ssltest.cert.pem", "ssltest.key.pem"}});
-    IProtocolSessionPtr sessionClient = entityContainerClient.connect("tcp://localhost:7788:headersize:protobuf", {{true}});
+    entityContainerServer.bind("tcp://*:7788:headersize:protobuf", {{true, SSL_VERIFY_NONE, "ssltest.cert.pem", "ssltest.key.pem"}});
+    IProtocolSessionPtr sessionClient = entityContainerClient.connect("tcp://localhost:7788:headersize:protobuf", {{true, SSL_VERIFY_NONE}});
 
     EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
     EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
