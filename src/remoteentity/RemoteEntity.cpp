@@ -774,6 +774,7 @@ bool RemoteEntity::isEntityRegistered() const
 
 void RemoteEntity::initEntity(EntityId entityId, const std::string& entityName, const std::shared_ptr<FileTransferReply>& fileTransferReply, const IExecutorPtr& executor)
 {
+    assert(m_entityId == ENTITYID_INVALID); // an entity shall no be registered twice.
     m_fileTransferReply = fileTransferReply;
     m_entityId = entityId;
     m_entityName = entityName;
