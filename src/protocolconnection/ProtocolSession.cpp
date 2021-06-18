@@ -244,14 +244,15 @@ bool ProtocolSession::sendMessage(const IMessagePtr& msg, bool isReply)
     {
         if (m_pollWaiting)
         {
-            m_pollWaiting = false;
             assert(m_pollReply == nullptr);
             const ProtocolConnection* protocolConnection = &m_protocolConnection;
             if (m_protocolFlagIsMultiConnectionSession)
             {
                 getProtocolConnectionFromConnectionId(protocolConnection, m_pollConnectionId);
             }
+            m_pollWaiting = false;
             m_pollConnectionId = 0;
+            m_pollTimer.stop();
             if (protocolConnection)
             {
                 m_pollReply = protocolConnection->protocol->pollReply({ msg });
@@ -277,17 +278,23 @@ bool ProtocolSession::sendMessage(const IMessagePtr& msg, bool isReply)
             }
             if (protocolConnection)
             {
+                m_pushCounter++;
                 m_pushReply = protocolConnection->protocol->pushReply({ msg });
                 ok = sendMessage(m_pushReply, protocolConnection);
                 if (ok)
                 {
                     m_pushReply = nullptr;
                 }
+                if (m_pushCountMax >= 0 && m_pushCounter >= m_pushCountMax)
+                {
+                    pushRelease();
+                }
             }
             else
             {
                 m_pushWaiting = false;
                 m_pushConnectionId = 0;
+                m_pushTimer.stop();
                 m_pollMessages.push_back(msg);
             }
             ok = true;
@@ -940,6 +947,7 @@ void ProtocolSession::pollRelease()
         }
         m_pollWaiting = false;
         m_pollConnectionId = 0;
+        m_pollTimer.stop();
     }
 }
 
@@ -960,15 +968,16 @@ void ProtocolSession::pushRelease()
             Variant& controlData = reply->getControlData();
             controlData = VariantStruct{ {"fmq_push_stop", true} };
             sendMessage(reply, protocolConnection);
-            m_pushWaiting = false;
-            m_pushConnectionId = 0;
         }
+        m_pushWaiting = false;
+        m_pushConnectionId = 0;
+        m_pushTimer.stop();
     }
 }
 
 
 
-void ProtocolSession::pushRequest(std::int64_t connectionId, int timeout)
+void ProtocolSession::pushRequest(std::int64_t connectionId, int timeout, int pushCountMax)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     if (m_incomingConnection)
@@ -976,6 +985,8 @@ void ProtocolSession::pushRequest(std::int64_t connectionId, int timeout)
         m_activityTimer.setTimeout(m_activityTimeout);
     }
     pushRelease();
+    m_pushCounter = 0;
+    m_pushCountMax = pushCountMax;
     assert(!m_pushWaiting);
     if (m_pushReply)
     {
@@ -984,6 +995,7 @@ void ProtocolSession::pushRequest(std::int64_t connectionId, int timeout)
         {
             getProtocolConnectionFromConnectionId(protocolConnection, connectionId);
         }
+        m_pushCounter++;
         bool ok = sendMessage(m_pushReply, protocolConnection);
         if (ok)
         {
@@ -1002,6 +1014,7 @@ void ProtocolSession::pushRequest(std::int64_t connectionId, int timeout)
         {
             messages = std::move(m_pollMessages);
             m_pollMessages.clear();
+            m_pushCounter++;
             m_pushReply = protocolConnection->protocol->pushReply(std::move(messages));
             int ok = sendMessage(m_pushReply, protocolConnection);
             if (ok)
@@ -1012,11 +1025,12 @@ void ProtocolSession::pushRequest(std::int64_t connectionId, int timeout)
     }
     m_pushWaiting = true;
     m_pushConnectionId = connectionId;
-    if (timeout != 0)
+    if (timeout > 0)
     {
         m_pushTimer.setTimeout(timeout);
     }
-    else
+
+    if (timeout == 0 || (m_pushCountMax >= 0 && m_pushCounter >= m_pushCountMax))
     {
         pushRelease();
     }
@@ -1054,11 +1068,13 @@ void ProtocolSession::disconnectedMultiConnection(const IStreamConnectionPtr& co
     {
         m_pollWaiting = false;
         m_pollConnectionId = 0;
+        m_pollTimer.stop();
     }
     if (m_pushWaiting && m_pushConnectionId == connectionId)
     {
         m_pushWaiting = false;
         m_pushConnectionId = 0;
+        m_pushTimer.stop();
     }
     lock.unlock();
 

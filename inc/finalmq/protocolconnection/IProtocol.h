@@ -49,7 +49,7 @@ struct IProtocolCallback
     virtual bool findSessionByName(const std::string& sessionName, const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) = 0;
     virtual void setSessionName(const std::string& sessionName, const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) = 0;
     virtual void pollRequest(std::int64_t connectionId, int timeout) = 0;
-    virtual void pushRequest(std::int64_t connectionId, int timeout) = 0;
+    virtual void pushRequest(std::int64_t connectionId, int timeout, int pushCountMax) = 0;
     virtual void activity() = 0;
     virtual void setActivityTimeout(int timeout) = 0;
     virtual void setPollMaxRequests(int maxRequests) = 0;

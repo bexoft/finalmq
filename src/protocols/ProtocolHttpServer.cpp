@@ -70,7 +70,7 @@ static const std::string FMQ_MULTIPART_BOUNDARY = "B9BMAhxAhY.mQw1IDRBA";
 
 
 //---------------------------------------
-// ProtocolStream
+// ProtocolHttpServer
 //---------------------------------------
 
 
@@ -901,11 +901,25 @@ bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolC
             m_multipart = 1;
             assert(m_message);
             handled = true;
-            std::int32_t timeout = 0;
+            std::int32_t timeout = -1;
+            std::int32_t pushCountMax = 1;
             const std::string* strTimeout = m_message->getMetainfo("FMQQUERY_timeout");
+            const std::string* strCount = m_message->getMetainfo("FMQQUERY_count");
             if (strTimeout)
             {
                 timeout = std::atoi(strTimeout->c_str());
+            }
+            if (strCount)
+            {
+                pushCountMax = std::atoi(strCount->c_str());
+            }
+            if (strTimeout && !strCount)
+            {
+                pushCountMax = -1;
+            }
+            if (!strTimeout && strCount)
+            {
+                timeout = -1;
             }
             IMessagePtr message = getMessageFactory()();
             std::string contentType = "multipart/x-mixed-replace; boundary=";
@@ -914,7 +928,7 @@ bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolC
             message->addMetainfo("Transfer-Encoding", "chunked");
             sendMessage(message);
             m_multipart = 2;
-            callback->pushRequest(m_connectionId, timeout);
+            callback->pushRequest(m_connectionId, timeout, pushCountMax);
         }
         else if (*m_path == FMQ_PATH_PING)
         {
