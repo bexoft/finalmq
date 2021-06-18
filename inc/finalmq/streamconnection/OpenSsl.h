@@ -355,11 +355,22 @@ public:
         return nullptr;
     }
 
+    void setVerifyCallback(std::function<int(int, X509_STORE_CTX*)> verifyCallback)
+    {
+        m_verifyCallback = std::move(verifyCallback);
+    }
+
+    std::function<int(int, X509_STORE_CTX*)>& getVerifyCallback()
+    {
+        return m_verifyCallback;
+    }
+
 private:
     SslContext(const SslContext&) = delete;
     const SslContext& operator =(const SslContext&) = delete;
 
     SSL_CTX* m_ctx = nullptr;
+    std::function<int(int, X509_STORE_CTX*)> m_verifyCallback;
     std::mutex& m_sslMutex;
 };
 
