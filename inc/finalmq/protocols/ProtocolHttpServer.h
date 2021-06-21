@@ -117,7 +117,8 @@ private:
     std::string                         m_sessionName;
     std::weak_ptr<IProtocolCallback>    m_callback;
     IStreamConnectionPtr                m_connection;
-    int                                 m_multipart = 0;
+    int                                 m_chunkedState = 0;
+    bool                                m_multipart = false;
 
     // path
     std::string*                        m_path = nullptr;

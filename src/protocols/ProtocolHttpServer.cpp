@@ -575,7 +575,7 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
     std::string firstLine;
     const Variant& controlData = message->getControlData();
     bool pushStop = false;
-    if (m_multipart)
+    if (m_chunkedState)
     {
         const bool* pPushStop = controlData.getData<bool>("fmq_push_stop");
         if (pPushStop && *pPushStop)
@@ -597,7 +597,7 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
         }
     }
     const std::string* http = controlData.getData<std::string>(FMQ_HTTP);
-    if (m_multipart < 2)
+    if (m_chunkedState < 2)
     {
         if (http && *http == HTTP_REQUEST)
         {
@@ -674,7 +674,7 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
     }
 
     size_t sumHeaderSize = 0;
-    if (m_multipart < 2)
+    if (m_chunkedState < 2)
     {
         sumHeaderSize += firstLine.size() + 2 + 2;   // 2 = '\r\n' and 2 = last empty line
         sumHeaderSize += HEADER_KEEP_ALIVE.size();  // Connection: keep-alive\r\n
@@ -691,7 +691,7 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
     }
 
     ProtocolMessage::Metainfo& metainfo = message->getAllMetainfo();
-    if (m_multipart == 0)
+    if (m_chunkedState == 0)
     {
         metainfo[CONTENT_LENGTH] = std::to_string(sizeBody);
     }
@@ -710,40 +710,51 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
         }
     }
 
-    if (m_multipart >= 2)
-    {
-        assert(sumHeaderSize == 0);
-        int sizeChunkedData = static_cast<int>(sizeBody);
-        firstLine.clear();
-        if (m_multipart == 2 || m_multipart == 3)
-        {
-            m_multipart = 4;
-        }
-        else
-        {
-            firstLine = "\r\n";
-        }
-        char buffer[50];
-#ifdef WIN32
-        _itoa_s(sizeChunkedData, buffer, sizeof(buffer), 16);
-#else
-        snprintf(buffer, sizeof(buffer), "%X", sizeChunkedData);
-#endif
-        firstLine += buffer;
-        for (auto& c : firstLine)
-        {
-            c = toupper(c);
-        }
-        sumHeaderSize += firstLine.size() + 2;  // "\r\n"
-    }
-
-    char* headerBuffer = message->addSendHeader(sumHeaderSize);
+    char* headerBuffer = nullptr;
     size_t index = 0;
-    assert(index + firstLine.size() + 2 <= sumHeaderSize);
-    memcpy(headerBuffer + index, firstLine.data(), firstLine.size());
-    index += firstLine.size();
-    memcpy(headerBuffer + index, "\r\n", 2);
-    index += 2;
+    if (!pushStop || m_multipart)
+    {
+        if (m_chunkedState >= 2)
+        {
+            assert(sumHeaderSize == 0);
+            message->addSendPayload("\r\n");
+            int sizeChunkedData = static_cast<int>(sizeBody);
+            firstLine.clear();
+            if (m_chunkedState == 2 || m_chunkedState == 3)
+            {
+                m_chunkedState = 4;
+            }
+            else
+            {
+//                firstLine = "\r\n";
+            }
+            char buffer[50];
+#ifdef WIN32
+            _itoa_s(sizeChunkedData, buffer, sizeof(buffer), 16);
+#else
+            snprintf(buffer, sizeof(buffer), "%X", sizeChunkedData);
+#endif
+            firstLine += buffer;
+            for (auto& c : firstLine)
+            {
+                c = toupper(c);
+            }
+            sumHeaderSize += firstLine.size() + 2;  // "\r\n"
+        }
+
+        headerBuffer = message->addSendHeader(sumHeaderSize);
+        index = 0;
+        assert(index + firstLine.size() + 2 <= sumHeaderSize);
+        memcpy(headerBuffer + index, firstLine.data(), firstLine.size());
+        index += firstLine.size();
+        memcpy(headerBuffer + index, "\r\n", 2);
+        index += 2;
+    }
+    else
+    {
+        headerBuffer = message->addSendHeader(sumHeaderSize);
+        index = 0;
+    }
 
     if (http && *http == HTTP_REQUEST)
     {
@@ -754,7 +765,7 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
     }
 
     // Connection: keep-alive\r\n
-    if (m_multipart < 2)
+    if (m_chunkedState < 2)
     {
         assert(index + HEADER_KEEP_ALIVE.size() <= sumHeaderSize);
         memcpy(headerBuffer + index, HEADER_KEEP_ALIVE.data(), HEADER_KEEP_ALIVE.size());
@@ -778,7 +789,7 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
             index += 2;
         }
     }
-    if (m_multipart < 2)
+    if (m_chunkedState < 2)
     {
         assert(index + 2 == sumHeaderSize);
         memcpy(headerBuffer + index, "\r\n", 2);
@@ -786,8 +797,9 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
 
     if (pushStop)
     {
-        message->addSendPayload("\r\n0\r\n\r\n");
-        m_multipart = 0;
+        message->addSendPayload("0\r\n\r\n");
+        m_chunkedState = 0;
+        m_multipart = false;
     }
 
     message->prepareMessageToSend();
@@ -898,13 +910,14 @@ bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolC
         }
         else if (*m_path == FMQ_PATH_PUSH)
         {
-            m_multipart = 1;
+            m_chunkedState = 1;
             assert(m_message);
             handled = true;
             std::int32_t timeout = -1;
             std::int32_t pushCountMax = 1;
             const std::string* strTimeout = m_message->getMetainfo("FMQQUERY_timeout");
             const std::string* strCount = m_message->getMetainfo("FMQQUERY_count");
+            const std::string* strMultipart = m_message->getMetainfo("FMQQUERY_multipart");
             if (strTimeout)
             {
                 timeout = std::atoi(strTimeout->c_str());
@@ -912,6 +925,10 @@ bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolC
             if (strCount)
             {
                 pushCountMax = std::atoi(strCount->c_str());
+            }
+            if (strMultipart)
+            {
+                m_multipart = (*strMultipart == "true") ? true : false;
             }
             if (strTimeout && !strCount)
             {
@@ -922,12 +939,20 @@ bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolC
                 timeout = -1;
             }
             IMessagePtr message = getMessageFactory()();
-            std::string contentType = "multipart/x-mixed-replace; boundary=";
-            contentType += FMQ_MULTIPART_BOUNDARY;
+            std::string contentType;
+            if (m_multipart)
+            {
+                contentType = "multipart/x-mixed-replace; boundary=";
+                contentType += FMQ_MULTIPART_BOUNDARY;
+            }
+            else
+            {
+                contentType = "text/event-stream";
+            }
             message->addMetainfo("Content-Type", contentType);
             message->addMetainfo("Transfer-Encoding", "chunked");
             sendMessage(message);
-            m_multipart = 2;
+            m_chunkedState = 2;
             callback->pushRequest(m_connectionId, timeout, pushCountMax);
         }
         else if (*m_path == FMQ_PATH_PING)
@@ -1136,39 +1161,52 @@ IMessagePtr ProtocolHttpServer::pushReply(std::deque<IMessagePtr>&& messages)
 {
     IMessagePtr message = getMessageFactory()();
 
-    if (!messages.empty())
+    if (m_multipart)
     {
-        for (auto it = messages.begin(); it != messages.end(); ++it)
+        if (!messages.empty())
+        {
+            for (auto it = messages.begin(); it != messages.end(); ++it)
+            {
+                std::string payload;
+                if (m_chunkedState == 2)
+                {
+                    m_chunkedState = 3;
+                    payload += "--" + FMQ_MULTIPART_BOUNDARY;
+                }
+                payload += "\r\n\r\n";
+                message->addSendPayload(payload);
+                IMessagePtr& msg = *it;
+                const std::list<BufferRef>& payloads = msg->getAllSendPayloads();
+                std::list<std::string>& payloadBuffers = msg->getSendPayloadBuffers();
+                message->moveSendBuffers(std::move(payloadBuffers), payloads);
+                payload = "\r\n--" + FMQ_MULTIPART_BOUNDARY;
+                message->addSendPayload(payload);
+            }
+        }
+        else
         {
             std::string payload;
-            if (m_multipart == 2)
+            if (m_chunkedState == 2)
             {
-                m_multipart = 3;
-                payload += "--" + FMQ_MULTIPART_BOUNDARY;
+                m_chunkedState = 3;
+                payload += "--" + FMQ_MULTIPART_BOUNDARY + "--\r\n";
             }
-            payload += "\r\n\r\n";
-            message->addSendPayload(payload);
-            IMessagePtr& msg = *it;
-            const std::list<BufferRef>& payloads = msg->getAllSendPayloads();
-            std::list<std::string>& payloadBuffers = msg->getSendPayloadBuffers();
-            message->moveSendBuffers(std::move(payloadBuffers), payloads);
-            payload = "\r\n--" + FMQ_MULTIPART_BOUNDARY;
+            else
+            {
+                payload += "--\r\n";
+            }
             message->addSendPayload(payload);
         }
     }
     else
     {
-        std::string payload;
-        if (m_multipart == 2)
+        for (auto it = messages.begin(); it != messages.end(); ++it)
         {
-            m_multipart = 3;
-            payload += "--" + FMQ_MULTIPART_BOUNDARY + "--\r\n";
+            IMessagePtr& msg = *it;
+            const std::list<BufferRef>& payloads = msg->getAllSendPayloads();
+            std::list<std::string>& payloadBuffers = msg->getSendPayloadBuffers();
+            message->moveSendBuffers(std::move(payloadBuffers), payloads);
         }
-        else
-        {
-            payload += "--\r\n";
-        }
-        message->addSendPayload(payload);
     }
     return message;
 }
