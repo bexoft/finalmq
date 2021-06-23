@@ -27,7 +27,7 @@
 #include "finalmq/protocolconnection/ProtocolSession.h"
 #include "finalmq/streamconnection/Socket.h"
 
-#include "finalmq/helpers/ModulenameFinalmq.h"
+//#include "finalmq/helpers/ModulenameFinalmq.h"
 
 #include <algorithm>
 #include <assert.h>
