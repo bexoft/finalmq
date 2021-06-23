@@ -223,8 +223,7 @@ class FmqSession
     {
 		this.requestReply('fmq', 'createsession', null, function(outparams, context) {
 			context.funcresult(outparams);
-			context._this._longpoll();
-//			context._this._serverPush();
+			context._this._serverPoll();
 		}, {_this:this, funcresult:funcresult});
     }
 	
@@ -294,84 +293,7 @@ class FmqSession
 		}
 	}
 	
-    _longpoll()
-    {
-        if (this._sessionId.length == 0)
-        {
-            return;
-        } 
-        var xmlhttp;
-        xmlhttp = this._createRequest();
-        xmlhttp.onreadystatechange=function()                                           
-        {                                                                         
-            if (xmlhttp.readyState==4)
-            {
-                var err = false;
-                if (xmlhttp.status==200)
-                {
-                    xmlhttp._this._updateSessionId(xmlhttp);
-                    xmlhttp._this._longpoll();
-
-					if (!err && xmlhttp._this._flagServerDisconnected)
-					{
-						xmlhttp._this._serverConnected();
-					}
-
-                    var responses = xmlhttp.responseText.split(']\t');
-                    for (var i = 0; i < responses.length; ++i)
-                    {
-                        var response = responses[i];
-                        if (response.length > 0)
-                        {
-							response += ']';
-							var command = xmlhttp._this._getParams(response);
-							var header = command[0];
-							var params = command[1];
-							params.fmqheader = header;
-							params.httpstatus = xmlhttp.status;
-                            var methodName = header.type.replace(/\./g, '_');  // replace all '.' by '_'
-							var entity = xmlhttp._this._getEntity(header.srcid);
-							if (entity && entity[methodName])
-							{
-                                entity[methodName](header.corrid, params);
-							}
-							else
-							{
-                                xmlhttp._this.replyStatus(header.srcid, header.corrid, 'STATUS_REQUEST_NOT_FOUND');
-							}
-                        }
-                    }
-                }
-                else
-                {
-                    err = true;
-                    setTimeout(function (_this) { _this._longpoll(); }, 5000, xmlhttp._this);
-                }
-
-                if (err && !xmlhttp._this._flagServerDisconnected)
-                {
-                    xmlhttp._this._serverDisconnected();
-                }
-                xmlhttp._this._flagServerDisconnected = err;
-            }
-        }
-		
-		var path = this._hostname + '/fmq/longpoll'
-        if (this._flagServerDisconnected)
-		{
-			path += '?timeout=0';
-		}
-		else
-		{
-			path += '?timeout=20000';
-		}
-		
-        xmlhttp.open("POST", path, true);
-        xmlhttp.setRequestHeader('fmq_sessionid', this._sessionId);
-        xmlhttp.send('');
-    }
-
-    _serverPush()
+    _serverPoll()
     {
 		this._pushSize = 0;
         if (this._sessionId.length == 0)
@@ -381,7 +303,8 @@ class FmqSession
         var xmlhttp;
         xmlhttp = this._createRequest();
         xmlhttp.onreadystatechange=function()                                           
-        {                                                                         
+        {                          
+			// console.log('xmlhttp.readyState: ' + xmlhttp.readyState + ', xmlhttp.status: ' + xmlhttp.status + ', response: ' + xmlhttp.responseText);
             if (xmlhttp.readyState == 3 || xmlhttp.readyState == 4)
             {
                 var err = false;
@@ -398,7 +321,8 @@ class FmqSession
 
 					if (xmlhttp.readyState == 4)
 					{
-						xmlhttp._this._serverPush();
+						xmlhttp._this._flagServerDisconnected = false;
+						xmlhttp._this._serverPoll();
 					}
 
                     var responses = delta.split(']\t');
@@ -434,7 +358,7 @@ class FmqSession
                 else
                 {
                     err = true;
-                    setTimeout(function (_this) { _this._serverPush(); }, 5000, xmlhttp._this);
+                    setTimeout(function (_this) { _this._serverPoll(); }, 5000, xmlhttp._this);
                 }
 
                 if (err && !xmlhttp._this._flagServerDisconnected)
@@ -445,7 +369,7 @@ class FmqSession
             }
         }
 		
-		var path = this._hostname + '/fmq/push'
+		var path = this._hostname + '/fmq/poll'
         if (this._flagServerDisconnected)
 		{
 			path += '?timeout=0';

@@ -43,7 +43,7 @@ struct CertificateData
     std::string certificateChainFile;   // SSL_CTX_use_certificate_chain_file, pem
     std::string clientCaFile;           // SSL_load_client_CA_file, pem, SSL_CTX_set_client_CA_list
 #ifdef USE_OPENSSL
-    std::function<int(int, X509_STORE_CTX*)> verifyCallback;    // SSL_CTX_set_verify
+    std::shared_ptr<std::function<int(int, X509_STORE_CTX*)>> verifyCallback;    // SSL_CTX_set_verify
 #endif
 };
 
@@ -355,14 +355,9 @@ public:
         return nullptr;
     }
 
-    void setVerifyCallback(std::function<int(int, X509_STORE_CTX*)> verifyCallback)
+    void setVerifyCallback(const std::shared_ptr<std::function<int(int, X509_STORE_CTX*)>>& verifyCallback)
     {
         m_verifyCallback = std::move(verifyCallback);
-    }
-
-    std::function<int(int, X509_STORE_CTX*)>& getVerifyCallback()
-    {
-        return m_verifyCallback;
     }
 
 private:
@@ -370,7 +365,7 @@ private:
     const SslContext& operator =(const SslContext&) = delete;
 
     SSL_CTX* m_ctx = nullptr;
-    std::function<int(int, X509_STORE_CTX*)> m_verifyCallback;
+    std::shared_ptr<std::function<int(int, X509_STORE_CTX*)>> m_verifyCallback;
     std::mutex& m_sslMutex;
 };
 

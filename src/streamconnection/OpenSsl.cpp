@@ -96,13 +96,16 @@ std::shared_ptr<SslContext> OpenSslImpl::configContext(SSL_CTX* ctx, const Certi
         }
     }
 
-    sslContext->setVerifyCallback(std::move(certificateData.verifyCallback));
     typedef int VerifyCallback(int, X509_STORE_CTX*);
-    VerifyCallback** pfunc = sslContext->getVerifyCallback().target<VerifyCallback*>();
     VerifyCallback* func = nullptr;
-    if (pfunc)
+    if (certificateData.verifyCallback && *certificateData.verifyCallback)
     {
-        func = *pfunc;
+        sslContext->setVerifyCallback(certificateData.verifyCallback);
+        VerifyCallback** pfunc = certificateData.verifyCallback->target<VerifyCallback*>();
+        if (pfunc)
+        {
+            func = *pfunc;
+        }
     }
     SSL_CTX_set_verify(ctx, certificateData.verifyMode, func);
 

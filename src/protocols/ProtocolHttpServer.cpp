@@ -60,8 +60,7 @@ static const std::string FMQ_SET_SESSION = "fmq_setsession";
 static const std::string HTTP_SET_COOKIE = "Set-Cookie";
 static const std::string COOKIE_PREFIX = "fmq=";
 
-static const std::string FMQ_PATH_LONGPOLL = "/fmq/longpoll";
-static const std::string FMQ_PATH_PUSH = "/fmq/push";
+static const std::string FMQ_PATH_POLL = "/fmq/poll";
 static const std::string FMQ_PATH_PING = "/fmq/ping";
 static const std::string FMQ_PATH_CONFIG = "/fmq/config";
 static const std::string FMQ_PATH_CREATESESSION = "/fmq/createsession";
@@ -280,7 +279,7 @@ void ProtocolHttpServer::checkSessionName()
             {
                 assert(m_connection);
                 bool foundInNames = callback->findSessionByName(m_sessionNames[i], shared_from_this(), m_connection);
-                streamInfo << this << " findSessionByName: " << foundInNames;
+//                streamInfo << this << " findSessionByName: " << foundInNames;
                 if (foundInNames)
                 {
                     sessionMatched.push_back(std::move(m_sessionNames[i]));
@@ -314,16 +313,16 @@ void ProtocolHttpServer::checkSessionName()
                 found = true;
                 if (m_sessionName != sessionFound)
                 {
-                    streamInfo << this << " name before: " << m_sessionName;
+//                    streamInfo << this << " name before: " << m_sessionName;
                     m_sessionName = std::move(sessionFound);
                 }
             }
         }
-        streamInfo << this << " name: " << m_sessionName;
+//        streamInfo << this << " name: " << m_sessionName;
         if (m_createSession || !found)
         {
             m_sessionName = createSessionName();
-            streamInfo << this << " create session: " << m_sessionName;
+//            streamInfo << this << " create session: " << m_sessionName;
             assert(m_connection);
             callback->setSessionName(m_sessionName, shared_from_this(), m_connection);
             m_headerSendNext[FMQ_SET_SESSION] = m_sessionName;
@@ -517,10 +516,10 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
                                 if (m_stateSessionId == SESSIONID_NONE)
                                 {
                                     cookiesToSessionIds(value);
-                                    if (!m_sessionNames.empty())
-                                    {
-                                        streamInfo << this << " input cookie: " << m_sessionNames[0];
-                                    }
+//                                    if (!m_sessionNames.empty())
+//                                    {
+//                                        streamInfo << this << " input cookie: " << m_sessionNames[0];
+//                                    }
                                     m_stateSessionId = SESSIONID_COOKIE;
                                 }
                             }
@@ -574,13 +573,13 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
     assert(!message->wasSent());
     std::string firstLine;
     const Variant& controlData = message->getControlData();
-    bool pushStop = false;
+    bool pollStop = false;
     if (m_chunkedState)
     {
-        const bool* pPushStop = controlData.getData<bool>("fmq_push_stop");
-        if (pPushStop && *pPushStop)
+        const bool* pPollStop = controlData.getData<bool>("fmq_poll_stop");
+        if (pPollStop && *pPollStop)
         {
-            pushStop = *pPushStop;
+            pollStop = *pPollStop;
         }
     }
     const std::string* filename = controlData.getData<std::string>("filetransfer");
@@ -712,7 +711,7 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
 
     char* headerBuffer = nullptr;
     size_t index = 0;
-    if (!pushStop || m_multipart)
+    if (!pollStop || m_multipart)
     {
         if (m_chunkedState >= 2)
         {
@@ -795,7 +794,7 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
         memcpy(headerBuffer + index, "\r\n", 2);
     }
 
-    if (pushStop)
+    if (pollStop)
     {
         message->addSendPayload("0\r\n\r\n");
         m_chunkedState = 0;
@@ -896,25 +895,13 @@ bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolC
     bool handled = false;
     if (m_path)
     {
-        if (*m_path == FMQ_PATH_LONGPOLL)
-        {
-            assert(m_message);
-            handled = true;
-            std::int32_t timeout = 0;
-            const std::string* strTimeout = m_message->getMetainfo("FMQQUERY_timeout");
-            if (strTimeout)
-            {
-                timeout = std::atoi(strTimeout->c_str());
-            }
-            callback->pollRequest(m_connectionId, timeout);
-        }
-        else if (*m_path == FMQ_PATH_PUSH)
+        if (*m_path == FMQ_PATH_POLL)
         {
             m_chunkedState = 1;
             assert(m_message);
             handled = true;
             std::int32_t timeout = -1;
-            std::int32_t pushCountMax = 1;
+            std::int32_t pollCountMax = 1;
             const std::string* strTimeout = m_message->getMetainfo("FMQQUERY_timeout");
             const std::string* strCount = m_message->getMetainfo("FMQQUERY_count");
             const std::string* strMultipart = m_message->getMetainfo("FMQQUERY_multipart");
@@ -924,7 +911,7 @@ bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolC
             }
             if (strCount)
             {
-                pushCountMax = std::atoi(strCount->c_str());
+                pollCountMax = std::atoi(strCount->c_str());
             }
             if (strMultipart)
             {
@@ -932,7 +919,7 @@ bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolC
             }
             if (strTimeout && !strCount)
             {
-                pushCountMax = -1;
+                pollCountMax = -1;
             }
             if (!strTimeout && strCount)
             {
@@ -953,7 +940,7 @@ bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolC
             message->addMetainfo("Transfer-Encoding", "chunked");
             sendMessage(message);
             m_chunkedState = 2;
-            callback->pushRequest(m_connectionId, timeout, pushCountMax);
+            callback->pollRequest(m_connectionId, timeout, pollCountMax);
         }
         else if (*m_path == FMQ_PATH_PING)
         {
@@ -1142,22 +1129,8 @@ void ProtocolHttpServer::disconnected(const IStreamConnectionPtr& connection)
 
 
 
+
 IMessagePtr ProtocolHttpServer::pollReply(std::deque<IMessagePtr>&& messages)
-{
-    IMessagePtr message = getMessageFactory()();
-
-    for (auto it = messages.begin(); it != messages.end(); ++it)
-    {
-        IMessagePtr& msg = *it;
-        const std::list<BufferRef>& payloads = msg->getAllSendPayloads();
-        std::list<std::string>& payloadBuffers = msg->getSendPayloadBuffers();
-        message->moveSendBuffers(std::move(payloadBuffers), payloads);
-    }
-    return message;
-}
-
-
-IMessagePtr ProtocolHttpServer::pushReply(std::deque<IMessagePtr>&& messages)
 {
     IMessagePtr message = getMessageFactory()();
 

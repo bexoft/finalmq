@@ -143,8 +143,7 @@ private:
     virtual void reconnect() override;
     virtual bool findSessionByName(const std::string& sessionName, const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) override;
     virtual void setSessionName(const std::string& sessionName, const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) override;
-    virtual void pollRequest(std::int64_t connectionId, int timeout) override;
-    virtual void pushRequest(std::int64_t connectionId, int timeout, int pushCountMax) override;
+    virtual void pollRequest(std::int64_t connectionId, int timeout, int pollCountMax) override;
     virtual void activity() override;
     virtual void setActivityTimeout(int timeout) override;
     virtual void setPollMaxRequests(int maxRequests) override;
@@ -164,7 +163,6 @@ private:
     bool sendMessage(const IMessagePtr& message, const ProtocolConnection* protocolConnection);
     void cleanupMultiConnection();
     void pollRelease();
-    void pushRelease();
 
     hybrid_ptr<IProtocolSessionCallback>                    m_callback;
     IExecutorPtr                                            m_executor;
@@ -197,19 +195,13 @@ private:
     std::deque<IMessagePtr>                         m_messagesBuffered;
 
     std::deque<IMessagePtr>                         m_pollMessages;
-    
+    int                                             m_pollMaxRequests = 10000;
     IMessagePtr                                     m_pollReply;
     bool                                            m_pollWaiting = false;
     std::int64_t                                    m_pollConnectionId = 0;
     PollingTimer                                    m_pollTimer;
-    int                                             m_pollMaxRequests = 10000;
-
-    IMessagePtr                                     m_pushReply;
-    bool                                            m_pushWaiting = false;
-    std::int64_t                                    m_pushConnectionId = 0;
-    PollingTimer                                    m_pushTimer;
-    int                                             m_pushCountMax = 0;
-    int                                             m_pushCounter = 0;
+    int                                             m_pollCountMax = 0;
+    int                                             m_pollCounter = 0;
 
     int                                             m_activityTimeout = -1;
     PollingTimer                                    m_activityTimer;

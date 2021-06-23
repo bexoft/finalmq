@@ -72,7 +72,6 @@ private:
     virtual hybrid_ptr<IStreamConnectionCallback> connected(const IStreamConnectionPtr& connection) override;
     virtual void disconnected(const IStreamConnectionPtr& connection) override;
     virtual IMessagePtr pollReply(std::deque<IMessagePtr>&& messages) override;
-    virtual IMessagePtr pushReply(std::deque<IMessagePtr>&& messages) override;
 
 
     bool receiveHeaders(ssize_t bytesReceived);
