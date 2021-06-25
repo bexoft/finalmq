@@ -9,10 +9,10 @@ option(FINALMQ_BUILD_COVERAGE "Enable gcov" OFF)
 option(FINALMQ_BUILD_DOXYGEN "Enable doxygen" OFF)
 
 if (WIN32)
-    option(FINALMQ_BUILD_FMQFCGI "Build fmqfcgi" OFF)   # avoid dependency to fcgi for windows
+#    option(FINALMQ_BUILD_FMQFCGI "Build fmqfcgi" OFF)   # avoid dependency to fcgi for windows
     option(FINALMQ_USE_SSL "Build with openssl" OFF)    # avoid dependency to openssl for windows
 else()
-    option(FINALMQ_BUILD_FMQFCGI "Build fmqfcgi" ON)
+#    option(FINALMQ_BUILD_FMQFCGI "Build fmqfcgi" ON)
     option(FINALMQ_USE_SSL "Build with openssl" ON)
 endif()
 
@@ -22,6 +22,7 @@ if (FINALMQ_BUILD_COVERAGE)
     SET(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage -O0")
     SET(GCC_COVERAGE_LINK_FLAGS    "-lgcov")
 endif(FINALMQ_BUILD_COVERAGE)
+
 
 if (WIN32)
 else()

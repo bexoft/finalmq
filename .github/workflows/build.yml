@@ -20,7 +20,7 @@ jobs:
       run: |
         sudo add-apt-repository ppa:maarten-fonville/protobuf
         sudo apt update
-        sudo apt install -y doxygen graphviz protobuf-compiler gcovr libprotobuf-dev libssl1.0-dev libfcgi-dev node-ejs npm
+        sudo apt install -y doxygen graphviz protobuf-compiler gcovr libprotobuf-dev libssl1.0-dev node-ejs npm
         sudo npm install ejs minimist
     - name: Create Build Environment
       # Some projects don't allow in-source building, so create a separate build directory
