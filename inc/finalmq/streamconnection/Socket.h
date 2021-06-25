@@ -36,6 +36,9 @@
 
 namespace finalmq {
 
+class SslContext;
+class SslSocket;
+
 class Socket;
 typedef std::shared_ptr<Socket> SocketPtr;
 
@@ -108,11 +111,11 @@ public:
     int sslPending();
 private:
     void startSslAccept(const std::shared_ptr<SslContext>& sslContext);
+#endif
     std::shared_ptr<SslContext> m_sslContext;
     std::shared_ptr<SslSocket>  m_sslSocket;
     bool                        m_readWhenWritable = false;
     bool                        m_writeWhenReadable = false;
-#endif
     //std::mutex          m_mtx;
 };
 

@@ -74,9 +74,9 @@ char* ProtocolMessage::addBuffer(ssize_t size, ssize_t reserve)
     ssize_t sizeHeader = 0;
     if (m_payloadBuffers.empty())
     {
-        sizeHeader = m_sizeHeader;
         assert(m_sizeSendBufferTotal == 0);
-        m_sizeSendBufferTotal = m_sizeHeader + m_sizeTrailer;
+        sizeHeader = m_sizeHeader;
+        m_sizeSendBufferTotal += m_sizeHeader + m_sizeTrailer;
     }
     else
     {

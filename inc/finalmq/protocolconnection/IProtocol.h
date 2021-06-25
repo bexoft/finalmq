@@ -48,8 +48,7 @@ struct IProtocolCallback
     virtual void reconnect() = 0;
     virtual bool findSessionByName(const std::string& sessionName, const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) = 0;
     virtual void setSessionName(const std::string& sessionName, const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) = 0;
-    virtual void pollRequest(std::int64_t connectionId, int timeout) = 0;
-    virtual void pushRequest(std::int64_t connectionId, int timeout) = 0;
+    virtual void pollRequest(std::int64_t connectionId, int timeout, int pollCountMax) = 0;
     virtual void activity() = 0;
     virtual void setActivityTimeout(int timeout) = 0;
     virtual void setPollMaxRequests(int maxRequests) = 0;
@@ -78,7 +77,6 @@ struct IProtocol : public IStreamConnectionCallback
     virtual bool sendMessage(IMessagePtr message) = 0;
     virtual void moveOldProtocolState(IProtocol& protocolOld) = 0;
     virtual IMessagePtr pollReply(std::deque<IMessagePtr>&& messages) = 0;
-    virtual IMessagePtr pushReply(std::deque<IMessagePtr>&& messages) = 0;
 };
 
 

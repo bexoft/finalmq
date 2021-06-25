@@ -40,8 +40,7 @@ public:
     MOCK_METHOD(void, reconnect, (), (override));
     MOCK_METHOD(bool, findSessionByName, (const std::string& sessionName, const IProtocolPtr& protocol, const IStreamConnectionPtr& connection), (override));
     MOCK_METHOD(void, setSessionName, (const std::string& sessionName, const IProtocolPtr& protocol, const IStreamConnectionPtr& connection), (override));
-    MOCK_METHOD(void, pollRequest, (std::int64_t connectionId, int timeout), (override));
-    MOCK_METHOD(void, pushRequest, (std::int64_t connectionId, int timeout), (override));
+    MOCK_METHOD(void, pollRequest, (std::int64_t connectionId, int timeout, int pollCountMax), (override));
     MOCK_METHOD(void, activity, (), (override));
     MOCK_METHOD(void, setActivityTimeout, (int timeout), (override));
     MOCK_METHOD(void, setPollMaxRequests, (int maxRequests), (override));

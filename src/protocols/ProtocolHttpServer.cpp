@@ -27,7 +27,7 @@
 #include "finalmq/protocolconnection/ProtocolSession.h"
 #include "finalmq/streamconnection/Socket.h"
 
-#include "finalmq/helpers/ModulenameFinalmq.h"
+//#include "finalmq/helpers/ModulenameFinalmq.h"
 
 #include <algorithm>
 #include <assert.h>
@@ -60,8 +60,7 @@ static const std::string FMQ_SET_SESSION = "fmq_setsession";
 static const std::string HTTP_SET_COOKIE = "Set-Cookie";
 static const std::string COOKIE_PREFIX = "fmq=";
 
-static const std::string FMQ_PATH_LONGPOLL = "/fmq/longpoll";
-static const std::string FMQ_PATH_PUSH = "/fmq/push";
+static const std::string FMQ_PATH_POLL = "/fmq/poll";
 static const std::string FMQ_PATH_PING = "/fmq/ping";
 static const std::string FMQ_PATH_CONFIG = "/fmq/config";
 static const std::string FMQ_PATH_CREATESESSION = "/fmq/createsession";
@@ -70,7 +69,7 @@ static const std::string FMQ_MULTIPART_BOUNDARY = "B9BMAhxAhY.mQw1IDRBA";
 
 
 //---------------------------------------
-// ProtocolStream
+// ProtocolHttpServer
 //---------------------------------------
 
 
@@ -280,7 +279,7 @@ void ProtocolHttpServer::checkSessionName()
             {
                 assert(m_connection);
                 bool foundInNames = callback->findSessionByName(m_sessionNames[i], shared_from_this(), m_connection);
-                streamInfo << this << " findSessionByName: " << foundInNames;
+//                streamInfo << this << " findSessionByName: " << foundInNames;
                 if (foundInNames)
                 {
                     sessionMatched.push_back(std::move(m_sessionNames[i]));
@@ -314,16 +313,16 @@ void ProtocolHttpServer::checkSessionName()
                 found = true;
                 if (m_sessionName != sessionFound)
                 {
-                    streamInfo << this << " name before: " << m_sessionName;
+//                    streamInfo << this << " name before: " << m_sessionName;
                     m_sessionName = std::move(sessionFound);
                 }
             }
         }
-        streamInfo << this << " name: " << m_sessionName;
+//        streamInfo << this << " name: " << m_sessionName;
         if (m_createSession || !found)
         {
             m_sessionName = createSessionName();
-            streamInfo << this << " create session: " << m_sessionName;
+//            streamInfo << this << " create session: " << m_sessionName;
             assert(m_connection);
             callback->setSessionName(m_sessionName, shared_from_this(), m_connection);
             m_headerSendNext[FMQ_SET_SESSION] = m_sessionName;
@@ -517,10 +516,10 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
                                 if (m_stateSessionId == SESSIONID_NONE)
                                 {
                                     cookiesToSessionIds(value);
-                                    if (!m_sessionNames.empty())
-                                    {
-                                        streamInfo << this << " input cookie: " << m_sessionNames[0];
-                                    }
+//                                    if (!m_sessionNames.empty())
+//                                    {
+//                                        streamInfo << this << " input cookie: " << m_sessionNames[0];
+//                                    }
                                     m_stateSessionId = SESSIONID_COOKIE;
                                 }
                             }
@@ -574,13 +573,13 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
     assert(!message->wasSent());
     std::string firstLine;
     const Variant& controlData = message->getControlData();
-    bool pushStop = false;
-    if (m_multipart)
+    bool pollStop = false;
+    if (m_chunkedState)
     {
-        const bool* pPushStop = controlData.getData<bool>("fmq_push_stop");
-        if (pPushStop && *pPushStop)
+        const bool* pPollStop = controlData.getData<bool>("fmq_poll_stop");
+        if (pPollStop && *pPollStop)
         {
-            pushStop = *pPushStop;
+            pollStop = *pPollStop;
         }
     }
     const std::string* filename = controlData.getData<std::string>("filetransfer");
@@ -597,7 +596,7 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
         }
     }
     const std::string* http = controlData.getData<std::string>(FMQ_HTTP);
-    if (m_multipart < 2)
+    if (m_chunkedState < 2)
     {
         if (http && *http == HTTP_REQUEST)
         {
@@ -674,7 +673,7 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
     }
 
     size_t sumHeaderSize = 0;
-    if (m_multipart < 2)
+    if (m_chunkedState < 2)
     {
         sumHeaderSize += firstLine.size() + 2 + 2;   // 2 = '\r\n' and 2 = last empty line
         sumHeaderSize += HEADER_KEEP_ALIVE.size();  // Connection: keep-alive\r\n
@@ -691,7 +690,7 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
     }
 
     ProtocolMessage::Metainfo& metainfo = message->getAllMetainfo();
-    if (m_multipart == 0)
+    if (m_chunkedState == 0)
     {
         metainfo[CONTENT_LENGTH] = std::to_string(sizeBody);
     }
@@ -710,40 +709,51 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
         }
     }
 
-    if (m_multipart >= 2)
-    {
-        assert(sumHeaderSize == 0);
-        int sizeChunkedData = static_cast<int>(sizeBody);
-        firstLine.clear();
-        if (m_multipart == 2 || m_multipart == 3)
-        {
-            m_multipart = 4;
-        }
-        else
-        {
-            firstLine = "\r\n";
-        }
-        char buffer[50];
-#ifdef WIN32
-        _itoa_s(sizeChunkedData, buffer, sizeof(buffer), 16);
-#else
-        snprintf(buffer, sizeof(buffer), "%X", sizeChunkedData);
-#endif
-        firstLine += buffer;
-        for (auto& c : firstLine)
-        {
-            c = toupper(c);
-        }
-        sumHeaderSize += firstLine.size() + 2;  // "\r\n"
-    }
-
-    char* headerBuffer = message->addSendHeader(sumHeaderSize);
+    char* headerBuffer = nullptr;
     size_t index = 0;
-    assert(index + firstLine.size() + 2 <= sumHeaderSize);
-    memcpy(headerBuffer + index, firstLine.data(), firstLine.size());
-    index += firstLine.size();
-    memcpy(headerBuffer + index, "\r\n", 2);
-    index += 2;
+    if (!pollStop || m_multipart)
+    {
+        if (m_chunkedState >= 2)
+        {
+            assert(sumHeaderSize == 0);
+            message->addSendPayload("\r\n");
+            int sizeChunkedData = static_cast<int>(sizeBody);
+            firstLine.clear();
+            if (m_chunkedState == 2 || m_chunkedState == 3)
+            {
+                m_chunkedState = 4;
+            }
+            else
+            {
+//                firstLine = "\r\n";
+            }
+            char buffer[50];
+#ifdef WIN32
+            _itoa_s(sizeChunkedData, buffer, sizeof(buffer), 16);
+#else
+            snprintf(buffer, sizeof(buffer), "%X", sizeChunkedData);
+#endif
+            firstLine += buffer;
+            for (auto& c : firstLine)
+            {
+                c = toupper(c);
+            }
+            sumHeaderSize += firstLine.size() + 2;  // "\r\n"
+        }
+
+        headerBuffer = message->addSendHeader(sumHeaderSize);
+        index = 0;
+        assert(index + firstLine.size() + 2 <= sumHeaderSize);
+        memcpy(headerBuffer + index, firstLine.data(), firstLine.size());
+        index += firstLine.size();
+        memcpy(headerBuffer + index, "\r\n", 2);
+        index += 2;
+    }
+    else
+    {
+        headerBuffer = message->addSendHeader(sumHeaderSize);
+        index = 0;
+    }
 
     if (http && *http == HTTP_REQUEST)
     {
@@ -754,7 +764,7 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
     }
 
     // Connection: keep-alive\r\n
-    if (m_multipart < 2)
+    if (m_chunkedState < 2)
     {
         assert(index + HEADER_KEEP_ALIVE.size() <= sumHeaderSize);
         memcpy(headerBuffer + index, HEADER_KEEP_ALIVE.data(), HEADER_KEEP_ALIVE.size());
@@ -778,16 +788,17 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
             index += 2;
         }
     }
-    if (m_multipart < 2)
+    if (m_chunkedState < 2)
     {
         assert(index + 2 == sumHeaderSize);
         memcpy(headerBuffer + index, "\r\n", 2);
     }
 
-    if (pushStop)
+    if (pollStop)
     {
-        message->addSendPayload("\r\n0\r\n\r\n");
-        m_multipart = 0;
+        message->addSendPayload("0\r\n\r\n");
+        m_chunkedState = 0;
+        m_multipart = false;
     }
 
     message->prepareMessageToSend();
@@ -884,37 +895,52 @@ bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolC
     bool handled = false;
     if (m_path)
     {
-        if (*m_path == FMQ_PATH_LONGPOLL)
+        if (*m_path == FMQ_PATH_POLL)
         {
+            m_chunkedState = 1;
             assert(m_message);
             handled = true;
-            std::int32_t timeout = 0;
+            std::int32_t timeout = -1;
+            std::int32_t pollCountMax = 1;
             const std::string* strTimeout = m_message->getMetainfo("FMQQUERY_timeout");
+            const std::string* strCount = m_message->getMetainfo("FMQQUERY_count");
+            const std::string* strMultipart = m_message->getMetainfo("FMQQUERY_multipart");
             if (strTimeout)
             {
                 timeout = std::atoi(strTimeout->c_str());
             }
-            callback->pollRequest(m_connectionId, timeout);
-        }
-        else if (*m_path == FMQ_PATH_PUSH)
-        {
-            m_multipart = 1;
-            assert(m_message);
-            handled = true;
-            std::int32_t timeout = 0;
-            const std::string* strTimeout = m_message->getMetainfo("FMQQUERY_timeout");
-            if (strTimeout)
+            if (strCount)
             {
-                timeout = std::atoi(strTimeout->c_str());
+                pollCountMax = std::atoi(strCount->c_str());
+            }
+            if (strMultipart)
+            {
+                m_multipart = (*strMultipart == "true") ? true : false;
+            }
+            if (strTimeout && !strCount)
+            {
+                pollCountMax = -1;
+            }
+            if (!strTimeout && strCount)
+            {
+                timeout = -1;
             }
             IMessagePtr message = getMessageFactory()();
-            std::string contentType = "multipart/x-mixed-replace; boundary=";
-            contentType += FMQ_MULTIPART_BOUNDARY;
+            std::string contentType;
+            if (m_multipart)
+            {
+                contentType = "multipart/x-mixed-replace; boundary=";
+                contentType += FMQ_MULTIPART_BOUNDARY;
+            }
+            else
+            {
+                contentType = "text/event-stream";
+            }
             message->addMetainfo("Content-Type", contentType);
             message->addMetainfo("Transfer-Encoding", "chunked");
             sendMessage(message);
-            m_multipart = 2;
-            callback->pushRequest(m_connectionId, timeout);
+            m_chunkedState = 2;
+            callback->pollRequest(m_connectionId, timeout, pollCountMax);
         }
         else if (*m_path == FMQ_PATH_PING)
         {
@@ -1103,58 +1129,57 @@ void ProtocolHttpServer::disconnected(const IStreamConnectionPtr& connection)
 
 
 
+
 IMessagePtr ProtocolHttpServer::pollReply(std::deque<IMessagePtr>&& messages)
 {
     IMessagePtr message = getMessageFactory()();
 
-    for (auto it = messages.begin(); it != messages.end(); ++it)
+    if (m_multipart)
     {
-        IMessagePtr& msg = *it;
-        const std::list<BufferRef>& payloads = msg->getAllSendPayloads();
-        std::list<std::string>& payloadBuffers = msg->getSendPayloadBuffers();
-        message->moveSendBuffers(std::move(payloadBuffers), payloads);
-    }
-    return message;
-}
-
-
-IMessagePtr ProtocolHttpServer::pushReply(std::deque<IMessagePtr>&& messages)
-{
-    IMessagePtr message = getMessageFactory()();
-
-    if (!messages.empty())
-    {
-        for (auto it = messages.begin(); it != messages.end(); ++it)
+        if (!messages.empty())
+        {
+            for (auto it = messages.begin(); it != messages.end(); ++it)
+            {
+                std::string payload;
+                if (m_chunkedState == 2)
+                {
+                    m_chunkedState = 3;
+                    payload += "--" + FMQ_MULTIPART_BOUNDARY;
+                }
+                payload += "\r\n\r\n";
+                message->addSendPayload(payload);
+                IMessagePtr& msg = *it;
+                const std::list<BufferRef>& payloads = msg->getAllSendPayloads();
+                std::list<std::string>& payloadBuffers = msg->getSendPayloadBuffers();
+                message->moveSendBuffers(std::move(payloadBuffers), payloads);
+                payload = "\r\n--" + FMQ_MULTIPART_BOUNDARY;
+                message->addSendPayload(payload);
+            }
+        }
+        else
         {
             std::string payload;
-            if (m_multipart == 2)
+            if (m_chunkedState == 2)
             {
-                m_multipart = 3;
-                payload += "--" + FMQ_MULTIPART_BOUNDARY;
+                m_chunkedState = 3;
+                payload += "--" + FMQ_MULTIPART_BOUNDARY + "--\r\n";
             }
-            payload += "\r\n\r\n";
-            message->addSendPayload(payload);
-            IMessagePtr& msg = *it;
-            const std::list<BufferRef>& payloads = msg->getAllSendPayloads();
-            std::list<std::string>& payloadBuffers = msg->getSendPayloadBuffers();
-            message->moveSendBuffers(std::move(payloadBuffers), payloads);
-            payload = "\r\n--" + FMQ_MULTIPART_BOUNDARY;
+            else
+            {
+                payload += "--\r\n";
+            }
             message->addSendPayload(payload);
         }
     }
     else
     {
-        std::string payload;
-        if (m_multipart == 2)
+        for (auto it = messages.begin(); it != messages.end(); ++it)
         {
-            m_multipart = 3;
-            payload += "--" + FMQ_MULTIPART_BOUNDARY + "--\r\n";
+            IMessagePtr& msg = *it;
+            const std::list<BufferRef>& payloads = msg->getAllSendPayloads();
+            std::list<std::string>& payloadBuffers = msg->getSendPayloadBuffers();
+            message->moveSendBuffers(std::move(payloadBuffers), payloads);
         }
-        else
-        {
-            payload += "--\r\n";
-        }
-        message->addSendPayload(payload);
     }
     return message;
 }

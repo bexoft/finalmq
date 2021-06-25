@@ -96,7 +96,7 @@ TEST_F(TestProtocolHttpServer, testReceiveFirstLineIncomplete)
 }
 
 
-TEST_F(TestProtocolHttpServer, testReceiveFirstLinecomplete)
+TEST_F(TestProtocolHttpServer, testReceiveFirstLineComplete)
 {
     EXPECT_CALL(*m_mockCallback, received(_, _)).Times(0);
     EXPECT_CALL(*m_mockCallback, disconnected()).Times(0);

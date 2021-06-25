@@ -54,9 +54,9 @@ std::shared_ptr<SslContext> OpenSslImpl::configContext(SSL_CTX* ctx, const Certi
 {
     std::shared_ptr<SslContext> sslContext = std::make_shared<SslContext>(ctx);
 
-    //    SSL_CTX_set_read_ahead(ctx, true);
+    // SSL_CTX_set_read_ahead(ctx, true);
     SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv2);
-    //SSL_CTX_set_mode(ctx, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER | SSL_MODE_AUTO_RETRY);// | SSL_MODE_ENABLE_PARTIAL_WRITE);
+    // SSL_CTX_set_mode(ctx, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER | SSL_MODE_AUTO_RETRY);// | SSL_MODE_ENABLE_PARTIAL_WRITE);
 
     std::unique_lock<std::mutex> lock(m_sslMutex);
 
@@ -95,8 +95,19 @@ std::shared_ptr<SslContext> OpenSslImpl::configContext(SSL_CTX* ctx, const Certi
             SSL_CTX_set_client_CA_list(ctx, list);
         }
     }
+
     typedef int VerifyCallback(int, X509_STORE_CTX*);
-    SSL_CTX_set_verify(ctx, certificateData.verifyMode, certificateData.verifyCallback.target<VerifyCallback>());
+    VerifyCallback* func = nullptr;
+    if (certificateData.verifyCallback)
+    {
+        sslContext->setVerifyCallback(certificateData.verifyCallback);
+        VerifyCallback** pfunc = sslContext->getVerifyCallback().target<VerifyCallback*>();
+        if (pfunc)
+        {
+            func = *pfunc;
+        }
+    }
+    SSL_CTX_set_verify(ctx, certificateData.verifyMode, func);
 
     return sslContext;
 }

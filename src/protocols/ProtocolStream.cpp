@@ -162,11 +162,6 @@ IMessagePtr ProtocolStream::pollReply(std::deque<IMessagePtr>&& /*messages*/)
     return {};
 }
 
-IMessagePtr ProtocolStream::pushReply(std::deque<IMessagePtr>&& /*messages*/)
-{
-    return {};
-}
-
 
 
 
