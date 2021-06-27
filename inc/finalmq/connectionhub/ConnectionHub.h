@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include "finalmq/protocolconnection/ProtocolSessionContainer.h"
+#include "finalmq/protocolsession/ProtocolSessionContainer.h"
 
 
 namespace finalmq {

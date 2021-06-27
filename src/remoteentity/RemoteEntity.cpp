@@ -21,7 +21,7 @@
 //SOFTWARE.
 
 #include "finalmq/remoteentity/RemoteEntity.h"
-#include "finalmq/protocolconnection/ProtocolMessage.h"
+#include "finalmq/protocolsession/ProtocolMessage.h"
 #include "finalmq/helpers/ModulenameFinalmq.h"
 
 #include <algorithm>

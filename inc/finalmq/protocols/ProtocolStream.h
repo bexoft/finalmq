@@ -23,7 +23,7 @@
 #pragma once
 
 #include "finalmq/streamconnection/IMessage.h"
-#include "finalmq/protocolconnection/IProtocol.h"
+#include "finalmq/protocolsession/IProtocol.h"
 
 
 namespace finalmq {

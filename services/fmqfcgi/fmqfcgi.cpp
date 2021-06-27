@@ -24,8 +24,8 @@
 #include "finalmq/remoteentity/RemoteEntityContainer.h"
 #include "finalmq/remoteentity/RemoteEntityFormatJson.h"
 #include "finalmq/remoteentity/FmqRegistryClient.h"
-#include "finalmq/protocolconnection/ProtocolMessage.h"
-//#include "finalmq/protocolconnection/ProtocolRegistry.h"
+#include "finalmq/protocolsession/ProtocolMessage.h"
+//#include "finalmq/protocolsession/ProtocolRegistry.h"
 #include "finalmq/logger/Logger.h"
 
 #include <thread>

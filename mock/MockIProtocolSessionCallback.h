@@ -23,7 +23,7 @@
 #pragma once
 
 
-#include "finalmq/protocolconnection/IProtocolSession.h"
+#include "finalmq/protocolsession/IProtocolSession.h"
 
 #include "gmock/gmock.h"
 

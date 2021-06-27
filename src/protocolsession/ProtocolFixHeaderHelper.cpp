@@ -21,9 +21,9 @@
 //SOFTWARE.
 
 
-#include "finalmq/protocolconnection/ProtocolFixHeaderHelper.h"
+#include "finalmq/protocolsession/ProtocolFixHeaderHelper.h"
 #include "finalmq/streamconnection/Socket.h"
-#include "finalmq/protocolconnection/ProtocolMessage.h"
+#include "finalmq/protocolsession/ProtocolMessage.h"
 
 namespace finalmq {
 

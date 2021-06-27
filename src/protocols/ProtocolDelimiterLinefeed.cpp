@@ -22,8 +22,8 @@
 
 
 #include "finalmq/protocols/ProtocolDelimiterLinefeed.h"
-#include "finalmq/protocolconnection/ProtocolMessage.h"
-#include "finalmq/protocolconnection/ProtocolRegistry.h"
+#include "finalmq/protocolsession/ProtocolMessage.h"
+#include "finalmq/protocolsession/ProtocolRegistry.h"
 #include "finalmq/streamconnection/Socket.h"
 
 

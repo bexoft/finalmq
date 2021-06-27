@@ -21,8 +21,8 @@
 //SOFTWARE.
 
 
-#include "finalmq/protocolconnection/ProtocolSessionList.h"
-#include "finalmq/protocolconnection/ProtocolSession.h"
+#include "finalmq/protocolsession/ProtocolSessionList.h"
+#include "finalmq/protocolsession/ProtocolSession.h"
 
 
 namespace finalmq {

@@ -22,9 +22,9 @@
 
 
 #include "finalmq/protocols/ProtocolHttpServer.h"
-#include "finalmq/protocolconnection/ProtocolMessage.h"
-#include "finalmq/protocolconnection/ProtocolRegistry.h"
-#include "finalmq/protocolconnection/ProtocolSession.h"
+#include "finalmq/protocolsession/ProtocolMessage.h"
+#include "finalmq/protocolsession/ProtocolRegistry.h"
+#include "finalmq/protocolsession/ProtocolSession.h"
 #include "finalmq/streamconnection/Socket.h"
 
 //#include "finalmq/helpers/ModulenameFinalmq.h"

@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include "finalmq/protocolconnection/ProtocolDelimiter.h"
+#include "finalmq/protocolsession/ProtocolDelimiter.h"
 
 
 namespace finalmq {

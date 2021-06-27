@@ -24,7 +24,7 @@
 #include "finalmq/remoteentity/RemoteEntityFormatProto.h"
 #include "finalmq/remoteentity/RemoteEntityFormatRegistry.h"
 
-#include "finalmq/protocolconnection/ProtocolRegistry.h"
+#include "finalmq/protocolsession/ProtocolRegistry.h"
 #include "finalmq/protocols/ProtocolHeaderBinarySize.h"
 
 #include <thread>

@@ -102,12 +102,12 @@ Afterwards, you can ...
 
 ​	
 
-FinalMQ - Cookbook
+Architectural Overview
 ========================================
 
 FinalMQ is a framework for message communication between processes and network nodes. It is based on an asynchronous event loop. This means, events like changing connection state or receiving messages are realized as callbacks. The application has the responsibility, not to sleep or having long running algorithms inside an event callback of the framework, because it would affect the timing of other events of other connections. The methods of the framework are thread-safe and can be called from any thread. Typical methods that will be called by the application are e.g. connect() or sendMessage().
 
-The API of FinalMQ has 3 layers. In case FINALMQ_USE_SSL is set for compilation, these layers support also SSL/TLS encryption.
+The API of FinalMQ has 3 layers. In case the compiler flag FINALMQ_USE_SSL is set, these layers support SSL/TLS encryption. In case the compiler flag FINALMQ_USE_SSL is NOT set, then there is no dependency to openssl.
 
 
 
@@ -133,9 +133,9 @@ This layer implements SSL/TLS functionalities, in case the compiler-flag FINALMQ
 
 
 
-## Protocol Connection
+## Protocol Session
 
-The second layer is called **Protocol Connection**. For this layer, an application can implement custom framing protocols as "plugins". When an application receives a message with the received() event, it will deliver always a complete message to the application.  
+The second layer is called **Protocol Session**. For this layer, an application can implement custom framing protocols as "plugins". When an application receives a message with the received() event, it will deliver always a complete message to the application.  
 
 The main class of this layer is called **ProtocolSessionContainer**. This container manages multi connections. The connection can be incoming connections (bind) and outgoing connections (connect). For one ProtocolSessionContainer, it is possible to call multiple times bind() for multiple listening ports (incoming connections) and it is also possible to call multiple times connect() for multiple outgoing connections. The class that represents a connection is called **ProtocolSession**, but the application will only get the interface **IProtocolSession** as a shared_ptr. In this layer, a connection is called session, because there can be protocols implemented which maintain sessions which could live longer than a socket connection. For simple protocols the session will be disconnected as soon the socket is disconnected, but for advanced protocols a session could recognize a socket disconnection, but the session is not disconnected and after a reconnection the session can continue its work. It depends on the protocol, when to disconnect a session. There could be protocols implemented that guarantee no message lost after reconnection.
 
@@ -234,5 +234,9 @@ Examples for Remote Entity endpoints:
 
 
 
-## 
+# FinalMQ - Cookbook
+
+
+
+
 
