@@ -95,7 +95,7 @@ void RemoteEntityFormatJson::serializeData(IMessage& message, const StructBase* 
         }
         else
         {
-            SerializerJson serializerData(message);
+            SerializerJson serializerData(message, 1024, true, false);
             ParserStruct parserData(serializerData, *structBase);
             parserData.parseStruct();
         }
