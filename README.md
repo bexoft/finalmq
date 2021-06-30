@@ -105,25 +105,33 @@ Afterwards, you can ...
 Architectural Overview
 ========================================
 
-FinalMQ is a framework for message communication between processes and network nodes. It is based on an asynchronous event loop. This means, events like changing connection state or receiving messages are realized as callbacks. The application has the responsibility, not to sleep or having long running algorithms inside an event callback of the framework, because it would affect the timing of other events of other connections. The methods of the framework are thread-safe and can be called from any thread. Typical methods that will be called by the application are e.g. connect() or sendMessage().
+FinalMQ is a framework for message communication between processes and network nodes. It is based on an asynchronous event loop. This means, events like changing connection state or receiving messages are realized as callbacks into the application. The application has the responsibility, not to sleep or having long running algorithms inside an event callbacks of the framework, because it would affect the timing of other events of other connections. The methods of the framework are thread-safe and can be called from any thread. Typical methods that will be called by the application are e.g. connect() or sendMessage().
 
-The API of FinalMQ has 3 layers. In case the compiler flag FINALMQ_USE_SSL is set, these layers support SSL/TLS encryption. In case the compiler flag FINALMQ_USE_SSL is NOT set, then there is no dependency to openssl.
+The API of FinalMQ has 3 layers. In case the compiler flag FINALMQ_USE_SSL is set, these layers support SSL/TLS encryption, but it exists a dependency to openssl.
+
+The 3 layers of finalMQ:
+
+| Remote Entity         |
+| --------------------- |
+| **Protocol Session**  |
+| **Stream Connection** |
 
 
 
 ## Stream Connection
 
-The first/lowest layer is called **Stream Connection**. It triggers a callback when new data is ready for read on the socket. This layer is not recognizing begin or end of message. This means it does not care about message framing. When a received() event is triggered, the event handler has to fully read the available data into a buffer, but it is not guaranteed that the received message is complete. The possible kind of sockets are TCP sockets and for unix/linux also Unix Domain Sockets are available. The methods connect() and bind() have an endpoint string that will define the kind of socket, the IP address or hostname and the port or Unix Domain Socket name.
+The first/lowest layer is called **Stream Connection**. It triggers a callback when new data is ready for read on the socket. This layer is not recognizing begin or end of message. This means it does not care about message framing. When a received() event is triggered, the event handler has to fully read the available data into a buffer, but it is not guaranteed that the received message is complete. The possible kind of sockets are TCP sockets. For unix/linux also Unix Domain Sockets are available. The methods connect() and bind() have an endpoint string that will define the kind of socket, the IP address or hostname and the port or Unix Domain Socket name.
 
 Endpoint examples:
 
-"tcp://localhost:2000"					TCP Socket, hostname: localhost, Port: 2000
+| endpoint                   | description                                                  |
+| -------------------------- | ------------------------------------------------------------ |
+| "tcp://localhost:2000"     | TCP Socket, hostname: localhost, Port: 2000                  |
+| "tcp://192.168.2.125:3000" | TCP Socket, IP address: 192.168.2.125, Port 3000             |
+| "tcp://*:2000"             | TCP Socket, Wildcard for bind to allow any interface for incoming connections, Port: 2000 |
+| "ipc://myunixdomain"       | Unix Domain Socket with its name                             |
 
-"tcp://192.168.2.125:3000"		   TCP Socket, IP address: 192.168.2.125, Port 3000
 
-"tcp://*:2000"								  TCP Socket, Wildcard for bind to allow any interface for incoming connections, Port: 2000
-
-"ipc://myunixdomain"				   Unix Domain Socket with its name
 
 
 
@@ -143,11 +151,11 @@ Each protocol plugin will have a name that can be used inside the endpoint.
 
 Example:
 
-"tcp://localhost:2000:delimiter_lf"		TCP Socket, hostname: localhost, Port: 2000, Framing protocol that looks at a line feed (LF) to separate messages.
-
-"tcp://*:2000:delimiter_lf"					  TCP Socket, Wildcard for any interface, Port: 2000, Framing protocol: LF to separate messages.
-
-"ipc://myunixdomain:delimiter_lf"		Unix Domain Socket with its name, Framing protocol: LF to separate messages.
+| endpoints                           | description                                                  |
+| ----------------------------------- | ------------------------------------------------------------ |
+| "tcp://localhost:2000:delimiter_lf" | TCP Socket, hostname: localhost, Port: 2000, Framing protocol that looks at a line feed (LF) to separate messages. |
+| "tcp://*:2000:delimiter_lf"         | TCP Socket, Wildcard for any interface, Port: 2000, Framing protocol: LF to separate messages. |
+| "ipc://myunixdomain:delimiter_lf"   | Unix Domain Socket with its name, Framing protocol: LF to separate messages. |
 
 
 
@@ -187,17 +195,14 @@ This protocol implements an HTTP server. The HTTP protocol is not symmetric for 
 
 A ProtocolSessionContainer can offer multiple protocols for different clients to connect.
 
-Examples for multiple binds for one ProtocolSessionContainer. A client can decide for which protocol it wants to connect:
+| Example: multiple endpoints to bind for one ProtocolSessionContainer |
+| ------------------------------------------------------------ |
+| "tcp://\*2000:delimiter_lf"                                  |
+| "tcp://\*:2001:headersize"                                   |
+| "tcp://\*:80:httpserver"                                     |
+| "ipc://myunixdomain:delimiter_lf"                            |
 
-"tcp://\*2000:delimiter_lf"
-
-"tcp://\*:2001:headersize"
-
-"tcp://\*:80:httpserver"
-
-"ipc://myunixdomain:delimiter_lf"
-
-
+A client can decide for which protocol it wants to connect
 
 
 
@@ -222,13 +227,13 @@ Each format plugin will have a name that can be used inside the endpoint string 
 
 Examples for Remote Entity endpoints:
 
-"tcp://\*2000:delimiter_lf:json"
-
-"tcp://\*:2001:protobuf"
-
-"tcp://\*80:httpserver:json"
-
-"ipc://myunixdomain:delimiter_lf:json"
+| endpoints                                | description                                                  |
+| ---------------------------------------- | ------------------------------------------------------------ |
+| "tcp://\*2000:delimiter_lf:json"         | bind TCP port 2000, Framing: delimiter LF, Format: json      |
+| "tcp://localhost:2000:delimiter_lf:json" | connect TCP port 2000 of localhost, Framing: delimiter LF, Format: json |
+| "tcp://\*:2001:headersize:protobuf"      | bind TCP port 2001, Framing: header with size, Format: protobuf |
+| "tcp://\*80:httpserver:json"             | bind TCP port 80, Framing: HTTP (server), Format: json       |
+| "ipc://myunixdomain:delimiter_lf:json"   | bind UDS "myunixdomain", Framing: delimiter LF, Format: json |
 
 
 
@@ -238,5 +243,119 @@ Examples for Remote Entity endpoints:
 
 
 
+## Remote Entity
 
+Let's start with the top layer, because here you will experience the full power of finalMQ.
+
+I will show you the features of finalMQ by examples.
+
+First of all we have to define the data structure of the messages we want to exchange between network nodes. This is done with a json description. This json description is similar to common IDLs or Google Protobuf's proto files.
+
+The json description file is usually called fmq-file.
+
+Besides the data structures, it is also possible to define enumerations inside the fmq-file.
+
+In the HelloWorld example we define the following hellowolrd.fmq file:
+
+
+
+    {
+        "namespace":"helloworld",
+        
+        "enums": [
+        	{"type":"Sex","desc":"The sex of a person","entries":[
+            	{"name":"INVALID",  "id":0,"desc":"invalid sex"},
+            	{"name":"MALE",     "id":1,"desc":"male"},
+            	{"name":"FEMALE",   "id":2,"desc":"female"},
+            	{"name":"DIVERSE",  "id":3,"desc":"diverse"}
+        	]}
+    	],
+    
+    	"structs":[
+        	{"type":"Address","desc":"An address","fields":[
+            	{"tid":"TYPE_STRING",                           "name":"street",            "desc":"The first name of a person."},
+    	        {"tid":"TYPE_UINT32",                           "name":"number",            "desc":"The house number"},
+        	    {"tid":"TYPE_UINT32",                           "name":"postalcode",        "desc":"The postal code."},
+            	{"tid":"TYPE_STRING",                           "name":"city",              "desc":"The city name."},
+    	        {"tid":"TYPE_STRING",                           "name":"country",           "desc":"The country name."}
+       		]},
+    	    {"type":"Person","desc":"Models a person","fields":[
+    	        {"tid":"TYPE_STRING",                           "name":"name",              "desc":"The first name of a person."},
+    	        {"tid":"TYPE_STRING",                           "name":"surname",           "desc":"The last name of a person."},
+    	        {"tid":"TYPE_ENUM",         "type":"Sex",       "name":"sex",               "desc":"The sex of a person."},
+    	        {"tid":"TYPE_UINT32",                           "name":"yearOfBirth",       "desc":"Year of birth."},
+    	        {"tid":"TYPE_STRUCT",       "type":"Address",   "name":"address",           "desc":"The address of a person."}
+    	    ]},
+    
+    	    {"type":"HelloRequest","desc":"","fields":[
+       	    	{"tid":"TYPE_ARRAY_STRUCT", "type":"Person",    "name":"persons",           "desc":"Parameter of HelloRequest"}
+        	]},
+        	{"type":"HelloReply","desc":"","fields":[
+            	{"tid":"TYPE_ARRAY_STRING",                     "name":"greetings",         "desc":"The greetings for all persons."}
+        	]}
+    	]
+    }
+
+
+First of all the namespace of the file is defined. Here, it is just "helloworld", but you can also have multiple words separated by dots: '.'. It is also possible to have an empty namespace.
+
+The next is a list of enumerations. Here, only one enumeration is defined.
+
+Structs defines the data structures. There is no difference between a data structure that will be send as a message and data structures that are sub structures of messages. But it is a good practice to put the suffix "Request" for request messages and "Reply" for reply messages. This makes it easier to distinguish messages from sub structures. It would also be a good practice to have the messages at the end of the file.
+
+As you can see, an entry of a data structure has the following fields:
+
+**tid**: The Type ID of an entry
+**type**: This field is only needed to specify the concrete type of an enum or a sub structure. The type name can also contain the namespace separated by dot.
+**name**: The name of an entry
+**desc**: The description of an entry
+
+
+
+The following type IDs are possible:
+
+| Type              | C++ Type                           |
+| ----------------- | ---------------------------------- |
+| TYPE_BOOL         | bool                               |
+| TYPE_INT32        | std::int32_t                       |
+| TYPE_UINT32       | std::uint32_t                      |
+| TYPE_INT64        | std::int64_t                       |
+| TYPE_UINT64       | std::uint64_t                      |
+| TYPE_FLOAT        | float                              |
+| TYPE_DOUBLE       | double                             |
+| TYPE_STRING       | std::string                        |
+| TYPE_BYTES        | std::vector\<char\>                |
+| TYPE_STRUCT       |                                    |
+| TYPE_ENUM         |                                    |
+| TYPE_VARIANT      | finalmq::Variant                   |
+| TYPE_ARRAY_BOOL   | std::vector\<bool\>                |
+| TYPE_ARRAY_INT32  | std::vector\<std::int32_t\>        |
+| TYPE_ARRAY_UINT32 | std::vector\<std::uint32_t\>       |
+| TYPE_ARRAY_INT64  | std::vector\<std::int64_t\>        |
+| TYPE_ARRAY_UINT64 | std::vector\<std::uint64_t\>       |
+| TYPE_ARRAY_FLOAT  | std::vector\<float\>               |
+| TYPE_ARRAY_DOUBLE | std::vector\<double\>              |
+| TYPE_ARRAY_STRING | std::vector\<std::string\>         |
+| TYPE_ARRAY_BYTES  | std::vector\<std::vector\<char\>\> |
+| TYPE_ARRAY_STRUCT |                                    |
+| TYPE_ARRAY_ENUM   |                                    |
+
+
+
+- The type TYPE_BYTES is treated as binary data.
+
+- The TYPE_VARIANT is a type that can be any type. This type is represented by the finalMQ's Variant.
+- The types enum and struct need additional information about the type name inside the field "type"
+
+
+
+Note:
+
+A data struct entry can also contain a **flags**-field. It is a list of strings. It can be used to give some additional data to the entry. 
+
+For the **protobuf** serialization it can be used to specify, how an integer value shall be serialized. You can add the flag **"METAFLAG_PROTO_VARINT"** to serialize an integer value as **varint**. Or you can add the flag **"METAFLAG_PROTO_ZIGZAG"** to serialize an integer value as **zigzag**. In case you do **not** set a protobuf flag, an integer value is serialized as **fixed** value.
+
+Example:
+
+`{"tid":"TYPE_UINT32", "name":"number", "desc":"The house number", "flags":["METAFLAG_PROTO_VARINT"]}`
 
