@@ -181,7 +181,7 @@ endif()
 install(TARGETS finalmq DESTINATION lib)
 install(DIRECTORY inc/finalmq DESTINATION include FILES_MATCHING PATTERN "*.h")
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq DESTINATION include FILES_MATCHING PATTERN "*.h")
-install(DIRECTORY ${CODEGENERATOR} DESTINATION include/finalmq)
+install(DIRECTORY ${CODEGENERATOR} DESTINATION lib/finalmq)
 
 
 ###############################################################
