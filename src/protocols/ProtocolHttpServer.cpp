@@ -94,6 +94,7 @@ void ProtocolHttpServer::setCallback(const std::weak_ptr<IProtocolCallback>& cal
     std::shared_ptr<IProtocolCallback> cb = callback.lock();
     if (cb)
     {
+        // 5 minutes session timeout
         cb->setActivityTimeout(5 * 60000);
     }
 }

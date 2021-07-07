@@ -126,7 +126,7 @@ struct IRemoteEntity
 
     template<class R>
     bool requestReply(const PeerId& peerId,
-        std::vector<std::string>&& metainfo,
+        IMessage::Metainfo&& metainfo,
         const StructBase& structBase,
         std::function<void(PeerId peerId, remoteentity::Status status, IMessage::Metainfo& metainfo, const std::shared_ptr<R>& reply)> funcReply)
     {

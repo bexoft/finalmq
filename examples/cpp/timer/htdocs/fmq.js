@@ -376,7 +376,7 @@ class FmqSession
 		}
 		else
 		{
-			path += '?timeout=20000';
+			path += '?timeout=60000&count=100';
 		}
 		
         xmlhttp.open("POST", path, true);

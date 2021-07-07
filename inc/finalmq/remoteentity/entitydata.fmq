@@ -4,8 +4,9 @@
     "namespace":"finalmq.remoteentity",
     "enums": [
         {"type":"MsgMode","desc":"","entries":[
-            {"name":"MSG_REQUEST",      "id":0,     "desc":"The message is a request"},
-            {"name":"MSG_REPLY",        "id":1,     "desc":"The message is a reply"}
+            {"name":"MSG_NONE",         "id":0,     "desc":"Invalid message mode"},
+            {"name":"MSG_REQUEST",      "id":1,     "desc":"The message is a request"},
+            {"name":"MSG_REPLY",        "id":2,     "desc":"The message is a reply"}
         ]},
         {"type":"Status","desc":"","entries":[
             {"name":"STATUS_OK",                        "id":0,     "desc":"OK"},
@@ -18,7 +19,28 @@
             {"name":"STATUS_SESSION_DISCONNECTED",      "id":7,     "desc":"the (socket) session is disconnected"},
             {"name":"STATUS_PEER_DISCONNECTED",         "id":8,     "desc":"The peer is disconnected"},
             {"name":"STATUS_NO_REPLY",                  "id":9,     "desc":"No reply was sent by the request executor (server)"},
-            {"name":"STATUS_WRONG_CONTENTTYPE",         "id":10,    "desc":"Wrong content type"}
+            {"name":"STATUS_WRONG_CONTENTTYPE",         "id":10,    "desc":"Wrong content type"},
+            {"name":"STATUS_RESERVED11",                "id":11,    "desc":""},
+            {"name":"STATUS_RESERVED12",                "id":12,    "desc":""},
+            {"name":"STATUS_RESERVED13",                "id":13,    "desc":""},
+            {"name":"STATUS_RESERVED14",                "id":14,    "desc":""},
+            {"name":"STATUS_RESERVED15",                "id":15,    "desc":""},
+            {"name":"STATUS_RESERVED16",                "id":16,    "desc":""},
+            {"name":"STATUS_RESERVED17",                "id":17,    "desc":""},
+            {"name":"STATUS_RESERVED18",                "id":18,    "desc":""},
+            {"name":"STATUS_RESERVED19",                "id":19,    "desc":""},
+            {"name":"STATUS_RESERVED20",                "id":20,    "desc":""},
+            {"name":"STATUS_RESERVED21",                "id":21,    "desc":""},
+            {"name":"STATUS_RESERVED22",                "id":22,    "desc":""},
+            {"name":"STATUS_RESERVED23",                "id":23,    "desc":""},
+            {"name":"STATUS_RESERVED24",                "id":24,    "desc":""},
+            {"name":"STATUS_RESERVED25",                "id":25,    "desc":""},
+            {"name":"STATUS_RESERVED26",                "id":26,    "desc":""},
+            {"name":"STATUS_RESERVED27",                "id":27,    "desc":""},
+            {"name":"STATUS_RESERVED28",                "id":28,    "desc":""},
+            {"name":"STATUS_RESERVED29",                "id":29,    "desc":""},
+            {"name":"STATUS_RESERVED30",                "id":30,    "desc":""},
+            {"name":"STATUS_RESERVED31",                "id":31,    "desc":""}
         ]}
     ],
 
@@ -43,7 +65,7 @@
             {"tid":"TYPE_STRING",       "type":"",          "name":"entityName",   "desc":"The entity name of the sender of ConnectivityReply","flags":[]}
         ]},
         {"type":"DisconnectEntity","desc":"The entity that will be removed will send DisconnectEntity to all its peers.","fields":[]},
-        {"type":"Bytes","desc":"Send pure data for protocols that allows it.","fields":[
+        {"type":"Bytes","desc":"Send pure data for protocols with no meta info.","fields":[
             {"tid":"TYPE_BYTES",       "type":"",          "name":"data",     "desc":"The data","flags":[]}
         ]}
     ]
