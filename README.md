@@ -303,7 +303,7 @@ First of all the namespace of the file is defined. Here, it is just "helloworld"
 
 The next is a list of enumerations. Here, only one enumeration is defined.
 
-Structs defines the data structures. There is no difference between a data structure that will be send as a message and data structures that are sub structures of messages. But it is a good practice to put the suffix "Request" for request messages and "Reply" for reply messages. This makes it easier to distinguish messages from sub structures. It would also be a good practice to have the messages at the end of the file.
+"structs" defines the data structures. There is no difference between a data structure that will be send as a message and data structures that are sub structures of messages. But it is a good practice to put the suffix "Request" for request messages and "Reply" for reply messages. This makes it easier to distinguish messages from sub structures. It would also be a good practice to have the messages at the end of the file.
 
 In our example, we define 2 messages HelloRequest and HelloReply. In the HelloRequest a client can pass a list of persions. The HelloReply contains a list of greeting strings. We will implement a server which will handle the HelloRequest and will reply with the HelloReply message.
 
@@ -318,31 +318,31 @@ As you can see, an entry of a data structure has the following fields:
 
 The following type IDs are possible:
 
-| Type              | C++ Type                           |
-| ----------------- | ---------------------------------- |
-| TYPE_BOOL         | bool                               |
-| TYPE_INT32        | std::int32_t                       |
-| TYPE_UINT32       | std::uint32_t                      |
-| TYPE_INT64        | std::int64_t                       |
-| TYPE_UINT64       | std::uint64_t                      |
-| TYPE_FLOAT        | float                              |
-| TYPE_DOUBLE       | double                             |
-| TYPE_STRING       | std::string                        |
-| TYPE_BYTES        | std::vector\<char\>                |
-| TYPE_STRUCT       |                                    |
-| TYPE_ENUM         |                                    |
-| TYPE_VARIANT      | finalmq::Variant                   |
-| TYPE_ARRAY_BOOL   | std::vector\<bool\>                |
-| TYPE_ARRAY_INT32  | std::vector\<std::int32_t\>        |
-| TYPE_ARRAY_UINT32 | std::vector\<std::uint32_t\>       |
-| TYPE_ARRAY_INT64  | std::vector\<std::int64_t\>        |
-| TYPE_ARRAY_UINT64 | std::vector\<std::uint64_t\>       |
-| TYPE_ARRAY_FLOAT  | std::vector\<float\>               |
-| TYPE_ARRAY_DOUBLE | std::vector\<double\>              |
-| TYPE_ARRAY_STRING | std::vector\<std::string\>         |
-| TYPE_ARRAY_BYTES  | std::vector\<std::vector\<char\>\> |
-| TYPE_ARRAY_STRUCT |                                    |
-| TYPE_ARRAY_ENUM   |                                    |
+| Type              | C++ Type                           | JSON Serialization                                           |
+| ----------------- | ---------------------------------- | ------------------------------------------------------------ |
+| TYPE_BOOL         | bool                               | bool                                                         |
+| TYPE_INT32        | std::int32_t                       | number                                                       |
+| TYPE_UINT32       | std::uint32_t                      | number                                                       |
+| TYPE_INT64        | std::int64_t                       | string                                                       |
+| TYPE_UINT64       | std::uint64_t                      | string                                                       |
+| TYPE_FLOAT        | float                              | number                                                       |
+| TYPE_DOUBLE       | double                             | number                                                       |
+| TYPE_STRING       | std::string                        | string                                                       |
+| TYPE_BYTES        | std::vector\<char\>                | base64 string                                                |
+| TYPE_STRUCT       |                                    | object                                                       |
+| TYPE_ENUM         |                                    | string                                                       |
+| TYPE_VARIANT      | finalmq::Variant                   | finalmq.variant.VarValue <br />(see inc/finalmq/metadataserialize/variant.fmq) |
+| TYPE_ARRAY_BOOL   | std::vector\<bool\>                | list of bool                                                 |
+| TYPE_ARRAY_INT32  | std::vector\<std::int32_t\>        | list of number                                               |
+| TYPE_ARRAY_UINT32 | std::vector\<std::uint32_t\>       | list of number                                               |
+| TYPE_ARRAY_INT64  | std::vector\<std::int64_t\>        | list of strings                                              |
+| TYPE_ARRAY_UINT64 | std::vector\<std::uint64_t\>       | list of strings                                              |
+| TYPE_ARRAY_FLOAT  | std::vector\<float\>               | list of number                                               |
+| TYPE_ARRAY_DOUBLE | std::vector\<double\>              | list of number                                               |
+| TYPE_ARRAY_STRING | std::vector\<std::string\>         | list of strings                                              |
+| TYPE_ARRAY_BYTES  | std::vector\<std::vector\<char\>\> | list of base64 strings                                       |
+| TYPE_ARRAY_STRUCT |                                    | list of objects                                              |
+| TYPE_ARRAY_ENUM   |                                    | list of strings                                              |
 
 
 
@@ -1280,7 +1280,7 @@ localhost:8080/fmq/poll?timeout=60000&count=100
 
 
 
-### Filedownload Service
+## Filedownload Service
 
 There exists a remote entity which supports file download. It is called: **EntityFileServer**.
 
@@ -1304,4 +1304,314 @@ In case of protobuf the data of TYPE_BYTES is encoded as binary data, in case of
 
 
 With the EntityFileServer you can e.g. keep scripts on server side and an HTTP client can download the scripts, so that they can be executed on client side.
+
+
+
+## Java Script
+
+FinalMQ gives you support to develop JavaScript applications. For the both examples "helloworld" and "timer", there exists html files with JavaScript to demonstrate the JavaScript support.
+
+The html files and the finalMQ JavaScript library are in the directory "htdocs". The finalMQ JavaScript library is one file that is called "fmq.js".
+
+
+
+### helloworld.html
+
+Copy the htdocs directory to the helloworld_server executable. The helloworld server registers the EntityFileServer as described above. For downloading the html and js files, it will look into the htdocs direcory.
+
+Start the helloworld_server. Afterwards, you can open a browser and type:
+
+	localhost:8080/helloworld.html
+
+Now you can see an html table with the names Bonnie and Clyde.
+
+The helloworld.html file looks like this:
+
+```javascript
+<html>                                                                          
+
+<head>                                                                          
+<script type="text/javascript" src="fmq.js"></script>
+
+<script type="text/javascript" >
+
+var g_fmqSession = new FmqSession();
+var g_fmqMyService = null;
+
+function printGreetings(outparams)
+{
+	var greetings = outparams.greetings;
+	var title = '<h1>Greetings</h1>';
+	var table = '<table border="1">';
+    for (i=0; i<greetings.length; i++)
+    {
+        var greeting = greetings[i];
+        table += '<tr>';
+        table += '<td width="320" align="left">' + greeting +'</td>';
+        table += '</tr>';
+    }
+	table += '</table>';
+	var el = document.getElementById('rootelement');
+	el.innerHTML = title + '<br>' + table;
+}
+
+function fmqReady()
+{
+	var inparams = {persons:[{name:"Bonnie"},{name:"Clyde"}]};
+	g_fmqMyService.requestReply('helloworld.HelloRequest', inparams, function(outparams) {
+		if (outparams.fmqheader.status == 'STATUS_OK')
+		{
+			printGreetings(outparams);
+		}
+	});
+}
+
+function pageLoad()
+{
+	g_fmqSession.createSession(function() {
+		g_fmqMyService = g_fmqSession.createEntity('MyService');
+		fmqReady();
+	});
+}
+
+function pageUnload()
+{
+	g_fmqSession.removeSession();
+}
+
+</script>                                                                       
+																		  
+</head>
+
+<body onload="pageLoad()" onunload="pageUnload()">
+<div id="rootelement"></div>
+</body>
+
+</html>
+```
+
+
+
+The JavaScript has two global variables:
+
+```javascript
+var g_fmqSession = new FmqSession();
+var g_fmqMyService = null;
+```
+
+
+
+When the page is loaded, the session will be created. When the session is created, a JavaScript entity will be created and it will be connected to the server entity "MyService":
+
+```javascript
+function pageLoad()
+{
+	g_fmqSession.createSession(function() {
+		g_fmqMyService = g_fmqSession.createEntity('MyService');
+		fmqReady();
+	});
+}
+```
+
+
+
+Now, we call the service, asynchronously:
+
+```javascript
+function fmqReady()
+{
+	var inparams = {persons:[{name:"Bonnie"},{name:"Clyde"}]};
+	g_fmqMyService.requestReply('helloworld.HelloRequest', inparams, function(outparams) {
+		if (outparams.fmqheader.status == 'STATUS_OK')
+		{
+			printGreetings(outparams);
+		}
+	});
+}
+```
+
+
+
+You can call the service synchronously (it is not recommended):
+
+```javascript
+function fmqReady()
+{
+	var inparams = {persons:[{name:"Bonnie"},{name:"Clyde"}]};
+	var outparams = g_fmqMyService.requestReply('helloworld.HelloRequest', inparams);
+    if (outparams.fmqheader.status == 'STATUS_OK')
+    {
+        printGreetings(outparams);
+    }
+}
+```
+
+
+
+The answer will be put into the html table. The outparams is the reply message of the service, it contains the list of greeting strings:
+
+```javascript
+function printGreetings(outparams)
+{
+	var greetings = outparams.greetings;
+	var title = '<h1>Greetings</h1>';
+	var table = '<table border="1">';
+    for (i=0; i<greetings.length; i++)
+    {
+        var greeting = greetings[i];
+        table += '<tr>';
+        table += '<td width="320" align="left">' + greeting +'</td>';
+        table += '</tr>';
+    }
+	table += '</table>';
+	var el = document.getElementById('rootelement');
+	el.innerHTML = title + '<br>' + table;
+}
+```
+
+
+
+In the pageUnload function you can remove the session:
+
+	function pageUnload()
+	{
+		g_fmqSession.removeSession();
+	}
+
+
+
+### timer.html
+
+Copy the htdocs directory to the timer_server executable. The timer server registers the EntityFileServer as described above. For downloading the html and js files, it will look into the htdocs direcory.
+
+Start the timer_server (do not forget to close a running helloworld_server, because both example servers use the same listening ports). Afterwards, you can open a browser and type:
+
+	localhost:8080/timer.html
+
+Now you can see the timer events in a growing html table.
+
+
+
+The timer.html file looks like this:                                                    
+
+
+```javascript
+<html>
+<head>                                                                          
+
+<script type="text/javascript" src="fmq.js"></script>
+																				
+<script type="text/javascript" >
+
+class TimerEntity extends FmqEntity
+{
+	timer_TimerEvent(correlationId, params)
+	{
+		var el = document.getElementById('rootelement');
+		el.innerHTML += '<tr><td width="320" align="left">' + params.time +'</td></tr>';
+	}
+
+	sessionDisconnected()
+	{
+		document.getElementById('rootelement').innerHTML += '<tr><td width="320" align="left">session disconnected</td></tr>';
+	}
+
+	sessionConnected()
+	{
+		document.getElementById('rootelement').innerHTML += '<tr><td width="320" align="left">session connected</td></tr>';
+	}
+
+	serverDisconnected()
+	{
+		document.getElementById('rootelement').innerHTML += '<tr><td width="320" align="left">server disconnected</td></tr>';
+	}
+
+	serverConnected()
+	{
+		document.getElementById('rootelement').innerHTML += '<tr><td width="320" align="left">server connected</td></tr>';
+	}
+}
+
+var g_fmqSession = new FmqSession();
+var g_fmqTimerService = null;
+
+function pageLoad()
+{
+	g_fmqSession.createSession(function() {
+		g_fmqTimerService = g_fmqSession.createEntity('MyService', TimerEntity);
+	});
+}
+
+function pageUnload()
+{
+	g_fmqSession.removeSession();
+}
+
+</script>                                                                       
+
+</head>
+
+<body onload="pageLoad()" onunload="pageUnload()">
+<table border="1" id="rootelement">
+</table>
+</body>
+
+</html>
+```
+
+
+
+This example connects to the Timer entity with the name "MyService". In the function "createEntity" the class "TimerEntity" of the JavaScript entity is passed, it is derived from FmqEntity:
+
+```javascript
+function pageLoad()
+{
+	g_fmqSession.createSession(function() {
+		g_fmqTimerService = g_fmqSession.createEntity('MyService', TimerEntity);
+	});
+}
+```
+
+
+
+We derive from FmqEntity, because we want to implement some callbacks. There are 4 common callbacks:
+
+- serverConnected
+- serverDisconnected
+- sessionConnected
+- sessionDisconnected
+
+The callbacks serverConnected/serverDisconnected are called when the socket connection to the server is up/down.
+The callbacks sessionConnected/sessionDisconnected are called when the HTTP session is created/removed.
+
+Besides the 4 common callbacks, you can also implement the server requests/notifications. You only have to name the function as the request type with namespace, but instead of the dots ('.') between namespaces and message name you have to put underlines ('_').
+
+See example:
+
+	class TimerEntity extends FmqEntity
+	{
+		timer_TimerEvent(correlationId, params)
+		{
+			var el = document.getElementById('rootelement');
+			el.innerHTML += '<tr><td width="320" align="left">' + params.time +'</td></tr>';
+		}
+		
+		...
+		
+	}
+
+
+
+In this example the timer event is a notification and the server does not expect a reply. The timer server calls sendEvent(). But if the server would expect a reply by calling requestReply(), then the correlationId of the request would be set to none-zero. In this case you have to reply with:
+
+```javascript
+reply(correlationId, funcname, inparams);
+```
+
+It is very unusual hat a server sends a request to a client and expects a reply, but it is possible.
+
+
+
+**Note:**
+The polling of server requests is done in the fmq.js script. It is very effective, because one client HTTP request will handle multiple server requests/notifications. Usually, a browser opens 6 socket connections to a server. One connection is used by the polling.
 

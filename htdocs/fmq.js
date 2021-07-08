@@ -90,7 +90,7 @@ class FmqSession
 		if (responseText != '')
 		{
 			try {
-				return eval('(' + responseText + ')');
+				return JSON.parse(responseText);
 			}
 			finally {
 			}

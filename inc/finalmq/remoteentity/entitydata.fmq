@@ -4,9 +4,22 @@
     "namespace":"finalmq.remoteentity",
     "enums": [
         {"type":"MsgMode","desc":"","entries":[
-            {"name":"MSG_NONE",         "id":0,     "desc":"Invalid message mode"},
-            {"name":"MSG_REQUEST",      "id":1,     "desc":"The message is a request"},
-            {"name":"MSG_REPLY",        "id":2,     "desc":"The message is a reply"}
+            {"name":"MSG_REQUEST",      "id":0,     "desc":"The message is a request"},
+            {"name":"MSG_REPLY",        "id":1,     "desc":"The message is a reply"},
+            {"name":"MSG_RESERVED2",    "id":2,     "desc":""},
+            {"name":"MSG_RESERVED3",    "id":3,     "desc":""},
+            {"name":"MSG_RESERVED4",    "id":4,     "desc":""},
+            {"name":"MSG_RESERVED5",    "id":5,     "desc":""},
+            {"name":"MSG_RESERVED6",    "id":6,     "desc":""},
+            {"name":"MSG_RESERVED7",    "id":7,     "desc":""},
+            {"name":"MSG_RESERVED8",    "id":8,     "desc":""},
+            {"name":"MSG_RESERVED9",    "id":9,     "desc":""},
+            {"name":"MSG_RESERVED10",   "id":10,    "desc":""},
+            {"name":"MSG_RESERVED11",   "id":11,    "desc":""},
+            {"name":"MSG_RESERVED12",   "id":12,    "desc":""},
+            {"name":"MSG_RESERVED13",   "id":13,    "desc":""},
+            {"name":"MSG_RESERVED14",   "id":14,    "desc":""},
+            {"name":"MSG_RESERVED15",   "id":15,    "desc":""}
         ]},
         {"type":"Status","desc":"","entries":[
             {"name":"STATUS_OK",                        "id":0,     "desc":"OK"},
