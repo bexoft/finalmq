@@ -132,7 +132,7 @@ file(GLOB SOURCES "src/*.cpp" "inc/finalmq/*.h"
                   "src/metadataserialize/*.cpp" "inc/finalmq/metadataserialize/*.h"
                   "src/poller/*.cpp" "inc/finalmq/poller/*.h"
                   "src/streamconnection/*.cpp" "inc/finalmq/streamconnection/*.h"
-                  "src/protocolconnection/*.cpp" "inc/finalmq/protocolconnection/*.h"
+                  "src/protocolsession/*.cpp" "inc/finalmq/protocolsession/*.h"
                   "src/protocols/*.cpp" "inc/finalmq/protocols/*.h"
                   "src/remoteentity/*.cpp" "inc/finalmq/remoteentity/*.h"
                   "src/connectionhub/*.cpp" "inc/finalmq/connectionhub/*.h"
@@ -181,7 +181,7 @@ endif()
 install(TARGETS finalmq DESTINATION lib)
 install(DIRECTORY inc/finalmq DESTINATION include FILES_MATCHING PATTERN "*.h")
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq DESTINATION include FILES_MATCHING PATTERN "*.h")
-install(DIRECTORY ${CODEGENERATOR} DESTINATION include/finalmq)
+install(DIRECTORY ${CODEGENERATOR} DESTINATION lib/finalmq)
 
 
 ###############################################################

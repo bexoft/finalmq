@@ -94,50 +94,9 @@ int main()
     });
 
     FmqRegistryClient fmqRegistryClient(&entityContainer);
-    /*PeerId peerId =*/ fmqRegistryClient.connectService("TimerService", entityId, {}, [] (PeerId peerId, Status status) {
+    /*PeerId peerId =*/ fmqRegistryClient.connectService("MyService", entityId, {}, [] (PeerId peerId, Status status) {
         std::cout << "connect reply: " << status.toString() << std::endl;
     });
-
-//    // asynchronous request/reply
-//    // A peer entity is been identified by its peerId.
-//    // each request has its own lambda. The lambda is been called when the corresponding reply is received.
-//    entityClient.requestReply<HelloReply>(peerId,
-//                HelloRequest{{ {"Bonnie","Parker",Sex::FEMALE,1910,{"somestreet",   12,76875,"Rowena","USA"}},
-//                               {"Clyde", "Barrow",Sex::MALE,  1909,{"anotherstreet",32,37385,"Telico","USA"}} }},
-//                [] (PeerId peerId, Status status, const std::shared_ptr<HelloReply>& reply) {
-//        if (reply)
-//        {
-//            std::cout << "REPLY: ";
-//            std::for_each(reply->greetings.begin(), reply->greetings.end(), [] (const auto& entry) {
-//                std::cout << entry << ". ";
-//            });
-//            std::cout << std::endl;
-//        }
-//        else
-//        {
-//            std::cout << "REPLY error: " << status.toString() << std::endl;
-//        }
-//    });
-
-//    // another request/reply
-//    entityClient.requestReply<HelloReply>(peerId,
-//                HelloRequest{{ {"Albert","Einstein",Sex::FEMALE,1879,{"somestreet",   12,89073, "Ulm",    "Germany"}},
-//                               {"Marie", "Curie",   Sex::FEMALE,1867,{"anotherstreet",32,00001,"Warschau","Poland"}},
-//                               {"World", "",        Sex::DIVERSE,0,{}} }},
-//                [] (PeerId peerId, Status status, const std::shared_ptr<HelloReply>& reply) {
-//        if (reply)
-//        {
-//            std::cout << "REPLY: - ";
-//            std::for_each(reply->greetings.begin(), reply->greetings.end(), [] (const auto& entry) {
-//                std::cout << entry << " - ";
-//            });
-//            std::cout << std::endl;
-//        }
-//        else
-//        {
-//            std::cout << "REPLY error: " << status.toString() << std::endl;
-//        }
-//    });
 
     // wait 20s
     std::this_thread::sleep_for(std::chrono::milliseconds(200000));

@@ -23,7 +23,7 @@
 #pragma once
 
 
-#include "finalmq/protocolconnection/IProtocol.h"
+#include "finalmq/protocolsession/IProtocol.h"
 
 #include <unordered_map>
 

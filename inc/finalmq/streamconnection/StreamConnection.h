@@ -53,8 +53,8 @@ struct BindProperties
 struct ConnectProperties
 {
     CertificateData certificateData;
-    int reconnectInterval = 5000;
-    int totalReconnectDuration = -1;
+    int reconnectInterval = 5000;       ///< if the server is not available, you can pass a reconnection intervall in [ms]
+    int totalReconnectDuration = -1;    ///< if the server is not available, you can pass a duration in [ms] how long the reconnect shall happen. -1 means: try for ever.
 };
 
 

@@ -93,6 +93,8 @@ public:
             assert(request);
             m_timerActive = false;
         });
+
+        startThread();
     }
 
     void startThread()
@@ -117,7 +119,7 @@ public:
                     std::vector<PeerId> peers = getAllPeers();
                     for (size_t i = 0; i < peers.size(); ++i)
                     {
-                        //streamInfo << "sendEvent " << timerEvent.time;
+                        streamInfo << "sendEvent " << timerEvent.time;
                         sendEvent(peers[i], timerEvent);
                     }
                 }
@@ -126,7 +128,6 @@ public:
     }
 
 private:
-
     bool            m_timerActive = true;
     std::thread     m_thread;
 };
@@ -158,20 +159,19 @@ int main()
     // Create server entity and register it at the entityContainer with the service name "MyService"
     // note: multiple entities can be registered.
     EntityServer entityServer;
-    entityServer.startThread();
-    entityContainer.registerEntity(&entityServer, "TimerEntity");
+    entityContainer.registerEntity(&entityServer, "MyService");
 
     EntityFileServer entityFileServer("htdocs");
     entityContainer.registerEntity(&entityFileServer, "*");
 
 
-    // Open listener port 7711 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
+    // Open listener port 7777 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
     // content type in payload: protobuf
-    entityContainer.bind("tcp://*:7711:headersize:protobuf");
+    entityContainer.bind("tcp://*:7777:headersize:protobuf");
 
-    // Open listener port 8811 with delimiter framing protocol ProtocolDelimiterLinefeed ('\n' is end of frame).
+    // Open listener port 8888 with delimiter framing protocol ProtocolDelimiterLinefeed ('\n' is end of frame).
     // content type in payload: JSON
-    entityContainer.bind("tcp://*:8811:delimiter_lf:json");
+    entityContainer.bind("tcp://*:8888:delimiter_lf:json");
 
     // Open listener port 8080 with http.
     // content type in payload: JSON
@@ -188,6 +188,6 @@ int main()
 
     // run
     entityContainer.run();
-
+    
     return 0;
 }

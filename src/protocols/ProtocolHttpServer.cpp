@@ -22,9 +22,9 @@
 
 
 #include "finalmq/protocols/ProtocolHttpServer.h"
-#include "finalmq/protocolconnection/ProtocolMessage.h"
-#include "finalmq/protocolconnection/ProtocolRegistry.h"
-#include "finalmq/protocolconnection/ProtocolSession.h"
+#include "finalmq/protocolsession/ProtocolMessage.h"
+#include "finalmq/protocolsession/ProtocolRegistry.h"
+#include "finalmq/protocolsession/ProtocolSession.h"
 #include "finalmq/streamconnection/Socket.h"
 
 //#include "finalmq/helpers/ModulenameFinalmq.h"
@@ -94,6 +94,7 @@ void ProtocolHttpServer::setCallback(const std::weak_ptr<IProtocolCallback>& cal
     std::shared_ptr<IProtocolCallback> cb = callback.lock();
     if (cb)
     {
+        // 5 minutes session timeout
         cb->setActivityTimeout(5 * 60000);
     }
 }

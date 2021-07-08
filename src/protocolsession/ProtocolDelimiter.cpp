@@ -21,8 +21,8 @@
 //SOFTWARE.
 
 
-#include "finalmq/protocolconnection/ProtocolDelimiter.h"
-#include "finalmq/protocolconnection/ProtocolMessage.h"
+#include "finalmq/protocolsession/ProtocolDelimiter.h"
+#include "finalmq/protocolsession/ProtocolMessage.h"
 #include "finalmq/streamconnection/Socket.h"
 
 

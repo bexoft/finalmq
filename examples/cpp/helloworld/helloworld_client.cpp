@@ -34,6 +34,9 @@
 #include <thread>
 #include <algorithm>
 
+// the modulename is needed for the logger streams (streamDebug, streamInfo, streamWarning, streamError, streamCritical, streamFatal)
+#define MODULENAME  "helloworld_server"
+
 
 using finalmq::RemoteEntity;
 using finalmq::RemoteEntityContainer;
@@ -107,9 +110,9 @@ int main()
     // register lambda for connection events to see when a network node connects or disconnects.
     entityContainer.registerConnectionEvent([] (const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) {
         const ConnectionData connectionData = session->getConnectionData();
-        std::cout << "connection event at " << connectionData.endpoint
+        streamInfo << "connection event at " << connectionData.endpoint
                   << " remote: " << connectionData.endpointPeer
-                  << " event: " << connectionEvent.toString() << std::endl;
+                  << " event: " << connectionEvent.toString();
     });
 
     // Create client entity and register it at the entityContainer
@@ -119,7 +122,7 @@ int main()
 
     // register peer events to see when a remote entity connects or disconnects.
     entityClient.registerPeerEvent([] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
-        std::cout << "peer event " << peerEvent.toString() << std::endl;
+        streamInfo << "peer event " << peerEvent.toString();
     });
 
     // connect to port 7777 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
@@ -135,7 +138,7 @@ int main()
     // The returned peerId identifies the peer entity.
     // The peerId will be used for sending commands to the peer (requestReply(), sendEvent())
     PeerId peerId = entityClient.connect(sessionClient, "MyService", [] (PeerId peerId, Status status) {
-        std::cout << "connect reply: " << status.toString() << std::endl;
+        streamInfo << "connect reply: " << status.toString();
     });
 
     // asynchronous request/reply

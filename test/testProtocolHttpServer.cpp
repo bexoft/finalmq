@@ -24,7 +24,7 @@
 #include "gmock/gmock.h"
 
 #include "finalmq/protocols/ProtocolHttpServer.h"
-#include "finalmq//protocolconnection/ProtocolMessage.h"
+#include "finalmq//protocolsession/ProtocolMessage.h"
 #include "MockIProtocolCallback.h"
 #include "finalmq/helpers/OperatingSystem.h"
 #include "finalmq/streamconnection/Socket.h"

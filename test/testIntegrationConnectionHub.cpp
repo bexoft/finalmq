@@ -24,7 +24,7 @@
 #include "gmock/gmock.h"
 
 
-#include "finalmq/protocolconnection/ProtocolSessionContainer.h"
+#include "finalmq/protocolsession/ProtocolSessionContainer.h"
 #include "MockIProtocolSessionCallback.h"
 #include "finalmq/protocols/ProtocolDelimiterLinefeed.h"
 #include "finalmq/protocols/ProtocolStream.h"

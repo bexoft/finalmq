@@ -26,10 +26,10 @@
 #include "gtest/gtest.h"
 
 
-#include "finalmq/protocolconnection/ProtocolSessionContainer.h"
+#include "finalmq/protocolsession/ProtocolSessionContainer.h"
 #include "MockIProtocolSessionCallback.h"
-#include "finalmq/protocolconnection/ProtocolDelimiter.h"
-#include "finalmq/protocolconnection/ProtocolRegistry.h"
+#include "finalmq/protocolsession/ProtocolDelimiter.h"
+#include "finalmq/protocolsession/ProtocolRegistry.h"
 #include "testHelper.h"
 
 #include <thread>

@@ -29,7 +29,9 @@
 #include "helloworld.fmq.h"
 
 #include <iostream>
-#include <thread>
+
+// the modulename is needed for the logger streams (streamDebug, streamInfo, streamWarning, streamError, streamCritical, streamFatal)
+#define MODULENAME  "helloworld_server"
 
 
 using finalmq::RemoteEntity;
@@ -56,19 +58,22 @@ public:
     {
         // register peer events to see when a remote entity connects or disconnects.
         registerPeerEvent([] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
-            std::cout << "peer event " << peerEvent.toString() << std::endl;
+            streamInfo << "peer event " << peerEvent.toString();
         });
 
         // handle the HelloRequest
         // this is fun - try to access the server with the json interface at port 8888:
-        // telnet localhost 8888  (or: netcat localhost 8888)
+        // telnet localhost 8888  (or: netcat localhost 8888) and type:
         // /MyService/helloworld.HelloRequest!4711{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
+        // or open a browser and type:
+        // localhost:8080/MyService/helloworld.HelloRequest{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
         registerCommand<HelloRequest>([] (const RequestContextPtr& requestContext, const std::shared_ptr<HelloRequest>& request) {
             assert(request);
 
             // prepare the reply
             std::string prefix("Hello ");
             HelloReply reply;
+            // go through all persons and make a greeting
             for (size_t i = 0; i < request->persons.size(); ++i)
             {
                 reply.greetings.emplace_back(prefix + request->persons[i].name);
@@ -81,8 +86,7 @@ public:
 
             // note:
             // The reply does not have to be sent immediately:
-            // The requestContext is a unique_ptr, it can be moved to another unique_ptr,
-            // so that the reply can be called later.
+            // The requestContext is a shared_ptr, store it and reply later.
 
             // note:
             // The requestContext has the method requestContext->peerId()
@@ -114,9 +118,9 @@ int main()
     // register lambda for connection events to see when a network node connects or disconnects.
     entityContainer.registerConnectionEvent([] (const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) {
         const ConnectionData connectionData = session->getConnectionData();
-        std::cout << "connection event at " << connectionData.endpoint
+        streamInfo << "connection event at " << connectionData.endpoint
                   << " remote: " << connectionData.endpointPeer
-                  << " event: " << connectionEvent.toString() << std::endl;
+                  << " event: " << connectionEvent.toString();
     });
 
     // Create server entity and register it at the entityContainer with the service name "MyService"
@@ -124,6 +128,8 @@ int main()
     EntityServer entityServer;
     entityContainer.registerEntity(&entityServer, "MyService");
 
+    // register an entity for file download. The name "*" means that if an entity name, given by a client, is not found by name, 
+    // then this entity will try to open a file inside the htdocs directory. An entity name can contain slashes ('/')
     EntityFileServer entityFileServer("htdocs");
     entityContainer.registerEntity(&entityFileServer, "*");
 
@@ -144,12 +150,12 @@ int main()
     // For Unix Domain Sockets use: "ipc://socketname"
     // For SSL/TLS encryption use BindProperties e.g.:
     // entityContainer->bind("tcp://*:7777:headersize", 
-    //                       RemoteEntityFormatProto::CONTENT_TYPE,
-    //                       {{true, "myservercertificate.cert.pem", "myservercertificate.key.pem"}});
+    //                       {{true, SSL_VERIFY_NONE, "myservercertificate.cert", "myservercertificate.key"}});
     // And by the way, also connect()s are possible for an EntityContainer. An EntityContainer can be client and server at the same time.
 
 
-    // run
+    // run the entity container. this call blocks the execution. 
+    // If you do not want to block, then execute run() in another thread
     entityContainer.run();
 
     return 0;

@@ -4,6 +4,10 @@ cmake_minimum_required(VERSION 3.10)
 project(timer)
 
 
+file(COPY ${CMAKE_SOURCE_DIR}/htdocs DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
+
+
 if (FINALMQ_USE_SSL)
     SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DUSE_OPENSSL" )
 endif(FINALMQ_USE_SSL)

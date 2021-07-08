@@ -23,7 +23,7 @@
 #include "gtest/gtest.h"
 
 
-#include "finalmq/protocolconnection/ProtocolSessionContainer.h"
+#include "finalmq/protocolsession/ProtocolSessionContainer.h"
 #include "MockIProtocolSessionCallback.h"
 #include "testHelper.h"
 

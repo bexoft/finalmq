@@ -20,9 +20,9 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#include "finalmq/protocolconnection/ProtocolSessionContainer.h"
+#include "finalmq/protocolsession/ProtocolSessionContainer.h"
 #include "finalmq/streamconnection/StreamConnectionContainer.h"
-#include "finalmq/protocolconnection/ProtocolRegistry.h"
+#include "finalmq/protocolsession/ProtocolRegistry.h"
 
 
 namespace finalmq {

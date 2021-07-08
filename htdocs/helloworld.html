@@ -1,15 +1,9 @@
 <html>                                                                          
 
-
 <head>                                                                          
-
-<script type="text/javascript" src="json2.js"></script>
 <script type="text/javascript" src="fmq.js"></script>
 
-                                                                                
 <script type="text/javascript" >
-
-//////////////////////////////////////////////////////////////////////
 
 var g_fmqSession = new FmqSession();
 var g_fmqMyService = null;
@@ -19,21 +13,17 @@ function printGreetings(outparams)
     var greetings = outparams.greetings;
     var title = '<h1>Greetings</h1>';
     var table = '<table border="1">';
-	if (greetings)
+	for (i=0; i<greetings.length; i++)
 	{
-		for (i=0; i<greetings.length; i++)
-		{
-			var greeting = greetings[i];
-			table += '<tr>';
-			table += '<td width="320" align="left">' + greeting +'</td>';
-			table += '</tr>';
-		}
+		var greeting = greetings[i];
+		table += '<tr>';
+		table += '<td width="320" align="left">' + greeting +'</td>';
+		table += '</tr>';
 	}
     table += '</table>';
-    var el = document.getElementById('testcontainer');
+    var el = document.getElementById('rootelement');
     el.innerHTML = title + '<br>' + table;
 }
-
 
 function fmqReady()
 {
@@ -45,7 +35,6 @@ function fmqReady()
         }
     });
 }
-
 
 function pageLoad()
 {
@@ -60,19 +49,13 @@ function pageUnload()
     g_fmqSession.removeSession();
 }
 
-                                                                           
 </script>                                                                       
-                                                                          
+
 </head>
 
-                                                               
-<body>                                                                          
-
 <body onload="pageLoad()" onunload="pageUnload()">
-<div id="testcontainer"></div>
-
+<div id="rootelement"></div>
 </body>
-
 
 </html>
        

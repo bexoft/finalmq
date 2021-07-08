@@ -5,11 +5,11 @@
     ],
 
     "structs":[
-        {"type":"StartRequest","desc":"","fields":[
+        {"type":"StartRequest","desc":"Call StartRequest to start the timer event.","fields":[
         ]},
-        {"type":"StopRequest","desc":"","fields":[
+        {"type":"StopRequest","desc":"Call StopRequest to stop the timer event.","fields":[
         ]},
-        {"type":"TimerEvent","desc":"","fields":[
+        {"type":"TimerEvent","desc":"The server triggers this event to all connected clients.","fields":[
             {"tid":"TYPE_STRING",                           "name":"time",              "desc":"The current time."}
         ]}
     ]

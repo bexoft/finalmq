@@ -20,10 +20,10 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#include "finalmq/protocolconnection/ProtocolSession.h"
+#include "finalmq/protocolsession/ProtocolSession.h"
 #include "finalmq/streamconnection/StreamConnectionContainer.h"
-#include "finalmq/protocolconnection/ProtocolMessage.h"
-#include "finalmq/protocolconnection/ProtocolRegistry.h"
+#include "finalmq/protocolsession/ProtocolMessage.h"
+#include "finalmq/protocolsession/ProtocolRegistry.h"
 
 #include <assert.h>
 

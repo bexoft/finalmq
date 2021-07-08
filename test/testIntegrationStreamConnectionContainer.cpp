@@ -27,7 +27,7 @@
 #include "MockIStreamConnectionCallback.h"
 #include "finalmq/helpers/OperatingSystem.h"
 #include "finalmq/protocols/ProtocolStream.h"
-#include "finalmq/protocolconnection/ProtocolMessage.h"
+#include "finalmq/protocolsession/ProtocolMessage.h"
 #include "testHelper.h"
 
 #include <thread>

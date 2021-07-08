@@ -37,6 +37,8 @@ html
 latex
 build
 
+enc_temp_folder
+
 *.user
 *.autosave
 

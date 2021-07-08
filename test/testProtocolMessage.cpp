@@ -24,7 +24,7 @@
 #include "gmock/gmock.h"
 
 
-#include "finalmq/protocolconnection/ProtocolMessage.h"
+#include "finalmq/protocolsession/ProtocolMessage.h"
 
 
 //using ::testing::_;
