@@ -63,7 +63,7 @@ protected:
         m_mockClientCallback = std::make_shared<MockIStreamConnectionCallback>();
         m_mockServerCallback = std::make_shared<MockIStreamConnectionCallback>();
         m_connectionContainer = std::make_unique<StreamConnectionContainer>();
-        m_connectionContainer->init(1, 1);
+        m_connectionContainer->init(1);
         IStreamConnectionContainer* connectionContainerRaw = m_connectionContainer.get();
         m_thread = std::make_unique<std::thread>([connectionContainerRaw] () {
             connectionContainerRaw->run();

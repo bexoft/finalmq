@@ -115,12 +115,11 @@ IStreamConnectionPrivatePtr StreamConnectionContainer::findConnectionById(std::i
 
 // IStreamConnectionContainer
 
-void StreamConnectionContainer::init(int cycleTime, int checkReconnectInterval, FuncPollerLoopTimer funcTimer)
+void StreamConnectionContainer::init(int cycleTime, FuncPollerLoopTimer funcTimer)
 {
     // no mutex lock, because it init is called before the thread will be active.
     m_funcTimer = std::move(funcTimer);
     m_cycleTime = cycleTime;
-    m_checkReconnectInterval = checkReconnectInterval;
     m_poller->init();
 }
 

@@ -78,11 +78,11 @@ ProtocolSessionContainer::~ProtocolSessionContainer()
 }
 
 // IProtocolSessionContainer
-void ProtocolSessionContainer::init(int cycleTime, int checkReconnectInterval, FuncTimer funcTimer, const IExecutorPtr& executor)
+void ProtocolSessionContainer::init(const IExecutorPtr& executor, int cycleTime, FuncTimer funcTimer)
 {
     m_executor = executor;
     std::shared_ptr<FuncTimer> pFuncTimer = funcTimer ? std::make_shared<FuncTimer>(std::move(funcTimer)) : nullptr;
-    m_streamConnectionContainer->init(cycleTime, checkReconnectInterval, [this, pFuncTimer](){
+    m_streamConnectionContainer->init(cycleTime, [this, pFuncTimer](){
         if (pFuncTimer)
         {
             if (m_executor)

@@ -57,22 +57,98 @@ typedef std::function<void(const IProtocolSessionPtr& session, ConnectionEvent c
 
 struct IRemoteEntityContainer
 {
+    /**
+     * @brief ~IRemoteEntityContainer is the virtual destructor of the interface.
+     */
     virtual ~IRemoteEntityContainer() {}
 
-    virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000, FuncTimer funcTimer = {}, const IExecutorPtr& executor = nullptr, bool storeRawDataInReceiveStruct = false) = 0;
+    /**
+     * @brief init initializes the instance. Call it once after constructing the object.
+     * @param executor decouples the callback thread from the polling thread.
+     * @param cycleTime is a timer interval in [ms] in which the poller thread will trigger a timer callback (see parameter funcTimer).
+     * @param funcTimer is a callback that is been called every cycleTime. Do not use it as a precise timer.
+     * @param storeRawDataInReceiveStruct is a flag. It is usually false. But if you wish to have the raw data inside a message struct, then you can set this flag to true.
+     */
+    virtual void init(const IExecutorPtr& executor = nullptr, int cycleTime = 100, FuncTimer funcTimer = nullptr, bool storeRawDataInReceiveStruct = false) = 0;
+
+    /**
+     * @brief bind opens a listener socket.
+     * @param endpoint defines the type of socket, port or socket name, protocol and the data encoding.
+     * examples:
+     * "tcp:// *:3000/httpserver:json" = tcp socket, port 3000, http protocol, json data encoding
+     * "ipc://my_uds/delimiter_lf:json" = unix domain socket, name my_uds, delimiter linefeed protocol, json data encoding
+     * "tcp:// *:3000/headersize:protobuf" = tcp socket, port 3000, 4 bytes payload size in header, protobuf data encoding
+     * @param bindProperties contains properties for the bind, e.g. SSL/TLS properties.
+     * @return 0 on success and -1 on failure.
+     */
     virtual int bind(const std::string& endpoint, const BindProperties& bindProperties = {}) = 0;
+
+    /**
+     * @brief unbind
+     * @param endpoint
+     */
     virtual void unbind(const std::string& endpoint) = 0;
+
+    /**
+     * @brief connect
+     * @param endpoint
+     * @param connectProperties
+     * @return
+     */
     virtual IProtocolSessionPtr connect(const std::string& endpoint, const ConnectProperties& connectProperties = {}) = 0;
+
+    /**
+     * @brief run
+     */
     virtual void run() = 0;
+
+    /**
+     * @brief terminatePollerLoop
+     */
     virtual void terminatePollerLoop() = 0;
+
+    /**
+     * @brief getExecutor
+     * @return
+     */
     virtual IExecutorPtr getExecutor() const = 0;
 
+    /**
+     * @brief registerEntity
+     * @param remoteEntity
+     * @param name
+     * @return
+     */
     virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, const std::string& name = "") = 0;
+
+    /**
+     * @brief addPureDataPaths
+     * @param paths
+     */
     virtual void addPureDataPaths(std::vector<std::string>& paths) = 0;
+
+    /**
+     * @brief unregisterEntity
+     * @param entityId
+     */
     virtual void unregisterEntity(EntityId entityId) = 0;
+
+    /**
+     * @brief registerConnectionEvent
+     * @param funcConnectionEvent
+     */
     virtual void registerConnectionEvent(FuncConnectionEvent funcConnectionEvent) = 0;
 
+    /**
+     * @brief getAllEntities
+     * @return
+     */
     virtual std::vector<EntityId> getAllEntities() const = 0;
+
+    /**
+     * @brief getEntity
+     * @return
+     */
     virtual hybrid_ptr<IRemoteEntity> getEntity(EntityId) const = 0;
 };
 
@@ -83,14 +159,14 @@ typedef std::shared_ptr<IRemoteEntityContainer> IRemoteEntityContainerPtr;
 
 
 class SYMBOLEXP RemoteEntityContainer : public IRemoteEntityContainer
-                                      , public IProtocolSessionCallback
+                                      , private IProtocolSessionCallback
 {
 public:
     RemoteEntityContainer();
     virtual ~RemoteEntityContainer();
 
     // IRemoteEntityContainer
-    virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000, FuncTimer funcTimer = {}, const IExecutorPtr& executor = nullptr, bool storeRawDataInReceiveStruct = false) override;
+    virtual void init(const IExecutorPtr& executor = nullptr, int cycleTime = 100, FuncTimer funcTimer = {}, bool storeRawDataInReceiveStruct = false) override;
     virtual int bind(const std::string& endpoint, const BindProperties& bindProperties = {}) override;
     virtual void unbind(const std::string& endpoint) override;
     virtual IProtocolSessionPtr connect(const std::string& endpoint, const ConnectProperties& connectProperties = {}) override;
