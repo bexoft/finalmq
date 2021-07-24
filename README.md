@@ -1684,10 +1684,10 @@ for (int i = 0; i < 4; ++i)
 
 
 
-Then you have to pass the Executor to the `IRemoteEntityContainer::init()`. The executor is the 4th parameter to pass, therefore you have to set the first three parameters. You can use the default values as shown:
+Then you have to pass the Executor to the `IRemoteEntityContainer::init()`:
 
 ```c++
-entityContainer.init(100, 1000, {}, executor);
+entityContainer.init(executor);
 ```
 
 Note:
@@ -1746,7 +1746,7 @@ I show you how:
 
     ExecutorMainLoop executorMainLoop;
     finalmq::RemoteEntityContainer entityContainer;
-    entityContainer.init(100, 1000, {}, executorMainLoop.getExecutor());
+    entityContainer.init(executorMainLoop.getExecutor());
 
 
 
