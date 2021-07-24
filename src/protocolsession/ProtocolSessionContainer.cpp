@@ -78,7 +78,7 @@ ProtocolSessionContainer::~ProtocolSessionContainer()
 }
 
 // IProtocolSessionContainer
-void ProtocolSessionContainer::init(const IExecutorPtr& executor, int cycleTime, FuncTimer funcTimer)
+void ProtocolSessionContainer::init(const IExecutorPtr& executor, int cycleTime, FuncTimer funcTimer, int checkReconnectInterval)
 {
     m_executor = executor;
     std::shared_ptr<FuncTimer> pFuncTimer = funcTimer ? std::make_shared<FuncTimer>(std::move(funcTimer)) : nullptr;
@@ -106,7 +106,7 @@ void ProtocolSessionContainer::init(const IExecutorPtr& executor, int cycleTime,
                 session->cycleTime();
             }
         }
-    });
+    }, checkReconnectInterval);
     if (m_executor)
     {
         m_thread = std::thread([this]() { m_streamConnectionContainer->run(); });

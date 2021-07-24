@@ -68,8 +68,9 @@ struct IRemoteEntityContainer
      * @param cycleTime is a timer interval in [ms] in which the poller thread will trigger a timer callback (see parameter funcTimer).
      * @param funcTimer is a callback that is been called every cycleTime. Do not use it as a precise timer.
      * @param storeRawDataInReceiveStruct is a flag. It is usually false. But if you wish to have the raw data inside a message struct, then you can set this flag to true.
+     * @param checkReconnectInterval
      */
-    virtual void init(const IExecutorPtr& executor = nullptr, int cycleTime = 100, FuncTimer funcTimer = nullptr, bool storeRawDataInReceiveStruct = false) = 0;
+    virtual void init(const IExecutorPtr& executor = nullptr, int cycleTime = 100, FuncTimer funcTimer = nullptr, bool storeRawDataInReceiveStruct = false, int checkReconnectInterval = 1000) = 0;
 
     /**
      * @brief bind opens a listener socket.
@@ -166,7 +167,7 @@ public:
     virtual ~RemoteEntityContainer();
 
     // IRemoteEntityContainer
-    virtual void init(const IExecutorPtr& executor = nullptr, int cycleTime = 100, FuncTimer funcTimer = {}, bool storeRawDataInReceiveStruct = false) override;
+    virtual void init(const IExecutorPtr& executor = nullptr, int cycleTime = 100, FuncTimer funcTimer = {}, bool storeRawDataInReceiveStruct = false, int checkReconnectInterval = 1000) override;
     virtual int bind(const std::string& endpoint, const BindProperties& bindProperties = {}) override;
     virtual void unbind(const std::string& endpoint) override;
     virtual IProtocolSessionPtr connect(const std::string& endpoint, const ConnectProperties& connectProperties = {}) override;

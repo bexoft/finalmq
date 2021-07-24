@@ -45,7 +45,7 @@ struct IStreamConnectionContainer
 {
     virtual ~IStreamConnectionContainer() {}
 
-    virtual void init(int cycleTime = 100, FuncPollerLoopTimer funcTimer = {}) = 0;
+    virtual void init(int cycleTime = 100, FuncPollerLoopTimer funcTimer = {}, int checkReconnectInterval = 1000) = 0;
     virtual int bind(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const BindProperties& bindProperties = {}) = 0;
     virtual void unbind(const std::string& endpoint) = 0;
     virtual IStreamConnectionPtr connect(hybrid_ptr<IStreamConnectionCallback> callback, const std::string& endpoint, const ConnectProperties& connectionProperties = {}) = 0;
@@ -69,7 +69,7 @@ public:
 
 private:
     // IStreamConnectionContainer
-    virtual void init(int cycleTime = 100, FuncPollerLoopTimer funcTimer = {}) override;
+    virtual void init(int cycleTime = 100, FuncPollerLoopTimer funcTimer = {}, int checkReconnectInterval = 1000) override;
     virtual int bind(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const BindProperties& bindProperties = {}) override;
     virtual void unbind(const std::string& endpoint) override;
     virtual IStreamConnectionPtr connect(hybrid_ptr<IStreamConnectionCallback> callback, const std::string& endpoint, const ConnectProperties& connectionProperties = {}) override;

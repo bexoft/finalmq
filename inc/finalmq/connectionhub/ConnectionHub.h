@@ -32,7 +32,7 @@ struct IConnectionHub
 {
     virtual ~IConnectionHub() {}
 
-    virtual void init(int cycleTime = 100) = 0;
+    virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000) = 0;
     virtual int bind(const std::string& endpoint, const BindProperties& bindProperties = {}) = 0;
     virtual void unbind(const std::string& endpoint) = 0;
     virtual IProtocolSessionPtr connect(const std::string& endpoint, const ConnectProperties& connectProperties = {}) = 0;
@@ -57,7 +57,7 @@ public:
 
 private:
     // IConnectionHub
-    virtual void init(int cycleTime = 100) override;
+    virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000) override;
     virtual int bind(const std::string& endpoint, const BindProperties& bindProperties = {}) override;
     virtual void unbind(const std::string& endpoint) override;
     virtual IProtocolSessionPtr connect(const std::string& endpoint, const ConnectProperties& connectProperties = {}) override;
