@@ -22,12 +22,6 @@
 
 #pragma once
 
-
-#include <memory>
-#include <vector>
-#include <mutex>
-#include <unordered_map>
-
 #include "finalmq/helpers/hybrid_ptr.h"
 #include "ConnectionData.h"
 #include "finalmq/poller/Poller.h"
@@ -36,6 +30,11 @@
 #include "finalmq/helpers/CondVar.h"
 #include "finalmq/helpers/IExecutor.h"
 
+#include <memory>
+#include <vector>
+#include <mutex>
+#include <thread>
+#include <unordered_map>
 
 
 namespace finalmq {
@@ -115,6 +114,7 @@ private:
     FuncPollerLoopTimer                                             m_funcTimer;
     IExecutorPtr                                                    m_executorPollerThread;
     std::unique_ptr<IExecutorWorker>                                m_executorWorker;
+    std::thread                                                     m_threadTimer;
     mutable std::mutex                                              m_mutex;
 
     std::chrono::time_point<std::chrono::system_clock>              m_lastReconnectTime;
