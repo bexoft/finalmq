@@ -22,12 +22,6 @@
 
 #pragma once
 
-
-#include <memory>
-#include <vector>
-#include <mutex>
-#include <unordered_map>
-
 #include "finalmq/helpers/hybrid_ptr.h"
 #include "ConnectionData.h"
 #include "finalmq/poller/Poller.h"
@@ -36,6 +30,11 @@
 #include "finalmq/helpers/CondVar.h"
 #include "finalmq/helpers/IExecutor.h"
 
+#include <memory>
+#include <vector>
+#include <mutex>
+#include <thread>
+#include <unordered_map>
 
 
 namespace finalmq {
@@ -46,7 +45,7 @@ struct IStreamConnectionContainer
 {
     virtual ~IStreamConnectionContainer() {}
 
-    virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000, FuncPollerLoopTimer funcTimer = {}) = 0;
+    virtual void init(int cycleTime = 100, FuncPollerLoopTimer funcTimer = {}, int checkReconnectInterval = 1000) = 0;
     virtual int bind(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const BindProperties& bindProperties = {}) = 0;
     virtual void unbind(const std::string& endpoint) = 0;
     virtual IStreamConnectionPtr connect(hybrid_ptr<IStreamConnectionCallback> callback, const std::string& endpoint, const ConnectProperties& connectionProperties = {}) = 0;
@@ -70,7 +69,7 @@ public:
 
 private:
     // IStreamConnectionContainer
-    virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000, FuncPollerLoopTimer funcTimer = {}) override;
+    virtual void init(int cycleTime = 100, FuncPollerLoopTimer funcTimer = {}, int checkReconnectInterval = 1000) override;
     virtual int bind(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const BindProperties& bindProperties = {}) override;
     virtual void unbind(const std::string& endpoint) override;
     virtual IStreamConnectionPtr connect(hybrid_ptr<IStreamConnectionCallback> callback, const std::string& endpoint, const ConnectProperties& connectionProperties = {}) override;
@@ -115,6 +114,7 @@ private:
     FuncPollerLoopTimer                                             m_funcTimer;
     IExecutorPtr                                                    m_executorPollerThread;
     std::unique_ptr<IExecutorWorker>                                m_executorWorker;
+    std::thread                                                     m_threadTimer;
     mutable std::mutex                                              m_mutex;
 
     std::chrono::time_point<std::chrono::system_clock>              m_lastReconnectTime;

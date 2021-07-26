@@ -141,10 +141,10 @@ bool RemoteEntityContainer::isTimerExpired(std::chrono::time_point<std::chrono::
 static const int INTERVAL_CHECK = 5000;
 
 
-void RemoteEntityContainer::init(int cycleTime, int checkReconnectInterval, FuncPollerLoopTimer funcTimer, const IExecutorPtr& executor, bool storeRawDataInReceiveStruct)
+void RemoteEntityContainer::init(const IExecutorPtr& executor, int cycleTime, FuncTimer funcTimer, bool storeRawDataInReceiveStruct, int checkReconnectInterval)
 {
     m_storeRawDataInReceiveStruct = storeRawDataInReceiveStruct;
-    m_protocolSessionContainer->init(cycleTime, checkReconnectInterval, std::move(funcTimer), executor);
+    m_protocolSessionContainer->init(executor, cycleTime, std::move(funcTimer), checkReconnectInterval);
 
     //registerEntity([this]() {
     //    std::shared_ptr<RemoteEntity> entity = std::make_shared<RemoteEntity>();

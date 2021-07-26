@@ -65,6 +65,10 @@ StreamConnectionContainer::~StreamConnectionContainer()
 {
     m_executorWorker = nullptr;
     terminatePollerLoop();
+    if (m_threadTimer.joinable())
+    {
+        m_threadTimer.join();
+    }
 }
 
 
@@ -115,13 +119,29 @@ IStreamConnectionPrivatePtr StreamConnectionContainer::findConnectionById(std::i
 
 // IStreamConnectionContainer
 
-void StreamConnectionContainer::init(int cycleTime, int checkReconnectInterval, FuncPollerLoopTimer funcTimer)
+void StreamConnectionContainer::init(int cycleTime, FuncPollerLoopTimer funcTimer, int checkReconnectInterval)
 {
     // no mutex lock, because it init is called before the thread will be active.
     m_funcTimer = std::move(funcTimer);
     m_cycleTime = cycleTime;
     m_checkReconnectInterval = checkReconnectInterval;
     m_poller->init();
+    m_threadTimer = std::thread([this](){
+        while (!m_terminatePollerLoop)
+        {
+            m_executorPollerThread->addAction([this](){
+                if (isTimerExpired(m_lastReconnectTime, m_checkReconnectInterval))
+                {
+                    doReconnect();
+                }
+                if (m_funcTimer)
+                {
+                    m_funcTimer();
+                }
+            });
+            std::this_thread::sleep_for(std::chrono::milliseconds(m_cycleTime));
+        }
+    });
 }
 
 
@@ -728,7 +748,7 @@ void StreamConnectionContainer::pollerLoop()
     m_lastCycleTime = std::chrono::system_clock::now();
     while (!m_terminatePollerLoop)
     {
-        const PollerResult& result = m_poller->wait(m_cycleTime);
+        const PollerResult& result = m_poller->wait(1000);
 
         if (result.releaseWait)
         {
@@ -813,17 +833,17 @@ void StreamConnectionContainer::pollerLoop()
             }
         }
 
-        if (isTimerExpired(m_lastCycleTime, m_cycleTime))
-        {
-            if (isTimerExpired(m_lastReconnectTime, m_checkReconnectInterval))
-            {
-                doReconnect();
-            }
-            if (m_funcTimer)
-            {
-                m_funcTimer();
-            }
-        }
+//        if (isTimerExpired(m_lastCycleTime, m_cycleTime))
+//        {
+//            if (isTimerExpired(m_lastReconnectTime, m_checkReconnectInterval))
+//            {
+//                doReconnect();
+//            }
+//            if (m_funcTimer)
+//            {
+//                m_funcTimer();
+//            }
+//        }
     }
 }
 

@@ -118,8 +118,8 @@ TEST_F(TestIntegrationRemoteEntity, testProto)
     EntityServer entityServer(mockEventsServer);
     RemoteEntity entityClient;
 
-    entityContainerServer.init();
-    entityContainerClient.init();
+    entityContainerServer.init(nullptr, 1, nullptr, false, 1);
+    entityContainerClient.init(nullptr, 1, nullptr, false, 1);
 
     std::thread thread1 = std::thread([&entityContainerServer] () {
         entityContainerServer.run();
@@ -179,8 +179,8 @@ TEST_F(TestIntegrationRemoteEntity, testJson)
     EntityServer entityServer(mockEventsServer);
     RemoteEntity entityClient;
 
-    entityContainerServer.init();
-    entityContainerClient.init();
+    entityContainerServer.init(nullptr, 1, nullptr, false, 1);
+    entityContainerClient.init(nullptr, 1, nullptr, false, 1);
 
     std::thread thread1 = std::thread([&entityContainerServer] () {
         entityContainerServer.run();
@@ -236,8 +236,8 @@ TEST_F(TestIntegrationRemoteEntity, testSslProto)
     EntityServer entityServer(mockEventsServer);
     RemoteEntity entityClient;
 
-    entityContainerServer.init();
-    entityContainerClient.init();
+    entityContainerServer.init(nullptr, 1, nullptr, false, 1);
+    entityContainerClient.init(nullptr, 1, nullptr, false, 1);
 
     std::thread thread1 = std::thread([&entityContainerServer] () {
         entityContainerServer.run();
@@ -294,8 +294,8 @@ TEST_F(TestIntegrationRemoteEntity, testProtoLateConnect)
     EntityServer entityServer(mockEventsServer);
     RemoteEntity entityClient;
 
-    entityContainerServer.init();
-    entityContainerClient.init();
+    entityContainerServer.init(nullptr, 1, nullptr, false, 1);
+    entityContainerClient.init(nullptr, 1, nullptr, false, 1);
 
     std::thread thread1 = std::thread([&entityContainerServer] () {
         entityContainerServer.run();

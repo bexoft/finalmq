@@ -62,7 +62,7 @@ protected:
         m_mockClientCallback = std::make_shared<MockIProtocolSessionCallback>();
         m_mockServerCallback = std::make_shared<MockIProtocolSessionCallback>();
         m_sessionContainer = std::make_unique<ProtocolSessionContainer>();
-        m_sessionContainer->init(1, 1);
+        m_sessionContainer->init(nullptr, 1, nullptr, 1);
         IProtocolSessionContainer* sessionContainerRaw = m_sessionContainer.get();
         m_threadSessionContainer = std::make_unique<std::thread>([sessionContainerRaw] () {
             sessionContainerRaw->run();

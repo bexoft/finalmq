@@ -77,7 +77,7 @@ public:
 protected:
     virtual void SetUp()
     {
-        m_entityContainerRegistry.init();
+        m_entityContainerRegistry.init(nullptr, 1, nullptr, false, 1);
         m_entityContainerRegistry.registerEntity(&m_registry, "fmqreg");
         m_entityContainerRegistry.bind("tcp://*:" PORTNUMBER_PROTO ":headersize:protobuf");
         m_threadRegistry = std::thread([this] () {
@@ -85,7 +85,7 @@ protected:
         });
 
         m_entityContainerServer = std::make_shared<RemoteEntityContainer>();
-        m_entityContainerServer->init();
+        m_entityContainerServer->init(nullptr, 1, nullptr, false, 1);
         m_entityIdServer = m_entityContainerServer->registerEntity(&m_server);
         m_entityContainerServer->bind("tcp://*:7799:headersize:protobuf");
         m_threadServer = std::thread([this] () {
@@ -93,7 +93,7 @@ protected:
         });
 
         m_entityContainerClient = std::make_shared<RemoteEntityContainer>();
-        m_entityContainerClient->init();
+        m_entityContainerClient->init(nullptr, 1, nullptr, false, 1);
         m_entityIdClient = m_entityContainerClient->registerEntity(&m_entityClient);
         m_threadClient = std::thread([this] () {
             m_entityContainerClient->run();

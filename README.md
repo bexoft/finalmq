@@ -1,8 +1,13 @@
 FinalMQ - Message exchange framework
 ===================================================
 
-
 Copyright 2020 bexoft GmbH
+
+Author: David Beck, Germany
+
+Contact: david.beck@bexoft.de
+
+
 
 C++ Installation - Unix
 -----------------------
@@ -592,7 +597,7 @@ For SSL/TLS you can pass BindProperties:
 	    std::string clientCaFile;           // SSL_load_client_CA_file, pem, SSL_CTX_set_client_CA_list
 	    std::function<int(int, X509_STORE_CTX*)> verifyCallback;    // SSL_CTX_set_verify
 	};
-	
+
 
 
 
@@ -1614,4 +1619,136 @@ It is very unusual hat a server sends a request to a client and expects a reply,
 
 **Note:**
 The polling of server requests is done in the fmq.js script. It is very effective, because one client HTTP request will handle multiple server requests/notifications. Usually, a browser opens 6 socket connections to a server. One connection is used by the polling.
+
+
+
+## Thread Context
+
+
+
+### Poller Thread
+
+The library finalMQ processes the communication in a non-blocking way. For sending messages or for connect, the program execution will not be blocked to wait for the IO operations. The reception of messages and the monitoring of connection states are handled in a so called Poller Thread. The application has to call `RemoteEntityContainer::run()`. The thread which calls `run()` is the Poller Thread. The `run()` will block for handling incoming messages and connection states. The Polling Thread handles all connections of the `RemoteEntityContainer`. You can call `run()` by a dedicated thread:
+
+```c++
+RemoteEntityContainer entityContainer;
+entityContainer.init();
+std::thread thread([&entityContainer] () {
+    entityContainer.run();
+});
+```
+
+
+
+ `run()` will be blocked till someone calls `RemoteEntityContainer::terminatePollerLoop()`. Then the message and connection state will be stopped.
+
+Afterwards, you should join() the thread to be sure that the thread is done.
+
+```c++
+entityContainer.terminatePollerLoop();
+thread.join();
+```
+
+
+
+For incoming messages and changed connection states the library will execute callbacks (lambdas) of the application. These callbacks are called directly from the Poller Thread.
+
+
+
+### IExecutor
+
+Executors can be used to decouple thread execution. in the `IRemoteEntityContainer::init()` method you can pass an executor as a shared pointer. If you pass an executor then all the callbacks (lambdas) will be executed in the thread context of the executor. There is one executor implemented in finalMQ:
+
+- For executing callbacks from dedicated thread(s), there is an **Executor**
+
+
+
+Feel free to develop your own Executor that fulfills your needs.
+
+
+
+I will now show you how to use an Executor that provides a load balancing between 4 threads.
+
+First, you have to create an Executor as a shared pointer, then you have to create the threads and call `IExecutor:run()` from each of the created threads:
+
+```c++
+IExecutorPtr executor = std::make_shared<Executor>();
+std::vector<std::thread> threads;
+for (int i = 0; i < 4; ++i)
+{
+    threads.emplace_back(std::thread([executor]() {
+        executor->run();
+    }));
+}
+```
+
+
+
+Then you have to pass the Executor to the `IRemoteEntityContainer::init()`:
+
+```c++
+entityContainer.init(executor);
+```
+
+Note:
+You also can first call `init()` and run the threads later.
+
+
+
+Now, you should **not** call `IRemoteEntityContainer::run()`, anymore. If you do anyway, it will have no effect (it will not block).
+
+With this setup, all the callbacks (lambdas) will be executed load-balanced in the context of the executor threads.
+
+Note:
+The Poller Thread is now a thread that has been created internally by the finalMQ library, it will not have any contact with the application.
+
+
+
+You will stop the execution like this:
+
+```C++
+executor->terminate();
+for (size_t i = 0; i < threads.size(); ++i)
+{
+    threads[i].join();
+}
+```
+
+
+
+### Execution in the context of RemoteEntityContainer
+
+As I described above, you can either execute RemoteEntityContainer callbacks (lambdas) in the context of the Poller Thread or in the context of the Executor. Let's call either way the context of RemoteEntityContainer. So, if you also want to execute application code in the context of RemoteEntityContainer, then you can call `IRemoteEntityContainer::getExecutor()` or even `IRemoteEntity::getExecutor()`.
+
+Note:
+Also in case of the Poller Thread, you will get an IExecutor of the Poller Thread.
+
+I show you now, how to execute application code inside the context of IRemoteEntityContainer:
+
+```c++
+entityContainer.getExecutor()->addAction([]() {
+    // put here application code that will be executed in the context of IRemoteEntityContainer
+});
+```
+
+
+
+Note:
+As mentioned above, also the `RemoteEntity` has the method `getExecution()`.
+
+
+
+### Qt - Execution of callbacks inside the Qt's main loop / main thread 
+
+If you are using finalMQ in your Qt project then you can setup the RemoteEntityContainer, so that the finalMQ callbacks are executed in the Qt's main loop.
+
+I show you how:
+
+    ExecutorMainLoop executorMainLoop;
+    finalmq::RemoteEntityContainer entityContainer;
+    entityContainer.init(executorMainLoop.getExecutor());
+
+
+
+Now, all callbacks will be executed in the context of the Qt's main loop.
 

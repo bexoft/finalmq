@@ -36,7 +36,7 @@ ConnectionHub::ConnectionHub()
 
 void ConnectionHub::init(int cycleTime, int checkReconnectInterval)
 {
-    m_protocolSessionContainer->init(cycleTime, checkReconnectInterval);
+    m_protocolSessionContainer->init(nullptr, cycleTime, nullptr, checkReconnectInterval);
 }
 
 int ConnectionHub::bind(const std::string& endpoint, const BindProperties& bindProperties)
