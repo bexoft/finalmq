@@ -478,7 +478,8 @@ public:
     EntityServer()
     {
         // register peer events to see when a remote entity connects or disconnects.
-        registerPeerEvent([] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
+        registerPeerEvent([] (PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, 
+                              PeerEvent peerEvent, bool incoming) {
             streamInfo << "peer event " << peerEvent.toString();
         });
 
@@ -774,8 +775,9 @@ int main()
     entityContainer.registerEntity(&entityClient);
 
     // register peer events to see when a remote entity connects or disconnects.
-    entityClient.registerPeerEvent([] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
-        streamInfo << "peer event " << peerEvent.toString();
+    entityClient.registerPeerEvent([] (PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, 
+                                       PeerEvent peerEvent, bool incoming) {
+        streamInfo << "peer event " << .toString();
     });
 
     // connect to port 7777 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
@@ -845,7 +847,8 @@ In this example, we do not derive from RemoteEntity, but we use RemoteEntity dir
 RemoteEntity entityClient;
 entityContainer.registerEntity(&entityClient);
 
-entityClient.registerPeerEvent([] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
+entityClient.registerPeerEvent([] (PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, 
+                                   PeerEvent peerEvent, bool incoming) {
 	streamInfo << "peer event " << peerEvent.toString();
 });
 ```
@@ -1034,7 +1037,8 @@ public:
 	EntityServer()
 	{
 		// register peer events to see when a remote entity connects or disconnects.
-		registerPeerEvent([] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
+		registerPeerEvent([] (PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, 
+                              PeerEvent peerEvent, bool incoming) {
 			std::cout << "peer event " << peerEvent.toString() << std::endl;
 		});
 

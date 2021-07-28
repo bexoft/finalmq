@@ -133,7 +133,7 @@ void PeerManager::updatePeer(PeerId peerId, EntityId entityId, const std::string
         // fire peer event CONNECTED
         if (funcPeerEvent && *funcPeerEvent)
         {
-            (*funcPeerEvent)(peerId, PeerEvent::PEER_CONNECTED, false);
+            (*funcPeerEvent)(peerId, peer->session, entityId, PeerEvent::PEER_CONNECTED, false);
         }
     }
 }
@@ -161,7 +161,7 @@ bool PeerManager::removePeer(PeerId peerId, bool& incoming)
         // fire peer event DISCONNECTED
         if (funcPeerEvent && *funcPeerEvent)
         {
-            (*funcPeerEvent)(peerId, PeerEvent::PEER_DISCONNECTED, incoming);
+            (*funcPeerEvent)(peerId, peer->session, peer->entityId, PeerEvent::PEER_DISCONNECTED, incoming);
         }
     }
     return found;
@@ -334,8 +334,7 @@ PeerId PeerManager::addPeer(const IProtocolSessionPtr& session, EntityId entityI
         {
             if (funcPeerEvent && *funcPeerEvent)
             {
-//                (*funcPeerEvent)(peerId, incoming ? PeerEvent::PEER_CONNECTED : PeerEvent::PEER_CONNECTING, incoming);
-                (*funcPeerEvent)(peerId, PeerEvent::PEER_CONNECTED, incoming);
+                (*funcPeerEvent)(peerId, session, entityId, PeerEvent::PEER_CONNECTED, incoming);
             }
         }
     }

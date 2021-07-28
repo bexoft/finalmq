@@ -35,6 +35,7 @@ using finalmq::RemoteEntity;
 using finalmq::RemoteEntityContainer;
 using finalmq::IRemoteEntityContainer;
 using finalmq::PeerId;
+using finalmq::EntityId;
 using finalmq::PeerEvent;
 using finalmq::RequestContextPtr;
 using finalmq::IProtocolSessionPtr;
@@ -53,7 +54,7 @@ public:
     EntityServer()
     {
         // register peer events to see when a remote entity connects or disconnects.
-        registerPeerEvent([] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
+        registerPeerEvent([] (PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, PeerEvent peerEvent, bool incoming) {
             std::cout << "peer event " << peerEvent.toString() << std::endl;
         });
 

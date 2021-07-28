@@ -58,13 +58,15 @@ class RequestContext;
 typedef std::shared_ptr<RequestContext> RequestContextPtr;
 
 
-
+/**
+ * @brief The PeerEvent class is an enum with possible entity connection states.
+ */
 class SYMBOLEXP PeerEvent
 {
 public:
     enum Enum : std::int32_t {
-        PEER_CONNECTED = 0,
-        PEER_DISCONNECTED = 1
+        PEER_CONNECTED = 0,     ///< The entity connected to a remote entity or a remote entity connected to the entity.
+        PEER_DISCONNECTED = 1   ///< The entity disconnected from a remote entity or a remote entity disconnected from the entity.
     };
 
     PeerEvent();
@@ -94,7 +96,7 @@ struct ReceiveData
 typedef std::function<void(PeerId peerId, remoteentity::Status status, const StructBasePtr& structBase)> FuncReply;
 typedef std::function<void(PeerId peerId, remoteentity::Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase)> FuncReplyMeta;
 typedef std::function<void(RequestContextPtr& requestContext, const StructBasePtr& structBase)> FuncCommand;
-typedef std::function<void(PeerId peerId, PeerEvent peerEvent, bool incoming)> FuncPeerEvent;
+typedef std::function<void(PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, PeerEvent peerEvent, bool incoming)> FuncPeerEvent;
 typedef std::function<bool(CorrelationId correlationId, remoteentity::Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase)> FuncReplyEvent; // return bool reply handled -> skip looking for reply lambda.
 typedef std::function<void(PeerId peerId, remoteentity::Status status)> FuncReplyConnect;
 
