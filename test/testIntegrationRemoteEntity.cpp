@@ -47,7 +47,7 @@ class MockEvents
 public:
     MOCK_METHOD(void, testRequest, (const RequestContextPtr& requestContext, const std::shared_ptr<TestRequest>& request));
     MOCK_METHOD(void, testReply, (PeerId peerId, remoteentity::Status status, const std::shared_ptr<TestReply>& reply));
-    MOCK_METHOD(void, peerEvent, (PeerId peerId, PeerEvent peerEvent, bool incoming));
+    MOCK_METHOD(void, peerEvent, (PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, PeerEvent peerEvent, bool incoming));
     MOCK_METHOD(void, connEvent, (const IProtocolSessionPtr& session, ConnectionEvent connectionEvent));
     MOCK_METHOD(void, connectReply, (PeerId peerId, remoteentity::Status status));
 };
@@ -98,8 +98,8 @@ public:
             requestContext->reply(TestReply(DATA_REPLY));
         });
 
-        registerPeerEvent([this] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
-            m_mockEvents.peerEvent(peerId, peerEvent, incoming);
+        registerPeerEvent([this] (PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, PeerEvent peerEvent, bool incoming) {
+            m_mockEvents.peerEvent(peerId, session, entityId, peerEvent, incoming);
         });
     }
 
@@ -128,8 +128,8 @@ TEST_F(TestIntegrationRemoteEntity, testProto)
         entityContainerClient.run();
     });
 
-    entityClient.registerPeerEvent([&mockEventsClient] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
-        mockEventsClient.peerEvent(peerId, peerEvent, incoming);
+    entityClient.registerPeerEvent([&mockEventsClient] (PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, PeerEvent peerEvent, bool incoming) {
+        mockEventsClient.peerEvent(peerId, session, entityId, peerEvent, incoming);
     });
 
     entityContainerServer.registerEntity(&entityServer, "MyServer");
@@ -138,10 +138,10 @@ TEST_F(TestIntegrationRemoteEntity, testProto)
     entityContainerServer.bind("tcp://*:7788:headersize:protobuf");
     IProtocolSessionPtr sessionClient = entityContainerClient.connect("tcp://localhost:7788:headersize:protobuf");
 
-    EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
-    EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
-    EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_DISCONNECTED), true)).Times(1);
-    EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_DISCONNECTED), false)).Times(1);
+    EXPECT_CALL(mockEventsServer, peerEvent(_, _, entityClient.getEntityId(), PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
+    EXPECT_CALL(mockEventsClient, peerEvent(_, sessionClient, entityServer.getEntityId(), PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
+    EXPECT_CALL(mockEventsServer, peerEvent(_, _, entityClient.getEntityId(), PeerEvent(PeerEvent::PEER_DISCONNECTED), true)).Times(1);
+    EXPECT_CALL(mockEventsClient, peerEvent(_, sessionClient, entityServer.getEntityId(), PeerEvent(PeerEvent::PEER_DISCONNECTED), false)).Times(1);
     EXPECT_CALL(mockEventsClient, connectReply(_, remoteentity::Status(remoteentity::Status::STATUS_OK))).Times(1);
     PeerId peerId = entityClient.connect(sessionClient, "MyServer", [&mockEventsClient] (PeerId peerId, remoteentity::Status status) {
         mockEventsClient.connectReply(peerId, status);
@@ -189,8 +189,8 @@ TEST_F(TestIntegrationRemoteEntity, testJson)
         entityContainerClient.run();
     });
 
-    entityClient.registerPeerEvent([&mockEventsClient] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
-        mockEventsClient.peerEvent(peerId, peerEvent, incoming);
+    entityClient.registerPeerEvent([&mockEventsClient] (PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, PeerEvent peerEvent, bool incoming) {
+        mockEventsClient.peerEvent(peerId, session, entityId, peerEvent, incoming);
     });
 
     entityContainerServer.registerEntity(&entityServer, "MyServer");
@@ -199,10 +199,10 @@ TEST_F(TestIntegrationRemoteEntity, testJson)
     entityContainerServer.bind("tcp://*:7788:headersize:json");
     IProtocolSessionPtr sessionClient = entityContainerClient.connect("tcp://localhost:7788:headersize:json");
 
-    EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
-    EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
-    EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_DISCONNECTED), true)).Times(1);
-    EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_DISCONNECTED), false)).Times(1);
+    EXPECT_CALL(mockEventsServer, peerEvent(_, _, entityClient.getEntityId(), PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
+    EXPECT_CALL(mockEventsClient, peerEvent(_, sessionClient, entityServer.getEntityId(), PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
+    EXPECT_CALL(mockEventsServer, peerEvent(_, _, entityClient.getEntityId(), PeerEvent(PeerEvent::PEER_DISCONNECTED), true)).Times(1);
+    EXPECT_CALL(mockEventsClient, peerEvent(_, sessionClient, entityServer.getEntityId(), PeerEvent(PeerEvent::PEER_DISCONNECTED), false)).Times(1);
     EXPECT_CALL(mockEventsClient, connectReply(_, remoteentity::Status(remoteentity::Status::STATUS_OK))).Times(1);
     PeerId peerId = entityClient.connect(sessionClient, "MyServer", [&mockEventsClient] (PeerId peerId, remoteentity::Status status) {
         mockEventsClient.connectReply(peerId, status);
@@ -246,8 +246,8 @@ TEST_F(TestIntegrationRemoteEntity, testSslProto)
         entityContainerClient.run();
     });
 
-    entityClient.registerPeerEvent([&mockEventsClient] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
-        mockEventsClient.peerEvent(peerId, peerEvent, incoming);
+    entityClient.registerPeerEvent([&mockEventsClient] (PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, PeerEvent peerEvent, bool incoming) {
+        mockEventsClient.peerEvent(peerId, session, entityId, peerEvent, incoming);
     });
 
     entityContainerServer.registerEntity(&entityServer, "MyServer");
@@ -256,10 +256,10 @@ TEST_F(TestIntegrationRemoteEntity, testSslProto)
     entityContainerServer.bind("tcp://*:7788:headersize:protobuf", {{true, SSL_VERIFY_NONE, "ssltest.cert.pem", "ssltest.key.pem"}});
     IProtocolSessionPtr sessionClient = entityContainerClient.connect("tcp://localhost:7788:headersize:protobuf", {{true, SSL_VERIFY_NONE}});
 
-    EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
-    EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
-    EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_DISCONNECTED), true)).Times(1);
-    EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_DISCONNECTED), false)).Times(1);
+    EXPECT_CALL(mockEventsServer, peerEvent(_, _, entityClient.getEntityId(), PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
+    EXPECT_CALL(mockEventsClient, peerEvent(_, sessionClient, entityServer.getEntityId(), PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
+    EXPECT_CALL(mockEventsServer, peerEvent(_, _, entityClient.getEntityId(), PeerEvent(PeerEvent::PEER_DISCONNECTED), true)).Times(1);
+    EXPECT_CALL(mockEventsClient, peerEvent(_, sessionClient, entityServer.getEntityId(), PeerEvent(PeerEvent::PEER_DISCONNECTED), false)).Times(1);
     EXPECT_CALL(mockEventsClient, connectReply(_, remoteentity::Status(remoteentity::Status::STATUS_OK))).Times(1);
     PeerId peerId = entityClient.connect(sessionClient, "MyServer", [&mockEventsClient] (PeerId peerId, remoteentity::Status status) {
         mockEventsClient.connectReply(peerId, status);
@@ -304,8 +304,8 @@ TEST_F(TestIntegrationRemoteEntity, testProtoLateConnect)
         entityContainerClient.run();
     });
 
-    entityClient.registerPeerEvent([&mockEventsClient] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
-        mockEventsClient.peerEvent(peerId, peerEvent, incoming);
+    entityClient.registerPeerEvent([&mockEventsClient] (PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, PeerEvent peerEvent, bool incoming) {
+        mockEventsClient.peerEvent(peerId, session, entityId, peerEvent, incoming);
     });
 
     entityContainerServer.registerEntity(&entityServer, "MyServer");
@@ -313,10 +313,10 @@ TEST_F(TestIntegrationRemoteEntity, testProtoLateConnect)
 
     entityContainerServer.bind("tcp://*:7788:headersize:protobuf");
 
-    EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
-    EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
-    EXPECT_CALL(mockEventsServer, peerEvent(_, PeerEvent(PeerEvent::PEER_DISCONNECTED), true)).Times(1);
-    EXPECT_CALL(mockEventsClient, peerEvent(_, PeerEvent(PeerEvent::PEER_DISCONNECTED), false)).Times(1);
+    EXPECT_CALL(mockEventsServer, peerEvent(_, _, entityClient.getEntityId(), PeerEvent(PeerEvent::PEER_CONNECTED), true)).Times(1);
+    EXPECT_CALL(mockEventsClient, peerEvent(_, _, entityServer.getEntityId(), PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
+    EXPECT_CALL(mockEventsServer, peerEvent(_, _, entityClient.getEntityId(), PeerEvent(PeerEvent::PEER_DISCONNECTED), true)).Times(1);
+    EXPECT_CALL(mockEventsClient, peerEvent(_, _, entityServer.getEntityId(), PeerEvent(PeerEvent::PEER_DISCONNECTED), false)).Times(1);
 
     PeerId peerId = entityClient.createPeer([&mockEventsClient] (PeerId peerId, remoteentity::Status status) {
             mockEventsClient.connectReply(peerId, status);

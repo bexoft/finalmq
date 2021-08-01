@@ -24,6 +24,7 @@
 #include "finalmq/remoteentity/RemoteEntityContainer.h"
 #include "finalmq/remoteentity/EntityFileService.h"
 #include "finalmq/logger/Logger.h"
+#include "finalmq/helpers/Executor.h"
 
 // the definition of the messages are in the file helloworld.fmq
 #include "helloworld.fmq.h"
@@ -39,6 +40,7 @@ using finalmq::RemoteEntityContainer;
 using finalmq::IRemoteEntityContainer;
 using finalmq::EntityFileServer;
 using finalmq::PeerId;
+using finalmq::EntityId;
 using finalmq::PeerEvent;
 using finalmq::RequestContextPtr;
 using finalmq::IProtocolSessionPtr;
@@ -46,6 +48,8 @@ using finalmq::ConnectionData;
 using finalmq::ConnectionEvent;
 using finalmq::Logger;
 using finalmq::LogContext;
+using finalmq::IExecutorPtr;
+using finalmq::Executor;
 using helloworld::HelloRequest;
 using helloworld::HelloReply;
 
@@ -57,7 +61,7 @@ public:
     EntityServer()
     {
         // register peer events to see when a remote entity connects or disconnects.
-        registerPeerEvent([] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
+        registerPeerEvent([] (PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, PeerEvent peerEvent, bool incoming) {
             streamInfo << "peer event " << peerEvent.toString();
         });
 
@@ -113,7 +117,17 @@ int main()
     // Entities are like remote objects, but they can be at the same time client and server.
     // This means, an entity can send (client) and receive (server) a request command.
     RemoteEntityContainer entityContainer;
-    entityContainer.init();
+
+    IExecutorPtr executor = std::make_shared<Executor>();
+    std::vector<std::thread> threads;
+    for (int i = 0; i < 2; ++i)
+    {
+        threads.emplace_back(std::thread([executor]() {
+            executor->run();
+        }));
+    }
+
+    entityContainer.init();//executor);
 
     // register lambda for connection events to see when a network node connects or disconnects.
     entityContainer.registerConnectionEvent([] (const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) {
@@ -136,6 +150,7 @@ int main()
     // Open listener port 7777 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
     // content type in payload: protobuf
     entityContainer.bind("tcp://*:7777:headersize:protobuf");
+//    entityContainer.bind("ipc://my_uds:headersize:protobuf");
 
     // Open listener port 8888 with delimiter framing protocol ProtocolDelimiterLinefeed ('\n' is end of frame).
     // content type in payload: JSON
@@ -157,6 +172,14 @@ int main()
     // run the entity container. this call blocks the execution. 
     // If you do not want to block, then execute run() in another thread
     entityContainer.run();
+
+    std::this_thread::sleep_for(std::chrono::seconds(200000));
+
+    executor->terminate();
+    for (size_t i = 0; i < threads.size(); ++i)
+    {
+        threads[i].join();
+    }
 
     return 0;
 }

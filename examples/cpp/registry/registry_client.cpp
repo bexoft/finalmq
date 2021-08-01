@@ -86,7 +86,7 @@ int main()
     EntityId entityId = entityContainer.registerEntity(&entityClient);
 
     // register peer events to see when a remote entity connects or disconnects.
-    entityClient.registerPeerEvent([] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
+    entityClient.registerPeerEvent([] (PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, PeerEvent peerEvent, bool incoming) {
         std::cout << "peer event " << peerEvent.toString() << std::endl;
     });
 

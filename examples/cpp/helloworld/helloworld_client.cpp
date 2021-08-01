@@ -44,6 +44,7 @@ using finalmq::RemoteEntityFormatProto;
 using finalmq::RemoteEntityFormatJson;
 using finalmq::IRemoteEntityContainer;
 using finalmq::PeerId;
+using finalmq::EntityId;
 using finalmq::PeerEvent;
 using finalmq::IProtocolSessionPtr;
 using finalmq::ConnectionData;
@@ -59,7 +60,7 @@ using helloworld::Address;
 
 
 
-#define LOOP 10000
+#define LOOP 100000
 
 void triggerRequest(RemoteEntity& entityClient, PeerId peerId, const std::chrono::time_point<std::chrono::system_clock>& starttime, int index)
 {
@@ -121,7 +122,7 @@ int main()
     entityContainer.registerEntity(&entityClient);
 
     // register peer events to see when a remote entity connects or disconnects.
-    entityClient.registerPeerEvent([] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
+    entityClient.registerPeerEvent([] (PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, PeerEvent peerEvent, bool incoming) {
         streamInfo << "peer event " << peerEvent.toString();
     });
 
@@ -133,6 +134,7 @@ int main()
     // becomes available. Use the ConnectProperties to change the reconnect properties
     // (default is: try to connect every 5s forever till the server becomes available).
     IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:7777:headersize:protobuf");
+//    IProtocolSessionPtr sessionClient = entityContainer.connect("ipc://my_uds:headersize:protobuf");
 
     // connect entityClient to remote server entity "MyService" with the created TCP session.
     // The returned peerId identifies the peer entity.
@@ -184,41 +186,43 @@ int main()
 
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
-    // performance measurement of throughput
-    auto starttime = std::chrono::system_clock::now();
-    for (int i = 0; i < LOOP; ++i)
+    for (int i = 0; i < 10; ++i)
     {
-        // asynchronous request/reply
-        // A peer entity is been identified by its peerId.
-        // each request has its own lambda. The lambda is been called when the corresponding reply is received.
-        entityClient.requestReply<HelloReply>(peerId,
-                    HelloRequest{{ {"Bonnie","Parker",Sex::FEMALE,1910,{"somestreet", 12,76875,"Rowena","USA"}} }},
-                    [i, starttime] (PeerId peerId, Status status, const std::shared_ptr<HelloReply>& reply) {
-            if (reply)
-            {
-                if (i == LOOP-1)
+        // performance measurement of throughput
+        auto starttime = std::chrono::system_clock::now();
+        for (int i = 0; i < LOOP; ++i)
+        {
+            // asynchronous request/reply
+            // A peer entity is been identified by its peerId.
+            // each request has its own lambda. The lambda is been called when the corresponding reply is received.
+            entityClient.requestReply<HelloReply>(peerId,
+                        HelloRequest{{ {"Bonnie","Parker",Sex::FEMALE,1910,{"somestreet", 12,76875,"Rowena","USA"}} }},
+                        [i, starttime] (PeerId peerId, Status status, const std::shared_ptr<HelloReply>& reply) {
+                if (reply)
                 {
-                    auto now = std::chrono::system_clock::now();
-                    std::chrono::duration<double> dur = now - starttime;
-                    long long delta = static_cast<long long>(dur.count() * 1000);
-                    std::cout << "time for " << LOOP << " parallel requests: " << delta << "ms" << std::endl;
+                    if (i == LOOP-1)
+                    {
+                        auto now = std::chrono::system_clock::now();
+                        std::chrono::duration<double> dur = now - starttime;
+                        long long delta = static_cast<long long>(dur.count() * 1000);
+                        std::cout << "time for " << LOOP << " parallel requests: " << delta << "ms" << std::endl;
+                    }
                 }
-            }
-            else
-            {
-                std::cout << "REPLY error: " << status.toString() << std::endl;
-            }
-        });
+                else
+                {
+                    std::cout << "REPLY error: " << status.toString() << std::endl;
+                }
+            });
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(2500));
     }
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(4000));
-
     // performance measurement of latency
-    starttime = std::chrono::system_clock::now();
+    auto starttime = std::chrono::system_clock::now();
     triggerRequest(entityClient, peerId, starttime, 0);
 
     // wait 20s
-    std::this_thread::sleep_for(std::chrono::milliseconds(20000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(200000));
 
     // release the thread
     entityContainer.terminatePollerLoop();
