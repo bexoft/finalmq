@@ -121,7 +121,7 @@ bool ProtocolHttpServer::doesSupportMetainfo() const
 
 bool ProtocolHttpServer::doesSupportSession() const
 {
-    return true;;
+    return true;
 }
 
 bool ProtocolHttpServer::needsReply() const
