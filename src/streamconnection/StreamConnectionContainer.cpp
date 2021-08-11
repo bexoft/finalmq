@@ -475,12 +475,13 @@ void StreamConnectionContainer::handleReceive(const IStreamConnectionPrivatePtr&
     }
 #endif
 
+    bool ok = true;
     int maxloop = 5;
-    while (bytesToRead > 0)
+    while (bytesToRead > 0 && ok)
     {
-        connection->received(connection, socket, bytesToRead);
+        ok = connection->received(connection, socket, bytesToRead);
         maxloop--;
-        if (maxloop > 0)
+        if (maxloop > 0 && ok)
         {
             bytesToRead = socket->pendingRead();
 #ifdef USE_OPENSSL
@@ -497,7 +498,7 @@ void StreamConnectionContainer::handleReceive(const IStreamConnectionPrivatePtr&
     }
 
 #ifdef USE_OPENSSL
-    if (socket->isReadWhenWritable())
+    if (socket->isReadWhenWritable() && ok)
     {
         SocketDescriptorPtr sd = socket->getSocketDescriptor();
         assert(sd);

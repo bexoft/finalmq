@@ -50,12 +50,13 @@ static const std::string MESSAGE1_BUFFER = "Hello";
 class TestIntegrationStreamConnectionContainerSsl: public testing::Test
 {
 public:
-    void receivedServer(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead)
+    bool receivedServer(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead)
     {
         std::string message;
         message.resize(bytesToRead);
         socket->receive((char*)message.data(), message.size());
         m_messagesServer.push_back(std::move(message));
+        return true;
     }
 
 protected:

@@ -478,7 +478,7 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
                         else
                         {
                             m_state = STATE_CONTENT;
-                            m_message->resizeReceivePayload(m_contentLength);
+                            m_message->resizeReceiveBuffer(m_contentLength);
                         }
                         m_indexFilled = 0;
                         m_offsetRemaining += 2;
@@ -985,7 +985,7 @@ bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolC
 
 
 
-void ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
+bool ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
 {
     bool ok = true;
 
@@ -1097,10 +1097,7 @@ void ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, co
             reset();
         }
     }
-    else
-    {
-        m_connection->disconnect();
-    }
+    return ok;
 }
 
 

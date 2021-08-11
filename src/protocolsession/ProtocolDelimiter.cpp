@@ -196,7 +196,7 @@ void ProtocolDelimiter::moveOldProtocolState(IProtocol& /*protocolOld*/)
 
 
 
-void ProtocolDelimiter::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
+bool ProtocolDelimiter::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
 {
     std::string receiveBuffer;
     ssize_t sizeDelimiterPartial = m_delimiterPartial.size();
@@ -224,7 +224,7 @@ void ProtocolDelimiter::received(const IStreamConnectionPtr& /*connection*/, con
         {
             ssize_t pos = positions[0];
             IMessagePtr message = std::make_shared<ProtocolMessage>(0);
-            message->resizeReceivePayload(m_characterCounter + pos);
+            message->resizeReceiveBuffer(m_characterCounter + pos);
             m_characterCounter += bytesReceived;
             assert(m_characterCounter >= 0);
 
@@ -281,7 +281,7 @@ void ProtocolDelimiter::received(const IStreamConnectionPtr& /*connection*/, con
                 pos = positions[i];
                 message = std::make_shared<ProtocolMessage>(0);
                 ssize_t size = pos - m_indexStartBuffer;
-                message->resizeReceivePayload(size);
+                message->resizeReceiveBuffer(size);
                 memcpy(message->getReceivePayload().first, receiveBuffer.c_str() + m_indexStartBuffer + sizeDelimiterPartial, size);
                 m_characterCounter -= size + m_delimiter.size();
                 assert(m_characterCounter >= 0);
@@ -313,6 +313,7 @@ void ProtocolDelimiter::received(const IStreamConnectionPtr& /*connection*/, con
             }
         }
     }
+    return true;
 }
 
 

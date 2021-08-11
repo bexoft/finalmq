@@ -39,7 +39,7 @@ public:
 
     ProtocolMqtt5();
 
-    void receive(const SocketPtr& socket, int bytesToRead, std::deque<IMessagePtr>& messages);
+    bool receive(const SocketPtr& socket, int bytesToRead, std::deque<IMessagePtr>& messages);
 
 private:
     // IProtocol
@@ -56,7 +56,7 @@ private:
     virtual FuncCreateMessage getMessageFactory() const override;
     virtual bool sendMessage(IMessagePtr message) override;
     virtual void moveOldProtocolState(IProtocol& protocolOld) override;
-    virtual void received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) override;
+    virtual bool received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) override;
     virtual hybrid_ptr<IStreamConnectionCallback> connected(const IStreamConnectionPtr& connection) override;
     virtual void disconnected(const IStreamConnectionPtr& connection) override;
     virtual IMessagePtr pollReply(std::deque<IMessagePtr>&& messages) override;
@@ -65,26 +65,31 @@ private:
     {
         WAITFORHEADER,
         WAITFORLENGTH,
-        WAITFORPAYLOAD,
-        PAYLOADRECEIVED
+        WAITFORPAYLOAD
     };
 
     bool receiveHeader(const SocketPtr& socket, int& bytesToRead);
-    bool receiveLength(const SocketPtr& socket, int& bytesToRead);
-    void setPayloadSize(int sizePayload);
+    bool receiveRemainingSize(const SocketPtr& socket, int& bytesToRead);
+    void setPayloadSize();
     bool receivePayload(const SocketPtr& socket, int& bytesToRead);
+    void handlePayloadReceived();
+    bool processPayload();
     void clearState();
 
     std::weak_ptr<IProtocolCallback>    m_callback;
     IStreamConnectionPtr                m_connection;
 
-    std::string m_header;
+    char        m_header;
+    int         m_remainigSize = 0;
+    int         m_remainigSizeShift = 0;
     State       m_state = State::WAITFORHEADER;
     ssize_t     m_sizeCurrent = 0;
 
     ssize_t     m_sizePayload = 0;
     IMessagePtr m_message;
-    char*       m_payload = nullptr;
+    char*       m_buffer = nullptr;
+
+    std::deque<IMessagePtr>* m_messages = nullptr;
 };
 
 

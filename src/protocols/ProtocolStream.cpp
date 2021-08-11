@@ -118,22 +118,23 @@ void ProtocolStream::moveOldProtocolState(IProtocol& /*protocolOld*/)
 }
 
 
-void ProtocolStream::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
+bool ProtocolStream::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
 {
     IMessagePtr message = std::make_shared<ProtocolMessage>(0);
-    char* payload = message->resizeReceivePayload(bytesToRead);
+    char* payload = message->resizeReceiveBuffer(bytesToRead);
     int res = socket->receive(payload, bytesToRead);
     if (res > 0)
     {
         int bytesReceived = res;
         assert(bytesReceived <= bytesToRead);
-        message->resizeReceivePayload(bytesReceived);
+        message->resizeReceiveBuffer(bytesReceived);
         auto callback = m_callback.lock();
         if (callback)
         {
             callback->received(message);
         }
     }
+    return true;
 }
 
 

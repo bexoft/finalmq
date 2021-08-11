@@ -232,13 +232,18 @@ void ProtocolMessage::downsizeLastSendPayload(ssize_t newSize)
 }
 
 // for receive
+BufferRef ProtocolMessage::getReceiveHeader() const
+{
+    return { const_cast<char*>(m_receiveBuffer.data()), m_sizeHeader };
+}
+
 BufferRef ProtocolMessage::getReceivePayload() const
 {
-    return {const_cast<char*>(m_receiveBuffer.data() + m_sizeHeader), m_sizeReceiveBuffer - m_sizeHeader};
+    return { const_cast<char*>(m_receiveBuffer.data() + m_sizeHeader), m_sizeReceiveBuffer - m_sizeHeader };
 }
 
 
-char* ProtocolMessage::resizeReceivePayload(ssize_t size)
+char* ProtocolMessage::resizeReceiveBuffer(ssize_t size)
 {
     if (size > m_sizeReceiveBuffer)
     {

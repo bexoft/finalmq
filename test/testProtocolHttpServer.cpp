@@ -161,7 +161,7 @@ TEST_F(TestProtocolHttpServer, testReceivePayload)
     metainfo[ProtocolHttpServer::FMQ_PROTOCOL] = "HTTP/1.1";
 
     message->addMetainfo("Content-Length", "10");
-    message->resizeReceivePayload(10);
+    message->resizeReceiveBuffer(10);
     memcpy(message->getReceivePayload().first, "0123456789", 10);
     EXPECT_CALL(*m_mockCallback, received(MatcherReceiveMessage(message), _)).Times(1);
 
@@ -195,7 +195,7 @@ TEST_F(TestProtocolHttpServer, testReceiveSplitPayload)
     metainfo[ProtocolHttpServer::FMQ_PROTOCOL] = "HTTP/1.1";
 
     message->addMetainfo("Content-Length", "10");
-    message->resizeReceivePayload(10);
+    message->resizeReceiveBuffer(10);
     memcpy(message->getReceivePayload().first, "0123456789", 10);
     EXPECT_CALL(*m_mockCallback, received(MatcherReceiveMessage(message), _)).Times(1);
 
@@ -214,8 +214,8 @@ TEST_F(TestProtocolHttpServer, testReceivePayloadTooBig)
     int size1 = receiveBuffer1.size();
     m_protocol->setConnection(m_mockStreamConnection);
     EXPECT_CALL(*m_mockOperatingSystem, recv(_, _, size1, 0)).Times(1).WillOnce(DoAll(SetArrayArgument<1>(receiveBuffer1.data(), receiveBuffer1.data() + size1), Return(size1)));
-    EXPECT_CALL(*m_mockStreamConnection, disconnect()).Times(1);
-    m_protocol->received(nullptr, m_socket, size1);
+    bool ok = m_protocol->received(nullptr, m_socket, size1);
+    ASSERT_EQ(ok, false);
 }
 
 TEST_F(TestProtocolHttpServer, testReceiveSplitPayloadTooBig)
@@ -224,14 +224,15 @@ TEST_F(TestProtocolHttpServer, testReceiveSplitPayloadTooBig)
     int size1 = receiveBuffer1.size();
     m_protocol->setConnection(m_mockStreamConnection);
     EXPECT_CALL(*m_mockOperatingSystem, recv(_, _, size1, 0)).Times(1).WillOnce(DoAll(SetArrayArgument<1>(receiveBuffer1.data(), receiveBuffer1.data() + size1), Return(size1)));
-    EXPECT_CALL(*m_mockStreamConnection, disconnect()).Times(1);
-    m_protocol->received(nullptr, m_socket, size1);
+    bool ok = m_protocol->received(nullptr, m_socket, size1);
+    ASSERT_EQ(ok, true);
 
     EXPECT_CALL(*m_mockCallback, received(_, _)).Times(0);
 
     std::string receiveBuffer2 = "7890";
     int size2 = receiveBuffer2.size();
-    m_protocol->received(nullptr, m_socket, size2);
+    ok = m_protocol->received(nullptr, m_socket, size2);
+    ASSERT_EQ(ok, false);
 }
 
 

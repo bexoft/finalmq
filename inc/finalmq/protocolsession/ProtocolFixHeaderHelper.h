@@ -36,21 +36,20 @@ class SYMBOLEXP ProtocolFixHeaderHelper
 public:
     ProtocolFixHeaderHelper(int sizeHeader, std::function<int(const std::string& header)> funcGetPayloadSize);
 
-    void receive(const SocketPtr& socket, int bytesToRead, std::deque<IMessagePtr>& messages);
+    bool receive(const SocketPtr& socket, int bytesToRead, std::deque<IMessagePtr>& messages);
 
 private:
 
     enum class State
     {
         WAITFORHEADER,
-        HEADERRECEIVED,
-        WAITFORPAYLOAD,
-        PAYLOADRECEIVED
+        WAITFORPAYLOAD
     };
 
     bool receiveHeader(const SocketPtr& socket, int& bytesToRead);
     void setPayloadSize(int sizePayload);
     bool receivePayload(const SocketPtr& socket, int& bytesToRead);
+    void handlePayloadReceived();
     void clearState();
 
     std::string m_header;
@@ -59,7 +58,9 @@ private:
 
     ssize_t     m_sizePayload = 0;
     IMessagePtr m_message;
-    char*       m_payload = nullptr;
+    char*       m_buffer = nullptr;
+
+    std::deque<IMessagePtr>* m_messages = nullptr;
 
     std::function<int(const std::string& header)>   m_funcGetPayloadSize;
 };

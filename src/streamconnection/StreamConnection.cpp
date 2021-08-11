@@ -337,14 +337,20 @@ void StreamConnection::disconnected(const IStreamConnectionPtr& connection)
     }
 }
 
-void StreamConnection::received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead)
+bool StreamConnection::received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead)
 {
+    bool ok = true;
     auto callback = m_callback.lock();
     if (callback)
     {
 //        m_executor->addAction(std::bind(&IStreamConnectionCallback::received, callback, connection, socket, bytesToRead));
-        callback->received(connection, socket, bytesToRead);
+        ok = callback->received(connection, socket, bytesToRead);
+        if (!ok)
+        {
+            disconnect();
+        }
     }
+    return ok;
 }
 
 }   // namespace finalmq

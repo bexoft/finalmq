@@ -24,105 +24,129 @@
 #include "finalmq/protocols/ProtocolMqtt5.h"
 #include "finalmq/streamconnection/Socket.h"
 #include "finalmq/protocolsession/ProtocolMessage.h"
+#include "finalmq/protocolsession/ProtocolRegistry.h"
 
 namespace finalmq {
+
+static const ssize_t HEADERSIZE = 1;
+
+const int ProtocolMqtt5::PROTOCOL_ID = 5;
+const std::string ProtocolMqtt5::PROTOCOL_NAME = "mqtt5";
+
 
 ProtocolMqtt5::ProtocolMqtt5()
 {
 }
 
 
-void ProtocolMqtt5::receive(const SocketPtr& socket, int bytesToRead, std::deque<IMessagePtr>& messages)
+bool ProtocolMqtt5::receive(const SocketPtr& socket, int bytesToRead, std::deque<IMessagePtr>& messages)
 {
+    m_messages = &messages;
     bool ok = true;
-    while (bytesToRead > 0 && ok)
+    while ((bytesToRead > 0) && ok)
     {
         switch (m_state)
         {
         case State::WAITFORHEADER:
             ok = receiveHeader(socket, bytesToRead);
             break;
-        case State::HEADERRECEIVED:
-            {
-                assert(m_funcGetPayloadSize);
-                int sizePayload = m_funcGetPayloadSize(m_header);
-                setPayloadSize(sizePayload);
-            }
+        case State::WAITFORLENGTH:
+            ok = receiveRemainingSize(socket, bytesToRead);
             break;
         case State::WAITFORPAYLOAD:
             ok = receivePayload(socket, bytesToRead);
-            if (m_state == State::PAYLOADRECEIVED)
-            {
-                messages.push_back(m_message);
-                clearState();
-            }
             break;
         default:
             assert(false);
             break;
         }
     }
+    m_messages = nullptr;
+    return ok;
 }
 
 
 bool ProtocolMqtt5::receiveHeader(const SocketPtr& socket, int& bytesToRead)
 {
+    assert(bytesToRead >= 1);
     assert(m_state == State::WAITFORHEADER);
-    assert(m_sizeCurrent < static_cast<ssize_t>(m_header.size()));
     bool ret = false;
 
-    ssize_t sizeRead = m_header.size() - m_sizeCurrent;
-    if (bytesToRead < sizeRead)
+    int res = socket->receive(&m_header, HEADERSIZE);
+    if (res == HEADERSIZE)
     {
-        sizeRead = bytesToRead;
-    }
-    int res = socket->receive(const_cast<char*>(m_header.data() + m_sizeCurrent), static_cast<int>(sizeRead));
-    if (res > 0)
-    {
-        int bytesReceived = res;
-        assert(bytesReceived <= sizeRead);
-        bytesToRead -= bytesReceived;
-        assert(bytesToRead >= 0);
-        m_sizeCurrent += bytesReceived;
-        assert(m_sizeCurrent <= static_cast<ssize_t>(m_header.size()));
-        if (m_sizeCurrent == static_cast<ssize_t>(m_header.size()))
-        {
-            m_sizeCurrent = 0;
-            m_state = State::HEADERRECEIVED;
-        }
-        if (bytesReceived == sizeRead)
-        {
-            ret = true;
-        }
+        bytesToRead -= HEADERSIZE;
+        ret = true;
+        m_remainigSize = 0;
+        m_remainigSizeShift = 0;
+        m_state = State::WAITFORLENGTH;
     }
     return ret;
 }
 
-
-void ProtocolMqtt5::setPayloadSize(int sizePayload)
+bool ProtocolMqtt5::receiveRemainingSize(const SocketPtr& socket, int& bytesToRead)
 {
-    assert(m_state == State::HEADERRECEIVED);
-    assert(sizePayload >= 0);
-    m_sizePayload = sizePayload;
-    m_message = std::make_shared<ProtocolMessage>(0, m_header.size());
-    m_payload = m_message->resizeReceivePayload(m_header.size() + sizePayload);
-    m_state = State::WAITFORPAYLOAD;
+    assert(bytesToRead >= 1);
+    assert(m_state == State::WAITFORHEADER);
+    bool ok = true;
+    bool done = false;
+    while (bytesToRead > 1 && !done && ok)
+    {
+        ok = false;
+        if (m_remainigSizeShift <= 21)
+        {
+            char data;
+            int res = socket->receive(&data, 1);
+            if (res == 1)
+            {
+                ok = true;
+                bytesToRead -= 1;
+                m_remainigSize |= (data & 0x7f) << m_remainigSizeShift;
+                if ((data & 0x80) == 0)
+                {
+                    done = true;
+                    setPayloadSize();
+                }
+                m_remainigSizeShift += 7;
+            }
+        }
+    }
+
+    return ok;
+}
+
+
+void ProtocolMqtt5::setPayloadSize()
+{
+    assert(m_state == State::WAITFORLENGTH);
+    assert(m_remainigSize >= 0);
+    m_message = std::make_shared<ProtocolMessage>(0, HEADERSIZE);
+    m_buffer = m_message->resizeReceiveBuffer(HEADERSIZE + m_remainigSize);
+    m_buffer[0] = m_header;
+    if (m_remainigSize != 0)
+    {
+        m_state = State::WAITFORPAYLOAD;
+    }
+    else
+    {
+        handlePayloadReceived();
+    }
+    m_sizeCurrent = 0;
 }
 
 
 bool ProtocolMqtt5::receivePayload(const SocketPtr& socket, int& bytesToRead)
 {
     assert(m_state == State::WAITFORPAYLOAD);
-    assert(m_sizeCurrent < m_sizePayload);
-    bool ret = false;
+    assert(m_sizeCurrent < m_remainigSize);
+    bool ok = false;
 
-    ssize_t sizeRead = m_sizePayload - m_sizeCurrent;
+    ssize_t sizeRead = m_remainigSize - m_sizeCurrent;
     if (bytesToRead < sizeRead)
     {
         sizeRead = bytesToRead;
     }
-    memcpy(m_payload, m_header.data(), m_header.size());
-    int res = socket->receive(m_payload + m_header.size() + m_sizeCurrent, static_cast<int>(sizeRead));
+    int res = socket->receive(m_buffer + HEADERSIZE + m_sizeCurrent, static_cast<int>(sizeRead));
     if (res > 0)
     {
         int bytesReceived = res;
@@ -130,27 +154,46 @@ bool ProtocolMqtt5::receivePayload(const SocketPtr& socket, int& bytesToRead)
         bytesToRead -= bytesReceived;
         assert(bytesToRead >= 0);
         m_sizeCurrent += bytesReceived;
-        assert(m_sizeCurrent <= m_sizePayload);
-        if (m_sizeCurrent == m_sizePayload)
-        {
-            m_sizeCurrent = 0;
-            m_state = State::PAYLOADRECEIVED;
-        }
+        assert(m_sizeCurrent <= m_remainigSize);
         if (bytesReceived == sizeRead)
         {
-            ret = true;
+            ok = true;
+        }
+        if (m_sizeCurrent == m_remainigSize)
+        {
+            m_sizeCurrent = 0;
+            if (ok)
+            {
+                ok = processPayload();
+            }
+            if (ok)
+            {
+                handlePayloadReceived();
+            }
         }
     }
-    return ret;
+    return ok;
+}
+
+void ProtocolMqtt5::handlePayloadReceived()
+{
+    m_messages->push_back(m_message);
+    clearState();
+}
+
+
+bool ProtocolMqtt5::processPayload()
+{
+    return false;
 }
 
 
 void ProtocolMqtt5::clearState()
 {
-    assert(m_state == State::PAYLOADRECEIVED);
+    m_sizeCurrent = 0;
     m_sizePayload = 0;
     m_message = nullptr;
-    m_payload = nullptr;
+    m_buffer = nullptr;
     m_state = State::WAITFORHEADER;
 }
 
@@ -188,6 +231,7 @@ bool ProtocolMqtt5::doesSupportSession() const
 
 bool ProtocolMqtt5::needsReply() const 
 {
+    return false;
 }
 
 bool ProtocolMqtt5::isMultiConnectionSession() const 
@@ -205,7 +249,7 @@ bool ProtocolMqtt5::doesSupportFileTransfer() const
     return false;
 }
 
-FuncCreateMessage ProtocolMqtt5::getMessageFactory() const 
+IProtocol::FuncCreateMessage ProtocolMqtt5::getMessageFactory() const
 {
     return []() {
         return std::make_shared<ProtocolMessage>(PROTOCOL_ID);
@@ -214,14 +258,18 @@ FuncCreateMessage ProtocolMqtt5::getMessageFactory() const
 
 bool ProtocolMqtt5::sendMessage(IMessagePtr message) 
 {
+    return false;
 }
 
 void ProtocolMqtt5::moveOldProtocolState(IProtocol& protocolOld) 
 {
 }
 
-void ProtocolMqtt5::received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) 
+bool ProtocolMqtt5::received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) 
 {
+    std::deque<IMessagePtr> messages;
+    bool ok = receive(socket, bytesToRead, messages);
+    return ok;
 }
 
 hybrid_ptr<IStreamConnectionCallback> ProtocolMqtt5::connected(const IStreamConnectionPtr& connection) 

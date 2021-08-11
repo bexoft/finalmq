@@ -140,10 +140,10 @@ void ProtocolHeaderBinarySize::moveOldProtocolState(IProtocol& /*protocolOld*/)
 
 }
 
-void ProtocolHeaderBinarySize::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
+bool ProtocolHeaderBinarySize::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
 {
     std::deque<IMessagePtr> messages;
-    m_headerHelper.receive(socket, bytesToRead, messages);
+    bool ok = m_headerHelper.receive(socket, bytesToRead, messages);
     auto callback = m_callback.lock();
     if (callback)
     {
@@ -152,6 +152,7 @@ void ProtocolHeaderBinarySize::received(const IStreamConnectionPtr& /*connection
             callback->received(*it);
         }
     }
+    return ok;
 }
 
 

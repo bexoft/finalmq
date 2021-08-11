@@ -54,7 +54,7 @@ private:
     virtual FuncCreateMessage getMessageFactory() const override;
     virtual bool sendMessage(IMessagePtr message) override;
     virtual void moveOldProtocolState(IProtocol& protocolOld) override;
-    virtual void received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) override;
+    virtual bool received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) override;
     virtual hybrid_ptr<IStreamConnectionCallback> connected(const IStreamConnectionPtr& connection) override;
     virtual void disconnected(const IStreamConnectionPtr& connection) override;
     virtual IMessagePtr pollReply(std::deque<IMessagePtr>&& messages) override;
