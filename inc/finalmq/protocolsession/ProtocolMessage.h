@@ -68,7 +68,8 @@ private:
     // for receive
     virtual BufferRef getReceiveHeader() const override;
     virtual BufferRef getReceivePayload() const override;
-    virtual char* resizeReceiveBuffer(ssize_t size) override;
+    virtual char* resizeReceiveBuffer(ssize_t sizeHeader) override;
+    virtual void setHeaderSize(ssize_t header) override;
 
     // for the framework
     virtual const std::list<BufferRef>& getAllSendBuffers() const override;

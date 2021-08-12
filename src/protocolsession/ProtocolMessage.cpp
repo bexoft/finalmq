@@ -253,6 +253,10 @@ char* ProtocolMessage::resizeReceiveBuffer(ssize_t size)
     return const_cast<char*>(m_receiveBuffer.data());
 }
 
+void ProtocolMessage::setHeaderSize(ssize_t sizeHeader)
+{
+    m_sizeHeader = sizeHeader;
+}
 
 
 // for the framework

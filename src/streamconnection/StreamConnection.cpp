@@ -73,7 +73,7 @@ bool StreamConnection::sendMessage(const IMessagePtr& msg)
                     ++it;
                     bool last = (it == payloads.end());
                     int flags = last ? 0 : MSG_MORE;    // win32: MSG_PARTIAL
-                    int err = m_socketPrivate->send(payload.first, payload.second, flags);
+                    int err = m_socketPrivate->send(payload.first, static_cast<int>(payload.second), flags);
                     if (err != payload.second)
                     {
                         if (err < 0)
