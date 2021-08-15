@@ -32,6 +32,7 @@
 
 namespace finalmq {
 
+
 class SYMBOLEXP ProtocolMqtt5 : public IProtocol
 {
 public:
@@ -77,21 +78,27 @@ private:
     bool processPayload();
     void clearState();
 
-    bool handleConnect();
-    bool handleConnAck();
-    bool handlePublish();
-    bool handlePubAck();
-    bool handlePubRec();
-    bool handlePubRel();
-    bool handlePubComp();
-    bool handleSubscribe();
-    bool handleSubAck();
-    bool handleUnsubscribe();
-    bool handleUnsubAck();
-    bool handlePing();
-    bool handlePingResp();
-    bool handleDisconnect();
-    bool handleAuth();
+    struct MqttWillMessage;
+    struct MqttConnectData;
+    struct MqttConnAckData;
+    struct MqttPublishData;
+    struct MqttPubAckData;
+    struct MqttSubscribeEntry;
+    struct MqttSubscribeData;
+    struct MqttSubAckData;
+    struct MqttUnsubscribeData;
+    struct MqttDisconnectData;
+    struct MqttAuthData;
+
+    bool deserializeConnect(MqttConnectData& data);
+    bool deserializeConnAck(MqttConnAckData& data);
+    bool deserializePublish(MqttPublishData& data);
+    bool deserializePubAck(MqttPubAckData& data);
+    bool deserializeSubscribe(MqttSubscribeData& data);
+    bool deserializeSubAck(MqttSubAckData& data);
+    bool deserializeUnsubscribe(MqttUnsubscribeData& data);
+    bool deserializeDisconnect(MqttDisconnectData& data);
+    bool deserializeAuth(MqttAuthData& data);
 
     bool doesFit(int size) const;
     bool read1ByteNumber(unsigned int& number);
@@ -101,7 +108,7 @@ private:
     bool readString(std::string& str);
     bool readStringPair(std::string& key, std::string& value);
     bool readBinary(Bytes& value);
-    bool readProperties(Variant& props, Variant* userprops, IMessage::Metainfo* metainfo);
+    bool readProperties(std::unordered_map<unsigned int, Variant>& properties, std::unordered_map<std::string, std::string>& metainfo);
 
     std::weak_ptr<IProtocolCallback>    m_callback;
     IStreamConnectionPtr                m_connection;

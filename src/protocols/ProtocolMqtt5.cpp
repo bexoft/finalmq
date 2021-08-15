@@ -35,6 +35,208 @@ const int ProtocolMqtt5::PROTOCOL_ID = 5;
 const std::string ProtocolMqtt5::PROTOCOL_NAME = "mqtt5";
 
 
+//////////////////////////////////////////////////////////
+// Properties
+
+class MqttPropertyId
+{
+public:
+    enum Enum : std::int32_t {
+        Invalid = 0,
+        PayloadFormatIndicator = 1,    // Byte, PUBLISH, Will Properties
+        MessageExpiryInterval = 2,    // Four Byte Integer, PUBLISH, Will Properties
+        ContentType = 3,    // UTF-8 Encoded String, PUBLISH, Will Properties
+        ResponseTopic = 8,    // UTF-8 Encoded String, PUBLISH, Will Properties
+        CorrelationData = 9,    // Binary Data, PUBLISH, Will Properties
+        SubscriptionIdentifier = 11,   // Variable Byte Integer, PUBLISH, SUBSCRIBE
+        SessionExpiryInterval = 17,   // Four Byte Integer, CONNECT, CONNACK, DISCONNECT
+        AssignedClientIdentifier = 18,   // UTF-8 Encoded String, CONNACK
+        ServerKeepAlive = 19,   // Two Byte Integer, CONNACK
+        AuthenticationMethod = 21,   // UTF-8 Encoded String, CONNECT, CONNACK, AUTH
+        AuthenticationData = 22,   // Binary Data, CONNECT, CONNACK, AUTH
+        RequestProblemInformation = 23,   // Byte, CONNECT
+        WillDelayInterval = 24,   // Four Byte Integer, Will Properties
+        RequestResponseInformation = 25,   // Byte, CONNECT
+        ResponseInformation = 26,   // UTF-8 Encoded String, CONNACK
+        ServerReference = 28,   // UTF-8 Encoded String, CONNACK, DISCONNECT
+        ReasonString = 31,   // UTF-8 Encoded String, CONNACK, PUBACK, PUBREC, PUBREL, PUBCOMP, SUBACK, UNSUBACK, DISCONNECT, AUTH
+        ReceiveMaximum = 33,   // Two Byte Integer, CONNECT, CONNACK
+        TopicAliasMaximum = 34,   // Two Byte Integer, CONNECT, CONNACK
+        TopicAlias = 35,   // Two Byte Integer, PUBLISH
+        MaximumQoS = 36,   // Byte, CONNACK
+        RetainAvailable = 37,   // Byte, CONNACK
+        UserProperty = 38,   // UTF-8 String Pair, CONNECT, CONNACK, PUBLISH, Will Properties, PUBACK, PUBREC, PUBREL, PUBCOMP, SUBSCRIBE, SUBACK, UNSUBSCRIBE, UNSUBACK, DISCONNECT, AUTH
+        MaximumPacketSize = 39,   // Four Byte Integer, CONNECT, CONNACK
+        WildcardSubscriptionAvailable = 40,   // Byte, CONNACK
+        SubscriptionIdentifierAvailable = 41,   // Byte, CONNACK
+        SharedSubscriptionAvailable = 42,   // Byte, CONNACK
+    };
+
+    MqttPropertyId();
+    MqttPropertyId(Enum en);
+    operator const Enum& () const;
+    operator Enum& ();
+    const MqttPropertyId& operator =(Enum en);
+    const std::string& toString() const;
+    void fromString(const std::string& name);
+
+private:
+    Enum m_value = Invalid;
+    static const finalmq::EnumInfo _enumInfo;
+};
+
+
+MqttPropertyId::MqttPropertyId()
+{
+}
+MqttPropertyId::MqttPropertyId(Enum en)
+    : m_value(en)
+{
+}
+MqttPropertyId::operator const Enum& () const
+{
+    return m_value;
+}
+MqttPropertyId::operator Enum& ()
+{
+    return m_value;
+}
+const MqttPropertyId& MqttPropertyId::operator =(Enum en)
+{
+    m_value = en;
+    return *this;
+}
+const std::string& MqttPropertyId::toString() const
+{
+    return _enumInfo.getMetaEnum().getNameByValue(m_value);
+}
+void MqttPropertyId::fromString(const std::string& name)
+{
+    m_value = static_cast<Enum>(_enumInfo.getMetaEnum().getValueByName(name));
+}
+const finalmq::EnumInfo MqttPropertyId::_enumInfo = {
+    "private.MqttPropertyId", "", {
+        {"Invalid", 0, ""},
+        {"PayloadFormatIndicator", 1, ""},
+        {"ContentType", 3, ""},
+        {"ResponseTopic", 8, ""},
+        {"CorrelationData", 9, ""},
+        {"SubscriptionIdentifier", 11, ""},
+        {"AssignedClientIdentifier", 18, ""},
+        {"ServerKeepAlive", 19, ""},
+        {"AuthenticationMethod", 21, ""},
+        {"AuthenticationData", 22, ""},
+        {"RequestProblemInformation", 23, ""},
+        {"WillDelayInterval", 24, ""},
+        {"RequestResponseInformation", 25, ""},
+        {"ResponseInformation", 26, ""},
+        {"ServerReference", 28, ""},
+        {"ReasonString", 31, ""},
+        {"ReceiveMaximum", 33, ""},
+        {"TopicAliasMaximum", 34, ""},
+        {"TopicAlias", 35, ""},
+        {"MaximumQoS", 36, ""},
+        {"RetainAvailable", 37, ""},
+        {"UserProperty", 38, ""},
+        {"MaximumPacketSize", 39, ""},
+        {"WildcardSubscriptionAvailable", 40, ""},
+        {"SubscriptionIdentifierAvailable", 41, ""},
+        {"SharedSubscriptionAvailable", 42, ""},
+     }
+};
+
+
+#define TypeNone                         0
+#define TypeByte                         1
+#define TypeTwoByteInteger               2
+#define TypeFourByteInteger              3
+#define TypeVariableByteInteger          4
+#define TypeUTF8String                   5
+#define TypeUTF8StringPair               6
+#define TypeBinaryData                   7
+
+static const int PropertyType[] = {
+    TypeNone,                   //  0
+    TypeByte,                   //  1 PayloadFormatIndicator
+    TypeFourByteInteger,        //  2 MessageExpiryInterval
+    TypeUTF8String,             //  3 ContentType
+    TypeNone,                   //  4 
+    TypeNone,                   //  5
+    TypeNone,                   //  6
+    TypeNone,                   //  7
+    TypeUTF8String,             //  8 ResponseTopic
+    TypeBinaryData,             //  9 CorrelationData
+    TypeNone,                   // 10
+    TypeVariableByteInteger,    // 11 SubscriptionIdentifier
+    TypeNone,                   // 12
+    TypeNone,                   // 13
+    TypeNone,                   // 14
+    TypeNone,                   // 15
+    TypeNone,                   // 16
+    TypeFourByteInteger,        // 17 SessionExpiryInterval
+    TypeUTF8String,             // 18 AssignedClientIdentifier
+    TypeTwoByteInteger,         // 19 ServerKeepAlive
+    TypeNone,                   // 20
+    TypeUTF8String,             // 21 AuthenticationMethod
+    TypeBinaryData,             // 22 AuthenticationData
+    TypeByte,                   // 23 RequestProblemInformation
+    TypeFourByteInteger,        // 24 WillDelayInterval
+    TypeByte,                   // 25 RequestResponseInformation
+    TypeUTF8String,             // 26 ResponseInformation
+    TypeNone,                   // 27
+    TypeUTF8String,             // 28 ServerReference
+    TypeNone,                   // 29
+    TypeNone,                   // 30
+    TypeUTF8String,             // 31 ReasonString
+    TypeNone,                   // 32
+    TypeTwoByteInteger,         // 33 ReceiveMaximum
+    TypeTwoByteInteger,         // 34 TopicAliasMaximum
+    TypeTwoByteInteger,         // 35 TopicAlias
+    TypeByte,                   // 36 MaximumQoS
+    TypeByte,                   // 37 RetainAvailable
+    TypeUTF8StringPair,         // 38 UserProperty
+    TypeFourByteInteger,        // 39 MaximumPacketSize
+    TypeByte,                   // 40 WildcardSubscriptionAvailable
+    TypeByte,                   // 41 SubscriptionIdentifierAvailable
+    TypeByte,                   // 42 SharedSubscriptionAvailable
+};
+
+static int getPropertyType(int id)
+{
+    if (id > MqttPropertyId::Invalid && id <= MqttPropertyId::SharedSubscriptionAvailable)
+    {
+        return PropertyType[id];
+    }
+    return TypeNone;
+}
+///////////////////////////////////////////////////////////////////////////
+
+
+
+
+#define HEADER_Command(header)      (((header) & 0xf0) >> 4)
+#define HEADER_Dup(header)          (((header) & 0x08) >> 3)
+#define HEADER_QoS(header)          (((header) & 0x06) >> 1)
+#define HEADER_Retain(header)       (((header) & 0x01) >> 0)
+
+
+#define COMMAND_CONNECT         1       // Server <-  Client, Connection request
+#define COMMAND_CONNACK         2       // Server  -> Client, Connect acknowledgment
+#define COMMAND_PUBLISH         3       // Server <-> Client, Publish message
+#define COMMAND_PUBACK          4       // Server <-> Client, Publish acknowledgment(QoS 1)
+#define COMMAND_PUBREC          5       // Server <-> Client, Publish received(QoS 2 delivery part 1)
+#define COMMAND_PUBREL          6       // Server <-> Client, Publish release(QoS 2 delivery part 2)
+#define COMMAND_PUBCOMP         7       // Server <-> Client, Publish complete(QoS 2 delivery part 3)
+#define COMMAND_SUBSCRIBE       8       // Server <-  Client, Subscribe request
+#define COMMAND_SUBACK          9       // Server  -> Client, Subscribe acknowledgment
+#define COMMAND_UNSUBSCRIBE     10      // Server <-  Client, Unsubscribe request
+#define COMMAND_UNSUBACK        11      // Server  -> Client, Unsubscribe acknowledgment
+#define COMMAND_PING            12      // Server <-  Client, PING request
+#define COMMAND_PINGRESP        13      // Server  -> Client, PING response
+#define COMMAND_DISCONNECT      14      // Server <-> Client, Disconnect notification
+#define COMMAND_AUTH            15      // Server <-> Client, Authentication exchange
+
+
 ProtocolMqtt5::ProtocolMqtt5()
 {
 }
@@ -183,27 +385,485 @@ void ProtocolMqtt5::handlePayloadReceived()
 }
 
 
-#define HEADER_Command(header)      (((header) & 0xf0) >> 4)
-#define HEADER_Dup(header)          (((header) & 0x08) >> 3)
-#define HEADER_QoS(header)          (((header) & 0x06) >> 1)
-#define HEADER_Retain(header)       (((header) & 0x01) >> 0)
 
 
-#define COMMAND_CONNECT         1       // Server <-  Client, Connection request
-#define COMMAND_CONNACK         2       // Server  -> Client, Connect acknowledgment
-#define COMMAND_PUBLISH         3       // Server <-> Client, Publish message
-#define COMMAND_PUBACK          4       // Server <-> Client, Publish acknowledgment(QoS 1)
-#define COMMAND_PUBREC          5       // Server <-> Client, Publish received(QoS 2 delivery part 1)
-#define COMMAND_PUBREL          6       // Server <-> Client, Publish release(QoS 2 delivery part 2)
-#define COMMAND_PUBCOMP         7       // Server <-> Client, Publish complete(QoS 2 delivery part 3)
-#define COMMAND_SUBSCRIBE       8       // Server <-  Client, Subscribe request
-#define COMMAND_SUBACK          9       // Server  -> Client, Subscribe acknowledgment
-#define COMMAND_UNSUBSCRIBE     10      // Server <-  Client, Unsubscribe request
-#define COMMAND_UNSUBACK        11      // Server  -> Client, Unsubscribe acknowledgment
-#define COMMAND_PING            12      // Server <-  Client, PING request
-#define COMMAND_PINGRESP        13      // Server  -> Client, PING response
-#define COMMAND_DISCONNECT      14      // Server <-> Client, Disconnect notification
-#define COMMAND_AUTH            15      // Server <-> Client, Authentication exchange
+
+#define CF_UserName(flags)       (((flags) & 0x80) >> 7) 
+#define CF_Password(flags)       (((flags) & 0x40) >> 6) 
+#define CF_WillRetain(flags)     (((flags) & 0x20) >> 5) 
+#define CF_WillQoS(flags)        (((flags) & 0x18) >> 3) 
+#define CF_WillFlag(flags)       (((flags) & 0x04) >> 2) 
+#define CF_CleanStart(flags)     (((flags) & 0x02) >> 1) 
+
+
+struct ProtocolMqtt5::MqttWillMessage
+{
+    std::unordered_map<unsigned int, Variant> properties;
+    std::unordered_map<std::string, std::string> metainfo;
+    std::string topic;
+    Bytes payload;
+};
+struct ProtocolMqtt5::MqttConnectData
+{
+    std::string protocol;
+    unsigned int version = 0;
+    unsigned int connectFlags = 0;
+    unsigned int keepAlive = 0;
+    std::unordered_map<unsigned int, Variant> properties;
+    std::unordered_map<std::string, std::string> metainfo;
+    std::string clientId;
+    std::unique_ptr<MqttWillMessage> willMessage;
+    std::string username;
+    std::string password;
+};
+
+
+bool ProtocolMqtt5::deserializeConnect(MqttConnectData& data)
+{
+    // protocol
+    bool ok = readString(data.protocol);
+    if (!ok || data.protocol != "MQTT")
+    {
+        return false;
+    }
+
+    // version
+    ok = read1ByteNumber(data.version);
+    if (!ok || data.version != 5)
+    {
+        return false;
+    }
+
+    // connect flags
+    ok = read1ByteNumber(data.connectFlags);
+    if (!ok)
+    {
+        return false;
+    }
+
+    // keep alive
+    ok = read2ByteNumber(data.keepAlive);
+    if (!ok)
+    {
+        return false;
+    }
+
+    // properties
+    ok = readProperties(data.properties, data.metainfo);
+    if (!ok)
+    {
+        return false;
+    }
+
+    // client ID
+    std::string clientId;
+    ok = readString(data.clientId);
+    if (!ok)
+    {
+        return false;
+    }
+
+    // will message
+    if (CF_WillFlag(data.connectFlags))
+    {
+        data.willMessage = std::make_unique<MqttWillMessage>();
+        // will properties
+        ok = readProperties(data.willMessage->properties, data.willMessage->metainfo);
+        if (!ok)
+        {
+            return false;
+        }
+
+        // will topic
+        ok = readString(data.willMessage->topic);
+        if (!ok)
+        {
+            return false;
+        }
+
+        // will payload
+        ok = readBinary(data.willMessage->payload);
+        if (!ok)
+        {
+            return false;
+        }
+    }
+
+    // username
+    if (CF_UserName(data.connectFlags))
+    {
+        ok = readString(data.username);
+        if (!ok)
+        {
+            return false;
+        }
+    }
+
+    // password
+    if (CF_Password(data.connectFlags))
+    {
+        ok = readString(data.password);
+        if (!ok)
+        {
+            return false;
+        }
+    }
+
+    return ok;
+}
+
+
+
+struct ProtocolMqtt5::MqttConnAckData
+{
+    bool sessionPresent = false;
+    unsigned int reasoncode = 0;
+    std::unordered_map<unsigned int, Variant> properties;
+    std::unordered_map<std::string, std::string> metainfo;
+};
+
+#define CAF_SessionPresent(flags)   (((flags) & 0x01) >> 0)
+
+bool ProtocolMqtt5::deserializeConnAck(MqttConnAckData& data)
+{
+    // connect ack flags
+    unsigned int connackflags = 0;
+    bool ok = read1ByteNumber(connackflags);
+    if (!ok)
+    {
+        return false;
+    }
+    data.sessionPresent = CAF_SessionPresent(connackflags);
+
+    // reason code
+    ok = read1ByteNumber(data.reasoncode);
+    if (!ok)
+    {
+        return false;
+    }
+
+    // properties
+    ok = readProperties(data.properties, data.metainfo);
+    if (!ok)
+    {
+        return false;
+    }
+
+    return ok;
+}
+
+
+struct ProtocolMqtt5::MqttPublishData
+{
+    std::string topicName;
+    unsigned int packetId = 0;
+    std::unordered_map<unsigned int, Variant> properties;
+    std::unordered_map<std::string, std::string> metainfo;
+};
+
+bool ProtocolMqtt5::deserializePublish(MqttPublishData& data)
+{
+    // topic name
+    bool ok = readString(data.topicName);
+    if (!ok)
+    {
+        return false;
+    }
+
+    // packet identifier
+    if (HEADER_QoS(m_header) > 0)
+    {
+        ok = read2ByteNumber(data.packetId);
+        if (!ok)
+        {
+            return false;
+        }
+    }
+
+    // properties
+    ok = readProperties(data.properties, data.metainfo);
+    if (!ok)
+    {
+        return false;
+    }
+
+    return ok;
+}
+
+
+struct ProtocolMqtt5::MqttPubAckData
+{
+    unsigned int packetId = 0;
+    unsigned int reasoncode = 0;
+    std::unordered_map<unsigned int, Variant> properties;
+    std::unordered_map<std::string, std::string> metainfo;
+};
+
+bool ProtocolMqtt5::deserializePubAck(MqttPubAckData& data)
+{
+    // packet identifier
+    bool ok = read2ByteNumber(data.packetId);
+    if (!ok)
+    {
+        return false;
+    }
+
+    if (doesFit(1))
+    {
+        // reason code
+        ok = read1ByteNumber(data.reasoncode);
+        if (!ok)
+        {
+            return false;
+        }
+
+        // properties
+        ok = readProperties(data.properties, data.metainfo);
+        if (!ok)
+        {
+            return false;
+        }
+    }
+
+    return ok;
+}
+
+
+struct ProtocolMqtt5::MqttSubscribeEntry
+{
+    std::string topic;
+    unsigned int retainHandling = 0;
+    bool retainAsPublished = false;
+    bool noLocal = false;
+    unsigned int qos = 0;
+};
+
+struct ProtocolMqtt5::MqttSubscribeData
+{
+    unsigned int packetId = 0;
+    std::unordered_map<unsigned int, Variant> properties;
+    std::unordered_map<std::string, std::string> metainfo;
+    std::vector<MqttSubscribeEntry> subscriptions;
+};
+
+#define SO_RetainHandling(flags)        (((flags) & 0x30) >> 4)
+#define SO_RetainAsPublished(flags)     (((flags) & 0x08) >> 3)
+#define SO_NoLocal(flags)               (((flags) & 0x04) >> 2)
+#define SO_QoS(flags)                   (((flags) & 0x03) >> 0)
+
+
+bool ProtocolMqtt5::deserializeSubscribe(MqttSubscribeData& data)
+{
+    // packet identifier
+    bool ok = read2ByteNumber(data.packetId);
+    if (!ok)
+    {
+        return false;
+    }
+
+    // properties
+    ok = readProperties(data.properties, data.metainfo);
+    if (!ok)
+    {
+        return false;
+    }
+
+    // at least one subscription must be available
+    if (!doesFit(1))
+    {
+        return false;
+    }
+
+    while (doesFit(1))
+    {
+        MqttSubscribeEntry entry;
+        ok = readString(entry.topic);
+        if (!ok)
+        {
+            return false;
+        }
+        unsigned int option = 0;
+        ok = read1ByteNumber(option);
+        if (!ok)
+        {
+            return false;
+        }
+        entry.retainHandling = SO_RetainHandling(option);
+        entry.retainAsPublished = SO_RetainAsPublished(option);
+        entry.noLocal = SO_NoLocal(option);
+        entry.qos = SO_QoS(option);
+
+        data.subscriptions.emplace_back(std::move(entry));
+    }
+
+    return ok;
+}
+
+struct ProtocolMqtt5::MqttSubAckData
+{
+    unsigned int packetId = 0;
+    std::unordered_map<unsigned int, Variant> properties;
+    std::unordered_map<std::string, std::string> metainfo;
+    std::vector<unsigned int> reasoncodes;
+};
+
+bool ProtocolMqtt5::deserializeSubAck(MqttSubAckData& data)
+{
+    // packet identifier
+    bool ok = read2ByteNumber(data.packetId);
+    if (!ok)
+    {
+        return false;
+    }
+
+    // properties
+    ok = readProperties(data.properties, data.metainfo);
+    if (!ok)
+    {
+        return false;
+    }
+
+    // at least one ack must be available
+    if (!doesFit(1))
+    {
+        return false;
+    }
+
+    while (doesFit(1))
+    {
+        data.reasoncodes.push_back(-1);
+        ok = read1ByteNumber(data.reasoncodes.back());
+        if (!ok)
+        {
+            return false;
+        }
+    }
+
+    return ok;
+}
+
+
+struct ProtocolMqtt5::MqttUnsubscribeData
+{
+    unsigned int packetId = 0;
+    std::unordered_map<unsigned int, Variant> properties;
+    std::unordered_map<std::string, std::string> metainfo;
+    std::vector<std::string> topics;
+};
+
+
+
+bool ProtocolMqtt5::deserializeUnsubscribe(MqttUnsubscribeData& data)
+{
+    // packet identifier
+    bool ok = read2ByteNumber(data.packetId);
+    if (!ok)
+    {
+        return false;
+    }
+
+    // properties
+    ok = readProperties(data.properties, data.metainfo);
+    if (!ok)
+    {
+        return false;
+    }
+
+    // at least one unsubscription must be available
+    if (!doesFit(1))
+    {
+        return false;
+    }
+
+    while (doesFit(1))
+    {
+        std::string topic;
+        ok = readString(topic);
+        if (!ok)
+        {
+            return false;
+        }
+        data.topics.emplace_back(std::move(topic));
+    }
+
+    return ok;
+}
+
+
+
+
+struct ProtocolMqtt5::MqttDisconnectData
+{
+    unsigned int reasoncode = 0;
+    std::unordered_map<unsigned int, Variant> properties;
+    std::unordered_map<std::string, std::string> metainfo;
+};
+
+
+
+bool ProtocolMqtt5::deserializeDisconnect(MqttDisconnectData& data)
+{
+    bool ok = true;
+
+    if (doesFit(1))
+    {
+        // reason code
+        ok = read2ByteNumber(data.reasoncode);
+        if (!ok)
+        {
+            return false;
+        }
+
+        // properties
+        ok = readProperties(data.properties, data.metainfo);
+        if (!ok)
+        {
+            return false;
+        }
+    }
+
+    return ok;
+}
+
+
+
+struct ProtocolMqtt5::MqttAuthData
+{
+    unsigned int reasoncode = 0;
+    std::unordered_map<unsigned int, Variant> properties;
+    std::unordered_map<std::string, std::string> metainfo;
+};
+
+
+
+bool ProtocolMqtt5::deserializeAuth(MqttAuthData& data)
+{
+    bool ok = true;
+
+    if (doesFit(1))
+    {
+        // reason code
+        ok = read2ByteNumber(data.reasoncode);
+        if (!ok)
+        {
+            return false;
+        }
+
+        // properties
+        ok = readProperties(data.properties, data.metainfo);
+        if (!ok)
+        {
+            return false;
+        }
+    }
+
+    return ok;
+}
+
+
+
+
+
 
 bool ProtocolMqtt5::processPayload()
 {
@@ -214,49 +874,86 @@ bool ProtocolMqtt5::processPayload()
     switch (command)
     {
     case COMMAND_CONNECT:
-        ok = handleConnect();
+        {
+            MqttConnectData data;
+            ok = deserializeConnect(data);
+        }
         break;
     case COMMAND_CONNACK:
-        ok = handleConnAck();
+        {
+            MqttConnAckData data;
+            ok = deserializeConnAck(data);
+        }
         break;
     case COMMAND_PUBLISH:
-        ok = handlePublish();
+        {
+            MqttPublishData data;
+            ok = deserializePublish(data);
+        }
         break;
     case COMMAND_PUBACK:
-        ok = handlePubAck();
+        {
+            MqttPubAckData data;
+            ok = deserializePubAck(data);
+        }
         break;
     case COMMAND_PUBREC:
-        ok = handlePubRec();
+        {
+            MqttPubAckData data;
+            ok = deserializePubAck(data);
+        }
         break;
     case COMMAND_PUBREL:
-        ok = handlePubRel();
+        {
+            MqttPubAckData data;
+            ok = deserializePubAck(data);
+        }
         break;
     case COMMAND_PUBCOMP:
-        ok = handlePubComp();
+        {
+            MqttPubAckData data;
+            ok = deserializePubAck(data);
+        }
         break;
     case COMMAND_SUBSCRIBE:
-        ok = handleSubscribe();
+        {
+            MqttSubscribeData data;
+            ok = deserializeSubscribe(data);
+        }
         break;
     case COMMAND_SUBACK:
-        ok = handleSubAck();
+        {
+            MqttSubAckData data;
+            ok = deserializeSubAck(data);
+        }
         break;
     case COMMAND_UNSUBSCRIBE:
-        ok = handleUnsubscribe();
+        {
+            MqttUnsubscribeData data;
+            ok = deserializeUnsubscribe(data);
+        }
         break;
     case COMMAND_UNSUBACK:
-        ok = handleUnsubAck();
+        {
+            MqttSubAckData data;
+            ok = deserializeSubAck(data);
+        }
         break;
     case COMMAND_PING:
-        ok = handlePing();
         break;
     case COMMAND_PINGRESP:
-        ok = handlePingResp();
         break;
     case COMMAND_DISCONNECT:
-        ok = handleDisconnect();
+        {
+            MqttDisconnectData data;
+            ok = deserializeDisconnect(data);
+        }
         break;
     case COMMAND_AUTH:
-        ok = handleAuth();
+        {
+            MqttAuthData data;
+            ok = deserializeAuth(data);
+        }
         break;
     default:
         break;
@@ -267,321 +964,9 @@ bool ProtocolMqtt5::processPayload()
 
 
 
-const std::string MQTT_CONNECTFLAGS = "connflags";
-const std::string MQTT_MQTT = "mqtt";
-const std::string MQTT_PROPS = "props";
-const std::string MQTT_WILLMESSAGE = "willmessage";
-const std::string MQTT_METAINFO = "metainfo";
-const std::string MQTT_KEEPALIVE = "keepalive";
-const std::string MQTT_CLIENTID = "clientid";
-const std::string MQTT_WILLTOPIC = "willtopic";
-const std::string MQTT_WILLPAYLOAD = "willpayload";
-const std::string MQTT_USERNAME = "username";
-const std::string MQTT_PASSWORD = "password";
-
-#define CF_UserName(flags)       (((flags) & 0x80) >> 7) 
-#define CF_Password(flags)       (((flags) & 0x40) >> 6) 
-#define CF_WillRetain(flags)     (((flags) & 0x20) >> 5) 
-#define CF_WillQoS(flags)        (((flags) & 0x18) >> 3) 
-#define CF_WillFlag(flags)       (((flags) & 0x04) >> 2) 
-#define CF_CleanStart(flags)     (((flags) & 0x02) >> 1) 
 
 
-bool ProtocolMqtt5::handleConnect()
-{
-    Variant& controlData = m_message->getControlData();
-    controlData = VariantStruct({ {MQTT_MQTT, VariantStruct({{MQTT_PROPS, VariantStruct()}, {MQTT_WILLMESSAGE, VariantStruct({{MQTT_PROPS, VariantStruct()},{MQTT_METAINFO, VariantStruct()}})}})} });
-    Variant* p = controlData.getVariant(MQTT_MQTT);
-    assert(p);
-    Variant& controlDataMqtt = *p;
 
-    // protocol
-    std::string protocol;
-    bool ok = readString(protocol);
-    if (!ok || protocol != "MQTT")
-    {
-        return false;
-    }
-
-    // version
-    unsigned int version = 0;
-    ok = read1ByteNumber(version);
-    if (!ok || version != 5)
-    {
-        return false;
-    }
-
-    // connect flags
-    unsigned int connectFlags = 0;
-    ok = read1ByteNumber(connectFlags);
-    if (!ok)
-    {
-        return false;
-    }
-    controlDataMqtt.add(MQTT_CONNECTFLAGS, connectFlags);
-
-    // keep alive
-    unsigned int keepAlive = 0;
-    ok = read2ByteNumber(keepAlive);
-    if (!ok)
-    {
-        return false;
-    }
-    controlDataMqtt.add(MQTT_KEEPALIVE, keepAlive);
-
-    // properties
-    p = controlDataMqtt.getVariant(MQTT_PROPS);
-    assert(p);
-    Variant& props = *p;
-    ok = readProperties(props, nullptr, &m_message->getAllMetainfo());
-    if (!ok)
-    {
-        return false;
-    }
-
-    m_message->setHeaderSize(m_indexRead);
-
-    // client ID
-    std::string clientId;
-    ok = readString(clientId);
-    if (!ok)
-    {
-        return false;
-    }
-    controlDataMqtt.add(MQTT_CLIENTID, clientId);
-
-    // will message
-    if (CF_WillFlag(connectFlags))
-    {
-        // will properties
-        p = controlDataMqtt.getVariant(MQTT_WILLMESSAGE);
-        assert(p);
-        Variant& willMessage = *p;
-        p = willMessage.getVariant(MQTT_PROPS);
-        assert(p);
-        Variant& willprops = *p;
-        p = willMessage.getVariant(MQTT_METAINFO);
-        assert(p);
-        Variant& willmetainfo = *p;
-        ok = readProperties(willprops, &willmetainfo, nullptr);
-        if (!ok)
-        {
-            return false;
-        }
-
-        // will topic
-        std::string willTopic;
-        ok = readString(willTopic);
-        if (!ok)
-        {
-            return false;
-        }
-        willMessage.add(MQTT_WILLTOPIC, willTopic);
-
-        // will payload
-        std::string willPayload;
-        ok = readString(willPayload);
-        if (!ok)
-        {
-            return false;
-        }
-        willMessage.add(MQTT_WILLPAYLOAD, willPayload);
-    }
-
-    // username
-    if (CF_UserName(connectFlags))
-    {
-        std::string username;
-        ok = readString(username);
-        if (!ok)
-        {
-            return false;
-        }
-        controlDataMqtt.add(MQTT_USERNAME, username);
-    }
-
-    // password
-    if (CF_Password(connectFlags))
-    {
-        std::string password;
-        ok = readString(password);
-        if (!ok)
-        {
-            return false;
-        }
-        controlDataMqtt.add(MQTT_USERNAME, password);
-    }
-
-    return ok;
-}
-
-
-static const std::string MQTT_CONNACKFLAGS  = "connackflags";
-static const std::string MQTT_REASONCODE    = "reasoncode";
-
-#define CAF_SessionPresent(flags)   (((flags) & 0x01) >> 0)
-
-bool ProtocolMqtt5::handleConnAck()
-{
-    Variant& controlData = m_message->getControlData();
-    controlData = VariantStruct({ {MQTT_MQTT, VariantStruct({{MQTT_PROPS, VariantStruct()} })} });
-    Variant* p = controlData.getVariant(MQTT_MQTT);
-    assert(p);
-    Variant& controlDataMqtt = *p;
-
-    // connect ack flags
-    unsigned int connackflags;
-    bool ok = read1ByteNumber(connackflags);
-    if (!ok)
-    {
-        return false;
-    }
-    controlDataMqtt.add(MQTT_CONNACKFLAGS, connackflags);
-
-    // reason code
-    unsigned int reasoncode = 0;
-    ok = read1ByteNumber(reasoncode);
-    if (!ok)
-    {
-        return false;
-    }
-    controlDataMqtt.add(MQTT_REASONCODE, reasoncode);
-
-    // properties
-    p = controlDataMqtt.getVariant(MQTT_PROPS);
-    assert(p);
-    Variant& props = *p;
-    ok = readProperties(props, nullptr, &m_message->getAllMetainfo());
-    if (!ok)
-    {
-        return false;
-    }
-
-    m_message->setHeaderSize(m_indexRead);
-
-    return ok;
-}
-
-static const std::string MQTT_TOPICNAME = "topicname";
-static const std::string MQTT_PACKETID  = "packetid";
-
-
-bool ProtocolMqtt5::handlePublish()
-{
-    Variant& controlData = m_message->getControlData();
-    controlData = VariantStruct({ {MQTT_MQTT, VariantStruct({{MQTT_PROPS, VariantStruct()} })} });
-    Variant* p = controlData.getVariant(MQTT_MQTT);
-    assert(p);
-    Variant& controlDataMqtt = *p;
-
-    // topic name
-    std::string topicName;
-    bool ok = readString(topicName);
-    if (!ok)
-    {
-        return false;
-    }
-    controlDataMqtt.add(MQTT_TOPICNAME, topicName);
-
-
-    // packet identifier
-    if (HEADER_QoS(m_header) > 0)
-    {
-        unsigned int packetId = 0;
-        ok = read2ByteNumber(packetId);
-        if (!ok)
-        {
-            return false;
-        }
-        controlDataMqtt.add(MQTT_PACKETID, packetId);
-    }
-
-    // properties
-    p = controlDataMqtt.getVariant(MQTT_PROPS);
-    assert(p);
-    Variant& props = *p;
-    ok = readProperties(props, nullptr, &m_message->getAllMetainfo());
-    if (!ok)
-    {
-        return false;
-    }
-
-    m_message->setHeaderSize(m_indexRead);
-
-    return ok;
-}
-
-bool ProtocolMqtt5::handlePubAck()
-{
-    bool ok = false;
-    return ok;
-}
-
-bool ProtocolMqtt5::handlePubRec()
-{
-    bool ok = false;
-    return ok;
-}
-
-bool ProtocolMqtt5::handlePubRel()
-{
-    bool ok = false;
-    return ok;
-}
-
-bool ProtocolMqtt5::handlePubComp()
-{
-    bool ok = false;
-    return ok;
-}
-
-bool ProtocolMqtt5::handleSubscribe()
-{
-    bool ok = false;
-    return ok;
-}
-
-bool ProtocolMqtt5::handleSubAck()
-{
-    bool ok = false;
-    return ok;
-}
-
-bool ProtocolMqtt5::handleUnsubscribe()
-{
-    bool ok = false;
-    return ok;
-}
-
-bool ProtocolMqtt5::handleUnsubAck()
-{
-    bool ok = false;
-    return ok;
-}
-
-bool ProtocolMqtt5::handlePing()
-{
-    bool ok = false;
-    return ok;
-}
-
-bool ProtocolMqtt5::handlePingResp()
-{
-    bool ok = false;
-    return ok;
-}
-
-bool ProtocolMqtt5::handleDisconnect()
-{
-    bool ok = false;
-    return ok;
-}
-
-bool ProtocolMqtt5::handleAuth()
-{
-    bool ok = false;
-    return ok;
-}
 
 bool ProtocolMqtt5::doesFit(int size) const
 {
@@ -708,180 +1093,9 @@ bool ProtocolMqtt5::readBinary(Bytes& value)
 
 
 
-class MqttPropertyId
-{
-public:
-    enum Enum : std::int32_t {
-        Invalid                         = 0,
-        PayloadFormatIndicator          = 1,    // Byte, PUBLISH, Will Properties
-        MessageExpiryInterval           = 2,    // Four Byte Integer, PUBLISH, Will Properties
-        ContentType                     = 3,    // UTF-8 Encoded String, PUBLISH, Will Properties
-        ResponseTopic                   = 8,    // UTF-8 Encoded String, PUBLISH, Will Properties
-        CorrelationData                 = 9,    // Binary Data, PUBLISH, Will Properties
-        SubscriptionIdentifier          = 11,   // Variable Byte Integer, PUBLISH, SUBSCRIBE
-        SessionExpiryInterval           = 17,   // Four Byte Integer, CONNECT, CONNACK, DISCONNECT
-        AssignedClientIdentifier        = 18,   // UTF-8 Encoded String, CONNACK
-        ServerKeepAlive                 = 19,   // Two Byte Integer, CONNACK
-        AuthenticationMethod            = 21,   // UTF-8 Encoded String, CONNECT, CONNACK, AUTH
-        AuthenticationData              = 22,   // Binary Data, CONNECT, CONNACK, AUTH
-        RequestProblemInformation       = 23,   // Byte, CONNECT
-        WillDelayInterval               = 24,   // Four Byte Integer, Will Properties
-        RequestResponseInformation      = 25,   // Byte, CONNECT
-        ResponseInformation             = 26,   // UTF-8 Encoded String, CONNACK
-        ServerReference                 = 28,   // UTF-8 Encoded String, CONNACK, DISCONNECT
-        ReasonString                    = 31,   // UTF-8 Encoded String, CONNACK, PUBACK, PUBREC, PUBREL, PUBCOMP, SUBACK, UNSUBACK, DISCONNECT, AUTH
-        ReceiveMaximum                  = 33,   // Two Byte Integer, CONNECT, CONNACK
-        TopicAliasMaximum               = 34,   // Two Byte Integer, CONNECT, CONNACK
-        TopicAlias                      = 35,   // Two Byte Integer, PUBLISH
-        MaximumQoS                      = 36,   // Byte, CONNACK
-        RetainAvailable                 = 37,   // Byte, CONNACK
-        UserProperty                    = 38,   // UTF-8 String Pair, CONNECT, CONNACK, PUBLISH, Will Properties, PUBACK, PUBREC, PUBREL, PUBCOMP, SUBSCRIBE, SUBACK, UNSUBSCRIBE, UNSUBACK, DISCONNECT, AUTH
-        MaximumPacketSize               = 39,   // Four Byte Integer, CONNECT, CONNACK
-        WildcardSubscriptionAvailable   = 40,   // Byte, CONNACK
-        SubscriptionIdentifierAvailable = 41,   // Byte, CONNACK
-        SharedSubscriptionAvailable     = 42,   // Byte, CONNACK
-    };
-
-    MqttPropertyId();
-    MqttPropertyId(Enum en);
-    operator const Enum& () const;
-    operator Enum& ();
-    const MqttPropertyId& operator =(Enum en);
-    const std::string& toString() const;
-    void fromString(const std::string& name);
-
-private:
-    Enum m_value = Invalid;
-    static const finalmq::EnumInfo _enumInfo;
-};
 
 
-MqttPropertyId::MqttPropertyId()
-{
-}
-MqttPropertyId::MqttPropertyId(Enum en)
-    : m_value(en)
-{
-}
-MqttPropertyId::operator const Enum& () const
-{
-    return m_value;
-}
-MqttPropertyId::operator Enum& ()
-{
-    return m_value;
-}
-const MqttPropertyId& MqttPropertyId::operator =(Enum en)
-{
-    m_value = en;
-    return *this;
-}
-const std::string& MqttPropertyId::toString() const
-{
-    return _enumInfo.getMetaEnum().getNameByValue(m_value);
-}
-void MqttPropertyId::fromString(const std::string& name)
-{
-    m_value = static_cast<Enum>(_enumInfo.getMetaEnum().getValueByName(name));
-}
-const finalmq::EnumInfo MqttPropertyId::_enumInfo = {
-    "private.MqttPropertyId", "", {
-        {"Invalid", 0, ""},
-        {"PayloadFormatIndicator", 1, ""},
-        {"ContentType", 3, ""},
-        {"ResponseTopic", 8, ""},
-        {"CorrelationData", 9, ""},
-        {"SubscriptionIdentifier", 11, ""},
-        {"AssignedClientIdentifier", 18, ""},
-        {"ServerKeepAlive", 19, ""},
-        {"AuthenticationMethod", 21, ""},
-        {"AuthenticationData", 22, ""},
-        {"RequestProblemInformation", 23, ""},
-        {"WillDelayInterval", 24, ""},
-        {"RequestResponseInformation", 25, ""},
-        {"ResponseInformation", 26, ""},
-        {"ServerReference", 28, ""},
-        {"ReasonString", 31, ""},
-        {"ReceiveMaximum", 33, ""},
-        {"TopicAliasMaximum", 34, ""},
-        {"TopicAlias", 35, ""},
-        {"MaximumQoS", 36, ""},
-        {"RetainAvailable", 37, ""},
-        {"UserProperty", 38, ""},
-        {"MaximumPacketSize", 39, ""},
-        {"WildcardSubscriptionAvailable", 40, ""},
-        {"SubscriptionIdentifierAvailable", 41, ""},
-        {"SharedSubscriptionAvailable", 42, ""},
-     }
-};
-
-
-#define TypeNone                         0
-#define TypeByte                         1
-#define TypeTwoByteInteger               2
-#define TypeFourByteInteger              3
-#define TypeVariableByteInteger          4
-#define TypeUTF8String                   5
-#define TypeUTF8StringPair               6
-#define TypeBinaryData                   7
-
-static const int PropertyType[] = {
-    TypeNone,                   //  0
-    TypeByte,                   //  1 PayloadFormatIndicator
-    TypeFourByteInteger,        //  2 MessageExpiryInterval
-    TypeUTF8String,             //  3 ContentType
-    TypeNone,                   //  4 
-    TypeNone,                   //  5
-    TypeNone,                   //  6
-    TypeNone,                   //  7
-    TypeUTF8String,             //  8 ResponseTopic
-    TypeBinaryData,             //  9 CorrelationData
-    TypeNone,                   // 10
-    TypeVariableByteInteger,    // 11 SubscriptionIdentifier
-    TypeNone,                   // 12
-    TypeNone,                   // 13
-    TypeNone,                   // 14
-    TypeNone,                   // 15
-    TypeNone,                   // 16
-    TypeFourByteInteger,        // 17 SessionExpiryInterval
-    TypeUTF8String,             // 18 AssignedClientIdentifier
-    TypeTwoByteInteger,         // 19 ServerKeepAlive
-    TypeNone,                   // 20
-    TypeUTF8String,             // 21 AuthenticationMethod
-    TypeBinaryData,             // 22 AuthenticationData
-    TypeByte,                   // 23 RequestProblemInformation
-    TypeFourByteInteger,        // 24 WillDelayInterval
-    TypeByte,                   // 25 RequestResponseInformation
-    TypeUTF8String,             // 26 ResponseInformation
-    TypeNone,                   // 27
-    TypeUTF8String,             // 28 ServerReference
-    TypeNone,                   // 29
-    TypeNone,                   // 30
-    TypeUTF8String,             // 31 ReasonString
-    TypeNone,                   // 32
-    TypeTwoByteInteger,         // 33 ReceiveMaximum
-    TypeTwoByteInteger,         // 34 TopicAliasMaximum
-    TypeTwoByteInteger,         // 35 TopicAlias
-    TypeByte,                   // 36 MaximumQoS
-    TypeByte,                   // 37 RetainAvailable
-    TypeUTF8StringPair,         // 38 UserProperty
-    TypeFourByteInteger,        // 39 MaximumPacketSize
-    TypeByte,                   // 40 WildcardSubscriptionAvailable
-    TypeByte,                   // 41 SubscriptionIdentifierAvailable
-    TypeByte,                   // 42 SharedSubscriptionAvailable
-};
-
-static int getPropertyType(int id)
-{
-    if (id > MqttPropertyId::Invalid && id <= MqttPropertyId::SharedSubscriptionAvailable)
-    {
-        return PropertyType[id];
-    }
-    return TypeNone;
-}
-
-
-bool ProtocolMqtt5::readProperties(Variant& props, Variant* userprops, IMessage::Metainfo* metainfo)
+bool ProtocolMqtt5::readProperties(std::unordered_map<unsigned int, Variant>& properties, std::unordered_map<std::string, std::string>& metainfo)
 {
     unsigned int size = 0;
     bool ok = readVarByteNumber(size);
@@ -921,7 +1135,7 @@ bool ProtocolMqtt5::readProperties(Variant& props, Variant* userprops, IMessage:
                     ok = read1ByteNumber(value);
                     if (ok)
                     {
-                        props.add(propertyId.toString(), value);
+                        properties[propertyId] = value;
                     }
                 }
                 break;
@@ -931,7 +1145,7 @@ bool ProtocolMqtt5::readProperties(Variant& props, Variant* userprops, IMessage:
                     ok = read2ByteNumber(value);
                     if (ok)
                     {
-                        props.add(propertyId.toString(), value);
+                        properties[propertyId] = value;
                     }
                 }
                 break;
@@ -941,7 +1155,7 @@ bool ProtocolMqtt5::readProperties(Variant& props, Variant* userprops, IMessage:
                     ok = read4ByteNumber(value);
                     if (ok)
                     {
-                        props.add(propertyId.toString(), value);
+                        properties[propertyId] = value;
                     }
                 }
                 break;
@@ -951,7 +1165,7 @@ bool ProtocolMqtt5::readProperties(Variant& props, Variant* userprops, IMessage:
                     ok = readVarByteNumber(value);
                     if (ok)
                     {
-                        props.add(propertyId.toString(), value);
+                        properties[propertyId] = value;
                     }
                 }
                 break;
@@ -961,7 +1175,7 @@ bool ProtocolMqtt5::readProperties(Variant& props, Variant* userprops, IMessage:
                     ok = readString(value);
                     if (ok)
                     {
-                        props.add(propertyId.toString(), std::move(value));
+                        properties[propertyId] = value;
                     }
                 }
                 break;
@@ -974,14 +1188,7 @@ bool ProtocolMqtt5::readProperties(Variant& props, Variant* userprops, IMessage:
                     {
                         if (propertyId == MqttPropertyId::UserProperty)
                         {
-                            if (metainfo)
-                            {
-                                (*metainfo)[std::move(key)] = std::move(value);
-                            }
-                            if (userprops)
-                            {
-                                userprops->add(std::move(key), std::move(value));
-                            }
+                            metainfo[std::move(key)] = std::move(value);
                         }
                     }
                 }
@@ -992,7 +1199,7 @@ bool ProtocolMqtt5::readProperties(Variant& props, Variant* userprops, IMessage:
                     ok = readBinary(value);
                     if (ok)
                     {
-                        props.add(propertyId.toString(), std::move(value));
+                        properties[propertyId] = value;
                     }
                 }
                 break;
