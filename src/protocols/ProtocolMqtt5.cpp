@@ -388,13 +388,19 @@ void ProtocolMqtt5::handlePayloadReceived()
 
 
 
-#define CF_UserName(flags)       (((flags) & 0x80) >> 7) 
-#define CF_Password(flags)       (((flags) & 0x40) >> 6) 
-#define CF_WillRetain(flags)     (((flags) & 0x20) >> 5) 
-#define CF_WillQoS(flags)        (((flags) & 0x18) >> 3) 
-#define CF_WillFlag(flags)       (((flags) & 0x04) >> 2) 
-#define CF_CleanStart(flags)     (((flags) & 0x02) >> 1) 
+#define CF_UserName(flags)       (((flags) >> 7) & 0x01) 
+#define CF_Password(flags)       (((flags) >> 6) & 0x01) 
+#define CF_WillRetain(flags)     (((flags) >> 5) & 0x01) 
+#define CF_WillQoS(flags)        (((flags) >> 3) & 0x03) 
+#define CF_WillFlag(flags)       (((flags) >> 2) & 0x01) 
+#define CF_CleanStart(flags)     (((flags) >> 1) & 0x01) 
 
+#define CF_SetUserName(value)    ((value) & 0x01) << 7)
+#define CF_SetPassword(flags)    ((value) & 0x01) << 6) 
+#define CF_SetWillRetain(flags)  ((value) & 0x01) << 5)
+#define CF_SetWillQoS(flags)     ((value) & 0x03) << 3)
+#define CF_SetWillFlag(flags)    ((value) & 0x01) << 2)
+#define CF_SetCleanStart(flags)  ((value) & 0x01) << 1)
 
 struct ProtocolMqtt5::MqttWillMessage
 {
@@ -513,6 +519,101 @@ bool ProtocolMqtt5::deserializeConnect(MqttConnectData& data)
 }
 
 
+//bool ProtocolMqtt5::serializeConnect(MqttConnectData& data)
+//{
+//    // protocol
+//    bool ok = readString(data.protocol);
+//    if (!ok || data.protocol != "MQTT")
+//    {
+//        return false;
+//    }
+//
+//    // version
+//    ok = read1ByteNumber(data.version);
+//    if (!ok || data.version != 5)
+//    {
+//        return false;
+//    }
+//
+//    // connect flags
+//    ok = read1ByteNumber(data.connectFlags);
+//    if (!ok)
+//    {
+//        return false;
+//    }
+//
+//    // keep alive
+//    ok = read2ByteNumber(data.keepAlive);
+//    if (!ok)
+//    {
+//        return false;
+//    }
+//
+//    // properties
+//    ok = readProperties(data.properties, data.metainfo);
+//    if (!ok)
+//    {
+//        return false;
+//    }
+//
+//    // client ID
+//    std::string clientId;
+//    ok = readString(data.clientId);
+//    if (!ok)
+//    {
+//        return false;
+//    }
+//
+//    // will message
+//    if (CF_WillFlag(data.connectFlags))
+//    {
+//        data.willMessage = std::make_unique<MqttWillMessage>();
+//        // will properties
+//        ok = readProperties(data.willMessage->properties, data.willMessage->metainfo);
+//        if (!ok)
+//        {
+//            return false;
+//        }
+//
+//        // will topic
+//        ok = readString(data.willMessage->topic);
+//        if (!ok)
+//        {
+//            return false;
+//        }
+//
+//        // will payload
+//        ok = readBinary(data.willMessage->payload);
+//        if (!ok)
+//        {
+//            return false;
+//        }
+//    }
+//
+//    // username
+//    if (CF_UserName(data.connectFlags))
+//    {
+//        ok = readString(data.username);
+//        if (!ok)
+//        {
+//            return false;
+//        }
+//    }
+//
+//    // password
+//    if (CF_Password(data.connectFlags))
+//    {
+//        ok = readString(data.password);
+//        if (!ok)
+//        {
+//            return false;
+//        }
+//    }
+//
+//    return ok;
+//}
+
+
 
 struct ProtocolMqtt5::MqttConnAckData
 {
@@ -522,7 +623,9 @@ struct ProtocolMqtt5::MqttConnAckData
     std::unordered_map<std::string, std::string> metainfo;
 };
 
-#define CAF_SessionPresent(flags)   (((flags) & 0x01) >> 0)
+#define CAF_SessionPresent(flags)       (((flags) & 0x01) >> 0)
+
+#define CAF_SetSessionPresent(flags)    ((value) & 0x01) << 1)
 
 bool ProtocolMqtt5::deserializeConnAck(MqttConnAckData& data)
 {
@@ -1046,6 +1149,11 @@ bool ProtocolMqtt5::readVarByteNumber(unsigned int& number)
     }
     return ok;
 }
+unsigned int ProtocolMqtt5::sizeVarByteNumber(unsigned int number)
+{
+    assert(number <= 268435455);
+    return (1 + (number > 127) + (number > 16383) + (number > 2097151));
+}
 
 bool ProtocolMqtt5::readString(std::string& str)
 {
@@ -1062,6 +1170,11 @@ bool ProtocolMqtt5::readString(std::string& str)
     }
     return ok;
 }
+unsigned int ProtocolMqtt5::sizeString(const std::string& str)
+{
+    assert(str.size() <= 0xffff);
+    return static_cast<unsigned int>(2 + str.size());
+}
 
 bool ProtocolMqtt5::readStringPair(std::string& key, std::string& value)
 {
@@ -1072,6 +1185,12 @@ bool ProtocolMqtt5::readStringPair(std::string& key, std::string& value)
     }
     ok = readString(value);
     return ok;
+}
+unsigned int ProtocolMqtt5::sizeStringPair(std::string& key, std::string& value)
+{
+    assert(key.size() <= 0xffff);
+    assert(value.size() <= 0xffff);
+    return static_cast<unsigned int>(4 + key.size() + value.size());
 }
 
 
@@ -1089,6 +1208,11 @@ bool ProtocolMqtt5::readBinary(Bytes& value)
         value.clear();
     }
     return ok;
+}
+unsigned int ProtocolMqtt5::sizeBinary(const Bytes& value)
+{
+    assert(value.size() <= 0xffff);
+    return static_cast<unsigned int>(2 + value.size());
 }
 
 
@@ -1216,6 +1340,52 @@ bool ProtocolMqtt5::readProperties(std::unordered_map<unsigned int, Variant>& pr
     }
 
     return ok;
+}
+unsigned int ProtocolMqtt5::sizeProperties(const std::unordered_map<unsigned int, Variant>& properties, const std::unordered_map<std::string, std::string>& metainfo, unsigned int& sizePropertyPayload)
+{
+    sizePropertyPayload = 0;
+
+    for (auto it = properties.begin(); it != properties.end(); ++it)
+    {
+        unsigned int id = it->first;
+        const Variant& value = it->second;
+        sizePropertyPayload += sizeVarByteNumber(id);
+        MqttPropertyId propertyId(static_cast<MqttPropertyId::Enum>(id));
+        assert(propertyId != MqttPropertyId::Invalid);
+        int type = getPropertyType(propertyId);
+        switch (type)
+        {
+        case TypeNone:
+            assert(false);
+            break;
+        case TypeByte:
+            sizePropertyPayload += 1;
+            break;
+        case TypeTwoByteInteger:
+            sizePropertyPayload += 2;
+            break;
+        case TypeFourByteInteger:
+            sizePropertyPayload += 4;
+            break;
+        case TypeVariableByteInteger:
+            sizePropertyPayload += sizeVarByteNumber(value);
+            break;
+        case TypeUTF8String:
+            sizePropertyPayload += sizeString(value);
+            break;
+        case TypeUTF8StringPair:
+            assert(false);
+            break;
+        case TypeBinaryData:
+            sizePropertyPayload += sizeBinary(value);
+            break;
+        default:
+            assert(false);
+            break;
+        }
+    }
+    
+    return (sizeVarByteNumber(sizePropertyPayload) + sizePropertyPayload);
 }
 
 

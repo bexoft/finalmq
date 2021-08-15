@@ -110,6 +110,12 @@ private:
     bool readBinary(Bytes& value);
     bool readProperties(std::unordered_map<unsigned int, Variant>& properties, std::unordered_map<std::string, std::string>& metainfo);
 
+    static unsigned int sizeVarByteNumber(unsigned int number);
+    static unsigned int sizeString(const std::string& str);
+    static unsigned int sizeStringPair(std::string& key, std::string& value);
+    static unsigned int sizeBinary(const Bytes& value);
+    static unsigned int sizeProperties(const std::unordered_map<unsigned int, Variant>& properties, const std::unordered_map<std::string, std::string>& metainfo, unsigned int& sizePropertyPayload);
+
     std::weak_ptr<IProtocolCallback>    m_callback;
     IStreamConnectionPtr                m_connection;
 
