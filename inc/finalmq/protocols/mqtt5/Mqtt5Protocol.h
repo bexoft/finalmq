@@ -120,7 +120,8 @@ public:
 
 //    std::deque<IMessagePtr>* m_messages = nullptr;
 
-    hybrid_ptr<IMqtt5ProtocolCallback> m_callback;
+    hybrid_ptr<IMqtt5ProtocolCallback>  m_callback;
+    IStreamConnectionPtr                m_connection;
 };
 
 

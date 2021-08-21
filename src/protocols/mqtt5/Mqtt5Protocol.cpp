@@ -374,37 +374,37 @@ void Mqtt5Protocol::disconnected()
     m_connection = nullptr;
 }
 
-bool Mqtt5Protocol::sendConnect(const Mqtt5ConnectData& data)
+bool Mqtt5Protocol::sendConnect(const Mqtt5ConnectData& /*data*/)
 {
     return false;
 }
 
-bool Mqtt5Protocol::sendConnAck(const Mqtt5ConnAckData& data)
+bool Mqtt5Protocol::sendConnAck(const Mqtt5ConnAckData& /*data*/)
 {
     return false;
 }
 
-bool Mqtt5Protocol::sendPublish(const Mqtt5PublishData& data)
+bool Mqtt5Protocol::sendPublish(const Mqtt5PublishData& /*data*/)
 {
     return false;
 }
 
-bool Mqtt5Protocol::sendSubscribe(const Mqtt5SubscribeData& data)
+bool Mqtt5Protocol::sendSubscribe(const Mqtt5SubscribeData& /*data*/)
 {
     return false;
 }
 
-bool Mqtt5Protocol::sendSubAck(const Mqtt5SubAckData& data)
+bool Mqtt5Protocol::sendSubAck(const Mqtt5SubAckData& /*data*/)
 {
     return false;
 }
 
-bool Mqtt5Protocol::sendUnsubscribe(const Mqtt5UnsubscribeData& data)
+bool Mqtt5Protocol::sendUnsubscribe(const Mqtt5UnsubscribeData& /*data*/)
 {
     return false;
 }
 
-bool Mqtt5Protocol::sendUnsubAck(const Mqtt5SubAckData& data)
+bool Mqtt5Protocol::sendUnsubAck(const Mqtt5SubAckData& /*data*/)
 {
     return false;
 }
@@ -419,12 +419,12 @@ bool Mqtt5Protocol::sendPingResp()
     return false;
 }
 
-bool Mqtt5Protocol::sendDisconnect(const Mqtt5DisconnectData& data)
+bool Mqtt5Protocol::sendDisconnect(const Mqtt5DisconnectData& /*data*/)
 {
     return false;
 }
 
-bool Mqtt5Protocol::sendAuth(const Mqtt5AuthData& data)
+bool Mqtt5Protocol::sendAuth(const Mqtt5AuthData& /*data*/)
 {
     return false;
 }
