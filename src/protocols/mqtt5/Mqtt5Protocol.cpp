@@ -34,28 +34,10 @@ namespace finalmq {
 static const ssize_t HEADERSIZE = 1;
 
 
-#define HEADER_Command(header)      (((header) & 0xf0) >> 4)
-#define HEADER_Dup(header)          (((header) & 0x08) >> 3)
-#define HEADER_QoS(header)          (((header) & 0x06) >> 1)
-#define HEADER_Retain(header)       (((header) & 0x01) >> 0)
-
-
-#define COMMAND_CONNECT         1       // Server <-  Client, Connection request
-#define COMMAND_CONNACK         2       // Server  -> Client, Connect acknowledgment
-#define COMMAND_PUBLISH         3       // Server <-> Client, Publish message
-#define COMMAND_PUBACK          4       // Server <-> Client, Publish acknowledgment(QoS 1)
-#define COMMAND_PUBREC          5       // Server <-> Client, Publish received(QoS 2 delivery part 1)
-#define COMMAND_PUBREL          6       // Server <-> Client, Publish release(QoS 2 delivery part 2)
-#define COMMAND_PUBCOMP         7       // Server <-> Client, Publish complete(QoS 2 delivery part 3)
-#define COMMAND_SUBSCRIBE       8       // Server <-  Client, Subscribe request
-#define COMMAND_SUBACK          9       // Server  -> Client, Subscribe acknowledgment
-#define COMMAND_UNSUBSCRIBE     10      // Server <-  Client, Unsubscribe request
-#define COMMAND_UNSUBACK        11      // Server  -> Client, Unsubscribe acknowledgment
-#define COMMAND_PING            12      // Server <-  Client, PING request
-#define COMMAND_PINGRESP        13      // Server  -> Client, PING response
-#define COMMAND_DISCONNECT      14      // Server <-> Client, Disconnect notification
-#define COMMAND_AUTH            15      // Server <-> Client, Authentication exchange
-
+#define HEADER_Command(header)      static_cast<Mqtt5Command>(((header) >> 4) & 0x0f)
+#define HEADER_Dup(header)          (((header) >> 3) >> 0x01)
+#define HEADER_QoS(header)          (((header) >> 1) >> 0x03)
+#define HEADER_Retain(header)       (((header) >> 0) >> 0x01)
 
 Mqtt5Protocol::Mqtt5Protocol()
 {
@@ -208,92 +190,92 @@ bool Mqtt5Protocol::processPayload()
 {
     assert(m_state == State::MESSAGECOMPLETE);
 
-    Mqtt5Serialization serialization(m_remainingSize, 1, m_header, m_buffer);
+    Mqtt5Serialization serialization(m_buffer, m_remainingSize, 1);
 
     bool ok = false;
-    int command = HEADER_Command(m_header);
+    Mqtt5Command command = HEADER_Command(m_header);
     switch (command)
     {
-    case COMMAND_CONNECT:
+    case Mqtt5Command::COMMAND_CONNECT:
         {
             Mqtt5ConnectData data;
             ok = serialization.deserializeConnect(data);
         }
         break;
-    case COMMAND_CONNACK:
+    case Mqtt5Command::COMMAND_CONNACK:
         {
             Mqtt5ConnAckData data;
             ok = serialization.deserializeConnAck(data);
         }
         break;
-    case COMMAND_PUBLISH:
+    case Mqtt5Command::COMMAND_PUBLISH:
         {
             Mqtt5PublishData data;
             ok = serialization.deserializePublish(data);
             int indexRead = serialization.getReadIndex();
             m_message->setHeaderSize(indexRead);
             m_messages->push_back(m_message);
-    }
-        break;
-    case COMMAND_PUBACK:
-        {
-            Mqtt5PubAckData data;
-            ok = serialization.deserializePubAck(data);
         }
         break;
-    case COMMAND_PUBREC:
+    case Mqtt5Command::COMMAND_PUBACK:
         {
             Mqtt5PubAckData data;
-            ok = serialization.deserializePubAck(data);
+            ok = serialization.deserializePubAck(data, Mqtt5Command::COMMAND_PUBACK);
         }
         break;
-    case COMMAND_PUBREL:
+    case Mqtt5Command::COMMAND_PUBREC:
         {
             Mqtt5PubAckData data;
-            ok = serialization.deserializePubAck(data);
+            ok = serialization.deserializePubAck(data, Mqtt5Command::COMMAND_PUBREC);
         }
         break;
-    case COMMAND_PUBCOMP:
+    case Mqtt5Command::COMMAND_PUBREL:
         {
             Mqtt5PubAckData data;
-            ok = serialization.deserializePubAck(data);
+            ok = serialization.deserializePubAck(data, Mqtt5Command::COMMAND_PUBREL);
         }
         break;
-    case COMMAND_SUBSCRIBE:
+    case Mqtt5Command::COMMAND_PUBCOMP:
+        {
+            Mqtt5PubAckData data;
+            ok = serialization.deserializePubAck(data, Mqtt5Command::COMMAND_PUBCOMP);
+        }
+        break;
+    case Mqtt5Command::COMMAND_SUBSCRIBE:
         {
             Mqtt5SubscribeData data;
             ok = serialization.deserializeSubscribe(data);
         }
         break;
-    case COMMAND_SUBACK:
+    case Mqtt5Command::COMMAND_SUBACK:
         {
             Mqtt5SubAckData data;
             ok = serialization.deserializeSubAck(data);
         }
         break;
-    case COMMAND_UNSUBSCRIBE:
+    case Mqtt5Command::COMMAND_UNSUBSCRIBE:
         {
             Mqtt5UnsubscribeData data;
             ok = serialization.deserializeUnsubscribe(data);
         }
         break;
-    case COMMAND_UNSUBACK:
+    case Mqtt5Command::COMMAND_UNSUBACK:
         {
             Mqtt5SubAckData data;
             ok = serialization.deserializeSubAck(data);
         }
         break;
-    case COMMAND_PING:
+    case Mqtt5Command::COMMAND_PINGREQ:
         break;
-    case COMMAND_PINGRESP:
+    case Mqtt5Command::COMMAND_PINGRESP:
         break;
-    case COMMAND_DISCONNECT:
+    case Mqtt5Command::COMMAND_DISCONNECT:
         {
             Mqtt5DisconnectData data;
             ok = serialization.deserializeDisconnect(data);
         }
         break;
-    case COMMAND_AUTH:
+    case Mqtt5Command::COMMAND_AUTH:
         {
             Mqtt5AuthData data;
             ok = serialization.deserializeAuth(data);

@@ -31,19 +31,40 @@
 namespace finalmq {
 
 
+enum class Mqtt5Command : unsigned int
+{
+    COMMAND_CONNECT         = 1,       // Server <-  Client, Connection request
+    COMMAND_CONNACK         = 2,       // Server  -> Client, Connect acknowledgment
+    COMMAND_PUBLISH         = 3,       // Server <-> Client, Publish message
+    COMMAND_PUBACK          = 4,       // Server <-> Client, Publish acknowledgment(QoS 1)
+    COMMAND_PUBREC          = 5,       // Server <-> Client, Publish received(QoS 2 delivery part 1)
+    COMMAND_PUBREL          = 6,       // Server <-> Client, Publish release(QoS 2 delivery part 2)
+    COMMAND_PUBCOMP         = 7,       // Server <-> Client, Publish complete(QoS 2 delivery part 3)
+    COMMAND_SUBSCRIBE       = 8,       // Server <-  Client, Subscribe request
+    COMMAND_SUBACK          = 9,       // Server  -> Client, Subscribe acknowledgment
+    COMMAND_UNSUBSCRIBE     = 10,      // Server <-  Client, Unsubscribe request
+    COMMAND_UNSUBACK        = 11,      // Server  -> Client, Unsubscribe acknowledgment
+    COMMAND_PINGREQ         = 12,      // Server <-  Client, PING request
+    COMMAND_PINGRESP        = 13,      // Server  -> Client, PING response
+    COMMAND_DISCONNECT      = 14,      // Server <-> Client, Disconnect notification
+    COMMAND_AUTH            = 15,      // Server <-> Client, Authentication exchange
+};
+
+
 struct Mqtt5WillMessage
 {
     std::unordered_map<unsigned int, Variant> properties;
     std::unordered_map<std::string, std::string> metainfo;
     std::string topic;
     Bytes payload;
+    bool retain = false;
+    unsigned int qos = 0;
 };
 
 struct Mqtt5ConnectData
 {
     std::string protocol;
     unsigned int version = 0;
-    unsigned int connectFlags = 0;
     unsigned int keepAlive = 0;
     std::unordered_map<unsigned int, Variant> properties;
     std::unordered_map<std::string, std::string> metainfo;
@@ -51,6 +72,7 @@ struct Mqtt5ConnectData
     std::unique_ptr<Mqtt5WillMessage> willMessage;
     std::string username;
     std::string password;
+    bool cleanStart = false;
 };
 
 struct Mqtt5ConnAckData
@@ -63,6 +85,9 @@ struct Mqtt5ConnAckData
 
 struct Mqtt5PublishData
 {
+    unsigned int qos = 0;
+    bool dup = false;
+    bool retain = false;
     std::string topicName;
     unsigned int packetId = 0;
     std::unordered_map<unsigned int, Variant> properties;
@@ -129,13 +154,13 @@ struct Mqtt5AuthData
 class Mqtt5Serialization
 {
 public:
-    Mqtt5Serialization(int remainingSize, int indexRead, unsigned char header, char* buffer);
+    Mqtt5Serialization(char* buffer, unsigned int sizeBuffer, unsigned int indexBuffer);
     int getReadIndex() const;
 
     bool deserializeConnect(Mqtt5ConnectData& data);
     bool deserializeConnAck(Mqtt5ConnAckData& data);
     bool deserializePublish(Mqtt5PublishData& data);
-    bool deserializePubAck(Mqtt5PubAckData& data);
+    bool deserializePubAck(Mqtt5PubAckData& data, Mqtt5Command command);
     bool deserializeSubscribe(Mqtt5SubscribeData& data);
     bool deserializeSubAck(Mqtt5SubAckData& data);
     bool deserializeUnsubscribe(Mqtt5UnsubscribeData& data);
@@ -152,18 +177,46 @@ public:
     bool readBinary(Bytes& value);
     bool readProperties(std::unordered_map<unsigned int, Variant>& properties, std::unordered_map<std::string, std::string>& metainfo);
 
+    void write1ByteNumber(unsigned int number);
+    void write2ByteNumber(unsigned int number);
+    void write4ByteNumber(unsigned int number);
+    void writeVarByteNumber(unsigned int number);
+    void writeString(const std::string& str);
+    void writeStringPair(const std::string& key, const std::string& value);
+    void writeBinary(const Bytes& value);
+    void writeProperties(const std::unordered_map<unsigned int, Variant>& properties, const std::unordered_map<std::string, std::string>& metainfo, unsigned int sizePropertyPayload);
+
     static unsigned int sizeVarByteNumber(unsigned int number);
     static unsigned int sizeString(const std::string& str);
-    static unsigned int sizeStringPair(std::string& key, std::string& value);
+    static unsigned int sizeStringPair(const std::string& key, const std::string& value);
     static unsigned int sizeBinary(const Bytes& value);
     static unsigned int sizeProperties(const std::unordered_map<unsigned int, Variant>& properties, const std::unordered_map<std::string, std::string>& metainfo, unsigned int& sizePropertyPayload);
 
-    bool serializeConnect(Mqtt5ConnectData& data);
+    unsigned int sizeConnect(const Mqtt5ConnectData& data, unsigned int& sizePropPayload, unsigned int& sizePropWillMessage) const;
+    unsigned int sizeConnAck(const Mqtt5ConnAckData& data, unsigned int& sizePropPayload) const;
+    unsigned int sizePublish(const Mqtt5PublishData& data, unsigned int& sizePropPayload) const;
+    unsigned int sizePubAck(const Mqtt5PubAckData& data, unsigned int& sizePropPayload) const;
+    unsigned int sizeSubscribe(const Mqtt5SubscribeData& data, unsigned int& sizePropPayload) const;
+    unsigned int sizeSubAck(const Mqtt5SubAckData& data, unsigned int& sizePropPayload) const;
+    unsigned int sizeUnsubscribe(const Mqtt5UnsubscribeData& data, unsigned int& sizePropPayload) const;
+    unsigned int sizeDisconnect(const Mqtt5DisconnectData& data, unsigned int& sizePropPayload) const;
+    unsigned int sizeAuth(const Mqtt5AuthData& data, unsigned int& sizePropPayload) const;
 
-    int             m_remainingSize = 0;
-    int             m_indexRead = 0;
-    unsigned char   m_header = 0;
+    void serializeConnect(const Mqtt5ConnectData& data, unsigned int sizePayload, unsigned int sizePropPayload, unsigned int sizePropWillMessage);
+    void serializeConnAck(const Mqtt5ConnAckData& data, unsigned int sizePayload, unsigned int sizePropPayload);
+    void serializePublish(const Mqtt5PublishData& data, unsigned int sizePayload, unsigned int sizePropPayload);
+    void serializePubAck(const Mqtt5PubAckData& data, Mqtt5Command command, unsigned int sizePayload, unsigned int sizePropPayload);
+    void serializeSubscribe(const Mqtt5SubscribeData& data, unsigned int sizePayload, unsigned int sizePropPayload);
+    void serializeSubAck(const Mqtt5SubAckData& data, unsigned int sizePayload, unsigned int sizePropPayload);
+    void serializeUnsubscribe(const Mqtt5UnsubscribeData& data, unsigned int sizePayload, unsigned int sizePropPayload);
+    void serializePingReq(const Mqtt5UnsubscribeData& data);
+    void serializePingResp(const Mqtt5UnsubscribeData& data);
+    void serializeDisconnect(const Mqtt5DisconnectData& data, unsigned int sizePayload, unsigned int sizePropPayload);
+    void serializeAuth(const Mqtt5AuthData& data, unsigned int sizePayload, unsigned int sizePropPayload);
+
     char*           m_buffer = nullptr;
+    unsigned int    m_sizeBuffer = 0;
+    unsigned int    m_indexBuffer = 0;
 };
 
 
