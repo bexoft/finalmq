@@ -828,7 +828,7 @@ void Mqtt5Serialization::serializeUnsubscribe(const Mqtt5UnsubscribeData& data, 
 }
 
 
-void Mqtt5Serialization::serializePingReq(const Mqtt5UnsubscribeData& data)
+void Mqtt5Serialization::serializePingReq()
 {
     unsigned int header = HEADER_SetCommand(Mqtt5Command::COMMAND_PINGREQ);
     write1ByteNumber(header);
@@ -836,7 +836,7 @@ void Mqtt5Serialization::serializePingReq(const Mqtt5UnsubscribeData& data)
     assert(m_indexBuffer == m_sizeBuffer);
 }
 
-void Mqtt5Serialization::serializePingResp(const Mqtt5UnsubscribeData& data)
+void Mqtt5Serialization::serializePingResp()
 {
     unsigned int header = HEADER_SetCommand(Mqtt5Command::COMMAND_PINGRESP);
     write1ByteNumber(header);

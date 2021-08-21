@@ -209,8 +209,8 @@ public:
     void serializeSubscribe(const Mqtt5SubscribeData& data, unsigned int sizePayload, unsigned int sizePropPayload);
     void serializeSubAck(const Mqtt5SubAckData& data, unsigned int sizePayload, unsigned int sizePropPayload);
     void serializeUnsubscribe(const Mqtt5UnsubscribeData& data, unsigned int sizePayload, unsigned int sizePropPayload);
-    void serializePingReq(const Mqtt5UnsubscribeData& data);
-    void serializePingResp(const Mqtt5UnsubscribeData& data);
+    void serializePingReq();
+    void serializePingResp();
     void serializeDisconnect(const Mqtt5DisconnectData& data, unsigned int sizePayload, unsigned int sizePropPayload);
     void serializeAuth(const Mqtt5AuthData& data, unsigned int sizePayload, unsigned int sizePropPayload);
 
