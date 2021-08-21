@@ -111,8 +111,7 @@ void ProtocolMqtt5::moveOldProtocolState(IProtocol& /*protocolOld*/)
 
 bool ProtocolMqtt5::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead) 
 {
-    std::deque<IMessagePtr> messages;
-    bool ok = m_protocol.receive(socket, bytesToRead, messages);
+    bool ok = m_protocol.receive(socket, bytesToRead);
     return ok;
 }
 

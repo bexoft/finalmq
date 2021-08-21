@@ -44,9 +44,8 @@ Mqtt5Protocol::Mqtt5Protocol()
 }
 
 
-bool Mqtt5Protocol::receive(const SocketPtr& socket, int bytesToRead, std::deque<IMessagePtr>& messages)
+bool Mqtt5Protocol::receive(const SocketPtr& socket, int bytesToRead)
 {
-    m_messages = &messages;
     bool ok = true;
     while ((bytesToRead > 0) && ok)
     {
@@ -66,7 +65,6 @@ bool Mqtt5Protocol::receive(const SocketPtr& socket, int bytesToRead, std::deque
             break;
         }
     }
-    m_messages = nullptr;
     return ok;
 }
 
@@ -129,8 +127,16 @@ void Mqtt5Protocol::setPayloadSize()
 {
     assert(m_state == State::WAITFORLENGTH);
     assert(m_remainingSize >= 0);
-    m_message = std::make_shared<ProtocolMessage>(0, HEADERSIZE);
-    m_buffer = m_message->resizeReceiveBuffer(HEADERSIZE + m_remainingSize);
+    if (HEADER_Command(m_header) == Mqtt5Command::COMMAND_PUBLISH)
+    {
+        m_message = std::make_shared<ProtocolMessage>(0, HEADERSIZE);
+        m_buffer = m_message->resizeReceiveBuffer(HEADERSIZE + m_remainingSize);
+    }
+    else
+    {
+        m_messageBuffer.resize(HEADERSIZE + m_remainingSize);
+        m_buffer = m_messageBuffer.data();
+    }
     m_buffer[0] = m_header;
     if (m_remainingSize != 0)
     {
@@ -192,6 +198,8 @@ bool Mqtt5Protocol::processPayload()
 
     Mqtt5Serialization serialization(m_buffer, m_remainingSize, 1);
 
+    auto callback = m_callback.lock();
+
     bool ok = false;
     Mqtt5Command command = HEADER_Command(m_header);
     switch (command)
@@ -200,21 +208,32 @@ bool Mqtt5Protocol::processPayload()
         {
             Mqtt5ConnectData data;
             ok = serialization.deserializeConnect(data);
+            if (callback && ok)
+            {
+                callback->receivedConnect(data);
+            }
         }
         break;
     case Mqtt5Command::COMMAND_CONNACK:
         {
             Mqtt5ConnAckData data;
             ok = serialization.deserializeConnAck(data);
-        }
+            if (callback && ok)
+            {
+                callback->receivedConnAck(data);
+            }
+    }
         break;
     case Mqtt5Command::COMMAND_PUBLISH:
         {
             Mqtt5PublishData data;
             ok = serialization.deserializePublish(data);
-            int indexRead = serialization.getReadIndex();
-            m_message->setHeaderSize(indexRead);
-            m_messages->push_back(m_message);
+            if (callback && ok)
+            {
+                int indexRead = serialization.getReadIndex();
+                m_message->setHeaderSize(indexRead);
+                callback->receivedPublish(data, m_message);
+            }
         }
         break;
     case Mqtt5Command::COMMAND_PUBACK:
@@ -245,40 +264,72 @@ bool Mqtt5Protocol::processPayload()
         {
             Mqtt5SubscribeData data;
             ok = serialization.deserializeSubscribe(data);
+            if (callback && ok)
+            {
+                callback->receivedSubscribe(data);
+            }
         }
         break;
     case Mqtt5Command::COMMAND_SUBACK:
         {
             Mqtt5SubAckData data;
             ok = serialization.deserializeSubAck(data);
-        }
+            if (callback && ok)
+            {
+                callback->receivedSubAck(data);
+            }
+    }
         break;
     case Mqtt5Command::COMMAND_UNSUBSCRIBE:
         {
             Mqtt5UnsubscribeData data;
             ok = serialization.deserializeUnsubscribe(data);
-        }
+            if (callback && ok)
+            {
+                callback->receivedUnsubscribe(data);
+            }
+    }
         break;
     case Mqtt5Command::COMMAND_UNSUBACK:
         {
             Mqtt5SubAckData data;
             ok = serialization.deserializeSubAck(data);
+            if (callback && ok)
+            {
+                callback->receivedUnsubAck(data);
+            }
         }
         break;
     case Mqtt5Command::COMMAND_PINGREQ:
+        if (callback)
+        {
+            callback->receivedPingReq();
+        }
         break;
     case Mqtt5Command::COMMAND_PINGRESP:
+        if (callback)
+        {
+            callback->receivedPingResp();
+        }
         break;
     case Mqtt5Command::COMMAND_DISCONNECT:
         {
             Mqtt5DisconnectData data;
             ok = serialization.deserializeDisconnect(data);
+            if (callback && ok)
+            {
+                callback->receivedDisconnect(data);
+            }
         }
         break;
     case Mqtt5Command::COMMAND_AUTH:
         {
             Mqtt5AuthData data;
             ok = serialization.deserializeAuth(data);
+            if (callback && ok)
+            {
+                callback->receivedAuth(data);
+            }
         }
         break;
     default:
@@ -300,9 +351,86 @@ void Mqtt5Protocol::clearState()
     m_sizeCurrent = 0;
     m_sizePayload = 0;
     m_message = nullptr;
+    m_messageBuffer.clear();
     m_buffer = nullptr;
     m_state = State::WAITFORHEADER;
 }
+
+
+
+// IMqtt5Protocol
+void Mqtt5Protocol::setCallback(hybrid_ptr<IMqtt5ProtocolCallback> callback)
+{
+    m_callback = callback;
+}
+
+void Mqtt5Protocol::connected(const IStreamConnectionPtr& connection)
+{
+    m_connection = connection;
+}
+
+void Mqtt5Protocol::disconnected()
+{
+    m_connection = nullptr;
+}
+
+bool Mqtt5Protocol::sendConnect(const Mqtt5ConnectData& data)
+{
+    return false;
+}
+
+bool Mqtt5Protocol::sendConnAck(const Mqtt5ConnAckData& data)
+{
+    return false;
+}
+
+bool Mqtt5Protocol::sendPublish(const Mqtt5PublishData& data)
+{
+    return false;
+}
+
+bool Mqtt5Protocol::sendSubscribe(const Mqtt5SubscribeData& data)
+{
+    return false;
+}
+
+bool Mqtt5Protocol::sendSubAck(const Mqtt5SubAckData& data)
+{
+    return false;
+}
+
+bool Mqtt5Protocol::sendUnsubscribe(const Mqtt5UnsubscribeData& data)
+{
+    return false;
+}
+
+bool Mqtt5Protocol::sendUnsubAck(const Mqtt5SubAckData& data)
+{
+    return false;
+}
+
+bool Mqtt5Protocol::sendPingReq()
+{
+    return false;
+}
+
+bool Mqtt5Protocol::sendPingResp()
+{
+    return false;
+}
+
+bool Mqtt5Protocol::sendDisconnect(const Mqtt5DisconnectData& data)
+{
+    return false;
+}
+
+bool Mqtt5Protocol::sendAuth(const Mqtt5AuthData& data)
+{
+    return false;
+}
+
+
+
 
 
 }   // namespace finalmq

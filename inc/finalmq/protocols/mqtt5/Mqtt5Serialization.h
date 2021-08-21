@@ -22,11 +22,8 @@
 
 #pragma once
 
-//#include "finalmq/streamconnection/IMessage.h"
-#include "finalmq/metadata/MetaType.h"
-#include "finalmq/variant/Variant.h"
+#include "finalmq/protocols/mqtt5/Mqtt5CommandData.h"
 
-#include <unordered_map>
 
 namespace finalmq {
 
@@ -48,105 +45,6 @@ enum class Mqtt5Command : unsigned int
     COMMAND_PINGRESP        = 13,      // Server  -> Client, PING response
     COMMAND_DISCONNECT      = 14,      // Server <-> Client, Disconnect notification
     COMMAND_AUTH            = 15,      // Server <-> Client, Authentication exchange
-};
-
-
-struct Mqtt5WillMessage
-{
-    std::unordered_map<unsigned int, Variant> properties;
-    std::unordered_map<std::string, std::string> metainfo;
-    std::string topic;
-    Bytes payload;
-    bool retain = false;
-    unsigned int qos = 0;
-};
-
-struct Mqtt5ConnectData
-{
-    std::string protocol;
-    unsigned int version = 0;
-    unsigned int keepAlive = 0;
-    std::unordered_map<unsigned int, Variant> properties;
-    std::unordered_map<std::string, std::string> metainfo;
-    std::string clientId;
-    std::unique_ptr<Mqtt5WillMessage> willMessage;
-    std::string username;
-    std::string password;
-    bool cleanStart = false;
-};
-
-struct Mqtt5ConnAckData
-{
-    bool sessionPresent = false;
-    unsigned int reasoncode = 0;
-    std::unordered_map<unsigned int, Variant> properties;
-    std::unordered_map<std::string, std::string> metainfo;
-};
-
-struct Mqtt5PublishData
-{
-    unsigned int qos = 0;
-    bool dup = false;
-    bool retain = false;
-    std::string topicName;
-    unsigned int packetId = 0;
-    std::unordered_map<unsigned int, Variant> properties;
-    std::unordered_map<std::string, std::string> metainfo;
-};
-
-struct Mqtt5PubAckData
-{
-    unsigned int packetId = 0;
-    unsigned int reasoncode = 0;
-    std::unordered_map<unsigned int, Variant> properties;
-    std::unordered_map<std::string, std::string> metainfo;
-};
-
-struct Mqtt5SubscribeEntry
-{
-    std::string topic;
-    unsigned int retainHandling = 0;
-    bool retainAsPublished = false;
-    bool noLocal = false;
-    unsigned int qos = 0;
-};
-
-struct Mqtt5SubscribeData
-{
-    unsigned int packetId = 0;
-    std::unordered_map<unsigned int, Variant> properties;
-    std::unordered_map<std::string, std::string> metainfo;
-    std::vector<Mqtt5SubscribeEntry> subscriptions;
-};
-
-struct Mqtt5SubAckData
-{
-    unsigned int packetId = 0;
-    std::unordered_map<unsigned int, Variant> properties;
-    std::unordered_map<std::string, std::string> metainfo;
-    std::vector<unsigned int> reasoncodes;
-};
-
-struct Mqtt5UnsubscribeData
-{
-    unsigned int packetId = 0;
-    std::unordered_map<unsigned int, Variant> properties;
-    std::unordered_map<std::string, std::string> metainfo;
-    std::vector<std::string> topics;
-};
-
-struct Mqtt5DisconnectData
-{
-    unsigned int reasoncode = 0;
-    std::unordered_map<unsigned int, Variant> properties;
-    std::unordered_map<std::string, std::string> metainfo;
-};
-
-struct Mqtt5AuthData
-{
-    unsigned int reasoncode = 0;
-    std::unordered_map<unsigned int, Variant> properties;
-    std::unordered_map<std::string, std::string> metainfo;
 };
 
 
