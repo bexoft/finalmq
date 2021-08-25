@@ -169,7 +169,7 @@ void Mqtt5Client::timerCyclus(const IStreamConnectionPtr& connection)
 
 
 // IMqtt5ProtocolCallback
-void Mqtt5Client::receivedConnect(const Mqtt5ConnectData& data)
+void Mqtt5Client::receivedConnect(const Mqtt5ConnectData& /*data*/)
 {
     // a client should never receive this message
 }
@@ -293,7 +293,7 @@ void Mqtt5Client::receivedPublish(Mqtt5PublishData&& data, const IMessagePtr& me
     }
 }
 
-void Mqtt5Client::receivedSubscribe(const Mqtt5SubscribeData& data)
+void Mqtt5Client::receivedSubscribe(const Mqtt5SubscribeData& /*data*/)
 {
     // a client should never receive this message
 }
@@ -307,7 +307,7 @@ void Mqtt5Client::receivedSubAck(const Mqtt5SubAckData& data)
     }
 }
 
-void Mqtt5Client::receivedUnsubscribe(const Mqtt5UnsubscribeData& data)
+void Mqtt5Client::receivedUnsubscribe(const Mqtt5UnsubscribeData& /*data*/)
 {
     // a client should never receive this message
 }
