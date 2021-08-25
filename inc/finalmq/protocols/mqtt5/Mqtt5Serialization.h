@@ -84,7 +84,12 @@ public:
     void writeBinary(const Bytes& value);
     void writeProperties(const std::unordered_map<unsigned int, Variant>& properties, const std::unordered_map<std::string, std::string>& metainfo, unsigned int sizePropertyPayload);
 
-    static constexpr unsigned int sizeVarByteNumber(unsigned int number);
+    static constexpr unsigned int sizeVarByteNumber(unsigned int number)
+    {
+        assert(number <= 268435455);
+        return (1 + (number > 127) + (number > 16383) + (number > 2097151));
+    }
+
     static unsigned int sizeString(const std::string& str);
     static unsigned int sizeStringPair(const std::string& key, const std::string& value);
     static unsigned int sizeBinary(const Bytes& value);

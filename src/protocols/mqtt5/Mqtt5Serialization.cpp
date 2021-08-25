@@ -1080,11 +1080,6 @@ bool Mqtt5Serialization::readVarByteNumber(unsigned int& number)
     }
     return ok;
 }
-constexpr unsigned int Mqtt5Serialization::sizeVarByteNumber(unsigned int number)
-{
-    assert(number <= 268435455);
-    return (1 + (number > 127) + (number > 16383) + (number > 2097151));
-}
 void Mqtt5Serialization::writeVarByteNumber(unsigned int number)
 {
     assert(number <= 268435455);
