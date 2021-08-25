@@ -614,6 +614,7 @@ class SYMBOLEXP RemoteEntity : public IRemoteEntity
 {
 public:
     RemoteEntity();
+    ~RemoteEntity();
 
 public:
     // IRemoteEntity

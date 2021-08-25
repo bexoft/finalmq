@@ -69,7 +69,7 @@ struct Mqtt5PublishData
     unsigned int qos = 0;
     bool dup = false;
     bool retain = false;
-    std::string topicName;
+    std::string topic;
     unsigned int packetId = 0;
     std::unordered_map<unsigned int, Variant> properties;
     std::unordered_map<std::string, std::string> metainfo;
@@ -105,7 +105,7 @@ struct Mqtt5SubAckData
     unsigned int packetId = 0;
     std::unordered_map<unsigned int, Variant> properties;
     std::unordered_map<std::string, std::string> metainfo;
-    std::vector<unsigned int> reasoncodes;
+    std::vector<std::uint8_t> reasoncodes;
 };
 
 struct Mqtt5UnsubscribeData

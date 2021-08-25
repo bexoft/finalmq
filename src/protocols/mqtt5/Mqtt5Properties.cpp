@@ -85,7 +85,7 @@ const finalmq::EnumInfo Mqtt5PropertyId::_enumInfo = {
         {"UserProperty", 38, ""},
         {"MaximumPacketSize", 39, ""},
         {"WildcardSubscriptionAvailable", 40, ""},
-        {"SubscriptionIdentifierAvailable", 41, ""},
+        {"SubscriptionIdentifiersAvailable", 41, ""},
         {"SharedSubscriptionAvailable", 42, ""},
      }
 };
@@ -103,7 +103,7 @@ static const Mqtt5Type PropertyType[] = {
     Mqtt5Type::TypeUTF8String,             //  8 ResponseTopic
     Mqtt5Type::TypeBinaryData,             //  9 CorrelationData
     Mqtt5Type::TypeNone,                   // 10
-    Mqtt5Type::TypeVariableByteInteger,    // 11 SubscriptionIdentifier
+    Mqtt5Type::TypeArrayVariableByteInteger,// 11 SubscriptionIdentifier
     Mqtt5Type::TypeNone,                   // 12
     Mqtt5Type::TypeNone,                   // 13
     Mqtt5Type::TypeNone,                   // 14
@@ -133,7 +133,7 @@ static const Mqtt5Type PropertyType[] = {
     Mqtt5Type::TypeUTF8StringPair,         // 38 UserProperty
     Mqtt5Type::TypeFourByteInteger,        // 39 MaximumPacketSize
     Mqtt5Type::TypeByte,                   // 40 WildcardSubscriptionAvailable
-    Mqtt5Type::TypeByte,                   // 41 SubscriptionIdentifierAvailable
+    Mqtt5Type::TypeByte,                   // 41 SubscriptionIdentifiersAvailable
     Mqtt5Type::TypeByte,                   // 42 SharedSubscriptionAvailable
 };
 

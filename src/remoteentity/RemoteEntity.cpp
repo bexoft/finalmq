@@ -447,6 +447,11 @@ RemoteEntity::RemoteEntity()
 }
 
 
+RemoteEntity::~RemoteEntity()
+{
+    deinit();
+}
+
 
 // IRemoteEntity
 

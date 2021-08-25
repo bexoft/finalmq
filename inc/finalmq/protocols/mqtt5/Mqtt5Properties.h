@@ -37,7 +37,9 @@ enum class Mqtt5Type
     TypeVariableByteInteger = 4,
     TypeUTF8String = 5,
     TypeUTF8StringPair = 6,
-    TypeBinaryData = 7
+    TypeBinaryData = 7,
+
+    TypeArrayVariableByteInteger = 16 + TypeVariableByteInteger,
 };
 
 
@@ -71,7 +73,7 @@ public:
         UserProperty = 38,   // UTF-8 String Pair, CONNECT, CONNACK, PUBLISH, Will Properties, PUBACK, PUBREC, PUBREL, PUBCOMP, SUBSCRIBE, SUBACK, UNSUBSCRIBE, UNSUBACK, DISCONNECT, AUTH
         MaximumPacketSize = 39,   // Four Byte Integer, CONNECT, CONNACK
         WildcardSubscriptionAvailable = 40,   // Byte, CONNACK
-        SubscriptionIdentifierAvailable = 41,   // Byte, CONNACK
+        SubscriptionIdentifiersAvailable = 41,   // Byte, CONNACK
         SharedSubscriptionAvailable = 42,   // Byte, CONNACK
     };
 

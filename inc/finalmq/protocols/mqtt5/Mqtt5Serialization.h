@@ -84,21 +84,21 @@ public:
     void writeBinary(const Bytes& value);
     void writeProperties(const std::unordered_map<unsigned int, Variant>& properties, const std::unordered_map<std::string, std::string>& metainfo, unsigned int sizePropertyPayload);
 
-    static unsigned int sizeVarByteNumber(unsigned int number);
+    static constexpr unsigned int sizeVarByteNumber(unsigned int number);
     static unsigned int sizeString(const std::string& str);
     static unsigned int sizeStringPair(const std::string& key, const std::string& value);
     static unsigned int sizeBinary(const Bytes& value);
     static unsigned int sizeProperties(const std::unordered_map<unsigned int, Variant>& properties, const std::unordered_map<std::string, std::string>& metainfo, unsigned int& sizePropertyPayload);
 
-    unsigned int sizeConnect(const Mqtt5ConnectData& data, unsigned int& sizePropPayload, unsigned int& sizePropWillMessage) const;
-    unsigned int sizeConnAck(const Mqtt5ConnAckData& data, unsigned int& sizePropPayload) const;
-    unsigned int sizePublish(const Mqtt5PublishData& data, unsigned int& sizePropPayload) const;
-    unsigned int sizePubAck(const Mqtt5PubAckData& data, unsigned int& sizePropPayload) const;
-    unsigned int sizeSubscribe(const Mqtt5SubscribeData& data, unsigned int& sizePropPayload) const;
-    unsigned int sizeSubAck(const Mqtt5SubAckData& data, unsigned int& sizePropPayload) const;
-    unsigned int sizeUnsubscribe(const Mqtt5UnsubscribeData& data, unsigned int& sizePropPayload) const;
-    unsigned int sizeDisconnect(const Mqtt5DisconnectData& data, unsigned int& sizePropPayload) const;
-    unsigned int sizeAuth(const Mqtt5AuthData& data, unsigned int& sizePropPayload) const;
+    static unsigned int sizeConnect(const Mqtt5ConnectData& data, unsigned int& sizePropPayload, unsigned int& sizePropWillMessage);
+    static unsigned int sizeConnAck(const Mqtt5ConnAckData& data, unsigned int& sizePropPayload);
+    static unsigned int sizePublish(const Mqtt5PublishData& data, unsigned int& sizePropPayload);
+    static unsigned int sizePubAck(const Mqtt5PubAckData& data, unsigned int& sizePropPayload);
+    static unsigned int sizeSubscribe(const Mqtt5SubscribeData& data, unsigned int& sizePropPayload);
+    static unsigned int sizeSubAck(const Mqtt5SubAckData& data, unsigned int& sizePropPayload);
+    static unsigned int sizeUnsubscribe(const Mqtt5UnsubscribeData& data, unsigned int& sizePropPayload);
+    static unsigned int sizeDisconnect(const Mqtt5DisconnectData& data, unsigned int& sizePropPayload);
+    static unsigned int sizeAuth(const Mqtt5AuthData& data, unsigned int& sizePropPayload);
 
     void serializeConnect(const Mqtt5ConnectData& data, unsigned int sizePayload, unsigned int sizePropPayload, unsigned int sizePropWillMessage);
     void serializeConnAck(const Mqtt5ConnAckData& data, unsigned int sizePayload, unsigned int sizePropPayload);
