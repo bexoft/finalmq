@@ -139,6 +139,7 @@ void Mqtt5Client::endConnection(const IStreamConnectionPtr& connection, const Di
     {
         dataInternal.properties[Mqtt5PropertyId::ServerReference] = data.serverReference;
     }
+    m_protocol->sendDisconnect(connection, dataInternal);
 }
 
 
@@ -158,11 +159,12 @@ void Mqtt5Client::auth(const IStreamConnectionPtr& connection, const AuthData& d
     {
         dataInternal.properties[Mqtt5PropertyId::AuthenticationData] = data.authenticationData;
     }
+    m_protocol->sendAuth(connection, dataInternal);
 }
 
 
 
-void Mqtt5Client::timerCyclus(const IStreamConnectionPtr& connection)
+void Mqtt5Client::timerCyclus(const IStreamConnectionPtr& /*connection*/)
 {
 
 }
