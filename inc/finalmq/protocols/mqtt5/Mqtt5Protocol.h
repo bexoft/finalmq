@@ -28,6 +28,7 @@
 
 #include <deque>
 #include <functional>
+#include <unordered_set>
 
 namespace finalmq {
 
@@ -86,6 +87,9 @@ public:
     bool processPayload(const IStreamConnectionPtr& connection);
     void clearState();
 
+    unsigned int getPacketId();
+    void resendMessages(const IStreamConnectionPtr& connection);
+    void sendPendingMessages(const IStreamConnectionPtr& connection);
     void prepareForSendWithPacketId(const IMessagePtr& message, char* bufferPacketId, unsigned qos, unsigned int command, unsigned int packetId);
     bool prepareForSend(const IMessagePtr& message, char* bufferPacketId, unsigned qos, unsigned int command);
     bool handleAck(const IStreamConnectionPtr& connection, unsigned int command, unsigned int packetId, unsigned int reasoncode);
@@ -95,7 +99,6 @@ public:
     void sendPubComp(const IStreamConnectionPtr& connection, const Mqtt5PubAckData& data);
     void sendSubAck(const IStreamConnectionPtr& connection, const Mqtt5SubAckData& data);
     void sendUnsubAck(const IStreamConnectionPtr& connection, const Mqtt5SubAckData& data);
-
     void sendPubAck(const IStreamConnectionPtr& connection, unsigned int command, const Mqtt5PubAckData& data);
     void sendSubAck(const IStreamConnectionPtr& connection, unsigned int command, const Mqtt5SubAckData& data);
 
@@ -145,12 +148,14 @@ public:
         Status                              status = SENDSTAT_NONE;
         std::list<IMessagePtr>::iterator    iterator;
     };
-    
+
+    bool                        m_connecting = true;
     std::uint16_t               m_sendMax = 0;              ///< max. messages that will wait for an ack. In case of exceed, the messages will wait in m_messagesPending.
     std::deque<PendingMessage>  m_messagesPending;          ///< messages that were not sent, yet, because of flow control
     std::list<IMessagePtr>      m_messagesWaitAck;          ///< keeps the messages in order that could be resent
     std::deque<MessageStatus>   m_messageIdsAllocated;      ///< the message status of messages that wait for ack, the index is the message id
     std::deque<std::uint16_t>   m_messageIdsFree;           ///< free message ids
+    std::unordered_set<std::uint16_t> m_setExactlyOne;
 
     hybrid_ptr<IMqtt5ProtocolCallback>  m_callback;
 
