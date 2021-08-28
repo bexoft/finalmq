@@ -98,7 +98,7 @@ bool Mqtt5Protocol::receiveRemainingSize(const IStreamConnectionPtr& connection,
     assert(m_state == State::WAITFORHEADER);
     bool ok = true;
     bool done = false;
-    while (bytesToRead > 1 && !done && ok)
+    while ((bytesToRead > 1) && !done && ok)
     {
         ok = false;
         if (m_remainingSizeShift <= 21)
@@ -179,7 +179,7 @@ bool Mqtt5Protocol::receivePayload(const IStreamConnectionPtr& connection, const
         {
             ok = true;
         }
-        if (ok && m_sizeCurrent == m_remainingSize)
+        if (ok && (m_sizeCurrent == m_remainingSize))
         {
             m_state = State::MESSAGECOMPLETE;
             m_sizeCurrent = 0;
@@ -198,20 +198,20 @@ bool Mqtt5Protocol::handleAck(const IStreamConnectionPtr& connection, unsigned i
 {
     bool ok = true;
     std::unique_lock<std::mutex> lock(m_mutex);
-    if (packetId != 0 && packetId < m_messageIdsAllocated.size())
+    if ((packetId != 0) && (packetId < m_messageIdsAllocated.size()))
     {
         Mqtt5Command cmd = static_cast<Mqtt5Command>(command);
         MessageStatus& status = m_messageIdsAllocated[packetId];
-        if ((status.status == MessageStatus::SENDSTAT_WAITPUBACK)   && (cmd == Mqtt5Command::COMMAND_PUBACK)  ||
-            (status.status == MessageStatus::SENDSTAT_WAITPUBREC)   && (cmd == Mqtt5Command::COMMAND_PUBREC)  ||
-            (status.status == MessageStatus::SENDSTAT_WAITPUBCOMP)  && (cmd == Mqtt5Command::COMMAND_PUBCOMP) ||
-            (status.status == MessageStatus::SENDSTAT_WAITSUBACK)   && (cmd == Mqtt5Command::COMMAND_SUBACK)  ||
-            (status.status == MessageStatus::SENDSTAT_WAITUNSUBACK) && (cmd == Mqtt5Command::COMMAND_UNSUBACK))
+        if (((status.status == MessageStatus::SENDSTAT_WAITPUBACK)   && (cmd == Mqtt5Command::COMMAND_PUBACK))  ||
+            ((status.status == MessageStatus::SENDSTAT_WAITPUBREC)   && (cmd == Mqtt5Command::COMMAND_PUBREC))  ||
+            ((status.status == MessageStatus::SENDSTAT_WAITPUBCOMP)  && (cmd == Mqtt5Command::COMMAND_PUBCOMP)) ||
+            ((status.status == MessageStatus::SENDSTAT_WAITSUBACK)   && (cmd == Mqtt5Command::COMMAND_SUBACK))  ||
+            ((status.status == MessageStatus::SENDSTAT_WAITUNSUBACK) && (cmd == Mqtt5Command::COMMAND_UNSUBACK)))
         {
             assert(status.iterator != m_messagesWaitAck.end());
             m_messagesWaitAck.erase(status.iterator);
             status.iterator = m_messagesWaitAck.end();
-            if (cmd != Mqtt5Command::COMMAND_PUBREC || reasoncode >= 128)
+            if ((cmd != Mqtt5Command::COMMAND_PUBREC) || (reasoncode >= 128))
             {
                 status.status = MessageStatus::SENDSTAT_NONE;
                 m_messageIdsFree.push_back(packetId);
@@ -219,8 +219,8 @@ bool Mqtt5Protocol::handleAck(const IStreamConnectionPtr& connection, unsigned i
                 if (packetId == m_messageIdsAllocated.size() - 1)
                 {
                     // ... remove all unused entries from the end of the allocation list
-                    while (m_messageIdsAllocated.size() >= 2 && // keep last dummy one at index = 0 
-                            m_messageIdsAllocated.back().status == MessageStatus::SENDSTAT_NONE)
+                    while ((m_messageIdsAllocated.size() >= 2) && // keep last dummy one at index = 0 
+                           (m_messageIdsAllocated.back().status == MessageStatus::SENDSTAT_NONE))
                     {
                         m_messageIdsAllocated.pop_back();
                     }
@@ -316,7 +316,7 @@ bool Mqtt5Protocol::processPayload(const IStreamConnectionPtr& connection)
                 else if (data.qos == 2)
                 {
                     std::unique_lock<std::mutex> lock(m_mutex);
-                    if (data.dup && m_setExactlyOne.find(data.packetId) != m_setExactlyOne.end())
+                    if (data.dup && (m_setExactlyOne.find(data.packetId) != m_setExactlyOne.end()))
                     {
                         execute = false;
                     }
@@ -575,7 +575,7 @@ void Mqtt5Protocol::resendMessages(const IStreamConnectionPtr& connection)
 
             // set dup
             const std::list<BufferRef>& buffers = message->getAllSendBuffers();
-            if (!buffers.empty() && buffers.front().second > 0)
+            if (!buffers.empty() && (buffers.front().second > 0))
             {
                 const BufferRef bufferRef = buffers.front();
                 assert(bufferRef.first);
