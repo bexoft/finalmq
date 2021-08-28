@@ -28,7 +28,7 @@
 namespace finalmq {
 
 
-enum class Mqtt5Command : unsigned int
+enum Mqtt5Command
 {
     COMMAND_CONNECT         = 1,       // Server <-  Client, Connection request
     COMMAND_CONNACK         = 2,       // Server  -> Client, Connect acknowledgment
@@ -84,6 +84,12 @@ public:
     void writeBinary(const Bytes& value);
     void writeProperties(const std::unordered_map<unsigned int, Variant>& properties, const std::unordered_map<std::string, std::string>& metainfo, unsigned int sizePropertyPayload);
 
+    static void write2ByteNumber(char* buffer, unsigned int number)
+    {
+        buffer[0] = (number >> 8) & 0xff;
+        buffer[1] = (number >> 0) & 0xff;
+    }
+
     static constexpr unsigned int sizeVarByteNumber(unsigned int number)
     {
         assert(number <= 268435455);
@@ -107,11 +113,11 @@ public:
 
     void serializeConnect(const Mqtt5ConnectData& data, unsigned int sizePayload, unsigned int sizePropPayload, unsigned int sizePropWillMessage);
     void serializeConnAck(const Mqtt5ConnAckData& data, unsigned int sizePayload, unsigned int sizePropPayload);
-    void serializePublish(const Mqtt5PublishData& data, unsigned int sizePayload, unsigned int sizePropPayload);
+    void serializePublish(const Mqtt5PublishData& data, unsigned int sizePayload, unsigned int sizePropPayload, char*& bufferPacketId);
     void serializePubAck(const Mqtt5PubAckData& data, Mqtt5Command command, unsigned int sizePayload, unsigned int sizePropPayload);
-    void serializeSubscribe(const Mqtt5SubscribeData& data, unsigned int sizePayload, unsigned int sizePropPayload);
-    void serializeSubAck(const Mqtt5SubAckData& data, unsigned int sizePayload, unsigned int sizePropPayload);
-    void serializeUnsubscribe(const Mqtt5UnsubscribeData& data, unsigned int sizePayload, unsigned int sizePropPayload);
+    void serializeSubscribe(const Mqtt5SubscribeData& data, unsigned int sizePayload, unsigned int sizePropPayload, char*& bufferPacketId);
+    void serializeSubAck(const Mqtt5SubAckData& data, Mqtt5Command command, unsigned int sizePayload, unsigned int sizePropPayload);
+    void serializeUnsubscribe(const Mqtt5UnsubscribeData& data, unsigned int sizePayload, unsigned int sizePropPayload, char*& bufferPacketId);
     void serializePingReq();
     void serializePingResp();
     void serializeDisconnect(const Mqtt5DisconnectData& data, unsigned int sizePayload, unsigned int sizePropPayload);

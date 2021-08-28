@@ -51,17 +51,15 @@ struct IMqtt5Protocol
 {
     virtual ~IMqtt5Protocol() = default;
     virtual void setCallback(hybrid_ptr<IMqtt5ProtocolCallback> callback) = 0;
-    virtual bool sendConnect(const IStreamConnectionPtr& connection, const Mqtt5ConnectData& data) = 0;
-    virtual bool sendConnAck(const IStreamConnectionPtr& connection, const Mqtt5ConnAckData& data) = 0;
-    virtual bool sendPublish(const IStreamConnectionPtr& connection, Mqtt5PublishData& data, const IMessagePtr& message) = 0;
-    virtual bool sendSubscribe(const IStreamConnectionPtr& connection, const Mqtt5SubscribeData& data) = 0;
-    virtual bool sendSubAck(const IStreamConnectionPtr& connection, const Mqtt5SubAckData& data) = 0;
-    virtual bool sendUnsubscribe(const IStreamConnectionPtr& connection, const Mqtt5UnsubscribeData& data) = 0;
-    virtual bool sendUnsubAck(const IStreamConnectionPtr& connection, const Mqtt5SubAckData& data) = 0;
-    virtual bool sendPingReq(const IStreamConnectionPtr& connection) = 0;
-    virtual bool sendPingResp(const IStreamConnectionPtr& connection) = 0;
-    virtual bool sendDisconnect(const IStreamConnectionPtr& connection, const Mqtt5DisconnectData& data) = 0;
-    virtual bool sendAuth(const IStreamConnectionPtr& connection, const Mqtt5AuthData& data) = 0;
+    virtual void sendConnect(const IStreamConnectionPtr& connection, const Mqtt5ConnectData& data) = 0;
+    virtual void sendConnAck(const IStreamConnectionPtr& connection, const Mqtt5ConnAckData& data) = 0;
+    virtual void sendPublish(const IStreamConnectionPtr& connection, Mqtt5PublishData& data, const IMessagePtr& message) = 0;
+    virtual void sendSubscribe(const IStreamConnectionPtr& connection, const Mqtt5SubscribeData& data) = 0;
+    virtual void sendUnsubscribe(const IStreamConnectionPtr& connection, const Mqtt5UnsubscribeData& data) = 0;
+    virtual void sendPingReq(const IStreamConnectionPtr& connection) = 0;
+    virtual void sendPingResp(const IStreamConnectionPtr& connection) = 0;
+    virtual void sendDisconnect(const IStreamConnectionPtr& connection, const Mqtt5DisconnectData& data) = 0;
+    virtual void sendAuth(const IStreamConnectionPtr& connection, const Mqtt5AuthData& data) = 0;
 };
 
 
@@ -70,7 +68,7 @@ class Mqtt5Protocol : public IMqtt5Protocol
 public:
     Mqtt5Protocol();
 
-    bool receive(const SocketPtr& socket, int bytesToRead);
+    bool receive(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead);
 
 public:
     enum class State
@@ -82,25 +80,37 @@ public:
     };
 
     bool receiveHeader(const SocketPtr& socket, int& bytesToRead);
-    bool receiveRemainingSize(const SocketPtr& socket, int& bytesToRead);
+    bool receiveRemainingSize(const IStreamConnectionPtr& connection, const SocketPtr& socket, int& bytesToRead);
     void setPayloadSize();
-    bool receivePayload(const SocketPtr& socket, int& bytesToRead);
-    bool processPayload();
+    bool receivePayload(const IStreamConnectionPtr& connection, const SocketPtr& socket, int& bytesToRead);
+    bool processPayload(const IStreamConnectionPtr& connection);
     void clearState();
+
+    void prepareForSendWithPacketId(const IMessagePtr& message, char* bufferPacketId, unsigned qos, unsigned int command, unsigned int packetId);
+    bool prepareForSend(const IMessagePtr& message, char* bufferPacketId, unsigned qos, unsigned int command);
+    bool handleAck(const IStreamConnectionPtr& connection, unsigned int command, unsigned int packetId, unsigned int reasoncode);
+    void sendPubAck(const IStreamConnectionPtr& connection, const Mqtt5PubAckData& data);
+    void sendPubRec(const IStreamConnectionPtr& connection, const Mqtt5PubAckData& data);
+    void sendPubRel(const IStreamConnectionPtr& connection, const Mqtt5PubAckData& data, const IMessagePtr& message);
+    void sendPubComp(const IStreamConnectionPtr& connection, const Mqtt5PubAckData& data);
+    void sendSubAck(const IStreamConnectionPtr& connection, const Mqtt5SubAckData& data);
+    void sendUnsubAck(const IStreamConnectionPtr& connection, const Mqtt5SubAckData& data);
+
+    void sendPubAck(const IStreamConnectionPtr& connection, unsigned int command, const Mqtt5PubAckData& data);
+    void sendSubAck(const IStreamConnectionPtr& connection, unsigned int command, const Mqtt5SubAckData& data);
+
 
     // IMqtt5Protocol
     virtual void setCallback(hybrid_ptr<IMqtt5ProtocolCallback> callback) override;
-    virtual bool sendConnect(const IStreamConnectionPtr& connection, const Mqtt5ConnectData& data) override;
-    virtual bool sendConnAck(const IStreamConnectionPtr& connection, const Mqtt5ConnAckData& data) override;
-    virtual bool sendPublish(const IStreamConnectionPtr& connection, Mqtt5PublishData& data, const IMessagePtr& message) override;
-    virtual bool sendSubscribe(const IStreamConnectionPtr& connection, const Mqtt5SubscribeData& data) override;
-    virtual bool sendSubAck(const IStreamConnectionPtr& connection, const Mqtt5SubAckData& data) override;
-    virtual bool sendUnsubscribe(const IStreamConnectionPtr& connection, const Mqtt5UnsubscribeData& data) override;
-    virtual bool sendUnsubAck(const IStreamConnectionPtr& connection, const Mqtt5SubAckData& data) override;
-    virtual bool sendPingReq(const IStreamConnectionPtr& connection) override;
-    virtual bool sendPingResp(const IStreamConnectionPtr& connection) override;
-    virtual bool sendDisconnect(const IStreamConnectionPtr& connection, const Mqtt5DisconnectData& data) override;
-    virtual bool sendAuth(const IStreamConnectionPtr& connection, const Mqtt5AuthData& data) override;
+    virtual void sendConnect(const IStreamConnectionPtr& connection, const Mqtt5ConnectData& data) override;
+    virtual void sendConnAck(const IStreamConnectionPtr& connection, const Mqtt5ConnAckData& data) override;
+    virtual void sendPublish(const IStreamConnectionPtr& connection, Mqtt5PublishData& data, const IMessagePtr& message) override;
+    virtual void sendSubscribe(const IStreamConnectionPtr& connection, const Mqtt5SubscribeData& data) override;
+    virtual void sendUnsubscribe(const IStreamConnectionPtr& connection, const Mqtt5UnsubscribeData& data) override;
+    virtual void sendPingReq(const IStreamConnectionPtr& connection) override;
+    virtual void sendPingResp(const IStreamConnectionPtr& connection) override;
+    virtual void sendDisconnect(const IStreamConnectionPtr& connection, const Mqtt5DisconnectData& data) override;
+    virtual void sendAuth(const IStreamConnectionPtr& connection, const Mqtt5AuthData& data) override;
 
     unsigned char m_header;
     int         m_remainingSize = 0;
@@ -113,7 +123,34 @@ public:
     Bytes       m_messageBuffer;
     char*       m_buffer = nullptr;
 
-//    std::deque<IMessagePtr>* m_messages = nullptr;
+    struct PendingMessage
+    {
+        IMessagePtr     message;
+        char*           bufferPacketId = nullptr;
+        unsigned int    qos = 0;
+        unsigned int    command = 0;
+    };
+    struct MessageStatus
+    {
+        enum Status
+        {
+            SENDSTAT_NONE,
+            SENDSTAT_WAITPUBACK,
+            SENDSTAT_WAITPUBREC,
+            SENDSTAT_WAITPUBCOMP,
+            SENDSTAT_WAITSUBACK,
+            SENDSTAT_WAITUNSUBACK,
+        };
+
+        Status                              status = SENDSTAT_NONE;
+        std::list<IMessagePtr>::iterator    iterator;
+    };
+    
+    std::uint16_t               m_sendMax = 0;              ///< max. messages that will wait for an ack. In case of exceed, the messages will wait in m_messagesPending.
+    std::deque<PendingMessage>  m_messagesPending;          ///< messages that were not sent, yet, because of flow control
+    std::list<IMessagePtr>      m_messagesWaitAck;          ///< keeps the messages in order that could be resent
+    std::deque<MessageStatus>   m_messageIdsAllocated;      ///< the message status of messages that wait for ack, the index is the message id
+    std::deque<std::uint16_t>   m_messageIdsFree;           ///< free message ids
 
     hybrid_ptr<IMqtt5ProtocolCallback>  m_callback;
 

@@ -413,8 +413,9 @@ unsigned int Mqtt5Serialization::sizePublish(const Mqtt5PublishData& data, unsig
     return size;
 }
 
-void Mqtt5Serialization::serializePublish(const Mqtt5PublishData& data, unsigned int sizePayload, unsigned int sizePropPayload)
+void Mqtt5Serialization::serializePublish(const Mqtt5PublishData& data, unsigned int sizePayload, unsigned int sizePropPayload, char*& bufferPacketId)
 {
+    bufferPacketId = nullptr;
     unsigned int header = 0;
     header |= HEADER_SetCommand(Mqtt5Command::COMMAND_PUBLISH);
     header |= HEADER_SetQoS(data.qos);
@@ -429,6 +430,7 @@ void Mqtt5Serialization::serializePublish(const Mqtt5PublishData& data, unsigned
     // packet identifier
     if (data.qos > 0)
     {
+        bufferPacketId = &m_buffer[m_indexBuffer];
         write2ByteNumber(data.packetId);
     }
 
@@ -618,7 +620,7 @@ unsigned int Mqtt5Serialization::sizeSubscribe(const Mqtt5SubscribeData& data, u
 }
 
 
-void Mqtt5Serialization::serializeSubscribe(const Mqtt5SubscribeData& data, unsigned int sizePayload, unsigned int sizePropPayload)
+void Mqtt5Serialization::serializeSubscribe(const Mqtt5SubscribeData& data, unsigned int sizePayload, unsigned int sizePropPayload, char*& bufferPacketId)
 {
     unsigned int header = 0;
     header |= HEADER_SetCommand(Mqtt5Command::COMMAND_SUBSCRIBE);
@@ -627,6 +629,7 @@ void Mqtt5Serialization::serializeSubscribe(const Mqtt5SubscribeData& data, unsi
     writeVarByteNumber(sizePayload);
 
     // packet identifier
+    bufferPacketId = &m_buffer[m_indexBuffer];
     write2ByteNumber(data.packetId);
 
     // properties
@@ -711,9 +714,9 @@ unsigned int Mqtt5Serialization::sizeSubAck(const Mqtt5SubAckData& data, unsigne
     return size;
 }
 
-void Mqtt5Serialization::serializeSubAck(const Mqtt5SubAckData& data, unsigned int sizePayload, unsigned int sizePropPayload)
+void Mqtt5Serialization::serializeSubAck(const Mqtt5SubAckData& data, Mqtt5Command command, unsigned int sizePayload, unsigned int sizePropPayload)
 {
-    unsigned int header = HEADER_SetCommand(Mqtt5Command::COMMAND_SUBACK);
+    unsigned int header = HEADER_SetCommand(command);
     write1ByteNumber(header);
     writeVarByteNumber(sizePayload);
 
@@ -801,7 +804,7 @@ unsigned int Mqtt5Serialization::sizeUnsubscribe(const Mqtt5UnsubscribeData& dat
     return size;
 }
 
-void Mqtt5Serialization::serializeUnsubscribe(const Mqtt5UnsubscribeData& data, unsigned int sizePayload, unsigned int sizePropPayload)
+void Mqtt5Serialization::serializeUnsubscribe(const Mqtt5UnsubscribeData& data, unsigned int sizePayload, unsigned int sizePropPayload, char*& bufferPacketId)
 {
     unsigned int header = 0;
     header |= HEADER_SetCommand(Mqtt5Command::COMMAND_UNSUBSCRIBE);
@@ -810,6 +813,7 @@ void Mqtt5Serialization::serializeUnsubscribe(const Mqtt5UnsubscribeData& data, 
     writeVarByteNumber(sizePayload);
 
     // packet identifier
+    bufferPacketId = &m_buffer[m_indexBuffer];
     write2ByteNumber(data.packetId);
 
     // properties

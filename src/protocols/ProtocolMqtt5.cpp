@@ -109,9 +109,9 @@ void ProtocolMqtt5::moveOldProtocolState(IProtocol& /*protocolOld*/)
 {
 }
 
-bool ProtocolMqtt5::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead) 
+bool ProtocolMqtt5::received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) 
 {
-    bool ok = m_protocol.receive(socket, bytesToRead);
+    bool ok = m_protocol.receive(connection, socket, bytesToRead);
     return ok;
 }
 
