@@ -181,6 +181,11 @@ IMessagePtr ProtocolHeaderBinarySize::pollReply(std::deque<IMessagePtr>&& /*mess
     return {};
 }
 
+void ProtocolHeaderBinarySize::cycleTime()
+{
+
+}
+
 
 //---------------------------------------
 // ProtocolHeaderBinarySizeFactory

@@ -163,6 +163,10 @@ IMessagePtr ProtocolStream::pollReply(std::deque<IMessagePtr>&& /*messages*/)
     return {};
 }
 
+void ProtocolStream::cycleTime()
+{
+
+}
 
 
 

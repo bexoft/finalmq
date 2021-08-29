@@ -42,6 +42,8 @@ void Mqtt5Client::setCallback(hybrid_ptr<IMqtt5ClientCallback> callback)
 
 void Mqtt5Client::startConnection(const IStreamConnectionPtr& connection, const ConnectData& data)
 {
+    m_keepAlive = data.keepAlive;
+    m_sessionExpiryInterval = data.sessionExpiryInterval;
     Mqtt5ConnectData dataInternal;
     dataInternal.cleanStart = data.cleanStart;
     if (data.willMessage)
@@ -164,9 +166,38 @@ void Mqtt5Client::auth(const IStreamConnectionPtr& connection, const AuthData& d
 
 
 
-void Mqtt5Client::timerCyclus(const IStreamConnectionPtr& /*connection*/)
+void Mqtt5Client::cycleTime(const IStreamConnectionPtr& connection)
 {
+    if (m_timerPing.isExpired())
+    {
+        m_protocol->sendPingReq(connection);
+        if (m_keepAlive > 0)
+        {
+            m_timerPing.setTimeout(m_keepAlive * 1000);
+        }
+    }
+    if (m_timerReceiveActivity.isExpired())
+    {
+        auto callback = m_callback.lock();
+        if (callback)
+        {
+            endConnection(connection, { ReasonKeepAliveTimeout, "Keep Alive Timeout"});
+            callback->closeConnection();
+        }
+    }
+}
 
+
+void Mqtt5Client::setReceiveActivity()
+{
+    if (m_keepAlive > 0)
+    {
+        m_timerReceiveActivity.setTimeout(m_keepAlive * 1500);  // x1.5
+    }
+    else
+    {
+        m_timerReceiveActivity.stop();
+    }
 }
 
 
@@ -181,10 +212,13 @@ void Mqtt5Client::receivedConnAck(const Mqtt5ConnAckData& data)
     IMqtt5ClientCallback::ConnAckData dataDest;
     dataDest.sessionPresent = data.sessionPresent;
     dataDest.reasoncode = data.reasoncode;
+    dataDest.serverKeepAlive = m_keepAlive;
+    dataDest.sessionExpiryInterval = m_sessionExpiryInterval;
     std::unordered_map<unsigned int, Variant>::const_iterator it;
     if ((it = data.properties.find(Mqtt5PropertyId::SessionExpiryInterval)) != data.properties.end())
     {
-        dataDest.sessionExpiryInterval = it->second;
+        m_sessionExpiryInterval = it->second;
+        dataDest.sessionExpiryInterval = m_sessionExpiryInterval;
     }
     if ((it = data.properties.find(Mqtt5PropertyId::ReceiveMaximum)) != data.properties.end())
     {
@@ -226,7 +260,8 @@ void Mqtt5Client::receivedConnAck(const Mqtt5ConnAckData& data)
     }
     if ((it = data.properties.find(Mqtt5PropertyId::ServerKeepAlive)) != data.properties.end())
     {
-        dataDest.serverKeepAlive = static_cast<std::uint32_t>(it->second);
+        m_keepAlive = static_cast<std::uint32_t>(it->second);
+        dataDest.serverKeepAlive = m_keepAlive;
     }
     if ((it = data.properties.find(Mqtt5PropertyId::ServerReference)) != data.properties.end())
     {
@@ -243,6 +278,12 @@ void Mqtt5Client::receivedConnAck(const Mqtt5ConnAckData& data)
         Bytes b = it->second;
         dataDest.authenticationData = std::move(b);
     }
+
+    if (m_keepAlive > 0)
+    {
+        m_timerPing.setTimeout(m_keepAlive * 1000);
+    }
+    setReceiveActivity();
 
     auto callback = m_callback.lock();
     if (callback)
@@ -288,6 +329,8 @@ void Mqtt5Client::receivedPublish(Mqtt5PublishData&& data, const IMessagePtr& me
         }
     }
 
+    setReceiveActivity();
+
     auto callback = m_callback.lock();
     if (callback)
     {
@@ -302,6 +345,8 @@ void Mqtt5Client::receivedSubscribe(const Mqtt5SubscribeData& /*data*/)
 
 void Mqtt5Client::receivedSubAck(const Mqtt5SubAckData& data)
 {
+    setReceiveActivity();
+
     auto callback = m_callback.lock();
     if (callback)
     {
@@ -316,6 +361,8 @@ void Mqtt5Client::receivedUnsubscribe(const Mqtt5UnsubscribeData& /*data*/)
 
 void Mqtt5Client::receivedUnsubAck(const Mqtt5SubAckData& data)
 {
+    setReceiveActivity();
+
     auto callback = m_callback.lock();
     if (callback)
     {
@@ -330,6 +377,8 @@ void Mqtt5Client::receivedPingReq()
 
 void Mqtt5Client::receivedPingResp()
 {
+    setReceiveActivity();
+
     auto callback = m_callback.lock();
     if (callback)
     {
@@ -398,12 +447,17 @@ void Mqtt5Client::receivedAuth(const Mqtt5AuthData& data)
         }
     }
 
+    setReceiveActivity();
+
     auto callback = m_callback.lock();
     if (callback)
     {
         callback->receivedAuth(dataDest);
     }
 }
+
+
+
 
 
 }   // namespace finalmq

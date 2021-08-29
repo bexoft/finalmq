@@ -711,6 +711,20 @@ void ProtocolSession::reconnect()
 void ProtocolSession::cycleTime()
 {
     std::unique_lock<std::mutex> lock(m_mutex);
+    std::vector<IProtocolPtr> protocols;
+    protocols.reserve(m_multiConnections.size() + 1);
+    if (m_protocolConnection.protocol)
+    {
+        protocols.push_back(m_protocolConnection.protocol);
+    }
+    for (auto it = m_multiConnections.begin(); it != m_multiConnections.end(); ++it)
+    {
+        if (it->second.protocol)
+        {
+            protocols.push_back(it->second.protocol);
+        }
+    }
+    
     if (m_pollWaiting && m_pollTimer.isExpired())
     {
         pollRelease();
@@ -719,6 +733,12 @@ void ProtocolSession::cycleTime()
     {
         lock.unlock();
         disconnect();
+    }
+    lock.unlock();
+
+    for (size_t i = 0; i < protocols.size(); ++i)
+    {
+        protocols[i]->cycleTime();
     }
 }
 

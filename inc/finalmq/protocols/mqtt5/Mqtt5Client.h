@@ -26,6 +26,7 @@
 #include "finalmq/streamconnection/StreamConnection.h"
 #include "finalmq/metadata/MetaType.h"
 #include "finalmq/protocols/mqtt5/Mqtt5Protocol.h"
+#include "finalmq/helpers/PollingTimer.h"
 
 
 namespace finalmq {
@@ -39,7 +40,7 @@ struct IMqtt5ClientCallback
     {
         bool sessionPresent = false;
         std::uint8_t reasoncode = 0;
-        std::uint32_t sessionExpiryInterval = 0xffffffff;    // 0xffffffff means, the session expiry interval was not present in the properties
+        std::uint32_t sessionExpiryInterval = 0;
         std::uint16_t receiveMaximum = 65535;
         std::uint8_t maximumQoS = 2;
         bool retainAvailable = true;
@@ -88,6 +89,8 @@ struct IMqtt5ClientCallback
         std::string reasonString;
     };
     virtual void receivedAuth(const AuthData& data) = 0;
+
+    virtual void closeConnection() = 0;
 };
 
 struct IMqtt5Client
@@ -161,7 +164,7 @@ struct IMqtt5Client
     };
     virtual void auth(const IStreamConnectionPtr& connection, const AuthData& data) = 0;
 
-    virtual void timerCyclus(const IStreamConnectionPtr& connection) = 0;
+    virtual void cycleTime(const IStreamConnectionPtr& connection) = 0;
 };
 
 
@@ -181,7 +184,7 @@ private:
     virtual void unsubscribe(const IStreamConnectionPtr& connection, const std::vector<std::string>& topics) override;
     virtual void endConnection(const IStreamConnectionPtr& connection, const DisconnectData& data) override;
     virtual void auth(const IStreamConnectionPtr& connection, const AuthData& data) override;
-    virtual void timerCyclus(const IStreamConnectionPtr& connection) override;
+    virtual void cycleTime(const IStreamConnectionPtr& connection) override;
 
     // IMqtt5ProtocolCallback
     virtual void receivedConnect(const Mqtt5ConnectData& data) override;
@@ -196,7 +199,14 @@ private:
     virtual void receivedDisconnect(const Mqtt5DisconnectData& data) override;
     virtual void receivedAuth(const Mqtt5AuthData& data) override;
 
+    void setReceiveActivity();
+
     hybrid_ptr<IMqtt5ClientCallback> m_callback;
+    std::uint16_t m_keepAlive = 0;
+    PollingTimer  m_timerPing;
+    PollingTimer  m_timerReceiveActivity;
+
+    std::uint32_t m_sessionExpiryInterval = 0;
 
     std::unique_ptr<IMqtt5Protocol> m_protocol = std::make_unique<Mqtt5Protocol>();
 };

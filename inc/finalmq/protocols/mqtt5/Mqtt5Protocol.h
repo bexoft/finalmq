@@ -32,6 +32,12 @@
 
 namespace finalmq {
 
+
+enum Mqtt5ReasonCode {
+    ReasonKeepAliveTimeout = 0x8d,
+};
+
+
 struct IMqtt5ProtocolCallback
 {
     virtual ~IMqtt5ProtocolCallback() = default;

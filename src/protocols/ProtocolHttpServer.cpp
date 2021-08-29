@@ -1183,6 +1183,13 @@ IMessagePtr ProtocolHttpServer::pollReply(std::deque<IMessagePtr>&& messages)
 }
 
 
+void ProtocolHttpServer::cycleTime()
+{
+
+}
+
+
+
 //---------------------------------------
 // ProtocolHttpFactory
 //---------------------------------------

@@ -343,5 +343,10 @@ IMessagePtr ProtocolDelimiter::pollReply(std::deque<IMessagePtr>&& /*messages*/)
     return {};
 }
 
+void ProtocolDelimiter::cycleTime()
+{
+
+}
+
 
 }   // namespace finalmq

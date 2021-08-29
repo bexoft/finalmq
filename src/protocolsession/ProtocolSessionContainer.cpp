@@ -83,7 +83,8 @@ void ProtocolSessionContainer::init(const IExecutorPtr& executor, int cycleTime,
 {
     m_executor = executor;
     std::shared_ptr<FuncTimer> pFuncTimer = funcTimer ? std::make_shared<FuncTimer>(std::move(funcTimer)) : nullptr;
-    m_streamConnectionContainer->init(cycleTime, [this, pFuncTimer](){
+    int counterInterval = (cycleTime > 0) ? (1000 / cycleTime) : 1; // 1000, means: call sessions ervery second
+    m_streamConnectionContainer->init(cycleTime, [this, pFuncTimer, counterInterval](){
         if (pFuncTimer)
         {
             if (m_executor)
@@ -97,7 +98,8 @@ void ProtocolSessionContainer::init(const IExecutorPtr& executor, int cycleTime,
                 (*pFuncTimer)();
             }
         }
-        if (++m_counterTimer % 20 == 0)
+        // the sessions will be called every second
+        if (++m_counterTimer % counterInterval == 0)
         {
             std::vector< IProtocolSessionPrivatePtr > sessions = m_protocolSessionList->getAllSessions();
             for (size_t i = 0; i < sessions.size(); ++i)

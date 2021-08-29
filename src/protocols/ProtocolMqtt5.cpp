@@ -27,6 +27,7 @@
 #include "finalmq/protocolsession/ProtocolRegistry.h"
 
 
+//!!! todo: the receivedConnAck callback has serverKeepAlive and sessionExpiryInterval, use these parameters for calling setActivityTimeout with: (serverKeepAlive*1000 + serverKeepAlive*1500)
 
 
 namespace finalmq {
@@ -137,6 +138,11 @@ void ProtocolMqtt5::disconnected(const IStreamConnectionPtr& /*connection*/)
 IMessagePtr ProtocolMqtt5::pollReply(std::deque<IMessagePtr>&& /*messages*/) 
 {
     return {};
+}
+
+void ProtocolMqtt5::cycleTime()
+{
+
 }
 
 
