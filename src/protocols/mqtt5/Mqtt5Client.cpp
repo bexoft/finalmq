@@ -181,7 +181,7 @@ void Mqtt5Client::cycleTime(const IStreamConnectionPtr& connection)
         auto callback = m_callback.lock();
         if (callback)
         {
-            endConnection(connection, { ReasonKeepAliveTimeout, "Keep Alive Timeout"});
+            endConnection(connection, { ReasonKeepAliveTimeout, "Keep Alive Timeout", ""});
             callback->closeConnection();
         }
     }
