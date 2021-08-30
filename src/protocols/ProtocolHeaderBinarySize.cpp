@@ -69,6 +69,12 @@ void ProtocolHeaderBinarySize::setConnection(const IStreamConnectionPtr& connect
     m_connection = connection;
 }
 
+void ProtocolHeaderBinarySize::disconnect()
+{
+    assert(m_connection);
+    m_connection->disconnect();
+}
+
 std::uint32_t ProtocolHeaderBinarySize::getProtocolId() const
 {
     return PROTOCOL_ID;

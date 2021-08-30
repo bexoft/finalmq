@@ -384,22 +384,24 @@ void ProtocolSession::disconnect()
 
     std::unique_lock<std::mutex> lock(m_mutex);
     IProtocolSessionListPtr protocolSessionList = m_protocolSessionList.lock();
-    if (m_protocolConnection.connection)
+    std::vector<IProtocolPtr> protocols;
+    protocols.reserve(m_multiConnections.size() + 1);
+    if (m_protocolConnection.protocol)
     {
-        connections.push_back(m_protocolConnection.connection);
+        protocols.push_back(m_protocolConnection.protocol);
     }
     for (auto it = m_multiConnections.begin(); it != m_multiConnections.end(); ++it)
     {
-        if (it->second.connection)
+        if (it->second.protocol)
         {
-            connections.push_back(it->second.connection);
+            protocols.push_back(it->second.protocol);
         }
     }
     lock.unlock();
 
     for (size_t i = 0; i < connections.size(); ++i)
     {
-        connections[i]->disconnect();
+        protocols[i]->disconnect();
     }
 
     if (protocolSessionList)
@@ -697,12 +699,12 @@ void ProtocolSession::reconnect()
     IStreamConnectionPtr connection = m_streamConnectionContainer->createConnection(std::weak_ptr<IStreamConnectionCallback>(m_protocolConnection.protocol));
     std::unique_lock<std::mutex> lock(m_mutex);
     m_protocolConnection.connection = connection;
-    
-    // do not set the connection here: m_protocolConnection.protocol->setConnection(connection);
-    // protocols that call reconnect (client) shall get the connection from IStreamConnectionCallback::connected()
-    // inside the protocol m_connection must be protected by a protocol mutex
-
+    IProtocolPtr protocol = m_protocolConnection.protocol;
     lock.unlock();
+    if (protocol)
+    {
+        protocol->setConnection(connection);
+    }
     m_streamConnectionContainer->connect(connection, m_endpointStreamConnection, m_connectionProperties);
 }
 

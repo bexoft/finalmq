@@ -55,6 +55,12 @@ void ProtocolStream::setConnection(const IStreamConnectionPtr& connection)
     m_connection = connection;
 }
 
+void ProtocolStream::disconnect()
+{
+    assert(m_connection);
+    m_connection->disconnect();
+}
+
 std::uint32_t ProtocolStream::getProtocolId() const
 {
     return PROTOCOL_ID;

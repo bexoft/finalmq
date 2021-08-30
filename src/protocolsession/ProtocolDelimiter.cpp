@@ -50,6 +50,12 @@ void ProtocolDelimiter::setConnection(const IStreamConnectionPtr& connection)
     m_connection = connection;
 }
 
+void ProtocolDelimiter::disconnect()
+{
+    assert(m_connection);
+    m_connection->disconnect();
+}
+
 bool ProtocolDelimiter::areMessagesResendable() const
 {
     return true;

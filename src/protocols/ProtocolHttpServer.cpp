@@ -104,6 +104,12 @@ void ProtocolHttpServer::setConnection(const IStreamConnectionPtr& connection)
     m_connection = connection;
 }
 
+void ProtocolHttpServer::disconnect()
+{
+    assert(m_connection);
+    m_connection->disconnect();
+}
+
 std::uint32_t ProtocolHttpServer::getProtocolId() const
 {
     return PROTOCOL_ID;

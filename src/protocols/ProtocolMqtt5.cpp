@@ -37,6 +37,7 @@ const std::string ProtocolMqtt5::PROTOCOL_NAME = "mqtt5";
 
 
 ProtocolMqtt5::ProtocolMqtt5()
+    : m_client(std::make_unique<Mqtt5Client>())
 {
 }
 
@@ -51,10 +52,21 @@ void ProtocolMqtt5::setCallback(const std::weak_ptr<IProtocolCallback>& callback
 
 void ProtocolMqtt5::setConnection(const IStreamConnectionPtr& connection)
 {
+    IMqtt5Client::ConnectData data;
+    m_client->startConnection(connection, data);
+
+    std::unique_lock<std::mutex> lock(m_mutex);
     m_connection = connection;
+
 }
 
-std::uint32_t ProtocolMqtt5::getProtocolId() const 
+void ProtocolMqtt5::disconnect()
+{
+    assert(m_connection);
+    m_connection->disconnect();
+}
+
+std::uint32_t ProtocolMqtt5::getProtocolId() const
 {
     return PROTOCOL_ID;
 }
@@ -112,7 +124,7 @@ void ProtocolMqtt5::moveOldProtocolState(IProtocol& /*protocolOld*/)
 
 bool ProtocolMqtt5::received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) 
 {
-    bool ok = m_protocol.receive(connection, socket, bytesToRead);
+    bool ok = m_client->receive(connection, socket, bytesToRead);
     return ok;
 }
 
@@ -126,13 +138,16 @@ hybrid_ptr<IStreamConnectionCallback> ProtocolMqtt5::connected(const IStreamConn
     return nullptr;
 }
 
-void ProtocolMqtt5::disconnected(const IStreamConnectionPtr& /*connection*/) 
+void ProtocolMqtt5::disconnected(const IStreamConnectionPtr& connection)
 {
     auto callback = m_callback.lock();
     if (callback)
     {
         callback->disconnected();
     }
+
+    std::unique_lock<std::mutex> lock(m_mutex);
+    m_connection = nullptr;
 }
 
 IMessagePtr ProtocolMqtt5::pollReply(std::deque<IMessagePtr>&& /*messages*/) 
@@ -144,6 +159,50 @@ void ProtocolMqtt5::cycleTime()
 {
 
 }
+
+
+// IMqtt5ClientCallback
+void ProtocolMqtt5::receivedConnAck(const ConnAckData& data)
+{
+
+}
+
+void ProtocolMqtt5::receivedPublish(const PublishData& data, const IMessagePtr& message)
+{
+
+}
+
+void ProtocolMqtt5::receivedSubAck(const std::vector<std::uint8_t>& reasoncodes)
+{
+
+}
+
+void ProtocolMqtt5::receivedUnsubAck(const std::vector<std::uint8_t>& reasoncodes)
+{
+
+}
+
+void ProtocolMqtt5::receivedPingResp()
+{
+
+}
+
+void ProtocolMqtt5::receivedDisconnect(const DisconnectData& data)
+{
+
+}
+
+void ProtocolMqtt5::receivedAuth(const AuthData& data)
+{
+
+}
+
+void ProtocolMqtt5::closeConnection()
+{
+
+}
+
+
 
 
 //---------------------------------------

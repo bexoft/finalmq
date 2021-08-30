@@ -40,6 +40,13 @@ void Mqtt5Client::setCallback(hybrid_ptr<IMqtt5ClientCallback> callback)
     m_callback = callback;
 }
 
+bool Mqtt5Client::receive(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead)
+{
+    return m_protocol->receive(connection, socket, bytesToRead);
+}
+
+
+
 void Mqtt5Client::startConnection(const IStreamConnectionPtr& connection, const ConnectData& data)
 {
     m_keepAlive = data.keepAlive;

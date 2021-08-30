@@ -40,6 +40,7 @@ private:
     // IProtocol
     virtual void setCallback(const std::weak_ptr<IProtocolCallback>& callback) override;
     virtual void setConnection(const IStreamConnectionPtr& connection) override;
+    virtual void disconnect() override;
     virtual std::uint32_t getProtocolId() const = 0;
     virtual bool areMessagesResendable() const override;
     virtual bool doesSupportMetainfo() const override;

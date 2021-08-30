@@ -24,7 +24,7 @@
 
 #include "finalmq/protocolsession/IProtocol.h"
 #include "finalmq/helpers/FmqDefines.h"
-#include "finalmq/protocols/mqtt5/Mqtt5Protocol.h"
+#include "finalmq/protocols/mqtt5/Mqtt5Client.h"
 
 #include <deque>
 #include <functional>
@@ -33,6 +33,7 @@ namespace finalmq {
 
 
 class SYMBOLEXP ProtocolMqtt5 : public IProtocol
+                              , public IMqtt5ClientCallback
 {
 public:
     static const int PROTOCOL_ID;           // 5
@@ -40,12 +41,11 @@ public:
 
     ProtocolMqtt5();
 
-    bool receive(const SocketPtr& socket, int bytesToRead, std::deque<IMessagePtr>& messages);
-
 private:
     // IProtocol
     virtual void setCallback(const std::weak_ptr<IProtocolCallback>& callback) override;
     virtual void setConnection(const IStreamConnectionPtr& connection) override;
+    virtual void disconnect() override;
     virtual std::uint32_t getProtocolId() const override;
     virtual bool areMessagesResendable() const override;
     virtual bool doesSupportMetainfo() const override;
@@ -63,6 +63,16 @@ private:
     virtual IMessagePtr pollReply(std::deque<IMessagePtr>&& messages) override;
     virtual void cycleTime() override;
 
+    // IMqtt5ClientCallback
+    virtual void receivedConnAck(const ConnAckData& data) override;
+    virtual void receivedPublish(const PublishData& data, const IMessagePtr& message) override;
+    virtual void receivedSubAck(const std::vector<std::uint8_t>& reasoncodes) override;
+    virtual void receivedUnsubAck(const std::vector<std::uint8_t>& reasoncodes) override;
+    virtual void receivedPingResp() override;
+    virtual void receivedDisconnect(const DisconnectData& data) override;
+    virtual void receivedAuth(const AuthData& data) override;
+    virtual void closeConnection() override;
+
     enum class State
     {
         WAITFORHEADER,
@@ -74,13 +84,14 @@ private:
     bool receiveHeader(const SocketPtr& socket, int& bytesToRead);
     bool receiveRemainingSize(const SocketPtr& socket, int& bytesToRead);
     void setPayloadSize();
-    bool receivePayload(const SocketPtr& socket, int& bytesToRead);
+    bool receivePayload(const SocketPtr& socket, int& bytesToRead); 
     bool processPayload();
     void clearState();
 
     std::weak_ptr<IProtocolCallback>    m_callback;
     IStreamConnectionPtr                m_connection;
-    Mqtt5Protocol                       m_protocol;
+    std::unique_ptr<IMqtt5Client>       m_client;
+    std::mutex                          m_mutex;
 };
 
 

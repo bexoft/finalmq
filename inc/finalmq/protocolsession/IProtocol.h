@@ -65,6 +65,7 @@ struct IProtocol : public IStreamConnectionCallback
     virtual ~IProtocol() {}
     virtual void setCallback(const std::weak_ptr<IProtocolCallback>& callback) = 0;
     virtual void setConnection(const IStreamConnectionPtr& connection) = 0;
+    virtual void disconnect() = 0;
     virtual std::uint32_t getProtocolId() const = 0;
     virtual bool areMessagesResendable() const = 0;
     virtual bool doesSupportMetainfo() const = 0;

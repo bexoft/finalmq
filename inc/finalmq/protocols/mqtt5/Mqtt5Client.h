@@ -97,6 +97,7 @@ struct IMqtt5Client
 {
     virtual ~IMqtt5Client() = default;
     virtual void setCallback(hybrid_ptr<IMqtt5ClientCallback> callback) = 0;
+    virtual bool receive(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) = 0;
 
     struct WillMessage
     {
@@ -178,6 +179,7 @@ public:
 private:
     // IMqtt5Protocol
     virtual void setCallback(hybrid_ptr<IMqtt5ClientCallback> callback) override;
+    virtual bool receive(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) override;
     virtual void startConnection(const IStreamConnectionPtr& connection, const ConnectData& data) override;
     virtual void publish(const IStreamConnectionPtr& connection, PublishData&& data, const IMessagePtr& message) override;
     virtual void subscribe(const IStreamConnectionPtr& connection, const SubscribeData& data) override;

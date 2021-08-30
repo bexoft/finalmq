@@ -690,7 +690,7 @@ bool Mqtt5Protocol::prepareForSend(const IMessagePtr& message, char* bufferPacke
     // messages will get lost when the connection is (temporarly) gone.
     if (qos == 0)
     {
-        return true;
+        return !m_connecting;
     }
 
     // when pending messages are available -> put the message to the back to keep ordering

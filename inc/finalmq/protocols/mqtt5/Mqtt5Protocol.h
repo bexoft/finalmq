@@ -58,6 +58,7 @@ struct IMqtt5Protocol
 {
     virtual ~IMqtt5Protocol() = default;
     virtual void setCallback(hybrid_ptr<IMqtt5ProtocolCallback> callback) = 0;
+    virtual bool receive(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) = 0;
     virtual void sendConnect(const IStreamConnectionPtr& connection, const Mqtt5ConnectData& data) = 0;
     virtual void sendConnAck(const IStreamConnectionPtr& connection, const Mqtt5ConnAckData& data) = 0;
     virtual void sendPublish(const IStreamConnectionPtr& connection, Mqtt5PublishData& data, const IMessagePtr& message) = 0;
@@ -74,8 +75,6 @@ class Mqtt5Protocol : public IMqtt5Protocol
 {
 public:
     Mqtt5Protocol();
-
-    bool receive(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead);
 
 public:
     enum class State
@@ -111,6 +110,7 @@ public:
 
     // IMqtt5Protocol
     virtual void setCallback(hybrid_ptr<IMqtt5ProtocolCallback> callback) override;
+    virtual bool receive(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) override;
     virtual void sendConnect(const IStreamConnectionPtr& connection, const Mqtt5ConnectData& data) override;
     virtual void sendConnAck(const IStreamConnectionPtr& connection, const Mqtt5ConnAckData& data) override;
     virtual void sendPublish(const IStreamConnectionPtr& connection, Mqtt5PublishData& data, const IMessagePtr& message) override;
