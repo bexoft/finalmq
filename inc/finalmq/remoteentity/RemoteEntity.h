@@ -37,6 +37,9 @@
 
 namespace finalmq {
 
+static const std::string KEY_VIRTUAL_SESSION_ID = "fmq_virtsessid";
+
+
 struct IProtocolSession;
 typedef std::shared_ptr<IProtocolSession> IProtocolSessionPtr;
 
@@ -430,12 +433,12 @@ public:
     PeerManager();
     std::vector<PeerId> getAllPeers() const;
     std::vector<PeerId> getAllPeersWithSession(IProtocolSessionPtr session) const;
-    void updatePeer(PeerId peerId, EntityId entityId, const std::string& entityName);
+    void updatePeer(PeerId peerId, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName);
     bool removePeer(PeerId peerId, bool& incoming);
-    PeerId getPeerId(std::int64_t sessionId, EntityId entityId, const std::string& entityName) const;
+    PeerId getPeerId(std::int64_t sessionId, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName) const;
     ReadyToSend getRequestHeader(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId, remoteentity::Header& header, IProtocolSessionPtr& session);
     std::string getEntityName(const PeerId& peerId);
-    PeerId addPeer(const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName, bool incoming, bool& added, const std::function<void()>& funcBeforeFirePeerEvent);
+    PeerId addPeer(const IProtocolSessionPtr& session, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName, bool incoming, bool& added, const std::function<void()>& funcBeforeFirePeerEvent);
     PeerId addPeer();
     std::deque<PeerManager::Request> connect(PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName);
     void setEntityId(EntityId entityId);
@@ -446,6 +449,7 @@ private:
     struct Peer
     {
         IProtocolSessionPtr session;
+        std::string         virtualSessionId;
         EntityId            entityId{ ENTITYID_INVALID };
         std::string         entityName;
         bool                incoming = false;
@@ -454,8 +458,8 @@ private:
     };
 
 
-    void removePeerFromSessionEntityToPeerId(std::int64_t sessionId, EntityId entityId, const std::string& entityName);
-    PeerId getPeerIdIntern(std::int64_t sessionId, EntityId entityId, const std::string& entityName) const;
+    void removePeerFromSessionEntityToPeerId(std::int64_t sessionId, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName);
+    PeerId getPeerIdIntern(std::int64_t sessionId, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName) const;
     std::shared_ptr<PeerManager::Peer> getPeer(const PeerId& peerId) const;
 
 
@@ -463,7 +467,7 @@ private:
     std::shared_ptr<FuncPeerEvent>      m_funcPeerEvent;
     std::unordered_map<PeerId, std::shared_ptr<Peer>>    m_peers;
     PeerId                              m_nextPeerId{1};
-    std::unordered_map<std::uint64_t, std::pair<std::unordered_map<EntityId, PeerId>, std::unordered_map<std::string, PeerId>>> m_sessionEntityToPeerId;
+    std::unordered_map<std::uint64_t, std::unordered_map<std::string, std::pair<std::unordered_map<EntityId, PeerId>, std::unordered_map<std::string, PeerId>>>> m_sessionEntityToPeerId;
     mutable std::mutex  m_mutex;
 };
 typedef std::shared_ptr<PeerManager> PeerManagerPtr;
@@ -502,7 +506,8 @@ public:
             assert(m_peerManager);
             assert(m_session);
             // get peer
-            m_peerId = m_peerManager->getPeerId(m_session->getSessionId(), m_entityIdDest, "");
+            const std::string& virtualSessionId = m_metainfo[KEY_VIRTUAL_SESSION_ID];
+            m_peerId = m_peerManager->getPeerId(m_session->getSessionId(), virtualSessionId, m_entityIdDest, "");
         }
         return m_peerId;
     }
@@ -647,7 +652,7 @@ private:
     virtual void receivedReply(ReceiveData& receiveData) override;
     virtual void deinit() override;
 
-    PeerId connectIntern(const IProtocolSessionPtr& session, const std::string& entityName, EntityId, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect);
+    PeerId connectIntern(const IProtocolSessionPtr& session, const std::string& virtualSessionId, const std::string& entityName, EntityId, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect);
     void connectIntern(PeerId peerId, const IProtocolSessionPtr& session, const std::string& entityName, EntityId entityId);
     void removePeer(PeerId peerId, remoteentity::Status status);
     void replyReceived(ReceiveData& receiveData);
