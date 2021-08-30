@@ -50,6 +50,11 @@ void ProtocolDelimiter::setConnection(const IStreamConnectionPtr& connection)
     m_connection = connection;
 }
 
+IStreamConnectionPtr ProtocolDelimiter::getConnection() const
+{
+    return m_connection;
+}
+
 void ProtocolDelimiter::disconnect()
 {
     assert(m_connection);

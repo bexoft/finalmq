@@ -45,6 +45,7 @@ private:
     // IProtocol
     virtual void setCallback(const std::weak_ptr<IProtocolCallback>& callback) override;
     virtual void setConnection(const IStreamConnectionPtr& connection) override;
+    virtual IStreamConnectionPtr getConnection() const override;
     virtual void disconnect() override;
     virtual std::uint32_t getProtocolId() const override;
     virtual bool areMessagesResendable() const override;
@@ -91,7 +92,7 @@ private:
     std::weak_ptr<IProtocolCallback>    m_callback;
     IStreamConnectionPtr                m_connection;
     std::unique_ptr<IMqtt5Client>       m_client;
-    std::mutex                          m_mutex;
+    mutable std::mutex                  m_mutex;
 };
 
 

@@ -46,7 +46,7 @@ struct IProtocolCallback
     virtual void socketConnected() = 0;
     virtual void socketDisconnected() = 0;
     virtual void reconnect() = 0;
-    virtual bool findSessionByName(const std::string& sessionName, const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) = 0;
+    virtual bool findSessionByName(const std::string& sessionName, const IProtocolPtr& protocol) = 0;
     virtual void setSessionName(const std::string& sessionName, const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) = 0;
     virtual void pollRequest(std::int64_t connectionId, int timeout, int pollCountMax) = 0;
     virtual void activity() = 0;
@@ -65,6 +65,7 @@ struct IProtocol : public IStreamConnectionCallback
     virtual ~IProtocol() {}
     virtual void setCallback(const std::weak_ptr<IProtocolCallback>& callback) = 0;
     virtual void setConnection(const IStreamConnectionPtr& connection) = 0;
+    virtual IStreamConnectionPtr getConnection() const = 0;
     virtual void disconnect() = 0;
     virtual std::uint32_t getProtocolId() const = 0;
     virtual bool areMessagesResendable() const = 0;

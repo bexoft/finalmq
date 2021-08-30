@@ -60,6 +60,12 @@ void ProtocolMqtt5::setConnection(const IStreamConnectionPtr& connection)
 
 }
 
+IStreamConnectionPtr ProtocolMqtt5::getConnection() const
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    return m_connection;
+}
+
 void ProtocolMqtt5::disconnect()
 {
     assert(m_connection);

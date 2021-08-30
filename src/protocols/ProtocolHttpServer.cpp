@@ -104,6 +104,11 @@ void ProtocolHttpServer::setConnection(const IStreamConnectionPtr& connection)
     m_connection = connection;
 }
 
+IStreamConnectionPtr ProtocolHttpServer::getConnection() const
+{
+    return m_connection;
+}
+
 void ProtocolHttpServer::disconnect()
 {
     assert(m_connection);
@@ -285,7 +290,7 @@ void ProtocolHttpServer::checkSessionName()
             for (size_t i = 0; i < m_sessionNames.size(); ++i)
             {
                 assert(m_connection);
-                bool foundInNames = callback->findSessionByName(m_sessionNames[i], shared_from_this(), m_connection);
+                bool foundInNames = callback->findSessionByName(m_sessionNames[i], shared_from_this());
 //                streamInfo << this << " findSessionByName: " << foundInNames;
                 if (foundInNames)
                 {

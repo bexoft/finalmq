@@ -69,6 +69,11 @@ void ProtocolHeaderBinarySize::setConnection(const IStreamConnectionPtr& connect
     m_connection = connection;
 }
 
+IStreamConnectionPtr ProtocolHeaderBinarySize::getConnection() const
+{
+    return m_connection;
+}
+
 void ProtocolHeaderBinarySize::disconnect()
 {
     assert(m_connection);

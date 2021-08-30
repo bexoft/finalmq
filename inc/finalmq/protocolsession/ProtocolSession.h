@@ -41,7 +41,7 @@ struct IProtocolSessionPrivate : public IProtocolSession
     virtual bool connect() = 0;
     virtual void createConnection() = 0;
     virtual int64_t setConnection(const IStreamConnectionPtr& connection, bool verified) = 0;
-    virtual void setProtocolConnection(const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) = 0;
+    virtual void setProtocol(const IProtocolPtr& protocol) = 0;
     virtual void setSessionNameInternal(const std::string& sessionName) = 0;
     virtual void cycleTime() = 0;
 };
@@ -92,7 +92,7 @@ private:
     virtual bool connect() override;
     virtual void createConnection() override;
     virtual int64_t setConnection(const IStreamConnectionPtr& connection, bool verified) override;
-    virtual void setProtocolConnection(const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) override;
+    virtual void setProtocol(const IProtocolPtr& protocol) override;
     virtual void setSessionNameInternal(const std::string& sessionName) override;
     virtual void cycleTime() override;
 
@@ -103,7 +103,7 @@ private:
     virtual void socketConnected() override;
     virtual void socketDisconnected() override;
     virtual void reconnect() override;
-    virtual bool findSessionByName(const std::string& sessionName, const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) override;
+    virtual bool findSessionByName(const std::string& sessionName, const IProtocolPtr& protocol) override;
     virtual void setSessionName(const std::string& sessionName, const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) override;
     virtual void pollRequest(std::int64_t connectionId, int timeout, int pollCountMax) override;
     virtual void activity() override;
@@ -111,26 +111,20 @@ private:
     virtual void setPollMaxRequests(int maxRequests) override;
     virtual void disconnectedMultiConnection(const IStreamConnectionPtr& connection) override;
 
-    struct ProtocolConnection
-    {
-        IProtocolPtr                                protocol;
-        IStreamConnectionPtr                        connection;
-    };
-
     IMessagePtr convertMessageToProtocol(const IMessagePtr& msg);
     void initProtocolValues();
     void sendBufferedMessages();
     void addSessionToList(bool verified);
-    void getProtocolConnectionFromConnectionId(const ProtocolConnection*& protocolConnection, std::int64_t connectionId);
-    bool sendMessage(const IMessagePtr& message, const ProtocolConnection* protocolConnection);
+    void getProtocolFromConnectionId(IProtocolPtr& protocol, std::int64_t connectionId);
+    bool sendMessage(const IMessagePtr& message, const IProtocolPtr& protocol);
     void cleanupMultiConnection();
     void pollRelease();
 
     hybrid_ptr<IProtocolSessionCallback>                    m_callback;
     IExecutorPtr                                            m_executor;
     IExecutorPtr                                            m_executorPollerThread;
-    ProtocolConnection                                      m_protocolConnection;
-    std::unordered_map<std::int64_t, ProtocolConnection>    m_multiConnections;
+    IProtocolPtr                                            m_protocol;
+    std::unordered_map<std::int64_t, IProtocolPtr>          m_multiProtocols;
 
     int64_t                                         m_sessionId = 0;
     std::weak_ptr<IProtocolSessionList>             m_protocolSessionList;

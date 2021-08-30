@@ -55,6 +55,12 @@ void ProtocolStream::setConnection(const IStreamConnectionPtr& connection)
     m_connection = connection;
 }
 
+IStreamConnectionPtr ProtocolStream::getConnection() const
+{
+    return m_connection;
+}
+
+
 void ProtocolStream::disconnect()
 {
     assert(m_connection);
