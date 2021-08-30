@@ -144,7 +144,7 @@ hybrid_ptr<IStreamConnectionCallback> ProtocolMqtt5::connected(const IStreamConn
     return nullptr;
 }
 
-void ProtocolMqtt5::disconnected(const IStreamConnectionPtr& connection)
+void ProtocolMqtt5::disconnected(const IStreamConnectionPtr& /*connection*/)
 {
     auto callback = m_callback.lock();
     if (callback)
@@ -168,22 +168,22 @@ void ProtocolMqtt5::cycleTime()
 
 
 // IMqtt5ClientCallback
-void ProtocolMqtt5::receivedConnAck(const ConnAckData& data)
+void ProtocolMqtt5::receivedConnAck(const ConnAckData& /*data*/)
 {
 
 }
 
-void ProtocolMqtt5::receivedPublish(const PublishData& data, const IMessagePtr& message)
+void ProtocolMqtt5::receivedPublish(const PublishData& /*data*/, const IMessagePtr& /*message*/)
 {
 
 }
 
-void ProtocolMqtt5::receivedSubAck(const std::vector<std::uint8_t>& reasoncodes)
+void ProtocolMqtt5::receivedSubAck(const std::vector<std::uint8_t>& /*reasoncodes*/)
 {
 
 }
 
-void ProtocolMqtt5::receivedUnsubAck(const std::vector<std::uint8_t>& reasoncodes)
+void ProtocolMqtt5::receivedUnsubAck(const std::vector<std::uint8_t>& /*reasoncodes*/)
 {
 
 }
@@ -193,12 +193,12 @@ void ProtocolMqtt5::receivedPingResp()
 
 }
 
-void ProtocolMqtt5::receivedDisconnect(const DisconnectData& data)
+void ProtocolMqtt5::receivedDisconnect(const DisconnectData& /*data*/)
 {
 
 }
 
-void ProtocolMqtt5::receivedAuth(const AuthData& data)
+void ProtocolMqtt5::receivedAuth(const AuthData& /*data*/)
 {
 
 }
