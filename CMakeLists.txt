@@ -169,7 +169,7 @@ if (WIN32)
         target_compile_options(finalmq PRIVATE -DEXPORT_finalmq)
 else()
     target_compile_options(finalmq PRIVATE -Werror -Wall -Wextra)
-    target_link_libraries(finalmq ssl)
+    target_link_libraries(finalmq uuid ssl)
 endif()
 
 

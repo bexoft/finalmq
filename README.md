@@ -18,13 +18,14 @@ To build finalmq from source, the following tools and dependencies are needed:
   * make
   * cmake
   * g++
+  * uuid
   * openssl
   * node-ejs
   * node-minimist
 
 On Ubuntu/Debian, you can install them with:
 
-    $ sudo apt-get install -y git make cmake g++ libssl1.0-dev node-ejs node-minimist
+    $ sudo apt-get install -y git make cmake g++ uuid-dev libssl1.0-dev node-ejs node-minimist
 
 To get the source, clone the repository of finalmq:
 
