@@ -311,8 +311,8 @@ bool StreamConnectionContainer::connect(const IStreamConnectionPtr& streamConnec
     ConnectionData connectionData = AddressHelpers::endpoint2ConnectionData(endpoint);
     connectionData.connectionId = connection->getConnectionId();
     connectionData.incomingConnection = false;
-    connectionData.reconnectInterval = connectionProperties.reconnectInterval;
-    connectionData.totalReconnectDuration = connectionProperties.totalReconnectDuration;
+    connectionData.reconnectInterval = connectionProperties.config.reconnectInterval;
+    connectionData.totalReconnectDuration = connectionProperties.config.totalReconnectDuration;
     connectionData.startTime = std::chrono::system_clock::now();
     connectionData.ssl = connectionProperties.certificateData.ssl;
     connectionData.connectionState = ConnectionState::CONNECTIONSTATE_CREATED;

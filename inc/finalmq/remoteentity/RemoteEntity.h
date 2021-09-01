@@ -37,7 +37,7 @@
 
 namespace finalmq {
 
-static const std::string KEY_VIRTUAL_SESSION_ID = "fmq_virtsessid";
+static const std::string FMQ_VIRTUAL_SESSION_ID = "fmq_virtsessid";
 
 
 struct IProtocolSession;
@@ -444,6 +444,7 @@ public:
     void setEntityId(EntityId entityId);
     void setPeerEvent(const std::shared_ptr<FuncPeerEvent>& funcPeerEvent);
     IProtocolSessionPtr getSession(PeerId peerId) const;
+    bool isVirtualSessionAvailable(const IProtocolSessionPtr& session, const std::string& virtualSessionId) const;
 
 private:
     struct Peer
@@ -506,7 +507,7 @@ public:
             assert(m_peerManager);
             assert(m_session);
             // get peer
-            const std::string& virtualSessionId = m_metainfo[KEY_VIRTUAL_SESSION_ID];
+            const std::string& virtualSessionId = m_metainfo[FMQ_VIRTUAL_SESSION_ID];
             m_peerId = m_peerManager->getPeerId(m_session->getSessionId(), virtualSessionId, m_entityIdDest, "");
         }
         return m_peerId;

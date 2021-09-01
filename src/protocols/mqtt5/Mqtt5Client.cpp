@@ -31,6 +31,7 @@ namespace finalmq {
 
 Mqtt5Client::Mqtt5Client()
 {
+    m_protocol->setCallback(this);
 }
 
 
@@ -50,6 +51,7 @@ bool Mqtt5Client::receive(const IStreamConnectionPtr& connection, const SocketPt
 void Mqtt5Client::startConnection(const IStreamConnectionPtr& connection, const ConnectData& data)
 {
     m_keepAlive = data.keepAlive;
+    setReceiveActivity();
     m_sessionExpiryInterval = data.sessionExpiryInterval;
     Mqtt5ConnectData dataInternal;
     dataInternal.cleanStart = data.cleanStart;
@@ -90,6 +92,7 @@ void Mqtt5Client::publish(const IStreamConnectionPtr& connection, PublishData&& 
     dataInternal.qos = data.qos;
     dataInternal.retain = data.retain;
     dataInternal.topic = std::move(data.topic);
+    dataInternal.metainfo = std::move(message->getAllMetainfo());
     if (data.messageExpiryInterval != 0)
     {
         dataInternal.properties[Mqtt5PropertyId::MessageExpiryInterval] = data.messageExpiryInterval;
@@ -177,13 +180,16 @@ void Mqtt5Client::cycleTime(const IStreamConnectionPtr& connection)
 {
     if (m_timerPing.isExpired())
     {
-        m_protocol->sendPingReq(connection);
+        if (connection)
+        {
+            m_protocol->sendPingReq(connection);
+        }
         if (m_keepAlive > 0)
         {
             m_timerPing.setTimeout(m_keepAlive * 1000);
         }
     }
-    if (m_timerReceiveActivity.isExpired())
+    if (connection && m_timerReceiveActivity.isExpired())
     {
         auto callback = m_callback.lock();
         if (callback)
@@ -306,6 +312,7 @@ void Mqtt5Client::receivedPublish(Mqtt5PublishData&& data, const IMessagePtr& me
     dataDest.qos = data.qos;
     dataDest.retain = data.retain;
     dataDest.topic = data.topic;
+    message->getAllMetainfo() = std::move(data.metainfo);
     std::unordered_map<unsigned int, Variant>::iterator it;
     if ((it = data.properties.find(Mqtt5PropertyId::MessageExpiryInterval)) != data.properties.end())
     {

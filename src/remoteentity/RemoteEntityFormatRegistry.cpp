@@ -46,7 +46,7 @@ static const std::string HTTP_RESPONSE = "response";
 static const std::string FMQ_PATH = "fmq_path";
 static const std::string FMQ_RE_SRCID = "fmq_re_srcid";
 static const std::string FMQ_RE_MODE = "fmq_re_mode";
-static const std::string FMQ_RE_CORRID = "fmq_re_corrid";
+static const std::string FMQ_CORRID = "fmq_corrid";
 static const std::string FMQ_RE_STATUS = "fmq_re_status";
 static const std::string FMQ_RE_TYPE = "fmq_re_type";
 static const std::string MSG_REPLY = "MSG_REPLY";
@@ -103,7 +103,7 @@ void RemoteEntityFormatRegistryImpl::serializeHeaderToMetainfo(IMessage& message
     IMessage::Metainfo& metainfo = message.getAllMetainfo();
     metainfo[FMQ_RE_SRCID] = std::to_string(header.srcid);
     metainfo[FMQ_RE_MODE] = header.mode.toString();
-    metainfo[FMQ_RE_CORRID] = std::to_string(header.corrid);
+    metainfo[FMQ_CORRID] = std::to_string(header.corrid);
     metainfo[FMQ_RE_STATUS] = header.status.toString();
     metainfo[FMQ_RE_TYPE] = header.type;
 }
@@ -307,7 +307,7 @@ void RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, remoteenti
     auto itPath = metainfo.find(FMQ_PATH);
     auto itSrcId = metainfo.find(FMQ_RE_SRCID);
     auto itMode = metainfo.find(FMQ_RE_MODE);
-    auto itCorrId = metainfo.find(FMQ_RE_CORRID);
+    auto itCorrId = metainfo.find(FMQ_CORRID);
     auto itStatus = metainfo.find(FMQ_RE_STATUS);
     if (itPath != metainfo.end())
     {

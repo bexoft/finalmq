@@ -478,7 +478,7 @@ bool ProtocolSession::connect(const std::string& endpoint, const ConnectProperti
         return false;
     }
 
-    IProtocolPtr protocol = protocolFactory->createProtocol();
+    IProtocolPtr protocol = protocolFactory->createProtocol(connectionProperties.protocolData);
     assert(protocol);
 
 

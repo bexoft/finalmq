@@ -42,7 +42,7 @@ ProtocolBind::ProtocolBind(hybrid_ptr<IProtocolSessionCallback> callback, const 
 // IStreamConnectionCallback
 hybrid_ptr<IStreamConnectionCallback> ProtocolBind::connected(const IStreamConnectionPtr& connection)
 {
-    IProtocolPtr protocol = m_protocolFactory->createProtocol();
+    IProtocolPtr protocol = m_protocolFactory->createProtocol(m_bindProperties.protocolData);
     assert(protocol);
     IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(m_callback, m_executor, m_executorPollerThread, protocol, m_protocolSessionList, m_bindProperties, m_contentType);
     protocolSession->setConnection(connection, !protocol->doesSupportSession());
@@ -171,7 +171,7 @@ IProtocolSessionPtr ProtocolSessionContainer::connect(const std::string& endpoin
         return nullptr;
     }
 
-    IProtocolPtr protocol = protocolFactory->createProtocol();
+    IProtocolPtr protocol = protocolFactory->createProtocol(connectProperties.protocolData);
     assert(protocol);
 
     std::string endpointStreamConnection = endpoint.substr(0, ixEndpoint);

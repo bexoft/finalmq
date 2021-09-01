@@ -30,6 +30,7 @@
 #include "finalmq/streamconnection/IMessage.h"
 #include "finalmq/helpers/CondVar.h"
 #include "finalmq/helpers/IExecutor.h"
+#include "finalmq/variant/Variant.h"
 
 #include <memory>
 #include <vector>
@@ -42,19 +43,23 @@ namespace finalmq {
 
 
 
-
-
-
 struct BindProperties
 {
     CertificateData certificateData;
+    Variant protocolData;
+};
+
+struct ConnectConfig
+{
+    int reconnectInterval = 5000;       ///< if the server is not available, you can pass a reconnection intervall in [ms]
+    int totalReconnectDuration = -1;    ///< if the server is not available, you can pass a duration in [ms] how long the reconnect shall happen. -1 means: try for ever.
 };
 
 struct ConnectProperties
 {
     CertificateData certificateData;
-    int reconnectInterval = 5000;       ///< if the server is not available, you can pass a reconnection intervall in [ms]
-    int totalReconnectDuration = -1;    ///< if the server is not available, you can pass a duration in [ms] how long the reconnect shall happen. -1 means: try for ever.
+    ConnectConfig config;
+    Variant protocolData;
 };
 
 

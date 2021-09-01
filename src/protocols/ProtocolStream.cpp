@@ -198,7 +198,7 @@ struct RegisterProtocolStreamFactory
 
 
 // IProtocolFactory
-IProtocolPtr ProtocolStreamFactory::createProtocol()
+IProtocolPtr ProtocolStreamFactory::createProtocol(const Variant& /*data*/)
 {
     return std::make_shared<ProtocolStream>();
 }

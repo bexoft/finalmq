@@ -1216,7 +1216,7 @@ struct RegisterProtocolHttpServerFactory
 
 
 // IProtocolFactory
-IProtocolPtr ProtocolHttpServerFactory::createProtocol()
+IProtocolPtr ProtocolHttpServerFactory::createProtocol(const Variant& /*data*/)
 {
     return std::make_shared<ProtocolHttpServer>();
 }

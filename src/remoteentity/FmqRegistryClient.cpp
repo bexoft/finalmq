@@ -164,7 +164,7 @@ public:
                         }
                         FuncGetServiceReplyAndConnect funcGetServiceReply(*this);
                         std::thread thread([funcGetServiceReply] () {
-                            std::this_thread::sleep_for(std::chrono::milliseconds(funcGetServiceReply.m_connectProperties.reconnectInterval));
+                            std::this_thread::sleep_for(std::chrono::milliseconds(funcGetServiceReply.m_connectProperties.config.reconnectInterval));
                             funcGetServiceReply.m_entityRegistry->requestReply<GetServiceReply>(funcGetServiceReply.m_peerIdRegistry, GetService{funcGetServiceReply.m_serviceName}, funcGetServiceReply);
                         });
                         thread.detach();
@@ -236,17 +236,17 @@ PeerId FmqRegistryClient::connectService(const std::string& serviceName, EntityI
     }
 
     ConnectProperties connectPropertiesRegistry;
-    connectPropertiesRegistry.reconnectInterval = connectProperties.reconnectInterval;
-    connectPropertiesRegistry.totalReconnectDuration = connectProperties.totalReconnectDuration;
+    connectPropertiesRegistry.config.reconnectInterval = connectProperties.config.reconnectInterval;
+    connectPropertiesRegistry.config.totalReconnectDuration = connectProperties.config.totalReconnectDuration;
     IProtocolSessionPtr sessionRegistry = createRegistrySession(hostname, connectPropertiesRegistry);
     if (sessionRegistry)
     {
         PeerId peerIdRegistry = m_entityRegistry->connect(sessionRegistry, "fmqreg");
 
         int retries = -1;
-        if (connectProperties.totalReconnectDuration >= 0)
+        if (connectProperties.config.totalReconnectDuration >= 0)
         {
-            retries = connectProperties.totalReconnectDuration / connectProperties.reconnectInterval;
+            retries = connectProperties.config.totalReconnectDuration / connectProperties.config.reconnectInterval;
         }
         FuncGetServiceReplyAndConnect funcGetServiceReply(retries, m_entityRegistry, peerIdRegistry, remainingServiceName, m_remoteEntityContainer, sessionRegistry, connectProperties, entityId, peerId, local, hostname);
         m_entityRegistry->requestReply<GetServiceReply>(peerIdRegistry, GetService{remainingServiceName}, funcGetServiceReply);
@@ -275,7 +275,7 @@ void FmqRegistryClient::getService(const std::string& serviceName, FuncGetServic
     }
 
     ConnectProperties connectPropertiesRegistry;
-    connectPropertiesRegistry.totalReconnectDuration = 0;
+    connectPropertiesRegistry.config.totalReconnectDuration = 0;
     IProtocolSessionPtr sessionRegistry = createRegistrySession(hostname, connectPropertiesRegistry);
     if (sessionRegistry)
     {
@@ -301,7 +301,7 @@ void FmqRegistryClient::registerService(const finalmq::fmqreg::Service& service,
     init();
 
     ConnectProperties connectProperties;
-    connectProperties.totalReconnectDuration = retryDurationMs;
+    connectProperties.config.totalReconnectDuration = retryDurationMs;
     IProtocolSessionPtr session = createRegistrySession("127.0.0.1", connectProperties);
     if (session)
     {

@@ -48,7 +48,7 @@ public:
 
 private:
     // IProtocolFactory
-    virtual IProtocolPtr createProtocol() override;
+    virtual IProtocolPtr createProtocol(const Variant& data) override;
 };
 
 }   // namespace finalmq

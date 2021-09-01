@@ -25,20 +25,80 @@
 #include "finalmq/streamconnection/Socket.h"
 #include "finalmq/protocolsession/ProtocolMessage.h"
 #include "finalmq/protocolsession/ProtocolRegistry.h"
+#include "finalmq/variant/VariantValueStruct.h"
+#include "finalmq/variant/VariantValues.h"
 
+#include "finalmq/helpers/ModulenameFinalmq.h"
 
-//!!! todo: the receivedConnAck callback has serverKeepAlive and sessionExpiryInterval, use these parameters for calling setActivityTimeout with: (serverKeepAlive*1000 + serverKeepAlive*1500)
+#ifdef WIN32
+#include <rpcdce.h>
+#else
+#include <uuid/uuid.h>
+#endif
+
 
 
 namespace finalmq {
 
 const int ProtocolMqtt5::PROTOCOL_ID = 5;
-const std::string ProtocolMqtt5::PROTOCOL_NAME = "mqtt5";
+const std::string ProtocolMqtt5::PROTOCOL_NAME = "mqtt5client";
+
+const std::string ProtocolMqtt5::KEY_USERNAME = "username";
+const std::string ProtocolMqtt5::KEY_PASSWORD = "password";
+const std::string ProtocolMqtt5::KEY_SESSIONEXPIRYINTERVAL = "sessionexpiryinterval";
+const std::string ProtocolMqtt5::KEY_KEEPALIVE = "keepalive";
+
+static const std::string FMQ_CORRID = "fmq_corrid";
+static const std::string FMQ_VIRTUAL_SESSION_ID = "fmq_virtsessid";
 
 
-ProtocolMqtt5::ProtocolMqtt5()
+#ifdef WIN32
+static std::string getUuid()
+{
+    UUID uuid = {};
+    ::UuidCreate(&uuid);
+    std::string strUuidRet;
+    RPC_CSTR strUuid = nullptr;
+    if (::UuidToStringA(&uuid, &strUuid) == RPC_S_OK)
+    {
+        strUuidRet = (char*)strUuid;
+        ::RpcStringFreeA(&strUuid);
+    }
+    return strUuidRet;
+}
+#else
+static std::string getUuid()
+{
+    std::string strUuid;   
+    strUuid.resize(50);     // 37 is the exact number
+    uuid_t uuid;
+    uuid_generate(uuid);
+    uuid_unparse(uuid, strUuid.data());
+    std::string strUuidRet = strUuid.data();
+    return strUuidRet;
+}
+#endif
+
+
+
+ProtocolMqtt5::ProtocolMqtt5(const Variant& data)
     : m_client(std::make_unique<Mqtt5Client>())
 {
+    m_username = data.getDataValue<std::string>(KEY_USERNAME);
+    m_password = data.getDataValue<std::string>(KEY_PASSWORD);
+    const Variant* entry = data.getVariant(KEY_SESSIONEXPIRYINTERVAL);
+    if (entry)
+    {
+        m_sessionExpiryInterval = *entry;
+    }
+    entry = data.getVariant(KEY_KEEPALIVE);
+    if (entry)
+    {
+        m_keepAlive = *entry;
+    }
+    m_clientId = getUuid();
+
+    m_client->setCallback(this);
 }
 
 
@@ -47,12 +107,22 @@ ProtocolMqtt5::ProtocolMqtt5()
 // IProtocol
 void ProtocolMqtt5::setCallback(const std::weak_ptr<IProtocolCallback>& callback)
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     m_callback = callback;
 }
 
 void ProtocolMqtt5::setConnection(const IStreamConnectionPtr& connection)
 {
     IMqtt5Client::ConnectData data;
+    data.cleanStart = m_firstConnection;
+    data.clientId = m_clientId;
+    data.receiveMaximum = 128;
+    data.username = m_username;
+    data.password = m_password;
+    data.keepAlive = m_keepAlive;
+    data.sessionExpiryInterval = m_sessionExpiryInterval;
+    //data.willMessage
+
     m_client->startConnection(connection, data);
 
     std::unique_lock<std::mutex> lock(m_mutex);
@@ -68,8 +138,13 @@ IStreamConnectionPtr ProtocolMqtt5::getConnection() const
 
 void ProtocolMqtt5::disconnect()
 {
-    assert(m_connection);
-    m_connection->disconnect();
+    std::unique_lock<std::mutex> lock(m_mutex);
+    IStreamConnectionPtr connection = m_connection;
+    lock.unlock();
+    if (connection)
+    {
+        connection->disconnect();
+    }
 }
 
 std::uint32_t ProtocolMqtt5::getProtocolId() const
@@ -119,9 +194,31 @@ IProtocol::FuncCreateMessage ProtocolMqtt5::getMessageFactory() const
     };
 }
 
-bool ProtocolMqtt5::sendMessage(IMessagePtr /*message*/) 
+bool ProtocolMqtt5::sendMessage(IMessagePtr message)
 {
-    return false;
+    std::unique_lock<std::mutex> lock(m_mutex);
+    IStreamConnectionPtr connection = m_connection;
+    lock.unlock();
+    IMqtt5Client::PublishData data;
+    data.qos = 2;
+    std::string* corrid = message->getMetainfo(FMQ_CORRID);
+    if (corrid)
+    {
+        data.correlationData = Bytes(corrid->begin(), corrid->end());
+    }
+    data.responseTopic = m_clientId;
+
+    data.topic = message->getEchoData().getDataValue<std::string>(FMQ_VIRTUAL_SESSION_ID);
+    if (data.topic.empty())
+    {
+//        message
+//        data.topic = 
+    }
+
+    //!!! todo
+    //data.topic
+    m_client->publish(connection, std::move(data), message);
+    return true;
 }
 
 void ProtocolMqtt5::moveOldProtocolState(IProtocol& /*protocolOld*/) 
@@ -136,24 +233,28 @@ bool ProtocolMqtt5::received(const IStreamConnectionPtr& connection, const Socke
 
 hybrid_ptr<IStreamConnectionCallback> ProtocolMqtt5::connected(const IStreamConnectionPtr& /*connection*/) 
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     auto callback = m_callback.lock();
+    lock.unlock();
     if (callback)
     {
-        callback->connected();
+        callback->socketConnected();
     }
     return nullptr;
 }
 
 void ProtocolMqtt5::disconnected(const IStreamConnectionPtr& /*connection*/)
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     auto callback = m_callback.lock();
+    m_connection = nullptr;
+    m_timerReconnect.setTimeout(5000);
+    lock.unlock();
+
     if (callback)
     {
-        callback->disconnected();
+        callback->socketDisconnected();
     }
-
-    std::unique_lock<std::mutex> lock(m_mutex);
-    m_connection = nullptr;
 }
 
 IMessagePtr ProtocolMqtt5::pollReply(std::deque<IMessagePtr>&& /*messages*/) 
@@ -163,19 +264,83 @@ IMessagePtr ProtocolMqtt5::pollReply(std::deque<IMessagePtr>&& /*messages*/)
 
 void ProtocolMqtt5::cycleTime()
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
+    IStreamConnectionPtr connection = m_connection;
+    bool isReconnectTimerExpired = m_timerReconnect.isExpired();
+    auto callback = m_callback.lock();
+    lock.unlock();
 
+    m_client->cycleTime(connection);
+
+    if (isReconnectTimerExpired && callback)
+    {
+        callback->reconnect();
+    }
 }
 
 
 // IMqtt5ClientCallback
-void ProtocolMqtt5::receivedConnAck(const ConnAckData& /*data*/)
+void ProtocolMqtt5::receivedConnAck(const ConnAckData& data)
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
+    bool sessionGone = false;
+    bool isFirstConnection = m_firstConnection;
+    m_firstConnection = false;
+    if (!isFirstConnection && !data.sessionPresent)
+    {
+        sessionGone = true;
+    }
+    else
+    {
+        m_keepAlive = data.serverKeepAlive;
+        m_sessionExpiryInterval = data.sessionExpiryInterval;
+    }
+    IStreamConnectionPtr connection = m_connection;
+    auto callback = m_callback.lock();
+    lock.unlock();
 
+    if (callback)
+    {
+        if (sessionGone)
+        {
+            IMqtt5Client::DisconnectData data = { 0, "", {} };
+            m_client->endConnection(connection, data);
+            disconnect();
+            callback->disconnected();
+        }
+        else
+        {
+            if (isFirstConnection)
+            {
+                callback->connected();
+            }
+            callback->setActivityTimeout(m_keepAlive * 1500 + m_sessionExpiryInterval * 1000);
+        }
+    }
 }
 
-void ProtocolMqtt5::receivedPublish(const PublishData& /*data*/, const IMessagePtr& /*message*/)
+void ProtocolMqtt5::receivedPublish(const PublishData& data, const IMessagePtr& message)
 {
+    message->addMetainfo(FMQ_CORRID, std::string(data.correlationData.begin(), data.correlationData.end()));
+    message->addMetainfo(FMQ_VIRTUAL_SESSION_ID, data.responseTopic);
+    Variant& echoData = message->getEchoData();
+    if (echoData.getType() == VARTYPE_NONE)
+    {
+        echoData = VariantStruct{ {FMQ_VIRTUAL_SESSION_ID, data.responseTopic} };
+    }
+    else
+    {
+        echoData.add(FMQ_VIRTUAL_SESSION_ID, data.responseTopic);
+    }
 
+    std::unique_lock<std::mutex> lock(m_mutex);
+    auto callback = m_callback.lock();
+    lock.unlock();
+
+    if (callback)
+    {
+        callback->received(message);
+    }
 }
 
 void ProtocolMqtt5::receivedSubAck(const std::vector<std::uint8_t>& /*reasoncodes*/)
@@ -190,12 +355,18 @@ void ProtocolMqtt5::receivedUnsubAck(const std::vector<std::uint8_t>& /*reasonco
 
 void ProtocolMqtt5::receivedPingResp()
 {
-
+    std::unique_lock<std::mutex> lock(m_mutex);
+    auto callback = m_callback.lock();
+    lock.unlock();
+    if (callback)
+    {
+        callback->activity();
+    }
 }
 
-void ProtocolMqtt5::receivedDisconnect(const DisconnectData& /*data*/)
+void ProtocolMqtt5::receivedDisconnect(const DisconnectData& data)
 {
-
+    streamInfo << "Disconnect from mqtt5 broker. Reason Code: " << data.reasoncode << " (" << data.reasonString << ")";
 }
 
 void ProtocolMqtt5::receivedAuth(const AuthData& /*data*/)
@@ -205,7 +376,7 @@ void ProtocolMqtt5::receivedAuth(const AuthData& /*data*/)
 
 void ProtocolMqtt5::closeConnection()
 {
-
+    disconnect();
 }
 
 
@@ -227,9 +398,9 @@ struct RegisterProtocolMqtt5Factory
 
 
 // IProtocolFactory
-IProtocolPtr ProtocolMqtt5Factory::createProtocol()
+IProtocolPtr ProtocolMqtt5Factory::createProtocol(const Variant& data)
 {
-    return std::make_shared<ProtocolMqtt5>();
+    return std::make_shared<ProtocolMqtt5>(data);
 }
 
 }   // namespace finalmq

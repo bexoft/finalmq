@@ -417,6 +417,23 @@ std::deque<PeerManager::Request> PeerManager::connect(PeerId peerId, const IProt
 }
 
 
+bool PeerManager::isVirtualSessionAvailable(const IProtocolSessionPtr& session, const std::string& virtualSessionId) const
+{
+    assert(session);
+    std::int64_t sessionId = session->getSessionId();
+    auto it1 = m_sessionEntityToPeerId.find(sessionId);
+    if (it1 == m_sessionEntityToPeerId.end())
+    {
+        return false;
+    }
+    auto it2 = it1->second.find(virtualSessionId);
+    if (it2 == it1->second.end())
+    {
+        return false;
+    }
+    return true;
+}
+
 
 
 void PeerManager::setEntityId(EntityId entityId)
@@ -455,7 +472,7 @@ RemoteEntity::RemoteEntity()
     registerCommand<ConnectEntity>([this] (const RequestContextPtr& requestContext, const std::shared_ptr<ConnectEntity>& request) {
         assert(request);
         bool added{};
-        std::string* virtualSessionId = requestContext->getMetainfo(KEY_VIRTUAL_SESSION_ID);
+        std::string* virtualSessionId = requestContext->getMetainfo(FMQ_VIRTUAL_SESSION_ID);
         m_peerManager->addPeer(requestContext->session(), virtualSessionId ? *virtualSessionId : "", requestContext->entityId(), request->entityName, true, added, [this, &requestContext]() {
             // send reply before the connect peer event is triggered. So that the peer gets first the connect reply and afterwards a possible greeting message maybe triggered by the connect peer event.
             requestContext->reply(ConnectEntityReply(m_entityId, m_entityName));
@@ -607,7 +624,7 @@ void RemoteEntity::sendConnectEntity(PeerId peerId, const std::shared_ptr<FuncRe
         }
         if (replyReceived)
         {
-            const std::string& virtualSessionId = metainfo[KEY_VIRTUAL_SESSION_ID];
+            const std::string& virtualSessionId = metainfo[FMQ_VIRTUAL_SESSION_ID];
             m_peerManager->updatePeer(peerId, virtualSessionId, replyReceived->entityid, replyReceived->entityName);
         }
         else if (status == Status::STATUS_ENTITY_NOT_FOUND)
@@ -828,28 +845,51 @@ void RemoteEntity::receivedRequest(ReceiveData& receiveData)
     assert(requestContext);
 
     std::unique_lock<std::mutex> lock(m_mutex);
-    auto it = m_funcCommands.find(receiveData.header.type);
-    if (it == m_funcCommands.end())
+    bool virtualSessionGone = false;
+    const IMessage::Metainfo& metainfo = requestContext->getAllMetainfo();
+    if (!metainfo.empty())
     {
-        it = m_funcCommands.find("*");
-    }
-    if (it != m_funcCommands.end())
-    {
-        std::shared_ptr<FuncCommand> func = it->second;
-        lock.unlock();
-        assert(func);
-        if (*func)
+        auto it = metainfo.find(FMQ_VIRTUAL_SESSION_ID);
+        if (it != metainfo.end())
         {
-            (*func)(requestContext, receiveData.structBase);
-        }
-        else
-        {
-            requestContext->reply(Status::STATUS_REQUEST_NOT_FOUND);
+            const std::string& virtualSessionId = it->second;
+            if (!virtualSessionId.empty())
+            {
+                if (!m_peerManager->isVirtualSessionAvailable(receiveData.session, virtualSessionId))
+                {
+                    virtualSessionGone = true;
+                }
+            }
         }
     }
-    else
+
+    std::shared_ptr<FuncCommand> func;
+    if (!virtualSessionGone)
+    {
+        auto it = m_funcCommands.find(receiveData.header.type);
+        if (it == m_funcCommands.end())
+        {
+            it = m_funcCommands.find("*");
+        }
+        if (it != m_funcCommands.end())
+        {
+            func = it->second;
+            assert(func);
+        }
+    }
+    lock.unlock();
+
+    if (func && *func && !virtualSessionGone)
+    {
+        (*func)(requestContext, receiveData.structBase);
+    }
+    else if (!virtualSessionGone)
     {
         requestContext->reply(Status::STATUS_REQUEST_NOT_FOUND);
+    }
+    else // if (virtualSessionGone)
+    {
+        requestContext->reply(Status::STATUS_SESSION_DISCONNECTED);
     }
 }
 
@@ -869,7 +909,7 @@ void RemoteEntity::receivedReply(ReceiveData& receiveData)
         receiveData.header.srcid != ENTITYID_INVALID)
     {
         assert(m_peerManager);
-        const std::string& virtualSessionId = receiveData.message->getAllMetainfo()[KEY_VIRTUAL_SESSION_ID];
+        const std::string& virtualSessionId = receiveData.message->getAllMetainfo()[FMQ_VIRTUAL_SESSION_ID];
         PeerId peerId = m_peerManager->getPeerId(receiveData.session->getSessionId(), virtualSessionId, receiveData.header.srcid, "");
         removePeer(peerId, Status::STATUS_PEER_DISCONNECTED);
     }

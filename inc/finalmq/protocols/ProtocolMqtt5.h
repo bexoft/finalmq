@@ -36,10 +36,16 @@ class SYMBOLEXP ProtocolMqtt5 : public IProtocol
                               , public IMqtt5ClientCallback
 {
 public:
+    static const std::string KEY_USERNAME;                  ///< the username for the broker
+    static const std::string KEY_PASSWORD;                  ///< the password for the broker
+    static const std::string KEY_SESSIONEXPIRYINTERVAL;     ///< the mqtt session expiry interval in seconds
+    static const std::string KEY_KEEPALIVE;                 ///< the mqtt keep alive interval in seconds
+    
     static const int PROTOCOL_ID;           // 5
-    static const std::string PROTOCOL_NAME; // mqtt5
+    static const std::string PROTOCOL_NAME; // mqtt5client
 
-    ProtocolMqtt5();
+
+    ProtocolMqtt5(const Variant& data);
 
 private:
     // IProtocol
@@ -89,6 +95,15 @@ private:
     bool processPayload();
     void clearState();
 
+    std::string                         m_username;
+    std::string                         m_password;
+    std::uint32_t                       m_sessionExpiryInterval = 5*60;     // default 5 minutes
+    std::uint32_t                       m_keepAlive = 20;                   // default 20 seconds
+    std::string                         m_clientId;
+
+    bool                                m_firstConnection = true;
+    PollingTimer                        m_timerReconnect;
+
     std::weak_ptr<IProtocolCallback>    m_callback;
     IStreamConnectionPtr                m_connection;
     std::unique_ptr<IMqtt5Client>       m_client;
@@ -102,7 +117,7 @@ public:
 
 private:
     // IProtocolFactory
-    virtual IProtocolPtr createProtocol() override;
+    virtual IProtocolPtr createProtocol(const Variant& data) override;
 };
 
 

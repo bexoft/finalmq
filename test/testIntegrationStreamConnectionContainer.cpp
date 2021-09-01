@@ -52,7 +52,7 @@ public:
     {
         std::string message;
         message.resize(bytesToRead);
-        socket->receive((char*)message.data(), message.size());
+        socket->receive((char*)message.data(), static_cast<int>(message.size()));
         m_messagesServer.push_back(std::move(message));
         return true;
     }
@@ -173,7 +173,7 @@ TEST_F(TestIntegrationStreamConnectionContainer, testConnectBind)
                                             .WillOnce(Return(nullptr));
     EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
 
-    IStreamConnectionPtr connection = m_connectionContainer->connect(m_mockClientCallback, "tcp://localhost:3333:stream", {{}, 1});
+    IStreamConnectionPtr connection = m_connectionContainer->connect(m_mockClientCallback, "tcp://localhost:3333:stream", { {}, {1} });
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
@@ -202,7 +202,7 @@ TEST_F(TestIntegrationStreamConnectionContainer, testSendConnectBind)
     IMessagePtr message = std::make_shared<ProtocolMessage>(0);
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
-    m_connectionContainer->connect(connection, "tcp://localhost:3333:stream", {{}, 1});
+    m_connectionContainer->connect(connection, "tcp://localhost:3333:stream", { {}, {1} });
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
@@ -224,7 +224,7 @@ TEST_F(TestIntegrationStreamConnectionContainer, testReconnectExpires)
     EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(0);
     auto& expectDisconnected = EXPECT_CALL(*m_mockClientCallback, disconnected(_)).Times(1);
 
-    IStreamConnectionPtr connection = m_connectionContainer->connect(m_mockClientCallback, "tcp://localhost:3333:stream", {{}, 1, 1});
+    IStreamConnectionPtr connection = m_connectionContainer->connect(m_mockClientCallback, "tcp://localhost:3333:stream", { {}, {1, 1} });
     IMessagePtr message = std::make_shared<ProtocolMessage>(0);
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
@@ -349,7 +349,7 @@ TEST_F(TestIntegrationStreamConnectionContainer, testSendLateConnectBind)
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
 
-    bool res2 = m_connectionContainer->connect(connection, "tcp://localhost:3333:stream", {{}, 1});
+    bool res2 = m_connectionContainer->connect(connection, "tcp://localhost:3333:stream", { {}, {1} });
     ASSERT_EQ(res2, true);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));

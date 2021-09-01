@@ -88,7 +88,7 @@ struct IProtocol : public IStreamConnectionCallback
 struct IProtocolFactory
 {
     virtual ~IProtocolFactory() {}
-    virtual IProtocolPtr createProtocol() = 0;
+    virtual IProtocolPtr createProtocol(const Variant& data) = 0;
 };
 
 typedef std::shared_ptr<IProtocolFactory>  IProtocolFactoryPtr;

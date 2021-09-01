@@ -213,7 +213,7 @@ struct RegisterProtocolHeaderBinarySizeFactory
 
 
 // IProtocolFactory
-IProtocolPtr ProtocolHeaderBinarySizeFactory::createProtocol()
+IProtocolPtr ProtocolHeaderBinarySizeFactory::createProtocol(const Variant& /*data*/)
 {
     return std::make_shared<ProtocolHeaderBinarySize>();
 }
