@@ -120,7 +120,7 @@ void Mqtt5Client::subscribe(const IStreamConnectionPtr& connection, const Subscr
     for (size_t i = 0; i < data.subscriptions.size(); ++i)
     {
         const SubscribeEntry& entry = data.subscriptions[i];
-        Mqtt5SubscribeEntry dest = dataInternal.subscriptions[i];
+        Mqtt5SubscribeEntry& dest = dataInternal.subscriptions[i];
         dest.topic = entry.topic;
         dest.retainHandling = entry.retainHandling;
         dest.retainAsPublished = entry.retainAsPublished;

@@ -57,7 +57,7 @@ static const ssize_t HEADERSIZE = 1;
 
 
 Mqtt5Serialization::Mqtt5Serialization(char* buffer, unsigned int sizeBuffer, unsigned int indexBuffer)
-    : m_buffer(buffer)
+    : m_buffer(reinterpret_cast<std::uint8_t*>(buffer))
     , m_sizeBuffer(sizeBuffer)
     , m_indexBuffer(indexBuffer)
 {
@@ -248,7 +248,7 @@ void Mqtt5Serialization::serializeConnect(const Mqtt5ConnectData& data, unsigned
     {
         connectFlags |= CF_SetPassword(1);
     }
-    connectFlags |= CF_SetPassword(data.cleanStart ? 1 : 0);
+    connectFlags |= CF_SetCleanStart(data.cleanStart ? 1 : 0);
 
 
     write1ByteNumber(connectFlags);
@@ -413,7 +413,7 @@ unsigned int Mqtt5Serialization::sizePublish(const Mqtt5PublishData& data, unsig
     return size;
 }
 
-void Mqtt5Serialization::serializePublish(const Mqtt5PublishData& data, unsigned int sizePayload, unsigned int sizePropPayload, char*& bufferPacketId)
+void Mqtt5Serialization::serializePublish(const Mqtt5PublishData& data, unsigned int sizePayload, unsigned int sizePropPayload, std::uint8_t*& bufferPacketId)
 {
     bufferPacketId = nullptr;
     unsigned int header = 0;
@@ -620,7 +620,7 @@ unsigned int Mqtt5Serialization::sizeSubscribe(const Mqtt5SubscribeData& data, u
 }
 
 
-void Mqtt5Serialization::serializeSubscribe(const Mqtt5SubscribeData& data, unsigned int sizePayload, unsigned int sizePropPayload, char*& bufferPacketId)
+void Mqtt5Serialization::serializeSubscribe(const Mqtt5SubscribeData& data, unsigned int sizePayload, unsigned int sizePropPayload, std::uint8_t*& bufferPacketId)
 {
     unsigned int header = 0;
     header |= HEADER_SetCommand(Mqtt5Command::COMMAND_SUBSCRIBE);
@@ -804,7 +804,7 @@ unsigned int Mqtt5Serialization::sizeUnsubscribe(const Mqtt5UnsubscribeData& dat
     return size;
 }
 
-void Mqtt5Serialization::serializeUnsubscribe(const Mqtt5UnsubscribeData& data, unsigned int sizePayload, unsigned int sizePropPayload, char*& bufferPacketId)
+void Mqtt5Serialization::serializeUnsubscribe(const Mqtt5UnsubscribeData& data, unsigned int sizePayload, unsigned int sizePropPayload, std::uint8_t*& bufferPacketId)
 {
     unsigned int header = 0;
     header |= HEADER_SetCommand(Mqtt5Command::COMMAND_UNSUBSCRIBE);
@@ -1102,7 +1102,7 @@ bool Mqtt5Serialization::readString(std::string& str)
     bool ok = read2ByteNumber(size);
     if (ok && doesFit(size))
     {
-        str.insert(0, &m_buffer[m_indexBuffer], size);
+        str.insert(0, reinterpret_cast<char*>(&m_buffer[m_indexBuffer]), size);
         m_indexBuffer += size;
     }
     else

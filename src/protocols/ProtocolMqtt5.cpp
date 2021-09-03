@@ -133,8 +133,8 @@ void ProtocolMqtt5::setConnection(const IStreamConnectionPtr& connection)
     data.willMessage->delayInterval = m_sessionExpiryInterval + 1000;   // the sessionExpiryInterval has priority
 
     m_client->startConnection(connection, data);
-    m_client->subscribe(connection, { {{m_clientId + "/#", 2, false, true, 2}} });
-    m_client->subscribe(connection, { {{"fmq_willmessages", 2, false, true, 2}} });
+    m_client->subscribe(connection, { {{"/" + m_clientId + "/#", 2, false, true, 2}} });
+    m_client->subscribe(connection, { {{"/fmq_willmessages", 2, false, true, 2}} });
 
     std::unique_lock<std::mutex> lock(m_mutex);
     m_connection = connection;
@@ -324,43 +324,50 @@ void ProtocolMqtt5::cycleTime()
 // IMqtt5ClientCallback
 void ProtocolMqtt5::receivedConnAck(const ConnAckData& data)
 {
-    std::unique_lock<std::mutex> lock(m_mutex);
-    bool sessionGone = false;
-    bool isFirstConnection = m_firstConnection;
-    m_firstConnection = false;
-    if (!isFirstConnection && !data.sessionPresent)
+    if (data.reasoncode < 0x80)
     {
-        sessionGone = true;
-    }
-    else
-    {
-        m_keepAlive = data.serverKeepAlive;
-        if (data.sessionExpiryInterval < m_sessionExpiryInterval)
+        std::unique_lock<std::mutex> lock(m_mutex);
+        bool sessionGone = false;
+        bool isFirstConnection = m_firstConnection;
+        m_firstConnection = false;
+        if (!isFirstConnection && !data.sessionPresent)
         {
-            m_sessionExpiryInterval = data.sessionExpiryInterval;
-        }
-    }
-    IStreamConnectionPtr connection = m_connection;
-    auto callback = m_callback.lock();
-    lock.unlock();
-
-    if (callback)
-    {
-        if (sessionGone)
-        {
-            IMqtt5Client::DisconnectData data = { ReasonCodeDisconnectWithWillMessage, "", {} };
-            m_client->endConnection(connection, data);
-            disconnect();
-            callback->disconnected();
+            sessionGone = true;
         }
         else
         {
-            if (isFirstConnection)
+            m_keepAlive = data.serverKeepAlive;
+            if (data.sessionExpiryInterval < m_sessionExpiryInterval)
             {
-                callback->connected();
+                m_sessionExpiryInterval = data.sessionExpiryInterval;
             }
-            callback->setActivityTimeout(m_keepAlive * 1500 + m_sessionExpiryInterval * 1000);
         }
+        IStreamConnectionPtr connection = m_connection;
+        auto callback = m_callback.lock();
+        lock.unlock();
+
+        if (callback)
+        {
+            if (sessionGone)
+            {
+                IMqtt5Client::DisconnectData data = { ReasonCodeDisconnectWithWillMessage, "", {} };
+                m_client->endConnection(connection, data);
+                disconnect();
+                callback->disconnected();
+            }
+            else
+            {
+                if (isFirstConnection)
+                {
+                    callback->connected();
+                }
+                callback->setActivityTimeout(m_keepAlive * 1500 + m_sessionExpiryInterval * 1000);
+            }
+        }
+    }
+    else
+    {
+        streamError << "Connection failed, reason code: " << (unsigned int)data.reasoncode << " (" << data.reasonString << ")";
     }
 }
 
@@ -402,7 +409,7 @@ void ProtocolMqtt5::receivedPingResp()
 
 void ProtocolMqtt5::receivedDisconnect(const DisconnectData& data)
 {
-    streamInfo << "Disconnect from mqtt5 broker. Reason Code: " << data.reasoncode << " (" << data.reasonString << ")";
+    streamInfo << "Disconnect from mqtt5 broker. Reason Code: " << (unsigned int)data.reasoncode << " (" << data.reasonString << ")";
 }
 
 void ProtocolMqtt5::receivedAuth(const AuthData& /*data*/)

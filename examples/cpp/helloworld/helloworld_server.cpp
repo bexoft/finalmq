@@ -173,7 +173,7 @@ int main()
     //                       {{true, SSL_VERIFY_NONE, "myservercertificate.cert", "myservercertificate.key"}});
     // And by the way, also connect()s are possible for an EntityContainer. An EntityContainer can be client and server at the same time.
 
-    entityContainer.connect("tcp://broker.emqx.io:1883:mqtt5client:json", { {},{},
+    entityContainer.connect("tcp://localhost:1883:mqtt5client:json", { {},{},
         VariantStruct{  /*{ProtocolMqtt5::KEY_USERNAME, std::string("")},
                         {ProtocolMqtt5::KEY_PASSWORD, std::string("")},*/
                         {ProtocolMqtt5::KEY_SESSIONEXPIRYINTERVAL, 300},

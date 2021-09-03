@@ -95,7 +95,7 @@ bool Mqtt5Protocol::receiveHeader(const SocketPtr& socket, int& bytesToRead)
 bool Mqtt5Protocol::receiveRemainingSize(const IStreamConnectionPtr& connection, const SocketPtr& socket, int& bytesToRead)
 {
     assert(bytesToRead >= 1);
-    assert(m_state == State::WAITFORHEADER);
+    assert(m_state == State::WAITFORLENGTH);
     bool ok = true;
     bool done = false;
     while ((bytesToRead > 1) && !done && ok)
@@ -255,7 +255,7 @@ bool Mqtt5Protocol::processPayload(const IStreamConnectionPtr& connection)
 {
     assert(m_state == State::MESSAGECOMPLETE);
 
-    Mqtt5Serialization serialization(m_buffer, m_remainingSize, 1);
+    Mqtt5Serialization serialization(m_buffer, HEADERSIZE + m_remainingSize, 1);
 
     auto callback = m_callback.lock();
 
@@ -277,22 +277,24 @@ bool Mqtt5Protocol::processPayload(const IStreamConnectionPtr& connection)
         {
             Mqtt5ConnAckData data;
             ok = serialization.deserializeConnAck(data);
-            auto it = data.properties.find(Mqtt5PropertyId::ReceiveMaximum);
-
-            std::unique_lock<std::mutex> lock(m_mutex);
-            if (it != data.properties.end())
+            if (ok && data.reasoncode < 0x80)
             {
-                m_sendMax = static_cast<std::uint32_t>(it->second);
-            }
-            else
-            {
-                m_sendMax = 65535;
-            }
-            resendMessages(connection);
-            sendPendingMessages(connection);
-            m_connecting = false;
-            lock.unlock();
+                auto it = data.properties.find(Mqtt5PropertyId::ReceiveMaximum);
 
+                std::unique_lock<std::mutex> lock(m_mutex);
+                if (it != data.properties.end())
+                {
+                    m_sendMax = static_cast<std::uint32_t>(it->second);
+                }
+                else
+                {
+                    m_sendMax = 65535;
+                }
+                resendMessages(connection);
+                sendPendingMessages(connection);
+                m_connecting = false;
+                lock.unlock();
+            }
             if (callback && ok)
             {
                 callback->receivedConnAck(data);
@@ -530,6 +532,7 @@ void Mqtt5Protocol::sendConnect(const IStreamConnectionPtr& connection, const Mq
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     m_connecting = true;
+    clearState();
     lock.unlock();
 
     unsigned int sizePropPayload = 0;
@@ -596,7 +599,6 @@ void Mqtt5Protocol::sendPendingMessages(const IStreamConnectionPtr& connection)
 {
     if (connection)
     {
-        std::unique_lock<std::mutex> lock(m_mutex);
         while (!m_messagesPending.empty())
         {
             unsigned int packetId = getPacketId();
@@ -617,7 +619,7 @@ void Mqtt5Protocol::sendPendingMessages(const IStreamConnectionPtr& connection)
 }
 
 
-static void putPacketIdIntoMessage(char* bufferPacketId, unsigned int packetId)
+static void putPacketIdIntoMessage(std::uint8_t* bufferPacketId, unsigned int packetId)
 {
     if (bufferPacketId)
     {
@@ -627,7 +629,7 @@ static void putPacketIdIntoMessage(char* bufferPacketId, unsigned int packetId)
 }
 
 
-void Mqtt5Protocol::prepareForSendWithPacketId(const IMessagePtr& message, char* bufferPacketId, unsigned qos, unsigned int command, unsigned int packetId)
+void Mqtt5Protocol::prepareForSendWithPacketId(const IMessagePtr& message, std::uint8_t* bufferPacketId, unsigned qos, unsigned int command, unsigned int packetId)
 {
     assert(bufferPacketId != nullptr);
     assert(packetId < m_messageIdsAllocated.size());
@@ -684,7 +686,7 @@ unsigned int Mqtt5Protocol::getPacketId()
 }
 
 
-bool Mqtt5Protocol::prepareForSend(const IMessagePtr& message, char* bufferPacketId, unsigned qos, unsigned int command)
+bool Mqtt5Protocol::prepareForSend(const IMessagePtr& message, std::uint8_t* bufferPacketId, unsigned qos, unsigned int command)
 {
     // qos == 0 -> these messages will not be treated with ack and flow control
     // messages will get lost when the connection is (temporarly) gone.
@@ -723,7 +725,7 @@ void Mqtt5Protocol::sendPublish(const IStreamConnectionPtr& connection, Mqtt5Pub
     int sizeMessage = 1 + Mqtt5Serialization::sizeVarByteNumber(sizePayload) + sizePayload;
     char* buffer = message->addSendHeader(sizeMessage);
     Mqtt5Serialization serialization(buffer, sizeMessage, 0);
-    char* bufferPacketId = nullptr;
+    std::uint8_t* bufferPacketId = nullptr;
     serialization.serializePublish(data, sizePayload, sizePropPayload, bufferPacketId);
 
     std::unique_lock<std::mutex> lock(m_mutex);
@@ -794,7 +796,7 @@ void Mqtt5Protocol::sendSubscribe(const IStreamConnectionPtr& connection, const 
     IMessagePtr message = std::make_shared<ProtocolMessage>(0);
     char* buffer = message->addSendHeader(sizeMessage);
     Mqtt5Serialization serialization(buffer, sizeMessage, 0);
-    char* bufferPacketId = nullptr;
+    std::uint8_t* bufferPacketId = nullptr;
     serialization.serializeSubscribe(data, sizePayload, sizePropPayload, bufferPacketId);
 
     std::unique_lock<std::mutex> lock(m_mutex);
@@ -835,7 +837,7 @@ void Mqtt5Protocol::sendUnsubscribe(const IStreamConnectionPtr& connection, cons
     IMessagePtr message = std::make_shared<ProtocolMessage>(0);
     char* buffer = message->addSendHeader(sizeMessage);
     Mqtt5Serialization serialization(buffer, sizeMessage, 0);
-    char* bufferPacketId = nullptr;
+    std::uint8_t* bufferPacketId = nullptr;
     serialization.serializeUnsubscribe(data, sizePayload, sizePropPayload, bufferPacketId);
 
     std::unique_lock<std::mutex> lock(m_mutex);

@@ -84,7 +84,7 @@ public:
     void writeBinary(const Bytes& value);
     void writeProperties(const std::unordered_map<unsigned int, Variant>& properties, const std::unordered_map<std::string, std::string>& metainfo, unsigned int sizePropertyPayload);
 
-    static void write2ByteNumber(char* buffer, unsigned int number)
+    static void write2ByteNumber(std::uint8_t* buffer, unsigned int number)
     {
         buffer[0] = (number >> 8) & 0xff;
         buffer[1] = (number >> 0) & 0xff;
@@ -113,17 +113,17 @@ public:
 
     void serializeConnect(const Mqtt5ConnectData& data, unsigned int sizePayload, unsigned int sizePropPayload, unsigned int sizePropWillMessage);
     void serializeConnAck(const Mqtt5ConnAckData& data, unsigned int sizePayload, unsigned int sizePropPayload);
-    void serializePublish(const Mqtt5PublishData& data, unsigned int sizePayload, unsigned int sizePropPayload, char*& bufferPacketId);
+    void serializePublish(const Mqtt5PublishData& data, unsigned int sizePayload, unsigned int sizePropPayload, std::uint8_t*& bufferPacketId);
     void serializePubAck(const Mqtt5PubAckData& data, Mqtt5Command command, unsigned int sizePayload, unsigned int sizePropPayload);
-    void serializeSubscribe(const Mqtt5SubscribeData& data, unsigned int sizePayload, unsigned int sizePropPayload, char*& bufferPacketId);
+    void serializeSubscribe(const Mqtt5SubscribeData& data, unsigned int sizePayload, unsigned int sizePropPayload, std::uint8_t*& bufferPacketId);
     void serializeSubAck(const Mqtt5SubAckData& data, Mqtt5Command command, unsigned int sizePayload, unsigned int sizePropPayload);
-    void serializeUnsubscribe(const Mqtt5UnsubscribeData& data, unsigned int sizePayload, unsigned int sizePropPayload, char*& bufferPacketId);
+    void serializeUnsubscribe(const Mqtt5UnsubscribeData& data, unsigned int sizePayload, unsigned int sizePropPayload, std::uint8_t*& bufferPacketId);
     void serializePingReq();
     void serializePingResp();
     void serializeDisconnect(const Mqtt5DisconnectData& data, unsigned int sizePayload, unsigned int sizePropPayload);
     void serializeAuth(const Mqtt5AuthData& data, unsigned int sizePayload, unsigned int sizePropPayload);
 
-    char*           m_buffer = nullptr;
+    std::uint8_t*   m_buffer = nullptr;
     unsigned int    m_sizeBuffer = 0;
     unsigned int    m_indexBuffer = 0;
 };

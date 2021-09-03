@@ -192,7 +192,9 @@ IProtocolSessionPtr RemoteEntityContainer::connect(const std::string& endpoint, 
     }
     std::string endpointProtocol = endpoint.substr(0, ixEndpoint);
 
-    return m_protocolSessionContainer->connect(endpointProtocol, this, connectProperties, contentType);
+    IProtocolSessionPtr session = m_protocolSessionContainer->connect(endpointProtocol, this, connectProperties, contentType);
+    subscribeEntityNames(session);
+    return session;
 }
 
 
@@ -216,6 +218,10 @@ void RemoteEntityContainer::subscribeEntityNames(const IProtocolSessionPtr& sess
 
 void RemoteEntityContainer::subscribeSessions(const std::string& name)
 {
+    if (name.empty())
+    {
+        return;
+    }
     std::vector< IProtocolSessionPtr > sessions = m_protocolSessionContainer->getAllSessions();
     for (auto it = sessions.begin(); it != sessions.end(); ++it)
     {
@@ -275,6 +281,12 @@ EntityId RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> remoteE
 
     re->initEntity(entityId, name, m_fileTransferReply, m_executor);
     m_entityId2entity[entityId] = remoteEntity;
+    lock.unlock();
+
+    if (!name.empty())
+    {
+        subscribeSessions(name);
+    }
 
     return entityId;
 }

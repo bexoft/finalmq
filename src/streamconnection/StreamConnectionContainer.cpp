@@ -249,7 +249,10 @@ IStreamConnectionPtr StreamConnectionContainer::createConnection(hybrid_ptr<IStr
 bool StreamConnectionContainer::createSocket(const IStreamConnectionPtr& streamConnection, ConnectionData& connectionData, const ConnectProperties& connectionProperties)
 {
     SocketPtr socket = streamConnection->getSocket();
-    assert(socket);
+    if (socket == nullptr)
+    {
+        return false;
+    }
 
     // the endpoint should not been set twice!
     assert(socket->getSocketDescriptor() == nullptr);

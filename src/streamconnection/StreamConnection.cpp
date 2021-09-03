@@ -341,7 +341,7 @@ bool StreamConnection::received(const IStreamConnectionPtr& connection, const So
 {
     bool ok = true;
     auto callback = m_callback.lock();
-    if (callback)
+    if (callback && !m_disconnectFlag)
     {
 //        m_executor->addAction(std::bind(&IStreamConnectionCallback::received, callback, connection, socket, bytesToRead));
         ok = callback->received(connection, socket, bytesToRead);

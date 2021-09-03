@@ -95,8 +95,8 @@ public:
     unsigned int getPacketId();
     void resendMessages(const IStreamConnectionPtr& connection);
     void sendPendingMessages(const IStreamConnectionPtr& connection);
-    void prepareForSendWithPacketId(const IMessagePtr& message, char* bufferPacketId, unsigned qos, unsigned int command, unsigned int packetId);
-    bool prepareForSend(const IMessagePtr& message, char* bufferPacketId, unsigned qos, unsigned int command);
+    void prepareForSendWithPacketId(const IMessagePtr& message, std::uint8_t* bufferPacketId, unsigned qos, unsigned int command, unsigned int packetId);
+    bool prepareForSend(const IMessagePtr& message, std::uint8_t* bufferPacketId, unsigned qos, unsigned int command);
     bool handleAck(const IStreamConnectionPtr& connection, unsigned int command, unsigned int packetId, unsigned int reasoncode);
     void sendPubAck(const IStreamConnectionPtr& connection, const Mqtt5PubAckData& data);
     void sendPubRec(const IStreamConnectionPtr& connection, const Mqtt5PubAckData& data);
@@ -135,7 +135,7 @@ public:
     struct PendingMessage
     {
         IMessagePtr     message;
-        char*           bufferPacketId = nullptr;
+        std::uint8_t*   bufferPacketId = nullptr;
         unsigned int    qos = 0;
         unsigned int    command = 0;
     };
