@@ -240,10 +240,10 @@ TEST_F(TestProtocolHttpServer, testSendMessage)
 {
     std::shared_ptr<IMessage> message = std::make_shared<ProtocolMessage>(0);
     Variant& controlData = message->getControlData();
-    controlData = VariantStruct{ {ProtocolHttpServer::FMQ_HTTP, std::string("request")},
-                                 {ProtocolHttpServer::FMQ_METHOD, std::string("GET")},
-                                 {ProtocolHttpServer::FMQ_PATH, std::string("/hello")},
-                                 {"queries", VariantStruct{{"filter", std::string("world")},{"lang", std::string("en")}}} };
+    controlData.add(ProtocolHttpServer::FMQ_HTTP, std::string("request"));
+    controlData.add(ProtocolHttpServer::FMQ_METHOD, std::string("GET"));
+    controlData.add(ProtocolHttpServer::FMQ_PATH, std::string("/hello"));
+    controlData.add("queries", VariantStruct{ {"filter", std::string("world")},{"lang", std::string("en")} });
         
     message->addSendPayload(std::string("0123456789"));
 

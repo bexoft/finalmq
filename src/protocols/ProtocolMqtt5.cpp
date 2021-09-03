@@ -209,6 +209,7 @@ bool ProtocolMqtt5::sendMessage(IMessagePtr message)
     data.responseTopic = m_clientId;
 
     data.topic = message->getEchoData().getDataValue<std::string>(FMQ_VIRTUAL_SESSION_ID);
+
     if (data.topic.empty())
     {
 //        message
@@ -323,15 +324,6 @@ void ProtocolMqtt5::receivedPublish(const PublishData& data, const IMessagePtr& 
 {
     message->addMetainfo(FMQ_CORRID, std::string(data.correlationData.begin(), data.correlationData.end()));
     message->addMetainfo(FMQ_VIRTUAL_SESSION_ID, data.responseTopic);
-    Variant& echoData = message->getEchoData();
-    if (echoData.getType() == VARTYPE_NONE)
-    {
-        echoData = VariantStruct{ {FMQ_VIRTUAL_SESSION_ID, data.responseTopic} };
-    }
-    else
-    {
-        echoData.add(FMQ_VIRTUAL_SESSION_ID, data.responseTopic);
-    }
 
     std::unique_lock<std::mutex> lock(m_mutex);
     auto callback = m_callback.lock();

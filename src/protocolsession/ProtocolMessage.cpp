@@ -189,11 +189,19 @@ std::string* ProtocolMessage::getMetainfo(const std::string& key)
 // controlData
 Variant& ProtocolMessage::getControlData()
 {
+    if (m_controlData.getType() != VARTYPE_STRUCT)
+    {
+        m_controlData = VariantStruct();
+    }
     return m_controlData;
 }
 
 const Variant& ProtocolMessage::getControlData() const
 {
+    if (m_controlData.getType() != VARTYPE_STRUCT)
+    {
+        const_cast<Variant&>(m_controlData) = VariantStruct();
+    }
     return m_controlData;
 }
 

@@ -51,6 +51,7 @@ static const std::string FMQ_RE_STATUS = "fmq_re_status";
 static const std::string FMQ_RE_TYPE = "fmq_re_type";
 static const std::string MSG_REPLY = "MSG_REPLY";
 
+static const std::string FMQ_VIRTUAL_SESSION_ID = "fmq_virtsessid";
 
 
 
@@ -194,7 +195,7 @@ static void metainfoToHeader(remoteentity::Header& header, IMessage::Metainfo& m
 }
 
 
-bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, remoteentity::Header& header, Variant&& echoData, const StructBase* structBase, IMessage::Metainfo* metainfo, Variant* controlData)
+bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, const std::string& virtualSessionId, remoteentity::Header& header, Variant&& echoData, const StructBase* structBase, IMessage::Metainfo* metainfo, Variant* controlData)
 {
     bool ok = true;
     assert(session);
@@ -239,19 +240,12 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, re
 
         if (controlData)
         {
-            if (controlData->getType() != VARTYPE_STRUCT)
+            VariantStruct* varstruct = message->getControlData().getData<VariantStruct>("");
+            VariantStruct* varstruct2 = controlData->getData<VariantStruct>("");
+            if (varstruct && varstruct2)
             {
-                message->getControlData() = std::move(*controlData);
-            }
-            else
-            {
-                VariantStruct* varstruct = message->getControlData().getData<VariantStruct>("");
-                VariantStruct* varstruct2 = controlData->getData<VariantStruct>("");
-                if (varstruct && varstruct2)
-                {
-                    varstruct->insert(varstruct->begin(), std::make_move_iterator(varstruct2->begin()), std::make_move_iterator(varstruct2->end()));
-                    varstruct2->clear();
-                }
+                varstruct->insert(varstruct->begin(), std::make_move_iterator(varstruct2->begin()), std::make_move_iterator(varstruct2->end()));
+                varstruct2->clear();
             }
         }
         if (pureData == nullptr)
@@ -272,6 +266,11 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, re
         }
         if (ok)
         {
+            if (!virtualSessionId.empty())
+            {
+                Variant& controlData = message->getControlData();
+                controlData.add(FMQ_VIRTUAL_SESSION_ID, virtualSessionId);
+            }
             ok = session->sendMessage(message, (header.mode == MsgMode::MSG_REPLY));
         }
     }

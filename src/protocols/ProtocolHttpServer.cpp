@@ -418,10 +418,10 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
                             {
                                 m_message = std::make_shared<ProtocolMessage>(0);
                                 Variant& controlData = m_message->getControlData();
-                                controlData = VariantStruct{ {FMQ_HTTP, std::string(HTTP_RESPONSE)},
-                                                             {FMQ_PROTOCOL, std::move(lineSplit[0])},
-                                                             {FMQ_STATUS, std::move(lineSplit[1])},
-                                                             {FMQ_STATUSTEXT, std::move(lineSplit[2])} };
+                                controlData.add(FMQ_HTTP, std::string(HTTP_RESPONSE));
+                                controlData.add(FMQ_PROTOCOL, std::move(lineSplit[0]));
+                                controlData.add(FMQ_STATUS, std::move(lineSplit[1]));
+                                controlData.add(FMQ_STATUSTEXT, std::move(lineSplit[2]));
                                 m_state = STATE_FIND_HEADERS;
                             }
                             else

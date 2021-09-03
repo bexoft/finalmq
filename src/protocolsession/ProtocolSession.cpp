@@ -890,7 +890,7 @@ void ProtocolSession::pollRelease()
         {
             IMessagePtr reply = protocol->pollReply({});
             Variant& controlData = reply->getControlData();
-            controlData = VariantStruct{ {"fmq_poll_stop", true} };
+            controlData.add("fmq_poll_stop", true);
             sendMessage(reply, protocol);
         }
         m_pollWaiting = false;

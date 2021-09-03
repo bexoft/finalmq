@@ -401,7 +401,7 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     }
 
     bool syntaxError = false;
-    ReceiveData receiveData{ session, message, {}, {} };
+    ReceiveData receiveData{ session, {}, message, {}, {} };
     if (!pureData)
     {
         if (!session->doesSupportMetainfo())
@@ -448,6 +448,15 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     auto entity = remoteEntity.lock();
     if (receiveData.header.mode == MsgMode::MSG_REQUEST)
     {
+        const IMessage::Metainfo& metainfo = receiveData.message->getAllMetainfo();
+        if (!metainfo.empty())
+        {
+            auto it = metainfo.find(FMQ_VIRTUAL_SESSION_ID);
+            if (it != metainfo.end())
+            {
+                receiveData.virtualSessionId = it->second;
+            }
+        }
         Status replyStatus = Status::STATUS_OK;
         if (!syntaxError)
         {
@@ -467,7 +476,7 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
         if (replyStatus != Status::STATUS_OK)
         {
             Header headerReply{ receiveData.header.srcid, "", entityId, MsgMode::MSG_REPLY, replyStatus, "", receiveData.header.corrid, {} };
-            RemoteEntityFormatRegistry::instance().send(session, headerReply, std::move(message->getEchoData()));
+            RemoteEntityFormatRegistry::instance().send(session, receiveData.virtualSessionId, headerReply, std::move(message->getEchoData()));
         }
     }
     else if (receiveData.header.mode == MsgMode::MSG_REPLY)
