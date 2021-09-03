@@ -44,11 +44,13 @@ static const std::string FMQ_STATUS = "fmq_status";
 static const std::string FMQ_STATUSTEXT = "fmq_statustext";
 static const std::string HTTP_RESPONSE = "response";
 static const std::string FMQ_PATH = "fmq_path";
+static const std::string FMQ_DESTNAME = "fmq_destname";
+static const std::string FMQ_RE_DESTID = "fmq_re_destid";
 static const std::string FMQ_RE_SRCID = "fmq_re_srcid";
 static const std::string FMQ_RE_MODE = "fmq_re_mode";
 static const std::string FMQ_CORRID = "fmq_corrid";
 static const std::string FMQ_RE_STATUS = "fmq_re_status";
-static const std::string FMQ_RE_TYPE = "fmq_re_type";
+static const std::string FMQ_TYPE = "fmq_type";
 static const std::string MSG_REPLY = "MSG_REPLY";
 
 static const std::string FMQ_VIRTUAL_SESSION_ID = "fmq_virtsessid";
@@ -102,11 +104,19 @@ bool RemoteEntityFormatRegistryImpl::serialize(IMessage& message, int contentTyp
 void RemoteEntityFormatRegistryImpl::serializeHeaderToMetainfo(IMessage& message, const remoteentity::Header& header)
 {
     IMessage::Metainfo& metainfo = message.getAllMetainfo();
+    if (!header.destname.empty())
+    {
+        metainfo[FMQ_DESTNAME] = header.destname;
+    }
+    if (header.destid != 0)
+    {
+        metainfo[FMQ_RE_DESTID] = std::to_string(header.destid);
+    }
     metainfo[FMQ_RE_SRCID] = std::to_string(header.srcid);
     metainfo[FMQ_RE_MODE] = header.mode.toString();
     metainfo[FMQ_CORRID] = std::to_string(header.corrid);
     metainfo[FMQ_RE_STATUS] = header.status.toString();
-    metainfo[FMQ_RE_TYPE] = header.type;
+    metainfo[FMQ_TYPE] = header.type;
 }
 
 
@@ -208,6 +218,11 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, co
         {
             message->getEchoData() = std::move(echoData);
         }
+        if (!header.destname.empty())
+        {
+            Variant& controlData = message->getControlData();
+            controlData.add(FMQ_DESTNAME, header.destname);
+        }
         bool writeMetainfoToHeader = metainfo;
         if (session->doesSupportMetainfo())
         {
@@ -308,6 +323,8 @@ void RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, remoteenti
     auto itMode = metainfo.find(FMQ_RE_MODE);
     auto itCorrId = metainfo.find(FMQ_CORRID);
     auto itStatus = metainfo.find(FMQ_RE_STATUS);
+    auto itDestName = metainfo.find(FMQ_DESTNAME);
+    auto itType = metainfo.find(FMQ_TYPE);
     if (itPath != metainfo.end())
     {
         const std::string& path = itPath->second;
@@ -366,6 +383,24 @@ void RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, remoteenti
     {
         const std::string& status = itStatus->second;
         header.status.fromString(status);
+    }
+
+    if (itDestName != metainfo.end())
+    {
+        const std::string& destname = itDestName->second;
+        if (!destname.empty())
+        {
+            header.destname = destname;
+        }
+    }
+
+    if (itType != metainfo.end())
+    {
+        const std::string& type = itType->second;
+        if (!type.empty())
+        {
+            header.type = type;
+        }
     }
 }
 

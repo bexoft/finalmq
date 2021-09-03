@@ -79,6 +79,7 @@ struct IProtocol : public IStreamConnectionCallback
     virtual bool sendMessage(IMessagePtr message) = 0;
     virtual void moveOldProtocolState(IProtocol& protocolOld) = 0;
     virtual IMessagePtr pollReply(std::deque<IMessagePtr>&& messages) = 0;
+    virtual void subscribe(const std::vector<std::string>& subscribtions) = 0;
     virtual void cycleTime() = 0;
 };
 

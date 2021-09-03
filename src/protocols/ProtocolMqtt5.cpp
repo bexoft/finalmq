@@ -49,7 +49,11 @@ const std::string ProtocolMqtt5::KEY_SESSIONEXPIRYINTERVAL = "sessionexpiryinter
 const std::string ProtocolMqtt5::KEY_KEEPALIVE = "keepalive";
 
 static const std::string FMQ_CORRID = "fmq_corrid";
+static const std::string FMQ_TYPE = "fmq_type";
 static const std::string FMQ_VIRTUAL_SESSION_ID = "fmq_virtsessid";
+static const std::string FMQ_DESTNAME = "fmq_destname";
+
+static const std::uint8_t ReasonCodeDisconnectWithWillMessage = 0x04;
 
 
 #ifdef WIN32
@@ -121,7 +125,12 @@ void ProtocolMqtt5::setConnection(const IStreamConnectionPtr& connection)
     data.password = m_password;
     data.keepAlive = m_keepAlive;
     data.sessionExpiryInterval = m_sessionExpiryInterval;
-    //data.willMessage
+    data.willMessage = std::make_unique<IMqtt5Client::WillMessage>();
+    data.willMessage->payload.insert(data.willMessage->payload.end(), m_clientId.begin(), m_clientId.end());
+    data.willMessage->qos = 2;
+    data.willMessage->topic = "fmq_willmessages";
+    data.willMessage->retain = false;
+    data.willMessage->delayInterval = m_sessionExpiryInterval + 1000;   // the sessionExpiryInterval has priority
 
     m_client->startConnection(connection, data);
 
@@ -206,18 +215,33 @@ bool ProtocolMqtt5::sendMessage(IMessagePtr message)
     {
         data.correlationData = Bytes(corrid->begin(), corrid->end());
     }
-    data.responseTopic = m_clientId;
+    data.responseTopic = "/" + m_clientId;
 
-    data.topic = message->getEchoData().getDataValue<std::string>(FMQ_VIRTUAL_SESSION_ID);
+    data.topic = '/';
+    data.topic += message->getEchoData().getDataValue<std::string>(FMQ_VIRTUAL_SESSION_ID);
 
     if (data.topic.empty())
     {
-//        message
-//        data.topic = 
+        std::string* destname = message->getControlData().getData<std::string>(FMQ_DESTNAME);
+        if (destname)
+        {
+            data.topic += *destname;
+        }
     }
 
-    //!!! todo
-    //data.topic
+    if (data.topic.empty())
+    {
+        data.topic += "fmqevents/";
+        data.topic += m_clientId;
+    }
+
+    std::string* type = message->getMetainfo(FMQ_TYPE);
+    if (type && !type->empty())
+    {
+        data.topic += '/';
+        data.topic += *type;
+    }
+
     m_client->publish(connection, std::move(data), message);
     return true;
 }
@@ -263,6 +287,21 @@ IMessagePtr ProtocolMqtt5::pollReply(std::deque<IMessagePtr>&& /*messages*/)
     return {};
 }
 
+void ProtocolMqtt5::subscribe(const std::vector<std::string>& subscribtions)
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    IMqtt5Client::SubscribeData data;
+    data.subscriptions.reserve(subscribtions.size());
+    for (size_t i = 0; i < subscribtions.size(); ++i)
+    {
+        std::string topic = "/" + subscribtions[i];
+        data.subscriptions.push_back({ topic, 2, false, false, 2});
+    }
+    IStreamConnectionPtr connection = m_connection;
+    lock.unlock();
+    m_client->subscribe(connection, data);
+}
+
 void ProtocolMqtt5::cycleTime()
 {
     std::unique_lock<std::mutex> lock(m_mutex);
@@ -294,7 +333,10 @@ void ProtocolMqtt5::receivedConnAck(const ConnAckData& data)
     else
     {
         m_keepAlive = data.serverKeepAlive;
-        m_sessionExpiryInterval = data.sessionExpiryInterval;
+        if (data.sessionExpiryInterval < m_sessionExpiryInterval)
+        {
+            m_sessionExpiryInterval = data.sessionExpiryInterval;
+        }
     }
     IStreamConnectionPtr connection = m_connection;
     auto callback = m_callback.lock();
@@ -304,7 +346,7 @@ void ProtocolMqtt5::receivedConnAck(const ConnAckData& data)
     {
         if (sessionGone)
         {
-            IMqtt5Client::DisconnectData data = { 0, "", {} };
+            IMqtt5Client::DisconnectData data = { ReasonCodeDisconnectWithWillMessage, "", {} };
             m_client->endConnection(connection, data);
             disconnect();
             callback->disconnected();
@@ -313,6 +355,8 @@ void ProtocolMqtt5::receivedConnAck(const ConnAckData& data)
         {
             if (isFirstConnection)
             {
+                m_client->subscribe(connection, { {{m_clientId + "/#", 2, false, true, 2}} });
+                m_client->subscribe(connection, { {{"fmq_willmessages", 2, false, true, 2}} });
                 callback->connected();
             }
             callback->setActivityTimeout(m_keepAlive * 1500 + m_sessionExpiryInterval * 1000);

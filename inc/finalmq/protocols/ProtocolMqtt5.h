@@ -68,6 +68,7 @@ private:
     virtual hybrid_ptr<IStreamConnectionCallback> connected(const IStreamConnectionPtr& connection) override;
     virtual void disconnected(const IStreamConnectionPtr& connection) override;
     virtual IMessagePtr pollReply(std::deque<IMessagePtr>&& messages) override;
+    virtual void subscribe(const std::vector<std::string>& subscribtions) override;
     virtual void cycleTime() override;
 
     // IMqtt5ClientCallback

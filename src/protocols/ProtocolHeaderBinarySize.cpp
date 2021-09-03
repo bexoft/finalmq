@@ -192,6 +192,11 @@ IMessagePtr ProtocolHeaderBinarySize::pollReply(std::deque<IMessagePtr>&& /*mess
     return {};
 }
 
+void ProtocolHeaderBinarySize::subscribe(const std::vector<std::string>& /*subscribtions*/)
+{
+
+}
+
 void ProtocolHeaderBinarySize::cycleTime()
 {
 

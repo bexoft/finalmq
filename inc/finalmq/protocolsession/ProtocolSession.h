@@ -82,6 +82,7 @@ private:
 //    virtual bool connect(const std::string& endpoint, const ConnectProperties& connectionProperties = {}) override;
     virtual bool connect(const std::string& endpoint, const ConnectProperties& connectionProperties = {}, int contentType = 0) override;
     virtual IExecutorPtr getExecutor() const override;
+    virtual void subscribe(const std::vector<std::string>& subscribtions) override;
 
     //// IStreamConnectionCallback
     //virtual hybrid_ptr<IStreamConnectionCallback> connected(const IStreamConnectionPtr& connection) override;

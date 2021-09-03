@@ -207,9 +207,10 @@ private:
     inline void triggerConnectionEvent(const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) const;
     void deinit();
     bool isPureDataPath(const std::string& path);
+    void subscribeEntityNames(const IProtocolSessionPtr& session);
+    void subscribeSessions(const std::string& name);
 
     static bool isTimerExpired(std::chrono::time_point<std::chrono::system_clock>& lastTime, int interval);
-
 
     std::unique_ptr<IProtocolSessionContainer>                  m_protocolSessionContainer;
     std::unordered_map<std::string, EntityId>                   m_name2entityId;

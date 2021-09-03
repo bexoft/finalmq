@@ -1138,7 +1138,6 @@ void ProtocolHttpServer::disconnected(const IStreamConnectionPtr& connection)
 
 
 
-
 IMessagePtr ProtocolHttpServer::pollReply(std::deque<IMessagePtr>&& messages)
 {
     IMessagePtr message = getMessageFactory()();
@@ -1191,6 +1190,12 @@ IMessagePtr ProtocolHttpServer::pollReply(std::deque<IMessagePtr>&& messages)
         }
     }
     return message;
+}
+
+
+void ProtocolHttpServer::subscribe(const std::vector<std::string>& /*subscribtions*/)
+{
+
 }
 
 

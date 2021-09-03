@@ -713,7 +713,7 @@ The HTTP response header looks like this:
 	fmq_re_mode: MSG_REPLY
 	fmq_re_srcid: 1
 	fmq_re_status: STATUS_OK
-	fmq_re_type: helloworld.HelloReply
+	fmq_type: helloworld.HelloReply
 
 
 

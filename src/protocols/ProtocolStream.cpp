@@ -175,6 +175,11 @@ IMessagePtr ProtocolStream::pollReply(std::deque<IMessagePtr>&& /*messages*/)
     return {};
 }
 
+void ProtocolStream::subscribe(const std::vector<std::string>& /*subscribtions*/)
+{
+
+}
+
 void ProtocolStream::cycleTime()
 {
 

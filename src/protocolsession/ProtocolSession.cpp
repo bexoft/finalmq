@@ -508,6 +508,20 @@ IExecutorPtr ProtocolSession::getExecutor() const
     return m_executor ? m_executor : m_executorPollerThread;
 }
 
+void ProtocolSession::subscribe(const std::vector<std::string>& subscribtions)
+{
+    IProtocolPtr protocol;
+    std::unique_lock<std::mutex> lock(m_mutex);
+    if (m_protocol)
+    {
+        protocol = m_protocol;
+    }
+    lock.unlock();
+    if (protocol)
+    {
+        protocol->subscribe(subscribtions);
+    }
+}
 
 
 // IProtocolCallback

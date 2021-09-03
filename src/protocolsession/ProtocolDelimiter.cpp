@@ -354,6 +354,11 @@ IMessagePtr ProtocolDelimiter::pollReply(std::deque<IMessagePtr>&& /*messages*/)
     return {};
 }
 
+void ProtocolDelimiter::subscribe(const std::vector<std::string>& /*subscribtions*/)
+{
+
+}
+
 void ProtocolDelimiter::cycleTime()
 {
 

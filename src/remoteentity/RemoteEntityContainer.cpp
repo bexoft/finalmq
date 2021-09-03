@@ -196,6 +196,39 @@ IProtocolSessionPtr RemoteEntityContainer::connect(const std::string& endpoint, 
 }
 
 
+
+void RemoteEntityContainer::subscribeEntityNames(const IProtocolSessionPtr& session)
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    std::vector<std::string> subscribtions;
+    subscribtions.reserve(m_name2entityId.size());
+    for (auto it = m_name2entityId.begin(); it != m_name2entityId.end(); ++it)
+    {
+        subscribtions.push_back(it->first);
+    }
+    lock.unlock();
+
+    if (session)
+    {
+//        session->subscribe(subscribtions);
+    }
+}
+
+void RemoteEntityContainer::subscribeSessions(const std::string& name)
+{
+    std::vector< IProtocolSessionPtr > sessions = m_protocolSessionContainer->getAllSessions();
+    for (auto it = sessions.begin(); it != sessions.end(); ++it)
+    {
+        if (*it)
+        {
+//            it->subscribe({name});
+        }
+    }
+}
+
+
+
+
 void RemoteEntityContainer::run()
 {
     m_protocolSessionContainer->run();
