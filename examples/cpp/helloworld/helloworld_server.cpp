@@ -25,6 +25,9 @@
 #include "finalmq/remoteentity/EntityFileService.h"
 #include "finalmq/logger/Logger.h"
 #include "finalmq/helpers/Executor.h"
+#include "finalmq/variant/VariantValueStruct.h"
+#include "finalmq/variant/VariantValues.h"
+#include "finalmq/protocols/ProtocolMqtt5.h"
 
 // the definition of the messages are in the file helloworld.fmq
 #include "helloworld.fmq.h"
@@ -50,6 +53,8 @@ using finalmq::Logger;
 using finalmq::LogContext;
 using finalmq::IExecutorPtr;
 using finalmq::Executor;
+using finalmq::VariantStruct;
+using finalmq::ProtocolMqtt5;
 using helloworld::HelloRequest;
 using helloworld::HelloReply;
 
@@ -167,6 +172,13 @@ int main()
     // entityContainer->bind("tcp://*:7777:headersize", 
     //                       {{true, SSL_VERIFY_NONE, "myservercertificate.cert", "myservercertificate.key"}});
     // And by the way, also connect()s are possible for an EntityContainer. An EntityContainer can be client and server at the same time.
+
+    entityContainer.connect("tcp://broker.emqx.io:1883:mqtt5client:json", { {},{},
+        VariantStruct{  /*{ProtocolMqtt5::KEY_USERNAME, std::string("")},
+                        {ProtocolMqtt5::KEY_PASSWORD, std::string("")},*/
+                        {ProtocolMqtt5::KEY_SESSIONEXPIRYINTERVAL, 300},
+                        {ProtocolMqtt5::KEY_KEEPALIVE, 20},
+        } });
 
 
     // run the entity container. this call blocks the execution. 

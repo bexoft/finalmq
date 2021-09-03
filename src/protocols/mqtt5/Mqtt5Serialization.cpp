@@ -600,7 +600,7 @@ unsigned int Mqtt5Serialization::sizeSubscribe(const Mqtt5SubscribeData& data, u
     unsigned int size = 0;
 
     // packet identifier
-    size += 1;
+    size += 2;
 
     // properties
     size += sizeProperties(data.properties, data.metainfo, sizePropPayload);
@@ -701,7 +701,7 @@ unsigned int Mqtt5Serialization::sizeSubAck(const Mqtt5SubAckData& data, unsigne
     unsigned int size = 0;
 
     // packet identifier
-    size += 1;
+    size += 2;
     
     // properties
     size += sizeProperties(data.properties, data.metainfo, sizePropPayload);
@@ -1406,7 +1406,6 @@ void Mqtt5Serialization::writeProperties(const std::unordered_map<unsigned int, 
     {
         unsigned int id = it->first;
         const Variant& value = it->second;
-        writeVarByteNumber(id);
         Mqtt5PropertyId propertyId(static_cast<Mqtt5PropertyId::Enum>(id));
         assert(propertyId != Mqtt5PropertyId::Invalid);
         Mqtt5Type type = propertyId.getPropertyType();

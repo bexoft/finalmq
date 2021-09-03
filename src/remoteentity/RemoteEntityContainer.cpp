@@ -210,7 +210,7 @@ void RemoteEntityContainer::subscribeEntityNames(const IProtocolSessionPtr& sess
 
     if (session)
     {
-//        session->subscribe(subscribtions);
+        session->subscribe(subscribtions);
     }
 }
 
@@ -221,7 +221,7 @@ void RemoteEntityContainer::subscribeSessions(const std::string& name)
     {
         if (*it)
         {
-//            it->subscribe({name});
+            (*it)->subscribe({ name });
         }
     }
 }

@@ -133,6 +133,8 @@ void ProtocolMqtt5::setConnection(const IStreamConnectionPtr& connection)
     data.willMessage->delayInterval = m_sessionExpiryInterval + 1000;   // the sessionExpiryInterval has priority
 
     m_client->startConnection(connection, data);
+    m_client->subscribe(connection, { {{m_clientId + "/#", 2, false, true, 2}} });
+    m_client->subscribe(connection, { {{"fmq_willmessages", 2, false, true, 2}} });
 
     std::unique_lock<std::mutex> lock(m_mutex);
     m_connection = connection;
@@ -355,8 +357,6 @@ void ProtocolMqtt5::receivedConnAck(const ConnAckData& data)
         {
             if (isFirstConnection)
             {
-                m_client->subscribe(connection, { {{m_clientId + "/#", 2, false, true, 2}} });
-                m_client->subscribe(connection, { {{"fmq_willmessages", 2, false, true, 2}} });
                 callback->connected();
             }
             callback->setActivityTimeout(m_keepAlive * 1500 + m_sessionExpiryInterval * 1000);
