@@ -26,6 +26,9 @@
 #include "finalmq/remoteentity/RemoteEntityFormatProto.h"
 #include "finalmq/remoteentity/RemoteEntityFormatJson.h"
 #include "finalmq/logger/Logger.h"
+#include "finalmq/variant/VariantValueStruct.h"
+#include "finalmq/variant/VariantValues.h"
+#include "finalmq/protocols/ProtocolMqtt5.h"
 
 // the definition of the messages are in the file helloworld.fmq
 #include "helloworld.fmq.h"
@@ -52,6 +55,8 @@ using finalmq::ConnectionEvent;
 using finalmq::remoteentity::Status;
 using finalmq::Logger;
 using finalmq::LogContext;
+using finalmq::VariantStruct;
+using finalmq::ProtocolMqtt5;
 using helloworld::HelloRequest;
 using helloworld::HelloReply;
 using helloworld::Sex;
@@ -133,8 +138,15 @@ int main()
     // A client can be started before the server is started. The connect is been retried in the background till the server
     // becomes available. Use the ConnectProperties to change the reconnect properties
     // (default is: try to connect every 5s forever till the server becomes available).
-    IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:7777:headersize:protobuf");
+//    IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:7777:headersize:protobuf");
 //    IProtocolSessionPtr sessionClient = entityContainer.connect("ipc://my_uds:headersize:protobuf");
+
+    IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:1883:mqtt5client:json", { {},{},
+        VariantStruct{  /*{ProtocolMqtt5::KEY_USERNAME, std::string("")},
+                        {ProtocolMqtt5::KEY_PASSWORD, std::string("")},*/
+                        {ProtocolMqtt5::KEY_SESSIONEXPIRYINTERVAL, 300},
+                        {ProtocolMqtt5::KEY_KEEPALIVE, 20},
+        } });
 
     // connect entityClient to remote server entity "MyService" with the created TCP session.
     // The returned peerId identifies the peer entity.

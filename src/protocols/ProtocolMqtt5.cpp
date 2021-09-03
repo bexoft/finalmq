@@ -291,7 +291,10 @@ IMessagePtr ProtocolMqtt5::pollReply(std::deque<IMessagePtr>&& /*messages*/)
 
 void ProtocolMqtt5::subscribe(const std::vector<std::string>& subscribtions)
 {
-    std::unique_lock<std::mutex> lock(m_mutex);
+    if (subscribtions.empty())
+    {
+        return;
+    }
     IMqtt5Client::SubscribeData data;
     data.subscriptions.reserve(subscribtions.size());
     for (size_t i = 0; i < subscribtions.size(); ++i)
@@ -299,6 +302,8 @@ void ProtocolMqtt5::subscribe(const std::vector<std::string>& subscribtions)
         std::string topic = "/" + subscribtions[i];
         data.subscriptions.push_back({ topic, 2, false, false, 2});
     }
+
+    std::unique_lock<std::mutex> lock(m_mutex);
     IStreamConnectionPtr connection = m_connection;
     lock.unlock();
     m_client->subscribe(connection, data);

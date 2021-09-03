@@ -720,11 +720,12 @@ bool Mqtt5Protocol::prepareForSend(const IMessagePtr& message, std::uint8_t* buf
 void Mqtt5Protocol::sendPublish(const IStreamConnectionPtr& connection, Mqtt5PublishData& data, const IMessagePtr& message)
 {
     data.metainfo = std::move(message->getAllMetainfo());
+    unsigned int sizeAppPayload = static_cast<unsigned int>(message->getTotalSendPayloadSize());
     unsigned int sizePropPayload = 0;
-    unsigned int sizePayload = Mqtt5Serialization::sizePublish(data, sizePropPayload) + static_cast<unsigned int>(message->getTotalSendPayloadSize());
+    unsigned int sizePayload = Mqtt5Serialization::sizePublish(data, sizePropPayload) + sizeAppPayload;
     int sizeMessage = 1 + Mqtt5Serialization::sizeVarByteNumber(sizePayload) + sizePayload;
     char* buffer = message->addSendHeader(sizeMessage);
-    Mqtt5Serialization serialization(buffer, sizeMessage, 0);
+    Mqtt5Serialization serialization(buffer, sizeMessage - sizeAppPayload, 0);
     std::uint8_t* bufferPacketId = nullptr;
     serialization.serializePublish(data, sizePayload, sizePropPayload, bufferPacketId);
 
