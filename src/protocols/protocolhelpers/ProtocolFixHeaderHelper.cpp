@@ -21,7 +21,7 @@
 //SOFTWARE.
 
 
-#include "finalmq/protocolsession/ProtocolFixHeaderHelper.h"
+#include "finalmq/protocols/protocolhelpers/ProtocolFixHeaderHelper.h"
 #include "finalmq/streamconnection/Socket.h"
 #include "finalmq/protocolsession/ProtocolMessage.h"
 
@@ -36,8 +36,9 @@ ProtocolFixHeaderHelper::ProtocolFixHeaderHelper(int sizeHeader, std::function<i
 
 
 
-void ProtocolFixHeaderHelper::receive(const SocketPtr& socket, int bytesToRead, std::deque<IMessagePtr>& messages)
+bool ProtocolFixHeaderHelper::receive(const SocketPtr& socket, int bytesToRead, std::deque<IMessagePtr>& messages)
 {
+    m_messages = &messages;
     bool ok = true;
     while (bytesToRead > 0 && ok)
     {
@@ -46,26 +47,17 @@ void ProtocolFixHeaderHelper::receive(const SocketPtr& socket, int bytesToRead, 
         case State::WAITFORHEADER:
             ok = receiveHeader(socket, bytesToRead);
             break;
-        case State::HEADERRECEIVED:
-            {
-                assert(m_funcGetPayloadSize);
-                int sizePayload = m_funcGetPayloadSize(m_header);
-                setPayloadSize(sizePayload);
-            }
-            break;
         case State::WAITFORPAYLOAD:
             ok = receivePayload(socket, bytesToRead);
-            if (m_state == State::PAYLOADRECEIVED)
-            {
-                messages.push_back(m_message);
-                clearState();
-            }
             break;
         default:
             assert(false);
             break;
         }
     }
+    m_messages = nullptr;
+
+    return ok;
 }
 
 
@@ -92,7 +84,9 @@ bool ProtocolFixHeaderHelper::receiveHeader(const SocketPtr& socket, int& bytesT
         if (m_sizeCurrent == static_cast<ssize_t>(m_header.size()))
         {
             m_sizeCurrent = 0;
-            m_state = State::HEADERRECEIVED;
+            assert(m_funcGetPayloadSize);
+            int sizePayload = m_funcGetPayloadSize(m_header);
+            setPayloadSize(sizePayload);
         }
         if (bytesReceived == sizeRead)
         {
@@ -105,12 +99,20 @@ bool ProtocolFixHeaderHelper::receiveHeader(const SocketPtr& socket, int& bytesT
 
 void ProtocolFixHeaderHelper::setPayloadSize(int sizePayload)
 {
-    assert(m_state == State::HEADERRECEIVED);
+    assert(m_state == State::WAITFORHEADER);
     assert(sizePayload >= 0);
     m_sizePayload = sizePayload;
     m_message = std::make_shared<ProtocolMessage>(0, m_header.size());
-    m_payload = m_message->resizeReceivePayload(m_header.size() + sizePayload);
-    m_state = State::WAITFORPAYLOAD;
+    m_buffer = m_message->resizeReceiveBuffer(m_header.size() + sizePayload);
+    memcpy(m_buffer, m_header.data(), m_header.size());
+    if (sizePayload != 0)
+    {
+        m_state = State::WAITFORPAYLOAD;
+    }
+    else
+    {
+        handlePayloadReceived();
+    }
 }
 
 
@@ -125,8 +127,7 @@ bool ProtocolFixHeaderHelper::receivePayload(const SocketPtr& socket, int& bytes
     {
         sizeRead = bytesToRead;
     }
-    memcpy(m_payload, m_header.data(), m_header.size());
-    int res = socket->receive(m_payload + m_header.size() + m_sizeCurrent, static_cast<int>(sizeRead));
+    int res = socket->receive(m_buffer + m_header.size() + m_sizeCurrent, static_cast<int>(sizeRead));
     if (res > 0)
     {
         int bytesReceived = res;
@@ -138,7 +139,7 @@ bool ProtocolFixHeaderHelper::receivePayload(const SocketPtr& socket, int& bytes
         if (m_sizeCurrent == m_sizePayload)
         {
             m_sizeCurrent = 0;
-            m_state = State::PAYLOADRECEIVED;
+            handlePayloadReceived();
         }
         if (bytesReceived == sizeRead)
         {
@@ -149,12 +150,20 @@ bool ProtocolFixHeaderHelper::receivePayload(const SocketPtr& socket, int& bytes
 }
 
 
+void ProtocolFixHeaderHelper::handlePayloadReceived()
+{
+    m_messages->push_back(m_message);
+    clearState();
+}
+
+
+
 void ProtocolFixHeaderHelper::clearState()
 {
-    assert(m_state == State::PAYLOADRECEIVED);
     m_sizePayload = 0;
     m_message = nullptr;
-    m_payload = nullptr;
+    m_buffer = nullptr;
+    m_sizeCurrent = 0;
     m_state = State::WAITFORHEADER;
 }
 

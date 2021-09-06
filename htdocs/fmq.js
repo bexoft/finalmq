@@ -122,9 +122,9 @@ class FmqSession
 	_header(xmlhttp)
 	{
 		var header = {mode: xmlhttp.getResponseHeader('fmq_re_mode'),
-					  corrid: xmlhttp.getResponseHeader('fmq_re_corrid'),
+					  corrid: xmlhttp.getResponseHeader('fmq_corrid'),
 					  status: xmlhttp.getResponseHeader('fmq_re_status'),
-					  type: xmlhttp.getResponseHeader('fmq_re_type'),
+					  type: xmlhttp.getResponseHeader('fmq_type'),
 					  srcid: xmlhttp.getResponseHeader('fmq_re_srcid')};
 		return header;
 	}
@@ -194,7 +194,7 @@ class FmqSession
             xmlhttp.setRequestHeader('fmq_sessionid', this._sessionId)
 			xmlhttp.setRequestHeader('fmq_re_mode', 'MSG_REPLY');
 			xmlhttp.setRequestHeader('fmq_re_destid', entityId);
-			xmlhttp.setRequestHeader('fmq_re_corrid', correlationId);
+			xmlhttp.setRequestHeader('fmq_corrid', correlationId);
 			var payload = this._createPayload(inparams);
             xmlhttp.send(payload);
         }
@@ -213,7 +213,7 @@ class FmqSession
             xmlhttp.setRequestHeader('fmq_sessionid', this._sessionId)
 			xmlhttp.setRequestHeader('fmq_re_mode', 'MSG_REPLY');
 			xmlhttp.setRequestHeader('fmq_re_destid', entityId);
-			xmlhttp.setRequestHeader('fmq_re_corrid', correlationId);
+			xmlhttp.setRequestHeader('fmq_corrid', correlationId);
 			xmlhttp.setRequestHeader('fmq_re_status', status);
             xmlhttp.send('');
         }

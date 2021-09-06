@@ -30,6 +30,7 @@
 #include "finalmq/streamconnection/IMessage.h"
 #include "finalmq/helpers/CondVar.h"
 #include "finalmq/helpers/IExecutor.h"
+#include "finalmq/variant/Variant.h"
 
 #include <memory>
 #include <vector>
@@ -42,19 +43,23 @@ namespace finalmq {
 
 
 
-
-
-
 struct BindProperties
 {
     CertificateData certificateData;
+    Variant protocolData;
+};
+
+struct ConnectConfig
+{
+    int reconnectInterval = 5000;       ///< if the server is not available, you can pass a reconnection intervall in [ms]
+    int totalReconnectDuration = -1;    ///< if the server is not available, you can pass a duration in [ms] how long the reconnect shall happen. -1 means: try for ever.
 };
 
 struct ConnectProperties
 {
     CertificateData certificateData;
-    int reconnectInterval = 5000;       ///< if the server is not available, you can pass a reconnection intervall in [ms]
-    int totalReconnectDuration = -1;    ///< if the server is not available, you can pass a duration in [ms] how long the reconnect shall happen. -1 means: try for ever.
+    ConnectConfig config;
+    Variant protocolData;
 };
 
 
@@ -67,7 +72,7 @@ struct IStreamConnectionCallback
     virtual ~IStreamConnectionCallback() {}
     virtual hybrid_ptr<IStreamConnectionCallback> connected(const IStreamConnectionPtr& connection) = 0;
     virtual void disconnected(const IStreamConnectionPtr& connection) = 0;
-    virtual void received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) = 0;
+    virtual bool received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) = 0;
 };
 
 
@@ -98,7 +103,7 @@ struct IStreamConnectionPrivate : public IStreamConnection
 
     virtual void connected(const IStreamConnectionPtr& connection) = 0;
     virtual void disconnected(const IStreamConnectionPtr& connection) = 0;
-    virtual void received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) = 0;
+    virtual bool received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) = 0;
 };
 
 
@@ -132,7 +137,7 @@ private:
 
     virtual void connected(const IStreamConnectionPtr& connection) override;
     virtual void disconnected(const IStreamConnectionPtr& connection) override;
-    virtual void received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) override;
+    virtual bool received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) override;
 
     struct MessageSendState
     {

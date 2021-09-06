@@ -55,6 +55,18 @@ void ProtocolStream::setConnection(const IStreamConnectionPtr& connection)
     m_connection = connection;
 }
 
+IStreamConnectionPtr ProtocolStream::getConnection() const
+{
+    return m_connection;
+}
+
+
+void ProtocolStream::disconnect()
+{
+    assert(m_connection);
+    m_connection->disconnect();
+}
+
 std::uint32_t ProtocolStream::getProtocolId() const
 {
     return PROTOCOL_ID;
@@ -118,22 +130,23 @@ void ProtocolStream::moveOldProtocolState(IProtocol& /*protocolOld*/)
 }
 
 
-void ProtocolStream::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
+bool ProtocolStream::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
 {
     IMessagePtr message = std::make_shared<ProtocolMessage>(0);
-    char* payload = message->resizeReceivePayload(bytesToRead);
+    char* payload = message->resizeReceiveBuffer(bytesToRead);
     int res = socket->receive(payload, bytesToRead);
     if (res > 0)
     {
         int bytesReceived = res;
         assert(bytesReceived <= bytesToRead);
-        message->resizeReceivePayload(bytesReceived);
+        message->resizeReceiveBuffer(bytesReceived);
         auto callback = m_callback.lock();
         if (callback)
         {
             callback->received(message);
         }
     }
+    return true;
 }
 
 
@@ -162,6 +175,15 @@ IMessagePtr ProtocolStream::pollReply(std::deque<IMessagePtr>&& /*messages*/)
     return {};
 }
 
+void ProtocolStream::subscribe(const std::vector<std::string>& /*subscribtions*/)
+{
+
+}
+
+void ProtocolStream::cycleTime()
+{
+
+}
 
 
 
@@ -181,7 +203,7 @@ struct RegisterProtocolStreamFactory
 
 
 // IProtocolFactory
-IProtocolPtr ProtocolStreamFactory::createProtocol()
+IProtocolPtr ProtocolStreamFactory::createProtocol(const Variant& /*data*/)
 {
     return std::make_shared<ProtocolStream>();
 }

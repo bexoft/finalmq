@@ -22,46 +22,49 @@
 
 #pragma once
 
-#include "finalmq/streamconnection/IMessage.h"
-#include "finalmq/protocolsession/IProtocol.h"
-#include "finalmq/helpers/FmqDefines.h"
-
-#include <deque>
-#include <functional>
+#include <chrono>
 
 namespace finalmq {
 
-class SYMBOLEXP ProtocolFixHeaderHelper
+
+class PollingTimer
 {
 public:
-    ProtocolFixHeaderHelper(int sizeHeader, std::function<int(const std::string& header)> funcGetPayloadSize);
+    void setTimeout(int timeout)
+    {
+        m_timeoutMs = timeout;
+        m_timer = std::chrono::system_clock::now();
+    }
 
-    void receive(const SocketPtr& socket, int bytesToRead, std::deque<IMessagePtr>& messages);
+    void stop()
+    {
+        m_timeoutMs = -1;
+    }
+
+    bool isExpired()
+    {
+        bool expired = false;
+        if (m_timeoutMs != -1)
+        {
+            std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+            std::chrono::duration<double> dur = now - m_timer;
+            long long delta = static_cast<long long>(dur.count() * 1000);
+            if (delta > m_timeoutMs)
+            {
+                expired = true;
+            }
+            else if (delta < 0)
+            {
+                m_timer = now;
+            }
+        }
+        return expired;
+    }
 
 private:
-
-    enum class State
-    {
-        WAITFORHEADER,
-        HEADERRECEIVED,
-        WAITFORPAYLOAD,
-        PAYLOADRECEIVED
-    };
-
-    bool receiveHeader(const SocketPtr& socket, int& bytesToRead);
-    void setPayloadSize(int sizePayload);
-    bool receivePayload(const SocketPtr& socket, int& bytesToRead);
-    void clearState();
-
-    std::string m_header;
-    State       m_state = State::WAITFORHEADER;
-    ssize_t     m_sizeCurrent = 0;
-
-    ssize_t     m_sizePayload = 0;
-    IMessagePtr m_message;
-    char*       m_payload = nullptr;
-
-    std::function<int(const std::string& header)>   m_funcGetPayloadSize;
+    int m_timeoutMs = -1;
+    std::chrono::time_point<std::chrono::system_clock> m_timer = std::chrono::system_clock::now();
 };
 
-}   // namespace finalmq
+
+} // namespace finalmq

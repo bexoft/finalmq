@@ -68,7 +68,7 @@ struct RegisterProtocolDelimiterLinefeedFactory
 
 
 // IProtocolFactory
-IProtocolPtr ProtocolDelimiterLinefeedFactory::createProtocol()
+IProtocolPtr ProtocolDelimiterLinefeedFactory::createProtocol(const Variant& /*data*/)
 {
     return std::make_shared<ProtocolDelimiterLinefeed>();
 }

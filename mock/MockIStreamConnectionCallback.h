@@ -35,7 +35,7 @@ class MockIStreamConnectionCallback : public IStreamConnectionCallback
 public:
     MOCK_METHOD(hybrid_ptr<IStreamConnectionCallback>, connected, (const IStreamConnectionPtr& connection), (override));
     MOCK_METHOD(void, disconnected, (const IStreamConnectionPtr& connection), (override));
-    MOCK_METHOD(void, received, (const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead), (override));
+    MOCK_METHOD(bool, received, (const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead), (override));
 };
 
 }

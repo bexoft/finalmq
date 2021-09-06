@@ -22,33 +22,47 @@
 
 #pragma once
 
-#include "finalmq/protocols/protocolhelpers/ProtocolDelimiter.h"
+#include "finalmq/streamconnection/IMessage.h"
+#include "finalmq/protocolsession/IProtocol.h"
+#include "finalmq/helpers/FmqDefines.h"
 
+#include <deque>
+#include <functional>
 
 namespace finalmq {
 
-
-class SYMBOLEXP ProtocolDelimiterLinefeed : public ProtocolDelimiter
+class SYMBOLEXP ProtocolFixHeaderHelper
 {
 public:
-    static const int PROTOCOL_ID;           // 3
-    static const std::string PROTOCOL_NAME; // delimiter_lf
+    ProtocolFixHeaderHelper(int sizeHeader, std::function<int(const std::string& header)> funcGetPayloadSize);
 
-    ProtocolDelimiterLinefeed();
-
-private:
-    // IProtocol
-    virtual std::uint32_t getProtocolId() const override;
-};
-
-
-class SYMBOLEXP ProtocolDelimiterLinefeedFactory : public IProtocolFactory
-{
-public:
+    bool receive(const SocketPtr& socket, int bytesToRead, std::deque<IMessagePtr>& messages);
 
 private:
-    // IProtocolFactory
-    virtual IProtocolPtr createProtocol(const Variant& data) override;
+
+    enum class State
+    {
+        WAITFORHEADER,
+        WAITFORPAYLOAD
+    };
+
+    bool receiveHeader(const SocketPtr& socket, int& bytesToRead);
+    void setPayloadSize(int sizePayload);
+    bool receivePayload(const SocketPtr& socket, int& bytesToRead);
+    void handlePayloadReceived();
+    void clearState();
+
+    std::string m_header;
+    State       m_state = State::WAITFORHEADER;
+    ssize_t     m_sizeCurrent = 0;
+
+    ssize_t     m_sizePayload = 0;
+    IMessagePtr m_message;
+    char*       m_buffer = nullptr;
+
+    std::deque<IMessagePtr>* m_messages = nullptr;
+
+    std::function<int(const std::string& header)>   m_funcGetPayloadSize;
 };
 
 }   // namespace finalmq

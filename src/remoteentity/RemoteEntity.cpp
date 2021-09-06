@@ -37,6 +37,8 @@ using finalmq::remoteentity::DisconnectEntity;
 
 namespace finalmq {
 
+
+
 PeerEvent::PeerEvent()
 {
 }
@@ -108,7 +110,22 @@ std::vector<PeerId> PeerManager::getAllPeersWithSession(IProtocolSessionPtr sess
     return peers;
 }
 
-void PeerManager::updatePeer(PeerId peerId, EntityId entityId, const std::string& entityName)
+std::vector<PeerId> PeerManager::getAllPeersWithVirtualSession(IProtocolSessionPtr session, const std::string& virtualSessionId) const
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    std::vector<PeerId> peers;
+    peers.reserve(m_peers.size());
+    std::for_each(m_peers.begin(), m_peers.end(), [&peers, &session, &virtualSessionId](const auto& entry) {
+        if (entry.second->session == session && entry.second->virtualSessionId == virtualSessionId)
+        {
+            peers.push_back(entry.first);
+        }
+    });
+    return peers;
+}
+
+
+void PeerManager::updatePeer(PeerId peerId, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     std::shared_ptr<PeerManager::Peer> peer = getPeer(peerId);
@@ -118,13 +135,22 @@ void PeerManager::updatePeer(PeerId peerId, EntityId entityId, const std::string
         peer->entityName = entityName;
         assert(peer->session);
         std::int64_t sessionId = peer->session->getSessionId();
+
+        if (peer->virtualSessionId != virtualSessionId)
+        {
+            assert(peer->virtualSessionId.empty());
+            m_sessionEntityToPeerId[sessionId][virtualSessionId] = m_sessionEntityToPeerId[sessionId][peer->virtualSessionId];
+            m_sessionEntityToPeerId[sessionId].erase(peer->virtualSessionId);
+            peer->virtualSessionId = virtualSessionId;
+        }
+
         if (entityId != ENTITYID_INVALID)
         {
-            m_sessionEntityToPeerId[sessionId].first[entityId] = peerId;
+            m_sessionEntityToPeerId[sessionId][peer->virtualSessionId].first[entityId] = peerId;
         }
         if (!entityName.empty())
         {
-            m_sessionEntityToPeerId[sessionId].second[entityName] = peerId;
+            m_sessionEntityToPeerId[sessionId][peer->virtualSessionId].second[entityName] = peerId;
         }
 
         std::shared_ptr<FuncPeerEvent> funcPeerEvent = m_funcPeerEvent;
@@ -150,7 +176,7 @@ bool PeerManager::removePeer(PeerId peerId, bool& incoming)
         found = true;
         if (peer->session)
         {
-            removePeerFromSessionEntityToPeerId(peer->session->getSessionId(), peer->entityId, peer->entityName);
+            removePeerFromSessionEntityToPeerId(peer->session->getSessionId(), peer->virtualSessionId, peer->entityId, peer->entityName);
         }
         incoming = peer->incoming;
         m_peers.erase(peerId);
@@ -168,61 +194,69 @@ bool PeerManager::removePeer(PeerId peerId, bool& incoming)
 }
 
 
-void PeerManager::removePeerFromSessionEntityToPeerId(std::int64_t sessionId, EntityId entityId, const std::string& entityName)
+void PeerManager::removePeerFromSessionEntityToPeerId(std::int64_t sessionId, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName)
 {
     // remove from m_sessionEntityToPeerId
     auto it1 = m_sessionEntityToPeerId.find(sessionId);
     if (it1 != m_sessionEntityToPeerId.end())
     {
-        auto& entityIdContainer = it1->second.first;
-        auto itA = entityIdContainer.find(entityId);
-        if (itA != entityIdContainer.end())
+        auto it2 = it1->second.find(virtualSessionId);
+        if (it2 != it1->second.end())
         {
-            entityIdContainer.erase(itA);
-        }
-        auto& entityNameContainer = it1->second.second;
-        auto itB = entityNameContainer.find(entityName);
-        if (itB != entityNameContainer.end())
-        {
-            entityNameContainer.erase(itB);
-        }
+            auto& entityIdContainer = it2->second.first;
+            auto itA = entityIdContainer.find(entityId);
+            if (itA != entityIdContainer.end())
+            {
+                entityIdContainer.erase(itA);
+            }
+            auto& entityNameContainer = it2->second.second;
+            auto itB = entityNameContainer.find(entityName);
+            if (itB != entityNameContainer.end())
+            {
+                entityNameContainer.erase(itB);
+            }
 
-        if (entityIdContainer.empty() && entityNameContainer.empty())
-        {
-            m_sessionEntityToPeerId.erase(it1);
+            if (entityIdContainer.empty() && entityNameContainer.empty())
+            {
+                m_sessionEntityToPeerId.erase(it1);
+            }
         }
     }
 }
 
-PeerId PeerManager::getPeerId(std::int64_t sessionId, EntityId entityId, const std::string& entityName) const
+PeerId PeerManager::getPeerId(std::int64_t sessionId, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName) const
 {
     std::unique_lock<std::mutex> lock(m_mutex);
-    return getPeerIdIntern(sessionId, entityId, entityName);
+    return getPeerIdIntern(sessionId, virtualSessionId, entityId, entityName);
 }
 
 
 
-PeerId PeerManager::getPeerIdIntern(std::int64_t sessionId, EntityId entityId, const std::string& entityName) const
+PeerId PeerManager::getPeerIdIntern(std::int64_t sessionId, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName) const
 {
-    auto it = m_sessionEntityToPeerId.find(sessionId);
-    if (it != m_sessionEntityToPeerId.end())
+    auto it1 = m_sessionEntityToPeerId.find(sessionId);
+    if (it1 != m_sessionEntityToPeerId.end())
     {
-        if (entityId != ENTITYID_INVALID)
+        auto it2 = it1->second.find(virtualSessionId);
+        if (it2 != it1->second.end())
         {
-            const auto& entityIdContainer = it->second.first;
-            auto itA = entityIdContainer.find(entityId);
-            if (itA != entityIdContainer.end())
+            if (entityId != ENTITYID_INVALID)
             {
-                return itA->second;
+                const auto& entityIdContainer = it2->second.first;
+                auto itA = entityIdContainer.find(entityId);
+                if (itA != entityIdContainer.end())
+                {
+                    return itA->second;
+                }
             }
-        }
-        else
-        {
-            const auto& entityNameContainer = it->second.second;
-            auto itB = entityNameContainer.find(entityName);
-            if (itB != entityNameContainer.end())
+            else
             {
-                return itB->second;
+                const auto& entityNameContainer = it2->second.second;
+                auto itB = entityNameContainer.find(entityName);
+                if (itB != entityNameContainer.end())
+                {
+                    return itB->second;
+                }
             }
         }
     }
@@ -244,7 +278,7 @@ std::shared_ptr<PeerManager::Peer> PeerManager::getPeer(const PeerId& peerId) co
 
 
 
-PeerManager::ReadyToSend PeerManager::getRequestHeader(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId, remoteentity::Header& header, IProtocolSessionPtr& session)
+PeerManager::ReadyToSend PeerManager::getRequestHeader(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId, remoteentity::Header& header, IProtocolSessionPtr& session, std::string& virtualSessionId)
 {
     ReadyToSend readyToSend = RTS_PEER_NOT_AVAILABLE;
 
@@ -255,6 +289,7 @@ PeerManager::ReadyToSend PeerManager::getRequestHeader(const PeerId& peerId, con
         if (peer->session)
         {
             session = peer->session;
+            virtualSessionId = peer->virtualSessionId;
             const std::string* typeName = structBase.getRawType();
             if (typeName == nullptr)
             {
@@ -291,14 +326,14 @@ std::string PeerManager::getEntityName(const PeerId& peerId)
 }
 
 
-PeerId PeerManager::addPeer(const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName, bool incoming, bool& added, const std::function<void()>& funcBeforeFirePeerEvent)
+PeerId PeerManager::addPeer(const IProtocolSessionPtr& session, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName, bool incoming, bool& added, const std::function<void()>& funcBeforeFirePeerEvent)
 {
 //    assert(entityId != ENTITYID_INVALID || !entityName.empty());
     added = false;
 
     std::unique_lock<std::mutex> lock(m_mutex);
 
-    PeerId peerId = getPeerIdIntern(session->getSessionId(), entityId, entityName);
+    PeerId peerId = getPeerIdIntern(session->getSessionId(), virtualSessionId, entityId, entityName);
 
     if (peerId == PEERID_INVALID)
     {
@@ -306,6 +341,7 @@ PeerId PeerManager::addPeer(const IProtocolSessionPtr& session, EntityId entityI
         ++m_nextPeerId;
         std::shared_ptr<Peer> peer = std::make_shared<Peer>();
         peer->session = session;
+        peer->virtualSessionId = virtualSessionId;
         peer->entityId = entityId;
         peer->entityName = entityName;
         peer->incoming = incoming;
@@ -314,11 +350,11 @@ PeerId PeerManager::addPeer(const IProtocolSessionPtr& session, EntityId entityI
         std::int64_t sessionId = session->getSessionId();
         if (entityId != ENTITYID_INVALID)
         {
-            m_sessionEntityToPeerId[sessionId].first[entityId] = peerId;
+            m_sessionEntityToPeerId[sessionId][peer->virtualSessionId].first[entityId] = peerId;
         }
         if (!entityName.empty())
         {
-            m_sessionEntityToPeerId[sessionId].second[entityName] = peerId;
+            m_sessionEntityToPeerId[sessionId][peer->virtualSessionId].second[entityName] = peerId;
         }
 
         std::shared_ptr<FuncPeerEvent> funcPeerEvent = m_funcPeerEvent;
@@ -383,11 +419,11 @@ std::deque<PeerManager::Request> PeerManager::connect(PeerId peerId, const IProt
         std::int64_t sessionId = session->getSessionId();
         if (entityId != ENTITYID_INVALID)
         {
-            m_sessionEntityToPeerId[sessionId].first[entityId] = peerId;
+            m_sessionEntityToPeerId[sessionId][peer->virtualSessionId].first[entityId] = peerId;
         }
         if (!entityName.empty())
         {
-            m_sessionEntityToPeerId[sessionId].second[entityName] = peerId;
+            m_sessionEntityToPeerId[sessionId][peer->virtualSessionId].second[entityName] = peerId;
         }
 
         requests = std::move(peer->requests);
@@ -395,7 +431,6 @@ std::deque<PeerManager::Request> PeerManager::connect(PeerId peerId, const IProt
 
     return requests;
 }
-
 
 
 
@@ -435,7 +470,8 @@ RemoteEntity::RemoteEntity()
     registerCommand<ConnectEntity>([this] (const RequestContextPtr& requestContext, const std::shared_ptr<ConnectEntity>& request) {
         assert(request);
         bool added{};
-        m_peerManager->addPeer(requestContext->session(), requestContext->entityId(), request->entityName, true, added, [this, &requestContext]() {
+        const std::string& virtualSessionId = requestContext->getVirtualSessionId();
+        m_peerManager->addPeer(requestContext->session(), virtualSessionId, requestContext->entityId(), request->entityName, true, added, [this, &requestContext]() {
             // send reply before the connect peer event is triggered. So that the peer gets first the connect reply and afterwards a possible greeting message maybe triggered by the connect peer event.
             requestContext->reply(ConnectEntityReply(m_entityId, m_entityName));
         });
@@ -446,6 +482,11 @@ RemoteEntity::RemoteEntity()
     });
 }
 
+
+RemoteEntity::~RemoteEntity()
+{
+    deinit();
+}
 
 
 // IRemoteEntity
@@ -485,16 +526,17 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
     bool ok = false;
     Header header;
     IProtocolSessionPtr session;
+    std::string virtualSessionId;
 
     // the mutex lock is important for RTS_CONNECT_NOT_AVAILABLE / RTS_READY handling. See connectIntern(PeerId ...)
     std::unique_lock<std::mutex> lock(m_mutex);
-    PeerManager::ReadyToSend readyToSend = m_peerManager->getRequestHeader(peerId, structBase, correlationId, header, session);
+    PeerManager::ReadyToSend readyToSend = m_peerManager->getRequestHeader(peerId, structBase, correlationId, header, session, virtualSessionId);
     lock.unlock();
 
     if (readyToSend == PeerManager::ReadyToSend::RTS_READY)
     {
         assert(session);
-        ok = RemoteEntityFormatRegistry::instance().send(session, header, {}, &structBase, metainfo);
+        ok = RemoteEntityFormatRegistry::instance().send(session, virtualSessionId, header, {}, &structBase, metainfo);
     }
     else if (readyToSend == PeerManager::ReadyToSend::RTS_SESSION_NOT_AVAILABLE)
     {
@@ -569,18 +611,29 @@ IExecutorPtr RemoteEntity::getExecutor() const
 }
 
 
+PeerId RemoteEntity::createPublishPeer(const IProtocolSessionPtr& session, const std::string& entityName)
+{
+    bool added = false;
+    PeerId peerId = m_peerManager->addPeer(session, "", ENTITYID_INVALID, entityName, true, added, {});
+    return peerId;
+}
+
+
+
 
 void RemoteEntity::sendConnectEntity(PeerId peerId, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect)
 {
-    requestReply<ConnectEntityReply>(peerId, ConnectEntity{m_entityName},
-                                     [this, funcReplyConnect] (PeerId peerId, remoteentity::Status status, const std::shared_ptr<ConnectEntityReply>& replyReceived) {
+    requestReply<ConnectEntityReply>(peerId, {}, ConnectEntity{ m_entityName },
+                                     [this, funcReplyConnect] (PeerId peerId, remoteentity::Status status, 
+                                         IMessage::Metainfo& metainfo, const std::shared_ptr<ConnectEntityReply>& replyReceived) {
         if (funcReplyConnect && *funcReplyConnect)
         {
             (*funcReplyConnect)(peerId, status);
         }
         if (replyReceived)
         {
-            m_peerManager->updatePeer(peerId, replyReceived->entityid, replyReceived->entityName);
+            const std::string& virtualSessionId = metainfo[FMQ_VIRTUAL_SESSION_ID];
+            m_peerManager->updatePeer(peerId, virtualSessionId, replyReceived->entityid, replyReceived->entityName);
         }
         else if (status == Status::STATUS_ENTITY_NOT_FOUND)
         {
@@ -591,10 +644,10 @@ void RemoteEntity::sendConnectEntity(PeerId peerId, const std::shared_ptr<FuncRe
     });
 }
 
-PeerId RemoteEntity::connectIntern(const IProtocolSessionPtr& session, const std::string& entityName, EntityId entityId, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect)
+PeerId RemoteEntity::connectIntern(const IProtocolSessionPtr& session, const std::string& virtualSessionId, const std::string& entityName, EntityId entityId, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect)
 {
     bool added{};
-    PeerId peerId = m_peerManager->addPeer(session, entityId, entityName, false, added, {});
+    PeerId peerId = m_peerManager->addPeer(session, virtualSessionId, entityId, entityName, false, added, {});
 
     if (added)
     {
@@ -606,12 +659,12 @@ PeerId RemoteEntity::connectIntern(const IProtocolSessionPtr& session, const std
 
 PeerId RemoteEntity::connect(const IProtocolSessionPtr& session, const std::string& entityName, FuncReplyConnect funcReplyConnect)
 {
-    return connectIntern(session, entityName, ENTITYID_INVALID, std::make_shared<FuncReplyConnect>(std::move(funcReplyConnect)));
+    return connectIntern(session, "", entityName, ENTITYID_INVALID, std::make_shared<FuncReplyConnect>(std::move(funcReplyConnect)));
 }
 
 PeerId RemoteEntity::connect(const IProtocolSessionPtr& session, EntityId entityId, FuncReplyConnect funcReplyConnect)
 {
-    return connectIntern(session, "", entityId, std::make_shared<FuncReplyConnect>(std::move(funcReplyConnect)));
+    return connectIntern(session, "", "", entityId, std::make_shared<FuncReplyConnect>(std::move(funcReplyConnect)));
 }
 
 
@@ -684,6 +737,7 @@ PeerId RemoteEntity::createPeer(FuncReplyConnect funcReplyConnect)
 }
 
 
+
 void RemoteEntity::connectIntern(PeerId peerId, const IProtocolSessionPtr& session, const std::string& entityName, EntityId entityId)
 {
     // the mutex lock is important for RTS_CONNECT_NOT_AVAILABLE / RTS_READY handling. See connectIntern(PeerId ...)
@@ -693,17 +747,18 @@ void RemoteEntity::connectIntern(PeerId peerId, const IProtocolSessionPtr& sessi
     bool ok = true;
     for (size_t i = 0; i < pendingRequests.size() && ok; ++i)
     {
-        const PeerManager::Request request = pendingRequests[i];
+        const PeerManager::Request& request = pendingRequests[i];
         Header header;
         IProtocolSessionPtr sessionRet;
+        std::string virtualSessionIdRet;
         PeerManager::ReadyToSend readyToSend = PeerManager::ReadyToSend::RTS_PEER_NOT_AVAILABLE;
         assert(request.structBase);
-        readyToSend = m_peerManager->getRequestHeader(peerId, *request.structBase, request.correlationId, header, sessionRet);
+        readyToSend = m_peerManager->getRequestHeader(peerId, *request.structBase, request.correlationId, header, sessionRet, virtualSessionIdRet);
 
         if (readyToSend == PeerManager::ReadyToSend::RTS_READY)
         {
             assert(session);
-            ok = RemoteEntityFormatRegistry::instance().send(sessionRet, header, {}, request.structBase.get());
+            ok = RemoteEntityFormatRegistry::instance().send(sessionRet, virtualSessionIdRet, header, {}, request.structBase.get());
         }
         else
         {
@@ -792,6 +847,16 @@ void RemoteEntity::sessionDisconnected(const IProtocolSessionPtr& session)
     }
 }
 
+void RemoteEntity::virtualSessionDisconnected(const IProtocolSessionPtr& session, const std::string& virtualSessionId)
+{
+    std::vector<PeerId> peerIds = m_peerManager->getAllPeersWithVirtualSession(session, virtualSessionId);
+
+    for (size_t i = 0; i < peerIds.size(); ++i)
+    {
+        removePeer(peerIds[i], Status::STATUS_SESSION_DISCONNECTED);
+    }
+}
+
 
 
 void RemoteEntity::receivedRequest(ReceiveData& receiveData)
@@ -800,6 +865,7 @@ void RemoteEntity::receivedRequest(ReceiveData& receiveData)
     assert(requestContext);
 
     std::unique_lock<std::mutex> lock(m_mutex);
+    std::shared_ptr<FuncCommand> func;
     auto it = m_funcCommands.find(receiveData.header.type);
     if (it == m_funcCommands.end())
     {
@@ -807,17 +873,14 @@ void RemoteEntity::receivedRequest(ReceiveData& receiveData)
     }
     if (it != m_funcCommands.end())
     {
-        std::shared_ptr<FuncCommand> func = it->second;
-        lock.unlock();
+        func = it->second;
         assert(func);
-        if (*func)
-        {
-            (*func)(requestContext, receiveData.structBase);
-        }
-        else
-        {
-            requestContext->reply(Status::STATUS_REQUEST_NOT_FOUND);
-        }
+    }
+    lock.unlock();
+
+    if (func && *func)
+    {
+        (*func)(requestContext, receiveData.structBase);
     }
     else
     {
@@ -841,7 +904,8 @@ void RemoteEntity::receivedReply(ReceiveData& receiveData)
         receiveData.header.srcid != ENTITYID_INVALID)
     {
         assert(m_peerManager);
-        PeerId peerId = m_peerManager->getPeerId(receiveData.session->getSessionId(), receiveData.header.srcid, "");
+        const std::string& virtualSessionId = receiveData.message->getAllMetainfo()[FMQ_VIRTUAL_SESSION_ID];
+        PeerId peerId = m_peerManager->getPeerId(receiveData.session->getSessionId(), virtualSessionId, receiveData.header.srcid, "");
         removePeer(peerId, Status::STATUS_PEER_DISCONNECTED);
     }
 }

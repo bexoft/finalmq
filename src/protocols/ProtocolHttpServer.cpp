@@ -104,6 +104,17 @@ void ProtocolHttpServer::setConnection(const IStreamConnectionPtr& connection)
     m_connection = connection;
 }
 
+IStreamConnectionPtr ProtocolHttpServer::getConnection() const
+{
+    return m_connection;
+}
+
+void ProtocolHttpServer::disconnect()
+{
+    assert(m_connection);
+    m_connection->disconnect();
+}
+
 std::uint32_t ProtocolHttpServer::getProtocolId() const
 {
     return PROTOCOL_ID;
@@ -121,7 +132,7 @@ bool ProtocolHttpServer::doesSupportMetainfo() const
 
 bool ProtocolHttpServer::doesSupportSession() const
 {
-    return true;;
+    return true;
 }
 
 bool ProtocolHttpServer::needsReply() const
@@ -279,7 +290,7 @@ void ProtocolHttpServer::checkSessionName()
             for (size_t i = 0; i < m_sessionNames.size(); ++i)
             {
                 assert(m_connection);
-                bool foundInNames = callback->findSessionByName(m_sessionNames[i], shared_from_this(), m_connection);
+                bool foundInNames = callback->findSessionByName(m_sessionNames[i], shared_from_this());
 //                streamInfo << this << " findSessionByName: " << foundInNames;
                 if (foundInNames)
                 {
@@ -407,10 +418,10 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
                             {
                                 m_message = std::make_shared<ProtocolMessage>(0);
                                 Variant& controlData = m_message->getControlData();
-                                controlData = VariantStruct{ {FMQ_HTTP, std::string(HTTP_RESPONSE)},
-                                                             {FMQ_PROTOCOL, std::move(lineSplit[0])},
-                                                             {FMQ_STATUS, std::move(lineSplit[1])},
-                                                             {FMQ_STATUSTEXT, std::move(lineSplit[2])} };
+                                controlData.add(FMQ_HTTP, std::string(HTTP_RESPONSE));
+                                controlData.add(FMQ_PROTOCOL, std::move(lineSplit[0]));
+                                controlData.add(FMQ_STATUS, std::move(lineSplit[1]));
+                                controlData.add(FMQ_STATUSTEXT, std::move(lineSplit[2]));
                                 m_state = STATE_FIND_HEADERS;
                             }
                             else
@@ -478,7 +489,7 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
                         else
                         {
                             m_state = STATE_CONTENT;
-                            m_message->resizeReceivePayload(m_contentLength);
+                            m_message->resizeReceiveBuffer(m_contentLength);
                         }
                         m_indexFilled = 0;
                         m_offsetRemaining += 2;
@@ -985,7 +996,7 @@ bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolC
 
 
 
-void ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
+bool ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
 {
     bool ok = true;
 
@@ -1097,10 +1108,7 @@ void ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, co
             reset();
         }
     }
-    else
-    {
-        m_connection->disconnect();
-    }
+    return ok;
 }
 
 
@@ -1127,7 +1135,6 @@ void ProtocolHttpServer::disconnected(const IStreamConnectionPtr& connection)
         callback->disconnectedMultiConnection(connection);
     }
 }
-
 
 
 
@@ -1186,6 +1193,19 @@ IMessagePtr ProtocolHttpServer::pollReply(std::deque<IMessagePtr>&& messages)
 }
 
 
+void ProtocolHttpServer::subscribe(const std::vector<std::string>& /*subscribtions*/)
+{
+
+}
+
+
+void ProtocolHttpServer::cycleTime()
+{
+
+}
+
+
+
 //---------------------------------------
 // ProtocolHttpFactory
 //---------------------------------------
@@ -1201,7 +1221,7 @@ struct RegisterProtocolHttpServerFactory
 
 
 // IProtocolFactory
-IProtocolPtr ProtocolHttpServerFactory::createProtocol()
+IProtocolPtr ProtocolHttpServerFactory::createProtocol(const Variant& /*data*/)
 {
     return std::make_shared<ProtocolHttpServer>();
 }

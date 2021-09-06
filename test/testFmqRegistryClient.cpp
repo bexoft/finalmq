@@ -159,7 +159,7 @@ TEST_F(TestIntegrationFmqRegistryClient, testConnectSendDisconnect)
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
     EXPECT_CALL(m_mockEvents, connectReply(_, _)).Times(1);
-    PeerId peerId = fmqRegistryClient.connectService("MyService", m_entityIdClient, {{}, 10, 3000}, [this] (PeerId peerId, remoteentity::Status status) {
+    PeerId peerId = fmqRegistryClient.connectService("MyService", m_entityIdClient, { {}, {10, 3000} }, [this](PeerId peerId, remoteentity::Status status) {
         m_mockEvents.connectReply(peerId, status);
     });
 
@@ -179,7 +179,7 @@ TEST_F(TestIntegrationFmqRegistryClient, testConnectSend)
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
     EXPECT_CALL(m_mockEvents, connectReply(_, remoteentity::Status(remoteentity::Status::STATUS_OK))).Times(1);
-    PeerId peerId = fmqRegistryClient.connectService("MyService", m_entityIdClient, {{}, 10, 3000}, [this] (PeerId peerId, remoteentity::Status status) {
+    PeerId peerId = fmqRegistryClient.connectService("MyService", m_entityIdClient, { {}, {10, 3000} }, [this](PeerId peerId, remoteentity::Status status) {
         m_mockEvents.connectReply(peerId, status);
     });
 
@@ -198,7 +198,7 @@ TEST_F(TestIntegrationFmqRegistryClient, testConnectEmptyEndpointSend)
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
     EXPECT_CALL(m_mockEvents, connectReply(_, remoteentity::Status(remoteentity::Status::STATUS_PEER_DISCONNECTED))).Times(1);
-    PeerId peerId = fmqRegistryClient.connectService("MyService", m_entityIdClient, {{}, 10, 3000}, [this] (PeerId peerId, remoteentity::Status status) {
+    PeerId peerId = fmqRegistryClient.connectService("MyService", m_entityIdClient, { {}, {10, 3000} }, [this](PeerId peerId, remoteentity::Status status) {
         m_mockEvents.connectReply(peerId, status);
     });
 
@@ -217,7 +217,7 @@ TEST_F(TestIntegrationFmqRegistryClient, testConnectNoServiceSend)
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
     EXPECT_CALL(m_mockEvents, connectReply(_, remoteentity::Status(remoteentity::Status::STATUS_PEER_DISCONNECTED))).Times(1);
-    PeerId peerId = fmqRegistryClient.connectService("NoService", m_entityIdClient, {{}, 10, 100}, [this] (PeerId peerId, remoteentity::Status status) {
+    PeerId peerId = fmqRegistryClient.connectService("NoService", m_entityIdClient, { {}, {10, 100} }, [this](PeerId peerId, remoteentity::Status status) {
         m_mockEvents.connectReply(peerId, status);
     });
 
@@ -236,7 +236,7 @@ TEST_F(TestIntegrationFmqRegistryClient, testConnectDisconnectLateRegister)
     auto& expectConnectReply = EXPECT_CALL(m_mockEvents, connectReply(_, _)).Times(1);
 
     FmqRegistryClient fmqRegistryClient(m_entityContainerClient);
-    fmqRegistryClient.connectService("MyService", m_entityIdClient, {{}, 10, 3000}, [this] (PeerId peerId, remoteentity::Status status) {
+    fmqRegistryClient.connectService("MyService", m_entityIdClient, { {}, {10, 3000} }, [this](PeerId peerId, remoteentity::Status status) {
         m_mockEvents.connectReply(peerId, status);
     });
 
@@ -251,7 +251,7 @@ TEST_F(TestIntegrationFmqRegistryClient, testConnectSendDisconnectLateRegister)
 {
     EXPECT_CALL(m_mockEvents, connectReply(_, _)).Times(1);
     FmqRegistryClient fmqRegistryClient(m_entityContainerClient);
-    PeerId peerId = fmqRegistryClient.connectService("MyService", m_entityIdClient, {{}, 10, 3000}, [this] (PeerId peerId, remoteentity::Status status) {
+    PeerId peerId = fmqRegistryClient.connectService("MyService", m_entityIdClient, { {}, {10, 3000} }, [this](PeerId peerId, remoteentity::Status status) {
         m_mockEvents.connectReply(peerId, status);
     });
 
@@ -272,7 +272,7 @@ TEST_F(TestIntegrationFmqRegistryClient, testConnectSendLateRegister)
 {
     EXPECT_CALL(m_mockEvents, connectReply(_, remoteentity::Status(remoteentity::Status::STATUS_OK))).Times(1);
     FmqRegistryClient fmqRegistryClient(m_entityContainerClient);
-    PeerId peerId = fmqRegistryClient.connectService("MyService", m_entityIdClient, {{}, 10, 3000}, [this] (PeerId peerId, remoteentity::Status status) {
+    PeerId peerId = fmqRegistryClient.connectService("MyService", m_entityIdClient, { {}, {10, 3000} }, [this](PeerId peerId, remoteentity::Status status) {
         m_mockEvents.connectReply(peerId, status);
     });
 
@@ -293,7 +293,7 @@ TEST_F(TestIntegrationFmqRegistryClient, testConnectEmptyEndpointSendLateRegiste
     FmqRegistryClient fmqRegistryClient(m_entityContainerClient);
 
     EXPECT_CALL(m_mockEvents, connectReply(_, remoteentity::Status(remoteentity::Status::STATUS_PEER_DISCONNECTED))).Times(1);
-    PeerId peerId = fmqRegistryClient.connectService("MyService", m_entityIdClient, {{}, 10, 3000}, [this] (PeerId peerId, remoteentity::Status status) {
+    PeerId peerId = fmqRegistryClient.connectService("MyService", m_entityIdClient, { {}, {10, 3000} }, [this](PeerId peerId, remoteentity::Status status) {
         m_mockEvents.connectReply(peerId, status);
     });
 
@@ -313,7 +313,7 @@ TEST_F(TestIntegrationFmqRegistryClient, testConnectNoServiceSendLateRegister)
 {
     EXPECT_CALL(m_mockEvents, connectReply(_, remoteentity::Status(remoteentity::Status::STATUS_PEER_DISCONNECTED))).Times(1);
     FmqRegistryClient fmqRegistryClient(m_entityContainerClient);
-    PeerId peerId = fmqRegistryClient.connectService("NoService", m_entityIdClient, {{}, 10, 100}, [this] (PeerId peerId, remoteentity::Status status) {
+    PeerId peerId = fmqRegistryClient.connectService("NoService", m_entityIdClient, { {}, {10, 100} }, [this](PeerId peerId, remoteentity::Status status) {
         m_mockEvents.connectReply(peerId, status);
     });
 

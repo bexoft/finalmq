@@ -42,11 +42,12 @@ struct IProtocolCallback
     virtual ~IProtocolCallback() {}
     virtual void connected() = 0;
     virtual void disconnected() = 0;
+    virtual void disconnectedVirtualSession(const std::string& virtualSessionId) = 0;
     virtual void received(const IMessagePtr& message, std::int64_t connectionId = 0) = 0;
     virtual void socketConnected() = 0;
     virtual void socketDisconnected() = 0;
     virtual void reconnect() = 0;
-    virtual bool findSessionByName(const std::string& sessionName, const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) = 0;
+    virtual bool findSessionByName(const std::string& sessionName, const IProtocolPtr& protocol) = 0;
     virtual void setSessionName(const std::string& sessionName, const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) = 0;
     virtual void pollRequest(std::int64_t connectionId, int timeout, int pollCountMax) = 0;
     virtual void activity() = 0;
@@ -65,6 +66,8 @@ struct IProtocol : public IStreamConnectionCallback
     virtual ~IProtocol() {}
     virtual void setCallback(const std::weak_ptr<IProtocolCallback>& callback) = 0;
     virtual void setConnection(const IStreamConnectionPtr& connection) = 0;
+    virtual IStreamConnectionPtr getConnection() const = 0;
+    virtual void disconnect() = 0;
     virtual std::uint32_t getProtocolId() const = 0;
     virtual bool areMessagesResendable() const = 0;
     virtual bool doesSupportMetainfo() const = 0;
@@ -77,6 +80,8 @@ struct IProtocol : public IStreamConnectionCallback
     virtual bool sendMessage(IMessagePtr message) = 0;
     virtual void moveOldProtocolState(IProtocol& protocolOld) = 0;
     virtual IMessagePtr pollReply(std::deque<IMessagePtr>&& messages) = 0;
+    virtual void subscribe(const std::vector<std::string>& subscribtions) = 0;
+    virtual void cycleTime() = 0;
 };
 
 
@@ -85,7 +90,7 @@ struct IProtocol : public IStreamConnectionCallback
 struct IProtocolFactory
 {
     virtual ~IProtocolFactory() {}
-    virtual IProtocolPtr createProtocol() = 0;
+    virtual IProtocolPtr createProtocol(const Variant& data) = 0;
 };
 
 typedef std::shared_ptr<IProtocolFactory>  IProtocolFactoryPtr;

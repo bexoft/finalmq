@@ -786,7 +786,7 @@ public:
                                     {
                                         endpoint.replace(pos, std::string("*").length(), "127.0.0.1");
                                     }
-                                    session = m_entityContainer->connect(endpoint, {{}, RECONNECT_INTERVAL, 0});
+                                    session = m_entityContainer->connect(endpoint, { {}, {RECONNECT_INTERVAL, 0} });
                                 }
                                 sessionAndEntity.session = session;
                             }

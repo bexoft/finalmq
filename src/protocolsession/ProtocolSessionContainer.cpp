@@ -42,7 +42,7 @@ ProtocolBind::ProtocolBind(hybrid_ptr<IProtocolSessionCallback> callback, const 
 // IStreamConnectionCallback
 hybrid_ptr<IStreamConnectionCallback> ProtocolBind::connected(const IStreamConnectionPtr& connection)
 {
-    IProtocolPtr protocol = m_protocolFactory->createProtocol();
+    IProtocolPtr protocol = m_protocolFactory->createProtocol(m_bindProperties.protocolData);
     assert(protocol);
     IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(m_callback, m_executor, m_executorPollerThread, protocol, m_protocolSessionList, m_bindProperties, m_contentType);
     protocolSession->setConnection(connection, !protocol->doesSupportSession());
@@ -55,10 +55,11 @@ void ProtocolBind::disconnected(const IStreamConnectionPtr& /*connection*/)
     assert(false);
 }
 
-void ProtocolBind::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& /*socket*/, int /*bytesToRead*/)
+bool ProtocolBind::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& /*socket*/, int /*bytesToRead*/)
 {
     // should never be called, because the callback will be overriden by connected
     assert(false);
+    return true;
 }
 
 
@@ -82,7 +83,8 @@ void ProtocolSessionContainer::init(const IExecutorPtr& executor, int cycleTime,
 {
     m_executor = executor;
     std::shared_ptr<FuncTimer> pFuncTimer = funcTimer ? std::make_shared<FuncTimer>(std::move(funcTimer)) : nullptr;
-    m_streamConnectionContainer->init(cycleTime, [this, pFuncTimer](){
+    int counterInterval = (cycleTime > 0) ? (1000 / cycleTime) : 1; // 1000, means: call sessions ervery second
+    m_streamConnectionContainer->init(cycleTime, [this, pFuncTimer, counterInterval](){
         if (pFuncTimer)
         {
             if (m_executor)
@@ -96,7 +98,8 @@ void ProtocolSessionContainer::init(const IExecutorPtr& executor, int cycleTime,
                 (*pFuncTimer)();
             }
         }
-        if (++m_counterTimer % 20 == 0)
+        // the sessions will be called every second
+        if (++m_counterTimer % counterInterval == 0)
         {
             std::vector< IProtocolSessionPrivatePtr > sessions = m_protocolSessionList->getAllSessions();
             for (size_t i = 0; i < sessions.size(); ++i)
@@ -168,7 +171,7 @@ IProtocolSessionPtr ProtocolSessionContainer::connect(const std::string& endpoin
         return nullptr;
     }
 
-    IProtocolPtr protocol = protocolFactory->createProtocol();
+    IProtocolPtr protocol = protocolFactory->createProtocol(connectProperties.protocolData);
     assert(protocol);
 
     std::string endpointStreamConnection = endpoint.substr(0, ixEndpoint);
@@ -221,6 +224,12 @@ void ProtocolSessionContainer::run()
 
 void ProtocolSessionContainer::terminatePollerLoop()
 {
+    std::vector< IProtocolSessionPtr > sessions = getAllSessions();
+    for (size_t i = 0; i < sessions.size(); ++i)
+    {
+        sessions[i]->disconnect();
+    }
+
     m_streamConnectionContainer->terminatePollerLoop();
     if (m_thread.joinable())
     {

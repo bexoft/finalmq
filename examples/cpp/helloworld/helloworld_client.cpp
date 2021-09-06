@@ -26,6 +26,9 @@
 #include "finalmq/remoteentity/RemoteEntityFormatProto.h"
 #include "finalmq/remoteentity/RemoteEntityFormatJson.h"
 #include "finalmq/logger/Logger.h"
+#include "finalmq/variant/VariantValueStruct.h"
+#include "finalmq/variant/VariantValues.h"
+#include "finalmq/protocols/ProtocolMqtt5Client.h"
 
 // the definition of the messages are in the file helloworld.fmq
 #include "helloworld.fmq.h"
@@ -52,6 +55,8 @@ using finalmq::ConnectionEvent;
 using finalmq::remoteentity::Status;
 using finalmq::Logger;
 using finalmq::LogContext;
+using finalmq::VariantStruct;
+using finalmq::ProtocolMqtt5Client;
 using helloworld::HelloRequest;
 using helloworld::HelloReply;
 using helloworld::Sex;
@@ -60,7 +65,7 @@ using helloworld::Address;
 
 
 
-#define LOOP 100000
+#define LOOP 1000
 
 void triggerRequest(RemoteEntity& entityClient, PeerId peerId, const std::chrono::time_point<std::chrono::system_clock>& starttime, int index)
 {
@@ -136,6 +141,14 @@ int main()
     IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:7777:headersize:protobuf");
 //    IProtocolSessionPtr sessionClient = entityContainer.connect("ipc://my_uds:headersize:protobuf");
 
+    //// if you want to use mqtt5 -> connect to broker
+    //IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://broker.emqx.io:1883:mqtt5client:json", { {},{},
+    //    VariantStruct{  //{ProtocolMqtt5Client::KEY_USERNAME, std::string("")},
+    //                    //{ProtocolMqtt5Client::KEY_PASSWORD, std::string("")},
+    //                    {ProtocolMqtt5Client::KEY_SESSIONEXPIRYINTERVAL, 300},
+    //                    {ProtocolMqtt5Client::KEY_KEEPALIVE, 20},
+    //    } });
+
     // connect entityClient to remote server entity "MyService" with the created TCP session.
     // The returned peerId identifies the peer entity.
     // The peerId will be used for sending commands to the peer (requestReply(), sendEvent())
@@ -163,6 +176,7 @@ int main()
             std::cout << "REPLY error: " << status.toString() << std::endl;
         }
     });
+    
 
     // another request/reply
     entityClient.requestReply<HelloReply>(peerId,

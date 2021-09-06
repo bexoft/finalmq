@@ -134,6 +134,8 @@ file(GLOB SOURCES "src/*.cpp" "inc/finalmq/*.h"
                   "src/streamconnection/*.cpp" "inc/finalmq/streamconnection/*.h"
                   "src/protocolsession/*.cpp" "inc/finalmq/protocolsession/*.h"
                   "src/protocols/*.cpp" "inc/finalmq/protocols/*.h"
+                  "src/protocols/mqtt5/*.cpp" "inc/finalmq/mqtt5/protocols/*.h"
+                  "src/protocols/protocolhelpers/*.cpp" "inc/finalmq/protocols/protocolhelpers/*.h"
                   "src/remoteentity/*.cpp" "inc/finalmq/remoteentity/*.h"
                   "src/connectionhub/*.cpp" "inc/finalmq/connectionhub/*.h"
                   "src/serialize/*.cpp" "inc/finalmq/serialize/*.h"
@@ -161,14 +163,14 @@ if (WIN32)
         SET(OPENSSL_DIR "$ENV{OPENSSL_INSTALL_DIR}")
         include_directories(${OPENSSL_DIR}/include)
         link_directories(${OPENSSL_DIR}/lib)
-        target_link_libraries(finalmq wsock32 ws2_32 ${OPENSSL_DIR}/lib/libssl.lib ${OPENSSL_DIR}/lib/libcrypto.lib)
+        target_link_libraries(finalmq wsock32 ws2_32 Rpcrt4 ${OPENSSL_DIR}/lib/libssl.lib ${OPENSSL_DIR}/lib/libcrypto.lib)
     else()
-        target_link_libraries(finalmq wsock32 ws2_32)
+        target_link_libraries(finalmq wsock32 ws2_32 Rpcrt4)
     endif()
         target_compile_options(finalmq PRIVATE -DEXPORT_finalmq)
 else()
     target_compile_options(finalmq PRIVATE -Werror -Wall -Wextra)
-    target_link_libraries(finalmq ssl)
+    target_link_libraries(finalmq uuid ssl)
 endif()
 
 

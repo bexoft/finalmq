@@ -66,13 +66,18 @@ private:
 
     }
 
+    virtual void disconnectedVirtualSession(const IProtocolSessionPtr& session, const std::string& virtualSessionId)
+    {
+
+    }
+
     virtual void received(const IProtocolSessionPtr& session, const IMessagePtr& message)
     {
         IMessagePtr response = session->createMessage();
         Variant& controlData = message->getControlData();
-        controlData = VariantStruct{ {ProtocolHttpServer::FMQ_HTTP, ProtocolHttpServer::HTTP_RESPONSE},
-                                     {ProtocolHttpServer::FMQ_STATUS, 200},
-                                     {ProtocolHttpServer::FMQ_STATUSTEXT, std::string("OK")} };
+        controlData.add(ProtocolHttpServer::FMQ_HTTP, ProtocolHttpServer::HTTP_RESPONSE);
+        controlData.add(ProtocolHttpServer::FMQ_STATUS, 200);
+        controlData.add(ProtocolHttpServer::FMQ_STATUSTEXT, std::string("OK"));
 
         const std::string* path = message->getMetainfo(ProtocolHttpServer::FMQ_PATH);
         if (path)

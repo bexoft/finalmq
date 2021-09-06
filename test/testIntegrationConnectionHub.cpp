@@ -77,6 +77,9 @@ protected:
 
     virtual void TearDown()
     {
+        EXPECT_CALL(*m_mockClientCallback, disconnected(_)).WillRepeatedly(Return());
+        EXPECT_CALL(*m_mockServerCallback, disconnected(_)).WillRepeatedly(Return());
+
         m_sessionContainer->terminatePollerLoop();
         m_threadSessionContainer->join();
         m_sessionContainer = nullptr;
@@ -108,9 +111,9 @@ TEST_F(TestIntegrationConnectionHub, testConnect)
     auto& expectConnectClient = EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(1);
     auto& expectConnectServer = EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
 
-    m_connectionHub->connect("tcp://localhost:3333:stream", {{},1});
+    m_connectionHub->connect("tcp://localhost:3333:stream", { {},{1} });
     m_sessionContainer->bind("tcp://*:3333:delimiter_lf", m_mockServerCallback);
-    m_sessionContainer->connect("tcp://localhost:3334:delimiter_lf", m_mockClientCallback, {{},1});
+    m_sessionContainer->connect("tcp://localhost:3334:delimiter_lf", m_mockClientCallback, { {},{1} });
     m_connectionHub->bind("tcp://*:3334:stream");
 
     waitTillDone(expectConnectClient, 5000);
@@ -122,9 +125,9 @@ TEST_F(TestIntegrationConnectionHub, testUnbind)
     auto& expectConnectClient = EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(1);
     auto& expectConnectServer = EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
 
-    m_connectionHub->connect("tcp://localhost:3333:stream", {{},1});
+    m_connectionHub->connect("tcp://localhost:3333:stream", { {},{1} });
     m_sessionContainer->bind("tcp://*:3333:delimiter_lf", m_mockServerCallback);
-    m_sessionContainer->connect("tcp://localhost:3334:delimiter_lf", m_mockClientCallback, {{},1});
+    m_sessionContainer->connect("tcp://localhost:3334:delimiter_lf", m_mockClientCallback, { {},{1} });
     m_connectionHub->bind("tcp://*:3334:stream");
 
     waitTillDone(expectConnectClient, 5000);
@@ -140,9 +143,9 @@ TEST_F(TestIntegrationConnectionHub, testGetAllSessions)
     auto& expectConnectClient = EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(1);
     auto& expectConnectServer = EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
 
-    m_connectionHub->connect("tcp://localhost:3333:stream", {{},1});
+    m_connectionHub->connect("tcp://localhost:3333:stream", { {},{1} });
     m_sessionContainer->bind("tcp://*:3333:delimiter_lf", m_mockServerCallback);
-    m_sessionContainer->connect("tcp://localhost:3334:delimiter_lf", m_mockClientCallback, {{},1});
+    m_sessionContainer->connect("tcp://localhost:3334:delimiter_lf", m_mockClientCallback, { {},{1} });
     m_connectionHub->bind("tcp://*:3334:stream");
 
     waitTillDone(expectConnectClient, 5000);
@@ -158,9 +161,9 @@ TEST_F(TestIntegrationConnectionHub, testGetSession)
     auto& expectConnectClient = EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(1);
     auto& expectConnectServer = EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
 
-    m_connectionHub->connect("tcp://localhost:3333:stream", {{},1});
+    m_connectionHub->connect("tcp://localhost:3333:stream", { {},{1} });
     m_sessionContainer->bind("tcp://*:3333:delimiter_lf", m_mockServerCallback);
-    m_sessionContainer->connect("tcp://localhost:3334:delimiter_lf", m_mockClientCallback, {{},1});
+    m_sessionContainer->connect("tcp://localhost:3334:delimiter_lf", m_mockClientCallback, { {},{1} });
     m_connectionHub->bind("tcp://*:3334:stream");
 
     waitTillDone(expectConnectClient, 5000);
@@ -182,9 +185,9 @@ TEST_F(TestIntegrationConnectionHub, testForwardLateMessage)
     auto& expectConnectServer = EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1)
                                                 .WillOnce(testing::SaveArg<0>(&bindSession));
 
-    m_connectionHub->connect("tcp://localhost:3333:stream", {{},1});
+    m_connectionHub->connect("tcp://localhost:3333:stream", { {},{1} });
     m_sessionContainer->bind("tcp://*:3333:delimiter_lf", m_mockServerCallback);
-    IProtocolSessionPtr session = m_sessionContainer->connect("tcp://localhost:3334:delimiter_lf", m_mockClientCallback, {{},1});
+    IProtocolSessionPtr session = m_sessionContainer->connect("tcp://localhost:3334:delimiter_lf", m_mockClientCallback, { {},{1} });
     m_connectionHub->bind("tcp://*:3334:stream");
 
     auto& expectReceiveClient = EXPECT_CALL(*m_mockClientCallback, received(_, ReceivedMessage(MESSAGE_BUFFER))).Times(1);
@@ -208,9 +211,9 @@ TEST_F(TestIntegrationConnectionHub, testForwardEarlyMessage)
     auto& expectConnectClient = EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(1);
     auto& expectConnectServer = EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
 
-    m_connectionHub->connect("tcp://localhost:3333:stream", {{},1});
+    m_connectionHub->connect("tcp://localhost:3333:stream", { {},{1} });
     m_sessionContainer->bind("tcp://*:3333:delimiter_lf", m_mockServerCallback);
-    IProtocolSessionPtr session = m_sessionContainer->connect("tcp://localhost:3334:delimiter_lf", m_mockClientCallback, {{},1});
+    IProtocolSessionPtr session = m_sessionContainer->connect("tcp://localhost:3334:delimiter_lf", m_mockClientCallback, { {},{1} });
     m_connectionHub->bind("tcp://*:3334:stream");
 
     IMessagePtr message = session->createMessage();
@@ -236,9 +239,9 @@ TEST_F(TestIntegrationConnectionHub, testStopForwardingToSession)
     auto& expectConnectServer = EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1)
                                                 .WillOnce(testing::SaveArg<0>(&bindSession));
 
-    IProtocolSessionPtr sessionForward = m_connectionHub->connect("tcp://localhost:3333:stream", {{},1});
+    IProtocolSessionPtr sessionForward = m_connectionHub->connect("tcp://localhost:3333:stream", { {},{1} });
     m_sessionContainer->bind("tcp://*:3333:delimiter_lf", m_mockServerCallback);
-    IProtocolSessionPtr session = m_sessionContainer->connect("tcp://localhost:3334:delimiter_lf", m_mockClientCallback, {{},1});
+    IProtocolSessionPtr session = m_sessionContainer->connect("tcp://localhost:3334:delimiter_lf", m_mockClientCallback, { {},{1} });
     m_connectionHub->bind("tcp://*:3334:stream");
 
     IMessagePtr message = session->createMessage();
@@ -274,9 +277,9 @@ TEST_F(TestIntegrationConnectionHub, testStopForwardingFromSession)
     auto& expectConnectServer = EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1)
                                                 .WillOnce(testing::SaveArg<0>(&bindSession));
 
-    IProtocolSessionPtr sessionForward = m_connectionHub->connect("tcp://localhost:3333:stream", {{},1});
+    IProtocolSessionPtr sessionForward = m_connectionHub->connect("tcp://localhost:3333:stream", { {},{1} });
     m_sessionContainer->bind("tcp://*:3333:delimiter_lf", m_mockServerCallback);
-    IProtocolSessionPtr session = m_sessionContainer->connect("tcp://localhost:3334:delimiter_lf", m_mockClientCallback,{{},1});
+    IProtocolSessionPtr session = m_sessionContainer->connect("tcp://localhost:3334:delimiter_lf", m_mockClientCallback, { {},{1} });
     m_connectionHub->bind("tcp://*:3334:stream");
 
     IMessagePtr message = session->createMessage();

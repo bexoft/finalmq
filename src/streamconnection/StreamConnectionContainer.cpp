@@ -249,7 +249,10 @@ IStreamConnectionPtr StreamConnectionContainer::createConnection(hybrid_ptr<IStr
 bool StreamConnectionContainer::createSocket(const IStreamConnectionPtr& streamConnection, ConnectionData& connectionData, const ConnectProperties& connectionProperties)
 {
     SocketPtr socket = streamConnection->getSocket();
-    assert(socket);
+    if (socket == nullptr)
+    {
+        return false;
+    }
 
     // the endpoint should not been set twice!
     assert(socket->getSocketDescriptor() == nullptr);
@@ -311,8 +314,8 @@ bool StreamConnectionContainer::connect(const IStreamConnectionPtr& streamConnec
     ConnectionData connectionData = AddressHelpers::endpoint2ConnectionData(endpoint);
     connectionData.connectionId = connection->getConnectionId();
     connectionData.incomingConnection = false;
-    connectionData.reconnectInterval = connectionProperties.reconnectInterval;
-    connectionData.totalReconnectDuration = connectionProperties.totalReconnectDuration;
+    connectionData.reconnectInterval = connectionProperties.config.reconnectInterval;
+    connectionData.totalReconnectDuration = connectionProperties.config.totalReconnectDuration;
     connectionData.startTime = std::chrono::system_clock::now();
     connectionData.ssl = connectionProperties.certificateData.ssl;
     connectionData.connectionState = ConnectionState::CONNECTIONSTATE_CREATED;
@@ -475,12 +478,13 @@ void StreamConnectionContainer::handleReceive(const IStreamConnectionPrivatePtr&
     }
 #endif
 
+    bool ok = true;
     int maxloop = 5;
-    while (bytesToRead > 0)
+    while (bytesToRead > 0 && ok)
     {
-        connection->received(connection, socket, bytesToRead);
+        ok = connection->received(connection, socket, bytesToRead);
         maxloop--;
-        if (maxloop > 0)
+        if (maxloop > 0 && ok)
         {
             bytesToRead = socket->pendingRead();
 #ifdef USE_OPENSSL
@@ -497,7 +501,7 @@ void StreamConnectionContainer::handleReceive(const IStreamConnectionPrivatePtr&
     }
 
 #ifdef USE_OPENSSL
-    if (socket->isReadWhenWritable())
+    if (socket->isReadWhenWritable() && ok)
     {
         SocketDescriptorPtr sd = socket->getSocketDescriptor();
         assert(sd);
@@ -771,6 +775,8 @@ void StreamConnectionContainer::pollerLoop()
             for (size_t i = 0; i < connectionsDisconnect.size(); ++i)
             {
                 const IStreamConnectionPrivatePtr& connectionDisconnect = connectionsDisconnect[i];
+                // last chance to send pending messages
+                connectionDisconnect->sendPendingMessages();
                 SocketPtr socket = connectionDisconnect->getSocketPrivate();
                 if (socket)
                 {

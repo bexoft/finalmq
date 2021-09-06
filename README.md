@@ -18,13 +18,14 @@ To build finalmq from source, the following tools and dependencies are needed:
   * make
   * cmake
   * g++
+  * uuid
   * openssl
   * node-ejs
   * node-minimist
 
 On Ubuntu/Debian, you can install them with:
 
-    $ sudo apt-get install -y git make cmake g++ libssl1.0-dev node-ejs node-minimist
+    $ sudo apt-get install -y git make cmake g++ uuid-dev libssl1.0-dev node-ejs node-minimist
 
 To get the source, clone the repository of finalmq:
 
@@ -150,7 +151,7 @@ This layer implements SSL/TLS functionalities, in case the compiler-flag FINALMQ
 
 The second layer is called **Protocol Session**. For this layer, an application can implement custom framing protocols as "plugins". When an application receives a message with the received() event, it will deliver always a complete message to the application.  
 
-The main class of this layer is called **ProtocolSessionContainer**. This container manages multi connections. The connection can be incoming connections (bind) and outgoing connections (connect). For one ProtocolSessionContainer, it is possible to call multiple times bind() for multiple listening ports (incoming connections) and it is also possible to call multiple times connect() for multiple outgoing connections. The class that represents a connection is called **ProtocolSession**, but the application will only get the interface **IProtocolSession** as a shared_ptr. In this layer, a connection is called session, because there can be protocols implemented which maintain sessions which could live longer than a socket connection. For simple protocols the session will be disconnected as soon the socket is disconnected, but for advanced protocols a session could recognize a socket disconnection, but the session is not disconnected and after a reconnection the session can continue its work. It depends on the protocol, when to disconnect a session. There could be protocols implemented that guarantee no message lost after reconnection.
+The main class of this layer is called **ProtocolSessionContainer**. This container manages multi connections. The connection can be incoming connections (bind) and outgoing connections (connect). For one ProtocolSessionContainer, it is possible to call multiple times bind() for multiple listening ports (incoming connections) and it is also possible to call multiple times connect() for multiple outgoing connections. The class that represents a connection is called **ProtocolSession**, but the application will only get the C++ interface **IProtocolSession** as a shared_ptr. In this layer, a connection is called session, because there can be protocols implemented which maintain sessions which could live longer than a socket connection. For simple protocols the session will be disconnected as soon the socket is disconnected, but for advanced protocols a session could recognize a socket disconnection, but the session is not disconnected and after a reconnection the session can continue its work. It depends on the protocol, when a session will be disconnected. There could be protocols implemented that guarantee no message lost after reconnection.
 
 Each protocol plugin will have a name that can be used inside the endpoint.
 
@@ -164,7 +165,15 @@ Example:
 
 
 
-At this time, the framework implements 4 protocols:
+At this time, the framework implements 5 protocols:
+
+- stream
+- delimiter_lf
+- headersize
+- httpserver
+- mqtt5client
+
+
 
 **"stream"		class ProtocolStream**		
 
@@ -198,13 +207,20 @@ This protocol implements an HTTP server. The HTTP protocol is not symmetric for 
 
 
 
-A ProtocolSessionContainer can offer multiple protocols for different clients to connect.
+**"mqtt5client"		class ProtocolMqtt5Client**		
 
-| Example: multiple endpoints to bind for one ProtocolSessionContainer |
+This protocol implements a MQTT 5 client. A client application and also a server application has to connect as a network client to a MQTT broker with the "mqtt5client" protocol. Afterwards, a client application and server application will communicate with each other via the broker.
+
+
+
+A ProtocolSessionContainer can offer multiple interfaces with different protocols. So, the clients can decide, which interface they want to use.
+
+| Example: multiple endpoints to bind/connect for one ProtocolSessionContainer |
 | ------------------------------------------------------------ |
 | "tcp://\*2000:delimiter_lf"                                  |
 | "tcp://\*:2001:headersize"                                   |
 | "tcp://\*:80:httpserver"                                     |
+| "tcp://localhost:1883:mqtt5client" - with mqtt5client, only connect to a MQTT broker is possible |
 | "ipc://myunixdomain:delimiter_lf"                            |
 
 A client can decide for which protocol it wants to connect
@@ -237,7 +253,8 @@ Examples for Remote Entity endpoints:
 | "tcp://\*2000:delimiter_lf:json"         | bind TCP port 2000, Framing: delimiter LF, Format: json      |
 | "tcp://localhost:2000:delimiter_lf:json" | connect TCP port 2000 of localhost, Framing: delimiter LF, Format: json |
 | "tcp://\*:2001:headersize:protobuf"      | bind TCP port 2001, Framing: header with size, Format: protobuf |
-| "tcp://\*80:httpserver:json"             | bind TCP port 80, Framing: HTTP (server), Format: json       |
+| "tcp://\*:80:httpserver:json"            | bind TCP port 80, Framing: HTTP (server), Format: json       |
+| "tcp://localhost:1883:mqtt5client:json"  | connects to a MQTT broker, Format: json                      |
 | "ipc://myunixdomain:delimiter_lf:json"   | bind UDS "myunixdomain", Framing: delimiter LF, Format: json |
 
 
@@ -581,23 +598,26 @@ Afterwards, some listening ports will be opened. Each port has a framing protoco
 
 For SSL/TLS you can pass BindProperties:
 
-	struct BindProperties
-	{
-		CertificateData certificateData;
-	};
-	
-	struct CertificateData
-	{
-	    bool ssl = false;
-	    int verifyMode = 0;                 // SSL_CTX_set_verify: SSL_VERIFY_NONE, SSL_VERIFY_PEER, SSL_VERIFY_FAIL_IF_NO_PEER_CERT, SSL_VERIFY_CLIENT_ONCE
-	    std::string certificateFile;        // SSL_CTX_use_certificate_file, pem
-	    std::string privateKeyFile;         // SSL_CTX_use_PrivateKey_file, pem
-	    std::string caFile;                 // SSL_CTX_load_verify_location, pem
-	    std::string caPath;                 // SSL_CTX_load_verify_location, pem
-	    std::string certificateChainFile;   // SSL_CTX_use_certificate_chain_file, pem
-	    std::string clientCaFile;           // SSL_load_client_CA_file, pem, SSL_CTX_set_client_CA_list
-	    std::function<int(int, X509_STORE_CTX*)> verifyCallback;    // SSL_CTX_set_verify
-	};
+```c++
+struct BindProperties
+{
+	CertificateData certificateData;	// the SSL/TLS parameters
+    Variant protocolData;				// parameters for the protocol (not used, yet)
+};
+
+struct CertificateData
+{
+    bool ssl = false;
+    int verifyMode = 0;                 // SSL_CTX_set_verify: SSL_VERIFY_NONE, SSL_VERIFY_PEER, SSL_VERIFY_FAIL_IF_NO_PEER_CERT, SSL_VERIFY_CLIENT_ONCE
+    std::string certificateFile;        // SSL_CTX_use_certificate_file, pem
+    std::string privateKeyFile;         // SSL_CTX_use_PrivateKey_file, pem
+    std::string caFile;                 // SSL_CTX_load_verify_location, pem
+    std::string caPath;                 // SSL_CTX_load_verify_location, pem
+    std::string certificateChainFile;   // SSL_CTX_use_certificate_chain_file, pem
+    std::string clientCaFile;           // SSL_load_client_CA_file, pem, SSL_CTX_set_client_CA_list
+    std::function<int(int, X509_STORE_CTX*)> verifyCallback;    // SSL_CTX_set_verify
+};
+```
 
 
 
@@ -712,7 +732,7 @@ The HTTP response header looks like this:
 	fmq_re_mode: MSG_REPLY
 	fmq_re_srcid: 1
 	fmq_re_status: STATUS_OK
-	fmq_re_type: helloworld.HelloReply
+	fmq_type: helloworld.HelloReply
 
 
 
@@ -932,10 +952,17 @@ It is possible to start first the client and then the server. If the client star
 ```c++
 struct ConnectProperties
 {
-	CertificateData certificateData;
-	int reconnectInterval = 5000;       ///< if the server is not available, you can pass a reconnection intervall in [ms]
-	int totalReconnectDuration = -1;    ///< if the server is not available, you can pass a duration in [ms] how long the reconnect shall happen.
+    CertificateData certificateData;	// the SSL/TLS parameters
+    ConnectConfig config;				// some connetion specific parameters
+    Variant protocolData;				// some protocol specific parameters (right now, only used for mqtt to pass username, password and additional parameters)
 };
+
+struct ConnectConfig
+{
+    int reconnectInterval = 5000;       // if the server is not available, you can pass a reconnection intervall in [ms]
+    int totalReconnectDuration = -1;    // if the server is not available, you can pass a duration in [ms] how long the reconnect shall happen. -1 means: try for ever.
+};
+
 ```
 
 In case you want to connect with SSL/TLS just fill the CertificationData.
@@ -1286,6 +1313,46 @@ localhost:8080/fmq/config?activitytimeout=120000&pollmaxrequests=5000
 ```json
 localhost:8080/fmq/poll?timeout=60000&count=100
 ```
+
+
+
+## MQTT
+
+With MQTT the client and also the server have to connect to a MQTT broker. The connect needs some additional parameters like username, password and some other configuration parameters. These parameters can by passed with the ConnectProperties. Here is an example how to connect to a MQTT broker:
+
+```c++
+IProtocolSessionPtr session = entityContainer.connect("tcp://broker.emqx.io:1883:mqtt5client:json", { {},{},
+	VariantStruct{  {ProtocolMqtt5Client::KEY_USERNAME, std::string("admin")},
+					{ProtocolMqtt5Client::KEY_PASSWORD, std::string("abcde")},
+					{ProtocolMqtt5Client::KEY_SESSIONEXPIRYINTERVAL, 300},
+					{ProtocolMqtt5Client::KEY_KEEPALIVE, 20},
+	} 
+});
+```
+
+With this connect you will connect to the broker at "broker.emqx.io", port: 1883. The encoding format of the messages is JSON. The username is "admin", password is "abcde", the session expiry interval is 300 seconds and the keep alive is 20 seconds. **If you want to use SSL/TLS, just fill out the first part of the ConnectProperties (see chapter: Connect Behavior).**
+
+
+
+**The request/reply pattern of finalmq will also work with MQTT.**
+
+
+
+If you have an entity that shall send sporatic events to the broker, but without a client that first sends ConnectEntity. Then you can just call the following line of code:
+
+```c++
+PeerId peerId = entityServer.createPublishPeer(session, "/my/timer/events");
+```
+
+With the peerId you can now publish events to the broker. The topic will look like this:
+
+"\<given name\>/\<message type\>"
+
+Example:
+
+"/my/timer/events/my.message.type"
+
+So, if a subscriber is interested in these events, it shall subscribe for example with the topic "/my/timer/events/#"
 
 
 

@@ -66,7 +66,7 @@ private:
     // IStreamConnectionCallback
     virtual hybrid_ptr<IStreamConnectionCallback> connected(const IStreamConnectionPtr& connection) override;
     virtual void disconnected(const IStreamConnectionPtr& connection) override;
-    virtual void received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) override;
+    virtual bool received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) override;
 
     hybrid_ptr<IProtocolSessionCallback>    m_callback;
     IExecutorPtr                            m_executor;

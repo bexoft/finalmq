@@ -44,13 +44,16 @@ static const std::string FMQ_STATUS = "fmq_status";
 static const std::string FMQ_STATUSTEXT = "fmq_statustext";
 static const std::string HTTP_RESPONSE = "response";
 static const std::string FMQ_PATH = "fmq_path";
+static const std::string FMQ_DESTNAME = "fmq_destname";
+static const std::string FMQ_RE_DESTID = "fmq_re_destid";
 static const std::string FMQ_RE_SRCID = "fmq_re_srcid";
 static const std::string FMQ_RE_MODE = "fmq_re_mode";
-static const std::string FMQ_RE_CORRID = "fmq_re_corrid";
+static const std::string FMQ_CORRID = "fmq_corrid";
 static const std::string FMQ_RE_STATUS = "fmq_re_status";
-static const std::string FMQ_RE_TYPE = "fmq_re_type";
+static const std::string FMQ_TYPE = "fmq_type";
 static const std::string MSG_REPLY = "MSG_REPLY";
 
+static const std::string FMQ_VIRTUAL_SESSION_ID = "fmq_virtsessid";
 
 
 
@@ -101,11 +104,22 @@ bool RemoteEntityFormatRegistryImpl::serialize(IMessage& message, int contentTyp
 void RemoteEntityFormatRegistryImpl::serializeHeaderToMetainfo(IMessage& message, const remoteentity::Header& header)
 {
     IMessage::Metainfo& metainfo = message.getAllMetainfo();
+    if (!header.destname.empty())
+    {
+        metainfo[FMQ_DESTNAME] = header.destname;
+    }
+    if (header.destid != 0)
+    {
+        metainfo[FMQ_RE_DESTID] = std::to_string(header.destid);
+    }
     metainfo[FMQ_RE_SRCID] = std::to_string(header.srcid);
     metainfo[FMQ_RE_MODE] = header.mode.toString();
-    metainfo[FMQ_RE_CORRID] = std::to_string(header.corrid);
+    if (header.corrid != 0)
+    {
+        metainfo[FMQ_CORRID] = std::to_string(header.corrid);
+    }
     metainfo[FMQ_RE_STATUS] = header.status.toString();
-    metainfo[FMQ_RE_TYPE] = header.type;
+    metainfo[FMQ_TYPE] = header.type;
 }
 
 
@@ -194,7 +208,7 @@ static void metainfoToHeader(remoteentity::Header& header, IMessage::Metainfo& m
 }
 
 
-bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, remoteentity::Header& header, Variant&& echoData, const StructBase* structBase, IMessage::Metainfo* metainfo, Variant* controlData)
+bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, const std::string& virtualSessionId, remoteentity::Header& header, Variant&& echoData, const StructBase* structBase, IMessage::Metainfo* metainfo, Variant* controlData)
 {
     bool ok = true;
     assert(session);
@@ -206,6 +220,16 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, re
         if (header.mode == MsgMode::MSG_REPLY)
         {
             message->getEchoData() = std::move(echoData);
+        }
+        if (!header.destname.empty())
+        {
+            Variant& controlDataTmp = message->getControlData();
+            controlDataTmp.add(FMQ_DESTNAME, header.destname);
+        }
+        if (!virtualSessionId.empty())
+        {
+            Variant& controlDataTmp = message->getControlData();
+            controlDataTmp.add(FMQ_VIRTUAL_SESSION_ID, virtualSessionId);
         }
         bool writeMetainfoToHeader = metainfo;
         if (session->doesSupportMetainfo())
@@ -239,19 +263,12 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, re
 
         if (controlData)
         {
-            if (controlData->getType() != VARTYPE_STRUCT)
+            VariantStruct* varstruct = message->getControlData().getData<VariantStruct>("");
+            VariantStruct* varstruct2 = controlData->getData<VariantStruct>("");
+            if (varstruct && varstruct2)
             {
-                message->getControlData() = std::move(*controlData);
-            }
-            else
-            {
-                VariantStruct* varstruct = message->getControlData().getData<VariantStruct>("");
-                VariantStruct* varstruct2 = controlData->getData<VariantStruct>("");
-                if (varstruct && varstruct2)
-                {
-                    varstruct->insert(varstruct->begin(), std::make_move_iterator(varstruct2->begin()), std::make_move_iterator(varstruct2->end()));
-                    varstruct2->clear();
-                }
+                varstruct->insert(varstruct->begin(), std::make_move_iterator(varstruct2->begin()), std::make_move_iterator(varstruct2->end()));
+                varstruct2->clear();
             }
         }
         if (pureData == nullptr)
@@ -272,6 +289,11 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, re
         }
         if (ok)
         {
+            if (!virtualSessionId.empty())
+            {
+                Variant& controlData = message->getControlData();
+                controlData.add(FMQ_VIRTUAL_SESSION_ID, virtualSessionId);
+            }
             ok = session->sendMessage(message, (header.mode == MsgMode::MSG_REPLY));
         }
     }
@@ -307,8 +329,11 @@ void RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, remoteenti
     auto itPath = metainfo.find(FMQ_PATH);
     auto itSrcId = metainfo.find(FMQ_RE_SRCID);
     auto itMode = metainfo.find(FMQ_RE_MODE);
-    auto itCorrId = metainfo.find(FMQ_RE_CORRID);
+    auto itCorrId = metainfo.find(FMQ_CORRID);
     auto itStatus = metainfo.find(FMQ_RE_STATUS);
+    auto itDestName = metainfo.find(FMQ_DESTNAME);
+    auto itDestId = metainfo.find(FMQ_RE_DESTID);
+    auto itType = metainfo.find(FMQ_TYPE);
     if (itPath != metainfo.end())
     {
         const std::string& path = itPath->second;
@@ -346,7 +371,7 @@ void RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, remoteenti
 
     if (itMode != metainfo.end())
     {
-        const std::string& mode = itSrcId->second;
+        const std::string& mode = itMode->second;
         if (mode == MSG_REPLY)
         {
             header.mode = MsgMode::MSG_REPLY;
@@ -367,6 +392,30 @@ void RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, remoteenti
     {
         const std::string& status = itStatus->second;
         header.status.fromString(status);
+    }
+
+    if (itDestName != metainfo.end())
+    {
+        const std::string& destname = itDestName->second;
+        if (!destname.empty())
+        {
+            header.destname = destname;
+        }
+    }
+
+    if (itDestId != metainfo.end())
+    {
+        const std::string& destid = itDestId->second;
+        header.destid = std::atoll(destid.c_str());
+    }
+
+    if (itType != metainfo.end())
+    {
+        const std::string& type = itType->second;
+        if (!type.empty())
+        {
+            header.type = type;
+        }
     }
 }
 

@@ -37,6 +37,9 @@
 
 namespace finalmq {
 
+static const std::string FMQ_VIRTUAL_SESSION_ID = "fmq_virtsessid";
+
+
 struct IProtocolSession;
 typedef std::shared_ptr<IProtocolSession> IProtocolSessionPtr;
 
@@ -86,6 +89,7 @@ private:
 struct ReceiveData
 {
     IProtocolSessionPtr         session;
+    std::string                 virtualSessionId;
     IMessagePtr                 message;
     remoteentity::Header        header;
     std::shared_ptr<StructBase> structBase;
@@ -397,10 +401,20 @@ struct IRemoteEntity
      */
     virtual IExecutorPtr getExecutor() const = 0;
 
+    /**
+    * @brief creates a peer at the own entity, so that the peer will publish events to the session.
+    * This can be used e.g. for mqtt sessions.
+    * @param entityName is the name of the destination. The mqtt topic will look like this: "/<entityName>/<message type>".
+    * @return the created peer id.
+    */
+    virtual PeerId createPublishPeer(const IProtocolSessionPtr& session, const std::string& entityName) = 0;
+
+
 private:
     // methods for RemoteEntityContainer
     virtual void initEntity(EntityId entityId, const std::string& entityName, const std::shared_ptr<FileTransferReply>& fileTransferReply, const IExecutorPtr& executorPollerThread) = 0;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) = 0;
+    virtual void virtualSessionDisconnected(const IProtocolSessionPtr& session, const std::string& virtualSessionId) = 0;
     virtual void receivedRequest(ReceiveData& receiveData) = 0;
     virtual void receivedReply(ReceiveData& receiveData) = 0;
     virtual void deinit() = 0;
@@ -430,12 +444,13 @@ public:
     PeerManager();
     std::vector<PeerId> getAllPeers() const;
     std::vector<PeerId> getAllPeersWithSession(IProtocolSessionPtr session) const;
-    void updatePeer(PeerId peerId, EntityId entityId, const std::string& entityName);
+    std::vector<PeerId> getAllPeersWithVirtualSession(IProtocolSessionPtr session, const std::string& virtualSessionId) const;
+    void updatePeer(PeerId peerId, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName);
     bool removePeer(PeerId peerId, bool& incoming);
-    PeerId getPeerId(std::int64_t sessionId, EntityId entityId, const std::string& entityName) const;
-    ReadyToSend getRequestHeader(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId, remoteentity::Header& header, IProtocolSessionPtr& session);
+    PeerId getPeerId(std::int64_t sessionId, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName) const;
+    ReadyToSend getRequestHeader(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId, remoteentity::Header& header, IProtocolSessionPtr& session, std::string& virtualSessionId);
     std::string getEntityName(const PeerId& peerId);
-    PeerId addPeer(const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName, bool incoming, bool& added, const std::function<void()>& funcBeforeFirePeerEvent);
+    PeerId addPeer(const IProtocolSessionPtr& session, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName, bool incoming, bool& added, const std::function<void()>& funcBeforeFirePeerEvent);
     PeerId addPeer();
     std::deque<PeerManager::Request> connect(PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName);
     void setEntityId(EntityId entityId);
@@ -446,6 +461,7 @@ private:
     struct Peer
     {
         IProtocolSessionPtr session;
+        std::string         virtualSessionId;
         EntityId            entityId{ ENTITYID_INVALID };
         std::string         entityName;
         bool                incoming = false;
@@ -454,8 +470,8 @@ private:
     };
 
 
-    void removePeerFromSessionEntityToPeerId(std::int64_t sessionId, EntityId entityId, const std::string& entityName);
-    PeerId getPeerIdIntern(std::int64_t sessionId, EntityId entityId, const std::string& entityName) const;
+    void removePeerFromSessionEntityToPeerId(std::int64_t sessionId, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName);
+    PeerId getPeerIdIntern(std::int64_t sessionId, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName) const;
     std::shared_ptr<PeerManager::Peer> getPeer(const PeerId& peerId) const;
 
 
@@ -463,7 +479,7 @@ private:
     std::shared_ptr<FuncPeerEvent>      m_funcPeerEvent;
     std::unordered_map<PeerId, std::shared_ptr<Peer>>    m_peers;
     PeerId                              m_nextPeerId{1};
-    std::unordered_map<std::uint64_t, std::pair<std::unordered_map<EntityId, PeerId>, std::unordered_map<std::string, PeerId>>> m_sessionEntityToPeerId;
+    std::unordered_map<std::uint64_t, std::unordered_map<std::string, std::pair<std::unordered_map<EntityId, PeerId>, std::unordered_map<std::string, PeerId>>>> m_sessionEntityToPeerId;
     mutable std::mutex  m_mutex;
 };
 typedef std::shared_ptr<PeerManager> PeerManagerPtr;
@@ -477,6 +493,7 @@ public:
     inline RequestContext(const PeerManagerPtr& sessionIdEntityIdToPeerId, EntityId entityIdSrc, ReceiveData& receiveData, const std::shared_ptr<FileTransferReply>& fileTransferReply)
         : m_peerManager(sessionIdEntityIdToPeerId)
         , m_session(receiveData.session)
+        , m_virtualSessionId(std::move(receiveData.virtualSessionId))
         , m_entityIdDest(receiveData.header.srcid)
         , m_entityIdSrc(entityIdSrc)
         , m_correlationId(receiveData.header.corrid)
@@ -502,7 +519,7 @@ public:
             assert(m_peerManager);
             assert(m_session);
             // get peer
-            m_peerId = m_peerManager->getPeerId(m_session->getSessionId(), m_entityIdDest, "");
+            m_peerId = m_peerManager->getPeerId(m_session->getSessionId(), m_virtualSessionId, m_entityIdDest, "");
         }
         return m_peerId;
     }
@@ -512,7 +529,7 @@ public:
         if (!m_replySent)
         {
             remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, remoteentity::Status::STATUS_OK, structBase.getStructInfo().getTypeName(), m_correlationId, {} };
-            RemoteEntityFormatRegistry::instance().send(m_session, header, std::move(m_echoData), &structBase, metainfo);
+            RemoteEntityFormatRegistry::instance().send(m_session, m_virtualSessionId, header, std::move(m_echoData), &structBase, metainfo);
             m_replySent = true;
         }
     }
@@ -522,7 +539,7 @@ public:
         if (!m_replySent)
         {
             remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, remoteentity::Status::STATUS_OK, {}, m_correlationId, {} };
-            RemoteEntityFormatRegistry::instance().send(m_session, header, std::move(m_echoData), nullptr, metainfo, &controlData);
+            RemoteEntityFormatRegistry::instance().send(m_session, m_virtualSessionId, header, std::move(m_echoData), nullptr, metainfo, &controlData);
             m_replySent = true;
         }
     }
@@ -532,7 +549,7 @@ public:
         if (!m_replySent)
         {
             remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, status, "", m_correlationId, {} };
-            RemoteEntityFormatRegistry::instance().send(m_session, header, std::move(m_echoData));
+            RemoteEntityFormatRegistry::instance().send(m_session, m_virtualSessionId, header, std::move(m_echoData));
             m_replySent = true;
         }
     }
@@ -576,6 +593,11 @@ public:
         return m_session->doesSupportFileTransfer();
     }
 
+    const std::string& getVirtualSessionId() const
+    {
+        return m_virtualSessionId;
+    }
+
 private:
     inline const IProtocolSessionPtr& session() const
     {
@@ -593,6 +615,7 @@ private:
 private:
     PeerManagerPtr                  m_peerManager;
     IProtocolSessionPtr             m_session;
+    std::string                     m_virtualSessionId;
     EntityId                        m_entityIdDest = ENTITYID_INVALID;
     EntityId                        m_entityIdSrc = ENTITYID_INVALID;
     CorrelationId                   m_correlationId = CORRELATIONID_NONE;
@@ -614,6 +637,7 @@ class SYMBOLEXP RemoteEntity : public IRemoteEntity
 {
 public:
     RemoteEntity();
+    ~RemoteEntity();
 
 public:
     // IRemoteEntity
@@ -638,15 +662,17 @@ public:
     virtual bool isEntityRegistered() const override;
     virtual void registerReplyEvent(FuncReplyEvent funcReplyEvent) override;
     virtual IExecutorPtr getExecutor() const override;
+    virtual PeerId createPublishPeer(const IProtocolSessionPtr& session, const std::string& entityName) override;
 
 private:
     virtual void initEntity(EntityId entityId, const std::string& entityName, const std::shared_ptr<FileTransferReply>& fileTransferReply, const IExecutorPtr& executor) override;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) override;
+    virtual void virtualSessionDisconnected(const IProtocolSessionPtr& session, const std::string& virtualSessionId) override;
     virtual void receivedRequest(ReceiveData& receiveData) override;
     virtual void receivedReply(ReceiveData& receiveData) override;
     virtual void deinit() override;
 
-    PeerId connectIntern(const IProtocolSessionPtr& session, const std::string& entityName, EntityId, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect);
+    PeerId connectIntern(const IProtocolSessionPtr& session, const std::string& virtualSessionId, const std::string& entityName, EntityId, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect);
     void connectIntern(PeerId peerId, const IProtocolSessionPtr& session, const std::string& entityName, EntityId entityId);
     void removePeer(PeerId peerId, remoteentity::Status status);
     void replyReceived(ReceiveData& receiveData);

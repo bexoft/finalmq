@@ -61,6 +61,9 @@ protected:
 
     virtual void TearDown()
     {
+        EXPECT_CALL(*m_mockClientCallback, disconnected(_)).WillRepeatedly(Return());
+        EXPECT_CALL(*m_mockServerCallback, disconnected(_)).WillRepeatedly(Return());
+
         m_sessionContainer->terminatePollerLoop();
         m_thread->join();
         m_sessionContainer = nullptr;
@@ -135,7 +138,7 @@ TEST_F(TestIntegrationProtocolHeaderBinarySize, testConnectBind)
     auto& expectConnected = EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(1);
     EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
 
-    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333:headersize", m_mockClientCallback, {{}, 1});
+    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333:headersize", m_mockClientCallback, { {}, {1} });
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
@@ -155,7 +158,7 @@ TEST_F(TestIntegrationProtocolHeaderBinarySize, testSendConnectBind)
     EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
     auto& expectReceive = EXPECT_CALL(*m_mockServerCallback, received(_, ReceivedMessage(MESSAGE1_BUFFER))).Times(1);
 
-    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333:headersize", m_mockClientCallback, {{}, 1});
+    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333:headersize", m_mockClientCallback, { {}, {1} });
     IMessagePtr message = connection->createMessage();
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
@@ -178,7 +181,7 @@ TEST_F(TestIntegrationProtocolHeaderBinarySize, testReconnectExpires)
     EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(0);
     auto& expectDisconnected = EXPECT_CALL(*m_mockClientCallback, disconnected(_)).Times(1);
 
-    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333:headersize", m_mockClientCallback, {{}, 1, 1});
+    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333:headersize", m_mockClientCallback, { {}, {1, 1} });
     IMessagePtr message = connection->createMessage();
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);

@@ -73,7 +73,7 @@ bool StreamConnection::sendMessage(const IMessagePtr& msg)
                     ++it;
                     bool last = (it == payloads.end());
                     int flags = last ? 0 : MSG_MORE;    // win32: MSG_PARTIAL
-                    int err = m_socketPrivate->send(payload.first, payload.second, flags);
+                    int err = m_socketPrivate->send(payload.first, static_cast<int>(payload.second), flags);
                     if (err != payload.second)
                     {
                         if (err < 0)
@@ -337,14 +337,20 @@ void StreamConnection::disconnected(const IStreamConnectionPtr& connection)
     }
 }
 
-void StreamConnection::received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead)
+bool StreamConnection::received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead)
 {
+    bool ok = true;
     auto callback = m_callback.lock();
-    if (callback)
+    if (callback && !m_disconnectFlag)
     {
 //        m_executor->addAction(std::bind(&IStreamConnectionCallback::received, callback, connection, socket, bytesToRead));
-        callback->received(connection, socket, bytesToRead);
+        ok = callback->received(connection, socket, bytesToRead);
+        if (!ok)
+        {
+            disconnect();
+        }
     }
+    return ok;
 }
 
 }   // namespace finalmq

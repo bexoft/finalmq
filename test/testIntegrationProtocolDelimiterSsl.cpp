@@ -28,7 +28,7 @@
 
 #include "finalmq/protocolsession/ProtocolSessionContainer.h"
 #include "MockIProtocolSessionCallback.h"
-#include "finalmq/protocolsession/ProtocolDelimiter.h"
+#include "finalmq/protocols/protocolhelpers/ProtocolDelimiter.h"
 #include "finalmq/protocolsession/ProtocolRegistry.h"
 #include "testHelper.h"
 
@@ -78,6 +78,9 @@ protected:
 
     virtual void TearDown()
     {
+        EXPECT_CALL(*m_mockClientCallback, disconnected(_)).WillRepeatedly(Return());
+        EXPECT_CALL(*m_mockServerCallback, disconnected(_)).WillRepeatedly(Return());
+
         m_sessionContainer->terminatePollerLoop();
         m_thread->join();
         m_sessionContainer = nullptr;

@@ -21,7 +21,7 @@
 //SOFTWARE.
 
 
-#include "finalmq/protocolsession/ProtocolDelimiter.h"
+#include "finalmq/protocols/protocolhelpers/ProtocolDelimiter.h"
 #include "finalmq/protocolsession/ProtocolMessage.h"
 #include "finalmq/streamconnection/Socket.h"
 
@@ -48,6 +48,17 @@ void ProtocolDelimiter::setCallback(const std::weak_ptr<IProtocolCallback>& call
 void ProtocolDelimiter::setConnection(const IStreamConnectionPtr& connection)
 {
     m_connection = connection;
+}
+
+IStreamConnectionPtr ProtocolDelimiter::getConnection() const
+{
+    return m_connection;
+}
+
+void ProtocolDelimiter::disconnect()
+{
+    assert(m_connection);
+    m_connection->disconnect();
 }
 
 bool ProtocolDelimiter::areMessagesResendable() const
@@ -196,7 +207,7 @@ void ProtocolDelimiter::moveOldProtocolState(IProtocol& /*protocolOld*/)
 
 
 
-void ProtocolDelimiter::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
+bool ProtocolDelimiter::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
 {
     std::string receiveBuffer;
     ssize_t sizeDelimiterPartial = m_delimiterPartial.size();
@@ -224,7 +235,7 @@ void ProtocolDelimiter::received(const IStreamConnectionPtr& /*connection*/, con
         {
             ssize_t pos = positions[0];
             IMessagePtr message = std::make_shared<ProtocolMessage>(0);
-            message->resizeReceivePayload(m_characterCounter + pos);
+            message->resizeReceiveBuffer(m_characterCounter + pos);
             m_characterCounter += bytesReceived;
             assert(m_characterCounter >= 0);
 
@@ -281,7 +292,7 @@ void ProtocolDelimiter::received(const IStreamConnectionPtr& /*connection*/, con
                 pos = positions[i];
                 message = std::make_shared<ProtocolMessage>(0);
                 ssize_t size = pos - m_indexStartBuffer;
-                message->resizeReceivePayload(size);
+                message->resizeReceiveBuffer(size);
                 memcpy(message->getReceivePayload().first, receiveBuffer.c_str() + m_indexStartBuffer + sizeDelimiterPartial, size);
                 m_characterCounter -= size + m_delimiter.size();
                 assert(m_characterCounter >= 0);
@@ -313,6 +324,7 @@ void ProtocolDelimiter::received(const IStreamConnectionPtr& /*connection*/, con
             }
         }
     }
+    return true;
 }
 
 
@@ -340,6 +352,16 @@ void ProtocolDelimiter::disconnected(const IStreamConnectionPtr& /*connection*/)
 IMessagePtr ProtocolDelimiter::pollReply(std::deque<IMessagePtr>&& /*messages*/)
 {
     return {};
+}
+
+void ProtocolDelimiter::subscribe(const std::vector<std::string>& /*subscribtions*/)
+{
+
+}
+
+void ProtocolDelimiter::cycleTime()
+{
+
 }
 
 

@@ -69,6 +69,17 @@ void ProtocolHeaderBinarySize::setConnection(const IStreamConnectionPtr& connect
     m_connection = connection;
 }
 
+IStreamConnectionPtr ProtocolHeaderBinarySize::getConnection() const
+{
+    return m_connection;
+}
+
+void ProtocolHeaderBinarySize::disconnect()
+{
+    assert(m_connection);
+    m_connection->disconnect();
+}
+
 std::uint32_t ProtocolHeaderBinarySize::getProtocolId() const
 {
     return PROTOCOL_ID;
@@ -140,10 +151,10 @@ void ProtocolHeaderBinarySize::moveOldProtocolState(IProtocol& /*protocolOld*/)
 
 }
 
-void ProtocolHeaderBinarySize::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
+bool ProtocolHeaderBinarySize::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
 {
     std::deque<IMessagePtr> messages;
-    m_headerHelper.receive(socket, bytesToRead, messages);
+    bool ok = m_headerHelper.receive(socket, bytesToRead, messages);
     auto callback = m_callback.lock();
     if (callback)
     {
@@ -152,6 +163,7 @@ void ProtocolHeaderBinarySize::received(const IStreamConnectionPtr& /*connection
             callback->received(*it);
         }
     }
+    return ok;
 }
 
 
@@ -180,6 +192,16 @@ IMessagePtr ProtocolHeaderBinarySize::pollReply(std::deque<IMessagePtr>&& /*mess
     return {};
 }
 
+void ProtocolHeaderBinarySize::subscribe(const std::vector<std::string>& /*subscribtions*/)
+{
+
+}
+
+void ProtocolHeaderBinarySize::cycleTime()
+{
+
+}
+
 
 //---------------------------------------
 // ProtocolHeaderBinarySizeFactory
@@ -196,7 +218,7 @@ struct RegisterProtocolHeaderBinarySizeFactory
 
 
 // IProtocolFactory
-IProtocolPtr ProtocolHeaderBinarySizeFactory::createProtocol()
+IProtocolPtr ProtocolHeaderBinarySizeFactory::createProtocol(const Variant& /*data*/)
 {
     return std::make_shared<ProtocolHeaderBinarySize>();
 }

@@ -73,6 +73,7 @@ private:
     // IProtocolSessionCallback
     virtual void connected(const IProtocolSessionPtr& session) override;
     virtual void disconnected(const IProtocolSessionPtr& session) override;
+    virtual void disconnectedVirtualSession(const IProtocolSessionPtr& session, const std::string& virtualSessionId) override;
     virtual void received(const IProtocolSessionPtr& session, const IMessagePtr& message) override;
     virtual void socketConnected(const IProtocolSessionPtr& session) override;
     virtual void socketDisconnected(const IProtocolSessionPtr& session) override;

@@ -40,6 +40,8 @@ private:
     // IProtocol
     virtual void setCallback(const std::weak_ptr<IProtocolCallback>& callback) override;
     virtual void setConnection(const IStreamConnectionPtr& connection) override;
+    virtual IStreamConnectionPtr getConnection() const override;
+    virtual void disconnect() override;
     virtual std::uint32_t getProtocolId() const = 0;
     virtual bool areMessagesResendable() const override;
     virtual bool doesSupportMetainfo() const override;
@@ -51,10 +53,12 @@ private:
     virtual FuncCreateMessage getMessageFactory() const override;
     virtual bool sendMessage(IMessagePtr message) override;
     virtual void moveOldProtocolState(IProtocol& protocolOld) override;
-    virtual void received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) override;
+    virtual bool received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) override;
     virtual hybrid_ptr<IStreamConnectionCallback> connected(const IStreamConnectionPtr& connection) override;
     virtual void disconnected(const IStreamConnectionPtr& connection) override;
     virtual IMessagePtr pollReply(std::deque<IMessagePtr>&& messages) override;
+    virtual void subscribe(const std::vector<std::string>& subscribtions) override;
+    virtual void cycleTime() override;
 
     std::vector<ssize_t> findEndOfMessage(const char* buffer, ssize_t size);
 

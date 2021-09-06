@@ -200,6 +200,7 @@ private:
     // IProtocolSessionCallback
     virtual void connected(const IProtocolSessionPtr& session) override;
     virtual void disconnected(const IProtocolSessionPtr& session) override;
+    virtual void disconnectedVirtualSession(const IProtocolSessionPtr& session, const std::string& virtualSessionId) override;
     virtual void received(const IProtocolSessionPtr& session, const IMessagePtr& message) override;
     virtual void socketConnected(const IProtocolSessionPtr& session) override;
     virtual void socketDisconnected(const IProtocolSessionPtr& session) override;
@@ -207,9 +208,10 @@ private:
     inline void triggerConnectionEvent(const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) const;
     void deinit();
     bool isPureDataPath(const std::string& path);
+    void subscribeEntityNames(const IProtocolSessionPtr& session);
+    void subscribeSessions(const std::string& name);
 
     static bool isTimerExpired(std::chrono::time_point<std::chrono::system_clock>& lastTime, int interval);
-
 
     std::unique_ptr<IProtocolSessionContainer>                  m_protocolSessionContainer;
     std::unordered_map<std::string, EntityId>                   m_name2entityId;

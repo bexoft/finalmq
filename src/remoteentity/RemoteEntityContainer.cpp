@@ -192,8 +192,51 @@ IProtocolSessionPtr RemoteEntityContainer::connect(const std::string& endpoint, 
     }
     std::string endpointProtocol = endpoint.substr(0, ixEndpoint);
 
-    return m_protocolSessionContainer->connect(endpointProtocol, this, connectProperties, contentType);
+    IProtocolSessionPtr session = m_protocolSessionContainer->connect(endpointProtocol, this, connectProperties, contentType);
+    subscribeEntityNames(session);
+    return session;
 }
+
+
+
+void RemoteEntityContainer::subscribeEntityNames(const IProtocolSessionPtr& session)
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    std::vector<std::string> subscribtions;
+    subscribtions.reserve(m_name2entityId.size());
+    for (auto it = m_name2entityId.begin(); it != m_name2entityId.end(); ++it)
+    {
+        const std::string& subscribtion = it->first;
+        if (subscribtion[subscribtion.size() - 1] != '*')
+        {
+            subscribtions.push_back(it->first + "/#");
+        }
+    }
+    lock.unlock();
+
+    if (session)
+    {
+        session->subscribe(subscribtions);
+    }
+}
+
+void RemoteEntityContainer::subscribeSessions(const std::string& name)
+{
+    if (name.empty())
+    {
+        return;
+    }
+    std::vector< IProtocolSessionPtr > sessions = m_protocolSessionContainer->getAllSessions();
+    for (auto it = sessions.begin(); it != sessions.end(); ++it)
+    {
+        if (*it && (name[name.size() - 1] != '*'))
+        {
+            (*it)->subscribe({ name + "/#" });
+        }
+    }
+}
+
+
 
 
 void RemoteEntityContainer::run()
@@ -242,6 +285,12 @@ EntityId RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> remoteE
 
     re->initEntity(entityId, name, m_fileTransferReply, m_executor);
     m_entityId2entity[entityId] = remoteEntity;
+    lock.unlock();
+
+    if (!name.empty())
+    {
+        subscribeSessions(name);
+    }
 
     return entityId;
 }
@@ -357,6 +406,28 @@ void RemoteEntityContainer::disconnected(const IProtocolSessionPtr& session)
 }
 
 
+void RemoteEntityContainer::disconnectedVirtualSession(const IProtocolSessionPtr& session, const std::string& virtualSessionId)
+{
+    std::vector<hybrid_ptr<IRemoteEntity>> entities;
+    std::unique_lock<std::mutex> lock(m_mutex);
+    entities.reserve(m_entityId2entity.size());
+    for (auto it = m_entityId2entity.begin(); it != m_entityId2entity.end(); ++it)
+    {
+        entities.push_back(it->second);
+    }
+    lock.unlock();
+
+    for (size_t i = 0; i < entities.size(); ++i)
+    {
+        auto entity = entities[i].lock();
+        if (entity)
+        {
+            entity->virtualSessionDisconnected(session, virtualSessionId);
+        }
+    }
+}
+
+
 bool RemoteEntityContainer::isPureDataPath(const std::string& path)
 {
     for (auto it = m_pureDataPathPrefixes.begin(); it != m_pureDataPathPrefixes.end(); ++it)
@@ -401,7 +472,7 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     }
 
     bool syntaxError = false;
-    ReceiveData receiveData{ session, message, {}, {} };
+    ReceiveData receiveData{ session, {}, message, {}, {} };
     if (!pureData)
     {
         if (!session->doesSupportMetainfo())
@@ -448,6 +519,15 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     auto entity = remoteEntity.lock();
     if (receiveData.header.mode == MsgMode::MSG_REQUEST)
     {
+        const IMessage::Metainfo& metainfo = receiveData.message->getAllMetainfo();
+        if (!metainfo.empty())
+        {
+            auto it = metainfo.find(FMQ_VIRTUAL_SESSION_ID);
+            if (it != metainfo.end())
+            {
+                receiveData.virtualSessionId = it->second;
+            }
+        }
         Status replyStatus = Status::STATUS_OK;
         if (!syntaxError)
         {
@@ -467,7 +547,7 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
         if (replyStatus != Status::STATUS_OK)
         {
             Header headerReply{ receiveData.header.srcid, "", entityId, MsgMode::MSG_REPLY, replyStatus, "", receiveData.header.corrid, {} };
-            RemoteEntityFormatRegistry::instance().send(session, headerReply, std::move(message->getEchoData()));
+            RemoteEntityFormatRegistry::instance().send(session, receiveData.virtualSessionId, headerReply, std::move(message->getEchoData()));
         }
     }
     else if (receiveData.header.mode == MsgMode::MSG_REPLY)
