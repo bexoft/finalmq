@@ -598,23 +598,26 @@ Afterwards, some listening ports will be opened. Each port has a framing protoco
 
 For SSL/TLS you can pass BindProperties:
 
-	struct BindProperties
-	{
-		CertificateData certificateData;
-	};
-	
-	struct CertificateData
-	{
-	    bool ssl = false;
-	    int verifyMode = 0;                 // SSL_CTX_set_verify: SSL_VERIFY_NONE, SSL_VERIFY_PEER, SSL_VERIFY_FAIL_IF_NO_PEER_CERT, SSL_VERIFY_CLIENT_ONCE
-	    std::string certificateFile;        // SSL_CTX_use_certificate_file, pem
-	    std::string privateKeyFile;         // SSL_CTX_use_PrivateKey_file, pem
-	    std::string caFile;                 // SSL_CTX_load_verify_location, pem
-	    std::string caPath;                 // SSL_CTX_load_verify_location, pem
-	    std::string certificateChainFile;   // SSL_CTX_use_certificate_chain_file, pem
-	    std::string clientCaFile;           // SSL_load_client_CA_file, pem, SSL_CTX_set_client_CA_list
-	    std::function<int(int, X509_STORE_CTX*)> verifyCallback;    // SSL_CTX_set_verify
-	};
+```c++
+struct BindProperties
+{
+	CertificateData certificateData;	// the SSL/TLS parameters
+    Variant protocolData;				// parameters for the protocol (not used, yet)
+};
+
+struct CertificateData
+{
+    bool ssl = false;
+    int verifyMode = 0;                 // SSL_CTX_set_verify: SSL_VERIFY_NONE, SSL_VERIFY_PEER, SSL_VERIFY_FAIL_IF_NO_PEER_CERT, SSL_VERIFY_CLIENT_ONCE
+    std::string certificateFile;        // SSL_CTX_use_certificate_file, pem
+    std::string privateKeyFile;         // SSL_CTX_use_PrivateKey_file, pem
+    std::string caFile;                 // SSL_CTX_load_verify_location, pem
+    std::string caPath;                 // SSL_CTX_load_verify_location, pem
+    std::string certificateChainFile;   // SSL_CTX_use_certificate_chain_file, pem
+    std::string clientCaFile;           // SSL_load_client_CA_file, pem, SSL_CTX_set_client_CA_list
+    std::function<int(int, X509_STORE_CTX*)> verifyCallback;    // SSL_CTX_set_verify
+};
+```
 
 
 
@@ -949,10 +952,17 @@ It is possible to start first the client and then the server. If the client star
 ```c++
 struct ConnectProperties
 {
-	CertificateData certificateData;
-	int reconnectInterval = 5000;       ///< if the server is not available, you can pass a reconnection intervall in [ms]
-	int totalReconnectDuration = -1;    ///< if the server is not available, you can pass a duration in [ms] how long the reconnect shall happen.
+    CertificateData certificateData;	// the SSL/TLS parameters
+    ConnectConfig config;				// some connetion specific parameters
+    Variant protocolData;				// some protocol specific parameters (right now, only used for mqtt to pass username, password and additional parameters)
 };
+
+struct ConnectConfig
+{
+    int reconnectInterval = 5000;       // if the server is not available, you can pass a reconnection intervall in [ms]
+    int totalReconnectDuration = -1;    // if the server is not available, you can pass a duration in [ms] how long the reconnect shall happen. -1 means: try for ever.
+};
+
 ```
 
 In case you want to connect with SSL/TLS just fill the CertificationData.
@@ -1303,6 +1313,46 @@ localhost:8080/fmq/config?activitytimeout=120000&pollmaxrequests=5000
 ```json
 localhost:8080/fmq/poll?timeout=60000&count=100
 ```
+
+
+
+## MQTT
+
+With MQTT the client and also the server have to connect to a MQTT broker. The connect needs some additional parameters like username, password and some other configuration parameters. These parameters can by passed with the ConnectProperties. Here is an example how to connect to a MQTT broker:
+
+```c++
+IProtocolSessionPtr session = entityContainer.connect("tcp://broker.emqx.io:1883:mqtt5client:json", { {},{},
+	VariantStruct{  {ProtocolMqtt5Client::KEY_USERNAME, std::string("admin")},
+					{ProtocolMqtt5Client::KEY_PASSWORD, std::string("abcde")},
+					{ProtocolMqtt5Client::KEY_SESSIONEXPIRYINTERVAL, 300},
+					{ProtocolMqtt5Client::KEY_KEEPALIVE, 20},
+	} 
+});
+```
+
+With this connect you will connect to the broker at "broker.emqx.io", port: 1883. The encoding format of the messages is JSON. The username is "admin", password is "abcde", the session expiry interval is 300 seconds and the keep alive is 20 seconds. **If you want to use SSL/TLS, just fill out the first part of the ConnectProperties (see chapter: Connect Behavior).**
+
+
+
+**The request/reply pattern of finalmq will also work with MQTT.**
+
+
+
+If you have an entity that shall send sporatic events to the broker, but without a client that first sends ConnectEntity. Then you can just call the following line of code:
+
+```c++
+PeerId peerId = entityServer.createPublishPeer(session, "/my/timer/events");
+```
+
+With the peerId you can now publish events to the broker. The topic will look like this:
+
+"\<given name\>/\<message type\>"
+
+Example:
+
+"/my/timer/events/my.message.type"
+
+So, if a subscriber is interested in these events, it shall subscribe for example with the topic "/my/timer/events/#"
 
 
 
