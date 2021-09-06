@@ -118,7 +118,7 @@ void ConnectionHub::disconnected(const IProtocolSessionPtr& /*session*/)
 
 }
 
-void ConnectionHub::disconnectedVirtualSession(const IProtocolSessionPtr& session, const std::string& virtualSessionId)
+void ConnectionHub::disconnectedVirtualSession(const IProtocolSessionPtr& /*session*/, const std::string& /*virtualSessionId*/)
 {
 
 }
