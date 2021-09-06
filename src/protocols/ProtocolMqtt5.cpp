@@ -249,12 +249,6 @@ bool ProtocolMqtt5::sendMessage(IMessagePtr message)
         }
     }
 
-    if (topic.empty())
-    {
-        topic = "fmqevents/";
-        topic += m_clientId;
-    }
-
     if (!topic.empty() && topic[0] != '/')
     {
         data.topic = '/';
@@ -272,7 +266,10 @@ bool ProtocolMqtt5::sendMessage(IMessagePtr message)
         data.topic += *type;
     }
 
-    m_client->publish(connection, std::move(data), message);
+    if (!data.topic.empty())
+    {
+        m_client->publish(connection, std::move(data), message);
+    }
     return true;
 }
 

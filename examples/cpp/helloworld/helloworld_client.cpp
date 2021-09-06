@@ -141,8 +141,8 @@ int main()
     IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:7777:headersize:protobuf");
 //    IProtocolSessionPtr sessionClient = entityContainer.connect("ipc://my_uds:headersize:protobuf");
 
-    // use mqtt5 -> connect to broker
-    //IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:1883:mqtt5client:json", { {},{},
+    //// if you want to use mqtt5 -> connect to broker
+    //IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://broker.emqx.io:1883:mqtt5client:json", { {},{},
     //    VariantStruct{  //{ProtocolMqtt5::KEY_USERNAME, std::string("")},
     //                    //{ProtocolMqtt5::KEY_PASSWORD, std::string("")},
     //                    {ProtocolMqtt5::KEY_SESSIONEXPIRYINTERVAL, 300},

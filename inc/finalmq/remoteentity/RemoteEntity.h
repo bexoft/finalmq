@@ -401,6 +401,15 @@ struct IRemoteEntity
      */
     virtual IExecutorPtr getExecutor() const = 0;
 
+    /**
+    * @brief creates a peer at the own entity, so that the peer will publish events to the session.
+    * This can be used e.g. for mqtt sessions.
+    * @param entityName is the name of the destination. The mqtt topic will look like this: "/<entityName>/<message type>".
+    * @return the created peer id.
+    */
+    virtual PeerId createPublishPeer(const IProtocolSessionPtr& session, const std::string& entityName) = 0;
+
+
 private:
     // methods for RemoteEntityContainer
     virtual void initEntity(EntityId entityId, const std::string& entityName, const std::shared_ptr<FileTransferReply>& fileTransferReply, const IExecutorPtr& executorPollerThread) = 0;
@@ -510,8 +519,7 @@ public:
             assert(m_peerManager);
             assert(m_session);
             // get peer
-            const std::string& virtualSessionId = m_metainfo[FMQ_VIRTUAL_SESSION_ID];
-            m_peerId = m_peerManager->getPeerId(m_session->getSessionId(), virtualSessionId, m_entityIdDest, "");
+            m_peerId = m_peerManager->getPeerId(m_session->getSessionId(), m_virtualSessionId, m_entityIdDest, "");
         }
         return m_peerId;
     }
@@ -585,6 +593,11 @@ public:
         return m_session->doesSupportFileTransfer();
     }
 
+    const std::string& getVirtualSessionId() const
+    {
+        return m_virtualSessionId;
+    }
+
 private:
     inline const IProtocolSessionPtr& session() const
     {
@@ -649,6 +662,7 @@ public:
     virtual bool isEntityRegistered() const override;
     virtual void registerReplyEvent(FuncReplyEvent funcReplyEvent) override;
     virtual IExecutorPtr getExecutor() const override;
+    virtual PeerId createPublishPeer(const IProtocolSessionPtr& session, const std::string& entityName) override;
 
 private:
     virtual void initEntity(EntityId entityId, const std::string& entityName, const std::shared_ptr<FileTransferReply>& fileTransferReply, const IExecutorPtr& executor) override;

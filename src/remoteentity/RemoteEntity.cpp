@@ -470,8 +470,8 @@ RemoteEntity::RemoteEntity()
     registerCommand<ConnectEntity>([this] (const RequestContextPtr& requestContext, const std::shared_ptr<ConnectEntity>& request) {
         assert(request);
         bool added{};
-        std::string* virtualSessionId = requestContext->getMetainfo(FMQ_VIRTUAL_SESSION_ID);
-        m_peerManager->addPeer(requestContext->session(), virtualSessionId ? *virtualSessionId : "", requestContext->entityId(), request->entityName, true, added, [this, &requestContext]() {
+        const std::string& virtualSessionId = requestContext->getVirtualSessionId();
+        m_peerManager->addPeer(requestContext->session(), virtualSessionId, requestContext->entityId(), request->entityName, true, added, [this, &requestContext]() {
             // send reply before the connect peer event is triggered. So that the peer gets first the connect reply and afterwards a possible greeting message maybe triggered by the connect peer event.
             requestContext->reply(ConnectEntityReply(m_entityId, m_entityName));
         });
@@ -611,6 +611,15 @@ IExecutorPtr RemoteEntity::getExecutor() const
 }
 
 
+PeerId RemoteEntity::createPublishPeer(const IProtocolSessionPtr& session, const std::string& entityName)
+{
+    bool added = false;
+    PeerId peerId = m_peerManager->addPeer(session, "", ENTITYID_INVALID, entityName, true, added, {});
+    return peerId;
+}
+
+
+
 
 void RemoteEntity::sendConnectEntity(PeerId peerId, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect)
 {
@@ -726,6 +735,7 @@ PeerId RemoteEntity::createPeer(FuncReplyConnect funcReplyConnect)
     sendConnectEntity(peerId, std::make_shared<FuncReplyConnect>(std::move(funcReplyConnect)));
     return peerId;
 }
+
 
 
 void RemoteEntity::connectIntern(PeerId peerId, const IProtocolSessionPtr& session, const std::string& entityName, EntityId entityId)

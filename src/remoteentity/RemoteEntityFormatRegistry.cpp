@@ -114,7 +114,10 @@ void RemoteEntityFormatRegistryImpl::serializeHeaderToMetainfo(IMessage& message
     }
     metainfo[FMQ_RE_SRCID] = std::to_string(header.srcid);
     metainfo[FMQ_RE_MODE] = header.mode.toString();
-    metainfo[FMQ_CORRID] = std::to_string(header.corrid);
+    if (header.corrid != 0)
+    {
+        metainfo[FMQ_CORRID] = std::to_string(header.corrid);
+    }
     metainfo[FMQ_RE_STATUS] = header.status.toString();
     metainfo[FMQ_TYPE] = header.type;
 }
