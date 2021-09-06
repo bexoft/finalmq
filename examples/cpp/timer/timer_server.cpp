@@ -187,7 +187,7 @@ int main()
     entityContainer.connect("tcp://localhost:1883:mqtt5client:json", { {},{},
         VariantStruct{  //{ProtocolMqtt5::KEY_USERNAME, std::string("")},
                         //{ProtocolMqtt5::KEY_PASSWORD, std::string("")},
-                        {ProtocolMqtt5::KEY_SESSIONEXPIRYINTERVAL, 300},
+                        {ProtocolMqtt5::KEY_SESSIONEXPIRYINTERVAL, 30},
                         {ProtocolMqtt5::KEY_KEEPALIVE, 20},
         } });
 

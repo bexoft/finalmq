@@ -34,6 +34,7 @@ class MockIProtocolCallback : public IProtocolCallback
 public:
     MOCK_METHOD(void, connected, (), (override));
     MOCK_METHOD(void, disconnected, (), (override));
+    MOCK_METHOD(void, disconnectedVirtualSession, (const std::string& virtualSessionId), (override));
     MOCK_METHOD(void, received, (const IMessagePtr& message, std::int64_t connectionId), (override));
     MOCK_METHOD(void, socketConnected, (), (override));
     MOCK_METHOD(void, socketDisconnected, (), (override));

@@ -405,6 +405,7 @@ private:
     // methods for RemoteEntityContainer
     virtual void initEntity(EntityId entityId, const std::string& entityName, const std::shared_ptr<FileTransferReply>& fileTransferReply, const IExecutorPtr& executorPollerThread) = 0;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) = 0;
+    virtual void virtualSessionDisconnected(const IProtocolSessionPtr& session, const std::string& virtualSessionId) = 0;
     virtual void receivedRequest(ReceiveData& receiveData) = 0;
     virtual void receivedReply(ReceiveData& receiveData) = 0;
     virtual void deinit() = 0;
@@ -434,6 +435,7 @@ public:
     PeerManager();
     std::vector<PeerId> getAllPeers() const;
     std::vector<PeerId> getAllPeersWithSession(IProtocolSessionPtr session) const;
+    std::vector<PeerId> getAllPeersWithVirtualSession(IProtocolSessionPtr session, const std::string& virtualSessionId) const;
     void updatePeer(PeerId peerId, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName);
     bool removePeer(PeerId peerId, bool& incoming);
     PeerId getPeerId(std::int64_t sessionId, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName) const;
@@ -651,6 +653,7 @@ public:
 private:
     virtual void initEntity(EntityId entityId, const std::string& entityName, const std::shared_ptr<FileTransferReply>& fileTransferReply, const IExecutorPtr& executor) override;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) override;
+    virtual void virtualSessionDisconnected(const IProtocolSessionPtr& session, const std::string& virtualSessionId) override;
     virtual void receivedRequest(ReceiveData& receiveData) override;
     virtual void receivedReply(ReceiveData& receiveData) override;
     virtual void deinit() override;

@@ -775,6 +775,8 @@ void StreamConnectionContainer::pollerLoop()
             for (size_t i = 0; i < connectionsDisconnect.size(); ++i)
             {
                 const IStreamConnectionPrivatePtr& connectionDisconnect = connectionsDisconnect[i];
+                // last chance to send pending messages
+                connectionDisconnect->sendPendingMessages();
                 SocketPtr socket = connectionDisconnect->getSocketPrivate();
                 if (socket)
                 {

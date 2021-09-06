@@ -406,6 +406,28 @@ void RemoteEntityContainer::disconnected(const IProtocolSessionPtr& session)
 }
 
 
+void RemoteEntityContainer::disconnectedVirtualSession(const IProtocolSessionPtr& session, const std::string& virtualSessionId)
+{
+    std::vector<hybrid_ptr<IRemoteEntity>> entities;
+    std::unique_lock<std::mutex> lock(m_mutex);
+    entities.reserve(m_entityId2entity.size());
+    for (auto it = m_entityId2entity.begin(); it != m_entityId2entity.end(); ++it)
+    {
+        entities.push_back(it->second);
+    }
+    lock.unlock();
+
+    for (size_t i = 0; i < entities.size(); ++i)
+    {
+        auto entity = entities[i].lock();
+        if (entity)
+        {
+            entity->virtualSessionDisconnected(session, virtualSessionId);
+        }
+    }
+}
+
+
 bool RemoteEntityContainer::isPureDataPath(const std::string& path)
 {
     for (auto it = m_pureDataPathPrefixes.begin(); it != m_pureDataPathPrefixes.end(); ++it)

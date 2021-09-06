@@ -107,15 +107,15 @@ int main()
     // A client can be started before the server is started. The connect is been retried in the background till the server
     // becomes available. Use the ConnectProperties to change the reconnect properties
     // (default is: try to connect every 5s forever till the server becomes available).
-    IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:7777:headersize:protobuf");
+    //IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:7777:headersize:protobuf");
 
     // use mqtt5 -> connect to broker
-    //IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:1883:mqtt5client:json", { {},{},
-    //    VariantStruct{  //{ProtocolMqtt5::KEY_USERNAME, std::string("")},
-    //                    //{ProtocolMqtt5::KEY_PASSWORD, std::string("")},
-    //                    {ProtocolMqtt5::KEY_SESSIONEXPIRYINTERVAL, 300},
-    //                    {ProtocolMqtt5::KEY_KEEPALIVE, 20},
-    //    } });
+    IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:1883:mqtt5client:json", { {},{},
+        VariantStruct{  //{ProtocolMqtt5::KEY_USERNAME, std::string("")},
+                        //{ProtocolMqtt5::KEY_PASSWORD, std::string("")},
+                        {ProtocolMqtt5::KEY_SESSIONEXPIRYINTERVAL, 30},
+                        {ProtocolMqtt5::KEY_KEEPALIVE, 20},
+        } });
 
     // connect entityClient to remote server entity "MyService" with the created TCP session.
     // The returned peerId identifies the peer entity.

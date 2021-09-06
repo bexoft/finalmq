@@ -110,6 +110,21 @@ std::vector<PeerId> PeerManager::getAllPeersWithSession(IProtocolSessionPtr sess
     return peers;
 }
 
+std::vector<PeerId> PeerManager::getAllPeersWithVirtualSession(IProtocolSessionPtr session, const std::string& virtualSessionId) const
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    std::vector<PeerId> peers;
+    peers.reserve(m_peers.size());
+    std::for_each(m_peers.begin(), m_peers.end(), [&peers, &session, &virtualSessionId](const auto& entry) {
+        if (entry.second->session == session && entry.second->virtualSessionId == virtualSessionId)
+        {
+            peers.push_back(entry.first);
+        }
+    });
+    return peers;
+}
+
+
 void PeerManager::updatePeer(PeerId peerId, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
@@ -815,6 +830,16 @@ void RemoteEntity::initEntity(EntityId entityId, const std::string& entityName, 
 void RemoteEntity::sessionDisconnected(const IProtocolSessionPtr& session)
 {
     std::vector<PeerId> peerIds = m_peerManager->getAllPeersWithSession(session);
+
+    for (size_t i = 0; i < peerIds.size(); ++i)
+    {
+        removePeer(peerIds[i], Status::STATUS_SESSION_DISCONNECTED);
+    }
+}
+
+void RemoteEntity::virtualSessionDisconnected(const IProtocolSessionPtr& session, const std::string& virtualSessionId)
+{
+    std::vector<PeerId> peerIds = m_peerManager->getAllPeersWithVirtualSession(session, virtualSessionId);
 
     for (size_t i = 0; i < peerIds.size(); ++i)
     {

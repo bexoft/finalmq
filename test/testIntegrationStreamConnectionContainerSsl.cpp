@@ -75,6 +75,9 @@ protected:
 
     virtual void TearDown()
     {
+        EXPECT_CALL(*m_mockClientCallback, disconnected(_)).WillRepeatedly(Return());
+        EXPECT_CALL(*m_mockServerCallback, disconnected(_)).WillRepeatedly(Return());
+
         m_connectionContainer->terminatePollerLoop();
         m_thread->join();
         m_connectionContainer = nullptr;

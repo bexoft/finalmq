@@ -53,6 +53,8 @@ static const std::string FMQ_TYPE = "fmq_type";
 static const std::string FMQ_VIRTUAL_SESSION_ID = "fmq_virtsessid";
 static const std::string FMQ_DESTNAME = "fmq_destname";
 
+static const std::string TOPIC_WILLMESSAGE = "/fmq_willmsg";
+
 static const std::uint8_t ReasonCodeDisconnectWithWillMessage = 0x04;
 
 
@@ -101,11 +103,16 @@ ProtocolMqtt5::ProtocolMqtt5(const Variant& data)
         m_keepAlive = *entry;
     }
     m_clientId = getUuid();
+    m_virtualSessionId = "/" + m_clientId;
 
     m_client->setCallback(this);
 }
 
 
+ProtocolMqtt5::~ProtocolMqtt5()
+{
+
+}
 
 
 // IProtocol
@@ -126,15 +133,15 @@ void ProtocolMqtt5::setConnection(const IStreamConnectionPtr& connection)
     data.keepAlive = m_keepAlive;
     data.sessionExpiryInterval = m_sessionExpiryInterval;
     data.willMessage = std::make_unique<IMqtt5Client::WillMessage>();
-    data.willMessage->payload.insert(data.willMessage->payload.end(), m_clientId.begin(), m_clientId.end());
+    data.willMessage->payload.insert(data.willMessage->payload.end(), m_virtualSessionId.begin(), m_virtualSessionId.end());
     data.willMessage->qos = 2;
-    data.willMessage->topic = "fmq_willmessages";
+    data.willMessage->topic = TOPIC_WILLMESSAGE;
     data.willMessage->retain = false;
     data.willMessage->delayInterval = m_sessionExpiryInterval + 1000;   // the sessionExpiryInterval has priority
 
     m_client->startConnection(connection, data);
-    m_client->subscribe(connection, { {{"/" + m_clientId + "/#", 2, false, true, 2}} });
-    m_client->subscribe(connection, { {{"/fmq_willmessages", 2, false, true, 2}} });
+    m_client->subscribe(connection, { {{m_virtualSessionId + "/#", 2, false, true, 2}} });
+    m_client->subscribe(connection, { {{TOPIC_WILLMESSAGE, 2, false, true, 2}} });
 
     std::unique_lock<std::mutex> lock(m_mutex);
     m_connection = connection;
@@ -152,6 +159,18 @@ void ProtocolMqtt5::disconnect()
     std::unique_lock<std::mutex> lock(m_mutex);
     IStreamConnectionPtr connection = m_connection;
     lock.unlock();
+
+    // send will message, manually, because ReasonCodeDisconnectWithWillMessage does not really work
+    IMqtt5Client::PublishData dataWill;
+    dataWill.qos = 0;
+    dataWill.topic = TOPIC_WILLMESSAGE;
+    IMessagePtr message = std::make_shared<ProtocolMessage>(0);
+    message->addSendPayload(m_virtualSessionId);
+    m_client->publish(connection, std::move(dataWill), message);
+
+    IMqtt5Client::DisconnectData data = { ReasonCodeDisconnectWithWillMessage, "", {} };
+    m_client->endConnection(connection, data);
+
     if (connection)
     {
         connection->disconnect();
@@ -217,7 +236,7 @@ bool ProtocolMqtt5::sendMessage(IMessagePtr message)
     {
         data.correlationData = Bytes(corrid->begin(), corrid->end());
     }
-    data.responseTopic = "/" + m_clientId;
+    data.responseTopic = m_virtualSessionId;
 
     std::string topic = message->getControlData().getDataValue<std::string>(FMQ_VIRTUAL_SESSION_ID);
 
@@ -357,7 +376,7 @@ void ProtocolMqtt5::receivedConnAck(const ConnAckData& data)
                 m_sessionExpiryInterval = data.sessionExpiryInterval;
             }
         }
-        IStreamConnectionPtr connection = m_connection;
+//        IStreamConnectionPtr connection = m_connection;
         auto callback = m_callback.lock();
         lock.unlock();
 
@@ -365,8 +384,6 @@ void ProtocolMqtt5::receivedConnAck(const ConnAckData& data)
         {
             if (sessionGone)
             {
-                IMqtt5Client::DisconnectData data = { ReasonCodeDisconnectWithWillMessage, "", {} };
-                m_client->endConnection(connection, data);
                 disconnect();
                 callback->disconnected();
             }
@@ -388,16 +405,24 @@ void ProtocolMqtt5::receivedConnAck(const ConnAckData& data)
 
 void ProtocolMqtt5::receivedPublish(const PublishData& data, const IMessagePtr& message)
 {
-    message->addMetainfo(FMQ_CORRID, std::string(data.correlationData.begin(), data.correlationData.end()));
-    message->addMetainfo(FMQ_VIRTUAL_SESSION_ID, data.responseTopic);
-
     std::unique_lock<std::mutex> lock(m_mutex);
     auto callback = m_callback.lock();
     lock.unlock();
 
     if (callback)
     {
-        callback->received(message);
+        if (data.topic == TOPIC_WILLMESSAGE)
+        {
+            BufferRef buffer = message->getReceivePayload();
+            std::string virtualSessionId(buffer.first, buffer.first + buffer.second);
+            callback->disconnectedVirtualSession(virtualSessionId);
+        }
+        else
+        {
+            message->addMetainfo(FMQ_CORRID, std::string(data.correlationData.begin(), data.correlationData.end()));
+            message->addMetainfo(FMQ_VIRTUAL_SESSION_ID, data.responseTopic);
+            callback->received(message);
+        }
     }
 }
 

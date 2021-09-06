@@ -100,6 +100,7 @@ private:
     // IProtocolCallback
     virtual void connected() override;
     virtual void disconnected() override;
+    virtual void disconnectedVirtualSession(const std::string& virtualSessionId) override;
     virtual void received(const IMessagePtr& message, std::int64_t connectionId) override;
     virtual void socketConnected() override;
     virtual void socketDisconnected() override;

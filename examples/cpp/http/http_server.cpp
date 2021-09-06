@@ -66,6 +66,11 @@ private:
 
     }
 
+    virtual void disconnectedVirtualSession(const IProtocolSessionPtr& session, const std::string& virtualSessionId)
+    {
+
+    }
+
     virtual void received(const IProtocolSessionPtr& session, const IMessagePtr& message)
     {
         IMessagePtr response = session->createMessage();

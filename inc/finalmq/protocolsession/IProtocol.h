@@ -42,6 +42,7 @@ struct IProtocolCallback
     virtual ~IProtocolCallback() {}
     virtual void connected() = 0;
     virtual void disconnected() = 0;
+    virtual void disconnectedVirtualSession(const std::string& virtualSessionId) = 0;
     virtual void received(const IMessagePtr& message, std::int64_t connectionId = 0) = 0;
     virtual void socketConnected() = 0;
     virtual void socketDisconnected() = 0;

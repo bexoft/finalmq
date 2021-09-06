@@ -224,6 +224,12 @@ void ProtocolSessionContainer::run()
 
 void ProtocolSessionContainer::terminatePollerLoop()
 {
+    std::vector< IProtocolSessionPtr > sessions = getAllSessions();
+    for (size_t i = 0; i < sessions.size(); ++i)
+    {
+        sessions[i]->disconnect();
+    }
+
     m_streamConnectionContainer->terminatePollerLoop();
     if (m_thread.joinable())
     {

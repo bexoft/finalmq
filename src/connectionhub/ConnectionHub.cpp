@@ -118,6 +118,11 @@ void ConnectionHub::disconnected(const IProtocolSessionPtr& /*session*/)
 
 }
 
+void ConnectionHub::disconnectedVirtualSession(const IProtocolSessionPtr& session, const std::string& virtualSessionId)
+{
+
+}
+
 
 static bool contains(const std::vector<std::int64_t>& array, std::int64_t sessionId)
 {

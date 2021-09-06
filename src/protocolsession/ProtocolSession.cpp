@@ -602,6 +602,32 @@ void ProtocolSession::disconnected()
     }
 }
 
+void ProtocolSession::disconnectedVirtualSession(const std::string& virtualSessionId)
+{
+    if (m_executor)
+    {
+        std::weak_ptr<ProtocolSession> pThisWeak = shared_from_this();
+        m_executor->addAction([pThisWeak, virtualSessionId]() {
+            std::shared_ptr<ProtocolSession> pThis = pThisWeak.lock();
+            if (pThis)
+            {
+                auto callback = pThis->m_callback.lock();
+                if (callback)
+                {
+                    callback->disconnectedVirtualSession(pThis, virtualSessionId);
+                }
+            }
+        });
+    }
+    else
+    {
+        auto callback = m_callback.lock();
+        if (callback)
+        {
+            callback->disconnectedVirtualSession(shared_from_this(), virtualSessionId);
+        }
+    }
+}
 
 
 
