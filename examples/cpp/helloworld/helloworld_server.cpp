@@ -165,6 +165,14 @@ int main()
     // content type in payload: JSON
     entityContainer.bind("tcp://*:8080:httpserver:json");
 
+    // use mqtt5 -> connect to broker
+    entityContainer.connect("tcp://localhost:1883:mqtt5client:json", { {},{},
+        VariantStruct{  //{ProtocolMqtt5::KEY_USERNAME, std::string("")},
+                        //{ProtocolMqtt5::KEY_PASSWORD, std::string("")},
+                        {ProtocolMqtt5::KEY_SESSIONEXPIRYINTERVAL, 300},
+                        {ProtocolMqtt5::KEY_KEEPALIVE, 20},
+        } });
+
     // note:
     // multiple access points (listening ports) can be activated by calling bind() several times.
     // For Unix Domain Sockets use: "ipc://socketname"
@@ -172,13 +180,6 @@ int main()
     // entityContainer->bind("tcp://*:7777:headersize", 
     //                       {{true, SSL_VERIFY_NONE, "myservercertificate.cert", "myservercertificate.key"}});
     // And by the way, also connect()s are possible for an EntityContainer. An EntityContainer can be client and server at the same time.
-
-    entityContainer.connect("tcp://localhost:1883:mqtt5client:json", { {},{},
-        VariantStruct{  /*{ProtocolMqtt5::KEY_USERNAME, std::string("")},
-                        {ProtocolMqtt5::KEY_PASSWORD, std::string("")},*/
-                        {ProtocolMqtt5::KEY_SESSIONEXPIRYINTERVAL, 300},
-                        {ProtocolMqtt5::KEY_KEEPALIVE, 20},
-        } });
 
 
     // run the entity container. this call blocks the execution. 

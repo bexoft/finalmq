@@ -30,10 +30,10 @@ namespace finalmq {
 static const ssize_t HEADERSIZE = 1;
 
 
-#define HEADER_Low4bits(header)     (((header) >> 4) >> 0x0f)
-#define HEADER_Dup(header)          (((header) >> 3) >> 0x01)
-#define HEADER_QoS(header)          (((header) >> 1) >> 0x03)
-#define HEADER_Retain(header)       (((header) >> 0) >> 0x01)
+#define HEADER_Low4bits(header)     (((header) >> 0) & 0x0f)
+#define HEADER_Dup(header)          (((header) >> 3) & 0x01)
+#define HEADER_QoS(header)          (((header) >> 1) & 0x03)
+#define HEADER_Retain(header)       (((header) >> 0) & 0x01)
 
 #define HEADER_SetCommand(value)    ((static_cast<unsigned int>(value) & 0x0f) << 4)
 #define HEADER_SetLow4bits(value)   (((value) & 0x0f) << 0)
@@ -1091,8 +1091,12 @@ void Mqtt5Serialization::writeVarByteNumber(unsigned int number)
     {
         assert(m_indexBuffer + 1 <= m_sizeBuffer);
         m_buffer[m_indexBuffer] = number & 0x7f;
-        ++m_indexBuffer;
         number >>= 7;
+        if (number > 0)
+        {
+            m_buffer[m_indexBuffer] |= 0x80;
+        }
+        ++m_indexBuffer;
     } while (number > 0);
 }
 
@@ -1186,6 +1190,11 @@ void Mqtt5Serialization::writeBinary(const Bytes& value)
 
 bool Mqtt5Serialization::readProperties(std::unordered_map<unsigned int, Variant>& properties, std::unordered_map<std::string, std::string>& metainfo)
 {
+    if (!doesFit(1))
+    {
+        return true;
+    }
+
     unsigned int size = 0;
     bool ok = readVarByteNumber(size);
     if (!ok || !doesFit(size))

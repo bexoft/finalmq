@@ -219,22 +219,31 @@ bool ProtocolMqtt5::sendMessage(IMessagePtr message)
     }
     data.responseTopic = "/" + m_clientId;
 
-    data.topic = '/';
-    data.topic += message->getEchoData().getDataValue<std::string>(FMQ_VIRTUAL_SESSION_ID);
+    std::string topic = message->getControlData().getDataValue<std::string>(FMQ_VIRTUAL_SESSION_ID);
 
-    if (data.topic.empty())
+    if (topic.empty())
     {
         std::string* destname = message->getControlData().getData<std::string>(FMQ_DESTNAME);
         if (destname)
         {
-            data.topic += *destname;
+            topic = *destname;
         }
     }
 
-    if (data.topic.empty())
+    if (topic.empty())
     {
-        data.topic += "fmqevents/";
-        data.topic += m_clientId;
+        topic = "fmqevents/";
+        topic += m_clientId;
+    }
+
+    if (!topic.empty() && topic[0] != '/')
+    {
+        data.topic = '/';
+        data.topic += topic;
+    }
+    else
+    {
+        data.topic = std::move(topic);
     }
 
     std::string* type = message->getMetainfo(FMQ_TYPE);
@@ -299,8 +308,9 @@ void ProtocolMqtt5::subscribe(const std::vector<std::string>& subscribtions)
     data.subscriptions.reserve(subscribtions.size());
     for (size_t i = 0; i < subscribtions.size(); ++i)
     {
-        std::string topic = "/" + subscribtions[i];
-        data.subscriptions.push_back({ topic, 2, false, false, 2});
+        const std::string& subscription = subscribtions[i];
+        std::string topic = "/" + subscription;
+        data.subscriptions.push_back({ topic, 2, false, false, 2 });
     }
 
     std::unique_lock<std::mutex> lock(m_mutex);

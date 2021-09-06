@@ -220,8 +220,13 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, co
         }
         if (!header.destname.empty())
         {
-            Variant& controlData = message->getControlData();
-            controlData.add(FMQ_DESTNAME, header.destname);
+            Variant& controlDataTmp = message->getControlData();
+            controlDataTmp.add(FMQ_DESTNAME, header.destname);
+        }
+        if (!virtualSessionId.empty())
+        {
+            Variant& controlDataTmp = message->getControlData();
+            controlDataTmp.add(FMQ_VIRTUAL_SESSION_ID, virtualSessionId);
         }
         bool writeMetainfoToHeader = metainfo;
         if (session->doesSupportMetainfo())
@@ -324,6 +329,7 @@ void RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, remoteenti
     auto itCorrId = metainfo.find(FMQ_CORRID);
     auto itStatus = metainfo.find(FMQ_RE_STATUS);
     auto itDestName = metainfo.find(FMQ_DESTNAME);
+    auto itDestId = metainfo.find(FMQ_RE_DESTID);
     auto itType = metainfo.find(FMQ_TYPE);
     if (itPath != metainfo.end())
     {
@@ -362,7 +368,7 @@ void RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, remoteenti
 
     if (itMode != metainfo.end())
     {
-        const std::string& mode = itSrcId->second;
+        const std::string& mode = itMode->second;
         if (mode == MSG_REPLY)
         {
             header.mode = MsgMode::MSG_REPLY;
@@ -392,6 +398,12 @@ void RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, remoteenti
         {
             header.destname = destname;
         }
+    }
+
+    if (itDestId != metainfo.end())
+    {
+        const std::string& destid = itDestId->second;
+        header.destid = std::atoll(destid.c_str());
     }
 
     if (itType != metainfo.end())

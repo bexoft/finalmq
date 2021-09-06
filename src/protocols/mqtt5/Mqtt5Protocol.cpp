@@ -98,7 +98,7 @@ bool Mqtt5Protocol::receiveRemainingSize(const IStreamConnectionPtr& connection,
     assert(m_state == State::WAITFORLENGTH);
     bool ok = true;
     bool done = false;
-    while ((bytesToRead > 1) && !done && ok)
+    while ((bytesToRead > 0) && !done && ok)
     {
         ok = false;
         if (m_remainingSizeShift <= 21)
@@ -214,16 +214,15 @@ bool Mqtt5Protocol::handleAck(const IStreamConnectionPtr& connection, unsigned i
             if ((cmd != Mqtt5Command::COMMAND_PUBREC) || (reasoncode >= 128))
             {
                 status.status = MessageStatus::SENDSTAT_NONE;
-                m_messageIdsFree.push_back(packetId);
                 // if last entry is freed ...
                 if (packetId == m_messageIdsAllocated.size() - 1)
                 {
-                    // ... remove all unused entries from the end of the allocation list
-                    while ((m_messageIdsAllocated.size() >= 2) && // keep last dummy one at index = 0 
-                           (m_messageIdsAllocated.back().status == MessageStatus::SENDSTAT_NONE))
-                    {
-                        m_messageIdsAllocated.pop_back();
-                    }
+                    // ... remove last unused entry from the end of the allocation list
+                    m_messageIdsAllocated.pop_back();
+                }
+                else
+                {
+                    m_messageIdsFree.push_back(packetId);
                 }
                 sendPendingMessages(connection);
             }
@@ -375,10 +374,6 @@ bool Mqtt5Protocol::processPayload(const IStreamConnectionPtr& connection)
                 dataAck.reasoncode = 0;
                 sendPubComp(connection, dataAck);
             }
-            if (ok)
-            {
-                ok = handleAck(connection, command, data.packetId, data.reasoncode);
-            }
         }
         break;
     case Mqtt5Command::COMMAND_PUBCOMP:
@@ -464,12 +459,14 @@ bool Mqtt5Protocol::processPayload(const IStreamConnectionPtr& connection)
         }
         break;
     case Mqtt5Command::COMMAND_PINGREQ:
+        ok = true;
         if (callback)
         {
             callback->receivedPingReq();
         }
         break;
     case Mqtt5Command::COMMAND_PINGRESP:
+        ok = true;
         if (callback)
         {
             callback->receivedPingResp();
@@ -696,7 +693,7 @@ bool Mqtt5Protocol::prepareForSend(const IMessagePtr& message, std::uint8_t* buf
     }
 
     // when pending messages are available -> put the message to the back to keep ordering
-    if (!m_messagesPending.empty())
+    if (!m_messagesPending.empty() || m_connecting)
     {
         m_messagesPending.emplace_back(PendingMessage{ message, bufferPacketId, qos, command });
         return false;
@@ -706,7 +703,7 @@ bool Mqtt5Protocol::prepareForSend(const IMessagePtr& message, std::uint8_t* buf
     if (packetId != 0)
     {
         prepareForSendWithPacketId(message, bufferPacketId, qos, command, packetId);
-        return !m_connecting;
+        return true;
     }
     else
     {
@@ -719,12 +716,11 @@ bool Mqtt5Protocol::prepareForSend(const IMessagePtr& message, std::uint8_t* buf
 
 void Mqtt5Protocol::sendPublish(const IStreamConnectionPtr& connection, Mqtt5PublishData& data, const IMessagePtr& message)
 {
-    data.metainfo = std::move(message->getAllMetainfo());
     unsigned int sizeAppPayload = static_cast<unsigned int>(message->getTotalSendPayloadSize());
     unsigned int sizePropPayload = 0;
     unsigned int sizePayload = Mqtt5Serialization::sizePublish(data, sizePropPayload) + sizeAppPayload;
     int sizeMessage = 1 + Mqtt5Serialization::sizeVarByteNumber(sizePayload) + sizePayload;
-    char* buffer = message->addSendHeader(sizeMessage);
+    char* buffer = message->addSendHeader(sizeMessage - sizeAppPayload);
     Mqtt5Serialization serialization(buffer, sizeMessage - sizeAppPayload, 0);
     std::uint8_t* bufferPacketId = nullptr;
     serialization.serializePublish(data, sizePayload, sizePropPayload, bufferPacketId);

@@ -65,7 +65,7 @@ using helloworld::Address;
 
 
 
-#define LOOP 100000
+#define LOOP 1000
 
 void triggerRequest(RemoteEntity& entityClient, PeerId peerId, const std::chrono::time_point<std::chrono::system_clock>& starttime, int index)
 {
@@ -138,15 +138,16 @@ int main()
     // A client can be started before the server is started. The connect is been retried in the background till the server
     // becomes available. Use the ConnectProperties to change the reconnect properties
     // (default is: try to connect every 5s forever till the server becomes available).
-//    IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:7777:headersize:protobuf");
+    IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:7777:headersize:protobuf");
 //    IProtocolSessionPtr sessionClient = entityContainer.connect("ipc://my_uds:headersize:protobuf");
 
-    IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:1883:mqtt5client:json", { {},{},
-        VariantStruct{  /*{ProtocolMqtt5::KEY_USERNAME, std::string("")},
-                        {ProtocolMqtt5::KEY_PASSWORD, std::string("")},*/
-                        {ProtocolMqtt5::KEY_SESSIONEXPIRYINTERVAL, 300},
-                        {ProtocolMqtt5::KEY_KEEPALIVE, 20},
-        } });
+    // use mqtt5 -> connect to broker
+    //IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:1883:mqtt5client:json", { {},{},
+    //    VariantStruct{  //{ProtocolMqtt5::KEY_USERNAME, std::string("")},
+    //                    //{ProtocolMqtt5::KEY_PASSWORD, std::string("")},
+    //                    {ProtocolMqtt5::KEY_SESSIONEXPIRYINTERVAL, 300},
+    //                    {ProtocolMqtt5::KEY_KEEPALIVE, 20},
+    //    } });
 
     // connect entityClient to remote server entity "MyService" with the created TCP session.
     // The returned peerId identifies the peer entity.
@@ -175,6 +176,7 @@ int main()
             std::cout << "REPLY error: " << status.toString() << std::endl;
         }
     });
+    
 
     // another request/reply
     entityClient.requestReply<HelloReply>(peerId,

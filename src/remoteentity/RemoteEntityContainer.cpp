@@ -206,7 +206,11 @@ void RemoteEntityContainer::subscribeEntityNames(const IProtocolSessionPtr& sess
     subscribtions.reserve(m_name2entityId.size());
     for (auto it = m_name2entityId.begin(); it != m_name2entityId.end(); ++it)
     {
-        subscribtions.push_back(it->first);
+        const std::string& subscribtion = it->first;
+        if (subscribtion[subscribtion.size() - 1] != '*')
+        {
+            subscribtions.push_back(it->first + "/#");
+        }
     }
     lock.unlock();
 
@@ -225,9 +229,9 @@ void RemoteEntityContainer::subscribeSessions(const std::string& name)
     std::vector< IProtocolSessionPtr > sessions = m_protocolSessionContainer->getAllSessions();
     for (auto it = sessions.begin(); it != sessions.end(); ++it)
     {
-        if (*it)
+        if (*it && (name[name.size() - 1] != '*'))
         {
-            (*it)->subscribe({ name });
+            (*it)->subscribe({ name + "/#" });
         }
     }
 }
