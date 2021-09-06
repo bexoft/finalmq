@@ -25,7 +25,7 @@
 
 #include "finalmq/protocolsession/ProtocolSessionContainer.h"
 #include "MockIProtocolSessionCallback.h"
-#include "finalmq/protocolsession/ProtocolDelimiter.h"
+#include "finalmq/protocols/protocolhelpers/ProtocolDelimiter.h"
 #include "finalmq/protocolsession/ProtocolRegistry.h"
 #include "testHelper.h"
 

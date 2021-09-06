@@ -21,7 +21,7 @@
 //SOFTWARE.
 
 
-#include "finalmq/protocols/ProtocolMqtt5.h"
+#include "finalmq/protocols/ProtocolMqtt5Client.h"
 #include "finalmq/streamconnection/Socket.h"
 #include "finalmq/protocolsession/ProtocolMessage.h"
 #include "finalmq/protocolsession/ProtocolRegistry.h"
@@ -40,13 +40,13 @@
 
 namespace finalmq {
 
-const int ProtocolMqtt5::PROTOCOL_ID = 5;
-const std::string ProtocolMqtt5::PROTOCOL_NAME = "mqtt5client";
+const int ProtocolMqtt5Client::PROTOCOL_ID = 5;
+const std::string ProtocolMqtt5Client::PROTOCOL_NAME = "mqtt5client";
 
-const std::string ProtocolMqtt5::KEY_USERNAME = "username";
-const std::string ProtocolMqtt5::KEY_PASSWORD = "password";
-const std::string ProtocolMqtt5::KEY_SESSIONEXPIRYINTERVAL = "sessionexpiryinterval";
-const std::string ProtocolMqtt5::KEY_KEEPALIVE = "keepalive";
+const std::string ProtocolMqtt5Client::KEY_USERNAME = "username";
+const std::string ProtocolMqtt5Client::KEY_PASSWORD = "password";
+const std::string ProtocolMqtt5Client::KEY_SESSIONEXPIRYINTERVAL = "sessionexpiryinterval";
+const std::string ProtocolMqtt5Client::KEY_KEEPALIVE = "keepalive";
 
 static const std::string FMQ_CORRID = "fmq_corrid";
 static const std::string FMQ_TYPE = "fmq_type";
@@ -87,7 +87,7 @@ static std::string getUuid()
 
 
 
-ProtocolMqtt5::ProtocolMqtt5(const Variant& data)
+ProtocolMqtt5Client::ProtocolMqtt5Client(const Variant& data)
     : m_client(std::make_unique<Mqtt5Client>())
 {
     m_username = data.getDataValue<std::string>(KEY_USERNAME);
@@ -109,20 +109,15 @@ ProtocolMqtt5::ProtocolMqtt5(const Variant& data)
 }
 
 
-ProtocolMqtt5::~ProtocolMqtt5()
-{
-
-}
-
 
 // IProtocol
-void ProtocolMqtt5::setCallback(const std::weak_ptr<IProtocolCallback>& callback)
+void ProtocolMqtt5Client::setCallback(const std::weak_ptr<IProtocolCallback>& callback)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     m_callback = callback;
 }
 
-void ProtocolMqtt5::setConnection(const IStreamConnectionPtr& connection)
+void ProtocolMqtt5Client::setConnection(const IStreamConnectionPtr& connection)
 {
     IMqtt5Client::ConnectData data;
     data.cleanStart = m_firstConnection;
@@ -148,13 +143,13 @@ void ProtocolMqtt5::setConnection(const IStreamConnectionPtr& connection)
 
 }
 
-IStreamConnectionPtr ProtocolMqtt5::getConnection() const
+IStreamConnectionPtr ProtocolMqtt5Client::getConnection() const
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     return m_connection;
 }
 
-void ProtocolMqtt5::disconnect()
+void ProtocolMqtt5Client::disconnect()
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     IStreamConnectionPtr connection = m_connection;
@@ -177,54 +172,54 @@ void ProtocolMqtt5::disconnect()
     }
 }
 
-std::uint32_t ProtocolMqtt5::getProtocolId() const
+std::uint32_t ProtocolMqtt5Client::getProtocolId() const
 {
     return PROTOCOL_ID;
 }
 
-bool ProtocolMqtt5::areMessagesResendable() const 
+bool ProtocolMqtt5Client::areMessagesResendable() const 
 {
     return false;
 }
 
-bool ProtocolMqtt5::doesSupportMetainfo() const 
+bool ProtocolMqtt5Client::doesSupportMetainfo() const 
 {
     return true;
 }
 
-bool ProtocolMqtt5::doesSupportSession() const 
+bool ProtocolMqtt5Client::doesSupportSession() const 
 {
     return true;
 }
 
-bool ProtocolMqtt5::needsReply() const 
+bool ProtocolMqtt5Client::needsReply() const 
 {
     return false;
 }
 
-bool ProtocolMqtt5::isMultiConnectionSession() const 
+bool ProtocolMqtt5Client::isMultiConnectionSession() const 
 {
     return false;
 }
 
-bool ProtocolMqtt5::isSendRequestByPoll() const 
+bool ProtocolMqtt5Client::isSendRequestByPoll() const 
 {
     return false;
 }
 
-bool ProtocolMqtt5::doesSupportFileTransfer() const 
+bool ProtocolMqtt5Client::doesSupportFileTransfer() const 
 {
     return false;
 }
 
-IProtocol::FuncCreateMessage ProtocolMqtt5::getMessageFactory() const
+IProtocol::FuncCreateMessage ProtocolMqtt5Client::getMessageFactory() const
 {
     return []() {
         return std::make_shared<ProtocolMessage>(PROTOCOL_ID);
     };
 }
 
-bool ProtocolMqtt5::sendMessage(IMessagePtr message)
+bool ProtocolMqtt5Client::sendMessage(IMessagePtr message)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     IStreamConnectionPtr connection = m_connection;
@@ -273,17 +268,17 @@ bool ProtocolMqtt5::sendMessage(IMessagePtr message)
     return true;
 }
 
-void ProtocolMqtt5::moveOldProtocolState(IProtocol& /*protocolOld*/) 
+void ProtocolMqtt5Client::moveOldProtocolState(IProtocol& /*protocolOld*/) 
 {
 }
 
-bool ProtocolMqtt5::received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) 
+bool ProtocolMqtt5Client::received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) 
 {
     bool ok = m_client->receive(connection, socket, bytesToRead);
     return ok;
 }
 
-hybrid_ptr<IStreamConnectionCallback> ProtocolMqtt5::connected(const IStreamConnectionPtr& /*connection*/) 
+hybrid_ptr<IStreamConnectionCallback> ProtocolMqtt5Client::connected(const IStreamConnectionPtr& /*connection*/) 
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     auto callback = m_callback.lock();
@@ -295,7 +290,7 @@ hybrid_ptr<IStreamConnectionCallback> ProtocolMqtt5::connected(const IStreamConn
     return nullptr;
 }
 
-void ProtocolMqtt5::disconnected(const IStreamConnectionPtr& /*connection*/)
+void ProtocolMqtt5Client::disconnected(const IStreamConnectionPtr& /*connection*/)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     auto callback = m_callback.lock();
@@ -309,12 +304,12 @@ void ProtocolMqtt5::disconnected(const IStreamConnectionPtr& /*connection*/)
     }
 }
 
-IMessagePtr ProtocolMqtt5::pollReply(std::deque<IMessagePtr>&& /*messages*/) 
+IMessagePtr ProtocolMqtt5Client::pollReply(std::deque<IMessagePtr>&& /*messages*/) 
 {
     return {};
 }
 
-void ProtocolMqtt5::subscribe(const std::vector<std::string>& subscribtions)
+void ProtocolMqtt5Client::subscribe(const std::vector<std::string>& subscribtions)
 {
     if (subscribtions.empty())
     {
@@ -335,7 +330,7 @@ void ProtocolMqtt5::subscribe(const std::vector<std::string>& subscribtions)
     m_client->subscribe(connection, data);
 }
 
-void ProtocolMqtt5::cycleTime()
+void ProtocolMqtt5Client::cycleTime()
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     IStreamConnectionPtr connection = m_connection;
@@ -353,7 +348,7 @@ void ProtocolMqtt5::cycleTime()
 
 
 // IMqtt5ClientCallback
-void ProtocolMqtt5::receivedConnAck(const ConnAckData& data)
+void ProtocolMqtt5Client::receivedConnAck(const ConnAckData& data)
 {
     if (data.reasoncode < 0x80)
     {
@@ -400,7 +395,7 @@ void ProtocolMqtt5::receivedConnAck(const ConnAckData& data)
     }
 }
 
-void ProtocolMqtt5::receivedPublish(const PublishData& data, const IMessagePtr& message)
+void ProtocolMqtt5Client::receivedPublish(const PublishData& data, const IMessagePtr& message)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     auto callback = m_callback.lock();
@@ -423,17 +418,17 @@ void ProtocolMqtt5::receivedPublish(const PublishData& data, const IMessagePtr& 
     }
 }
 
-void ProtocolMqtt5::receivedSubAck(const std::vector<std::uint8_t>& /*reasoncodes*/)
+void ProtocolMqtt5Client::receivedSubAck(const std::vector<std::uint8_t>& /*reasoncodes*/)
 {
 
 }
 
-void ProtocolMqtt5::receivedUnsubAck(const std::vector<std::uint8_t>& /*reasoncodes*/)
+void ProtocolMqtt5Client::receivedUnsubAck(const std::vector<std::uint8_t>& /*reasoncodes*/)
 {
 
 }
 
-void ProtocolMqtt5::receivedPingResp()
+void ProtocolMqtt5Client::receivedPingResp()
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     auto callback = m_callback.lock();
@@ -444,17 +439,17 @@ void ProtocolMqtt5::receivedPingResp()
     }
 }
 
-void ProtocolMqtt5::receivedDisconnect(const DisconnectData& data)
+void ProtocolMqtt5Client::receivedDisconnect(const DisconnectData& data)
 {
     streamInfo << "Disconnect from mqtt5 broker. Reason Code: " << (unsigned int)data.reasoncode << " (" << data.reasonString << ")";
 }
 
-void ProtocolMqtt5::receivedAuth(const AuthData& /*data*/)
+void ProtocolMqtt5Client::receivedAuth(const AuthData& /*data*/)
 {
 
 }
 
-void ProtocolMqtt5::closeConnection()
+void ProtocolMqtt5Client::closeConnection()
 {
     disconnect();
 }
@@ -466,21 +461,21 @@ void ProtocolMqtt5::closeConnection()
 // ProtocolMqtt5Factory
 //---------------------------------------
 
-struct RegisterProtocolMqtt5Factory
+struct RegisterProtocolMqtt5ClientFactory
 {
-    RegisterProtocolMqtt5Factory()
+    RegisterProtocolMqtt5ClientFactory()
     {
-        ProtocolRegistry::instance().registerProtocolFactory(ProtocolMqtt5::PROTOCOL_NAME, ProtocolMqtt5::PROTOCOL_ID, std::make_shared<ProtocolMqtt5Factory>());
+        ProtocolRegistry::instance().registerProtocolFactory(ProtocolMqtt5Client::PROTOCOL_NAME, ProtocolMqtt5Client::PROTOCOL_ID, std::make_shared<ProtocolMqtt5ClientFactory>());
     }
-} g_registerProtocolMqtt5Factory;
+} g_registerProtocolMqtt5ClientFactory;
 
 
 
 
 // IProtocolFactory
-IProtocolPtr ProtocolMqtt5Factory::createProtocol(const Variant& data)
+IProtocolPtr ProtocolMqtt5ClientFactory::createProtocol(const Variant& data)
 {
-    return std::make_shared<ProtocolMqtt5>(data);
+    return std::make_shared<ProtocolMqtt5Client>(data);
 }
 
 }   // namespace finalmq

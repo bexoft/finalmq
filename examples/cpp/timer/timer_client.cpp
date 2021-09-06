@@ -26,7 +26,7 @@
 #include "finalmq/logger/Logger.h"
 #include "finalmq/variant/VariantValueStruct.h"
 #include "finalmq/variant/VariantValues.h"
-#include "finalmq/protocols/ProtocolMqtt5.h"
+#include "finalmq/protocols/ProtocolMqtt5Client.h"
 
 #include "finalmq/helpers/ModulenameFinalmq.h"
 
@@ -53,7 +53,7 @@ using finalmq::FmqRegistryClient;
 using finalmq::Logger;
 using finalmq::LogContext;
 using finalmq::VariantStruct;
-using finalmq::ProtocolMqtt5;
+using finalmq::ProtocolMqtt5Client;
 using timer::TimerEvent;
 
 
@@ -111,10 +111,10 @@ int main()
 
     //// if you want to use mqtt5 -> connect to broker
     //IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://broker.emqx.io:1883:mqtt5client:json", { {},{},
-    //    VariantStruct{  //{ProtocolMqtt5::KEY_USERNAME, std::string("")},
-    //                    //{ProtocolMqtt5::KEY_PASSWORD, std::string("")},
-    //                    {ProtocolMqtt5::KEY_SESSIONEXPIRYINTERVAL, 30},
-    //                    {ProtocolMqtt5::KEY_KEEPALIVE, 20},
+    //    VariantStruct{  //{ProtocolMqtt5Client::KEY_USERNAME, std::string("")},
+    //                    //{ProtocolMqtt5Client::KEY_PASSWORD, std::string("")},
+    //                    {ProtocolMqtt5Client::KEY_SESSIONEXPIRYINTERVAL, 30},
+    //                    {ProtocolMqtt5Client::KEY_KEEPALIVE, 20},
     //    } });
 
     // connect entityClient to remote server entity "MyService" with the created TCP session.

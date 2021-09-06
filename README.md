@@ -151,7 +151,7 @@ This layer implements SSL/TLS functionalities, in case the compiler-flag FINALMQ
 
 The second layer is called **Protocol Session**. For this layer, an application can implement custom framing protocols as "plugins". When an application receives a message with the received() event, it will deliver always a complete message to the application.  
 
-The main class of this layer is called **ProtocolSessionContainer**. This container manages multi connections. The connection can be incoming connections (bind) and outgoing connections (connect). For one ProtocolSessionContainer, it is possible to call multiple times bind() for multiple listening ports (incoming connections) and it is also possible to call multiple times connect() for multiple outgoing connections. The class that represents a connection is called **ProtocolSession**, but the application will only get the interface **IProtocolSession** as a shared_ptr. In this layer, a connection is called session, because there can be protocols implemented which maintain sessions which could live longer than a socket connection. For simple protocols the session will be disconnected as soon the socket is disconnected, but for advanced protocols a session could recognize a socket disconnection, but the session is not disconnected and after a reconnection the session can continue its work. It depends on the protocol, when to disconnect a session. There could be protocols implemented that guarantee no message lost after reconnection.
+The main class of this layer is called **ProtocolSessionContainer**. This container manages multi connections. The connection can be incoming connections (bind) and outgoing connections (connect). For one ProtocolSessionContainer, it is possible to call multiple times bind() for multiple listening ports (incoming connections) and it is also possible to call multiple times connect() for multiple outgoing connections. The class that represents a connection is called **ProtocolSession**, but the application will only get the C++ interface **IProtocolSession** as a shared_ptr. In this layer, a connection is called session, because there can be protocols implemented which maintain sessions which could live longer than a socket connection. For simple protocols the session will be disconnected as soon the socket is disconnected, but for advanced protocols a session could recognize a socket disconnection, but the session is not disconnected and after a reconnection the session can continue its work. It depends on the protocol, when a session will be disconnected. There could be protocols implemented that guarantee no message lost after reconnection.
 
 Each protocol plugin will have a name that can be used inside the endpoint.
 
@@ -165,7 +165,15 @@ Example:
 
 
 
-At this time, the framework implements 4 protocols:
+At this time, the framework implements 5 protocols:
+
+- stream
+- delimiter_lf
+- headersize
+- httpserver
+- mqtt5client
+
+
 
 **"stream"		class ProtocolStream**		
 
@@ -199,13 +207,20 @@ This protocol implements an HTTP server. The HTTP protocol is not symmetric for 
 
 
 
-A ProtocolSessionContainer can offer multiple protocols for different clients to connect.
+**"mqtt5client"		class ProtocolMqtt5Client**		
 
-| Example: multiple endpoints to bind for one ProtocolSessionContainer |
+This protocol implements a MQTT 5 client. A client application and also a server application has to connect as a network client to a MQTT broker with the "mqtt5client" protocol. Afterwards, a client application and server application will communicate with each other via the broker.
+
+
+
+A ProtocolSessionContainer can offer multiple interfaces with different protocols. So, the clients can decide, which interface they want to use.
+
+| Example: multiple endpoints to bind/connect for one ProtocolSessionContainer |
 | ------------------------------------------------------------ |
 | "tcp://\*2000:delimiter_lf"                                  |
 | "tcp://\*:2001:headersize"                                   |
 | "tcp://\*:80:httpserver"                                     |
+| "tcp://localhost:1883:mqtt5client" - with mqtt5client, only connect to a MQTT broker is possible |
 | "ipc://myunixdomain:delimiter_lf"                            |
 
 A client can decide for which protocol it wants to connect
@@ -238,7 +253,8 @@ Examples for Remote Entity endpoints:
 | "tcp://\*2000:delimiter_lf:json"         | bind TCP port 2000, Framing: delimiter LF, Format: json      |
 | "tcp://localhost:2000:delimiter_lf:json" | connect TCP port 2000 of localhost, Framing: delimiter LF, Format: json |
 | "tcp://\*:2001:headersize:protobuf"      | bind TCP port 2001, Framing: header with size, Format: protobuf |
-| "tcp://\*80:httpserver:json"             | bind TCP port 80, Framing: HTTP (server), Format: json       |
+| "tcp://\*:80:httpserver:json"            | bind TCP port 80, Framing: HTTP (server), Format: json       |
+| "tcp://localhost:1883:mqtt5client:json"  | connects to a MQTT broker, Format: json                      |
 | "ipc://myunixdomain:delimiter_lf:json"   | bind UDS "myunixdomain", Framing: delimiter LF, Format: json |
 
 

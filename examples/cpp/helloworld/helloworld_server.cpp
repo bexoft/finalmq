@@ -27,7 +27,7 @@
 #include "finalmq/helpers/Executor.h"
 #include "finalmq/variant/VariantValueStruct.h"
 #include "finalmq/variant/VariantValues.h"
-#include "finalmq/protocols/ProtocolMqtt5.h"
+#include "finalmq/protocols/ProtocolMqtt5Client.h"
 
 // the definition of the messages are in the file helloworld.fmq
 #include "helloworld.fmq.h"
@@ -54,7 +54,7 @@ using finalmq::LogContext;
 using finalmq::IExecutorPtr;
 using finalmq::Executor;
 using finalmq::VariantStruct;
-using finalmq::ProtocolMqtt5;
+using finalmq::ProtocolMqtt5Client;
 using helloworld::HelloRequest;
 using helloworld::HelloReply;
 
@@ -167,10 +167,10 @@ int main()
 
     //// if you want to use mqtt5 -> connect to broker
     //entityContainer.connect("tcp://broker.emqx.io:1883:mqtt5client:json", { {},{},
-    //    VariantStruct{  //{ProtocolMqtt5::KEY_USERNAME, std::string("")},
-    //                    //{ProtocolMqtt5::KEY_PASSWORD, std::string("")},
-    //                    {ProtocolMqtt5::KEY_SESSIONEXPIRYINTERVAL, 300},
-    //                    {ProtocolMqtt5::KEY_KEEPALIVE, 20},
+    //    VariantStruct{  //{ProtocolMqtt5Client::KEY_USERNAME, std::string("")},
+    //                    //{ProtocolMqtt5Client::KEY_PASSWORD, std::string("")},
+    //                    {ProtocolMqtt5Client::KEY_SESSIONEXPIRYINTERVAL, 300},
+    //                    {ProtocolMqtt5Client::KEY_KEEPALIVE, 20},
     //    } });
 
     // note:

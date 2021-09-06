@@ -21,7 +21,7 @@
 //SOFTWARE.
 
 
-#include "finalmq/protocolsession/ProtocolFixHeaderHelper.h"
+#include "finalmq/protocols/protocolhelpers/ProtocolFixHeaderHelper.h"
 #include "finalmq/streamconnection/Socket.h"
 #include "finalmq/protocolsession/ProtocolMessage.h"
 

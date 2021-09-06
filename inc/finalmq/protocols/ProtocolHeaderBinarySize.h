@@ -24,7 +24,7 @@
 
 #include "finalmq/streamconnection/IMessage.h"
 #include "finalmq/protocolsession/IProtocol.h"
-#include "finalmq/protocolsession/ProtocolFixHeaderHelper.h"
+#include "finalmq/protocols/protocolhelpers/ProtocolFixHeaderHelper.h"
 
 
 

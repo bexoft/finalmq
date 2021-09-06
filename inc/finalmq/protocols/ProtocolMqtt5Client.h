@@ -32,8 +32,8 @@
 namespace finalmq {
 
 
-class SYMBOLEXP ProtocolMqtt5 : public IProtocol
-                              , public IMqtt5ClientCallback
+class SYMBOLEXP ProtocolMqtt5Client : public IProtocol
+                                    , public IMqtt5ClientCallback
 {
 public:
     static const std::string KEY_USERNAME;                  ///< the username for the broker
@@ -45,8 +45,7 @@ public:
     static const std::string PROTOCOL_NAME; // mqtt5client
 
 
-    ProtocolMqtt5(const Variant& data);
-    ~ProtocolMqtt5();
+    ProtocolMqtt5Client(const Variant& data);
 
 private:
     // IProtocol
@@ -114,7 +113,7 @@ private:
 };
 
 
-class SYMBOLEXP ProtocolMqtt5Factory : public IProtocolFactory
+class SYMBOLEXP ProtocolMqtt5ClientFactory : public IProtocolFactory
 {
 public:
 
