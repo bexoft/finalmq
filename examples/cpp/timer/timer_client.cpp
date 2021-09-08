@@ -113,7 +113,7 @@ int main()
     //IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://broker.emqx.io:1883:mqtt5client:json", { {},{},
     //    VariantStruct{  //{ProtocolMqtt5Client::KEY_USERNAME, std::string("")},
     //                    //{ProtocolMqtt5Client::KEY_PASSWORD, std::string("")},
-    //                    {ProtocolMqtt5Client::KEY_SESSIONEXPIRYINTERVAL, 30},
+    //                    {ProtocolMqtt5Client::KEY_SESSIONEXPIRYINTERVAL, 300},
     //                    {ProtocolMqtt5Client::KEY_KEEPALIVE, 20},
     //    } });
 

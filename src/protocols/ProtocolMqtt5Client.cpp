@@ -48,6 +48,7 @@ const std::string ProtocolMqtt5Client::KEY_PASSWORD = "password";
 const std::string ProtocolMqtt5Client::KEY_SESSIONEXPIRYINTERVAL = "sessionexpiryinterval";
 const std::string ProtocolMqtt5Client::KEY_KEEPALIVE = "keepalive";
 
+static const std::string FMQ_PATH = "fmq_path";
 static const std::string FMQ_CORRID = "fmq_corrid";
 static const std::string FMQ_TYPE = "fmq_type";
 static const std::string FMQ_VIRTUAL_SESSION_ID = "fmq_virtsessid";
@@ -411,6 +412,7 @@ void ProtocolMqtt5Client::receivedPublish(const PublishData& data, const IMessag
         }
         else
         {
+            message->addMetainfo(FMQ_PATH, data.topic);
             message->addMetainfo(FMQ_CORRID, std::string(data.correlationData.begin(), data.correlationData.end()));
             message->addMetainfo(FMQ_VIRTUAL_SESSION_ID, data.responseTopic);
             callback->received(message);
