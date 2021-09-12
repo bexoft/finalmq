@@ -45,6 +45,8 @@ namespace finalmq {
 const int RemoteEntityFormatProto::CONTENT_TYPE = 1;
 const std::string RemoteEntityFormatProto::CONTENT_TYPE_NAME = "protobuf";
 
+static const std::string FMQ_METHOD = "fmq_method";
+
 
 struct RegisterFormatProto
 {
@@ -157,7 +159,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const BufferRef& buff
         buffer += sizeHeader;
 
         BufferRef bufferRefData = { buffer, sizeData };
-        data = parseData(bufferRefData, storeRawData, header.type, syntaxError);
+        data = parseData(bufferRefData, storeRawData, header.type, nullptr, syntaxError);
     }
 
     return data;
@@ -165,7 +167,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const BufferRef& buff
 
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatProto::parseData(const BufferRef& bufferRef, bool storeRawData, const std::string& type, bool& syntaxError)
+std::shared_ptr<StructBase> RemoteEntityFormatProto::parseData(const BufferRef& bufferRef, bool storeRawData, std::string& type, const IMessage::Metainfo* metainfo, bool& syntaxError)
 {
     syntaxError = false;
     const char* buffer = bufferRef.first;
@@ -210,6 +212,20 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parseData(const BufferRef& 
         if (ok)
         {
             data = StructFactoryRegistry::instance().createStruct(type);
+            if (data == nullptr && metainfo)
+            {
+                // try to lookup for type_method
+                auto it = metainfo->find(FMQ_METHOD);
+                if (it != metainfo->end())
+                {
+                    std::string trytype = type + '_' + it->second;
+                    data = StructFactoryRegistry::instance().createStruct(trytype);
+                    if (data != nullptr)
+                    {
+                        type = trytype;
+                    }
+                }
+            }
             if (data)
             {
                 assert(sizeDataInStream >= 0);
@@ -222,16 +238,13 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parseData(const BufferRef& 
                     data = nullptr;
                 }
             }
-            else
+
+            if (storeRawData)
             {
-                if (storeRawData)
+                if (data == nullptr)
                 {
                     data = std::make_shared<remoteentity::RawDataMessage>();
                 }
-            }
-
-            if (storeRawData && data)
-            {
                 data->setRawData(type, CONTENT_TYPE, buffer, sizeDataInStream);
             }
         }

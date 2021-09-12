@@ -149,49 +149,69 @@ inline static bool shallSend(const remoteentity::Header& header, const IProtocol
 
 
 
-static void statusToProtocolStatus(remoteentity::Status status, Variant& controlData, const IProtocolSessionPtr& session)
+static void statusToProtocolStatus(remoteentity::Status status, Variant& controlData, IMessage::Metainfo* metainfo, const IProtocolSessionPtr& session)
 {
+    controlData.add(FMQ_HTTP, HTTP_RESPONSE);
     switch (status)
     {
     case Status::STATUS_OK:
-        controlData = VariantStruct{ {FMQ_HTTP, HTTP_RESPONSE},
-                                     {FMQ_STATUS, 200},
-                                     {FMQ_STATUSTEXT, std::string("OK")} };
+        {
+            bool statusOk = true;
+            if (metainfo)
+            {
+                auto itStatus = metainfo->find(FMQ_STATUS);
+                if (itStatus != metainfo->end())
+                {
+                    statusOk = false;
+                    auto itStatusText = metainfo->find(FMQ_STATUSTEXT);
+                    std::string statustext;
+                    if (itStatusText != metainfo->end())
+                    {
+                        statustext = itStatusText->second;
+                    }
+                    if (statustext.empty())
+                    {
+                        statustext = "_";
+                    }
+                    controlData.add(FMQ_STATUS, itStatus->second);
+                    controlData.add(FMQ_STATUSTEXT, std::move(statustext));
+                }
+            }
+            if (statusOk)
+            {
+                controlData.add(FMQ_STATUS, 200);
+                controlData.add(FMQ_STATUSTEXT, std::string("OK"));
+            }
+        }
         break;
     case Status::STATUS_ENTITY_NOT_FOUND:
-        controlData = VariantStruct{ {FMQ_HTTP, HTTP_RESPONSE},
-                                     {FMQ_STATUS, 404},
-                                     {FMQ_STATUSTEXT, std::string("Not Found")} };
+        controlData.add(FMQ_STATUS, 404);
+        controlData.add(FMQ_STATUSTEXT, std::string("Not Found"));
         break;
     case Status::STATUS_SYNTAX_ERROR:
-        controlData = VariantStruct{ {FMQ_HTTP, HTTP_RESPONSE},
-                                     {FMQ_STATUS, 400},
-                                     {FMQ_STATUSTEXT, std::string("Bad Request")} };
+        controlData.add(FMQ_STATUS, 400);
+        controlData.add(FMQ_STATUSTEXT, std::string("Bad Request"));
         break;
     case Status::STATUS_REQUEST_NOT_FOUND:
     case Status::STATUS_REQUESTTYPE_NOT_KNOWN:
-        controlData = VariantStruct{ {FMQ_HTTP, HTTP_RESPONSE},
-                                     {FMQ_STATUS, 501},
-                                     {FMQ_STATUSTEXT, std::string("Not Implemented")} };
+        controlData.add(FMQ_STATUS, 501);
+        controlData.add(FMQ_STATUSTEXT, std::string("Not Implemented"));
         break;
     case Status::STATUS_NO_REPLY:
         if (session->needsReply())
         {
-            controlData = VariantStruct{ {FMQ_HTTP, HTTP_RESPONSE},
-                                         {FMQ_STATUS, 200},
-                                         {FMQ_STATUSTEXT, std::string("OK")} };
+            controlData.add(FMQ_STATUS, 200);
+            controlData.add(FMQ_STATUSTEXT, std::string("OK"));
         }
         else
         {
-            controlData = VariantStruct{ {FMQ_HTTP, HTTP_RESPONSE},
-                                         {FMQ_STATUS, 500},
-                                         {FMQ_STATUSTEXT, std::string("Internal Server Error")} };
+            controlData.add(FMQ_STATUS, 500);
+            controlData.add(FMQ_STATUSTEXT, std::string("Internal Server Error"));
         }
         break;
     default:
-        controlData = VariantStruct{ {FMQ_HTTP, HTTP_RESPONSE},
-                                     {FMQ_STATUS, 500},
-                                     {FMQ_STATUSTEXT, std::string("Internal Server Error")} };
+        controlData.add(FMQ_STATUS, 500);
+        controlData.add(FMQ_STATUSTEXT, std::string("Internal Server Error"));
         break;
     }
 }
@@ -236,8 +256,8 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, co
         {
             if (header.mode == MsgMode::MSG_REPLY)
             {
-                Variant& controlData = message->getControlData();
-                statusToProtocolStatus(header.status, controlData, session);
+                Variant& controlDataTmp = message->getControlData();
+                statusToProtocolStatus(header.status, controlDataTmp, metainfo, session);
                 if (structBase && structBase->getStructInfo().getTypeName() == remoteentity::Bytes::structInfo().getTypeName())
                 {
                     pureData = &static_cast<const remoteentity::Bytes*>(structBase)->data;
@@ -448,7 +468,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainf
     if (it != m_contentTypeToFormat.end())
     {
         assert(it->second);
-        structBase = it->second->parseData(bufferRef, storeRawData, header.type, syntaxError);
+        structBase = it->second->parseData(bufferRef, storeRawData, header.type, &message.getAllMetainfo(), syntaxError);
     }
 
     return structBase;

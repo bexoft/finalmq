@@ -50,7 +50,7 @@ struct IRemoteEntityFormat
 {
     virtual ~IRemoteEntityFormat() {}
     virtual std::shared_ptr<StructBase> parse(const BufferRef& bufferRef, bool storeRawData, remoteentity::Header& header, bool& syntaxError) = 0;
-    virtual std::shared_ptr<StructBase> parseData(const BufferRef& bufferRef, bool storeRawData, const std::string& type, bool& syntaxError) = 0;
+    virtual std::shared_ptr<StructBase> parseData(const BufferRef& bufferRef, bool storeRawData, std::string& type, const IMessage::Metainfo* metainfo, bool& syntaxError) = 0;
     virtual void serialize(IMessage& message, const remoteentity::Header& header, const StructBase* structBase = nullptr) = 0;
     virtual void serializeData(IMessage& message, const StructBase* structBase = nullptr) = 0;
 };

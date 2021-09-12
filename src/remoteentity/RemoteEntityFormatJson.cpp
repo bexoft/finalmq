@@ -43,6 +43,9 @@ const int RemoteEntityFormatJson::CONTENT_TYPE = 2;
 const std::string RemoteEntityFormatJson::CONTENT_TYPE_NAME = "json";
 
 
+static const std::string FMQ_METHOD = "fmq_method";
+
+
 struct RegisterFormatJson
 {
     RegisterFormatJson()
@@ -232,7 +235,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
         assert(sizeData >= 0);
 
         BufferRef bufferRefData = {buffer, sizeData};
-        data = parseData(bufferRefData, storeRawData, header.type, syntaxError);
+        data = parseData(bufferRefData, storeRawData, header.type, nullptr, syntaxError);
     }
 
     return data;
@@ -240,7 +243,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
 
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatJson::parseData(const BufferRef& bufferRef, bool storeRawData, const std::string& type, bool& syntaxError)
+std::shared_ptr<StructBase> RemoteEntityFormatJson::parseData(const BufferRef& bufferRef, bool storeRawData, std::string& type, const IMessage::Metainfo* metainfo, bool& syntaxError)
 {
     syntaxError = false;
     const char* buffer = bufferRef.first;
@@ -251,6 +254,20 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parseData(const BufferRef& b
     if (!type.empty())
     {
         data = StructFactoryRegistry::instance().createStruct(type);
+        if (data == nullptr && metainfo)
+        {
+            // try to lookup for type_method
+            auto it = metainfo->find(FMQ_METHOD);
+            if (it != metainfo->end())
+            {
+                std::string trytype = type + '_' + it->second;
+                data = StructFactoryRegistry::instance().createStruct(trytype);
+                if (data != nullptr)
+                {
+                    type = trytype;
+                }
+            }
+        }
         ssize_t sizeData = sizeBuffer;
         assert(sizeData >= 0);
 
@@ -268,16 +285,13 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parseData(const BufferRef& b
                 }
             }
         }
-        else
+
+        if (storeRawData)
         {
-            if (storeRawData)
+            if (data == nullptr)
             {
                 data = std::make_shared<remoteentity::RawDataMessage>();
             }
-        }
-
-        if (storeRawData && data)
-        {
             data->setRawData(type, CONTENT_TYPE, buffer, sizeData);
         }
     }
