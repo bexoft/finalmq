@@ -343,7 +343,7 @@ static void metainfoToMessage(IMessage& message, std::vector<std::string>& meta)
 
 
 
-void RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, remoteentity::Header& header)
+void RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, remoteentity::Header& header)
 {
     const IMessage::Metainfo& metainfo = message.getAllMetainfo();
     auto itPath = metainfo.find(FMQ_PATH);
@@ -360,26 +360,48 @@ void RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, remoteenti
 
         // 012345678901234567890123456789
         // /MyServer/test.TestRequest!1{}
-        ssize_t ixStartDestName = 0;
+        std::string pathWithoutFirstSlash;
         if (path[0] == '/')
         {
-            ixStartDestName = 1;
+            pathWithoutFirstSlash = { &path[1], path.size() - 1 };
+        }
+        else
+        {
+            pathWithoutFirstSlash = path;
         }
         size_t ixEndHeader = path.find_first_of('{');   //28
         if (ixEndHeader == std::string::npos)
         {
             ixEndHeader = path.size();
         }
-        //endHeader = &buffer[ixEndHeader];
-        ssize_t ixStartCommand = path.find_last_of('/', ixEndHeader);    //9
-        if (ixStartCommand != 0 && ixStartCommand != (ssize_t)std::string::npos)
+
+        const std::string* foundEntityName = nullptr;
+        hybrid_ptr<IRemoteEntity> remoteEntity;
+        for (auto it = name2Entity.begin(); it != name2Entity.end() && !foundEntityName; ++it)
         {
-            header.destname = { &path[ixStartDestName], &path[ixStartCommand] };
-            header.type = { &path[ixStartCommand + 1], &path[ixEndHeader] };
+            const std::string& prefix = it->first;
+            if (pathWithoutFirstSlash.size() >= prefix.size() && pathWithoutFirstSlash.compare(0, prefix.size(), prefix) == 0)
+            {
+                foundEntityName = &prefix;
+                remoteEntity = it->second;
+            }
+        }
+        if (foundEntityName)
+        {
+            header.destname = std::string(pathWithoutFirstSlash.c_str(), foundEntityName->size());
+            if (pathWithoutFirstSlash.size() > foundEntityName->size())
+            {
+                header.path = std::string(&pathWithoutFirstSlash[foundEntityName->size() + 1], pathWithoutFirstSlash.size() - foundEntityName->size() - 1);
+                auto entity = remoteEntity.lock();
+                if (entity)
+                {
+                    header.type = entity->getTypeOfCommandFunction(header.path);
+                }
+            }
         }
         else
         {
-            header.destname = { &path[ixStartDestName], &path[ixEndHeader] };
+            header.destname = pathWithoutFirstSlash;
         }
     }
 
@@ -440,9 +462,9 @@ void RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, remoteenti
 }
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainfo(IMessage& message, int contentType, bool storeRawData, Header& header, bool& syntaxError)
+std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainfo(IMessage& message, int contentType, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, bool& syntaxError)
 {
-    parseMetainfo(message, header);
+    parseMetainfo(message, name2Entity, header);
 
     syntaxError = false;
     BufferRef bufferRef = message.getReceivePayload();
@@ -474,7 +496,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainf
     return structBase;
 }
 
-std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(IMessage& message, int contentType, bool storeRawData, Header& header, bool& syntaxError)
+std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(IMessage& message, int contentType, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, bool& syntaxError)
 {
     syntaxError = false;
     BufferRef bufferRef = message.getReceivePayload();
@@ -485,7 +507,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(IMessage& mess
     if (it != m_contentTypeToFormat.end())
     {
         assert(it->second);
-        structBase = it->second->parse(bufferRef, storeRawData, header, syntaxError);
+        structBase = it->second->parse(bufferRef, storeRawData, name2Entity, header, syntaxError);
         metainfoToMessage(message, header.meta);
     }
 
@@ -494,7 +516,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(IMessage& mess
 
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parsePureData(IMessage& message, Header& header)
+std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parsePureData(IMessage& message, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header)
 {
     std::string* path = message.getMetainfo(FMQ_PATH);
     if (path && !path->empty())

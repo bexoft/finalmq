@@ -256,8 +256,14 @@ IExecutorPtr RemoteEntityContainer::getExecutor() const
 }
 
 
-EntityId RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, const std::string& name)
+EntityId RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, std::string name)
 {
+    // remove last '/', if available
+    if (!name.empty() && name[name.size() - 1] == '/')
+    {
+        name.resize(name.size() - 1);
+    }
+
     auto re = remoteEntity.lock();
     if (!re || re->isEntityRegistered())
     {
@@ -281,6 +287,7 @@ EntityId RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> remoteE
     if (!name.empty())
     {
         m_name2entityId[name] = entityId;
+        m_entityNamesChanged.store(true, std::memory_order_release);
     }
 
     re->initEntity(entityId, name, m_fileTransferReply, m_executor);
@@ -458,6 +465,33 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     assert(session);
     assert(message);
 
+    if (m_entityNamesChanged.exchange(false, std::memory_order_acq_rel))
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        m_name2Entity.clear();
+        for (auto it = m_name2entityId.begin(); it != m_name2entityId.end(); ++it)
+        {
+            std::string name = it->first;
+            if (!name.empty() && name[name.size() - 1] == '*')
+            {
+                name.resize(name.size() - 1);
+            }
+            if (!name.empty() && name[name.size() - 1] == '/')
+            {
+                name.resize(name.size() - 1);
+            }
+            if (!name.empty())
+            {
+                auto it2 = m_entityId2entity.find(it->second);
+                if (it2 != m_entityId2entity.end())
+                {
+                    m_name2Entity[std::move(name)] = it2->second;
+                }
+            }
+        }
+    }
+
+
     bool pureData = false;
     if (session->doesSupportMetainfo())
     {
@@ -477,16 +511,16 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     {
         if (!session->doesSupportMetainfo())
         {
-            receiveData.structBase = RemoteEntityFormatRegistry::instance().parse(*message, session->getContentType(), m_storeRawDataInReceiveStruct, receiveData.header, syntaxError);
+            receiveData.structBase = RemoteEntityFormatRegistry::instance().parse(*message, session->getContentType(), m_storeRawDataInReceiveStruct, m_name2Entity, receiveData.header, syntaxError);
         }
         else
         {
-            receiveData.structBase = RemoteEntityFormatRegistry::instance().parseHeaderInMetainfo(*message, session->getContentType(), m_storeRawDataInReceiveStruct, receiveData.header, syntaxError);
+            receiveData.structBase = RemoteEntityFormatRegistry::instance().parseHeaderInMetainfo(*message, session->getContentType(), m_storeRawDataInReceiveStruct, m_name2Entity, receiveData.header, syntaxError);
         }
     }
     else
     {
-        receiveData.structBase = RemoteEntityFormatRegistry::instance().parsePureData(*message, receiveData.header);
+        receiveData.structBase = RemoteEntityFormatRegistry::instance().parsePureData(*message, m_name2Entity, receiveData.header);
     }
 
     std::unique_lock<std::mutex> lock(m_mutex);
@@ -546,7 +580,7 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
         }
         if (replyStatus != Status::STATUS_OK)
         {
-            Header headerReply{ receiveData.header.srcid, "", entityId, MsgMode::MSG_REPLY, replyStatus, "", receiveData.header.corrid, {} };
+            Header headerReply{ receiveData.header.srcid, "", entityId, MsgMode::MSG_REPLY, replyStatus, {}, {}, receiveData.header.corrid, {} };
             RemoteEntityFormatRegistry::instance().send(session, receiveData.virtualSessionId, headerReply, std::move(message->getEchoData()));
         }
     }

@@ -139,7 +139,7 @@ static const std::string FMQ_PATH = "fmq_path";
 
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& bufferRef, bool storeRawData, Header& header, bool& syntaxError)
+std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& bufferRef, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, bool& syntaxError)
 {
     syntaxError = false;
     char* buffer = bufferRef.first;
@@ -171,35 +171,46 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
             ixEndHeader = sizeBuffer;
         }
         endHeader = &buffer[ixEndHeader];
-        ssize_t ixStartCommand = findLast(buffer, ixEndHeader, '/');    //9
-        assert(ixStartCommand >= 0);
-        ssize_t ixCorrelationId = 0;
-        if (ixStartCommand != 0)
+
+        ssize_t ixCorrelationId = findLast(buffer, ixEndHeader, '!');   //26
+        if (ixCorrelationId != -1)
         {
-            header.destname = { &buffer[1], &buffer[ixStartCommand] };
-            ixCorrelationId = findLast(buffer, ixEndHeader, '!');   //26
-            if (ixCorrelationId != -1)
-            {
-                header.corrid = strtoll(&buffer[ixCorrelationId + 1], nullptr, 10);
-            }
-            else
-            {
-                ixCorrelationId = ixEndHeader;
-            }
-            header.type = { &buffer[ixStartCommand + 1], &buffer[ixCorrelationId] };
+            header.corrid = strtoll(&buffer[ixCorrelationId + 1], nullptr, 10);
         }
         else
         {
-            ixCorrelationId = findLast(buffer, ixEndHeader, '!');   //26
-            if (ixCorrelationId != -1)
+            ixCorrelationId = ixEndHeader;
+        }
+
+        std::string pathWithoutFirstSlash = { &buffer[1], &buffer[ixCorrelationId] };
+        pathWithoutFirstSlash.erase(pathWithoutFirstSlash.find_last_not_of(" \n\r\t") + 1);
+        const std::string* foundEntityName = nullptr;
+        hybrid_ptr<IRemoteEntity> remoteEntity;
+        for (auto it = name2Entity.begin(); it != name2Entity.end() && !foundEntityName; ++it)
+        {
+            const std::string& prefix = it->first;
+            if (pathWithoutFirstSlash.size() >= prefix.size() && pathWithoutFirstSlash.compare(0, prefix.size(), prefix) == 0)
             {
-                header.corrid = strtoll(&buffer[ixCorrelationId + 1], nullptr, 10);
+                foundEntityName = &prefix;
+                remoteEntity = it->second;
             }
-            else
+        }
+        if (foundEntityName)
+        {
+            header.destname = std::string(pathWithoutFirstSlash.c_str(), foundEntityName->size());
+            if (pathWithoutFirstSlash.size() > foundEntityName->size())
             {
-                ixCorrelationId = ixEndHeader;
+                header.path = std::string(&pathWithoutFirstSlash[foundEntityName->size() + 1], pathWithoutFirstSlash.size() - foundEntityName->size() - 1);
+                auto entity = remoteEntity.lock();
+                if (entity)
+                {
+                    header.type = entity->getTypeOfCommandFunction(header.path);
+                }
             }
-            header.destname = { &buffer[ixStartCommand + 1], &buffer[ixCorrelationId] };
+        }
+        else
+        {
+            header.destname = pathWithoutFirstSlash;
         }
 
         std::string path = { &buffer[0], &buffer[ixCorrelationId] };
@@ -218,6 +229,14 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
         {
             // skip comma
             ++endHeader;
+        }
+        if (header.path.empty() && !header.type.empty())
+        {
+            header.path = header.type;
+        }
+        else if (!header.path.empty() && header.type.empty())
+        {
+            header.type = header.path;
         }
         header.meta.emplace_back(FMQ_PATH);
         header.meta.emplace_back(header.destname);

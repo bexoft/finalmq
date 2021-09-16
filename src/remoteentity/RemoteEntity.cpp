@@ -296,7 +296,7 @@ PeerManager::ReadyToSend PeerManager::getRequestHeader(const PeerId& peerId, con
                 typeName = &structBase.getStructInfo().getTypeName();
             }
             assert(typeName);
-            header = { peer->entityId, (peer->entityId == ENTITYID_INVALID) ? peer->entityName : std::string(), m_entityId, MsgMode::MSG_REQUEST, Status::STATUS_OK, *typeName, correlationId, {} };
+            header = { peer->entityId, (peer->entityId == ENTITYID_INVALID) ? peer->entityName : std::string(), m_entityId, MsgMode::MSG_REQUEST, Status::STATUS_OK, {}, *typeName, correlationId, {} };
             readyToSend = RTS_READY;
         }
         else
@@ -791,11 +791,23 @@ void RemoteEntity::connect(PeerId peerId, const IProtocolSessionPtr& session, co
 }
 
 
-void RemoteEntity::registerCommandFunction(const std::string& functionName, FuncCommand funcCommand)
+void RemoteEntity::registerCommandFunction(const std::string& path, const std::string& type, FuncCommand funcCommand)
 {
     std::shared_ptr<FuncCommand> func = std::make_shared<FuncCommand>(std::move(funcCommand));
     std::unique_lock<std::mutex> lock(m_mutex);
-    m_funcCommands[functionName] = func;
+    m_funcCommands[path] = { type, func };
+}
+
+
+std::string RemoteEntity::getTypeOfCommandFunction(const std::string& path)
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    RemoteEntity::Function* function = getFunction(path);
+    if (function)
+    {
+        return function->type;
+    }
+    return {};
 }
 
 
@@ -858,22 +870,35 @@ void RemoteEntity::virtualSessionDisconnected(const IProtocolSessionPtr& session
 }
 
 
+RemoteEntity::Function* RemoteEntity::getFunction(const std::string& path)
+{
+    std::shared_ptr<FuncCommand> func;
+    auto it = m_funcCommands.find(path);
+    if (it != m_funcCommands.end())
+    {
+        return &it->second;
+    }
+    return nullptr;
+}
+
+
 
 void RemoteEntity::receivedRequest(ReceiveData& receiveData)
 {
+    static const std::string WILDCARD = "*";
     RequestContextPtr requestContext = std::make_shared<RequestContext>(m_peerManager, m_entityId, receiveData, m_fileTransferReply);
     assert(requestContext);
 
     std::unique_lock<std::mutex> lock(m_mutex);
     std::shared_ptr<FuncCommand> func;
-    auto it = m_funcCommands.find(receiveData.header.type);
-    if (it == m_funcCommands.end())
+    RemoteEntity::Function* funcData = RemoteEntity::getFunction(receiveData.header.path);
+    if (funcData == nullptr)
     {
-        it = m_funcCommands.find("*");
+        funcData = RemoteEntity::getFunction(WILDCARD);
     }
-    if (it != m_funcCommands.end())
+    if (funcData)
     {
-        func = it->second;
+        func = funcData->func;
         assert(func);
     }
     lock.unlock();

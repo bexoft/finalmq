@@ -131,7 +131,7 @@ struct IRemoteEntityContainer
      * @param name is the name, how a peer can find the entity.
      * @return the entity ID.
      */
-    virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, const std::string& name = "") = 0;
+    virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, std::string name = "") = 0;
 
     /**
      * @brief addPureDataPaths define the paths for receiving pure binary data. You can also use '*' at the end
@@ -188,7 +188,7 @@ public:
     virtual void terminatePollerLoop() override;
     virtual IExecutorPtr getExecutor() const override;
 
-    virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, const std::string& name = "") override;
+    virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, std::string name = "") override;
     virtual void addPureDataPaths(std::vector<std::string>& paths) override;
     virtual void unregisterEntity(EntityId entityId) override;
     virtual void registerConnectionEvent(FuncConnectionEvent funcConnectionEvent) override;
@@ -224,6 +224,10 @@ private:
     std::list<std::string>                                      m_pureDataPathPrefixes;
     std::shared_ptr<FileTransferReply>                          m_fileTransferReply;
     IExecutorPtr                                                m_executor;
+
+    std::atomic_bool                                            m_entityNamesChanged = {};
+    std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>  m_name2Entity;
+
     mutable std::mutex                                          m_mutex;
 };
 
