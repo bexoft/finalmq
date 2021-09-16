@@ -520,7 +520,7 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     }
     else
     {
-        receiveData.structBase = RemoteEntityFormatRegistry::instance().parsePureData(*message, m_name2Entity, receiveData.header);
+        receiveData.structBase = RemoteEntityFormatRegistry::instance().parsePureData(*message, receiveData.header);
     }
 
     std::unique_lock<std::mutex> lock(m_mutex);
