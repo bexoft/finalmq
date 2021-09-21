@@ -498,7 +498,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainf
     if (it != m_contentTypeToFormat.end())
     {
         assert(it->second);
-        structBase = it->second->parseData(bufferRef, storeRawData, header.type, &message.getAllMetainfo(), syntaxError);
+        structBase = it->second->parseData(bufferRef, storeRawData, header.type, syntaxError);
     }
 
     return structBase;

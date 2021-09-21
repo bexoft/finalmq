@@ -255,7 +255,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
         assert(sizeData >= 0);
 
         BufferRef bufferRefData = {buffer, sizeData};
-        data = parseData(bufferRefData, storeRawData, header.type, nullptr, syntaxError);
+        data = parseData(bufferRefData, storeRawData, header.type, syntaxError);
     }
 
     return data;
@@ -263,7 +263,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
 
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatJson::parseData(const BufferRef& bufferRef, bool storeRawData, std::string& type, const IMessage::Metainfo* /*metainfo*/, bool& syntaxError)
+std::shared_ptr<StructBase> RemoteEntityFormatJson::parseData(const BufferRef& bufferRef, bool storeRawData, std::string& type, bool& syntaxError)
 {
     syntaxError = false;
     const char* buffer = bufferRef.first;
