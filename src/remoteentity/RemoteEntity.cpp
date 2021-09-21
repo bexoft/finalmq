@@ -23,6 +23,7 @@
 #include "finalmq/remoteentity/RemoteEntity.h"
 #include "finalmq/protocolsession/ProtocolMessage.h"
 #include "finalmq/helpers/ModulenameFinalmq.h"
+#include "finalmq/helpers/Utils.h"
 
 #include <algorithm>
 
@@ -37,6 +38,7 @@ using finalmq::remoteentity::DisconnectEntity;
 
 namespace finalmq {
 
+static const std::string FMQ_METHOD = "fmq_method";
 
 
 PeerEvent::PeerEvent()
@@ -795,14 +797,36 @@ void RemoteEntity::registerCommandFunction(const std::string& path, const std::s
 {
     std::shared_ptr<FuncCommand> func = std::make_shared<FuncCommand>(std::move(funcCommand));
     std::unique_lock<std::mutex> lock(m_mutex);
-    m_funcCommands[path] = { type, func };
+    if (path.find('{') == std::string::npos)
+    {
+        m_funcCommandsStatic[path] = { type, func };
+    }
+    else
+    {
+        FunctionVar funcVar;
+        funcVar.type = type;
+        funcVar.func = func;
+        Utils::split(path, 0, path.size(), '/', funcVar.pathEntries);
+        m_funcCommandsVar.emplace_back( std::move(funcVar) );
+    }
 }
 
 
-std::string RemoteEntity::getTypeOfCommandFunction(const std::string& path)
+std::string RemoteEntity::getTypeOfCommandFunction(std::string& path, const std::string* method)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
-    RemoteEntity::Function* function = getFunction(path);
+    const RemoteEntity::Function* function = getFunction(path);
+    if (!function && method)
+    {
+        std::string pathWithMethod = path;
+        pathWithMethod += '/';
+        pathWithMethod += *method;
+        function = getFunction(pathWithMethod);
+        if (function)
+        {
+            path = std::move(pathWithMethod);
+        }
+    }
     if (function)
     {
         return function->type;
@@ -870,13 +894,54 @@ void RemoteEntity::virtualSessionDisconnected(const IProtocolSessionPtr& session
 }
 
 
-RemoteEntity::Function* RemoteEntity::getFunction(const std::string& path)
+const RemoteEntity::Function* RemoteEntity::getFunction(const std::string& path, std::vector<std::string>* keys) const
 {
     std::shared_ptr<FuncCommand> func;
-    auto it = m_funcCommands.find(path);
-    if (it != m_funcCommands.end())
+    auto it1 = m_funcCommandsStatic.find(path);
+    if (it1 != m_funcCommandsStatic.end())
     {
-        return &it->second;
+        return &it1->second;
+    }
+
+    static const std::string WILDCARD = "*";
+    if (!m_funcCommandsVar.empty() && path != WILDCARD)
+    {
+        std::vector<std::string> pathEntries;
+        Utils::split(path, 0, path.size(), '/', pathEntries);
+        for (auto it2 = m_funcCommandsVar.begin(); it2 != m_funcCommandsVar.end(); ++it2)
+        {
+            const FunctionVar& funcVar = *it2;
+            if (funcVar.pathEntries.size() == pathEntries.size())
+            {
+                bool match = true;
+                for (size_t i = 0; i < pathEntries.size() && match; ++i)
+                {
+                    const std::string& entry = funcVar.pathEntries[i];
+                    if (entry.size() >= 2 && entry[0] == '{')
+                    {
+                        if (keys)
+                        {
+                            static const std::string PATH_PREFIX = "PATH_";
+                            std::string key = PATH_PREFIX;
+                            key.insert(key.end(), entry.data() + 1, entry.data() + entry.size() - 1);
+                            keys->emplace_back(std::move(key));
+                            keys->emplace_back(std::move(pathEntries[i]));
+                        }
+                    }
+                    else
+                    {
+                        if (entry != pathEntries[i])
+                        {
+                            match = false;
+                        }
+                    }
+                }
+                if (match)
+                {
+                    return &funcVar;
+                }
+            }
+        }
     }
     return nullptr;
 }
@@ -886,15 +951,21 @@ RemoteEntity::Function* RemoteEntity::getFunction(const std::string& path)
 void RemoteEntity::receivedRequest(ReceiveData& receiveData)
 {
     static const std::string WILDCARD = "*";
-    RequestContextPtr requestContext = std::make_shared<RequestContext>(m_peerManager, m_entityId, receiveData, m_fileTransferReply);
-    assert(requestContext);
 
     std::unique_lock<std::mutex> lock(m_mutex);
+    std::vector<std::string> keys;
     std::shared_ptr<FuncCommand> func;
-    RemoteEntity::Function* funcData = RemoteEntity::getFunction(receiveData.header.path);
+    const RemoteEntity::Function* funcData = getFunction(receiveData.header.path, &keys);
+    if (funcData)
+    {
+        for (size_t i = 0; i < keys.size(); i += 2)
+        {
+            receiveData.message->addMetainfo(std::move(keys[i]), std::move(keys[i + 1]));
+        }
+    }
     if (funcData == nullptr)
     {
-        funcData = RemoteEntity::getFunction(WILDCARD);
+        funcData = getFunction(WILDCARD);
     }
     if (funcData)
     {
@@ -902,6 +973,9 @@ void RemoteEntity::receivedRequest(ReceiveData& receiveData)
         assert(func);
     }
     lock.unlock();
+
+    RequestContextPtr requestContext = std::make_shared<RequestContext>(m_peerManager, m_entityId, receiveData, m_fileTransferReply);
+    assert(requestContext);
 
     if (func && *func)
     {

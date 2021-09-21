@@ -308,7 +308,7 @@ public:
     virtual void connect(PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId) override;
     virtual void connect(PeerId peerId, const IProtocolSessionPtr& session, const std::string& entityName, EntityId entityId) override;
     virtual void registerCommandFunction(const std::string& path, const std::string& type, FuncCommand funcCommand) override;
-    virtual std::string getTypeOfCommandFunction(const std::string& path) override;
+    virtual std::string getTypeOfCommandFunction(std::string& path, const std::string* method = nullptr) override;
     virtual CorrelationId getNextCorrelationId() const override;
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId, IMessage::Metainfo* metainfo = nullptr) override;
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) override;
@@ -337,8 +337,12 @@ private:
         std::string                  type;
         std::shared_ptr<FuncCommand> func;
     };
+    struct FunctionVar : public Function
+    {
+        std::vector<std::string>     pathEntries;
+    };
 
-    Function* getFunction(const std::string& path);
+    const Function* getFunction(const std::string& path, std::vector<std::string>* keys = nullptr) const;
 
     struct Request
     {
@@ -363,7 +367,8 @@ private:
 
     FuncReplyEvent                      m_funcReplyEvent;
     std::unordered_map<CorrelationId, std::unique_ptr<Request>> m_requests;
-    std::unordered_map<std::string, Function> m_funcCommands;
+    std::unordered_map<std::string, Function> m_funcCommandsStatic;
+    std::list<FunctionVar>              m_funcCommandsVar;
     std::shared_ptr<PeerManager>        m_peerManager;
     std::shared_ptr<FileTransferReply>  m_fileTransferReply;
     IExecutorPtr                        m_executor;

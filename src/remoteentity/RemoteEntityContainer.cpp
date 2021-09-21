@@ -99,8 +99,9 @@ void RemoteEntityContainer::deinit()
     {
         entities.push_back(it->second);
     }
-    m_name2entityId.clear();
+    m_name2entity.clear();
     m_entityId2entity.clear();
+    m_entitiesChanged.store(true, std::memory_order_release);
     lock.unlock();
 
     for (size_t i = 0; i < entities.size(); ++i)
@@ -203,8 +204,8 @@ void RemoteEntityContainer::subscribeEntityNames(const IProtocolSessionPtr& sess
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     std::vector<std::string> subscribtions;
-    subscribtions.reserve(m_name2entityId.size());
-    for (auto it = m_name2entityId.begin(); it != m_name2entityId.end(); ++it)
+    subscribtions.reserve(m_name2entity.size());
+    for (auto it = m_name2entity.begin(); it != m_name2entity.end(); ++it)
     {
         const std::string& subscribtion = it->first;
         if (subscribtion[subscribtion.size() - 1] != '*')
@@ -274,8 +275,8 @@ EntityId RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> remoteE
     std::unique_lock<std::mutex> lock(m_mutex);
     if (!name.empty())
     {
-        auto it = m_name2entityId.find(name);
-        if (it != m_name2entityId.end())
+        auto it = m_name2entity.find(name);
+        if (it != m_name2entity.end())
         {
             return ENTITYID_INVALID;
         }
@@ -286,12 +287,12 @@ EntityId RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> remoteE
 
     if (!name.empty())
     {
-        m_name2entityId[name] = entityId;
-        m_entityNamesChanged.store(true, std::memory_order_release);
+        m_name2entity[name] = remoteEntity;
     }
 
     re->initEntity(entityId, name, m_fileTransferReply, m_executor);
     m_entityId2entity[entityId] = remoteEntity;
+    m_entitiesChanged.store(true, std::memory_order_release);
     lock.unlock();
 
     if (!name.empty())
@@ -327,12 +328,12 @@ void RemoteEntityContainer::addPureDataPaths(std::vector<std::string>& paths)
 void RemoteEntityContainer::unregisterEntity(EntityId entityId)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
-    for (auto it = m_name2entityId.begin(); it != m_name2entityId.end(); ++it)
+    for (auto it = m_name2entity.begin(); it != m_name2entity.end(); ++it)
     {
-        if (it->second == entityId)
+        auto remoteEntity = it->second.lock();
+        if (!remoteEntity || remoteEntity->getEntityId() == entityId)
         {
-            m_name2entityId.erase(it);
-            break;
+            m_name2entity.erase(it);
         }
     }
     m_entityId2entity.erase(entityId);
@@ -465,30 +466,11 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     assert(session);
     assert(message);
 
-    if (m_entityNamesChanged.exchange(false, std::memory_order_acq_rel))
+    if (m_entitiesChanged.exchange(false, std::memory_order_acq_rel))
     {
         std::unique_lock<std::mutex> lock(m_mutex);
-        m_name2Entity.clear();
-        for (auto it = m_name2entityId.begin(); it != m_name2entityId.end(); ++it)
-        {
-            std::string name = it->first;
-            if (!name.empty() && name[name.size() - 1] == '*')
-            {
-                name.resize(name.size() - 1);
-            }
-            if (!name.empty() && name[name.size() - 1] == '/')
-            {
-                name.resize(name.size() - 1);
-            }
-            if (!name.empty())
-            {
-                auto it2 = m_entityId2entity.find(it->second);
-                if (it2 != m_entityId2entity.end())
-                {
-                    m_name2Entity[std::move(name)] = it2->second;
-                }
-            }
-        }
+        m_name2entityNoLock = m_name2entity;
+        m_entityId2entityNoLock = m_entityId2entity;
     }
 
 
@@ -511,11 +493,11 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     {
         if (!session->doesSupportMetainfo())
         {
-            receiveData.structBase = RemoteEntityFormatRegistry::instance().parse(*message, session->getContentType(), m_storeRawDataInReceiveStruct, m_name2Entity, receiveData.header, syntaxError);
+            receiveData.structBase = RemoteEntityFormatRegistry::instance().parse(*message, session->getContentType(), m_storeRawDataInReceiveStruct, m_name2entityNoLock, receiveData.header, syntaxError);
         }
         else
         {
-            receiveData.structBase = RemoteEntityFormatRegistry::instance().parseHeaderInMetainfo(*message, session->getContentType(), m_storeRawDataInReceiveStruct, m_name2Entity, receiveData.header, syntaxError);
+            receiveData.structBase = RemoteEntityFormatRegistry::instance().parseHeaderInMetainfo(*message, session->getContentType(), m_storeRawDataInReceiveStruct, m_name2entityNoLock, receiveData.header, syntaxError);
         }
     }
     else
@@ -523,30 +505,30 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
         receiveData.structBase = RemoteEntityFormatRegistry::instance().parsePureData(*message, receiveData.header);
     }
 
-    std::unique_lock<std::mutex> lock(m_mutex);
     EntityId entityId = receiveData.header.destid;
+    bool foundEntity = false;
+    hybrid_ptr<IRemoteEntity> remoteEntity;
     if (entityId == ENTITYID_INVALID || (entityId == ENTITYID_DEFAULT && !receiveData.header.destname.empty()))
     {
-        auto itName = m_name2entityId.find(receiveData.header.destname);
-        if (itName == m_name2entityId.end())
+        auto itName = m_name2entityNoLock.find(receiveData.header.destname);
+        if (itName == m_name2entityNoLock.end())
         {
-            itName = m_name2entityId.find("*");
+            itName = m_name2entityNoLock.find("*");
         }
-        if (itName != m_name2entityId.end())
+        if (itName != m_name2entityNoLock.end())
         {
-            entityId = itName->second;
+            remoteEntity = itName->second;
+            foundEntity = true;
         }
     }
-    hybrid_ptr<IRemoteEntity> remoteEntity;
-    if (entityId != ENTITYID_INVALID)
+    if (!foundEntity && entityId != ENTITYID_INVALID)
     {
-        auto it = m_entityId2entity.find(entityId);
-        if (it != m_entityId2entity.end())
+        auto it = m_entityId2entityNoLock.find(entityId);
+        if (it != m_entityId2entityNoLock.end())
         {
             remoteEntity = it->second;
         }
     }
-    lock.unlock();
 
     const std::string& type = receiveData.header.type;
 
@@ -580,6 +562,10 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
         }
         if (replyStatus != Status::STATUS_OK)
         {
+            if (entity && (entityId == ENTITYID_INVALID || entityId == ENTITYID_DEFAULT))
+            {
+                entityId = entity->getEntityId();
+            }
             Header headerReply{ receiveData.header.srcid, "", entityId, MsgMode::MSG_REPLY, replyStatus, {}, {}, receiveData.header.corrid, {} };
             RemoteEntityFormatRegistry::instance().send(session, receiveData.virtualSessionId, headerReply, std::move(message->getEchoData()));
         }

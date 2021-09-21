@@ -220,20 +220,6 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parseData(const BufferRef& 
         if (ok)
         {
             data = StructFactoryRegistry::instance().createStruct(type);
-            if (data == nullptr && metainfo)
-            {
-                // try to lookup for type_method
-                auto it = metainfo->find(FMQ_METHOD);
-                if (it != metainfo->end())
-                {
-                    std::string trytype = type + '_' + it->second;
-                    data = StructFactoryRegistry::instance().createStruct(trytype);
-                    if (data != nullptr)
-                    {
-                        type = trytype;
-                    }
-                }
-            }
             if (data)
             {
                 assert(sizeDataInStream >= 0);

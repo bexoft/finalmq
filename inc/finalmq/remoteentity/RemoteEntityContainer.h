@@ -214,7 +214,7 @@ private:
     static bool isTimerExpired(std::chrono::time_point<std::chrono::system_clock>& lastTime, int interval);
 
     std::unique_ptr<IProtocolSessionContainer>                  m_protocolSessionContainer;
-    std::unordered_map<std::string, EntityId>                   m_name2entityId;
+    std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>  m_name2entity;
     std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>>     m_entityId2entity;
     EntityId                                                    m_nextEntityId = 1;
     std::shared_ptr<FuncConnectionEvent>                        m_funcConnectionEvent;
@@ -225,8 +225,9 @@ private:
     std::shared_ptr<FileTransferReply>                          m_fileTransferReply;
     IExecutorPtr                                                m_executor;
 
-    std::atomic_bool                                            m_entityNamesChanged = {};
-    std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>  m_name2Entity;
+    std::atomic_bool                                            m_entitiesChanged = {};
+    std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>  m_name2entityNoLock;
+    std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>>     m_entityId2entityNoLock;
 
     mutable std::mutex                                          m_mutex;
 };

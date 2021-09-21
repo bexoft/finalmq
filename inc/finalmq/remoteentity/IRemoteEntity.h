@@ -184,6 +184,24 @@ struct IRemoteEntity
     }
 
     /**
+     * @brief registerCommand registers a callback function for executing a request or event.
+     * The template parameter is the message type of the request/event (generated code of fmq file).
+     * @param path ist the path how to access the command.
+     * @param funcCommand is the callback function. Is will be called whenever the request/event is
+     * sent by a peer. Inside the callback you can reply to the peer with requestContext->reply().
+     * If you cannot reply immediatelly, then you can store the requestContext and reply later
+     * whenever you would like to reply. If the command is an event, then you do not have to reply
+     * at all. If a client peer calls requestReply, but you do not reply, then the client will get
+     * the status = NO_REPLY. If the client peer calls sendEvent, but you reply, then the reply
+     * will not be sent.
+     */
+    template<class R>
+    void registerCommand(const std::string& path, std::function<void(const RequestContextPtr& requestContext, const std::shared_ptr<R>& request)> funcCommand)
+    {
+        registerCommandFunction(path, R::structInfo().getTypeName(), reinterpret_cast<FuncCommand&>(funcCommand));
+    }
+
+    /**
      * @brief connect the entity with a remote entity. This entity-to-entity connection is represented by a peer ID.
      * You can connect an entity with multiple remote entities. For each connection you will get a peer ID.
      * To connect to a remote entity, you have to pass a session and the name of the remote entity (how it is
@@ -294,10 +312,11 @@ struct IRemoteEntity
 
     /**
      * @brief gets the type of the function, which is defined at path.
-     * @param path is the path of the function.
+     * @param path is the path of the function. Can be adjusted by the call, if the method is relevant for the function.
+     * @param method is a http method (GET,POST,...).
      * @return expected type of the function.
      */
-    virtual std::string getTypeOfCommandFunction(const std::string& path) = 0;
+    virtual std::string getTypeOfCommandFunction(std::string& path, const std::string* method = nullptr) = 0;
 
     /**
      * @brief getNextCorrelationId creates a correlation ID that is unique inside the entity.

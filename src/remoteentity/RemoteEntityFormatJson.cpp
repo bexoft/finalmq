@@ -182,6 +182,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
             ixCorrelationId = ixEndHeader;
         }
 
+        static const std::string WILDCARD = "*";
         std::string pathWithoutFirstSlash = { &buffer[1], &buffer[ixCorrelationId] };
         pathWithoutFirstSlash.erase(pathWithoutFirstSlash.find_last_not_of(" \n\r\t") + 1);
         const std::string* foundEntityName = nullptr;
@@ -189,7 +190,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
         for (auto it = name2Entity.begin(); it != name2Entity.end() && !foundEntityName; ++it)
         {
             const std::string& prefix = it->first;
-            if (pathWithoutFirstSlash.size() >= prefix.size() && pathWithoutFirstSlash.compare(0, prefix.size(), prefix) == 0)
+            if (prefix != WILDCARD && pathWithoutFirstSlash.size() >= prefix.size() && pathWithoutFirstSlash.compare(0, prefix.size(), prefix) == 0)
             {
                 foundEntityName = &prefix;
                 remoteEntity = it->second;
@@ -273,20 +274,6 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parseData(const BufferRef& b
     if (!type.empty())
     {
         data = StructFactoryRegistry::instance().createStruct(type);
-        if (data == nullptr && metainfo)
-        {
-            // try to lookup for type_method
-            auto it = metainfo->find(FMQ_METHOD);
-            if (it != metainfo->end())
-            {
-                std::string trytype = type + '_' + it->second;
-                data = StructFactoryRegistry::instance().createStruct(trytype);
-                if (data != nullptr)
-                {
-                    type = trytype;
-                }
-            }
-        }
         ssize_t sizeData = sizeBuffer;
         assert(sizeData >= 0);
 
