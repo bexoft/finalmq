@@ -78,6 +78,79 @@ struct IRemoteEntity
      * call getAllPeers(), inside a peer event or by calling requestContext->peerId() inside a
      * command execution. The peerId belongs to this entity. Because an entity can have multiple
      * connections to remote entities, a remote entity must be identified be the peerId.
+     * @param path is the path that shall be called at the remote entity
+     * @param structBase is the request message to send (generated code of fmq file).
+     * @param funcReply is the reply callback.
+     * @return true on success.
+     */
+    template<class R>
+    bool requestReply(const PeerId& peerId,
+        const std::string& path, const StructBase& structBase,
+        std::function<void(PeerId peerId, remoteentity::Status status, const std::shared_ptr<R>& reply)> funcReply)
+    {
+        assert(funcReply);
+        bool ok = sendRequest(peerId, path, structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, remoteentity::Status status, const StructBasePtr& structBase) {
+            std::shared_ptr<R> reply;
+            bool typeOk = (!structBase || structBase->getStructInfo().getTypeName() == R::structInfo().getTypeName());
+            if (status == remoteentity::Status::STATUS_OK && structBase && typeOk)
+            {
+                reply = std::static_pointer_cast<R>(structBase);
+            }
+            if (!typeOk)
+            {
+                status = remoteentity::Status::STATUS_WRONG_REPLY_TYPE;
+            }
+            funcReply(peerId, status, reply);
+        });
+        return ok;
+    }
+
+    /**
+     * @brief requestReply sends a request to the peer and the funcReply is triggered when
+     * the reply is available. The template parameter is the message type of the reply (generated code of fmq file).
+     * This method allows message exchange with metainfo. Metainfo is very similar to HTTP headers. You can use it
+     * to exchange additional data besides the message data.
+     * @param peerId is the id of the peer. You can get it when you connect() to a peer, when you
+     * call getAllPeers(), inside a peer event or by calling requestContext->peerId() inside a
+     * command execution. The peerId belongs to this entity. Because an entity can have multiple
+     * connections to remote entities, a remote entity must be identified be the peerId.
+     * @param path is the path that shall be called at the remote entity
+     * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
+     * @param structBase is the request message to send (generated code of fmq file).
+     * @param funcReply is the reply callback.
+     * @return true on success.
+     */
+    template<class R>
+    bool requestReply(const PeerId& peerId,
+        const std::string& path,
+        IMessage::Metainfo&& metainfo,
+        const StructBase& structBase,
+        std::function<void(PeerId peerId, remoteentity::Status status, IMessage::Metainfo& metainfo, const std::shared_ptr<R>& reply)> funcReply)
+    {
+        assert(funcReply);
+        bool ok = sendRequest(peerId, path, std::move(metainfo), structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, remoteentity::Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase) {
+            std::shared_ptr<R> reply;
+            bool typeOk = (!structBase || structBase->getStructInfo().getTypeName() == R::structInfo().getTypeName());
+            if (status == remoteentity::Status::STATUS_OK && structBase && typeOk)
+            {
+                reply = std::static_pointer_cast<R>(structBase);
+            }
+            if (!typeOk)
+            {
+                status = remoteentity::Status::STATUS_WRONG_REPLY_TYPE;
+            }
+            funcReply(peerId, status, metainfo, reply);
+        });
+        return ok;
+    }
+
+    /**
+     * @brief requestReply sends a request to the peer and the funcReply is triggered when
+     * the reply is available. The template parameter is the message type of the reply (generated code of fmq file).
+     * @param peerId is the id of the peer. You can get it when you connect() to a peer, when you
+     * call getAllPeers(), inside a peer event or by calling requestContext->peerId() inside a
+     * command execution. The peerId belongs to this entity. Because an entity can have multiple
+     * connections to remote entities, a remote entity must be identified be the peerId.
      * @param structBase is the request message to send (generated code of fmq file).
      * @param funcReply is the reply callback.
      * @return true on success.
@@ -165,6 +238,33 @@ struct IRemoteEntity
      * @return true on success.
      */
     virtual bool sendEvent(const PeerId& peerId, IMessage::Metainfo&& metainfo, const StructBase& structBase) = 0;
+
+    /**
+     * @brief sendEvent sends a request to the peer and does not expect a reply.
+     * @param peerId is the id of the peer. You can get it when you connect() to a peer, when you
+     * call getAllPeers(), inside a peer event or by calling requestContext->peerId() inside a
+     * command execution. The peerId belongs to this entity. Because an entity can have multiple
+     * connections to remote entities, a remote entity must be identified be the peerId.
+     * @param path is the path that shall be called at the remote entity
+     * @param structBase is the request message to send (generated code of fmq file).
+     * @return true on success.
+     */
+    virtual bool sendEvent(const PeerId& peerId, const std::string& path, const StructBase& structBase) = 0;
+
+    /**
+     * @brief sendEvent sends a request to the peer and does not expect a reply.
+     * This method allows message exchange with metainfo. Metainfo is very similar to HTTP headers.
+     * You can use it to exchange additional data besides the message data.
+     * @param peerId is the id of the peer. You can get it when you connect() to a peer, when you
+     * call getAllPeers(), inside a peer event or by calling requestContext->peerId() inside a
+     * command execution. The peerId belongs to this entity. Because an entity can have multiple
+     * connections to remote entities, a remote entity must be identified be the peerId.
+     * @param path is the path that shall be called at the remote entity
+     * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
+     * @param structBase is the request message to send (generated code of fmq file).
+     * @return true on success.
+     */
+    virtual bool sendEvent(const PeerId& peerId, const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase) = 0;
 
     /**
      * @brief registerCommand registers a callback function for executing a request or event.
@@ -331,13 +431,45 @@ struct IRemoteEntity
      * call getAllPeers(), inside a peer event or by calling requestContext->peerId() inside a
      * command execution. The peerId belongs to this entity. Because an entity can have multiple
      * connections to remote entities, a remote entity must be identified be the peerId.
+     * @param path is the path that shall be called at the remote entity
      * @param structBase is the request message to send (generated code of fmq file).
      * @param correlationId is an ID that can be matched at the callback, which is registered
      * by registerReplyEvent().
      * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
      * @return true on success.
      */
-    virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId, IMessage::Metainfo* metainfo = nullptr) = 0;
+    virtual bool sendRequest(const PeerId& peerId, const std::string& path, const StructBase& structBase, CorrelationId correlationId, IMessage::Metainfo* metainfo = nullptr) = 0;
+
+    /**
+     * @brief requestReply sends a request to the peer and the funcReply is triggered when
+     * the reply is available.
+     * @param peerId is the id of the peer. You can get it when you connect() to a peer, when you
+     * call getAllPeers(), inside a peer event or by calling requestContext->peerId() inside a
+     * command execution. The peerId belongs to this entity. Because an entity can have multiple
+     * connections to remote entities, a remote entity must be identified be the peerId.
+     * @param path is the path that shall be called at the remote entity
+     * @param structBase is the request message to send (generated code of fmq file).
+     * @param funcReply is the reply callback.
+     * @return true on success.
+     */
+    virtual bool sendRequest(const PeerId& peerId, const std::string& path, const StructBase& structBase, FuncReply funcReply) = 0;
+
+    /**
+     * @brief requestReply sends a request to the peer and the funcReply is triggered when
+     * the reply is available.
+     * This method allows message exchange with metainfo. Metainfo is very similar to HTTP headers. You can use it
+     * to exchange additional data besides the message data.
+     * @param peerId is the id of the peer. You can get it when you connect() to a peer, when you
+     * call getAllPeers(), inside a peer event or by calling requestContext->peerId() inside a
+     * command execution. The peerId belongs to this entity. Because an entity can have multiple
+     * connections to remote entities, a remote entity must be identified be the peerId.
+     * @param path is the path that shall be called at the remote entity
+     * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
+     * @param structBase is the request message to send (generated code of fmq file).
+     * @param funcReply is the reply callback.
+     * @return true on success.
+     */
+    virtual bool sendRequest(const PeerId& peerId, const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply) = 0;
 
     /**
      * @brief requestReply sends a request to the peer and the funcReply is triggered when

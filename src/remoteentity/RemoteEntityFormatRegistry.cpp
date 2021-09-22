@@ -51,6 +51,7 @@ static const std::string FMQ_RE_SRCID = "fmq_re_srcid";
 static const std::string FMQ_RE_MODE = "fmq_re_mode";
 static const std::string FMQ_CORRID = "fmq_corrid";
 static const std::string FMQ_RE_STATUS = "fmq_re_status";
+static const std::string FMQ_RE_PATH = "fmq_re_path";
 static const std::string FMQ_TYPE = "fmq_type";
 static const std::string MSG_REPLY = "MSG_REPLY";
 
@@ -120,6 +121,10 @@ void RemoteEntityFormatRegistryImpl::serializeHeaderToMetainfo(IMessage& message
         metainfo[FMQ_CORRID] = std::to_string(header.corrid);
     }
     metainfo[FMQ_RE_STATUS] = header.status.toString();
+    if (!header.path.empty())
+    {
+        metainfo[FMQ_RE_PATH] = header.path;
+    }
     metainfo[FMQ_TYPE] = header.type;
 }
 
@@ -354,6 +359,7 @@ void RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, const std:
     auto itStatus = metainfo.find(FMQ_RE_STATUS);
     auto itDestName = metainfo.find(FMQ_DESTNAME);
     auto itDestId = metainfo.find(FMQ_RE_DESTID);
+    auto itRePath = metainfo.find(FMQ_RE_PATH);
     auto itType = metainfo.find(FMQ_TYPE);
     if (itPath != metainfo.end())
     {
@@ -465,6 +471,15 @@ void RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, const std:
         if (!type.empty())
         {
             header.type = type;
+        }
+    }
+
+    if (itRePath != metainfo.end())
+    {
+        const std::string& path = itType->second;
+        if (!path.empty())
+        {
+            header.path = path;
         }
     }
 }

@@ -39,6 +39,7 @@ using finalmq::remoteentity::DisconnectEntity;
 namespace finalmq {
 
 static const std::string FMQ_METHOD = "fmq_method";
+static const std::string EMPTY_PATH;
 
 
 PeerEvent::PeerEvent()
@@ -280,7 +281,7 @@ std::shared_ptr<PeerManager::Peer> PeerManager::getPeer(const PeerId& peerId) co
 
 
 
-PeerManager::ReadyToSend PeerManager::getRequestHeader(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId, remoteentity::Header& header, IProtocolSessionPtr& session, std::string& virtualSessionId)
+PeerManager::ReadyToSend PeerManager::getRequestHeader(const PeerId& peerId, const std::string& path, const StructBase& structBase, CorrelationId correlationId, remoteentity::Header& header, IProtocolSessionPtr& session, std::string& virtualSessionId)
 {
     ReadyToSend readyToSend = RTS_PEER_NOT_AVAILABLE;
 
@@ -298,7 +299,7 @@ PeerManager::ReadyToSend PeerManager::getRequestHeader(const PeerId& peerId, con
                 typeName = &structBase.getStructInfo().getTypeName();
             }
             assert(typeName);
-            header = { peer->entityId, (peer->entityId == ENTITYID_INVALID) ? peer->entityName : std::string(), m_entityId, MsgMode::MSG_REQUEST, Status::STATUS_OK, {}, *typeName, correlationId, {} };
+            header = { peer->entityId, (peer->entityId == ENTITYID_INVALID) ? peer->entityName : std::string(), m_entityId, MsgMode::MSG_REQUEST, Status::STATUS_OK, path, *typeName, correlationId, {} };
             readyToSend = RTS_READY;
         }
         else
@@ -506,9 +507,16 @@ CorrelationId RemoteEntity::getNextCorrelationId() const
 
 bool RemoteEntity::sendEvent(const PeerId& peerId, const StructBase& structBase)
 {
-    bool ok = sendRequest(peerId, structBase, CORRELATIONID_NONE);
+    bool ok = sendRequest(peerId, EMPTY_PATH, structBase, CORRELATIONID_NONE);
     return ok;
 }
+
+bool RemoteEntity::sendEvent(const PeerId& peerId, const std::string& path, const StructBase& structBase)
+{
+    bool ok = sendRequest(peerId, path, structBase, CORRELATIONID_NONE);
+    return ok;
+}
+
 
 bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply)
 {
@@ -516,14 +524,23 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
     std::unique_lock<std::mutex> lock(m_mutex);
     m_requests.emplace(correlationId, std::make_unique<Request>(peerId, std::make_shared<FuncReply>(std::move(funcReply))));
     lock.unlock();
-    bool ok = sendRequest(peerId, structBase, correlationId);
+    bool ok = sendRequest(peerId, EMPTY_PATH, structBase, correlationId);
     return ok;
 }
 
 
+bool RemoteEntity::sendRequest(const PeerId& peerId, const std::string& path, const StructBase& structBase, FuncReply funcReply)
+{
+    CorrelationId correlationId = getNextCorrelationId();
+    std::unique_lock<std::mutex> lock(m_mutex);
+    m_requests.emplace(correlationId, std::make_unique<Request>(peerId, std::make_shared<FuncReply>(std::move(funcReply))));
+    lock.unlock();
+    bool ok = sendRequest(peerId, path, structBase, correlationId);
+    return ok;
+}
 
 
-bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId, IMessage::Metainfo* metainfo)
+bool RemoteEntity::sendRequest(const PeerId& peerId, const std::string& path, const StructBase& structBase, CorrelationId correlationId, IMessage::Metainfo* metainfo)
 {
     bool ok = false;
     Header header;
@@ -532,7 +549,7 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
 
     // the mutex lock is important for RTS_CONNECT_NOT_AVAILABLE / RTS_READY handling. See connectIntern(PeerId ...)
     std::unique_lock<std::mutex> lock(m_mutex);
-    PeerManager::ReadyToSend readyToSend = m_peerManager->getRequestHeader(peerId, structBase, correlationId, header, session, virtualSessionId);
+    PeerManager::ReadyToSend readyToSend = m_peerManager->getRequestHeader(peerId, path, structBase, correlationId, header, session, virtualSessionId);
     lock.unlock();
 
     if (readyToSend == PeerManager::ReadyToSend::RTS_READY)
@@ -557,7 +574,13 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
 
 bool RemoteEntity::sendEvent(const PeerId& peerId, IMessage::Metainfo&& metainfo, const StructBase& structBase)
 {
-    bool ok = sendRequest(peerId, structBase, CORRELATIONID_NONE, &metainfo);
+    bool ok = sendRequest(peerId, EMPTY_PATH, structBase, CORRELATIONID_NONE, &metainfo);
+    return ok;
+}
+
+bool RemoteEntity::sendEvent(const PeerId& peerId, const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase)
+{
+    bool ok = sendRequest(peerId, path, structBase, CORRELATIONID_NONE, &metainfo);
     return ok;
 }
 
@@ -567,7 +590,18 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, IMessage::Metainfo&& metain
     std::unique_lock<std::mutex> lock(m_mutex);
     m_requests.emplace(correlationId, std::make_unique<Request>(peerId, std::make_shared<FuncReplyMeta>(std::move(funcReply))));
     lock.unlock();
-    bool ok = sendRequest(peerId, structBase, correlationId, &metainfo);
+    bool ok = sendRequest(peerId, EMPTY_PATH, structBase, correlationId, &metainfo);
+    return ok;
+}
+
+
+bool RemoteEntity::sendRequest(const PeerId& peerId, const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply)
+{
+    CorrelationId correlationId = getNextCorrelationId();
+    std::unique_lock<std::mutex> lock(m_mutex);
+    m_requests.emplace(correlationId, std::make_unique<Request>(peerId, std::make_shared<FuncReplyMeta>(std::move(funcReply))));
+    lock.unlock();
+    bool ok = sendRequest(peerId, path, structBase, correlationId, &metainfo);
     return ok;
 }
 
@@ -755,7 +789,7 @@ void RemoteEntity::connectIntern(PeerId peerId, const IProtocolSessionPtr& sessi
         std::string virtualSessionIdRet;
         PeerManager::ReadyToSend readyToSend = PeerManager::ReadyToSend::RTS_PEER_NOT_AVAILABLE;
         assert(request.structBase);
-        readyToSend = m_peerManager->getRequestHeader(peerId, *request.structBase, request.correlationId, header, sessionRet, virtualSessionIdRet);
+        readyToSend = m_peerManager->getRequestHeader(peerId, EMPTY_PATH, *request.structBase, request.correlationId, header, sessionRet, virtualSessionIdRet);
 
         if (readyToSend == PeerManager::ReadyToSend::RTS_READY)
         {

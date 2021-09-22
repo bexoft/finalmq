@@ -84,9 +84,10 @@ void RemoteEntityFormatProto::serialize(IMessage& message, const Header& header,
 
 void RemoteEntityFormatProto::serializeData(IMessage& message, const StructBase* structBase)
 {
+    char* bufferSizePayload = message.addSendPayload(4);
+    ssize_t sizePayload = 0;
     if (structBase)
     {
-        char* bufferSizePayload = message.addSendPayload(4);
         ssize_t sizeStart = message.getTotalSendPayloadSize();
         if (structBase->getRawContentType() == CONTENT_TYPE)
         {
@@ -102,16 +103,16 @@ void RemoteEntityFormatProto::serializeData(IMessage& message, const StructBase*
             parserData.parseStruct();
         }
         ssize_t sizeEnd = message.getTotalSendPayloadSize();
-        ssize_t sizePayload = sizeEnd - sizeStart;
-        assert(sizePayload >= 0);
-        *bufferSizePayload = static_cast<unsigned char>(sizePayload);
-        ++bufferSizePayload;
-        *bufferSizePayload = static_cast<unsigned char>(sizePayload >> 8);
-        ++bufferSizePayload;
-        *bufferSizePayload = static_cast<unsigned char>(sizePayload >> 16);
-        ++bufferSizePayload;
-        *bufferSizePayload = static_cast<unsigned char>(sizePayload >> 24);
+        sizePayload = sizeEnd - sizeStart;
     }
+    assert(sizePayload >= 0);
+    *bufferSizePayload = static_cast<unsigned char>(sizePayload);
+    ++bufferSizePayload;
+    *bufferSizePayload = static_cast<unsigned char>(sizePayload >> 8);
+    ++bufferSizePayload;
+    *bufferSizePayload = static_cast<unsigned char>(sizePayload >> 16);
+    ++bufferSizePayload;
+    *bufferSizePayload = static_cast<unsigned char>(sizePayload >> 24);
 }
 
 static const std::string FMQ_PATH = "fmq_path";
@@ -150,13 +151,11 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const BufferRef& buff
         if (header.path.empty() && !header.type.empty())
         {
             header.path = header.type;
-        }
+        }   
         else if (!header.path.empty() && header.type.empty())
         {
             header.type = header.path;
         }
-        header.meta.emplace_back(FMQ_PATH);
-        header.meta.emplace_back(header.destname);
     }
 
     std::shared_ptr<StructBase> data;

@@ -239,8 +239,6 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
         {
             header.type = header.path;
         }
-        header.meta.emplace_back(FMQ_PATH);
-        header.meta.emplace_back(header.destname);
     }
 
     std::shared_ptr<StructBase> data;
