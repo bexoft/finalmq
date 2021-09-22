@@ -706,7 +706,7 @@ PeerId RemoteEntity::connect(const IProtocolSessionPtr& session, EntityId entity
 
 void RemoteEntity::disconnect(PeerId peerId)
 {
-    sendRequest(peerId, DisconnectEntity(), CORRELATIONID_NONE);
+    sendRequest(peerId, EMPTY_PATH, DisconnectEntity(), CORRELATIONID_NONE);
     removePeer(peerId, Status::STATUS_PEER_DISCONNECTED);
 }
 
