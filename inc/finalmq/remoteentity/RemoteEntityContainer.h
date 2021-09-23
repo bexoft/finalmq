@@ -131,7 +131,7 @@ struct IRemoteEntityContainer
      * @param name is the name, how a peer can find the entity.
      * @return the entity ID.
      */
-    virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, const std::string& name = "") = 0;
+    virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, std::string name = "") = 0;
 
     /**
      * @brief addPureDataPaths define the paths for receiving pure binary data. You can also use '*' at the end
@@ -188,7 +188,7 @@ public:
     virtual void terminatePollerLoop() override;
     virtual IExecutorPtr getExecutor() const override;
 
-    virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, const std::string& name = "") override;
+    virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, std::string name = "") override;
     virtual void addPureDataPaths(std::vector<std::string>& paths) override;
     virtual void unregisterEntity(EntityId entityId) override;
     virtual void registerConnectionEvent(FuncConnectionEvent funcConnectionEvent) override;
@@ -214,7 +214,7 @@ private:
     static bool isTimerExpired(std::chrono::time_point<std::chrono::system_clock>& lastTime, int interval);
 
     std::unique_ptr<IProtocolSessionContainer>                  m_protocolSessionContainer;
-    std::unordered_map<std::string, EntityId>                   m_name2entityId;
+    std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>  m_name2entity;
     std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>>     m_entityId2entity;
     EntityId                                                    m_nextEntityId = 1;
     std::shared_ptr<FuncConnectionEvent>                        m_funcConnectionEvent;
@@ -224,6 +224,11 @@ private:
     std::list<std::string>                                      m_pureDataPathPrefixes;
     std::shared_ptr<FileTransferReply>                          m_fileTransferReply;
     IExecutorPtr                                                m_executor;
+
+    std::atomic_bool                                            m_entitiesChanged = {};
+    std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>  m_name2entityNoLock;
+    std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>>     m_entityId2entityNoLock;
+
     mutable std::mutex                                          m_mutex;
 };
 

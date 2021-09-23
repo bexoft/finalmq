@@ -23,6 +23,7 @@
 #include "finalmq/remoteentity/RemoteEntity.h"
 #include "finalmq/protocolsession/ProtocolMessage.h"
 #include "finalmq/helpers/ModulenameFinalmq.h"
+#include "finalmq/helpers/Utils.h"
 
 #include <algorithm>
 
@@ -37,6 +38,8 @@ using finalmq::remoteentity::DisconnectEntity;
 
 namespace finalmq {
 
+static const std::string FMQ_METHOD = "fmq_method";
+static const std::string EMPTY_PATH;
 
 
 PeerEvent::PeerEvent()
@@ -278,7 +281,7 @@ std::shared_ptr<PeerManager::Peer> PeerManager::getPeer(const PeerId& peerId) co
 
 
 
-PeerManager::ReadyToSend PeerManager::getRequestHeader(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId, remoteentity::Header& header, IProtocolSessionPtr& session, std::string& virtualSessionId)
+PeerManager::ReadyToSend PeerManager::getRequestHeader(const PeerId& peerId, const std::string& path, const StructBase& structBase, CorrelationId correlationId, remoteentity::Header& header, IProtocolSessionPtr& session, std::string& virtualSessionId)
 {
     ReadyToSend readyToSend = RTS_PEER_NOT_AVAILABLE;
 
@@ -296,7 +299,7 @@ PeerManager::ReadyToSend PeerManager::getRequestHeader(const PeerId& peerId, con
                 typeName = &structBase.getStructInfo().getTypeName();
             }
             assert(typeName);
-            header = { peer->entityId, (peer->entityId == ENTITYID_INVALID) ? peer->entityName : std::string(), m_entityId, MsgMode::MSG_REQUEST, Status::STATUS_OK, *typeName, correlationId, {} };
+            header = { peer->entityId, (peer->entityId == ENTITYID_INVALID) ? peer->entityName : std::string(), m_entityId, MsgMode::MSG_REQUEST, Status::STATUS_OK, path, *typeName, correlationId, {} };
             readyToSend = RTS_READY;
         }
         else
@@ -504,9 +507,16 @@ CorrelationId RemoteEntity::getNextCorrelationId() const
 
 bool RemoteEntity::sendEvent(const PeerId& peerId, const StructBase& structBase)
 {
-    bool ok = sendRequest(peerId, structBase, CORRELATIONID_NONE);
+    bool ok = sendRequest(peerId, EMPTY_PATH, structBase, CORRELATIONID_NONE);
     return ok;
 }
+
+bool RemoteEntity::sendEvent(const PeerId& peerId, const std::string& path, const StructBase& structBase)
+{
+    bool ok = sendRequest(peerId, path, structBase, CORRELATIONID_NONE);
+    return ok;
+}
+
 
 bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply)
 {
@@ -514,14 +524,23 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
     std::unique_lock<std::mutex> lock(m_mutex);
     m_requests.emplace(correlationId, std::make_unique<Request>(peerId, std::make_shared<FuncReply>(std::move(funcReply))));
     lock.unlock();
-    bool ok = sendRequest(peerId, structBase, correlationId);
+    bool ok = sendRequest(peerId, EMPTY_PATH, structBase, correlationId);
     return ok;
 }
 
 
+bool RemoteEntity::sendRequest(const PeerId& peerId, const std::string& path, const StructBase& structBase, FuncReply funcReply)
+{
+    CorrelationId correlationId = getNextCorrelationId();
+    std::unique_lock<std::mutex> lock(m_mutex);
+    m_requests.emplace(correlationId, std::make_unique<Request>(peerId, std::make_shared<FuncReply>(std::move(funcReply))));
+    lock.unlock();
+    bool ok = sendRequest(peerId, path, structBase, correlationId);
+    return ok;
+}
 
 
-bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBase, CorrelationId correlationId, IMessage::Metainfo* metainfo)
+bool RemoteEntity::sendRequest(const PeerId& peerId, const std::string& path, const StructBase& structBase, CorrelationId correlationId, IMessage::Metainfo* metainfo)
 {
     bool ok = false;
     Header header;
@@ -530,7 +549,7 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
 
     // the mutex lock is important for RTS_CONNECT_NOT_AVAILABLE / RTS_READY handling. See connectIntern(PeerId ...)
     std::unique_lock<std::mutex> lock(m_mutex);
-    PeerManager::ReadyToSend readyToSend = m_peerManager->getRequestHeader(peerId, structBase, correlationId, header, session, virtualSessionId);
+    PeerManager::ReadyToSend readyToSend = m_peerManager->getRequestHeader(peerId, path, structBase, correlationId, header, session, virtualSessionId);
     lock.unlock();
 
     if (readyToSend == PeerManager::ReadyToSend::RTS_READY)
@@ -555,7 +574,13 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBas
 
 bool RemoteEntity::sendEvent(const PeerId& peerId, IMessage::Metainfo&& metainfo, const StructBase& structBase)
 {
-    bool ok = sendRequest(peerId, structBase, CORRELATIONID_NONE, &metainfo);
+    bool ok = sendRequest(peerId, EMPTY_PATH, structBase, CORRELATIONID_NONE, &metainfo);
+    return ok;
+}
+
+bool RemoteEntity::sendEvent(const PeerId& peerId, const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase)
+{
+    bool ok = sendRequest(peerId, path, structBase, CORRELATIONID_NONE, &metainfo);
     return ok;
 }
 
@@ -565,7 +590,18 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, IMessage::Metainfo&& metain
     std::unique_lock<std::mutex> lock(m_mutex);
     m_requests.emplace(correlationId, std::make_unique<Request>(peerId, std::make_shared<FuncReplyMeta>(std::move(funcReply))));
     lock.unlock();
-    bool ok = sendRequest(peerId, structBase, correlationId, &metainfo);
+    bool ok = sendRequest(peerId, EMPTY_PATH, structBase, correlationId, &metainfo);
+    return ok;
+}
+
+
+bool RemoteEntity::sendRequest(const PeerId& peerId, const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply)
+{
+    CorrelationId correlationId = getNextCorrelationId();
+    std::unique_lock<std::mutex> lock(m_mutex);
+    m_requests.emplace(correlationId, std::make_unique<Request>(peerId, std::make_shared<FuncReplyMeta>(std::move(funcReply))));
+    lock.unlock();
+    bool ok = sendRequest(peerId, path, structBase, correlationId, &metainfo);
     return ok;
 }
 
@@ -670,7 +706,7 @@ PeerId RemoteEntity::connect(const IProtocolSessionPtr& session, EntityId entity
 
 void RemoteEntity::disconnect(PeerId peerId)
 {
-    sendRequest(peerId, DisconnectEntity(), CORRELATIONID_NONE);
+    sendRequest(peerId, EMPTY_PATH, DisconnectEntity(), CORRELATIONID_NONE);
     removePeer(peerId, Status::STATUS_PEER_DISCONNECTED);
 }
 
@@ -753,7 +789,7 @@ void RemoteEntity::connectIntern(PeerId peerId, const IProtocolSessionPtr& sessi
         std::string virtualSessionIdRet;
         PeerManager::ReadyToSend readyToSend = PeerManager::ReadyToSend::RTS_PEER_NOT_AVAILABLE;
         assert(request.structBase);
-        readyToSend = m_peerManager->getRequestHeader(peerId, *request.structBase, request.correlationId, header, sessionRet, virtualSessionIdRet);
+        readyToSend = m_peerManager->getRequestHeader(peerId, EMPTY_PATH, *request.structBase, request.correlationId, header, sessionRet, virtualSessionIdRet);
 
         if (readyToSend == PeerManager::ReadyToSend::RTS_READY)
         {
@@ -791,11 +827,45 @@ void RemoteEntity::connect(PeerId peerId, const IProtocolSessionPtr& session, co
 }
 
 
-void RemoteEntity::registerCommandFunction(const std::string& functionName, FuncCommand funcCommand)
+void RemoteEntity::registerCommandFunction(const std::string& path, const std::string& type, FuncCommand funcCommand)
 {
     std::shared_ptr<FuncCommand> func = std::make_shared<FuncCommand>(std::move(funcCommand));
     std::unique_lock<std::mutex> lock(m_mutex);
-    m_funcCommands[functionName] = func;
+    if (path.find('{') == std::string::npos)
+    {
+        m_funcCommandsStatic[path] = { type, func };
+    }
+    else
+    {
+        FunctionVar funcVar;
+        funcVar.type = type;
+        funcVar.func = func;
+        Utils::split(path, 0, path.size(), '/', funcVar.pathEntries);
+        m_funcCommandsVar.emplace_back( std::move(funcVar) );
+    }
+}
+
+
+std::string RemoteEntity::getTypeOfCommandFunction(std::string& path, const std::string* method)
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    const RemoteEntity::Function* function = getFunction(path);
+    if (!function && method)
+    {
+        std::string pathWithMethod = path;
+        pathWithMethod += '/';
+        pathWithMethod += *method;
+        function = getFunction(pathWithMethod);
+        if (function)
+        {
+            path = std::move(pathWithMethod);
+        }
+    }
+    if (function)
+    {
+        return function->type;
+    }
+    return {};
 }
 
 
@@ -858,25 +928,88 @@ void RemoteEntity::virtualSessionDisconnected(const IProtocolSessionPtr& session
 }
 
 
+const RemoteEntity::Function* RemoteEntity::getFunction(const std::string& path, std::vector<std::string>* keys) const
+{
+    std::shared_ptr<FuncCommand> func;
+    auto it1 = m_funcCommandsStatic.find(path);
+    if (it1 != m_funcCommandsStatic.end())
+    {
+        return &it1->second;
+    }
+
+    static const std::string WILDCARD = "*";
+    if (!m_funcCommandsVar.empty() && path != WILDCARD)
+    {
+        std::vector<std::string> pathEntries;
+        Utils::split(path, 0, path.size(), '/', pathEntries);
+        for (auto it2 = m_funcCommandsVar.begin(); it2 != m_funcCommandsVar.end(); ++it2)
+        {
+            const FunctionVar& funcVar = *it2;
+            if (funcVar.pathEntries.size() == pathEntries.size())
+            {
+                bool match = true;
+                for (size_t i = 0; i < pathEntries.size() && match; ++i)
+                {
+                    const std::string& entry = funcVar.pathEntries[i];
+                    if (entry.size() >= 2 && entry[0] == '{')
+                    {
+                        if (keys)
+                        {
+                            static const std::string PATH_PREFIX = "PATH_";
+                            std::string key = PATH_PREFIX;
+                            key.insert(key.end(), entry.data() + 1, entry.data() + entry.size() - 1);
+                            keys->emplace_back(std::move(key));
+                            keys->emplace_back(std::move(pathEntries[i]));
+                        }
+                    }
+                    else
+                    {
+                        if (entry != pathEntries[i])
+                        {
+                            match = false;
+                        }
+                    }
+                }
+                if (match)
+                {
+                    return &funcVar;
+                }
+            }
+        }
+    }
+    return nullptr;
+}
+
+
 
 void RemoteEntity::receivedRequest(ReceiveData& receiveData)
 {
-    RequestContextPtr requestContext = std::make_shared<RequestContext>(m_peerManager, m_entityId, receiveData, m_fileTransferReply);
-    assert(requestContext);
+    static const std::string WILDCARD = "*";
 
     std::unique_lock<std::mutex> lock(m_mutex);
+    std::vector<std::string> keys;
     std::shared_ptr<FuncCommand> func;
-    auto it = m_funcCommands.find(receiveData.header.type);
-    if (it == m_funcCommands.end())
+    const RemoteEntity::Function* funcData = getFunction(receiveData.header.path, &keys);
+    if (funcData)
     {
-        it = m_funcCommands.find("*");
+        for (size_t i = 0; i < keys.size(); i += 2)
+        {
+            receiveData.message->addMetainfo(std::move(keys[i]), std::move(keys[i + 1]));
+        }
     }
-    if (it != m_funcCommands.end())
+    if (funcData == nullptr)
     {
-        func = it->second;
+        funcData = getFunction(WILDCARD);
+    }
+    if (funcData)
+    {
+        func = funcData->func;
         assert(func);
     }
     lock.unlock();
+
+    RequestContextPtr requestContext = std::make_shared<RequestContext>(m_peerManager, m_entityId, receiveData, m_fileTransferReply);
+    assert(requestContext);
 
     if (func && *func)
     {

@@ -45,6 +45,8 @@ namespace finalmq {
 const int RemoteEntityFormatProto::CONTENT_TYPE = 1;
 const std::string RemoteEntityFormatProto::CONTENT_TYPE_NAME = "protobuf";
 
+static const std::string FMQ_METHOD = "fmq_method";
+
 
 struct RegisterFormatProto
 {
@@ -82,9 +84,10 @@ void RemoteEntityFormatProto::serialize(IMessage& message, const Header& header,
 
 void RemoteEntityFormatProto::serializeData(IMessage& message, const StructBase* structBase)
 {
+    char* bufferSizePayload = message.addSendPayload(4);
+    ssize_t sizePayload = 0;
     if (structBase)
     {
-        char* bufferSizePayload = message.addSendPayload(4);
         ssize_t sizeStart = message.getTotalSendPayloadSize();
         if (structBase->getRawContentType() == CONTENT_TYPE)
         {
@@ -100,21 +103,21 @@ void RemoteEntityFormatProto::serializeData(IMessage& message, const StructBase*
             parserData.parseStruct();
         }
         ssize_t sizeEnd = message.getTotalSendPayloadSize();
-        ssize_t sizePayload = sizeEnd - sizeStart;
-        assert(sizePayload >= 0);
-        *bufferSizePayload = static_cast<unsigned char>(sizePayload);
-        ++bufferSizePayload;
-        *bufferSizePayload = static_cast<unsigned char>(sizePayload >> 8);
-        ++bufferSizePayload;
-        *bufferSizePayload = static_cast<unsigned char>(sizePayload >> 16);
-        ++bufferSizePayload;
-        *bufferSizePayload = static_cast<unsigned char>(sizePayload >> 24);
+        sizePayload = sizeEnd - sizeStart;
     }
+    assert(sizePayload >= 0);
+    *bufferSizePayload = static_cast<unsigned char>(sizePayload);
+    ++bufferSizePayload;
+    *bufferSizePayload = static_cast<unsigned char>(sizePayload >> 8);
+    ++bufferSizePayload;
+    *bufferSizePayload = static_cast<unsigned char>(sizePayload >> 16);
+    ++bufferSizePayload;
+    *bufferSizePayload = static_cast<unsigned char>(sizePayload >> 24);
 }
 
 static const std::string FMQ_PATH = "fmq_path";
 
-std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const BufferRef& bufferRef, bool storeRawData, Header& header, bool& syntaxError)
+std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const BufferRef& bufferRef, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& /*name2Entity*/, Header& header, bool& syntaxError)
 {
     syntaxError = false;
     char* buffer = bufferRef.first;
@@ -145,8 +148,14 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const BufferRef& buff
         SerializerStruct serializerHeader(header);
         ParserProto parserHeader(serializerHeader, buffer, sizeHeader);
         ok = parserHeader.parseStruct(Header::structInfo().getTypeName());
-        header.meta.emplace_back(FMQ_PATH);
-        header.meta.emplace_back(header.destname);
+        if (header.path.empty() && !header.type.empty())
+        {
+            header.path = header.type;
+        }   
+        else if (!header.path.empty() && header.type.empty())
+        {
+            header.type = header.path;
+        }
     }
 
     std::shared_ptr<StructBase> data;
@@ -165,7 +174,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const BufferRef& buff
 
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatProto::parseData(const BufferRef& bufferRef, bool storeRawData, const std::string& type, bool& syntaxError)
+std::shared_ptr<StructBase> RemoteEntityFormatProto::parseData(const BufferRef& bufferRef, bool storeRawData, std::string& type, bool& syntaxError)
 {
     syntaxError = false;
     const char* buffer = bufferRef.first;
@@ -222,16 +231,13 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parseData(const BufferRef& 
                     data = nullptr;
                 }
             }
-            else
+
+            if (storeRawData)
             {
-                if (storeRawData)
+                if (data == nullptr)
                 {
                     data = std::make_shared<remoteentity::RawDataMessage>();
                 }
-            }
-
-            if (storeRawData && data)
-            {
                 data->setRawData(type, CONTENT_TYPE, buffer, sizeDataInStream);
             }
         }

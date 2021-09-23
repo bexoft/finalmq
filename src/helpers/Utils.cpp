@@ -20,42 +20,26 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#include "finalmq/remoteentity/EntityFileService.h"
-
-#include <fcntl.h>
+#include "finalmq/helpers/Utils.h"
+#include <assert.h>
 
 
 namespace finalmq {
 
-
-
-
-EntityFileServer::EntityFileServer(const std::string& baseDirectory)
-    : m_baseDirectory(baseDirectory)
+void Utils::split(const std::string& src, ssize_t indexBegin, ssize_t indexEnd, char delimiter, std::vector<std::string>& dest)
 {
-    registerCommand<remoteentity::ConnectEntity>([this](const RequestContextPtr& requestContext, const std::shared_ptr<remoteentity::ConnectEntity>& /*request*/) {
-        requestContext->reply(remoteentity::Status::STATUS_ENTITY_NOT_FOUND);
-    });
-
-    registerCommandFunction("*", "", [this](RequestContextPtr& requestContext, const StructBasePtr& /*structBase*/) {
-        bool handeled = false;
-        std::string* path = requestContext->getMetainfo("fmq_path");
-        if (path && !path->empty())
+    while (indexBegin < indexEnd)
+    {
+        size_t pos = src.find_first_of(delimiter, indexBegin);
+        if (pos == std::string::npos || static_cast<ssize_t>(pos) > indexEnd)
         {
-            std::string filename = m_baseDirectory + *path;
-            handeled = requestContext->replyFile(filename);
+            pos = indexEnd;
         }
-
-        if (!handeled)
-        {
-            // not found
-            requestContext->reply(finalmq::remoteentity::Status::STATUS_ENTITY_NOT_FOUND);
-        }
-    });
+        ssize_t len = pos - indexBegin;
+        assert(len >= 0);
+        dest.emplace_back(&src[indexBegin], len);
+        indexBegin += len + 1;
+    }
 }
 
-
-
-
-
-}   // namespace finalmq
+} // namespace finalmq

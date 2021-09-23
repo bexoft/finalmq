@@ -20,42 +20,21 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#include "finalmq/remoteentity/EntityFileService.h"
+#pragma once
 
-#include <fcntl.h>
+#include <string>
+#include <vector>
 
+#include "finalmq/helpers/FmqDefines.h"
 
 namespace finalmq {
 
 
-
-
-EntityFileServer::EntityFileServer(const std::string& baseDirectory)
-    : m_baseDirectory(baseDirectory)
+class SYMBOLEXP Utils
 {
-    registerCommand<remoteentity::ConnectEntity>([this](const RequestContextPtr& requestContext, const std::shared_ptr<remoteentity::ConnectEntity>& /*request*/) {
-        requestContext->reply(remoteentity::Status::STATUS_ENTITY_NOT_FOUND);
-    });
+public:
+    static void split(const std::string& src, ssize_t indexBegin, ssize_t indexEnd, char delimiter, std::vector<std::string>& dest);
 
-    registerCommandFunction("*", "", [this](RequestContextPtr& requestContext, const StructBasePtr& /*structBase*/) {
-        bool handeled = false;
-        std::string* path = requestContext->getMetainfo("fmq_path");
-        if (path && !path->empty())
-        {
-            std::string filename = m_baseDirectory + *path;
-            handeled = requestContext->replyFile(filename);
-        }
+};
 
-        if (!handeled)
-        {
-            // not found
-            requestContext->reply(finalmq::remoteentity::Status::STATUS_ENTITY_NOT_FOUND);
-        }
-    });
-}
-
-
-
-
-
-}   // namespace finalmq
+} // namespace finalmq

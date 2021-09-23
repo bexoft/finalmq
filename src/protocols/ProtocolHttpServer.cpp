@@ -26,6 +26,7 @@
 #include "finalmq/protocolsession/ProtocolRegistry.h"
 #include "finalmq/protocolsession/ProtocolSession.h"
 #include "finalmq/streamconnection/Socket.h"
+#include "finalmq/helpers/Utils.h"
 
 //#include "finalmq/helpers/ModulenameFinalmq.h"
 
@@ -162,22 +163,6 @@ IProtocol::FuncCreateMessage ProtocolHttpServer::getMessageFactory() const
     };
 }
 
-
-static void split(const std::string& src, ssize_t indexBegin, ssize_t indexEnd, char delimiter, std::vector<std::string>& dest)
-{
-    while (indexBegin < indexEnd)
-    {
-        size_t pos = src.find_first_of(delimiter, indexBegin);
-        if (pos == std::string::npos || static_cast<ssize_t>(pos) > indexEnd)
-        {
-            pos = indexEnd;
-        }
-        ssize_t len = pos - indexBegin;
-        assert(len >= 0);
-        dest.emplace_back(&src[indexBegin], len);
-        indexBegin += len + 1;
-    }
-}
 
 static void splitOnce(const std::string& src, ssize_t indexBegin, ssize_t indexEnd, char delimiter, std::vector<std::string>& dest)
 {
@@ -413,7 +398,7 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
                         if (m_receiveBuffer[m_offsetRemaining] == 'H' && m_receiveBuffer[m_offsetRemaining + 1] == 'T')
                         {
                             std::vector<std::string> lineSplit;
-                            split(m_receiveBuffer, m_offsetRemaining, indexEndLine, ' ', lineSplit);
+                            Utils::split(m_receiveBuffer, m_offsetRemaining, indexEndLine, ' ', lineSplit);
                             if (lineSplit.size() == 3)
                             {
                                 m_message = std::make_shared<ProtocolMessage>(0);
@@ -432,11 +417,11 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
                         else
                         {
                             std::vector<std::string> lineSplit;
-                            split(m_receiveBuffer, m_offsetRemaining, indexEndLine, ' ', lineSplit);
+                            Utils::split(m_receiveBuffer, m_offsetRemaining, indexEndLine, ' ', lineSplit);
                             if (lineSplit.size() == 3)
                             {
                                 std::vector<std::string> pathquerySplit;
-                                split(lineSplit[1], 0, lineSplit[1].size(), '?', pathquerySplit);
+                                Utils::split(lineSplit[1], 0, lineSplit[1].size(), '?', pathquerySplit);
                                 m_message = std::make_shared<ProtocolMessage>(0);
                                 IMessage::Metainfo& metainfo = m_message->getAllMetainfo();
                                 metainfo[FMQ_HTTP] = HTTP_REQUEST;
@@ -452,13 +437,13 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
                                 if (pathquerySplit.size() >= 2)
                                 {
                                     std::vector<std::string> querySplit;
-                                    split(pathquerySplit[1], 0, pathquerySplit[1].size(), '&', querySplit);
+                                    Utils::split(pathquerySplit[1], 0, pathquerySplit[1].size(), '&', querySplit);
                                     for (size_t i = 0; i < querySplit.size(); ++i)
                                     {
                                         std::string queryTotal;
                                         decode(queryTotal, querySplit[i]);
                                         std::vector<std::string> queryNameValue;
-                                        split(queryTotal, 0, queryTotal.size(), '=', queryNameValue);
+                                        Utils::split(queryTotal, 0, queryTotal.size(), '=', queryNameValue);
                                         if (queryNameValue.size() == 1)
                                         {
                                             metainfo[FMQ_QUERY_PREFIX + queryNameValue[0]] = std::string();
