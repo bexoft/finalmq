@@ -41,7 +41,7 @@ public:
         m_timeoutMs = -1;
     }
 
-    bool isExpired()
+    bool isExpired(bool stopIfExpired = true)
     {
         bool expired = false;
         if (m_timeoutMs != -1)
@@ -52,6 +52,10 @@ public:
             if (delta > m_timeoutMs)
             {
                 expired = true;
+                if (stopIfExpired)
+                {
+                    stop();
+                }
             }
             else if (delta < 0)
             {
