@@ -71,7 +71,7 @@ void triggerRequest(RemoteEntity& entityClient, PeerId peerId, const std::chrono
 {
     entityClient.requestReply<HelloReply>(peerId,
         HelloRequest{ { {"Bonnie","Parker",Sex::FEMALE,1910,{"somestreet", 12,76875,"Rowena","USA"}} } },
-        [&entityClient, peerId, &starttime, index](PeerId peerId, Status status, const std::shared_ptr<HelloReply>& reply) {
+        [&entityClient, &starttime, index](PeerId peerId, Status status, const std::shared_ptr<HelloReply>& reply) {
             if (reply)
             {
                 if (index == LOOP - 1)

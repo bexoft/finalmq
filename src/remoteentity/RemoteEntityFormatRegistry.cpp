@@ -51,7 +51,7 @@ static const std::string FMQ_RE_SRCID = "fmq_re_srcid";
 static const std::string FMQ_RE_MODE = "fmq_re_mode";
 static const std::string FMQ_CORRID = "fmq_corrid";
 static const std::string FMQ_RE_STATUS = "fmq_re_status";
-static const std::string FMQ_RE_PATH = "fmq_re_path";
+static const std::string FMQ_SUBPATH = "fmq_subpath";
 static const std::string FMQ_TYPE = "fmq_type";
 static const std::string MSG_REPLY = "MSG_REPLY";
 
@@ -123,7 +123,7 @@ void RemoteEntityFormatRegistryImpl::serializeHeaderToMetainfo(IMessage& message
     metainfo[FMQ_RE_STATUS] = header.status.toString();
     if (!header.path.empty())
     {
-        metainfo[FMQ_RE_PATH] = header.path;
+        metainfo[FMQ_SUBPATH] = header.path;
     }
     metainfo[FMQ_TYPE] = header.type;
 }
@@ -345,9 +345,30 @@ static void metainfoToMessage(IMessage& message, std::vector<std::string>& meta)
 
 
 
+inline static bool isDestinationIdDefined(const remoteentity::Header& header)
+{
+    return (header.destid != ENTITYID_INVALID && header.destid != ENTITYID_DEFAULT);
+}
 
+inline static bool isDestinationDefined(const remoteentity::Header& header)
+{
+    return (!header.destname.empty() || (header.destid != ENTITYID_INVALID && header.destid != ENTITYID_DEFAULT));
+}
 
+inline static bool isTypeDefined(const remoteentity::Header& header)
+{
+    return (!header.type.empty());
+}
 
+inline static bool isSubPathDefined(const remoteentity::Header& header)
+{
+    return (!header.path.empty());
+}
+
+inline static bool isDestTypeSubTypeDefined(const remoteentity::Header& header)
+{
+    return (isDestinationDefined(header) && isTypeDefined(header) && isSubPathDefined(header));
+}
 
 void RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, remoteentity::Header& header)
 {
@@ -359,9 +380,65 @@ void RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, const std:
     auto itStatus = metainfo.find(FMQ_RE_STATUS);
     auto itDestName = metainfo.find(FMQ_DESTNAME);
     auto itDestId = metainfo.find(FMQ_RE_DESTID);
-    auto itRePath = metainfo.find(FMQ_RE_PATH);
+    auto itSubPath = metainfo.find(FMQ_SUBPATH);
     auto itType = metainfo.find(FMQ_TYPE);
-    if (itPath != metainfo.end())
+
+    if (itSrcId != metainfo.end())
+    {
+        const std::string& srcid = itSrcId->second;
+        header.srcid = std::atoll(srcid.c_str());
+    }
+
+    if (itMode != metainfo.end())
+    {
+        const std::string& mode = itMode->second;
+        if (mode == MSG_REPLY)
+        {
+            header.mode = MsgMode::MSG_REPLY;
+        }
+        else
+        {
+            header.mode = MsgMode::MSG_REQUEST;
+        }
+    }
+
+    if (itCorrId != metainfo.end())
+    {
+        const std::string& corrid = itCorrId->second;
+        header.corrid = std::atoll(corrid.c_str());
+    }
+
+    if (itStatus != metainfo.end())
+    {
+        const std::string& status = itStatus->second;
+        header.status.fromString(status);
+    }
+
+    if (itDestName != metainfo.end())
+    {
+        const std::string& destname = itDestName->second;
+        header.destname = destname;
+    }
+
+    if (itDestId != metainfo.end())
+    {
+        const std::string& destid = itDestId->second;
+        header.destid = std::atoll(destid.c_str());
+    }
+
+    if (itType != metainfo.end())
+    {
+        const std::string& type = itType->second;
+        header.type = type;
+    }
+
+    if (itSubPath != metainfo.end())
+    {
+        const std::string& path = itSubPath->second;
+        header.path = path;
+    }
+
+    if (itPath != metainfo.end() && !isDestTypeSubTypeDefined(header))
     {
         const std::string& path = itPath->second;
 
@@ -401,7 +478,7 @@ void RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, const std:
             {
                 header.path = std::string(&pathWithoutFirstSlash[foundEntityName->size() + 1], ixEndHeader - foundEntityName->size() - 1);
                 auto entity = remoteEntity.lock();
-                if (entity)
+                if (entity && !isTypeDefined(header))
                 {
                     const std::string* method = nullptr;
                     auto itMethod = metainfo.find(FMQ_METHOD);
@@ -415,72 +492,16 @@ void RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, const std:
         }
         else
         {
-            header.destname = pathWithoutFirstSlash;
+            if (!isDestinationIdDefined(header))
+            {
+                header.destname = pathWithoutFirstSlash;
+            }
         }
     }
 
-    if (itSrcId != metainfo.end())
+    if (header.path.empty())
     {
-        const std::string& srcid = itSrcId->second;
-        header.srcid = std::atoll(srcid.c_str());
-    }
-
-    if (itMode != metainfo.end())
-    {
-        const std::string& mode = itMode->second;
-        if (mode == MSG_REPLY)
-        {
-            header.mode = MsgMode::MSG_REPLY;
-        }
-        else
-        {
-            header.mode = MsgMode::MSG_REQUEST;
-        }
-    }
-
-    if (itCorrId != metainfo.end())
-    {
-        const std::string& corrid = itCorrId->second;
-        header.corrid = std::atoll(corrid.c_str());
-    }
-
-    if (itStatus != metainfo.end())
-    {
-        const std::string& status = itStatus->second;
-        header.status.fromString(status);
-    }
-
-    if (itDestName != metainfo.end())
-    {
-        const std::string& destname = itDestName->second;
-        if (!destname.empty())
-        {
-            header.destname = destname;
-        }
-    }
-
-    if (itDestId != metainfo.end())
-    {
-        const std::string& destid = itDestId->second;
-        header.destid = std::atoll(destid.c_str());
-    }
-
-    if (itType != metainfo.end())
-    {
-        const std::string& type = itType->second;
-        if (!type.empty())
-        {
-            header.type = type;
-        }
-    }
-
-    if (itRePath != metainfo.end())
-    {
-        const std::string& path = itType->second;
-        if (!path.empty())
-        {
-            header.path = path;
-        }
+        header.path = header.type;
     }
 }
 

@@ -496,10 +496,7 @@ bool Mqtt5Protocol::processPayload(const IStreamConnectionPtr& connection)
         break;
     }
 
-    if (ok)
-    {
-        clearState();
-    }
+    clearState();
 
     return ok;
 }
