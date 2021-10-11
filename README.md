@@ -59,7 +59,35 @@ C++ Installation - Windows
 --------------------------
 
 To build from source using VC++, follow this instructions:
-* Install dependend tools and dependencies listed above (TODO: details will follow)
+* Install dependend tools and dependencies listed above
+  * Install node.js from https://nodejs.org/en/download/current/
+  
+  * Install ejs and minimist
+  
+    command:
+  
+    ```
+    npm install -g ejs minimist
+    ```
+  
+    Get the directory, where the packages were installed
+  
+    	npm config get prefix
+  
+    The output could be:
+  
+    	C:\Users\<UserName>\AppData\Roaming\npm
+  
+    Use this path, add the directory "node_modules" and set the NODE_PATH environment variable with this path.
+  
+    	NODE_PATH=C:\Users\<UserName>\AppData\Roaming\npm\node_modules
+  
+    If you need help for setting the environment variable, then you can get help from here:
+  
+    https://docs.oracle.com/en/database/oracle/machine-learning/oml4r/1.5.1/oread/creating-and-modifying-environment-variables-on-windows.html
+  
+    After setting the environment variable you have to restart your Visual Studio, in case it is opened, otherwise it will not see the new value. 
+
 * Open CMakeLists.txt from VisualStudio
 * Compile the finalmq project
 
@@ -750,7 +778,7 @@ If an HTTP client sends an HTTP request with query parameters:
 
 	localhost:8080/MyService/helloworld.HelloRequest{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}?filter=hello
 
-Then on finalMQ side you can get the query parameters in the meta info. The key is the name of the query parameter with the prefix "FMQQUERY_". So, in this example the "filter" query will have the key "FMQQUERY_filter". If you want to get all query parameters then you have to iterate through all meta info and filter all keys that start with"FMQQUERY".
+Then on finalMQ side you can get the query parameters in the meta info. The key is the name of the query parameter with the prefix "QUERY_". So, in this example the "filter" query will have the key "QUERY_filter". If you want to get all query parameters then you have to iterate through all meta info and filter all keys that start with"QUERY".
 
 
 
