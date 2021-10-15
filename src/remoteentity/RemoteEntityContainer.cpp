@@ -304,24 +304,24 @@ EntityId RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> remoteE
 }
 
 
-void RemoteEntityContainer::addPureDataPaths(std::vector<std::string>& paths)
-{
-    for (size_t i = 0; i < paths.size(); ++i)
-    {
-        const std::string& path = paths[i];
-        if (!path.empty())
-        {
-            if (path[path.size() - 1] == '*')
-            {
-                m_pureDataPathPrefixes.emplace_back(path.data(), path.size() - 1);
-            }
-            else
-            {
-                m_pureDataPaths.emplace_back(path);
-            }
-        }
-    }
-}
+//void RemoteEntityContainer::addPureDataPaths(std::vector<std::string>& paths)
+//{
+//    for (size_t i = 0; i < paths.size(); ++i)
+//    {
+//        const std::string& path = paths[i];
+//        if (!path.empty())
+//        {
+//            if (path[path.size() - 1] == '*')
+//            {
+//                m_pureDataPathPrefixes.emplace_back(path.data(), path.size() - 1);
+//            }
+//            else
+//            {
+//                m_pureDataPaths.emplace_back(path);
+//            }
+//        }
+//    }
+//}
 
 
 
@@ -436,26 +436,26 @@ void RemoteEntityContainer::disconnectedVirtualSession(const IProtocolSessionPtr
 }
 
 
-bool RemoteEntityContainer::isPureDataPath(const std::string& path)
-{
-    for (auto it = m_pureDataPathPrefixes.begin(); it != m_pureDataPathPrefixes.end(); ++it)
-    {
-        const std::string& prefix = *it;
-        if (path.size() >= prefix.size() && path.compare(0, prefix.size(), prefix) == 0)
-        {
-            return true;
-        }
-    }
-    for (auto it = m_pureDataPaths.begin(); it != m_pureDataPaths.end(); ++it)
-    {
-        const std::string& pathCompare = *it;
-        if (path == pathCompare)
-        {
-            return true;
-        }
-    }
-    return false;
-}
+//bool RemoteEntityContainer::isPureDataPath(const std::string& path)
+//{
+//    for (auto it = m_pureDataPathPrefixes.begin(); it != m_pureDataPathPrefixes.end(); ++it)
+//    {
+//        const std::string& prefix = *it;
+//        if (path.size() >= prefix.size() && path.compare(0, prefix.size(), prefix) == 0)
+//        {
+//            return true;
+//        }
+//    }
+//    for (auto it = m_pureDataPaths.begin(); it != m_pureDataPaths.end(); ++it)
+//    {
+//        const std::string& pathCompare = *it;
+//        if (path == pathCompare)
+//        {
+//            return true;
+//        }
+//    }
+//    return false;
+//}
 
 
 
@@ -474,23 +474,23 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     }
 
 
-    bool pureData = false;
-    if (session->doesSupportMetainfo())
-    {
-        const std::string* path = message->getMetainfo(FMQ_PATH);
-        if (path)
-        {
-            if (isPureDataPath(*path))
-            {
-                pureData = true;
-            }
-        }
-    }
+    //bool pureData = false;
+    //if (session->doesSupportMetainfo())
+    //{
+    //    const std::string* path = message->getMetainfo(FMQ_PATH);
+    //    if (path)
+    //    {
+    //        if (isPureDataPath(*path))
+    //        {
+    //            pureData = true;
+    //        }
+    //    }
+    //}
 
     bool syntaxError = false;
     ReceiveData receiveData{ session, {}, message, {}, {} };
-    if (!pureData)
-    {
+    //if (!pureData)
+    //{
         if (!session->doesSupportMetainfo())
         {
             receiveData.structBase = RemoteEntityFormatRegistry::instance().parse(*message, session->getContentType(), m_storeRawDataInReceiveStruct, m_name2entityNoLock, receiveData.header, syntaxError);
@@ -499,11 +499,11 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
         {
             receiveData.structBase = RemoteEntityFormatRegistry::instance().parseHeaderInMetainfo(*message, session->getContentType(), m_storeRawDataInReceiveStruct, m_name2entityNoLock, receiveData.header, syntaxError);
         }
-    }
-    else
-    {
-        receiveData.structBase = RemoteEntityFormatRegistry::instance().parsePureData(*message, receiveData.header);
-    }
+    //}
+    //else
+    //{
+    //    receiveData.structBase = RemoteEntityFormatRegistry::instance().parsePureData(*message, receiveData.header);
+    //}
 
     EntityId entityId = receiveData.header.destid;
     bool foundEntity = false;

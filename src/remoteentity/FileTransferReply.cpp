@@ -78,7 +78,7 @@ bool FileTransferReply::replyFile(const RequestContextPtr& requestContext, const
                 int fd = OperatingSystem::instance().open(filename.c_str(), flags);
                 if (fd != -1)
                 {
-                    remoteentity::Bytes reply;
+                    remoteentity::RawBytes reply;
                     reply.data.resize(sizeFile);
 
                     char* buf = reply.data.data();

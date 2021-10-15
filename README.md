@@ -1395,11 +1395,11 @@ EntityFileServer entityFileServer("htdocs");
 entityContainer.registerEntity(&entityFileServer, "*");
 ```
 
-In the constructor you have to pass the directory in which the downloadable files will exist. You will register the remote entity with "*". This means, if no remote entity is found with the given path in the request ("/entityname/messagetype"), then this entity will lookup inside the directory (htdocs), if the path matches a filepath.  If yes, then the file will be downloaded to the client. In case of protocols that support meta info, like HTTP headers, the file will be transfered as binary data, in other cases the file will be transfered as the message "finalmq.remoteentity.Bytes" (see "inc/finalmq/entitydata.fmq").
+In the constructor you have to pass the directory in which the downloadable files will exist. You will register the remote entity with "*". This means, if no remote entity is found with the given path in the request ("/entityname/messagetype"), then this entity will lookup inside the directory (htdocs), if the path matches a filepath.  If yes, then the file will be downloaded to the client. In case of protocols that support meta info, like HTTP headers, the file will be transfered as binary data, in other cases the file will be transfered as the message "finalmq.remoteentity.RawBytes" (see "inc/finalmq/entitydata.fmq").
 
 Message description:
 
-	{"type":"Bytes","desc":"Send pure data for protocols with no meta info.","fields":[
+	{"type":"RawBytes","desc":"Send pure data for protocols with no meta info.","fields":[
 	    {"tid":"TYPE_BYTES", "type":"", "name":"data", "desc":"The data","flags":[]}
 	]} 
 

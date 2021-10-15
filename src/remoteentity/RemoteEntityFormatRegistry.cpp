@@ -264,9 +264,9 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, co
             {
                 Variant& controlDataTmp = message->getControlData();
                 statusToProtocolStatus(header.status, controlDataTmp, metainfo, session);
-                if (structBase && structBase->getStructInfo().getTypeName() == remoteentity::Bytes::structInfo().getTypeName())
+                if (structBase && structBase->getStructInfo().getTypeName() == remoteentity::RawBytes::structInfo().getTypeName())
                 {
-                    pureData = &static_cast<const remoteentity::Bytes*>(structBase)->data;
+                    pureData = &static_cast<const remoteentity::RawBytes*>(structBase)->data;
                 }
             }
 
@@ -513,28 +513,37 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainf
     syntaxError = false;
     BufferRef bufferRef = message.getReceivePayload();
 
-    // special feature for the browser: json data can be written into the path
-    if (bufferRef.second == 0)
-    {
-        std::string* path = message.getMetainfo(FMQ_PATH);
-        if (path && !path->empty())
-        {
-            size_t pos = path->find_first_of('{');
-            if (pos != std::string::npos)
-            {
-                bufferRef.first = &path->at(pos);
-                bufferRef.second = path->size() - pos;
-            }
-        }
-    }
-
     std::shared_ptr<StructBase> structBase;
 
-    auto it = m_contentTypeToFormat.find(contentType);
-    if (it != m_contentTypeToFormat.end())
+    if (header.type != remoteentity::RawBytes::structInfo().getTypeName())
     {
-        assert(it->second);
-        structBase = it->second->parseData(bufferRef, storeRawData, header.type, syntaxError);
+        // special feature for the browser: json data can be written into the path
+        if (bufferRef.second == 0)
+        {
+            std::string* path = message.getMetainfo(FMQ_PATH);
+            if (path && !path->empty())
+            {
+                size_t pos = path->find_first_of('{');
+                if (pos != std::string::npos)
+                {
+                    bufferRef.first = &path->at(pos);
+                    bufferRef.second = path->size() - pos;
+                }
+            }
+        }
+
+        auto it = m_contentTypeToFormat.find(contentType);
+        if (it != m_contentTypeToFormat.end())
+        {
+            assert(it->second);
+            structBase = it->second->parseData(bufferRef, storeRawData, header.type, syntaxError);
+        }
+    }
+    else
+    {
+        std::shared_ptr<remoteentity::RawBytes> structRawBytes = std::make_shared<remoteentity::RawBytes>();
+        structRawBytes->data = { bufferRef.first, bufferRef.first + bufferRef.second };
+        structBase = structRawBytes;
     }
 
     return structBase;
@@ -560,21 +569,19 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(IMessage& mess
 
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parsePureData(IMessage& message, Header& header)
-{
-    std::string* path = message.getMetainfo(FMQ_PATH);
-    if (path && !path->empty())
-    {
-        header.destname = *path;
-    }
-
-    std::shared_ptr<remoteentity::Bytes> structBytes = std::make_shared<remoteentity::Bytes>();
-    BufferRef rec = message.getReceivePayload();
-    structBytes->data = { rec.first, rec.first + rec.second };
-    header.type = remoteentity::Bytes::structInfo().getTypeName();
-
-    return structBytes;
-}
+//std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parsePureData(IMessage& message, Header& header)
+//{
+//    const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity;
+//    parseMetainfo(message, name2Entity, header);
+//
+//    BufferRef bufferRef = message.getReceivePayload();
+//
+//    std::shared_ptr<remoteentity::RawBytes> structBytes = std::make_shared<remoteentity::RawBytes>();
+//    structBytes->data = { bufferRef.first, bufferRef.first + bufferRef.second };
+//    header.type = remoteentity::RawBytes::structInfo().getTypeName();
+//
+//    return structBytes;
+//}
 
 
 
