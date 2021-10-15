@@ -79,7 +79,7 @@
             {"tid":"TYPE_STRING",       "type":"",          "name":"entityName",   "desc":"The entity name of the sender of ConnectivityReply","flags":[]}
         ]},
         {"type":"DisconnectEntity","desc":"The entity that will be removed will send DisconnectEntity to all its peers.","fields":[]},
-        {"type":"Bytes","desc":"Send pure data for protocols with no meta info.","fields":[
+        {"type":"RawBytes","desc":"Send pure data for protocols with no meta info.","fields":[
             {"tid":"TYPE_BYTES",       "type":"",          "name":"data",     "desc":"The data","flags":[]}
         ]}
     ]

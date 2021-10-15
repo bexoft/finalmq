@@ -831,17 +831,25 @@ void RemoteEntity::registerCommandFunction(const std::string& path, const std::s
 {
     std::shared_ptr<FuncCommand> func = std::make_shared<FuncCommand>(std::move(funcCommand));
     std::unique_lock<std::mutex> lock(m_mutex);
-    if (path.find('{') == std::string::npos)
-    {
-        m_funcCommandsStatic[path] = { type, func };
-    }
-    else
+    if (path.find('{') != std::string::npos)
     {
         FunctionVar funcVar;
         funcVar.type = type;
         funcVar.func = func;
         Utils::split(path, 0, path.size(), '/', funcVar.pathEntries);
-        m_funcCommandsVar.emplace_back( std::move(funcVar) );
+        m_funcCommandsVar.emplace_back(std::move(funcVar));
+    }
+    else if (path.find('*') != std::string::npos)
+    {
+        FunctionVar funcVar;
+        funcVar.type = type;
+        funcVar.func = func;
+        Utils::split(path, 0, path.size(), '/', funcVar.pathEntries);
+        m_funcCommandsVarStar.emplace_back(std::move(funcVar));
+    }
+    else
+    {
+        m_funcCommandsStatic[path] = { type, func };
     }
 }
 
@@ -937,11 +945,11 @@ const RemoteEntity::Function* RemoteEntity::getFunction(const std::string& path,
         return &it1->second;
     }
 
-    static const std::string WILDCARD = "*";
-    if (!m_funcCommandsVar.empty() && path != WILDCARD)
+    std::vector<std::string> pathEntries;
+    Utils::split(path, 0, path.size(), '/', pathEntries);
+
+    if (!m_funcCommandsVar.empty())
     {
-        std::vector<std::string> pathEntries;
-        Utils::split(path, 0, path.size(), '/', pathEntries);
         for (auto it2 = m_funcCommandsVar.begin(); it2 != m_funcCommandsVar.end(); ++it2)
         {
             const FunctionVar& funcVar = *it2;
@@ -953,7 +961,7 @@ const RemoteEntity::Function* RemoteEntity::getFunction(const std::string& path,
                     const std::string& entry = funcVar.pathEntries[i];
                     if (entry.size() >= 2 && entry[0] == '{')
                     {
-                        if (keys)
+                        if (keys && entry.size() >= 3)
                         {
                             static const std::string PATH_PREFIX = "PATH_";
                             std::string key = PATH_PREFIX;
@@ -977,6 +985,72 @@ const RemoteEntity::Function* RemoteEntity::getFunction(const std::string& path,
             }
         }
     }
+
+    if (!m_funcCommandsVarStar.empty())
+    {
+        for (auto it2 = m_funcCommandsVarStar.begin(); it2 != m_funcCommandsVarStar.end(); ++it2)
+        {
+            const FunctionVar& funcVar = *it2;
+            bool match = true;
+            size_t j = 0;
+            for (size_t i = 0; i < funcVar.pathEntries.size() && match; ++i)
+            {
+                const std::string& entry = funcVar.pathEntries[i];
+                if (entry[0] == '*')
+                {
+                    std::string nextEntry;
+                    ++i;
+                    bool nextEntryAvailable = (i < funcVar.pathEntries.size());
+                    if (nextEntryAvailable)
+                    {
+                        nextEntry = funcVar.pathEntries[i];
+                    }
+                    std::string value;
+                    match = false;
+                    for (; j < pathEntries.size() && !match; ++j)
+                    {
+                        bool matchNextEntry = (nextEntryAvailable && pathEntries[j] == nextEntry);
+                        bool matchLastEntry = (!nextEntryAvailable && (j == pathEntries.size() - 1));
+
+                        if (!matchNextEntry)
+                        {
+                            if (!value.empty())
+                            {
+                                value += '/';
+                            }
+                            value += pathEntries[j];
+                        }
+
+                        if (matchNextEntry || matchLastEntry)
+                        {
+                            if (keys && entry.size() >= 3)
+                            {
+                                static const std::string PATH_PREFIX = "PATH_";
+                                std::string key = PATH_PREFIX;
+                                key.insert(key.end(), entry.data() + 1, entry.data() + entry.size() - 1);
+                                keys->emplace_back(std::move(key));
+                                keys->emplace_back(std::move(value));
+                            }
+                            match = true;
+                        }
+                    }
+                }
+                else
+                {
+                    if (entry != pathEntries[j])
+                    {
+                        match = false;
+                    }
+                    ++j;
+                }
+            }
+            if (match && j == pathEntries.size())
+            {
+                return &funcVar;
+            }
+        }
+    }
+
     return nullptr;
 }
 

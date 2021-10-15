@@ -133,13 +133,13 @@ struct IRemoteEntityContainer
      */
     virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, std::string name = "") = 0;
 
-    /**
-     * @brief addPureDataPaths define the paths for receiving pure binary data. You can also use '*' at the end
-     * of the path to include all sub-paths. You will use this method to accept e.g. a file upload via HTTP to
-     * a given path.
-     * @param paths
-     */
-    virtual void addPureDataPaths(std::vector<std::string>& paths) = 0;
+    ///**
+    // * @brief addPureDataPaths define the paths for receiving pure binary data. You can also use '*' at the end
+    // * of the path to include all sub-paths. You will use this method to accept e.g. a file upload via HTTP to
+    // * a given path.
+    // * @param paths
+    // */
+    //virtual void addPureDataPaths(std::vector<std::string>& paths) = 0;
 
     /**
      * @brief unregisterEntity unregisters an entity.
@@ -189,7 +189,7 @@ public:
     virtual IExecutorPtr getExecutor() const override;
 
     virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, std::string name = "") override;
-    virtual void addPureDataPaths(std::vector<std::string>& paths) override;
+//    virtual void addPureDataPaths(std::vector<std::string>& paths) override;
     virtual void unregisterEntity(EntityId entityId) override;
     virtual void registerConnectionEvent(FuncConnectionEvent funcConnectionEvent) override;
 
@@ -207,7 +207,7 @@ private:
 
     inline void triggerConnectionEvent(const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) const;
     void deinit();
-    bool isPureDataPath(const std::string& path);
+//    bool isPureDataPath(const std::string& path);
     void subscribeEntityNames(const IProtocolSessionPtr& session);
     void subscribeSessions(const std::string& name);
 
@@ -221,7 +221,7 @@ private:
     bool                                                        m_storeRawDataInReceiveStruct = false;
     std::chrono::time_point<std::chrono::system_clock>          m_lastCheckTime;
     std::list<std::string>                                      m_pureDataPaths;
-    std::list<std::string>                                      m_pureDataPathPrefixes;
+//    std::list<std::string>                                      m_pureDataPathPrefixes;
     std::shared_ptr<FileTransferReply>                          m_fileTransferReply;
     IExecutorPtr                                                m_executor;
 
