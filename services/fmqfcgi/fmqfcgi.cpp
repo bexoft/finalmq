@@ -270,7 +270,7 @@ public:
         std::unique_lock<std::mutex> lock(m_mutex);
         m_longpollDurationMs = durationSecond * 1000;
         m_longpoll = nullptr;
-        m_longpollTimer = std::chrono::system_clock::now();
+        m_longpollTimer = std::chrono::steady_clock::now();
         if (m_requestEntries.empty() && m_longpollDurationMs > 0)
         {
             streamInfo << "Save longpoll";
@@ -285,7 +285,7 @@ public:
     bool isLongPollExpired()
     {
         std::unique_lock<std::mutex> lock(m_mutex);
-        std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+        std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
         std::chrono::duration<double> dur = now - m_longpollTimer;
         long long delta = static_cast<long long>(dur.count() * 1000);
         bool expired = false;
@@ -370,7 +370,7 @@ public:
     void setActivity()
     {
         std::unique_lock<std::mutex> lock(m_mutex);
-        m_lastActivityTime = std::chrono::system_clock::now();
+        m_lastActivityTime = std::chrono::steady_clock::now();
     }
 
     void setExpirationDuration(long long expirationDurationSecond)
@@ -382,7 +382,7 @@ public:
     bool isSessionTimeExpired()
     {
         std::unique_lock<std::mutex> lock(m_mutex);
-        std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+        std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
         std::chrono::duration<double> dur = now - m_lastActivityTime;
         long long delta = static_cast<long long>(dur.count() * 1000);
         bool expired = false;
@@ -419,9 +419,9 @@ private:
     std::deque<std::string>                 m_requestEntries;
     RequestPtr                              m_longpoll;
     long long                               m_longpollDurationMs;
-    std::chrono::time_point<std::chrono::system_clock> m_longpollTimer = std::chrono::system_clock::now();
+    std::chrono::time_point<std::chrono::steady_clock> m_longpollTimer = std::chrono::steady_clock::now();
 
-    std::chrono::time_point<std::chrono::system_clock> m_lastActivityTime = std::chrono::system_clock::now();
+    std::chrono::time_point<std::chrono::steady_clock> m_lastActivityTime = std::chrono::steady_clock::now();
     long long                               m_sessionExpirationDurationMs = DEFAULT_SESSION_EXPIRATION_DURATION;
 
     std::mutex                              m_mutex;

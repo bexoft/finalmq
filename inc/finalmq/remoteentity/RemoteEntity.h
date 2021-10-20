@@ -379,6 +379,7 @@ private:
     IExecutorPtr                        m_executor;
     mutable std::atomic_uint64_t        m_nextCorrelationId{1};
     mutable std::mutex                  m_mutex;
+    mutable std::mutex                  m_mutexFunctions;
 };
 
 

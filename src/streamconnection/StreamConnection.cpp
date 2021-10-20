@@ -38,7 +38,7 @@ StreamConnection::StreamConnection(const ConnectionData& connectionData, std::sh
     , m_executorPollerThread(executorPollerThread)
 {
 
-    m_lastReconnectTime = std::chrono::system_clock::now();
+    m_lastReconnectTime = std::chrono::steady_clock::now();
 }
 
 // IStreamConnection
@@ -240,7 +240,7 @@ bool StreamConnection::doReconnect()
         m_connectionData.connectionState == ConnectionState::CONNECTIONSTATE_CONNECTING_FAILED &&
         m_connectionData.reconnectInterval >= 0)
     {
-        std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+        std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
         std::chrono::duration<double> dur = now - m_lastReconnectTime;
         int delta = static_cast<int>(dur.count() * 1000);
         if (delta < 0 || delta >= m_connectionData.reconnectInterval)
@@ -259,7 +259,7 @@ bool StreamConnection::changeStateForDisconnect()
     bool reconnectExpired = false;
     if (!m_disconnectFlag && (m_connectionData.connectionState == ConnectionState::CONNECTIONSTATE_CONNECTING))
     {
-        std::chrono::duration<double> dur = std::chrono::system_clock::now() - m_connectionData.startTime;
+        std::chrono::duration<double> dur = std::chrono::steady_clock::now() - m_connectionData.startTime;
         int delta = static_cast<int>(dur.count() * 1000);
         if (m_connectionData.totalReconnectDuration >= 0 && (delta < 0 || delta >= m_connectionData.totalReconnectDuration))
         {

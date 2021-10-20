@@ -829,14 +829,14 @@ std::uint64_t ParserProto::parseVarint()
     {
         return res;
     }
-    for (int i = 1; i < 10; ++i)
+    for (int shift = 7; shift < 70; shift += 7)
     {
         if (m_size <= 0)
         {
             break;
         }
         c = static_cast<std::uint8_t>(*m_ptr);
-        res += (c - 1) << (7 * i);
+        res += (c - 1) << shift;
         ++m_ptr;
         --m_size;
         if (c < 128)

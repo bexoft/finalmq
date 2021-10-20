@@ -32,24 +32,28 @@ class PollingTimer
 public:
     void setTimeout(int timeout)
     {
-        m_timeoutMs = timeout;
-        m_timer = std::chrono::system_clock::now();
+        std::int64_t t = timeout;
+        if (t != -1)
+        {
+            std::int64_t now = std::chrono::steady_clock::now().time_since_epoch().count() / (std::chrono::steady_clock::period::ratio::den / 1000);
+            t += now;
+        }
+        m_timeExpired.store(t, std::memory_order_release);
     }
 
     void stop()
     {
-        m_timeoutMs = -1;
+        m_timeExpired.store(-1, std::memory_order_release);
     }
 
     bool isExpired(bool stopIfExpired = true)
     {
         bool expired = false;
-        if (m_timeoutMs != -1)
+        std::int64_t timeExpired = m_timeExpired.load(std::memory_order_acquire);
+        if (timeExpired != -1)
         {
-            std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
-            std::chrono::duration<double> dur = now - m_timer;
-            long long delta = static_cast<long long>(dur.count() * 1000);
-            if (delta > m_timeoutMs)
+            std::int64_t now = std::chrono::steady_clock::now().time_since_epoch().count() / (std::chrono::steady_clock::period::ratio::den / 1000);
+            if (now >= timeExpired)
             {
                 expired = true;
                 if (stopIfExpired)
@@ -57,17 +61,12 @@ public:
                     stop();
                 }
             }
-            else if (delta < 0)
-            {
-                m_timer = now;
-            }
         }
         return expired;
     }
 
 private:
-    int m_timeoutMs = -1;
-    std::chrono::time_point<std::chrono::system_clock> m_timer = std::chrono::system_clock::now();
+    std::atomic<std::int64_t> m_timeExpired{-1};
 };
 
 

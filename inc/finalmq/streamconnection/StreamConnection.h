@@ -154,7 +154,7 @@ private:
     std::atomic<bool>           m_disconnectFlag{};
     hybrid_ptr<IStreamConnectionCallback> m_callback;
 
-    std::chrono::time_point<std::chrono::system_clock> m_lastReconnectTime;
+    std::chrono::time_point<std::chrono::steady_clock> m_lastReconnectTime;
     IExecutorPtr                m_executorPollerThread;
 
     mutable std::mutex          m_mutex;

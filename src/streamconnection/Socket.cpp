@@ -44,12 +44,12 @@
 
 
 
-#if defined(WIN32) || defined(__MINGW32__)
 class InitWinSocket
 {
 public:
     InitWinSocket()
     {
+#if defined(WIN32) || defined(__MINGW32__)
         WSADATA wsaData;
         WORD wVersion = MAKEWORD(2, 2);
         int res = WSAStartup(wVersion, &wsaData);
@@ -57,10 +57,12 @@ public:
         {
             streamFatal << "WSAStartup failed with: " << res;
         }
+#else
+        signal(SIGPIPE, SIG_IGN);
+#endif
     }
 };
 static InitWinSocket g_initWinSocket;
-#endif
 
 
 

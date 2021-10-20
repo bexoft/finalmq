@@ -119,10 +119,10 @@ void RemoteEntityContainer::deinit()
 // IRemoteEntityContainer
 
 
-bool RemoteEntityContainer::isTimerExpired(std::chrono::time_point<std::chrono::system_clock>& lastTime, int interval)
+bool RemoteEntityContainer::isTimerExpired(std::chrono::time_point<std::chrono::steady_clock>& lastTime, int interval)
 {
     bool expired = false;
-    std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+    std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
 
     std::chrono::duration<double> dur = now - lastTime;
     int delta = static_cast<int>(dur.count() * 1000);

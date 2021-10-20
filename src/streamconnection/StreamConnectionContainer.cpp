@@ -316,7 +316,7 @@ bool StreamConnectionContainer::connect(const IStreamConnectionPtr& streamConnec
     connectionData.incomingConnection = false;
     connectionData.reconnectInterval = connectionProperties.config.reconnectInterval;
     connectionData.totalReconnectDuration = connectionProperties.config.totalReconnectDuration;
-    connectionData.startTime = std::chrono::system_clock::now();
+    connectionData.startTime = std::chrono::steady_clock::now();
     connectionData.ssl = connectionProperties.certificateData.ssl;
     connectionData.connectionState = ConnectionState::CONNECTIONSTATE_CREATED;
     bool doAsyncGetHostByName = false;
@@ -620,7 +620,7 @@ void StreamConnectionContainer::handleBindEvents(const DescriptorInfo& info)
             {
                 ConnectionData connectionData = bindData.connectionData;
                 connectionData.incomingConnection = true;
-                connectionData.startTime = std::chrono::system_clock::now();
+                connectionData.startTime = std::chrono::steady_clock::now();
                 connectionData.sockaddr = addr;
                 connectionData.connectionState = ConnectionState::CONNECTIONSTATE_CONNECTED;
 
@@ -723,10 +723,10 @@ void StreamConnectionContainer::doReconnect()
 
 
 
-bool StreamConnectionContainer::isTimerExpired(std::chrono::time_point<std::chrono::system_clock>& lastTime, int interval)
+bool StreamConnectionContainer::isTimerExpired(std::chrono::time_point<std::chrono::steady_clock>& lastTime, int interval)
 {
     bool expired = false;
-    std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+    std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
 
     std::chrono::duration<double> dur = now - lastTime;
     int delta = static_cast<int>(dur.count() * 1000);
@@ -748,8 +748,8 @@ bool StreamConnectionContainer::isTimerExpired(std::chrono::time_point<std::chro
 
 void StreamConnectionContainer::pollerLoop()
 {
-    m_lastReconnectTime = std::chrono::system_clock::now();
-    m_lastCycleTime = std::chrono::system_clock::now();
+    m_lastReconnectTime = std::chrono::steady_clock::now();
+    m_lastCycleTime = std::chrono::steady_clock::now();
     while (!m_terminatePollerLoop)
     {
         const PollerResult& result = m_poller->wait(1000);

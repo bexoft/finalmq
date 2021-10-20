@@ -100,7 +100,7 @@ private:
     void handleConnectionEvents(const IStreamConnectionPrivatePtr& connection, const SocketPtr& socket, const DescriptorInfo& info);
     void handleBindEvents(const DescriptorInfo& info);
     void handleReceive(const IStreamConnectionPrivatePtr& connection, const SocketPtr& socket, int bytesToRead);
-    static bool isTimerExpired(std::chrono::time_point<std::chrono::system_clock>& lastTime, int interval);
+    static bool isTimerExpired(std::chrono::time_point<std::chrono::steady_clock>& lastTime, int interval);
     void doReconnect();
 
     std::shared_ptr<IPoller>                                        m_poller;
@@ -117,8 +117,8 @@ private:
     std::thread                                                     m_threadTimer;
     mutable std::mutex                                              m_mutex;
 
-    std::chrono::time_point<std::chrono::system_clock>              m_lastReconnectTime;
-    std::chrono::time_point<std::chrono::system_clock>              m_lastCycleTime;
+    std::chrono::time_point<std::chrono::steady_clock>              m_lastReconnectTime;
+    std::chrono::time_point<std::chrono::steady_clock>              m_lastCycleTime;
 
 #ifdef USE_OPENSSL
     struct SslAcceptingData

@@ -830,7 +830,7 @@ void RemoteEntity::connect(PeerId peerId, const IProtocolSessionPtr& session, co
 void RemoteEntity::registerCommandFunction(const std::string& path, const std::string& type, FuncCommand funcCommand)
 {
     std::shared_ptr<FuncCommand> func = std::make_shared<FuncCommand>(std::move(funcCommand));
-    std::unique_lock<std::mutex> lock(m_mutex);
+    std::unique_lock<std::mutex> lock(m_mutexFunctions);
     if (path.find('{') != std::string::npos)
     {
         FunctionVar funcVar;
@@ -856,7 +856,7 @@ void RemoteEntity::registerCommandFunction(const std::string& path, const std::s
 
 std::string RemoteEntity::getTypeOfCommandFunction(std::string& path, const std::string* method)
 {
-    std::unique_lock<std::mutex> lock(m_mutex);
+    std::unique_lock<std::mutex> lock(m_mutexFunctions);
     const RemoteEntity::Function* function = getFunction(path);
     if (!function && method)
     {
@@ -1060,7 +1060,7 @@ void RemoteEntity::receivedRequest(ReceiveData& receiveData)
 {
     static const std::string WILDCARD = "*";
 
-    std::unique_lock<std::mutex> lock(m_mutex);
+    std::unique_lock<std::mutex> lock(m_mutexFunctions);
     std::vector<std::string> keys;
     std::shared_ptr<FuncCommand> func;
     const RemoteEntity::Function* funcData = getFunction(receiveData.header.path, &keys);
