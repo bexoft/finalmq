@@ -857,7 +857,6 @@ bool ProtocolSession::findSessionByName(const std::string& sessionName, const IP
                 }
                 else
                 {
-                    assert(protocol == protocol);
                     disconnected(); // we are in the poller loop  thread
                     assert(m_protocol);
                     session->setProtocol(m_protocol);

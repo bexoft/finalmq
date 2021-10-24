@@ -78,7 +78,10 @@ bool StreamConnection::sendMessage(const IMessagePtr& msg)
                     const BufferRef& payload = *it;
                     ++it;
                     bool last = (it == payloads.end());
-                    int flags = last ? MSG_NOSIGNAL : (MSG_NOSIGNAL | MSG_MORE);    // win32: MSG_PARTIAL
+                    int flags = last ? 0 : MSG_MORE;    // win32: MSG_PARTIAL
+#if !defined WIN32
+                    flags |= MSG_NOSIGNAL;              // no sigpipe
+#endif
                     int err = m_socketPrivate->send(payload.first, static_cast<int>(payload.second), flags);
                     if (err != payload.second)
                     {
