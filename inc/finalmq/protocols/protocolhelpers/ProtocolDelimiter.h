@@ -35,6 +35,7 @@ class SYMBOLEXP ProtocolDelimiter : public IProtocol
 {
 public:
     ProtocolDelimiter(const std::string& delimiter);
+    ~ProtocolDelimiter();
 
 private:
     // IProtocol

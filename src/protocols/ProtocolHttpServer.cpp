@@ -85,6 +85,10 @@ ProtocolHttpServer::ProtocolHttpServer()
 
 ProtocolHttpServer::~ProtocolHttpServer()
 {
+    if (m_connection)
+    {
+        m_connection->disconnect();
+    }
 }
 
 
@@ -886,7 +890,7 @@ void ProtocolHttpServer::moveOldProtocolState(IProtocol& /*protocolOld*/)
 
 
 
-bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolCallback>& callback)
+bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolCallback>& callback, bool& ok)
 {
     assert(callback);
     bool handled = false;
@@ -971,8 +975,9 @@ bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolC
         else if (*m_path == FMQ_PATH_REMOVESESSION)
         {
             handled = true;
-            callback->disconnected();
+            ok = false;
             sendMessage(getMessageFactory()());
+            callback->disconnected();
         }
     }
 
@@ -1084,7 +1089,7 @@ bool ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, co
             auto callback = m_callback.lock();
             if (callback)
             {
-                bool handled = handleInternalCommands(callback);
+                bool handled = handleInternalCommands(callback, ok);
                 if (!handled)
                 {
                     callback->received(m_message, m_connectionId);

@@ -660,7 +660,7 @@ PeerId RemoteEntity::createPublishPeer(const IProtocolSessionPtr& session, const
 void RemoteEntity::sendConnectEntity(PeerId peerId, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect)
 {
     requestReply<ConnectEntityReply>(peerId, {}, ConnectEntity{ m_entityName },
-                                     [this, funcReplyConnect] (PeerId peerId, remoteentity::Status status, 
+                                     [this, funcReplyConnect] (PeerId peerId, remoteentity::Status status,
                                          IMessage::Metainfo& metainfo, const std::shared_ptr<ConnectEntityReply>& replyReceived) {
         if (funcReplyConnect && *funcReplyConnect)
         {

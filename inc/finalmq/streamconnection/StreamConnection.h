@@ -115,6 +115,7 @@ class SYMBOLEXP StreamConnection : public IStreamConnectionPrivate
 {
 public:
     StreamConnection(const ConnectionData& connectionData, std::shared_ptr<Socket> socket, const IPollerPtr& poller, const IExecutorPtr& executorPollerThread, hybrid_ptr<IStreamConnectionCallback> callback);
+    ~StreamConnection();
 
 private:
     // IStreamConnection

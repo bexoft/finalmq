@@ -111,6 +111,15 @@ ProtocolMqtt5Client::ProtocolMqtt5Client(const Variant& data)
 
 
 
+ProtocolMqtt5Client::~ProtocolMqtt5Client()
+{
+    if (m_connection)
+    {
+        m_connection->disconnect();
+    }
+}
+
+
 // IProtocol
 void ProtocolMqtt5Client::setCallback(const std::weak_ptr<IProtocolCallback>& callback)
 {

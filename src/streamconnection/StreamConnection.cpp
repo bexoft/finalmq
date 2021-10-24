@@ -41,6 +41,12 @@ StreamConnection::StreamConnection(const ConnectionData& connectionData, std::sh
     m_lastReconnectTime = std::chrono::steady_clock::now();
 }
 
+
+StreamConnection::~StreamConnection()
+{
+}
+
+
 // IStreamConnection
 bool StreamConnection::sendMessage(const IMessagePtr& msg)
 {
@@ -72,7 +78,7 @@ bool StreamConnection::sendMessage(const IMessagePtr& msg)
                     const BufferRef& payload = *it;
                     ++it;
                     bool last = (it == payloads.end());
-                    int flags = last ? 0 : MSG_MORE;    // win32: MSG_PARTIAL
+                    int flags = last ? MSG_NOSIGNAL : (MSG_NOSIGNAL | MSG_MORE);    // win32: MSG_PARTIAL
                     int err = m_socketPrivate->send(payload.first, static_cast<int>(payload.second), flags);
                     if (err != payload.second)
                     {
@@ -339,16 +345,11 @@ void StreamConnection::disconnected(const IStreamConnectionPtr& connection)
 
 bool StreamConnection::received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead)
 {
-    bool ok = true;
+    bool ok = false;
     auto callback = m_callback.lock();
     if (callback && !m_disconnectFlag)
     {
-//        m_executor->addAction(std::bind(&IStreamConnectionCallback::received, callback, connection, socket, bytesToRead));
         ok = callback->received(connection, socket, bytesToRead);
-        if (!ok)
-        {
-            disconnect();
-        }
     }
     return ok;
 }

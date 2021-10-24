@@ -37,7 +37,7 @@ EntityFileServer::EntityFileServer(const std::string& baseDirectory)
         requestContext->reply(remoteentity::Status::STATUS_ENTITY_NOT_FOUND);
     });
 
-    registerCommandFunction("*hello*", "", [this](RequestContextPtr& requestContext, const StructBasePtr& /*structBase*/) {
+    registerCommandFunction("*", "", [this](RequestContextPtr& requestContext, const StructBasePtr& /*structBase*/) {
         bool handeled = false;
         std::string* path = requestContext->getMetainfo("fmq_path");
         if (path && !path->empty())

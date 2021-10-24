@@ -198,6 +198,13 @@ int Socket::bind(const sockaddr* addr, int addrlen)
 #endif
     assert(m_sd);
     int err = OperatingSystem::instance().bind(m_sd->getDescriptor(), addr, addrlen);
+#if !defined(WIN32) && !defined(__MINGW32__)
+    if (err == -1 && getLastError() == 98 && !m_name.empty() && m_af == AF_UNIX)
+    {
+        ::unlink(m_name.c_str());
+        err = OperatingSystem::instance().bind(m_sd->getDescriptor(), addr, addrlen);
+    }
+#endif
     err = handleError(err, "bind");
     return err;
 }

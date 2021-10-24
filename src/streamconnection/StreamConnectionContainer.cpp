@@ -500,6 +500,16 @@ void StreamConnectionContainer::handleReceive(const IStreamConnectionPrivatePtr&
         }
     }
 
+    if (!ok)
+    {
+        SocketPtr socket = connection->getSocketPrivate();
+        if (socket)
+        {
+            SocketDescriptorPtr sd = socket->getSocketDescriptor();
+            disconnectIntern(connection, sd);
+        }
+    }
+
 #ifdef USE_OPENSSL
     if (socket->isReadWhenWritable() && ok)
     {
