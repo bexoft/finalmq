@@ -41,6 +41,9 @@
 
 namespace finalmq {
 
+#define RELEASE_DISCONNECT              1
+#define RELEASE_EXECUTEINPOLLERTHREAD   2
+#define RELEASE_TERMINATE               4
 
 
 struct BindProperties

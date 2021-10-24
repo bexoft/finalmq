@@ -218,14 +218,14 @@ void PollerImplSelect::copyFds(fd_set& dest, fd_set& source)
 void PollerImplSelect::sockedDescriptorHasChanged()
 {
     m_socketDescriptorsStable.clear(std::memory_order_release);
-    releaseWaitInternal();
+    releaseWait(0);
 }
 
 
 void PollerImplSelect::sdMaxHasChanged()
 {
     m_sdMaxStable.clear(std::memory_order_release);
-    releaseWaitInternal();
+    releaseWait(0);
 }
 
 
@@ -233,7 +233,7 @@ void PollerImplSelect::sockedDescriptorAndSdMaxHasChanged()
 {
     m_socketDescriptorsStable.clear(std::memory_order_release);
     m_sdMaxStable.clear(std::memory_order_release);
-    releaseWaitInternal();
+    releaseWait(0);
 }
 
 
@@ -263,15 +263,6 @@ void PollerImplSelect::updateSdMax()
 #endif
     copyFds(m_readfdsOriginal, m_readfdsCached);
     copyFds(m_writefdsOriginal, m_writefdsCached);
-}
-
-
-void PollerImplSelect::releaseWaitInternal()
-{
-    if (m_controlSocketWrite)
-    {
-        OperatingSystem::instance().send(m_controlSocketWrite->getDescriptor(), "", 1, 0);
-    }
 }
 
 
@@ -309,10 +300,12 @@ void PollerImplSelect::collectSockets(int res)
                         // read pending bytes from control socket
                         std::vector<char> buffer(countRead);
                         OperatingSystem::instance().recv(sd, buffer.data(), static_cast<int>(buffer.size()), 0);
-                        std::unique_lock<std::mutex> locker(m_mutex);
-                        m_result.releaseWait = m_releaseWaitExternal;
-                        m_releaseWaitExternal = false;
-                        locker.unlock();
+                        char info = 0;
+                        for (size_t i = 0; i < buffer.size(); ++i)
+                        {
+                            info |= buffer[i];
+                        }
+                        m_result.releaseWait = info;
                     }
                     else
                     {
@@ -413,7 +406,7 @@ const PollerResult& PollerImplSelect::wait(std::int32_t timeout)
 
         collectSockets(res);
 
-    } while (!m_result.error && !m_result.timeout && !m_result.releaseWait && (m_result.descriptorInfos.size() == 0));
+    } while (!m_result.error && !m_result.timeout && m_result.releaseWait == 0 && (m_result.descriptorInfos.size() == 0));
 
     if (!m_socketDescriptorsStable.test_and_set(std::memory_order_acquire))
     {
@@ -425,12 +418,12 @@ const PollerResult& PollerImplSelect::wait(std::int32_t timeout)
 }
 
 
-void PollerImplSelect::releaseWait()
+void PollerImplSelect::releaseWait(char info)
 {
-    std::unique_lock<std::mutex> locker(m_mutex);
-    m_releaseWaitExternal = true;
-    locker.unlock();
-    releaseWaitInternal();
+    if (m_controlSocketWrite)
+    {
+        OperatingSystem::instance().send(m_controlSocketWrite->getDescriptor(), &info, 1, 0);
+    }
 }
 
 }   // namespace finalmq

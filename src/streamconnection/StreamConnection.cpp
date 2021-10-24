@@ -143,7 +143,7 @@ SocketPtr StreamConnection::getSocket()
 void StreamConnection::disconnect()
 {
     m_disconnectFlag = true;
-    m_poller->releaseWait();
+    m_poller->releaseWait(RELEASE_DISCONNECT);
 }
 
 
