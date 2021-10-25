@@ -190,7 +190,10 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
         for (auto it = name2Entity.begin(); it != name2Entity.end() && !foundEntityName; ++it)
         {
             const std::string& prefix = it->first;
-            if (prefix != WILDCARD && pathWithoutFirstSlash.size() >= prefix.size() && pathWithoutFirstSlash.compare(0, prefix.size(), prefix) == 0)
+            if (prefix != WILDCARD &&
+                pathWithoutFirstSlash.size() >= prefix.size() &&
+                pathWithoutFirstSlash.compare(0, prefix.size(), prefix) == 0 &&
+                (pathWithoutFirstSlash.size() == prefix.size() || pathWithoutFirstSlash[prefix.size()] == '/'))
             {
                 foundEntityName = &prefix;
                 remoteEntity = it->second;
@@ -211,7 +214,8 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
         }
         else
         {
-            header.destname = pathWithoutFirstSlash;
+            header.destname = ".";
+            header.path = pathWithoutFirstSlash;
         }
 
         std::string path = { &buffer[0], &buffer[ixCorrelationId] };

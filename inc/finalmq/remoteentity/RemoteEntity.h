@@ -346,7 +346,7 @@ private:
         std::vector<std::string>     pathEntries;
     };
 
-    const Function* getFunction(const std::string& path, std::vector<std::string>* keys = nullptr) const;
+    const Function* getFunction(const std::string& path, IMessage::Metainfo* keys = nullptr) const;
 
     struct Request
     {
