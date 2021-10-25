@@ -65,9 +65,9 @@ using helloworld::Address;
 
 
 
-#define LOOP 1000
+#define LOOP 100000
 
-void triggerRequest(RemoteEntity& entityClient, PeerId peerId, const std::chrono::time_point<std::chrono::system_clock>& starttime, int index)
+void triggerRequest(RemoteEntity& entityClient, PeerId peerId, const std::chrono::time_point<std::chrono::steady_clock>& starttime, int index)
 {
     entityClient.requestReply<HelloReply>(peerId,
         HelloRequest{ { {"Bonnie","Parker",Sex::FEMALE,1910,{"somestreet", 12,76875,"Rowena","USA"}} } },
@@ -76,7 +76,7 @@ void triggerRequest(RemoteEntity& entityClient, PeerId peerId, const std::chrono
             {
                 if (index == LOOP - 1)
                 {
-                    auto now = std::chrono::system_clock::now();
+                    auto now = std::chrono::steady_clock::now();
                     std::chrono::duration<double> dur = now - starttime;
                     long long delta = static_cast<long long>(dur.count() * 1000);
                     std::cout << "time for " << LOOP << " sequential requests: " << delta << "ms" << std::endl;
@@ -203,7 +203,7 @@ int main()
     for (int i = 0; i < 10; ++i)
     {
         // performance measurement of throughput
-        auto starttime = std::chrono::system_clock::now();
+        auto starttime = std::chrono::steady_clock::now();
         for (int i = 0; i < LOOP; ++i)
         {
             // asynchronous request/reply
@@ -216,7 +216,7 @@ int main()
                 {
                     if (i == LOOP-1)
                     {
-                        auto now = std::chrono::system_clock::now();
+                        auto now = std::chrono::steady_clock::now();
                         std::chrono::duration<double> dur = now - starttime;
                         long long delta = static_cast<long long>(dur.count() * 1000);
                         std::cout << "time for " << LOOP << " parallel requests: " << delta << "ms" << std::endl;
@@ -232,7 +232,7 @@ int main()
     }
 
     // performance measurement of latency
-    auto starttime = std::chrono::system_clock::now();
+    auto starttime = std::chrono::steady_clock::now();
     triggerRequest(entityClient, peerId, starttime, 0);
 
     // wait 20s

@@ -56,13 +56,13 @@ private:
     virtual void enableWrite(const SocketDescriptorPtr& fd) override;
     virtual void disableWrite(const SocketDescriptorPtr& fd) override;
     virtual const PollerResult& wait(std::int32_t timeout) override;
-    virtual void releaseWait() override;
+    virtual void releaseWait(char info) override;
 
 private:
     void updateSocketDescriptors();
     void sockedDescriptorHasChanged();
     void collectSockets(int res);
-    void releaseWaitInternal();
+    void releaseWaitInternal(char info);
 
     SocketDescriptorPtr m_controlSocketRead;
     SocketDescriptorPtr m_controlSocketWrite;

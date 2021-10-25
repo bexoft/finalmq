@@ -44,6 +44,17 @@ ProtocolStream::ProtocolStream()
 }
 
 
+ProtocolStream::~ProtocolStream()
+{
+    if (m_connection)
+    {
+        m_connection->disconnect();
+    }
+}
+
+
+
+
 // IProtocol
 void ProtocolStream::setCallback(const std::weak_ptr<IProtocolCallback>& callback)
 {

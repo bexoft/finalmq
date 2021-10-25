@@ -211,7 +211,7 @@ private:
     void subscribeEntityNames(const IProtocolSessionPtr& session);
     void subscribeSessions(const std::string& name);
 
-    static bool isTimerExpired(std::chrono::time_point<std::chrono::system_clock>& lastTime, int interval);
+    static bool isTimerExpired(std::chrono::time_point<std::chrono::steady_clock>& lastTime, int interval);
 
     std::unique_ptr<IProtocolSessionContainer>                  m_protocolSessionContainer;
     std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>  m_name2entity;
@@ -219,7 +219,7 @@ private:
     EntityId                                                    m_nextEntityId = 1;
     std::shared_ptr<FuncConnectionEvent>                        m_funcConnectionEvent;
     bool                                                        m_storeRawDataInReceiveStruct = false;
-    std::chrono::time_point<std::chrono::system_clock>          m_lastCheckTime;
+    std::chrono::time_point<std::chrono::steady_clock>          m_lastCheckTime;
     std::list<std::string>                                      m_pureDataPaths;
 //    std::list<std::string>                                      m_pureDataPathPrefixes;
     std::shared_ptr<FileTransferReply>                          m_fileTransferReply;

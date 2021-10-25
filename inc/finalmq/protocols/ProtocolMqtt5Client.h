@@ -46,6 +46,7 @@ public:
 
 
     ProtocolMqtt5Client(const Variant& data);
+    ~ProtocolMqtt5Client();
 
 private:
     // IProtocol

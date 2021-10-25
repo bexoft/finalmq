@@ -58,6 +58,15 @@ ProtocolHeaderBinarySize::ProtocolHeaderBinarySize()
 }
 
 
+ProtocolHeaderBinarySize::~ProtocolHeaderBinarySize()
+{
+    if (m_connection)
+    {
+        m_connection->disconnect();
+    }
+}
+
+
 // IProtocol
 void ProtocolHeaderBinarySize::setCallback(const std::weak_ptr<IProtocolCallback>& callback)
 {

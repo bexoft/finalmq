@@ -58,7 +58,7 @@ struct ConnectionData
     SOCKET          sd = INVALID_SOCKET;
     int             reconnectInterval = 5000;
     int             totalReconnectDuration = -1;
-    std::chrono::time_point<std::chrono::system_clock> startTime{};
+    std::chrono::time_point<std::chrono::steady_clock> startTime{};
     bool            ssl = false;
     ConnectionState connectionState = ConnectionState::CONNECTIONSTATE_CREATED;
 };

@@ -36,6 +36,7 @@ public:
     static const std::string PROTOCOL_NAME; // stream
 
     ProtocolStream();
+    ~ProtocolStream();
 
 private:
     // IProtocol

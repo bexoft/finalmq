@@ -38,6 +38,7 @@ public:
     static const std::string PROTOCOL_NAME; // headersize
 
     ProtocolHeaderBinarySize();
+    ~ProtocolHeaderBinarySize();
 
 private:
     // IProtocol

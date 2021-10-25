@@ -44,12 +44,12 @@
 
 
 
-#if defined(WIN32) || defined(__MINGW32__)
 class InitWinSocket
 {
 public:
     InitWinSocket()
     {
+#if defined(WIN32) || defined(__MINGW32__)
         WSADATA wsaData;
         WORD wVersion = MAKEWORD(2, 2);
         int res = WSAStartup(wVersion, &wsaData);
@@ -57,10 +57,12 @@ public:
         {
             streamFatal << "WSAStartup failed with: " << res;
         }
+#else
+        signal(SIGPIPE, SIG_IGN);
+#endif
     }
 };
 static InitWinSocket g_initWinSocket;
-#endif
 
 
 
@@ -196,6 +198,13 @@ int Socket::bind(const sockaddr* addr, int addrlen)
 #endif
     assert(m_sd);
     int err = OperatingSystem::instance().bind(m_sd->getDescriptor(), addr, addrlen);
+#if !defined(WIN32) && !defined(__MINGW32__)
+    if (err == -1 && getLastError() == 98 && !m_name.empty() && m_af == AF_UNIX)
+    {
+        ::unlink(m_name.c_str());
+        err = OperatingSystem::instance().bind(m_sd->getDescriptor(), addr, addrlen);
+    }
+#endif
     err = handleError(err, "bind");
     return err;
 }

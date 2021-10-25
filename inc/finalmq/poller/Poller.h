@@ -91,14 +91,14 @@ struct PollerResult
 {
     bool error = false;
     bool timeout = false;
-    bool releaseWait = false;
+    char releaseWait = 0;
     DescriptorInfos descriptorInfos;
 
     void clear()
     {
         error = false;
         timeout = false;
-        releaseWait = false;
+        releaseWait = 0;
         descriptorInfos.clear();
     }
     PollerResult() = default;
@@ -121,7 +121,7 @@ struct IPoller
     virtual void enableWrite(const SocketDescriptorPtr& fd) = 0;
     virtual void disableWrite(const SocketDescriptorPtr& fd) = 0;
     virtual const PollerResult& wait(std::int32_t timeout) = 0;
-    virtual void releaseWait() = 0;
+    virtual void releaseWait(char info) = 0;
 };
 
 typedef std::shared_ptr<IPoller> IPollerPtr;

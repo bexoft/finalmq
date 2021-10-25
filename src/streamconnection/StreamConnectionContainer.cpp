@@ -57,7 +57,7 @@ StreamConnectionContainer::StreamConnectionContainer()
     , m_executorWorker(std::make_unique<ExecutorWorker>(1))
 {
     m_executorPollerThread->registerActionNotification([this]() {
-        m_poller->releaseWait();
+        m_poller->releaseWait(RELEASE_EXECUTEINPOLLERTHREAD);
     });
 }
 
@@ -316,7 +316,7 @@ bool StreamConnectionContainer::connect(const IStreamConnectionPtr& streamConnec
     connectionData.incomingConnection = false;
     connectionData.reconnectInterval = connectionProperties.config.reconnectInterval;
     connectionData.totalReconnectDuration = connectionProperties.config.totalReconnectDuration;
-    connectionData.startTime = std::chrono::system_clock::now();
+    connectionData.startTime = std::chrono::steady_clock::now();
     connectionData.ssl = connectionProperties.certificateData.ssl;
     connectionData.connectionState = ConnectionState::CONNECTIONSTATE_CREATED;
     bool doAsyncGetHostByName = false;
@@ -441,7 +441,7 @@ void StreamConnectionContainer::run()
 void StreamConnectionContainer::terminatePollerLoop()
 {
     m_terminatePollerLoop = true;
-    m_poller->releaseWait();
+    m_poller->releaseWait(RELEASE_TERMINATE);
 }
 
 
@@ -497,6 +497,16 @@ void StreamConnectionContainer::handleReceive(const IStreamConnectionPrivatePtr&
         else
         {
             break;
+        }
+    }
+
+    if (!ok)
+    {
+        SocketPtr socket = connection->getSocketPrivate();
+        if (socket)
+        {
+            SocketDescriptorPtr sd = socket->getSocketDescriptor();
+            disconnectIntern(connection, sd);
         }
     }
 
@@ -620,7 +630,7 @@ void StreamConnectionContainer::handleBindEvents(const DescriptorInfo& info)
             {
                 ConnectionData connectionData = bindData.connectionData;
                 connectionData.incomingConnection = true;
-                connectionData.startTime = std::chrono::system_clock::now();
+                connectionData.startTime = std::chrono::steady_clock::now();
                 connectionData.sockaddr = addr;
                 connectionData.connectionState = ConnectionState::CONNECTIONSTATE_CONNECTED;
 
@@ -723,10 +733,10 @@ void StreamConnectionContainer::doReconnect()
 
 
 
-bool StreamConnectionContainer::isTimerExpired(std::chrono::time_point<std::chrono::system_clock>& lastTime, int interval)
+bool StreamConnectionContainer::isTimerExpired(std::chrono::time_point<std::chrono::steady_clock>& lastTime, int interval)
 {
     bool expired = false;
-    std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+    std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
 
     std::chrono::duration<double> dur = now - lastTime;
     int delta = static_cast<int>(dur.count() * 1000);
@@ -748,40 +758,46 @@ bool StreamConnectionContainer::isTimerExpired(std::chrono::time_point<std::chro
 
 void StreamConnectionContainer::pollerLoop()
 {
-    m_lastReconnectTime = std::chrono::system_clock::now();
-    m_lastCycleTime = std::chrono::system_clock::now();
+    m_lastReconnectTime = std::chrono::steady_clock::now();
+    m_lastCycleTime = std::chrono::steady_clock::now();
     while (!m_terminatePollerLoop)
     {
         const PollerResult& result = m_poller->wait(1000);
 
         if (result.releaseWait)
         {
-            m_executorPollerThread->runAvailableActions();
-
-            std::vector<IStreamConnectionPrivatePtr> connectionsDisconnect;
-            std::unique_lock<std::mutex> lock(m_mutex);
-            connectionsDisconnect.reserve(m_connectionId2Connection.size());
-            for (auto it = m_connectionId2Connection.begin(); it != m_connectionId2Connection.end(); ++it)
+            if (result.releaseWait & RELEASE_EXECUTEINPOLLERTHREAD)
             {
-                const IStreamConnectionPrivatePtr& connection = it->second;
-                assert(connection);
-                if (connection->getDisconnectFlag())
-                {
-                    connectionsDisconnect.push_back(it->second);
-                }
+                m_executorPollerThread->runAvailableActions();
             }
-            lock.unlock();
 
-            for (size_t i = 0; i < connectionsDisconnect.size(); ++i)
+            if (result.releaseWait & RELEASE_DISCONNECT)
             {
-                const IStreamConnectionPrivatePtr& connectionDisconnect = connectionsDisconnect[i];
-                // last chance to send pending messages
-                connectionDisconnect->sendPendingMessages();
-                SocketPtr socket = connectionDisconnect->getSocketPrivate();
-                if (socket)
+                std::vector<IStreamConnectionPrivatePtr> connectionsDisconnect;
+                std::unique_lock<std::mutex> lock(m_mutex);
+                connectionsDisconnect.reserve(m_connectionId2Connection.size());
+                for (auto it = m_connectionId2Connection.begin(); it != m_connectionId2Connection.end(); ++it)
                 {
-                    SocketDescriptorPtr sd = socket->getSocketDescriptor();
-                    disconnectIntern(connectionDisconnect, sd);
+                    const IStreamConnectionPrivatePtr& connection = it->second;
+                    assert(connection);
+                    if (connection->getDisconnectFlag())
+                    {
+                        connectionsDisconnect.push_back(it->second);
+                    }
+                }
+                lock.unlock();
+
+                for (size_t i = 0; i < connectionsDisconnect.size(); ++i)
+                {
+                    const IStreamConnectionPrivatePtr& connectionDisconnect = connectionsDisconnect[i];
+                    // last chance to send pending messages
+                    connectionDisconnect->sendPendingMessages();
+                    SocketPtr socket = connectionDisconnect->getSocketPrivate();
+                    if (socket)
+                    {
+                        SocketDescriptorPtr sd = socket->getSocketDescriptor();
+                        disconnectIntern(connectionDisconnect, sd);
+                    }
                 }
             }
         }
@@ -838,18 +854,6 @@ void StreamConnectionContainer::pollerLoop()
                 }
             }
         }
-
-//        if (isTimerExpired(m_lastCycleTime, m_cycleTime))
-//        {
-//            if (isTimerExpired(m_lastReconnectTime, m_checkReconnectInterval))
-//            {
-//                doReconnect();
-//            }
-//            if (m_funcTimer)
-//            {
-//                m_funcTimer();
-//            }
-//        }
     }
 }
 

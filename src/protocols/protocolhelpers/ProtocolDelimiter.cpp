@@ -39,6 +39,16 @@ ProtocolDelimiter::ProtocolDelimiter(const std::string& delimiter)
 }
 
 
+ProtocolDelimiter::~ProtocolDelimiter()
+{
+    if (m_connection)
+    {
+        m_connection->disconnect();
+    }
+}
+
+
+
 // IProtocol
 void ProtocolDelimiter::setCallback(const std::weak_ptr<IProtocolCallback>& callback)
 {

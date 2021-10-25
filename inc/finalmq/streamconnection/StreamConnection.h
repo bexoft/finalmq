@@ -41,6 +41,9 @@
 
 namespace finalmq {
 
+#define RELEASE_DISCONNECT              1
+#define RELEASE_EXECUTEINPOLLERTHREAD   2
+#define RELEASE_TERMINATE               4
 
 
 struct BindProperties
@@ -115,6 +118,7 @@ class SYMBOLEXP StreamConnection : public IStreamConnectionPrivate
 {
 public:
     StreamConnection(const ConnectionData& connectionData, std::shared_ptr<Socket> socket, const IPollerPtr& poller, const IExecutorPtr& executorPollerThread, hybrid_ptr<IStreamConnectionCallback> callback);
+    ~StreamConnection();
 
 private:
     // IStreamConnection
@@ -154,7 +158,7 @@ private:
     std::atomic<bool>           m_disconnectFlag{};
     hybrid_ptr<IStreamConnectionCallback> m_callback;
 
-    std::chrono::time_point<std::chrono::system_clock> m_lastReconnectTime;
+    std::chrono::time_point<std::chrono::steady_clock> m_lastReconnectTime;
     IExecutorPtr                m_executorPollerThread;
 
     mutable std::mutex          m_mutex;

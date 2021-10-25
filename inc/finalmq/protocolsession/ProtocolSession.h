@@ -126,6 +126,7 @@ private:
     IExecutorPtr                                            m_executor;
     IExecutorPtr                                            m_executorPollerThread;
     IProtocolPtr                                            m_protocol;
+    std::int64_t                                            m_connectionId = 0;
     std::unordered_map<std::int64_t, IProtocolPtr>          m_multiProtocols;
 
     int64_t                                         m_sessionId = 0;
@@ -139,7 +140,7 @@ private:
     bool                                            m_protocolFlagIsSendRequestByPoll = false;
     bool                                            m_protocolFlagSupportFileTransfer = false;
     IProtocol::FuncCreateMessage                    m_messageFactory;
-    std::atomic_bool                                m_protocolSet;
+    std::atomic_bool                                m_protocolSet{false};
     bool                                            m_triggerConnected = false;
     bool                                            m_triggerDisconnected = false;
     bool                                            m_incomingConnection = false;

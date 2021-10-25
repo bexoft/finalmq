@@ -83,7 +83,7 @@ private:
     std::string createSessionName();
     void checkSessionName();
     void cookiesToSessionIds(const std::string& cookies);
-    bool handleInternalCommands(const std::shared_ptr<IProtocolCallback>& callback);
+    bool handleInternalCommands(const std::shared_ptr<IProtocolCallback>& callback, bool& ok);
 
     enum State
     {
