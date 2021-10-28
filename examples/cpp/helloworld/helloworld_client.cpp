@@ -65,7 +65,8 @@ using helloworld::Address;
 
 
 
-#define LOOP 100000
+#define LOOP_PARALLEL   1000
+#define LOOP_SEQUENTIAL 10000
 
 void triggerRequest(RemoteEntity& entityClient, PeerId peerId, const std::chrono::time_point<std::chrono::steady_clock>& starttime, int index)
 {
@@ -74,12 +75,12 @@ void triggerRequest(RemoteEntity& entityClient, PeerId peerId, const std::chrono
         [&entityClient, &starttime, index](PeerId peerId, Status status, const std::shared_ptr<HelloReply>& reply) {
             if (reply)
             {
-                if (index == LOOP - 1)
+                if (index == LOOP_SEQUENTIAL - 1)
                 {
                     auto now = std::chrono::steady_clock::now();
                     std::chrono::duration<double> dur = now - starttime;
                     long long delta = static_cast<long long>(dur.count() * 1000);
-                    std::cout << "time for " << LOOP << " sequential requests: " << delta << "ms" << std::endl;
+                    std::cout << "time for " << LOOP_SEQUENTIAL << " sequential requests: " << delta << "ms" << std::endl;
                 }
                 else
                 {
@@ -204,7 +205,7 @@ int main()
     {
         // performance measurement of throughput
         auto starttime = std::chrono::steady_clock::now();
-        for (int i = 0; i < LOOP; ++i)
+        for (int i = 0; i < LOOP_PARALLEL; ++i)
         {
             // asynchronous request/reply
             // A peer entity is been identified by its peerId.
@@ -214,12 +215,12 @@ int main()
                         [i, starttime] (PeerId peerId, Status status, const std::shared_ptr<HelloReply>& reply) {
                 if (reply)
                 {
-                    if (i == LOOP-1)
+                    if (i == LOOP_PARALLEL-1)
                     {
                         auto now = std::chrono::steady_clock::now();
                         std::chrono::duration<double> dur = now - starttime;
                         long long delta = static_cast<long long>(dur.count() * 1000);
-                        std::cout << "time for " << LOOP << " parallel requests: " << delta << "ms" << std::endl;
+                        std::cout << "time for " << LOOP_PARALLEL << " parallel requests: " << delta << "ms" << std::endl;
                     }
                 }
                 else
