@@ -1344,9 +1344,9 @@ localhost:8080/fmq/poll?timeout=60000&count=100
 
 
 
-## MQTT
+## MQTT5
 
-With MQTT the client and also the server have to connect to a MQTT broker. The connect needs some additional parameters like username, password and some other configuration parameters. These parameters can by passed with the ConnectProperties. Here is an example how to connect to a MQTT broker:
+With MQTT the client application and also the server application have to connect to a MQTT broker. The connect needs some additional parameters like username, password and some other configuration parameters. These parameters can be passed with the ConnectProperties. Here is an example how to connect to a MQTT broker (without SSL/TLS):
 
 ```c++
 IProtocolSessionPtr session = entityContainer.connect("tcp://broker.emqx.io:1883:mqtt5client:json", { {},{},
@@ -1362,9 +1362,13 @@ With this connect you will connect to the broker at "broker.emqx.io", port: 1883
 
 
 
-**The request/reply pattern of finalmq will also work with MQTT.**
+**The request/reply pattern of finalmq will also work with MQTT5.**
+
+The following will explain how the request/reply pattern of finalmq is mapped with MQTT5. All registered entities, which are registered with a name, will subscribe for events of the topic "/\<entityname\>/#". With this subscription the server application will receive all requests of the entity. The server application uses the MQTT5's Response Topic and Correlation Data to send the reply of the request. 
 
 
+
+**Publish events**
 
 If you have an entity that shall send sporatic events to the broker, but without a client that first sends ConnectEntity. Then you can just call the following line of code:
 
@@ -1372,15 +1376,31 @@ If you have an entity that shall send sporatic events to the broker, but without
 PeerId peerId = entityServer.createPublishPeer(session, "/my/timer/events");
 ```
 
-With the peerId you can now publish events to the broker. The topic will look like this:
+With the peerId the server application can now publish events to the broker. For the server application createPublishPeer() looks like a remote entity has sent ConnectEntity. Also with RemoteEntity::getAllPeers() you will get this peer ID. Sending events through this peer ID is the typical publish/subscribe mechanism of MQTT.
 
-"\<given name\>/\<message type\>"
+The topic will look like this:
+
+"\<given name\>/\<message type\>" (or "\<given name\>/\<path\>")
 
 Example:
 
 "/my/timer/events/my.message.type"
 
-So, if a subscriber is interested in these events, it shall subscribe for example with the topic "/my/timer/events/#"
+So, if a subscriber is interested in all events of "/my/timer/events", it can subscribe for example with the topic "/my/timer/events/#"
+
+
+
+**Session**
+
+A MQTT5 session is created for each connect() to the broker. A session is identified with an UUID, which is sent in the MQTT's CONNECT message as the Client Identifier. In case of a connection loss, the application will try to reconnect till the time ProtocolMqtt5Client::KEY_SESSIONEXPIRYINTERVAL. If the reconnect is successful before KEY_SESSIONEXPIRYINTERVAL is expired, then the message exchange will continue without any loss of messages. But, if the reconnections were not successful for the time: KEY_SESSIONEXPIRYINTERVAL, then the session will be destroyed (disconnected). In this case, last messages could be lost. if you want to create a new session, then you have to call connect(), again.
+
+A finalmq application will also subscribe to the topic "/\<sessionId\>/#". With this topic, the application can receive requests and replies. If a session is gone, then all messages that will be published to this session topic ("/\<sessionId\>/...") will be lost.
+
+
+
+**Will Message**
+
+With Will Messages all members which are connected to a broker will be notified if a session was expired. The Will Message will be sent to the Will Topic "/fmq_willmsg". The data of the Will Message is the UUID (session ID / Client ID) of the session which was expired.
 
 
 
