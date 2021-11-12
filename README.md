@@ -1364,6 +1364,7 @@ With this connect you will connect to the broker at "broker.emqx.io", port: 1883
 
 **The request/reply pattern of finalmq will also work with MQTT5.**
 
+Note: 
 The following will explain how the request/reply pattern of finalmq is mapped with MQTT5. All registered entities, which are registered with a name, will subscribe for events of the topic "/\<entityname\>/#". With this subscription the server application will receive all requests of the entity. The server application uses the MQTT5's Response Topic and Correlation Data to send the reply of the request. 
 
 

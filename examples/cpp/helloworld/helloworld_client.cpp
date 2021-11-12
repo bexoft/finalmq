@@ -66,7 +66,7 @@ using helloworld::Address;
 
 
 #define LOOP_PARALLEL   1000
-#define LOOP_SEQUENTIAL 10000
+#define LOOP_SEQUENTIAL 1000
 
 void triggerRequest(RemoteEntity& entityClient, PeerId peerId, const std::chrono::time_point<std::chrono::steady_clock>& starttime, int index)
 {
@@ -143,7 +143,7 @@ int main()
 //    IProtocolSessionPtr sessionClient = entityContainer.connect("ipc://my_uds:headersize:protobuf");
 
     //// if you want to use mqtt5 -> connect to broker
-    //IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://broker.emqx.io:1883:mqtt5client:json", { {},{},
+    //IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:1883:mqtt5client:json", { {},{},
     //    VariantStruct{  //{ProtocolMqtt5Client::KEY_USERNAME, std::string("")},
     //                    //{ProtocolMqtt5Client::KEY_PASSWORD, std::string("")},
     //                    {ProtocolMqtt5Client::KEY_SESSIONEXPIRYINTERVAL, 300},
@@ -199,7 +199,7 @@ int main()
         }
     });
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
     for (int i = 0; i < 10; ++i)
     {

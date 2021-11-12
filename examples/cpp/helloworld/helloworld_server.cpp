@@ -76,6 +76,9 @@ public:
         // /MyService/helloworld.HelloRequest!4711{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
         // or open a browser and type:
         // localhost:8080/MyService/helloworld.HelloRequest{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
+        // or do an HTTP request (the method GET, POST, ... does not matter) to localhost:8000 with:
+        // /MyService/mypath/1234/PUT{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
+        // for the HTTP request you can also put the json data into the HTTP payload
         registerCommand<HelloRequest>([] (const RequestContextPtr& requestContext, const std::shared_ptr<HelloRequest>& request) {
             assert(request);
 
@@ -102,7 +105,36 @@ public:
             // The returned peerId can be used for calling requestReply() or sendEvent().
             // So, also a server entity can act as a client and can send requestReply()
             // to the peer entity that is calling this request.
-            // An entity can act as a client and as a server. It is bidirectional (symmetric) as a socket.
+            // An entity can act as a client and as a server. It is bidirectional (symmetric), like a socket.
+        });
+
+        
+        // just to demonstrate REST API. You can access the service with with either an HTTP PUT with path: "mypath/1234".
+        // Or with "maypath/1234/PUT" and the HTTP method (like: GET, POST, PUT, ...) does not matter.
+        // this is fun - try to access the server with the json interface at port 8888:
+        // telnet localhost 8888  (or: netcat localhost 8888) and type:
+        // /MyService/mypath/1234/PUT!4711{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
+        // or open a browser and type:
+        // localhost:8080/MyService/mypath/1234/PUT{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
+        // or do an HTTP PUT request to localhost:8000 with:
+        // /MyService/mypath/1234/PUT{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
+        // for the HTTP PUT request you can also put the json data into the HTTP payload
+        registerCommand<HelloRequest>("mypath/{id}/PUT", [](const RequestContextPtr& requestContext, const std::shared_ptr<HelloRequest>& request) {
+            assert(request);
+
+            const std::string* id = requestContext->getMetainfo("PATH_id"); // when a field is defined as {keyname}, then you can get the value with the key prefix "PATH_" ("PATH_keyname"}
+
+            // prepare the reply
+            std::string prefix("Hello ");
+            HelloReply reply;
+            // go through all persons and make a greeting
+            for (size_t i = 0; i < request->persons.size(); ++i)
+            {
+                reply.greetings.emplace_back(prefix + request->persons[i].name);
+            }
+
+            // send reply
+            requestContext->reply(std::move(reply));
         });
     }
 };
@@ -166,12 +198,12 @@ int main()
     entityContainer.bind("tcp://*:8080:httpserver:json");
 
     //// if you want to use mqtt5 -> connect to broker
-    //entityContainer.connect("tcp://broker.emqx.io:1883:mqtt5client:json", { {},{},
+    //entityContainer.connect("tcp://localhost:1883:mqtt5client:json", { {},{},
     //    VariantStruct{  //{ProtocolMqtt5Client::KEY_USERNAME, std::string("")},
     //                    //{ProtocolMqtt5Client::KEY_PASSWORD, std::string("")},
     //                    {ProtocolMqtt5Client::KEY_SESSIONEXPIRYINTERVAL, 300},
     //                    {ProtocolMqtt5Client::KEY_KEEPALIVE, 20},
-    //    } });
+    //} });
 
     // note:
     // multiple access points (listening ports) can be activated by calling bind() several times.
