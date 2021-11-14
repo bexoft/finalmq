@@ -53,8 +53,10 @@ static const std::string FMQ_CORRID = "fmq_corrid";
 static const std::string FMQ_TYPE = "fmq_type";
 static const std::string FMQ_VIRTUAL_SESSION_ID = "fmq_virtsessid";
 static const std::string FMQ_DESTNAME = "fmq_destname";
+static const std::string FMQ_SUBPATH = "fmq_subpath";
 
 static const std::string TOPIC_WILLMESSAGE = "/fmq_willmsg";
+static const std::string SESSIONID_PREFIX = "/_id:";
 
 static const std::uint8_t ReasonCodeDisconnectWithWillMessage = 0x04;
 
@@ -104,7 +106,7 @@ ProtocolMqtt5Client::ProtocolMqtt5Client(const Variant& data)
         m_keepAlive = *entry;
     }
     m_clientId = getUuid();
-    m_virtualSessionId = "/" + m_clientId;
+    m_virtualSessionId = SESSIONID_PREFIX + m_clientId;
 
     m_client->setCallback(this);
 }
@@ -245,34 +247,38 @@ bool ProtocolMqtt5Client::sendMessage(IMessagePtr message)
 
     std::string topic = message->getControlData().getDataValue<std::string>(FMQ_VIRTUAL_SESSION_ID);
 
-    if (topic.empty())
+    std::string* destname = message->getControlData().getData<std::string>(FMQ_DESTNAME);
+    if (destname && !destname->empty())
     {
-        std::string* destname = message->getControlData().getData<std::string>(FMQ_DESTNAME);
-        if (destname)
+        if ((*destname)[0] != '/')
         {
-            topic = *destname;
+            topic += '/';
+        }
+        topic += *destname;
+
+        std::string* path = message->getMetainfo(FMQ_SUBPATH);
+        if (path && !path->empty())
+        {
+            if ((*path)[0] != '/')
+            {
+                topic += '/';
+            }
+            topic += *path;
+        }
+        else
+        {
+            std::string* type = message->getMetainfo(FMQ_TYPE);
+            if (type && !type->empty())
+            {
+                topic += '/';
+                topic += *type;
+            }
         }
     }
 
-    if (!topic.empty() && topic[0] != '/')
-    {
-        data.topic = '/';
-        data.topic += topic;
-    }
-    else
+    if (!topic.empty())
     {
         data.topic = std::move(topic);
-    }
-
-    std::string* type = message->getMetainfo(FMQ_TYPE);
-    if (type && !type->empty())
-    {
-        data.topic += '/';
-        data.topic += *type;
-    }
-
-    if (!data.topic.empty())
-    {
         m_client->publish(connection, std::move(data), message);
     }
     return true;
@@ -421,7 +427,19 @@ void ProtocolMqtt5Client::receivedPublish(const PublishData& data, const IMessag
         }
         else
         {
-            message->addMetainfo(FMQ_PATH, data.topic);
+            if (data.topic.compare(0, SESSIONID_PREFIX.size(), SESSIONID_PREFIX.c_str()) == 0)
+            {
+                size_t pos = data.topic.find_first_of('/', SESSIONID_PREFIX.size());
+                if (pos != std::string::npos)
+                {
+                    std::string path = &data.topic[pos];
+                    message->addMetainfo(FMQ_PATH, std::move(path));
+                }
+            }
+            else
+            {
+                message->addMetainfo(FMQ_PATH, data.topic);
+            }
             message->addMetainfo(FMQ_CORRID, std::string(data.correlationData.begin(), data.correlationData.end()));
             message->addMetainfo(FMQ_VIRTUAL_SESSION_ID, data.responseTopic);
             callback->received(message);

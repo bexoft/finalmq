@@ -441,7 +441,7 @@ struct IRemoteEntity
     virtual bool sendRequest(const PeerId& peerId, const std::string& path, const StructBase& structBase, CorrelationId correlationId, IMessage::Metainfo* metainfo = nullptr) = 0;
 
     /**
-     * @brief requestReply sends a request to the peer and the funcReply is triggered when
+     * @brief sendRequest sends a request to the peer and the funcReply is triggered when
      * the reply is available.
      * @param peerId is the id of the peer. You can get it when you connect() to a peer, when you
      * call getAllPeers(), inside a peer event or by calling requestContext->peerId() inside a
@@ -455,7 +455,7 @@ struct IRemoteEntity
     virtual bool sendRequest(const PeerId& peerId, const std::string& path, const StructBase& structBase, FuncReply funcReply) = 0;
 
     /**
-     * @brief requestReply sends a request to the peer and the funcReply is triggered when
+     * @brief sendRequest sends a request to the peer and the funcReply is triggered when
      * the reply is available.
      * This method allows message exchange with metainfo. Metainfo is very similar to HTTP headers. You can use it
      * to exchange additional data besides the message data.
@@ -472,7 +472,7 @@ struct IRemoteEntity
     virtual bool sendRequest(const PeerId& peerId, const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply) = 0;
 
     /**
-     * @brief requestReply sends a request to the peer and the funcReply is triggered when
+     * @brief sendRequest sends a request to the peer and the funcReply is triggered when
      * the reply is available.
      * @param peerId is the id of the peer. You can get it when you connect() to a peer, when you
      * call getAllPeers(), inside a peer event or by calling requestContext->peerId() inside a
@@ -485,7 +485,7 @@ struct IRemoteEntity
     virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) = 0;
 
     /**
-     * @brief requestReply sends a request to the peer and the funcReply is triggered when
+     * @brief sendRequest sends a request to the peer and the funcReply is triggered when
      * the reply is available.
      * This method allows message exchange with metainfo. Metainfo is very similar to HTTP headers. You can use it
      * to exchange additional data besides the message data.
