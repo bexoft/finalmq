@@ -1365,7 +1365,8 @@ With this connect you will connect to the broker at "broker.emqx.io", port: 1883
 **The request/reply pattern of finalmq will also work with MQTT5.**
 
 Note: 
-The following will explain how the request/reply pattern of finalmq is mapped with MQTT5. All registered entities, which are registered with a name, will subscribe for events of the topic "/\<entityname\>/#". With this subscription the server application will receive all requests of the entity. The server application uses the MQTT5's Response Topic and Correlation Data to send the reply of the request. 
+The following will explain how the request/reply pattern of finalmq is mapped with MQTT5:
+All registered entities, which are registered with a name, will subscribe for events of the topic "/\<entityname\>/#". With this subscription the server application will receive all requests of the entity. The server application uses the MQTT5's Response Topic and Correlation Data to send the reply of the request. 
 
 
 
@@ -1377,31 +1378,39 @@ If you have an entity that shall send sporatic events to the broker, but without
 PeerId peerId = entityServer.createPublishPeer(session, "/my/timer/events");
 ```
 
-With the peerId the server application can now publish events to the broker. For the server application createPublishPeer() looks like a remote entity has sent ConnectEntity. Also with RemoteEntity::getAllPeers() you will get this peer ID. Sending events through this peer ID is the typical publish/subscribe mechanism of MQTT.
+With the peerId the server application can now publish events to the broker. For the server application createPublishPeer() looks like a remote entity has sent ConnectEntity. Also with RemoteEntity::getAllPeers() you will get this peer ID. When you send messages to this peerId, then the message will be published to the topic:
 
-The topic will look like this:
+"\<given name\>/\<message type\>" or "\<given name\>/\<path\>"
 
-"\<given name\>/\<message type\>" (or "\<given name\>/\<path\>")
+The last part of the message is either the message type or the path, depending on the kind of method you call to send the message. When you call e.g. sendEvent with the "path" parameter, then the last part of the topic is the path. When you call sendEvent without the path parameter, then the last part of the topic the message type.
 
-Example:
+Example for message type:
 
-"/my/timer/events/my.message.type"
+"/my/timer/events**/**my.message.type"
 
-So, if a subscriber is interested in all events of "/my/timer/events", it can subscribe for example with the topic "/my/timer/events/#"
+So, if a mqtt subscriber is interested in all events of "/my/timer/events", it can subscribe for example with the topic "/my/timer/events/#"
 
 
 
 **Session**
 
-A MQTT5 session is created for each connect() to the broker. A session is identified with an UUID, which is sent in the MQTT's CONNECT message as the Client Identifier. In case of a connection loss, the application will try to reconnect till the time ProtocolMqtt5Client::KEY_SESSIONEXPIRYINTERVAL. If the reconnect is successful before KEY_SESSIONEXPIRYINTERVAL is expired, then the message exchange will continue without any loss of messages. But, if the reconnections were not successful for the time: KEY_SESSIONEXPIRYINTERVAL, then the session will be destroyed (disconnected). In this case, last messages could be lost. if you want to create a new session, then you have to call connect(), again.
+A MQTT5 session is created for each IRemoteEntityContainer::connect() to the broker. It is identified with an UUID, which is sent in the MQTT's CONNECT message as the Client Identifier. In case of a connection loss, the application will try to reconnect till the time ProtocolMqtt5Client::KEY_SESSIONEXPIRYINTERVAL. If the reconnect is successful before KEY_SESSIONEXPIRYINTERVAL is expired, then the message exchange will continue without any loss of messages. But, if the reconnections were not successful for the time: KEY_SESSIONEXPIRYINTERVAL, then the session will be destroyed (disconnected). In this case, last messages could be lost. if you want to create a new session, then you have to call IRemoteEntityContainer::connect(), again.
 
-A finalmq application will also subscribe to the topic "/\<sessionId\>/#". With this topic, the application can receive requests and replies. If a session is gone, then all messages that will be published to this session topic ("/\<sessionId\>/...") will be lost.
+A finalmq application will also subscribe to the topic "/\<sessionId\>/#". With this subscription the application can receive requests and replies for this session. If a session is gone, then all messages that will be published to this session topic ("/\<sessionId\>/...") will be lost.
+
+A finalmq publisher will use the topic "/\<sessionid\>/\<destination name\>/\<message type or path>" to publish a message to a subscriber.
 
 
 
 **Will Message**
 
 With Will Messages all members which are connected to a broker will be notified if a session was expired. The Will Message will be sent to the Will Topic "/fmq_willmsg". The data of the Will Message is the UUID (session ID / Client ID) of the session which was expired.
+
+
+
+**Header of finalmq message**
+
+The header values of a finalmq message (like: srcid, destname or type) are encoded in the mqtt5's UserProperty.
 
 
 
@@ -1871,4 +1880,73 @@ I show you how:
 
 
 Now, all callbacks will be executed in the context of the Qt's main loop.
+
+
+
+### REST API
+
+#### User defined path
+
+When you register a command on server side like this:
+
+```c++
+registerCommand<HelloRequest>([] (const RequestContextPtr& requestContext, const std::shared_ptr<HelloRequest>& request)
+```
+
+The you can call this command with the path "/\<service name\>/\<message type\>". For example: "/MyService/helloworld.HelloRequest"
+
+But if you would like to use another path instead of the message type, then you can register the command like this:
+
+```c++
+registerCommand<HelloRequest>("my/special/path", [] (const RequestContextPtr& requestContext, const std::shared_ptr<HelloRequest>& request)
+```
+
+Now, you can call this command with: "/MyService/my/special/path".
+
+
+
+#### HTTP method
+
+With HTTP, the method, like GET, POST, ... will be ignored. This means, the server does not care about GET, POST, ... . It will always accept the command. But you also can define the path like: "my/special/path/POST". Now, you have two possibilities to call your command:
+
+1. With path  "/MyService/my/special/path/POST". In this case the GET, POST, ... will still be ignored by the server.
+2. With path "/MyService/my/special/path". In this case the server will only accept the command, if the HTTP method is POST.
+
+So, HTTP will use the 2. case. And if you would like to call the command with other protocols like HTTP, then you will use the 1. case. You can also use the 1. case, if you would like to call the command with the Browser's input line, which only uses the GET method.
+
+
+
+#### Wild Cards
+
+You can also register a command with a path that has wild cards in it. Example:
+
+```c++
+registerCommand<HelloRequest>("my/{id}/path", [] (const RequestContextPtr& requestContext, const std::shared_ptr<HelloRequest>& request)
+```
+
+Now, the server will for example accept: "/MyService/my/**special**/path" or "/MyService/my/**1234**/path".
+
+You can get the according value of {id} with the following command:
+
+```c++
+const std::string* id = requestContext->getMetainfo("PATH_id");
+```
+
+In the examples above, the id will be "**special**" or "**1234**", respectively.
+
+The value exists in the meta info and the key is prefixed with "PATH_".
+
+If you do not care about the according value of the wild card, then you can also use "my/{}/path".
+
+It is also possible to use * for making a ward card for multiple path entries. Example: "my/\*/path". If you would like to get the according value of the wild card, then use the following syntax: "my/\*subpath\*/path". 
+
+Now, the server will for example accept: "/MyService/my/**special/nice**/path"
+
+You can get the according value of \*subpath\* with the following command:
+
+```c++
+const std::string* subpath = requestContext->getMetainfo("PATH_subpath");
+```
+
+In the examples above, the subpath will be "**special/nice**".
 
