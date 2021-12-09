@@ -31,6 +31,7 @@
 #include "finalmq/Qt/qtdata.fmq.h"
 
 #include <algorithm>
+//#include <QCommonStyle>
 
 using finalmq::RemoteEntity;
 using finalmq::RemoteEntityContainer;
@@ -44,6 +45,7 @@ using finalmq::FmqRegistryClient;
 using finalmq::qt::GetObjectTreeRequest;
 using finalmq::qt::GetObjectTreeReply;
 using finalmq::qt::ObjectData;
+//using finalmq::remoteentity::RawBytes;
 
 
 
@@ -77,7 +79,10 @@ public:
         for (int i = 0; i < children.size(); ++i)
         {
             QObject* child = children.at(i);
-            accept(visitor, *child, level + 1);
+            if (child)
+            {
+                accept(visitor, *child, level + 1);
+            }
         }
         visitor.exitObject(obj, level);
     }
@@ -174,6 +179,25 @@ private:
 };
 
 
+//class NoFocusRectangleStyle : public QCommonStyle
+//{
+//private:
+//    void drawPrimitive(PrimitiveElement element,
+//        const QStyleOption* option,
+//        QPainter* painter,
+//        const QWidget* widget) const
+//    {
+//        if (QStyle::PE_FrameFocusRect == element)
+//        {
+//            return;
+//        }
+//        else
+//        {
+//            QCommonStyle::drawPrimitive(element, option, painter, widget);
+//        }
+//    }
+//};
+
 
 class QtServer : public RemoteEntity
 {
@@ -244,6 +268,15 @@ public:
                 requestContext->reply(reply);
             }
         });
+
+        //registerCommand<RawBytes>("stylesheet", [](const RequestContextPtr& requestContext, const std::shared_ptr<RawBytes>& request) {
+        //    assert(request);
+        //    finalmq::Bytes& data = request->data;
+        //    std::string str = std::string(&data[142], data.data() + data.size());
+        //    QString css = str.c_str();
+        //    qApp->setStyleSheet(css);
+        //    qApp->setStyle(new NoFocusRectangleStyle);
+        //});
     }
 };
 

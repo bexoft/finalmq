@@ -50,6 +50,12 @@ void ParserProcessDefaultValues::setVisitor(IParserVisitor &visitor)
     m_visitor = &visitor;
 }
 
+void ParserProcessDefaultValues::resetVarValueActive()
+{
+    m_varValueActive = 0;
+}
+
+
 
 // ParserProcessDefaultValues
 void ParserProcessDefaultValues::notifyError(const char* str, const char* message)
@@ -89,9 +95,9 @@ void ParserProcessDefaultValues::enterStruct(const MetaField& field)
     if (!m_skipDefaultValues)
     {
         markAsDone(field);
-        const MetaStruct* stru = MetaDataGlobal::instance().getStruct(field);
-        if (!stru || stru->getTypeName() != STR_VARVALUE)
+        if (field.typeName != STR_VARVALUE)
         {
+            const MetaStruct* stru = MetaDataGlobal::instance().getStruct(field);
             if (stru)
             {
                 m_stackFieldsDone.emplace_back(stru->getFieldsSize(), false);
@@ -101,17 +107,20 @@ void ParserProcessDefaultValues::enterStruct(const MetaField& field)
                 m_stackFieldsDone.emplace_back(0, false);
             }
         }
+        else
+        {
+            m_varValueActive++;
+        }
     }
 
     m_visitor->enterStruct(field);
 }
 void ParserProcessDefaultValues::exitStruct(const MetaField& field)
 {
-    if (!m_skipDefaultValues)
+    if (!m_skipDefaultValues && m_varValueActive == 0)
     {
         assert(!m_stackFieldsDone.empty());
         const std::vector<bool>& fieldsDone = m_stackFieldsDone.back();
-
         const MetaStruct* stru = MetaDataGlobal::instance().getStruct(field);
         if (stru)
         {
@@ -119,6 +128,10 @@ void ParserProcessDefaultValues::exitStruct(const MetaField& field)
         }
 
         m_stackFieldsDone.pop_back();
+    }
+    if (m_varValueActive > 0)
+    {
+        m_varValueActive--;
     }
 
     m_visitor->exitStruct(field);
@@ -235,7 +248,7 @@ void ParserProcessDefaultValues::processDefaultValues(const MetaStruct& stru, co
 
 void ParserProcessDefaultValues::markAsDone(const MetaField& field)
 {
-    if (!m_skipDefaultValues)
+    if (!m_skipDefaultValues && m_varValueActive == 0)
     {
         assert(!m_stackFieldsDone.empty());
         std::vector<bool>& fieldsDone = m_stackFieldsDone.back();

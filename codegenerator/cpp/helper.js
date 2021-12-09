@@ -113,7 +113,10 @@ module.exports = {
         {
             for (var i = 0; i < flagArray.length; i++)
             {
-                flags += ' | finalmq::' + flagArray[i]
+				if (flagArray[i].startsWith('METAFLAG_'))
+				{
+					flags += ' | finalmq::' + flagArray[i]
+				}
             }
         }
         return flags

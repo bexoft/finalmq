@@ -93,6 +93,7 @@ void SerializerVariant::Internal::enterStruct(const MetaField& field)
         m_varValueToVariant->setExitNotification([this, &field]() {
             assert(m_varValueToVariant);
             m_outer.ParserConverter::setVisitor(*m_outer.m_parserProcessDefaultValues);
+            m_outer.m_parserProcessDefaultValues->resetVarValueActive();
             m_outer.m_parserProcessDefaultValues->setVisitor(*this);
             m_varValueToVariant->convert();
             m_varValueToVariant->setExitNotification(nullptr);

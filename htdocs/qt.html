@@ -273,8 +273,9 @@ function insertItem(idParent, item)
                                        
 function createBox(x, y, w, h, id, showLayer)
 {	
-	var borderstyle = (showLayer) ? 'solid' : 'none';
-	var style = 'position:absolute; color:rgb(0,155,155); left:'+x+'px; top:'+y+'px; width:'+w+'px; height:'+h+'px; border-width:1px; border-style:'+borderstyle+';';
+	var borderstyle = 'solid';
+	var bordercolor = (showLayer) ? 'rgb(0,155,155)' : 'rgba(0,155,155,0)';
+	var style = 'position:absolute; color:'+bordercolor+'; left:'+(x-1)+'px; top:'+(y-1)+'px; width:'+(w)+'px; height:'+(h)+'px; border-width:1px; border-style:'+borderstyle+';';
 	var box = '<div style="'+style+'" id="'+id+'"></div>';
 	return box;
 }
@@ -282,7 +283,7 @@ function createBox(x, y, w, h, id, showLayer)
 function createButton(x, y, w, h, id, objectName, showLayer)
 {
 	var opacity = (showLayer) ? 0.5 : 0;
-	var style = 'position:absolute; opacity:'+opacity+'; left:'+x+'px; top:'+y+'px; width:'+w+'px; height:'+h+'px;';
+	var style = 'position:absolute; opacity:'+opacity+'; left:'+(x)+'px; top:'+(y)+'px; width:'+(w)+'px; height:'+(h)+'px;';
 	var button = '<button style="'+style+'" id="'+id+'" onmousedown="pressButton(\''+objectName+'\')"></button>';
 	return button;
 }
@@ -308,12 +309,16 @@ function handleCheckboxLayer(checkbox, layer)
 												 
 </script>                                                                       
                                                                           
+
 </head>
 
                                                                
-<body>                                                                          
-
 <body onload="pageLoad()" onunload="pageUnload()">
+
+
+
+
+
 <div style="position:absolute; top:0; left:0; width:100%; height:100%;">
 	<div style="position:absolute; top:0; left:0; width:100%; height:100%;" id="image">
 	</div>
@@ -389,7 +394,9 @@ function handleCheckboxLayer(checkbox, layer)
 		<td>Layer 16</td>
 	</tr>
 	</table>
+	
 </div>
+
 
 </body>
 

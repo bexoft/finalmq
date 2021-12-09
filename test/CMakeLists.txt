@@ -20,6 +20,7 @@ endif()
 
 if (WIN32)
 set(Protobuf_INCLUDE_DIR $ENV{Protobuf_INCLUDE_DIR})
+set(Protobuf_LIBRARIES $ENV{Protobuf_LIBRARIES})
 include_directories(${Protobuf_INCLUDE_DIR} "${CMAKE_CURRENT_BINARY_DIR}/googletest-src/googlemock/include")
 endif()
 
@@ -98,7 +99,6 @@ if (WIN32)
 SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -D_ALLOW_KEYWORD_MACROS" )
 endif()
 add_executable(testfinalmq ${TESTSOURCES} ${PROTO_SRCS} ${PROTO_HDRS} ${CMAKE_CURRENT_BINARY_DIR}/test.fmq.cpp ../services/fmqreg/registry.cpp)
-
 
 
 if (FINALMQ_USE_SSL)
