@@ -28,6 +28,7 @@
 #include "finalmq/metadata/MetaData.h"
 #include "MockIZeroCopyBuffer.h"
 #include "test.pb.h"
+#include "finalmq/metadataserialize/variant.fmq.h"
 
 
 using ::testing::_;
@@ -69,7 +70,36 @@ protected:
         EXPECT_CALL(m_mockBuffer, addBuffer(MAX_BLOCK_SIZE, _)).Times(1).WillOnce(Return((char*)m_data.data()));
         EXPECT_CALL(m_mockBuffer, downsizeLastBuffer(_)).Times(1).WillOnce(Invoke(&m_data, &String::resize));
         m_serializer = std::make_unique<SerializerJson>(m_mockBuffer, MAX_BLOCK_SIZE);
+        m_serializerDefault = std::make_unique<SerializerJson>(m_mockBuffer, MAX_BLOCK_SIZE, true, false);
         m_serializerEnumAsInt = std::make_unique<SerializerJson>(m_mockBuffer, MAX_BLOCK_SIZE, false);
+
+        const MetaStruct* structTestVariant = MetaDataGlobal::instance().getStruct("test.TestVariant");
+        ASSERT_NE(structTestVariant, nullptr);
+        m_fieldValue = structTestVariant->getFieldByName("value");
+        ASSERT_NE(m_fieldValue, nullptr);
+        ASSERT_EQ(m_fieldValue->typeName, "finalmq.variant.VarValue");
+        m_fieldValue2 = structTestVariant->getFieldByName("value2");
+        ASSERT_NE(m_fieldValue2, nullptr);
+        ASSERT_EQ(m_fieldValue2->typeName, "finalmq.variant.VarValue");
+        m_fieldValueInt32 = structTestVariant->getFieldByName("valueInt32");
+        ASSERT_NE(m_fieldValueInt32, nullptr);
+
+        const MetaStruct* structVarVariant = MetaDataGlobal::instance().getStruct("finalmq.variant.VarValue");
+        ASSERT_NE(structVarVariant, nullptr);
+
+        m_fieldName = structVarVariant->getFieldByName("name");
+        m_fieldType = structVarVariant->getFieldByName("type");
+        m_fieldInt32 = structVarVariant->getFieldByName("valint32");
+        m_fieldString = structVarVariant->getFieldByName("valstring");
+        m_fieldList = structVarVariant->getFieldByName("vallist");
+        m_fieldListWithoutArray = MetaDataGlobal::instance().getArrayField(*m_fieldList);
+
+        ASSERT_NE(m_fieldName, nullptr);
+        ASSERT_NE(m_fieldType, nullptr);
+        ASSERT_NE(m_fieldInt32, nullptr);
+        ASSERT_NE(m_fieldString, nullptr);
+        ASSERT_NE(m_fieldList, nullptr);
+        ASSERT_NE(m_fieldListWithoutArray, nullptr);
     }
 
     virtual void TearDown()
@@ -79,7 +109,18 @@ protected:
     String                          m_data;
     MockIZeroCopyBuffer             m_mockBuffer;
     std::unique_ptr<IParserVisitor> m_serializer;
+    std::unique_ptr<IParserVisitor> m_serializerDefault;
     std::unique_ptr<IParserVisitor> m_serializerEnumAsInt;
+
+    const MetaField* m_fieldValue = nullptr;
+    const MetaField* m_fieldValue2 = nullptr;
+    const MetaField* m_fieldValueInt32 = nullptr;
+    const MetaField* m_fieldName = nullptr;
+    const MetaField* m_fieldType = nullptr;
+    const MetaField* m_fieldInt32 = nullptr;
+    const MetaField* m_fieldString = nullptr;
+    const MetaField* m_fieldList = nullptr;
+    const MetaField* m_fieldListWithoutArray = nullptr;
 };
 
 
@@ -238,6 +279,117 @@ TEST_F(TestSerializerJson, testEnumAsInt)
     ASSERT_EQ(m_data, "{\"value\":-2}");
 }
 
+
+TEST_F(TestSerializerJson, testVariantInt32)
+{
+    static const std::int32_t VALUE = -2;
+
+    const MetaStruct* stru = MetaDataGlobal::instance().getStruct("test.TestVariant");
+    ASSERT_NE(stru, nullptr);
+    const MetaStruct* struValue = MetaDataGlobal::instance().getStruct(stru->getFieldByName("value")->typeName);
+    m_serializer->startStruct(*stru);
+    m_serializer->enterStruct(*stru->getFieldByName("value"));
+    m_serializer->enterEnum(*struValue->getFieldByName("type"), "T_INT32");
+    m_serializer->enterInt32(*struValue->getFieldByName("valint32"), VALUE);
+    m_serializer->exitStruct(*stru->getFieldByName("value"));
+    m_serializer->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":{\"type\":\"T_INT32\",\"valint32\":-2}}");
+}
+
+TEST_F(TestSerializerJson, testVariantInt32Default)
+{
+    static const std::int32_t VALUE = -2;
+
+    const MetaStruct* stru = MetaDataGlobal::instance().getStruct("test.TestVariant");
+    ASSERT_NE(stru, nullptr);
+    const MetaStruct* struValue = MetaDataGlobal::instance().getStruct(stru->getFieldByName("value")->typeName);
+    m_serializerDefault->startStruct(*stru);
+    m_serializerDefault->enterStruct(*stru->getFieldByName("value"));
+    m_serializerDefault->enterEnum(*struValue->getFieldByName("type"), "T_INT32");
+    m_serializerDefault->enterInt32(*struValue->getFieldByName("valint32"), VALUE);
+    m_serializerDefault->exitStruct(*stru->getFieldByName("value"));
+    m_serializerDefault->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":{\"type\":\"T_INT32\",\"valint32\":-2},\"valueInt32\":0,\"value2\":{}}");
+}
+
+
+TEST_F(TestSerializerJson, testVariantEmptyDefault)
+{
+    static const std::int32_t VALUE = -2;
+
+    const MetaStruct* stru = MetaDataGlobal::instance().getStruct("test.TestVariant");
+    ASSERT_NE(stru, nullptr);
+    const MetaStruct* struValue = MetaDataGlobal::instance().getStruct(stru->getFieldByName("value")->typeName);
+    m_serializerDefault->startStruct(*stru);
+    m_serializerDefault->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":{},\"valueInt32\":0,\"value2\":{}}");
+}
+
+
+
+TEST_F(TestSerializerJson, testVariantStructDefault)
+{
+    // VariantStruct{ {"value", VariantStruct{
+    m_serializerDefault->startStruct(*MetaDataGlobal::instance().getStruct("test.TestVariant"));
+    m_serializerDefault->enterStruct(*m_fieldValue);
+    m_serializerDefault->enterEnum(*m_fieldType, variant::VarTypeId::T_STRUCT);
+    m_serializerDefault->enterArrayStruct(*m_fieldList);
+        // {"key1", VariantList{
+        m_serializerDefault->enterStruct(*m_fieldListWithoutArray);
+        m_serializerDefault->enterString(*m_fieldName, "key1", 4);
+        m_serializerDefault->enterEnum(*m_fieldType, variant::VarTypeId::T_LIST);
+        m_serializerDefault->enterArrayStruct(*m_fieldList);
+            // 2
+            m_serializerDefault->enterStruct(*m_fieldListWithoutArray);
+            m_serializerDefault->enterEnum(*m_fieldType, variant::VarTypeId::T_INT32);
+            m_serializerDefault->enterInt32(*m_fieldInt32, 2);
+            m_serializerDefault->exitStruct(*m_fieldListWithoutArray);
+            // , std::string("Hello")
+            m_serializerDefault->enterStruct(*m_fieldListWithoutArray);
+            m_serializerDefault->enterEnum(*m_fieldType, variant::VarTypeId::T_STRING);
+            m_serializerDefault->enterString(*m_fieldString, "Hello", 5);
+            m_serializerDefault->exitStruct(*m_fieldListWithoutArray);
+        // }
+        m_serializerDefault->exitArrayStruct(*m_fieldList);
+        m_serializerDefault->exitStruct(*m_fieldListWithoutArray);
+
+        // {"key2", VariantStruct{
+        m_serializerDefault->enterStruct(*m_fieldListWithoutArray);
+        m_serializerDefault->enterString(*m_fieldName, "key2", 4);
+        m_serializerDefault->enterEnum(*m_fieldType, variant::VarTypeId::T_STRUCT);
+        m_serializerDefault->enterArrayStruct(*m_fieldList);
+            // {"a", 3},
+            m_serializerDefault->enterStruct(*m_fieldListWithoutArray);
+            m_serializerDefault->enterString(*m_fieldName, "a", 1);
+            m_serializerDefault->enterEnum(*m_fieldType, variant::VarTypeId::T_INT32);
+            m_serializerDefault->enterInt32(*m_fieldInt32, 3);
+            m_serializerDefault->exitStruct(*m_fieldListWithoutArray);
+            // {"b", std::string("Hi")}
+            m_serializerDefault->enterStruct(*m_fieldListWithoutArray);
+            m_serializerDefault->enterString(*m_fieldName, "b", 1);
+            m_serializerDefault->enterEnum(*m_fieldType, variant::VarTypeId::T_STRING);
+            m_serializerDefault->enterString(*m_fieldString, "Hi", 2);
+            m_serializerDefault->exitStruct(*m_fieldListWithoutArray);
+        // }
+        m_serializerDefault->exitArrayStruct(*m_fieldList);
+        m_serializerDefault->exitStruct(*m_fieldListWithoutArray);
+
+        // {
+        m_serializerDefault->enterStruct(*m_fieldListWithoutArray);
+        m_serializerDefault->enterString(*m_fieldName, "key3", 4);
+        m_serializerDefault->enterEnum(*m_fieldType, variant::VarTypeId::T_NONE);
+        m_serializerDefault->exitStruct(*m_fieldListWithoutArray);
+    // }}
+    m_serializerDefault->exitArrayStruct(*m_fieldList);
+    m_serializerDefault->exitStruct(*m_fieldValue);
+    m_serializerDefault->finished();
+
+    std::string cmp = "{\"value\":{\"type\":\"T_STRUCT\",\"vallist\":[{\"name\":\"key1\",\"type\":\"T_LIST\",\"vallist\":[{\"type\":\"T_INT32\",\"valint32\":2},{\"type\":\"T_STRING\",\"valstring\":\"Hello\"}]},{\"name\":\"key2\",\"type\":\"T_STRUCT\",\"vallist\":[{\"name\":\"a\",\"type\":\"T_INT32\",\"valint32\":3},{\"name\":\"b\",\"type\":\"T_STRING\",\"valstring\":\"Hi\"}]},{\"name\":\"key3\",\"type\":\"T_NONE\"}]},\"valueInt32\":0,\"value2\":{}}";
+    ASSERT_EQ(m_data == cmp, true);
+}
 
 
 

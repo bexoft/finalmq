@@ -160,7 +160,7 @@ add_library(finalmq SHARED ${SOURCES}
 
 if (WIN32)
     if (FINALMQ_USE_SSL)
-        SET(OPENSSL_DIR "$ENV{OPENSSL_INSTALL_DIR}")
+        SET(OPENSSL_DIR "$ENV{OPENSSL_ROOT_DIR}")
         include_directories(${OPENSSL_DIR}/include)
         link_directories(${OPENSSL_DIR}/lib)
         target_link_libraries(finalmq wsock32 ws2_32 Rpcrt4 ${OPENSSL_DIR}/lib/libssl.lib ${OPENSSL_DIR}/lib/libcrypto.lib)

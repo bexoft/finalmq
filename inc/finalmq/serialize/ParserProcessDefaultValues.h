@@ -36,6 +36,7 @@ class SYMBOLEXP ParserProcessDefaultValues : public IParserVisitor
 public:
     ParserProcessDefaultValues(bool skipDefaultValues, IParserVisitor* visitor = nullptr);
     void setVisitor(IParserVisitor &visitor);
+    void resetVarValueActive();
 
 private:
     // IParserVisitor
@@ -95,6 +96,7 @@ private:
     bool                            m_skipDefaultValues = true;
     const MetaStruct*               m_struct = nullptr;
     std::deque<std::vector<bool>>   m_stackFieldsDone;
+    int                             m_varValueActive = 0;
 };
 
 }   // namespace finalmq
