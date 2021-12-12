@@ -76,8 +76,8 @@ public:
         // /MyService/helloworld.HelloRequest!4711{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
         // or open a browser and type:
         // localhost:8080/MyService/helloworld.HelloRequest{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
-        // or do an HTTP request (the method GET, POST, ... does not matter) to localhost:8000 with:
-        // /MyService/mypath/1234/PUT{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
+        // or do an HTTP request (the method GET, POST, ... does not matter) to localhost:8080 with:
+        // /MyService/helloworld.HelloRequest{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
         // for the HTTP request you can also put the json data into the HTTP payload
         registerCommand<HelloRequest>([] (const RequestContextPtr& requestContext, const std::shared_ptr<HelloRequest>& request) {
             assert(request);
@@ -116,8 +116,8 @@ public:
         // /MyService/mypath/1234/PUT!4711{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
         // or open a browser and type:
         // localhost:8080/MyService/mypath/1234/PUT{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
-        // or do an HTTP PUT request to localhost:8000 with:
-        // /MyService/mypath/1234/PUT{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
+        // or do an HTTP PUT request to localhost:8080 with:
+        // /MyService/mypath/1234{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
         // for the HTTP PUT request you can also put the json data into the HTTP payload
         registerCommand<HelloRequest>("mypath/{id}/PUT", [](const RequestContextPtr& requestContext, const std::shared_ptr<HelloRequest>& request) {
             assert(request);

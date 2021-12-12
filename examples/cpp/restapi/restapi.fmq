@@ -12,25 +12,26 @@
 
     "structs":[
         {"type":"Address","desc":"An address","fields":[
-            {"tid":"string",                           "name":"street",            "desc":"The first name of a person."},
-            {"tid":"uint32",                           "name":"number",            "desc":"The house number"},
-            {"tid":"uint32",                           "name":"postalcode",        "desc":"The postal code."},
-            {"tid":"string",                           "name":"city",              "desc":"The city name."},
-            {"tid":"string",                           "name":"country",           "desc":"The country name."}
+            {"tid":"string",                       "name":"street",            "desc":"The first name of a person."},
+            {"tid":"uint32",                       "name":"number",            "desc":"The house number"},
+            {"tid":"uint32",                       "name":"postalcode",        "desc":"The postal code."},
+            {"tid":"string",                       "name":"city",              "desc":"The city name."},
+            {"tid":"string",                       "name":"country",           "desc":"The country name."}
         ]},
         {"type":"Person","desc":"Models a person","fields":[
-            {"tid":"string",                           "name":"name",              "desc":"The first name of a person."},
-            {"tid":"string",                           "name":"surname",           "desc":"The last name of a person."},
-            {"tid":"enum",         "type":"Gender",    "name":"gender",            "desc":"The gender of a person."},
-            {"tid":"uint32",                           "name":"yearOfBirth",       "desc":"Year of birth."},
-            {"tid":"struct",       "type":"Address",   "name":"address",           "desc":"The address of a person."}
+            {"tid":"string",                       "name":"id",                "desc":"The id of the person"},
+            {"tid":"string",                       "name":"name",              "desc":"The first name of a person."},
+            {"tid":"string",                       "name":"surname",           "desc":"The last name of a person."},
+            {"tid":"enum",     "type":"Gender",    "name":"gender",            "desc":"The gender of a person."},
+            {"tid":"uint32",                       "name":"yearOfBirth",       "desc":"Year of birth."},
+            {"tid":"struct",   "type":"Address",   "name":"address",           "desc":"The address of a person."}
         ]},
-
-        {"type":"HelloRequest","desc":"","fields":[
-            {"tid":"struct[]", "type":"Person",    "name":"persons",           "desc":"Parameter of HelloRequest"}
+        
+        {"type":"PersonList","desc":"","fields":[
+            {"tid":"struct[]", "type":"Person",    "name":"persons",           "desc":""}
         ]},
-        {"type":"HelloReply","desc":"","fields":[
-            {"tid":"string[]",                     "name":"greetings",         "desc":"The greetings for all persons."}
+        {"type":"PersonId","desc":"","fields":[
+            {"tid":"string",                       "name":"id",                "desc":""}
         ]}
     ]
 }

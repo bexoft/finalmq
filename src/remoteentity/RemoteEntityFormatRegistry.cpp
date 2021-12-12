@@ -191,17 +191,14 @@ static void statusToProtocolStatus(remoteentity::Status status, Variant& control
         }
         break;
     case Status::STATUS_ENTITY_NOT_FOUND:
+    case Status::STATUS_REQUEST_NOT_FOUND:
+    case Status::STATUS_REQUESTTYPE_NOT_KNOWN:
         controlData.add(FMQ_STATUS, 404);
         controlData.add(FMQ_STATUSTEXT, std::string("Not Found"));
         break;
     case Status::STATUS_SYNTAX_ERROR:
         controlData.add(FMQ_STATUS, 400);
         controlData.add(FMQ_STATUSTEXT, std::string("Bad Request"));
-        break;
-    case Status::STATUS_REQUEST_NOT_FOUND:
-    case Status::STATUS_REQUESTTYPE_NOT_KNOWN:
-        controlData.add(FMQ_STATUS, 501);
-        controlData.add(FMQ_STATUSTEXT, std::string("Not Implemented"));
         break;
     case Status::STATUS_NO_REPLY:
         if (session->needsReply())
@@ -480,26 +477,28 @@ void RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, const std:
             if (pathWithoutFirstSlash.size() > foundEntityName->size())
             {
                 header.path = std::string(&pathWithoutFirstSlash[foundEntityName->size() + 1], ixEndHeader - foundEntityName->size() - 1);
-                auto entity = remoteEntity.lock();
-                if (entity && !isTypeDefined(header))
-                {
-                    const std::string* method = nullptr;
-                    auto itMethod = metainfo.find(FMQ_METHOD);
-                    if (itMethod != metainfo.end())
-                    {
-                        method = &itMethod->second;
-                    }
-                    header.type = entity->getTypeOfCommandFunction(header.path, method);
-                }
             }
         }
         else
         {
-//            if (!isDestinationIdDefined(header))
+            header.destname = "*";
+            header.path = pathWithoutFirstSlash;
+            auto it = name2Entity.find(header.destname);
+            if (it != name2Entity.end())
             {
-                header.destname = ".";
-                header.path = pathWithoutFirstSlash;
+                remoteEntity = it->second;
             }
+        }
+        auto entity = remoteEntity.lock();
+        if (entity)
+        {
+            const std::string* method = nullptr;
+            auto itMethod = metainfo.find(FMQ_METHOD);
+            if (itMethod != metainfo.end())
+            {
+                method = &itMethod->second;
+            }
+            header.type = entity->getTypeOfCommandFunction(header.path, method);
         }
     }
 

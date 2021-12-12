@@ -28,6 +28,7 @@
 #include "finalmq/variant/VariantValueStruct.h"
 #include "finalmq/variant/VariantValues.h"
 #include "finalmq/protocols/ProtocolMqtt5Client.h"
+#include "finalmq/remoteentity/entitydata.fmq.h"
 
 // the definition of the messages are in the file restapi.fmq
 #include "restapi.fmq.h"
@@ -55,8 +56,10 @@ using finalmq::IExecutorPtr;
 using finalmq::Executor;
 using finalmq::VariantStruct;
 using finalmq::ProtocolMqtt5Client;
-using restapi::HelloRequest;
-using restapi::HelloReply;
+using finalmq::remoteentity::NoData;
+using restapi::Person;
+using restapi::PersonList;
+using restapi::PersonId;
 
 
 
@@ -70,73 +73,96 @@ public:
             streamInfo << "peer event " << peerEvent.toString();
         });
 
-        // handle the HelloRequest
-        // this is fun - try to access the server with the json interface at port 8888:
+        // handle GET persons -> get all persons
+        // try to access the server with the json/TCP interface at port 8888:
         // telnet localhost 8888  (or: netcat localhost 8888) and type:
-        // /MyService/restapi.HelloRequest!4711{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
+        // /MyService/persons/GET!4711
         // or open a browser and type:
-        // localhost:8080/MyService/restapi.HelloRequest{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
-        // or do an HTTP request (the method GET, POST, ... does not matter) to localhost:8000 with:
-        // /MyService/mypath/1234/PUT{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
-        // for the HTTP request you can also put the json data into the HTTP payload
-        registerCommand<HelloRequest>([] (const RequestContextPtr& requestContext, const std::shared_ptr<HelloRequest>& request) {
-            assert(request);
-
-            // prepare the reply
-            std::string prefix("Hello ");
-            HelloReply reply;
-            // go through all persons and make a greeting
-            for (size_t i = 0; i < request->persons.size(); ++i)
-            {
-                reply.greetings.emplace_back(prefix + request->persons[i].name);
-            }
-
-//            PeerId peerid = requestContext->peerId();
-
+        // localhost:8080/MyService/persons
+        // or do an HTTP GET request to localhost:8080 with: /MyService/persons
+        registerCommand<NoData>("persons/GET", [this](const RequestContextPtr& requestContext, const std::shared_ptr<NoData>& request) {
             // send reply
-            requestContext->reply(std::move(reply));
-
-            // note:
-            // The reply does not have to be sent immediately:
-            // The requestContext is a shared_ptr, store it and reply later.
-
-            // note:
-            // The requestContext has the method requestContext->peerId()
-            // The returned peerId can be used for calling requestReply() or sendEvent().
-            // So, also a server entity can act as a client and can send requestReply()
-            // to the peer entity that is calling this request.
-            // An entity can act as a client and as a server. It is bidirectional (symmetric), like a socket.
+            PersonList persons;
+            for (auto it = m_persons.begin(); it != m_persons.end(); ++it)
+            {
+                persons.persons.emplace_back(it->second);
+            }
+            requestContext->reply(std::move(persons));
         });
 
-        
-        // just to demonstrate REST API. You can access the service with with either an HTTP PUT with path: "mypath/1234".
-        // Or with "maypath/1234/PUT" and the HTTP method (like: GET, POST, PUT, ...) does not matter.
-        // this is fun - try to access the server with the json interface at port 8888:
+        // handle POST persons -> add a person
+        // try to access the server with the json/TCP interface at port 8888:
         // telnet localhost 8888  (or: netcat localhost 8888) and type:
-        // /MyService/mypath/1234/PUT!4711{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
+        // /MyService/persons/POST!4711{"name":"Bonnie"}
         // or open a browser and type:
-        // localhost:8080/MyService/mypath/1234/PUT{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
-        // or do an HTTP PUT request to localhost:8000 with:
-        // /MyService/mypath/1234/PUT{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
-        // for the HTTP PUT request you can also put the json data into the HTTP payload
-        registerCommand<HelloRequest>("mypath/{id}/PUT", [](const RequestContextPtr& requestContext, const std::shared_ptr<HelloRequest>& request) {
-            assert(request);
-
-            const std::string* id = requestContext->getMetainfo("PATH_id"); // when a field is defined as {keyname}, then you can get the value with the key prefix "PATH_" ("PATH_keyname"}
-
-            // prepare the reply
-            std::string prefix("Hello ");
-            HelloReply reply;
-            // go through all persons and make a greeting
-            for (size_t i = 0; i < request->persons.size(); ++i)
+        // localhost:8080/MyService/persons/POST{"name":"Bonnie"}
+        // or do an HTTP POST request to localhost:8080 with: /MyService/persons{"name":"Bonnie"}
+        // you can also put the json data into the HTTP payload
+        registerCommand<Person>("persons/POST", [this](const RequestContextPtr& requestContext, const std::shared_ptr<Person>& request) {
+            if (request)
             {
-                reply.greetings.emplace_back(prefix + request->persons[i].name);
+                request->id = std::to_string(m_idNext);
+                m_idNext++;
+                m_persons[request->id] = *request;
+                // send reply
+                requestContext->reply(PersonId{ request->id });
             }
+        });
 
-            // send reply
-            requestContext->reply(std::move(reply));
+        // handle PUT persons -> change a person
+        // try to access the server with the json/TCP interface at port 8888:
+        // telnet localhost 8888  (or: netcat localhost 8888) and type:
+        // /MyService/persons/{id}/PUT!4711{"name":"Clyde"}
+        // or open a browser and type:
+        // localhost:8080/MyService/persons/{id}/POST{"name":"Clyde"}
+        // or do an HTTP POST request to localhost:8080 with: /MyService/persons/{id}{"name":"Bonnie"}
+        // you can also put the json data into the HTTP payload
+        registerCommand<Person>("persons/{id}/PUT", [this](const RequestContextPtr& requestContext, const std::shared_ptr<Person>& request) {
+            if (request)
+            {
+                std::string* id = requestContext->getMetainfo("PATH_id");
+                assert(id);
+                auto it = m_persons.find(*id);
+                if (it != m_persons.end())
+                {
+                    Person& person = it->second;
+                    person = *request;
+                    person.id = *id;
+                    requestContext->reply(finalmq::remoteentity::Status::STATUS_OK);
+                }
+                else
+                {
+                    requestContext->reply(finalmq::remoteentity::Status::STATUS_REQUEST_NOT_FOUND);
+                }
+            }
+        });
+
+        // handle DELETE persons -> delete a person
+        // try to access the server with the json/TCP interface at port 8888:
+        // telnet localhost 8888  (or: netcat localhost 8888) and type:
+        // /MyService/persons/{id}/DELETE!4711
+        // or open a browser and type:
+        // localhost:8080/MyService/persons/{id}/DELETE
+        // or do an HTTP DELETE request to localhost:8080 with: /MyService/persons/{id}
+        registerCommand<NoData>("persons/{id}/DELETE", [this](const RequestContextPtr& requestContext, const std::shared_ptr<NoData>& request) {
+            std::string* id = requestContext->getMetainfo("PATH_id");
+            assert(id);
+            auto it = m_persons.find(*id);
+            if (it != m_persons.end())
+            {
+                m_persons.erase(it);
+                requestContext->reply(finalmq::remoteentity::Status::STATUS_OK);
+            }
+            else
+            {
+                requestContext->reply(finalmq::remoteentity::Status::STATUS_REQUEST_NOT_FOUND);
+            }
         });
     }
+
+private:
+    std::unordered_map<std::string, Person>  m_persons;
+    int                                      m_idNext = 1;
 };
 
 
@@ -174,8 +200,8 @@ int main()
                   << " event: " << connectionEvent.toString();
     });
 
-    // Create server entity and register it at the entityContainer with the service name "MyService"
-    // note: multiple entities can be registered.
+    // Create server entity and register it at the entityContainer with the service name "MyService".
+    // note: multiple entities can be registered
     EntityServer entityServer;
     entityContainer.registerEntity(&entityServer, "MyService");
 

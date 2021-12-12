@@ -205,17 +205,22 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
             if (pathWithoutFirstSlash.size() > foundEntityName->size())
             {
                 header.path = std::string(&pathWithoutFirstSlash[foundEntityName->size() + 1], pathWithoutFirstSlash.size() - foundEntityName->size() - 1);
-                auto entity = remoteEntity.lock();
-                if (entity)
-                {
-                    header.type = entity->getTypeOfCommandFunction(header.path);
-                }
             }
         }
         else
         {
-            header.destname = ".";
+            header.destname = "*";
             header.path = pathWithoutFirstSlash;
+            auto it = name2Entity.find(header.destname);
+            if (it != name2Entity.end())
+            {
+                remoteEntity = it->second;
+            }
+        }
+        auto entity = remoteEntity.lock();
+        if (entity)
+        {
+            header.type = entity->getTypeOfCommandFunction(header.path);
         }
 
         std::string path = { &buffer[0], &buffer[ixCorrelationId] };
