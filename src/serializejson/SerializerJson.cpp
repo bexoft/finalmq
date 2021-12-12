@@ -194,7 +194,7 @@ void SerializerJson::Internal::enterEnum(const MetaField& field, std::int32_t va
     setKey(field);
     if (m_enumAsString)
     {
-        const std::string& name = MetaDataGlobal::instance().getEnumNameByValue(field, value);
+        const std::string& name = MetaDataGlobal::instance().getEnumAliasByValue(field, value);
         m_jsonBuilder.enterString(name.c_str(), name.size());
     }
     else
@@ -401,7 +401,7 @@ void SerializerJson::Internal::enterArrayEnum(const MetaField& field, const std:
     if (m_enumAsString)
     {
         std::for_each(value, value + size, [this, &field] (std::int32_t entry) {
-            const std::string& name = MetaDataGlobal::instance().getEnumNameByValue(field, entry);
+            const std::string& name = MetaDataGlobal::instance().getEnumAliasByValue(field, entry);
             m_jsonBuilder.enterString(name.c_str(), name.size());
         });
     }

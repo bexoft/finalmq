@@ -86,10 +86,15 @@ const MetaEnumEntry* MetaEnum::getEntryById(int id) const
 
 const MetaEnumEntry* MetaEnum::getEntryByName(const std::string& name) const
 {
-    auto it = m_name2Entry.find(name);
-    if (it != m_name2Entry.end())
+    auto it1 = m_name2Entry.find(name);
+    if (it1 != m_name2Entry.end())
     {
-        return it->second.get();
+        return it1->second.get();
+    }
+    auto it2 = m_alias2Entry.find(name);
+    if (it2 != m_alias2Entry.end())
+    {
+        return it2->second.get();
     }
     return nullptr;
 }
@@ -141,6 +146,33 @@ const std::string& MetaEnum::getNameByValue(std::int32_t value) const
             return entry->name;
         }
     }
+    static std::string empty;   
+    return empty;
+}
+
+const std::string& MetaEnum::getAliasByValue(std::int32_t value) const
+{
+    const MetaEnumEntry* entry = MetaEnum::getEntryById(value);
+    if (entry)
+    {
+        if (!entry->alias.empty())
+        {
+            return entry->alias;
+        }
+        return entry->name;
+    }
+    else
+    {
+        entry = MetaEnum::getEntryById(0);
+        if (entry)
+        {
+            if (!entry->alias.empty())
+            {
+                return entry->alias;
+            }
+            return entry->name;
+        }
+    }
     static std::string empty;
     return empty;
 }
@@ -165,6 +197,7 @@ void MetaEnum::addEntry(MetaEnumEntry&& entry)
     m_entries.emplace_back(e);
     m_id2Entry.emplace(e->id, e);
     m_name2Entry.emplace(e->name, e);
+    m_alias2Entry.emplace(e->alias, e);
 }
 
 }   // namespace finalmq

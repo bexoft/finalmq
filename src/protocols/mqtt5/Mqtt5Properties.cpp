@@ -51,9 +51,13 @@ const Mqtt5PropertyId& Mqtt5PropertyId::operator =(Enum en)
     m_value = en;
     return *this;
 }
-const std::string& Mqtt5PropertyId::toString() const
+const std::string& Mqtt5PropertyId::toName() const
 {
     return _enumInfo.getMetaEnum().getNameByValue(m_value);
+}
+const std::string& Mqtt5PropertyId::toString() const
+{
+    return _enumInfo.getMetaEnum().getAliasByValue(m_value);
 }
 void Mqtt5PropertyId::fromString(const std::string& name)
 {

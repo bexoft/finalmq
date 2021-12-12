@@ -272,7 +272,7 @@ void SerializerVariant::Internal::enterEnum(const MetaField& field, std::int32_t
 {
     if (m_enumAsString)
     {
-        const std::string& name = MetaDataGlobal::instance().getEnumNameByValue(field, value);
+        const std::string& name = MetaDataGlobal::instance().getEnumAliasByValue(field, value);
         add(field, name);
     }
     else
@@ -407,7 +407,7 @@ void SerializerVariant::Internal::enterArrayEnum(const MetaField& field, std::ve
         std::vector<std::string> enums;
         enums.reserve(value.size());
         std::for_each(value.begin(), value.end(), [this, &field, &enums] (std::int32_t entry) {
-            const std::string& name = MetaDataGlobal::instance().getEnumNameByValue(field, entry);
+            const std::string& name = MetaDataGlobal::instance().getEnumAliasByValue(field, entry);
             enums.push_back(name);
         });
         add(field, std::move(enums));
@@ -427,7 +427,7 @@ void SerializerVariant::Internal::enterArrayEnum(const MetaField& field, const s
         std::vector<std::string> enums;
         enums.reserve(size);
         std::for_each(value, value + size, [this, &field, &enums] (std::int32_t entry) {
-            const std::string& name = MetaDataGlobal::instance().getEnumNameByValue(field, entry);
+            const std::string& name = MetaDataGlobal::instance().getEnumAliasByValue(field, entry);
             enums.push_back(name);
         });
         add(field, std::move(enums));

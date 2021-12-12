@@ -55,7 +55,7 @@ void MetaDataExchange::importMetaData(const SerializeMetaData& metadata)
         for (size_t n = 0; n < enumSource.entries.size(); ++n)
         {
             const SerializeMetaEnumEntry& entrySource = enumSource.entries[i];
-            entries.push_back({entrySource.name, entrySource.id, entrySource.desc});
+            entries.push_back({entrySource.name, entrySource.id, entrySource.desc, entrySource.alias});
         }
         MetaDataGlobal::instance().addEnum({enumSource.type, enumSource.desc, std::move(entries)});
     }
@@ -95,7 +95,7 @@ void MetaDataExchange::exportMetaData(SerializeMetaData& metadata)
         {
             const MetaEnumEntry* entrySource = enumSource.getEntryByIndex(n);
             assert(entrySource);
-            enumDestination.entries.push_back({entrySource->name, entrySource->id, entrySource->description});
+            enumDestination.entries.push_back({entrySource->name, entrySource->id, entrySource->description, entrySource->alias});
         }
         metadata.enums.push_back(std::move(enumDestination));
     }

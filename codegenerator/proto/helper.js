@@ -1,5 +1,44 @@
 module.exports = {
 
+    convertTypeId: function (data)
+    {
+        structs = data.structs;
+        for (var i = 0; i < structs.length; i++)
+        {
+            var stru = structs[i];
+            for (var n = 0; n < stru.fields.length; n++)
+            {
+                field = stru.fields[n];
+                switch (field.tid)
+                {
+                    case 'bool': field.tid = 'TYPE_BOOL'; break;
+                    case 'int32': field.tid = 'TYPE_INT32'; break;
+                    case 'uint32': field.tid = 'TYPE_UINT32'; break;
+                    case 'int64': field.tid = 'TYPE_INT64'; break;
+                    case 'uint64': field.tid = 'TYPE_UINT64'; break;
+                    case 'float': field.tid = 'TYPE_FLOAT'; break;
+                    case 'double': field.tid = 'TYPE_DOUBLE'; break;
+                    case 'string': field.tid = 'TYPE_STRING'; break;
+                    case 'bytes': field.tid = 'TYPE_BYTES'; break;
+                    case 'struct': field.tid = 'TYPE_STRUCT'; break;
+                    case 'enum': field.tid = 'TYPE_ENUM'; break;
+                    case 'variant': field.tid = 'TYPE_VARIANT'; break;
+                    case 'bool[]': field.tid = 'TYPE_ARRAY_BOOL'; break;
+                    case 'int32[]': field.tid = 'TYPE_ARRAY_INT32'; break;
+                    case 'uint32[]': field.tid = 'TYPE_ARRAY_UINT32'; break;
+                    case 'int64[]': field.tid = 'TYPE_ARRAY_INT64'; break;
+                    case 'uint64[]': field.tid = 'TYPE_ARRAY_UINT64'; break;
+                    case 'float[]': field.tid = 'TYPE_ARRAY_FLOAT'; break;
+                    case 'double[]': field.tid = 'TYPE_ARRAY_DOUBLE'; break;
+                    case 'string[]': field.tid = 'TYPE_ARRAY_STRING'; break;
+                    case 'bytes[]': field.tid = 'TYPE_ARRAY_BYTES'; break;
+                    case 'struct[]': field.tid = 'TYPE_ARRAY_STRUCT'; break;
+                    case 'enum[]': field.tid = 'TYPE_ARRAY_ENUM'; break;
+                }
+            }
+        }
+    },
+
     isTypeInData : function(data, type)
     {
         for (var i = 0; i < data.enums.length; i++)

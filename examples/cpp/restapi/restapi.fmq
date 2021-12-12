@@ -1,5 +1,5 @@
 {
-    "namespace":"helloworld",
+    "namespace":"restapi",
 
     "enums": [
         {"type":"Gender","desc":"The gender of a person","entries":[

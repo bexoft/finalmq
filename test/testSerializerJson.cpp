@@ -261,10 +261,22 @@ TEST_F(TestSerializerJson, testEnum)
     static const fmq::test::Foo VALUE = fmq::test::Foo::FOO_HELLO;
 
     m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestEnum"));
-    m_serializer->enterEnum({MetaTypeId::TYPE_ENUM, "test.Foo", "value", "", 0}, VALUE);
+    m_serializer->enterEnum({ MetaTypeId::TYPE_ENUM, "test.Foo", "value", "", 0 }, VALUE);
     m_serializer->finished();
 
     ASSERT_EQ(m_data, "{\"value\":\"FOO_HELLO\"}");
+}
+
+
+TEST_F(TestSerializerJson, testEnumAlias)
+{
+    static const fmq::test::Foo VALUE = fmq::test::Foo::FOO_WORLD2;
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestEnum"));
+    m_serializer->enterEnum({ MetaTypeId::TYPE_ENUM, "test.Foo", "value", "", 0 }, VALUE);
+    m_serializer->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":\"world2\"}");
 }
 
 
@@ -579,7 +591,7 @@ TEST_F(TestSerializerJson, testArrayEnum)
     m_serializer->enterArrayEnum({MetaTypeId::TYPE_ARRAY_ENUM, "test.Foo", "value", "", 0}, VALUE.data(), VALUE.size());
     m_serializer->finished();
 
-    ASSERT_EQ(m_data, "{\"value\":[\"FOO_HELLO\",\"FOO_WORLD\",\"FOO_WORLD2\",\"FOO_WORLD\"]}");
+    ASSERT_EQ(m_data, "{\"value\":[\"FOO_HELLO\",\"FOO_WORLD\",\"world2\",\"FOO_WORLD\"]}");
 }
 
 

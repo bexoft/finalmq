@@ -163,6 +163,18 @@ const std::string& MetaData::getEnumNameByValue(const MetaField& field, std::int
 }
 
 
+const std::string& MetaData::getEnumAliasByValue(const MetaField& field, std::int32_t value) const
+{
+    const MetaEnum* en = getEnum(field);
+    if (en)
+    {
+        return en->getAliasByValue(value);
+    }
+    static std::string empty;
+    return empty;
+}
+
+
 
 const MetaStruct& MetaData::addStruct(const MetaStruct& stru)
 {

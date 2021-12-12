@@ -46,9 +46,13 @@ const <%- plaintype %>& <%- plaintype %>::operator =(Enum en)
     m_value = en;
     return *this;
 }
-const std::string& <%- plaintype %>::toString() const
+const std::string& <%- plaintype %>::toName() const
 {
     return _enumInfo.getMetaEnum().getNameByValue(m_value);
+}
+const std::string& <%- plaintype %>::toString() const
+{
+    return _enumInfo.getMetaEnum().getAliasByValue(m_value);
 }
 void <%- plaintype %>::fromString(const std::string& name)
 {
@@ -58,7 +62,7 @@ const finalmq::EnumInfo <%- plaintype %>::_enumInfo = {
     "<%- helper.typeWithNamespace(data, en.type, '.') %>", "<%- en.description %>", {<% -%>
         <% for (var n = 0; n < en.entries.length; n++) { 
             var entry = en.entries[n] %>
-        {"<%- entry.name %>", <%- entry.id %>, "<%- entry.description %>"},<% -%>
+        {"<%- entry.name %>", <%- entry.id %>, "<%- entry.description %>", "<%- entry.alias %>"},<% -%>
         <% } %>
      }
 };

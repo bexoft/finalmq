@@ -30,15 +30,15 @@
 #include "finalmq/variant/VariantValues.h"
 #include "finalmq/protocols/ProtocolMqtt5Client.h"
 
-// the definition of the messages are in the file helloworld.fmq
-#include "helloworld.fmq.h"
+// the definition of the messages are in the file restapi.fmq
+#include "restapi.fmq.h"
 
 #include <iostream>
 #include <thread>
 #include <algorithm>
 
 // the modulename is needed for the logger streams (streamDebug, streamInfo, streamWarning, streamError, streamCritical, streamFatal)
-#define MODULENAME  "helloworld_server"
+#define MODULENAME  "restapi_server"
 
 
 using finalmq::RemoteEntity;
@@ -57,11 +57,11 @@ using finalmq::Logger;
 using finalmq::LogContext;
 using finalmq::VariantStruct;
 using finalmq::ProtocolMqtt5Client;
-using helloworld::HelloRequest;
-using helloworld::HelloReply;
-using helloworld::Gender;
-using helloworld::Person;
-using helloworld::Address;
+using restapi::HelloRequest;
+using restapi::HelloReply;
+using restapi::Gender;
+using restapi::Person;
+using restapi::Address;
 
 
 

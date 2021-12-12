@@ -10,7 +10,7 @@
         {"type":"StopRequest","desc":"Call StopRequest to stop the timer event.","fields":[
         ]},
         {"type":"TimerEvent","desc":"The server triggers this event to all connected clients.","fields":[
-            {"tid":"TYPE_STRING",                           "name":"time",              "desc":"The current time."}
+            {"tid":"string",                           "name":"time",              "desc":"The current time."}
         ]}
     ]
 }

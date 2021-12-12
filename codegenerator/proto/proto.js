@@ -28,6 +28,7 @@ if (pathOutput)
     fileOutput   = pathOutput + '/' + splitFileOutput[splitFileOutput.length - 1]
 }
 
+helper.convertTypeId(data)
 var options = {data:data, helper:helper}
 var str = ejs.render(strTemplate, options)
 

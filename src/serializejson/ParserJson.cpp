@@ -159,7 +159,7 @@ void ParserJson::enterNumber(T value)
         }
         else
         {
-            const std::string& v = MetaDataGlobal::instance().getEnumNameByValue(*m_fieldCurrent, static_cast<std::int32_t>(value));
+            const std::string& v = MetaDataGlobal::instance().getEnumAliasByValue(*m_fieldCurrent, static_cast<std::int32_t>(value));
             m_arrayString.push_back(v);
         }
         break;
