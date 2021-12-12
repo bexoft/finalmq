@@ -301,12 +301,12 @@ TEST_F(TestSerializerJson, testVariantInt32)
     const MetaStruct* struValue = MetaDataGlobal::instance().getStruct(stru->getFieldByName("value")->typeName);
     m_serializer->startStruct(*stru);
     m_serializer->enterStruct(*stru->getFieldByName("value"));
-    m_serializer->enterEnum(*struValue->getFieldByName("type"), "T_INT32");
+    m_serializer->enterEnum(*struValue->getFieldByName("type"), "int32");
     m_serializer->enterInt32(*struValue->getFieldByName("valint32"), VALUE);
     m_serializer->exitStruct(*stru->getFieldByName("value"));
     m_serializer->finished();
 
-    ASSERT_EQ(m_data, "{\"value\":{\"type\":\"T_INT32\",\"valint32\":-2}}");
+    ASSERT_EQ(m_data, "{\"value\":{\"type\":\"int32\",\"valint32\":-2}}");
 }
 
 TEST_F(TestSerializerJson, testVariantInt32Default)
@@ -318,12 +318,12 @@ TEST_F(TestSerializerJson, testVariantInt32Default)
     const MetaStruct* struValue = MetaDataGlobal::instance().getStruct(stru->getFieldByName("value")->typeName);
     m_serializerDefault->startStruct(*stru);
     m_serializerDefault->enterStruct(*stru->getFieldByName("value"));
-    m_serializerDefault->enterEnum(*struValue->getFieldByName("type"), "T_INT32");
+    m_serializerDefault->enterEnum(*struValue->getFieldByName("type"), "int32");
     m_serializerDefault->enterInt32(*struValue->getFieldByName("valint32"), VALUE);
     m_serializerDefault->exitStruct(*stru->getFieldByName("value"));
     m_serializerDefault->finished();
 
-    ASSERT_EQ(m_data, "{\"value\":{\"type\":\"T_INT32\",\"valint32\":-2},\"valueInt32\":0,\"value2\":{}}");
+    ASSERT_EQ(m_data, "{\"value\":{\"type\":\"int32\",\"valint32\":-2},\"valueInt32\":0,\"value2\":{}}");
 }
 
 
@@ -399,7 +399,7 @@ TEST_F(TestSerializerJson, testVariantStructDefault)
     m_serializerDefault->exitStruct(*m_fieldValue);
     m_serializerDefault->finished();
 
-    std::string cmp = "{\"value\":{\"type\":\"T_STRUCT\",\"vallist\":[{\"name\":\"key1\",\"type\":\"T_LIST\",\"vallist\":[{\"type\":\"T_INT32\",\"valint32\":2},{\"type\":\"T_STRING\",\"valstring\":\"Hello\"}]},{\"name\":\"key2\",\"type\":\"T_STRUCT\",\"vallist\":[{\"name\":\"a\",\"type\":\"T_INT32\",\"valint32\":3},{\"name\":\"b\",\"type\":\"T_STRING\",\"valstring\":\"Hi\"}]},{\"name\":\"key3\",\"type\":\"T_NONE\"}]},\"valueInt32\":0,\"value2\":{}}";
+    std::string cmp = "{\"value\":{\"type\":\"struct\",\"vallist\":[{\"name\":\"key1\",\"type\":\"list\",\"vallist\":[{\"type\":\"int32\",\"valint32\":2},{\"type\":\"string\",\"valstring\":\"Hello\"}]},{\"name\":\"key2\",\"type\":\"struct\",\"vallist\":[{\"name\":\"a\",\"type\":\"int32\",\"valint32\":3},{\"name\":\"b\",\"type\":\"string\",\"valstring\":\"Hi\"}]},{\"name\":\"key3\",\"type\":\"none\"}]},\"valueInt32\":0,\"value2\":{}}";
     ASSERT_EQ(m_data == cmp, true);
 }
 

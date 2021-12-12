@@ -18,8 +18,8 @@
             {"name":"T_ARRAY_UINT32",        "id":1027,  "desc":"desc", "alias":"uint32[]"},
             {"name":"T_ARRAY_INT64",         "id":1028,  "desc":"desc", "alias":"int64[]"},
             {"name":"T_ARRAY_UINT64",        "id":1029,  "desc":"desc", "alias":"uint64[]"},
-            {"name":"T_ARRAY_FLOAT",         "id":1030,  "desc":"desc", "alias":"float"},
-            {"name":"T_ARRAY_DOUBLE",        "id":1031,  "desc":"desc", "alias":"double"},
+            {"name":"T_ARRAY_FLOAT",         "id":1030,  "desc":"desc", "alias":"float[]"},
+            {"name":"T_ARRAY_DOUBLE",        "id":1031,  "desc":"desc", "alias":"double[]"},
             {"name":"T_ARRAY_STRING",        "id":1032,  "desc":"desc", "alias":"string[]"},
             {"name":"T_ARRAY_BYTES",         "id":1033,  "desc":"desc", "alias":"bytes[]"},
             {"name":"T_LIST",                "id":1034,  "desc":"desc", "alias":"list"}
