@@ -314,35 +314,35 @@ In the HelloWorld example we define the following helloworld.fmq file:
     "namespace":"helloworld",
     
     "enums": [
-        {"type":"Sex","desc":"The sex of a person","entries":[
-            {"name":"INVALID",  "id":0,"desc":"invalid sex"},
-            {"name":"MALE",     "id":1,"desc":"male"},
-            {"name":"FEMALE",   "id":2,"desc":"female"},
-            {"name":"DIVERSE",  "id":3,"desc":"diverse"}
+        {"type":"Gender","desc":"The gender of a person","entries":[
+            {"name":"INVALID",  "id":0,"desc":"invalid gender", "alias":"invalid"},
+            {"name":"MALE",     "id":1,"desc":"male", "alias":"male"},
+            {"name":"FEMALE",   "id":2,"desc":"female", "alias":"female"},
+            {"name":"DIVERSE",  "id":3,"desc":"diverse", "alias":"diverse"}
         ]}
     ],
 
     "structs":[
         {"type":"Address","desc":"An address","fields":[
-            {"tid":"TYPE_STRING",                           "name":"street",            "desc":"The first name of a person."},
-            {"tid":"TYPE_UINT32",                           "name":"number",            "desc":"The house number"},
-            {"tid":"TYPE_UINT32",                           "name":"postalcode",        "desc":"The postal code."},
-            {"tid":"TYPE_STRING",                           "name":"city",              "desc":"The city name."},
-            {"tid":"TYPE_STRING",                           "name":"country",           "desc":"The country name."}
+            {"tid":"string",                     "name":"street",      "desc":"The first name of a person."},
+            {"tid":"uint32",                     "name":"number",      "desc":"The house number"},
+            {"tid":"uint32",                     "name":"postalcode",  "desc":"The postal code."},
+            {"tid":"string",                     "name":"city",        "desc":"The city name."},
+            {"tid":"string",                     "name":"country",     "desc":"The country name."}
         ]},
         {"type":"Person","desc":"Models a person","fields":[
-            {"tid":"TYPE_STRING",                           "name":"name",              "desc":"The first name of a person."},
-            {"tid":"TYPE_STRING",                           "name":"surname",           "desc":"The last name of a person."},
-            {"tid":"TYPE_ENUM",         "type":"Sex",       "name":"sex",               "desc":"The sex of a person."},
-            {"tid":"TYPE_UINT32",                           "name":"yearOfBirth",       "desc":"Year of birth."},
-            {"tid":"TYPE_STRUCT",       "type":"Address",   "name":"address",           "desc":"The address of a person."}
+            {"tid":"string",                     "name":"name",        "desc":"The first name of a person."},
+            {"tid":"string",                     "name":"surname",     "desc":"The last name of a person."},
+            {"tid":"enum",     "type":"Gender",  "name":"gender",      "desc":"The gender of a person."},
+            {"tid":"uint32",                     "name":"yearOfBirth", "desc":"Year of birth."},
+            {"tid":"struct",   "type":"Address", "name":"address",     "desc":"The address of a person."}
         ]},
 
         {"type":"HelloRequest","desc":"","fields":[
-            {"tid":"TYPE_ARRAY_STRUCT", "type":"Person",    "name":"persons",           "desc":"Parameter of HelloRequest"}
+            {"tid":"struct[]", "type":"Person",  "name":"persons",     "desc":"Parameter of HelloRequest"}
         ]},
         {"type":"HelloReply","desc":"","fields":[
-            {"tid":"TYPE_ARRAY_STRING",                     "name":"greetings",         "desc":"The greetings for all persons."}
+            {"tid":"string[]",                   "name":"greetings",   "desc":"The greetings for all persons."}
         ]}
     ]
 }
@@ -368,38 +368,38 @@ As you can see, an entry of a data structure has the following fields:
 
 The following type IDs are possible:
 
-| Type              | C++ Type                           | JSON Serialization                                           |
-| ----------------- | ---------------------------------- | ------------------------------------------------------------ |
-| TYPE_BOOL         | bool                               | bool                                                         |
-| TYPE_INT32        | std::int32_t                       | number                                                       |
-| TYPE_UINT32       | std::uint32_t                      | number                                                       |
-| TYPE_INT64        | std::int64_t                       | string                                                       |
-| TYPE_UINT64       | std::uint64_t                      | string                                                       |
-| TYPE_FLOAT        | float                              | number                                                       |
-| TYPE_DOUBLE       | double                             | number                                                       |
-| TYPE_STRING       | std::string                        | string                                                       |
-| TYPE_BYTES        | std::vector\<char\>                | base64 string                                                |
-| TYPE_STRUCT       |                                    | object                                                       |
-| TYPE_ENUM         |                                    | string                                                       |
-| TYPE_VARIANT      | finalmq::Variant                   | finalmq.variant.VarValue <br />(see inc/finalmq/metadataserialize/variant.fmq) |
-| TYPE_ARRAY_BOOL   | std::vector\<bool\>                | list of bool                                                 |
-| TYPE_ARRAY_INT32  | std::vector\<std::int32_t\>        | list of number                                               |
-| TYPE_ARRAY_UINT32 | std::vector\<std::uint32_t\>       | list of number                                               |
-| TYPE_ARRAY_INT64  | std::vector\<std::int64_t\>        | list of strings                                              |
-| TYPE_ARRAY_UINT64 | std::vector\<std::uint64_t\>       | list of strings                                              |
-| TYPE_ARRAY_FLOAT  | std::vector\<float\>               | list of number                                               |
-| TYPE_ARRAY_DOUBLE | std::vector\<double\>              | list of number                                               |
-| TYPE_ARRAY_STRING | std::vector\<std::string\>         | list of strings                                              |
-| TYPE_ARRAY_BYTES  | std::vector\<std::vector\<char\>\> | list of base64 strings                                       |
-| TYPE_ARRAY_STRUCT |                                    | list of objects                                              |
-| TYPE_ARRAY_ENUM   |                                    | list of strings                                              |
+| Type     | C++ Type                           | JSON Serialization                                           |
+| -------- | ---------------------------------- | ------------------------------------------------------------ |
+| bool     | bool                               | bool                                                         |
+| int32    | std::int32_t                       | number                                                       |
+| uint32   | std::uint32_t                      | number                                                       |
+| int64    | std::int64_t                       | string                                                       |
+| uint64   | std::uint64_t                      | string                                                       |
+| float    | float                              | number                                                       |
+| double   | double                             | number                                                       |
+| string   | std::string                        | string                                                       |
+| bytes    | std::vector\<char\>                | base64 string                                                |
+| struct   |                                    | object                                                       |
+| enum     |                                    | string                                                       |
+| variant  | finalmq::Variant                   | finalmq.variant.VarValue <br />(see inc/finalmq/metadataserialize/variant.fmq) |
+| bool[]   | std::vector\<bool\>                | list of bool                                                 |
+| int32[]  | std::vector\<std::int32_t\>        | list of number                                               |
+| uint32[] | std::vector\<std::uint32_t\>       | list of number                                               |
+| int64[]  | std::vector\<std::int64_t\>        | list of strings                                              |
+| uint64[] | std::vector\<std::uint64_t\>       | list of strings                                              |
+| float[]  | std::vector\<float\>               | list of number                                               |
+| double[] | std::vector\<double\>              | list of number                                               |
+| string[] | std::vector\<std::string\>         | list of strings                                              |
+| bytes[]  | std::vector\<std::vector\<char\>\> | list of base64 strings                                       |
+| struct[] |                                    | list of objects                                              |
+| enum[]   |                                    | list of strings                                              |
 
 
 
-- The TYPE_STRING is a utf8 character string.
-- The TYPE_BYTES can be used for binary data.
+- The string is a utf8 character string.
+- The bytes can be used for binary data.
 
-- The TYPE_VARIANT is a type that can be any type. This type is represented by the finalMQ's Variant.
+- The variant is a type that can be any type. This type is represented by the finalMQ's Variant.
 - The types enum and struct need additional information about the type name inside the field "type"
 
 
@@ -412,7 +412,7 @@ For the **protobuf** serialization it can be used to specify, how an integer val
 
 Example:
 
-`{"tid":"TYPE_UINT32", "name":"number", "desc":"The house number", "flags":["METAFLAG_PROTO_VARINT"]}`
+`{"tid":"uint32", "name":"number", "desc":"The house number", "flags":["METAFLAG_PROTO_VARINT"]}`
 
 Feel free to put your own strings into the flags-list to give some additional information about the data struct entry.
 
@@ -848,8 +848,8 @@ int main()
     // A peer entity is been identified by its peerId.
     // each request has its own lambda. The lambda is been called when the corresponding reply is received.
     entityClient.requestReply<HelloReply>(peerId,
-                HelloRequest{{ {"Bonnie","Parker",Sex::FEMALE,1910,{"somestreet",   12,76875,"Rowena","USA"}},
-                               {"Clyde", "Barrow",Sex::MALE,  1909,{"anotherstreet",32,37385,"Telico","USA"}} }},
+                HelloRequest{{ {"Bonnie","Parker",Gender::FEMALE,1910,{"somestreet",   12,76875,"Rowena","USA"}},
+                               {"Clyde", "Barrow",Gender::MALE,  1909,{"anotherstreet",32,37385,"Telico","USA"}} }},
                 [] (PeerId peerId, Status status, const std::shared_ptr<HelloReply>& reply) {
         if (reply)
         {
@@ -939,8 +939,8 @@ Notes:
 Now that we have a peerId for the server remote entity, we can send requests to the server.
 
     entityClient.requestReply<HelloReply>(peerId,
-                HelloRequest{{ {"Bonnie","Parker",Sex::FEMALE,1910,{"somestreet",   12,76875,"Rowena","USA"}},
-                               {"Clyde", "Barrow",Sex::MALE,  1909,{"anotherstreet",32,37385,"Telico","USA"}} }},
+                HelloRequest{{ {"Bonnie","Parker",Gender::FEMALE,1910,{"somestreet",   12,76875,"Rowena","USA"}},
+                               {"Clyde", "Barrow",Gender::MALE,  1909,{"anotherstreet",32,37385,"Telico","USA"}} }},
                 [] (PeerId peerId, Status status, const std::shared_ptr<HelloReply>& reply) {
         if (reply)
         {
@@ -1051,7 +1051,7 @@ The interface definition looks like this:
 	        {"type":"StopRequest","desc":"Call StopRequest to stop the timer event.","fields":[
 	        ]},
 	        {"type":"TimerEvent","desc":"The server triggers this event to all connected clients.","fields":[
-	            {"tid":"TYPE_STRING", "name":"time", "desc":"The current time."}
+	            {"tid":"string", "name":"time", "desc":"The current time."}
 	        ]}
 	    ]
 	}
@@ -1430,10 +1430,10 @@ In the constructor you have to pass the directory in which the downloadable file
 Message description:
 
 	{"type":"RawBytes","desc":"Send pure data for protocols with no meta info.","fields":[
-	    {"tid":"TYPE_BYTES", "type":"", "name":"data", "desc":"The data","flags":[]}
+	    {"tid":"bytes", "type":"", "name":"data", "desc":"The data","flags":[]}
 	]} 
 
-In case of protobuf the data of TYPE_BYTES is encoded as binary data, in case of json the TYPE_BYTES is encoded as base64.
+In case of protobuf the data of bytes is encoded as binary data, in case of json the bytes are encoded as base64.
 
 
 

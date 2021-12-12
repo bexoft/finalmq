@@ -66,6 +66,7 @@ public:
     operator const Enum&() const;
     operator Enum&();
     const PeerEvent& operator =(Enum en);
+    const std::string& toName() const;
     const std::string& toString() const;
     void fromString(const std::string& name);
 

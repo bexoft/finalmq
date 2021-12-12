@@ -45,6 +45,7 @@ struct IMetaData
     virtual bool isEnumValue(const MetaField& field, std::int32_t value) const = 0;
     virtual std::int32_t getEnumValueByName(const MetaField& field, const std::string& name) const = 0;
     virtual const std::string& getEnumNameByValue(const MetaField& field, std::int32_t value) const = 0;
+    virtual const std::string& getEnumAliasByValue(const MetaField& field, std::int32_t value) const = 0;
     virtual const MetaStruct& addStruct(const MetaStruct& stru) = 0;
     virtual const MetaStruct& addStruct(MetaStruct&& stru) = 0;
     virtual const MetaEnum& addEnum(const MetaEnum& en) = 0;
@@ -70,6 +71,7 @@ private:
     virtual bool isEnumValue(const MetaField& field, std::int32_t value) const override;
     virtual std::int32_t getEnumValueByName(const MetaField& field, const std::string& name) const override;
     virtual const std::string& getEnumNameByValue(const MetaField& field, std::int32_t value) const override;
+    virtual const std::string& getEnumAliasByValue(const MetaField& field, std::int32_t value) const override;
     virtual const MetaStruct& addStruct(const MetaStruct& stru) override;
     virtual const MetaStruct& addStruct(MetaStruct&& stru) override;
     virtual const MetaEnum& addEnum(const MetaEnum& en) override;

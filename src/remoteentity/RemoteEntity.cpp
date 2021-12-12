@@ -62,9 +62,13 @@ const PeerEvent& PeerEvent::operator =(Enum en)
     m_value = en;
     return *this;
 }
-const std::string& PeerEvent::toString() const
+const std::string& PeerEvent::toName() const
 {
     return _enumInfo.getMetaEnum().getNameByValue(m_value);
+}
+const std::string& PeerEvent::toString() const
+{
+    return _enumInfo.getMetaEnum().getAliasByValue(m_value);
 }
 void PeerEvent::fromString(const std::string& name)
 {
@@ -72,8 +76,8 @@ void PeerEvent::fromString(const std::string& name)
 }
 const EnumInfo PeerEvent::_enumInfo = {
     "PeerEvent", "", {
-        {"PEER_CONNECTED", 0, ""},
-        {"PEER_DISCONNECTED", 1, ""},
+        {"PEER_CONNECTED", 0, "", "connected"},
+        {"PEER_DISCONNECTED", 1, "", "disconnected"},
      }
 };
 

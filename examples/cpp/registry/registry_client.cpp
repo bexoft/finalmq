@@ -48,7 +48,7 @@ using finalmq::Logger;
 using finalmq::LogContext;
 using helloworld::HelloRequest;
 using helloworld::HelloReply;
-using helloworld::Sex;
+using helloworld::Gender;
 using helloworld::Person;
 using helloworld::Address;
 
@@ -99,8 +99,8 @@ int main()
     // A peer entity is been identified by its peerId.
     // each request has its own lambda. The lambda is been called when the corresponding reply is received.
     entityClient.requestReply<HelloReply>(peerId,
-                HelloRequest{{ {"Bonnie","Parker",Sex::FEMALE,1910,{"somestreet",   12,76875,"Rowena","USA"}},
-                               {"Clyde", "Barrow",Sex::MALE,  1909,{"anotherstreet",32,37385,"Telico","USA"}} }},
+                HelloRequest{{ {"Bonnie","Parker",Gender::FEMALE,1910,{"somestreet",   12,76875,"Rowena","USA"}},
+                               {"Clyde", "Barrow",Gender::MALE,  1909,{"anotherstreet",32,37385,"Telico","USA"}} }},
                 [] (PeerId peerId, Status status, const std::shared_ptr<HelloReply>& reply) {
         if (reply)
         {
@@ -118,9 +118,9 @@ int main()
 
     // another request/reply
     entityClient.requestReply<HelloReply>(peerId,
-                HelloRequest{{ {"Albert","Einstein",Sex::FEMALE,1879,{"somestreet",   12,89073, "Ulm",    "Germany"}},
-                               {"Marie", "Curie",   Sex::FEMALE,1867,{"anotherstreet",32,00001,"Warschau","Poland"}},
-                               {"World", "",        Sex::DIVERSE,0,{}} }},
+                HelloRequest{{ {"Albert","Einstein",Gender::FEMALE,1879,{"somestreet",   12,89073, "Ulm",    "Germany"}},
+                               {"Marie", "Curie",   Gender::FEMALE,1867,{"anotherstreet",32,00001,"Warschau","Poland"}},
+                               {"World", "",        Gender::DIVERSE,0,{}} }},
                 [] (PeerId peerId, Status status, const std::shared_ptr<HelloReply>& reply) {
         if (reply)
         {

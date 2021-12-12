@@ -63,6 +63,7 @@ const std::string ENUM_DESCRIPTION = "enum description 0";
 const std::string ENUM_ENTRY_NAME = "ENTRY_TEST1";
 const std::int32_t ENUM_ENTRY_ID = 0;
 const std::string ENUM_ENTRY_DESCRIPTION = "enum description 1";
+const std::string ENUM_ENTRY_ALIAS = "enum alias 1";
 
 const std::string STRUCT_DESCRIPTION = "struct description";
 const SerializeMetaTypeId STRUCT_ENTRY_TYPEID = SerializeMetaTypeId::TYPE_STRING;
@@ -96,7 +97,7 @@ TEST_F(TestMetaDataExchange, testImportEnum)
 
     en.type = ENUM_TYPE;
     en.desc = ENUM_DESCRIPTION;
-    en.entries.push_back({ENUM_ENTRY_NAME, ENUM_ENTRY_ID, ENUM_ENTRY_DESCRIPTION});
+    en.entries.push_back({ENUM_ENTRY_NAME, ENUM_ENTRY_ID, ENUM_ENTRY_DESCRIPTION, ENUM_ENTRY_ALIAS});
 
     SerializeMetaData serializeMetaData;
     serializeMetaData.enums.push_back(en);
@@ -145,7 +146,7 @@ TEST_F(TestMetaDataExchange, testExportEnum)
     SerializeMetaEnum en;
     en.type = ENUM_TYPE;
     en.desc = ENUM_DESCRIPTION;
-    en.entries.push_back({ENUM_ENTRY_NAME, ENUM_ENTRY_ID, ENUM_ENTRY_DESCRIPTION});
+    en.entries.push_back({ENUM_ENTRY_NAME, ENUM_ENTRY_ID, ENUM_ENTRY_DESCRIPTION, ENUM_ENTRY_ALIAS});
     SerializeMetaData serializeMetaData;
     serializeMetaData.enums.push_back(en);
     MetaDataExchange::importMetaData(serializeMetaData);

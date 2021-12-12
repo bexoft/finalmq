@@ -56,9 +56,13 @@ const ConnectionEvent& ConnectionEvent::operator =(Enum en)
     m_value = en;
     return *this;
 }
-const std::string& ConnectionEvent::toString() const
+const std::string& ConnectionEvent::toName() const
 {
     return ConnectionEvent::_enumInfo.getMetaEnum().getNameByValue(m_value);
+}
+const std::string& ConnectionEvent::toString() const
+{
+    return ConnectionEvent::_enumInfo.getMetaEnum().getAliasByValue(m_value);
 }
 void ConnectionEvent::fromString(const std::string& name)
 {
@@ -66,10 +70,10 @@ void ConnectionEvent::fromString(const std::string& name)
 }
 const EnumInfo ConnectionEvent::_enumInfo = {
     "ConnectionEvent", "", {
-        {"CONNECTIONEVENT_CONNECTED", 0, ""},
-        {"CONNECTIONEVENT_DISCONNECTED", 1, ""},
-        {"CONNECTIONEVENT_SOCKET_CONNECTED", 2, ""},
-        {"CONNECTIONEVENT_SOCKET_DISCONNECTED", 3, ""},
+        {"CONNECTIONEVENT_CONNECTED", 0, "", "connected"},
+        {"CONNECTIONEVENT_DISCONNECTED", 1, "", "disconnected"},
+        {"CONNECTIONEVENT_SOCKET_CONNECTED", 2, "", "socket connected"},
+        {"CONNECTIONEVENT_SOCKET_DISCONNECTED", 3, "", "socket disconnected"},
      }
 };
 

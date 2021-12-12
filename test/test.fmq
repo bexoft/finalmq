@@ -4,7 +4,7 @@
         {"type":"Foo","desc":"desc","entries":[
             {"name":"FOO_WORLD","id":0,"desc":"desc"},
             {"name":"FOO_HELLO","id":-2,"desc":"desc"},
-            {"name":"FOO_WORLD2","id":1,"desc":"desc"}
+            {"name":"FOO_WORLD2","id":1,"desc":"desc", "alias":"world2"}
         ]}
     ],
     "structs":[

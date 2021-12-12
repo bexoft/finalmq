@@ -28,6 +28,7 @@ if (pathOutput)
     fileOutputH   = pathOutput + '/' + splitFileOutputH[splitFileOutputH.length - 1]
 }
 
+helper.convertTypeId(data)
 var options = {data:data, exportMacro:exportMacro, helper:helper, fileOutputH:fileOutputH}
 var strCpp = ejs.render(strTemplateCpp, options)
 var strH = ejs.render(strTemplateH, options)

@@ -38,6 +38,7 @@ public:
     std::string     name;
     int             id = 0;
     std::string     description;
+    std::string     alias;
 };
 
 
@@ -60,6 +61,7 @@ public:
     bool isId(int id) const;
     std::int32_t getValueByName(const std::string& name) const;
     const std::string& getNameByValue(std::int32_t value) const;
+    const std::string& getAliasByValue(std::int32_t value) const;
 
     void addEntry(const MetaEnumEntry& entries);
     void addEntry(MetaEnumEntry&& entries);
@@ -75,6 +77,7 @@ private:
     std::vector<std::shared_ptr<const MetaEnumEntry>>                       m_entries;
     std::unordered_map<int, std::shared_ptr<const MetaEnumEntry>>           m_id2Entry;
     std::unordered_map<std::string, std::shared_ptr<const MetaEnumEntry>>   m_name2Entry;
+    std::unordered_map<std::string, std::shared_ptr<const MetaEnumEntry>>   m_alias2Entry;
 };
 
 }   // namespace finalmq

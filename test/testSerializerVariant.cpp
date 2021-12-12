@@ -284,10 +284,23 @@ TEST_F(TestSerializerVariant, testEnum)
     static const std::int32_t VALUE = -2;
 
     m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestEnum"));
-    m_serializer->enterEnum({MetaTypeId::TYPE_ENUM, "test.Foo", "value", "", 0}, VALUE);
+    m_serializer->enterEnum({ MetaTypeId::TYPE_ENUM, "test.Foo", "value", "", 0 }, VALUE);
     m_serializer->finished();
 
-    Variant cmp = VariantStruct({{"value", std::string("FOO_HELLO")}});
+    Variant cmp = VariantStruct({ {"value", std::string("FOO_HELLO")} });
+    ASSERT_EQ(m_root == cmp, true);
+}
+
+
+TEST_F(TestSerializerVariant, testEnumAlias)
+{
+    static const std::int32_t VALUE = 1;
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestEnum"));
+    m_serializer->enterEnum({ MetaTypeId::TYPE_ENUM, "test.Foo", "value", "", 0 }, VALUE);
+    m_serializer->finished();
+
+    Variant cmp = VariantStruct({ {"value", std::string("world2")} });
     ASSERT_EQ(m_root == cmp, true);
 }
 
@@ -691,7 +704,7 @@ TEST_F(TestSerializerVariant, testArrayEnum)
     m_serializer->enterArrayEnum({MetaTypeId::TYPE_ARRAY_ENUM, "test.Foo", "value", "", 0}, VALUE.data(), VALUE.size());
     m_serializer->finished();
 
-    Variant cmp = VariantStruct({{"value", std::vector<std::string>({"FOO_HELLO","FOO_WORLD","FOO_WORLD2","FOO_WORLD"})}});
+    Variant cmp = VariantStruct({{"value", std::vector<std::string>({"FOO_HELLO","FOO_WORLD","world2","FOO_WORLD"})}});
     ASSERT_EQ(m_root == cmp, true);
 }
 
