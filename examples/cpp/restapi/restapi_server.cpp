@@ -76,28 +76,40 @@ public:
         // handle GET persons -> get all persons
         // try to access the server with the json/TCP interface at port 8888:
         // telnet localhost 8888  (or: netcat localhost 8888) and type:
-        // /MyService/persons/GET!4711
+        //   /MyService/persons/GET!4711
+        //   with query parameter you have to use the following syntax. In the meta array you can put
+        //   key/value pairs, the strings with even index are keys, the strings with odd index are the according values.
+        //   The query parameter "filter" needs a prefix "QUERY_".
+        //   [{"destname":"MyService","path":"persons/GET","corrid":"4711","meta":["QUERY_filter","Bon"]},{}]
         // or open a browser and type:
-        // localhost:8080/MyService/persons
-        // or do an HTTP GET request to localhost:8080 with: /MyService/persons
+        //   localhost:8080/MyService/persons?filter=Bon
+        // or use a HTTP client and do an HTTP GET request to localhost:8080 with: /MyService/persons?filter=Bon
         registerCommand<NoData>("persons/GET", [this](const RequestContextPtr& requestContext, const std::shared_ptr<NoData>& request) {
+
+            std::string* filter = requestContext->getMetainfo("QUERY_filter");
+
             // send reply
             PersonList persons;
             for (auto it = m_persons.begin(); it != m_persons.end(); ++it)
             {
-                persons.persons.emplace_back(it->second);
+                if (!filter || filter->empty() ||
+                    (it->second.name.compare(0, filter->size(), *filter) == 0) ||
+                    (it->second.surname.compare(0, filter->size(), *filter) == 0))
+                {
+                    persons.persons.emplace_back(it->second);
+                }
             }
             requestContext->reply(std::move(persons));
         });
 
-        // handle POST persons -> add a person
+        // handle POST persons -> add a person, it returns a person-ID.
         // try to access the server with the json/TCP interface at port 8888:
         // telnet localhost 8888  (or: netcat localhost 8888) and type:
-        // /MyService/persons/POST!4711{"name":"Bonnie"}
+        //   /MyService/persons/POST!4711{"name":"Bonnie"}
         // or open a browser and type:
-        // localhost:8080/MyService/persons/POST{"name":"Bonnie"}
-        // or do an HTTP POST request to localhost:8080 with: /MyService/persons{"name":"Bonnie"}
-        // you can also put the json data into the HTTP payload
+        //   localhost:8080/MyService/persons/POST{"name":"Bonnie"}
+        // or use a HTTP client and do an HTTP POST request to localhost:8080 with: /MyService/persons
+        //   and payload: {"name":"Bonnie"}
         registerCommand<Person>("persons/POST", [this](const RequestContextPtr& requestContext, const std::shared_ptr<Person>& request) {
             if (request)
             {
@@ -109,14 +121,14 @@ public:
             }
         });
 
-        // handle PUT persons -> change a person
+        // handle PUT persons -> change a person. Use the person-ID to identify the person (replace <id> with the person-ID)
         // try to access the server with the json/TCP interface at port 8888:
         // telnet localhost 8888  (or: netcat localhost 8888) and type:
-        // /MyService/persons/{id}/PUT!4711{"name":"Clyde"}
+        //   /MyService/persons/<id>/PUT!4711{"name":"Clyde"}       example: /MyService/persons/1/PUT!4711{"name":"Clyde"}
         // or open a browser and type:
-        // localhost:8080/MyService/persons/{id}/POST{"name":"Clyde"}
-        // or do an HTTP POST request to localhost:8080 with: /MyService/persons/{id}{"name":"Bonnie"}
-        // you can also put the json data into the HTTP payload
+        //   localhost:8080/MyService/persons/<id>/PUT{"name":"Clyde"}
+        // or use a HTTP client and do an HTTP PUT request to localhost:8080 with: /MyService/persons/<id>
+        //   and payload: {"name":"Clyde"}
         registerCommand<Person>("persons/{id}/PUT", [this](const RequestContextPtr& requestContext, const std::shared_ptr<Person>& request) {
             if (request)
             {
@@ -137,13 +149,13 @@ public:
             }
         });
 
-        // handle DELETE persons -> delete a person
+        // handle DELETE persons -> delete a person. Use the person-ID to identify the person (replace <id> with the person-ID)
         // try to access the server with the json/TCP interface at port 8888:
         // telnet localhost 8888  (or: netcat localhost 8888) and type:
-        // /MyService/persons/{id}/DELETE!4711
+        //   /MyService/persons/<id>/DELETE!4711                example: /MyService/persons/1/DELETE!4711
         // or open a browser and type:
-        // localhost:8080/MyService/persons/{id}/DELETE
-        // or do an HTTP DELETE request to localhost:8080 with: /MyService/persons/{id}
+        //   localhost:8080/MyService/persons/<id>/DELETE
+        // or use a HTTP client and do an HTTP DELETE request to localhost:8080 with: /MyService/persons/<id>
         registerCommand<NoData>("persons/{id}/DELETE", [this](const RequestContextPtr& requestContext, const std::shared_ptr<NoData>& request) {
             std::string* id = requestContext->getMetainfo("PATH_id");
             assert(id);

@@ -362,12 +362,35 @@ inline static bool isSubPathDefined(const remoteentity::Header& header)
     return (!header.path.empty());
 }
 
-inline static bool isDestTypeSubTypeDefined(const remoteentity::Header& header)
+inline static bool isDestAndSubPathDefined(const remoteentity::Header& header)
 {
-    return (isDestinationDefined(header) && isTypeDefined(header) && isSubPathDefined(header));
+    return (isDestinationDefined(header) && isSubPathDefined(header));
 }
 
-void RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, remoteentity::Header& header)
+static size_t findEndOfPath(const char* buffer)
+{
+    int i = 0;
+    char cOld = 0;
+    char c;
+    while (c = buffer[i])
+    {
+        if (c == '{')
+        {
+            char cNext = buffer[i + 1];
+            if (cOld != '/' && (cNext == '\"' || cNext == '}'))
+            {
+                return i;
+            }
+        }
+        cOld = c;
+        ++i;
+    }
+    return i;
+}
+
+
+
+std::string RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, remoteentity::Header& header)
 {
     const IMessage::Metainfo& metainfo = message.getAllMetainfo();
     auto itPath = metainfo.find(FMQ_PATH);
@@ -435,7 +458,9 @@ void RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, const std:
         header.path = path;
     }
 
-    if (itPath != metainfo.end() && !isDestTypeSubTypeDefined(header))
+    hybrid_ptr<IRemoteEntity> remoteEntity;
+    std::string data;
+    if (itPath != metainfo.end() && !isDestAndSubPathDefined(header))
     {
         const std::string& path = itPath->second;
 
@@ -450,15 +475,11 @@ void RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, const std:
         {
             pathWithoutFirstSlash = path;
         }
-        size_t ixEndHeader = pathWithoutFirstSlash.find_first_of('{');   //28
-        if (ixEndHeader == std::string::npos)
-        {
-            ixEndHeader = pathWithoutFirstSlash.size();
-        }
+        size_t ixEndHeader = findEndOfPath(pathWithoutFirstSlash.c_str());   //28
+        data = std::string(&pathWithoutFirstSlash[ixEndHeader], pathWithoutFirstSlash.size() - ixEndHeader);
 
         static const std::string WILDCARD = "*";
         const std::string* foundEntityName = nullptr;
-        hybrid_ptr<IRemoteEntity> remoteEntity;
         for (auto it = name2Entity.begin(); it != name2Entity.end() && !foundEntityName; ++it)
         {
             const std::string& prefix = it->first;
@@ -489,7 +510,19 @@ void RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, const std:
                 remoteEntity = it->second;
             }
         }
+    }
+
+    if (header.type.empty())
+    {
         auto entity = remoteEntity.lock();
+        if (!entity)
+        {
+            auto it = name2Entity.find(header.destname);
+            if (it != name2Entity.end())
+            {
+                entity = it->second.lock();
+            }
+        }
         if (entity)
         {
             const std::string* method = nullptr;
@@ -506,12 +539,14 @@ void RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, const std:
     {
         header.path = header.type;
     }
+
+    return data;
 }
 
 
 std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainfo(IMessage& message, int contentType, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, bool& syntaxError)
 {
-    parseMetainfo(message, name2Entity, header);
+    std::string data = parseMetainfo(message, name2Entity, header);
 
     syntaxError = false;
     BufferRef bufferRef = message.getReceivePayload();
@@ -521,18 +556,10 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainf
     if (header.type != remoteentity::RawBytes::structInfo().getTypeName())
     {
         // special feature for the browser: json data can be written into the path
-        if (bufferRef.second == 0)
+        if (bufferRef.second == 0 && !data.empty())
         {
-            std::string* path = message.getMetainfo(FMQ_PATH);
-            if (path && !path->empty())
-            {
-                size_t pos = path->find_first_of('{');
-                if (pos != std::string::npos)
-                {
-                    bufferRef.first = &path->at(pos);
-                    bufferRef.second = path->size() - pos;
-                }
-            }
+            bufferRef.first = const_cast<char*>(data.data());
+            bufferRef.second = data.size();
         }
 
         auto it = m_contentTypeToFormat.find(contentType);

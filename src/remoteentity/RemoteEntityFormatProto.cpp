@@ -117,7 +117,7 @@ void RemoteEntityFormatProto::serializeData(IMessage& message, const StructBase*
 
 static const std::string FMQ_PATH = "fmq_path";
 
-std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const BufferRef& bufferRef, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& /*name2Entity*/, Header& header, bool& syntaxError)
+std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const BufferRef& bufferRef, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, bool& syntaxError)
 {
     syntaxError = false;
     char* buffer = bufferRef.first;
@@ -148,6 +148,29 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const BufferRef& buff
         SerializerStruct serializerHeader(header);
         ParserProto parserHeader(serializerHeader, buffer, sizeHeader);
         ok = parserHeader.parseStruct(Header::structInfo().getTypeName());
+        if (header.type.empty() && !header.path.empty())
+        {
+            hybrid_ptr<IRemoteEntity> remoteEntity;
+            auto it = name2Entity.find(header.destname);
+            if (it != name2Entity.end())
+            {
+                remoteEntity = it->second;
+            }
+            else
+            {
+                static const std::string WILDCARD = "*";
+                it = name2Entity.find(WILDCARD);
+                if (it != name2Entity.end())
+                {
+                    remoteEntity = it->second;
+                }
+            }
+            auto entity = remoteEntity.lock();
+            if (entity)
+            {
+                header.type = entity->getTypeOfCommandFunction(header.path);
+            }
+        }
         if (header.path.empty() && !header.type.empty())
         {
             header.path = header.type;

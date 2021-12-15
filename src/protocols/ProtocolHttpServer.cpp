@@ -46,7 +46,7 @@ const std::string ProtocolHttpServer::FMQ_HTTP = "fmq_http";
 const std::string ProtocolHttpServer::FMQ_METHOD = "fmq_method";
 const std::string ProtocolHttpServer::FMQ_PROTOCOL = "fmq_protocol";
 const std::string ProtocolHttpServer::FMQ_PATH = "fmq_path";
-const std::string ProtocolHttpServer::FMQ_QUERY_PREFIX = "FMQQUERY_";
+const std::string ProtocolHttpServer::FMQ_QUERY_PREFIX = "QUERY_";
 const std::string ProtocolHttpServer::FMQ_STATUS = "fmq_status";
 const std::string ProtocolHttpServer::FMQ_STATUSTEXT = "fmq_statustext";
 const std::string ProtocolHttpServer::HTTP_REQUEST = "request";
@@ -903,9 +903,9 @@ bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolC
             handled = true;
             std::int32_t timeout = -1;
             std::int32_t pollCountMax = 1;
-            const std::string* strTimeout = m_message->getMetainfo("FMQQUERY_timeout");
-            const std::string* strCount = m_message->getMetainfo("FMQQUERY_count");
-            const std::string* strMultipart = m_message->getMetainfo("FMQQUERY_multipart");
+            const std::string* strTimeout = m_message->getMetainfo("QUERY_timeout");
+            const std::string* strCount = m_message->getMetainfo("QUERY_count");
+            const std::string* strMultipart = m_message->getMetainfo("QUERY_multipart");
             if (strTimeout)
             {
                 timeout = std::atoi(strTimeout->c_str());
@@ -953,12 +953,12 @@ bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolC
         else if (*m_path == FMQ_PATH_CONFIG)
         {
             handled = true;
-            const std::string* timeout = m_message->getMetainfo("FMQQUERY_activitytimeout");
+            const std::string* timeout = m_message->getMetainfo("QUERY_activitytimeout");
             if (timeout)
             {
                 callback->setActivityTimeout(std::atoi(timeout->c_str()));
             }
-            const std::string* pollMaxRequests = m_message->getMetainfo("FMQQUERY_pollmaxrequests");
+            const std::string* pollMaxRequests = m_message->getMetainfo("QUERY_pollmaxrequests");
             if (pollMaxRequests)
             {
                 callback->setPollMaxRequests(std::atoi(pollMaxRequests->c_str()));

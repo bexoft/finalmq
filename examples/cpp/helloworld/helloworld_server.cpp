@@ -73,12 +73,12 @@ public:
         // handle the HelloRequest
         // this is fun - try to access the server with the json interface at port 8888:
         // telnet localhost 8888  (or: netcat localhost 8888) and type:
-        // /MyService/helloworld.HelloRequest!4711{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
+        //   /MyService/helloworld.HelloRequest!4711{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
         // or open a browser and type:
-        // localhost:8080/MyService/helloworld.HelloRequest{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
-        // or do an HTTP request (the method GET, POST, ... does not matter) to localhost:8080 with:
-        // /MyService/helloworld.HelloRequest{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
-        // for the HTTP request you can also put the json data into the HTTP payload
+        //   localhost:8080/MyService/helloworld.HelloRequest{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
+        // or use a HTTP client and do an HTTP request (the method GET, POST, ... does not matter) to localhost:8080 with:
+        //   /MyService/helloworld.HelloRequest
+        //   and payload: {"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
         registerCommand<HelloRequest>([] (const RequestContextPtr& requestContext, const std::shared_ptr<HelloRequest>& request) {
             assert(request);
 
@@ -109,16 +109,16 @@ public:
         });
 
         
-        // just to demonstrate REST API. You can access the service with with either an HTTP PUT with path: "mypath/1234".
+        // just to demonstrate REST API. You can access the service with either an HTTP PUT with path: "mypath/1234".
         // Or with "maypath/1234/PUT" and the HTTP method (like: GET, POST, PUT, ...) does not matter.
-        // this is fun - try to access the server with the json interface at port 8888:
+        // try to access the server with the json interface at port 8888:
         // telnet localhost 8888  (or: netcat localhost 8888) and type:
-        // /MyService/mypath/1234/PUT!4711{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
+        //   /MyService/mypath/1234/PUT!4711{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
         // or open a browser and type:
-        // localhost:8080/MyService/mypath/1234/PUT{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
-        // or do an HTTP PUT request to localhost:8080 with:
-        // /MyService/mypath/1234{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
-        // for the HTTP PUT request you can also put the json data into the HTTP payload
+        //   localhost:8080/MyService/mypath/1234/PUT{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
+        // or use a HTTP client and do an HTTP PUT request to localhost:8080 with:
+        //   /MyService/mypath/1234
+        //   and payload: {"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
         registerCommand<HelloRequest>("mypath/{id}/PUT", [](const RequestContextPtr& requestContext, const std::shared_ptr<HelloRequest>& request) {
             assert(request);
 

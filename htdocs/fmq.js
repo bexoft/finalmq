@@ -340,12 +340,21 @@ class FmqSession
 								var header = command[0];
 								var params = command[1];
 								params.fmqheader = header;
-								params.httpstatus = xmlhttp.status;
-								var methodName = header.type.replace(/\./g, '_');  // replace all '.' by '_'
+                                params.httpstatus = xmlhttp.status;
+                                var path = header.path;
+                                if (!path || path == '')
+                                {
+                                    path = header.type.replace(/\./g, '_');  // replace all '.' by '_'
+                                }
+                                else
+                                {
+                                    path = path.replace(/\//g, '_');  // replace all '/' by '_'
+                                }
+
 								var entity = xmlhttp._this._getEntity(header.srcid);
-								if (entity && entity[methodName])
+								if (entity && entity[path])
 								{
-									entity[methodName](header.corrid, params);
+									entity[path](header.corrid, params);
 								}
 								else
 								{

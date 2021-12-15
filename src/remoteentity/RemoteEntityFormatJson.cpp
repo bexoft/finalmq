@@ -135,6 +135,31 @@ static ssize_t findLast(const char* buffer, ssize_t size, char c)
 }
 
 
+
+static size_t findEndOfPath(const char* buffer, int size)
+{
+    int i = 0;
+    char cOld = 0;
+    char c;
+    while ((c = buffer[i]) && (i < size))
+    {
+        if (c == '{')
+        {
+            char cNext = buffer[i + 1];
+            if (cOld != '/' && (cNext == '\"' || cNext == '}'))
+            {
+                return i;
+            }
+        }
+        cOld = c;
+        ++i;
+    }
+    return i;
+}
+
+
+
+
 static const std::string FMQ_PATH = "fmq_path";
 
 
@@ -160,16 +185,13 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
         --sizeBuffer;
     }
 
+    static const std::string WILDCARD = "*";
     const char* endHeader = nullptr;
     if (buffer[0] == '/')
     {
         // 012345678901234567890123456789
         // /MyServer/test.TestRequest!1{}
-        size_t ixEndHeader = findFirst(buffer, sizeBuffer, '{');   //28
-        if (ixEndHeader == std::string::npos)
-        {
-            ixEndHeader = sizeBuffer;
-        }
+        size_t ixEndHeader = findEndOfPath(buffer, sizeBuffer);   //28
         endHeader = &buffer[ixEndHeader];
 
         ssize_t ixCorrelationId = findLast(buffer, ixEndHeader, '!');   //26
@@ -182,7 +204,6 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
             ixCorrelationId = ixEndHeader;
         }
 
-        static const std::string WILDCARD = "*";
         std::string pathWithoutFirstSlash = { &buffer[1], &buffer[ixCorrelationId] };
         pathWithoutFirstSlash.erase(pathWithoutFirstSlash.find_last_not_of(" \n\r\t") + 1);
         const std::string* foundEntityName = nullptr;
@@ -239,6 +260,28 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
         {
             // skip comma
             ++endHeader;
+        }
+        if (header.type.empty() && !header.path.empty())
+        {
+            hybrid_ptr<IRemoteEntity> remoteEntity;
+            auto it = name2Entity.find(header.destname);
+            if (it != name2Entity.end())
+            {
+                remoteEntity = it->second;
+            }
+            else
+            {
+                it = name2Entity.find(WILDCARD);
+                if (it != name2Entity.end())
+                {
+                    remoteEntity = it->second;
+                }
+            }
+            auto entity = remoteEntity.lock();
+            if (entity)
+            {
+                header.type = entity->getTypeOfCommandFunction(header.path);
+            }
         }
         if (header.path.empty() && !header.type.empty())
         {

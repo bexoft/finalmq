@@ -970,7 +970,7 @@ const RemoteEntity::Function* RemoteEntity::getFunction(const std::string& path,
                             static const std::string PATH_PREFIX = "PATH_";
                             std::string key = PATH_PREFIX;
                             key.insert(key.end(), entry.data() + 1, entry.data() + entry.size() - 1);
-                            (*keys)[std::move(key)] = std::move(pathEntries[i]);
+                            (*keys)[std::move(key)] = pathEntries[i];
                         }
                     }
                     else
