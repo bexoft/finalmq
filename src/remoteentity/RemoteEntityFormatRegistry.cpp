@@ -372,7 +372,7 @@ static size_t findEndOfPath(const char* buffer)
     int i = 0;
     char cOld = 0;
     char c;
-    while (c = buffer[i])
+    while ((c = buffer[i]))
     {
         if (c == '{')
         {
