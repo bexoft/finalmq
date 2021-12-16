@@ -2,11 +2,17 @@
     "namespace":"restapi",
 
     "enums": [
-        {"type":"Gender","desc":"The gender of a person","entries":[
+        {"type":"Gender","desc":"The gender of a person.","entries":[
             {"name":"INVALID",  "id":0,"desc":"invalid gender", "alias":"invalid"},
             {"name":"MALE",     "id":1,"desc":"male", "alias":"male"},
             {"name":"FEMALE",   "id":2,"desc":"female", "alias":"female"},
             {"name":"DIVERSE",  "id":3,"desc":"diverse", "alias":"diverse"}
+        ]},
+        {"type":"ChangeType","desc":"The type, how a person was changed.","entries":[
+            {"name":"INVALID",  "id":0,"desc":"invalid", "alias":"invalid"},
+            {"name":"ADDED",    "id":1,"desc":"The person was added.", "alias":"added"},
+            {"name":"CHANGED",  "id":2,"desc":"The person was changed.", "alias":"changed"},
+            {"name":"DELETED",  "id":3,"desc":"The person was deleted.", "alias":"deleted"}
         ]}
     ],
 
@@ -19,7 +25,7 @@
             {"tid":"string",                       "name":"country",           "desc":"The country name."}
         ]},
         {"type":"Person","desc":"Models a person","fields":[
-            {"tid":"string",                       "name":"id",                "desc":"The id of the person"},
+            {"tid":"string",                       "name":"id",                "desc":"The id of the person."},
             {"tid":"string",                       "name":"name",              "desc":"The first name of a person."},
             {"tid":"string",                       "name":"surname",           "desc":"The last name of a person."},
             {"tid":"enum",     "type":"Gender",    "name":"gender",            "desc":"The gender of a person."},
@@ -28,10 +34,14 @@
         ]},
         
         {"type":"PersonList","desc":"","fields":[
-            {"tid":"struct[]", "type":"Person",    "name":"persons",           "desc":""}
+            {"tid":"struct[]", "type":"Person",    "name":"persons",           "desc":"A list of persons."}
         ]},
         {"type":"PersonId","desc":"","fields":[
-            {"tid":"string",                       "name":"id",                "desc":""}
+            {"tid":"string",                       "name":"id",                "desc":"Contains the person ID."}
+        ]},
+        {"type":"PersonChanged","desc":"","fields":[
+            {"tid":"struct", "type":"Person",    "name":"person",              "desc":"The data of the changed person."},
+            {"tid":"enum",   "type":"ChangeType","name":"changeType",          "desc":"The type, how the person was changed."}
         ]}
     ]
 }

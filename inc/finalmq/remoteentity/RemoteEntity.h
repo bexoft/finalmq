@@ -299,6 +299,10 @@ public:
     virtual bool sendEvent(const PeerId& peerId, IMessage::Metainfo&& metainfo, const StructBase& structBase) override;
     virtual bool sendEvent(const PeerId& peerId, const std::string& path, const StructBase& structBase) override;
     virtual bool sendEvent(const PeerId& peerId, const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase) override;
+    virtual bool sendEventToAllPeers(const StructBase& structBase) override;
+    virtual bool sendEventToAllPeers(IMessage::Metainfo&& metainfo, const StructBase& structBase) override;
+    virtual bool sendEventToAllPeers(const std::string& path, const StructBase& structBase) override;
+    virtual bool sendEventToAllPeers(const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase) override;
     virtual PeerId connect(const IProtocolSessionPtr& session, const std::string& entityName, FuncReplyConnect funcReplyConnect = {}) override;
     virtual PeerId connect(const IProtocolSessionPtr& session, EntityId entityId, FuncReplyConnect funcReplyConnect = {}) override;
     virtual void disconnect(PeerId peerId) override;

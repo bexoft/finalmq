@@ -19,9 +19,9 @@ class FmqEntity
 		return this._session.sendEvent(this._name, funcname, inparams)
     }
 
-    reply(correlationId, funcname, inparams)
+    reply(entityId, correlationId, inparams)
     {
-		return this._session.sendEvent(correlationId, funcname, inparams)
+        return this._session.reply(entityId, correlationId, inparams)
     }
 	
 	connect()
@@ -131,57 +131,58 @@ class FmqSession
 
     requestReply(objectname, funcname, inparams, funcresult, context)
     {
-        if (this._sessionId.length == 0 && objectname != 'fmq')
-        {
+        if (this._sessionId.length == 0 && objectname != 'fmq') {
             return;
-        } 
+        }
+        return this.httpRequest('POST', '/' + objectname + '/' + funcname, inparams, funcresult, context)
+    }
+
+    httpRequest(method, url, inparams, funcresult, context) {
         var xmlhttp = this._createRequest();
         xmlhttp.funcresult = funcresult;
-        if (funcresult != null)
-        {
-	        xmlhttp._context = context;
-	        xmlhttp.onreadystatechange = function()
-	        {
-	            if (xmlhttp.readyState == 4)
-	            {                                                                           
+        if (funcresult != null) {
+            xmlhttp._context = context;
+            xmlhttp.onreadystatechange = function () {
+                if (xmlhttp.readyState == 4) {
                     xmlhttp._this._updateSessionId(xmlhttp);
-	                var header = xmlhttp._this._header(xmlhttp);
-	                var params = xmlhttp._this._getParams(xmlhttp.responseText);
-					params.fmqheader = header;
-					params.httpstatus = xmlhttp.status;
-	                xmlhttp.funcresult(params, xmlhttp._context);
-	            }
-	        }
+                    var header = xmlhttp._this._header(xmlhttp);
+                    var params = xmlhttp._this._getParams(xmlhttp.responseText);
+                    params.fmqheader = header;
+                    params.httpstatus = xmlhttp.status;
+                    xmlhttp.funcresult(params, xmlhttp._context);
+                }
+            }
         }
-        xmlhttp.open('POST', this._hostname + '/' + objectname + '/' + funcname, (funcresult == null) ? false : true);
+        xmlhttp.open(method, this._hostname + url, (funcresult == null) ? false : true);
         xmlhttp.setRequestHeader('fmq_sessionid', this._sessionId);
-		var payload = this._createPayload(inparams);
+        var payload = this._createPayload(inparams);
         xmlhttp.send(payload);
-	    if (funcresult == null)
-	    {
+        if (funcresult == null) {
             this._updateSessionId(xmlhttp);
-			var header = this._header(xmlhttp);
+            var header = this._header(xmlhttp);
             var params = xmlhttp._this._getParams(xmlhttp.responseText);
-			params.fmqheader = header;
-			params.httpstatus = xmlhttp.status;
-	        return params;
-	    }
+            params.fmqheader = header;
+            params.httpstatus = xmlhttp.status;
+            return params;
+        }
     }
 
-    sendEvent(objectname, funcname, inparams)
-    {
-        if (this._sessionId.length == 0)
-        {
+    sendEvent(objectname, funcname, inparams) {
+        this.httpEvent('POST', '/' + objectname + '/' + funcname, inparams);
+    }
+
+    httpEvent(method, url, inparams) {
+        if (this._sessionId.length == 0) {
             return;
-        } 
+        }
         var xmlhttp = this._createRequest();
-        xmlhttp.open('POST', this._hostname + '/' + objectname + '/' + funcname, true);
+        xmlhttp.open(method, this._hostname + url, true);
         xmlhttp.setRequestHeader('fmq_sessionid', this._sessionId)
-		var payload = this._createPayload(inparams);
+        var payload = this._createPayload(inparams);
         xmlhttp.send(payload);
     }
 
-    reply(entityId, correlationId, funcname, inparams)
+    reply(entityId, correlationId, inparams)
     {
         if (this._sessionId.length == 0 || !correlationId)
         {
@@ -190,7 +191,7 @@ class FmqSession
         if (correlationId != 0)
         {
             var xmlhttp = this._createRequest();
-            xmlhttp.open('POST', this._hostname, true);
+            xmlhttp.open('PUT', this._hostname, true);
             xmlhttp.setRequestHeader('fmq_sessionid', this._sessionId)
 			xmlhttp.setRequestHeader('fmq_re_mode', 'MSG_REPLY');
 			xmlhttp.setRequestHeader('fmq_re_destid', entityId);
@@ -209,7 +210,7 @@ class FmqSession
         if (correlationId != 0)
         {
             var xmlhttp = this._createRequest();
-            xmlhttp.open('POST', this._hostname, true);
+            xmlhttp.open('PUT', this._hostname, true);
             xmlhttp.setRequestHeader('fmq_sessionid', this._sessionId)
 			xmlhttp.setRequestHeader('fmq_re_mode', 'MSG_REPLY');
 			xmlhttp.setRequestHeader('fmq_re_destid', entityId);

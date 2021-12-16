@@ -60,6 +60,7 @@ using finalmq::remoteentity::NoData;
 using restapi::Person;
 using restapi::PersonList;
 using restapi::PersonId;
+using restapi::PersonChanged;
 
 
 
@@ -118,6 +119,8 @@ public:
                 m_persons[request->id] = *request;
                 // send reply
                 requestContext->reply(PersonId{ request->id });
+
+                sendEventToAllPeers("events/personChanged", PersonChanged{ *request, restapi::ChangeType::ADDED });
             }
         });
 
@@ -134,13 +137,14 @@ public:
             {
                 std::string* id = requestContext->getMetainfo("PATH_id");
                 assert(id);
+                request->id = *id;
                 auto it = m_persons.find(*id);
                 if (it != m_persons.end())
                 {
-                    Person& person = it->second;
-                    person = *request;
-                    person.id = *id;
+                    it->second = *request;
                     requestContext->reply(finalmq::remoteentity::Status::STATUS_OK);
+
+                    sendEventToAllPeers("events/personChanged", PersonChanged{ *request, restapi::ChangeType::CHANGED });
                 }
                 else
                 {
@@ -162,6 +166,7 @@ public:
             auto it = m_persons.find(*id);
             if (it != m_persons.end())
             {
+                sendEventToAllPeers("events/personChanged", PersonChanged{ it->second, restapi::ChangeType::DELETED});
                 m_persons.erase(it);
                 requestContext->reply(finalmq::remoteentity::Status::STATUS_OK);
             }

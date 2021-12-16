@@ -118,16 +118,8 @@ public:
                     // get current time string
                     std::string strTime = currentISO8601TimeUTC();
 
-                    // timer event
-                    TimerEvent timerEvent{strTime};
-
                     // send timer event to all connected peers. No reply expected.
-                    std::vector<PeerId> peers = getAllPeers();
-                    for (size_t i = 0; i < peers.size(); ++i)
-                    {
-                        streamInfo << "sendEvent " << timerEvent.time;
-                        sendEvent(peers[i], timerEvent);
-                    }
+                    sendEventToAllPeers(TimerEvent{ strTime });
                 }
             }
         });

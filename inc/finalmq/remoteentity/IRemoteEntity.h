@@ -220,7 +220,7 @@ struct IRemoteEntity
      * call getAllPeers(), inside a peer event or by calling requestContext->peerId() inside a
      * command execution. The peerId belongs to this entity. Because an entity can have multiple
      * connections to remote entities, a remote entity must be identified be the peerId.
-     * @param structBase is the request message to send (generated code of fmq file).
+     * @param structBase is the event message to send (generated code of fmq file).
      * @return true on success.
      */
     virtual bool sendEvent(const PeerId& peerId, const StructBase& structBase) = 0;
@@ -234,7 +234,7 @@ struct IRemoteEntity
      * command execution. The peerId belongs to this entity. Because an entity can have multiple
      * connections to remote entities, a remote entity must be identified be the peerId.
      * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
-     * @param structBase is the request message to send (generated code of fmq file).
+     * @param structBase is the event message to send (generated code of fmq file).
      * @return true on success.
      */
     virtual bool sendEvent(const PeerId& peerId, IMessage::Metainfo&& metainfo, const StructBase& structBase) = 0;
@@ -246,7 +246,7 @@ struct IRemoteEntity
      * command execution. The peerId belongs to this entity. Because an entity can have multiple
      * connections to remote entities, a remote entity must be identified be the peerId.
      * @param path is the path that shall be called at the remote entity
-     * @param structBase is the request message to send (generated code of fmq file).
+     * @param structBase is the event message to send (generated code of fmq file).
      * @return true on success.
      */
     virtual bool sendEvent(const PeerId& peerId, const std::string& path, const StructBase& structBase) = 0;
@@ -261,10 +261,46 @@ struct IRemoteEntity
      * connections to remote entities, a remote entity must be identified be the peerId.
      * @param path is the path that shall be called at the remote entity
      * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
-     * @param structBase is the request message to send (generated code of fmq file).
+     * @param structBase is the event message to send (generated code of fmq file).
      * @return true on success.
      */
     virtual bool sendEvent(const PeerId& peerId, const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase) = 0;
+
+    /**
+     * @brief sendEventToAllPeers sends an event to all connected peers and does not expect a reply.
+     * @param structBase is the event message to send (generated code of fmq file).
+     * @return true on success.
+     */
+    virtual bool sendEventToAllPeers(const StructBase& structBase) = 0;
+
+    /**
+     * @brief sendEventToAllPeers sends an event to all connected peers and does not expect a reply.
+     * This method allows message exchange with metainfo. Metainfo is very similar to HTTP headers.
+     * You can use it to exchange additional data besides the message data.
+     * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
+     * @param structBase is the event message to send (generated code of fmq file).
+     * @return true on success.
+     */
+    virtual bool sendEventToAllPeers(IMessage::Metainfo&& metainfo, const StructBase& structBase) = 0;
+
+    /**
+     * @brief sendEventToAllPeers sends an event to all connected peers and does not expect a reply.
+     * @param path is the path that shall be called at the remote entity
+     * @param structBase is the event message to send (generated code of fmq file).
+     * @return true on success.
+     */
+    virtual bool sendEventToAllPeers(const std::string& path, const StructBase& structBase) = 0;
+
+    /**
+     * @brief sendEventToAllPeers sends an event to all connected peers and does not expect a reply.
+     * This method allows message exchange with metainfo. Metainfo is very similar to HTTP headers.
+     * You can use it to exchange additional data besides the message data.
+     * @param path is the path that shall be called at the remote entity
+     * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
+     * @param structBase is the event message to send (generated code of fmq file).
+     * @return true on success.
+     */
+    virtual bool sendEventToAllPeers(const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase) = 0;
 
     /**
      * @brief registerCommand registers a callback function for executing a request or event.
