@@ -81,6 +81,8 @@
         {"type":"DisconnectEntity","desc":"The entity that will be removed will send DisconnectEntity to all its peers.","fields":[]},
         {"type":"RawBytes","desc":"Send pure data for protocols with no meta info.","fields":[
             {"tid":"TYPE_BYTES",       "type":"",          "name":"data",     "desc":"The data","flags":[]}
+        ]},
+        {"type":"NoData","desc":"Use this type for the request if you register a command with a path and the rquest does not have any data","fields":[
         ]}
     ]
 }

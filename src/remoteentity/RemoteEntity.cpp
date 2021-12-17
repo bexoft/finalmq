@@ -521,6 +521,36 @@ bool RemoteEntity::sendEvent(const PeerId& peerId, const std::string& path, cons
     return ok;
 }
 
+bool RemoteEntity::sendEventToAllPeers(const StructBase& structBase)
+{
+    bool ok = true;
+    std::vector<PeerId> peers = getAllPeers();
+    for (size_t i = 0; i < peers.size(); ++i)
+    {
+        bool okTmp = sendRequest(peers[i], EMPTY_PATH, structBase, CORRELATIONID_NONE);
+        if (!okTmp)
+        {
+            ok = false;
+        }
+    }
+    return ok;
+}
+
+bool RemoteEntity::sendEventToAllPeers(const std::string& path, const StructBase& structBase)
+{
+    bool ok = true;
+    std::vector<PeerId> peers = getAllPeers();
+    for (size_t i = 0; i < peers.size(); ++i)
+    {
+        bool okTmp = sendRequest(peers[i], path, structBase, CORRELATIONID_NONE);
+        if (!okTmp)
+        {
+            ok = false;
+        }
+    }
+    return ok;
+}
+
 
 bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply)
 {
@@ -587,6 +617,37 @@ bool RemoteEntity::sendEvent(const PeerId& peerId, const std::string& path, IMes
     bool ok = sendRequest(peerId, path, structBase, CORRELATIONID_NONE, &metainfo);
     return ok;
 }
+
+bool RemoteEntity::sendEventToAllPeers(IMessage::Metainfo&& metainfo, const StructBase& structBase)
+{
+    bool ok = true;
+    std::vector<PeerId> peers = getAllPeers();
+    for (size_t i = 0; i < peers.size(); ++i)
+    {
+        bool okTmp = sendRequest(peers[i], EMPTY_PATH, structBase, CORRELATIONID_NONE, &metainfo);
+        if (!okTmp)
+        {
+            ok = false;
+        }
+    }
+    return ok;
+}
+
+bool RemoteEntity::sendEventToAllPeers(const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase)
+{
+    bool ok = true;
+    std::vector<PeerId> peers = getAllPeers();
+    for (size_t i = 0; i < peers.size(); ++i)
+    {
+        bool okTmp = sendRequest(peers[i], path, structBase, CORRELATIONID_NONE, &metainfo);
+        if (!okTmp)
+        {
+            ok = false;
+        }
+    }
+    return ok;
+}
+
 
 bool RemoteEntity::sendRequest(const PeerId& peerId, IMessage::Metainfo&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply)
 {
@@ -970,7 +1031,7 @@ const RemoteEntity::Function* RemoteEntity::getFunction(const std::string& path,
                             static const std::string PATH_PREFIX = "PATH_";
                             std::string key = PATH_PREFIX;
                             key.insert(key.end(), entry.data() + 1, entry.data() + entry.size() - 1);
-                            (*keys)[std::move(key)] = std::move(pathEntries[i]);
+                            (*keys)[std::move(key)] = pathEntries[i];
                         }
                     }
                     else

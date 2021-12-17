@@ -57,42 +57,9 @@ using finalmq::Logger;
 using finalmq::LogContext;
 using finalmq::VariantStruct;
 using finalmq::ProtocolMqtt5Client;
-using restapi::HelloRequest;
-using restapi::HelloReply;
 using restapi::Gender;
 using restapi::Person;
 using restapi::Address;
-
-
-
-#define LOOP_PARALLEL   1000
-#define LOOP_SEQUENTIAL 1000
-
-void triggerRequest(RemoteEntity& entityClient, PeerId peerId, const std::chrono::time_point<std::chrono::steady_clock>& starttime, int index)
-{
-    entityClient.requestReply<HelloReply>(peerId,
-        HelloRequest{ { {"Bonnie","Parker",Gender::FEMALE,1910,{"somestreet", 12,76875,"Rowena","USA"}} } },
-        [&entityClient, &starttime, index](PeerId peerId, Status status, const std::shared_ptr<HelloReply>& reply) {
-            if (reply)
-            {
-                if (index == LOOP_SEQUENTIAL - 1)
-                {
-                    auto now = std::chrono::steady_clock::now();
-                    std::chrono::duration<double> dur = now - starttime;
-                    long long delta = static_cast<long long>(dur.count() * 1000);
-                    std::cout << "time for " << LOOP_SEQUENTIAL << " sequential requests: " << delta << "ms" << std::endl;
-                }
-                else
-                {
-                    triggerRequest(entityClient, peerId, starttime, index + 1);
-                }
-            }
-            else
-            {
-                std::cout << "REPLY error: " << status.toString() << std::endl;
-            }
-        });
-}
 
 
 
@@ -157,84 +124,6 @@ int main()
         streamInfo << "connect reply: " << status.toString();
     });
 
-    // asynchronous request/reply
-    // A peer entity is been identified by its peerId.
-    // each request has its own lambda. The lambda is been called when the corresponding reply is received.
-    entityClient.requestReply<HelloReply>(peerId,
-                HelloRequest{{ {"Bonnie","Parker",Gender::FEMALE,1910,{"somestreet",   12,76875,"Rowena","USA"}},
-                               {"Clyde", "Barrow",Gender::MALE,  1909,{"anotherstreet",32,37385,"Telico","USA"}} }},
-                [] (PeerId peerId, Status status, const std::shared_ptr<HelloReply>& reply) {
-        if (reply)
-        {
-            std::cout << "REPLY: ";
-            std::for_each(reply->greetings.begin(), reply->greetings.end(), [] (const auto& entry) {
-                std::cout << entry << ". ";
-            });
-            std::cout << std::endl;
-        }
-        else
-        {
-            std::cout << "REPLY error: " << status.toString() << std::endl;
-        }
-    });
-    
-
-    // another request/reply
-    entityClient.requestReply<HelloReply>(peerId,
-                HelloRequest{{ {"Albert","Einstein",Gender::FEMALE,1879,{"somestreet",   12,89073, "Ulm",    "Germany"}},
-                               {"Marie", "Curie",   Gender::FEMALE,1867,{"anotherstreet",32,00001,"Warschau","Poland"}},
-                               {"World", "",        Gender::DIVERSE,0,{}} }},
-                [] (PeerId peerId, Status status, const std::shared_ptr<HelloReply>& reply) {
-        if (reply)
-        {
-            std::cout << "REPLY: - ";
-            std::for_each(reply->greetings.begin(), reply->greetings.end(), [] (const auto& entry) {
-                std::cout << entry << " - ";
-            });
-            std::cout << std::endl;
-        }
-        else
-        {
-            std::cout << "REPLY error: " << status.toString() << std::endl;
-        }
-    });
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-
-    for (int i = 0; i < 10; ++i)
-    {
-        // performance measurement of throughput
-        auto starttime = std::chrono::steady_clock::now();
-        for (int i = 0; i < LOOP_PARALLEL; ++i)
-        {
-            // asynchronous request/reply
-            // A peer entity is been identified by its peerId.
-            // each request has its own lambda. The lambda is been called when the corresponding reply is received.
-            entityClient.requestReply<HelloReply>(peerId,
-                        HelloRequest{{ {"Bonnie","Parker",Gender::FEMALE,1910,{"somestreet", 12,76875,"Rowena","USA"}} }},
-                        [i, starttime] (PeerId peerId, Status status, const std::shared_ptr<HelloReply>& reply) {
-                if (reply)
-                {
-                    if (i == LOOP_PARALLEL-1)
-                    {
-                        auto now = std::chrono::steady_clock::now();
-                        std::chrono::duration<double> dur = now - starttime;
-                        long long delta = static_cast<long long>(dur.count() * 1000);
-                        std::cout << "time for " << LOOP_PARALLEL << " parallel requests: " << delta << "ms" << std::endl;
-                    }
-                }
-                else
-                {
-                    std::cout << "REPLY error: " << status.toString() << std::endl;
-                }
-            });
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(2500));
-    }
-
-    // performance measurement of latency
-    auto starttime = std::chrono::steady_clock::now();
-    triggerRequest(entityClient, peerId, starttime, 0);
 
     // wait 20s
     std::this_thread::sleep_for(std::chrono::milliseconds(200000));
