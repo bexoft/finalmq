@@ -14,6 +14,10 @@ class FmqEntity
 		return this._session.requestReply(this._name, funcname, inparams, funcresult, context)
 	}
 
+    httpRequest(method, url, inparams, funcresult, context) {
+		return this._session.httpRequest(method, this._name + url, inparams, funcresult, context)
+	}
+
     sendEvent(funcname, inparams)
     {
 		return this._session.sendEvent(this._name, funcname, inparams)

@@ -94,8 +94,8 @@ public:
             for (auto it = m_persons.begin(); it != m_persons.end(); ++it)
             {
                 if (!filter || filter->empty() ||
-                    (it->second.name.compare(0, filter->size(), *filter) == 0) ||
-                    (it->second.surname.compare(0, filter->size(), *filter) == 0))
+                    (it->second.name.find(*filter) != std::string::npos) ||
+                    (it->second.surname.find(*filter) != std::string::npos))
                 {
                     persons.persons.emplace_back(it->second);
                 }
