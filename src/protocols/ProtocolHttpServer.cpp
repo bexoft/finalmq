@@ -47,8 +47,8 @@ const std::string ProtocolHttpServer::FMQ_METHOD = "fmq_method";
 const std::string ProtocolHttpServer::FMQ_PROTOCOL = "fmq_protocol";
 const std::string ProtocolHttpServer::FMQ_PATH = "fmq_path";
 const std::string ProtocolHttpServer::FMQ_QUERY_PREFIX = "QUERY_";
-const std::string ProtocolHttpServer::FMQ_STATUS = "fmq_status";
-const std::string ProtocolHttpServer::FMQ_STATUSTEXT = "fmq_statustext";
+const std::string ProtocolHttpServer::FMQ_HTTP_STATUS = "fmq_http_status";
+const std::string ProtocolHttpServer::FMQ_HTTP_STATUSTEXT = "fmq_http_statustext";
 const std::string ProtocolHttpServer::HTTP_REQUEST = "request";
 const std::string ProtocolHttpServer::HTTP_RESPONSE = "response";
     
@@ -409,8 +409,8 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
                                 Variant& controlData = m_message->getControlData();
                                 controlData.add(FMQ_HTTP, std::string(HTTP_RESPONSE));
                                 controlData.add(FMQ_PROTOCOL, std::move(lineSplit[0]));
-                                controlData.add(FMQ_STATUS, std::move(lineSplit[1]));
-                                controlData.add(FMQ_STATUSTEXT, std::move(lineSplit[2]));
+                                controlData.add(FMQ_HTTP_STATUS, std::move(lineSplit[1]));
+                                controlData.add(FMQ_HTTP_STATUSTEXT, std::move(lineSplit[2]));
                                 m_state = STATE_FIND_HEADERS;
                             }
                             else
@@ -644,8 +644,8 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
         }
         else
         {
-            std::string status = controlData.getDataValue<std::string>(FMQ_STATUS);
-            const std::string* statustext = controlData.getData<std::string>(FMQ_STATUSTEXT);
+            std::string status = controlData.getDataValue<std::string>(FMQ_HTTP_STATUS);
+            const std::string* statustext = controlData.getData<std::string>(FMQ_HTTP_STATUSTEXT);
             if (filename && filesize == -1)
             {
                 status = "404";

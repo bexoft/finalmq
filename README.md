@@ -757,9 +757,9 @@ The HTTP response header looks like this:
 
 	Connection: keep-alive
 	Content-Length: 44
-	fmq_re_mode: MSG_REPLY
-	fmq_re_srcid: 1
-	fmq_re_status: STATUS_OK
+	fmq_mode: MSG_REPLY
+	fmq_srcid: 1
+	fmq_status: STATUS_OK
 	fmq_type: helloworld.HelloReply
 
 

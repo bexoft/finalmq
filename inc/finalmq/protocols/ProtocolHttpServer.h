@@ -45,8 +45,8 @@ public:
     static const std::string FMQ_PROTOCOL;
     static const std::string FMQ_PATH;
     static const std::string FMQ_QUERY_PREFIX;
-    static const std::string FMQ_STATUS;
-    static const std::string FMQ_STATUSTEXT;
+    static const std::string FMQ_HTTP_STATUS;
+    static const std::string FMQ_HTTP_STATUSTEXT;
     static const std::string HTTP_REQUEST;
     static const std::string HTTP_RESPONSE;
 

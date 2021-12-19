@@ -125,11 +125,11 @@ class FmqSession
 	
 	_header(xmlhttp)
 	{
-		var header = {mode: xmlhttp.getResponseHeader('fmq_re_mode'),
+		var header = {mode: xmlhttp.getResponseHeader('fmq_mode'),
 					  corrid: xmlhttp.getResponseHeader('fmq_corrid'),
-					  status: xmlhttp.getResponseHeader('fmq_re_status'),
+					  status: xmlhttp.getResponseHeader('fmq_status'),
 					  type: xmlhttp.getResponseHeader('fmq_type'),
-					  srcid: xmlhttp.getResponseHeader('fmq_re_srcid')};
+					  srcid: xmlhttp.getResponseHeader('fmq_srcid')};
 		return header;
 	}
 
@@ -197,8 +197,8 @@ class FmqSession
             var xmlhttp = this._createRequest();
             xmlhttp.open('PUT', this._hostname, true);
             xmlhttp.setRequestHeader('fmq_sessionid', this._sessionId)
-			xmlhttp.setRequestHeader('fmq_re_mode', 'MSG_REPLY');
-			xmlhttp.setRequestHeader('fmq_re_destid', entityId);
+			xmlhttp.setRequestHeader('fmq_mode', 'MSG_REPLY');
+			xmlhttp.setRequestHeader('fmq_destid', entityId);
 			xmlhttp.setRequestHeader('fmq_corrid', correlationId);
 			var payload = this._createPayload(inparams);
             xmlhttp.send(payload);
@@ -216,10 +216,10 @@ class FmqSession
             var xmlhttp = this._createRequest();
             xmlhttp.open('PUT', this._hostname, true);
             xmlhttp.setRequestHeader('fmq_sessionid', this._sessionId)
-			xmlhttp.setRequestHeader('fmq_re_mode', 'MSG_REPLY');
-			xmlhttp.setRequestHeader('fmq_re_destid', entityId);
+			xmlhttp.setRequestHeader('fmq_mode', 'MSG_REPLY');
+			xmlhttp.setRequestHeader('fmq_destid', entityId);
 			xmlhttp.setRequestHeader('fmq_corrid', correlationId);
-			xmlhttp.setRequestHeader('fmq_re_status', status);
+			xmlhttp.setRequestHeader('fmq_status', status);
             xmlhttp.send('');
         }
     }
