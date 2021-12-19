@@ -142,7 +142,7 @@ public:
                 if (it != m_persons.end())
                 {
                     it->second = *request;
-                    requestContext->reply(finalmq::remoteentity::Status::STATUS_OK);
+                    requestContext->reply(NoData{});
 
                     sendEventToAllPeers("events/personChanged", PersonChanged{ *request, restapi::ChangeType::CHANGED });
                 }
@@ -168,7 +168,7 @@ public:
             {
                 sendEventToAllPeers("events/personChanged", PersonChanged{ it->second, restapi::ChangeType::DELETED});
                 m_persons.erase(it);
-                requestContext->reply(finalmq::remoteentity::Status::STATUS_OK);
+                requestContext->reply(NoData{});
             }
             else
             {
@@ -198,16 +198,20 @@ int main()
     // This means, an entity can send (client) and receive (server) a request command.
     RemoteEntityContainer entityContainer;
 
-    IExecutorPtr executor = std::make_shared<Executor>();
-    std::vector<std::thread> threads;
-    for (int i = 0; i < 2; ++i)
-    {
-        threads.emplace_back(std::thread([executor]() {
-            executor->run();
-        }));
-    }
 
-    entityContainer.init();//executor);
+    entityContainer.init();
+
+    // If you want that the commands and events shall be executed in extra threads, 
+    // then call entityContainer.init with an executor.
+    //IExecutorPtr executor = std::make_shared<Executor>();
+    //std::vector<std::thread> threads;
+    //for (int i = 0; i < 2; ++i)
+    //{
+    //    threads.emplace_back(std::thread([executor]() {
+    //        executor->run();
+    //    }));
+    //}
+    //entityContainer.init(executor);
 
     // register lambda for connection events to see when a network node connects or disconnects.
     entityContainer.registerConnectionEvent([] (const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) {
@@ -230,7 +234,9 @@ int main()
     // Open listener port 7777 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
     // content type in payload: protobuf
     entityContainer.bind("tcp://*:7777:headersize:protobuf");
-//    entityContainer.bind("ipc://my_uds:headersize:protobuf");
+
+    // Open unix domain socket listener my_uds with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
+    entityContainer.bind("ipc://my_uds:headersize:protobuf");
 
     // Open listener port 8888 with delimiter framing protocol ProtocolDelimiterLinefeed ('\n' is end of frame).
     // content type in payload: JSON
@@ -240,13 +246,13 @@ int main()
     // content type in payload: JSON
     entityContainer.bind("tcp://*:8080:httpserver:json");
 
-    //// if you want to use mqtt5 -> connect to broker
-    //entityContainer.connect("tcp://localhost:1883:mqtt5client:json", { {},{},
-    //    VariantStruct{  //{ProtocolMqtt5Client::KEY_USERNAME, std::string("")},
-    //                    //{ProtocolMqtt5Client::KEY_PASSWORD, std::string("")},
-    //                    {ProtocolMqtt5Client::KEY_SESSIONEXPIRYINTERVAL, 300},
-    //                    {ProtocolMqtt5Client::KEY_KEEPALIVE, 20},
-    //} });
+    // if you want to use mqtt5 -> connect to broker
+    entityContainer.connect("tcp://broker.emqx.io:1883:mqtt5client:json", { {},{},
+        VariantStruct{  //{ProtocolMqtt5Client::KEY_USERNAME, std::string("")},
+                        //{ProtocolMqtt5Client::KEY_PASSWORD, std::string("")},
+                        {ProtocolMqtt5Client::KEY_SESSIONEXPIRYINTERVAL, 300},
+                        {ProtocolMqtt5Client::KEY_KEEPALIVE, 20},
+    } });
 
     // note:
     // multiple access points (listening ports) can be activated by calling bind() several times.
@@ -261,13 +267,11 @@ int main()
     // If you do not want to block, then execute run() in another thread
     entityContainer.run();
 
-    std::this_thread::sleep_for(std::chrono::seconds(200000));
-
-    executor->terminate();
-    for (size_t i = 0; i < threads.size(); ++i)
-    {
-        threads[i].join();
-    }
+    //executor->terminate();
+    //for (size_t i = 0; i < threads.size(); ++i)
+    //{
+    //    threads[i].join();
+    //}
 
     return 0;
 }

@@ -46,6 +46,7 @@ using finalmq::RemoteEntityContainer;
 using finalmq::RemoteEntityFormatProto;
 using finalmq::RemoteEntityFormatJson;
 using finalmq::IRemoteEntityContainer;
+using finalmq::RequestContextPtr;
 using finalmq::PeerId;
 using finalmq::EntityId;
 using finalmq::PeerEvent;
@@ -57,9 +58,57 @@ using finalmq::Logger;
 using finalmq::LogContext;
 using finalmq::VariantStruct;
 using finalmq::ProtocolMqtt5Client;
+using finalmq::IMessage;
+using finalmq::remoteentity::NoData;
 using restapi::Gender;
-using restapi::Person;
 using restapi::Address;
+using restapi::Person;
+using restapi::PersonList;
+using restapi::PersonId;
+using restapi::PersonChanged;
+
+
+
+
+void triggerDeletePerson(RemoteEntity& entityClient, PeerId peerId, const std::string& id)
+{
+    entityClient.requestReply<NoData>(peerId, "persons/" + id + "/DELETE", NoData{},
+        [id](PeerId peerId, Status status, const std::shared_ptr<NoData>& reply)
+    {
+        if (reply)
+        {
+            std::cout << "person deleted, id:" << id << std::endl;
+        }
+        else
+        {
+            std::cout << "REPLY error: " << status.toString() << std::endl;
+        }
+    });
+}
+
+
+
+
+void triggerGetPersons(RemoteEntity& entityClient, PeerId peerId, const std::string& id)
+{
+    entityClient.requestReply<PersonList>(peerId, "persons/GET", { {"QUERY_filter", "Bon"}}, NoData{},
+        [&entityClient, id](PeerId peerId, Status status, IMessage::Metainfo& metainfo, const std::shared_ptr<PersonList>& reply)
+    {
+        if (reply)
+        {
+            for (size_t i = 0; i < reply->persons.size(); ++i)
+            {
+                const Person& person = reply->persons[i];
+                std::cout << person.id << " " << person.name << " " << person.surname << std::endl;
+            }
+            triggerDeletePerson(entityClient, peerId, id);
+        }
+        else
+        {
+            std::cout << "REPLY error: " << status.toString() << std::endl;
+        }
+    });
+}
 
 
 
@@ -94,6 +143,13 @@ int main()
     RemoteEntity entityClient;
     entityContainer.registerEntity(&entityClient);
 
+    entityClient.registerCommand<PersonChanged>("events/personChanged",
+        [](const RequestContextPtr& requestContext, const std::shared_ptr<PersonChanged>& request)
+    {
+        std::cout << "person changed event: " << request->changeType.toString() << ", id:" << request->person.id << ", "
+                  << " " << request->person.name << " " << request->person.surname << std::endl;
+    });
+
     // register peer events to see when a remote entity connects or disconnects.
     entityClient.registerPeerEvent([] (PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, PeerEvent peerEvent, bool incoming) {
         streamInfo << "peer event " << peerEvent.toString();
@@ -110,12 +166,12 @@ int main()
 //    IProtocolSessionPtr sessionClient = entityContainer.connect("ipc://my_uds:headersize:protobuf");
 
     //// if you want to use mqtt5 -> connect to broker
-    //IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:1883:mqtt5client:json", { {},{},
+    //IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://broker.emqx.io:1883:mqtt5client:json", { {},{},
     //    VariantStruct{  //{ProtocolMqtt5Client::KEY_USERNAME, std::string("")},
     //                    //{ProtocolMqtt5Client::KEY_PASSWORD, std::string("")},
     //                    {ProtocolMqtt5Client::KEY_SESSIONEXPIRYINTERVAL, 300},
     //                    {ProtocolMqtt5Client::KEY_KEEPALIVE, 20},
-    //    } });
+    //} });
 
     // connect entityClient to remote server entity "MyService" with the created TCP session.
     // The returned peerId identifies the peer entity.
@@ -124,6 +180,24 @@ int main()
         streamInfo << "connect reply: " << status.toString();
     });
 
+
+    // asynchronous request/reply
+    // A peer entity is been identified by its peerId.
+    // each request has its own lambda. The lambda is been called when the corresponding reply is received.
+    entityClient.requestReply<PersonId>(peerId, "persons/POST",
+        Person{ {}, "Bonnie", "Parker", Gender::FEMALE, 1910, {"somestreet", 12,76875, "Rowena", "USA"} },
+        [&entityClient](PeerId peerId, Status status, const std::shared_ptr<PersonId>& reply)
+    {
+        if (reply)
+        {
+            std::cout << "person added, id:" << reply->id << std::endl;
+            triggerGetPersons(entityClient, peerId, reply->id);
+        }
+        else
+        {
+            std::cout << "REPLY error: " << status.toString() << std::endl;
+        }
+    });
 
     // wait 20s
     std::this_thread::sleep_for(std::chrono::milliseconds(200000));
