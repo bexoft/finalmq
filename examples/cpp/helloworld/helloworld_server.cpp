@@ -155,16 +155,19 @@ int main()
     // This means, an entity can send (client) and receive (server) a request command.
     RemoteEntityContainer entityContainer;
 
-    IExecutorPtr executor = std::make_shared<Executor>();
-    std::vector<std::thread> threads;
-    for (int i = 0; i < 2; ++i)
-    {
-        threads.emplace_back(std::thread([executor]() {
-            executor->run();
-        }));
-    }
+    entityContainer.init();
 
-    entityContainer.init();//executor);
+    // If you want that the commands and events shall be executed in extra threads, 
+    // then call entityContainer.init with an executor.
+    //IExecutorPtr executor = std::make_shared<Executor>();
+    //std::vector<std::thread> threads;
+    //for (int i = 0; i < 2; ++i)
+    //{
+    //    threads.emplace_back(std::thread([executor]() {
+    //        executor->run();
+    //    }));
+    //}
+    //entityContainer.init(executor);
 
     // register lambda for connection events to see when a network node connects or disconnects.
     entityContainer.registerConnectionEvent([] (const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) {
@@ -218,13 +221,11 @@ int main()
     // If you do not want to block, then execute run() in another thread
     entityContainer.run();
 
-    std::this_thread::sleep_for(std::chrono::seconds(200000));
-
-    executor->terminate();
-    for (size_t i = 0; i < threads.size(); ++i)
-    {
-        threads[i].join();
-    }
+    //executor->terminate();
+    //for (size_t i = 0; i < threads.size(); ++i)
+    //{
+    //    threads[i].join();
+    //}
 
     return 0;
 }

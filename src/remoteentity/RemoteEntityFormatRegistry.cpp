@@ -41,16 +41,16 @@ namespace finalmq {
 
 static const std::string FMQ_HTTP = "fmq_http";
 static const std::string FMQ_METHOD = "fmq_method";
-static const std::string FMQ_STATUS = "fmq_status";
-static const std::string FMQ_STATUSTEXT = "fmq_statustext";
+static const std::string FMQ_HTTP_STATUS = "fmq_http_status";
+static const std::string FMQ_HTTP_STATUSTEXT = "fmq_http_statustext";
 static const std::string HTTP_RESPONSE = "response";
 static const std::string FMQ_PATH = "fmq_path";
 static const std::string FMQ_DESTNAME = "fmq_destname";
-static const std::string FMQ_RE_DESTID = "fmq_re_destid";
-static const std::string FMQ_RE_SRCID = "fmq_re_srcid";
-static const std::string FMQ_RE_MODE = "fmq_re_mode";
+static const std::string FMQ_DESTID = "fmq_destid";
+static const std::string FMQ_SRCID = "fmq_srcid";
+static const std::string FMQ_MODE = "fmq_mode";
 static const std::string FMQ_CORRID = "fmq_corrid";
-static const std::string FMQ_RE_STATUS = "fmq_re_status";
+static const std::string FMQ_STATUS = "fmq_status";
 static const std::string FMQ_SUBPATH = "fmq_subpath";
 static const std::string FMQ_TYPE = "fmq_type";
 static const std::string MSG_REPLY = "MSG_REPLY";
@@ -112,15 +112,15 @@ void RemoteEntityFormatRegistryImpl::serializeHeaderToMetainfo(IMessage& message
     }
     if (header.destid != 0)
     {
-        metainfo[FMQ_RE_DESTID] = std::to_string(header.destid);
+        metainfo[FMQ_DESTID] = std::to_string(header.destid);
     }
-    metainfo[FMQ_RE_SRCID] = std::to_string(header.srcid);
-    metainfo[FMQ_RE_MODE] = header.mode.toString();
+    metainfo[FMQ_SRCID] = std::to_string(header.srcid);
+    metainfo[FMQ_MODE] = header.mode.toString();
     if (header.corrid != 0)
     {
         metainfo[FMQ_CORRID] = std::to_string(header.corrid);
     }
-    metainfo[FMQ_RE_STATUS] = header.status.toString();
+    metainfo[FMQ_STATUS] = header.status.toString();
     if (!header.path.empty())
     {
         metainfo[FMQ_SUBPATH] = header.path;
@@ -165,11 +165,11 @@ static void statusToProtocolStatus(remoteentity::Status status, Variant& control
             bool statusOk = true;
             if (metainfo)
             {
-                auto itStatus = metainfo->find(FMQ_STATUS);
+                auto itStatus = metainfo->find(FMQ_HTTP_STATUS);
                 if (itStatus != metainfo->end())
                 {
                     statusOk = false;
-                    auto itStatusText = metainfo->find(FMQ_STATUSTEXT);
+                    auto itStatusText = metainfo->find(FMQ_HTTP_STATUSTEXT);
                     std::string statustext;
                     if (itStatusText != metainfo->end())
                     {
@@ -179,42 +179,42 @@ static void statusToProtocolStatus(remoteentity::Status status, Variant& control
                     {
                         statustext = "_";
                     }
-                    controlData.add(FMQ_STATUS, itStatus->second);
-                    controlData.add(FMQ_STATUSTEXT, std::move(statustext));
+                    controlData.add(FMQ_HTTP_STATUS, itStatus->second);
+                    controlData.add(FMQ_HTTP_STATUSTEXT, std::move(statustext));
                 }
             }
             if (statusOk)
             {
-                controlData.add(FMQ_STATUS, 200);
-                controlData.add(FMQ_STATUSTEXT, std::string("OK"));
+                controlData.add(FMQ_HTTP_STATUS, 200);
+                controlData.add(FMQ_HTTP_STATUSTEXT, std::string("OK"));
             }
         }
         break;
     case Status::STATUS_ENTITY_NOT_FOUND:
     case Status::STATUS_REQUEST_NOT_FOUND:
     case Status::STATUS_REQUESTTYPE_NOT_KNOWN:
-        controlData.add(FMQ_STATUS, 404);
-        controlData.add(FMQ_STATUSTEXT, std::string("Not Found"));
+        controlData.add(FMQ_HTTP_STATUS, 404);
+        controlData.add(FMQ_HTTP_STATUSTEXT, std::string("Not Found"));
         break;
     case Status::STATUS_SYNTAX_ERROR:
-        controlData.add(FMQ_STATUS, 400);
-        controlData.add(FMQ_STATUSTEXT, std::string("Bad Request"));
+        controlData.add(FMQ_HTTP_STATUS, 400);
+        controlData.add(FMQ_HTTP_STATUSTEXT, std::string("Bad Request"));
         break;
     case Status::STATUS_NO_REPLY:
         if (session->needsReply())
         {
-            controlData.add(FMQ_STATUS, 200);
-            controlData.add(FMQ_STATUSTEXT, std::string("OK"));
+            controlData.add(FMQ_HTTP_STATUS, 200);
+            controlData.add(FMQ_HTTP_STATUSTEXT, std::string("OK"));
         }
         else
         {
-            controlData.add(FMQ_STATUS, 500);
-            controlData.add(FMQ_STATUSTEXT, std::string("Internal Server Error"));
+            controlData.add(FMQ_HTTP_STATUS, 500);
+            controlData.add(FMQ_HTTP_STATUSTEXT, std::string("Internal Server Error"));
         }
         break;
     default:
-        controlData.add(FMQ_STATUS, 500);
-        controlData.add(FMQ_STATUSTEXT, std::string("Internal Server Error"));
+        controlData.add(FMQ_HTTP_STATUS, 500);
+        controlData.add(FMQ_HTTP_STATUSTEXT, std::string("Internal Server Error"));
         break;
     }
 }
@@ -394,12 +394,12 @@ std::string RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, con
 {
     const IMessage::Metainfo& metainfo = message.getAllMetainfo();
     auto itPath = metainfo.find(FMQ_PATH);
-    auto itSrcId = metainfo.find(FMQ_RE_SRCID);
-    auto itMode = metainfo.find(FMQ_RE_MODE);
+    auto itSrcId = metainfo.find(FMQ_SRCID);
+    auto itMode = metainfo.find(FMQ_MODE);
     auto itCorrId = metainfo.find(FMQ_CORRID);
-    auto itStatus = metainfo.find(FMQ_RE_STATUS);
+    auto itStatus = metainfo.find(FMQ_STATUS);
     auto itDestName = metainfo.find(FMQ_DESTNAME);
-    auto itDestId = metainfo.find(FMQ_RE_DESTID);
+    auto itDestId = metainfo.find(FMQ_DESTID);
     auto itSubPath = metainfo.find(FMQ_SUBPATH);
     auto itType = metainfo.find(FMQ_TYPE);
 

@@ -76,8 +76,8 @@ private:
         IMessagePtr response = session->createMessage();
         Variant& controlData = message->getControlData();
         controlData.add(ProtocolHttpServer::FMQ_HTTP, ProtocolHttpServer::HTTP_RESPONSE);
-        controlData.add(ProtocolHttpServer::FMQ_STATUS, 200);
-        controlData.add(ProtocolHttpServer::FMQ_STATUSTEXT, std::string("OK"));
+        controlData.add(ProtocolHttpServer::FMQ_HTTP_STATUS, 200);
+        controlData.add(ProtocolHttpServer::FMQ_HTTP_STATUSTEXT, std::string("OK"));
 
         const std::string* path = message->getMetainfo(ProtocolHttpServer::FMQ_PATH);
         if (path)

@@ -87,7 +87,12 @@ To build from source using VC++, follow this instructions:
     https://docs.oracle.com/en/database/oracle/machine-learning/oml4r/1.5.1/oread/creating-and-modifying-environment-variables-on-windows.html
   
     After setting the environment variable you have to restart your Visual Studio, in case it is opened, otherwise it will not see the new value. 
-
+    
+  * Install openSSL
+    You will find a Windows installer at [Win32/Win64 OpenSSL Installer for Windows - Shining Light Productions (slproweb.com)](https://slproweb.com/products/Win32OpenSSL.html)
+    Make sure, the environment variable OPENSSL_ROOT_DIR is set to the openssl install directory.
+    Set the cmake variable FINALMQ_USE_SSL=on to compile finalmq with open ssl.
+  
 * Open CMakeLists.txt from VisualStudio
 * Compile the finalmq project
 
@@ -133,11 +138,43 @@ Afterwards, you can ...
 
     make doc
 
-
 ​	
+
+# Quick Start
+
+If you want a quick start for finalmq, then look at the examples, "helloworld", "timer" and "restapi". You can find the examples in the directory:
+
+examples/cpp
+
+The "helloworld" example demonstrates the asynchronous request/reply calls between client and server.
+The "timer" example demonstrates events from server to clients.
+The "restapi" example demonstrates the communication in a REST API manner.
+
+The server application of these examples can be accessed by different interfaces of different technologies.
+
+**Please make sure to run only one server at a time, because all examples use the same ports!**
+
+You can use **telnet for JSON over TCP** or the **browser input line for JSON over HTTP**
+In the example servers you will find some comments how to access the server commands.
+
+There are also **html pages with JavaScript** available to demonstrate **JSON over HTTP** in a script. Just start a server, open a browser and type...
+... for helloworld example: localhost:8080/helloworld.html
+... for timer example: localhost:8080/timer.html
+... for restapi example: localhost:8080/restapi.html
+
+The according **cpp clients** can be used to access the servers with **Protobuf over TCP**.
+
+When you want to use **MQTT5**, then you have to enable the mqtt5 connections to the broker inside the servers and clients.
+**For mqtt5 be careful of not sending too many requests/events in parallel, because the brokers could drop messages if there are too many messages sent in parallel. This is not a problem of finalmq, but a problem of the configuration of the MQTT broker.**
+
+### The great thing of finalmq is, that you can use all technologies at the same time!
+
+
 
 Architectural Overview
 ========================================
+
+With the architectural overview you will get the knowledge of the layers of finalmq. If this is too early for you, you can skip this chapter and continue with the "Finalmq - Cookbook" chapter.
 
 FinalMQ is a framework for message communication between processes and network nodes. It is based on an asynchronous event loop. This means, events like changing connection state or receiving messages are realized as callbacks into the application. The application has the responsibility, not to sleep or having long running algorithms inside an event callbacks of the framework, because it would affect the timing of other events of other connections. The methods of the framework are thread-safe and can be called from any thread. Typical methods that will be called by the application are e.g. connect() or sendMessage().
 
@@ -292,6 +329,8 @@ Examples for Remote Entity endpoints:
 # FinalMQ - Cookbook
 
 
+
+You probably went through the examples in the Quick Start. Now, you will learn more internals about finalmq to build your own applications.
 
 ## Remote Entity
 
@@ -757,9 +796,9 @@ The HTTP response header looks like this:
 
 	Connection: keep-alive
 	Content-Length: 44
-	fmq_re_mode: MSG_REPLY
-	fmq_re_srcid: 1
-	fmq_re_status: STATUS_OK
+	fmq_mode: MSG_REPLY
+	fmq_srcid: 1
+	fmq_status: STATUS_OK
 	fmq_type: helloworld.HelloReply
 
 
@@ -1893,7 +1932,7 @@ When you register a command on server side like this:
 registerCommand<HelloRequest>([] (const RequestContextPtr& requestContext, const std::shared_ptr<HelloRequest>& request)
 ```
 
-The you can call this command with the path "/\<service name\>/\<message type\>". For example: "/MyService/helloworld.HelloRequest"
+Then you can call this command with the path "/\<service name\>/\<message type\>". For example: "/MyService/helloworld.HelloRequest"
 
 But if you would like to use another path instead of the message type, then you can register the command like this:
 
@@ -1949,4 +1988,20 @@ const std::string* subpath = requestContext->getMetainfo("PATH_subpath");
 ```
 
 In the examples above, the subpath will be "**special/nice**".
+
+If you send query parameters like: "/MyService/persons?filter=Bon", then you can get the value of the query parameter with 
+
+```c++
+const std::string* filter = requestContext->getMetainfo("QUERY_filter");
+```
+
+So, the the query parameter is inside the meta info, the key is the name of the query parameter with the prefix: "QUERY_"
+
+By the way, the http headers are also contained inside the meta info. If you want to get all meta info parameters, you can call:
+
+```c++
+const Metainfo& metainfo = requestContext->getAllMetainfo();
+```
+
+The Metainfo is a std::unordered_map<std::string, std::string>, so you can iterate through all entries.
 
