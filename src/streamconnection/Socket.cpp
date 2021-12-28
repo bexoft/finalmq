@@ -21,7 +21,6 @@
 //SOFTWARE.
 
 
-
 #include "finalmq/streamconnection/Socket.h"
 #include "finalmq/helpers/OperatingSystem.h"
 #include "finalmq/logger/LogStream.h"

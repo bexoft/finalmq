@@ -210,12 +210,12 @@ void StreamConnectionContainer::unbind(const std::string& endpoint)
     locker.unlock();
 }
 
-IStreamConnectionPtr StreamConnectionContainer::connect(hybrid_ptr<IStreamConnectionCallback> callback, const std::string& endpoint, const ConnectProperties& connectionProperties)
+IStreamConnectionPtr StreamConnectionContainer::connect(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const ConnectProperties& connectionProperties)
 {
     IStreamConnectionPtr connection = createConnection(callback);
     if (connection)
     {
-        bool res = connect(connection, endpoint, connectionProperties);
+        bool res = connect(endpoint, connection, connectionProperties);
         if (!res)
         {
             connection = nullptr;
@@ -302,7 +302,7 @@ bool StreamConnectionContainer::createSocket(const IStreamConnectionPtr& streamC
 
 
 
-bool StreamConnectionContainer::connect(const IStreamConnectionPtr& streamConnection, const std::string& endpoint, const ConnectProperties& connectionProperties)
+bool StreamConnectionContainer::connect(const std::string& endpoint, const IStreamConnectionPtr& streamConnection, const ConnectProperties& connectionProperties)
 {
     assert(streamConnection);
     IStreamConnectionPrivatePtr connection = findConnectionById(streamConnection->getConnectionId());
