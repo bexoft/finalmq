@@ -136,7 +136,7 @@ static ssize_t findLast(const char* buffer, ssize_t size, char c)
 
 
 
-static size_t findEndOfPath(const char* buffer, int size)
+static size_t findEndOfPath(const char* buffer, ssize_t size)
 {
     int i = 0;
     char cOld = 0;
