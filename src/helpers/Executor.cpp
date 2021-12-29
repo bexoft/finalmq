@@ -21,7 +21,7 @@
 //SOFTWARE.
 
 #include "finalmq/helpers/Executor.h"
-
+#include <assert.h>
 
 
 namespace finalmq {
@@ -35,46 +35,130 @@ void Executor::registerActionNotification(std::function<void()> func)
 void Executor::runAvailableActions()
 {
     std::unique_lock<std::mutex> lock(m_mutex);
-    std::deque<std::function<void()>> actions = std::move(m_actions);
+    std::list<ActionEntry> actions = std::move(m_actions);
     m_actions.clear();
     lock.unlock();
-    for (size_t i = 0; i < actions.size(); ++i)
+    for (auto it = actions.begin(); it != actions.end(); ++it)
     {
-        actions[i]();
+        ActionEntry& entry = *it;
+        for (auto it = entry.funcs.begin(); it != entry.funcs.end(); ++it)
+        {
+            std::function<void()>& func = *it;
+            if (func)
+            {
+                func();
+            }
+        }
     }
 }
 
-void Executor::runOneAvailableAction()
+bool Executor::runOneAvailableAction()
 {
+    bool stillActions = false;
     std::unique_lock<std::mutex> lock(m_mutex);
-    std::function<void()> action;
-    if (!m_actions.empty())
+    std::function<void()> func;
+    std::int64_t id = 0;
+    for (auto it = m_actions.begin(); it != m_actions.end(); ++it)
     {
-        action = std::move(m_actions.front());
-        m_actions.pop_front();
+        ActionEntry& entry = *it;
+        if (entry.id == 0 || m_runningIds.find(entry.id) == m_runningIds.end())
+        {
+            id = entry.id;
+            assert(!entry.funcs.empty());
+            func = std::move(entry.funcs.front());
+            if (id != 0)
+            {
+                m_runningIds.insert(id);
+            }
+            if (entry.funcs.size() == 1)
+            {
+                it = m_actions.erase(it);
+                if (it != m_actions.end())
+                {
+                    stillActions = true;
+                }
+            }
+            else
+            {
+                entry.funcs.pop_front();
+                if (id != 0)
+                {
+                    ++it;
+                    if (it != m_actions.end())
+                    {
+                        stillActions = true;
+                    }
+                }
+                else
+                {
+                    stillActions = true;
+                }
+            }
+            break;
+        }
     }
-    bool stillActions = (!m_actions.empty());
     lock.unlock();
     if (stillActions)
     {
         m_newActions = true;
     }
-    if (action)
+    if (func)
     {
-        action();
+        func();
     }
+    stillActions = false;
+    if (id != 0)
+    {
+        lock.lock();
+        m_runningIds.erase(id);
+        auto it = m_storedIds.find(id);
+        assert(it != m_storedIds.end());
+        auto& counter = it->second;
+        assert(counter > 0);
+        if (counter == 1)
+        {
+            m_storedIds.erase(it);
+        }
+        else
+        {
+            --counter;
+            stillActions = true;
+        }
+        lock.unlock();
+    }
+    return stillActions;
 }
 
-void Executor::addAction(std::function<void()> func)
+void Executor::addAction(std::function<void()> func, std::int64_t id)
 {
+    bool notify = false;
     std::unique_lock<std::mutex> lock(m_mutex);
-    bool notify = m_actions.empty();
-    m_actions.push_back(std::move(func));
-    lock.unlock();
-    m_newActions = true;
-    if (m_funcNotify && notify)
+    if (id != 0)
     {
-        m_funcNotify();
+        auto& count = m_storedIds[id];
+        notify = (count == 0);
+        ++count;
+    }
+    else
+    {
+        notify = m_actions.empty();
+    }
+    if (!m_actions.empty() && m_actions.back().id == id)
+    {
+        m_actions.back().funcs.push_back(std::move(func));
+    }
+    else
+    {
+        m_actions.emplace_back(id, std::move(func));
+    }
+    lock.unlock();
+    if (notify)
+    {
+        m_newActions = true;
+        if (m_funcNotify)
+        {
+            m_funcNotify();
+        }
     }
 }
 
@@ -83,9 +167,10 @@ void Executor::run()
     while (!m_terminate)
     {
         m_newActions.wait();
-        if (!m_terminate)
+        bool repeat = true;
+        while (!m_terminate && repeat)
         {
-            runOneAvailableAction();
+            repeat = runOneAvailableAction();
         }
     }
     // release possible other threads
@@ -109,7 +194,7 @@ bool Executor::isTerminating() const
 
 
 ExecutorWorker::ExecutorWorker(int numberOfWorkerThreads)
-    : m_executor(std::make_unique<Executor>())
+    : m_executor(std::make_shared<Executor>())
 {
     for (int i = 0; i < numberOfWorkerThreads; ++i)
     {
@@ -123,6 +208,11 @@ ExecutorWorker::~ExecutorWorker()
 {
     m_executor->terminate();
     join();
+}
+
+IExecutorPtr ExecutorWorker::getExecutor() const
+{
+    return m_executor;
 }
 
 void ExecutorWorker::addAction(std::function<void()> func)

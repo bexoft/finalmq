@@ -421,7 +421,7 @@ void ProtocolSession::disconnect()
         {
             pThis->disconnected();
         }
-    });
+    }, m_connectionId);
 }
 
 void ProtocolSession::sendBufferedMessages()
@@ -547,7 +547,7 @@ void ProtocolSession::connected()
                         callback->connected(pThis);
                     }
                 }
-            });
+            }, m_connectionId);
         }
         else
         {
@@ -585,7 +585,7 @@ void ProtocolSession::disconnected()
                         callback->disconnected(pThis);
                     }
                 }
-            });
+            }, m_connectionId);
         }
         else
         {
@@ -618,7 +618,7 @@ void ProtocolSession::disconnectedVirtualSession(const std::string& virtualSessi
                     callback->disconnectedVirtualSession(pThis, virtualSessionId);
                 }
             }
-        });
+        }, m_connectionId);
     }
     else
     {
@@ -670,7 +670,7 @@ void ProtocolSession::received(const IMessagePtr& message, std::int64_t connecti
                     callback->received(pThis, message);
                 }
             }
-        });
+        }, m_connectionId);
     }
     else
     {
@@ -697,7 +697,7 @@ void ProtocolSession::socketConnected()
                     callback->socketConnected(pThis);
                 }
             }
-        });
+        }, m_connectionId);
     }
     else
     {
@@ -724,7 +724,7 @@ void ProtocolSession::socketDisconnected()
                     callback->socketDisconnected(pThis);
                 }
             }
-        });
+        }, m_connectionId);
     }
     else
     {

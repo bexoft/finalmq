@@ -25,10 +25,13 @@
 #include "finalmq/helpers/CondVar.h"
 #include "finalmq/helpers/IExecutor.h"
 
+#include <list>
 #include <deque>
 #include <vector>
 #include <atomic>
 #include <thread>
+#include <unordered_map>
+#include <unordered_set>
 
 
 namespace finalmq {
@@ -41,18 +44,31 @@ public:
 private:
     virtual void registerActionNotification(std::function<void()> func) override;
     virtual void runAvailableActions() override;
-    virtual void runOneAvailableAction() override;
-    virtual void addAction(std::function<void()> func) override;
+    virtual bool runOneAvailableAction() override;
+    virtual void addAction(std::function<void()> func, std::int64_t id = 0) override;
     virtual void run() override;
     virtual void terminate() override;
     virtual bool isTerminating() const override;
 
 private:
-    std::deque<std::function<void()>>   m_actions;
+    struct ActionEntry
+    {
+        ActionEntry(std::int64_t i, std::function<void()>& f)
+            : id(i)
+            , funcs({ std::move(f) })
+        {
+
+        }
+        std::int64_t                        id;
+        std::deque<std::function<void()>>   funcs;
+    };
+    std::list<ActionEntry>      m_actions;
 
     std::atomic<bool>                   m_terminate;
     CondVar                             m_newActions;
     std::function<void()>               m_funcNotify;
+    std::unordered_map<std::int64_t, std::int32_t>  m_storedIds;
+    std::unordered_set<std::int64_t>                m_runningIds;
     std::mutex                          m_mutex;
 };
 
@@ -64,13 +80,17 @@ public:
     explicit ExecutorWorker(int numberOfWorkerThreads = 4);
     virtual ~ExecutorWorker();
 
-private:
+    virtual IExecutorPtr getExecutor() const override;
     virtual void addAction(std::function<void()> func) override;
     virtual void terminate() override;
     virtual bool isTerminating() const override;
     virtual void join() override;
 
-    std::unique_ptr<IExecutor>  m_executor;
+private:
+    ExecutorWorker(const ExecutorWorker&) = delete;
+    const ExecutorWorker& operator =(const ExecutorWorker&) = delete;
+
+    std::shared_ptr<IExecutor>  m_executor;
     std::vector<std::thread>    m_threads;
 };
 

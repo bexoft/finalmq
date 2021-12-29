@@ -34,8 +34,8 @@ struct IExecutor
     virtual ~IExecutor() {}
     virtual void registerActionNotification(std::function<void()> func) = 0;
     virtual void runAvailableActions() = 0;
-    virtual void runOneAvailableAction() = 0;
-    virtual void addAction(std::function<void()> func) = 0;
+    virtual bool runOneAvailableAction() = 0;
+    virtual void addAction(std::function<void()> func, std::int64_t id = 0) = 0;
     virtual void run() = 0;
     virtual void terminate() = 0;
     virtual bool isTerminating() const = 0;
@@ -47,6 +47,7 @@ typedef std::shared_ptr<IExecutor>  IExecutorPtr;
 struct IExecutorWorker
 {
     virtual ~IExecutorWorker() {}
+    virtual IExecutorPtr getExecutor() const = 0;
     virtual void addAction(std::function<void()> func) = 0;
     virtual void terminate() = 0;
     virtual bool isTerminating() const = 0;
