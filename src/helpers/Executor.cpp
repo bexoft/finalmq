@@ -149,7 +149,7 @@ void Executor::addAction(std::function<void()> func, std::int64_t id)
     }
     else
     {
-        m_actions.emplace_back(id, std::move(func));
+        m_actions.emplace_back(id, func);
     }
     lock.unlock();
     if (notify)
