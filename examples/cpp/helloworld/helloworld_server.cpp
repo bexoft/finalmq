@@ -53,6 +53,7 @@ using finalmq::Logger;
 using finalmq::LogContext;
 using finalmq::IExecutorPtr;
 using finalmq::Executor;
+using finalmq::ExecutorWorker;
 using finalmq::VariantStruct;
 using finalmq::ProtocolMqtt5Client;
 using helloworld::HelloRequest;
@@ -140,7 +141,7 @@ public:
 };
 
 
-
+//#define MULTITHREADED
 
 
 int main()
@@ -155,19 +156,14 @@ int main()
     // This means, an entity can send (client) and receive (server) a request command.
     RemoteEntityContainer entityContainer;
 
+#ifndef MULTITHREADED
     entityContainer.init();
-
+#else
     // If you want that the commands and events shall be executed in extra threads, 
     // then call entityContainer.init with an executor.
-    //IExecutorPtr executor = std::make_shared<Executor>();
-    //std::vector<std::thread> threads;
-    //for (int i = 0; i < 2; ++i)
-    //{
-    //    threads.emplace_back(std::thread([executor]() {
-    //        executor->run();
-    //    }));
-    //}
-    //entityContainer.init(executor);
+    ExecutorWorker worker;
+    entityContainer.init(worker.getExecutor());
+#endif
 
     // register lambda for connection events to see when a network node connects or disconnects.
     entityContainer.registerConnectionEvent([] (const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) {
@@ -217,15 +213,13 @@ int main()
     // And by the way, also connect()s are possible for an EntityContainer. An EntityContainer can be client and server at the same time.
 
 
+#ifndef MULTITHREADED
     // run the entity container. this call blocks the execution. 
     // If you do not want to block, then execute run() in another thread
     entityContainer.run();
-
-    //executor->terminate();
-    //for (size_t i = 0; i < threads.size(); ++i)
-    //{
-    //    threads[i].join();
-    //}
+#else
+    std::this_thread::sleep_for(std::chrono::seconds(100000000));
+#endif
 
     return 0;
 }
