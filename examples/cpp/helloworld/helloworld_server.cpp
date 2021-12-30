@@ -124,6 +124,9 @@ public:
             assert(request);
 
             const std::string* id = requestContext->getMetainfo("PATH_id"); // when a field is defined as {keyname}, then you can get the value with the key prefix "PATH_" ("PATH_keyname"}
+            if (id)
+            {
+            }
 
             // prepare the reply
             std::string prefix("Hello ");
@@ -161,7 +164,7 @@ int main()
 #else
     // If you want that the commands and events shall be executed in extra threads, 
     // then call entityContainer.init with an executor.
-    ExecutorWorker worker;
+    ExecutorWorker worker(4);
     entityContainer.init(worker.getExecutor());
 #endif
 
@@ -186,7 +189,7 @@ int main()
     // Open listener port 7777 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
     // content type in payload: protobuf
     entityContainer.bind("tcp://*:7777:headersize:protobuf");
-//    entityContainer.bind("ipc://my_uds:headersize:protobuf");
+    //entityContainer.bind("ipc://my_uds:headersize:protobuf");
 
     // Open listener port 8888 with delimiter framing protocol ProtocolDelimiterLinefeed ('\n' is end of frame).
     // content type in payload: JSON

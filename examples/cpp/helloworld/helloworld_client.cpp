@@ -65,8 +65,8 @@ using helloworld::Address;
 
 
 
-#define LOOP_PARALLEL   1000
-#define LOOP_SEQUENTIAL 1000
+#define LOOP_PARALLEL   10000
+#define LOOP_SEQUENTIAL 10000
 
 void triggerRequest(RemoteEntity& entityClient, PeerId peerId, const std::chrono::time_point<std::chrono::steady_clock>& starttime, int index)
 {
@@ -140,8 +140,9 @@ int main()
     // becomes available. Use the ConnectProperties to change the reconnect properties
     // (default is: try to connect every 5s forever till the server becomes available).
     IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:7777:headersize:protobuf");
-    IProtocolSessionPtr sessionClient2 = entityContainer.connect("tcp://localhost:7777:headersize:protobuf");
-    //    IProtocolSessionPtr sessionClient = entityContainer.connect("ipc://my_uds:headersize:protobuf");
+    //IProtocolSessionPtr sessionClient2 = entityContainer.connect("tcp://localhost:7777:headersize:protobuf");
+    //IProtocolSessionPtr sessionClient = entityContainer.connect("ipc://my_uds:headersize:protobuf");
+    //IProtocolSessionPtr sessionClient2 = entityContainer.connect("ipc://my_uds:headersize:protobuf");
 
     //// if you want to use mqtt5 -> connect to broker
     //IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:1883:mqtt5client:json", { {},{},
@@ -157,9 +158,9 @@ int main()
     PeerId peerId = entityClient.connect(sessionClient, "MyService", [](PeerId peerId, Status status) {
         streamInfo << "connect reply: " << status.toString();
         });
-    PeerId peerId2 = entityClient.connect(sessionClient2, "MyService", [](PeerId peerId, Status status) {
-        streamInfo << "connect reply: " << status.toString();
-        });
+    //PeerId peerId2 = entityClient.connect(sessionClient2, "MyService", [](PeerId peerId, Status status) {
+    //    streamInfo << "connect reply: " << status.toString();
+    //    });
 
     // asynchronous request/reply
     // A peer entity is been identified by its peerId.
@@ -232,6 +233,7 @@ int main()
                     std::cout << "REPLY error: " << status.toString() << std::endl;
                 }
             });
+/*
             entityClient.requestReply<HelloReply>(peerId2,
                 HelloRequest{ { {"Bonnie","Parker",Gender::FEMALE,1910,{"somestreet", 12,76875,"Rowena","USA"}} } },
                 [i, starttime](PeerId peerId, Status status, const std::shared_ptr<HelloReply>& reply) {
@@ -250,8 +252,9 @@ int main()
                         std::cout << "REPLY error: " << status.toString() << std::endl;
                     }
                 });
+*/
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(2500));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10000));
     }
 
     // performance measurement of latency
