@@ -46,11 +46,9 @@ void Executor::runAvailableActions()
         ActionEntry& entry = *it;
         for (auto it = entry.funcs.begin(); it != entry.funcs.end(); ++it)
         {
-            std::function<void()>& func = *it;
-            if (func)
-            {
-                func();
-            }
+            std::shared_ptr<std::function<void()>>& func = *it;
+            assert(func && *func);
+            (*func)();
         }
     }
 }
@@ -74,7 +72,7 @@ bool Executor::runOneAvailableAction()
     {
         return false;
     }
-    std::deque<std::function<void()>> funcs;
+    std::deque<std::shared_ptr<std::function<void()>>> funcs;
     std::int64_t id = -1;
     for (auto it = m_actions.begin(); it != m_actions.end(); ++it)
     {
@@ -131,10 +129,8 @@ bool Executor::runOneAvailableAction()
 
     for (auto it = funcs.begin(); it != funcs.end(); ++it)
     {
-        if (*it)
-        {
-            (*it)();
-        }
+        assert(*it && **it);
+        (**it)();
     }
 
     stillActions = false;
@@ -178,11 +174,11 @@ void Executor::addAction(std::function<void()> func, std::int64_t id)
     }
     if (!m_actions.empty() && m_actions.back().id == id)
     {
-        m_actions.back().funcs.push_back(std::move(func));
+        m_actions.back().funcs.push_back(std::make_shared<std::function<void()>>(std::move(func)));
     }
     else
     {
-        m_actions.emplace_back(id, func);
+        m_actions.emplace_back(id, std::make_shared<std::function<void()>>(std::move(func)));
         static size_t maxsize = 0;
         if (m_actions.size() > maxsize)
         {
