@@ -24,6 +24,9 @@
 #include <assert.h>
 
 
+#include <iostream>
+
+
 namespace finalmq {
 
 
@@ -52,62 +55,90 @@ void Executor::runAvailableActions()
     }
 }
 
+bool Executor::runnableActionsAvailable() const
+{
+    if (m_runningIds.size() == m_storedIds.size() && (m_zeroIdCounter == 0))
+    {
+        return false;
+    }
+    return true;
+}
+
+
+
 bool Executor::runOneAvailableAction()
 {
     bool stillActions = false;
     std::unique_lock<std::mutex> lock(m_mutex);
-    std::function<void()> func;
-    std::int64_t id = 0;
+    if (!runnableActionsAvailable())
+    {
+        return false;
+    }
+    std::deque<std::function<void()>> funcs;
+    std::int64_t id = -1;
     for (auto it = m_actions.begin(); it != m_actions.end(); ++it)
     {
         ActionEntry& entry = *it;
         if (entry.id == 0 || m_runningIds.find(entry.id) == m_runningIds.end())
         {
             id = entry.id;
-            assert(!entry.funcs.empty());
-            func = std::move(entry.funcs.front());
+
+            bool erased = false;
             if (id != 0)
             {
                 m_runningIds.insert(id);
-            }
-            if (entry.funcs.size() == 1)
-            {
+                funcs = std::move(entry.funcs);
                 it = m_actions.erase(it);
-                if (it != m_actions.end())
-                {
-                    stillActions = true;
-                }
+                erased = true;
             }
             else
             {
-                entry.funcs.pop_front();
-                if (id != 0)
+                --m_zeroIdCounter;
+                funcs.push_back(std::move(entry.funcs.front()));
+                if (entry.funcs.size() == 1)
                 {
-                    ++it;
-                    if (it != m_actions.end())
-                    {
-                        stillActions = true;
-                    }
+                    it = m_actions.erase(it);
+                    erased = true;
                 }
                 else
                 {
-                    stillActions = true;
+                    entry.funcs.pop_front();
                 }
             }
+            if (erased && it != m_actions.end())
+            {
+                auto itPrev = it;
+                --itPrev;
+                if (itPrev != m_actions.end())
+                {
+                    if (itPrev->id == it->id)
+                    {
+                        itPrev->funcs.insert(itPrev->funcs.end(), std::make_move_iterator(it->funcs.begin()), std::make_move_iterator(it->funcs.end()));
+                        m_actions.erase(it);
+                    }
+                }
+            }
+            stillActions = runnableActionsAvailable();
             break;
         }
     }
     lock.unlock();
+
     if (stillActions)
     {
         m_newActions = true;
     }
-    if (func)
+
+    for (auto it = funcs.begin(); it != funcs.end(); ++it)
     {
-        func();
+        if (*it)
+        {
+            (*it)();
+        }
     }
+
     stillActions = false;
-    if (id != 0)
+    if (id > 0)
     {
         lock.lock();
         m_runningIds.erase(id);
@@ -115,13 +146,14 @@ bool Executor::runOneAvailableAction()
         assert(it != m_storedIds.end());
         auto& counter = it->second;
         assert(counter > 0);
-        if (counter == 1)
+        assert(counter >= funcs.size());
+        counter -= funcs.size();
+        if (counter == 0)
         {
             m_storedIds.erase(it);
         }
         else
         {
-            --counter;
             stillActions = true;
         }
         lock.unlock();
@@ -142,6 +174,7 @@ void Executor::addAction(std::function<void()> func, std::int64_t id)
     else
     {
         notify = m_actions.empty();
+        ++m_zeroIdCounter;
     }
     if (!m_actions.empty() && m_actions.back().id == id)
     {
@@ -150,10 +183,22 @@ void Executor::addAction(std::function<void()> func, std::int64_t id)
     else
     {
         m_actions.emplace_back(id, func);
+        static size_t maxsize = 0;
+        if (m_actions.size() > maxsize)
+        {
+            maxsize = m_actions.size();
+//            std::cout << maxsize << std::endl;
+        }
     }
     lock.unlock();
     if (notify)
     {
+        if (id != 0)
+        {
+            static int count = 0;
+            count++;
+//            std::cout << "===== notify: " << count << " " << std::endl;
+        }
         m_newActions = true;
         if (m_funcNotify)
         {
