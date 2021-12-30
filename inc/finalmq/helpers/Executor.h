@@ -56,14 +56,13 @@ private:
 
     struct ActionEntry
     {
-        ActionEntry(std::int64_t i, std::shared_ptr<std::function<void()>>&& f)
+        ActionEntry(std::int64_t i, std::unique_ptr<std::function<void()>>&& f)
             : id(i)
-            , funcs({ std::move(f) })
         {
-
+            funcs.emplace_back(std::move(f));
         }
         std::int64_t                        id;
-        std::deque<std::shared_ptr<std::function<void()>>>   funcs;
+        std::deque<std::unique_ptr<std::function<void()>>>   funcs;
     };
     std::list<ActionEntry>      m_actions;
 
