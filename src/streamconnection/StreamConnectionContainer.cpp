@@ -47,6 +47,9 @@
 namespace finalmq {
 
 
+std::atomic_int64_t StreamConnectionContainer::m_nextConnectionId{0x0100000000000001ll};
+
+
 StreamConnectionContainer::StreamConnectionContainer()
 #if defined(WIN32) || defined(__MINGW32__)
     : m_poller(std::make_shared<PollerImplSelect>())
@@ -455,7 +458,7 @@ IExecutorPtr StreamConnectionContainer::getPollerThreadExecutor() const
 IStreamConnectionPrivatePtr StreamConnectionContainer::addConnection(const SocketPtr& socket, ConnectionData& connectionData, hybrid_ptr<IStreamConnectionCallback> callback)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
-    std::int64_t connectionId = m_nextConnectionId++;
+    std::int64_t connectionId = m_nextConnectionId.fetch_add(1);
     connectionData.connectionId = connectionId;
     IStreamConnectionPrivatePtr connection = std::make_shared<StreamConnection>(connectionData, socket, m_poller, m_executorPollerThread, callback);
     m_connectionId2Connection[connectionId] = connection;

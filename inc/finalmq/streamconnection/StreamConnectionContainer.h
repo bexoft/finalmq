@@ -107,7 +107,7 @@ private:
     std::unordered_map<SOCKET, BindData>                            m_sd2binds;
     std::unordered_map<std::int64_t, IStreamConnectionPrivatePtr>   m_connectionId2Connection;
     std::unordered_map<SOCKET, IStreamConnectionPrivatePtr>         m_sd2Connection;
-    std::int64_t                                                    m_nextConnectionId = 1;
+    static std::atomic_int64_t                                      m_nextConnectionId;
     bool                                                            m_terminatePollerLoop = false;
     int                                                             m_cycleTime = 100;
     int                                                             m_checkReconnectInterval = 1000;
