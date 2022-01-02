@@ -47,7 +47,7 @@ private:
     virtual void terminate() override;
     virtual bool isTerminating() const override;
 
-private:
+protected:
     std::atomic<bool>                   m_terminate;
     CondVar                             m_newActions;
     std::function<void()>               m_funcNotify;
@@ -82,13 +82,9 @@ private:
     };
     std::list<ActionEntry>      m_actions;
 
-    std::atomic<bool>                   m_terminate;
-    CondVar                             m_newActions;
-    std::function<void()>               m_funcNotify;
     std::unordered_map<std::int64_t, std::int32_t>  m_storedIds;
     std::unordered_set<std::int64_t>                m_runningIds;
     int                                 m_zeroIdCounter = 0;
-    std::mutex                          m_mutex;
 };
 
 
@@ -104,11 +100,6 @@ private:
 
 private:
     std::deque<std::function<void()>>   m_actions;
-
-    std::atomic<bool>                   m_terminate;
-    CondVar                             m_newActions;
-    std::function<void()>               m_funcNotify;
-    std::mutex                          m_mutex;
 };
 
 

@@ -177,8 +177,8 @@ bool ExecutorKeepOrderOfInstance::runOneAvailableAction()
         assert(it != m_storedIds.end());
         auto& counter = it->second;
         assert(counter > 0);
-        assert(counter >= funcs.size());
-        counter -= funcs.size();
+        assert(counter >= static_cast<std::int32_t>(funcs.size()));
+        counter -= static_cast<std::int32_t>(funcs.size());
         if (counter == 0)
         {
             m_storedIds.erase(it);
@@ -272,10 +272,13 @@ void ExecutorIgnoreOrderOfInstance::addAction(std::function<void()> func, std::i
     bool notify = m_actions.empty();
     m_actions.push_back(std::move(func));
     lock.unlock();
-    m_newActions = true;
-    if (m_funcNotify && notify)
+    if (notify)
     {
-        m_funcNotify();
+        m_newActions = true;
+        if (m_funcNotify)
+        {
+            m_funcNotify();
+        }
     }
 }
 
