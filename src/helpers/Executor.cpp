@@ -30,12 +30,47 @@
 namespace finalmq {
 
 
-void Executor::registerActionNotification(std::function<void()> func)
+void ExecutorBase::registerActionNotification(std::function<void()> func)
 {
     m_funcNotify = func;
 }
 
-void Executor::runAvailableActions()
+
+void ExecutorBase::run()
+{
+    while (!m_terminate)
+    {
+        m_newActions.wait();
+        bool repeat = true;
+        while (!m_terminate && repeat)
+        {
+            repeat = runOneAvailableAction();
+        }
+    }
+    // release possible other threads
+    m_newActions = true;
+}
+
+void ExecutorBase::terminate()
+{
+    m_terminate = true;
+    m_newActions = true;
+}
+
+bool ExecutorBase::isTerminating() const
+{
+    return m_terminate;
+}
+
+
+
+
+////////////////////////////////////////////////////////
+
+
+
+
+void ExecutorKeepOrderOfInstance::runAvailableActions()
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     std::list<ActionEntry> actions = std::move(m_actions);
@@ -53,7 +88,7 @@ void Executor::runAvailableActions()
     }
 }
 
-bool Executor::runnableActionsAvailable() const
+bool ExecutorKeepOrderOfInstance::runnableActionsAvailable() const
 {
     if (m_runningIds.size() == m_storedIds.size() && (m_zeroIdCounter == 0))
     {
@@ -64,7 +99,7 @@ bool Executor::runnableActionsAvailable() const
 
 
 
-bool Executor::runOneAvailableAction()
+bool ExecutorKeepOrderOfInstance::runOneAvailableAction()
 {
     bool stillActions = false;
     std::unique_lock<std::mutex> lock(m_mutex);
@@ -73,18 +108,18 @@ bool Executor::runOneAvailableAction()
         return false;
     }
     std::deque<std::unique_ptr<std::function<void()>>> funcs;
-    std::int64_t id = -1;
+    std::int64_t instanceId = -1;
     for (auto it = m_actions.begin(); it != m_actions.end(); ++it)
     {
         ActionEntry& entry = *it;
-        if (entry.id == 0 || m_runningIds.find(entry.id) == m_runningIds.end())
+        if (entry.instanceId == 0 || m_runningIds.find(entry.instanceId) == m_runningIds.end())
         {
-            id = entry.id;
+            instanceId = entry.instanceId;
 
             bool erased = false;
-            if (id != 0)
+            if (instanceId != 0)
             {
-                m_runningIds.insert(id);
+                m_runningIds.insert(instanceId);
                 funcs = std::move(entry.funcs);
                 it = m_actions.erase(it);
                 erased = true;
@@ -109,7 +144,7 @@ bool Executor::runOneAvailableAction()
                 --itPrev;
                 if (itPrev != m_actions.end())
                 {
-                    if (itPrev->id == it->id)
+                    if (itPrev->instanceId == it->instanceId)
                     {
                         itPrev->funcs.insert(itPrev->funcs.end(), std::make_move_iterator(it->funcs.begin()), std::make_move_iterator(it->funcs.end()));
                         m_actions.erase(it);
@@ -134,11 +169,11 @@ bool Executor::runOneAvailableAction()
     }
 
     stillActions = false;
-    if (id > 0)
+    if (instanceId > 0)
     {
         lock.lock();
-        m_runningIds.erase(id);
-        auto it = m_storedIds.find(id);
+        m_runningIds.erase(instanceId);
+        auto it = m_storedIds.find(instanceId);
         assert(it != m_storedIds.end());
         auto& counter = it->second;
         assert(counter > 0);
@@ -157,13 +192,13 @@ bool Executor::runOneAvailableAction()
     return stillActions;
 }
 
-void Executor::addAction(std::function<void()> func, std::int64_t id)
+void ExecutorKeepOrderOfInstance::addAction(std::function<void()> func, std::int64_t instanceId)
 {
     bool notify = false;
     std::unique_lock<std::mutex> lock(m_mutex);
-    if (id != 0)
+    if (instanceId != 0)
     {
-        auto& count = m_storedIds[id];
+        auto& count = m_storedIds[instanceId];
         notify = (count == 0);
         ++count;
     }
@@ -172,13 +207,13 @@ void Executor::addAction(std::function<void()> func, std::int64_t id)
         notify = m_actions.empty();
         ++m_zeroIdCounter;
     }
-    if (!m_actions.empty() && m_actions.back().id == id)
+    if (!m_actions.empty() && m_actions.back().instanceId == instanceId)
     {
         m_actions.back().funcs.push_back(std::make_unique<std::function<void()>>(std::move(func)));
     }
     else
     {
-        m_actions.emplace_back(id, std::make_unique<std::function<void()>>(std::move(func)));
+        m_actions.emplace_back(instanceId, std::make_unique<std::function<void()>>(std::move(func)));
     }
     lock.unlock();
     if (notify)
@@ -191,39 +226,65 @@ void Executor::addAction(std::function<void()> func, std::int64_t id)
     }
 }
 
-void Executor::run()
-{
-    while (!m_terminate)
-    {
-        m_newActions.wait();
-        bool repeat = true;
-        while (!m_terminate && repeat)
-        {
-            repeat = runOneAvailableAction();
-        }
-    }
-    // release possible other threads
-    m_newActions = true;
-}
-
-void Executor::terminate()
-{
-    m_terminate = true;
-    m_newActions = true;
-}
-
-bool Executor::isTerminating() const
-{
-    return m_terminate;
-}
 
 
 
 //////////////////////////////////////////////////
 
+void ExecutorIgnoreOrderOfInstance::runAvailableActions()
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    std::deque<std::function<void()>> actions = std::move(m_actions);
+    m_actions.clear();
+    lock.unlock();
+    for (size_t i = 0; i < actions.size(); ++i)
+    {
+        actions[i]();
+    }
+}
 
-ExecutorWorker::ExecutorWorker(int numberOfWorkerThreads)
-    : m_executor(std::make_shared<Executor>())
+bool ExecutorIgnoreOrderOfInstance::runOneAvailableAction()
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    std::function<void()> action;
+    if (!m_actions.empty())
+    {
+        action = std::move(m_actions.front());
+        m_actions.pop_front();
+    }
+    bool stillActions = (!m_actions.empty());
+    lock.unlock();
+    if (stillActions)
+    {
+        m_newActions = true;
+    }
+    if (action)
+    {
+        action();
+    }
+
+    return false;
+}
+
+void ExecutorIgnoreOrderOfInstance::addAction(std::function<void()> func, std::int64_t /*instanceId*/)
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    bool notify = m_actions.empty();
+    m_actions.push_back(std::move(func));
+    lock.unlock();
+    m_newActions = true;
+    if (m_funcNotify && notify)
+    {
+        m_funcNotify();
+    }
+}
+
+
+//////////////////////////////////////////////////
+
+
+ExecutorWorkerBase::ExecutorWorkerBase(const std::shared_ptr<IExecutor>& executor, int numberOfWorkerThreads)
+    : m_executor(executor)
 {
     for (int i = 0; i < numberOfWorkerThreads; ++i)
     {
@@ -233,33 +294,33 @@ ExecutorWorker::ExecutorWorker(int numberOfWorkerThreads)
     }
 }
 
-ExecutorWorker::~ExecutorWorker()
+ExecutorWorkerBase::~ExecutorWorkerBase()
 {
     m_executor->terminate();
     join();
 }
 
-IExecutorPtr ExecutorWorker::getExecutor() const
+IExecutorPtr ExecutorWorkerBase::getExecutor() const
 {
     return m_executor;
 }
 
-void ExecutorWorker::addAction(std::function<void()> func)
+void ExecutorWorkerBase::addAction(std::function<void()> func)
 {
     m_executor->addAction(std::move(func));
 }
 
-void ExecutorWorker::terminate()
+void ExecutorWorkerBase::terminate()
 {
     m_executor->terminate();
 }
 
-bool ExecutorWorker::isTerminating() const
+bool ExecutorWorkerBase::isTerminating() const
 {
     return m_executor->isTerminating();
 }
 
-void ExecutorWorker::join()
+void ExecutorWorkerBase::join()
 {
     for (size_t i = 0; i < m_threads.size(); ++i)
     {

@@ -130,6 +130,7 @@ private:
     std::unordered_map<std::int64_t, IProtocolPtr>          m_multiProtocols;
 
     int64_t                                         m_sessionId = 0;
+    int64_t                                         m_instanceId = 0;
     std::weak_ptr<IProtocolSessionList>             m_protocolSessionList;
     int                                             m_contentType = 0;
     std::uint32_t                                   m_protocolId = 0;

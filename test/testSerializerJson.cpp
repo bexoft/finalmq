@@ -329,11 +329,8 @@ TEST_F(TestSerializerJson, testVariantInt32Default)
 
 TEST_F(TestSerializerJson, testVariantEmptyDefault)
 {
-    static const std::int32_t VALUE = -2;
-
     const MetaStruct* stru = MetaDataGlobal::instance().getStruct("test.TestVariant");
     ASSERT_NE(stru, nullptr);
-    const MetaStruct* struValue = MetaDataGlobal::instance().getStruct(stru->getFieldByName("value")->typeName);
     m_serializerDefault->startStruct(*stru);
     m_serializerDefault->finished();
 

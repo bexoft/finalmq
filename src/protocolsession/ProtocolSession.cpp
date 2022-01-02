@@ -30,6 +30,8 @@
 
 namespace finalmq {
 
+static int64_t INSTANCEID_PREFIX = 0x0100000000000000ll;
+
 const static std::string FMQ_CONNECTION_ID = "fmq_echo_connid";
 
 
@@ -421,7 +423,7 @@ void ProtocolSession::disconnect()
         {
             pThis->disconnected();
         }
-    }, m_connectionId);
+    }, m_instanceId);
 }
 
 void ProtocolSession::sendBufferedMessages()
@@ -459,6 +461,7 @@ void ProtocolSession::addSessionToList(bool verified)
         if (protocolSessionList)
         {
             m_sessionId = protocolSessionList->addProtocolSession(shared_from_this(), verified);
+            m_instanceId = m_sessionId | INSTANCEID_PREFIX;
         }
     }
 }
@@ -547,7 +550,7 @@ void ProtocolSession::connected()
                         callback->connected(pThis);
                     }
                 }
-            }, m_connectionId);
+            }, m_instanceId);
         }
         else
         {
@@ -585,7 +588,7 @@ void ProtocolSession::disconnected()
                         callback->disconnected(pThis);
                     }
                 }
-            }, m_connectionId);
+            }, m_instanceId);
         }
         else
         {
@@ -618,7 +621,7 @@ void ProtocolSession::disconnectedVirtualSession(const std::string& virtualSessi
                     callback->disconnectedVirtualSession(pThis, virtualSessionId);
                 }
             }
-        }, m_connectionId);
+        }, m_instanceId);
     }
     else
     {
@@ -670,7 +673,7 @@ void ProtocolSession::received(const IMessagePtr& message, std::int64_t connecti
                     callback->received(pThis, message);
                 }
             }
-        }, m_connectionId);
+        }, m_instanceId);
     }
     else
     {
@@ -697,7 +700,7 @@ void ProtocolSession::socketConnected()
                     callback->socketConnected(pThis);
                 }
             }
-        }, m_connectionId);
+        }, m_instanceId);
     }
     else
     {
@@ -724,7 +727,7 @@ void ProtocolSession::socketDisconnected()
                     callback->socketDisconnected(pThis);
                 }
             }
-        }, m_connectionId);
+        }, m_instanceId);
     }
     else
     {

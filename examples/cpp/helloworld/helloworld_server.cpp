@@ -52,7 +52,7 @@ using finalmq::ConnectionEvent;
 using finalmq::Logger;
 using finalmq::LogContext;
 using finalmq::IExecutorPtr;
-using finalmq::Executor;
+using finalmq::ExecutorKeepOrderOfInstance;
 using finalmq::ExecutorWorker;
 using finalmq::VariantStruct;
 using finalmq::ProtocolMqtt5Client;
@@ -164,7 +164,7 @@ int main()
 #else
     // If you want that the commands and events shall be executed in extra threads, 
     // then call entityContainer.init with an executor.
-    ExecutorWorker worker(4);
+    ExecutorWorker<ExecutorKeepOrderOfInstance> worker(4);
     entityContainer.init(worker.getExecutor());
 #endif
 

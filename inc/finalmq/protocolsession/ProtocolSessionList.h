@@ -68,7 +68,7 @@ private:
     };
 
     std::unordered_map<std::int64_t, SessionData>       m_connectionId2ProtocolSession;
-    std::int64_t                                        m_nextSessionId = 1;
+    static std::atomic_int64_t                          m_nextSessionId;
     mutable std::mutex                                  m_mutex;
 };
 

@@ -47,7 +47,7 @@
 namespace finalmq {
 
 
-std::atomic_int64_t StreamConnectionContainer::m_nextConnectionId{0x0100000000000001ll};
+std::atomic_int64_t StreamConnectionContainer::m_nextConnectionId{1};
 
 
 StreamConnectionContainer::StreamConnectionContainer()
@@ -56,8 +56,8 @@ StreamConnectionContainer::StreamConnectionContainer()
 #else
     : m_poller(std::make_shared<PollerImplEpoll>())
 #endif
-    , m_executorPollerThread(std::make_shared<Executor>())
-    , m_executorWorker(std::make_unique<ExecutorWorker>(1))
+    , m_executorPollerThread(std::make_shared<ExecutorIgnoreOrderOfInstance>())
+    , m_executorWorker(std::make_unique<ExecutorWorker<ExecutorIgnoreOrderOfInstance>>(1))
 {
     m_executorPollerThread->registerActionNotification([this]() {
         m_poller->releaseWait(RELEASE_EXECUTEINPOLLERTHREAD);
@@ -460,7 +460,7 @@ IStreamConnectionPrivatePtr StreamConnectionContainer::addConnection(const Socke
     std::unique_lock<std::mutex> lock(m_mutex);
     std::int64_t connectionId = m_nextConnectionId.fetch_add(1);
     connectionData.connectionId = connectionId;
-    IStreamConnectionPrivatePtr connection = std::make_shared<StreamConnection>(connectionData, socket, m_poller, m_executorPollerThread, callback);
+    IStreamConnectionPrivatePtr connection = std::make_shared<StreamConnection>(connectionData, socket, m_poller, callback);
     m_connectionId2Connection[connectionId] = connection;
     if (connectionData.sd != INVALID_SOCKET)
     {

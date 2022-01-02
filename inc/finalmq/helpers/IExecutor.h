@@ -35,7 +35,7 @@ struct IExecutor
     virtual void registerActionNotification(std::function<void()> func) = 0;
     virtual void runAvailableActions() = 0;
     virtual bool runOneAvailableAction() = 0;
-    virtual void addAction(std::function<void()> func, std::int64_t id = 0) = 0;
+    virtual void addAction(std::function<void()> func, std::int64_t instanceId = 0) = 0;
     virtual void run() = 0;
     virtual void terminate() = 0;
     virtual bool isTerminating() const = 0;
