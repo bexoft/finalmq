@@ -56,7 +56,7 @@ StreamConnectionContainer::StreamConnectionContainer()
 #else
     : m_poller(std::make_shared<PollerImplEpoll>())
 #endif
-    , m_executorPollerThread(std::make_shared<ExecutorIgnoreOrderOfInstance>())
+    , m_executorPollerThread(std::make_shared<Executor>())
     , m_executorWorker(std::make_unique<ExecutorWorker<ExecutorIgnoreOrderOfInstance>>(1))
 {
     m_executorPollerThread->registerActionNotification([this]() {

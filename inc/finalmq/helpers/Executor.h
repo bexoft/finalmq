@@ -57,7 +57,7 @@ protected:
 
 
 
-class SYMBOLEXP ExecutorKeepOrderOfInstance : public ExecutorBase
+class SYMBOLEXP Executor : public ExecutorBase
 {
 public:
 

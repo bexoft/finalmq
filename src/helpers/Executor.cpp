@@ -70,7 +70,7 @@ bool ExecutorBase::isTerminating() const
 
 
 
-void ExecutorKeepOrderOfInstance::runAvailableActions()
+void Executor::runAvailableActions()
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     std::list<ActionEntry> actions = std::move(m_actions);
@@ -88,7 +88,7 @@ void ExecutorKeepOrderOfInstance::runAvailableActions()
     }
 }
 
-bool ExecutorKeepOrderOfInstance::runnableActionsAvailable() const
+bool Executor::runnableActionsAvailable() const
 {
     if (m_runningIds.size() == m_storedIds.size() && (m_zeroIdCounter == 0))
     {
@@ -99,7 +99,7 @@ bool ExecutorKeepOrderOfInstance::runnableActionsAvailable() const
 
 
 
-bool ExecutorKeepOrderOfInstance::runOneAvailableAction()
+bool Executor::runOneAvailableAction()
 {
     bool stillActions = false;
     std::unique_lock<std::mutex> lock(m_mutex);
@@ -192,7 +192,7 @@ bool ExecutorKeepOrderOfInstance::runOneAvailableAction()
     return stillActions;
 }
 
-void ExecutorKeepOrderOfInstance::addAction(std::function<void()> func, std::int64_t instanceId)
+void Executor::addAction(std::function<void()> func, std::int64_t instanceId)
 {
     bool notify = false;
     std::unique_lock<std::mutex> lock(m_mutex);
