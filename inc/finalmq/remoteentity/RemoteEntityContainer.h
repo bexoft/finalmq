@@ -226,9 +226,7 @@ private:
     std::shared_ptr<FileTransferReply>                          m_fileTransferReply;
     IExecutorPtr                                                m_executor;
 
-    std::atomic_bool                                            m_entitiesChanged = {};
-    std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>  m_name2entityNoLock;
-    std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>>     m_entityId2entityNoLock;
+    std::atomic_int64_t                                         m_entitiesChanged = {};
 
     mutable std::mutex                                          m_mutex;
 };
