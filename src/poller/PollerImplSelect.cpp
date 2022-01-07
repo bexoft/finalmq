@@ -56,8 +56,10 @@ void PollerImplSelect::init()
 {
     FD_ZERO(&m_readfdsCached);
     FD_ZERO(&m_writefdsCached);
+    FD_ZERO(&m_errorfdsCached);
     FD_ZERO(&m_readfdsOriginal);
     FD_ZERO(&m_writefdsOriginal);
+    FD_ZERO(&m_errorfdsOriginal);
     int res = OperatingSystem::instance().makeSocketPair(m_controlSocketRead, m_controlSocketWrite);
     if (res == 0)
     {
@@ -74,7 +76,11 @@ void PollerImplSelect::addSocket(const SocketDescriptorPtr& fd)
     auto result = m_socketDescriptors.insert(std::make_pair(fd, 0));
     if (result.second)
     {
-        sockedDescriptorHasChanged();
+        if (!FD_ISSET(fd->getDescriptor(), &m_errorfdsCached))
+        {
+            FD_SET(fd->getDescriptor(), &m_errorfdsCached);
+            sockedDescriptorAndSdMaxHasChanged();
+        }
     }
     else
     {
@@ -90,9 +96,11 @@ void PollerImplSelect::addSocketEnableRead(const SocketDescriptorPtr& fd)
     auto result = m_socketDescriptors.insert(std::make_pair(fd, SOCKET_POLLIN));
     if (result.second)
     {
-        if (!FD_ISSET(fd->getDescriptor(), &m_readfdsCached))
+        if (!FD_ISSET(fd->getDescriptor(), &m_readfdsCached) ||
+            !FD_ISSET(fd->getDescriptor(), &m_errorfdsCached))
         {
             FD_SET(fd->getDescriptor(), &m_readfdsCached);
+            FD_SET(fd->getDescriptor(), &m_errorfdsCached);
             sockedDescriptorAndSdMaxHasChanged();
         }
     }
@@ -112,6 +120,7 @@ void PollerImplSelect::removeSocket(const SocketDescriptorPtr& fd)
     {
         FD_CLR(fd->getDescriptor(), &m_readfdsCached);
         FD_CLR(fd->getDescriptor(), &m_writefdsCached);
+        FD_CLR(fd->getDescriptor(), &m_errorfdsCached);
         m_socketDescriptors.erase(it);
         sockedDescriptorAndSdMaxHasChanged();
     }
@@ -215,13 +224,6 @@ void PollerImplSelect::copyFds(fd_set& dest, fd_set& source)
 }
 
 
-void PollerImplSelect::sockedDescriptorHasChanged()
-{
-    m_socketDescriptorsStable.clear(std::memory_order_release);
-    releaseWait(0);
-}
-
-
 void PollerImplSelect::sdMaxHasChanged()
 {
     m_sdMaxStable.clear(std::memory_order_release);
@@ -261,8 +263,9 @@ void PollerImplSelect::updateSdMax()
         }
     }
 #endif
-    copyFds(m_readfdsOriginal, m_readfdsCached);
+    copyFds(m_readfdsOriginal,  m_readfdsCached);
     copyFds(m_writefdsOriginal, m_writefdsCached);
+    copyFds(m_errorfdsOriginal, m_errorfdsCached);
 }
 
 
@@ -382,9 +385,9 @@ const PollerResult& PollerImplSelect::wait(std::int32_t timeout)
             }
 
             // copy fds
-            copyFds(m_readfds, m_readfdsOriginal);
+            copyFds(m_readfds,  m_readfdsOriginal);
             copyFds(m_writefds, m_writefdsOriginal);
-            copyFds(m_errorfds, m_readfdsOriginal);
+            copyFds(m_errorfds, m_errorfdsOriginal);
 
             timeval tim;
             tim.tv_sec = 0;

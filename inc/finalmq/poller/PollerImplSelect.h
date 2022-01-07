@@ -57,7 +57,6 @@ private:
     inline static void copyFds(fd_set& dest, fd_set& source);
     void updateSocketDescriptors();
     void updateSdMax();
-    void sockedDescriptorHasChanged();
     void sdMaxHasChanged();
     void sockedDescriptorAndSdMaxHasChanged();
     void collectSockets(int res);
@@ -71,8 +70,10 @@ private:
     PollerResult m_result;
     fd_set m_readfdsCached{};
     fd_set m_writefdsCached{};
+    fd_set m_errorfdsCached{};
     fd_set m_readfdsOriginal{};
     fd_set m_writefdsOriginal{};
+    fd_set m_errorfdsOriginal{};
     fd_set m_readfds{};
     fd_set m_writefds{};
     fd_set m_errorfds{};
