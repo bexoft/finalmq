@@ -29,6 +29,7 @@
 #include "finalmq/variant/VariantValueStruct.h"
 #include "finalmq/variant/VariantValues.h"
 #include "finalmq/protocols/ProtocolMqtt5Client.h"
+#include "finalmq/helpers/Executor.h"
 
 // the definition of the messages are in the file helloworld.fmq
 #include "helloworld.fmq.h"
@@ -57,6 +58,9 @@ using finalmq::Logger;
 using finalmq::LogContext;
 using finalmq::VariantStruct;
 using finalmq::ProtocolMqtt5Client;
+using finalmq::IExecutorPtr;
+using finalmq::Executor;
+using finalmq::ExecutorWorker;
 using helloworld::HelloRequest;
 using helloworld::HelloReply;
 using helloworld::Gender;
@@ -65,8 +69,10 @@ using helloworld::Address;
 
 
 
-#define LOOP_PARALLEL   10000
+#define LOOP_PARALLEL   100000
 #define LOOP_SEQUENTIAL 10000
+
+finalmq::CondVar g_performanceTestFinished{};
 
 void triggerRequest(RemoteEntity& entityClient, PeerId peerId, const std::chrono::time_point<std::chrono::steady_clock>& starttime, int index)
 {
@@ -81,6 +87,7 @@ void triggerRequest(RemoteEntity& entityClient, PeerId peerId, const std::chrono
                     std::chrono::duration<double> dur = now - starttime;
                     long long delta = static_cast<long long>(dur.count() * 1000);
                     std::cout << "time for " << LOOP_SEQUENTIAL << " sequential requests: " << delta << "ms" << std::endl;
+                    g_performanceTestFinished = true;
                 }
                 else
                 {
@@ -95,6 +102,8 @@ void triggerRequest(RemoteEntity& entityClient, PeerId peerId, const std::chrono
 }
 
 
+//#define MULTITHREADED
+//#define TWOCONNECTIONS
 
 int main()
 {
@@ -107,12 +116,20 @@ int main()
     // Entities are like remote objects, but they can be at the same time client and server.
     // This means, an entity can send (client) and receive (server) a request command.
     RemoteEntityContainer entityContainer;
-    entityContainer.init();
 
+#ifndef MULTITHREADED
+    entityContainer.init();
     // run entity container in separate thread
     std::thread thread([&entityContainer] () {
         entityContainer.run();
     });
+#else
+    // If you want that the commands and events shall be executed in extra threads,
+    // then call entityContainer.init with an executor.
+    ExecutorWorker<Executor> worker(4);
+    entityContainer.init(worker.getExecutor());
+#endif
+
 
     // register lambda for connection events to see when a network node connects or disconnects.
     entityContainer.registerConnectionEvent([] (const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) {
@@ -139,10 +156,13 @@ int main()
     // A client can be started before the server is started. The connect is been retried in the background till the server
     // becomes available. Use the ConnectProperties to change the reconnect properties
     // (default is: try to connect every 5s forever till the server becomes available).
-    IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:7777:headersize:protobuf");
+    //IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:7777:headersize:protobuf");
     //IProtocolSessionPtr sessionClient2 = entityContainer.connect("tcp://localhost:7777:headersize:protobuf");
-    //IProtocolSessionPtr sessionClient = entityContainer.connect("ipc://my_uds:headersize:protobuf");
-    //IProtocolSessionPtr sessionClient2 = entityContainer.connect("ipc://my_uds:headersize:protobuf");
+    IProtocolSessionPtr sessionClient = entityContainer.connect("ipc://my_uds:headersize:protobuf");
+
+#ifdef TWOCONNECTIONS
+    IProtocolSessionPtr sessionClient2 = entityContainer.connect("ipc://my_uds:headersize:protobuf");
+#endif
 
     //// if you want to use mqtt5 -> connect to broker
     //IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:1883:mqtt5client:json", { {},{},
@@ -158,9 +178,12 @@ int main()
     PeerId peerId = entityClient.connect(sessionClient, "MyService", [](PeerId peerId, Status status) {
         streamInfo << "connect reply: " << status.toString();
         });
-    //PeerId peerId2 = entityClient.connect(sessionClient2, "MyService", [](PeerId peerId, Status status) {
-    //    streamInfo << "connect reply: " << status.toString();
-    //    });
+
+#ifdef TWOCONNECTIONS
+    PeerId peerId2 = entityClient.connect(sessionClient2, "MyService", [](PeerId peerId, Status status) {
+        streamInfo << "connect reply: " << status.toString();
+        });
+#endif
 
     // asynchronous request/reply
     // A peer entity is been identified by its peerId.
@@ -226,6 +249,7 @@ int main()
                         std::chrono::duration<double> dur = now - starttime;
                         long long delta = static_cast<long long>(dur.count() * 1000);
                         std::cout << "time for " << LOOP_PARALLEL << " parallel requests: " << delta << "ms" << std::endl;
+                        g_performanceTestFinished = true;
                     }
                 }
                 else
@@ -233,7 +257,10 @@ int main()
                     std::cout << "REPLY error: " << status.toString() << std::endl;
                 }
             });
-/*
+
+
+#ifdef TWOCONNECTIONS
+            i++;
             entityClient.requestReply<HelloReply>(peerId2,
                 HelloRequest{ { {"Bonnie","Parker",Gender::FEMALE,1910,{"somestreet", 12,76875,"Rowena","USA"}} } },
                 [i, starttime](PeerId peerId, Status status, const std::shared_ptr<HelloReply>& reply) {
@@ -245,6 +272,7 @@ int main()
                             std::chrono::duration<double> dur = now - starttime;
                             long long delta = static_cast<long long>(dur.count() * 1000);
                             std::cout << "time for " << LOOP_PARALLEL << " parallel requests: " << delta << "ms" << std::endl;
+                            g_performanceTestFinished = true;
                         }
                     }
                     else
@@ -252,21 +280,23 @@ int main()
                         std::cout << "REPLY error: " << status.toString() << std::endl;
                     }
                 });
-*/
+#endif
+
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+        g_performanceTestFinished.wait();
     }
 
     // performance measurement of latency
     auto starttime = std::chrono::steady_clock::now();
     triggerRequest(entityClient, peerId, starttime, 0);
 
-    // wait 20s
-    std::this_thread::sleep_for(std::chrono::milliseconds(20000));
+    g_performanceTestFinished.wait();
 
+#ifndef MULTITHREADED
     // release the thread
     entityContainer.terminatePollerLoop();
     thread.join();
+#endif
 
     return 0;
 }

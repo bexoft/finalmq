@@ -105,7 +105,7 @@ void RemoteEntityContainer::deinit()
     }
     m_name2entity.clear();
     m_entityId2entity.clear();
-    m_entitiesChanged.store(true, std::memory_order_release);
+    m_entitiesChanged.fetch_add(1, std::memory_order_acq_rel);
     lock.unlock();
 
     for (size_t i = 0; i < entities.size(); ++i)
@@ -143,7 +143,7 @@ bool RemoteEntityContainer::isTimerExpired(std::chrono::time_point<std::chrono::
     return expired;
 }
 
-static const int INTERVAL_CHECK = 5000;
+//static const int INTERVAL_CHECK = 5000;
 
 
 void RemoteEntityContainer::init(const IExecutorPtr& executor, int cycleTime, FuncTimer funcTimer, bool storeRawDataInReceiveStruct, int checkReconnectInterval)
@@ -296,7 +296,7 @@ EntityId RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> remoteE
 
     re->initEntity(entityId, name, m_fileTransferReply, m_executor);
     m_entityId2entity[entityId] = remoteEntity;
-    m_entitiesChanged.store(true, std::memory_order_release);
+    m_entitiesChanged.fetch_add(1, std::memory_order_acq_rel);
     lock.unlock();
 
     if (!name.empty())
@@ -465,16 +465,30 @@ void RemoteEntityContainer::disconnectedVirtualSession(const IProtocolSessionPtr
 
 static const std::string FMQ_PATH = "fmq_path";
 
+
+struct ThreadLocalData
+{
+    std::int16_t                                                changeId = 0;
+    std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>  name2entityNoLock;
+    std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>>     entityId2entityNoLock;
+};
+thread_local ThreadLocalData t_threadLocalData;
+
 void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const IMessagePtr& message)
 {
     assert(session);
     assert(message);
 
-    if (m_entitiesChanged.exchange(false, std::memory_order_acq_rel))
+    ThreadLocalData& threadLocalData = t_threadLocalData;
+    std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2entityNoLock = threadLocalData.name2entityNoLock;
+    std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>>& entityId2entityNoLock = threadLocalData.entityId2entityNoLock;
+    std::int64_t changeId = m_entitiesChanged.load(std::memory_order_acquire);
+    if (changeId != threadLocalData.changeId)
     {
+        threadLocalData.changeId = changeId;
         std::unique_lock<std::mutex> lock(m_mutex);
-        m_name2entityNoLock = m_name2entity;
-        m_entityId2entityNoLock = m_entityId2entity;
+        name2entityNoLock = m_name2entity;
+        entityId2entityNoLock = m_entityId2entity;
     }
 
 
@@ -497,11 +511,11 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     //{
         if (!session->doesSupportMetainfo())
         {
-            receiveData.structBase = RemoteEntityFormatRegistry::instance().parse(*message, session->getContentType(), m_storeRawDataInReceiveStruct, m_name2entityNoLock, receiveData.header, syntaxError);
+            receiveData.structBase = RemoteEntityFormatRegistry::instance().parse(*message, session->getContentType(), m_storeRawDataInReceiveStruct, name2entityNoLock, receiveData.header, syntaxError);
         }
         else
         {
-            receiveData.structBase = RemoteEntityFormatRegistry::instance().parseHeaderInMetainfo(*message, session->getContentType(), m_storeRawDataInReceiveStruct, m_name2entityNoLock, receiveData.header, syntaxError);
+            receiveData.structBase = RemoteEntityFormatRegistry::instance().parseHeaderInMetainfo(*message, session->getContentType(), m_storeRawDataInReceiveStruct, name2entityNoLock, receiveData.header, syntaxError);
         }
     //}
     //else
@@ -514,12 +528,12 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     hybrid_ptr<IRemoteEntity> remoteEntity;
     if (entityId == ENTITYID_INVALID || (entityId == ENTITYID_DEFAULT && !receiveData.header.destname.empty()))
     {
-        auto itName = m_name2entityNoLock.find(receiveData.header.destname);
-        if (itName == m_name2entityNoLock.end())
+        auto itName = name2entityNoLock.find(receiveData.header.destname);
+        if (itName == name2entityNoLock.end())
         {
-            itName = m_name2entityNoLock.find("*");
+            itName = name2entityNoLock.find("*");
         }
-        if (itName != m_name2entityNoLock.end())
+        if (itName != name2entityNoLock.end())
         {
             remoteEntity = itName->second;
             foundEntity = true;
@@ -527,8 +541,8 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     }
     if (!foundEntity && entityId != ENTITYID_INVALID)
     {
-        auto it = m_entityId2entityNoLock.find(entityId);
-        if (it != m_entityId2entityNoLock.end())
+        auto it = entityId2entityNoLock.find(entityId);
+        if (it != entityId2entityNoLock.end())
         {
             remoteEntity = it->second;
         }

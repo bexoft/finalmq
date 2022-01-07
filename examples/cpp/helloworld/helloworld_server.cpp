@@ -189,7 +189,10 @@ int main()
     // Open listener port 7777 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
     // content type in payload: protobuf
     entityContainer.bind("tcp://*:7777:headersize:protobuf");
-    //entityContainer.bind("ipc://my_uds:headersize:protobuf");
+
+#ifndef WIN32
+    entityContainer.bind("ipc://my_uds:headersize:protobuf");
+#endif
 
     // Open listener port 8888 with delimiter framing protocol ProtocolDelimiterLinefeed ('\n' is end of frame).
     // content type in payload: JSON
