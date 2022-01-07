@@ -21,18 +21,217 @@
 //SOFTWARE.
 
 #include "finalmq/helpers/Executor.h"
+#include <assert.h>
 
+
+#include <iostream>
 
 
 namespace finalmq {
 
 
-void Executor::registerActionNotification(std::function<void()> func)
+void ExecutorBase::registerActionNotification(std::function<void()> func)
 {
     m_funcNotify = func;
 }
 
+
+void ExecutorBase::run()
+{
+    while (!m_terminate)
+    {
+        m_newActions.wait();
+        bool repeat = true;
+        while (!m_terminate && repeat)
+        {
+            repeat = runOneAvailableAction();
+        }
+    }
+    // release possible other threads
+    m_newActions = true;
+}
+
+void ExecutorBase::terminate()
+{
+    m_terminate = true;
+    m_newActions = true;
+}
+
+bool ExecutorBase::isTerminating() const
+{
+    return m_terminate;
+}
+
+
+
+
+////////////////////////////////////////////////////////
+
+
+
+
 void Executor::runAvailableActions()
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    std::list<ActionEntry> actions = std::move(m_actions);
+    m_actions.clear();
+    lock.unlock();
+    for (auto it = actions.begin(); it != actions.end(); ++it)
+    {
+        ActionEntry& entry = *it;
+        for (auto it = entry.funcs.begin(); it != entry.funcs.end(); ++it)
+        {
+            std::unique_ptr<std::function<void()>>& func = *it;
+            assert(func && *func);
+            (*func)();
+        }
+    }
+}
+
+bool Executor::runnableActionsAvailable() const
+{
+    if (m_runningIds.size() == m_storedIds.size() && (m_zeroIdCounter == 0))
+    {
+        return false;
+    }
+    return true;
+}
+
+
+
+bool Executor::runOneAvailableAction()
+{
+    bool stillActions = false;
+    std::unique_lock<std::mutex> lock(m_mutex);
+    if (!runnableActionsAvailable())
+    {
+        return false;
+    }
+    std::deque<std::unique_ptr<std::function<void()>>> funcs;
+    std::int64_t instanceId = -1;
+    for (auto it = m_actions.begin(); it != m_actions.end(); ++it)
+    {
+        ActionEntry& entry = *it;
+        if (entry.instanceId == 0 || m_runningIds.find(entry.instanceId) == m_runningIds.end())
+        {
+            instanceId = entry.instanceId;
+
+            bool erased = false;
+            if (instanceId != 0)
+            {
+                m_runningIds.insert(instanceId);
+                funcs = std::move(entry.funcs);
+                it = m_actions.erase(it);
+                erased = true;
+            }
+            else
+            {
+                --m_zeroIdCounter;
+                funcs.push_back(std::move(entry.funcs.front()));
+                if (entry.funcs.size() == 1)
+                {
+                    it = m_actions.erase(it);
+                    erased = true;
+                }
+                else
+                {
+                    entry.funcs.pop_front();
+                }
+            }
+            if (erased && it != m_actions.end())
+            {
+                auto itPrev = it;
+                --itPrev;
+                if (itPrev != m_actions.end())
+                {
+                    if (itPrev->instanceId == it->instanceId)
+                    {
+                        itPrev->funcs.insert(itPrev->funcs.end(), std::make_move_iterator(it->funcs.begin()), std::make_move_iterator(it->funcs.end()));
+                        m_actions.erase(it);
+                    }
+                }
+            }
+            stillActions = runnableActionsAvailable();
+            break;
+        }
+    }
+    lock.unlock();
+
+    if (stillActions)
+    {
+        m_newActions = true;
+    }
+
+    for (auto it = funcs.begin(); it != funcs.end(); ++it)
+    {
+        assert(*it && **it);
+        (**it)();
+    }
+
+    stillActions = false;
+    if (instanceId > 0)
+    {
+        lock.lock();
+        m_runningIds.erase(instanceId);
+        auto it = m_storedIds.find(instanceId);
+        assert(it != m_storedIds.end());
+        auto& counter = it->second;
+        assert(counter > 0);
+        assert(counter >= static_cast<std::int32_t>(funcs.size()));
+        counter -= static_cast<std::int32_t>(funcs.size());
+        if (counter == 0)
+        {
+            m_storedIds.erase(it);
+        }
+        else
+        {
+            stillActions = true;
+        }
+        lock.unlock();
+    }
+    return stillActions;
+}
+
+void Executor::addAction(std::function<void()> func, std::int64_t instanceId)
+{
+    bool notify = false;
+    std::unique_lock<std::mutex> lock(m_mutex);
+    if (instanceId != 0)
+    {
+        auto& count = m_storedIds[instanceId];
+        notify = (count == 0);
+        ++count;
+    }
+    else
+    {
+        notify = m_actions.empty();
+        ++m_zeroIdCounter;
+    }
+    if (!m_actions.empty() && m_actions.back().instanceId == instanceId)
+    {
+        m_actions.back().funcs.push_back(std::make_unique<std::function<void()>>(std::move(func)));
+    }
+    else
+    {
+        m_actions.emplace_back(instanceId, std::make_unique<std::function<void()>>(std::move(func)));
+    }
+    lock.unlock();
+    if (notify)
+    {
+        m_newActions = true;
+        if (m_funcNotify)
+        {
+            m_funcNotify();
+        }
+    }
+}
+
+
+
+
+//////////////////////////////////////////////////
+
+void ExecutorIgnoreOrderOfInstance::runAvailableActions()
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     std::deque<std::function<void()>> actions = std::move(m_actions);
@@ -44,7 +243,7 @@ void Executor::runAvailableActions()
     }
 }
 
-void Executor::runOneAvailableAction()
+bool ExecutorIgnoreOrderOfInstance::runOneAvailableAction()
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     std::function<void()> action;
@@ -63,53 +262,32 @@ void Executor::runOneAvailableAction()
     {
         action();
     }
+
+    return false;
 }
 
-void Executor::addAction(std::function<void()> func)
+void ExecutorIgnoreOrderOfInstance::addAction(std::function<void()> func, std::int64_t /*instanceId*/)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     bool notify = m_actions.empty();
     m_actions.push_back(std::move(func));
     lock.unlock();
-    m_newActions = true;
-    if (m_funcNotify && notify)
+    if (notify)
     {
-        m_funcNotify();
-    }
-}
-
-void Executor::run()
-{
-    while (!m_terminate)
-    {
-        m_newActions.wait();
-        if (!m_terminate)
+        m_newActions = true;
+        if (m_funcNotify)
         {
-            runOneAvailableAction();
+            m_funcNotify();
         }
     }
-    // release possible other threads
-    m_newActions = true;
 }
-
-void Executor::terminate()
-{
-    m_terminate = true;
-    m_newActions = true;
-}
-
-bool Executor::isTerminating() const
-{
-    return m_terminate;
-}
-
 
 
 //////////////////////////////////////////////////
 
 
-ExecutorWorker::ExecutorWorker(int numberOfWorkerThreads)
-    : m_executor(std::make_unique<Executor>())
+ExecutorWorkerBase::ExecutorWorkerBase(const std::shared_ptr<IExecutor>& executor, int numberOfWorkerThreads)
+    : m_executor(executor)
 {
     for (int i = 0; i < numberOfWorkerThreads; ++i)
     {
@@ -119,28 +297,33 @@ ExecutorWorker::ExecutorWorker(int numberOfWorkerThreads)
     }
 }
 
-ExecutorWorker::~ExecutorWorker()
+ExecutorWorkerBase::~ExecutorWorkerBase()
 {
     m_executor->terminate();
     join();
 }
 
-void ExecutorWorker::addAction(std::function<void()> func)
+IExecutorPtr ExecutorWorkerBase::getExecutor() const
+{
+    return m_executor;
+}
+
+void ExecutorWorkerBase::addAction(std::function<void()> func)
 {
     m_executor->addAction(std::move(func));
 }
 
-void ExecutorWorker::terminate()
+void ExecutorWorkerBase::terminate()
 {
     m_executor->terminate();
 }
 
-bool ExecutorWorker::isTerminating() const
+bool ExecutorWorkerBase::isTerminating() const
 {
     return m_executor->isTerminating();
 }
 
-void ExecutorWorker::join()
+void ExecutorWorkerBase::join()
 {
     for (size_t i = 0; i < m_threads.size(); ++i)
     {

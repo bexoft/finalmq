@@ -117,7 +117,7 @@ typedef std::shared_ptr<IStreamConnectionPrivate> IStreamConnectionPrivatePtr;
 class SYMBOLEXP StreamConnection : public IStreamConnectionPrivate
 {
 public:
-    StreamConnection(const ConnectionData& connectionData, std::shared_ptr<Socket> socket, const IPollerPtr& poller, const IExecutorPtr& executorPollerThread, hybrid_ptr<IStreamConnectionCallback> callback);
+    StreamConnection(const ConnectionData& connectionData, std::shared_ptr<Socket> socket, const IPollerPtr& poller, hybrid_ptr<IStreamConnectionCallback> callback);
     ~StreamConnection();
 
 private:
@@ -159,7 +159,6 @@ private:
     hybrid_ptr<IStreamConnectionCallback> m_callback;
 
     std::chrono::time_point<std::chrono::steady_clock> m_lastReconnectTime;
-    IExecutorPtr                m_executorPollerThread;
 
     mutable std::mutex          m_mutex;
 };

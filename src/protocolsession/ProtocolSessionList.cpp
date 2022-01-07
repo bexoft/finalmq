@@ -28,6 +28,9 @@
 namespace finalmq {
 
 
+std::atomic_int64_t ProtocolSessionList::m_nextSessionId{1};
+
+
 ProtocolSessionList::ProtocolSessionList()
 {
 }
@@ -39,7 +42,7 @@ ProtocolSessionList::~ProtocolSessionList()
 std::int64_t ProtocolSessionList::addProtocolSession(IProtocolSessionPrivatePtr ProtocolSession, bool verified)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
-    std::int64_t sessionId = m_nextSessionId++;
+    std::int64_t sessionId = m_nextSessionId.fetch_add(1);
     m_connectionId2ProtocolSession[sessionId] = { ProtocolSession, verified, {} };
     lock.unlock();
     return sessionId;

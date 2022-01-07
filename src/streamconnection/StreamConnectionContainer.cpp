@@ -47,6 +47,9 @@
 namespace finalmq {
 
 
+std::atomic_int64_t StreamConnectionContainer::m_nextConnectionId{1};
+
+
 StreamConnectionContainer::StreamConnectionContainer()
 #if defined(WIN32) || defined(__MINGW32__)
     : m_poller(std::make_shared<PollerImplSelect>())
@@ -54,7 +57,7 @@ StreamConnectionContainer::StreamConnectionContainer()
     : m_poller(std::make_shared<PollerImplEpoll>())
 #endif
     , m_executorPollerThread(std::make_shared<Executor>())
-    , m_executorWorker(std::make_unique<ExecutorWorker>(1))
+    , m_executorWorker(std::make_unique<ExecutorWorker<ExecutorIgnoreOrderOfInstance>>(1))
 {
     m_executorPollerThread->registerActionNotification([this]() {
         m_poller->releaseWait(RELEASE_EXECUTEINPOLLERTHREAD);
@@ -210,12 +213,12 @@ void StreamConnectionContainer::unbind(const std::string& endpoint)
     locker.unlock();
 }
 
-IStreamConnectionPtr StreamConnectionContainer::connect(hybrid_ptr<IStreamConnectionCallback> callback, const std::string& endpoint, const ConnectProperties& connectionProperties)
+IStreamConnectionPtr StreamConnectionContainer::connect(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const ConnectProperties& connectionProperties)
 {
     IStreamConnectionPtr connection = createConnection(callback);
     if (connection)
     {
-        bool res = connect(connection, endpoint, connectionProperties);
+        bool res = connect(endpoint, connection, connectionProperties);
         if (!res)
         {
             connection = nullptr;
@@ -302,7 +305,7 @@ bool StreamConnectionContainer::createSocket(const IStreamConnectionPtr& streamC
 
 
 
-bool StreamConnectionContainer::connect(const IStreamConnectionPtr& streamConnection, const std::string& endpoint, const ConnectProperties& connectionProperties)
+bool StreamConnectionContainer::connect(const std::string& endpoint, const IStreamConnectionPtr& streamConnection, const ConnectProperties& connectionProperties)
 {
     assert(streamConnection);
     IStreamConnectionPrivatePtr connection = findConnectionById(streamConnection->getConnectionId());
@@ -455,9 +458,9 @@ IExecutorPtr StreamConnectionContainer::getPollerThreadExecutor() const
 IStreamConnectionPrivatePtr StreamConnectionContainer::addConnection(const SocketPtr& socket, ConnectionData& connectionData, hybrid_ptr<IStreamConnectionCallback> callback)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
-    std::int64_t connectionId = m_nextConnectionId++;
+    std::int64_t connectionId = m_nextConnectionId.fetch_add(1);
     connectionData.connectionId = connectionId;
-    IStreamConnectionPrivatePtr connection = std::make_shared<StreamConnection>(connectionData, socket, m_poller, m_executorPollerThread, callback);
+    IStreamConnectionPrivatePtr connection = std::make_shared<StreamConnection>(connectionData, socket, m_poller, callback);
     m_connectionId2Connection[connectionId] = connection;
     if (connectionData.sd != INVALID_SOCKET)
     {

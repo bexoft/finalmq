@@ -48,9 +48,9 @@ struct IStreamConnectionContainer
     virtual void init(int cycleTime = 100, FuncPollerLoopTimer funcTimer = {}, int checkReconnectInterval = 1000) = 0;
     virtual int bind(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const BindProperties& bindProperties = {}) = 0;
     virtual void unbind(const std::string& endpoint) = 0;
-    virtual IStreamConnectionPtr connect(hybrid_ptr<IStreamConnectionCallback> callback, const std::string& endpoint, const ConnectProperties& connectionProperties = {}) = 0;
+    virtual IStreamConnectionPtr connect(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const ConnectProperties& connectionProperties = {}) = 0;
     virtual IStreamConnectionPtr createConnection(hybrid_ptr<IStreamConnectionCallback> callback) = 0;
-    virtual bool connect(const IStreamConnectionPtr& streamConnection, const std::string& endpoint, const ConnectProperties& connectionProperties = {}) = 0;
+    virtual bool connect(const std::string& endpoint, const IStreamConnectionPtr& streamConnection, const ConnectProperties& connectionProperties = {}) = 0;
     virtual std::vector< IStreamConnectionPtr > getAllConnections() const = 0;
     virtual IStreamConnectionPtr getConnection(std::int64_t connectionId) const = 0;
     virtual void run() = 0;
@@ -72,9 +72,9 @@ private:
     virtual void init(int cycleTime = 100, FuncPollerLoopTimer funcTimer = {}, int checkReconnectInterval = 1000) override;
     virtual int bind(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const BindProperties& bindProperties = {}) override;
     virtual void unbind(const std::string& endpoint) override;
-    virtual IStreamConnectionPtr connect(hybrid_ptr<IStreamConnectionCallback> callback, const std::string& endpoint, const ConnectProperties& connectionProperties = {}) override;
+    virtual IStreamConnectionPtr connect(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const ConnectProperties& connectionProperties = {}) override;
     virtual IStreamConnectionPtr createConnection(hybrid_ptr<IStreamConnectionCallback> callback) override;
-    virtual bool connect(const IStreamConnectionPtr& streamConnection, const std::string& endpoint, const ConnectProperties& connectionProperties = {}) override;
+    virtual bool connect(const std::string& endpoint, const IStreamConnectionPtr& streamConnection, const ConnectProperties& connectionProperties = {}) override;
     virtual std::vector< IStreamConnectionPtr > getAllConnections() const override;
     virtual IStreamConnectionPtr getConnection(std::int64_t connectionId) const override;
     virtual void run() override;
@@ -107,7 +107,7 @@ private:
     std::unordered_map<SOCKET, BindData>                            m_sd2binds;
     std::unordered_map<std::int64_t, IStreamConnectionPrivatePtr>   m_connectionId2Connection;
     std::unordered_map<SOCKET, IStreamConnectionPrivatePtr>         m_sd2Connection;
-    std::int64_t                                                    m_nextConnectionId = 1;
+    static std::atomic_int64_t                                      m_nextConnectionId;
     bool                                                            m_terminatePollerLoop = false;
     int                                                             m_cycleTime = 100;
     int                                                             m_checkReconnectInterval = 1000;
