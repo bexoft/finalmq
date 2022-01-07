@@ -34,6 +34,7 @@ struct DescriptorInfo
 {
     void clear()
     {
+        sd = INVALID_SOCKET;
         readable = false;
         writable = false;
         disconnected = false;
