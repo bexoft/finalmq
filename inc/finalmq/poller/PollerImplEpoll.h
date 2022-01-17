@@ -27,6 +27,7 @@
 #include "Poller.h"
 #include <unordered_map>
 #include <array>
+#include <atomic>
 #include <mutex>
 
 
