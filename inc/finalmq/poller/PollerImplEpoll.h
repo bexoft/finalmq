@@ -27,6 +27,7 @@
 #include "Poller.h"
 #include <unordered_map>
 #include <array>
+#include <atomic>
 #include <mutex>
 
 
@@ -56,7 +57,7 @@ private:
     virtual void enableWrite(const SocketDescriptorPtr& fd) override;
     virtual void disableWrite(const SocketDescriptorPtr& fd) override;
     virtual const PollerResult& wait(std::int32_t timeout) override;
-    virtual void releaseWait(char info) override;
+    virtual void releaseWait(std::uint32_t info) override;
 
 private:
     void updateSocketDescriptors();
@@ -71,7 +72,8 @@ private:
 
     PollerResult        m_result;
     int                 m_fdEpoll = -1;
-    std::atomic_flag    m_socketDescriptorsStable;
+    std::atomic_flag    m_socketDescriptorsStable{};
+    std::atomic_uint32_t m_releaseFlags{};
     std::array<epoll_event, 32>     m_events;
 
 

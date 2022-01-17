@@ -468,7 +468,7 @@ static const std::string FMQ_PATH = "fmq_path";
 
 struct ThreadLocalData
 {
-    std::int16_t                                                changeId = 0;
+    std::int64_t                                                changeId = 0;
     std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>  name2entityNoLock;
     std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>>     entityId2entityNoLock;
 };

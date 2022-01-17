@@ -313,12 +313,7 @@ void PollerImplEpoll::collectSockets(int res)
                         // read pending bytes from control socket
                         std::vector<char> buffer(countRead);
                         OperatingSystem::instance().recv(sd, buffer.data(), buffer.size(), 0);
-                        char info = 0;
-                        for (size_t i = 0; i < buffer.size(); ++i)
-                        {
-                            info |= buffer[i];
-                        }
-                        m_result.releaseWait = info;
+                        m_result.releaseWait = m_releaseFlags.exchange(0, std::memory_order_acq_rel);
                     }
                     else
                     {
@@ -363,7 +358,7 @@ const PollerResult& PollerImplEpoll::wait(std::int32_t timeout)
     int res = 0;
     int err = 0;
 
-    if (!m_socketDescriptorsStable.test_and_set(std::memory_order_acquire))
+    if (!m_socketDescriptorsStable.test_and_set(std::memory_order_acq_rel))
     {
         std::unique_lock<std::mutex> locker(m_mutex);
         updateSocketDescriptors();
@@ -386,7 +381,7 @@ const PollerResult& PollerImplEpoll::wait(std::int32_t timeout)
 
     collectSockets(res);
 
-    if (!m_socketDescriptorsStable.test_and_set(std::memory_order_acquire))
+    if (!m_socketDescriptorsStable.test_and_set(std::memory_order_acq_rel))
     {
         std::unique_lock<std::mutex> locker(m_mutex);
         updateSocketDescriptors();
@@ -395,11 +390,13 @@ const PollerResult& PollerImplEpoll::wait(std::int32_t timeout)
     return m_result;
 }
 
-void PollerImplEpoll::releaseWait(char info)
+void PollerImplEpoll::releaseWait(std::uint32_t info)
 {
+    m_releaseFlags.fetch_or(info, std::memory_order_acq_rel);
     if (m_controlSocketWrite)
     {
-        OperatingSystem::instance().send(m_controlSocketWrite->getDescriptor(), &info, 1, 0);
+        char dummy = 0;
+        OperatingSystem::instance().send(m_controlSocketWrite->getDescriptor(), &dummy, 1, 0);
     }
 }
 

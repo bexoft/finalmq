@@ -122,7 +122,7 @@ struct IPoller
     virtual void enableWrite(const SocketDescriptorPtr& fd) = 0;
     virtual void disableWrite(const SocketDescriptorPtr& fd) = 0;
     virtual const PollerResult& wait(std::int32_t timeout) = 0;
-    virtual void releaseWait(char info) = 0;
+    virtual void releaseWait(std::uint32_t info) = 0;
 };
 
 typedef std::shared_ptr<IPoller> IPollerPtr;
