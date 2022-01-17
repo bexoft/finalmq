@@ -51,7 +51,7 @@ private:
     virtual void enableWrite(const SocketDescriptorPtr& fd) override;
     virtual void disableWrite(const SocketDescriptorPtr& fd) override;
     virtual const PollerResult& wait(std::int32_t timeout) override;
-    virtual void releaseWait(char info) override;
+    virtual void releaseWait(std::uint32_t info) override;
 
 private:
     inline static void copyFds(fd_set& dest, fd_set& source);
@@ -77,9 +77,9 @@ private:
     fd_set m_readfds{};
     fd_set m_writefds{};
     fd_set m_errorfds{};
-    std::atomic_flag m_socketDescriptorsStable;
-    std::atomic_flag m_sdMaxStable;
-    int m_releaseWaitExternal = 0;
+    std::atomic_flag m_socketDescriptorsStable{};
+    std::atomic_flag m_sdMaxStable{};
+    std::atomic_uint32_t m_releaseFlags{};
 
     // parameters that are const during select and collect.
     int m_sdMax = 0;
