@@ -27,6 +27,8 @@
 
 #include <assert.h>
 #include <iostream>
+#include <mutex>
+#include <atomic>
 
 
 namespace finalmq {
