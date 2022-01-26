@@ -151,13 +151,32 @@ std::mutex& OpenSslImpl::getMutex()
     return m_sslMutex;
 }
 
-std::unique_ptr<IOpenSsl> OpenSsl::m_instance;
+
+////////////////////////////////
+
+std::atomic<IOpenSsl*> OpenSsl::m_instance{};
+std::unique_ptr<IOpenSsl> OpenSsl::m_instanceUniquePtr;
+std::mutex OpenSsl::m_mutex;
 
 void OpenSsl::setInstance(std::unique_ptr<IOpenSsl>&& instance)
 {
-    m_instance = std::move(instance);
+    m_instanceUniquePtr = std::move(instance);
+    IOpenSsl* inst = m_instanceUniquePtr.get();
+    m_instance.store(inst, std::memory_order_release);
 }
 
+IOpenSsl* OpenSsl::createInstance()
+{
+    std::unique_lock<std::mutex>(m_mutex);
+    IOpenSsl* inst = m_instance.load(std::memory_order_relaxed);
+    if (!inst)
+    {
+        m_instanceUniquePtr = std::make_unique<OpenSslImpl>();
+        inst = m_instanceUniquePtr.get();
+        m_instance.store(inst, std::memory_order_relaxed);
+    }
+    return inst;
+}
 
 }   // namespace finalmq
 
