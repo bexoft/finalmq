@@ -24,6 +24,7 @@
 
 
 #include <memory>
+#include <mutex>
 
 #if defined(WIN32) || defined(__MINGW32__)
 #include <winsock2.h>
@@ -98,18 +99,29 @@ namespace finalmq {
     public:
         inline static IOperatingSystem& instance()
         {
-            if (!m_instance)
+            IOperatingSystem* inst = m_instance.load(std::memory_order_acquire);
+            if (!inst)
             {
-                m_instance = std::make_unique<OperatingSystemImpl>();
+                inst = createInstance();
             }
-            return *m_instance;
+            return *inst;
         }
-        static void setInstance(std::unique_ptr<IOperatingSystem>& instance);
+
+        /**
+        * Overwrite the default implementation, e.g. with a mock for testing purposes.
+        * This method is not thread-safe. Make sure that no one uses the current instance before
+        * calling this method.
+        */
+        static void setInstance(std::unique_ptr<IOperatingSystem>&& instance);
 
     private:
         OperatingSystem() = delete;
+        ~OperatingSystem() = delete;
+        static IOperatingSystem* createInstance();
 
-        static std::unique_ptr<IOperatingSystem> m_instance;
+        static std::atomic<IOperatingSystem*> m_instance;
+        static std::unique_ptr<IOperatingSystem> m_instanceUniquePtr;
+        static std::mutex m_mutex;
     };
 
 }   // namespace finalmq

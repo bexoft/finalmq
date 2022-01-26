@@ -65,8 +65,7 @@ protected:
     virtual void SetUp()
     {
         m_mockMockOperatingSystem = new MockIOperatingSystem;
-        std::unique_ptr<IOperatingSystem> iOperatingSystem(m_mockMockOperatingSystem);
-        OperatingSystem::setInstance(iOperatingSystem);
+        OperatingSystem::setInstance(std::unique_ptr<IOperatingSystem>(m_mockMockOperatingSystem));
         m_select = std::make_unique<PollerImplSelect>();
 
         SocketDescriptorPtr sd1 = std::make_shared<SocketDescriptor>(CONTROLSOCKET_READ);
@@ -84,8 +83,7 @@ protected:
         testing::Mock::VerifyAndClearExpectations(m_mockMockOperatingSystem);
         EXPECT_CALL(*m_mockMockOperatingSystem, closeSocket(_)).WillRepeatedly(Return(0));
         m_select = nullptr;
-        std::unique_ptr<IOperatingSystem> resetOperatingSystem;
-        OperatingSystem::setInstance(resetOperatingSystem);
+        OperatingSystem::setInstance({});   // destroy the mock
     }
 
     MockIOperatingSystem* m_mockMockOperatingSystem = nullptr;
