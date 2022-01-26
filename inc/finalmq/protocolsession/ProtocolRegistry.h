@@ -27,6 +27,8 @@
 
 #include <unordered_map>
 
+#include <mutex>
+#include <atomic>
 
 namespace finalmq {
 
@@ -92,9 +94,6 @@ private:
     static std::unique_ptr<IProtocolRegistry> m_instanceUniquePtr;
     static std::mutex m_mutex;
 };
-
-
-
 
 
 }   // namespace finalmq

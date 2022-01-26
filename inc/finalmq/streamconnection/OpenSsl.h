@@ -25,6 +25,8 @@
 #include "finalmq/logger/LogStream.h"
 
 #include <string>
+#include <mutex>
+#include <atomic>
 
 #ifdef USE_OPENSSL
 #include "openssl/ossl_typ.h"
