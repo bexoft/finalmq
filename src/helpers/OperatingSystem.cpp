@@ -344,7 +344,7 @@ namespace finalmq {
     //////////////////////////////////////
     /// OperatingSystem
 
-    std::atomic<IOperatingSystem*> OperatingSystem::m_instance = nullptr;
+    std::atomic<IOperatingSystem*> OperatingSystem::m_instance{};
     std::unique_ptr<IOperatingSystem> OperatingSystem::m_instanceUniquePtr;
     std::mutex OperatingSystem::m_mutex;
 
