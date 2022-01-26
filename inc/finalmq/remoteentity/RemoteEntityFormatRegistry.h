@@ -25,7 +25,8 @@
 #include "finalmq/protocolsession/ProtocolSessionContainer.h"
 #include "finalmq/remoteentity/IRemoteEntity.h"
 
-
+#include <mutex>
+#include <atomic>
 
 namespace finalmq {
 
@@ -90,18 +91,29 @@ class SYMBOLEXP RemoteEntityFormatRegistry
 public:
     inline static IRemoteEntityFormatRegistry& instance()
     {
-        if (!m_instance)
+        IRemoteEntityFormatRegistry* inst = m_instance.load(std::memory_order_acquire);
+        if (!inst)
         {
-            m_instance = std::make_unique<RemoteEntityFormatRegistryImpl>();
+            inst = createInstance();
         }
-        return *m_instance;
+        return *inst;
     }
-    static void setInstance(std::unique_ptr<IRemoteEntityFormatRegistry>& instance);
+
+    /**
+    * Overwrite the default implementation, e.g. with a mock for testing purposes.
+    * This method is not thread-safe. Make sure that no one uses the current instance before
+    * calling this method.
+    */
+    static void setInstance(std::unique_ptr<IRemoteEntityFormatRegistry>&& instance);
 
 private:
     RemoteEntityFormatRegistry() = delete;
+    ~RemoteEntityFormatRegistry() = delete;
+    static IRemoteEntityFormatRegistry* createInstance();
 
-    static std::unique_ptr<IRemoteEntityFormatRegistry> m_instance;
+    static std::atomic<IRemoteEntityFormatRegistry*> m_instance;
+    static std::unique_ptr<IRemoteEntityFormatRegistry> m_instanceUniquePtr;
+    static std::mutex m_mutex;
 };
 
 

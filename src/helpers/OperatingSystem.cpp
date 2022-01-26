@@ -344,11 +344,28 @@ namespace finalmq {
     //////////////////////////////////////
     /// OperatingSystem
 
-    std::unique_ptr<IOperatingSystem> OperatingSystem::m_instance;
+    std::atomic<IOperatingSystem*> OperatingSystem::m_instance{};
+    std::unique_ptr<IOperatingSystem> OperatingSystem::m_instanceUniquePtr;
+    std::mutex OperatingSystem::m_mutex;
 
-    void OperatingSystem::setInstance(std::unique_ptr<IOperatingSystem>& instance)
+    void OperatingSystem::setInstance(std::unique_ptr<IOperatingSystem>&& instance)
     {
-        m_instance = std::move(instance);
+        m_instanceUniquePtr = std::move(instance);
+        IOperatingSystem* inst = m_instanceUniquePtr.get();
+        m_instance.store(inst, std::memory_order_release);
+    }
+
+    IOperatingSystem* OperatingSystem::createInstance()
+    {
+        std::unique_lock<std::mutex>(m_mutex);
+        IOperatingSystem* inst = m_instance.load(std::memory_order_relaxed);
+        if (!inst)
+        {
+            m_instanceUniquePtr = std::make_unique<OperatingSystemImpl>();
+            inst = m_instanceUniquePtr.get();
+            m_instance.store(inst, std::memory_order_relaxed);
+        }
+        return inst;
     }
 
 }   // namespace finalmq

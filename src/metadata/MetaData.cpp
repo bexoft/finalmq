@@ -237,11 +237,28 @@ const std::unordered_map<std::string, MetaEnum> MetaData::getAllEnums() const
 
 ////////////////////////////////
 
-std::unique_ptr<IMetaData> MetaDataGlobal::m_instance;
+std::atomic<IMetaData*> MetaDataGlobal::m_instance{};
+std::unique_ptr<IMetaData> MetaDataGlobal::m_instanceUniquePtr;
+std::mutex MetaDataGlobal::m_mutex;
 
 void MetaDataGlobal::setInstance(std::unique_ptr<IMetaData>&& instance)
 {
-    m_instance = std::move(instance);
+    m_instanceUniquePtr = std::move(instance);
+    IMetaData* inst = m_instanceUniquePtr.get();
+    m_instance.store(inst, std::memory_order_release);
+}
+
+IMetaData* MetaDataGlobal::createInstance()
+{
+    std::unique_lock<std::mutex>(m_mutex);
+    IMetaData* inst = m_instance.load(std::memory_order_relaxed);
+    if (!inst)
+    {
+        m_instanceUniquePtr = std::make_unique<MetaData>();
+        inst = m_instanceUniquePtr.get();
+        m_instance.store(inst, std::memory_order_relaxed);
+    }
+    return inst;
 }
 
 }   // namespace finalmq

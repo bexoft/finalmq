@@ -57,13 +57,31 @@ void LoggerImpl::triggerLog(const LogContext& context, const char* text)
 
 
 
-std::unique_ptr<ILogger> Logger::m_instance;
+/////////////////////////////////////////////////////
 
-void Logger::setInstance(std::unique_ptr<ILogger>& instance)
+std::atomic<ILogger*> Logger::m_instance{};
+std::unique_ptr<ILogger> Logger::m_instanceUniquePtr;
+std::mutex Logger::m_mutex;
+
+void Logger::setInstance(std::unique_ptr<ILogger>&& instance)
 {
-    m_instance = std::move(instance);
+    m_instanceUniquePtr = std::move(instance);
+    ILogger* inst = m_instanceUniquePtr.get();
+    m_instance.store(inst, std::memory_order_release);
 }
 
+ILogger* Logger::createInstance()
+{
+    std::unique_lock<std::mutex>(m_mutex);
+    ILogger* inst = m_instance.load(std::memory_order_relaxed);
+    if (!inst)
+    {
+        m_instanceUniquePtr = std::make_unique<LoggerImpl>();
+        inst = m_instanceUniquePtr.get();
+        m_instance.store(inst, std::memory_order_relaxed);
+    }
+    return inst;
+}
 
 
 } // namespace finalmq

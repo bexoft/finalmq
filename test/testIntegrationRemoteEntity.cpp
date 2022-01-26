@@ -74,7 +74,7 @@ protected:
     {
         // reset logger
         std::unique_ptr<ILogger> noLogger;
-        Logger::setInstance(noLogger);
+        Logger::setInstance({});
     }
 
 };

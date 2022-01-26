@@ -63,14 +63,29 @@ IProtocolFactoryPtr ProtocolRegistryImpl::getProtocolFactory(int protocolId) con
 //////////////////////////////////////
 /// ProtocolRegistry
 
-std::unique_ptr<IProtocolRegistry> ProtocolRegistry::m_instance;
+std::atomic<IProtocolRegistry*> ProtocolRegistry::m_instance{};
+std::unique_ptr<IProtocolRegistry> ProtocolRegistry::m_instanceUniquePtr;
+std::mutex ProtocolRegistry::m_mutex;
 
-void ProtocolRegistry::setInstance(std::unique_ptr<IProtocolRegistry>& instance)
+void ProtocolRegistry::setInstance(std::unique_ptr<IProtocolRegistry>&& instance)
 {
-    m_instance = std::move(instance);
+    m_instanceUniquePtr = std::move(instance);
+    IProtocolRegistry* inst = m_instanceUniquePtr.get();
+    m_instance.store(inst, std::memory_order_release);
 }
 
-
+IProtocolRegistry* ProtocolRegistry::createInstance()
+{
+    std::unique_lock<std::mutex>(m_mutex);
+    IProtocolRegistry* inst = m_instance.load(std::memory_order_relaxed);
+    if (!inst)
+    {
+        m_instanceUniquePtr = std::make_unique<ProtocolRegistryImpl>();
+        inst = m_instanceUniquePtr.get();
+        m_instance.store(inst, std::memory_order_relaxed);
+    }
+    return inst;
+}
 
 
 }   // namespace finalmq

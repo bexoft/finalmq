@@ -26,8 +26,9 @@
 #include "finalmq/variant/VariantValueStruct.h"
 #include "finalmq/variant/VariantValues.h"
 
+#include <mutex>
+#include <atomic>
 
-//#include "finalmq/helpers/ModulenameFinalmq.h"
 
 
 using finalmq::remoteentity::MsgMode;
@@ -619,11 +620,28 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(IMessage& mess
 //////////////////////////////////////
 /// RemoteEntityFormat
 
-std::unique_ptr<IRemoteEntityFormatRegistry> RemoteEntityFormatRegistry::m_instance;
+std::atomic<IRemoteEntityFormatRegistry*> RemoteEntityFormatRegistry::m_instance{};
+std::unique_ptr<IRemoteEntityFormatRegistry> RemoteEntityFormatRegistry::m_instanceUniquePtr;
+std::mutex RemoteEntityFormatRegistry::m_mutex;
 
-void RemoteEntityFormatRegistry::setInstance(std::unique_ptr<IRemoteEntityFormatRegistry>& instance)
+void RemoteEntityFormatRegistry::setInstance(std::unique_ptr<IRemoteEntityFormatRegistry>&& instance)
 {
-    m_instance = std::move(instance);
+    m_instanceUniquePtr = std::move(instance);
+    IRemoteEntityFormatRegistry* inst = m_instanceUniquePtr.get();
+    m_instance.store(inst, std::memory_order_release);
+}
+
+IRemoteEntityFormatRegistry* RemoteEntityFormatRegistry::createInstance()
+{
+    std::unique_lock<std::mutex>(m_mutex);
+    IRemoteEntityFormatRegistry* inst = m_instance.load(std::memory_order_relaxed);
+    if (!inst)
+    {
+        m_instanceUniquePtr = std::make_unique<RemoteEntityFormatRegistryImpl>();
+        inst = m_instanceUniquePtr.get();
+        m_instance.store(inst, std::memory_order_relaxed);
+    }
+    return inst;
 }
 
 

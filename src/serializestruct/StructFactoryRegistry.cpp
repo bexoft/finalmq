@@ -53,15 +53,29 @@ std::shared_ptr<StructBase> StructFactoryRegistryImpl::createStruct(const std::s
 
 ////////////////////////////////
 
-std::unique_ptr<IStructFactoryRegistry> StructFactoryRegistry::m_instance;
+std::atomic<IStructFactoryRegistry*> StructFactoryRegistry::m_instance{};
+std::unique_ptr<IStructFactoryRegistry> StructFactoryRegistry::m_instanceUniquePtr;
+std::mutex StructFactoryRegistry::m_mutex;
 
 void StructFactoryRegistry::setInstance(std::unique_ptr<IStructFactoryRegistry>&& instance)
 {
-    m_instance = std::move(instance);
+    m_instanceUniquePtr = std::move(instance);
+    IStructFactoryRegistry* inst = m_instanceUniquePtr.get();
+    m_instance.store(inst, std::memory_order_release);
 }
 
-
-
+IStructFactoryRegistry* StructFactoryRegistry::createInstance()
+{
+    std::unique_lock<std::mutex>(m_mutex);
+    IStructFactoryRegistry* inst = m_instance.load(std::memory_order_relaxed);
+    if (!inst)
+    {
+        m_instanceUniquePtr = std::make_unique<StructFactoryRegistryImpl>();
+        inst = m_instanceUniquePtr.get();
+        m_instance.store(inst, std::memory_order_relaxed);
+    }
+    return inst;
+}
 
 
 }   // namespace finalmq

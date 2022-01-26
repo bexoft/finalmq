@@ -26,6 +26,8 @@
 
 #include <memory>
 #include <unordered_map>
+#include <mutex>
+#include <atomic>
 
 
 namespace finalmq {
@@ -56,20 +58,29 @@ class SYMBOLEXP StructFactoryRegistry
 public:
     inline static IStructFactoryRegistry& instance()
     {
-        if (!m_instance)
+        IStructFactoryRegistry* inst = m_instance.load(std::memory_order_acquire);
+        if (!inst)
         {
-            m_instance = std::make_unique<StructFactoryRegistryImpl>();
+            inst = createInstance();
         }
-        assert(m_instance);
-        return *m_instance.get();
+        return *inst;
     }
 
+    /**
+    * Overwrite the default implementation, e.g. with a mock for testing purposes.
+    * This method is not thread-safe. Make sure that no one uses the current instance before
+    * calling this method.
+    */
     static void setInstance(std::unique_ptr<IStructFactoryRegistry>&& instance);
 
 private:
     StructFactoryRegistry() = delete;
+    ~StructFactoryRegistry() = delete;
+    static IStructFactoryRegistry* createInstance();
 
-    static std::unique_ptr<IStructFactoryRegistry> m_instance;
+    static std::atomic<IStructFactoryRegistry*> m_instance;
+    static std::unique_ptr<IStructFactoryRegistry> m_instanceUniquePtr;
+    static std::mutex m_mutex;
 };
 
 

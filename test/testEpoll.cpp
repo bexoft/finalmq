@@ -64,8 +64,7 @@ protected:
     virtual void SetUp()
     {
         m_mockMockOperatingSystem = new MockIOperatingSystem;
-        std::unique_ptr<IOperatingSystem> iOperatingSystem(m_mockMockOperatingSystem);
-        OperatingSystem::setInstance(iOperatingSystem);
+        OperatingSystem::setInstance(std::unique_ptr<IOperatingSystem>(m_mockMockOperatingSystem));
         m_select = std::make_unique<PollerImplEpoll>();
 
         EXPECT_CALL(*m_mockMockOperatingSystem, epoll_create1(EPOLL_CLOEXEC)).Times(1)
@@ -90,8 +89,7 @@ protected:
         EXPECT_CALL(*m_mockMockOperatingSystem, close(EPOLL_FD)).Times(1).WillRepeatedly(Return(0));
         EXPECT_CALL(*m_mockMockOperatingSystem, closeSocket(_)).WillRepeatedly(Return(0));
         m_select = nullptr;
-        std::unique_ptr<IOperatingSystem> resetOperatingSystem;
-        OperatingSystem::setInstance(resetOperatingSystem);
+        OperatingSystem::setInstance({});
     }
 
     MockIOperatingSystem* m_mockMockOperatingSystem = nullptr;

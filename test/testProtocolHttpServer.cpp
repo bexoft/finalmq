@@ -57,8 +57,7 @@ protected:
     virtual void SetUp()
     {
         m_mockOperatingSystem = new MockIOperatingSystem;
-        std::unique_ptr<IOperatingSystem> iOperatingSystem(m_mockOperatingSystem);
-        OperatingSystem::setInstance(iOperatingSystem);
+        OperatingSystem::setInstance(std::unique_ptr<IOperatingSystem>(m_mockOperatingSystem));
 
         EXPECT_CALL(*m_mockOperatingSystem, socket(0, 0, 0)).WillOnce(Return(3));
         EXPECT_CALL(*m_mockOperatingSystem, setNonBlocking(3, true)).WillOnce(Return(3));
@@ -72,8 +71,8 @@ protected:
 
     virtual void TearDown()
     {
-        std::unique_ptr<IOperatingSystem> resetOperatingSystem;
-        OperatingSystem::setInstance(resetOperatingSystem);
+        m_socket = nullptr;
+        OperatingSystem::setInstance({});   // destroy the mock
     }
 
     MockIOperatingSystem*                   m_mockOperatingSystem = nullptr;

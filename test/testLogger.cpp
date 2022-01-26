@@ -71,8 +71,7 @@ TEST_F(TestLogger, test)
     EXPECT_CALL(mock, func(_, StrEq("Hello"))).Times(1);
     streamInfo << "Hello";
 
-    std::unique_ptr<ILogger> noLogger;
-    Logger::setInstance(noLogger);
+    Logger::setInstance({});
 
     EXPECT_CALL(mock, func(_, _)).Times(0);
     streamInfo << "World";

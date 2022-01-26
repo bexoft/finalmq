@@ -25,6 +25,8 @@
 #include "finalmq/logger/LogStream.h"
 
 #include <string>
+#include <mutex>
+#include <atomic>
 
 #ifdef USE_OPENSSL
 #include "openssl/ossl_typ.h"
@@ -105,19 +107,29 @@ class SYMBOLEXP OpenSsl
 public:
     inline static IOpenSsl& instance()
     {
-        if (!m_instance)
+        IOpenSsl* inst = m_instance.load(std::memory_order_acquire);
+        if (!inst)
         {
-            m_instance = std::make_unique<OpenSslImpl>();
+            inst = createInstance();
         }
-        return *m_instance;
+        return *inst;
     }
 
+    /**
+    * Overwrite the default implementation, e.g. with a mock for testing purposes.
+    * This method is not thread-safe. Make sure that no one uses the current instance before
+    * calling this method.
+    */
     static void setInstance(std::unique_ptr<IOpenSsl>&& instance);
 
 private:
     OpenSsl() = delete;
+    ~OpenSsl() = delete;
+    static IOpenSsl* createInstance();
 
-    static std::unique_ptr<IOpenSsl> m_instance;
+    static std::atomic<IOpenSsl*> m_instance;
+    static std::unique_ptr<IOpenSsl> m_instanceUniquePtr;
+    static std::mutex m_mutex;
 };
 
 
