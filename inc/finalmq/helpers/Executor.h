@@ -84,7 +84,7 @@ private:
 
     std::unordered_map<std::int64_t, std::int32_t>  m_storedIds;
     std::unordered_set<std::int64_t>                m_runningIds;
-    int                                 m_zeroIdCounter = 0;
+    int                                             m_zeroIdCounter = 0;
 };
 
 
@@ -143,18 +143,29 @@ class SYMBOLEXP GlobalExecutorWorker
 public:
     inline static IExecutorWorker& instance()
     {
-        if (!m_instance)
+        IExecutorWorker* inst = m_instance.load(std::memory_order_acquire);
+        if (!inst)
         {
-            m_instance = std::make_unique<ExecutorWorker<ExecutorIgnoreOrderOfInstance>>();
+            inst = createInstance();
         }
-        return *m_instance;
+        return *inst;
     }
-    static void setInstance(std::unique_ptr<IExecutorWorker>& instance);
+
+    /**
+    * Overwrite the default implementation, e.g. with a mock for testing purposes.
+    * This method is not thread-safe. Make sure that no one uses the current instance before
+    * calling this method.
+    */
+    static void setInstance(std::unique_ptr<IExecutorWorker>&& instance);
 
 private:
     GlobalExecutorWorker() = delete;
+    ~GlobalExecutorWorker() = delete;
+    static IExecutorWorker* createInstance();
 
-    static std::unique_ptr<IExecutorWorker> m_instance;
+    static std::atomic<IExecutorWorker*> m_instance;
+    static std::unique_ptr<IExecutorWorker> m_instanceUniquePtr;
+    static std::mutex m_mutex;
 };
 
 

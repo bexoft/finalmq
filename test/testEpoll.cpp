@@ -89,8 +89,7 @@ protected:
         EXPECT_CALL(*m_mockMockOperatingSystem, close(EPOLL_FD)).Times(1).WillRepeatedly(Return(0));
         EXPECT_CALL(*m_mockMockOperatingSystem, closeSocket(_)).WillRepeatedly(Return(0));
         m_select = nullptr;
-        std::unique_ptr<IOperatingSystem> resetOperatingSystem;
-        OperatingSystem::setInstance(resetOperatingSystem);
+        OperatingSystem::setInstance({});
     }
 
     MockIOperatingSystem* m_mockMockOperatingSystem = nullptr;
