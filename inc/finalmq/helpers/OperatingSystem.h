@@ -25,6 +25,7 @@
 
 #include <memory>
 #include <mutex>
+#include <atomic>
 
 #if defined(WIN32) || defined(__MINGW32__)
 #include <winsock2.h>
