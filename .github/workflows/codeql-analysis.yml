@@ -44,7 +44,7 @@ jobs:
       run: |
         sudo add-apt-repository ppa:maarten-fonville/protobuf
         sudo apt update
-        sudo apt install -y doxygen graphviz protobuf-compiler gcovr uuid-dev libprotobuf-dev libssl1.1-dev node-ejs npm
+        sudo apt install -y doxygen graphviz protobuf-compiler gcovr uuid-dev libprotobuf-dev libssl1.0-dev node-ejs npm
         sudo npm install ejs minimist
 
     # Initializes the CodeQL tools for scanning.
