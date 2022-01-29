@@ -274,7 +274,7 @@ void PollerImplSelect::updateSocketDescriptors()
 #if !defined(WIN32) && !defined(__MINGW32__)
     for (auto it = m_socketDescriptors.begin(); it != m_socketDescriptors.end(); ++it)
     {
-        m_sdMax = std::max(it->getDescriptor(), m_sdMax);
+        m_sdMax = std::max((*it)->getDescriptor(), m_sdMax);
     }
 #endif
 }
