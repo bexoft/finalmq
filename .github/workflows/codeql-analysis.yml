@@ -40,6 +40,13 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
+    - name: install pre-requisites 
+      run: |
+        sudo add-apt-repository ppa:maarten-fonville/protobuf
+        sudo apt update
+        sudo apt install -y doxygen graphviz protobuf-compiler gcovr uuid-dev libprotobuf-dev libssl-dev node-ejs npm
+        sudo npm install ejs minimist
+
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v1
