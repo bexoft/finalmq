@@ -44,10 +44,12 @@ static const int SOCKET_POLLOUT = 2;
 
 PollerImplSelect::PollerImplSelect()
     : m_socketDescriptorsStable{}
-    , m_sdMaxStable{}
+    , m_fdsReadStable{}
+    , m_fdsWriteStable{}
 {
     m_socketDescriptorsStable.test_and_set();
-    m_sdMaxStable.test_and_set();
+    m_fdsReadStable.test_and_set();
+    m_fdsWriteStable.test_and_set();
 }
 
 
@@ -73,14 +75,14 @@ void PollerImplSelect::init()
 void PollerImplSelect::addSocket(const SocketDescriptorPtr& fd)
 {
     std::unique_lock<std::mutex> locker(m_mutex);
-    auto result = m_socketDescriptors.insert(std::make_pair(fd, 0));
+    auto result = m_socketDescriptors.insert(fd);
     if (result.second)
     {
         if (!FD_ISSET(fd->getDescriptor(), &m_errorfdsCached))
         {
             FD_SET(fd->getDescriptor(), &m_errorfdsCached);
-            sockedDescriptorAndSdMaxHasChanged();
         }
+        sockedDescriptorsHaveChanged();
     }
     else
     {
@@ -93,7 +95,7 @@ void PollerImplSelect::addSocket(const SocketDescriptorPtr& fd)
 void PollerImplSelect::addSocketEnableRead(const SocketDescriptorPtr& fd)
 {
     std::unique_lock<std::mutex> locker(m_mutex);
-    auto result = m_socketDescriptors.insert(std::make_pair(fd, SOCKET_POLLIN));
+    auto result = m_socketDescriptors.insert(fd);
     if (result.second)
     {
         if (!FD_ISSET(fd->getDescriptor(), &m_readfdsCached) ||
@@ -101,8 +103,8 @@ void PollerImplSelect::addSocketEnableRead(const SocketDescriptorPtr& fd)
         {
             FD_SET(fd->getDescriptor(), &m_readfdsCached);
             FD_SET(fd->getDescriptor(), &m_errorfdsCached);
-            sockedDescriptorAndSdMaxHasChanged();
         }
+        sockedDescriptorsAndFdsReadHaveChanged();
     }
     else
     {
@@ -122,7 +124,7 @@ void PollerImplSelect::removeSocket(const SocketDescriptorPtr& fd)
         FD_CLR(fd->getDescriptor(), &m_writefdsCached);
         FD_CLR(fd->getDescriptor(), &m_errorfdsCached);
         m_socketDescriptors.erase(it);
-        sockedDescriptorAndSdMaxHasChanged();
+        sockedDescriptorsAndAllFdsHaveChanged();
     }
     else
     {
@@ -138,11 +140,10 @@ void PollerImplSelect::enableRead(const SocketDescriptorPtr& fd)
     auto it = m_socketDescriptors.find(fd);
     if (it != m_socketDescriptors.end())
     {
-        it->second |= SOCKET_POLLIN;
         if (!FD_ISSET(fd->getDescriptor(), &m_readfdsCached))
         {
             FD_SET(fd->getDescriptor(), &m_readfdsCached);
-            sdMaxHasChanged();
+            fdsReadHaveChanged();
         }
     }
     else
@@ -159,11 +160,10 @@ void PollerImplSelect::disableRead(const SocketDescriptorPtr& fd)
     auto it = m_socketDescriptors.find(fd);
     if (it != m_socketDescriptors.end())
     {
-        it->second &= ~SOCKET_POLLIN;
         if (FD_ISSET(fd->getDescriptor(), &m_readfdsCached))
         {
             FD_CLR(fd->getDescriptor(), &m_readfdsCached);
-            sdMaxHasChanged();
+            fdsReadHaveChanged();
         }
     }
     else
@@ -182,11 +182,10 @@ void PollerImplSelect::enableWrite(const SocketDescriptorPtr& fd)
     auto it = m_socketDescriptors.find(fd);
     if (it != m_socketDescriptors.end())
     {
-        it->second |= SOCKET_POLLOUT;
         if (!FD_ISSET(fd->getDescriptor(), &m_writefdsCached))
         {
             FD_SET(fd->getDescriptor(), &m_writefdsCached);
-            sdMaxHasChanged();
+            fdsWriteHaveChanged();
         }
     }
     else
@@ -203,11 +202,10 @@ void PollerImplSelect::disableWrite(const SocketDescriptorPtr& fd)
     auto it = m_socketDescriptors.find(fd);
     if (it != m_socketDescriptors.end())
     {
-        it->second &= ~SOCKET_POLLOUT;
         if (FD_ISSET(fd->getDescriptor(), &m_writefdsCached))
         {
             FD_CLR(fd->getDescriptor(), &m_writefdsCached);
-            sdMaxHasChanged();
+            fdsWriteHaveChanged();
         }
     }
     else
@@ -224,17 +222,38 @@ void PollerImplSelect::copyFds(fd_set& dest, fd_set& source)
 }
 
 
-void PollerImplSelect::sdMaxHasChanged()
+
+
+void PollerImplSelect::sockedDescriptorsHaveChanged()
 {
-    m_sdMaxStable.clear(std::memory_order_release);
+    m_socketDescriptorsStable.clear(std::memory_order_release);
     releaseWait(0);
 }
 
-
-void PollerImplSelect::sockedDescriptorAndSdMaxHasChanged()
+void PollerImplSelect::sockedDescriptorsAndFdsReadHaveChanged()
 {
     m_socketDescriptorsStable.clear(std::memory_order_release);
-    m_sdMaxStable.clear(std::memory_order_release);
+    m_fdsReadStable.clear(std::memory_order_release);
+    releaseWait(0);
+}
+
+void PollerImplSelect::sockedDescriptorsAndAllFdsHaveChanged()
+{
+    m_socketDescriptorsStable.clear(std::memory_order_release);
+    m_fdsReadStable.clear(std::memory_order_release);
+    m_fdsWriteStable.clear(std::memory_order_release);
+    releaseWait(0);
+}
+
+void PollerImplSelect::fdsReadHaveChanged()
+{
+    m_fdsReadStable.clear(std::memory_order_release);
+    releaseWait(0);
+}
+
+void PollerImplSelect::fdsWriteHaveChanged()
+{
+    m_fdsWriteStable.clear(std::memory_order_release);
     releaseWait(0);
 }
 
@@ -246,26 +265,28 @@ void PollerImplSelect::updateSocketDescriptors()
     m_socketDescriptorsConstForSelect.reserve(m_socketDescriptors.size());
     for (auto it = m_socketDescriptors.begin(); it != m_socketDescriptors.end(); ++it)
     {
-        m_socketDescriptorsConstForSelect.push_back(it->first);
+        m_socketDescriptorsConstForSelect.push_back(*it);
     }
-}
 
-void PollerImplSelect::updateSdMax()
-{
+    copyFds(m_errorfdsOriginal, m_errorfdsCached);
+
     m_sdMax = 0;
 #if !defined(WIN32) && !defined(__MINGW32__)
     for (auto it = m_socketDescriptors.begin(); it != m_socketDescriptors.end(); ++it)
     {
-        // if an event is active (readable or writeable)
-        if (it->second)
-        {
-            m_sdMax = std::max(it->first->getDescriptor(), m_sdMax);
-        }
+        m_sdMax = std::max((*it)->getDescriptor(), m_sdMax);
     }
 #endif
-    copyFds(m_readfdsOriginal,  m_readfdsCached);
+}
+
+void PollerImplSelect::updateFdsRead()
+{
+    copyFds(m_readfdsOriginal, m_readfdsCached);
+}
+
+void PollerImplSelect::updateFdsWrite()
+{
     copyFds(m_writefdsOriginal, m_writefdsCached);
-    copyFds(m_errorfdsOriginal, m_errorfdsCached);
 }
 
 
@@ -368,15 +389,25 @@ const PollerResult& PollerImplSelect::wait(std::int32_t timeout)
         int err = 0;
         do
         {
-            if (!m_socketDescriptorsStable.test_and_set(std::memory_order_acq_rel))
+            bool socketDescriptorsStable = m_socketDescriptorsStable.test_and_set(std::memory_order_acq_rel);
+            bool fdsReadStable = m_fdsReadStable.test_and_set(std::memory_order_acq_rel);
+            bool fdsWriteStable = m_fdsWriteStable.test_and_set(std::memory_order_acq_rel);
+
+            if (!socketDescriptorsStable || !fdsReadStable || !fdsWriteStable)
             {
                 std::unique_lock<std::mutex> locker(m_mutex);
-                updateSocketDescriptors();
-            }
-            if (!m_sdMaxStable.test_and_set(std::memory_order_acq_rel))
-            {
-                std::unique_lock<std::mutex> locker(m_mutex);
-                updateSdMax();
+                if (!socketDescriptorsStable)
+                {
+                    updateSocketDescriptors();
+                }
+                if (!fdsReadStable)
+                {
+                    updateFdsRead();
+                }
+                if (!fdsWriteStable)
+                {
+                    updateFdsWrite();
+                }
             }
 
             // copy fds

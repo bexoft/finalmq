@@ -24,7 +24,6 @@
 
 #include "Poller.h"
 #include <unordered_set>
-#include <unordered_map>
 #include <atomic>
 #include <mutex>
 
@@ -56,16 +55,22 @@ private:
 private:
     inline static void copyFds(fd_set& dest, fd_set& source);
     void updateSocketDescriptors();
-    void updateSdMax();
-    void sdMaxHasChanged();
-    void sockedDescriptorAndSdMaxHasChanged();
+    void updateFdsRead();
+    void updateFdsWrite();
+
+    void sockedDescriptorsHaveChanged();
+    void sockedDescriptorsAndFdsReadHaveChanged();
+    void sockedDescriptorsAndAllFdsHaveChanged();
+    void fdsReadHaveChanged();
+    void fdsWriteHaveChanged();
+
     void collectSockets(int res);
 
 
     SocketDescriptorPtr m_controlSocketRead;
     SocketDescriptorPtr m_controlSocketWrite;
 
-    std::unordered_map<SocketDescriptorPtr, int> m_socketDescriptors;
+    std::unordered_set<SocketDescriptorPtr> m_socketDescriptors;
 
     PollerResult m_result;
     fd_set m_readfdsCached{};
@@ -78,7 +83,8 @@ private:
     fd_set m_writefds{};
     fd_set m_errorfds{};
     std::atomic_flag m_socketDescriptorsStable{};
-    std::atomic_flag m_sdMaxStable{};
+    std::atomic_flag m_fdsReadStable{};
+    std::atomic_flag m_fdsWriteStable{};
     std::atomic_uint32_t m_releaseFlags{};
 
     // parameters that are const during select and collect.
