@@ -71,8 +71,14 @@ protected:
 
     virtual void TearDown()
     {
+        EXPECT_CALL(*m_mockOperatingSystem, closeSocket(m_socket->getSocketDescriptor()->getDescriptor())).WillOnce(Return(0));
         m_socket = nullptr;
         OperatingSystem::setInstance({});   // destroy the mock
+        if (m_protocol->getConnection())
+        {
+            EXPECT_CALL(*m_mockStreamConnection, disconnect()).WillOnce(Return());
+        }
+        m_protocol = nullptr;
     }
 
     MockIOperatingSystem*                   m_mockOperatingSystem = nullptr;
