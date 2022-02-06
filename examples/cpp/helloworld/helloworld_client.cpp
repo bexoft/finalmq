@@ -156,9 +156,9 @@ int main()
     // A client can be started before the server is started. The connect is been retried in the background till the server
     // becomes available. Use the ConnectProperties to change the reconnect properties
     // (default is: try to connect every 5s forever till the server becomes available).
-    //IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:7777:headersize:protobuf");
+    IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:7777:headersize:protobuf");
     //IProtocolSessionPtr sessionClient2 = entityContainer.connect("tcp://localhost:7777:headersize:protobuf");
-    IProtocolSessionPtr sessionClient = entityContainer.connect("ipc://my_uds:headersize:protobuf");
+    //IProtocolSessionPtr sessionClient = entityContainer.connect("ipc://my_uds:headersize:protobuf");
 
 #ifdef TWOCONNECTIONS
     IProtocolSessionPtr sessionClient2 = entityContainer.connect("ipc://my_uds:headersize:protobuf");
