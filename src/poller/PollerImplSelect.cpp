@@ -74,48 +74,52 @@ void PollerImplSelect::init()
 
 void PollerImplSelect::addSocket(const SocketDescriptorPtr& fd)
 {
+    bool changed = false;
     std::unique_lock<std::mutex> locker(m_mutex);
     auto result = m_socketDescriptors.insert(fd);
     if (result.second)
     {
-        if (!FD_ISSET(fd->getDescriptor(), &m_errorfdsCached))
-        {
-            FD_SET(fd->getDescriptor(), &m_errorfdsCached);
-        }
-        sockedDescriptorsHaveChanged();
+        FD_SET(fd->getDescriptor(), &m_errorfdsCached);
+        changed = true;
     }
     else
     {
         // socket already added
     }
     locker.unlock();
+    if (changed)
+    {
+        sockedDescriptorsHaveChanged();
+    }
 }
 
 
 void PollerImplSelect::addSocketEnableRead(const SocketDescriptorPtr& fd)
 {
+    bool changed = false;
     std::unique_lock<std::mutex> locker(m_mutex);
     auto result = m_socketDescriptors.insert(fd);
     if (result.second)
     {
-        if (!FD_ISSET(fd->getDescriptor(), &m_readfdsCached) ||
-            !FD_ISSET(fd->getDescriptor(), &m_errorfdsCached))
-        {
-            FD_SET(fd->getDescriptor(), &m_readfdsCached);
-            FD_SET(fd->getDescriptor(), &m_errorfdsCached);
-        }
-        sockedDescriptorsAndFdsReadHaveChanged();
+        FD_SET(fd->getDescriptor(), &m_readfdsCached);
+        FD_SET(fd->getDescriptor(), &m_errorfdsCached);
+        changed = true;
     }
     else
     {
         // socket already added
     }
     locker.unlock();
+    if (changed)
+    {
+        sockedDescriptorsAndFdsReadHaveChanged();
+    }
 }
 
 
 void PollerImplSelect::removeSocket(const SocketDescriptorPtr& fd)
 {
+    bool changed = false;
     std::unique_lock<std::mutex> locker(m_mutex);
     auto it = m_socketDescriptors.find(fd);
     if (it != m_socketDescriptors.end())
@@ -124,18 +128,23 @@ void PollerImplSelect::removeSocket(const SocketDescriptorPtr& fd)
         FD_CLR(fd->getDescriptor(), &m_writefdsCached);
         FD_CLR(fd->getDescriptor(), &m_errorfdsCached);
         m_socketDescriptors.erase(it);
-        sockedDescriptorsAndAllFdsHaveChanged();
+        changed = true;
     }
     else
     {
         // socket not added
     }
     locker.unlock();
+    if (changed)
+    {
+        sockedDescriptorsAndAllFdsHaveChanged();
+    }
 }
 
 
 void PollerImplSelect::enableRead(const SocketDescriptorPtr& fd)
 {
+    bool changed = false;
     std::unique_lock<std::mutex> locker(m_mutex);
     auto it = m_socketDescriptors.find(fd);
     if (it != m_socketDescriptors.end())
@@ -143,7 +152,7 @@ void PollerImplSelect::enableRead(const SocketDescriptorPtr& fd)
         if (!FD_ISSET(fd->getDescriptor(), &m_readfdsCached))
         {
             FD_SET(fd->getDescriptor(), &m_readfdsCached);
-            fdsReadHaveChanged();
+            changed = true;
         }
     }
     else
@@ -151,11 +160,16 @@ void PollerImplSelect::enableRead(const SocketDescriptorPtr& fd)
         // error: socket not added
     }
     locker.unlock();
+    if (changed)
+    {
+        fdsReadHaveChanged();
+    }
 }
 
 
 void PollerImplSelect::disableRead(const SocketDescriptorPtr& fd)
 {
+    bool changed = false;
     std::unique_lock<std::mutex> locker(m_mutex);
     auto it = m_socketDescriptors.find(fd);
     if (it != m_socketDescriptors.end())
@@ -163,7 +177,7 @@ void PollerImplSelect::disableRead(const SocketDescriptorPtr& fd)
         if (FD_ISSET(fd->getDescriptor(), &m_readfdsCached))
         {
             FD_CLR(fd->getDescriptor(), &m_readfdsCached);
-            fdsReadHaveChanged();
+            changed = true;
         }
     }
     else
@@ -171,6 +185,10 @@ void PollerImplSelect::disableRead(const SocketDescriptorPtr& fd)
         // error: socket not added
     }
     locker.unlock();
+    if (changed)
+    {
+        fdsReadHaveChanged();
+    }
 }
 
 
@@ -178,6 +196,7 @@ void PollerImplSelect::disableRead(const SocketDescriptorPtr& fd)
 
 void PollerImplSelect::enableWrite(const SocketDescriptorPtr& fd)
 {
+    bool changed = false;
     std::unique_lock<std::mutex> locker(m_mutex);
     auto it = m_socketDescriptors.find(fd);
     if (it != m_socketDescriptors.end())
@@ -185,7 +204,7 @@ void PollerImplSelect::enableWrite(const SocketDescriptorPtr& fd)
         if (!FD_ISSET(fd->getDescriptor(), &m_writefdsCached))
         {
             FD_SET(fd->getDescriptor(), &m_writefdsCached);
-            fdsWriteHaveChanged();
+            changed = true;
         }
     }
     else
@@ -193,11 +212,16 @@ void PollerImplSelect::enableWrite(const SocketDescriptorPtr& fd)
         // error: socket not added
     }
     locker.unlock();
+    if (changed)
+    {
+        fdsWriteHaveChanged();
+    }
 }
 
 
 void PollerImplSelect::disableWrite(const SocketDescriptorPtr& fd)
 {
+    bool changed = false;
     std::unique_lock<std::mutex> locker(m_mutex);
     auto it = m_socketDescriptors.find(fd);
     if (it != m_socketDescriptors.end())
@@ -205,7 +229,7 @@ void PollerImplSelect::disableWrite(const SocketDescriptorPtr& fd)
         if (FD_ISSET(fd->getDescriptor(), &m_writefdsCached))
         {
             FD_CLR(fd->getDescriptor(), &m_writefdsCached);
-            fdsWriteHaveChanged();
+            changed = true;
         }
     }
     else
@@ -213,6 +237,10 @@ void PollerImplSelect::disableWrite(const SocketDescriptorPtr& fd)
         // error: socket not added
     }
     locker.unlock();
+    if (changed)
+    {
+        fdsWriteHaveChanged();
+    }
 }
 
 
@@ -436,12 +464,6 @@ const PollerResult& PollerImplSelect::wait(std::int32_t timeout)
         collectSockets(res);
 
     } while (!m_result.error && !m_result.timeout && m_result.releaseWait == 0 && (m_result.descriptorInfos.size() == 0));
-
-    if (!m_socketDescriptorsStable.test_and_set(std::memory_order_acq_rel))
-    {
-        std::unique_lock<std::mutex> locker(m_mutex);
-        updateSocketDescriptors();
-    }
 
     return m_result;
 }
