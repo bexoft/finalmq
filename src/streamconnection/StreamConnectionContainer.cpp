@@ -89,16 +89,14 @@ std::unordered_map<SOCKET, StreamConnectionContainer::BindData>::iterator Stream
 }
 
 
-IStreamConnectionPrivatePtr StreamConnectionContainer::findConnectionBySd(SOCKET sd)
+IStreamConnectionPrivatePtr StreamConnectionContainer::findConnectionBySdOnlyForPollerLoop(SOCKET sd)
 {
-    std::unique_lock<std::mutex> lock(m_mutex);
     IStreamConnectionPrivatePtr connection;
-    auto it = m_sd2Connection.find(sd);
-    if (it != m_sd2Connection.end())
+    auto it = m_sd2ConnectionPollerLoop.find(sd);
+    if (it != m_sd2ConnectionPollerLoop.end())
     {
         connection = it->second;
     }
-    lock.unlock();
     return connection;
 }
 
@@ -288,6 +286,7 @@ bool StreamConnectionContainer::createSocket(const IStreamConnectionPtr& streamC
             assert(streamConnectionPrivate);
             streamConnectionPrivate->updateConnectionData(connectionData);
             m_sd2Connection[connectionData.sd] = it->second;
+            m_connectionsStable.clear(std::memory_order_relaxed);
         }
         else
         {
@@ -414,6 +413,7 @@ void StreamConnectionContainer::removeConnection(const SocketDescriptorPtr& sd, 
     if (sd)
     {
         m_sd2Connection.erase(sd->getDescriptor());
+        m_connectionsStable.clear(std::memory_order_relaxed);
     }
     m_connectionId2Connection.erase(connectionId);
     lock.unlock();
@@ -465,6 +465,7 @@ IStreamConnectionPrivatePtr StreamConnectionContainer::addConnection(const Socke
     if (connectionData.sd != INVALID_SOCKET)
     {
         m_sd2Connection[connectionData.sd] = connection;
+        m_connectionsStable.clear(std::memory_order_relaxed);
     }
     lock.unlock();
 
@@ -767,6 +768,12 @@ void StreamConnectionContainer::pollerLoop()
     {
         const PollerResult& result = m_poller->wait(1000);
 
+        if (m_connectionsStable.test_and_set(std::memory_order_acq_rel))
+        {
+            std::unique_lock<std::mutex> lock(m_mutex);
+            m_sd2ConnectionPollerLoop = m_sd2Connection;
+        }
+
         if (result.releaseWait)
         {
             if (result.releaseWait & RELEASE_EXECUTEINPOLLERTHREAD)
@@ -820,7 +827,7 @@ void StreamConnectionContainer::pollerLoop()
             for (size_t i = 0; i < result.descriptorInfos.size(); ++i)
             {
                 const DescriptorInfo& info = result.descriptorInfos[i];
-                IStreamConnectionPrivatePtr connection = findConnectionBySd(info.sd);
+                IStreamConnectionPrivatePtr connection = findConnectionBySdOnlyForPollerLoop(info.sd);
                 if (connection)
                 {
                     SocketPtr socket = connection->getSocketPrivate();
@@ -838,7 +845,7 @@ void StreamConnectionContainer::pollerLoop()
                         bool success = sslAccepting(itSslAccepting->second);
                         if (success)
                         {
-                            IStreamConnectionPrivatePtr connection = findConnectionBySd(info.sd);
+                            IStreamConnectionPrivatePtr connection = findConnectionBySdOnlyForPollerLoop(info.sd);
                             if (connection)
                             {
                                 SocketPtr socket = connection->getSocketPrivate();
