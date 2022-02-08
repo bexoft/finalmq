@@ -292,10 +292,7 @@ void PollerImplEpoll::collectSockets(int res)
                 }
                 assert(descriptorInfo);
                 assert(descriptorInfo->sd == sd);
-                if (!descriptorInfo->disconnected)
-                {
-                    descriptorInfo->writable = true;
-                }
+                descriptorInfo->writable = true;
             }
             if (pe.events & EPOLLIN)
             {
@@ -329,11 +326,8 @@ void PollerImplEpoll::collectSockets(int res)
                     }
                     assert(descriptorInfo);
                     assert(descriptorInfo->sd == sd);
-                    if (!descriptorInfo->disconnected)
-                    {
-                        descriptorInfo->readable = true;
-                        descriptorInfo->bytesToRead = countRead;
-                    }
+                    descriptorInfo->readable = true;
+                    descriptorInfo->bytesToRead = countRead;
                 }
             }
         }

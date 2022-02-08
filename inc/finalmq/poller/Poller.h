@@ -92,7 +92,7 @@ struct PollerResult
 {
     bool error = false;
     bool timeout = false;
-    char releaseWait = 0;
+    std::uint32_t releaseWait = 0;
     DescriptorInfos descriptorInfos;
 
     void clear()

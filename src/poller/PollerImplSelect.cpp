@@ -378,10 +378,7 @@ void PollerImplSelect::collectSockets(int res)
                 }
                 assert(descriptorInfo);
                 assert(descriptorInfo->sd == sd);
-                if (!descriptorInfo->disconnected)
-                {
-                    descriptorInfo->writable = true;
-                }
+                descriptorInfo->writable = true;
             }
             if (FD_ISSET(sd, &m_errorfds))
             {
@@ -445,9 +442,9 @@ const PollerResult& PollerImplSelect::wait(std::int32_t timeout)
 
             timeval tim;
             tim.tv_sec = 0;
-            tim.tv_usec = static_cast<suseconds_t>(timeout) * MILLITOMICRO;
+            tim.tv_usec = static_cast<long>(timeout) * MILLITOMICRO;
 
-            res = OperatingSystem::instance().select(m_sdMax + 1, &m_readfds, &m_writefds, &m_errorfds, &tim);
+            res = OperatingSystem::instance().select(m_sdMax + 1, &m_readfds, &m_writefds, &m_errorfds, (timeout >= 0) ? &tim : nullptr);
 
             if (res == -1)
             {
