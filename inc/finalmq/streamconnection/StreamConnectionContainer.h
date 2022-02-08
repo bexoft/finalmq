@@ -91,7 +91,7 @@ private:
     };
 
     std::unordered_map<SOCKET, BindData>::iterator findBindByEndpoint(const std::string& endpoint);
-    IStreamConnectionPrivatePtr findConnectionBySd(SOCKET sd);
+    IStreamConnectionPrivatePtr findConnectionBySdOnlyForPollerLoop(SOCKET sd);
     IStreamConnectionPrivatePtr findConnectionById(std::int64_t connectionId);
     bool createSocket(const IStreamConnectionPtr& streamConnection, ConnectionData& connectionData, const ConnectProperties& connectionProperties);
     void removeConnection(const SocketDescriptorPtr& sd, std::int64_t connectionId);
@@ -107,6 +107,8 @@ private:
     std::unordered_map<SOCKET, BindData>                            m_sd2binds;
     std::unordered_map<std::int64_t, IStreamConnectionPrivatePtr>   m_connectionId2Connection;
     std::unordered_map<SOCKET, IStreamConnectionPrivatePtr>         m_sd2Connection;
+    std::unordered_map<SOCKET, IStreamConnectionPrivatePtr>         m_sd2ConnectionPollerLoop;
+    std::atomic_flag                                                m_connectionsStable{};
     static std::atomic_int64_t                                      m_nextConnectionId;
     bool                                                            m_terminatePollerLoop = false;
     int                                                             m_cycleTime = 100;
