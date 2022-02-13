@@ -286,7 +286,7 @@ bool StreamConnectionContainer::createSocket(const IStreamConnectionPtr& streamC
             assert(streamConnectionPrivate);
             streamConnectionPrivate->updateConnectionData(connectionData);
             m_sd2Connection[connectionData.sd] = it->second;
-            m_connectionsStable.clear(std::memory_order_relaxed);
+            m_connectionsStable.clear(std::memory_order_release);
         }
         else
         {
@@ -413,7 +413,7 @@ void StreamConnectionContainer::removeConnection(const SocketDescriptorPtr& sd, 
     if (sd)
     {
         m_sd2Connection.erase(sd->getDescriptor());
-        m_connectionsStable.clear(std::memory_order_relaxed);
+        m_connectionsStable.clear(std::memory_order_release);
     }
     m_connectionId2Connection.erase(connectionId);
     lock.unlock();
@@ -465,7 +465,7 @@ IStreamConnectionPrivatePtr StreamConnectionContainer::addConnection(const Socke
     if (connectionData.sd != INVALID_SOCKET)
     {
         m_sd2Connection[connectionData.sd] = connection;
-        m_connectionsStable.clear(std::memory_order_relaxed);
+        m_connectionsStable.clear(std::memory_order_release);
     }
     lock.unlock();
 

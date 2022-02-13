@@ -23,9 +23,14 @@
 #pragma once
 
 #include "Logger.h"
-#include "finalmq/helpers/FmqDefines.h"
 #include <string>
 #include <sstream>
+
+#if defined(WIN32)
+#define METHODNAME  __FUNCTION__
+#else
+#define METHODNAME  __FUNCTION__
+#endif
 
 
 
@@ -48,19 +53,13 @@ public:
 
     inline static LogStream getStream(const LogContext& context)
     {
-        return LogStream(context);
+        return { context };
     }
 
-    explicit LogStream(const LogContext& context);
-    LogStream(const LogStream& rhs);
-    LogStream(LogStream&& rhs) noexcept;
-
-    ~LogStream();
-
-    /**
-     * Flush the contents of the stream buffer.
-     **/
-    void flush();
+    inline ~LogStream()
+    {
+        Logger::instance().triggerLog(m_context, m_buffer.str().c_str());
+    }
 
     /**
      * Stream in arbitrary types and objects.
@@ -70,21 +69,44 @@ public:
     template<typename T>
     LogStream& operator <<(const T& t)
     {
-        (*m_buffer) << t;
+        m_buffer << t;
         return *this;
     }
 
-    LogStream& operator <<(const char* t);
-    LogStream& operator <<(const std::string& t);
+    inline LogStream& operator <<(const char* t)
+    {
+        m_buffer << t;
+        return *this;
+    }
+
+    inline LogStream& operator <<(const std::string& t)
+    {
+        m_buffer << t;
+        return *this;
+    }
 
     /**
     * Set the width output on LogStream
     **/
-    std::streamsize width(std::streamsize wide );
+    inline std::streamsize width(std::streamsize wide)
+    {
+        return m_buffer.width(wide);
+    }
 
 private:
+    inline LogStream(const LogContext& context)
+        : m_context(context)
+        , m_buffer()
+    {
+    }
+
+    LogStream(const LogStream& rhs) = delete;
+    const LogStream& operator =(const LogStream& rhs) = delete;
+    LogStream(LogStream&& rhs) = delete;
+    const LogStream& operator =(const LogStream&& rhs) = delete;
+
     const LogContext&   m_context;
-    std::ostringstream* m_buffer = nullptr;
+    std::ostringstream  m_buffer;
 };
 
 
