@@ -34,8 +34,8 @@
 #include "finalmq/helpers/ModulenameFinalmq.h"
 
 
-using finalmq::remoteentity::MsgMode;
-using finalmq::remoteentity::Header;
+using finalmq::MsgMode;
+using finalmq::Header;
 
 
 
@@ -259,7 +259,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parseData(const BufferRef& 
             {
                 if (data == nullptr)
                 {
-                    data = std::make_shared<remoteentity::RawDataMessage>();
+                    data = std::make_shared<RawDataMessage>();
                 }
                 data->setRawData(type, CONTENT_TYPE, buffer, sizeDataInStream);
             }

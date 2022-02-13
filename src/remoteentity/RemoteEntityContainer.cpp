@@ -27,9 +27,9 @@
 #include "finalmq/remoteentity/entitydata.fmq.h"
 
 
-using finalmq::remoteentity::MsgMode;
-using finalmq::remoteentity::Status;
-using finalmq::remoteentity::Header;
+using finalmq::MsgMode;
+using finalmq::Status;
+using finalmq::Header;
 
 
 namespace finalmq {

@@ -45,7 +45,7 @@ using finalmq::FmqRegistryClient;
 using finalmq::qt::GetObjectTreeRequest;
 using finalmq::qt::GetObjectTreeReply;
 using finalmq::qt::ObjectData;
-//using finalmq::remoteentity::RawBytes;
+//using finalmq::RawBytes;
 
 
 

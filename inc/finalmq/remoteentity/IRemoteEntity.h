@@ -49,19 +49,19 @@ struct ReceiveData
     IProtocolSessionPtr         session;
     std::string                 virtualSessionId;
     IMessagePtr                 message;
-    remoteentity::Header        header;
+    Header        header;
     std::shared_ptr<StructBase> structBase;
 };
 
 
 
 
-typedef std::function<void(PeerId peerId, remoteentity::Status status, const StructBasePtr& structBase)> FuncReply;
-typedef std::function<void(PeerId peerId, remoteentity::Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase)> FuncReplyMeta;
+typedef std::function<void(PeerId peerId, Status status, const StructBasePtr& structBase)> FuncReply;
+typedef std::function<void(PeerId peerId, Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase)> FuncReplyMeta;
 typedef std::function<void(RequestContextPtr& requestContext, const StructBasePtr& structBase)> FuncCommand;
 typedef std::function<void(PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, PeerEvent peerEvent, bool incoming)> FuncPeerEvent;
-typedef std::function<bool(CorrelationId correlationId, remoteentity::Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase)> FuncReplyEvent; // return bool reply handled -> skip looking for reply lambda.
-typedef std::function<void(PeerId peerId, remoteentity::Status status)> FuncReplyConnect;
+typedef std::function<bool(CorrelationId correlationId, Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase)> FuncReplyEvent; // return bool reply handled -> skip looking for reply lambda.
+typedef std::function<void(PeerId peerId, Status status)> FuncReplyConnect;
 
 
 struct IRemoteEntity
@@ -86,19 +86,19 @@ struct IRemoteEntity
     template<class R>
     bool requestReply(const PeerId& peerId,
         const std::string& path, const StructBase& structBase,
-        std::function<void(PeerId peerId, remoteentity::Status status, const std::shared_ptr<R>& reply)> funcReply)
+        std::function<void(PeerId peerId, Status status, const std::shared_ptr<R>& reply)> funcReply)
     {
         assert(funcReply);
-        bool ok = sendRequest(peerId, path, structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, remoteentity::Status status, const StructBasePtr& structBase) {
+        bool ok = sendRequest(peerId, path, structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, Status status, const StructBasePtr& structBase) {
             std::shared_ptr<R> reply;
             bool typeOk = (!structBase || structBase->getStructInfo().getTypeName() == R::structInfo().getTypeName());
-            if (status == remoteentity::Status::STATUS_OK && structBase && typeOk)
+            if (status == Status::STATUS_OK && structBase && typeOk)
             {
                 reply = std::static_pointer_cast<R>(structBase);
             }
             if (!typeOk)
             {
-                status = remoteentity::Status::STATUS_WRONG_REPLY_TYPE;
+                status = Status::STATUS_WRONG_REPLY_TYPE;
             }
             funcReply(peerId, status, reply);
         });
@@ -125,19 +125,19 @@ struct IRemoteEntity
         const std::string& path,
         IMessage::Metainfo&& metainfo,
         const StructBase& structBase,
-        std::function<void(PeerId peerId, remoteentity::Status status, IMessage::Metainfo& metainfo, const std::shared_ptr<R>& reply)> funcReply)
+        std::function<void(PeerId peerId, Status status, IMessage::Metainfo& metainfo, const std::shared_ptr<R>& reply)> funcReply)
     {
         assert(funcReply);
-        bool ok = sendRequest(peerId, path, std::move(metainfo), structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, remoteentity::Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase) {
+        bool ok = sendRequest(peerId, path, std::move(metainfo), structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase) {
             std::shared_ptr<R> reply;
             bool typeOk = (!structBase || structBase->getStructInfo().getTypeName() == R::structInfo().getTypeName());
-            if (status == remoteentity::Status::STATUS_OK && structBase && typeOk)
+            if (status == Status::STATUS_OK && structBase && typeOk)
             {
                 reply = std::static_pointer_cast<R>(structBase);
             }
             if (!typeOk)
             {
-                status = remoteentity::Status::STATUS_WRONG_REPLY_TYPE;
+                status = Status::STATUS_WRONG_REPLY_TYPE;
             }
             funcReply(peerId, status, metainfo, reply);
         });
@@ -158,19 +158,19 @@ struct IRemoteEntity
     template<class R>
     bool requestReply(const PeerId& peerId,
         const StructBase& structBase,
-        std::function<void(PeerId peerId, remoteentity::Status status, const std::shared_ptr<R>& reply)> funcReply)
+        std::function<void(PeerId peerId, Status status, const std::shared_ptr<R>& reply)> funcReply)
     {
         assert(funcReply);
-        bool ok = sendRequest(peerId, structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, remoteentity::Status status, const StructBasePtr& structBase) {
+        bool ok = sendRequest(peerId, structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, Status status, const StructBasePtr& structBase) {
             std::shared_ptr<R> reply;
             bool typeOk = (!structBase || structBase->getStructInfo().getTypeName() == R::structInfo().getTypeName());
-            if (status == remoteentity::Status::STATUS_OK && structBase && typeOk)
+            if (status == Status::STATUS_OK && structBase && typeOk)
             {
                 reply = std::static_pointer_cast<R>(structBase);
             }
             if (!typeOk)
             {
-                status = remoteentity::Status::STATUS_WRONG_REPLY_TYPE;
+                status = Status::STATUS_WRONG_REPLY_TYPE;
             }
             funcReply(peerId, status, reply);
         });
@@ -195,19 +195,19 @@ struct IRemoteEntity
     bool requestReply(const PeerId& peerId,
         IMessage::Metainfo&& metainfo,
         const StructBase& structBase,
-        std::function<void(PeerId peerId, remoteentity::Status status, IMessage::Metainfo& metainfo, const std::shared_ptr<R>& reply)> funcReply)
+        std::function<void(PeerId peerId, Status status, IMessage::Metainfo& metainfo, const std::shared_ptr<R>& reply)> funcReply)
     {
         assert(funcReply);
-        bool ok = sendRequest(peerId, std::move(metainfo), structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, remoteentity::Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase) {
+        bool ok = sendRequest(peerId, std::move(metainfo), structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase) {
             std::shared_ptr<R> reply;
             bool typeOk = (!structBase || structBase->getStructInfo().getTypeName() == R::structInfo().getTypeName());
-            if (status == remoteentity::Status::STATUS_OK && structBase && typeOk)
+            if (status == Status::STATUS_OK && structBase && typeOk)
             {
                 reply = std::static_pointer_cast<R>(structBase);
             }
             if (!typeOk)
             {
-                status = remoteentity::Status::STATUS_WRONG_REPLY_TYPE;
+                status = Status::STATUS_WRONG_REPLY_TYPE;
             }
             funcReply(peerId, status, metainfo, reply);
         });

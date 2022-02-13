@@ -123,7 +123,7 @@ public:
     {
     }
 
-    void operator() (PeerId /*peerIdRegistry*/, remoteentity::Status /*status*/, const std::shared_ptr<GetServiceReply>& reply)
+    void operator() (PeerId /*peerIdRegistry*/, Status /*status*/, const std::shared_ptr<GetServiceReply>& reply)
     {
         bool connectDone = false;
         bool retry = false;
@@ -282,7 +282,7 @@ void FmqRegistryClient::getService(const std::string& serviceName, FuncGetServic
         PeerId peerIdRegistry = m_entityRegistry->connect(sessionRegistry, "fmqreg");
 
         m_entityRegistry->requestReply<GetServiceReply>(peerIdRegistry, GetService{remainingServiceName}, [sessionRegistry, funcGetServiceReply{std::move(funcGetServiceReply)}]
-                (PeerId /*peerId*/, remoteentity::Status status, const std::shared_ptr<GetServiceReply>& reply) {
+                (PeerId /*peerId*/, Status status, const std::shared_ptr<GetServiceReply>& reply) {
             sessionRegistry->disconnect();
             if (funcGetServiceReply)
             {
@@ -306,7 +306,7 @@ void FmqRegistryClient::registerService(const finalmq::fmqreg::Service& service,
     if (session)
     {
         PeerId peerId = m_entityRegistry->connect(session, "fmqreg");
-        m_entityRegistry->sendRequest(peerId, RegisterService{service}, [session] (PeerId /*peerId*/, remoteentity::Status /*status*/, const StructBasePtr& /*reply*/) {
+        m_entityRegistry->sendRequest(peerId, RegisterService{service}, [session] (PeerId /*peerId*/, Status /*status*/, const StructBasePtr& /*reply*/) {
             session->disconnect();
         });
     }

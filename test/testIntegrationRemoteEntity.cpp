@@ -46,10 +46,10 @@ class MockEvents
 {
 public:
     MOCK_METHOD(void, testRequest, (const RequestContextPtr& requestContext, const std::shared_ptr<TestRequest>& request));
-    MOCK_METHOD(void, testReply, (PeerId peerId, remoteentity::Status status, const std::shared_ptr<TestReply>& reply));
+    MOCK_METHOD(void, testReply, (PeerId peerId, Status status, const std::shared_ptr<TestReply>& reply));
     MOCK_METHOD(void, peerEvent, (PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, PeerEvent peerEvent, bool incoming));
     MOCK_METHOD(void, connEvent, (const IProtocolSessionPtr& session, ConnectionEvent connectionEvent));
-    MOCK_METHOD(void, connectReply, (PeerId peerId, remoteentity::Status status));
+    MOCK_METHOD(void, connectReply, (PeerId peerId, Status status));
 };
 
 
@@ -142,8 +142,8 @@ TEST_F(TestIntegrationRemoteEntity, testProto)
     EXPECT_CALL(mockEventsClient, peerEvent(_, sessionClient, entityServer.getEntityId(), PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
     EXPECT_CALL(mockEventsServer, peerEvent(_, _, entityClient.getEntityId(), PeerEvent(PeerEvent::PEER_DISCONNECTED), true)).Times(1);
     EXPECT_CALL(mockEventsClient, peerEvent(_, sessionClient, entityServer.getEntityId(), PeerEvent(PeerEvent::PEER_DISCONNECTED), false)).Times(1);
-    EXPECT_CALL(mockEventsClient, connectReply(_, remoteentity::Status(remoteentity::Status::STATUS_OK))).Times(1);
-    PeerId peerId = entityClient.connect(sessionClient, "MyServer", [&mockEventsClient] (PeerId peerId, remoteentity::Status status) {
+    EXPECT_CALL(mockEventsClient, connectReply(_, Status(Status::STATUS_OK))).Times(1);
+    PeerId peerId = entityClient.connect(sessionClient, "MyServer", [&mockEventsClient] (PeerId peerId, Status status) {
         mockEventsClient.connectReply(peerId, status);
     });
 
@@ -152,8 +152,8 @@ TEST_F(TestIntegrationRemoteEntity, testProto)
     auto& expectReply = EXPECT_CALL(mockEventsClient, testReply(peerId, _, _)).Times(LOOP);
     for (int i = 0; i < LOOP; ++i)
     {
-        entityClient.requestReply<TestReply>(peerId, TestRequest{DATA_REQUEST}, [&mockEventsClient] (PeerId peerId, remoteentity::Status status, const std::shared_ptr<TestReply>& reply) {
-            ASSERT_EQ(status, remoteentity::Status::STATUS_OK);
+        entityClient.requestReply<TestReply>(peerId, TestRequest{DATA_REQUEST}, [&mockEventsClient] (PeerId peerId, Status status, const std::shared_ptr<TestReply>& reply) {
+            ASSERT_EQ(status, Status::STATUS_OK);
             ASSERT_NE(reply, nullptr);
             ASSERT_EQ(reply->datareply, DATA_REPLY);
             mockEventsClient.testReply(peerId, status, reply);
@@ -203,8 +203,8 @@ TEST_F(TestIntegrationRemoteEntity, testJson)
     EXPECT_CALL(mockEventsClient, peerEvent(_, sessionClient, entityServer.getEntityId(), PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
     EXPECT_CALL(mockEventsServer, peerEvent(_, _, entityClient.getEntityId(), PeerEvent(PeerEvent::PEER_DISCONNECTED), true)).Times(1);
     EXPECT_CALL(mockEventsClient, peerEvent(_, sessionClient, entityServer.getEntityId(), PeerEvent(PeerEvent::PEER_DISCONNECTED), false)).Times(1);
-    EXPECT_CALL(mockEventsClient, connectReply(_, remoteentity::Status(remoteentity::Status::STATUS_OK))).Times(1);
-    PeerId peerId = entityClient.connect(sessionClient, "MyServer", [&mockEventsClient] (PeerId peerId, remoteentity::Status status) {
+    EXPECT_CALL(mockEventsClient, connectReply(_, Status(Status::STATUS_OK))).Times(1);
+    PeerId peerId = entityClient.connect(sessionClient, "MyServer", [&mockEventsClient] (PeerId peerId, Status status) {
         mockEventsClient.connectReply(peerId, status);
     });
 
@@ -213,7 +213,7 @@ TEST_F(TestIntegrationRemoteEntity, testJson)
     auto& expectReply = EXPECT_CALL(mockEventsClient, testReply(peerId, _, _)).Times(LOOP);
     for (int i = 0; i < LOOP; ++i)
     {
-        entityClient.requestReply<TestReply>(peerId, TestRequest{DATA_REQUEST}, [&mockEventsClient] (PeerId peerId, remoteentity::Status status, const std::shared_ptr<TestReply>& reply) {
+        entityClient.requestReply<TestReply>(peerId, TestRequest{DATA_REQUEST}, [&mockEventsClient] (PeerId peerId, Status status, const std::shared_ptr<TestReply>& reply) {
             ASSERT_EQ(reply->datareply, DATA_REPLY);
             mockEventsClient.testReply(peerId, status, reply);
         });
@@ -260,8 +260,8 @@ TEST_F(TestIntegrationRemoteEntity, testSslProto)
     EXPECT_CALL(mockEventsClient, peerEvent(_, sessionClient, entityServer.getEntityId(), PeerEvent(PeerEvent::PEER_CONNECTED), false)).Times(1);
     EXPECT_CALL(mockEventsServer, peerEvent(_, _, entityClient.getEntityId(), PeerEvent(PeerEvent::PEER_DISCONNECTED), true)).Times(1);
     EXPECT_CALL(mockEventsClient, peerEvent(_, sessionClient, entityServer.getEntityId(), PeerEvent(PeerEvent::PEER_DISCONNECTED), false)).Times(1);
-    EXPECT_CALL(mockEventsClient, connectReply(_, remoteentity::Status(remoteentity::Status::STATUS_OK))).Times(1);
-    PeerId peerId = entityClient.connect(sessionClient, "MyServer", [&mockEventsClient] (PeerId peerId, remoteentity::Status status) {
+    EXPECT_CALL(mockEventsClient, connectReply(_, Status(Status::STATUS_OK))).Times(1);
+    PeerId peerId = entityClient.connect(sessionClient, "MyServer", [&mockEventsClient] (PeerId peerId, Status status) {
         mockEventsClient.connectReply(peerId, status);
     });
 
@@ -270,7 +270,7 @@ TEST_F(TestIntegrationRemoteEntity, testSslProto)
     auto& expectReply = EXPECT_CALL(mockEventsClient, testReply(peerId, _, _)).Times(LOOP);
     for (int i = 0; i < LOOP; ++i)
     {
-        entityClient.requestReply<TestReply>(peerId, TestRequest{DATA_REQUEST}, [&mockEventsClient] (PeerId peerId, remoteentity::Status status, const std::shared_ptr<TestReply>& reply) {
+        entityClient.requestReply<TestReply>(peerId, TestRequest{DATA_REQUEST}, [&mockEventsClient] (PeerId peerId, Status status, const std::shared_ptr<TestReply>& reply) {
             ASSERT_EQ(reply->datareply, DATA_REPLY);
             mockEventsClient.testReply(peerId, status, reply);
         });
@@ -318,7 +318,7 @@ TEST_F(TestIntegrationRemoteEntity, testProtoLateConnect)
     EXPECT_CALL(mockEventsServer, peerEvent(_, _, entityClient.getEntityId(), PeerEvent(PeerEvent::PEER_DISCONNECTED), true)).Times(1);
     EXPECT_CALL(mockEventsClient, peerEvent(_, _, entityServer.getEntityId(), PeerEvent(PeerEvent::PEER_DISCONNECTED), false)).Times(1);
 
-    PeerId peerId = entityClient.createPeer([&mockEventsClient] (PeerId peerId, remoteentity::Status status) {
+    PeerId peerId = entityClient.createPeer([&mockEventsClient] (PeerId peerId, Status status) {
             mockEventsClient.connectReply(peerId, status);
     });
 
@@ -327,8 +327,8 @@ TEST_F(TestIntegrationRemoteEntity, testProtoLateConnect)
     auto& expectReply = EXPECT_CALL(mockEventsClient, testReply(peerId, _, _)).Times(LOOP);
     for (int i = 0; i < LOOP; ++i)
     {
-        entityClient.requestReply<TestReply>(peerId, TestRequest{DATA_REQUEST}, [&mockEventsClient] (PeerId peerId, remoteentity::Status status, const std::shared_ptr<TestReply>& reply) {
-            ASSERT_EQ(status, remoteentity::Status::STATUS_OK);
+        entityClient.requestReply<TestReply>(peerId, TestRequest{DATA_REQUEST}, [&mockEventsClient] (PeerId peerId, Status status, const std::shared_ptr<TestReply>& reply) {
+            ASSERT_EQ(status, Status::STATUS_OK);
             ASSERT_NE(reply, nullptr);
             ASSERT_EQ(reply->datareply, DATA_REPLY);
             mockEventsClient.testReply(peerId, status, reply);
@@ -337,7 +337,7 @@ TEST_F(TestIntegrationRemoteEntity, testProtoLateConnect)
 
     IProtocolSessionPtr sessionClient = entityContainerClient.connect("tcp://localhost:7788:headersize:protobuf");
 
-    EXPECT_CALL(mockEventsClient, connectReply(_, remoteentity::Status(remoteentity::Status::STATUS_OK))).Times(1);
+    EXPECT_CALL(mockEventsClient, connectReply(_, Status(Status::STATUS_OK))).Times(1);
     entityClient.connect(peerId, sessionClient, "MyServer");
 
     waitTillDone(expectReply, 15000);
