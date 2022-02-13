@@ -31,9 +31,9 @@
 
 
 
-using finalmq::remoteentity::MsgMode;
-using finalmq::remoteentity::Status;
-using finalmq::remoteentity::Header;
+using finalmq::MsgMode;
+using finalmq::Status;
+using finalmq::Header;
 
 
 namespace finalmq {
@@ -91,7 +91,7 @@ int RemoteEntityFormatRegistryImpl::getContentType(const std::string& contentTyp
 
 
 
-bool RemoteEntityFormatRegistryImpl::serialize(IMessage& message, int contentType, const remoteentity::Header& header, const StructBase* structBase)
+bool RemoteEntityFormatRegistryImpl::serialize(IMessage& message, int contentType, const Header& header, const StructBase* structBase)
 {
     auto it = m_contentTypeToFormat.find(contentType);
     if (it != m_contentTypeToFormat.end())
@@ -104,7 +104,7 @@ bool RemoteEntityFormatRegistryImpl::serialize(IMessage& message, int contentTyp
 }
 
 
-void RemoteEntityFormatRegistryImpl::serializeHeaderToMetainfo(IMessage& message, const remoteentity::Header& header)
+void RemoteEntityFormatRegistryImpl::serializeHeaderToMetainfo(IMessage& message, const Header& header)
 {
     IMessage::Metainfo& metainfo = message.getAllMetainfo();
     if (!header.destname.empty())
@@ -143,7 +143,7 @@ bool RemoteEntityFormatRegistryImpl::serializeData(IMessage& message, int conten
 }
 
 
-inline static bool shallSend(const remoteentity::Header& header, const IProtocolSessionPtr& session)
+inline static bool shallSend(const Header& header, const IProtocolSessionPtr& session)
 {
     if ((header.mode != MsgMode::MSG_REPLY) ||
         (header.corrid != CORRELATIONID_NONE) || 
@@ -156,7 +156,7 @@ inline static bool shallSend(const remoteentity::Header& header, const IProtocol
 
 
 
-static void statusToProtocolStatus(remoteentity::Status status, Variant& controlData, IMessage::Metainfo* metainfo, const IProtocolSessionPtr& session)
+static void statusToProtocolStatus(Status status, Variant& controlData, IMessage::Metainfo* metainfo, const IProtocolSessionPtr& session)
 {
     controlData.add(FMQ_HTTP, HTTP_RESPONSE);
     switch (status)
@@ -220,7 +220,7 @@ static void statusToProtocolStatus(remoteentity::Status status, Variant& control
     }
 }
 
-static void metainfoToHeader(remoteentity::Header& header, IMessage::Metainfo& metainfo)
+static void metainfoToHeader(Header& header, IMessage::Metainfo& metainfo)
 {
     header.meta.reserve(metainfo.size() * 2);
     for (auto it = metainfo.begin(); it != metainfo.end(); ++it)
@@ -232,7 +232,7 @@ static void metainfoToHeader(remoteentity::Header& header, IMessage::Metainfo& m
 }
 
 
-bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, const std::string& virtualSessionId, remoteentity::Header& header, Variant&& echoData, const StructBase* structBase, IMessage::Metainfo* metainfo, Variant* controlData)
+bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, const std::string& virtualSessionId, Header& header, Variant&& echoData, const StructBase* structBase, IMessage::Metainfo* metainfo, Variant* controlData)
 {
     bool ok = true;
     assert(session);
@@ -262,9 +262,9 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, co
             {
                 Variant& controlDataTmp = message->getControlData();
                 statusToProtocolStatus(header.status, controlDataTmp, metainfo, session);
-                if (structBase && structBase->getStructInfo().getTypeName() == remoteentity::RawBytes::structInfo().getTypeName())
+                if (structBase && structBase->getStructInfo().getTypeName() == RawBytes::structInfo().getTypeName())
                 {
-                    pureData = &static_cast<const remoteentity::RawBytes*>(structBase)->data;
+                    pureData = &static_cast<const RawBytes*>(structBase)->data;
                 }
             }
 
@@ -343,27 +343,27 @@ static void metainfoToMessage(IMessage& message, std::vector<std::string>& meta)
 
 
 
-inline static bool isDestinationIdDefined(const remoteentity::Header& header)
+inline static bool isDestinationIdDefined(const Header& header)
 {
     return (header.destid != ENTITYID_INVALID && header.destid != ENTITYID_DEFAULT);
 }
 
-inline static bool isDestinationDefined(const remoteentity::Header& header)
+inline static bool isDestinationDefined(const Header& header)
 {
     return (!header.destname.empty() || (header.destid != ENTITYID_INVALID && header.destid != ENTITYID_DEFAULT));
 }
 
-inline static bool isTypeDefined(const remoteentity::Header& header)
+inline static bool isTypeDefined(const Header& header)
 {
     return (!header.type.empty());
 }
 
-inline static bool isSubPathDefined(const remoteentity::Header& header)
+inline static bool isSubPathDefined(const Header& header)
 {
     return (!header.path.empty());
 }
 
-inline static bool isDestAndSubPathDefined(const remoteentity::Header& header)
+inline static bool isDestAndSubPathDefined(const Header& header)
 {
     return (isDestinationDefined(header) && isSubPathDefined(header));
 }
@@ -391,7 +391,7 @@ static size_t findEndOfPath(const char* buffer)
 
 
 
-std::string RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, remoteentity::Header& header)
+std::string RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header)
 {
     const IMessage::Metainfo& metainfo = message.getAllMetainfo();
     auto itPath = metainfo.find(FMQ_PATH);
@@ -554,7 +554,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainf
 
     std::shared_ptr<StructBase> structBase;
 
-    if (header.type != remoteentity::RawBytes::structInfo().getTypeName())
+    if (header.type != RawBytes::structInfo().getTypeName())
     {
         // special feature for the browser: json data can be written into the path
         if (bufferRef.second == 0 && !data.empty())
@@ -572,7 +572,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainf
     }
     else
     {
-        std::shared_ptr<remoteentity::RawBytes> structRawBytes = std::make_shared<remoteentity::RawBytes>();
+        std::shared_ptr<RawBytes> structRawBytes = std::make_shared<RawBytes>();
         structRawBytes->data = { bufferRef.first, bufferRef.first + bufferRef.second };
         structBase = structRawBytes;
     }
@@ -607,9 +607,9 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(IMessage& mess
 //
 //    BufferRef bufferRef = message.getReceivePayload();
 //
-//    std::shared_ptr<remoteentity::RawBytes> structBytes = std::make_shared<remoteentity::RawBytes>();
+//    std::shared_ptr<RawBytes> structBytes = std::make_shared<RawBytes>();
 //    structBytes->data = { bufferRef.first, bufferRef.first + bufferRef.second };
-//    header.type = remoteentity::RawBytes::structInfo().getTypeName();
+//    header.type = RawBytes::structInfo().getTypeName();
 //
 //    return structBytes;
 //}

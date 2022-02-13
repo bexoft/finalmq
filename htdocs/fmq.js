@@ -30,7 +30,7 @@ class FmqEntity
 	
 	connect()
 	{
-		this.requestReply('finalmq.remoteentity.ConnectEntity', null, function(outparams, context) {
+		this.requestReply('finalmq.ConnectEntity', null, function(outparams, context) {
 			if (outparams.fmqheader.status == 'STATUS_OK')
 			{
 				context._this._id = outparams.fmqheader.srcid;

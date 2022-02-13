@@ -1,7 +1,7 @@
 {
 	"imports":[
 	],
-    "namespace":"finalmq.remoteentity",
+    "namespace":"finalmq",
     "enums": [
         {"type":"MsgMode","desc":"","entries":[
             {"name":"MSG_REQUEST",      "id":0,     "desc":"The message is a request"},

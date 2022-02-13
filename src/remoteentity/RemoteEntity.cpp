@@ -28,12 +28,12 @@
 #include <algorithm>
 
 
-using finalmq::remoteentity::MsgMode;
-using finalmq::remoteentity::Status;
-using finalmq::remoteentity::Header;
-using finalmq::remoteentity::ConnectEntity;
-using finalmq::remoteentity::ConnectEntityReply;
-using finalmq::remoteentity::DisconnectEntity;
+using finalmq::MsgMode;
+using finalmq::Status;
+using finalmq::Header;
+using finalmq::ConnectEntity;
+using finalmq::ConnectEntityReply;
+using finalmq::DisconnectEntity;
 
 
 namespace finalmq {
@@ -285,7 +285,7 @@ std::shared_ptr<PeerManager::Peer> PeerManager::getPeer(const PeerId& peerId) co
 
 
 
-PeerManager::ReadyToSend PeerManager::getRequestHeader(const PeerId& peerId, const std::string& path, const StructBase& structBase, CorrelationId correlationId, remoteentity::Header& header, IProtocolSessionPtr& session, std::string& virtualSessionId)
+PeerManager::ReadyToSend PeerManager::getRequestHeader(const PeerId& peerId, const std::string& path, const StructBase& structBase, CorrelationId correlationId, Header& header, IProtocolSessionPtr& session, std::string& virtualSessionId)
 {
     ReadyToSend readyToSend = RTS_PEER_NOT_AVAILABLE;
 
@@ -725,7 +725,7 @@ PeerId RemoteEntity::createPublishPeer(const IProtocolSessionPtr& session, const
 void RemoteEntity::sendConnectEntity(PeerId peerId, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect)
 {
     requestReply<ConnectEntityReply>(peerId, {}, ConnectEntity{ m_entityName },
-                                     [this, funcReplyConnect] (PeerId peerId, remoteentity::Status status,
+                                     [this, funcReplyConnect] (PeerId peerId, Status status,
                                          IMessage::Metainfo& metainfo, const std::shared_ptr<ConnectEntityReply>& replyReceived) {
         if (funcReplyConnect && *funcReplyConnect)
         {
@@ -776,7 +776,7 @@ void RemoteEntity::disconnect(PeerId peerId)
 }
 
 
-void RemoteEntity::removePeer(PeerId peerId, remoteentity::Status status)
+void RemoteEntity::removePeer(PeerId peerId, Status status)
 {
     if (peerId != PEERID_INVALID)
     {

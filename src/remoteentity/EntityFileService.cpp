@@ -37,8 +37,8 @@ EntityFileServer::EntityFileServer(const std::string& baseDirectory)
     {
         m_baseDirectory += '/';
     }
-    registerCommand<remoteentity::ConnectEntity>([this](const RequestContextPtr& requestContext, const std::shared_ptr<remoteentity::ConnectEntity>& /*request*/) {
-        requestContext->reply(remoteentity::Status::STATUS_ENTITY_NOT_FOUND);
+    registerCommand<ConnectEntity>([this](const RequestContextPtr& requestContext, const std::shared_ptr<ConnectEntity>& /*request*/) {
+        requestContext->reply(Status::STATUS_ENTITY_NOT_FOUND);
     });
 
     registerCommandFunction("*tail*", "", [this](RequestContextPtr& requestContext, const StructBasePtr& /*structBase*/) {
@@ -53,7 +53,7 @@ EntityFileServer::EntityFileServer(const std::string& baseDirectory)
         if (!handeled)
         {
             // not found
-            requestContext->reply(finalmq::remoteentity::Status::STATUS_ENTITY_NOT_FOUND);
+            requestContext->reply(finalmq::Status::STATUS_ENTITY_NOT_FOUND);
         }
     });
 }

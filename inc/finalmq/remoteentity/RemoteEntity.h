@@ -43,10 +43,8 @@ struct IProtocolSession;
 typedef std::shared_ptr<IProtocolSession> IProtocolSessionPtr;
 
 
-namespace remoteentity {
-    class Status;
-    class Header;
-}
+class Status;
+class Header;
 
 
 
@@ -102,7 +100,7 @@ public:
     void updatePeer(PeerId peerId, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName);
     bool removePeer(PeerId peerId, bool& incoming);
     PeerId getPeerId(std::int64_t sessionId, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName) const;
-    ReadyToSend getRequestHeader(const PeerId& peerId, const std::string& path, const StructBase& structBase, CorrelationId correlationId, remoteentity::Header& header, IProtocolSessionPtr& session, std::string& virtualSessionId);
+    ReadyToSend getRequestHeader(const PeerId& peerId, const std::string& path, const StructBase& structBase, CorrelationId correlationId, Header& header, IProtocolSessionPtr& session, std::string& virtualSessionId);
     std::string getEntityName(const PeerId& peerId);
     PeerId addPeer(const IProtocolSessionPtr& session, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName, bool incoming, bool& added, const std::function<void()>& funcBeforeFirePeerEvent);
     PeerId addPeer();
@@ -162,7 +160,7 @@ public:
     {
         if (!m_replySent)
         {
-            reply(remoteentity::Status::STATUS_NO_REPLY);
+            reply(Status::STATUS_NO_REPLY);
         }
     }
 
@@ -182,7 +180,7 @@ public:
     {
         if (!m_replySent)
         {
-            remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, remoteentity::Status::STATUS_OK, {}, structBase.getStructInfo().getTypeName(), m_correlationId, {} };
+            Header header{ m_entityIdDest, "", m_entityIdSrc, MsgMode::MSG_REPLY, Status::STATUS_OK, {}, structBase.getStructInfo().getTypeName(), m_correlationId, {} };
             RemoteEntityFormatRegistry::instance().send(m_session, m_virtualSessionId, header, std::move(m_echoData), &structBase, metainfo);
             m_replySent = true;
         }
@@ -192,17 +190,17 @@ public:
     {
         if (!m_replySent)
         {
-            remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, remoteentity::Status::STATUS_OK, {}, {}, m_correlationId, {} };
+            Header header{ m_entityIdDest, "", m_entityIdSrc, MsgMode::MSG_REPLY, Status::STATUS_OK, {}, {}, m_correlationId, {} };
             RemoteEntityFormatRegistry::instance().send(m_session, m_virtualSessionId, header, std::move(m_echoData), nullptr, metainfo, &controlData);
             m_replySent = true;
         }
     }
 
-    void reply(remoteentity::Status status)
+    void reply(Status status)
     {
         if (!m_replySent)
         {
-            remoteentity::Header header{ m_entityIdDest, "", m_entityIdSrc, remoteentity::MsgMode::MSG_REPLY, status, {}, {}, m_correlationId, {} };
+            Header header{ m_entityIdDest, "", m_entityIdSrc, MsgMode::MSG_REPLY, status, {}, {}, m_correlationId, {} };
             RemoteEntityFormatRegistry::instance().send(m_session, m_virtualSessionId, header, std::move(m_echoData));
             m_replySent = true;
         }
@@ -216,7 +214,7 @@ public:
 
     void replyMemory(const char* buffer, size_t size, IMessage::Metainfo* metainfo = nullptr)
     {
-        remoteentity::RawBytes replyBytes;
+        RawBytes replyBytes;
         replyBytes.data.resize(size);
         memcpy(const_cast<BytesElement*>(replyBytes.data.data()), buffer, size);
         reply(replyBytes, metainfo);
@@ -337,7 +335,7 @@ private:
 
     PeerId connectIntern(const IProtocolSessionPtr& session, const std::string& virtualSessionId, const std::string& entityName, EntityId, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect);
     void connectIntern(PeerId peerId, const IProtocolSessionPtr& session, const std::string& entityName, EntityId entityId);
-    void removePeer(PeerId peerId, remoteentity::Status status);
+    void removePeer(PeerId peerId, Status status);
     void replyReceived(ReceiveData& receiveData);
     void sendConnectEntity(PeerId peerId, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect);
 

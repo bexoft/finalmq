@@ -53,7 +53,7 @@ using finalmq::PeerEvent;
 using finalmq::IProtocolSessionPtr;
 using finalmq::ConnectionData;
 using finalmq::ConnectionEvent;
-using finalmq::remoteentity::Status;
+using finalmq::Status;
 using finalmq::Logger;
 using finalmq::LogContext;
 using finalmq::VariantStruct;

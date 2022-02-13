@@ -78,7 +78,7 @@ bool FileTransferReply::replyFile(const RequestContextPtr& requestContext, const
                 int fd = OperatingSystem::instance().open(filename.c_str(), flags);
                 if (fd != -1)
                 {
-                    remoteentity::RawBytes reply;
+                    RawBytes reply;
                     reply.data.resize(sizeFile);
 
                     char* buf = reply.data.data();
@@ -119,7 +119,7 @@ bool FileTransferReply::replyFile(const RequestContextPtr& requestContext, const
                 else
                 {
                     // not found
-                    requestContext->reply(finalmq::remoteentity::Status::STATUS_ENTITY_NOT_FOUND);
+                    requestContext->reply(finalmq::Status::STATUS_ENTITY_NOT_FOUND);
                 }
             });
         }

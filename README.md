@@ -1222,12 +1222,12 @@ Now, we can do some first tests with the server. Let's start a telnet or netcat 
 
 Afterwards, let's try to connect to the server-remote-entity, so that the server recognizes it as a peer. You can find the definition of this "connect" request in the interface definition at "inc/finalmq/remoteentity/entitydata.fmq".
 
-	/MyService/finalmq.remoteentity.ConnectEntity!1234
+	/MyService/finalmq.ConnectEntity!1234
 
 The answer is:
 
 ```json
-[{"srcid":"1","mode":"MSG_REPLY","type":"finalmq.remoteentity.ConnectEntityReply","corrid":"1234"},   {"entityid":"1","entityName":"MyService"}]
+[{"srcid":"1","mode":"MSG_REPLY","type":"finalmq.ConnectEntityReply","corrid":"1234"},   {"entityid":"1","entityName":"MyService"}]
 ```
 
 Here, you can correlate the entityName to the entityId. The entityId of the server-remote-entity which triggered a request/notification will be inside each request/notification header. 
@@ -1246,7 +1246,7 @@ The "srcid" in the header tells the entityId from which server-remote-entity the
 
 You also can test the timer_server with the browser. Type the following url to connect to the server remote entity:
 
-	localhost:8080/MyService/finalmq.remoteentity.ConnectEntity
+	localhost:8080/MyService/finalmq.ConnectEntity
 
 The browser will display:
 
@@ -1464,7 +1464,7 @@ EntityFileServer entityFileServer("htdocs");
 entityContainer.registerEntity(&entityFileServer, "*");
 ```
 
-In the constructor you have to pass the directory in which the downloadable files will exist. You will register the remote entity with "*". This means, if no remote entity is found with the given path in the request ("/entityname/messagetype"), then this entity will lookup inside the directory (htdocs), if the path matches a filepath.  If yes, then the file will be downloaded to the client. In case of protocols that support meta info, like HTTP headers, the file will be transfered as binary data, in other cases the file will be transfered as the message "finalmq.remoteentity.RawBytes" (see "inc/finalmq/entitydata.fmq").
+In the constructor you have to pass the directory in which the downloadable files will exist. You will register the remote entity with "*". This means, if no remote entity is found with the given path in the request ("/entityname/messagetype"), then this entity will lookup inside the directory (htdocs), if the path matches a filepath.  If yes, then the file will be downloaded to the client. In case of protocols that support meta info, like HTTP headers, the file will be transfered as binary data, in other cases the file will be transfered as the message "finalmq.RawBytes" (see "inc/finalmq/entitydata.fmq").
 
 Message description:
 

@@ -57,7 +57,7 @@ using finalmq::Executor;
 using finalmq::ExecutorWorker;
 using finalmq::VariantStruct;
 using finalmq::ProtocolMqtt5Client;
-using finalmq::remoteentity::NoData;
+using finalmq::NoData;
 using restapi::Person;
 using restapi::PersonList;
 using restapi::PersonId;
@@ -149,7 +149,7 @@ public:
                 }
                 else
                 {
-                    requestContext->reply(finalmq::remoteentity::Status::STATUS_REQUEST_NOT_FOUND);
+                    requestContext->reply(finalmq::Status::STATUS_REQUEST_NOT_FOUND);
                 }
             }
         });
@@ -173,7 +173,7 @@ public:
             }
             else
             {
-                requestContext->reply(finalmq::remoteentity::Status::STATUS_REQUEST_NOT_FOUND);
+                requestContext->reply(finalmq::Status::STATUS_REQUEST_NOT_FOUND);
             }
         });
     }
