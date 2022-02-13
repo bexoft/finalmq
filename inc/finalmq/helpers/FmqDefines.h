@@ -68,13 +68,6 @@ namespace finalmq {
 
 
 
-#if defined(WIN32)
-#define METHODNAME  __FUNCTION__
-#else
-#define METHODNAME  __FUNCTION__
-#endif
-
-
 #define TOKENPASTE(x, y) x ## y
 #define TOKENPASTE2(x, y) TOKENPASTE(x, y)
 
