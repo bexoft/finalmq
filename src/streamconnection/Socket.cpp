@@ -37,7 +37,9 @@
 #else
 #include <netinet/tcp.h>
 #include <fcntl.h>
+#ifndef __QNX__
 #include <sys/unistd.h>
+#endif
 #endif
 
 

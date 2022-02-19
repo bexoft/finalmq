@@ -76,7 +76,7 @@ void ProtocolRegistry::setInstance(std::unique_ptr<IProtocolRegistry>&& instance
 
 IProtocolRegistry* ProtocolRegistry::createInstance()
 {
-    std::unique_lock<std::mutex>(m_mutex);
+    std::unique_lock<std::mutex> lock(m_mutex);
     IProtocolRegistry* inst = m_instance.load(std::memory_order_relaxed);
     if (!inst)
     {

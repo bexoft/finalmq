@@ -347,7 +347,7 @@ void GlobalExecutorWorker::setInstance(std::unique_ptr<IExecutorWorker>&& instan
 
 IExecutorWorker* GlobalExecutorWorker::createInstance()
 {
-    std::unique_lock<std::mutex>(m_mutex);
+    std::unique_lock<std::mutex> lock(m_mutex);
     IExecutorWorker* inst = m_instance.load(std::memory_order_relaxed);
     if (!inst)
     {

@@ -250,7 +250,7 @@ void MetaDataGlobal::setInstance(std::unique_ptr<IMetaData>&& instance)
 
 IMetaData* MetaDataGlobal::createInstance()
 {
-    std::unique_lock<std::mutex>(m_mutex);
+    std::unique_lock<std::mutex> lock(m_mutex);
     IMetaData* inst = m_instance.load(std::memory_order_relaxed);
     if (!inst)
     {

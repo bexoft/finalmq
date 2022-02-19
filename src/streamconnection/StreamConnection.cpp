@@ -76,8 +76,14 @@ bool StreamConnection::sendMessage(const IMessagePtr& msg)
                 {
                     const BufferRef& payload = *it;
                     ++it;
+
+#if __QNX__
+                    int flags = 0;
+#else
                     bool last = (it == payloads.end());
                     int flags = last ? 0 : MSG_MORE;    // win32: MSG_PARTIAL
+#endif
+
 #if !defined WIN32
                     flags |= MSG_NOSIGNAL;              // no sigpipe
 #endif
@@ -188,8 +194,15 @@ bool StreamConnection::sendPendingMessages()
                 {
                     const BufferRef& payload = *it;
                     ++it;
+#if __QNX__
+                    int flags = 0;
+#else
                     bool last = ((it == payloads.end()) && (m_pendingMessages.size() == 1));
                     int flags = last ? 0 : MSG_MORE;    // win32: MSG_PARTIAL
+#endif
+#if !defined WIN32
+                    flags |= MSG_NOSIGNAL;              // no sigpipe
+#endif
                     ssize_t size = payload.second - messageSendState.offset;
                     assert((payload.second == 0 && size == 0) || (size > 0));
                     int err = m_socketPrivate->send(payload.first + messageSendState.offset, static_cast<int>(size), flags);

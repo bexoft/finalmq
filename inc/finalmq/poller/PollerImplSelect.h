@@ -27,6 +27,10 @@
 #include <atomic>
 #include <mutex>
 
+#ifdef __QNX__
+#include <sys/select.h>
+#endif
+
 
 namespace finalmq {
 

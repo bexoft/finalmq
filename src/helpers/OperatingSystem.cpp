@@ -32,9 +32,10 @@
 #include <errno.h>
 #include <netinet/tcp.h>
 #include <fcntl.h>
-#include <sys/unistd.h>
 #include <sys/stat.h>
-//#include <sys/types.h>
+#ifndef __QNX__
+#include <sys/unistd.h>
+#endif
 #endif
 
 
@@ -172,7 +173,7 @@ namespace finalmq {
 
 
 
-#if defined(WIN32) || defined(__MINGW32__)
+#if defined(WIN32) || defined(__MINGW32__) || defined(__QNX__)
 
     int OperatingSystemImpl::makeSocketPair(SocketDescriptorPtr& socket1, SocketDescriptorPtr& socket2)
     {
@@ -357,7 +358,7 @@ namespace finalmq {
 
     IOperatingSystem* OperatingSystem::createInstance()
     {
-        std::unique_lock<std::mutex>(m_mutex);
+        std::unique_lock<std::mutex> lock(m_mutex);
         IOperatingSystem* inst = m_instance.load(std::memory_order_relaxed);
         if (!inst)
         {

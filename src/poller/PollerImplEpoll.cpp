@@ -20,7 +20,7 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#if !defined(WIN32) && !defined(__MINGW32__)
+#if !defined(WIN32) && !defined(__MINGW32__) && !defined(__QNX__)
 
 #include "finalmq/poller/PollerImplEpoll.h"
 

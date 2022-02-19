@@ -41,7 +41,16 @@ typedef sockaddr            t_sockaddr;
 #include <netdb.h>
 #include <sys/ioctl.h>
 #include <sys/un.h>
+
+#ifdef __QNX__
+//extern "C" {
+//#include <sys/neutrino.h>
+//}
+#include <sys/select.h>
+#else
 #include <sys/epoll.h>
+#endif
+
 #define SOCKETERROR(err)	err
 
 #endif
@@ -78,7 +87,7 @@ namespace finalmq {
         virtual int recv(SOCKET fd, char* buffer, int len, int flags) override;
         virtual int getLastError() override;
         virtual int select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, struct timeval* timeout) override;
-#if !defined(WIN32) && !defined(__MINGW32__)
+#if !defined(WIN32) && !defined(__MINGW32__) && !defined(__QNX__)
         virtual int epoll_create1(int flags) override;
         virtual int epoll_ctl(int epfd, int op, int fd, struct epoll_event* event) override;
         virtual int epoll_pwait(int epfd, struct epoll_event* events, int maxevents, int timeout, const sigset_t* sigmask) override;

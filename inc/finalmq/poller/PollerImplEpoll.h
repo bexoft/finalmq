@@ -22,7 +22,7 @@
 
 #pragma once
 
-#if !defined(WIN32) && !defined(__MINGW32__)
+#if !defined(WIN32) && !defined(__MINGW32__) && !defined(__QNX__)
 
 #include "Poller.h"
 #include <unordered_map>

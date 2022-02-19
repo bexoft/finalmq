@@ -32,6 +32,11 @@
 #include <netdb.h>
 #endif
 
+#ifdef __QNX__
+#include <sys/socket.h>
+#include <netinet/in.h>
+#endif
+
 #include <iostream>
 
 

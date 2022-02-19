@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
+	<storageModule moduleId="org.eclipse.cdt.core.settings">
+		<cconfiguration id="org.eclipse.cdt.core.default.config.1378118168">
+			<storageModule buildSystemId="org.eclipse.cdt.core.defaultConfigDataProvider" id="org.eclipse.cdt.core.default.config.1378118168" moduleId="org.eclipse.cdt.core.settings" name="Configuration">
+				<externalSettings/>
+				<extensions>
+					<extension id="com.qnx.tools.ide.qde.core.QDEBynaryParser" point="org.eclipse.cdt.core.BinaryParser"/>
+				</extensions>
+			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+		</cconfiguration>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+	<storageModule moduleId="scannerConfiguration">
+		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="com.qnx.qcc.toolChain.1581321889">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="com.qnx.tools.ide.qde.managedbuilder.core.qccScannerInfo"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="com.qnx.qcc.toolChain.239567037">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="com.qnx.tools.ide.qde.managedbuilder.core.qccScannerInfo"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="com.qnx.qcc.toolChain.2006014589">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="com.qnx.tools.ide.qde.managedbuilder.core.qccScannerInfo"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="com.qnx.qcc.toolChain.1067428824">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="com.qnx.tools.ide.qde.managedbuilder.core.qccScannerInfo"/>
+		</scannerConfigBuildInfo>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.core.pathentry">
+		<pathentry kind="src" path="src"/>
+		<pathentry include="C:/Users/X1DABECK/qnx710/target/qnx7/usr/include" kind="inc" path="" system="true"/>
+		<pathentry include="C:/Users/X1DABECK/qnx710/target/qnx7/usr/include/c++/v1" kind="inc" path="" system="true"/>
+		<pathentry include="C:/Users/X1DABECK/QNX71Workspaces/finalmq/finalmq/aarch64/so-le-g" kind="inc" path="" system="true"/>
+		<pathentry include="C:/Users/X1DABECK/QNX71Workspaces/finalmq/finalmq/aarch64" kind="inc" path="" system="true"/>
+		<pathentry include="C:/Users/X1DABECK/QNX71Workspaces/finalmq/finalmq" kind="inc" path="" system="true"/>
+		<pathentry include="C:/Users/X1DABECK/QNX71Workspaces/finalmq/finalmq/src" kind="inc" path="" system="true"/>
+		<pathentry include="C:/Users/X1DABECK/QNX71Workspaces/finalmq/finalmq/inc" kind="inc" path="" system="true"/>
+		<pathentry kind="mac" name="__DEPRECATED" path="" value=""/>
+		<pathentry kind="mac" name="__ELF__" path="" value=""/>
+		<pathentry kind="mac" name="__GNUC_MINOR__" path="" value="3"/>
+		<pathentry kind="mac" name="__GNUC_PATCHLEVEL__" path="" value="0"/>
+		<pathentry kind="mac" name="__GNUC__" path="" value="8"/>
+		<pathentry kind="mac" name="__LITTLEENDIAN__" path="" value=""/>
+		<pathentry kind="mac" name="__NO_INLINE__" path="" value=""/>
+		<pathentry kind="mac" name="__QNXNTO__" path="" value=""/>
+		<pathentry kind="mac" name="__QNX__" path="" value=""/>
+		<pathentry kind="mac" name="__unix" path="" value=""/>
+		<pathentry kind="mac" name="__unix__" path="" value=""/>
+		<pathentry kind="out" path=""/>
+		<pathentry kind="con" path="com.qnx.tools.ide.qde.QDE_PROJECT_CONTAINER"/>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets">
+		<buildTargets>
+			<target name="build" path="aarch64/so-le" targetID="com.qnx.tools.ide.qde.core.cbuilder">
+				<buildCommand>make</buildCommand>
+				<buildTarget>all</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>true</useDefaultCommand>
+				<runAllBuilders>true</runAllBuilders>
+			</target>
+			<target name="clean" path="aarch64/so-le" targetID="com.qnx.tools.ide.qde.core.cbuilder">
+				<buildCommand>make</buildCommand>
+				<buildArguments/>
+				<buildTarget>clean</buildTarget>
+				<stopOnError>false</stopOnError>
+				<useDefaultCommand>true</useDefaultCommand>
+				<runAllBuilders>true</runAllBuilders>
+			</target>
+			<target name="generate" path="aarch64/so-le" targetID="com.qnx.tools.ide.qde.core.cbuilder">
+				<buildCommand>make</buildCommand>
+				<buildArguments/>
+				<buildTarget>generate</buildTarget>
+				<stopOnError>false</stopOnError>
+				<useDefaultCommand>true</useDefaultCommand>
+				<runAllBuilders>true</runAllBuilders>
+			</target>
+		</buildTargets>
+	</storageModule>
+	<storageModule moduleId="com.qnx.tools.ide.qde.core.QNXProjectProperties">
+		<makefile value="Makefile"/>
+		<command value="make"/>
+		<code_coverage value="false"/>
+		<profiling value="false"/>
+		<mudflapth value="false"/>
+		<instrumentedFunctionProfiling value="false"/>
+		<type value="4"/>
+		<parallel_build value="false"/>
+		<parallel_build_number value="1"/>
+		<active_configurations>
+			<configuration value="_aarch64le_r"/>
+			<configuration default="true" indexing="true" value="_aarch64le_g"/>
+		</active_configurations>
+	</storageModule>
+</cproject>
