@@ -51,7 +51,7 @@ namespace finalmq {
         virtual int recv(SOCKET fd, char* buffer, int len, int flags) = 0;
         virtual int getLastError() = 0;
         virtual int select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, struct timeval* timeout) = 0;
-#if !defined(WIN32) && !defined(__MINGW32__)
+#if !defined(WIN32) && !defined(__MINGW32__) && !defined(__QNX__)
         virtual int epoll_create1(int flags) = 0;
         virtual int epoll_ctl(int epfd, int op, int fd, struct epoll_event* event) = 0;
         virtual int epoll_pwait(int epfd, struct epoll_event* events, int maxevents, int timeout, const sigset_t* sigmask) = 0;

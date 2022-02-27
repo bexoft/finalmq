@@ -27,7 +27,7 @@
 #include "finalmq/helpers/Executor.h"
 
 
-#if defined(WIN32) || defined(__MINGW32__)
+#if defined(WIN32) || defined(__MINGW32__) || defined(__QNX__)
 #include "finalmq/poller/PollerImplSelect.h"
 #else
 #include "finalmq/poller/PollerImplEpoll.h"
@@ -36,8 +36,10 @@
 #if !defined(WIN32) && !defined(__MINGW32__)
 #include <netinet/tcp.h>
 #include <fcntl.h>
-#include <sys/unistd.h>
 #include <sys/un.h>
+#ifndef __QNX__
+#include <sys/unistd.h>
+#endif
 #endif
 
 #include <thread>
@@ -51,7 +53,7 @@ std::atomic_int64_t StreamConnectionContainer::m_nextConnectionId{1};
 
 
 StreamConnectionContainer::StreamConnectionContainer()
-#if defined(WIN32) || defined(__MINGW32__)
+#if defined(WIN32) || defined(__MINGW32__) || defined(__QNX__)
     : m_poller(std::make_shared<PollerImplSelect>())
 #else
     : m_poller(std::make_shared<PollerImplEpoll>())

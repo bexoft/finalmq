@@ -33,7 +33,11 @@
 #ifdef WIN32
 #include <rpcdce.h>
 #else
+#ifdef __QNX__
+#include <uuid.h>
+#else
 #include <uuid/uuid.h>
+#endif
 #endif
 
 
@@ -76,9 +80,22 @@ static std::string getUuid()
     return strUuidRet;
 }
 #else
+#ifdef __QNX__
 static std::string getUuid()
 {
-    std::string strUuid;   
+	uuid_t* uuid = nullptr;
+	uuid_create(&uuid);
+	char buffer[50];     // 37 is the exact number
+	size_t sizeStrUuid = sizeof(buffer);
+	uuid_export(uuid, UUID_FMT_STR, buffer, &sizeStrUuid);
+	std::string strUuidRet(buffer, sizeStrUuid);
+	uuid_destroy(uuid);
+	return strUuidRet;
+}
+#else
+static std::string getUuid()
+{
+    std::string strUuid;
     strUuid.resize(50);     // 37 is the exact number
     uuid_t uuid;
     uuid_generate(uuid);
@@ -86,6 +103,7 @@ static std::string getUuid()
     std::string strUuidRet = strUuid.data();
     return strUuidRet;
 }
+#endif
 #endif
 
 

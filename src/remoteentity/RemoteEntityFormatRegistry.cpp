@@ -633,7 +633,7 @@ void RemoteEntityFormatRegistry::setInstance(std::unique_ptr<IRemoteEntityFormat
 
 IRemoteEntityFormatRegistry* RemoteEntityFormatRegistry::createInstance()
 {
-    std::unique_lock<std::mutex>(m_mutex);
+    std::unique_lock<std::mutex> lock(m_mutex);
     IRemoteEntityFormatRegistry* inst = m_instance.load(std::memory_order_relaxed);
     if (!inst)
     {

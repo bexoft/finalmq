@@ -167,7 +167,7 @@ void OpenSsl::setInstance(std::unique_ptr<IOpenSsl>&& instance)
 
 IOpenSsl* OpenSsl::createInstance()
 {
-    std::unique_lock<std::mutex>(m_mutex);
+    std::unique_lock<std::mutex> lock(m_mutex);
     IOpenSsl* inst = m_instance.load(std::memory_order_relaxed);
     if (!inst)
     {

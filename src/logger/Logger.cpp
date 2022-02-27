@@ -72,7 +72,7 @@ void Logger::setInstance(std::unique_ptr<ILogger>&& instance)
 
 ILogger* Logger::createInstance()
 {
-    std::unique_lock<std::mutex>(m_mutex);
+    std::unique_lock<std::mutex> lock(m_mutex);
     ILogger* inst = m_instance.load(std::memory_order_relaxed);
     if (!inst)
     {

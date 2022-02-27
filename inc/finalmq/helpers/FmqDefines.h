@@ -66,6 +66,11 @@ namespace finalmq {
 }   // namespace finalmq
 #endif
 
+#ifdef __QNX__
+#define strtof32 strtof
+#define strtof64 strtold
+#endif
+
 
 
 #define TOKENPASTE(x, y) x ## y
@@ -83,6 +88,9 @@ namespace finalmq {
 #include <sys/param.h>  // __BYTE_ORDER
 #if ((defined(__LITTLE_ENDIAN__) && !defined(__BIG_ENDIAN__)) ||    \
          (defined(__BYTE_ORDER) && __BYTE_ORDER == __LITTLE_ENDIAN))
+#define FINALMQ_LITTLE_ENDIAN 1
+#endif
+#ifdef __QNX__	// todo: recognize byte order for QNX
 #define FINALMQ_LITTLE_ENDIAN 1
 #endif
 #endif
@@ -196,7 +204,7 @@ namespace finalmq {
     const unsigned int SURROGATE_OFFSET = static_cast<unsigned int>(0x10000 - (0xD800 << 10) - 0xDC00);
 
     // first 16bit in the lower word, second 16bit in higher word.
-    static unsigned int utf32to16(unsigned int utf32)
+    static inline unsigned int utf32to16(unsigned int utf32)
     {
         if (utf32 > 0x0000ffff)
         {
@@ -211,7 +219,7 @@ namespace finalmq {
     }
 
     // first 16bit in the lower word, second 16bit in higher word.
-    static unsigned int utf16to32(unsigned int utf16)
+    static inline unsigned int utf16to32(unsigned int utf16)
     {
         unsigned int trail = utf16 >> 16;
         if (trail != 0)
@@ -224,7 +232,7 @@ namespace finalmq {
             return utf16;
         }
     }
-    static unsigned int utf32to8(unsigned int utf32)
+    static inline unsigned int utf32to8(unsigned int utf32)
     {
         if (utf32 <= 0x7f)
         {
@@ -252,7 +260,7 @@ namespace finalmq {
             return (trail3 << 24) + (trail2 << 16) + (trail1 << 8) + lead;
         }
     }
-    static unsigned int utf8to32(unsigned int utf8)
+    static inline unsigned int utf8to32(unsigned int utf8)
     {
         unsigned char c = utf8 & 0x000000ff;
         if (c <= 0x7f)

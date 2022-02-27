@@ -110,17 +110,17 @@ void RemoteEntityFormatJson::serializeData(IMessage& message, const StructBase* 
 }
 
 
-static ssize_t findFirst(const char* buffer, ssize_t size, char c)
-{
-    for (ssize_t i = 0; i < size; ++i)
-    {
-        if (buffer[i] == c)
-        {
-            return i;
-        }
-    }
-    return -1;
-}
+//static ssize_t findFirst(const char* buffer, ssize_t size, char c)
+//{
+//    for (ssize_t i = 0; i < size; ++i)
+//    {
+//        if (buffer[i] == c)
+//        {
+//            return i;
+//        }
+//    }
+//    return -1;
+//}
 
 static ssize_t findLast(const char* buffer, ssize_t size, char c)
 {
