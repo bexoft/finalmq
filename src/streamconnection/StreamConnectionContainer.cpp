@@ -272,6 +272,8 @@ bool StreamConnectionContainer::createSocket(const IStreamConnectionPtr& streamC
         ret = socket->create(connectionData.af, connectionData.type, connectionData.protocol);
     }
 
+    (void) connectionProperties;
+
     if (ret)
     {
         SocketDescriptorPtr sd = socket->getSocketDescriptor();

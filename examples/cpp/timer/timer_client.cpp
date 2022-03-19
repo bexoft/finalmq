@@ -93,7 +93,7 @@ int main()
     entityClient.registerCommand<TimerEvent>([] (const RequestContextPtr& requestContext, const std::shared_ptr<TimerEvent>& request) {
         std::cout << "time: " << request->time << std::endl;
     });
-    EntityId entityId = entityContainer.registerEntity(&entityClient);
+    /*EntityId entityId =*/ entityContainer.registerEntity(&entityClient);
 
     // register peer events to see when a remote entity connects or disconnects.
     entityClient.registerPeerEvent([] (PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, PeerEvent peerEvent, bool incoming) {
