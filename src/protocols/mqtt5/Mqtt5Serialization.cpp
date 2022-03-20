@@ -1259,7 +1259,7 @@ bool Mqtt5Serialization::readProperties(std::unordered_map<unsigned int, Variant
                 break;
             case Mqtt5Type::TypeVariableByteInteger:
                 {
-                    unsigned int value;
+                    unsigned int value = 0;
                     ok = readVarByteNumber(value);
                     if (ok)
                     {
@@ -1303,7 +1303,7 @@ bool Mqtt5Serialization::readProperties(std::unordered_map<unsigned int, Variant
                 break;
             case Mqtt5Type::TypeArrayVariableByteInteger:
             {
-                unsigned int value;
+                unsigned int value = 0;
                 ok = readVarByteNumber(value);
                 if (ok)
                 {
