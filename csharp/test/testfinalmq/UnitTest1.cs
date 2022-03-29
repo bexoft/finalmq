@@ -26,12 +26,12 @@ namespace testfinalmq
             Platform.Instance = mockPlatform.Object;
 
             
-            mockPlatform.Setup(x => x.makeSocketPair());
+            //mockPlatform.Setup(x => x.makeSocketPair());
 
-            mockPlatform.Setup(x => x.makeSocketPair(_, _)).Times(1)
-                        .WillRepeatedly(DoAll(testing::SetArgReferee < 0 > (sd1), testing::SetArgReferee < 1 > (sd2), Return(0)));
-            EXPECT_CALL(*m_mockMockOperatingSystem, send(CONTROLSOCKET_WRITE, _, 1, 0)).Times(1)
-                                                                .WillRepeatedly(Return(1));
+            //mockPlatform.Setup(x => x.makeSocketPair(_, _)).Times(1)
+            //            .WillRepeatedly(DoAll(testing::SetArgReferee < 0 > (sd1), testing::SetArgReferee < 1 > (sd2), Return(0)));
+            //EXPECT_CALL(*m_mockMockOperatingSystem, send(CONTROLSOCKET_WRITE, _, 1, 0)).Times(1)
+            //                                                    .WillRepeatedly(Return(1));
 
             m_poller.Init();
         }
@@ -48,7 +48,7 @@ namespace testfinalmq
             int timeout = TIMEOUT * MILLITOMICRO;
 
 
-            mockPlatform.Setup(x => x.Select(new List<Socket>(), new List<Socket>(), new List<Socket>(), timeout));
+            //mockPlatform.Setup(x => x.Select(new List<Socket>(), new List<Socket>(), new List<Socket>(), timeout));
 
             PollerResult result = m_poller.Wait(TIMEOUT);
             Assert.True(result.Timeout);
