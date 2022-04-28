@@ -34,7 +34,13 @@
 #include <rpcdce.h>
 #else
 #ifdef __QNX__
-#include <uuid.h>
+//#include <uuid.h>
+#include <limits.h>
+#include <stdlib.h>
+#include <time.h>
+#if defined(USE_OPENSSL)
+#include <openssl/rand.h>
+#endif
 #else
 #include <uuid/uuid.h>
 #endif
@@ -81,16 +87,66 @@ static std::string getUuid()
 }
 #else
 #ifdef __QNX__
+//static std::string getUuid()
+//{
+//	uuid_t* uuid = nullptr;
+//	uuid_create(&uuid);
+//	char buffer[50];     // 37 is the exact number
+//	size_t sizeStrUuid = sizeof(buffer);
+//	uuid_export(uuid, UUID_FMT_STR, buffer, &sizeStrUuid);
+//	std::string strUuidRet(buffer, sizeStrUuid);
+//	uuid_destroy(uuid);
+//	return strUuidRet;
+//}
+
+/** @brief raw uuid type */
+typedef unsigned char uuid_t[16];
+
+/**
+ * @brief generates a uuid, compatible with RFC 4122, version 4 (random)
+ * @note Uses a very insecure algorithm but no external dependencies
+ */
+void uuid_generate(uuid_t out)
+{
+#if defined(USE_OPENSSL)
+    int rc = RAND_bytes(out, sizeof(uuid_t));
+    if (!rc)
+#endif
+    {
+        /* very insecure, but generates a random uuid */
+        int i;
+        srand(time(NULL));
+        for (i = 0; i < 16; ++i)
+            out[i] = (unsigned char)(rand() % UCHAR_MAX);
+        out[6] = (out[6] & 0x0f) | 0x40;
+        out[8] = (out[8] & 0x3F) | 0x80;
+    }
+}
+
+/** @brief converts a uuid to a string */
+void uuid_unparse(uuid_t uu, char* out)
+{
+    int i;
+    for (i = 0; i < 16; ++i)
+    {
+        if (i == 4 || i == 6 || i == 8 || i == 10)
+        {
+            *out = '-';
+            ++out;
+        }
+        out += sprintf(out, "%02x", uu[i]);
+    }
+    *out = '\0';
+}
 static std::string getUuid()
 {
-	uuid_t* uuid = nullptr;
-	uuid_create(&uuid);
-	char buffer[50];     // 37 is the exact number
-	size_t sizeStrUuid = sizeof(buffer);
-	uuid_export(uuid, UUID_FMT_STR, buffer, &sizeStrUuid);
-	std::string strUuidRet(buffer, sizeStrUuid);
-	uuid_destroy(uuid);
-	return strUuidRet;
+    std::string strUuid;
+    strUuid.resize(50);     // 37 is the exact number
+    uuid_t uuid;
+    uuid_generate(uuid);
+    uuid_unparse(uuid, const_cast<char*>(strUuid.data()));
+    std::string strUuidRet = strUuid.data();
+    return strUuidRet;
 }
 #else
 static std::string getUuid()
