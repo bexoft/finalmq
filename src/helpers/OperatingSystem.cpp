@@ -345,28 +345,35 @@ namespace finalmq {
     //////////////////////////////////////
     /// OperatingSystem
 
-    std::atomic<IOperatingSystem*> OperatingSystem::m_instance{};
-    std::unique_ptr<IOperatingSystem> OperatingSystem::m_instanceUniquePtr;
-    std::mutex OperatingSystem::m_mutex;
-
-    void OperatingSystem::setInstance(std::unique_ptr<IOperatingSystem>&& instance)
+    void OperatingSystem::setInstance(std::unique_ptr<IOperatingSystem>&& instanceUniquePtr)
     {
-        m_instanceUniquePtr = std::move(instance);
-        IOperatingSystem* inst = m_instanceUniquePtr.get();
-        m_instance.store(inst, std::memory_order_release);
+        getStaticUniquePtrRef() = std::move(instanceUniquePtr);
+        getStaticInstanceRef().store(getStaticUniquePtrRef().get(), std::memory_order_release);
     }
 
     IOperatingSystem* OperatingSystem::createInstance()
     {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        IOperatingSystem* inst = m_instance.load(std::memory_order_relaxed);
+        static std::mutex mutex;
+        std::unique_lock<std::mutex> lock(mutex);
+        IOperatingSystem* inst = getStaticInstanceRef().load(std::memory_order_relaxed);
         if (!inst)
         {
-            m_instanceUniquePtr = std::make_unique<OperatingSystemImpl>();
-            inst = m_instanceUniquePtr.get();
-            m_instance.store(inst, std::memory_order_relaxed);
+            setInstance(std::make_unique<OperatingSystemImpl>());
+            inst = getStaticInstanceRef().load(std::memory_order_relaxed);
         }
         return inst;
+    }
+
+    std::atomic<IOperatingSystem*>& OperatingSystem::getStaticInstanceRef()
+    {
+        static std::atomic<IOperatingSystem*> instance;
+        return instance;
+    }
+
+    std::unique_ptr<IOperatingSystem>& OperatingSystem::getStaticUniquePtrRef()
+    {
+        static std::unique_ptr<IOperatingSystem> instanceUniquePtr;
+        return instanceUniquePtr;
     }
 
 }   // namespace finalmq

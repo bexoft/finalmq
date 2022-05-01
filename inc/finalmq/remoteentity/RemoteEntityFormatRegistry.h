@@ -88,12 +88,12 @@ class SYMBOLEXP RemoteEntityFormatRegistry
 public:
     inline static IRemoteEntityFormatRegistry& instance()
     {
-        IRemoteEntityFormatRegistry* inst = m_instance.load(std::memory_order_acquire);
-        if (!inst)
+        IRemoteEntityFormatRegistry* instance = getStaticInstanceRef().load(std::memory_order_acquire);
+        if (!instance)
         {
-            inst = createInstance();
+            instance = createInstance();
         }
-        return *inst;
+        return *instance;
     }
 
     /**
@@ -108,9 +108,8 @@ private:
     ~RemoteEntityFormatRegistry() = delete;
     static IRemoteEntityFormatRegistry* createInstance();
 
-    static std::atomic<IRemoteEntityFormatRegistry*> m_instance;
-    static std::unique_ptr<IRemoteEntityFormatRegistry> m_instanceUniquePtr;
-    static std::mutex m_mutex;
+    static std::atomic<IRemoteEntityFormatRegistry*>& getStaticInstanceRef();
+    static std::unique_ptr<IRemoteEntityFormatRegistry>& getStaticUniquePtrRef();
 };
 
 

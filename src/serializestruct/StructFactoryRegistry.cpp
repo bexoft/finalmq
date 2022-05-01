@@ -53,28 +53,35 @@ std::shared_ptr<StructBase> StructFactoryRegistryImpl::createStruct(const std::s
 
 ////////////////////////////////
 
-std::atomic<IStructFactoryRegistry*> StructFactoryRegistry::m_instance{};
-std::unique_ptr<IStructFactoryRegistry> StructFactoryRegistry::m_instanceUniquePtr;
-std::mutex StructFactoryRegistry::m_mutex;
-
-void StructFactoryRegistry::setInstance(std::unique_ptr<IStructFactoryRegistry>&& instance)
+void StructFactoryRegistry::setInstance(std::unique_ptr<IStructFactoryRegistry>&& instanceUniquePtr)
 {
-    m_instanceUniquePtr = std::move(instance);
-    IStructFactoryRegistry* inst = m_instanceUniquePtr.get();
-    m_instance.store(inst, std::memory_order_release);
+    getStaticUniquePtrRef() = std::move(instanceUniquePtr);
+    getStaticInstanceRef().store(getStaticUniquePtrRef().get(), std::memory_order_release);
 }
 
 IStructFactoryRegistry* StructFactoryRegistry::createInstance()
 {
-    std::unique_lock<std::mutex> lock(m_mutex);
-    IStructFactoryRegistry* inst = m_instance.load(std::memory_order_relaxed);
+    static std::mutex mutex;
+    std::unique_lock<std::mutex> lock(mutex);
+    IStructFactoryRegistry* inst = getStaticInstanceRef().load(std::memory_order_relaxed);
     if (!inst)
     {
-        m_instanceUniquePtr = std::make_unique<StructFactoryRegistryImpl>();
-        inst = m_instanceUniquePtr.get();
-        m_instance.store(inst, std::memory_order_relaxed);
+        setInstance(std::make_unique<StructFactoryRegistryImpl>());
+        inst = getStaticInstanceRef().load(std::memory_order_relaxed);
     }
     return inst;
+}
+
+std::atomic<IStructFactoryRegistry*>& StructFactoryRegistry::getStaticInstanceRef()
+{
+    static std::atomic<IStructFactoryRegistry*> instance;
+    return instance;
+}
+
+std::unique_ptr<IStructFactoryRegistry>& StructFactoryRegistry::getStaticUniquePtrRef()
+{
+    static std::unique_ptr<IStructFactoryRegistry> instanceUniquePtr;
+    return instanceUniquePtr;
 }
 
 

@@ -143,7 +143,7 @@ class SYMBOLEXP GlobalExecutorWorker
 public:
     inline static IExecutorWorker& instance()
     {
-        IExecutorWorker* inst = m_instance.load(std::memory_order_acquire);
+        IExecutorWorker* inst = getStaticInstanceRef().load(std::memory_order_acquire);
         if (!inst)
         {
             inst = createInstance();
@@ -163,9 +163,8 @@ private:
     ~GlobalExecutorWorker() = delete;
     static IExecutorWorker* createInstance();
 
-    static std::atomic<IExecutorWorker*> m_instance;
-    static std::unique_ptr<IExecutorWorker> m_instanceUniquePtr;
-    static std::mutex m_mutex;
+    static std::atomic<IExecutorWorker*>& getStaticInstanceRef();
+    static std::unique_ptr<IExecutorWorker>& getStaticUniquePtrRef();
 };
 
 

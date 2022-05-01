@@ -58,7 +58,7 @@ class SYMBOLEXP StructFactoryRegistry
 public:
     inline static IStructFactoryRegistry& instance()
     {
-        IStructFactoryRegistry* inst = m_instance.load(std::memory_order_acquire);
+        IStructFactoryRegistry* inst = getStaticInstanceRef().load(std::memory_order_acquire);
         if (!inst)
         {
             inst = createInstance();
@@ -78,9 +78,8 @@ private:
     ~StructFactoryRegistry() = delete;
     static IStructFactoryRegistry* createInstance();
 
-    static std::atomic<IStructFactoryRegistry*> m_instance;
-    static std::unique_ptr<IStructFactoryRegistry> m_instanceUniquePtr;
-    static std::mutex m_mutex;
+    static std::atomic<IStructFactoryRegistry*>& getStaticInstanceRef();
+    static std::unique_ptr<IStructFactoryRegistry>& getStaticUniquePtrRef();
 };
 
 

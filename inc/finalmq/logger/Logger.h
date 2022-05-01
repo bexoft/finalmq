@@ -97,7 +97,7 @@ class SYMBOLEXP Logger
 public:
     static inline ILogger& instance()
     {
-        ILogger* inst = m_instance.load(std::memory_order_acquire);
+        ILogger* inst = getStaticInstanceRef().load(std::memory_order_acquire);
         if (!inst)
         {
             inst = createInstance();
@@ -117,9 +117,8 @@ private:
     ~Logger() = delete;
     static ILogger* createInstance();
 
-    static std::atomic<ILogger*> m_instance;
-    static std::unique_ptr<ILogger> m_instanceUniquePtr;
-    static std::mutex m_mutex;
+    static std::atomic<ILogger*>& getStaticInstanceRef();
+    static std::unique_ptr<ILogger>& getStaticUniquePtrRef();
 };
 
 
