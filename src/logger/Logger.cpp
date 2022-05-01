@@ -59,28 +59,35 @@ void LoggerImpl::triggerLog(const LogContext& context, const char* text)
 
 /////////////////////////////////////////////////////
 
-std::atomic<ILogger*> Logger::m_instance{};
-std::unique_ptr<ILogger> Logger::m_instanceUniquePtr;
-std::mutex Logger::m_mutex;
-
-void Logger::setInstance(std::unique_ptr<ILogger>&& instance)
+void Logger::setInstance(std::unique_ptr<ILogger>&& instanceUniquePtr)
 {
-    m_instanceUniquePtr = std::move(instance);
-    ILogger* inst = m_instanceUniquePtr.get();
-    m_instance.store(inst, std::memory_order_release);
+    getStaticUniquePtrRef() = std::move(instanceUniquePtr);
+    getStaticInstanceRef().store(getStaticUniquePtrRef().get(), std::memory_order_release);
 }
 
 ILogger* Logger::createInstance()
 {
-    std::unique_lock<std::mutex> lock(m_mutex);
-    ILogger* inst = m_instance.load(std::memory_order_relaxed);
+    static std::mutex mutex;
+    std::unique_lock<std::mutex> lock(mutex);
+    ILogger* inst = getStaticInstanceRef().load(std::memory_order_relaxed);
     if (!inst)
     {
-        m_instanceUniquePtr = std::make_unique<LoggerImpl>();
-        inst = m_instanceUniquePtr.get();
-        m_instance.store(inst, std::memory_order_relaxed);
+        setInstance(std::make_unique<LoggerImpl>());
+        inst = getStaticInstanceRef().load(std::memory_order_relaxed);
     }
     return inst;
+}
+
+std::atomic<ILogger*>& Logger::getStaticInstanceRef()
+{
+    static std::atomic<ILogger*> instance;
+    return instance;
+}
+
+std::unique_ptr<ILogger>& Logger::getStaticUniquePtrRef()
+{
+    static std::unique_ptr<ILogger> instanceUniquePtr;
+    return instanceUniquePtr;
 }
 
 

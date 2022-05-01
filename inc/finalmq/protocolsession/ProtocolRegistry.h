@@ -70,12 +70,12 @@ class SYMBOLEXP ProtocolRegistry
 public:
     inline static IProtocolRegistry& instance()
     {
-        IProtocolRegistry* inst = m_instance.load(std::memory_order_acquire);
-        if (!inst)
+        IProtocolRegistry* instance = getStaticInstanceRef().load(std::memory_order_acquire);
+        if (!instance)
         {
-            inst = createInstance();
+            instance = createInstance();
         }
-        return *inst;
+        return *instance;
     }
 
     /**
@@ -90,9 +90,8 @@ private:
     ~ProtocolRegistry() = delete;
     static IProtocolRegistry* createInstance();
 
-    static std::atomic<IProtocolRegistry*> m_instance;
-    static std::unique_ptr<IProtocolRegistry> m_instanceUniquePtr;
-    static std::mutex m_mutex;
+    static std::atomic<IProtocolRegistry*>& getStaticInstanceRef();
+    static std::unique_ptr<IProtocolRegistry>& getStaticUniquePtrRef();
 };
 
 

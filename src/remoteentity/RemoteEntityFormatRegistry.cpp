@@ -620,30 +620,36 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(IMessage& mess
 //////////////////////////////////////
 /// RemoteEntityFormat
 
-std::atomic<IRemoteEntityFormatRegistry*> RemoteEntityFormatRegistry::m_instance{};
-std::unique_ptr<IRemoteEntityFormatRegistry> RemoteEntityFormatRegistry::m_instanceUniquePtr;
-std::mutex RemoteEntityFormatRegistry::m_mutex;
-
-void RemoteEntityFormatRegistry::setInstance(std::unique_ptr<IRemoteEntityFormatRegistry>&& instance)
+void RemoteEntityFormatRegistry::setInstance(std::unique_ptr<IRemoteEntityFormatRegistry>&& instanceUniquePtr)
 {
-    m_instanceUniquePtr = std::move(instance);
-    IRemoteEntityFormatRegistry* inst = m_instanceUniquePtr.get();
-    m_instance.store(inst, std::memory_order_release);
+    getStaticUniquePtrRef() = std::move(instanceUniquePtr);
+    getStaticInstanceRef().store(getStaticUniquePtrRef().get(), std::memory_order_release);
 }
 
 IRemoteEntityFormatRegistry* RemoteEntityFormatRegistry::createInstance()
 {
-    std::unique_lock<std::mutex> lock(m_mutex);
-    IRemoteEntityFormatRegistry* inst = m_instance.load(std::memory_order_relaxed);
+    static std::mutex mutex;
+    std::unique_lock<std::mutex> lock(mutex);
+    IRemoteEntityFormatRegistry* inst = getStaticInstanceRef().load(std::memory_order_relaxed);
     if (!inst)
     {
-        m_instanceUniquePtr = std::make_unique<RemoteEntityFormatRegistryImpl>();
-        inst = m_instanceUniquePtr.get();
-        m_instance.store(inst, std::memory_order_relaxed);
+        setInstance(std::make_unique<RemoteEntityFormatRegistryImpl>());
+        inst = getStaticInstanceRef().load(std::memory_order_relaxed);
     }
     return inst;
 }
 
+std::atomic<IRemoteEntityFormatRegistry*>& RemoteEntityFormatRegistry::getStaticInstanceRef()
+{
+    static std::atomic<IRemoteEntityFormatRegistry*> instance;
+    return instance;
+}
+
+std::unique_ptr<IRemoteEntityFormatRegistry>& RemoteEntityFormatRegistry::getStaticUniquePtrRef()
+{
+    static std::unique_ptr<IRemoteEntityFormatRegistry> instanceUniquePtr;
+    return instanceUniquePtr;
+}
 
 
 

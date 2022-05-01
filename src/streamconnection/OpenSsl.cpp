@@ -154,28 +154,35 @@ std::mutex& OpenSslImpl::getMutex()
 
 ////////////////////////////////
 
-std::atomic<IOpenSsl*> OpenSsl::m_instance{};
-std::unique_ptr<IOpenSsl> OpenSsl::m_instanceUniquePtr;
-std::mutex OpenSsl::m_mutex;
-
-void OpenSsl::setInstance(std::unique_ptr<IOpenSsl>&& instance)
+void OpenSsl::setInstance(std::unique_ptr<IOpenSsl>&& instanceUniquePtr)
 {
-    m_instanceUniquePtr = std::move(instance);
-    IOpenSsl* inst = m_instanceUniquePtr.get();
-    m_instance.store(inst, std::memory_order_release);
+    getStaticUniquePtrRef() = std::move(instanceUniquePtr);
+    getStaticInstanceRef().store(getStaticUniquePtrRef().get(), std::memory_order_release);
 }
 
 IOpenSsl* OpenSsl::createInstance()
 {
-    std::unique_lock<std::mutex> lock(m_mutex);
-    IOpenSsl* inst = m_instance.load(std::memory_order_relaxed);
+    static std::mutex mutex;
+    std::unique_lock<std::mutex> lock(mutex);
+    IOpenSsl* inst = getStaticInstanceRef().load(std::memory_order_relaxed);
     if (!inst)
     {
-        m_instanceUniquePtr = std::make_unique<OpenSslImpl>();
-        inst = m_instanceUniquePtr.get();
-        m_instance.store(inst, std::memory_order_relaxed);
+        setInstance(std::make_unique<OpenSslImpl>());
+        inst = getStaticInstanceRef().load(std::memory_order_relaxed);
     }
     return inst;
+}
+
+std::atomic<IOpenSsl*>& OpenSsl::getStaticInstanceRef()
+{
+    static std::atomic<IOpenSsl*> instance;
+    return instance;
+}
+
+std::unique_ptr<IOpenSsl>& OpenSsl::getStaticUniquePtrRef()
+{
+    static std::unique_ptr<IOpenSsl> instanceUniquePtr;
+    return instanceUniquePtr;
 }
 
 }   // namespace finalmq

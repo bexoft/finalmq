@@ -92,7 +92,7 @@ class SYMBOLEXP MetaDataGlobal
 public:
     inline static IMetaData& instance()
     {
-        IMetaData* inst = m_instance.load(std::memory_order_acquire);
+        IMetaData* inst = getStaticInstanceRef().load(std::memory_order_acquire);
         if (!inst)
         {
             inst = createInstance();
@@ -112,9 +112,8 @@ private:
     ~MetaDataGlobal() = delete;
     static IMetaData* createInstance();
 
-    static std::atomic<IMetaData*> m_instance;
-    static std::unique_ptr<IMetaData> m_instanceUniquePtr;
-    static std::mutex m_mutex;
+    static std::atomic<IMetaData*>& getStaticInstanceRef();
+    static std::unique_ptr<IMetaData>& getStaticUniquePtrRef();
 };
 
 }   // namespace finalmq

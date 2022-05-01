@@ -334,28 +334,35 @@ void ExecutorWorkerBase::join()
 
 /////////////////////////////////////////////////////
 
-std::atomic<IExecutorWorker*> GlobalExecutorWorker::m_instance{};
-std::unique_ptr<IExecutorWorker> GlobalExecutorWorker::m_instanceUniquePtr;
-std::mutex GlobalExecutorWorker::m_mutex;
-
-void GlobalExecutorWorker::setInstance(std::unique_ptr<IExecutorWorker>&& instance)
+void GlobalExecutorWorker::setInstance(std::unique_ptr<IExecutorWorker>&& instanceUniquePtr)
 {
-    m_instanceUniquePtr = std::move(instance);
-    IExecutorWorker* inst = m_instanceUniquePtr.get();
-    m_instance.store(inst, std::memory_order_release);
+    getStaticUniquePtrRef() = std::move(instanceUniquePtr);
+    getStaticInstanceRef().store(getStaticUniquePtrRef().get(), std::memory_order_release);
 }
 
 IExecutorWorker* GlobalExecutorWorker::createInstance()
 {
-    std::unique_lock<std::mutex> lock(m_mutex);
-    IExecutorWorker* inst = m_instance.load(std::memory_order_relaxed);
+    static std::mutex mutex;
+    std::unique_lock<std::mutex> lock(mutex);
+    IExecutorWorker* inst = getStaticInstanceRef().load(std::memory_order_relaxed);
     if (!inst)
     {
-        m_instanceUniquePtr = std::make_unique<ExecutorWorker<Executor>>();
-        inst = m_instanceUniquePtr.get();
-        m_instance.store(inst, std::memory_order_relaxed);
+        setInstance(std::make_unique<ExecutorWorker<Executor>>());
+        inst = getStaticInstanceRef().load(std::memory_order_relaxed);
     }
     return inst;
+}
+
+std::atomic<IExecutorWorker*>& GlobalExecutorWorker::getStaticInstanceRef()
+{
+    static std::atomic<IExecutorWorker*> instance;
+    return instance;
+}
+
+std::unique_ptr<IExecutorWorker>& GlobalExecutorWorker::getStaticUniquePtrRef()
+{
+    static std::unique_ptr<IExecutorWorker> instanceUniquePtr;
+    return instanceUniquePtr;
 }
 
 } // namespace finalmq

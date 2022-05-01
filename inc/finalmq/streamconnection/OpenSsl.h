@@ -107,7 +107,7 @@ class SYMBOLEXP OpenSsl
 public:
     inline static IOpenSsl& instance()
     {
-        IOpenSsl* inst = m_instance.load(std::memory_order_acquire);
+        IOpenSsl* inst = getStaticInstanceRef().load(std::memory_order_acquire);
         if (!inst)
         {
             inst = createInstance();
@@ -127,9 +127,8 @@ private:
     ~OpenSsl() = delete;
     static IOpenSsl* createInstance();
 
-    static std::atomic<IOpenSsl*> m_instance;
-    static std::unique_ptr<IOpenSsl> m_instanceUniquePtr;
-    static std::mutex m_mutex;
+    static std::atomic<IOpenSsl*>& getStaticInstanceRef();
+    static std::unique_ptr<IOpenSsl>& getStaticUniquePtrRef();
 };
 
 

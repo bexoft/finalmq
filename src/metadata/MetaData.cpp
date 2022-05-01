@@ -237,28 +237,35 @@ const std::unordered_map<std::string, MetaEnum> MetaData::getAllEnums() const
 
 ////////////////////////////////
 
-std::atomic<IMetaData*> MetaDataGlobal::m_instance{};
-std::unique_ptr<IMetaData> MetaDataGlobal::m_instanceUniquePtr;
-std::mutex MetaDataGlobal::m_mutex;
-
-void MetaDataGlobal::setInstance(std::unique_ptr<IMetaData>&& instance)
+void MetaDataGlobal::setInstance(std::unique_ptr<IMetaData>&& instanceUniquePtr)
 {
-    m_instanceUniquePtr = std::move(instance);
-    IMetaData* inst = m_instanceUniquePtr.get();
-    m_instance.store(inst, std::memory_order_release);
+    getStaticUniquePtrRef() = std::move(instanceUniquePtr);
+    getStaticInstanceRef().store(getStaticUniquePtrRef().get(), std::memory_order_release);
 }
 
 IMetaData* MetaDataGlobal::createInstance()
 {
-    std::unique_lock<std::mutex> lock(m_mutex);
-    IMetaData* inst = m_instance.load(std::memory_order_relaxed);
+    static std::mutex mutex;
+    std::unique_lock<std::mutex> lock(mutex);
+    IMetaData* inst = getStaticInstanceRef().load(std::memory_order_relaxed);
     if (!inst)
     {
-        m_instanceUniquePtr = std::make_unique<MetaData>();
-        inst = m_instanceUniquePtr.get();
-        m_instance.store(inst, std::memory_order_relaxed);
+        setInstance(std::make_unique<MetaData>());
+        inst = getStaticInstanceRef().load(std::memory_order_relaxed);
     }
     return inst;
+}
+
+std::atomic<IMetaData*>& MetaDataGlobal::getStaticInstanceRef()
+{
+    static std::atomic<IMetaData*> instance;
+    return instance;
+}
+
+std::unique_ptr<IMetaData>& MetaDataGlobal::getStaticUniquePtrRef()
+{
+    static std::unique_ptr<IMetaData> instanceUniquePtr;
+    return instanceUniquePtr;
 }
 
 }   // namespace finalmq

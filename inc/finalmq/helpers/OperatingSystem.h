@@ -109,7 +109,7 @@ namespace finalmq {
     public:
         inline static IOperatingSystem& instance()
         {
-            IOperatingSystem* inst = m_instance.load(std::memory_order_acquire);
+            IOperatingSystem* inst = getStaticInstanceRef().load(std::memory_order_acquire);
             if (!inst)
             {
                 inst = createInstance();
@@ -129,9 +129,8 @@ namespace finalmq {
         ~OperatingSystem() = delete;
         static IOperatingSystem* createInstance();
 
-        static std::atomic<IOperatingSystem*> m_instance;
-        static std::unique_ptr<IOperatingSystem> m_instanceUniquePtr;
-        static std::mutex m_mutex;
+        static std::atomic<IOperatingSystem*>& getStaticInstanceRef();
+        static std::unique_ptr<IOperatingSystem>& getStaticUniquePtrRef();
     };
 
 }   // namespace finalmq
