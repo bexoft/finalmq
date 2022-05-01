@@ -202,7 +202,7 @@ namespace finalmq {
             return -1;
         }
 
-        struct sockaddr_in addrBind = { 0, 0, 0, 0 };
+        struct sockaddr_in addrBind = { 0, 0, 0, 0,{} };
         addrBind.sin_family = AF_INET;
         addrBind.sin_port = 0;
         addrBind.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
