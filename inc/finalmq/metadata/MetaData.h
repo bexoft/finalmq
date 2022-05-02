@@ -92,7 +92,8 @@ class SYMBOLEXP MetaDataGlobal
 public:
     inline static IMetaData& instance()
     {
-        IMetaData* inst = getStaticInstanceRef().load(std::memory_order_acquire);
+        static auto& instanceRef = getStaticInstanceRef();
+        auto* inst = instanceRef.load(std::memory_order_acquire);
         if (!inst)
         {
             inst = createInstance();
