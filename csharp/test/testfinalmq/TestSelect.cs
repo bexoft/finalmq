@@ -147,6 +147,59 @@ namespace testfinalmq
         }
 
         [Fact]
+        public void TestAddSocketReleaseByControlSocket()
+        {
+            using (Socket socket = new Socket(SocketType.Stream, ProtocolType.Tcp))
+            {
+                m_mockPlatform.Setup(x => x.Send(m_controlSocketWrite, It.IsAny<byte[]>(), 0, 1, SocketFlags.None)).Returns(1);
+
+                m_poller.AddSocketEnableRead(socket);
+
+                int timeout = TIMEOUT * MILLITOMICRO;
+
+                int sequence = 0;
+                m_mockPlatform.Setup(x => x.Select(It.IsAny<IList<Socket>>(),
+                                                   It.IsAny<IList<Socket>>(),
+                                                   It.IsAny<IList<Socket>>(),
+                                                   timeout))
+                    .Callback((IList<Socket> checkRead, IList<Socket> checkWrite, IList<Socket> checkError, int microSeconds) =>
+                    {
+                        Assert.Equal(2, checkRead.Count);
+                        Assert.Equal(0, checkWrite.Count);
+                        Assert.Equal(2, checkError.Count);
+                        Assert.Equal(m_controlSocketRead, checkRead[0]);
+                        Assert.Equal(m_controlSocketRead, checkError[0]);
+                        Assert.Equal(socket, checkRead[1]);
+                        Assert.Equal(socket, checkError[1]);
+                        checkRead.Clear();
+                        checkWrite.Clear();
+                        checkError.Clear();
+
+                        if (sequence == 0)
+                        {
+                            checkRead.Add(m_controlSocketRead);
+                            sequence = 1;
+                        }
+                        else if (sequence == 1)
+                        {
+                        }
+                    });
+
+                m_mockPlatform.Setup(x => x.GetAvailable(m_controlSocketRead)).Returns(1);
+
+                PollerResult result = m_poller.Wait(TIMEOUT);
+
+                m_mockPlatform.Verify(x => x.Select(It.IsAny<IList<Socket>>(),
+                                                    It.IsAny<IList<Socket>>(),
+                                                    It.IsAny<IList<Socket>>(),
+                                                    timeout), Times.Exactly(2));
+
+                Assert.True(result.Timeout);
+                Assert.Equal(0, result.DescriptorInfos.Count);
+            }
+        }
+
+        [Fact]
         public void TestAddSocketReadableWaitSocketDescriptorsChanged()
         {
             using (Socket socket = new Socket(SocketType.Stream, ProtocolType.Tcp))
@@ -174,17 +227,20 @@ namespace testfinalmq
                         checkWrite.Clear();
                         checkError.Clear();
                         checkRead.Add(socket);
+
                         m_poller.RemoveSocket(socket);
                     });
 
                 m_mockPlatform.Setup(x => x.GetAvailable(socket)).Returns(NUMBER_OF_BYTES_TO_READ);
+
+                m_mockPlatform.Setup(x => x.Send(m_controlSocketWrite, It.IsAny<byte[]>(), 0, 1, SocketFlags.None)).Returns(1);
 
                 PollerResult result = m_poller.Wait(TIMEOUT);
 
                 m_mockPlatform.Verify(x => x.Select(It.IsAny<IList<Socket>>(),
                                                     It.IsAny<IList<Socket>>(),
                                                     It.IsAny<IList<Socket>>(),
-                                                    timeout), Times.Once);
+                                                    timeout), Times.Exactly(1));
 
                 Assert.False(result.Timeout);
                 Assert.Equal(1, result.DescriptorInfos.Count);
@@ -244,5 +300,6 @@ namespace testfinalmq
                 Assert.Equal(0, result.DescriptorInfos[socket].bytesToRead);
             }
         }
+
     }
 }
