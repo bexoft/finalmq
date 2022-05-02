@@ -346,8 +346,12 @@ namespace finalmq
         private DescriptorInfo getDescriptorInfo(Socket socket)
         {
             var desciptorInfos = m_result.DescriptorInfos;
-            DescriptorInfo descriptorInfo = desciptorInfos[socket];
-            if (descriptorInfo == null)
+            DescriptorInfo descriptorInfo = null;
+            try
+            {
+                descriptorInfo = desciptorInfos[socket];
+            }
+            catch (KeyNotFoundException)
             {
                 descriptorInfo = new DescriptorInfo();
                 desciptorInfos[socket] = descriptorInfo;
@@ -485,7 +489,7 @@ namespace finalmq
             if (m_controlSocketWrite != null)
             {
                 byte[] buffer = { 0 };
-                m_controlSocketWrite.Send(buffer, 0, 1, SocketFlags.None);
+                Platform.Instance.Send(m_controlSocketWrite, buffer, 0, 1, SocketFlags.None);
             }
         }
 
