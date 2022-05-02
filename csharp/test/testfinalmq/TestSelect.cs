@@ -11,7 +11,7 @@ using finalmq;
 
 namespace testfinalmq
 {
-    public class UnitTestSelect : IDisposable
+    public class TestSelect : IDisposable
     {
         static int MILLITOMICRO = 1000;
         static int TIMEOUT = 10;
@@ -23,7 +23,7 @@ namespace testfinalmq
         Socket m_controlSocketWrite = new Socket(SocketType.Stream, ProtocolType.Tcp);
         Mock<IPlatform> m_mockPlatform = new Mock<IPlatform>();
 
-        public UnitTestSelect()
+        public TestSelect()
         {
             Platform.Instance = m_mockPlatform.Object;
 
