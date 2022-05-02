@@ -97,7 +97,8 @@ class SYMBOLEXP Logger
 public:
     static inline ILogger& instance()
     {
-        ILogger* inst = getStaticInstanceRef().load(std::memory_order_acquire);
+        static auto& instanceRef = getStaticInstanceRef();
+        auto* inst = instanceRef.load(std::memory_order_acquire);
         if (!inst)
         {
             inst = createInstance();
