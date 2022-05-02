@@ -13,7 +13,7 @@ namespace finalmq
     public interface IPlatform
     {
         Socket CreateSocket(SocketType socketType, ProtocolType protocolType);
-        EndPoint getLocalEndPoint(Socket socket);
+        EndPoint GetLocalEndPoint(Socket socket);
         bool GetNoDelay(Socket socket);
         void SetNoDelay(Socket socket, bool value);
         int GetLingerTime(Socket socket);
@@ -43,7 +43,7 @@ namespace finalmq
         {
             return new Socket(socketType, protocolType);
         }
-        public EndPoint getLocalEndPoint(Socket socket)
+        public EndPoint GetLocalEndPoint(Socket socket)
         {
             return socket.LocalEndPoint;
         }
