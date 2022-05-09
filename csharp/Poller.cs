@@ -428,8 +428,16 @@ namespace finalmq
                 }
                 foreach (Socket socket in m_errorfds)
                 {
-                    DescriptorInfo descriptorInfo = getDescriptorInfo(socket);
-                    descriptorInfo.disconnected = true;
+                    if (socket == m_controlSocketRead)
+                    {
+                        // control socket broken
+                        //todo: handle broken control socket (should never happen)
+                    }
+                    else
+                    {
+                        DescriptorInfo descriptorInfo = getDescriptorInfo(socket);
+                        descriptorInfo.disconnected = true;
+                    }
                 }
             }
         }

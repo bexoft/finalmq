@@ -11,6 +11,7 @@ using finalmq;
 
 namespace testfinalmq
 {
+    [Collection("Our Test Collection #1")]
     public class TestSelect : IDisposable
     {
         static int MILLITOMICRO = 1000;
@@ -41,6 +42,7 @@ namespace testfinalmq
         {
             m_controlSocketRead.Dispose();
             m_controlSocketWrite.Dispose();
+            Platform.Instance = null;
         }
 
         [Fact]
