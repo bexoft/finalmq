@@ -42,7 +42,7 @@ void CondVar::setValue()
     std::unique_lock<std::mutex> locker(m_mutex);
     m_value = true;
     locker.unlock();
-    if (m_mode == CondVarMode::CONDVAR_AUTOMATICRESET)
+    if (m_mode == CondVarMode::CONDVAR_AUTORESET)
     {
         m_condvar.notify_one();
     }
@@ -65,7 +65,7 @@ bool CondVar::wait(int timeout) const
 {
     bool ret = false;
     std::unique_lock<std::mutex> locker(m_mutex);
-    if (timeout == 0 && (m_mode == CondVarMode::CONDVAR_MANUAL))
+    if (timeout == 0 && (m_mode == CondVarMode::CONDVAR_MANUALRESET))
     {
         ret = m_value;
     }
@@ -83,7 +83,7 @@ bool CondVar::wait(int timeout) const
             }
         }
         ret = m_value;
-        if (m_mode == CondVarMode::CONDVAR_AUTOMATICRESET)
+        if (m_mode == CondVarMode::CONDVAR_AUTORESET)
         {
             m_value = false;
         }
