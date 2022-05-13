@@ -159,19 +159,31 @@ add_library(finalmq SHARED ${SOURCES}
 
 
 if (WIN32)
+    message("== WIN32 ==")
+    set(LINKLIBS ${LINKLIBS} wsock32 ws2_32 Rpcrt4)
     if (FINALMQ_USE_SSL)
         SET(OPENSSL_DIR "$ENV{OPENSSL_ROOT_DIR}")
         include_directories(${OPENSSL_DIR}/include)
         link_directories(${OPENSSL_DIR}/lib)
-        target_link_libraries(finalmq wsock32 ws2_32 Rpcrt4 ${OPENSSL_DIR}/lib/libssl.lib ${OPENSSL_DIR}/lib/libcrypto.lib)
-    else()
-        target_link_libraries(finalmq wsock32 ws2_32 Rpcrt4)
+        set(LINKLIBS ${LINKLIBS} wsock32 ws2_32 Rpcrt4 "${OPENSSL_DIR}/lib/libssl.lib" "${OPENSSL_DIR}/lib/libcrypto.lib")
     endif()
-        target_compile_options(finalmq PRIVATE -DEXPORT_finalmq)
-else()
+    target_compile_options(finalmq PRIVATE -DEXPORT_finalmq)
+elseif(UNIX)
+    message("== UNIX ==")
     target_compile_options(finalmq PRIVATE -Werror -Wall -Wextra)
-    target_link_libraries(finalmq ssl)
+    if (QNX)
+        message("== QNX ==")
+    else()
+        set(LINKLIBS ${LINKLIBS} uuid pthread)
+    endif()
+    if (FINALMQ_USE_SSL)
+        set(LINKLIBS ${LINKLIBS} ssl)
+    endif()
+else()
+    message("== UNKNOWN PLATFORM ==")
 endif()
+
+target_link_libraries(finalmq ${LINKLIBS})
 
 
 ###############################################################
