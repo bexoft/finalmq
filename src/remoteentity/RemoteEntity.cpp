@@ -552,25 +552,25 @@ bool RemoteEntity::sendEventToAllPeers(const std::string& path, const StructBase
 }
 
 
-bool RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply)
+CorrelationId RemoteEntity::sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply)
 {
     CorrelationId correlationId = getNextCorrelationId();
     std::unique_lock<std::mutex> lock(m_mutex);
     m_requests.emplace(correlationId, std::make_unique<Request>(peerId, std::make_shared<FuncReply>(std::move(funcReply))));
     lock.unlock();
     bool ok = sendRequest(peerId, EMPTY_PATH, structBase, correlationId);
-    return ok;
+    return ok ? correlationId : CORRELATIONID_NONE;
 }
 
 
-bool RemoteEntity::sendRequest(const PeerId& peerId, const std::string& path, const StructBase& structBase, FuncReply funcReply)
+CorrelationId RemoteEntity::sendRequest(const PeerId& peerId, const std::string& path, const StructBase& structBase, FuncReply funcReply)
 {
     CorrelationId correlationId = getNextCorrelationId();
     std::unique_lock<std::mutex> lock(m_mutex);
     m_requests.emplace(correlationId, std::make_unique<Request>(peerId, std::make_shared<FuncReply>(std::move(funcReply))));
     lock.unlock();
     bool ok = sendRequest(peerId, path, structBase, correlationId);
-    return ok;
+    return ok ? correlationId : CORRELATIONID_NONE;
 }
 
 
@@ -600,7 +600,10 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const std::string& path, co
         ReceiveData receiveData;
         receiveData.header.corrid = correlationId;
         receiveData.header.status = Status::STATUS_PEER_DISCONNECTED;
-        replyReceived(receiveData);
+        getExecutor()->addAction([this, receiveData] ()
+            {
+                receivedReply(receiveData);
+            });
     }
     return ok;
 }
@@ -649,40 +652,75 @@ bool RemoteEntity::sendEventToAllPeers(const std::string& path, IMessage::Metain
 }
 
 
-bool RemoteEntity::sendRequest(const PeerId& peerId, IMessage::Metainfo&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply)
+CorrelationId RemoteEntity::sendRequest(const PeerId& peerId, IMessage::Metainfo&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply)
 {
     CorrelationId correlationId = getNextCorrelationId();
     std::unique_lock<std::mutex> lock(m_mutex);
     m_requests.emplace(correlationId, std::make_unique<Request>(peerId, std::make_shared<FuncReplyMeta>(std::move(funcReply))));
     lock.unlock();
     bool ok = sendRequest(peerId, EMPTY_PATH, structBase, correlationId, &metainfo);
-    return ok;
+    return ok ? correlationId : CORRELATIONID_NONE;
 }
 
 
-bool RemoteEntity::sendRequest(const PeerId& peerId, const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply)
+CorrelationId RemoteEntity::sendRequest(const PeerId& peerId, const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply)
 {
     CorrelationId correlationId = getNextCorrelationId();
     std::unique_lock<std::mutex> lock(m_mutex);
     m_requests.emplace(correlationId, std::make_unique<Request>(peerId, std::make_shared<FuncReplyMeta>(std::move(funcReply))));
     lock.unlock();
     bool ok = sendRequest(peerId, path, structBase, correlationId, &metainfo);
-    return ok;
+    return ok ? correlationId : CORRELATIONID_NONE;
 }
 
 
+bool RemoteEntity::cancelReply(CorrelationId correlationId)
+{
+    if (correlationId == CORRELATIONID_NONE)
+    {
+        return false;
+    }
+    while (true)
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        auto it = m_requests.find(correlationId);
+        if (it != m_requests.end())
+        {
+            if (it->second->executing)
+            {
+                if (it->second->executingThreadId == std::this_thread::get_id())
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                m_requests.erase(it);
+                return true;
+            }
+        }
+        else
+        {
+            return false;
+        }
+        lock.unlock();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    return false;
+}
 
 
-void RemoteEntity::replyReceived(ReceiveData& receiveData)
+void RemoteEntity::replyReceived(const ReceiveData& receiveData)
 {
     std::unique_ptr<Request> request;
     std::unique_lock<std::mutex> lock(m_mutex);
     auto it = m_requests.find(receiveData.header.corrid);
-    if (it != m_requests.end())
+    if ((it != m_requests.end()) && !it->second->executing)
     {
         request = std::move(it->second);
         assert(request);
-        m_requests.erase(it);
+        request->executing = true;
+        request->executingThreadId = std::this_thread::get_id();
     }
     lock.unlock();
 
@@ -697,12 +735,21 @@ void RemoteEntity::replyReceived(ReceiveData& receiveData)
             (*request->funcMeta)(request->peerId, receiveData.header.status, receiveData.message->getAllMetainfo(), receiveData.structBase);
         }
     }
+
+    lock.lock();
+    if (it != m_requests.end())
+    {
+        m_requests.erase(it);
+    }
+    lock.unlock();
 }
 
 
 void RemoteEntity::registerReplyEvent(FuncReplyEvent funcReplyEvent)
 {
-    m_funcReplyEvent = std::move(funcReplyEvent);
+    std::unique_lock<std::mutex> lock(m_mutex);
+    m_funcsReplyEvent.emplace_back(std::move(funcReplyEvent));
+    m_funcsReplyEventChanged.fetch_add(1, std::memory_order_acq_rel);
 }
 
 
@@ -791,7 +838,7 @@ void RemoteEntity::removePeer(PeerId peerId, Status status)
             requests.reserve(m_requests.size());
             for (auto it = m_requests.begin(); it != m_requests.end(); )
             {
-                if (it->second->peerId == peerId)
+                if ((it->second->peerId == peerId) && !it->second->executing)
                 {
                     requests.push_back(std::move(it->second));
                     it = m_requests.erase(it);
@@ -1142,12 +1189,35 @@ void RemoteEntity::receivedRequest(ReceiveData& receiveData)
     }
 }
 
-void RemoteEntity::receivedReply(ReceiveData& receiveData)
+
+struct ThreadLocalDataReplyEvent
 {
-    bool replyHandled = false;
-    if (m_funcReplyEvent)
+    std::int64_t                changeId = 0;
+    std::vector<FuncReplyEvent> funcsReplyEventNoLock;
+};
+thread_local ThreadLocalDataReplyEvent t_threadLocalDataReplyEvent;
+
+
+void RemoteEntity::receivedReply(const ReceiveData& receiveData)
+{
+    ThreadLocalDataReplyEvent& threadLocalDataReplyEvent = t_threadLocalDataReplyEvent;
+    std::vector<FuncReplyEvent>& funcsReplyEventNoLock = threadLocalDataReplyEvent.funcsReplyEventNoLock;
+    std::int64_t changeId = m_funcsReplyEventChanged.load(std::memory_order_acquire);
+    if (changeId != threadLocalDataReplyEvent.changeId)
     {
-        replyHandled = m_funcReplyEvent(receiveData.header.corrid, receiveData.header.status, receiveData.message->getAllMetainfo(), receiveData.structBase);
+        threadLocalDataReplyEvent.changeId = changeId;
+        std::unique_lock<std::mutex> lock(m_mutex);
+        funcsReplyEventNoLock = m_funcsReplyEvent;
+    }
+
+    bool replyHandled = false;
+    for (size_t i = 0; i < m_funcsReplyEvent.size(); ++i)
+    {
+        replyHandled = m_funcsReplyEvent[i](receiveData.header.corrid, receiveData.header.status, receiveData.message->getAllMetainfo(), receiveData.structBase);
+        if (replyHandled)
+        {
+            break;
+        }
     }
     if (!replyHandled)
     {

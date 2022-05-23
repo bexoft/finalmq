@@ -81,15 +81,15 @@ struct IRemoteEntity
      * @param path is the path that shall be called at the remote entity
      * @param structBase is the request message to send (generated code of fmq file).
      * @param funcReply is the reply callback.
-     * @return true on success.
+     * @return if successful, valid correlation ID.
      */
     template<class R>
-    bool requestReply(const PeerId& peerId,
+    CorrelationId requestReply(const PeerId& peerId,
         const std::string& path, const StructBase& structBase,
         std::function<void(PeerId peerId, Status status, const std::shared_ptr<R>& reply)> funcReply)
     {
         assert(funcReply);
-        bool ok = sendRequest(peerId, path, structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, Status status, const StructBasePtr& structBase) {
+        CorrelationId correlationId = sendRequest(peerId, path, structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, Status status, const StructBasePtr& structBase) {
             std::shared_ptr<R> reply;
             bool typeOk = (!structBase || structBase->getStructInfo().getTypeName() == R::structInfo().getTypeName());
             if (status == Status::STATUS_OK && structBase && typeOk)
@@ -102,7 +102,7 @@ struct IRemoteEntity
             }
             funcReply(peerId, status, reply);
         });
-        return ok;
+        return correlationId;
     }
 
     /**
@@ -118,17 +118,17 @@ struct IRemoteEntity
      * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
      * @param structBase is the request message to send (generated code of fmq file).
      * @param funcReply is the reply callback.
-     * @return true on success.
+     * @return if successful, valid correlation ID.
      */
     template<class R>
-    bool requestReply(const PeerId& peerId,
+    CorrelationId requestReply(const PeerId& peerId,
         const std::string& path,
         IMessage::Metainfo&& metainfo,
         const StructBase& structBase,
         std::function<void(PeerId peerId, Status status, IMessage::Metainfo& metainfo, const std::shared_ptr<R>& reply)> funcReply)
     {
         assert(funcReply);
-        bool ok = sendRequest(peerId, path, std::move(metainfo), structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase) {
+        CorrelationId correlationId = sendRequest(peerId, path, std::move(metainfo), structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase) {
             std::shared_ptr<R> reply;
             bool typeOk = (!structBase || structBase->getStructInfo().getTypeName() == R::structInfo().getTypeName());
             if (status == Status::STATUS_OK && structBase && typeOk)
@@ -141,7 +141,7 @@ struct IRemoteEntity
             }
             funcReply(peerId, status, metainfo, reply);
         });
-        return ok;
+        return correlationId;
     }
 
     /**
@@ -153,15 +153,15 @@ struct IRemoteEntity
      * connections to remote entities, a remote entity must be identified be the peerId.
      * @param structBase is the request message to send (generated code of fmq file).
      * @param funcReply is the reply callback.
-     * @return true on success.
+     * @return if successful, valid correlation ID.
      */
     template<class R>
-    bool requestReply(const PeerId& peerId,
+    CorrelationId requestReply(const PeerId& peerId,
         const StructBase& structBase,
         std::function<void(PeerId peerId, Status status, const std::shared_ptr<R>& reply)> funcReply)
     {
         assert(funcReply);
-        bool ok = sendRequest(peerId, structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, Status status, const StructBasePtr& structBase) {
+        CorrelationId correlationId = sendRequest(peerId, structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, Status status, const StructBasePtr& structBase) {
             std::shared_ptr<R> reply;
             bool typeOk = (!structBase || structBase->getStructInfo().getTypeName() == R::structInfo().getTypeName());
             if (status == Status::STATUS_OK && structBase && typeOk)
@@ -174,7 +174,7 @@ struct IRemoteEntity
             }
             funcReply(peerId, status, reply);
         });
-        return ok;
+        return correlationId;
     }
 
     /**
@@ -189,16 +189,16 @@ struct IRemoteEntity
      * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
      * @param structBase is the request message to send (generated code of fmq file).
      * @param funcReply is the reply callback.
-     * @return true on success.
+     * @return if successful, valid correlation ID.
      */
     template<class R>
-    bool requestReply(const PeerId& peerId,
+    CorrelationId requestReply(const PeerId& peerId,
         IMessage::Metainfo&& metainfo,
         const StructBase& structBase,
         std::function<void(PeerId peerId, Status status, IMessage::Metainfo& metainfo, const std::shared_ptr<R>& reply)> funcReply)
     {
         assert(funcReply);
-        bool ok = sendRequest(peerId, std::move(metainfo), structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase) {
+        CorrelationId correlationId = sendRequest(peerId, std::move(metainfo), structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase) {
             std::shared_ptr<R> reply;
             bool typeOk = (!structBase || structBase->getStructInfo().getTypeName() == R::structInfo().getTypeName());
             if (status == Status::STATUS_OK && structBase && typeOk)
@@ -211,7 +211,7 @@ struct IRemoteEntity
             }
             funcReply(peerId, status, metainfo, reply);
         });
-        return ok;
+        return correlationId;
     }
 
     /**
@@ -486,9 +486,9 @@ struct IRemoteEntity
      * @param path is the path that shall be called at the remote entity
      * @param structBase is the request message to send (generated code of fmq file).
      * @param funcReply is the reply callback.
-     * @return true on success.
+     * @return if successful, valid correlation ID.
      */
-    virtual bool sendRequest(const PeerId& peerId, const std::string& path, const StructBase& structBase, FuncReply funcReply) = 0;
+    virtual CorrelationId sendRequest(const PeerId& peerId, const std::string& path, const StructBase& structBase, FuncReply funcReply) = 0;
 
     /**
      * @brief sendRequest sends a request to the peer and the funcReply is triggered when
@@ -503,9 +503,9 @@ struct IRemoteEntity
      * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
      * @param structBase is the request message to send (generated code of fmq file).
      * @param funcReply is the reply callback.
-     * @return true on success.
+     * @return if successful, valid correlation ID.
      */
-    virtual bool sendRequest(const PeerId& peerId, const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply) = 0;
+    virtual CorrelationId sendRequest(const PeerId& peerId, const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply) = 0;
 
     /**
      * @brief sendRequest sends a request to the peer and the funcReply is triggered when
@@ -516,9 +516,9 @@ struct IRemoteEntity
      * connections to remote entities, a remote entity must be identified be the peerId.
      * @param structBase is the request message to send (generated code of fmq file).
      * @param funcReply is the reply callback.
-     * @return true on success.
+     * @return if successful, valid correlation ID.
      */
-    virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) = 0;
+    virtual CorrelationId sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) = 0;
 
     /**
      * @brief sendRequest sends a request to the peer and the funcReply is triggered when
@@ -532,9 +532,17 @@ struct IRemoteEntity
      * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
      * @param structBase is the request message to send (generated code of fmq file).
      * @param funcReply is the reply callback.
-     * @return true on success.
+     * @return if successful, valid correlation ID.
      */
-    virtual bool sendRequest(const PeerId& peerId, IMessage::Metainfo&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply) = 0;
+    virtual CorrelationId sendRequest(const PeerId& peerId, IMessage::Metainfo&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply) = 0;
+
+    /**
+    * @brief cancels the a reply callback. After calling this function, the expected reply callback will be be called, anymore.
+    * Call this function, if e.g. a timeout happened, and you are not interested for the reply, anymore.
+    * @param correlationId of the request, which reply callback shall not be called, anymore
+    * @return true, if the request was still pending and the reply callback was canceled. false, if the reply callback, was already called.
+    */
+    virtual bool cancelReply(CorrelationId correlationId) = 0;
 
     /**
      * @brief isEntityRegistered returns the information, if the entity was registered at a RemoteEntityContainer.
@@ -571,7 +579,7 @@ private:
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) = 0;
     virtual void virtualSessionDisconnected(const IProtocolSessionPtr& session, const std::string& virtualSessionId) = 0;
     virtual void receivedRequest(ReceiveData& receiveData) = 0;
-    virtual void receivedReply(ReceiveData& receiveData) = 0;
+    virtual void receivedReply(const ReceiveData& receiveData) = 0;
     virtual void deinit() = 0;
     friend class RemoteEntityContainer;
 };

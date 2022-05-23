@@ -466,26 +466,26 @@ void RemoteEntityContainer::disconnectedVirtualSession(const IProtocolSessionPtr
 static const std::string FMQ_PATH = "fmq_path";
 
 
-struct ThreadLocalData
+struct ThreadLocalDataEntities
 {
     std::int64_t                                                changeId = 0;
     std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>  name2entityNoLock;
     std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>>     entityId2entityNoLock;
 };
-thread_local ThreadLocalData t_threadLocalData;
+thread_local ThreadLocalDataEntities t_threadLocalDataEntities;
 
 void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const IMessagePtr& message)
 {
     assert(session);
     assert(message);
 
-    ThreadLocalData& threadLocalData = t_threadLocalData;
-    std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2entityNoLock = threadLocalData.name2entityNoLock;
-    std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>>& entityId2entityNoLock = threadLocalData.entityId2entityNoLock;
+    ThreadLocalDataEntities& threadLocalDataEntities = t_threadLocalDataEntities;
+    std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2entityNoLock = threadLocalDataEntities.name2entityNoLock;
+    std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>>& entityId2entityNoLock = threadLocalDataEntities.entityId2entityNoLock;
     std::int64_t changeId = m_entitiesChanged.load(std::memory_order_acquire);
-    if (changeId != threadLocalData.changeId)
+    if (changeId != threadLocalDataEntities.changeId)
     {
-        threadLocalData.changeId = changeId;
+        threadLocalDataEntities.changeId = changeId;
         std::unique_lock<std::mutex> lock(m_mutex);
         name2entityNoLock = m_name2entity;
         entityId2entityNoLock = m_entityId2entity;
