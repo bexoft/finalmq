@@ -30,6 +30,7 @@
 #include "finalmq/variant/VariantValues.h"
 #include "finalmq/protocols/ProtocolMqtt5Client.h"
 #include "finalmq/helpers/Executor.h"
+#include "finalmq/helpers/ProtothreadRequestReply.h"
 
 // the definition of the messages are in the file helloworld.fmq
 #include "helloworld.fmq.h"
@@ -69,7 +70,7 @@ using helloworld::Address;
 
 
 
-#define LOOP_PARALLEL   100000
+#define LOOP_PARALLEL   10000
 #define LOOP_SEQUENTIAL 10000
 
 finalmq::CondVar g_performanceTestFinished{};
@@ -100,6 +101,7 @@ void triggerRequest(RemoteEntity& entityClient, PeerId peerId, const std::chrono
             }
         });
 }
+
 
 
 //#define MULTITHREADED
@@ -291,6 +293,35 @@ int main()
     triggerRequest(entityClient, peerId, starttime, 0);
 
     g_performanceTestFinished.wait();
+
+
+
+    starttime = std::chrono::steady_clock::now();
+    finalmq::CondVar condvar;
+    struct ProtoThreadState
+    {
+        int i = 0;
+        std::shared_ptr<HelloReply> reply;
+    } protoThreadState;
+    finalmq::ProtothreadRequestReply protothread([&entityClient, peerId, protoThreadState](finalmq::ProtothreadRequestReply& protothread) mutable {
+        PT_BEGIN(protothread);
+
+        for (; protoThreadState.i < LOOP_SEQUENTIAL; ++protoThreadState.i)
+        {
+            protothread.sendRequest(&entityClient, peerId, HelloRequest{ { {"Bonnie","Parker",Gender::FEMALE,1910,{"somestreet", 12,76875,"Rowena","USA"}} } });
+            WAIT_FOR_REPLY(protothread);
+            auto reply = protothread.reply<HelloReply>();
+        }
+
+        PT_END(protothread);
+    }, [&condvar]() { condvar = true; });
+    protothread.Run();
+    condvar.wait();
+    auto now = std::chrono::steady_clock::now();
+    std::chrono::duration<double> dur = now - starttime;
+    long long delta = static_cast<long long>(dur.count() * 1000);
+    std::cout << "time for " << LOOP_SEQUENTIAL << " sequential requests: " << delta << "ms" << std::endl;
+
 
 #ifndef MULTITHREADED
     // release the thread

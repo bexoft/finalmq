@@ -316,10 +316,11 @@ public:
     virtual std::string getTypeOfCommandFunction(std::string& path, const std::string* method = nullptr) override;
     virtual CorrelationId getNextCorrelationId() const override;
     virtual bool sendRequest(const PeerId& peerId, const std::string& path, const StructBase& structBase, CorrelationId correlationId, IMessage::Metainfo* metainfo = nullptr) override;
-    virtual bool sendRequest(const PeerId& peerId, const std::string& path, const StructBase& structBase, FuncReply funcReply) override;
-    virtual bool sendRequest(const PeerId& peerId, const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply) override;
-    virtual bool sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) override;
-    virtual bool sendRequest(const PeerId& peerId, IMessage::Metainfo&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply) override;
+    virtual CorrelationId sendRequest(const PeerId& peerId, const std::string& path, const StructBase& structBase, FuncReply funcReply) override;
+    virtual CorrelationId sendRequest(const PeerId& peerId, const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply) override;
+    virtual CorrelationId sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) override;
+    virtual CorrelationId sendRequest(const PeerId& peerId, IMessage::Metainfo&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply) override;
+    virtual bool cancelReply(CorrelationId correlationId) override;
     virtual bool isEntityRegistered() const override;
     virtual void registerReplyEvent(FuncReplyEvent funcReplyEvent) override;
     virtual IExecutorPtr getExecutor() const override;
@@ -330,13 +331,13 @@ private:
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) override;
     virtual void virtualSessionDisconnected(const IProtocolSessionPtr& session, const std::string& virtualSessionId) override;
     virtual void receivedRequest(ReceiveData& receiveData) override;
-    virtual void receivedReply(ReceiveData& receiveData) override;
+    virtual void receivedReply(const ReceiveData& receiveData) override;
     virtual void deinit() override;
 
     PeerId connectIntern(const IProtocolSessionPtr& session, const std::string& virtualSessionId, const std::string& entityName, EntityId, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect);
     void connectIntern(PeerId peerId, const IProtocolSessionPtr& session, const std::string& entityName, EntityId entityId);
     void removePeer(PeerId peerId, Status status);
-    void replyReceived(ReceiveData& receiveData);
+    void replyReceived(const ReceiveData& receiveData);
     void sendConnectEntity(PeerId peerId, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect);
 
     struct Function
@@ -366,13 +367,16 @@ private:
         PeerId                          peerId = PEERID_INVALID;
         std::shared_ptr<FuncReply>      func;
         std::shared_ptr<FuncReplyMeta>  funcMeta;
+        bool                            executing = false;
+        std::thread::id                 executingThreadId{};
     };
 
 
     EntityId                            m_entityId{ ENTITYID_INVALID };
     std::string                         m_entityName;
 
-    FuncReplyEvent                      m_funcReplyEvent;
+    std::vector<FuncReplyEvent>         m_funcsReplyEvent;
+    std::atomic_int64_t                 m_funcsReplyEventChanged = {};
     std::unordered_map<CorrelationId, std::unique_ptr<Request>> m_requests;
     std::unordered_map<std::string, Function> m_funcCommandsStatic;
     std::list<FunctionVar>              m_funcCommandsVar;
