@@ -64,8 +64,7 @@ Mqtt5Serialization::Mqtt5Serialization(char* buffer, unsigned int sizeBuffer, un
 
 }
 
-
-int Mqtt5Serialization::getReadIndex() const
+unsigned int Mqtt5Serialization::getReadIndex() const
 {
     return m_indexBuffer;
 }

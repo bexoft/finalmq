@@ -28,7 +28,7 @@
 namespace finalmq {
 
 
-enum Mqtt5Command
+enum class Mqtt5Command
 {
     COMMAND_CONNECT         = 1,       // Server <-  Client, Connection request
     COMMAND_CONNACK         = 2,       // Server  -> Client, Connect acknowledgment
@@ -53,7 +53,7 @@ class Mqtt5Serialization
 {
 public:
     Mqtt5Serialization(char* buffer, unsigned int sizeBuffer, unsigned int indexBuffer);
-    int getReadIndex() const;
+    unsigned int getReadIndex() const;
 
     bool deserializeConnect(Mqtt5ConnectData& data);
     bool deserializeConnAck(Mqtt5ConnAckData& data);
