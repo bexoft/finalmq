@@ -25,6 +25,7 @@
 #include "finalmq/streamconnection/IMessage.h"
 #include "finalmq/protocols/mqtt5/Mqtt5CommandData.h"
 #include "finalmq/streamconnection/StreamConnection.h"
+#include "Mqtt5Serialization.h"
 
 #include <deque>
 #include <functional>
@@ -95,17 +96,17 @@ public:
     unsigned int getPacketId();
     void resendMessages(const IStreamConnectionPtr& connection);
     void sendPendingMessages(const IStreamConnectionPtr& connection);
-    void prepareForSendWithPacketId(const IMessagePtr& message, std::uint8_t* bufferPacketId, unsigned qos, unsigned int command, unsigned int packetId);
-    bool prepareForSend(const IMessagePtr& message, std::uint8_t* bufferPacketId, unsigned qos, unsigned int command);
-    bool handleAck(const IStreamConnectionPtr& connection, unsigned int command, unsigned int packetId, unsigned int reasoncode);
+    void prepareForSendWithPacketId(const IMessagePtr& message, std::uint8_t* bufferPacketId, unsigned qos, Mqtt5Command command, unsigned int packetId);
+    bool prepareForSend(const IMessagePtr& message, std::uint8_t* bufferPacketId, unsigned qos, Mqtt5Command command);
+    bool handleAck(const IStreamConnectionPtr& connection, Mqtt5Command command, unsigned int packetId, unsigned int reasoncode);
     void sendPubAck(const IStreamConnectionPtr& connection, const Mqtt5PubAckData& data);
     void sendPubRec(const IStreamConnectionPtr& connection, const Mqtt5PubAckData& data);
     void sendPubRel(const IStreamConnectionPtr& connection, const Mqtt5PubAckData& data, const IMessagePtr& message);
     void sendPubComp(const IStreamConnectionPtr& connection, const Mqtt5PubAckData& data);
     void sendSubAck(const IStreamConnectionPtr& connection, const Mqtt5SubAckData& data);
     void sendUnsubAck(const IStreamConnectionPtr& connection, const Mqtt5SubAckData& data);
-    void sendPubAck(const IStreamConnectionPtr& connection, unsigned int command, const Mqtt5PubAckData& data);
-    void sendSubAck(const IStreamConnectionPtr& connection, unsigned int command, const Mqtt5SubAckData& data);
+    void sendPubAck(const IStreamConnectionPtr& connection, Mqtt5Command command, const Mqtt5PubAckData& data);
+    void sendSubAck(const IStreamConnectionPtr& connection, Mqtt5Command command, const Mqtt5SubAckData& data);
 
 
     // IMqtt5Protocol
@@ -137,7 +138,7 @@ public:
         IMessagePtr     message;
         std::uint8_t*   bufferPacketId = nullptr;
         unsigned int    qos = 0;
-        unsigned int    command = 0;
+        Mqtt5Command    command {};
     };
     struct MessageStatus
     {
