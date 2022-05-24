@@ -80,7 +80,7 @@ bool Mqtt5Protocol::receiveHeader(const SocketPtr& socket, int& bytesToRead)
     assert(m_state == State::WAITFORHEADER);
     bool ret = false;
 
-    int res = socket->receive(reinterpret_cast<char*>(&m_header), HEADERSIZE);
+    int res = socket->receive(&m_header, HEADERSIZE);
     if (res == HEADERSIZE)
     {
         bytesToRead -= HEADERSIZE;
