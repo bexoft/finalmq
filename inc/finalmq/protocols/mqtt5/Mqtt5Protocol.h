@@ -121,7 +121,7 @@ public:
     virtual void sendDisconnect(const IStreamConnectionPtr& connection, const Mqtt5DisconnectData& data) override;
     virtual void sendAuth(const IStreamConnectionPtr& connection, const Mqtt5AuthData& data) override;
 
-    unsigned char m_header;
+    char m_header{};
     int         m_remainingSize = 0;
     int         m_remainingSizeShift = 0;
     State       m_state = State::WAITFORHEADER;
