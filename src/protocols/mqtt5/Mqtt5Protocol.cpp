@@ -80,7 +80,7 @@ bool Mqtt5Protocol::receiveHeader(const SocketPtr& socket, int& bytesToRead)
     assert(m_state == State::WAITFORHEADER);
     bool ret = false;
 
-    int res = socket->receive(reinterpret_cast<char*>(&m_header), HEADERSIZE);
+    int res = socket->receive(&m_header, HEADERSIZE);
     if (res == HEADERSIZE)
     {
         bytesToRead -= HEADERSIZE;
@@ -183,10 +183,7 @@ bool Mqtt5Protocol::receivePayload(const IStreamConnectionPtr& connection, const
         {
             m_state = State::MESSAGECOMPLETE;
             m_sizeCurrent = 0;
-            if (ok)
-            {
-                ok = processPayload(connection);
-            }
+            ok = processPayload(connection);
         }
     }
     return ok;
@@ -200,7 +197,7 @@ bool Mqtt5Protocol::handleAck(const IStreamConnectionPtr& connection, unsigned i
     std::unique_lock<std::mutex> lock(m_mutex);
     if ((packetId != 0) && (packetId < m_messageIdsAllocated.size()))
     {
-        Mqtt5Command cmd = static_cast<Mqtt5Command>(command);
+        auto cmd = static_cast<Mqtt5Command>(command);
         MessageStatus& status = m_messageIdsAllocated[packetId];
         if (((status.status == MessageStatus::SENDSTAT_WAITPUBACK)   && (cmd == Mqtt5Command::COMMAND_PUBACK))  ||
             ((status.status == MessageStatus::SENDSTAT_WAITPUBREC)   && (cmd == Mqtt5Command::COMMAND_PUBREC))  ||
@@ -532,7 +529,7 @@ void Mqtt5Protocol::sendConnect(const IStreamConnectionPtr& connection, const Mq
     unsigned int sizePropPayload = 0;
     unsigned int sizePropWillMessage = 0;
     unsigned int sizePayload = Mqtt5Serialization::sizeConnect(data, sizePropPayload, sizePropWillMessage);
-    int sizeMessage = 1 + Mqtt5Serialization::sizeVarByteNumber(sizePayload) + sizePayload;
+    unsigned int sizeMessage = 1u + Mqtt5Serialization::sizeVarByteNumber(sizePayload) + sizePayload;
     IMessagePtr message = std::make_shared<ProtocolMessage>(0);
     char* buffer = message->addSendHeader(sizeMessage);
     Mqtt5Serialization serialization(buffer, sizeMessage, 0);
@@ -548,7 +545,7 @@ void Mqtt5Protocol::sendConnAck(const IStreamConnectionPtr& connection, const Mq
 {
     unsigned int sizePropPayload = 0;
     unsigned int sizePayload = Mqtt5Serialization::sizeConnAck(data, sizePropPayload);
-    int sizeMessage = 1 + Mqtt5Serialization::sizeVarByteNumber(sizePayload) + sizePayload;
+    unsigned int sizeMessage = 1u + Mqtt5Serialization::sizeVarByteNumber(sizePayload) + sizePayload;
     IMessagePtr message = std::make_shared<ProtocolMessage>(0);
     char* buffer = message->addSendHeader(sizeMessage);
     Mqtt5Serialization serialization(buffer, sizeMessage, 0);
@@ -565,9 +562,8 @@ void Mqtt5Protocol::resendMessages(const IStreamConnectionPtr& connection)
 {
     if (connection)
     {
-        for (auto it = m_messagesWaitAck.begin(); it != m_messagesWaitAck.end(); ++it)
+        for (const IMessagePtr& message : m_messagesWaitAck)
         {
-            const IMessagePtr& message = *it;
             assert(message);
 
             // set dup
@@ -582,7 +578,6 @@ void Mqtt5Protocol::resendMessages(const IStreamConnectionPtr& connection)
                     header |= HEADER_SetDup(header);
                 }
             }
-
             connection->sendMessage(message);
         }
     }
@@ -632,7 +627,7 @@ void Mqtt5Protocol::prepareForSendWithPacketId(const IMessagePtr& message, std::
     MessageStatus::Status status = MessageStatus::SENDSTAT_NONE;
     if (qos == 1)
     {
-        Mqtt5Command cmd = static_cast<Mqtt5Command>(command);
+        auto cmd = static_cast<Mqtt5Command>(command);
         switch (cmd)
         {
         case Mqtt5Command::COMMAND_PUBLISH:
@@ -716,7 +711,7 @@ void Mqtt5Protocol::sendPublish(const IStreamConnectionPtr& connection, Mqtt5Pub
     unsigned int sizeAppPayload = static_cast<unsigned int>(message->getTotalSendPayloadSize());
     unsigned int sizePropPayload = 0;
     unsigned int sizePayload = Mqtt5Serialization::sizePublish(data, sizePropPayload) + sizeAppPayload;
-    int sizeMessage = 1 + Mqtt5Serialization::sizeVarByteNumber(sizePayload) + sizePayload;
+    unsigned int sizeMessage = 1u + Mqtt5Serialization::sizeVarByteNumber(sizePayload) + sizePayload;
     char* buffer = message->addSendHeader(sizeMessage - sizeAppPayload);
     Mqtt5Serialization serialization(buffer, sizeMessage - sizeAppPayload, 0);
     std::uint8_t* bufferPacketId = nullptr;
@@ -735,7 +730,7 @@ void Mqtt5Protocol::sendPubAck(const IStreamConnectionPtr& connection, unsigned 
 {
     unsigned int sizePropPayload = 0;
     unsigned int sizePayload = Mqtt5Serialization::sizePubAck(data, sizePropPayload);
-    int sizeMessage = 1 + Mqtt5Serialization::sizeVarByteNumber(sizePayload) + sizePayload;
+    unsigned int sizeMessage = 1 + Mqtt5Serialization::sizeVarByteNumber(sizePayload) + sizePayload;
     IMessagePtr message = std::make_shared<ProtocolMessage>(0);
     char* buffer = message->addSendHeader(sizeMessage);
     Mqtt5Serialization serialization(buffer, sizeMessage, 0);
@@ -763,7 +758,7 @@ void Mqtt5Protocol::sendPubRel(const IStreamConnectionPtr& connection, const Mqt
 {
     unsigned int sizePropPayload = 0;
     unsigned int sizePayload = Mqtt5Serialization::sizePubAck(data, sizePropPayload);
-    int sizeMessage = 1 + Mqtt5Serialization::sizeVarByteNumber(sizePayload) + sizePayload;
+    unsigned int sizeMessage = 1u + Mqtt5Serialization::sizeVarByteNumber(sizePayload) + sizePayload;
     char* buffer = message->addSendHeader(sizeMessage);
     Mqtt5Serialization serialization(buffer, sizeMessage, 0);
     serialization.serializePubAck(data, Mqtt5Command::COMMAND_PUBREL, sizePayload, sizePropPayload);
@@ -786,7 +781,7 @@ void Mqtt5Protocol::sendSubscribe(const IStreamConnectionPtr& connection, const 
 {
     unsigned int sizePropPayload = 0;
     unsigned int sizePayload = Mqtt5Serialization::sizeSubscribe(data, sizePropPayload);
-    int sizeMessage = 1 + Mqtt5Serialization::sizeVarByteNumber(sizePayload) + sizePayload;
+    unsigned int sizeMessage = 1u + Mqtt5Serialization::sizeVarByteNumber(sizePayload) + sizePayload;
     IMessagePtr message = std::make_shared<ProtocolMessage>(0);
     char* buffer = message->addSendHeader(sizeMessage);
     Mqtt5Serialization serialization(buffer, sizeMessage, 0);
@@ -805,7 +800,7 @@ void Mqtt5Protocol::sendSubAck(const IStreamConnectionPtr& connection, unsigned 
 {
     unsigned int sizePropPayload = 0;
     unsigned int sizePayload = Mqtt5Serialization::sizeSubAck(data, sizePropPayload);
-    int sizeMessage = 1 + Mqtt5Serialization::sizeVarByteNumber(sizePayload) + sizePayload;
+    unsigned int sizeMessage = 1u + Mqtt5Serialization::sizeVarByteNumber(sizePayload) + sizePayload;
     IMessagePtr message = std::make_shared<ProtocolMessage>(0);
     char* buffer = message->addSendHeader(sizeMessage);
     Mqtt5Serialization serialization(buffer, sizeMessage, 0);
@@ -827,7 +822,7 @@ void Mqtt5Protocol::sendUnsubscribe(const IStreamConnectionPtr& connection, cons
 {
     unsigned int sizePropPayload = 0;
     unsigned int sizePayload = Mqtt5Serialization::sizeUnsubscribe(data, sizePropPayload);
-    int sizeMessage = 1 + Mqtt5Serialization::sizeVarByteNumber(sizePayload) + sizePayload;
+    unsigned int sizeMessage = 1u + Mqtt5Serialization::sizeVarByteNumber(sizePayload) + sizePayload;
     IMessagePtr message = std::make_shared<ProtocolMessage>(0);
     char* buffer = message->addSendHeader(sizeMessage);
     Mqtt5Serialization serialization(buffer, sizeMessage, 0);
@@ -879,7 +874,7 @@ void Mqtt5Protocol::sendDisconnect(const IStreamConnectionPtr& connection, const
 {
     unsigned int sizePropPayload = 0;
     unsigned int sizePayload = Mqtt5Serialization::sizeDisconnect(data, sizePropPayload);
-    int sizeMessage = 1 + Mqtt5Serialization::sizeVarByteNumber(sizePayload) + sizePayload;
+    unsigned sizeMessage = 1u + Mqtt5Serialization::sizeVarByteNumber(sizePayload) + sizePayload;
     IMessagePtr message = std::make_shared<ProtocolMessage>(0);
     char* buffer = message->addSendHeader(sizeMessage);
     Mqtt5Serialization serialization(buffer, sizeMessage, 0);
@@ -895,7 +890,7 @@ void Mqtt5Protocol::sendAuth(const IStreamConnectionPtr& connection, const Mqtt5
 {
     unsigned int sizePropPayload = 0;
     unsigned int sizePayload = Mqtt5Serialization::sizeAuth(data, sizePropPayload);
-    int sizeMessage = 1 + Mqtt5Serialization::sizeVarByteNumber(sizePayload) + sizePayload;
+    unsigned int sizeMessage = 1u + Mqtt5Serialization::sizeVarByteNumber(sizePayload) + sizePayload;
     IMessagePtr message = std::make_shared<ProtocolMessage>(0);
     char* buffer = message->addSendHeader(sizeMessage);
     Mqtt5Serialization serialization(buffer, sizeMessage, 0);
