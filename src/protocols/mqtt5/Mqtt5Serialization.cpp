@@ -607,9 +607,8 @@ unsigned int Mqtt5Serialization::sizeSubscribe(const Mqtt5SubscribeData& data, u
     // at least one subscription must be available
     assert(!data.subscriptions.empty());
 
-    for (size_t i = 0; i < data.subscriptions.size(); ++i)
+    for (const Mqtt5SubscribeEntry& entry : data.subscriptions)
     {
-        const Mqtt5SubscribeEntry& entry = data.subscriptions[i];
         size += sizeString(entry.topic);
     }
     // options
@@ -637,9 +636,8 @@ void Mqtt5Serialization::serializeSubscribe(const Mqtt5SubscribeData& data, unsi
     // at least one subscription must be available
     assert(!data.subscriptions.empty());
 
-    for (size_t i = 0; i < data.subscriptions.size(); ++i)
+    for (const auto & entry: data.subscriptions)
     {
-        const Mqtt5SubscribeEntry& entry = data.subscriptions[i];
         writeString(entry.topic);
         unsigned int option = 0;
         option |= SO_SetRetainHandling(entry.retainHandling);
@@ -728,10 +726,9 @@ void Mqtt5Serialization::serializeSubAck(const Mqtt5SubAckData& data, Mqtt5Comma
     // at least one ack must be available
     assert(!data.reasoncodes.empty());
 
-    for (size_t i = 0; i < data.reasoncodes.size(); ++i)
+    for (const auto reasonCode: data.reasoncodes)
     {
-        unsigned int reasoncode = data.reasoncodes[i];
-        write1ByteNumber(reasoncode);
+        write1ByteNumber(reasonCode);
     }
 
     assert(m_indexBuffer == m_sizeBuffer);
@@ -794,9 +791,8 @@ unsigned int Mqtt5Serialization::sizeUnsubscribe(const Mqtt5UnsubscribeData& dat
     // at least one unsubscription must be available
     assert(!data.topics.empty());
 
-    for (size_t i = 0; i < data.topics.size(); ++i)
+    for (const auto & topic: data.topics)
     {
-        const std::string& topic = data.topics[i];
         size += sizeString(topic);
     }
 
@@ -821,9 +817,8 @@ void Mqtt5Serialization::serializeUnsubscribe(const Mqtt5UnsubscribeData& data, 
     // at least one unsubscription must be available
     assert(!data.topics.empty());
 
-    for (size_t i = 0; i < data.topics.size(); ++i)
+    for (const auto &topic: data.topics)
     {
-        const std::string& topic = data.topics[i];
         writeString(topic);
     }
 

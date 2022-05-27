@@ -31,9 +31,9 @@
 //#include "finalmq/helpers/ModulenameFinalmq.h"
 
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 #include <fcntl.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 
 namespace finalmq {
