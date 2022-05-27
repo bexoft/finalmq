@@ -46,6 +46,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="helper\CondVar.cs" />
+    <Compile Include="helper\Executor.cs" />
+    <Compile Include="helper\IExecutor.cs" />
     <Compile Include="helper\Platform.cs" />
     <Compile Include="poller\Poller.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -27,6 +27,26 @@ namespace testfinalmq
         public TestIntegrationSelect()
         {
             m_poller.Init();
+
+            //object sync = new object();
+            //Thread thread = new Thread(() =>
+            //{
+            //    Thread.Sleep(10000);
+            //    lock (sync)
+            //    {
+            //        Monitor.PulseAll(sync);
+            //    }
+            //});
+            //thread.Start();
+            //lock (sync)
+            //{
+            //    Monitor.Wait(sync);
+            //}
+
+            var ewh = new EventWaitHandle(false, EventResetMode.AutoReset);
+            //ewh.Set();
+            ewh.WaitOne(10000);
+
         }
 
         public void Dispose()
