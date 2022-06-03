@@ -26,8 +26,7 @@
 #include "finalmq/protocolsession/ProtocolRegistry.h"
 #include "finalmq/streamconnection/Socket.h"
 
-#include <atomic>
-#include <assert.h>
+#include <cassert>
 
 namespace finalmq {
 
@@ -167,9 +166,9 @@ bool ProtocolHeaderBinarySize::received(const IStreamConnectionPtr& /*connection
     auto callback = m_callback.lock();
     if (callback)
     {
-        for (auto it = messages.begin(); it != messages.end(); ++it)
+        for (const auto &message : messages)
         {
-            callback->received(*it);
+            callback->received(message);
         }
     }
     return ok;

@@ -326,7 +326,7 @@ bool Mqtt5Protocol::processPayload(const IStreamConnectionPtr& connection)
                 }
                 if (callback && execute)
                 {
-                    int indexRead = serialization.getReadIndex();
+                    auto indexRead = serialization.getReadIndex();
                     m_message->setHeaderSize(indexRead);
                     callback->receivedPublish(std::move(data), m_message);
                 }
@@ -703,7 +703,7 @@ bool Mqtt5Protocol::prepareForSend(const IMessagePtr& message, std::uint8_t* buf
 
 void Mqtt5Protocol::sendPublish(const IStreamConnectionPtr& connection, Mqtt5PublishData& data, const IMessagePtr& message)
 {
-    unsigned int sizeAppPayload = static_cast<unsigned int>(message->getTotalSendPayloadSize());
+    auto sizeAppPayload = message->getTotalSendPayloadSize();
     unsigned int sizePropPayload = 0;
     unsigned int sizePayload = Mqtt5Serialization::sizePublish(data, sizePropPayload) + sizeAppPayload;
     unsigned int sizeMessage = 1u + Mqtt5Serialization::sizeVarByteNumber(sizePayload) + sizePayload;
@@ -799,7 +799,7 @@ void Mqtt5Protocol::sendSubAck(const IStreamConnectionPtr& connection, Mqtt5Comm
     IMessagePtr message = std::make_shared<ProtocolMessage>(0);
     char* buffer = message->addSendHeader(sizeMessage);
     Mqtt5Serialization serialization(buffer, sizeMessage, 0);
-    serialization.serializeSubAck(data, static_cast<Mqtt5Command>(command), sizePayload, sizePropPayload);
+    serialization.serializeSubAck(data,command, sizePayload, sizePropPayload);
 
     if (connection)
     {
