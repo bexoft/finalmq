@@ -17,7 +17,6 @@ namespace finalmq
 
         public void Run()
         {
-            Interlocked.MemoryBarrier();
             while (Interlocked.Read(ref m_terminate) == 0)
             {
                 m_newActions.Wait();
@@ -285,7 +284,7 @@ namespace finalmq
             }
         }
 
-        private IList<DelegateAction> m_actions;
+        private IList<DelegateAction> m_actions = new List<DelegateAction>();
     }
 
     class ExecutorWorkerBase : IExecutorWorker

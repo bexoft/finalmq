@@ -55,8 +55,15 @@
     <Compile Include="src\helper\CondVar.cs" />
     <Compile Include="src\helper\Executor.cs" />
     <Compile Include="src\helper\IExecutor.cs" />
+    <Compile Include="src\helper\IZeroCopyBuffer.cs" />
     <Compile Include="src\helper\Platform.cs" />
     <Compile Include="src\poller\Poller.cs" />
+    <Compile Include="src\streamconnection\SocketHelpers.cs" />
+    <Compile Include="src\streamconnection\AddressHelpers.cs" />
+    <Compile Include="src\streamconnection\ConnectionData.cs" />
+    <Compile Include="src\streamconnection\IMessage.cs" />
+    <Compile Include="src\streamconnection\StreamConnection.cs" />
+    <Compile Include="src\streamconnection\StreamConnectionContainer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -64,15 +71,6 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="src\streamconnection\AddressHelpers.h" />
-    <Content Include="src\streamconnection\ConnectionData.h" />
-    <Content Include="src\streamconnection\IMessage.h" />
-    <Content Include="src\streamconnection\OpenSsl.h" />
-    <Content Include="src\streamconnection\Socket.h" />
-    <Content Include="src\streamconnection\StreamConnection.h" />
-    <Content Include="src\streamconnection\StreamConnectionContainer.h" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
