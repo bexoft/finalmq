@@ -25,8 +25,7 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Net.Security;
-using System.IO;
-using System.Threading;
+using System.Security.Cryptography.X509Certificates;
 
 
 namespace finalmq {
@@ -35,12 +34,12 @@ namespace finalmq {
 
     public interface IStreamConnectionContainer
     {
-        void Init(int cycleTime = 100, FuncPollerLoopTimer funcTimer = null, int checkReconnectInterval = 1000);
-        void Bind(string endpoint, IStreamConnectionCallback callback, BindProperties bindProperties = null);
+        void Init(int cycleTime = 100, FuncPollerLoopTimer? funcTimer = null, int checkReconnectInterval = 1000);
+        void Bind(string endpoint, IStreamConnectionCallback? callback, BindProperties? bindProperties = null);
         void Unbind(string endpoint);
-        IStreamConnection Connect(string endpoint, IStreamConnectionCallback callback, ConnectProperties connectionProperties = null);
+        IStreamConnection Connect(string endpoint, IStreamConnectionCallback callback, ConnectProperties? connectionProperties = null);
         IStreamConnection CreateConnection(IStreamConnectionCallback callback);
-        bool Connect(string endpoint, IStreamConnection streamConnection, ConnectProperties connectionProperties = null);
+        void Connect(string endpoint, IStreamConnection streamConnection, ConnectProperties? connectionProperties = null);
         IList<IStreamConnection> GetAllConnections();
         IStreamConnection GetConnection(long connectionId);
         //void Run();
@@ -51,7 +50,7 @@ namespace finalmq {
 
     public class StreamConnectionContainer : IStreamConnectionContainer
     {
-        public void Bind(string endpoint, IStreamConnectionCallback callback, BindProperties bindProperties = null)
+        public void Bind(string endpoint, IStreamConnectionCallback? callback, BindProperties? bindProperties = null)
         {
             if (string.IsNullOrEmpty(endpoint))
             {
@@ -59,9 +58,9 @@ namespace finalmq {
             }
 
             ConnectionData connectionData = AddressHelpers.Endpoint2ConnectionData(endpoint);
-            connectionData.ssl = (bindProperties != null) ? bindProperties.CertificateData.ssl : false;
+            connectionData.ssl = (bindProperties != null && bindProperties.SslServerOptions != null) ? true : false;
 
-            IPAddress address = null;
+            IPAddress? address = null;
             if (connectionData.hostname == "*")
             {
                 address = IPAddress.IPv6Any;
@@ -80,8 +79,8 @@ namespace finalmq {
                 throw new ArgumentException("Hostname error: " + endpoint);
             }
 
-            TcpListener listener = null;
-            BindData bindData = null;
+            TcpListener? listener = null;
+            BindData? bindData = null;
             lock (m_mutex)
             {
                 if (!m_endpoint2binds.ContainsKey(endpoint))
@@ -92,19 +91,19 @@ namespace finalmq {
                 }
             }
 
-            if (listener != null)
+            if (listener != null && bindData != null)
             {
                 listener.Start();
                 AsyncCallback callbackAccept = new AsyncCallback((IAsyncResult ar) => {
-                    AsyncCallback c = (AsyncCallback)ar.AsyncState;
+                    AsyncCallback? c = (AsyncCallback?)ar.AsyncState;
                     TcpClient tcpClient = listener.EndAcceptTcpClient(ar);
-                    if (connectionData.ssl)
+                    if (bindProperties != null && bindProperties.SslServerOptions != null)
                     {
-                        CertificateData certificateData = bindProperties.CertificateData;
-                        SslStream sslStream = new SslStream(tcpClient.GetStream(), false, certificateData.userCertificateValidationCallback, 
-                                                            certificateData.userCertificateSelectionCallback,certificateData.encryptionPolicy);
+                        SslServerOptions sslServerOptions = bindProperties.SslServerOptions;
+                        SslStream sslStream = new SslStream(tcpClient.GetStream(), false, sslServerOptions.UserCertificateValidationCallback,
+                                                            sslServerOptions.UserCertificateSelectionCallback, sslServerOptions.EncryptionPolicy);
                         listener.BeginAcceptTcpClient(c, null);
-                        StartIncomingSslConnection(bindData, sslStream, certificateData);
+                        StartIncomingSslConnection(bindData, sslStream, sslServerOptions);
                     }
                     else
                     {
@@ -124,23 +123,23 @@ namespace finalmq {
             connectionData.startTime = DateTime.Now;
             connectionData.connectionState = ConnectionState.CONNECTIONSTATE_CONNECTED;
             IStreamConnectionPrivate connection = AddConnection(stream, connectionData, bindData.Callback);
-            connection.Connected(connection);
+            connection.Connected();
         }
 
-        private void StartIncomingSslConnection(BindData bindData, SslStream sslStream, CertificateData certificateData)
+        private void StartIncomingSslConnection(BindData bindData, SslStream sslStream, SslServerOptions sslServerOptions)
         {
-            sslStream.BeginAuthenticateAsServer(certificateData.serverCertificate, certificateData.clientCertificateRequired, certificateData.enabledSslProtocols,
-                                                certificateData.checkCertificateRevocation, (IAsyncResult ar) => {
-                ConnectionData connectionData = bindData.ConnectionData.Clone();
-                connectionData.incomingConnection = true;
-                connectionData.startTime = DateTime.Now;
-                connectionData.connectionState = ConnectionState.CONNECTIONSTATE_CONNECTED;
-                IStreamConnectionPrivate connection = AddConnection(sslStream, connectionData, bindData.Callback);
-                connection.Connected(connection);
-            }, null);
+            sslStream.BeginAuthenticateAsServer(sslServerOptions.ServerCertificate, sslServerOptions.ClientCertificateRequired, sslServerOptions.EnabledSslProtocols,
+                                                sslServerOptions.CheckCertificateRevocation, (IAsyncResult ar) => {
+                                                    ConnectionData connectionData = bindData.ConnectionData.Clone();
+                                                    connectionData.incomingConnection = true;
+                                                    connectionData.startTime = DateTime.Now;
+                                                    connectionData.connectionState = ConnectionState.CONNECTIONSTATE_CONNECTED;
+                                                    IStreamConnectionPrivate connection = AddConnection(sslStream, connectionData, bindData.Callback);
+                                                    connection.Connected();
+                                                }, null);
         }
 
-        private IStreamConnectionPrivate AddConnection(Stream stream, ConnectionData connectionData, IStreamConnectionCallback callback)
+        private IStreamConnectionPrivate AddConnection(Stream? stream, ConnectionData connectionData, IStreamConnectionCallback? callback)
         {
             long connectionId = Interlocked.Increment(ref m_nextConnectionId);
             connectionData.connectionId = connectionId;
@@ -153,19 +152,99 @@ namespace finalmq {
         }
 
 
-        public IStreamConnection Connect(string endpoint, IStreamConnectionCallback callback, ConnectProperties connectionProperties = null)
+        public IStreamConnection Connect(string endpoint, IStreamConnectionCallback callback, ConnectProperties? connectionProperties = null)
         {
-            throw new System.NotImplementedException();
+            IStreamConnection connection = CreateConnection(callback);
+            Connect(endpoint, connection, connectionProperties);
+            return connection;
         }
 
-        public bool Connect(string endpoint, IStreamConnection streamConnection, ConnectProperties connectionProperties = null)
+        public void Connect(string endpoint, IStreamConnection streamConnection, ConnectProperties? connectionProperties = null)
         {
-            throw new System.NotImplementedException();
+            IStreamConnectionPrivate? connection = FindConnectionById(streamConnection.GetConnectionId());
+            if (connection == null)
+            {
+                throw new ArgumentException("Connection is not part of StreamConnectionContainer");
+            }
+
+            ConnectProperties connectionPropertiesNoneNull = new ConnectProperties();
+            if (connectionProperties != null)
+            {
+                connectionPropertiesNoneNull = connectionProperties;
+            }
+
+            ConnectionData connectionData = AddressHelpers.Endpoint2ConnectionData(endpoint);
+            connectionData.connectionId = connection.GetConnectionId();
+            connectionData.incomingConnection = false;
+            connectionData.reconnectInterval = connectionPropertiesNoneNull.ConnectConfig.reconnectInterval;
+            connectionData.totalReconnectDuration = connectionPropertiesNoneNull.ConnectConfig.totalReconnectDuration;
+            connectionData.startTime = DateTime.Now;
+            connectionData.ssl = connectionPropertiesNoneNull.SslClientOptions != null ? true : false;
+            connectionData.connectionState = ConnectionState.CONNECTIONSTATE_CONNECTING;
+
+            TcpClient tcpClient = new TcpClient();
+            SslStream? sslStream = null;
+            if (connectionPropertiesNoneNull.SslClientOptions != null)
+            {
+                SslClientOptions sslClientOptions = connectionPropertiesNoneNull.SslClientOptions;
+                sslStream = new SslStream(tcpClient.GetStream(), false, sslClientOptions.UserCertificateValidationCallback,
+                                                sslClientOptions.UserCertificateSelectionCallback, sslClientOptions.EncryptionPolicy);
+                connectionData.stream = sslStream;
+            }
+            else
+            {
+                connectionData.stream = tcpClient.GetStream();
+            }
+
+            lock (m_mutex)
+            {
+                m_connectionId2Conns[connectionData.connectionId] = new ConnData(tcpClient);
+            }
+
+            connection.UpdateConnectionData(connectionData);
+
+            tcpClient.BeginConnect(connectionData.hostname, connectionData.port, (IAsyncResult ar) => {
+                if (connectionPropertiesNoneNull.SslClientOptions != null && sslStream != null)
+                {
+                    StartOutgoingSslConnection(connection, connectionData, sslStream, connectionPropertiesNoneNull.SslClientOptions);
+                }
+                else 
+                {
+                    connection.Connected();
+                }
+            }, null);
+
+        }
+
+        private void StartOutgoingSslConnection(IStreamConnectionPrivate streamConnection, ConnectionData connectionData, SslStream sslStream, SslClientOptions sslClientOptions)
+        {
+            sslStream.BeginAuthenticateAsClient(sslClientOptions.TargetHost, sslClientOptions.ClientCertificates, sslClientOptions.EnabledSslProtocols,
+                                                sslClientOptions.CheckCertificateRevocation, 
+                (IAsyncResult ar) => 
+                {
+                    streamConnection.Connected();
+                }, 
+                null);
+        }
+
+
+        public IStreamConnectionPrivate? FindConnectionById(long connectionId)
+        {
+            IStreamConnectionPrivate? connection = null;
+            lock (m_mutex)
+            {
+                m_connectionId2Connection.TryGetValue(connectionId, out connection);
+            }
+            return connection;
         }
 
         public IStreamConnection CreateConnection(IStreamConnectionCallback callback)
         {
-            throw new System.NotImplementedException();
+            ConnectionData connectionData = new ConnectionData();
+            connectionData.incomingConnection = false;
+            connectionData.connectionState = ConnectionState.CONNECTIONSTATE_CREATED;
+            IStreamConnectionPrivate connection = AddConnection(null, connectionData, callback);
+            return connection;
         }
 
         public IList<IStreamConnection> GetAllConnections()
@@ -183,7 +262,7 @@ namespace finalmq {
             throw new System.NotImplementedException();
         }
 
-        public void Init(int cycleTime = 100, FuncPollerLoopTimer funcTimer = null, int checkReconnectInterval = 1000)
+        public void Init(int cycleTime = 100, FuncPollerLoopTimer? funcTimer = null, int checkReconnectInterval = 1000)
         {
             throw new System.NotImplementedException();
         }
@@ -192,9 +271,9 @@ namespace finalmq {
         {
             lock (m_mutex)
             {
-                BindData bindData = null;
-                bool found = m_endpoint2binds.TryGetValue(endpoint, out bindData);
-                if (found)
+                BindData? bindData = null;
+                m_endpoint2binds.TryGetValue(endpoint, out bindData);
+                if (bindData != null)
                 {
                     bindData.TcpListener.Stop();
                     lock (m_mutex)
@@ -207,100 +286,37 @@ namespace finalmq {
 
         class BindData
         {
-            public BindData(ConnectionData connectionData, IStreamConnectionCallback callback, TcpListener tcpListener)
+            public BindData(ConnectionData connectionData, IStreamConnectionCallback? callback, TcpListener tcpListener)
             {
                 this.connectionData = connectionData;
                 this.callback = callback;
                 this.tcpListener = tcpListener;
             }
             public ConnectionData ConnectionData { get => connectionData; }
-            public IStreamConnectionCallback Callback { get => callback; }
+            public IStreamConnectionCallback? Callback { get => callback; }
             public TcpListener TcpListener { get => tcpListener; }
 
             private ConnectionData connectionData;
-            private IStreamConnectionCallback callback;
+            private IStreamConnectionCallback? callback;
             private TcpListener tcpListener;
         }
 
+        class ConnData
+        {
+            public ConnData(TcpClient tcpClient)
+            {
+                this.tcpClient = tcpClient;
+            }
+            private TcpClient tcpClient;
+        }
+
         private IDictionary<string, BindData> m_endpoint2binds = new Dictionary<string, BindData>();
+        private IDictionary<long, ConnData> m_connectionId2Conns = new Dictionary<long, ConnData>();
         private IDictionary<long, IStreamConnectionPrivate> m_connectionId2Connection = new Dictionary<long, IStreamConnectionPrivate>();
         private static long m_nextConnectionId = 0;
         private object m_mutex = new object();
 
     }
 
-
-    //class SYMBOLEXP StreamConnectionContainer : public IStreamConnectionContainer
-    //{
-    //public:
-    //    StreamConnectionContainer();
-    //    ~StreamConnectionContainer();
-
-    //private:
-    //    // IStreamConnectionContainer
-    //    void init(int cycleTime = 100, FuncPollerLoopTimer funcTimer = {}, int checkReconnectInterval = 1000) override;
-    //    int bind(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const BindProperties& bindProperties = {}) override;
-    //    void unbind(const std::string& endpoint) override;
-    //    IStreamConnectionPtr connect(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const ConnectProperties& connectionProperties = {}) override;
-    //    IStreamConnectionPtr createConnection(hybrid_ptr<IStreamConnectionCallback> callback) override;
-    //    bool connect(const std::string& endpoint, const IStreamConnectionPtr& streamConnection, const ConnectProperties& connectionProperties = {}) override;
-    //    std::vector< IStreamConnectionPtr > getAllConnections() const override;
-    //    IStreamConnectionPtr getConnection(std::int64_t connectionId) const override;
-    //    void run() override;
-    //    void terminatePollerLoop() override;
-    //    IExecutorPtr getPollerThreadExecutor() const override;
-
-    //    void pollerLoop();
-
-    //    struct BindData
-    //    {
-    //        ConnectionData                          connectionData;
-    //        SocketPtr                               socket;
-    //        hybrid_ptr<IStreamConnectionCallback>   callback;
-    //    };
-
-    //    std::unordered_map<SOCKET, BindData>::iterator findBindByEndpoint(const std::string& endpoint);
-    //    IStreamConnectionPrivatePtr findConnectionBySdOnlyForPollerLoop(SOCKET sd);
-    //    IStreamConnectionPrivatePtr findConnectionById(std::int64_t connectionId);
-    //    bool createSocket(const IStreamConnectionPtr& streamConnection, ConnectionData& connectionData, const ConnectProperties& connectionProperties);
-    //    void removeConnection(const SocketDescriptorPtr& sd, std::int64_t connectionId);
-    //    void disconnectIntern(const IStreamConnectionPrivatePtr& connectionDisconnect, const SocketDescriptorPtr& sd);
-    //    IStreamConnectionPrivatePtr addConnection(const SocketPtr& socket, ConnectionData& connectionData, hybrid_ptr<IStreamConnectionCallback> callback);
-    //    void handleConnectionEvents(const IStreamConnectionPrivatePtr& connection, const SocketPtr& socket, const DescriptorInfo& info);
-    //    void handleBindEvents(const DescriptorInfo& info);
-    //    void handleReceive(const IStreamConnectionPrivatePtr& connection, const SocketPtr& socket, int bytesToRead);
-    //    static bool isTimerExpired(std::chrono::time_point<std::chrono::steady_clock>& lastTime, int interval);
-    //    void doReconnect();
-
-    //    std::shared_ptr<IPoller>                                        m_poller;
-    //    std::unordered_map<SOCKET, BindData>                            m_sd2binds;
-    //    std::unordered_map<std::int64_t, IStreamConnectionPrivatePtr>   m_connectionId2Connection;
-    //    std::unordered_map<SOCKET, IStreamConnectionPrivatePtr>         m_sd2Connection;
-    //    std::unordered_map<SOCKET, IStreamConnectionPrivatePtr>         m_sd2ConnectionPollerLoop;
-    //    std::atomic_flag                                                m_connectionsStable{};
-    //    static std::atomic_int64_t                                      m_nextConnectionId;
-    //    bool                                                            m_terminatePollerLoop = false;
-    //    int                                                             m_cycleTime = 100;
-    //    int                                                             m_checkReconnectInterval = 1000;
-    //    FuncPollerLoopTimer                                             m_funcTimer;
-    //    IExecutorPtr                                                    m_executorPollerThread;
-    //    std::unique_ptr<IExecutorWorker>                                m_executorWorker;
-    //    std::thread                                                     m_threadTimer;
-    //    mutable std::mutex                                              m_mutex;
-
-    //    std::chrono::time_point<std::chrono::steady_clock>              m_lastReconnectTime;
-    //    std::chrono::time_point<std::chrono::steady_clock>              m_lastCycleTime;
-
-    //#ifdef USE_OPENSSL
-    //    struct SslAcceptingData
-    //    {
-    //        SocketPtr socket;
-    //        ConnectionData connectionData;
-    //        hybrid_ptr<IStreamConnectionCallback> callback;
-    //    };
-    //    bool sslAccepting(SslAcceptingData& sslAcceptingData);
-    //    std::unordered_map<SOCKET, SslAcceptingData>                    m_sslAcceptings;
-    //#endif
-    //};
 
 }   // namespace finalmq

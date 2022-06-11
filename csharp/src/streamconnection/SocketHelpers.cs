@@ -30,18 +30,18 @@ namespace finalmq
 {
     class SocketHelpers
     {
-        public static Socket Create(AddressFamily af, SocketType type, ProtocolType protocol)
-        {
-            Socket socket = new Socket(af, type, protocol);
-            Platform.Instance.SetBlocking(socket, false);
-            Platform.Instance.SetLingerTime(socket, 0);
-            Platform.Instance.SetNoDelay(socket, true);
-            if (protocol == ProtocolType.Tcp)
-            {
-                Platform.Instance.SetNoDelay(socket, true);
-            }
-            return socket;
-        }
+        //public static Socket Create(AddressFamily af, SocketType type, ProtocolType protocol)
+        //{
+        //    Socket socket = new Socket(af, type, protocol);
+        //    Platform.Instance.SetBlocking(socket, false);
+        //    Platform.Instance.SetLingerTime(socket, 0);
+        //    Platform.Instance.SetNoDelay(socket, true);
+        //    if (protocol == ProtocolType.Tcp)
+        //    {
+        //        Platform.Instance.SetNoDelay(socket, true);
+        //    }
+        //    return socket;
+        //}
 
 
 
