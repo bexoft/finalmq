@@ -73,7 +73,7 @@ namespace finalmq
         public ProtocolType protocol = ProtocolType.Unknown;
         public int portPeer = 0;
         public bool incomingConnection = false;
-        public Stream stream;
+        public Stream? stream = null;
         public int reconnectInterval;
         public int totalReconnectDuration;
         public DateTime startTime = DateTime.Now;

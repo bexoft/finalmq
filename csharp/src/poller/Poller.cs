@@ -40,7 +40,7 @@ namespace finalmq
             disconnected = false;
             bytesToRead = 0;
         }
-        public Socket socket = null;
+        public Socket? socket = null;
         public bool readable = false;
         public bool writable = false;
         public bool disconnected = false;
@@ -105,8 +105,8 @@ namespace finalmq
 
     public class PollerImplSelect : IPoller
     {
-        Socket m_controlSocketRead;
-        Socket m_controlSocketWrite;
+        Socket? m_controlSocketRead = null;
+        Socket? m_controlSocketWrite = null;
 
         PollerResult m_result = new PollerResult();
 
@@ -133,7 +133,14 @@ namespace finalmq
         public void Init()
         {
             Platform.Instance.MakeSocketPair(out m_controlSocketWrite, out m_controlSocketRead);
-            AddSocketEnableRead(m_controlSocketRead);
+            if (m_controlSocketRead != null)
+            {
+                AddSocketEnableRead(m_controlSocketRead);
+            }
+            else
+            {
+                throw new InvalidOperationException("MakeSocketPair failed");
+            }
         }
 
         public void AddSocket(Socket socket)
@@ -346,7 +353,7 @@ namespace finalmq
         private DescriptorInfo getDescriptorInfo(Socket socket)
         {
             var desciptorInfos = m_result.DescriptorInfos;
-            DescriptorInfo descriptorInfo = null;
+            DescriptorInfo? descriptorInfo = null;
             try
             {
                 descriptorInfo = desciptorInfos[socket];

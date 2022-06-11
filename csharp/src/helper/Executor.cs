@@ -47,7 +47,7 @@ namespace finalmq
 
         long m_terminate = 0;    // atomic
         protected CondVar m_newActions = new CondVar();
-        protected DelegateNotification m_funcNotify;
+        protected DelegateNotification? m_funcNotify = null;
         protected Object m_mutex = new Object();
     }
 
@@ -244,7 +244,7 @@ namespace finalmq
         public override bool RunOneAvailableAction()
         {
             bool stillActions = false;
-            DelegateAction action = null;
+            DelegateAction? action = null;
             lock (m_mutex)
             {
                 if (m_actions.Count != 0)

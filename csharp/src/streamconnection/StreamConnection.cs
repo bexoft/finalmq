@@ -29,18 +29,16 @@ using System.Net.Security;
 
 namespace finalmq {
 
-    public class CertificateData
+    public class SslServerOptions
     {
-        public CertificateData(bool ssl = false,
-                               X509Certificate serverCertificate = null,
-                               bool clientCertificateRequired = false,
-                               SslProtocols enabledSslProtocols = SslProtocols.Default,
-                               bool checkCertificateRevocation = false,
-                               RemoteCertificateValidationCallback userCertificateValidationCallback = null,
-                               LocalCertificateSelectionCallback userCertificateSelectionCallback = null,
-                               EncryptionPolicy encryptionPolicy = EncryptionPolicy.RequireEncryption) 
+        public SslServerOptions(X509Certificate serverCertificate,
+                                bool clientCertificateRequired = false,
+                                SslProtocols enabledSslProtocols = SslProtocols.None,
+                                bool checkCertificateRevocation = false,
+                                RemoteCertificateValidationCallback? userCertificateValidationCallback = null,
+                                LocalCertificateSelectionCallback? userCertificateSelectionCallback = null,
+                                EncryptionPolicy encryptionPolicy = EncryptionPolicy.RequireEncryption)
         {
-            this.ssl = ssl;
             this.serverCertificate = serverCertificate;
             this.clientCertificateRequired = clientCertificateRequired;
             this.enabledSslProtocols = enabledSslProtocols;
@@ -50,37 +48,41 @@ namespace finalmq {
             this.encryptionPolicy = encryptionPolicy;
         }
 
-        public bool ssl = false;
-        public X509Certificate serverCertificate = null;
-        public bool clientCertificateRequired = false;
-        public SslProtocols enabledSslProtocols = SslProtocols.Default;
-        public bool checkCertificateRevocation = false;
-        public RemoteCertificateValidationCallback userCertificateValidationCallback = null;
-        public LocalCertificateSelectionCallback userCertificateSelectionCallback = null;
-        public EncryptionPolicy encryptionPolicy = EncryptionPolicy.RequireEncryption;
-    }
+        public X509Certificate ServerCertificate { get => serverCertificate; set { serverCertificate = value; } }
+        public bool ClientCertificateRequired { get => clientCertificateRequired; set { clientCertificateRequired = value; } }
+        public SslProtocols EnabledSslProtocols { get => enabledSslProtocols; set { enabledSslProtocols = value; } }
+        public bool CheckCertificateRevocation { get => checkCertificateRevocation; set { checkCertificateRevocation = value; } }
+        public RemoteCertificateValidationCallback? UserCertificateValidationCallback { get => userCertificateValidationCallback; set { userCertificateValidationCallback = value; } }
+        public LocalCertificateSelectionCallback? UserCertificateSelectionCallback { get => userCertificateSelectionCallback; set { userCertificateSelectionCallback = value; } }
+        public EncryptionPolicy EncryptionPolicy { get => encryptionPolicy; set { encryptionPolicy = value; } }
 
+        // BeginAuthenticateAsServer parameter
+        private X509Certificate serverCertificate;
+        private bool clientCertificateRequired;
+        private SslProtocols enabledSslProtocols;
+        private bool checkCertificateRevocation;
+
+        // SslStream ctor parameter
+        private RemoteCertificateValidationCallback? userCertificateValidationCallback;
+        private LocalCertificateSelectionCallback? userCertificateSelectionCallback;
+        private EncryptionPolicy encryptionPolicy;
+    }
 
     public class BindProperties
     {
-        public BindProperties(CertificateData certificateData = null)
+        public BindProperties(SslServerOptions? sslServerOptions = null)
         {
-            this.certificateData = certificateData;
-            if (this.certificateData == null)
-            {
-                this.certificateData = new CertificateData();
-            }
+            this.sslServerOptions = sslServerOptions;
         }
-        public CertificateData CertificateData 
+        public SslServerOptions? SslServerOptions
         {   
-            get => certificateData;
+            get => sslServerOptions;
             set
             {
-                certificateData = value;
+                sslServerOptions = value;
             }
         }
-        private CertificateData certificateData = null;
-        //private Variant protocolData;
+        private SslServerOptions? sslServerOptions = null;
     }
 
     public class ConnectConfig
@@ -89,10 +91,74 @@ namespace finalmq {
         public int totalReconnectDuration = -1;    ///< if the server is not available, you can pass a duration in [ms] how long the reconnect shall happen. -1 means: try for ever.
     }
 
+
+    public class SslClientOptions
+    {
+        public SslClientOptions(string targetHost,
+                                X509CertificateCollection? clientCertificates,
+                                SslProtocols enabledSslProtocols = SslProtocols.None,
+                                bool checkCertificateRevocation = false,
+                                RemoteCertificateValidationCallback? userCertificateValidationCallback = null,
+                                LocalCertificateSelectionCallback? userCertificateSelectionCallback = null,
+                                EncryptionPolicy encryptionPolicy = EncryptionPolicy.RequireEncryption)
+        {
+            this.targetHost = targetHost;
+            this.clientCertificates = clientCertificates;
+            this.enabledSslProtocols = enabledSslProtocols;
+            this.checkCertificateRevocation = checkCertificateRevocation;
+            this.userCertificateValidationCallback = userCertificateValidationCallback;
+            this.userCertificateSelectionCallback = userCertificateSelectionCallback;
+            this.encryptionPolicy = encryptionPolicy;
+        }
+
+        public string TargetHost { get => targetHost; set { targetHost = value; } }
+        public X509CertificateCollection? ClientCertificates { get => clientCertificates; set { clientCertificates = value; } }
+        public SslProtocols EnabledSslProtocols { get => enabledSslProtocols; set { enabledSslProtocols = value; } }
+        public bool CheckCertificateRevocation { get => checkCertificateRevocation; set { checkCertificateRevocation = value; } }
+        public RemoteCertificateValidationCallback? UserCertificateValidationCallback { get => userCertificateValidationCallback; set { userCertificateValidationCallback = value; } }
+        public LocalCertificateSelectionCallback? UserCertificateSelectionCallback { get => userCertificateSelectionCallback; set { userCertificateSelectionCallback = value; } }
+        public EncryptionPolicy EncryptionPolicy { get => encryptionPolicy; set { encryptionPolicy = value; } }
+
+        // BeginAuthenticateAsClient parameter
+        private string targetHost;
+        private X509CertificateCollection? clientCertificates;
+        private SslProtocols enabledSslProtocols;
+        bool checkCertificateRevocation;
+
+        // SslStream ctor parameter
+        private RemoteCertificateValidationCallback? userCertificateValidationCallback;
+        private LocalCertificateSelectionCallback? userCertificateSelectionCallback;
+        private EncryptionPolicy encryptionPolicy;
+    }
+
     public class ConnectProperties
     {
-    //    CertificateData certificateData;
-        public ConnectConfig config = new ConnectConfig();
+        public ConnectProperties(SslClientOptions? sslClientOptions = null, ConnectConfig? config = null)
+        {
+            this.sslClientOptions = sslClientOptions;
+            if (config != null)
+            {
+                this.config = config;
+            }
+        }
+        public SslClientOptions? SslClientOptions
+        {
+            get => sslClientOptions;
+            set
+            {
+                sslClientOptions = value;
+            }
+        }
+        public ConnectConfig ConnectConfig 
+        { 
+            get => config;
+            set 
+            { 
+                config = value; 
+            } 
+        }
+        private SslClientOptions? sslClientOptions = null;
+        private ConnectConfig config = new ConnectConfig();
     //    Variant protocolData;
     }
 
@@ -123,20 +189,18 @@ namespace finalmq {
         bool Connect();
         Socket GetSocketPrivate();
         bool SendPendingMessages();
-        bool CheckEdgeConnected();
         bool DoReconnect();
         bool ChangeStateForDisconnect();
         bool GetDisconnectFlag();
         void UpdateConnectionData(ConnectionData connectionData);
-
-        void Connected(IStreamConnection connection);
-        void Disconnected(IStreamConnection connection);
-        bool Received(IStreamConnection connection, Socket socket, int bytesToRead);
+        void Connected();
+        void Disconnected();
+        bool Received(Socket socket, int bytesToRead);
     };
 
     class StreamConnection : IStreamConnectionPrivate
     {
-        public StreamConnection(ConnectionData connectionData, Stream stream, IStreamConnectionCallback callback)
+        public StreamConnection(ConnectionData connectionData, Stream? stream, IStreamConnectionCallback? callback)
         {
 
         }
@@ -146,17 +210,12 @@ namespace finalmq {
             throw new System.NotImplementedException();
         }
 
-        public bool CheckEdgeConnected()
-        {
-            throw new System.NotImplementedException();
-        }
-
         public bool Connect()
         {
             throw new System.NotImplementedException();
         }
 
-        public void Connected(IStreamConnection connection)
+        public void Connected()
         {
             throw new System.NotImplementedException();
         }
@@ -166,7 +225,7 @@ namespace finalmq {
             throw new System.NotImplementedException();
         }
 
-        public void Disconnected(IStreamConnection connection)
+        public void Disconnected()
         {
             throw new System.NotImplementedException();
         }
@@ -206,7 +265,7 @@ namespace finalmq {
             throw new System.NotImplementedException();
         }
 
-        public bool Received(IStreamConnection connection, Socket socket, int bytesToRead)
+        public bool Received(Socket socket, int bytesToRead)
         {
             throw new System.NotImplementedException();
         }
@@ -221,10 +280,13 @@ namespace finalmq {
             throw new System.NotImplementedException();
         }
 
-        public void UpdateConnectionData(ConnectionData connectionData)
+        void IStreamConnectionPrivate.UpdateConnectionData(ConnectionData connectionData)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
+
+        ConnectionData m_connectionData = new ConnectionData();
+        object m_mutex = new object();
     }
 
 

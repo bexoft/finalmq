@@ -20,8 +20,8 @@ namespace testfinalmq
 
 
         IPoller m_poller = new PollerImplSelect();
-        Socket m_controlSocketRead = new Socket(SocketType.Stream, ProtocolType.Tcp);
-        Socket m_controlSocketWrite = new Socket(SocketType.Stream, ProtocolType.Tcp);
+        Socket? m_controlSocketRead = new Socket(SocketType.Stream, ProtocolType.Tcp);
+        Socket? m_controlSocketWrite = new Socket(SocketType.Stream, ProtocolType.Tcp);
         Mock<IPlatform> m_mockPlatform = new Mock<IPlatform>();
 
         public TestSelect()
@@ -33,16 +33,22 @@ namespace testfinalmq
 
             m_poller.Init();
 
-            Socket socketAny = It.IsAny<Socket>();
+            Socket? socketAny = It.IsAny<Socket>();
             m_mockPlatform.Verify(x => x.MakeSocketPair(out socketAny, out socketAny), Times.Once);
             m_mockPlatform.Verify(x => x.Send(m_controlSocketWrite, It.IsAny<byte[]>(), 0, 1, SocketFlags.None), Times.Once);
         }
 
         public void Dispose()
         {
-            m_controlSocketRead.Dispose();
-            m_controlSocketWrite.Dispose();
-            Platform.Instance = null;
+            if (m_controlSocketRead != null)
+            {
+                m_controlSocketRead.Dispose();
+            }
+            if (m_controlSocketWrite != null)
+            {
+                m_controlSocketWrite.Dispose();
+            }
+            Platform.Instance = new PlatformImpl();
         }
 
         [Fact]
@@ -81,6 +87,12 @@ namespace testfinalmq
         [Fact]
         public void TestAddSocketReadableWait()
         {
+            Socket? nullSocket = null;
+            Assert.NotEqual(nullSocket, m_controlSocketWrite);
+            if (m_controlSocketWrite == null)
+            {
+                return;
+            }
             using (Socket socket = new Socket(SocketType.Stream, ProtocolType.Tcp))
             {
                 m_mockPlatform.Setup(x => x.Send(m_controlSocketWrite, It.IsAny<byte[]>(), 0, 1, SocketFlags.None)).Returns(1);
@@ -151,6 +163,13 @@ namespace testfinalmq
         [Fact]
         public void TestAddSocketReleaseByControlSocket()
         {
+            Socket? nullSocket = null;
+            Assert.NotEqual(nullSocket, m_controlSocketWrite);
+            Assert.NotEqual(nullSocket, m_controlSocketRead);
+            if (m_controlSocketWrite == null || m_controlSocketRead == null)
+            {
+                return;
+            }
             using (Socket socket = new Socket(SocketType.Stream, ProtocolType.Tcp))
             {
                 m_mockPlatform.Setup(x => x.Send(m_controlSocketWrite, It.IsAny<byte[]>(), 0, 1, SocketFlags.None)).Returns(1);
@@ -204,6 +223,12 @@ namespace testfinalmq
         [Fact]
         public void TestAddSocketReadableWaitSocketDescriptorsChanged()
         {
+            Socket? nullSocket = null;
+            Assert.NotEqual(nullSocket, m_controlSocketWrite);
+            if (m_controlSocketWrite == null)
+            {
+                return;
+            }
             using (Socket socket = new Socket(SocketType.Stream, ProtocolType.Tcp))
             {
                 m_mockPlatform.Setup(x => x.Send(m_controlSocketWrite, It.IsAny<byte[]>(), 0, 1, SocketFlags.None)).Returns(1);
@@ -257,6 +282,12 @@ namespace testfinalmq
         [Fact]
         public void TestAddSocketDisconnect()
         {
+            Socket? nullSocket = null;
+            Assert.NotEqual(nullSocket, m_controlSocketWrite);
+            if (m_controlSocketWrite == null)
+            {
+                return;
+            }
             using (Socket socket = new Socket(SocketType.Stream, ProtocolType.Tcp))
             {
                 m_mockPlatform.Setup(x => x.Send(m_controlSocketWrite, It.IsAny<byte[]>(), 0, 1, SocketFlags.None)).Returns(1);
@@ -306,6 +337,12 @@ namespace testfinalmq
         [Fact]
         public void TestAddSocketAvailableError()
         {
+            Socket? nullSocket = null;
+            Assert.NotEqual(nullSocket, m_controlSocketWrite);
+            if (m_controlSocketWrite == null)
+            {
+                return;
+            }
             using (Socket socket = new Socket(SocketType.Stream, ProtocolType.Tcp))
             {
                 m_mockPlatform.Setup(x => x.Send(m_controlSocketWrite, It.IsAny<byte[]>(), 0, 1, SocketFlags.None)).Returns(1);
@@ -358,6 +395,12 @@ namespace testfinalmq
         [Fact]
         public void TestAddSocketWritableWait()
         {
+            Socket? nullSocket = null;
+            Assert.NotEqual(nullSocket, m_controlSocketWrite);
+            if (m_controlSocketWrite == null)
+            {
+                return;
+            }
             using (Socket socket = new Socket(SocketType.Stream, ProtocolType.Tcp))
             {
                 m_mockPlatform.Setup(x => x.Send(m_controlSocketWrite, It.IsAny<byte[]>(), 0, 1, SocketFlags.None)).Returns(1);
@@ -407,6 +450,12 @@ namespace testfinalmq
         [Fact]
         public void TestAddSocketDisableWritableWait()
         {
+            Socket? nullSocket = null;
+            Assert.NotEqual(nullSocket, m_controlSocketWrite);
+            if (m_controlSocketWrite == null)
+            {
+                return;
+            }
             using (Socket socket = new Socket(SocketType.Stream, ProtocolType.Tcp))
             {
                 m_mockPlatform.Setup(x => x.Send(m_controlSocketWrite, It.IsAny<byte[]>(), 0, 1, SocketFlags.None)).Returns(1);

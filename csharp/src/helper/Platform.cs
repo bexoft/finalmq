@@ -13,7 +13,7 @@ namespace finalmq
     public interface IPlatform
     {
         Socket CreateSocket(SocketType socketType, ProtocolType protocolType);
-        EndPoint GetLocalEndPoint(Socket socket);
+        EndPoint? GetLocalEndPoint(Socket socket);
         bool GetNoDelay(Socket socket);
         void SetNoDelay(Socket socket, bool value);
         int GetLingerTime(Socket socket);
@@ -28,11 +28,11 @@ namespace finalmq
         Socket Accept(Socket socket);
         int Send(Socket socket, byte[] buffer, int offset, int size, SocketFlags socketFlags = SocketFlags.None);
         int Receive(Socket socket, byte[] buffer, int offset, int size, SocketFlags socketFlags = SocketFlags.None);
-        void MakeSocketPair(out Socket socket1, out Socket socket2);
+        void MakeSocketPair(out Socket? socket1, out Socket? socket2);
         void Select(IList<Socket> checkRead, IList<Socket> checkWrite, IList<Socket> checkError, int microSeconds);
     };
 
-    class PlatformImpl : IPlatform
+    public class PlatformImpl : IPlatform
     {
         public PlatformImpl()
         {
@@ -43,7 +43,7 @@ namespace finalmq
         {
             return new Socket(socketType, protocolType);
         }
-        public EndPoint GetLocalEndPoint(Socket socket)
+        public EndPoint? GetLocalEndPoint(Socket socket)
         {
             return socket.LocalEndPoint;
         }
@@ -57,8 +57,8 @@ namespace finalmq
         }
         public int GetLingerTime(Socket socket)
         {
-            LingerOption value = socket.LingerState;
-            if (value.Enabled)
+            LingerOption? value = socket.LingerState;
+            if (value != null && value.Enabled)
             {
                 return value.LingerTime;
             }
@@ -118,11 +118,11 @@ namespace finalmq
         {
             return socket.Receive(buffer, offset, size, socketFlags);
         }
-        public void MakeSocketPair(out Socket socket1, out Socket socket2)
+        public void MakeSocketPair(out Socket? socket1, out Socket? socket2)
         {
             socket1 = null;
             socket2 = null;
-            Socket socketAccept = null;
+            Socket? socketAccept = null;
             try
             {
                 socketAccept = CreateSocket(SocketType.Stream, ProtocolType.Tcp);
@@ -135,8 +135,15 @@ namespace finalmq
                 socketAccept.Bind(new IPEndPoint(IPAddress.Loopback, 0));
                 socketAccept.Listen(1);
 
-                EndPoint endpoint = socketAccept.LocalEndPoint;
-                socket2.Connect(endpoint);
+                EndPoint? endpoint = socketAccept.LocalEndPoint;
+                if (endpoint != null)
+                {
+                    socket2.Connect(endpoint);
+                }
+                else
+                {
+                    throw new InvalidOperationException("LocalEndPoint is null");
+                }
                 socket2.Blocking = false;
 
                 socket1 = socketAccept.Accept();
