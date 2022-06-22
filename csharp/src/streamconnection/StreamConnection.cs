@@ -166,7 +166,7 @@ namespace finalmq {
 
     public interface IStreamConnectionCallback
     {
-        IStreamConnectionCallback Connected(IStreamConnection connection);
+        IStreamConnectionCallback? Connected(IStreamConnection connection);
         void Disconnected(IStreamConnection connection);
         bool Received(IStreamConnection connection, Socket socket, int bytesToRead);
     }
@@ -200,9 +200,10 @@ namespace finalmq {
 
     class StreamConnection : IStreamConnectionPrivate
     {
-        public StreamConnection(ConnectionData connectionData, Stream? stream, IStreamConnectionCallback? callback)
+        public StreamConnection(ConnectionData connectionData, Stream? stream, IStreamConnectionCallback callback)
         {
-
+            m_connectionData = connectionData;
+            m_callback = callback;
         }
 
         public bool ChangeStateForDisconnect()
@@ -217,17 +218,41 @@ namespace finalmq {
 
         public void Connected()
         {
-            throw new System.NotImplementedException();
+            IStreamConnectionCallback callback;
+            lock (m_mutexCallback)
+            {
+                callback = m_callback;
+            }
+            if (callback != null)
+            {
+                IStreamConnectionCallback? callbackOverride = callback.Connected(this);
+                if (callbackOverride != null)
+                {
+                    lock (m_mutexCallback)
+                    {
+                        m_callback = callbackOverride;
+                    }
+                    callbackOverride.Connected(this);
+                }
+            }
         }
 
         public void Disconnect()
         {
-            throw new System.NotImplementedException();
+            Interlocked.Exchange(ref m_disconnectFlag, 1);
         }
 
         public void Disconnected()
         {
-            throw new System.NotImplementedException();
+            IStreamConnectionCallback callback;
+            lock (m_mutexCallback)
+            {
+                callback = m_callback;
+            }
+            if (callback != null)
+            {
+                callback.Disconnected(this);
+            }
         }
 
         public bool DoReconnect()
@@ -237,22 +262,31 @@ namespace finalmq {
 
         public ConnectionData GetConnectionData()
         {
-            throw new System.NotImplementedException();
+            lock (m_mutex)
+            {
+                return m_connectionData;
+            }
         }
 
         public long GetConnectionId()
         {
-            throw new System.NotImplementedException();
+            lock (m_mutex)
+            {
+                return m_connectionData.connectionId;
+            }
         }
 
         public ConnectionState GetConnectionState()
         {
-            throw new System.NotImplementedException();
+            lock (m_mutex)
+            {
+                return m_connectionData.connectionState;
+            }
         }
 
         public bool GetDisconnectFlag()
         {
-            throw new System.NotImplementedException();
+            return (Interlocked.Read(ref m_disconnectFlag) != 0);
         }
 
         public Socket GetSocket()
@@ -285,8 +319,11 @@ namespace finalmq {
             throw new NotImplementedException();
         }
 
-        ConnectionData m_connectionData = new ConnectionData();
-        object m_mutex = new object();
+        readonly ConnectionData m_connectionData;
+        IStreamConnectionCallback m_callback;
+        readonly object m_mutex = new object();
+        readonly object m_mutexCallback = new object();
+        long m_disconnectFlag = 0;  // atomic  
     }
 
 

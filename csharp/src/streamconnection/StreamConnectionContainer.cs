@@ -20,37 +20,37 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-using System.Collections.Generic;
-using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
 
 
 namespace finalmq {
 
-    public delegate void FuncPollerLoopTimer();
-
     public interface IStreamConnectionContainer
     {
-        void Init(int cycleTime = 100, FuncPollerLoopTimer? funcTimer = null, int checkReconnectInterval = 1000);
-        void Bind(string endpoint, IStreamConnectionCallback? callback, BindProperties? bindProperties = null);
+        int CheckReconnectInterval { get; set; }
+        void Bind(string endpoint, IStreamConnectionCallback callback, BindProperties? bindProperties = null);
         void Unbind(string endpoint);
         IStreamConnection Connect(string endpoint, IStreamConnectionCallback callback, ConnectProperties? connectionProperties = null);
         IStreamConnection CreateConnection(IStreamConnectionCallback callback);
         void Connect(string endpoint, IStreamConnection streamConnection, ConnectProperties? connectionProperties = null);
         IList<IStreamConnection> GetAllConnections();
-        IStreamConnection GetConnection(long connectionId);
-        //void Run();
-        //void terminatePollerLoop();
-        IExecutor GetPollerThreadExecutor();
+        IStreamConnection? GetConnection(long connectionId);
+        IStreamConnection? TryGetConnection(long connectionId);
     };
 
 
     public class StreamConnectionContainer : IStreamConnectionContainer
     {
-        public void Bind(string endpoint, IStreamConnectionCallback? callback, BindProperties? bindProperties = null)
+        public StreamConnectionContainer()
+        {
+            m_timerReconnect.Elapsed += (Object? source, System.Timers.ElapsedEventArgs e) => { DoReconnect(); };
+            m_timerReconnect.AutoReset = true;
+            m_timerReconnect.Enabled = true;
+        }
+
+        public void Bind(string endpoint, IStreamConnectionCallback callback, BindProperties? bindProperties = null)
         {
             if (string.IsNullOrEmpty(endpoint))
             {
@@ -95,22 +95,21 @@ namespace finalmq {
             {
                 listener.Start();
                 AsyncCallback callbackAccept = new AsyncCallback((IAsyncResult ar) => {
-                    AsyncCallback? c = (AsyncCallback?)ar.AsyncState;
                     TcpClient tcpClient = listener.EndAcceptTcpClient(ar);
                     if (bindProperties != null && bindProperties.SslServerOptions != null)
                     {
                         SslServerOptions sslServerOptions = bindProperties.SslServerOptions;
                         SslStream sslStream = new SslStream(tcpClient.GetStream(), false, sslServerOptions.UserCertificateValidationCallback,
                                                             sslServerOptions.UserCertificateSelectionCallback, sslServerOptions.EncryptionPolicy);
-                        listener.BeginAcceptTcpClient(c, null);
                         StartIncomingSslConnection(bindData, sslStream, sslServerOptions);
                     }
                     else
                     {
                         Stream stream = tcpClient.GetStream();
-                        listener.BeginAcceptTcpClient(c, null);
                         StartIncomingConnection(bindData, stream);
                     }
+                    AsyncCallback? c = (AsyncCallback?)ar.AsyncState;
+                    listener.BeginAcceptTcpClient(c, null);
                 });
                 listener.BeginAcceptTcpClient(callbackAccept, callbackAccept);
             }
@@ -130,6 +129,7 @@ namespace finalmq {
         {
             sslStream.BeginAuthenticateAsServer(sslServerOptions.ServerCertificate, sslServerOptions.ClientCertificateRequired, sslServerOptions.EnabledSslProtocols,
                                                 sslServerOptions.CheckCertificateRevocation, (IAsyncResult ar) => {
+                                                    sslStream.EndAuthenticateAsServer(ar);
                                                     ConnectionData connectionData = bindData.ConnectionData.Clone();
                                                     connectionData.incomingConnection = true;
                                                     connectionData.startTime = DateTime.Now;
@@ -139,7 +139,7 @@ namespace finalmq {
                                                 }, null);
         }
 
-        private IStreamConnectionPrivate AddConnection(Stream? stream, ConnectionData connectionData, IStreamConnectionCallback? callback)
+        private IStreamConnectionPrivate AddConnection(Stream? stream, ConnectionData connectionData, IStreamConnectionCallback callback)
         {
             long connectionId = Interlocked.Increment(ref m_nextConnectionId);
             connectionData.connectionId = connectionId;
@@ -161,7 +161,8 @@ namespace finalmq {
 
         public void Connect(string endpoint, IStreamConnection streamConnection, ConnectProperties? connectionProperties = null)
         {
-            IStreamConnectionPrivate? connection = FindConnectionById(streamConnection.GetConnectionId());
+            long connectionId = streamConnection.GetConnectionId();
+            IStreamConnectionPrivate? connection = FindConnectionById(connectionId);
             if (connection == null)
             {
                 throw new ArgumentException("Connection is not part of StreamConnectionContainer");
@@ -174,7 +175,7 @@ namespace finalmq {
             }
 
             ConnectionData connectionData = AddressHelpers.Endpoint2ConnectionData(endpoint);
-            connectionData.connectionId = connection.GetConnectionId();
+            connectionData.connectionId = connectionId;
             connectionData.incomingConnection = false;
             connectionData.reconnectInterval = connectionPropertiesNoneNull.ConnectConfig.reconnectInterval;
             connectionData.totalReconnectDuration = connectionPropertiesNoneNull.ConnectConfig.totalReconnectDuration;
@@ -193,7 +194,14 @@ namespace finalmq {
             }
             else
             {
-                connectionData.stream = tcpClient.GetStream();
+                try
+                {
+                    connectionData.stream = tcpClient.GetStream();
+                }
+                catch (InvalidOperationException)
+                {
+                    DisconnectIntern(connection, connectionId);
+                }
             }
 
             lock (m_mutex)
@@ -204,6 +212,7 @@ namespace finalmq {
             connection.UpdateConnectionData(connectionData);
 
             tcpClient.BeginConnect(connectionData.hostname, connectionData.port, (IAsyncResult ar) => {
+                tcpClient.EndConnect(ar);
                 if (connectionPropertiesNoneNull.SslClientOptions != null && sslStream != null)
                 {
                     StartOutgoingSslConnection(connection, connectionData, sslStream, connectionPropertiesNoneNull.SslClientOptions);
@@ -216,12 +225,23 @@ namespace finalmq {
 
         }
 
+        private void DisconnectIntern(IStreamConnectionPrivate connectionDisconnect, long connectionId)
+        {
+            bool removeConn = connectionDisconnect.ChangeStateForDisconnect();
+            if (removeConn)
+            {
+//todo                RemoveConnection(connectionId);
+                connectionDisconnect.Disconnected();
+            }
+        }
+
         private void StartOutgoingSslConnection(IStreamConnectionPrivate streamConnection, ConnectionData connectionData, SslStream sslStream, SslClientOptions sslClientOptions)
         {
             sslStream.BeginAuthenticateAsClient(sslClientOptions.TargetHost, sslClientOptions.ClientCertificates, sslClientOptions.EnabledSslProtocols,
                                                 sslClientOptions.CheckCertificateRevocation, 
                 (IAsyncResult ar) => 
                 {
+                    sslStream.EndAuthenticateAsClient(ar);
                     streamConnection.Connected();
                 }, 
                 null);
@@ -249,22 +269,48 @@ namespace finalmq {
 
         public IList<IStreamConnection> GetAllConnections()
         {
-            throw new System.NotImplementedException();
+            IList<IStreamConnection> connections = new List<IStreamConnection>();
+            lock (m_mutex)
+            {
+                foreach (var entry in m_connectionId2Connection)
+                {
+                    connections.Add(entry.Value);
+                }
+            }
+            return connections;
         }
 
         public IStreamConnection GetConnection(long connectionId)
         {
-            throw new System.NotImplementedException();
+            lock (m_mutex)
+            {
+                IStreamConnectionPrivate? connection = null;
+                m_connectionId2Connection.TryGetValue(connectionId, out connection);
+                if (connection != null)
+                {
+                    return connection;
+                }
+            }
+            throw new System.Collections.Generic.KeyNotFoundException("Connection ID " + connectionId.ToString() + " not found");
         }
 
-        public IExecutor GetPollerThreadExecutor()
+        public IStreamConnection? TryGetConnection(long connectionId)
         {
-            throw new System.NotImplementedException();
+            IStreamConnectionPrivate? connection = null;
+            lock (m_mutex)
+            {
+                m_connectionId2Connection.TryGetValue(connectionId, out connection);
+            }
+            return connection;
         }
 
-        public void Init(int cycleTime = 100, FuncPollerLoopTimer? funcTimer = null, int checkReconnectInterval = 1000)
-        {
-            throw new System.NotImplementedException();
+        public int CheckReconnectInterval 
+        { 
+            get => (int)m_timerReconnect.Interval;
+            set
+            {
+                m_timerReconnect.Interval = 1000.0;
+            }
         }
 
         public void Unbind(string endpoint)
@@ -284,20 +330,37 @@ namespace finalmq {
             }
         }
 
+        private void DoReconnect()
+        {
+            IList<IStreamConnectionPrivate> connections = new List<IStreamConnectionPrivate>();
+            lock (m_mutex)
+            {
+                foreach (var entry in m_connectionId2Connection)
+                {
+                    connections.Add(entry.Value);
+                }
+            }
+
+            foreach (var connection in connections)
+            {
+//todo                connection.DoReconnect();
+            }
+        }
+
         class BindData
         {
-            public BindData(ConnectionData connectionData, IStreamConnectionCallback? callback, TcpListener tcpListener)
+            public BindData(ConnectionData connectionData, IStreamConnectionCallback callback, TcpListener tcpListener)
             {
                 this.connectionData = connectionData;
                 this.callback = callback;
                 this.tcpListener = tcpListener;
             }
             public ConnectionData ConnectionData { get => connectionData; }
-            public IStreamConnectionCallback? Callback { get => callback; }
+            public IStreamConnectionCallback Callback { get => callback; }
             public TcpListener TcpListener { get => tcpListener; }
 
             private ConnectionData connectionData;
-            private IStreamConnectionCallback? callback;
+            private IStreamConnectionCallback callback;
             private TcpListener tcpListener;
         }
 
@@ -314,8 +377,8 @@ namespace finalmq {
         private IDictionary<long, ConnData> m_connectionId2Conns = new Dictionary<long, ConnData>();
         private IDictionary<long, IStreamConnectionPrivate> m_connectionId2Connection = new Dictionary<long, IStreamConnectionPrivate>();
         private static long m_nextConnectionId = 0;
+        private System.Timers.Timer m_timerReconnect = new System.Timers.Timer(1000.0);
         private object m_mutex = new object();
-
     }
 
 
