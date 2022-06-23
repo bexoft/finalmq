@@ -383,11 +383,18 @@ void PollerImplSelect::collectSockets(int res)
             if (FD_ISSET(sd, &m_errorfds))
             {
                 cntFd++;
-                if (descriptorInfo == nullptr)
+                if (sd == m_controlSocketRead->getDescriptor())
                 {
-                    descriptorInfo = &m_result.descriptorInfos.add();
-                    descriptorInfo->sd = sd;
-                    descriptorInfo->disconnected = true;
+                    // control socket brocken
+                }
+                else
+                {
+                    if (descriptorInfo == nullptr)
+                    {
+                        descriptorInfo = &m_result.descriptorInfos.add();
+                        descriptorInfo->sd = sd;
+                        descriptorInfo->disconnected = true;
+                    }
                 }
             }
         }

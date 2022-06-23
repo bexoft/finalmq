@@ -279,9 +279,16 @@ void PollerImplEpoll::collectSockets(int res)
 
             if (pe.events & (EPOLLERR | EPOLLHUP))
             {
-                descriptorInfo = &m_result.descriptorInfos.add();
-                descriptorInfo->sd = sd;
-                descriptorInfo->disconnected = true;
+                if (sd == m_controlSocketRead->getDescriptor())
+                {
+                    // control socket brocken
+                }
+                else
+                {
+                    descriptorInfo = &m_result.descriptorInfos.add();
+                    descriptorInfo->sd = sd;
+                    descriptorInfo->disconnected = true;
+                }
             }
             if (pe.events & EPOLLOUT)
             {

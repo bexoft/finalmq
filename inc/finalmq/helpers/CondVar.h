@@ -37,17 +37,17 @@ public:
     */
     enum CondVarMode
     {
-        /// mode: manual
-        CONDVAR_MANUAL,
+        /// mode: manual reset
+        CONDVAR_MANUALRESET,
         /// mode: automatic reset
-        CONDVAR_AUTOMATICRESET
+        CONDVAR_AUTORESET
     };
 
     /**
     * The constructor of the class CondVar initalizes/creates the CondVar.
     * @param mode the mode of signal. If no parameter is passed to the constructor, then it is a manual signal.
     */
-    explicit CondVar(CondVarMode mode = CondVarMode::CONDVAR_AUTOMATICRESET);
+    explicit CondVar(CondVarMode mode = CondVarMode::CONDVAR_AUTORESET);
     virtual ~CondVar(void);
 
     /**
@@ -97,7 +97,7 @@ private:
 
     mutable std::condition_variable     m_condvar;
     mutable bool                        m_value = false;
-    const CondVarMode                   m_mode = CondVarMode::CONDVAR_MANUAL;
+    const CondVarMode                   m_mode = CondVarMode::CONDVAR_MANUALRESET;
     mutable std::mutex                  m_mutex;
 };
 
