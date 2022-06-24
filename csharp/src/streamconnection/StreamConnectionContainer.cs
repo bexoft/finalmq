@@ -42,7 +42,8 @@ namespace finalmq {
 
     internal interface IStreamConnectionContainerPrivate
     {
-        void RemoveConnection(long connectionId);
+        void Connect(string endpoint, IStreamConnection streamConnection, ConnectProperties? connectionProperties = null);
+        void Disconnect(IStreamConnectionPrivate connection);
     }
 
 
@@ -173,20 +174,20 @@ namespace finalmq {
                 }
                 else
                 {
-                    DisconnectIntern(connection);
+                    ((IStreamConnectionContainerPrivate)this).Disconnect(connection);
                 }
             });
             stream.BeginRead(buffer, 0, buffer.Length, callbackRead, callbackRead);
         }
 
-        public IStreamConnection Connect(string endpoint, IStreamConnectionCallback callback, ConnectProperties? connectionProperties = null)
+        public IStreamConnection Connect(string endpoint, IStreamConnectionCallback callback, ConnectProperties? connectProperties = null)
         {
             IStreamConnection connection = CreateConnection(callback);
-            Connect(endpoint, connection, connectionProperties);
+            Connect(endpoint, connection, connectProperties);
             return connection;
         }
 
-        public void Connect(string endpoint, IStreamConnection streamConnection, ConnectProperties? connectionProperties = null)
+        public void Connect(string endpoint, IStreamConnection streamConnection, ConnectProperties? connectProperties = null)
         {
             long connectionId = streamConnection.GetConnectionId();
             IStreamConnectionPrivate? connection = FindConnectionById(connectionId);
@@ -195,26 +196,27 @@ namespace finalmq {
                 throw new ArgumentException("Connection is not part of StreamConnectionContainer");
             }
 
-            ConnectProperties connectionPropertiesNoneNull = new ConnectProperties();
-            if (connectionProperties != null)
+            ConnectProperties connectPropertiesNoneNull = new ConnectProperties();
+            if (connectProperties != null)
             {
-                connectionPropertiesNoneNull = connectionProperties;
+                connectPropertiesNoneNull = connectProperties;
             }
 
             ConnectionData connectionData = AddressHelpers.Endpoint2ConnectionData(endpoint);
             connectionData.connectionId = connectionId;
             connectionData.incomingConnection = false;
-            connectionData.reconnectInterval = connectionPropertiesNoneNull.ConnectConfig.reconnectInterval;
-            connectionData.totalReconnectDuration = connectionPropertiesNoneNull.ConnectConfig.totalReconnectDuration;
+            connectionData.reconnectInterval = connectPropertiesNoneNull.ConnectConfig.reconnectInterval;
+            connectionData.totalReconnectDuration = connectPropertiesNoneNull.ConnectConfig.totalReconnectDuration;
             connectionData.startTime = DateTime.Now;
-            connectionData.ssl = connectionPropertiesNoneNull.SslClientOptions != null ? true : false;
+            connectionData.ssl = connectPropertiesNoneNull.SslClientOptions != null ? true : false;
             connectionData.connectionState = ConnectionState.CONNECTIONSTATE_CONNECTING;
+            connectionData.connectProperties = connectProperties;
 
             TcpClient tcpClient = new TcpClient();
             SslStream? sslStream = null;
-            if (connectionPropertiesNoneNull.SslClientOptions != null)
+            if (connectPropertiesNoneNull.SslClientOptions != null)
             {
-                SslClientOptions sslClientOptions = connectionPropertiesNoneNull.SslClientOptions;
+                SslClientOptions sslClientOptions = connectPropertiesNoneNull.SslClientOptions;
                 sslStream = new SslStream(tcpClient.GetStream(), false, sslClientOptions.UserCertificateValidationCallback,
                                                 sslClientOptions.UserCertificateSelectionCallback, sslClientOptions.EncryptionPolicy);
                 connectionData.stream = sslStream;
@@ -227,7 +229,7 @@ namespace finalmq {
                 }
                 catch (InvalidOperationException)
                 {
-                    DisconnectIntern(connection);
+                    ((IStreamConnectionContainerPrivate)this).Disconnect(connection);
                 }
             }
 
@@ -243,9 +245,9 @@ namespace finalmq {
                 tcpClient.BeginConnect(connectionData.hostname, connectionData.port, (IAsyncResult ar) =>
                 {
                     tcpClient.EndConnect(ar);
-                    if (connectionPropertiesNoneNull.SslClientOptions != null && sslStream != null)
+                    if (connectPropertiesNoneNull.SslClientOptions != null && sslStream != null)
                     {
-                        StartOutgoingSslConnection(connection, connectionData, sslStream, connectionPropertiesNoneNull.SslClientOptions);
+                        StartOutgoingSslConnection(connection, connectionData, sslStream, connectPropertiesNoneNull.SslClientOptions);
                     }
                     else
                     {
@@ -253,17 +255,6 @@ namespace finalmq {
                         StartReading(connectionData.stream, connection);
                     }
                 }, null);
-            }
-        }
-
-        private void DisconnectIntern(IStreamConnectionPrivate connectionDisconnect)
-        {
-            bool removeConn = connectionDisconnect.ChangeStateForDisconnect();
-            if (removeConn)
-            {
-                long connectionId = connectionDisconnect.GetConnectionId();
-                ((IStreamConnectionContainerPrivate)this).RemoveConnection(connectionId);
-                connectionDisconnect.Disconnected();
             }
         }
 
@@ -380,7 +371,18 @@ namespace finalmq {
             }
         }
 
-        void IStreamConnectionContainerPrivate.RemoveConnection(long connectionId)
+        void IStreamConnectionContainerPrivate.Disconnect(IStreamConnectionPrivate connection)
+        {
+            bool removeConn = connection.ChangeStateForDisconnect();
+            long connectionId = connection.GetConnectionId();
+            RemoveConnection(connectionId, removeConn);
+            if (removeConn)
+            {
+                connection.Disconnected();
+            }
+        }
+
+        private void RemoveConnection(long connectionId, bool removeConn)
         {
             IStreamConnectionPrivate? streamConnection = null;
             ConnectionData? connectionData = null;
@@ -388,7 +390,10 @@ namespace finalmq {
             lock (m_mutex)
             {
                 m_connectionId2Connection.TryGetValue(connectionId, out streamConnection);
-                m_connectionId2Connection.Remove(connectionId);
+                if (removeConn)
+                {
+                    m_connectionId2Connection.Remove(connectionId);
+                }
                 if (streamConnection != null)
                 {
                     connectionData = streamConnection.GetConnectionData();

@@ -20,9 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using System;
 using System.Net.Sockets;
-using System.IO;
 
 
 
@@ -60,6 +58,7 @@ namespace finalmq
             connectionData.startTime = startTime;
             connectionData.ssl = ssl;
             connectionData.connectionState = connectionState;
+            connectionData.connectProperties = connectProperties;
             return connectionData;
         }
 
@@ -79,6 +78,7 @@ namespace finalmq
         public DateTime startTime = DateTime.Now;
         public bool ssl;
         public ConnectionState connectionState;
+        public ConnectProperties? connectProperties = null;
     }
 
 }   // namespace finalmq

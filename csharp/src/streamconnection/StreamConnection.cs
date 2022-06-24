@@ -23,8 +23,6 @@
 
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Authentication;
-using System.IO;
-using System.Net.Sockets;
 using System.Net.Security;
 
 namespace finalmq {
@@ -180,14 +178,14 @@ namespace finalmq {
         ConnectionData GetConnectionData();
         ConnectionState GetConnectionState();
         long GetConnectionId();
-        Socket GetSocket();
+//        Socket GetSocket();
         void Disconnect();
     };
 
     public interface IStreamConnectionPrivate : IStreamConnection
     {
         bool Connect();
-        Socket GetSocketPrivate();
+//        Socket GetSocketPrivate();
         bool SendPendingMessages();
         bool DoReconnect();
         bool ChangeStateForDisconnect();
@@ -209,12 +207,48 @@ namespace finalmq {
 
         public bool ChangeStateForDisconnect()
         {
-            throw new System.NotImplementedException();
+            bool removeConnection = false;
+            lock (m_mutex)
+            {
+                bool reconnectExpired = false;
+                if (!GetDisconnectFlag() && (m_connectionData.connectionState == ConnectionState.CONNECTIONSTATE_CONNECTING))
+                {
+                    TimeSpan dur = DateTime.Now - m_connectionData.startTime;
+                    int delta = dur.Milliseconds;
+                    if (m_connectionData.totalReconnectDuration >= 0 && (delta < 0 || delta >= m_connectionData.totalReconnectDuration))
+                    {
+                        reconnectExpired = true;
+                    }
+                    else
+                    {
+                        m_connectionData.connectionState = ConnectionState.CONNECTIONSTATE_CONNECTING_FAILED;
+                    }
+                }
+
+                if (GetDisconnectFlag() || (m_connectionData.connectionState == ConnectionState.CONNECTIONSTATE_CONNECTED) || reconnectExpired)
+                {
+                    removeConnection = true;
+                    m_connectionData.connectionState = ConnectionState.CONNECTIONSTATE_DISCONNECTED;
+                }
+            }
+            return removeConnection;
         }
 
         public bool Connect()
         {
-            throw new System.NotImplementedException();
+            bool connecting = false;
+            ConnectionData connectionData;
+            lock (m_mutex)
+            {
+                connectionData = m_connectionData;
+            }
+            if (connectionData.connectionState == ConnectionState.CONNECTIONSTATE_CREATED ||
+                connectionData.connectionState == ConnectionState.CONNECTIONSTATE_CONNECTING_FAILED)
+            {
+                m_streamConnectionContainer.Connect(m_connectionData.endpoint, this, m_connectionData.connectProperties);
+                connecting = true;
+            }
+            return connecting;
         }
 
         public void Connected()
@@ -242,7 +276,7 @@ namespace finalmq {
         public void Disconnect()
         {
             Interlocked.Exchange(ref m_disconnectFlag, 1);
-//todo            m_streamConnectionContainer.RemoveConnection(GetConnectionId());
+            m_streamConnectionContainer.Disconnect(this);
         }
 
         public void Disconnected()
@@ -260,14 +294,33 @@ namespace finalmq {
 
         public bool DoReconnect()
         {
-            throw new System.NotImplementedException();
+            bool reconnecting = false;
+            ConnectionData connectionData;
+            lock (m_mutex)
+            {
+                connectionData = m_connectionData;
+            }
+            if (!connectionData.incomingConnection &&
+                connectionData.connectionState == ConnectionState.CONNECTIONSTATE_CONNECTING_FAILED &&
+                connectionData.reconnectInterval >= 0)
+            {
+                DateTime now = DateTime.Now;
+                TimeSpan dur = now - m_lastReconnectTime;
+                int delta = dur.Milliseconds;
+                if (delta < 0 || delta >= m_connectionData.reconnectInterval)
+                {
+                    m_lastReconnectTime = now;
+                    reconnecting = Connect();
+                }
+            }
+            return reconnecting;
         }
 
         public ConnectionData GetConnectionData()
         {
             lock (m_mutex)
             {
-                return m_connectionData;
+                return m_connectionData.Clone();
             }
         }
 
@@ -292,19 +345,9 @@ namespace finalmq {
             return (Interlocked.Read(ref m_disconnectFlag) != 0);
         }
 
-        public Socket GetSocket()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public Socket GetSocketPrivate()
-        {
-            throw new System.NotImplementedException();
-        }
-
         public bool Received(byte[] buffer, int count)
         {
-            throw new System.NotImplementedException();
+            return m_callback.Received(this, buffer, count);
         }
 
         public bool SendMessage(IMessage msg)
@@ -331,6 +374,7 @@ namespace finalmq {
         readonly object m_mutexCallback = new object();
         long m_disconnectFlag = 0;  // atomic  
         readonly IStreamConnectionContainerPrivate m_streamConnectionContainer;
+        DateTime m_lastReconnectTime = DateTime.Now;
     }
 
 
