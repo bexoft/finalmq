@@ -168,7 +168,7 @@ namespace finalmq {
     {
         IStreamConnectionCallback? Connected(IStreamConnection connection);
         void Disconnected(IStreamConnection connection);
-        bool Received(IStreamConnection connection, Socket socket, int bytesToRead);
+        bool Received(IStreamConnection connection, byte[] buffer, int count);
     }
 
 
@@ -195,15 +195,16 @@ namespace finalmq {
         void UpdateConnectionData(ConnectionData connectionData);
         void Connected();
         void Disconnected();
-        bool Received(Socket socket, int bytesToRead);
+        bool Received(byte[] buffer, int count);
     };
 
     class StreamConnection : IStreamConnectionPrivate
     {
-        public StreamConnection(ConnectionData connectionData, Stream? stream, IStreamConnectionCallback callback)
+        public StreamConnection(ConnectionData connectionData, Stream? stream, IStreamConnectionCallback callback, IStreamConnectionContainerPrivate streamConnectionContainer)
         {
             m_connectionData = connectionData;
             m_callback = callback;
+            m_streamConnectionContainer = streamConnectionContainer;
         }
 
         public bool ChangeStateForDisconnect()
@@ -235,11 +236,13 @@ namespace finalmq {
                     callbackOverride.Connected(this);
                 }
             }
+
         }
 
         public void Disconnect()
         {
             Interlocked.Exchange(ref m_disconnectFlag, 1);
+//todo            m_streamConnectionContainer.RemoveConnection(GetConnectionId());
         }
 
         public void Disconnected()
@@ -299,7 +302,7 @@ namespace finalmq {
             throw new System.NotImplementedException();
         }
 
-        public bool Received(Socket socket, int bytesToRead)
+        public bool Received(byte[] buffer, int count)
         {
             throw new System.NotImplementedException();
         }
@@ -316,14 +319,18 @@ namespace finalmq {
 
         void IStreamConnectionPrivate.UpdateConnectionData(ConnectionData connectionData)
         {
-            throw new NotImplementedException();
+            lock (m_mutex)
+            {
+                m_connectionData = connectionData;
+            }
         }
 
-        readonly ConnectionData m_connectionData;
+        ConnectionData m_connectionData;
         IStreamConnectionCallback m_callback;
         readonly object m_mutex = new object();
         readonly object m_mutexCallback = new object();
         long m_disconnectFlag = 0;  // atomic  
+        readonly IStreamConnectionContainerPrivate m_streamConnectionContainer;
     }
 
 

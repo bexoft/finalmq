@@ -38,10 +38,16 @@ namespace finalmq {
         IList<IStreamConnection> GetAllConnections();
         IStreamConnection? GetConnection(long connectionId);
         IStreamConnection? TryGetConnection(long connectionId);
-    };
+    }
+
+    internal interface IStreamConnectionContainerPrivate
+    {
+        void RemoveConnection(long connectionId);
+    }
 
 
     public class StreamConnectionContainer : IStreamConnectionContainer
+                                           , IStreamConnectionContainerPrivate
     {
         public StreamConnectionContainer()
         {
@@ -109,7 +115,7 @@ namespace finalmq {
                         StartIncomingConnection(bindData, stream);
                     }
                     AsyncCallback? c = (AsyncCallback?)ar.AsyncState;
-                    listener.BeginAcceptTcpClient(c, null);
+                    listener.BeginAcceptTcpClient(c, c);
                 });
                 listener.BeginAcceptTcpClient(callbackAccept, callbackAccept);
             }
@@ -123,6 +129,7 @@ namespace finalmq {
             connectionData.connectionState = ConnectionState.CONNECTIONSTATE_CONNECTED;
             IStreamConnectionPrivate connection = AddConnection(stream, connectionData, bindData.Callback);
             connection.Connected();
+            StartReading(stream, connection);
         }
 
         private void StartIncomingSslConnection(BindData bindData, SslStream sslStream, SslServerOptions sslServerOptions)
@@ -136,6 +143,7 @@ namespace finalmq {
                                                     connectionData.connectionState = ConnectionState.CONNECTIONSTATE_CONNECTED;
                                                     IStreamConnectionPrivate connection = AddConnection(sslStream, connectionData, bindData.Callback);
                                                     connection.Connected();
+                                                    StartReading(sslStream, connection);
                                                 }, null);
         }
 
@@ -143,7 +151,7 @@ namespace finalmq {
         {
             long connectionId = Interlocked.Increment(ref m_nextConnectionId);
             connectionData.connectionId = connectionId;
-            IStreamConnectionPrivate connection = new StreamConnection(connectionData, stream, callback);
+            IStreamConnectionPrivate connection = new StreamConnection(connectionData, stream, callback, this);
             lock (m_mutex)
             {
                 m_connectionId2Connection[connectionId] = connection;
@@ -151,6 +159,25 @@ namespace finalmq {
             return connection;
         }
 
+        private void StartReading(Stream stream, IStreamConnectionPrivate connection)
+        {
+            long connectionId = connection.GetConnectionId();
+            byte[] buffer = new byte[4096];
+            AsyncCallback callbackRead = new AsyncCallback((IAsyncResult ar) => {
+                int count = stream.EndRead(ar);
+                if (count > 0)
+                {
+                    connection.Received(buffer, count);
+                    AsyncCallback? c = (AsyncCallback?)ar.AsyncState;
+                    stream.BeginRead(buffer, 0, buffer.Length, c, c);
+                }
+                else
+                {
+                    DisconnectIntern(connection);
+                }
+            });
+            stream.BeginRead(buffer, 0, buffer.Length, callbackRead, callbackRead);
+        }
 
         public IStreamConnection Connect(string endpoint, IStreamConnectionCallback callback, ConnectProperties? connectionProperties = null)
         {
@@ -200,37 +227,42 @@ namespace finalmq {
                 }
                 catch (InvalidOperationException)
                 {
-                    DisconnectIntern(connection, connectionId);
+                    DisconnectIntern(connection);
                 }
             }
 
-            lock (m_mutex)
+            if (connectionData.stream != null)
             {
-                m_connectionId2Conns[connectionData.connectionId] = new ConnData(tcpClient);
+                lock (m_mutex)
+                {
+                    m_connectionId2Conns[connectionData.connectionId] = new ConnData(tcpClient);
+                }
+
+                connection.UpdateConnectionData(connectionData);
+
+                tcpClient.BeginConnect(connectionData.hostname, connectionData.port, (IAsyncResult ar) =>
+                {
+                    tcpClient.EndConnect(ar);
+                    if (connectionPropertiesNoneNull.SslClientOptions != null && sslStream != null)
+                    {
+                        StartOutgoingSslConnection(connection, connectionData, sslStream, connectionPropertiesNoneNull.SslClientOptions);
+                    }
+                    else
+                    {
+                        connection.Connected();
+                        StartReading(connectionData.stream, connection);
+                    }
+                }, null);
             }
-
-            connection.UpdateConnectionData(connectionData);
-
-            tcpClient.BeginConnect(connectionData.hostname, connectionData.port, (IAsyncResult ar) => {
-                tcpClient.EndConnect(ar);
-                if (connectionPropertiesNoneNull.SslClientOptions != null && sslStream != null)
-                {
-                    StartOutgoingSslConnection(connection, connectionData, sslStream, connectionPropertiesNoneNull.SslClientOptions);
-                }
-                else 
-                {
-                    connection.Connected();
-                }
-            }, null);
-
         }
 
-        private void DisconnectIntern(IStreamConnectionPrivate connectionDisconnect, long connectionId)
+        private void DisconnectIntern(IStreamConnectionPrivate connectionDisconnect)
         {
             bool removeConn = connectionDisconnect.ChangeStateForDisconnect();
             if (removeConn)
             {
-//todo                RemoveConnection(connectionId);
+                long connectionId = connectionDisconnect.GetConnectionId();
+                ((IStreamConnectionContainerPrivate)this).RemoveConnection(connectionId);
                 connectionDisconnect.Disconnected();
             }
         }
@@ -243,6 +275,7 @@ namespace finalmq {
                 {
                     sslStream.EndAuthenticateAsClient(ar);
                     streamConnection.Connected();
+                    StartReading(sslStream, streamConnection);
                 }, 
                 null);
         }
@@ -347,6 +380,38 @@ namespace finalmq {
             }
         }
 
+        void IStreamConnectionContainerPrivate.RemoveConnection(long connectionId)
+        {
+            IStreamConnectionPrivate? streamConnection = null;
+            ConnectionData? connectionData = null;
+            ConnData? connData = null;
+            lock (m_mutex)
+            {
+                m_connectionId2Connection.TryGetValue(connectionId, out streamConnection);
+                m_connectionId2Connection.Remove(connectionId);
+                if (streamConnection != null)
+                {
+                    connectionData = streamConnection.GetConnectionData();
+                    if (!connectionData.incomingConnection)
+                    {
+                        if (m_connectionId2Conns.TryGetValue(connectionId, out connData))
+                        {
+                            m_connectionId2Conns.Remove(connectionId);
+                        }
+                    }
+                }
+            }
+            if (connectionData != null)
+            {
+                connectionData.stream?.Close();
+            }
+            if (connData != null)
+            {
+                connData.TcpClient.Close();
+            }
+        }
+
+
         class BindData
         {
             public BindData(ConnectionData connectionData, IStreamConnectionCallback callback, TcpListener tcpListener)
@@ -370,7 +435,12 @@ namespace finalmq {
             {
                 this.tcpClient = tcpClient;
             }
-            private TcpClient tcpClient;
+
+            public TcpClient TcpClient
+            {
+                get => tcpClient;
+            }
+            private readonly TcpClient tcpClient;
         }
 
         private IDictionary<string, BindData> m_endpoint2binds = new Dictionary<string, BindData>();

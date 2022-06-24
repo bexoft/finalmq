@@ -21,7 +21,7 @@ namespace testfinalmq
         {
 
         }
-        public bool Received(IStreamConnection connection, Socket socket, int bytesToRead)
+        public bool Received(IStreamConnection connection, byte[] buffer, int count)
         {
             return false;
         }
