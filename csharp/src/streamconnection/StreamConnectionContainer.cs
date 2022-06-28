@@ -49,12 +49,51 @@ namespace finalmq {
 
     public class StreamConnectionContainer : IStreamConnectionContainer
                                            , IStreamConnectionContainerPrivate
+                                           , IDisposable
     {
+        private bool m_disposed = false;
+
         public StreamConnectionContainer()
         {
             m_timerReconnect.Elapsed += (Object? source, System.Timers.ElapsedEventArgs e) => { DoReconnect(); };
             m_timerReconnect.AutoReset = true;
             m_timerReconnect.Enabled = true;
+        }
+
+        ~StreamConnectionContainer()
+        {
+            Dispose(false);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (m_disposed)
+            {
+                return;
+            }
+            m_disposed = true;
+
+            if (disposing)
+            {
+                foreach (var entry in m_endpoint2binds)
+                {
+                    entry.Value.TcpListener.Stop();
+                }
+                foreach (var entry in m_connectionId2Conns)
+                {
+                    entry.Value.TcpClient.Dispose();
+                }
+                foreach (var entry in m_connectionId2Connection)
+                {
+                    entry.Value.Dispose();
+                }
+            }
         }
 
         public void Bind(string endpoint, IStreamConnectionCallback callback, BindProperties? bindProperties = null)
@@ -74,7 +113,7 @@ namespace finalmq {
             }
             else
             {
-                IPHostEntry entry = Dns.GetHostEntry(endpoint);
+                IPHostEntry entry = Dns.GetHostEntry(connectionData.hostname);
                 if (entry.AddressList.Length > 0)
                 {
                     address = entry.AddressList[0];
@@ -213,60 +252,54 @@ namespace finalmq {
             connectionData.connectProperties = connectProperties;
 
             TcpClient tcpClient = new TcpClient();
-            SslStream? sslStream = null;
-            if (connectPropertiesNoneNull.SslClientOptions != null)
+
+            lock (m_mutex)
             {
-                SslClientOptions sslClientOptions = connectPropertiesNoneNull.SslClientOptions;
-                sslStream = new SslStream(tcpClient.GetStream(), false, sslClientOptions.UserCertificateValidationCallback,
-                                                sslClientOptions.UserCertificateSelectionCallback, sslClientOptions.EncryptionPolicy);
-                connectionData.stream = sslStream;
-            }
-            else
-            {
-                try
-                {
-                    connectionData.stream = tcpClient.GetStream();
-                }
-                catch (InvalidOperationException)
-                {
-                    ((IStreamConnectionContainerPrivate)this).Disconnect(connection);
-                }
+                m_connectionId2Conns[connectionData.connectionId] = new ConnData(tcpClient);
             }
 
-            if (connectionData.stream != null)
-            {
-                lock (m_mutex)
-                {
-                    m_connectionId2Conns[connectionData.connectionId] = new ConnData(tcpClient);
-                }
-
-                connection.UpdateConnectionData(connectionData);
-
-                tcpClient.BeginConnect(connectionData.hostname, connectionData.port, (IAsyncResult ar) =>
+            tcpClient.BeginConnect(connectionData.hostname, connectionData.port, (IAsyncResult ar) =>
                 {
                     tcpClient.EndConnect(ar);
-                    if (connectPropertiesNoneNull.SslClientOptions != null && sslStream != null)
+                    try
                     {
-                        StartOutgoingSslConnection(connection, connectionData, sslStream, connectPropertiesNoneNull.SslClientOptions);
+                        Stream tcpStream = tcpClient.GetStream();
+
+                        if (connectPropertiesNoneNull.SslClientOptions != null)
+                        {
+                            SslClientOptions sslClientOptions = connectPropertiesNoneNull.SslClientOptions;
+                            SslStream sslStream = new SslStream(tcpStream, false, sslClientOptions.UserCertificateValidationCallback,
+                                                            sslClientOptions.UserCertificateSelectionCallback, sslClientOptions.EncryptionPolicy);
+                            connectionData.stream = sslStream;
+                            StartOutgoingSslConnection(connection, connectionData, sslStream, connectPropertiesNoneNull.SslClientOptions);
+                        }
+                        else
+                        {
+                            connectionData.stream = tcpStream;
+                            connectionData.connectionState = ConnectionState.CONNECTIONSTATE_CONNECTED;
+                            connection.UpdateConnectionData(connectionData);
+                            connection.Connected();
+                            StartReading(connectionData.stream, connection);
+                        }
                     }
-                    else
+                    catch (Exception)
                     {
-                        connection.Connected();
-                        StartReading(connectionData.stream, connection);
+                        ((IStreamConnectionContainerPrivate)this).Disconnect(connection);
                     }
                 }, null);
-            }
         }
 
-        private void StartOutgoingSslConnection(IStreamConnectionPrivate streamConnection, ConnectionData connectionData, SslStream sslStream, SslClientOptions sslClientOptions)
+        private void StartOutgoingSslConnection(IStreamConnectionPrivate connection, ConnectionData connectionData, SslStream sslStream, SslClientOptions sslClientOptions)
         {
             sslStream.BeginAuthenticateAsClient(sslClientOptions.TargetHost, sslClientOptions.ClientCertificates, sslClientOptions.EnabledSslProtocols,
                                                 sslClientOptions.CheckCertificateRevocation, 
                 (IAsyncResult ar) => 
                 {
                     sslStream.EndAuthenticateAsClient(ar);
-                    streamConnection.Connected();
-                    StartReading(sslStream, streamConnection);
+                    connectionData.connectionState = ConnectionState.CONNECTIONSTATE_CONNECTED;
+                    connection.UpdateConnectionData(connectionData);
+                    connection.Connected();
+                    StartReading(sslStream, connection);
                 }, 
                 null);
         }
@@ -415,7 +448,6 @@ namespace finalmq {
                 connData.TcpClient.Close();
             }
         }
-
 
         class BindData
         {

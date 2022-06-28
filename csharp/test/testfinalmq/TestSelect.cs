@@ -11,7 +11,7 @@ using finalmq;
 
 namespace testfinalmq
 {
-    [Collection("Our Test Collection #1")]
+    [Collection("TestCollectionPoller")]
     public class TestSelect : IDisposable
     {
         static int MILLITOMICRO = 1000;

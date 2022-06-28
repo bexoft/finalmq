@@ -28,15 +28,38 @@ namespace finalmq
     {
     }
 
-    public struct BufferRef
+    public class BufferRef
     {
-        BufferRef(int index = 0, int size = 0)
+        public BufferRef(byte[] buffer, int offset = 0, int count = 0)
         {
-            this.index = index;
-            this.size = size;
+            m_buffer = buffer;
+            m_offset = offset;
+            m_count = count;
         }
-        int index;
-        int size;
+        public byte[] Buffer
+        {
+            get
+            {
+                return this.m_buffer;
+            }
+        }
+        public int Offset
+        {
+            get
+            {
+                return this.m_offset;
+            }
+        }
+        public int Count
+        {
+            get
+            {
+                return this.m_count;
+            }
+        }
+        private readonly byte[] m_buffer;
+        private int m_offset;
+        private int m_count;
     }
 
 

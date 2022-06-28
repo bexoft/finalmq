@@ -174,7 +174,7 @@ namespace finalmq {
 
     public interface IStreamConnection
     {
-        bool SendMessage(IMessage msg);
+        void SendMessage(IMessage msg);
         ConnectionData GetConnectionData();
         ConnectionState GetConnectionState();
         long GetConnectionId();
@@ -182,11 +182,10 @@ namespace finalmq {
         void Disconnect();
     };
 
-    public interface IStreamConnectionPrivate : IStreamConnection
+    public interface IStreamConnectionPrivate : IStreamConnection, IDisposable
     {
         bool Connect();
 //        Socket GetSocketPrivate();
-        bool SendPendingMessages();
         bool DoReconnect();
         bool ChangeStateForDisconnect();
         bool GetDisconnectFlag();
@@ -196,8 +195,10 @@ namespace finalmq {
         bool Received(byte[] buffer, int count);
     };
 
-    class StreamConnection : IStreamConnectionPrivate
+    internal class StreamConnection : IStreamConnectionPrivate
     {
+        bool m_disposed = false;
+
         public StreamConnection(ConnectionData connectionData, Stream? stream, IStreamConnectionCallback callback, IStreamConnectionContainerPrivate streamConnectionContainer)
         {
             m_connectionData = connectionData;
@@ -205,7 +206,32 @@ namespace finalmq {
             m_streamConnectionContainer = streamConnectionContainer;
         }
 
-        public bool ChangeStateForDisconnect()
+        ~StreamConnection()
+        {
+            Dispose(false);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (m_disposed)
+            {
+                return;
+            }
+            m_disposed = true;
+
+            if (disposing)
+            {
+                m_connectionData.stream?.DisposeAsync();
+            }
+        }
+
+            public bool ChangeStateForDisconnect()
         {
             bool removeConnection = false;
             lock (m_mutex)
@@ -350,14 +376,30 @@ namespace finalmq {
             return m_callback.Received(this, buffer, count);
         }
 
-        public bool SendMessage(IMessage msg)
+        public void SendMessage(IMessage msg)
         {
-            throw new System.NotImplementedException();
-        }
-
-        public bool SendPendingMessages()
-        {
-            throw new System.NotImplementedException();
+            IList<BufferRef> buffers = msg.GetAllSendBuffers();
+            lock (m_mutex)
+            {
+                var connectionState = m_connectionData.connectionState;
+                if (connectionState == ConnectionState.CONNECTIONSTATE_CREATED ||
+                    connectionState == ConnectionState.CONNECTIONSTATE_CONNECTING ||
+                    connectionState == ConnectionState.CONNECTIONSTATE_CONNECTED)
+                {
+                    Stream? stream = m_connectionData.stream;
+                    if (stream != null)
+                    {
+                        SendBuffers(stream, buffers);
+                    }
+                    else
+                    {
+                        foreach (BufferRef buffer in buffers)
+                        {
+                            m_pendingBuffers.Add(buffer);
+                        }
+                    }
+                }
+            }
         }
 
         void IStreamConnectionPrivate.UpdateConnectionData(ConnectionData connectionData)
@@ -365,6 +407,31 @@ namespace finalmq {
             lock (m_mutex)
             {
                 m_connectionData = connectionData;
+                Stream? stream = m_connectionData.stream;
+                if (stream != null)
+                {
+                    SendBuffers(stream, m_pendingBuffers);
+                    m_pendingBuffers.Clear();
+                }
+            }
+        }
+
+        void SendBuffers(Stream stream, IList<BufferRef> buffers)
+        {
+            foreach (BufferRef buffer in buffers)
+            {
+                stream.BeginWrite(buffer.Buffer, buffer.Offset, buffer.Count,
+                    (IAsyncResult ar) =>
+                    {
+                        try
+                        {
+                            stream.EndWrite(ar);
+                        }
+                        catch (Exception)
+                        {
+                            m_streamConnectionContainer.Disconnect(this);
+                        }
+                    }, null);
             }
         }
 
@@ -375,6 +442,7 @@ namespace finalmq {
         long m_disconnectFlag = 0;  // atomic  
         readonly IStreamConnectionContainerPrivate m_streamConnectionContainer;
         DateTime m_lastReconnectTime = DateTime.Now;
+        IList<BufferRef> m_pendingBuffers = new List<BufferRef>();
     }
 
 
