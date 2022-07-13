@@ -46,13 +46,13 @@ namespace finalmq {
             this.encryptionPolicy = encryptionPolicy;
         }
 
-        public X509Certificate ServerCertificate { get => serverCertificate; set { serverCertificate = value; } }
-        public bool ClientCertificateRequired { get => clientCertificateRequired; set { clientCertificateRequired = value; } }
-        public SslProtocols EnabledSslProtocols { get => enabledSslProtocols; set { enabledSslProtocols = value; } }
-        public bool CheckCertificateRevocation { get => checkCertificateRevocation; set { checkCertificateRevocation = value; } }
-        public RemoteCertificateValidationCallback? UserCertificateValidationCallback { get => userCertificateValidationCallback; set { userCertificateValidationCallback = value; } }
-        public LocalCertificateSelectionCallback? UserCertificateSelectionCallback { get => userCertificateSelectionCallback; set { userCertificateSelectionCallback = value; } }
-        public EncryptionPolicy EncryptionPolicy { get => encryptionPolicy; set { encryptionPolicy = value; } }
+        public X509Certificate ServerCertificate { get => serverCertificate; set => serverCertificate = value; }
+        public bool ClientCertificateRequired { get => clientCertificateRequired; set => clientCertificateRequired = value; }
+        public SslProtocols EnabledSslProtocols { get => enabledSslProtocols; set => enabledSslProtocols = value; }
+        public bool CheckCertificateRevocation { get => checkCertificateRevocation; set => checkCertificateRevocation = value; }
+        public RemoteCertificateValidationCallback? UserCertificateValidationCallback { get => userCertificateValidationCallback; set => userCertificateValidationCallback = value; }
+        public LocalCertificateSelectionCallback? UserCertificateSelectionCallback { get => userCertificateSelectionCallback; set => userCertificateSelectionCallback = value; }
+        public EncryptionPolicy EncryptionPolicy { get => encryptionPolicy; set => encryptionPolicy = value; }
 
         // BeginAuthenticateAsServer parameter
         private X509Certificate serverCertificate;
@@ -72,21 +72,23 @@ namespace finalmq {
         {
             this.sslServerOptions = sslServerOptions;
         }
-        public SslServerOptions? SslServerOptions
-        {   
-            get => sslServerOptions;
-            set
-            {
-                sslServerOptions = value;
-            }
-        }
+        public SslServerOptions? SslServerOptions { get => sslServerOptions; set => sslServerOptions = value; }
+
         private SslServerOptions? sslServerOptions = null;
     }
 
     public class ConnectConfig
     {
-        public int reconnectInterval = 5000;       ///< if the server is not available, you can pass a reconnection intervall in [ms]
-        public int totalReconnectDuration = -1;    ///< if the server is not available, you can pass a duration in [ms] how long the reconnect shall happen. -1 means: try for ever.
+        public ConnectConfig(int reconnectInterval = 5000, int totalReconnectDuration = -1)
+        {
+            this.reconnectInterval = reconnectInterval;
+            this.totalReconnectDuration = totalReconnectDuration;
+        }
+        public int ReconnectInterval { get => reconnectInterval; set => reconnectInterval = value; }
+        public int TotalReconnectDuration { get => totalReconnectDuration; set => totalReconnectDuration = value; }
+
+        private int reconnectInterval = 5000;       ///< if the server is not available, you can pass a reconnection intervall in [ms]
+        private int totalReconnectDuration = -1;    ///< if the server is not available, you can pass a duration in [ms] how long the reconnect shall happen. -1 means: try for ever.
     }
 
 
@@ -109,19 +111,19 @@ namespace finalmq {
             this.encryptionPolicy = encryptionPolicy;
         }
 
-        public string TargetHost { get => targetHost; set { targetHost = value; } }
-        public X509CertificateCollection? ClientCertificates { get => clientCertificates; set { clientCertificates = value; } }
-        public SslProtocols EnabledSslProtocols { get => enabledSslProtocols; set { enabledSslProtocols = value; } }
-        public bool CheckCertificateRevocation { get => checkCertificateRevocation; set { checkCertificateRevocation = value; } }
-        public RemoteCertificateValidationCallback? UserCertificateValidationCallback { get => userCertificateValidationCallback; set { userCertificateValidationCallback = value; } }
-        public LocalCertificateSelectionCallback? UserCertificateSelectionCallback { get => userCertificateSelectionCallback; set { userCertificateSelectionCallback = value; } }
-        public EncryptionPolicy EncryptionPolicy { get => encryptionPolicy; set { encryptionPolicy = value; } }
+        public string TargetHost { get => targetHost; set => targetHost = value; }
+        public X509CertificateCollection? ClientCertificates { get => clientCertificates; set => clientCertificates = value; }
+        public SslProtocols EnabledSslProtocols { get => enabledSslProtocols; set => enabledSslProtocols = value; }
+        public bool CheckCertificateRevocation { get => checkCertificateRevocation; set => checkCertificateRevocation = value; }
+        public RemoteCertificateValidationCallback? UserCertificateValidationCallback { get => userCertificateValidationCallback; set => userCertificateValidationCallback = value; }
+        public LocalCertificateSelectionCallback? UserCertificateSelectionCallback { get => userCertificateSelectionCallback; set => userCertificateSelectionCallback = value; }
+        public EncryptionPolicy EncryptionPolicy { get => encryptionPolicy; set => encryptionPolicy = value; }
 
         // BeginAuthenticateAsClient parameter
         private string targetHost;
         private X509CertificateCollection? clientCertificates;
         private SslProtocols enabledSslProtocols;
-        bool checkCertificateRevocation;
+        private bool checkCertificateRevocation;
 
         // SslStream ctor parameter
         private RemoteCertificateValidationCallback? userCertificateValidationCallback;
@@ -139,22 +141,9 @@ namespace finalmq {
                 this.config = config;
             }
         }
-        public SslClientOptions? SslClientOptions
-        {
-            get => sslClientOptions;
-            set
-            {
-                sslClientOptions = value;
-            }
-        }
-        public ConnectConfig ConnectConfig 
-        { 
-            get => config;
-            set 
-            { 
-                config = value; 
-            } 
-        }
+        public SslClientOptions? SslClientOptions { get => sslClientOptions; set => sslClientOptions = value; }
+        public ConnectConfig ConnectConfig { get => config; set => config = value; }
+
         private SslClientOptions? sslClientOptions = null;
         private ConnectConfig config = new ConnectConfig();
     //    Variant protocolData;
@@ -166,7 +155,7 @@ namespace finalmq {
     {
         IStreamConnectionCallback? Connected(IStreamConnection connection);
         void Disconnected(IStreamConnection connection);
-        bool Received(IStreamConnection connection, byte[] buffer, int count);
+        void Received(IStreamConnection connection, byte[] buffer, int count);
     }
 
 
@@ -175,10 +164,9 @@ namespace finalmq {
     public interface IStreamConnection
     {
         void SendMessage(IMessage msg);
-        ConnectionData GetConnectionData();
-        ConnectionState GetConnectionState();
-        long GetConnectionId();
-//        Socket GetSocket();
+        ConnectionData ConnectionData { get; }
+        ConnectionState ConnectionState { get; }
+        long ConnectionId { get; }
         void Disconnect();
     };
 
@@ -192,7 +180,7 @@ namespace finalmq {
         void UpdateConnectionData(ConnectionData connectionData);
         void Connected();
         void Disconnected();
-        bool Received(byte[] buffer, int count);
+        void Received(byte[] buffer, int count);
     };
 
     internal class StreamConnection : IStreamConnectionPrivate
@@ -227,34 +215,34 @@ namespace finalmq {
 
             if (disposing)
             {
-                m_connectionData.stream?.DisposeAsync();
+                m_connectionData.Stream?.DisposeAsync();
             }
         }
 
-            public bool ChangeStateForDisconnect()
+        public bool ChangeStateForDisconnect()
         {
             bool removeConnection = false;
             lock (m_mutex)
             {
                 bool reconnectExpired = false;
-                if (!GetDisconnectFlag() && (m_connectionData.connectionState == ConnectionState.CONNECTIONSTATE_CONNECTING))
+                if (!GetDisconnectFlag() && (m_connectionData.ConnectionState == ConnectionState.CONNECTIONSTATE_CONNECTING))
                 {
-                    TimeSpan dur = DateTime.Now - m_connectionData.startTime;
+                    TimeSpan dur = DateTime.Now - m_connectionData.StartTime;
                     int delta = dur.Milliseconds;
-                    if (m_connectionData.totalReconnectDuration >= 0 && (delta < 0 || delta >= m_connectionData.totalReconnectDuration))
+                    if (m_connectionData.TotalReconnectDuration >= 0 && (delta < 0 || delta >= m_connectionData.TotalReconnectDuration))
                     {
                         reconnectExpired = true;
                     }
                     else
                     {
-                        m_connectionData.connectionState = ConnectionState.CONNECTIONSTATE_CONNECTING_FAILED;
+                        m_connectionData.ConnectionState = ConnectionState.CONNECTIONSTATE_CONNECTING_FAILED;
                     }
                 }
 
-                if (GetDisconnectFlag() || (m_connectionData.connectionState == ConnectionState.CONNECTIONSTATE_CONNECTED) || reconnectExpired)
+                if (GetDisconnectFlag() || (m_connectionData.ConnectionState == ConnectionState.CONNECTIONSTATE_CONNECTED) || reconnectExpired)
                 {
                     removeConnection = true;
-                    m_connectionData.connectionState = ConnectionState.CONNECTIONSTATE_DISCONNECTED;
+                    m_connectionData.ConnectionState = ConnectionState.CONNECTIONSTATE_DISCONNECTED;
                 }
             }
             return removeConnection;
@@ -268,10 +256,10 @@ namespace finalmq {
             {
                 connectionData = m_connectionData;
             }
-            if (connectionData.connectionState == ConnectionState.CONNECTIONSTATE_CREATED ||
-                connectionData.connectionState == ConnectionState.CONNECTIONSTATE_CONNECTING_FAILED)
+            if (connectionData.ConnectionState == ConnectionState.CONNECTIONSTATE_CREATED ||
+                connectionData.ConnectionState == ConnectionState.CONNECTIONSTATE_CONNECTING_FAILED)
             {
-                m_streamConnectionContainer.Connect(m_connectionData.endpoint, this, m_connectionData.connectProperties);
+                m_streamConnectionContainer.Connect(m_connectionData.Endpoint, this, m_connectionData.ConnectProperties);
                 connecting = true;
             }
             return connecting;
@@ -326,14 +314,14 @@ namespace finalmq {
             {
                 connectionData = m_connectionData;
             }
-            if (!connectionData.incomingConnection &&
-                connectionData.connectionState == ConnectionState.CONNECTIONSTATE_CONNECTING_FAILED &&
-                connectionData.reconnectInterval >= 0)
+            if (!connectionData.IncomingConnection &&
+                connectionData.ConnectionState == ConnectionState.CONNECTIONSTATE_CONNECTING_FAILED &&
+                connectionData.ReconnectInterval >= 0)
             {
                 DateTime now = DateTime.Now;
                 TimeSpan dur = now - m_lastReconnectTime;
                 int delta = dur.Milliseconds;
-                if (delta < 0 || delta >= m_connectionData.reconnectInterval)
+                if (delta < 0 || delta >= m_connectionData.ReconnectInterval)
                 {
                     m_lastReconnectTime = now;
                     reconnecting = Connect();
@@ -342,27 +330,36 @@ namespace finalmq {
             return reconnecting;
         }
 
-        public ConnectionData GetConnectionData()
+        public ConnectionData ConnectionData
         {
-            lock (m_mutex)
+            get
             {
-                return m_connectionData.Clone();
+                lock (m_mutex)
+                {
+                    return m_connectionData.Clone();
+                }
             }
         }
 
-        public long GetConnectionId()
+        public long ConnectionId
         {
-            lock (m_mutex)
+            get
             {
-                return m_connectionData.connectionId;
+                lock (m_mutex)
+                {
+                    return m_connectionData.ConnectionId;
+                }
             }
         }
 
-        public ConnectionState GetConnectionState()
+        public ConnectionState ConnectionState
         {
-            lock (m_mutex)
+            get
             {
-                return m_connectionData.connectionState;
+                lock (m_mutex)
+                {
+                    return m_connectionData.ConnectionState;
+                }
             }
         }
 
@@ -371,9 +368,9 @@ namespace finalmq {
             return (Interlocked.Read(ref m_disconnectFlag) != 0);
         }
 
-        public bool Received(byte[] buffer, int count)
+        public void Received(byte[] buffer, int count)
         {
-            return m_callback.Received(this, buffer, count);
+            m_callback.Received(this, buffer, count);
         }
 
         public void SendMessage(IMessage msg)
@@ -381,12 +378,12 @@ namespace finalmq {
             IList<BufferRef> buffers = msg.GetAllSendBuffers();
             lock (m_mutex)
             {
-                var connectionState = m_connectionData.connectionState;
+                var connectionState = m_connectionData.ConnectionState;
                 if (connectionState == ConnectionState.CONNECTIONSTATE_CREATED ||
                     connectionState == ConnectionState.CONNECTIONSTATE_CONNECTING ||
                     connectionState == ConnectionState.CONNECTIONSTATE_CONNECTED)
                 {
-                    Stream? stream = m_connectionData.stream;
+                    Stream? stream = m_connectionData.Stream;
                     if (stream != null)
                     {
                         SendBuffers(stream, buffers);
@@ -407,7 +404,7 @@ namespace finalmq {
             lock (m_mutex)
             {
                 m_connectionData = connectionData;
-                Stream? stream = m_connectionData.stream;
+                Stream? stream = m_connectionData.Stream;
                 if (stream != null)
                 {
                     SendBuffers(stream, m_pendingBuffers);
@@ -420,7 +417,7 @@ namespace finalmq {
         {
             foreach (BufferRef buffer in buffers)
             {
-                stream.BeginWrite(buffer.Buffer, buffer.Offset, buffer.Count,
+                stream.BeginWrite(buffer.Buffer, buffer.Offset, buffer.Length,
                     (IAsyncResult ar) =>
                     {
                         try

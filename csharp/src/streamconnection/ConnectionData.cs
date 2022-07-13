@@ -42,43 +42,145 @@ namespace finalmq
         public ConnectionData Clone()
         {
             ConnectionData connectionData = new ConnectionData();
-            connectionData.connectionId = connectionId;
-            connectionData.endpoint = endpoint;
-            connectionData.hostname = hostname;
-            connectionData.port = port;
-            connectionData.endpointPeer = endpointPeer;
-            connectionData.af = af;
-            connectionData.type = type;
-            connectionData.protocol = protocol;
-            connectionData.portPeer = portPeer;
-            connectionData.incomingConnection = incomingConnection;
-            connectionData.stream = stream;
-            connectionData.reconnectInterval = reconnectInterval;
-            connectionData.totalReconnectDuration = totalReconnectDuration;
-            connectionData.startTime = startTime;
-            connectionData.ssl = ssl;
-            connectionData.connectionState = connectionState;
-            connectionData.connectProperties = connectProperties;
+            connectionData.m_connectionId = m_connectionId;
+            connectionData.m_endpoint = m_endpoint;
+            connectionData.m_hostname = m_hostname;
+            connectionData.m_port = m_port;
+            connectionData.m_endpointPeer = m_endpointPeer;
+            connectionData.m_af = m_af;
+            connectionData.m_type = m_type;
+            connectionData.m_protocol = m_protocol;
+            connectionData.m_portPeer = m_portPeer;
+            connectionData.m_incomingConnection = m_incomingConnection;
+            connectionData.m_stream = m_stream;
+            connectionData.m_reconnectInterval = m_reconnectInterval;
+            connectionData.m_totalReconnectDuration = m_totalReconnectDuration;
+            connectionData.m_startTime = m_startTime;
+            connectionData.m_ssl = m_ssl;
+            connectionData.m_connectionState = m_connectionState;
+            connectionData.m_connectProperties = m_connectProperties;
             return connectionData;
         }
 
-        public long connectionId = 0;
-        public string endpoint = "";
-        public string hostname = "";
-        public int port = 0;
-        public string endpointPeer = "";
-        public AddressFamily af = AddressFamily.Unknown;
-        public SocketType type = SocketType.Unknown;
-        public ProtocolType protocol = ProtocolType.Unknown;
-        public int portPeer = 0;
-        public bool incomingConnection = false;
-        public Stream? stream = null;
-        public int reconnectInterval;
-        public int totalReconnectDuration;
-        public DateTime startTime = DateTime.Now;
-        public bool ssl;
-        public ConnectionState connectionState;
-        public ConnectProperties? connectProperties = null;
+        public long ConnectionId
+        {
+            get => m_connectionId;
+            set => m_connectionId = value;
+        }
+
+        public string Endpoint
+        {
+            get => m_endpoint;
+            set => m_endpoint = value;
+        }
+
+        public string Hostname
+        {
+            get => m_hostname;
+            set => m_hostname = value;
+        }
+
+        public int Port
+        {
+            get => m_port;
+            set => m_port = value;
+        }
+
+        public string EndpointPeer
+        {
+            get => m_endpointPeer;
+            set => m_endpointPeer = value;
+        }
+
+        public AddressFamily Af
+        {
+            get => m_af;
+            set => m_af = value;
+        }
+
+        public SocketType Type
+        {
+            get => m_type;
+            set => m_type = value;
+        }
+
+        public ProtocolType Protocol
+        {
+            get => m_protocol;
+            set => m_protocol = value;
+        }
+
+        public int PortPeer
+        {
+            get => m_portPeer;
+            set => m_portPeer = value;
+        }
+
+        public bool IncomingConnection
+        {
+            get => m_incomingConnection;
+            set => m_incomingConnection = value;
+        }
+
+        public Stream Stream
+        {
+            get => m_stream;
+            set => m_stream = value;
+        }
+
+        public int ReconnectInterval
+        {
+            get => m_reconnectInterval;
+            set => m_reconnectInterval = value;
+        }
+
+        public int TotalReconnectDuration
+        {
+            get => m_totalReconnectDuration;
+            set => m_totalReconnectDuration = value;
+        }
+
+        public DateTime StartTime
+        {
+            get => m_startTime;
+            set => m_startTime = value;
+        }
+
+        public bool Ssl
+        {
+            get => m_ssl;
+            set => m_ssl = value;
+        }
+
+        public ConnectionState ConnectionState
+        {
+            get => m_connectionState;
+            set => m_connectionState = value;
+        }
+
+        public ConnectProperties? ConnectProperties
+        {
+            get => m_connectProperties;
+            set => m_connectProperties = value;
+        }
+
+        private long m_connectionId = 0;
+        private string m_endpoint = "";
+        private string m_hostname = "";
+        private int m_port = 0;
+        private string m_endpointPeer = "";
+        private AddressFamily m_af = AddressFamily.Unknown;
+        private SocketType m_type = SocketType.Unknown;
+        private ProtocolType m_protocol = ProtocolType.Unknown;
+        private int m_portPeer = 0;
+        private bool m_incomingConnection = false;
+        private Stream? m_stream = null;
+        private int m_reconnectInterval;
+        private int m_totalReconnectDuration;
+        private DateTime m_startTime = DateTime.Now;
+        private bool m_ssl;
+        private ConnectionState m_connectionState;
+        private ConnectProperties? m_connectProperties = null;
     }
 
 }   // namespace finalmq

@@ -27,7 +27,7 @@ namespace finalmq
 
     public interface IZeroCopyBuffer
     {
-        byte[] AddBuffer(int size, int reserve = 0);
+        BufferRef AddBuffer(int size, int reserve = 0);
         void DownsizeLastBuffer(int size);
     }
 

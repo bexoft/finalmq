@@ -30,11 +30,11 @@ namespace finalmq
 
     public class BufferRef
     {
-        public BufferRef(byte[] buffer, int offset = 0, int count = 0)
+        public BufferRef(byte[] buffer, int offset = 0, int length = 0)
         {
             m_buffer = buffer;
             m_offset = offset;
-            m_count = count;
+            m_length = length;
         }
         public byte[] Buffer
         {
@@ -50,16 +50,20 @@ namespace finalmq
                 return this.m_offset;
             }
         }
-        public int Count
+        public int Length
         {
             get
             {
-                return this.m_count;
+                return this.m_length;
+            }
+            set
+            {
+                this.m_length = value;
             }
         }
         private readonly byte[] m_buffer;
         private int m_offset;
-        private int m_count;
+        private int m_length;
     }
 
 
@@ -67,9 +71,9 @@ namespace finalmq
     {
         
         // metainfo
-        Metainfo getAllMetainfo();
+        Metainfo GetAllMetainfo();
         void AddMetainfo(string key, string value);
-        string getMetainfo(string key);
+        string GetMetainfo(string key);
 
         //// controlData
         //virtual Variant& getControlData() = 0;
@@ -82,13 +86,13 @@ namespace finalmq
         // for send
         void AddSendPayload(byte[] payload);
         void AddSendPayload(byte[] payload, int reserve = 0);
-        byte[] AddSendPayload(int size, int reserve = 0);
+        BufferRef AddSendPayload(int size, int reserve = 0);
         void DownsizeLastSendPayload(int newSize);
 
         // for receive
         BufferRef GetReceiveHeader();
         BufferRef GetReceivePayload();
-        byte[] ResizeReceiveBuffer(int size);
+        BufferRef ResizeReceiveBuffer(int size);
         void SetHeaderSize(int sizeHeader);
 
         // for the framework
@@ -96,24 +100,23 @@ namespace finalmq
         int GetTotalSendBufferSize();
         IList<BufferRef> GetAllSendPayloads();
         int GetTotalSendPayloadSize();
-        void MoveSendBuffers(IList<byte[]> payloadBuffers, IList<BufferRef> payloads);
-        IList<string> GetSendPayloadBuffers();
+        void MoveSendBuffers(IList<BufferRef> payloads);
 
         // for the protocol to add a header
         void AddSendHeader(byte[] header);
-        byte[] AddSendHeader(int size);
+        BufferRef AddSendHeader(int size);
         void DownsizeLastSendHeader(int newSize);
 
         // for the protocol to prepare the message for send
         void PrepareMessageToSend();
 
         // for the protocol to check which protocol created the message
-        uint GetProtocolId();
+        int GetProtocolId();
 
         bool WasSent();
 
         void AddMessage(IMessage msg);
-        IMessage GetMessage(int protocolId);
+        IMessage? GetMessage(int protocolId);
     };
 
 

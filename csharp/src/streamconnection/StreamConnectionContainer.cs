@@ -104,16 +104,16 @@ namespace finalmq {
             }
 
             ConnectionData connectionData = AddressHelpers.Endpoint2ConnectionData(endpoint);
-            connectionData.ssl = (bindProperties != null && bindProperties.SslServerOptions != null) ? true : false;
+            connectionData.Ssl = (bindProperties != null && bindProperties.SslServerOptions != null) ? true : false;
 
             IPAddress? address = null;
-            if (connectionData.hostname == "*")
+            if (connectionData.Hostname == "*")
             {
                 address = IPAddress.IPv6Any;
             }
             else
             {
-                IPHostEntry entry = Dns.GetHostEntry(connectionData.hostname);
+                IPHostEntry entry = Dns.GetHostEntry(connectionData.Hostname);
                 if (entry.AddressList.Length > 0)
                 {
                     address = entry.AddressList[0];
@@ -131,7 +131,7 @@ namespace finalmq {
             {
                 if (!m_endpoint2binds.ContainsKey(endpoint))
                 {
-                    listener = new TcpListener(address, connectionData.port);
+                    listener = new TcpListener(address, connectionData.Port);
                     bindData = new BindData(connectionData, callback, listener);
                     m_endpoint2binds.Add(endpoint, bindData);
                 }
@@ -141,21 +141,27 @@ namespace finalmq {
             {
                 listener.Start();
                 AsyncCallback callbackAccept = new AsyncCallback((IAsyncResult ar) => {
-                    TcpClient tcpClient = listener.EndAcceptTcpClient(ar);
-                    if (bindProperties != null && bindProperties.SslServerOptions != null)
+                    try
                     {
-                        SslServerOptions sslServerOptions = bindProperties.SslServerOptions;
-                        SslStream sslStream = new SslStream(tcpClient.GetStream(), false, sslServerOptions.UserCertificateValidationCallback,
-                                                            sslServerOptions.UserCertificateSelectionCallback, sslServerOptions.EncryptionPolicy);
-                        StartIncomingSslConnection(bindData, sslStream, sslServerOptions);
+                        TcpClient tcpClient = listener.EndAcceptTcpClient(ar);
+                        if (bindProperties != null && bindProperties.SslServerOptions != null)
+                        {
+                            SslServerOptions sslServerOptions = bindProperties.SslServerOptions;
+                            SslStream sslStream = new SslStream(tcpClient.GetStream(), false, sslServerOptions.UserCertificateValidationCallback,
+                                                                sslServerOptions.UserCertificateSelectionCallback, sslServerOptions.EncryptionPolicy);
+                            StartIncomingSslConnection(bindData, sslStream, sslServerOptions);
+                        }
+                        else
+                        {
+                            Stream stream = tcpClient.GetStream();
+                            StartIncomingConnection(bindData, stream);
+                        }
+                        AsyncCallback? c = (AsyncCallback?)ar.AsyncState;
+                        listener.BeginAcceptTcpClient(c, c);
                     }
-                    else
+                    catch (Exception)
                     {
-                        Stream stream = tcpClient.GetStream();
-                        StartIncomingConnection(bindData, stream);
                     }
-                    AsyncCallback? c = (AsyncCallback?)ar.AsyncState;
-                    listener.BeginAcceptTcpClient(c, c);
                 });
                 listener.BeginAcceptTcpClient(callbackAccept, callbackAccept);
             }
@@ -164,9 +170,9 @@ namespace finalmq {
         private void StartIncomingConnection(BindData bindData, Stream stream)
         {
             ConnectionData connectionData = bindData.ConnectionData.Clone();
-            connectionData.incomingConnection = true;
-            connectionData.startTime = DateTime.Now;
-            connectionData.connectionState = ConnectionState.CONNECTIONSTATE_CONNECTED;
+            connectionData.IncomingConnection = true;
+            connectionData.StartTime = DateTime.Now;
+            connectionData.ConnectionState = ConnectionState.CONNECTIONSTATE_CONNECTED;
             IStreamConnectionPrivate connection = AddConnection(stream, connectionData, bindData.Callback);
             connection.Connected();
             StartReading(stream, connection);
@@ -178,9 +184,9 @@ namespace finalmq {
                                                 sslServerOptions.CheckCertificateRevocation, (IAsyncResult ar) => {
                                                     sslStream.EndAuthenticateAsServer(ar);
                                                     ConnectionData connectionData = bindData.ConnectionData.Clone();
-                                                    connectionData.incomingConnection = true;
-                                                    connectionData.startTime = DateTime.Now;
-                                                    connectionData.connectionState = ConnectionState.CONNECTIONSTATE_CONNECTED;
+                                                    connectionData.IncomingConnection = true;
+                                                    connectionData.StartTime = DateTime.Now;
+                                                    connectionData.ConnectionState = ConnectionState.CONNECTIONSTATE_CONNECTED;
                                                     IStreamConnectionPrivate connection = AddConnection(sslStream, connectionData, bindData.Callback);
                                                     connection.Connected();
                                                     StartReading(sslStream, connection);
@@ -190,7 +196,7 @@ namespace finalmq {
         private IStreamConnectionPrivate AddConnection(Stream? stream, ConnectionData connectionData, IStreamConnectionCallback callback)
         {
             long connectionId = Interlocked.Increment(ref m_nextConnectionId);
-            connectionData.connectionId = connectionId;
+            connectionData.ConnectionId = connectionId;
             IStreamConnectionPrivate connection = new StreamConnection(connectionData, stream, callback, this);
             lock (m_mutex)
             {
@@ -201,17 +207,24 @@ namespace finalmq {
 
         private void StartReading(Stream stream, IStreamConnectionPrivate connection)
         {
-            long connectionId = connection.GetConnectionId();
+            long connectionId = connection.ConnectionId;
             byte[] buffer = new byte[4096];
             AsyncCallback callbackRead = new AsyncCallback((IAsyncResult ar) => {
-                int count = stream.EndRead(ar);
-                if (count > 0)
+                try
                 {
-                    connection.Received(buffer, count);
-                    AsyncCallback? c = (AsyncCallback?)ar.AsyncState;
-                    stream.BeginRead(buffer, 0, buffer.Length, c, c);
+                    int count = stream.EndRead(ar);
+                    if (count > 0)
+                    {
+                        connection.Received(buffer, count);
+                        AsyncCallback? c = (AsyncCallback?)ar.AsyncState;
+                        stream.BeginRead(buffer, 0, buffer.Length, c, c);
+                    }
+                    else
+                    {
+                        ((IStreamConnectionContainerPrivate)this).Disconnect(connection);
+                    }
                 }
-                else
+                catch (Exception)
                 {
                     ((IStreamConnectionContainerPrivate)this).Disconnect(connection);
                 }
@@ -228,7 +241,7 @@ namespace finalmq {
 
         public void Connect(string endpoint, IStreamConnection streamConnection, ConnectProperties? connectProperties = null)
         {
-            long connectionId = streamConnection.GetConnectionId();
+            long connectionId = streamConnection.ConnectionId;
             IStreamConnectionPrivate? connection = FindConnectionById(connectionId);
             if (connection == null)
             {
@@ -242,27 +255,29 @@ namespace finalmq {
             }
 
             ConnectionData connectionData = AddressHelpers.Endpoint2ConnectionData(endpoint);
-            connectionData.connectionId = connectionId;
-            connectionData.incomingConnection = false;
-            connectionData.reconnectInterval = connectPropertiesNoneNull.ConnectConfig.reconnectInterval;
-            connectionData.totalReconnectDuration = connectPropertiesNoneNull.ConnectConfig.totalReconnectDuration;
-            connectionData.startTime = DateTime.Now;
-            connectionData.ssl = connectPropertiesNoneNull.SslClientOptions != null ? true : false;
-            connectionData.connectionState = ConnectionState.CONNECTIONSTATE_CONNECTING;
-            connectionData.connectProperties = connectProperties;
+            connectionData.ConnectionId = connectionId;
+            connectionData.IncomingConnection = false;
+            connectionData.ReconnectInterval = connectPropertiesNoneNull.ConnectConfig.ReconnectInterval;
+            connectionData.TotalReconnectDuration = connectPropertiesNoneNull.ConnectConfig.TotalReconnectDuration;
+            connectionData.StartTime = DateTime.Now;
+            connectionData.Ssl = connectPropertiesNoneNull.SslClientOptions != null ? true : false;
+            connectionData.ConnectionState = ConnectionState.CONNECTIONSTATE_CONNECTING;
+            connectionData.ConnectProperties = connectProperties;
+
+            connection.UpdateConnectionData(connectionData);
 
             TcpClient tcpClient = new TcpClient();
 
             lock (m_mutex)
             {
-                m_connectionId2Conns[connectionData.connectionId] = new ConnData(tcpClient);
+                m_connectionId2Conns[connectionData.ConnectionId] = new ConnData(tcpClient);
             }
 
-            tcpClient.BeginConnect(connectionData.hostname, connectionData.port, (IAsyncResult ar) =>
+            tcpClient.BeginConnect(connectionData.Hostname, connectionData.Port, (IAsyncResult ar) =>
                 {
-                    tcpClient.EndConnect(ar);
                     try
                     {
+                        tcpClient.EndConnect(ar);
                         Stream tcpStream = tcpClient.GetStream();
 
                         if (connectPropertiesNoneNull.SslClientOptions != null)
@@ -270,16 +285,16 @@ namespace finalmq {
                             SslClientOptions sslClientOptions = connectPropertiesNoneNull.SslClientOptions;
                             SslStream sslStream = new SslStream(tcpStream, false, sslClientOptions.UserCertificateValidationCallback,
                                                             sslClientOptions.UserCertificateSelectionCallback, sslClientOptions.EncryptionPolicy);
-                            connectionData.stream = sslStream;
+                            connectionData.Stream = sslStream;
                             StartOutgoingSslConnection(connection, connectionData, sslStream, connectPropertiesNoneNull.SslClientOptions);
                         }
                         else
                         {
-                            connectionData.stream = tcpStream;
-                            connectionData.connectionState = ConnectionState.CONNECTIONSTATE_CONNECTED;
+                            connectionData.Stream = tcpStream;
+                            connectionData.ConnectionState = ConnectionState.CONNECTIONSTATE_CONNECTED;
                             connection.UpdateConnectionData(connectionData);
                             connection.Connected();
-                            StartReading(connectionData.stream, connection);
+                            StartReading(connectionData.Stream, connection);
                         }
                     }
                     catch (Exception)
@@ -296,7 +311,7 @@ namespace finalmq {
                 (IAsyncResult ar) => 
                 {
                     sslStream.EndAuthenticateAsClient(ar);
-                    connectionData.connectionState = ConnectionState.CONNECTIONSTATE_CONNECTED;
+                    connectionData.ConnectionState = ConnectionState.CONNECTIONSTATE_CONNECTED;
                     connection.UpdateConnectionData(connectionData);
                     connection.Connected();
                     StartReading(sslStream, connection);
@@ -318,8 +333,8 @@ namespace finalmq {
         public IStreamConnection CreateConnection(IStreamConnectionCallback callback)
         {
             ConnectionData connectionData = new ConnectionData();
-            connectionData.incomingConnection = false;
-            connectionData.connectionState = ConnectionState.CONNECTIONSTATE_CREATED;
+            connectionData.IncomingConnection = false;
+            connectionData.ConnectionState = ConnectionState.CONNECTIONSTATE_CREATED;
             IStreamConnectionPrivate connection = AddConnection(null, connectionData, callback);
             return connection;
         }
@@ -366,7 +381,7 @@ namespace finalmq {
             get => (int)m_timerReconnect.Interval;
             set
             {
-                m_timerReconnect.Interval = 1000.0;
+                m_timerReconnect.Interval = value;
             }
         }
 
@@ -400,14 +415,14 @@ namespace finalmq {
 
             foreach (var connection in connections)
             {
-//todo                connection.DoReconnect();
+                connection.DoReconnect();
             }
         }
 
         void IStreamConnectionContainerPrivate.Disconnect(IStreamConnectionPrivate connection)
         {
             bool removeConn = connection.ChangeStateForDisconnect();
-            long connectionId = connection.GetConnectionId();
+            long connectionId = connection.ConnectionId;
             RemoveConnection(connectionId, removeConn);
             if (removeConn)
             {
@@ -429,8 +444,8 @@ namespace finalmq {
                 }
                 if (streamConnection != null)
                 {
-                    connectionData = streamConnection.GetConnectionData();
-                    if (!connectionData.incomingConnection)
+                    connectionData = streamConnection.ConnectionData;
+                    if (!connectionData.IncomingConnection)
                     {
                         if (m_connectionId2Conns.TryGetValue(connectionId, out connData))
                         {
@@ -441,7 +456,7 @@ namespace finalmq {
             }
             if (connectionData != null)
             {
-                connectionData.stream?.Close();
+                connectionData.Stream?.Close();
             }
             if (connData != null)
             {

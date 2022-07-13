@@ -96,12 +96,12 @@ namespace finalmq
                 string hostname;
                 int port = -1;
                 ParseTcpAddress(address, out hostname, out port);
-                connectionData.endpoint = endpoint;
-                connectionData.hostname = hostname;
-                connectionData.port = port;
-                connectionData.af = AddressFamily.InterNetwork;
-                connectionData.type = SocketType.Stream;
-                connectionData.protocol = ProtocolType.Tcp;
+                connectionData.Endpoint = endpoint;
+                connectionData.Hostname = hostname;
+                connectionData.Port = port;
+                connectionData.Af = AddressFamily.InterNetwork;
+                connectionData.Type = SocketType.Stream;
+                connectionData.Protocol = ProtocolType.Tcp;
             }
             else
             {
