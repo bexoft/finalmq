@@ -274,7 +274,7 @@ TEST_F(TestProtocolMessage, addSendPayloadMultipleWithMultipleDownsize3)
     imessage.downsizeLastSendPayload(1);
     imessage.downsizeLastSendPayload(0);
     imessage.downsizeLastSendPayload(0);
-    char* buffer2 = imessage.addSendPayload(5);
+    imessage.addSendPayload(5);
     imessage.downsizeLastSendPayload(1);
     imessage.downsizeLastSendPayload(0);
     imessage.downsizeLastSendPayload(0);
@@ -288,8 +288,8 @@ TEST_F(TestProtocolMessage, addSendPayloadMultipleWithMultipleDownsize3)
     int totalSendBufferSize = imessage.getTotalSendBufferSize();
     int totalSendPayloadSize = imessage.getTotalSendPayloadSize();
 
-    ASSERT_EQ(sendBuffers.size(), 3);
-    ASSERT_EQ(sendPayloads.size(), 3);
+    ASSERT_EQ(sendBuffers.size(), 2);
+    ASSERT_EQ(sendPayloads.size(), 2);
     ASSERT_EQ(totalSendBufferSize, SIZE_HEADER + SIZE_TRAILER);
     ASSERT_EQ(totalSendPayloadSize, 0);
 
@@ -297,17 +297,11 @@ TEST_F(TestProtocolMessage, addSendPayloadMultipleWithMultipleDownsize3)
     ASSERT_EQ(itBuffers->first, buffer1 - SIZE_HEADER);
     ASSERT_EQ(itBuffers->second, SIZE_HEADER);
     ++itBuffers;
-    ASSERT_EQ(itBuffers->first, buffer2);
-    ASSERT_EQ(itBuffers->second, 0);
-    ++itBuffers;
     ASSERT_EQ(itBuffers->first, buffer3);
     ASSERT_EQ(itBuffers->second, SIZE_TRAILER);
 
     auto itPayloads = sendPayloads.begin();
     ASSERT_EQ(itPayloads->first, buffer1);
-    ASSERT_EQ(itPayloads->second, 0);
-    ++itPayloads;
-    ASSERT_EQ(itPayloads->first, buffer2);
     ASSERT_EQ(itPayloads->second, 0);
     ++itPayloads;
     ASSERT_EQ(itPayloads->first, buffer3);
@@ -589,7 +583,7 @@ TEST_F(TestProtocolMessage, firstDownsizeZeroBlockRemoveBlockAddSendPayload)
 }
 
 
-TEST_F(TestProtocolMessage, addSendHeader)
+TEST_F(TestProtocolMessage, addSendHeaderAfterAddPayload)
 {
     ProtocolMessage message(PROTOCOL_ID, SIZE_HEADER, SIZE_TRAILER);
     IMessage& imessage = message;
@@ -625,4 +619,86 @@ TEST_F(TestProtocolMessage, addSendHeader)
     ASSERT_EQ(itPayloads->second, 4);
 }
 
+
+TEST_F(TestProtocolMessage, addSendHeaderBeforeAddPayload)
+{
+    ProtocolMessage message(PROTOCOL_ID, SIZE_HEADER, SIZE_TRAILER);
+    IMessage& imessage = message;
+    char* buffer2 = imessage.addSendHeader(8);
+    imessage.downsizeLastSendHeader(4);
+    char* buffer3 = imessage.addSendHeader(8);
+    imessage.downsizeLastSendHeader(4);
+    char* buffer1 = imessage.addSendPayload(8);
+    imessage.downsizeLastSendPayload(4);
+
+    const std::list<BufferRef>& sendBuffers = imessage.getAllSendBuffers();
+    const std::list<BufferRef>& sendPayloads = imessage.getAllSendPayloads();
+    int totalSendBufferSize = imessage.getTotalSendBufferSize();
+    int totalSendPayloadSize = imessage.getTotalSendPayloadSize();
+
+    ASSERT_EQ(sendBuffers.size(), 3);
+    ASSERT_EQ(sendPayloads.size(), 1);
+    ASSERT_EQ(totalSendBufferSize, 3 * 4 + SIZE_HEADER + SIZE_TRAILER);
+    ASSERT_EQ(totalSendPayloadSize, 4);
+
+    auto itBuffers = sendBuffers.begin();
+    ASSERT_EQ(itBuffers->first, buffer2);
+    ASSERT_EQ(itBuffers->second, 4);
+    ++itBuffers;
+    ASSERT_EQ(itBuffers->first, buffer3);
+    ASSERT_EQ(itBuffers->second, 4);
+    ++itBuffers;
+    ASSERT_EQ(itBuffers->first, buffer1 - SIZE_HEADER);
+    ASSERT_EQ(itBuffers->second, SIZE_HEADER + 4 + SIZE_TRAILER);
+
+    auto itPayloads = sendPayloads.begin();
+    ASSERT_EQ(itPayloads->first, buffer1);
+    ASSERT_EQ(itPayloads->second, 4);
+}
+
+TEST_F(TestProtocolMessage, addSendHeaderAndRemoveItWithPayload)
+{
+    ProtocolMessage message(PROTOCOL_ID, 0, 0);
+    IMessage& imessage = message;
+    char* buffer1 = imessage.addSendPayload(8);
+    imessage.downsizeLastSendPayload(4);
+    char* buffer2 = imessage.addSendHeader(8);
+    imessage.downsizeLastSendHeader(0);
+
+    const std::list<BufferRef>& sendBuffers = imessage.getAllSendBuffers();
+    const std::list<BufferRef>& sendPayloads = imessage.getAllSendPayloads();
+    int totalSendBufferSize = imessage.getTotalSendBufferSize();
+    int totalSendPayloadSize = imessage.getTotalSendPayloadSize();
+
+    ASSERT_EQ(sendBuffers.size(), 1);
+    ASSERT_EQ(sendPayloads.size(), 1);
+    ASSERT_EQ(totalSendBufferSize, 4);
+    ASSERT_EQ(totalSendPayloadSize, 4);
+
+    auto itBuffers = sendBuffers.begin();
+    ASSERT_EQ(itBuffers->first, buffer1);
+    ASSERT_EQ(itBuffers->second, 4);
+
+    auto itPayloads = sendPayloads.begin();
+    ASSERT_EQ(itPayloads->first, buffer1);
+    ASSERT_EQ(itPayloads->second, 4);
+}
+
+TEST_F(TestProtocolMessage, addSendHeaderAndRemoveItWithoutPayload)
+{
+    ProtocolMessage message(PROTOCOL_ID, 0, 0);
+    IMessage& imessage = message;
+    char* buffer1 = imessage.addSendHeader(8);
+    imessage.downsizeLastSendHeader(0);
+
+    const std::list<BufferRef>& sendBuffers = imessage.getAllSendBuffers();
+    const std::list<BufferRef>& sendPayloads = imessage.getAllSendPayloads();
+    int totalSendBufferSize = imessage.getTotalSendBufferSize();
+    int totalSendPayloadSize = imessage.getTotalSendPayloadSize();
+
+    ASSERT_EQ(sendBuffers.size(), 0);
+    ASSERT_EQ(sendPayloads.size(), 0);
+    ASSERT_EQ(totalSendBufferSize, 0);
+    ASSERT_EQ(totalSendPayloadSize, 0);
+}
 

@@ -198,36 +198,6 @@ TEST_F(TestIntegrationStreamConnectionContainerSsl, testConnectBind)
 
 
 
-TEST_F(TestIntegrationStreamConnectionContainerSsl, testSendConnectBind)
-{
-    EXPECT_CALL(*m_mockBindCallback, connected(_)).Times(1)
-                                            .WillOnce(Return(m_mockServerCallback));
-    EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(1)
-                                            .WillOnce(Return(nullptr));
-    EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
-    auto& expectReceive = EXPECT_CALL(*m_mockServerCallback, received(_, _, _)).Times(1)
-                                                   .WillRepeatedly(Invoke(this, &TestIntegrationStreamConnectionContainerSsl::receivedServer));
-
-    IStreamConnectionPtr connection = m_connectionContainer->createConnection(m_mockClientCallback);
-    IMessagePtr message = std::make_shared<ProtocolMessage>(0);
-    message->addSendPayload(MESSAGE1_BUFFER);
-    connection->sendMessage(message);
-    m_connectionContainer->connect("tcp://localhost:3333", connection, {{true, SSL_VERIFY_NONE}, 1});
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(5));
-
-    int res = m_connectionContainer->bind("tcp://*:3333", m_mockBindCallback, {{true, SSL_VERIFY_NONE, "ssltest.cert.pem", "ssltest.key.pem"}});
-    EXPECT_EQ(res, 0);
-
-    waitTillDone(expectReceive, 5000);
-
-    EXPECT_EQ(connection->getConnectionData().connectionState, ConnectionState::CONNECTIONSTATE_CONNECTED);
-    EXPECT_EQ(m_connectionContainer->getConnection(connection->getConnectionData().connectionId), connection);
-    EXPECT_EQ(m_messagesServer.size(), 1);
-    EXPECT_EQ(m_messagesServer[0], MESSAGE1_BUFFER);
-}
-
-
 
 TEST_F(TestIntegrationStreamConnectionContainerSsl, testReconnectExpires)
 {
