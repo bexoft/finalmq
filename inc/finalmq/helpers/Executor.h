@@ -111,7 +111,7 @@ public:
     virtual ~ExecutorWorkerBase();
 
     virtual IExecutorPtr getExecutor() const override;
-    virtual void addAction(std::function<void()> func) override;
+    virtual void addAction(std::function<void()> func, std::int64_t instanceId = 0) override;
     virtual void terminate() override;
     virtual bool isTerminating() const override;
     virtual void join() override;

@@ -730,13 +730,19 @@ bool StreamConnectionContainer::sslAccepting(SslAcceptingData& sslAcceptingData)
 
 void StreamConnectionContainer::doReconnect()
 {
+    std::vector< IStreamConnectionPrivatePtr > connections;
     std::unique_lock<std::mutex> lock(m_mutex);
-    for (auto it = m_sd2Connection.begin(); it != m_sd2Connection.end(); ++it)
+    connections.reserve(m_connectionId2Connection.size());
+    for (auto it = m_connectionId2Connection.begin(); it != m_connectionId2Connection.end(); ++it)
     {
-        const IStreamConnectionPrivatePtr& connection = it->second;
-        connection->doReconnect();
+        connections.push_back(it->second);
     }
     lock.unlock();
+
+    for (const auto& connection : connections)
+    {
+        connection->doReconnect();
+    }
 }
 
 

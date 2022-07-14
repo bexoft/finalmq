@@ -308,9 +308,9 @@ IExecutorPtr ExecutorWorkerBase::getExecutor() const
     return m_executor;
 }
 
-void ExecutorWorkerBase::addAction(std::function<void()> func)
+void ExecutorWorkerBase::addAction(std::function<void()> func, std::int64_t instanceId)
 {
-    m_executor->addAction(std::move(func));
+    m_executor->addAction(std::move(func), instanceId);
 }
 
 void ExecutorWorkerBase::terminate()

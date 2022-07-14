@@ -74,14 +74,21 @@ char* ProtocolMessage::addBuffer(ssize_t size, ssize_t reserve)
     ssize_t sizeHeader = 0;
     if (m_payloadBuffers.empty())
     {
-        assert(m_sizeSendBufferTotal == 0);
+        assert(m_sizeSendPayloadTotal == 0);
         sizeHeader = m_sizeHeader;
         m_sizeSendBufferTotal += m_sizeHeader + m_sizeTrailer;
     }
     else
     {
         // remove the trailer of the last payload
-        m_sendBufferRefs.back().second -= m_sizeTrailer;
+        BufferRef& lastRef = m_sendBufferRefs.back();
+        lastRef.second -= m_sizeTrailer;
+        if (lastRef.second == 0)
+        {
+            m_sendBufferRefs.pop_back();
+            m_sendPayloadRefs.pop_back();
+            m_payloadBuffers.pop_back();
+        }
     }
 
     m_offset = sizeHeader + reserve;
@@ -236,7 +243,7 @@ char* ProtocolMessage::addSendPayload(ssize_t size, ssize_t reserve)
 
 void ProtocolMessage::downsizeLastSendPayload(ssize_t newSize)
 {
-    return downsizeLastBuffer(newSize);
+    downsizeLastBuffer(newSize);
 }
 
 // for receive
@@ -253,7 +260,11 @@ BufferRef ProtocolMessage::getReceivePayload() const
 
 char* ProtocolMessage::resizeReceiveBuffer(ssize_t size)
 {
-    if (size > m_sizeReceiveBuffer)
+    if (size < 0)
+    {
+        size = 0;
+    }
+    if (static_cast<size_t>(size) > m_receiveBuffer.size())
     {
         m_receiveBuffer.resize(size);
     }
@@ -341,8 +352,14 @@ void ProtocolMessage::downsizeLastSendHeader(ssize_t newSize)
     --itSendBufferRefs;
     assert(itSendBufferRefs != m_sendBufferRefs.end());
     ssize_t& sizeCurrent = itSendBufferRefs->second;
+    assert(newSize <= sizeCurrent);
     m_sizeSendBufferTotal += (newSize - sizeCurrent);
     sizeCurrent = newSize;
+    if (newSize == 0)
+    {
+        m_sendBufferRefs.erase(itSendBufferRefs);
+        m_headerBuffers.pop_back();
+    }
 }
 
 // for the protocol to prepare the message for send
