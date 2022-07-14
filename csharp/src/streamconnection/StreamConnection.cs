@@ -95,27 +95,27 @@ namespace finalmq {
     public class SslClientOptions
     {
         public SslClientOptions(string targetHost,
-                                X509CertificateCollection? clientCertificates,
+                                RemoteCertificateValidationCallback? userCertificateValidationCallback = null,
+                                X509CertificateCollection? clientCertificates = null,
                                 SslProtocols enabledSslProtocols = SslProtocols.None,
                                 bool checkCertificateRevocation = false,
-                                RemoteCertificateValidationCallback? userCertificateValidationCallback = null,
                                 LocalCertificateSelectionCallback? userCertificateSelectionCallback = null,
                                 EncryptionPolicy encryptionPolicy = EncryptionPolicy.RequireEncryption)
         {
             this.targetHost = targetHost;
+            this.userCertificateValidationCallback = userCertificateValidationCallback;
             this.clientCertificates = clientCertificates;
             this.enabledSslProtocols = enabledSslProtocols;
             this.checkCertificateRevocation = checkCertificateRevocation;
-            this.userCertificateValidationCallback = userCertificateValidationCallback;
             this.userCertificateSelectionCallback = userCertificateSelectionCallback;
             this.encryptionPolicy = encryptionPolicy;
         }
 
         public string TargetHost { get => targetHost; set => targetHost = value; }
+        public RemoteCertificateValidationCallback? UserCertificateValidationCallback { get => userCertificateValidationCallback; set => userCertificateValidationCallback = value; }
         public X509CertificateCollection? ClientCertificates { get => clientCertificates; set => clientCertificates = value; }
         public SslProtocols EnabledSslProtocols { get => enabledSslProtocols; set => enabledSslProtocols = value; }
         public bool CheckCertificateRevocation { get => checkCertificateRevocation; set => checkCertificateRevocation = value; }
-        public RemoteCertificateValidationCallback? UserCertificateValidationCallback { get => userCertificateValidationCallback; set => userCertificateValidationCallback = value; }
         public LocalCertificateSelectionCallback? UserCertificateSelectionCallback { get => userCertificateSelectionCallback; set => userCertificateSelectionCallback = value; }
         public EncryptionPolicy EncryptionPolicy { get => encryptionPolicy; set => encryptionPolicy = value; }
 

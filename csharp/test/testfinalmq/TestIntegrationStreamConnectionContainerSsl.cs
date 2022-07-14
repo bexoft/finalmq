@@ -9,11 +9,13 @@ using Xunit;
 using Moq;
 
 using finalmq;
+using System.Net.Security;
+using System.Security.Authentication;
 
 namespace testfinalmq
 {
 
-    class StreamConnectionCallback : IStreamConnectionCallback
+    class StreamConnectionCallbackSsl : IStreamConnectionCallback
     {
         public IStreamConnectionCallback? Connected(IStreamConnection connection)
         {
@@ -31,7 +33,7 @@ namespace testfinalmq
 
 
     [Collection("TestCollectionSocket")]
-    public class TestIntegrationStreamConnectionContainer : IDisposable
+    public class TestIntegrationStreamConnectionContainerSsl : IDisposable
     {
         readonly StreamConnectionContainer m_connectionContainer = new StreamConnectionContainer();
         readonly Mock<IStreamConnectionCallback> m_mockBindCallback = new Mock<IStreamConnectionCallback>();
@@ -40,7 +42,7 @@ namespace testfinalmq
         readonly string MESSAGE1_BUFFER = "Hello";
 
 
-        public TestIntegrationStreamConnectionContainer()
+        public TestIntegrationStreamConnectionContainerSsl()
         {
         }
 
@@ -49,23 +51,42 @@ namespace testfinalmq
             m_connectionContainer.Dispose();
         }
 
+        public static bool ValidateServerCertificate(
+                     object sender,
+                     X509Certificate? certificate,
+                     X509Chain? chain,
+                     SslPolicyErrors sslPolicyErrors)
+        {
+            sslPolicyErrors &= ~SslPolicyErrors.RemoteCertificateChainErrors;
+            sslPolicyErrors &= ~SslPolicyErrors.RemoteCertificateNameMismatch;
+            if (sslPolicyErrors == SslPolicyErrors.None)
+            {
+                return true;
+            }
+
+            Console.WriteLine("Certificate error: {0}", sslPolicyErrors);
+
+            // Do not allow this client to communicate with unauthenticated servers.
+            return false;
+        }
+
         [Fact]
         public void TestBind()
         {
-            m_connectionContainer.Bind("tcp://*:3333", m_mockBindCallback.Object);
+            m_connectionContainer.Bind("tcp://*:3333", m_mockBindCallback.Object, new BindProperties(new SslServerOptions(new X509Certificate("ssl-certificate.pfx"))));
         }
 
         [Fact]
         public void TestUnbind()
         {
-            m_connectionContainer.Bind("tcp://*:3333", m_mockBindCallback.Object);
+            m_connectionContainer.Bind("tcp://*:3333", m_mockBindCallback.Object, new BindProperties(new SslServerOptions(new X509Certificate("ssl-certificate.pfx"))));
             m_connectionContainer.Unbind("tcp://*:3333");
         }
 
         [Fact]
         public void TestBindConnect()
         {
-            m_connectionContainer.Bind("tcp://*:3333", m_mockBindCallback.Object);
+            m_connectionContainer.Bind("tcp://*:3333", m_mockBindCallback.Object, new BindProperties(new SslServerOptions(new X509Certificate("ssl-certificate.pfx"))));
 
             IStreamConnection? connBind = null;
             IStreamConnection? connConnect = null;
@@ -90,8 +111,8 @@ namespace testfinalmq
                 })
                 .Returns((IStreamConnectionCallback?)null);
 
-
-            IStreamConnection connection = m_connectionContainer.Connect("tcp://localhost:3333", m_mockClientCallback.Object);
+            IStreamConnection connection = m_connectionContainer.Connect("tcp://localhost:3333", m_mockClientCallback.Object, 
+                new ConnectProperties(new SslClientOptions("", new RemoteCertificateValidationCallback(ValidateServerCertificate))));
 
             Debug.Assert(connectClient.Wait(5000));
             Debug.Assert(connectServer.Wait(5000));
@@ -111,7 +132,7 @@ namespace testfinalmq
         [Fact]
         public void TestBindConnectSend()
         {
-            m_connectionContainer.Bind("tcp://*:3333", m_mockBindCallback.Object);
+            m_connectionContainer.Bind("tcp://*:3333", m_mockBindCallback.Object, new BindProperties(new SslServerOptions(new X509Certificate("ssl-certificate.pfx"))));
 
             IStreamConnection? connBind = null;
             IStreamConnection? connConnect = null;
@@ -140,8 +161,8 @@ namespace testfinalmq
                 });
 
 
-            IStreamConnection connection = m_connectionContainer.Connect("tcp://localhost:3333", m_mockClientCallback.Object);
-
+            IStreamConnection connection = m_connectionContainer.Connect("tcp://localhost:3333", m_mockClientCallback.Object,
+                new ConnectProperties(new SslClientOptions("", new RemoteCertificateValidationCallback(ValidateServerCertificate))));
             IMessage message = new ProtocolMessage(0);
             message.AddSendPayload(Encoding.UTF8.GetBytes(MESSAGE1_BUFFER));
             connection.SendMessage(message);
@@ -185,11 +206,12 @@ namespace testfinalmq
                 .Returns((IStreamConnectionCallback?)null);
 
 
-            IStreamConnection connection = m_connectionContainer.Connect("tcp://localhost:3333", m_mockClientCallback.Object, new ConnectProperties(null, new ConnectConfig(1)));
+            IStreamConnection connection = m_connectionContainer.Connect("tcp://localhost:3333", m_mockClientCallback.Object, 
+                new ConnectProperties(new SslClientOptions("", new RemoteCertificateValidationCallback(ValidateServerCertificate)), new ConnectConfig(1)));
 
             Thread.Sleep(4000);
 
-            m_connectionContainer.Bind("tcp://*:3333", m_mockBindCallback.Object);
+            m_connectionContainer.Bind("tcp://*:3333", m_mockBindCallback.Object, new BindProperties(new SslServerOptions(new X509Certificate("ssl-certificate.pfx"))));
 
             Debug.Assert(condVarConnectClient.Wait(5000));
             Debug.Assert(condVarConnectServer.Wait(5000));
@@ -241,11 +263,12 @@ namespace testfinalmq
             message.AddSendPayload(Encoding.UTF8.GetBytes(MESSAGE1_BUFFER));
             connection.SendMessage(message);
 
-            m_connectionContainer.Connect("tcp://localhost:3333", connection, new ConnectProperties(null, new ConnectConfig(1)));
+            m_connectionContainer.Connect("tcp://localhost:3333", connection, 
+                new ConnectProperties(new SslClientOptions("", new RemoteCertificateValidationCallback(ValidateServerCertificate)), new ConnectConfig(1)));
 
             Thread.Sleep(4000);
 
-            m_connectionContainer.Bind("tcp://*:3333", m_mockBindCallback.Object);
+            m_connectionContainer.Bind("tcp://*:3333", m_mockBindCallback.Object, new BindProperties(new SslServerOptions(new X509Certificate("ssl-certificate.pfx"))));
 
 
             Debug.Assert(condVarReceived.Wait(5000));
@@ -273,7 +296,8 @@ namespace testfinalmq
                     condVarDisconnectClient.Set();
                 });
 
-            IStreamConnection connection = m_connectionContainer.Connect("tcp://localhost:3333", m_mockClientCallback.Object, new ConnectProperties(null, new ConnectConfig(1, 1)));
+            IStreamConnection connection = m_connectionContainer.Connect("tcp://localhost:3333", m_mockClientCallback.Object, 
+                new ConnectProperties(new SslClientOptions("", new RemoteCertificateValidationCallback(ValidateServerCertificate)), new ConnectConfig(1, 1)));
 
             Debug.Assert(condVarDisconnectClient.Wait(5000));
 
@@ -288,7 +312,7 @@ namespace testfinalmq
         [Fact]
         public void TestBindConnectDisconnect()
         {
-            m_connectionContainer.Bind("tcp://*:3333", m_mockBindCallback.Object);
+            m_connectionContainer.Bind("tcp://*:3333", m_mockBindCallback.Object, new BindProperties(new SslServerOptions(new X509Certificate("ssl-certificate.pfx"))));
 
             IStreamConnection? connBind = null;
             IStreamConnection? connConnect = null;
@@ -314,7 +338,8 @@ namespace testfinalmq
                 .Returns((IStreamConnectionCallback?)null);
 
 
-            IStreamConnection connection = m_connectionContainer.Connect("tcp://localhost:3333", m_mockClientCallback.Object);
+            IStreamConnection connection = m_connectionContainer.Connect("tcp://localhost:3333", m_mockClientCallback.Object,
+                new ConnectProperties(new SslClientOptions("", new RemoteCertificateValidationCallback(ValidateServerCertificate))));
 
             Debug.Assert(condVarConnectClient.Wait(5000));
             Debug.Assert(condVarConnectServer.Wait(5000));
@@ -356,7 +381,7 @@ namespace testfinalmq
         [Fact]
         public void testGetAllConnections()
         {
-            m_connectionContainer.Bind("tcp://*:3333", m_mockBindCallback.Object);
+            m_connectionContainer.Bind("tcp://*:3333", m_mockBindCallback.Object, new BindProperties(new SslServerOptions(new X509Certificate("ssl-certificate.pfx"))));
 
             IStreamConnection? connBind = null;
             IStreamConnection? connConnect = null;
@@ -382,7 +407,8 @@ namespace testfinalmq
                 .Returns((IStreamConnectionCallback?)null);
 
 
-            IStreamConnection connection = m_connectionContainer.Connect("tcp://localhost:3333", m_mockClientCallback.Object);
+            IStreamConnection connection = m_connectionContainer.Connect("tcp://localhost:3333", m_mockClientCallback.Object,
+                new ConnectProperties(new SslClientOptions("", new RemoteCertificateValidationCallback(ValidateServerCertificate))));
 
             Debug.Assert(condVarConnectClient.Wait(5000));
             Debug.Assert(condVarConnectServer.Wait(5000));
@@ -415,7 +441,7 @@ namespace testfinalmq
         [Fact]
         public void TestBindLateConnect()
         {
-            m_connectionContainer.Bind("tcp://*:3333", m_mockBindCallback.Object);
+            m_connectionContainer.Bind("tcp://*:3333", m_mockBindCallback.Object, new BindProperties(new SslServerOptions(new X509Certificate("ssl-certificate.pfx"))));
 
             IStreamConnection? connBind = null;
             IStreamConnection? connConnect = null;
@@ -441,7 +467,8 @@ namespace testfinalmq
                 .Returns((IStreamConnectionCallback?)null);
 
             IStreamConnection connection = m_connectionContainer.CreateConnection(m_mockClientCallback.Object);
-            m_connectionContainer.Connect("tcp://localhost:3333", connection, new ConnectProperties(null, new ConnectConfig(1)));
+            m_connectionContainer.Connect("tcp://localhost:3333", connection, 
+                new ConnectProperties(new SslClientOptions("", new RemoteCertificateValidationCallback(ValidateServerCertificate)), new ConnectConfig(1)));
 
             Debug.Assert(connectClient.Wait(5000));
             Debug.Assert(connectServer.Wait(5000));
@@ -493,11 +520,12 @@ namespace testfinalmq
             message.AddSendPayload(Encoding.UTF8.GetBytes(MESSAGE1_BUFFER));
             connection.SendMessage(message);
 
-            m_connectionContainer.Connect("tcp://localhost:3333", connection, new ConnectProperties(null, new ConnectConfig(1)));
+            m_connectionContainer.Connect("tcp://localhost:3333", connection, 
+                new ConnectProperties(new SslClientOptions("", new RemoteCertificateValidationCallback(ValidateServerCertificate)), new ConnectConfig(1)));
 
             Thread.Sleep(4000);
 
-            m_connectionContainer.Bind("tcp://*:3333", m_mockBindCallback.Object);
+            m_connectionContainer.Bind("tcp://*:3333", m_mockBindCallback.Object, new BindProperties(new SslServerOptions(new X509Certificate("ssl-certificate.pfx"))));
 
 
             Debug.Assert(condVarReceived.Wait(5000));

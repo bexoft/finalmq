@@ -1,0 +1,2 @@
+openssl req -new -x509 -sha256 -config openssl.cnf -newkey rsa:2048 -nodes -keyout ssltest.key.pem -days 100000 -out ssltest.cert.pem
+openssl pkcs12 -export -out ssl-certificate.pfx -inkey ssltest.key.pem -in ssltest.cert.pem -name "SSL Signed Certificate"
