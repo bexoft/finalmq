@@ -189,19 +189,20 @@ IMessagePtr ProtocolSession::convertMessageToProtocol(const IMessagePtr& msg)
         {
             message = createMessage();
             message->getAllMetainfo() = msg->getAllMetainfo();
+            ssize_t sizePayload = msg->getTotalSendPayloadSize();
             if (msg->getTotalSendPayloadSize() > 0)
             {
-                ssize_t sizePayload = msg->getTotalSendPayloadSize();
                 char* payload = message->addSendPayload(sizePayload);
                 const std::list<BufferRef>& payloads = msg->getAllSendPayloads();
                 ssize_t offset = 0;
                 for (auto it = payloads.begin(); it != payloads.end(); ++it)
                 {
                     const BufferRef& p = *it;
-                    assert(offset + p.second == sizePayload);
+                    assert(offset + p.second <= sizePayload);
                     memcpy(payload + offset, p.first, p.second);
                     offset += p.second;
                 }
+                assert(offset == sizePayload);
             }
             else
             {
@@ -989,7 +990,7 @@ void ProtocolSession::pollRequest(std::int64_t connectionId, int timeout, int po
             m_pollMessages.clear();
             m_pollCounter++;
             m_pollReply = protocol->pollReply(std::move(messages));
-            int ok = sendMessage(m_pollReply, protocol);
+            bool ok = sendMessage(m_pollReply, protocol);
             if (ok)
             {
                 m_pollReply = nullptr;

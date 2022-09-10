@@ -38,13 +38,15 @@ void ExecutorBase::registerActionNotification(std::function<void()> func)
 
 void ExecutorBase::run()
 {
+    bool wasAvailable = true;
     while (!m_terminate)
     {
-        m_newActions.wait();
-        bool repeat = true;
-        while (!m_terminate && repeat)
+        bool wasAvailable = runAvailableActionBatch([this]() {
+            return m_terminate.load();
+        });
+        if (!wasAvailable && !m_terminate)
         {
-            repeat = runOneAvailableAction();
+            m_newActions.wait();
         }
     }
     // release possible other threads
@@ -70,25 +72,42 @@ bool ExecutorBase::isTerminating() const
 
 
 
-void Executor::runAvailableActions()
+bool Executor::runAvailableActions(const FuncIsAbort& funcIsAbort)
 {
+    std::list<ActionEntry> actions;
     std::unique_lock<std::mutex> lock(m_mutex);
-    std::list<ActionEntry> actions = std::move(m_actions);
+    actions = std::move(m_actions);
     m_actions.clear();
     lock.unlock();
-    for (auto it = actions.begin(); it != actions.end(); ++it)
+
+    if (!actions.empty())
     {
-        ActionEntry& entry = *it;
-        for (auto it = entry.funcs.begin(); it != entry.funcs.end(); ++it)
+        for (auto it = actions.begin(); it != actions.end(); ++it)
         {
-            std::unique_ptr<std::function<void()>>& func = *it;
-            assert(func && *func);
-            (*func)();
+            ActionEntry& entry = *it;
+            for (auto it = entry.funcs.begin(); it != entry.funcs.end(); ++it)
+            {
+                std::unique_ptr<std::function<void()>>& func = *it;
+                assert(func && *func);
+                if (!funcIsAbort || !funcIsAbort())
+                {
+                    (*func)();
+                }
+                else
+                {
+                    return true;
+                }
+            }
         }
+        return true;
+    }
+    else
+    {
+        return false;
     }
 }
-
-bool Executor::runnableActionsAvailable() const
+    
+bool Executor::areRunnableActionsAvailable() const
 {
     if (m_runningIds.size() == m_storedIds.size() && (m_zeroIdCounter == 0))
     {
@@ -99,11 +118,12 @@ bool Executor::runnableActionsAvailable() const
 
 
 
-bool Executor::runOneAvailableAction()
+bool Executor::runAvailableActionBatch(const FuncIsAbort& funcIsAbort)
 {
+    bool wasAvailable = false;
     bool stillActions = false;
     std::unique_lock<std::mutex> lock(m_mutex);
-    if (!runnableActionsAvailable())
+    if (!areRunnableActionsAvailable())
     {
         return false;
     }
@@ -151,12 +171,14 @@ bool Executor::runOneAvailableAction()
                     }
                 }
             }
-            stillActions = runnableActionsAvailable();
+            wasAvailable = true;
+            stillActions = areRunnableActionsAvailable();
             break;
         }
     }
     lock.unlock();
 
+    // trigger next possible thread
     if (stillActions)
     {
         m_newActions = true;
@@ -165,10 +187,16 @@ bool Executor::runOneAvailableAction()
     for (auto it = funcs.begin(); it != funcs.end(); ++it)
     {
         assert(*it && **it);
-        (**it)();
+        if (!funcIsAbort || !funcIsAbort())
+        {
+            (**it)();
+        }
+        else
+        {
+            break;
+        }
     }
 
-    stillActions = false;
     if (instanceId > 0)
     {
         lock.lock();
@@ -183,13 +211,9 @@ bool Executor::runOneAvailableAction()
         {
             m_storedIds.erase(it);
         }
-        else
-        {
-            stillActions = true;
-        }
         lock.unlock();
     }
-    return stillActions;
+    return wasAvailable;
 }
 
 void Executor::addAction(std::function<void()> func, std::int64_t instanceId)
@@ -204,7 +228,7 @@ void Executor::addAction(std::function<void()> func, std::int64_t instanceId)
     }
     else
     {
-        notify = m_actions.empty();
+        notify = (m_zeroIdCounter == 0);
         ++m_zeroIdCounter;
     }
     if (!m_actions.empty() && m_actions.back().instanceId == instanceId)
@@ -231,39 +255,37 @@ void Executor::addAction(std::function<void()> func, std::int64_t instanceId)
 
 //////////////////////////////////////////////////
 
-void ExecutorIgnoreOrderOfInstance::runAvailableActions()
+bool ExecutorIgnoreOrderOfInstance::runAvailableActions(const FuncIsAbort& funcIsAbort)
 {
+    std::deque<std::function<void()>> actions;
     std::unique_lock<std::mutex> lock(m_mutex);
-    std::deque<std::function<void()>> actions = std::move(m_actions);
+    actions = std::move(m_actions);
     m_actions.clear();
     lock.unlock();
-    for (size_t i = 0; i < actions.size(); ++i)
+    if (!actions.empty())
     {
-        actions[i]();
+        for (size_t i = 0; i < actions.size(); ++i)
+        {
+            if (!funcIsAbort || !funcIsAbort())
+            {
+                actions[i]();
+            }
+            else
+            {
+                break;
+            }
+        }
+        return true;
+    }
+    else
+    {
+        return false;
     }
 }
 
-bool ExecutorIgnoreOrderOfInstance::runOneAvailableAction()
+bool ExecutorIgnoreOrderOfInstance::runAvailableActionBatch(const FuncIsAbort& funcIsAbort)
 {
-    std::unique_lock<std::mutex> lock(m_mutex);
-    std::function<void()> action;
-    if (!m_actions.empty())
-    {
-        action = std::move(m_actions.front());
-        m_actions.pop_front();
-    }
-    bool stillActions = (!m_actions.empty());
-    lock.unlock();
-    if (stillActions)
-    {
-        m_newActions = true;
-    }
-    if (action)
-    {
-        action();
-    }
-
-    return false;
+    return runAvailableActions(funcIsAbort);
 }
 
 void ExecutorIgnoreOrderOfInstance::addAction(std::function<void()> func, std::int64_t /*instanceId*/)

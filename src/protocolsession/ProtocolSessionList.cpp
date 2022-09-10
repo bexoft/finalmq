@@ -39,11 +39,11 @@ ProtocolSessionList::~ProtocolSessionList()
 {
 }
 
-std::int64_t ProtocolSessionList::addProtocolSession(IProtocolSessionPrivatePtr ProtocolSession, bool verified)
+std::int64_t ProtocolSessionList::addProtocolSession(IProtocolSessionPrivatePtr protocolSession, bool verified)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     std::int64_t sessionId = m_nextSessionId.fetch_add(1);
-    m_connectionId2ProtocolSession[sessionId] = { ProtocolSession, verified, {} };
+    m_connectionId2ProtocolSession[sessionId] = { protocolSession, verified, {} };
     lock.unlock();
     return sessionId;
 }

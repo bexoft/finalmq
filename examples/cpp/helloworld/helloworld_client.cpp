@@ -44,6 +44,8 @@
 
 
 using finalmq::RemoteEntity;
+using finalmq::IRemoteEntity;
+using finalmq::IRemoteEntityPtr;
 using finalmq::RemoteEntityContainer;
 using finalmq::RemoteEntityFormatProto;
 using finalmq::RemoteEntityFormatJson;
@@ -69,13 +71,17 @@ using helloworld::Person;
 using helloworld::Address;
 
 
-
-#define LOOP_PARALLEL   10000
-#define LOOP_SEQUENTIAL 10000
+#ifdef WIN32
+    #define LOOP_PARALLEL   10000
+    #define LOOP_SEQUENTIAL 10000
+#else
+    #define LOOP_PARALLEL   100000
+    #define LOOP_SEQUENTIAL 10000
+#endif
 
 finalmq::CondVar g_performanceTestFinished{};
 
-void triggerRequest(RemoteEntity& entityClient, PeerId peerId, const std::chrono::time_point<std::chrono::steady_clock>& starttime, int index)
+void triggerRequest(IRemoteEntity& entityClient, PeerId peerId, const std::chrono::time_point<std::chrono::steady_clock>& starttime, int index)
 {
     entityClient.requestReply<HelloReply>(peerId,
         HelloRequest{ { {"Bonnie","Parker",Gender::FEMALE,1910,{"somestreet", 12,76875,"Rowena","USA"}} } },
@@ -143,8 +149,9 @@ int main()
 
     // Create client entity and register it at the entityContainer
     // note: multiple entities can be registered.
-    RemoteEntity entityClient;
-    entityContainer.registerEntity(&entityClient);
+    IRemoteEntityPtr entityClientPtr = std::make_shared<RemoteEntity>();
+    entityContainer.registerEntity(entityClientPtr);
+    IRemoteEntity& entityClient = *entityClientPtr;
 
     // register peer events to see when a remote entity connects or disconnects.
     entityClient.registerPeerEvent([] (PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, PeerEvent peerEvent, bool incoming) {
