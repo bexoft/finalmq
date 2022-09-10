@@ -38,7 +38,6 @@ void ExecutorBase::registerActionNotification(std::function<void()> func)
 
 void ExecutorBase::run()
 {
-    bool wasAvailable = true;
     while (!m_terminate)
     {
         bool wasAvailable = runAvailableActionBatch([this]() {
