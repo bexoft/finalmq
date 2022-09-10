@@ -39,7 +39,7 @@ namespace finalmq {
 struct IProtocolSessionPrivate : public IProtocolSession
 {
     virtual bool connect() = 0;
-    virtual void createConnection() = 0;
+//    virtual void createConnection() = 0;
     virtual int64_t setConnection(const IStreamConnectionPtr& connection, bool verified) = 0;
     virtual void setProtocol(const IProtocolPtr& protocol) = 0;
     virtual void setSessionNameInternal(const std::string& sessionName) = 0;
@@ -91,7 +91,7 @@ private:
 
     // IProtocolSessionPrivate
     virtual bool connect() override;
-    virtual void createConnection() override;
+//    virtual void createConnection() override;
     virtual int64_t setConnection(const IStreamConnectionPtr& connection, bool verified) override;
     virtual void setProtocol(const IProtocolPtr& protocol) override;
     virtual void setSessionNameInternal(const std::string& sessionName) override;

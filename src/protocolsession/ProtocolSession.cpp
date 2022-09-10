@@ -125,16 +125,16 @@ bool ProtocolSession::connect()
 }
 
 
-void ProtocolSession::createConnection()
-{
-    assert(m_streamConnectionContainer);
-    IStreamConnectionPtr connection;
-    if (m_protocol)
-    {
-        connection = m_streamConnectionContainer->createConnection(std::weak_ptr<IStreamConnectionCallback>(m_protocol));
-    }
-    setConnection(connection, true);
-}
+//void ProtocolSession::createConnection()
+//{
+//    assert(m_streamConnectionContainer);
+//    IStreamConnectionPtr connection;
+//    if (m_protocol)
+//    {
+//        connection = m_streamConnectionContainer->createConnection(std::weak_ptr<IStreamConnectionCallback>(m_protocol));
+//    }
+//    setConnection(connection, true);
+//}
 
 
 int64_t ProtocolSession::setConnection(const IStreamConnectionPtr& connection, bool verified)
@@ -175,6 +175,7 @@ IMessagePtr ProtocolSession::createMessage() const
 
 IMessagePtr ProtocolSession::convertMessageToProtocol(const IMessagePtr& msg)
 {
+    // mutext is already locked
     IMessagePtr message = msg;
     if (message->getProtocolId() != m_protocolId ||
         (!m_protocolFlagMessagesResendable && message->wasSent()) ||
@@ -224,6 +225,7 @@ IMessagePtr ProtocolSession::convertMessageToProtocol(const IMessagePtr& msg)
 
 void ProtocolSession::getProtocolFromConnectionId(IProtocolPtr& protocol, std::int64_t connectionId)
 {
+    // mutext is already locked
     assert(protocol->getConnection());
     if (connectionId != 0 && connectionId != protocol->getConnection()->getConnectionId())
     {
@@ -928,6 +930,7 @@ void ProtocolSession::setSessionName(const std::string& sessionName, const IProt
 
 void ProtocolSession::pollRelease()
 {
+    // mutext is already locked
     if (m_pollWaiting)
     {
         assert(m_pollReply == nullptr);

@@ -194,7 +194,7 @@ IProtocolSessionPtr ProtocolSessionContainer::connect(const std::string& endpoin
 IProtocolSessionPtr ProtocolSessionContainer::createSession(hybrid_ptr<IProtocolSessionCallback> callback)
 {
     IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(callback, m_executor, m_executorPollerThread, m_protocolSessionList, m_streamConnectionContainer);
-    protocolSession->createConnection();
+    protocolSession->setConnection(nullptr, true);
     return protocolSession;
 }
 
