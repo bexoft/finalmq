@@ -40,7 +40,7 @@ struct IProtocolSessionPrivate : public IProtocolSession
 {
     virtual bool connect() = 0;
 //    virtual void createConnection() = 0;
-    virtual int64_t setConnection(const IStreamConnectionPtr& connection, bool verified) = 0;
+    virtual void setConnection(const IStreamConnectionPtr& connection, bool verified) = 0;
     virtual void setProtocol(const IProtocolPtr& protocol) = 0;
     virtual void setSessionNameInternal(const std::string& sessionName) = 0;
     virtual void cycleTime() = 0;
@@ -59,10 +59,10 @@ class ProtocolSession : public IProtocolSessionPrivate
                       , public std::enable_shared_from_this<ProtocolSession>
 {
 public:
-    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const BindProperties& bindProperties, int contentType);
-    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, const std::string& endpointStreamConnection, const ConnectProperties& connectProperties, int contentType);
+    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const IProtocolPtr& protocol, const std::shared_ptr<IProtocolSessionList>& protocolSessionList, const BindProperties& bindProperties, int contentType);
+    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const IProtocolPtr& protocol, const std::shared_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, const std::string& endpointStreamConnection, const ConnectProperties& connectProperties, int contentType);
 //    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, int contentType);
-    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer);
+    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const std::shared_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer);
 
     virtual ~ProtocolSession();
 
@@ -92,7 +92,7 @@ private:
     // IProtocolSessionPrivate
     virtual bool connect() override;
 //    virtual void createConnection() override;
-    virtual int64_t setConnection(const IStreamConnectionPtr& connection, bool verified) override;
+    virtual void setConnection(const IStreamConnectionPtr& connection, bool verified) override;
     virtual void setProtocol(const IProtocolPtr& protocol) override;
     virtual void setSessionNameInternal(const std::string& sessionName) override;
     virtual void cycleTime() override;
@@ -122,34 +122,36 @@ private:
     void cleanupMultiConnection();
     void pollRelease();
 
-    hybrid_ptr<IProtocolSessionCallback>                    m_callback;
-    IExecutorPtr                                            m_executor;
-    IExecutorPtr                                            m_executorPollerThread;
+    const hybrid_ptr<IProtocolSessionCallback>              m_callback;
+    const IExecutorPtr                                      m_executor;
+    const IExecutorPtr                                      m_executorPollerThread;
     IProtocolPtr                                            m_protocol;
-    std::int64_t                                            m_connectionId = 0;
+    std::atomic<std::int64_t>                               m_connectionId = 0;
     std::unordered_map<std::int64_t, IProtocolPtr>          m_multiProtocols;
 
-    int64_t                                         m_sessionId = 0;
-    int64_t                                         m_instanceId = 0;
-    std::weak_ptr<IProtocolSessionList>             m_protocolSessionList;
-    int                                             m_contentType = 0;
-    std::uint32_t                                   m_protocolId = 0;
-    bool                                            m_protocolFlagMessagesResendable = false;
-    bool                                            m_protocolFlagSupportMetainfo = false;
-    bool                                            m_protocolFlagNeedsReply = false;
-    bool                                            m_protocolFlagIsMultiConnectionSession = false;
-    bool                                            m_protocolFlagIsSendRequestByPoll = false;
-    bool                                            m_protocolFlagSupportFileTransfer = false;
+    const std::weak_ptr<IProtocolSessionList>       m_protocolSessionList;
+    const int64_t                                   m_sessionId = 0;
+    const int64_t                                   m_instanceId = 0;
+
+    std::atomic<int>                                m_contentType{false};
+    std::uint32_t                                   m_protocolId = false;
+    std::atomic<bool>                               m_protocolFlagMessagesResendable{false};
+    std::atomic<bool>                               m_protocolFlagSupportMetainfo{false};
+    std::atomic<bool>                               m_protocolFlagNeedsReply{false};
+    std::atomic<bool>                               m_protocolFlagIsMultiConnectionSession{false};
+    std::atomic<bool>                               m_protocolFlagIsSendRequestByPoll{false};
+    std::atomic<bool>                               m_protocolFlagSupportFileTransfer{false};
+
     IProtocol::FuncCreateMessage                    m_messageFactory;
     std::atomic_bool                                m_protocolSet{false};
     bool                                            m_triggerConnected = false;
     bool                                            m_triggerDisconnected = false;
-    bool                                            m_incomingConnection = false;
+    const bool                                      m_incomingConnection = false;
 
-    std::shared_ptr<IStreamConnectionContainer>     m_streamConnectionContainer;
-    std::string                                     m_endpointStreamConnection;
+    const std::shared_ptr<IStreamConnectionContainer>   m_streamConnectionContainer;
+    std::string                                         m_endpointStreamConnection;
 
-    BindProperties                                  m_bindProperties;
+    const BindProperties                            m_bindProperties;
     ConnectProperties                               m_connectionProperties;
 
     std::deque<IMessagePtr>                         m_messagesBuffered;
