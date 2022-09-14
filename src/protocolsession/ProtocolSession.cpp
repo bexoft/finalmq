@@ -84,10 +84,10 @@ ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, 
     , m_executor(executor)
     , m_executorPollerThread(executorPollerThread)
     , m_protocolSessionList(protocolSessionList)
-    , m_incomingConnection(false)
-    , m_streamConnectionContainer(streamConnectionContainer)
     , m_sessionId(protocolSessionList->getNextSessionId())
     , m_instanceId(m_sessionId | INSTANCEID_PREFIX)
+    , m_incomingConnection(false)
+    , m_streamConnectionContainer(streamConnectionContainer)
 {
 }
 
