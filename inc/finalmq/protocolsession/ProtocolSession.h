@@ -126,7 +126,7 @@ private:
     const IExecutorPtr                                      m_executor;
     const IExecutorPtr                                      m_executorPollerThread;
     IProtocolPtr                                            m_protocol;
-    std::atomic<std::int64_t>                               m_connectionId = 0;
+    std::atomic<std::int64_t>                               m_connectionId{0};
     std::unordered_map<std::int64_t, IProtocolPtr>          m_multiProtocols;
 
     const std::weak_ptr<IProtocolSessionList>       m_protocolSessionList;
