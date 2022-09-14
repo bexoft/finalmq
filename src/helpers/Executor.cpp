@@ -77,6 +77,9 @@ bool Executor::runAvailableActions(const FuncIsAbort& funcIsAbort)
     std::unique_lock<std::mutex> lock(m_mutex);
     actions = std::move(m_actions);
     m_actions.clear();
+    m_zeroIdCounter = 0;
+    m_storedIds.clear();
+    m_runningIds.clear();
     lock.unlock();
 
     if (!actions.empty())
