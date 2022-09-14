@@ -155,8 +155,6 @@ void ProtocolSession::setConnection(const IStreamConnectionPtr& connection, bool
     if (connection)
     {
         m_connectionId = connection->getConnectionId();
-        bool incomingConnection = connection->getConnectionData().incomingConnection;
-        assert(m_incomingConnection == incomingConnection);
         if (m_incomingConnection)
         {
             m_activityTimer.setTimeout(m_activityTimeout);
