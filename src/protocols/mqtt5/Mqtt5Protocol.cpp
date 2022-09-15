@@ -703,7 +703,7 @@ bool Mqtt5Protocol::prepareForSend(const IMessagePtr& message, std::uint8_t* buf
 
 void Mqtt5Protocol::sendPublish(const IStreamConnectionPtr& connection, Mqtt5PublishData& data, const IMessagePtr& message)
 {
-    ssize_t sizeAppPayload = message->getTotalSendPayloadSize();
+    unsigned int sizeAppPayload = static_cast<unsigned int>(message->getTotalSendPayloadSize());
     unsigned int sizePropPayload = 0;
     unsigned int sizePayload = Mqtt5Serialization::sizePublish(data, sizePropPayload) + sizeAppPayload;
     unsigned int sizeMessage = 1u + Mqtt5Serialization::sizeVarByteNumber(sizePayload) + sizePayload;
