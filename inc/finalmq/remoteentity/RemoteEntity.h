@@ -381,9 +381,10 @@ private:
     std::unordered_map<std::string, Function> m_funcCommandsStatic;
     std::list<FunctionVar>              m_funcCommandsVar;
     std::list<FunctionVar>              m_funcCommandsVarStar;
-    std::shared_ptr<PeerManager>        m_peerManager;
+    const std::shared_ptr<PeerManager>  m_peerManager;
     std::shared_ptr<FileTransferReply>  m_fileTransferReply;
     IExecutorPtr                        m_executor;
+    std::atomic<bool>                   m_initialized{false};
     mutable std::atomic_uint64_t        m_nextCorrelationId{1};
     mutable std::mutex                  m_mutex;
     mutable std::mutex                  m_mutexFunctions;

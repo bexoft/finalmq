@@ -55,7 +55,7 @@ struct IProtocolRegistry
 class ProtocolRegistryImpl : public IProtocolRegistry
 {
 public:
-    virtual void registerProtocolFactory(const std::string& protocolName, int remoteEntityProtocolId, const IProtocolFactoryPtr& protocolFactory) override;
+    virtual void registerProtocolFactory(const std::string& protocolName, int protocolId, const IProtocolFactoryPtr& protocolFactory) override;
     virtual IProtocolFactoryPtr getProtocolFactory(const std::string& protocolName) const override;
     virtual IProtocolFactoryPtr getProtocolFactory(int protocolId) const override;
 

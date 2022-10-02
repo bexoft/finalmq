@@ -150,10 +150,11 @@ private:
         int offset = 0;
     };
 
+    const std::int64_t          m_connectionId = 0;
     ConnectionData              m_connectionData;
     SocketPtr                   m_socketPrivate;
     SocketPtr                   m_socket;
-    IPollerPtr                  m_poller;
+    const IPollerPtr            m_poller;
     std::list<MessageSendState> m_pendingMessages;
     std::atomic<bool>           m_disconnectFlag{};
     hybrid_ptr<IStreamConnectionCallback> m_callback;

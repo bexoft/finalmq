@@ -103,24 +103,23 @@ private:
     static bool isTimerExpired(std::chrono::time_point<std::chrono::steady_clock>& lastTime, int interval);
     void doReconnect();
 
-    std::shared_ptr<IPoller>                                        m_poller;
+    const std::shared_ptr<IPoller>                                  m_poller;
     std::unordered_map<SOCKET, BindData>                            m_sd2binds;
     std::unordered_map<std::int64_t, IStreamConnectionPrivatePtr>   m_connectionId2Connection;
     std::unordered_map<SOCKET, IStreamConnectionPrivatePtr>         m_sd2Connection;
     std::unordered_map<SOCKET, IStreamConnectionPrivatePtr>         m_sd2ConnectionPollerLoop;
     std::atomic_flag                                                m_connectionsStable{};
     static std::atomic_int64_t                                      m_nextConnectionId;
-    bool                                                            m_terminatePollerLoop = false;
+    std::atomic_bool                                                m_terminatePollerLoop{false};
     int                                                             m_cycleTime = 100;
     int                                                             m_checkReconnectInterval = 1000;
     FuncPollerLoopTimer                                             m_funcTimer;
-    IExecutorPtr                                                    m_executorPollerThread;
+    const IExecutorPtr                                              m_executorPollerThread;
     std::unique_ptr<IExecutorWorker>                                m_executorWorker;
     std::thread                                                     m_threadTimer;
     mutable std::mutex                                              m_mutex;
 
     std::chrono::time_point<std::chrono::steady_clock>              m_lastReconnectTime;
-    std::chrono::time_point<std::chrono::steady_clock>              m_lastCycleTime;
 
 #ifdef USE_OPENSSL
     struct SslAcceptingData

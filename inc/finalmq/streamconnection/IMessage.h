@@ -96,7 +96,7 @@ struct IMessage : public IZeroCopyBuffer
     virtual bool wasSent() const = 0;
 
     virtual void addMessage(const std::shared_ptr<IMessage>& msg) = 0;
-    virtual std::shared_ptr<IMessage> getMessage(int protocolId) const = 0;
+    virtual std::shared_ptr<IMessage> getMessage(std::uint32_t protocolId) const = 0;
 };
 
 

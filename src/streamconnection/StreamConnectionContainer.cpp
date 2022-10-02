@@ -80,6 +80,7 @@ StreamConnectionContainer::~StreamConnectionContainer()
 
 std::unordered_map<SOCKET, StreamConnectionContainer::BindData>::iterator StreamConnectionContainer::findBindByEndpoint(const std::string& endpoint)
 {
+    // mutex already locked
     for (auto it = m_sd2binds.begin(); it != m_sd2binds.end(); ++it)
     {
         if (it->second.connectionData.endpoint == endpoint)
@@ -93,6 +94,7 @@ std::unordered_map<SOCKET, StreamConnectionContainer::BindData>::iterator Stream
 
 IStreamConnectionPrivatePtr StreamConnectionContainer::findConnectionBySdOnlyForPollerLoop(SOCKET sd)
 {
+    // m_sd2ConnectionPollerLoop is only used at poller loop thread
     IStreamConnectionPrivatePtr connection;
     auto it = m_sd2ConnectionPollerLoop.find(sd);
     if (it != m_sd2ConnectionPollerLoop.end())
@@ -124,7 +126,7 @@ IStreamConnectionPrivatePtr StreamConnectionContainer::findConnectionById(std::i
 
 void StreamConnectionContainer::init(int cycleTime, FuncPollerLoopTimer funcTimer, int checkReconnectInterval)
 {
-    // no mutex lock, because it init is called before the thread will be active.
+    std::unique_lock<std::mutex> lock(m_mutex);
     m_funcTimer = std::move(funcTimer);
     m_cycleTime = cycleTime;
     m_checkReconnectInterval = checkReconnectInterval;
@@ -133,6 +135,7 @@ void StreamConnectionContainer::init(int cycleTime, FuncPollerLoopTimer funcTime
         while (!m_terminatePollerLoop)
         {
             m_executorPollerThread->addAction([this](){
+                // this is the poller thread
                 if (isTimerExpired(m_lastReconnectTime, m_checkReconnectInterval))
                 {
                     doReconnect();
@@ -773,7 +776,6 @@ bool StreamConnectionContainer::isTimerExpired(std::chrono::time_point<std::chro
 void StreamConnectionContainer::pollerLoop()
 {
     m_lastReconnectTime = std::chrono::steady_clock::now();
-    m_lastCycleTime = std::chrono::steady_clock::now();
     while (!m_terminatePollerLoop)
     {
         const PollerResult& result = m_poller->wait(1000);

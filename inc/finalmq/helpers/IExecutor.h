@@ -31,10 +31,12 @@ namespace finalmq {
 
 struct IExecutor
 {
+    typedef std::function<bool()> FuncIsAbort;
+
     virtual ~IExecutor() {}
     virtual void registerActionNotification(std::function<void()> func) = 0;
-    virtual void runAvailableActions() = 0;
-    virtual bool runOneAvailableAction() = 0;
+    virtual bool runAvailableActions(const FuncIsAbort& funcIsAbort = nullptr) = 0;
+    virtual bool runAvailableActionBatch(const FuncIsAbort& funcIsAbort = nullptr) = 0;
     virtual void addAction(std::function<void()> func, std::int64_t instanceId = 0) = 0;
     virtual void run() = 0;
     virtual void terminate() = 0;

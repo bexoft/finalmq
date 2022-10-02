@@ -30,13 +30,13 @@ namespace finalmq {
 
 
 StreamConnection::StreamConnection(const ConnectionData& connectionData, std::shared_ptr<Socket> socket, const IPollerPtr& poller, hybrid_ptr<IStreamConnectionCallback> callback)
-    : m_connectionData(connectionData)
+    : m_connectionId(connectionData.connectionId)
+    , m_connectionData(connectionData)
     , m_socketPrivate(socket)
     , m_socket(socket)
     , m_poller(poller)
     , m_callback(callback)
 {
-
     m_lastReconnectTime = std::chrono::steady_clock::now();
 }
 
@@ -125,8 +125,7 @@ ConnectionState StreamConnection::getConnectionState() const
 
 std::int64_t StreamConnection::getConnectionId() const
 {
-    std::unique_lock<std::mutex> lock(m_mutex);
-    return m_connectionData.connectionId;
+    return m_connectionId;
 }
 
 
@@ -244,6 +243,7 @@ bool StreamConnection::sendPendingMessages()
 
 bool StreamConnection::checkEdgeConnected()
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     bool edgeConnected = false;
     if (m_connectionData.connectionState == ConnectionState::CONNECTIONSTATE_CONNECTING)
     {
@@ -276,6 +276,7 @@ bool StreamConnection::doReconnect()
 
 bool StreamConnection::changeStateForDisconnect()
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     bool removeConnection = false;
     bool reconnectExpired = false;
     if (!m_disconnectFlag && (m_connectionData.connectionState == ConnectionState::CONNECTIONSTATE_CONNECTING))
@@ -301,7 +302,6 @@ bool StreamConnection::changeStateForDisconnect()
         assert(m_socketPrivate);
         m_connectionData.connectionState = ConnectionState::CONNECTIONSTATE_DISCONNECTED;
         m_poller->removeSocket(m_socketPrivate->getSocketDescriptor());
-        std::unique_lock<std::mutex> lock(m_mutex);
         m_socketPrivate = nullptr;
         m_socket = nullptr;
     }
@@ -318,16 +318,10 @@ bool StreamConnection::getDisconnectFlag() const
 void StreamConnection::updateConnectionData(const ConnectionData& connectionData)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
+    assert(m_connectionId == connectionData.connectionId);
     m_connectionData = connectionData;
     lock.unlock();
 }
-
-
-
-
-
-
-
 
 
 void StreamConnection::connected(const IStreamConnectionPtr& connection)

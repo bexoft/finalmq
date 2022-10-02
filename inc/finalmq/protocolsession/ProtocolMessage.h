@@ -37,7 +37,7 @@ namespace finalmq {
 class SYMBOLEXP ProtocolMessage : public IMessage
 {
 public:
-    ProtocolMessage(int protocolId, ssize_t sizeHeader = 0, ssize_t sizeTrailer = 0);
+    ProtocolMessage(std::uint32_t protocolId, ssize_t sizeHeader = 0, ssize_t sizeTrailer = 0);
 
 private:
     virtual char* addBuffer(ssize_t size, ssize_t reserve = 0) override;
@@ -93,7 +93,7 @@ private:
     virtual bool wasSent() const override;
 
     virtual void addMessage(const IMessagePtr& msg) override;
-    virtual IMessagePtr getMessage(int protocolId) const override;
+    virtual IMessagePtr getMessage(std::uint32_t protocolId) const override;
 
 private:
 
@@ -120,9 +120,9 @@ private:
     ssize_t                     m_sizeTrailer = 0;
 
     bool                        m_preparedToSend = false;
-    const int                   m_protocolId;
+    const std::uint32_t         m_protocolId;
 
-    std::unordered_map<int, IMessagePtr> m_messages;
+    std::unordered_map<std::uint32_t, IMessagePtr> m_messages;
 };
 
 }   // namespace finalmq

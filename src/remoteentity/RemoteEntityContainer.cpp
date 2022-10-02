@@ -84,8 +84,8 @@ const EnumInfo ConnectionEvent::_enumInfo = {
 RemoteEntityContainer::RemoteEntityContainer()
     : m_protocolSessionContainer(std::make_unique<ProtocolSessionContainer>())
     , m_fileTransferReply(std::make_shared<FileTransferReply>())
+    , m_executor(m_protocolSessionContainer->getExecutor())
 {
-    m_executor = m_protocolSessionContainer->getExecutor();
 }
 
 RemoteEntityContainer::~RemoteEntityContainer()
@@ -150,13 +150,6 @@ void RemoteEntityContainer::init(const IExecutorPtr& executor, int cycleTime, Fu
 {
     m_storeRawDataInReceiveStruct = storeRawDataInReceiveStruct;
     m_protocolSessionContainer->init(executor, cycleTime, std::move(funcTimer), checkReconnectInterval);
-
-    //registerEntity([this]() {
-    //    std::shared_ptr<RemoteEntity> entity = std::make_shared<RemoteEntity>();
-    //    entity->registerCommand<COMMAND>([this](const RequestContextPtr& requestContext, const std::shared_ptr<COMMAND>& request) {
-    //    });
-    //    return entity;
-    //}(), "fmq");
 }
 
 int RemoteEntityContainer::bind(const std::string& endpoint, const BindProperties& bindProperties)
@@ -353,6 +346,7 @@ void RemoteEntityContainer::registerConnectionEvent(FuncConnectionEvent funcConn
 
 std::vector<EntityId> RemoteEntityContainer::getAllEntities() const
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     std::vector<EntityId> entities;
     entities.reserve(m_entityId2entity.size());
     for (auto it = m_entityId2entity.begin(); it != m_entityId2entity.end(); ++it)
@@ -364,6 +358,7 @@ std::vector<EntityId> RemoteEntityContainer::getAllEntities() const
 
 hybrid_ptr<IRemoteEntity> RemoteEntityContainer::getEntity(EntityId entityId) const
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     std::vector<EntityId> entities;
     auto it = m_entityId2entity.find(entityId);
     if (it !=  m_entityId2entity.end())
@@ -490,7 +485,6 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
         name2entityNoLock = m_name2entity;
         entityId2entityNoLock = m_entityId2entity;
     }
-
 
     //bool pureData = false;
     //if (session->doesSupportMetainfo())

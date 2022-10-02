@@ -203,6 +203,7 @@ bool PeerManager::removePeer(PeerId peerId, bool& incoming)
 
 void PeerManager::removePeerFromSessionEntityToPeerId(std::int64_t sessionId, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName)
 {
+    // mutex already locked
     // remove from m_sessionEntityToPeerId
     auto it1 = m_sessionEntityToPeerId.find(sessionId);
     if (it1 != m_sessionEntityToPeerId.end())
@@ -241,6 +242,7 @@ PeerId PeerManager::getPeerId(std::int64_t sessionId, const std::string& virtual
 
 PeerId PeerManager::getPeerIdIntern(std::int64_t sessionId, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName) const
 {
+    // mutex already locked
     auto it1 = m_sessionEntityToPeerId.find(sessionId);
     if (it1 != m_sessionEntityToPeerId.end())
     {
@@ -317,8 +319,6 @@ PeerManager::ReadyToSend PeerManager::getRequestHeader(const PeerId& peerId, con
 
 
 
-
-
 std::string PeerManager::getEntityName(const PeerId& peerId)
 {
     std::string entityName;
@@ -383,6 +383,7 @@ PeerId PeerManager::addPeer(const IProtocolSessionPtr& session, const std::strin
     }
     else
     {
+        lock.unlock();
         if (funcBeforeFirePeerEvent)
         {
             funcBeforeFirePeerEvent();
@@ -434,6 +435,7 @@ std::deque<PeerManager::Request> PeerManager::connect(PeerId peerId, const IProt
         }
 
         requests = std::move(peer->requests);
+        peer->requests.clear();
     }
 
     return requests;
@@ -479,7 +481,9 @@ RemoteEntity::RemoteEntity()
         bool added{};
         const std::string& virtualSessionId = requestContext->getVirtualSessionId();
         m_peerManager->addPeer(requestContext->session(), virtualSessionId, requestContext->entityId(), request->entityName, true, added, [this, &requestContext]() {
+            assert(m_initialized.load(std::memory_order_acquire));
             // send reply before the connect peer event is triggered. So that the peer gets first the connect reply and afterwards a possible greeting message maybe triggered by the connect peer event.
+            // no lock for m_entityId and m_entityName, because they are already set in initEntity, they will not be changed, anymore.
             requestContext->reply(ConnectEntityReply(m_entityId, m_entityName));
         });
     });
@@ -503,9 +507,6 @@ CorrelationId RemoteEntity::getNextCorrelationId() const
     CorrelationId id = m_nextCorrelationId.fetch_add(1);
     return id;
 }
-
-
-
 
 
 
@@ -576,6 +577,12 @@ CorrelationId RemoteEntity::sendRequest(const PeerId& peerId, const std::string&
 
 bool RemoteEntity::sendRequest(const PeerId& peerId, const std::string& path, const StructBase& structBase, CorrelationId correlationId, IMessage::Metainfo* metainfo)
 {
+    // return with false, if not initialized
+    if (!m_initialized.load(std::memory_order_acquire))
+    {
+        return false;
+    }
+        
     bool ok = false;
     Header header;
     IProtocolSessionPtr session;
@@ -600,7 +607,8 @@ bool RemoteEntity::sendRequest(const PeerId& peerId, const std::string& path, co
         ReceiveData receiveData;
         receiveData.header.corrid = correlationId;
         receiveData.header.status = Status::STATUS_PEER_DISCONNECTED;
-        getExecutor()->addAction([this, receiveData] ()
+        assert(m_executor);
+        m_executor->addAction([this, receiveData] ()
             {
                 receivedReply(receiveData);
             });
@@ -755,14 +763,22 @@ void RemoteEntity::registerReplyEvent(FuncReplyEvent funcReplyEvent)
 
 IExecutorPtr RemoteEntity::getExecutor() const
 {
-    return m_executor;
+    if (m_initialized.load(std::memory_order_acquire))
+    {
+        return m_executor;
+    }
+    return nullptr;
 }
 
 
 PeerId RemoteEntity::createPublishPeer(const IProtocolSessionPtr& session, const std::string& entityName)
 {
     bool added = false;
-    PeerId peerId = m_peerManager->addPeer(session, "", ENTITYID_INVALID, entityName, true, added, {});
+    PeerId peerId = PEERID_INVALID;
+    if (m_initialized.load(std::memory_order_acquire))
+    {
+        peerId = m_peerManager->addPeer(session, "", ENTITYID_INVALID, entityName, true, added, {});
+    }
     return peerId;
 }
 
@@ -771,9 +787,12 @@ PeerId RemoteEntity::createPublishPeer(const IProtocolSessionPtr& session, const
 
 void RemoteEntity::sendConnectEntity(PeerId peerId, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect)
 {
+    assert(m_initialized.load(std::memory_order_acquire));
+
     requestReply<ConnectEntityReply>(peerId, {}, ConnectEntity{ m_entityName },
                                      [this, funcReplyConnect] (PeerId peerId, Status status,
                                          IMessage::Metainfo& metainfo, const std::shared_ptr<ConnectEntityReply>& replyReceived) {
+        assert(m_initialized.load(std::memory_order_acquire));
         if (funcReplyConnect && *funcReplyConnect)
         {
             (*funcReplyConnect)(peerId, status);
@@ -795,11 +814,14 @@ void RemoteEntity::sendConnectEntity(PeerId peerId, const std::shared_ptr<FuncRe
 PeerId RemoteEntity::connectIntern(const IProtocolSessionPtr& session, const std::string& virtualSessionId, const std::string& entityName, EntityId entityId, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect)
 {
     bool added{};
-    PeerId peerId = m_peerManager->addPeer(session, virtualSessionId, entityId, entityName, false, added, {});
-
-    if (added)
+    PeerId peerId = PEERID_INVALID;
+    if (m_initialized.load(std::memory_order_acquire))
     {
-        sendConnectEntity(peerId, funcReplyConnect);
+        peerId = m_peerManager->addPeer(session, virtualSessionId, entityId, entityName, false, added, {});
+        if (added)
+        {
+            sendConnectEntity(peerId, funcReplyConnect);
+        }
     }
 
     return peerId;
@@ -879,8 +901,12 @@ std::vector<PeerId> RemoteEntity::getAllPeers() const
 
 PeerId RemoteEntity::createPeer(FuncReplyConnect funcReplyConnect)
 {
-    PeerId peerId = m_peerManager->addPeer();
-    sendConnectEntity(peerId, std::make_shared<FuncReplyConnect>(std::move(funcReplyConnect)));
+    PeerId peerId = PEERID_INVALID;
+    if (m_initialized.load(std::memory_order_acquire))
+    {
+        peerId = m_peerManager->addPeer();
+        sendConnectEntity(peerId, std::make_shared<FuncReplyConnect>(std::move(funcReplyConnect)));
+    }
     return peerId;
 }
 
@@ -888,6 +914,12 @@ PeerId RemoteEntity::createPeer(FuncReplyConnect funcReplyConnect)
 
 void RemoteEntity::connectIntern(PeerId peerId, const IProtocolSessionPtr& session, const std::string& entityName, EntityId entityId)
 {
+    // entity not initialized
+    if (!m_initialized.load(std::memory_order_acquire))
+    {
+        return;
+    }
+
     // the mutex lock is important for RTS_CONNECT_NOT_AVAILABLE / RTS_READY handling. See connectIntern(PeerId ...)
     std::unique_lock<std::mutex> lock(m_mutex);
     std::deque<PeerManager::Request> pendingRequests = m_peerManager->connect(peerId, session, entityId, entityName);
@@ -997,7 +1029,11 @@ void RemoteEntity::registerPeerEvent(FuncPeerEvent funcPeerEvent)
 
 EntityId RemoteEntity::getEntityId() const
 {
-    return m_entityId;
+    if (m_initialized.load(std::memory_order_acquire))
+    {
+        return m_entityId;
+    }
+    return ENTITYID_INVALID;
 }
 
 
@@ -1010,19 +1046,24 @@ IProtocolSessionPtr RemoteEntity::getSession(PeerId peerId) const
 
 bool RemoteEntity::isEntityRegistered() const
 {
-    return (m_entityId != ENTITYID_INVALID);
+    return m_initialized.load(std::memory_order_acquire);
 }
 
 
 
 void RemoteEntity::initEntity(EntityId entityId, const std::string& entityName, const std::shared_ptr<FileTransferReply>& fileTransferReply, const IExecutorPtr& executor)
 {
-    assert(m_entityId == ENTITYID_INVALID); // an entity shall no be registered twice.
-    m_fileTransferReply = fileTransferReply;
-    m_entityId = entityId;
-    m_entityName = entityName;
-    m_peerManager->setEntityId(entityId);
-    m_executor = executor;
+    // an entity shall not be registered twice.
+    assert(!m_initialized.load(std::memory_order_acquire));
+    if (!m_initialized.load(std::memory_order_acquire))
+    {
+        m_fileTransferReply = fileTransferReply;
+        m_entityId = entityId;
+        m_entityName = entityName;
+        m_peerManager->setEntityId(entityId);
+        m_executor = executor;
+        m_initialized.store(true, std::memory_order_release);
+    }
 }
 
 
@@ -1168,6 +1209,9 @@ const RemoteEntity::Function* RemoteEntity::getFunction(const std::string& path,
 
 void RemoteEntity::receivedRequest(ReceiveData& receiveData)
 {
+    // the entity is registered
+    assert(m_initialized.load(std::memory_order_acquire));
+
     std::shared_ptr<FuncCommand> func;
     const RemoteEntity::Function* funcData = getFunction(receiveData.header.path, &receiveData.message->getAllMetainfo());
     if (funcData)
@@ -1211,9 +1255,9 @@ void RemoteEntity::receivedReply(const ReceiveData& receiveData)
     }
 
     bool replyHandled = false;
-    for (size_t i = 0; i < m_funcsReplyEvent.size(); ++i)
+    for (size_t i = 0; i < funcsReplyEventNoLock.size(); ++i)
     {
-        replyHandled = m_funcsReplyEvent[i](receiveData.header.corrid, receiveData.header.status, receiveData.message->getAllMetainfo(), receiveData.structBase);
+        replyHandled = funcsReplyEventNoLock[i](receiveData.header.corrid, receiveData.header.status, receiveData.message->getAllMetainfo(), receiveData.structBase);
         if (replyHandled)
         {
             break;

@@ -703,7 +703,7 @@ bool Mqtt5Protocol::prepareForSend(const IMessagePtr& message, std::uint8_t* buf
 
 void Mqtt5Protocol::sendPublish(const IStreamConnectionPtr& connection, Mqtt5PublishData& data, const IMessagePtr& message)
 {
-    auto sizeAppPayload = message->getTotalSendPayloadSize();
+    unsigned int sizeAppPayload = static_cast<unsigned int>(message->getTotalSendPayloadSize());
     unsigned int sizePropPayload = 0;
     unsigned int sizePayload = Mqtt5Serialization::sizePublish(data, sizePropPayload) + sizeAppPayload;
     unsigned int sizeMessage = 1u + Mqtt5Serialization::sizeVarByteNumber(sizePayload) + sizePayload;
@@ -839,7 +839,7 @@ void Mqtt5Protocol::sendUnsubAck(const IStreamConnectionPtr& connection, const M
 
 void Mqtt5Protocol::sendPingReq(const IStreamConnectionPtr& connection)
 {
-    int sizeMessage = 1 + Mqtt5Serialization::sizeVarByteNumber(0);
+    constexpr int sizeMessage = 1 + Mqtt5Serialization::sizeVarByteNumber(0);
     IMessagePtr message = std::make_shared<ProtocolMessage>(0);
     char* buffer = message->addSendHeader(sizeMessage);
     Mqtt5Serialization serialization(buffer, sizeMessage, 0);

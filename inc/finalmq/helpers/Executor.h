@@ -62,11 +62,11 @@ class SYMBOLEXP Executor : public ExecutorBase
 public:
 
 private:
-    virtual void runAvailableActions() override;
-    virtual bool runOneAvailableAction() override;
+    virtual bool runAvailableActions(const FuncIsAbort& funcIsAbort = nullptr) override;
+    virtual bool runAvailableActionBatch(const FuncIsAbort& funcIsAbort = nullptr) override;
     virtual void addAction(std::function<void()> func, std::int64_t instanceId = 0) override;
 
-    inline bool runnableActionsAvailable() const;
+    inline bool areRunnableActionsAvailable() const;
 
 private:
 
@@ -94,8 +94,8 @@ class SYMBOLEXP ExecutorIgnoreOrderOfInstance : public ExecutorBase
 public:
 
 private:
-    virtual void runAvailableActions() override;
-    virtual bool runOneAvailableAction() override;
+    virtual bool runAvailableActions(const FuncIsAbort& funcIsAbort = nullptr) override;
+    virtual bool runAvailableActionBatch(const FuncIsAbort& funcIsAbort = nullptr) override;
     virtual void addAction(std::function<void()> func, std::int64_t instanceId = 0) override;
 
 private:

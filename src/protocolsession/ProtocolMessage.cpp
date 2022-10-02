@@ -31,7 +31,7 @@ namespace finalmq {
 //---------------------------------------
 
 
-ProtocolMessage::ProtocolMessage(int protocolId, ssize_t sizeHeader, ssize_t sizeTrailer)
+ProtocolMessage::ProtocolMessage(std::uint32_t protocolId, ssize_t sizeHeader, ssize_t sizeTrailer)
     : m_sizeHeader(sizeHeader)
     , m_sizeTrailer(sizeTrailer)
     , m_protocolId(protocolId)
@@ -395,7 +395,7 @@ void ProtocolMessage::addMessage(const IMessagePtr& msg)
     m_messages[msg->getProtocolId()] = msg;
 }
 
-IMessagePtr ProtocolMessage::getMessage(int protocolId) const
+IMessagePtr ProtocolMessage::getMessage(std::uint32_t protocolId) const
 {
     auto it = m_messages.find(protocolId);
     if (it != m_messages.end())

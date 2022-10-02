@@ -68,13 +68,13 @@ private:
     virtual void disconnected(const IStreamConnectionPtr& connection) override;
     virtual bool received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) override;
 
-    hybrid_ptr<IProtocolSessionCallback>    m_callback;
-    IExecutorPtr                            m_executor;
-    IExecutorPtr                            m_executorPollerThread;
-    IProtocolFactoryPtr                     m_protocolFactory;
-    std::weak_ptr<IProtocolSessionList>     m_protocolSessionList;
-    BindProperties                          m_bindProperties;
-    int                                     m_contentType = 0;
+    const hybrid_ptr<IProtocolSessionCallback>  m_callback;
+    const IExecutorPtr                          m_executor;
+    const IExecutorPtr                          m_executorPollerThread;
+    const IProtocolFactoryPtr                   m_protocolFactory;
+    const std::weak_ptr<IProtocolSessionList>   m_protocolSessionList;
+    const BindProperties                        m_bindProperties;
+    const int                                   m_contentType = 0;
 };
 
 typedef std::shared_ptr<ProtocolBind> ProtocolBindPtr;
