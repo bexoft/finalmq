@@ -19,11 +19,12 @@ namespace finalmq
         {
             while (Interlocked.Read(ref m_terminate) == 0)
             {
-                m_newActions.Wait();
-                bool repeat = true;
-                while (Interlocked.Read(ref m_terminate) == 0 && repeat)
+                bool wasAvailable = RunAvailableActionBatch(() => {
+                    return (Interlocked.Read(ref m_terminate) != 0);
+                });
+                if (!wasAvailable && (Interlocked.Read(ref m_terminate) == 0))
                 {
-                    repeat = RunOneAvailableAction();
+                    m_newActions.Wait();
                 }
             }
             // release possible other threads
@@ -41,8 +42,8 @@ namespace finalmq
             return (Interlocked.Read(ref m_terminate) != 0);
         }
 
-        public abstract void RunAvailableActions();
-        public abstract bool RunOneAvailableAction();
+        public abstract bool RunAvailableActions(DelegateIsAbort? funcIsAbort = null);
+        public abstract bool RunAvailableActionBatch(DelegateIsAbort? funcIsAbort = null);
         public abstract void AddAction(DelegateAction func, Int64 instanceId);
 
         long m_terminate = 0;    // atomic
@@ -53,31 +54,52 @@ namespace finalmq
 
     class Executor : ExecutorBase
     {
-        public override void RunAvailableActions()
+        public override bool RunAvailableActions(DelegateIsAbort? funcIsAbort = null)
         {
-            ActionEntry[] actions;
+            IList<ActionEntry> actions;
             lock (m_mutex)
             {
-                actions = m_actions.ToArray();
-                m_actions.Clear();
+                actions = m_actions;
+                m_actions = new List<ActionEntry>();
+                m_zeroIdCounter = 0;
+                m_storedIds.Clear();
+                m_runningIds.Clear();
             }
-            foreach (var entry in actions)
+
+            if (actions.Count != 0)
             {
-                foreach (var func in entry.funcs)
+                foreach (var entry in actions)
                 {
-                    func();
+                    foreach (var func in entry.funcs)
+                    {
+                        Debug.Assert(func != null);
+                        if (funcIsAbort == null || !funcIsAbort())
+                        {
+                            func();
+                        }
+                        else
+                        {
+                            return true;
+                        }
+                    }
                 }
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
 
-        public override bool RunOneAvailableAction()
+        public override bool RunAvailableActionBatch(DelegateIsAbort? funcIsAbort = null)
         {
+            bool wasAvailable = false;
             bool stillActions = false;
             IList<DelegateAction> funcs = new List<DelegateAction>();
             long instanceId = -1;
             lock (m_mutex)
             {
-                if (!RunnableActionsAvailable())
+                if (!AreRunnableActionsAvailable())
                 {
                     return false;
                 }
@@ -122,12 +144,14 @@ namespace finalmq
                                 }
                             }
                         }
-                        stillActions = RunnableActionsAvailable();
+                        wasAvailable = true;
+                        stillActions = AreRunnableActionsAvailable();
                         break;
                     }
                 }
             }
 
+            // trigger next possible thread
             if (stillActions)
             {
                 m_newActions.Set();
@@ -135,10 +159,16 @@ namespace finalmq
 
             foreach (var func in funcs)
             {
-                func();
+                if (funcIsAbort == null || !funcIsAbort())
+                {
+                    func();
+                }
+                else
+                {
+                    break;
+                }
             }
 
-            stillActions = false;
             if (instanceId > 0)
             {
                 lock (m_mutex)
@@ -154,13 +184,9 @@ namespace finalmq
                     {
                         m_storedIds.Remove(instanceId);
                     }
-                    else
-                    {
-                        stillActions = true;
-                    }
                 }
             }
-            return stillActions;
+            return wasAvailable;
         }
 
         public override void AddAction(DelegateAction func, long instanceId = 0)
@@ -176,7 +202,7 @@ namespace finalmq
                 }
                 else
                 {
-                    notify = (m_actions.Count == 0);
+                    notify = (m_zeroIdCounter == 0);
                     ++m_zeroIdCounter;
                 }
                 if ((m_actions.Count != 0) && m_actions.Last().instanceId == instanceId)
@@ -198,7 +224,7 @@ namespace finalmq
             }
         }
 
-        bool RunnableActionsAvailable()
+        bool AreRunnableActionsAvailable()
         {
             if (m_runningIds.Count() == m_storedIds.Count() && (m_zeroIdCounter == 0))
             {
@@ -227,22 +253,38 @@ namespace finalmq
 
     class ExecutorIgnoreOrderOfInstance : ExecutorBase
     {
-        public override void RunAvailableActions()
+        public override bool RunAvailableActions(DelegateIsAbort? funcIsAbort = null)
         {
-            DelegateAction[] actions;
+            IList<DelegateAction> actions;
             lock (m_mutex)
             {
-                actions = m_actions.ToArray();
-                m_actions.Clear();
+                actions = m_actions;
+                m_actions = new List<DelegateAction>();
             }
-            foreach (var action in m_actions)
+            if (actions.Count != 0)
             {
-                action();
+                foreach (var action in m_actions)
+                {
+                    if (funcIsAbort == null || !funcIsAbort())
+                    {
+                        action();
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
 
-        public override bool RunOneAvailableAction()
+        public override bool RunAvailableActionBatch(DelegateIsAbort? funcIsAbort = null)
         {
+            bool wasAvailable = false;
             bool stillActions = false;
             DelegateAction? action = null;
             lock (m_mutex)
@@ -251,8 +293,9 @@ namespace finalmq
                 {
                     action = m_actions[0];
                     m_actions.RemoveAt(0);
+                    wasAvailable = true;
+                    stillActions = (m_actions.Count != 0);
                 }
-                stillActions = (m_actions.Count != 0);
             }
             if (stillActions)
             {
@@ -260,10 +303,13 @@ namespace finalmq
             }
             if (action != null)
             {
-                action();
+                if (funcIsAbort == null || !funcIsAbort())
+                {
+                    action();
+                }
             }
 
-            return false;
+            return wasAvailable;
         }
 
         public override void AddAction(DelegateAction func, long instanceId = 0)

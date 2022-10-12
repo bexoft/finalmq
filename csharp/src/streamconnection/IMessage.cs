@@ -111,12 +111,12 @@ namespace finalmq
         void PrepareMessageToSend();
 
         // for the protocol to check which protocol created the message
-        int GetProtocolId();
+        uint ProtocolId { get; }
 
         bool WasSent();
 
         void AddMessage(IMessage msg);
-        IMessage? GetMessage(int protocolId);
+        IMessage? GetMessage(uint protocolId);
     };
 
 

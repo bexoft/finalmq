@@ -1,0 +1,918 @@
+//MIT License
+
+//Copyright (c) 2020 bexoft GmbH (mail@bexoft.de)
+
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
+
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
+
+using System.Threading;
+using System.Diagnostics;
+
+namespace finalmq 
+{
+
+
+    internal interface IProtocolSessionPrivate : IProtocolSession
+    {
+        void Connect();
+        void CreateConnection();
+        long SetConnection(IStreamConnection? connection, bool verified);
+        void SetProtocol(IProtocol protocol);
+        void SetSessionNameInternal(string sessionName);
+    }
+
+
+
+    internal class ProtocolSession : IProtocolSessionPrivate
+                                   , IProtocolCallback
+    {
+        public ProtocolSession(IProtocolSessionCallback callback, IExecutor executor, IExecutor executorPollerThread, IProtocol protocol, IProtocolSessionList protocolSessionList, BindProperties? bindProperties, int contentType)
+        {
+            m_callback = callback;
+            m_executor = executor;
+            m_executorPollerThread = executorPollerThread;
+            m_protocol = protocol;
+            m_protocolSessionList = protocolSessionList;
+            m_contentType = contentType;
+            m_bindProperties = bindProperties;
+
+            InitProtocolValues();
+        }
+        public ProtocolSession(IProtocolSessionCallback callback, IExecutor executor, IExecutor executorPollerThread, IProtocol protocol, IProtocolSessionList protocolSessionList, IStreamConnectionContainer streamConnectionContainer, string endpointStreamConnection, ConnectProperties connectProperties, int contentType)
+        {
+            m_callback = callback;
+            m_executor = executor;
+            m_executorPollerThread = executorPollerThread;
+            m_protocol = protocol;
+            m_protocolSessionList = protocolSessionList;
+            m_contentType = contentType;
+            m_streamConnectionContainer = streamConnectionContainer;
+            m_endpointStreamConnection = endpointStreamConnection;
+            m_connectionProperties = connectProperties;
+
+            InitProtocolValues();
+        }
+        public ProtocolSession(IProtocolSessionCallback callback, IExecutor executor, IExecutor executorPollerThread, IProtocolSessionList protocolSessionList, IStreamConnectionContainer streamConnectionContainer)
+        {
+            m_callback = callback;
+            m_executor = executor;
+            m_executorPollerThread = executorPollerThread;
+            m_protocolSessionList = protocolSessionList;
+            m_streamConnectionContainer = streamConnectionContainer;
+        }
+
+        // IProtocolSession
+        public IMessage CreateMessage()
+        {
+            Thread.MemoryBarrier();
+            if (m_protocolSet && m_messageFactory != null)
+            {
+                return m_messageFactory();
+            }
+            return new ProtocolMessage(0);
+        }
+        public bool SendMessage(IMessage msg, bool isReply = false)
+        {
+            bool ok = false;
+            bool doDisconnect = false;
+            // lock whole function, because the protocol can be changed by setProtocol (lock also over sendMessage, because the protocol could increment a sequential message counter and the order of the counter shall be like the messages that are sent.)
+            lock (m_mutex)
+            {
+                if (!isReply && m_protocolFlagIsSendRequestByPoll)
+                {
+                    if (m_pollWaiting)
+                    {
+                        Debug.Assert(m_pollReply == null);
+                        IProtocol? protocol = m_protocol;
+                        Debug.Assert(protocol != null);
+                        if (m_protocolFlagIsMultiConnectionSession)
+                        {
+                            GetProtocolFromConnectionId(ref protocol, m_pollConnectionId);
+                        }
+                        if (protocol != null)
+                        {
+                            ++m_pollCounter;
+                            IList<IMessage> messages = new List<IMessage>();
+                            messages.Add(msg);
+                            m_pollReply = protocol.PollReply(messages);
+                            ok = SendMessage(m_pollReply, protocol);
+                            if (ok)
+                            {
+                                m_pollReply = null;
+                            }
+                            if (m_pollCountMax >= 0 && m_pollCounter >= m_pollCountMax)
+                            {
+                                PollRelease();
+                            }
+                        }
+                        else
+                        {
+                            m_pollWaiting = false;
+                            m_pollConnectionId = 0;
+//todo                            m_pollTimer.stop();
+                            m_pollMessages.Add(msg);
+                        }
+                        ok = true;
+                    }
+                    else
+                    {
+                        m_pollMessages.Add(msg);
+                        ok = true;
+                    }
+                    if (m_pollMaxRequests != -1 && m_pollMessages.Count >= m_pollMaxRequests)
+                    {
+                        doDisconnect = true;
+                    }
+                }
+                else
+                {
+                    if (m_protocol == null || ((m_endpointStreamConnection == null || m_endpointStreamConnection.Length == 0) && !m_incomingConnection))
+                    {
+                        m_messagesBuffered.Add(msg);
+                        return true;
+                    }
+
+                    IProtocol? protocol = m_protocol;
+                    if (m_protocolFlagIsMultiConnectionSession)
+                    {
+                        //todo                        Variant & echoData = msg->getEchoData();
+                        long connectionId = 0;  //todo echoData.getDataValue<std::int64_t>(FMQ_CONNECTION_ID);
+                        GetProtocolFromConnectionId(ref protocol, connectionId);
+                    }
+
+                    ok = SendMessage(msg, protocol);
+                }
+            }
+            if (doDisconnect)
+            {
+                Disconnect();
+            }
+            return ok;
+        }
+        public long SessionId
+        {
+            get
+            {
+                return m_sessionId;
+            }
+        }
+        public ConnectionData ConnectionData
+        {
+            get
+            {
+                IStreamConnection? connection = null;
+                lock (m_mutex)
+                {
+                    if (m_protocol != null)
+                    {
+                        connection = m_protocol.Connection;
+                    }
+                    if (m_protocolFlagIsMultiConnectionSession &&
+                        ((connection == null) || connection.ConnectionData.ConnectionState != ConnectionState.CONNECTIONSTATE_CONNECTED))
+                    {
+                        foreach (var entry in m_multiProtocols)
+                        {
+                            IStreamConnection connIter = entry.Value.Connection;
+                            if (connection == null)
+                            {
+                                connection = connIter;
+                            }
+                            if (connIter != null && connIter.ConnectionData.ConnectionState == ConnectionState.CONNECTIONSTATE_CONNECTED)
+                            {
+                                connection = connIter;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (connection != null)
+                {
+                    return connection.ConnectionData;
+                }
+                ConnectionData defaultConnectionData = new ConnectionData();
+                defaultConnectionData.ConnectionState = ConnectionState.CONNECTIONSTATE_DISCONNECTED;
+                return defaultConnectionData;
+            }
+        }
+        public int ContentType 
+        {
+            get
+            {
+                return m_contentType;
+            }
+        }
+        public bool DoesSupportMetainfo()
+        {
+            return m_protocolFlagSupportMetainfo;
+        }
+        public bool NeedsReply()
+        {
+            return m_protocolFlagNeedsReply;
+        }
+        public bool IsMultiConnectionSession()
+        {
+            return m_protocolFlagIsMultiConnectionSession;
+        }
+        public bool IsSendRequestByPoll()
+        {
+            return m_protocolFlagIsSendRequestByPoll;
+        }
+        public bool DoesSupportFileTransfer()
+        {
+            return m_protocolFlagSupportFileTransfer;
+        }
+        public void Disconnect()
+        {
+            IProtocolSessionList? protocolSessionList = null;
+            IList<IProtocol>? protocols = null;
+            lock (m_mutex)
+            {
+                protocolSessionList = m_protocolSessionList;
+                protocols = new List<IProtocol>();
+                if (m_protocol != null)
+                {
+                    protocols.Add(m_protocol);
+                }
+                foreach (var entry in m_multiProtocols)
+                {
+                    if (entry.Value != null)
+                    {
+                        protocols.Add(entry.Value);
+                    }
+                }
+            }
+
+            foreach (var protocol in protocols)
+            {
+                protocol.Disconnect();
+            }
+
+            if (protocolSessionList != null)
+            {
+                protocolSessionList.RemoveProtocolSession(m_sessionId);
+            }
+
+            Debug.Assert(m_executorPollerThread != null);
+
+            m_executorPollerThread.AddAction(() => {
+                Disconnected();
+            }, m_instanceId);
+        }
+        public void Connect(string endpoint, ConnectProperties? connectionProperties = null, int contentType = 0)
+        {
+            int ixEndpoint = endpoint.LastIndexOf(':');
+            if (ixEndpoint == -1)
+            {
+                throw new System.ArgumentException("Wrong endpoint format: " + endpoint);
+            }
+            string protocolName = endpoint.Substring(ixEndpoint + 1, endpoint.Length - (ixEndpoint + 1));
+            IProtocolFactory protocolFactory = ProtocolRegistry.Instance.GetProtocolFactory(protocolName);
+
+            IProtocol? protocol = protocolFactory.CreateProtocol(/* todo connectionProperties.ProtocolData */);
+            Debug.Assert(protocol != null);
+
+
+            Debug.Assert(m_protocol == null);
+            Debug.Assert(m_streamConnectionContainer != null);
+
+            IStreamConnection connection = m_streamConnectionContainer.CreateConnection(protocol);
+
+            lock (m_mutex)
+            {
+                m_endpointStreamConnection = endpoint.Substring(0, ixEndpoint);
+                m_connectionProperties = connectionProperties;
+                m_contentType = contentType;
+                m_protocol = protocol;
+                m_connectionId = connection.ConnectionId;
+                InitProtocolValues();
+                m_protocol.SetCallback(this);
+                m_protocol.SetConnection(connection);
+                SendBufferedMessages();
+            }
+
+            m_streamConnectionContainer.Connect(m_endpointStreamConnection, connection, m_connectionProperties);
+        }
+        public IExecutor Executor
+        {
+            get
+            {
+                return (m_executor != null) ? m_executor : m_executorPollerThread;
+            }
+        }
+        public void Subscribe(IList<string> subscribtions)
+        {
+            IProtocol? protocol = null;
+            lock (m_mutex)
+            {
+                if (m_protocol != null)
+                {
+                    protocol = m_protocol;
+                }
+            }
+            if (protocol != null)
+            {
+                protocol.Subscribe(subscribtions);
+            }
+        }
+
+        // IProtocolSessionPrivate
+        public void Connect()
+        {
+            Debug.Assert(m_streamConnectionContainer != null);
+            Debug.Assert(m_protocol != null);
+            Debug.Assert(m_endpointStreamConnection != null);
+            IStreamConnection connection = m_streamConnectionContainer.CreateConnection(m_protocol);
+            SetConnection(connection, true);
+            m_streamConnectionContainer.Connect(m_endpointStreamConnection, connection, m_connectionProperties);
+        }
+        public void CreateConnection()
+        {
+            Debug.Assert(m_streamConnectionContainer != null);
+            IStreamConnection? connection = null;
+            if (m_protocol != null)
+            {
+                connection = m_streamConnectionContainer.CreateConnection(m_protocol);
+            }
+            SetConnection(connection, true);
+        }
+        public long SetConnection(IStreamConnection? connection, bool verified)
+        {
+            return -1;
+        }
+        public void SetProtocol(IProtocol protocol)
+        {
+            long connectionId = 0;
+            IStreamConnection connection = protocol.Connection;
+            if (connection != null)
+            {
+                connectionId = connection.ConnectionId;
+            }
+
+            lock (m_mutex)
+            {
+                if (m_protocolFlagIsMultiConnectionSession)
+                {
+                    if (connectionId != 0)
+                    {
+                        if (!m_multiProtocols.ContainsKey(connectionId))
+                        {
+                            CleanupMultiConnection();
+                            m_multiProtocols[connectionId] = protocol;
+                        }
+                    }
+                }
+                else
+                {
+                    Debug.Assert(m_protocol != null);
+                    protocol.MoveOldProtocolState(m_protocol);
+                    m_connectionId = connectionId;
+                    m_protocol = protocol;
+                }
+                protocol.SetCallback(this);
+            }
+        }
+        public void SetSessionNameInternal(string sessionName)
+        {
+            IProtocolSessionList? list = null;
+            lock (m_mutex)
+            {
+                list = m_protocolSessionList;
+            }
+            if (list != null)
+            {
+                bool setSuccessful = list.SetSessionName(m_sessionId, sessionName);
+                if (setSuccessful)
+                {
+                    lock (m_mutex)
+                    {
+                        m_verified = true;
+                        m_sessionName = sessionName;
+                    }
+                    Connected();    // we are in the poller loop  thread
+                }
+            }
+        }
+
+        // IProtocolCallback
+        public void Connected()
+        {
+            bool trigger = false;
+            lock (m_mutex)
+            {
+                if (!m_triggerConnected)
+                {
+                    trigger = true;
+                    m_triggerConnected = true;
+                }
+            }
+
+            if (trigger)
+            {
+                if (m_executor != null)
+                {
+                    m_executor.AddAction(() => {
+                        m_callback.Connected(this);
+                    }, m_instanceId);
+                }
+                else
+                {
+                    m_callback.Connected(this);
+                }
+            }
+        }
+        public void Disconnected()
+        {
+            IProtocolSessionList? protocolSessionList = null;
+            bool doDisconnected = false;
+            lock (m_mutex)
+            {
+                PollRelease();
+
+                protocolSessionList = m_protocolSessionList;
+                doDisconnected = (!m_triggerDisconnected) && (m_triggerConnected || ((m_endpointStreamConnection != null) && (m_endpointStreamConnection.Length > 0)));
+                m_triggerDisconnected = true;
+            }
+
+            if (doDisconnected)
+            {
+                if (m_executor != null)
+                {
+                    m_executor.AddAction(() => {
+                        m_callback.Disconnected(this);
+                    }, m_instanceId);
+                }
+                else
+                {
+                     m_callback.Disconnected(this);
+                }
+            }
+
+            if (protocolSessionList != null)
+            {
+                protocolSessionList.RemoveProtocolSession(m_sessionId);
+            }
+        }
+        public void DisconnectedVirtualSession(string virtualSessionId)
+        {
+            if (m_executor != null)
+            {
+                m_executor.AddAction(() => {
+                    m_callback.DisconnectedVirtualSession(this, virtualSessionId);
+                }, m_instanceId);
+            }
+            else
+            {
+                m_callback.DisconnectedVirtualSession(this, virtualSessionId);
+            }
+        }
+        public void Received(IMessage message, long connectionId)
+        {
+            if (m_incomingConnection)
+            {
+//todo                m_activityTimer.setTimeout(m_activityTimeout);
+            }
+            bool writeChannelIdIntoEchoData = false;
+            if (m_protocolFlagIsMultiConnectionSession && connectionId != 0)
+            {
+                writeChannelIdIntoEchoData = (connectionId != m_connectionId);
+            }
+
+            if (writeChannelIdIntoEchoData)
+            {
+                //todo
+                //Variant & echoData = message->getEchoData();
+                //if (echoData.getType() == VARTYPE_NONE)
+                //{
+                //    echoData = VariantStruct{ { FMQ_CONNECTION_ID, connectionId} };
+                //}
+                //else
+                //{
+                //    echoData.add(FMQ_CONNECTION_ID, connectionId);
+                //}
+            }
+
+            if (m_executor != null)
+            {
+                m_executor.AddAction(() => {
+                    m_callback.Received(this, message);
+                }, m_instanceId);
+            }
+            else
+            {
+                m_callback.Received(this, message);
+            }
+        }
+        public void SocketConnected()
+        {
+            if (m_executor != null)
+            {
+                m_executor.AddAction(() => {
+                    m_callback.SocketConnected(this);
+                }, m_instanceId);
+            }
+            else
+            {
+                m_callback.SocketConnected(this);
+            }
+        }
+        public void SocketDisconnected()
+        {
+            if (m_executor != null)
+            {
+                m_executor.AddAction(() => {
+                    m_callback.SocketDisconnected(this);
+                }, m_instanceId);
+            }
+            else
+            {
+                m_callback.SocketDisconnected(this);
+            }
+        }
+        public void Reconnect()
+        {
+            Debug.Assert(m_endpointStreamConnection != null);
+            Debug.Assert(m_streamConnectionContainer != null);
+            Debug.Assert(m_protocol != null);
+            IStreamConnection connection = m_streamConnectionContainer.CreateConnection(m_protocol);
+            IProtocol? protocol = null;
+            lock (m_mutex)
+            {
+                protocol = m_protocol;
+            }
+            m_connectionId = connection.ConnectionId;
+            protocol.SetConnection(connection);
+            m_streamConnectionContainer.Connect(m_endpointStreamConnection, connection, m_connectionProperties);
+        }
+        public bool FindSessionByName(string sessionName, IProtocol protocol)
+        {
+            IProtocolSessionList? list = null;
+            lock (m_mutex)
+            {
+                list = m_protocolSessionList;
+
+            }
+            if (list != null)
+            {
+                IProtocolSessionPrivate? session = list.FindSessionByName(sessionName);
+                if (session != null)
+                {
+                    if (session != this)
+                    {
+                        if (m_verified)
+                        {
+                            session.SetProtocol(protocol);
+                        }
+                        else
+                        {
+                            Disconnected(); // we are in the poller loop  thread
+                            Debug.Assert(m_protocol != null);
+                            session.SetProtocol(m_protocol);
+                            m_connectionId = 0;
+                            m_protocol = null;
+                            return true;
+                        }
+                    }
+                    return true;
+                }
+            }
+            return false;
+        }
+        public void SetSessionName(string sessionName, IProtocol protocol, IStreamConnection connection)
+        {
+            IProtocolSessionList? list = null;
+            lock (m_mutex)
+            {
+                list = m_protocolSessionList;
+            }
+            if (list != null)
+            {
+                bool setSuccessful = list.SetSessionName(m_sessionId, sessionName);
+                if (setSuccessful)
+                {
+                    lock (m_mutex)
+                    {
+                        m_verified = true;
+                        m_sessionName = sessionName;
+                    }
+                    Connected();    // we are in the poller loop  thread
+                }
+                else
+                {
+                    IProtocolSessionPrivate protocolSession = new ProtocolSession(m_callback, m_executor, m_executorPollerThread, protocol, m_protocolSessionList, m_bindProperties, m_contentType);
+                    protocolSession.SetConnection(connection, false);
+                    protocolSession.SetSessionNameInternal(sessionName);
+                }
+            }
+        }
+        public void PollRequest(long connectionId, int timeout, int pollCountMax)
+        {
+            if (m_incomingConnection)
+            {
+//todo                m_activityTimer.setTimeout(m_activityTimeout);
+            }
+            lock (m_mutex)
+            {
+                PollRelease();
+                m_pollCounter = 0;
+                m_pollCountMax = pollCountMax;
+                Debug.Assert(!m_pollWaiting);
+                if (m_pollReply != null)
+                {
+                    IProtocol? protocol = m_protocol;
+                    if (m_protocolFlagIsMultiConnectionSession)
+                    {
+                        GetProtocolFromConnectionId(ref protocol, connectionId);
+                    }
+                    m_pollCounter++;
+                    bool ok = SendMessage(m_pollReply, protocol);
+                    if (ok)
+                    {
+                        m_pollReply = null;
+                    }
+                }
+                else if (m_pollMessages.Count > 0)
+                {
+                    IProtocol? protocol = m_protocol;
+                    if (m_protocolFlagIsMultiConnectionSession)
+                    {
+                        GetProtocolFromConnectionId(ref protocol, connectionId);
+                    }
+                    IList<IMessage> messages = new List<IMessage>();
+                    if (protocol != null)
+                    {
+                        messages = m_pollMessages;
+                        m_pollMessages = new List<IMessage>();
+                        m_pollCounter++;
+                        m_pollReply = protocol.PollReply(messages);
+                        bool ok = SendMessage(m_pollReply, protocol);
+                        if (ok)
+                        {
+                            m_pollReply = null;
+                        }
+                    }
+                }
+                m_pollWaiting = true;
+                m_pollConnectionId = connectionId;
+                if (timeout > 0)
+                {
+//todo                    m_pollTimer.setTimeout(timeout);
+                }
+
+                if (timeout == 0 || (m_pollCountMax >= 0 && m_pollCounter >= m_pollCountMax))
+                {
+                    PollRelease();
+                }
+            }
+        }
+        public void Activity()
+        {
+            if (m_incomingConnection)
+            {
+//todo                m_activityTimer.setTimeout(m_activityTimeout);
+            }
+        }
+        public void SetActivityTimeout(int timeout)
+        {
+            m_activityTimeout = timeout;
+        }
+        public void SetPollMaxRequests(int maxRequests)
+        {
+            m_pollMaxRequests = maxRequests;
+        }
+        public void DisconnectedMultiConnection(IStreamConnection connection)
+        {
+            lock (m_mutex)
+            {
+                long connectionId = connection.ConnectionId;
+                if (m_pollWaiting && m_pollConnectionId == connectionId)
+                {
+                    m_pollWaiting = false;
+                    m_pollConnectionId = 0;
+//todo                    m_pollTimer.Stop();
+                }
+            }
+
+            if (!m_verified)
+            {
+                Disconnected();
+            }
+        }
+
+        private IMessage ConvertMessageToProtocol(IMessage msg)
+        {
+            IMessage? message = msg;
+            if (message.ProtocolId != m_protocolId ||
+                (!m_protocolFlagMessagesResendable && message.WasSent()) ||
+                (message.GetTotalSendPayloadSize() == 0 && msg.GetReceivePayload().Length > 0))
+            {
+                message = null;
+                if (m_protocolFlagMessagesResendable)
+                {
+                    message = msg.GetMessage(m_protocolId);
+                }
+                if (message == null)
+                {
+                    message = CreateMessage();
+//todo                    message.GetAllMetainfo() = msg.GetAllMetainfo();
+                    int sizePayload = msg.GetTotalSendPayloadSize();
+                    if (sizePayload > 0)
+                    {
+                        BufferRef payload = message.AddSendPayload(sizePayload);
+                        IList<BufferRef> payloads = msg.GetAllSendPayloads();
+                        int offset = 0;
+                        foreach (BufferRef bufferRef in payloads)
+                        {
+                            Debug.Assert(offset + bufferRef.Length <= sizePayload);
+                            bufferRef.Buffer.CopyTo(payload.Buffer, offset);
+                            offset += bufferRef.Length;
+                        }
+                        Debug.Assert(offset == sizePayload);
+                    }
+                    else
+                    {
+                        BufferRef receivePayload = msg.GetReceivePayload();
+                        BufferRef payload = message.AddSendPayload(receivePayload.Length);
+                        receivePayload.Buffer.CopyTo(payload.Buffer, 0);
+                    }
+                    if (m_protocolFlagMessagesResendable)
+                    {
+                        msg.AddMessage(message);
+                    }
+                }
+            }
+
+            return message;
+        }
+        private void InitProtocolValues()
+        {
+            IProtocol? protocol = m_protocol;
+            Debug.Assert(protocol != null);
+            m_protocolId = protocol.ProtocolId;
+            m_protocolFlagMessagesResendable = protocol.AreMessagesResendable();
+            m_protocolFlagSupportMetainfo = protocol.DoesSupportMetainfo();
+            m_protocolFlagNeedsReply = protocol.NeedsReply();
+            m_protocolFlagIsMultiConnectionSession = protocol.IsMultiConnectionSession();
+            m_protocolFlagIsSendRequestByPoll = protocol.IsSendRequestByPoll();
+            m_protocolFlagSupportFileTransfer = protocol.DoesSupportFileTransfer();
+            m_messageFactory = protocol.MessageFactory;
+
+            Thread.MemoryBarrier();
+            m_protocolSet = true;
+            Thread.MemoryBarrier();
+        }
+        private void SendBufferedMessages()
+        {
+            foreach (var message in m_messagesBuffered)
+            {
+                SendMessage(message, m_protocol);
+            }
+            m_messagesBuffered.Clear();
+        }
+        private void AddSessionToList(bool verified)
+        {
+            if (m_sessionId == 0)
+            {
+                IProtocolSessionList? protocolSessionList = null;
+                lock (m_mutex)
+                {
+                    m_verified = verified;
+                    protocolSessionList = m_protocolSessionList;
+                }
+                if (protocolSessionList != null)
+                {
+                    m_sessionId = protocolSessionList.AddProtocolSession(this, verified);
+                    m_instanceId = m_sessionId | INSTANCEID_PREFIX;
+                }
+            }
+        }
+        private void GetProtocolFromConnectionId(ref IProtocol? protocol, long connectionId)
+        {
+            Debug.Assert(protocol != null);
+            Debug.Assert(protocol.Connection != null);
+            if (connectionId != 0 && connectionId != protocol.Connection.ConnectionId)
+            {
+                protocol = null;
+                m_multiProtocols.TryGetValue(connectionId, out protocol);
+            }
+        }
+        private bool SendMessage(IMessage message, IProtocol? protocol)
+        {
+            // the mutex must be locked before calling sendMessage, lock also over sendMessage, because the protocol could increment a sequential message counter and the order of the counter shall be like the messages that are sent.
+            bool ok = false;
+            if (protocol != null)
+            {
+                IMessage messageProtocol = ConvertMessageToProtocol(message);
+                ok = protocol.SendMessage(messageProtocol);
+            }
+            return ok;
+        }
+        private void CleanupMultiConnection()
+        {
+            IList<long> connectionIdsToRemove = new List<long>();
+            foreach (var protocol in m_multiProtocols)
+            {
+                IStreamConnection connection = protocol.Value.Connection;
+                if (connection == null || connection.ConnectionData.Stream == null)
+                {
+                    connectionIdsToRemove.Add(protocol.Key);
+                }
+            }
+            foreach (var connectionId in connectionIdsToRemove)
+            {
+                m_multiProtocols.Remove(connectionId);
+            }
+        }
+        private void PollRelease()
+        {
+            if (m_pollWaiting)
+            {
+                Debug.Assert(m_pollReply == null);
+                IProtocol? protocol = m_protocol;
+                if (m_protocolFlagIsMultiConnectionSession)
+                {
+                    GetProtocolFromConnectionId(ref protocol, m_pollConnectionId);
+                }
+                if (protocol != null)
+                {
+                    IMessage reply = protocol.PollReply();
+//todo                    Variant & controlData = reply->getControlData();
+//todo                    controlData.add("fmq_poll_stop", true);
+                    SendMessage(reply, protocol);
+                }
+                m_pollWaiting = false;
+                m_pollConnectionId = 0;
+//todo                m_pollTimer.stop();
+            }
+        }
+
+        static readonly long INSTANCEID_PREFIX = 0x0100000000000000;
+//todo        static readonly string FMQ_CONNECTION_ID = "fmq_echo_connid";
+
+
+        readonly IProtocolSessionCallback               m_callback;
+        readonly IExecutor                              m_executor;
+        readonly IExecutor                              m_executorPollerThread;
+        IProtocol?                                      m_protocol = null;
+        long                                            m_connectionId;
+        readonly IDictionary<long, IProtocol>           m_multiProtocols = new Dictionary<long, IProtocol>();
+
+        long                                            m_sessionId;
+        long                                            m_instanceId;
+        readonly IProtocolSessionList                   m_protocolSessionList;
+        int                                             m_contentType;
+        uint                                            m_protocolId;
+        bool                                            m_protocolFlagMessagesResendable = false;
+        bool                                            m_protocolFlagSupportMetainfo = false;
+        bool                                            m_protocolFlagNeedsReply = false;
+        bool                                            m_protocolFlagIsMultiConnectionSession = false;
+        bool                                            m_protocolFlagIsSendRequestByPoll = false;
+        bool                                            m_protocolFlagSupportFileTransfer = false;
+        FuncCreateMessage?                              m_messageFactory = null;
+        bool                                            m_protocolSet = false;   // atomic
+        bool                                            m_triggerConnected = false;
+        bool                                            m_triggerDisconnected = false;
+        bool                                            m_incomingConnection = false;
+
+        IStreamConnectionContainer?                     m_streamConnectionContainer = null;
+        string?                                         m_endpointStreamConnection = null;
+
+        BindProperties?                                 m_bindProperties = null;
+        ConnectProperties?                              m_connectionProperties = null;
+
+        IList<IMessage>                                 m_messagesBuffered = new List<IMessage>();
+
+        IList<IMessage>                                 m_pollMessages = new List<IMessage>();
+        int                                             m_pollMaxRequests = 10000;
+        IMessage?                                       m_pollReply = null;
+        bool                                            m_pollWaiting = false;
+        long                                            m_pollConnectionId;
+//        PollingTimer                                    m_pollTimer;
+        int                                             m_pollCountMax;
+        int                                             m_pollCounter;
+
+        int                                             m_activityTimeout = -1;
+//        PollingTimer                                    m_activityTimer;
+
+        bool                                            m_verified = false;
+        string                                          m_sessionName = "";
+
+        readonly object                                 m_mutex = new object();
+    }
+
+}   // namespace finalmq

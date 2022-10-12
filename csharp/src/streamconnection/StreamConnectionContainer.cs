@@ -67,7 +67,10 @@ namespace finalmq {
 
         public void Dispose()
         {
-            Dispose(true);
+            lock (m_mutex)
+            {
+                Dispose(true);
+            }
             GC.SuppressFinalize(this);
         }
 
@@ -129,6 +132,10 @@ namespace finalmq {
             BindData? bindData = null;
             lock (m_mutex)
             {
+                if (m_disposed)
+                {
+                    throw new ObjectDisposedException(GetType().FullName);
+                }
                 if (!m_endpoint2binds.ContainsKey(endpoint))
                 {
                     listener = new TcpListener(address, connectionData.Port);
@@ -200,6 +207,10 @@ namespace finalmq {
             IStreamConnectionPrivate connection = new StreamConnection(connectionData, stream, callback, this);
             lock (m_mutex)
             {
+                if (m_disposed)
+                {
+                    throw new ObjectDisposedException(GetType().FullName);
+                }
                 m_connectionId2Connection[connectionId] = connection;
             }
             return connection;
@@ -270,6 +281,10 @@ namespace finalmq {
 
             lock (m_mutex)
             {
+                if (m_disposed)
+                {
+                    throw new ObjectDisposedException(GetType().FullName);
+                }
                 m_connectionId2Conns[connectionData.ConnectionId] = new ConnData(tcpClient);
             }
 
@@ -344,6 +359,10 @@ namespace finalmq {
             IList<IStreamConnection> connections = new List<IStreamConnection>();
             lock (m_mutex)
             {
+                if (m_disposed)
+                {
+                    throw new ObjectDisposedException(GetType().FullName);
+                }
                 foreach (var entry in m_connectionId2Connection)
                 {
                     connections.Add(entry.Value);
@@ -356,6 +375,10 @@ namespace finalmq {
         {
             lock (m_mutex)
             {
+                if (m_disposed)
+                {
+                    throw new ObjectDisposedException(GetType().FullName);
+                }
                 IStreamConnectionPrivate? connection = null;
                 m_connectionId2Connection.TryGetValue(connectionId, out connection);
                 if (connection != null)
@@ -371,6 +394,10 @@ namespace finalmq {
             IStreamConnectionPrivate? connection = null;
             lock (m_mutex)
             {
+                if (m_disposed)
+                {
+                    throw new ObjectDisposedException(GetType().FullName);
+                }
                 m_connectionId2Connection.TryGetValue(connectionId, out connection);
             }
             return connection;
@@ -389,15 +416,16 @@ namespace finalmq {
         {
             lock (m_mutex)
             {
+                if (m_disposed)
+                {
+                    throw new ObjectDisposedException(GetType().FullName);
+                }
                 BindData? bindData = null;
                 m_endpoint2binds.TryGetValue(endpoint, out bindData);
                 if (bindData != null)
                 {
                     bindData.TcpListener.Stop();
-                    lock (m_mutex)
-                    {
-                        m_endpoint2binds.Remove(endpoint);
-                    }
+                    m_endpoint2binds.Remove(endpoint);
                 }
             }
         }
@@ -407,9 +435,12 @@ namespace finalmq {
             IList<IStreamConnectionPrivate> connections = new List<IStreamConnectionPrivate>();
             lock (m_mutex)
             {
-                foreach (var entry in m_connectionId2Connection)
+                if (!m_disposed)
                 {
-                    connections.Add(entry.Value);
+                    foreach (var entry in m_connectionId2Connection)
+                    {
+                        connections.Add(entry.Value);
+                    }
                 }
             }
 

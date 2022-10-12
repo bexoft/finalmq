@@ -37,7 +37,7 @@ namespace finalmq
         bool IsSendRequestByPoll();
         bool DoesSupportFileTransfer();
         void Disconnect();
-        bool Connect(string endpoint, ConnectProperties connectionProperties = null, int contentType = 0);
+        void Connect(string endpoint, ConnectProperties? connectionProperties = null, int contentType = 0);
         IExecutor Executor { get; }
         void Subscribe(IList<string> subscribtions);
     }

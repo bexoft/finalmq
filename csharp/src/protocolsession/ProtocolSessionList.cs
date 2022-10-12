@@ -24,18 +24,13 @@
 namespace finalmq
 {
 
-    interface IProtocolSessionPrivate : IProtocolSession
-    {
-
-    }
-
     internal interface IProtocolSessionList
     {
-        long AddProtocolSession(IProtocolSessionPrivate ProtocolSession, bool verified);
+        long AddProtocolSession(IProtocolSessionPrivate protocolSession, bool verified);
         void RemoveProtocolSession(long sessionId);
         IList<IProtocolSessionPrivate> GetAllSessions();
         IProtocolSession GetSession(long sessionId);
-        IProtocolSessionPrivate FindSessionByName(string sessionName);
+        IProtocolSessionPrivate? FindSessionByName(string sessionName);
         bool SetSessionName(long sessionId, string sessionName);
     }
 
@@ -91,7 +86,7 @@ namespace finalmq
             }
             throw new System.Collections.Generic.KeyNotFoundException("Session ID " + sessionId + " not found");
         }
-        public IProtocolSessionPrivate FindSessionByName(string sessionName)
+        public IProtocolSessionPrivate? FindSessionByName(string sessionName)
         {
             lock (m_mutex)
             {
@@ -103,7 +98,7 @@ namespace finalmq
                     }
                 }
             }
-            throw new System.Collections.Generic.KeyNotFoundException("Session name " + sessionName + " not found");
+            return null;
         }
 
         public bool SetSessionName(long sessionId, string sessionName)

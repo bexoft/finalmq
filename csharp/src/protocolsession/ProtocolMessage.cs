@@ -28,7 +28,7 @@ namespace finalmq {
 
     public class ProtocolMessage : IMessage
     {
-        public ProtocolMessage(int protocolId, int sizeHeader = 0, int sizeTrailer = 0)
+        public ProtocolMessage(uint protocolId, int sizeHeader = 0, int sizeTrailer = 0)
         {
             m_sizeHeader = sizeHeader;
             m_sizeTrailer = sizeTrailer;
@@ -356,9 +356,9 @@ namespace finalmq {
         }
 
         // for the protocol to check if which protocol created the message
-        public int GetProtocolId()
+        public uint ProtocolId 
         {
-            return m_protocolId;
+            get => m_protocolId;
         }
         public bool WasSent()
         {
@@ -369,11 +369,11 @@ namespace finalmq {
         {
             if (m_messages == null)
             {
-                m_messages = new Dictionary<int, IMessage>();
+                m_messages = new Dictionary<uint, IMessage>();
             }
-            m_messages[msg.GetProtocolId()] = msg;
+            m_messages[msg.ProtocolId] = msg;
         }
-        public IMessage? GetMessage(int protocolId)
+        public IMessage? GetMessage(uint protocolId)
         {
             if (m_messages == null)
             {
@@ -405,9 +405,9 @@ namespace finalmq {
         int m_sizeTrailer = 0;
 
         bool m_preparedToSend = false;
-        readonly int m_protocolId = 0;
+        readonly uint m_protocolId = 0;
 
-        IDictionary<int, IMessage>? m_messages = null;
+        IDictionary<uint, IMessage>? m_messages = null;
     }
 
 
