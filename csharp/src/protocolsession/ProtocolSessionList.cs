@@ -26,7 +26,8 @@ namespace finalmq
 
     internal interface IProtocolSessionList
     {
-        long AddProtocolSession(IProtocolSessionPrivate protocolSession, bool verified);
+        long GetNextSessionId();
+        void AddProtocolSession(IProtocolSessionPrivate protocolSession, long sessionId, bool verified);
         void RemoveProtocolSession(long sessionId);
         IList<IProtocolSessionPrivate> GetAllSessions();
         IProtocolSession GetSession(long sessionId);
@@ -40,15 +41,16 @@ namespace finalmq
         {
         }
 
-        public long AddProtocolSession(IProtocolSessionPrivate protocolSession, bool verified)
+        public long GetNextSessionId()
         {
-            long sessionId = 0;
+            return Interlocked.Increment(ref m_nextSessionId);
+        }
+        public void AddProtocolSession(IProtocolSessionPrivate protocolSession, long sessionId, bool verified)
+        {
             lock (m_mutex)
             {
-                sessionId = Interlocked.Increment(ref m_nextSessionId);
                 m_connectionId2ProtocolSession[sessionId] = new SessionData(protocolSession, verified, "");
             }
-            return sessionId;
         }
         public void RemoveProtocolSession(long sessionId)
         {

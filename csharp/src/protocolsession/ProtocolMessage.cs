@@ -87,8 +87,8 @@ namespace finalmq {
             {
                 // remove the trailer of the last payload
                 BufferRef lastRef = m_sendBufferRefs.Last<BufferRef>();
+                Debug.Assert(lastRef.Length >= m_sizeTrailer);
                 lastRef.Length -= m_sizeTrailer;
-                Debug.Assert(lastRef.Length >= 0);
                 if (lastRef.Length == 0)
                 {
                     m_sendBufferRefs.RemoveAt(m_sendBufferRefs.Count - 1);
