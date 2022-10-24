@@ -188,13 +188,16 @@ int StreamConnectionContainer::bind(const std::string& endpoint, hybrid_ptr<IStr
 
         std::unique_lock<std::mutex> locker(m_mutex);
 
-        err = -1;
         auto it = findBindByEndpoint(endpoint);
         if (it == m_sd2binds.end())
         {
             assert(m_poller);
             m_sd2binds.emplace(sd->getDescriptor(), BindData{connectionData, socket, callbackDefault});
             m_poller->addSocketEnableRead(sd);
+        }
+        else
+        {
+            err = -1;
         }
         locker.unlock();
     }
