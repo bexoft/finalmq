@@ -41,11 +41,10 @@ namespace finalmq
     internal class ProtocolSession : IProtocolSessionPrivate
                                    , IProtocolCallback
     {
-        public ProtocolSession(IProtocolSessionCallback callback, IExecutor executor, IExecutor executorPollerThread, IProtocol protocol, IProtocolSessionList protocolSessionList, BindProperties? bindProperties, int contentType)
+        public ProtocolSession(IProtocolSessionCallback callback, IExecutor? executor, IProtocol protocol, IProtocolSessionList protocolSessionList, BindProperties? bindProperties, int contentType)
         {
             m_callback = callback;
             m_executor = executor;
-            m_executorPollerThread = executorPollerThread;
             m_protocol = protocol;
             m_protocolSessionList = protocolSessionList;
             m_sessionId = protocolSessionList.GetNextSessionId();
@@ -54,11 +53,10 @@ namespace finalmq
             m_incomingConnection = true;
             m_bindProperties = bindProperties;
         }
-        public ProtocolSession(IProtocolSessionCallback callback, IExecutor executor, IExecutor executorPollerThread, IProtocol protocol, IProtocolSessionList protocolSessionList, IStreamConnectionContainer streamConnectionContainer, string endpointStreamConnection, ConnectProperties connectProperties, int contentType)
+        public ProtocolSession(IProtocolSessionCallback callback, IExecutor? executor, IProtocol protocol, IProtocolSessionList protocolSessionList, IStreamConnectionContainer streamConnectionContainer, string endpointStreamConnection, ConnectProperties? connectProperties, int contentType)
         {
             m_callback = callback;
             m_executor = executor;
-            m_executorPollerThread = executorPollerThread;
             m_protocol = protocol;
             m_protocolSessionList = protocolSessionList;
             m_sessionId = protocolSessionList.GetNextSessionId();
@@ -69,11 +67,10 @@ namespace finalmq
             m_endpointStreamConnection = endpointStreamConnection;
             m_connectionProperties = connectProperties;
         }
-        public ProtocolSession(IProtocolSessionCallback callback, IExecutor executor, IExecutor executorPollerThread, IProtocolSessionList protocolSessionList, IStreamConnectionContainer streamConnectionContainer)
+        public ProtocolSession(IProtocolSessionCallback callback, IExecutor? executor, IProtocolSessionList protocolSessionList, IStreamConnectionContainer streamConnectionContainer)
         {
             m_callback = callback;
             m_executor = executor;
-            m_executorPollerThread = executorPollerThread;
             m_protocolSessionList = protocolSessionList;
             m_sessionId = protocolSessionList.GetNextSessionId();
             m_instanceId = m_sessionId | INSTANCEID_PREFIX;
@@ -272,11 +269,7 @@ namespace finalmq
                 protocolSessionList.RemoveProtocolSession(m_sessionId);
             }
 
-            Debug.Assert(m_executorPollerThread != null);
-
-            m_executorPollerThread.AddAction(() => {
-                Disconnected();
-            }, m_instanceId);
+            Disconnected();
         }
         public void Connect(string endpoint, ConnectProperties? connectionProperties = null, int contentType = 0)
         {
@@ -312,11 +305,11 @@ namespace finalmq
 
             m_streamConnectionContainer.Connect(m_endpointStreamConnection, connection, m_connectionProperties);
         }
-        public IExecutor Executor
+        public IExecutor? Executor
         {
             get
             {
-                return (m_executor != null) ? m_executor : m_executorPollerThread;
+                return m_executor;
             }
         }
         public void Subscribe(IList<string> subscribtions)
@@ -638,7 +631,7 @@ namespace finalmq
                 }
                 else
                 {
-                    IProtocolSessionPrivate protocolSession = new ProtocolSession(m_callback, m_executor, m_executorPollerThread, protocol, m_protocolSessionList, m_bindProperties, m_contentType);
+                    IProtocolSessionPrivate protocolSession = new ProtocolSession(m_callback, m_executor, protocol, m_protocolSessionList, m_bindProperties, m_contentType);
                     protocolSession.SetConnection(connection, false);
                     protocolSession.SetSessionNameInternal(sessionName);
                 }
@@ -890,8 +883,7 @@ namespace finalmq
 
 
         readonly IProtocolSessionCallback               m_callback;
-        readonly IExecutor                              m_executor;
-        readonly IExecutor                              m_executorPollerThread;
+        readonly IExecutor?                             m_executor;
         IProtocol?                                      m_protocol = null;
         long                                            m_connectionId;
         readonly IDictionary<long, IProtocol>           m_multiProtocols = new Dictionary<long, IProtocol>();

@@ -27,7 +27,7 @@ using System.Net.Security;
 
 namespace finalmq {
 
-    public interface IStreamConnectionContainer
+    public interface IStreamConnectionContainer : IDisposable
     {
         int CheckReconnectInterval { get; set; }
         void Bind(string endpoint, IStreamConnectionCallback callback, BindProperties? bindProperties = null);
@@ -49,7 +49,6 @@ namespace finalmq {
 
     public class StreamConnectionContainer : IStreamConnectionContainer
                                            , IStreamConnectionContainerPrivate
-                                           , IDisposable
     {
         private bool m_disposed = false;
 
