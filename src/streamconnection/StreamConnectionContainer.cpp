@@ -188,6 +188,7 @@ int StreamConnectionContainer::bind(const std::string& endpoint, hybrid_ptr<IStr
 
         std::unique_lock<std::mutex> locker(m_mutex);
 
+        err = -1;
         auto it = findBindByEndpoint(endpoint);
         if (it == m_sd2binds.end())
         {

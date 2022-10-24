@@ -82,6 +82,7 @@ char* ProtocolMessage::addBuffer(ssize_t size, ssize_t reserve)
     {
         // remove the trailer of the last payload
         BufferRef& lastRef = m_sendBufferRefs.back();
+        assert(lastRef.second >= m_sizeTrailer);
         lastRef.second -= m_sizeTrailer;
         if (lastRef.second == 0)
         {

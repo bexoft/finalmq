@@ -137,7 +137,7 @@ int ProtocolSessionContainer::bind(const std::string& endpoint, hybrid_ptr<IProt
 
     std::string endpointStreamConnection = endpoint.substr(0, ixEndpoint);
 
-    int err = 0;
+    int err = -1;
     std::unique_lock<std::mutex> lock(m_mutex);
     auto it = m_endpoint2Bind.find(endpoint);
     if (it == m_endpoint2Bind.end())

@@ -863,16 +863,16 @@ bool ProtocolSession::findSessionByName(const std::string& sessionName, const IP
                 }
                 else
                 {
-                    disconnected(); // we are in the poller loop  thread
+                    disconnected(); // we are in the poller loop thread
 
                     lock.lock();
-                    IProtocolPtr protocol = m_protocol;
+                    IProtocolPtr prot = m_protocol;
                     m_protocol = nullptr;
                     m_connectionId = 0;
                     lock.unlock();
 
-                    assert(protocol);
-                    session->setProtocol(protocol);
+                    assert(prot);
+                    session->setProtocol(prot);
                 }
             }
             return true;
@@ -896,7 +896,7 @@ void ProtocolSession::setSessionNameInternal(const std::string& sessionName)
             m_verified = true;
             m_sessionName = sessionName;
             lock.unlock();
-            connected();    // we are in the poller loop  thread
+            connected();    // we are in the poller loop thread
         }
     }
 }
@@ -917,7 +917,7 @@ void ProtocolSession::setSessionName(const std::string& sessionName, const IProt
             m_verified = true;
             m_sessionName = sessionName;
             lock.unlock();
-            connected();    // we are in the poller loop  thread
+            connected();    // we are in the poller loop thread
         }
         else
         {
