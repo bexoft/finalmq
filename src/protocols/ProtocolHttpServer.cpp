@@ -389,7 +389,7 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
             }
             if (ok)
             {
-                if (m_state == STATE_FIND_FIRST_LINE)
+                if (m_state == State::STATE_FIND_FIRST_LINE)
                 {
                     m_contentLength = 0;
                     if (len < 4)
@@ -411,7 +411,7 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
                                 controlData.add(FMQ_PROTOCOL, std::move(lineSplit[0]));
                                 controlData.add(FMQ_HTTP_STATUS, std::move(lineSplit[1]));
                                 controlData.add(FMQ_HTTP_STATUSTEXT, std::move(lineSplit[2]));
-                                m_state = STATE_FIND_HEADERS;
+                                m_state = State::STATE_FIND_HEADERS;
                             }
                             else
                             {
@@ -458,7 +458,7 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
                                         }
                                     }
                                 }
-                                m_state = STATE_FIND_HEADERS;
+                                m_state = State::STATE_FIND_HEADERS;
                             }
                             else
                             {
@@ -467,17 +467,17 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
                         }
                     }
                 }
-                else if (m_state == STATE_FIND_HEADERS)
+                else if (m_state == State::STATE_FIND_HEADERS)
                 {
                     if (len == 0)
                     {
                         if (m_contentLength == 0)
                         {
-                            m_state = STATE_CONTENT_DONE;
+                            m_state = State::STATE_CONTENT_DONE;
                         }
                         else
                         {
-                            m_state = STATE_CONTENT;
+                            m_state = State::STATE_CONTENT;
                             m_message->resizeReceiveBuffer(m_contentLength);
                         }
                         m_indexFilled = 0;
@@ -510,18 +510,18 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
                                 {
                                     m_sessionNames.push_back(value);
                                 }
-                                m_stateSessionId = SESSIONID_FMQ;
+                                m_stateSessionId = StateSessionId::SESSIONID_FMQ;
                             }
                             else if (lineSplit[0] == HTTP_COOKIE)
                             {
-                                if (m_stateSessionId == SESSIONID_NONE)
+                                if (m_stateSessionId == StateSessionId::SESSIONID_NONE)
                                 {
                                     cookiesToSessionIds(value);
 //                                    if (!m_sessionNames.empty())
 //                                    {
 //                                        streamInfo << this << " input cookie: " << m_sessionNames[0];
 //                                    }
-                                    m_stateSessionId = SESSIONID_COOKIE;
+                                    m_stateSessionId = StateSessionId::SESSIONID_COOKIE;
                                 }
                             }
                             m_message->addMetainfo(std::move(lineSplit[0]), std::move(lineSplit[1]));
@@ -558,8 +558,8 @@ void ProtocolHttpServer::reset()
     m_contentLength = 0;
     m_indexFilled = 0;
     m_message = nullptr;
-    m_state = STATE_FIND_FIRST_LINE;
-    m_stateSessionId = SESSIONID_NONE;
+    m_state = State::STATE_FIND_FIRST_LINE;
+    m_stateSessionId = StateSessionId::SESSIONID_NONE;
     m_createSession = false;
     m_sessionNames.clear();
     m_path = nullptr;
@@ -569,7 +569,7 @@ void ProtocolHttpServer::reset()
 
 static std::string HEADER_KEEP_ALIVE = "Connection: keep-alive\r\n";
 
-bool ProtocolHttpServer::sendMessage(IMessagePtr message)
+void ProtocolHttpServer::sendMessage(IMessagePtr message)
 {
     assert(!message->wasSent());
     std::string firstLine;
@@ -805,10 +805,10 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
     message->prepareMessageToSend();
 
     assert(m_connection);
-    bool ok = m_connection->sendMessage(message);
+    m_connection->sendMessage(message);
 
 
-    if (ok && filename)
+    if (filename)
     {
         std::string file = *filename;
         std::weak_ptr<ProtocolHttpServer> pThisWeak = shared_from_this();
@@ -846,13 +846,13 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
                         {
                             messageData->downsizeLastSendPayload(err);
                         }
-                        bool ok = pThis->m_connection->sendMessage(messageData);
+                        pThis->m_connection->sendMessage(messageData);
                         buf += err;
                         len -= err;
                         lenReceived += err;
                         err = 0;
                         assert(len >= 0);
-                        if (len == 0 || !ok)
+                        if (len == 0)
                         {
                             ex = true;
                         }
@@ -873,8 +873,6 @@ bool ProtocolHttpServer::sendMessage(IMessagePtr message)
             }
         });
     }
-
-    return ok;
 }
 
 
@@ -918,14 +916,14 @@ bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolC
             {
                 m_multipart = (*strMultipart == "true") ? true : false;
             }
-            if (strTimeout && !strCount)
-            {
-                pollCountMax = -1;
-            }
-            if (!strTimeout && strCount)
-            {
-                timeout = -1;
-            }
+            //if (strTimeout && !strCount)
+            //{
+            //    pollCountMax = -1;
+            //}
+            //if (!strTimeout && strCount)
+            //{
+            //    timeout = -1;
+            //}
             IMessagePtr message = getMessageFactory()();
             std::string contentType;
             if (m_multipart)
@@ -941,7 +939,7 @@ bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolC
             message->addMetainfo("Transfer-Encoding", "chunked");
             sendMessage(message);
             m_chunkedState = 2;
-            callback->pollRequest(m_connectionId, timeout, pollCountMax);
+            callback->pollRequest(shared_from_this(), timeout, pollCountMax);
         }
         else if (*m_path == FMQ_PATH_PING)
         {
@@ -990,7 +988,7 @@ bool ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, co
 {
     bool ok = true;
 
-    if (m_state != STATE_CONTENT)
+    if (m_state != State::STATE_CONTENT)
     {
         if (m_offsetRemaining == 0)
         {
@@ -1025,7 +1023,7 @@ bool ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, co
         {
             assert(bytesReceived <= bytesToRead);
             ok = receiveHeaders(bytesReceived);
-            if (ok && m_state == STATE_CONTENT)
+            if (ok && m_state == State::STATE_CONTENT)
             {
                 BufferRef payload = m_message->getReceivePayload();
                 assert(payload.second == m_contentLength);
@@ -1036,7 +1034,7 @@ bool ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, co
                     assert(m_indexFilled <= m_contentLength);
                     if (m_indexFilled == m_contentLength)
                     {
-                        m_state = STATE_CONTENT_DONE;
+                        m_state = State::STATE_CONTENT_DONE;
                     }
                 }
                 else
@@ -1070,7 +1068,7 @@ bool ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, co
                 assert(m_indexFilled <= m_contentLength);
                 if (m_indexFilled == m_contentLength)
                 {
-                    m_state = STATE_CONTENT_DONE;
+                    m_state = State::STATE_CONTENT_DONE;
                 }
             }
         }
@@ -1083,7 +1081,7 @@ bool ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, co
 
     if (ok)
     {
-        if (m_state == STATE_CONTENT_DONE)
+        if (m_state == State::STATE_CONTENT_DONE)
         {
             checkSessionName();
             auto callback = m_callback.lock();
@@ -1122,7 +1120,7 @@ void ProtocolHttpServer::disconnected(const IStreamConnectionPtr& connection)
     auto callback = m_callback.lock();
     if (callback)
     {
-        callback->disconnectedMultiConnection(connection);
+        callback->disconnectedMultiConnection(shared_from_this());
     }
 }
 

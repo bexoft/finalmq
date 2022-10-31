@@ -163,6 +163,7 @@ int RemoteEntityContainer::bind(const std::string& endpoint, const BindPropertie
     int contentType = RemoteEntityFormatRegistry::instance().getContentType(contentTypeName);
     if (contentType == 0)
     {
+        streamError << "ContentType not found: " << contentTypeName;
         return -1;
     }
     std::string endpointProtocol = endpoint.substr(0, ixEndpoint);
@@ -186,6 +187,7 @@ IProtocolSessionPtr RemoteEntityContainer::connect(const std::string& endpoint, 
     int contentType = RemoteEntityFormatRegistry::instance().getContentType(contentTypeName);
     if (contentType == 0)
     {
+        streamError << "ContentType not found: " << contentTypeName;
         return nullptr;
     }
     std::string endpointProtocol = endpoint.substr(0, ixEndpoint);

@@ -57,11 +57,12 @@ struct RegisterFormatProto
 } g_registerFormatProto;
 
 
+#define PROTOBUFBLOCKSIZE   512
 
 
 void RemoteEntityFormatProto::serialize(IMessage& message, const Header& header, const StructBase* structBase)
 {
-    char* bufferSizeHeader = message.addSendPayload(2048);
+    char* bufferSizeHeader = message.addSendPayload(PROTOBUFBLOCKSIZE);
     message.downsizeLastSendPayload(4);
 
     SerializerProto serializerHeader(message);

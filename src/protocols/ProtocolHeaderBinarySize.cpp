@@ -135,7 +135,7 @@ IProtocol::FuncCreateMessage ProtocolHeaderBinarySize::getMessageFactory() const
     };
 }
 
-bool ProtocolHeaderBinarySize::sendMessage(IMessagePtr message)
+void ProtocolHeaderBinarySize::sendMessage(IMessagePtr message)
 {
     if (!message->wasSent())
     {
@@ -151,7 +151,7 @@ bool ProtocolHeaderBinarySize::sendMessage(IMessagePtr message)
         message->prepareMessageToSend();
     }
     assert(m_connection);
-    return m_connection->sendMessage(message);
+    m_connection->sendMessage(message);
 }
 
 void ProtocolHeaderBinarySize::moveOldProtocolState(IProtocol& /*protocolOld*/)

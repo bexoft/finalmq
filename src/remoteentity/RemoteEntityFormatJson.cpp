@@ -56,7 +56,7 @@ struct RegisterFormatJson
 
 
 
-#define JSONBLOCKSIZE   2048
+#define JSONBLOCKSIZE   512
 
 void RemoteEntityFormatJson::serialize(IMessage& message, const Header& header, const StructBase* structBase)
 {
@@ -98,7 +98,7 @@ void RemoteEntityFormatJson::serializeData(IMessage& message, const StructBase* 
         }
         else
         {
-            SerializerJson serializerData(message, 1024, true, false);
+            SerializerJson serializerData(message, 512, true, false);
             ParserStruct parserData(serializerData, *structBase);
             parserData.parseStruct();
         }

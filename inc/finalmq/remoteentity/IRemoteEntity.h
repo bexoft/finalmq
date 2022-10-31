@@ -221,9 +221,8 @@ struct IRemoteEntity
      * command execution. The peerId belongs to this entity. Because an entity can have multiple
      * connections to remote entities, a remote entity must be identified be the peerId.
      * @param structBase is the event message to send (generated code of fmq file).
-     * @return true on success.
      */
-    virtual bool sendEvent(const PeerId& peerId, const StructBase& structBase) = 0;
+    virtual void sendEvent(const PeerId& peerId, const StructBase& structBase) = 0;
 
     /**
      * @brief sendEvent sends a request to the peer and does not expect a reply.
@@ -235,9 +234,8 @@ struct IRemoteEntity
      * connections to remote entities, a remote entity must be identified be the peerId.
      * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
      * @param structBase is the event message to send (generated code of fmq file).
-     * @return true on success.
      */
-    virtual bool sendEvent(const PeerId& peerId, IMessage::Metainfo&& metainfo, const StructBase& structBase) = 0;
+    virtual void sendEvent(const PeerId& peerId, IMessage::Metainfo&& metainfo, const StructBase& structBase) = 0;
 
     /**
      * @brief sendEvent sends a request to the peer and does not expect a reply.
@@ -247,9 +245,8 @@ struct IRemoteEntity
      * connections to remote entities, a remote entity must be identified be the peerId.
      * @param path is the path that shall be called at the remote entity
      * @param structBase is the event message to send (generated code of fmq file).
-     * @return true on success.
      */
-    virtual bool sendEvent(const PeerId& peerId, const std::string& path, const StructBase& structBase) = 0;
+    virtual void sendEvent(const PeerId& peerId, const std::string& path, const StructBase& structBase) = 0;
 
     /**
      * @brief sendEvent sends a request to the peer and does not expect a reply.
@@ -262,16 +259,14 @@ struct IRemoteEntity
      * @param path is the path that shall be called at the remote entity
      * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
      * @param structBase is the event message to send (generated code of fmq file).
-     * @return true on success.
      */
-    virtual bool sendEvent(const PeerId& peerId, const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase) = 0;
+    virtual void sendEvent(const PeerId& peerId, const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase) = 0;
 
     /**
      * @brief sendEventToAllPeers sends an event to all connected peers and does not expect a reply.
      * @param structBase is the event message to send (generated code of fmq file).
-     * @return true on success.
      */
-    virtual bool sendEventToAllPeers(const StructBase& structBase) = 0;
+    virtual void sendEventToAllPeers(const StructBase& structBase) = 0;
 
     /**
      * @brief sendEventToAllPeers sends an event to all connected peers and does not expect a reply.
@@ -279,17 +274,15 @@ struct IRemoteEntity
      * You can use it to exchange additional data besides the message data.
      * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
      * @param structBase is the event message to send (generated code of fmq file).
-     * @return true on success.
      */
-    virtual bool sendEventToAllPeers(IMessage::Metainfo&& metainfo, const StructBase& structBase) = 0;
+    virtual void sendEventToAllPeers(IMessage::Metainfo&& metainfo, const StructBase& structBase) = 0;
 
     /**
      * @brief sendEventToAllPeers sends an event to all connected peers and does not expect a reply.
      * @param path is the path that shall be called at the remote entity
      * @param structBase is the event message to send (generated code of fmq file).
-     * @return true on success.
      */
-    virtual bool sendEventToAllPeers(const std::string& path, const StructBase& structBase) = 0;
+    virtual void sendEventToAllPeers(const std::string& path, const StructBase& structBase) = 0;
 
     /**
      * @brief sendEventToAllPeers sends an event to all connected peers and does not expect a reply.
@@ -298,9 +291,8 @@ struct IRemoteEntity
      * @param path is the path that shall be called at the remote entity
      * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
      * @param structBase is the event message to send (generated code of fmq file).
-     * @return true on success.
      */
-    virtual bool sendEventToAllPeers(const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase) = 0;
+    virtual void sendEventToAllPeers(const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase) = 0;
 
     /**
      * @brief registerCommand registers a callback function for executing a request or event.
@@ -472,9 +464,8 @@ struct IRemoteEntity
      * @param correlationId is an ID that can be matched at the callback, which is registered
      * by registerReplyEvent().
      * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
-     * @return true on success.
      */
-    virtual bool sendRequest(const PeerId& peerId, const std::string& path, const StructBase& structBase, CorrelationId correlationId, IMessage::Metainfo* metainfo = nullptr) = 0;
+    virtual void sendRequest(const PeerId& peerId, const std::string& path, const StructBase& structBase, CorrelationId correlationId, IMessage::Metainfo* metainfo = nullptr) = 0;
 
     /**
      * @brief sendRequest sends a request to the peer and the funcReply is triggered when
@@ -537,10 +528,11 @@ struct IRemoteEntity
     virtual CorrelationId sendRequest(const PeerId& peerId, IMessage::Metainfo&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply) = 0;
 
     /**
-    * @brief cancels the a reply callback. After calling this function, the expected reply callback will be be called, anymore.
-    * Call this function, if e.g. a timeout happened, and you are not interested for the reply, anymore.
+    * @brief cancels a reply callback. After calling this function, the expected reply callback will not be called, anymore.
+    * Call this function, if e.g. a timeout happened, and you are not interested in the reply, anymore.
     * @param correlationId of the request, which reply callback shall not be called, anymore
-    * @return true, if the request was still pending and the reply callback was canceled. false, if the reply callback, was already called.
+    * @return true, if the request was still pending and the reply callback was canceled. false, if the reply callback, was already called or 
+    * if it is still running.
     */
     virtual bool cancelReply(CorrelationId correlationId) = 0;
 

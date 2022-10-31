@@ -192,7 +192,7 @@ std::vector<ssize_t> ProtocolDelimiter::findEndOfMessage(const char* buffer, ssi
 
 
 
-bool ProtocolDelimiter::sendMessage(IMessagePtr message)
+void ProtocolDelimiter::sendMessage(IMessagePtr message)
 {
     if (!message->wasSent())
     {
@@ -206,7 +206,7 @@ bool ProtocolDelimiter::sendMessage(IMessagePtr message)
         }
     }
     assert(m_connection);
-    return m_connection->sendMessage(message);
+    m_connection->sendMessage(message);
 }
 
 

@@ -293,14 +293,14 @@ public:
 
 public:
     // IRemoteEntity
-    virtual bool sendEvent(const PeerId& peerId, const StructBase& structBase) override;
-    virtual bool sendEvent(const PeerId& peerId, IMessage::Metainfo&& metainfo, const StructBase& structBase) override;
-    virtual bool sendEvent(const PeerId& peerId, const std::string& path, const StructBase& structBase) override;
-    virtual bool sendEvent(const PeerId& peerId, const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase) override;
-    virtual bool sendEventToAllPeers(const StructBase& structBase) override;
-    virtual bool sendEventToAllPeers(IMessage::Metainfo&& metainfo, const StructBase& structBase) override;
-    virtual bool sendEventToAllPeers(const std::string& path, const StructBase& structBase) override;
-    virtual bool sendEventToAllPeers(const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase) override;
+    virtual void sendEvent(const PeerId& peerId, const StructBase& structBase) override;
+    virtual void sendEvent(const PeerId& peerId, IMessage::Metainfo&& metainfo, const StructBase& structBase) override;
+    virtual void sendEvent(const PeerId& peerId, const std::string& path, const StructBase& structBase) override;
+    virtual void sendEvent(const PeerId& peerId, const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase) override;
+    virtual void sendEventToAllPeers(const StructBase& structBase) override;
+    virtual void sendEventToAllPeers(IMessage::Metainfo&& metainfo, const StructBase& structBase) override;
+    virtual void sendEventToAllPeers(const std::string& path, const StructBase& structBase) override;
+    virtual void sendEventToAllPeers(const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase) override;
     virtual PeerId connect(const IProtocolSessionPtr& session, const std::string& entityName, FuncReplyConnect funcReplyConnect = {}) override;
     virtual PeerId connect(const IProtocolSessionPtr& session, EntityId entityId, FuncReplyConnect funcReplyConnect = {}) override;
     virtual void disconnect(PeerId peerId) override;
@@ -315,7 +315,7 @@ public:
     virtual void registerCommandFunction(const std::string& path, const std::string& type, FuncCommand funcCommand) override;
     virtual std::string getTypeOfCommandFunction(std::string& path, const std::string* method = nullptr) override;
     virtual CorrelationId getNextCorrelationId() const override;
-    virtual bool sendRequest(const PeerId& peerId, const std::string& path, const StructBase& structBase, CorrelationId correlationId, IMessage::Metainfo* metainfo = nullptr) override;
+    virtual void sendRequest(const PeerId& peerId, const std::string& path, const StructBase& structBase, CorrelationId correlationId, IMessage::Metainfo* metainfo = nullptr) override;
     virtual CorrelationId sendRequest(const PeerId& peerId, const std::string& path, const StructBase& structBase, FuncReply funcReply) override;
     virtual CorrelationId sendRequest(const PeerId& peerId, const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply) override;
     virtual CorrelationId sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) override;
@@ -367,8 +367,6 @@ private:
         PeerId                          peerId = PEERID_INVALID;
         std::shared_ptr<FuncReply>      func;
         std::shared_ptr<FuncReplyMeta>  funcMeta;
-        bool                            executing = false;
-        std::thread::id                 executingThreadId{};
     };
 
 

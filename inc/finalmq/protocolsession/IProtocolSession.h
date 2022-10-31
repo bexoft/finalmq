@@ -31,7 +31,7 @@ struct IProtocolSession
 {
     virtual ~IProtocolSession() {}
     virtual IMessagePtr createMessage() const = 0;
-    virtual bool sendMessage(const IMessagePtr& msg, bool isReply = false) = 0;
+    virtual void sendMessage(const IMessagePtr& msg, bool isReply = false) = 0;
     virtual std::int64_t getSessionId() const = 0;
     virtual ConnectionData getConnectionData() const = 0;
     virtual int getContentType() const = 0;

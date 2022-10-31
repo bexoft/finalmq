@@ -47,14 +47,12 @@ StreamConnection::~StreamConnection()
 
 
 // IStreamConnection
-bool StreamConnection::sendMessage(const IMessagePtr& msg)
+void StreamConnection::sendMessage(const IMessagePtr& msg)
 {
     assert(msg);
-    bool ret = false;
     std::unique_lock<std::mutex> lock(m_mutex);
     if (m_socketPrivate)
     {
-        ret = true;
         ssize_t size = msg->getTotalSendBufferSize();
         if (size > 0)
         {
@@ -106,7 +104,6 @@ bool StreamConnection::sendMessage(const IMessagePtr& msg)
         }
     }
     lock.unlock();
-    return ret;
 }
 
 

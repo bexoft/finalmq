@@ -305,7 +305,7 @@ IProtocol::FuncCreateMessage ProtocolMqtt5Client::getMessageFactory() const
     };
 }
 
-bool ProtocolMqtt5Client::sendMessage(IMessagePtr message)
+void ProtocolMqtt5Client::sendMessage(IMessagePtr message)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     IStreamConnectionPtr connection = m_connection;
@@ -355,7 +355,6 @@ bool ProtocolMqtt5Client::sendMessage(IMessagePtr message)
         data.topic = std::move(topic);
         m_client->publish(connection, std::move(data), message);
     }
-    return true;
 }
 
 void ProtocolMqtt5Client::moveOldProtocolState(IProtocol& /*protocolOld*/) 

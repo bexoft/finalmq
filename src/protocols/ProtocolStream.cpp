@@ -125,14 +125,14 @@ IProtocol::FuncCreateMessage ProtocolStream::getMessageFactory() const
     };
 }
 
-bool ProtocolStream::sendMessage(IMessagePtr message)
+void ProtocolStream::sendMessage(IMessagePtr message)
 {
     if (!message->wasSent())
     {
         message->prepareMessageToSend();
     }
     assert(m_connection);
-    return m_connection->sendMessage(message);
+    m_connection->sendMessage(message);
 }
 
 void ProtocolStream::moveOldProtocolState(IProtocol& /*protocolOld*/)
