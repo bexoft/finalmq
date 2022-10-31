@@ -1115,7 +1115,7 @@ hybrid_ptr<IStreamConnectionCallback> ProtocolHttpServer::connected(const IStrea
     return nullptr;
 }
 
-void ProtocolHttpServer::disconnected(const IStreamConnectionPtr& connection)
+void ProtocolHttpServer::disconnected(const IStreamConnectionPtr& /*connection*/)
 {
     auto callback = m_callback.lock();
     if (callback)
