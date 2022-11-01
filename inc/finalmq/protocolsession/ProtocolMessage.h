@@ -42,6 +42,7 @@ public:
 private:
     virtual char* addBuffer(ssize_t size, ssize_t reserve = 0) override;
     virtual void downsizeLastBuffer(ssize_t newSize) override;
+    virtual ssize_t getRemainingSize() const override;
 
     // metainfo
     virtual const Metainfo& getAllMetainfo() const override;

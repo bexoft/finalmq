@@ -58,6 +58,7 @@ protected:
         m_data.resize(MAX_BLOCK_SIZE);
         EXPECT_CALL(m_mockBuffer, addBuffer(MAX_BLOCK_SIZE, _)).Times(1).WillOnce(Return((char*)m_data.data()));
         EXPECT_CALL(m_mockBuffer, downsizeLastBuffer(_)).Times(1).WillOnce(Invoke(&m_data, &String::resize));
+        EXPECT_CALL(m_mockBuffer, getRemainingSize()).WillRepeatedly(Return(0));
 
         m_builder = std::unique_ptr<JsonBuilder>(new JsonBuilder(m_mockBuffer, MAX_BLOCK_SIZE));
     }

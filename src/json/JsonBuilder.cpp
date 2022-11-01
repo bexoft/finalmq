@@ -53,13 +53,22 @@ void JsonBuilder::reserveSpace(ssize_t space)
     ssize_t sizeRemaining = m_bufferEnd - m_buffer;
     if (sizeRemaining < space)
     {
-        if (m_buffer != nullptr)
+        const ssize_t sizeRemainingZeroCopyBuffer = m_zeroCopybuffer.getRemainingSize();
+        ssize_t sizeNew = m_maxBlockSize;
+        if (sizeRemainingZeroCopyBuffer >= space)
         {
-            ssize_t size = m_buffer - m_bufferStart;
-            assert(size >= 0);
-            m_zeroCopybuffer.downsizeLastBuffer(size);
+            sizeNew = std::min(m_maxBlockSize, sizeRemainingZeroCopyBuffer);
         }
-        ssize_t sizeNew = std::max(m_maxBlockSize, space);
+        else
+        {
+            if (m_buffer != nullptr)
+            {
+                ssize_t size = m_buffer - m_bufferStart;
+                assert(size >= 0);
+                m_zeroCopybuffer.downsizeLastBuffer(size);
+            }
+        }
+        sizeNew = std::max(sizeNew, space);
         char* bufferStartNew = m_zeroCopybuffer.addBuffer(sizeNew);
         m_bufferStart = bufferStartNew;
         m_bufferEnd = m_bufferStart + sizeNew;

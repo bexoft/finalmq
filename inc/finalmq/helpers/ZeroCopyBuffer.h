@@ -38,6 +38,7 @@ public:
 private:
     virtual char* addBuffer(ssize_t size, ssize_t reserve = 0) override;
     virtual void downsizeLastBuffer(ssize_t newSize) override;
+    virtual ssize_t getRemainingSize() const override;
 
     std::list<std::string>  m_strings;
 };

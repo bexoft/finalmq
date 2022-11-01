@@ -73,6 +73,7 @@ TEST(TestSerializerProtoStruct, test0Data)
     data.resize(MAX_BLOCK_SIZE);
     EXPECT_CALL(mockBuffer, addBuffer(MAX_BLOCK_SIZE, _)).Times(1).WillOnce(Return((char*)data.data()));
     EXPECT_CALL(mockBuffer, downsizeLastBuffer(_)).Times(1).WillOnce(Invoke(&data, &String::resize));
+    EXPECT_CALL(mockBuffer, getRemainingSize()).WillRepeatedly(Return(0));
 
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerProto>(mockBuffer, MAX_BLOCK_SIZE);
 
@@ -109,6 +110,7 @@ void helperTestStructSize(int size)
     data.resize(MAX_BLOCK_SIZE);
     EXPECT_CALL(mockBuffer, addBuffer(MAX_BLOCK_SIZE, _)).Times(1).WillOnce(Return((char*)data.data()));
     EXPECT_CALL(mockBuffer, downsizeLastBuffer(_)).Times(1).WillOnce(Invoke(&data, &String::resize));
+    EXPECT_CALL(mockBuffer, getRemainingSize()).WillRepeatedly(Return(0));
 
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerProto>(mockBuffer, MAX_BLOCK_SIZE);
 
@@ -221,6 +223,7 @@ TEST(TestSerializerProtoStruct, test0DataBlockSize1)
     data1.resize(1000);
     String data2;
     data2.resize(1000);
+    EXPECT_CALL(mockBuffer, getRemainingSize()).WillRepeatedly(Return(0));
     {
         testing::InSequence seq;
         EXPECT_CALL(mockBuffer, addBuffer(_, _)).Times(1).WillOnce(Return((char*)data1.data()));
@@ -266,6 +269,7 @@ TEST(TestSerializerProtoStruct, test32DataBlockSize1)
     data2.resize(1000);
     String data3;
     data3.resize(1000);
+    EXPECT_CALL(mockBuffer, getRemainingSize()).WillRepeatedly(Return(0));
     {
         testing::InSequence seq;
         EXPECT_CALL(mockBuffer, addBuffer(_, _)).Times(1).WillOnce(Return((char*)data1.data()));
@@ -311,6 +315,7 @@ TEST(TestSerializerProtoStruct, test33DataBlockSize1)
     data2.resize(1000);
     String data3;
     data3.resize(1000);
+    EXPECT_CALL(mockBuffer, getRemainingSize()).WillRepeatedly(Return(0));
     {
         testing::InSequence seq;
         EXPECT_CALL(mockBuffer, addBuffer(_, _)).Times(1).WillOnce(Return((char*)data1.data()));
@@ -357,6 +362,7 @@ TEST(TestSerializerProtoStruct, test121DataBlockSize1)
     data2.resize(1000);
     String data3;
     data3.resize(1000);
+    EXPECT_CALL(mockBuffer, getRemainingSize()).WillRepeatedly(Return(0));
     {
         testing::InSequence seq;
         EXPECT_CALL(mockBuffer, addBuffer(_, _)).Times(1).WillOnce(Return((char*)data1.data()));
@@ -403,6 +409,7 @@ TEST(TestSerializerProtoStruct, test122DataBlockSize1)
     data2.resize(1000);
     String data3;
     data3.resize(1000);
+    EXPECT_CALL(mockBuffer, getRemainingSize()).WillRepeatedly(Return(0));
     {
         testing::InSequence seq;
         EXPECT_CALL(mockBuffer, addBuffer(_, _)).Times(1).WillOnce(Return((char*)data1.data()));

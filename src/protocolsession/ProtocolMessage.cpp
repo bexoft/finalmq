@@ -155,6 +155,20 @@ void ProtocolMessage::downsizeLastBuffer(ssize_t newSize)
     }
 }
 
+ssize_t ProtocolMessage::getRemainingSize() const
+{
+    if (m_offset != -1)
+    {
+        assert(!m_payloadBuffers.empty());
+        const std::string& bufLast = m_payloadBuffers.back();
+        ssize_t remaining = bufLast.size() - m_offset - m_sizeTrailer;
+        assert(remaining >= 0);
+        return remaining;
+    }
+
+    return 0;
+}
+
 
 // metadata
 const ProtocolMessage::Metainfo& ProtocolMessage::getAllMetainfo() const
