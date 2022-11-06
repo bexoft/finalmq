@@ -165,6 +165,22 @@ namespace finalmq {
             }
         }
 
+        public int RemainingSize 
+        {
+            get
+            {
+                if (m_offset != -1 && m_sendBufferRefs != null)
+                {
+                    Debug.Assert(m_sendBufferRefs.Count > 0);
+                    BufferRef bufLast = m_sendBufferRefs.Last<BufferRef>();
+                    int remaining = bufLast.Buffer.Length - m_offset - m_sizeTrailer;
+                    Debug.Assert(remaining >= 0);
+                    return remaining;
+                }
+                return 0;
+            }
+        }
+
         // metainfo
         public Metainfo GetAllMetainfo()
         {

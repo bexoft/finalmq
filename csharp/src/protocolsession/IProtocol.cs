@@ -35,11 +35,11 @@ namespace finalmq
         void Reconnect();
         bool FindSessionByName(string sessionName, IProtocol protocol);
         void SetSessionName(string sessionName, IProtocol protocol, IStreamConnection connection);
-        void PollRequest(long connectionId, int timeout, int pollCountMax);
+        void PollRequest(IProtocol protocol, int timeout, int pollCountMax);
         void Activity();
-        void SetActivityTimeout(int timeout);
-        void SetPollMaxRequests(int maxRequests);
-        void DisconnectedMultiConnection(IStreamConnection connection);
+        int ActivityTimeout { set; }
+        int PollMaxRequests { set; }
+        void DisconnectedMultiConnection(IProtocol protocol);
     }
 
     public delegate IMessage FuncCreateMessage();
@@ -59,7 +59,7 @@ namespace finalmq
         bool IsSendRequestByPoll();
         bool DoesSupportFileTransfer();
         FuncCreateMessage MessageFactory { get; }
-        bool SendMessage(IMessage message);
+        void SendMessage(IMessage message);
         void MoveOldProtocolState(IProtocol protocolOld);
         IMessage PollReply(IList<IMessage>? messages = null);
         void Subscribe(IList<string> subscribtions);

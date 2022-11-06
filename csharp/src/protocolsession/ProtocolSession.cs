@@ -30,14 +30,13 @@ namespace finalmq
     internal interface IProtocolSessionPrivate : IProtocolSession
     {
         void Connect();
-        void CreateConnection();
         void SetConnection(IStreamConnection? connection, bool verified);
         void SetProtocol(IProtocol protocol);
         void SetSessionNameInternal(string sessionName);
     }
 
 
-
+        
     internal class ProtocolSession : IProtocolSessionPrivate
                                    , IProtocolCallback
     {
@@ -50,7 +49,6 @@ namespace finalmq
             m_sessionId = protocolSessionList.GetNextSessionId();
             m_instanceId = m_sessionId | INSTANCEID_PREFIX;
             m_contentType = contentType;
-            m_incomingConnection = true;
             m_bindProperties = bindProperties;
         }
         public ProtocolSession(IProtocolSessionCallback callback, IExecutor? executor, IProtocol protocol, IProtocolSessionList protocolSessionList, IStreamConnectionContainer streamConnectionContainer, string endpointStreamConnection, ConnectProperties? connectProperties, int contentType)
@@ -62,7 +60,6 @@ namespace finalmq
             m_sessionId = protocolSessionList.GetNextSessionId();
             m_instanceId = m_sessionId | INSTANCEID_PREFIX;
             m_contentType = contentType;
-            m_incomingConnection = false;
             m_streamConnectionContainer = streamConnectionContainer;
             m_endpointStreamConnection = endpointStreamConnection;
             m_connectionProperties = connectProperties;
@@ -74,7 +71,6 @@ namespace finalmq
             m_protocolSessionList = protocolSessionList;
             m_sessionId = protocolSessionList.GetNextSessionId();
             m_instanceId = m_sessionId | INSTANCEID_PREFIX;
-            m_incomingConnection = false;
             m_streamConnectionContainer = streamConnectionContainer;
         }
 
@@ -87,53 +83,29 @@ namespace finalmq
             }
             return new ProtocolMessage(0);
         }
-        public bool SendMessage(IMessage msg, bool isReply = false)
+        public void SendMessage(IMessage msg, bool isReply = false)
         {
-            bool ok = false;
             bool doDisconnect = false;
             // lock whole function, because the protocol can be changed by setProtocol (lock also over sendMessage, because the protocol could increment a sequential message counter and the order of the counter shall be like the messages that are sent.)
             lock (m_mutex)
             {
                 if (!isReply && m_protocolFlagIsSendRequestByPoll)
                 {
-                    if (m_pollWaiting)
+                    if (m_pollProtocol != null)
                     {
-                        Debug.Assert(m_pollReply == null);
-                        IProtocol? protocol = m_protocol;
-                        Debug.Assert(protocol != null);
-                        if (m_protocolFlagIsMultiConnectionSession)
+                        ++m_pollCounter;
+                        IList<IMessage> messages = new List<IMessage>();
+                        messages.Add(msg);
+                        IMessage pollReply = m_pollProtocol.PollReply(messages);
+                        SendMessage(pollReply, m_pollProtocol);
+                        if (m_pollCountMax >= 0 && m_pollCounter >= m_pollCountMax)
                         {
-                            GetProtocolFromConnectionId(ref protocol, m_pollConnectionId);
+                            PollRelease();
                         }
-                        if (protocol != null)
-                        {
-                            ++m_pollCounter;
-                            IList<IMessage> messages = new List<IMessage>();
-                            messages.Add(msg);
-                            m_pollReply = protocol.PollReply(messages);
-                            ok = SendMessage(m_pollReply, protocol);
-                            if (ok)
-                            {
-                                m_pollReply = null;
-                            }
-                            if (m_pollCountMax >= 0 && m_pollCounter >= m_pollCountMax)
-                            {
-                                PollRelease();
-                            }
-                        }
-                        else
-                        {
-                            m_pollWaiting = false;
-                            m_pollConnectionId = 0;
-//todo                            m_pollTimer.stop();
-                            m_pollMessages.Add(msg);
-                        }
-                        ok = true;
                     }
                     else
                     {
                         m_pollMessages.Add(msg);
-                        ok = true;
                     }
                     if (m_pollMaxRequests != -1 && m_pollMessages.Count >= m_pollMaxRequests)
                     {
@@ -142,10 +114,10 @@ namespace finalmq
                 }
                 else
                 {
-                    if (m_protocol == null || ((m_endpointStreamConnection == null || m_endpointStreamConnection.Length == 0) && !m_incomingConnection))
+                    if (m_protocolSet)
                     {
                         m_messagesBuffered.Add(msg);
-                        return true;
+                        return;
                     }
 
                     IProtocol? protocol = m_protocol;
@@ -156,14 +128,13 @@ namespace finalmq
                         GetProtocolFromConnectionId(ref protocol, connectionId);
                     }
 
-                    ok = SendMessage(msg, protocol);
+                    SendMessage(msg, protocol);
                 }
             }
             if (doDisconnect)
             {
                 Disconnect();
             }
-            return ok;
         }
         public long SessionId
         {
@@ -240,11 +211,9 @@ namespace finalmq
         }
         public void Disconnect()
         {
-            IProtocolSessionList? protocolSessionList = null;
             IList<IProtocol>? protocols = null;
             lock (m_mutex)
             {
-                protocolSessionList = m_protocolSessionList;
                 protocols = new List<IProtocol>();
                 if (m_protocol != null)
                 {
@@ -264,10 +233,7 @@ namespace finalmq
                 protocol.Disconnect();
             }
 
-            if (protocolSessionList != null)
-            {
-                protocolSessionList.RemoveProtocolSession(m_sessionId);
-            }
+            m_protocolSessionList.RemoveProtocolSession(m_sessionId);
 
             Disconnected();
         }
@@ -338,31 +304,30 @@ namespace finalmq
             SetConnection(connection, true);
             m_streamConnectionContainer.Connect(m_endpointStreamConnection, connection, m_connectionProperties);
         }
-        public void CreateConnection()
+
+        private void RetriggerActivityTimer()
         {
-            Debug.Assert(m_streamConnectionContainer != null);
-            IStreamConnection? connection = null;
-            if (m_protocol != null)
+            m_activityTimer.Stop();
+            if (m_activityTimeout > 0)
             {
-                connection = m_streamConnectionContainer.CreateConnection(m_protocol);
+                m_activityTimer.Interval = m_activityTimeout;
+                m_activityTimer.Start();
             }
-            SetConnection(connection, true);
         }
+
         public void SetConnection(IStreamConnection? connection, bool verified)
         {
-            if (m_protocol != null)
-            {
-                InitProtocolValues();
-                m_protocol.SetCallback(this);
-                m_protocol.SetConnection(connection);
-            }
             if (connection != null)
             {
-                m_connectionId = connection.ConnectionId;
-                if (m_incomingConnection)
+                if (m_protocol != null)
                 {
-// todo                    m_activityTimer.setTimeout(m_activityTimeout);
+                    InitProtocolValues();
+                    m_protocol.SetCallback(this);
+                    m_protocol.SetConnection(connection);
                 }
+
+                m_connectionId = connection.ConnectionId;
+                Activity();
             }
             AddSessionToList(verified);
         }
@@ -400,23 +365,15 @@ namespace finalmq
         }
         public void SetSessionNameInternal(string sessionName)
         {
-            IProtocolSessionList? list = null;
-            lock (m_mutex)
+            bool setSuccessful = m_protocolSessionList.SetSessionName(m_sessionId, sessionName);
+            if (setSuccessful)
             {
-                list = m_protocolSessionList;
-            }
-            if (list != null)
-            {
-                bool setSuccessful = list.SetSessionName(m_sessionId, sessionName);
-                if (setSuccessful)
+                lock (m_mutex)
                 {
-                    lock (m_mutex)
-                    {
-                        m_verified = true;
-                        m_sessionName = sessionName;
-                    }
-                    Connected();    // we are in the poller loop  thread
+                    m_verified = true;
+                    m_sessionName = sessionName;
                 }
+                Connected();    // we are in the poller loop  thread
             }
         }
 
@@ -449,13 +406,11 @@ namespace finalmq
         }
         public void Disconnected()
         {
-            IProtocolSessionList? protocolSessionList = null;
             bool doDisconnected = false;
             lock (m_mutex)
             {
                 PollRelease();
 
-                protocolSessionList = m_protocolSessionList;
                 doDisconnected = (!m_triggerDisconnected) && (m_triggerConnected || m_protocolSet);
                 m_triggerDisconnected = true;
             }
@@ -474,10 +429,7 @@ namespace finalmq
                 }
             }
 
-            if (protocolSessionList != null)
-            {
-                protocolSessionList.RemoveProtocolSession(m_sessionId);
-            }
+            m_protocolSessionList.RemoveProtocolSession(m_sessionId);
         }
         public void DisconnectedVirtualSession(string virtualSessionId)
         {
@@ -494,10 +446,7 @@ namespace finalmq
         }
         public void Received(IMessage message, long connectionId)
         {
-            if (m_incomingConnection)
-            {
-//todo                m_activityTimer.setTimeout(m_activityTimeout);
-            }
+            Activity();
             bool writeChannelIdIntoEchoData = false;
             if (m_protocolFlagIsMultiConnectionSession && connectionId != 0)
             {
@@ -574,121 +523,73 @@ namespace finalmq
         }
         public bool FindSessionByName(string sessionName, IProtocol protocol)
         {
-            IProtocolSessionList? list = null;
-            lock (m_mutex)
+            IProtocolSessionPrivate? session = m_protocolSessionList.FindSessionByName(sessionName);
+            if (session != null)
             {
-                list = m_protocolSessionList;
-
-            }
-            if (list != null)
-            {
-                IProtocolSessionPrivate? session = list.FindSessionByName(sessionName);
-                if (session != null)
+                if (session != this)
                 {
-                    if (session != this)
+                    if (m_verified)
                     {
-                        if (m_verified)
-                        {
-                            session.SetProtocol(protocol);
-                        }
-                        else
-                        {
-                            Disconnected(); // we are in the poller loop  thread
-                            IProtocol? prot = null;
-                            lock (m_mutex)
-                            {
-                                prot = m_protocol;
-                                m_protocol = null;
-                                m_connectionId = 0;
-                            }
-                            Debug.Assert(prot != null);
-                            session.SetProtocol(prot);
-                        }
+                        session.SetProtocol(protocol);
                     }
-                    return true;
+                    else
+                    {
+                        Disconnected(); // we are in the poller loop thread
+                        IProtocol? prot = null;
+                        lock (m_mutex)
+                        {
+                            prot = m_protocol;
+                            m_protocol = null;
+                            m_connectionId = 0;
+                        }
+                        Debug.Assert(prot != null);
+                        session.SetProtocol(prot);
+                    }
                 }
+                return true;
             }
             return false;
         }
         public void SetSessionName(string sessionName, IProtocol protocol, IStreamConnection connection)
         {
-            IProtocolSessionList? list = null;
-            lock (m_mutex)
+            bool setSuccessful = m_protocolSessionList.SetSessionName(m_sessionId, sessionName);
+            if (setSuccessful)
             {
-                list = m_protocolSessionList;
+                lock (m_mutex)
+                {
+                    m_verified = true;
+                    m_sessionName = sessionName;
+                }
+                Connected();    // we are in the poller loop  thread
             }
-            if (list != null)
+            else
             {
-                bool setSuccessful = list.SetSessionName(m_sessionId, sessionName);
-                if (setSuccessful)
-                {
-                    lock (m_mutex)
-                    {
-                        m_verified = true;
-                        m_sessionName = sessionName;
-                    }
-                    Connected();    // we are in the poller loop  thread
-                }
-                else
-                {
-                    IProtocolSessionPrivate protocolSession = new ProtocolSession(m_callback, m_executor, protocol, m_protocolSessionList, m_bindProperties, m_contentType);
-                    protocolSession.SetConnection(connection, false);
-                    protocolSession.SetSessionNameInternal(sessionName);
-                }
+                IProtocolSessionPrivate protocolSession = new ProtocolSession(m_callback, m_executor, protocol, m_protocolSessionList, m_bindProperties, m_contentType);
+                protocolSession.SetConnection(connection, false);
+                protocolSession.SetSessionNameInternal(sessionName);
             }
         }
-        public void PollRequest(long connectionId, int timeout, int pollCountMax)
+        public void PollRequest(IProtocol protocol, int timeout, int pollCountMax)
         {
-            if (m_incomingConnection)
-            {
-//todo                m_activityTimer.setTimeout(m_activityTimeout);
-            }
+            Debug.Assert(protocol != null);
+            Activity();
             lock (m_mutex)
             {
                 PollRelease();
                 m_pollCounter = 0;
                 m_pollCountMax = pollCountMax;
-                Debug.Assert(!m_pollWaiting);
-                if (m_pollReply != null)
-                {
-                    IProtocol? protocol = m_protocol;
-                    if (m_protocolFlagIsMultiConnectionSession)
-                    {
-                        GetProtocolFromConnectionId(ref protocol, connectionId);
-                    }
-                    m_pollCounter++;
-                    bool ok = SendMessage(m_pollReply, protocol);
-                    if (ok)
-                    {
-                        m_pollReply = null;
-                    }
-                }
-                else if (m_pollMessages.Count > 0)
-                {
-                    IProtocol? protocol = m_protocol;
-                    if (m_protocolFlagIsMultiConnectionSession)
-                    {
-                        GetProtocolFromConnectionId(ref protocol, connectionId);
-                    }
-                    IList<IMessage> messages = new List<IMessage>();
-                    if (protocol != null)
-                    {
-                        messages = m_pollMessages;
-                        m_pollMessages = new List<IMessage>();
-                        m_pollCounter++;
-                        m_pollReply = protocol.PollReply(messages);
-                        bool ok = SendMessage(m_pollReply, protocol);
-                        if (ok)
-                        {
-                            m_pollReply = null;
-                        }
-                    }
-                }
-                m_pollWaiting = true;
-                m_pollConnectionId = connectionId;
+                m_pollProtocol = protocol;
+                m_pollTimer.Stop();
                 if (timeout > 0)
                 {
-//todo                    m_pollTimer.setTimeout(timeout);
+                    m_pollTimer.Interval = timeout;
+                }
+                
+                if (m_pollMessages.Count > 0)
+                {
+                    IMessage pollReply = protocol.PollReply(m_pollMessages);
+                    m_pollMessages.Clear();
+                    SendMessage(pollReply, protocol);
                 }
 
                 if (timeout == 0 || (m_pollCountMax >= 0 && m_pollCounter >= m_pollCountMax))
@@ -699,29 +600,30 @@ namespace finalmq
         }
         public void Activity()
         {
-            if (m_incomingConnection)
+            RetriggerActivityTimer();
+        }
+        public int ActivityTimeout
+        {
+            set
             {
-//todo                m_activityTimer.setTimeout(m_activityTimeout);
+                m_activityTimeout = value;
             }
         }
-        public void SetActivityTimeout(int timeout)
+        public int PollMaxRequests
         {
-            m_activityTimeout = timeout;
+            set
+            {
+                m_pollMaxRequests = value;
+            }
         }
-        public void SetPollMaxRequests(int maxRequests)
-        {
-            m_pollMaxRequests = maxRequests;
-        }
-        public void DisconnectedMultiConnection(IStreamConnection connection)
+        public void DisconnectedMultiConnection(IProtocol protocol)
         {
             lock (m_mutex)
             {
-                long connectionId = connection.ConnectionId;
-                if (m_pollWaiting && m_pollConnectionId == connectionId)
+                if (m_pollProtocol == protocol)
                 {
-                    m_pollWaiting = false;
-                    m_pollConnectionId = 0;
-//todo                    m_pollTimer.Stop();
+                    m_pollProtocol = null;
+                    m_pollTimer.Stop();
                 }
             }
 
@@ -804,17 +706,12 @@ namespace finalmq
         }
         private void AddSessionToList(bool verified)
         {
-            IProtocolSessionList? protocolSessionList = null;
             lock (m_mutex)
             {
                 m_verified = verified;
-                protocolSessionList = m_protocolSessionList;
             }
 
-            if (protocolSessionList != null)
-            {
-                protocolSessionList.AddProtocolSession(this, m_sessionId, verified);
-            }
+            m_protocolSessionList.AddProtocolSession(this, m_sessionId, verified);
         }
         private void GetProtocolFromConnectionId(ref IProtocol? protocol, long connectionId)
         {
@@ -827,16 +724,14 @@ namespace finalmq
                 m_multiProtocols.TryGetValue(connectionId, out protocol);
             }
         }
-        private bool SendMessage(IMessage message, IProtocol? protocol)
+        private void SendMessage(IMessage message, IProtocol? protocol)
         {
             // the mutex must be locked before calling sendMessage, lock also over sendMessage, because the protocol could increment a sequential message counter and the order of the counter shall be like the messages that are sent.
-            bool ok = false;
             if (protocol != null)
             {
                 IMessage messageProtocol = ConvertMessageToProtocol(message);
-                ok = protocol.SendMessage(messageProtocol);
+                protocol.SendMessage(messageProtocol);
             }
-            return ok;
         }
         private void CleanupMultiConnection()
         {
@@ -857,24 +752,14 @@ namespace finalmq
         private void PollRelease()
         {
             // mutext is already locked
-            if (m_pollWaiting)
+            if (m_pollProtocol != null)
             {
-                Debug.Assert(m_pollReply == null);
-                IProtocol? protocol = m_protocol;
-                if (m_protocolFlagIsMultiConnectionSession)
-                {
-                    GetProtocolFromConnectionId(ref protocol, m_pollConnectionId);
-                }
-                if (protocol != null)
-                {
-                    IMessage reply = protocol.PollReply();
-//todo                    Variant & controlData = reply->getControlData();
-//todo                    controlData.add("fmq_poll_stop", true);
-                    SendMessage(reply, protocol);
-                }
-                m_pollWaiting = false;
-                m_pollConnectionId = 0;
-//todo                m_pollTimer.stop();
+                IMessage reply = m_pollProtocol.PollReply();
+//todo                Variant & controlData = reply->getControlData();
+//todo                controlData.add("fmq_poll_stop", true);
+                SendMessage(reply, m_pollProtocol);
+                m_pollProtocol = null;
+                m_pollTimer.Stop();
             }
         }
 
@@ -903,7 +788,6 @@ namespace finalmq
         bool                                            m_protocolSet = false;   // atomic
         bool                                            m_triggerConnected = false;
         bool                                            m_triggerDisconnected = false;
-        readonly bool                                   m_incomingConnection = false;
 
         readonly IStreamConnectionContainer?            m_streamConnectionContainer = null;
         string?                                         m_endpointStreamConnection = null;
@@ -915,15 +799,13 @@ namespace finalmq
 
         IList<IMessage>                                 m_pollMessages = new List<IMessage>();
         int                                             m_pollMaxRequests = 10000;
-        IMessage?                                       m_pollReply = null;
-        bool                                            m_pollWaiting = false;
-        long                                            m_pollConnectionId;
-//        PollingTimer                                    m_pollTimer;
+        IProtocol?                                      m_pollProtocol = null;
+        System.Timers.Timer                             m_pollTimer = new System.Timers.Timer();
         int                                             m_pollCountMax;
         int                                             m_pollCounter;
 
         int                                             m_activityTimeout = -1;
-//        PollingTimer                                    m_activityTimer;
+        System.Timers.Timer                             m_activityTimer = new System.Timers.Timer();
 
         bool                                            m_verified = false;
         string                                          m_sessionName = "";

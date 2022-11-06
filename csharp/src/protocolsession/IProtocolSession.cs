@@ -27,7 +27,7 @@ namespace finalmq
     interface IProtocolSession
     {
         IMessage CreateMessage();
-        bool SendMessage(IMessage msg, bool isReply = false);
+        void SendMessage(IMessage msg, bool isReply = false);
         long SessionId { get; }
         ConnectionData ConnectionData { get; }
         int ContentType { get; }
@@ -38,7 +38,7 @@ namespace finalmq
         bool DoesSupportFileTransfer();
         void Disconnect();
         void Connect(string endpoint, ConnectProperties? connectionProperties = null, int contentType = 0);
-        IExecutor Executor { get; }
+        IExecutor? Executor { get; }
         void Subscribe(IList<string> subscribtions);
     }
 

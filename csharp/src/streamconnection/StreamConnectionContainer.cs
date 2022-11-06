@@ -56,6 +56,7 @@ namespace finalmq {
         {
             m_timerReconnect.Elapsed += (Object? source, System.Timers.ElapsedEventArgs e) => { DoReconnect(); };
             m_timerReconnect.AutoReset = true;
+            m_timerReconnect.Interval = 1000;
             m_timerReconnect.Enabled = true;
         }
 
