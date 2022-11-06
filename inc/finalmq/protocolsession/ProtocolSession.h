@@ -146,7 +146,6 @@ private:
     std::atomic_bool                                m_protocolSet{false};
     bool                                            m_triggerConnected = false;
     bool                                            m_triggerDisconnected = false;
-    const bool                                      m_incomingConnection = false;
 
     const std::shared_ptr<IStreamConnectionContainer>   m_streamConnectionContainer;
     std::string                                         m_endpointStreamConnection;

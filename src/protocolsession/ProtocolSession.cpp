@@ -45,7 +45,6 @@ ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, 
     , m_sessionId(protocolSessionList->getNextSessionId())
     , m_instanceId(m_sessionId | INSTANCEID_PREFIX)
     , m_contentType(contentType)
-    , m_incomingConnection(true)
     , m_bindProperties(bindProperties)
 {
 }
@@ -59,7 +58,6 @@ ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, 
     , m_sessionId(protocolSessionList->getNextSessionId())
     , m_instanceId(m_sessionId | INSTANCEID_PREFIX)
     , m_contentType(contentType)
-    , m_incomingConnection(false)
     , m_streamConnectionContainer(streamConnectionContainer)
     , m_endpointStreamConnection(endpointStreamConnection)
     , m_connectionProperties(connectProperties)
@@ -86,7 +84,6 @@ ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, 
     , m_protocolSessionList(protocolSessionList)
     , m_sessionId(protocolSessionList->getNextSessionId())
     , m_instanceId(m_sessionId | INSTANCEID_PREFIX)
-    , m_incomingConnection(false)
     , m_streamConnectionContainer(streamConnectionContainer)
 {
 }
@@ -146,14 +143,15 @@ bool ProtocolSession::connect()
 
 void ProtocolSession::setConnection(const IStreamConnectionPtr& connection, bool verified)
 {
-    if (m_protocol)
-    {
-        initProtocolValues();
-        m_protocol->setCallback(shared_from_this());
-        m_protocol->setConnection(connection);
-    }
     if (connection)
     {
+        if (m_protocol)
+        {
+            initProtocolValues();
+            m_protocol->setCallback(shared_from_this());
+            m_protocol->setConnection(connection);
+        }
+
         m_connectionId = connection->getConnectionId();
         activity();
     }
