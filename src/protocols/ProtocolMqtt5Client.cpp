@@ -50,7 +50,7 @@
 
 namespace finalmq {
 
-const int ProtocolMqtt5Client::PROTOCOL_ID = 5;
+const std::uint32_t ProtocolMqtt5Client::PROTOCOL_ID = 5;
 const std::string ProtocolMqtt5Client::PROTOCOL_NAME = "mqtt5client";
 
 const std::string ProtocolMqtt5Client::KEY_USERNAME = "username";
@@ -307,6 +307,10 @@ IProtocol::FuncCreateMessage ProtocolMqtt5Client::getMessageFactory() const
 
 void ProtocolMqtt5Client::sendMessage(IMessagePtr message)
 {
+    if (message == nullptr)
+    {
+        return;
+    }
     std::unique_lock<std::mutex> lock(m_mutex);
     IStreamConnectionPtr connection = m_connection;
     lock.unlock();

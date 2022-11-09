@@ -37,7 +37,7 @@ class SYMBOLEXP ProtocolHttpServer : public IProtocol
                                    , public std::enable_shared_from_this<ProtocolHttpServer>
 {
 public:
-    static const int PROTOCOL_ID;           // 4
+    static const std::uint32_t PROTOCOL_ID;           // 4
     static const std::string PROTOCOL_NAME; // httpserver
 
     static const std::string FMQ_HTTP;

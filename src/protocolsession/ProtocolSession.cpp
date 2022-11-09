@@ -174,6 +174,10 @@ IMessagePtr ProtocolSession::createMessage() const
 IMessagePtr ProtocolSession::convertMessageToProtocol(const IMessagePtr& msg)
 {
     // mutext is already locked
+    if (msg == nullptr)
+    {
+        return nullptr;
+    }
     IMessagePtr message = msg;
     if (message->getProtocolId() != m_protocolId ||
         (!m_protocolFlagMessagesResendable && message->wasSent()) ||
@@ -909,9 +913,12 @@ void ProtocolSession::pollRelease()
     if (m_pollProtocol)
     {
         IMessagePtr reply = m_pollProtocol->pollReply({});
-        Variant& controlData = reply->getControlData();
-        controlData.add("fmq_poll_stop", true);
-        sendMessage(reply, m_pollProtocol);
+        if (reply)
+        {
+            Variant& controlData = reply->getControlData();
+            controlData.add("fmq_poll_stop", true);
+            sendMessage(reply, m_pollProtocol);
+        }
         m_pollProtocol = nullptr;
         m_pollTimer.stop();
     }
@@ -989,7 +996,7 @@ void ProtocolSession::disconnectedMultiConnection(const IProtocolPtr& protocol)
 void ProtocolSession::sendMessage(const IMessagePtr& message, const IProtocolPtr& protocol)
 {
     // the mutex must be locked before calling sendMessage, lock also over sendMessage, because the protocol could increment a sequential message counter and the order of the counter shall be like the messages that are sent.
-    if (protocol)
+    if (protocol && message)
     {
         IMessagePtr messageProtocol = convertMessageToProtocol(message);
         protocol->sendMessage(messageProtocol);

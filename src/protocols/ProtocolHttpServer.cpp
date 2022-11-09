@@ -38,7 +38,7 @@
 
 namespace finalmq {
 
-const int ProtocolHttpServer::PROTOCOL_ID = 4;
+const std::uint32_t ProtocolHttpServer::PROTOCOL_ID = 4;
 const std::string ProtocolHttpServer::PROTOCOL_NAME = "httpserver";
 
 
@@ -571,6 +571,10 @@ static std::string HEADER_KEEP_ALIVE = "Connection: keep-alive\r\n";
 
 void ProtocolHttpServer::sendMessage(IMessagePtr message)
 {
+    if (message == nullptr)
+    {
+        return;
+    }
     assert(!message->wasSent());
     std::string firstLine;
     const Variant& controlData = message->getControlData();

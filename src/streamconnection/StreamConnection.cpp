@@ -49,7 +49,10 @@ StreamConnection::~StreamConnection()
 // IStreamConnection
 void StreamConnection::sendMessage(const IMessagePtr& msg)
 {
-    assert(msg);
+    if (msg == nullptr)
+    {
+        return;
+    }
     std::unique_lock<std::mutex> lock(m_mutex);
     if (m_socketPrivate)
     {

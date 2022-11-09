@@ -194,6 +194,10 @@ std::vector<ssize_t> ProtocolDelimiter::findEndOfMessage(const char* buffer, ssi
 
 void ProtocolDelimiter::sendMessage(IMessagePtr message)
 {
+    if (message == nullptr)
+    {
+        return;
+    }
     if (!message->wasSent())
     {
         const std::list<BufferRef>& buffers = message->getAllSendBuffers();
