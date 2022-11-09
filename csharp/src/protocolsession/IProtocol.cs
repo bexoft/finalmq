@@ -48,20 +48,20 @@ namespace finalmq
     {
         void SetCallback(IProtocolCallback callback);
         void SetConnection(IStreamConnection connection);
-        IStreamConnection Connection { get; }
+        IStreamConnection? Connection { get; }
         void Disconnect();
         uint ProtocolId { get; }
-        bool AreMessagesResendable();
-        bool DoesSupportMetainfo();
-        bool DoesSupportSession();
-        bool NeedsReply();
-        bool IsMultiConnectionSession();
-        bool IsSendRequestByPoll();
-        bool DoesSupportFileTransfer();
+        bool AreMessagesResendable { get; }
+        bool DoesSupportMetainfo { get; }
+        bool DoesSupportSession { get; }
+        bool NeedsReply { get; }
+        bool IsMultiConnectionSession { get; }
+        bool IsSendRequestByPoll { get; }
+        bool DoesSupportFileTransfer { get; }
         FuncCreateMessage MessageFactory { get; }
         void SendMessage(IMessage message);
         void MoveOldProtocolState(IProtocol protocolOld);
-        IMessage PollReply(IList<IMessage>? messages = null);
+        IMessage? PollReply(IList<IMessage>? messages = null);
         void Subscribe(IList<string> subscribtions);
     }
 

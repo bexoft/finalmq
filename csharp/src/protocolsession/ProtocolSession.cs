@@ -96,7 +96,8 @@ namespace finalmq
                         ++m_pollCounter;
                         IList<IMessage> messages = new List<IMessage>();
                         messages.Add(msg);
-                        IMessage pollReply = m_pollProtocol.PollReply(messages);
+                        IMessage? pollReply = m_pollProtocol.PollReply(messages);
+                        Debug.Assert(pollReply != null);    // wrong implementation of the protocol
                         SendMessage(pollReply, m_pollProtocol);
                         if (m_pollCountMax >= 0 && m_pollCounter >= m_pollCountMax)
                         {
@@ -159,7 +160,7 @@ namespace finalmq
                     {
                         foreach (var entry in m_multiProtocols)
                         {
-                            IStreamConnection connIter = entry.Value.Connection;
+                            IStreamConnection? connIter = entry.Value.Connection;
                             if (connection == null)
                             {
                                 connection = connIter;
@@ -334,7 +335,7 @@ namespace finalmq
         public void SetProtocol(IProtocol protocol)
         {
             long connectionId = 0;
-            IStreamConnection connection = protocol.Connection;
+            IStreamConnection? connection = protocol.Connection;
             if (connection != null)
             {
                 connectionId = connection.ConnectionId;
@@ -587,7 +588,8 @@ namespace finalmq
                 
                 if (m_pollMessages.Count > 0)
                 {
-                    IMessage pollReply = protocol.PollReply(m_pollMessages);
+                    IMessage? pollReply = protocol.PollReply(m_pollMessages);
+                    Debug.Assert(pollReply != null);    // wrong implementation of the protocol
                     m_pollMessages.Clear();
                     SendMessage(pollReply, protocol);
                 }
@@ -638,12 +640,12 @@ namespace finalmq
             IProtocol? protocol = m_protocol;
             Debug.Assert(protocol != null);
             m_protocolId = protocol.ProtocolId;
-            m_protocolFlagMessagesResendable = protocol.AreMessagesResendable();
-            m_protocolFlagSupportMetainfo = protocol.DoesSupportMetainfo();
-            m_protocolFlagNeedsReply = protocol.NeedsReply();
-            m_protocolFlagIsMultiConnectionSession = protocol.IsMultiConnectionSession();
-            m_protocolFlagIsSendRequestByPoll = protocol.IsSendRequestByPoll();
-            m_protocolFlagSupportFileTransfer = protocol.DoesSupportFileTransfer();
+            m_protocolFlagMessagesResendable = protocol.AreMessagesResendable;
+            m_protocolFlagSupportMetainfo = protocol.DoesSupportMetainfo;
+            m_protocolFlagNeedsReply = protocol.NeedsReply;
+            m_protocolFlagIsMultiConnectionSession = protocol.IsMultiConnectionSession;
+            m_protocolFlagIsSendRequestByPoll = protocol.IsSendRequestByPoll;
+            m_protocolFlagSupportFileTransfer = protocol.DoesSupportFileTransfer;
             m_messageFactory = protocol.MessageFactory;
 
             Thread.MemoryBarrier();
@@ -654,7 +656,7 @@ namespace finalmq
         {
             IMessage? message = msg;
             if (message.ProtocolId != m_protocolId ||
-                (!m_protocolFlagMessagesResendable && message.WasSent()) ||
+                (!m_protocolFlagMessagesResendable && message.WasSent) ||
                 (message.GetTotalSendPayloadSize() == 0 && msg.GetReceivePayload().Length > 0))
             {
                 message = null;
@@ -724,10 +726,10 @@ namespace finalmq
                 m_multiProtocols.TryGetValue(connectionId, out protocol);
             }
         }
-        private void SendMessage(IMessage message, IProtocol? protocol)
+        private void SendMessage(IMessage? message, IProtocol? protocol)
         {
             // the mutex must be locked before calling sendMessage, lock also over sendMessage, because the protocol could increment a sequential message counter and the order of the counter shall be like the messages that are sent.
-            if (protocol != null)
+            if (protocol != null && message != null)
             {
                 IMessage messageProtocol = ConvertMessageToProtocol(message);
                 protocol.SendMessage(messageProtocol);
@@ -738,7 +740,7 @@ namespace finalmq
             IList<long> connectionIdsToRemove = new List<long>();
             foreach (var protocol in m_multiProtocols)
             {
-                IStreamConnection connection = protocol.Value.Connection;
+                IStreamConnection? connection = protocol.Value.Connection;
                 if (connection == null || connection.ConnectionData.Stream == null)
                 {
                     connectionIdsToRemove.Add(protocol.Key);
@@ -754,17 +756,21 @@ namespace finalmq
             // mutext is already locked
             if (m_pollProtocol != null)
             {
-                IMessage reply = m_pollProtocol.PollReply();
-//todo                Variant & controlData = reply->getControlData();
-//todo                controlData.add("fmq_poll_stop", true);
-                SendMessage(reply, m_pollProtocol);
+                IMessage? reply = m_pollProtocol.PollReply();    // wrong implementation of the protocol
+                Debug.Assert(reply != null);
+                if (reply != null)
+                {
+                    //todo  Variant & controlData = reply->getControlData();
+                    //todo  controlData.add("fmq_poll_stop", true);
+                    SendMessage(reply, m_pollProtocol);
+                }
                 m_pollProtocol = null;
                 m_pollTimer.Stop();
             }
         }
 
         static readonly long INSTANCEID_PREFIX = 0x0100000000000000;
-//todo        static readonly string FMQ_CONNECTION_ID = "fmq_echo_connid";
+        //todo static readonly string FMQ_CONNECTION_ID = "fmq_echo_connid";
 
 
         readonly IProtocolSessionCallback               m_callback;

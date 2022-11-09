@@ -256,6 +256,12 @@ namespace finalmq {
             m_sizeReceiveBuffer = size;
             return new BufferRef(m_receiveBuffer, 0, size);
         }
+        public BufferRef SetReceiveBuffer(byte[] buffer, int size)
+        {
+            m_receiveBuffer = buffer;
+            m_sizeReceiveBuffer = size;
+            return new BufferRef(m_receiveBuffer, 0, size);
+        }
         public void SetHeaderSize(int sizeHeader)
         {
             m_sizeHeader = sizeHeader;
@@ -376,9 +382,12 @@ namespace finalmq {
         {
             get => m_protocolId;
         }
-        public bool WasSent()
+        public bool WasSent
         {
-            return m_preparedToSend;
+            get
+            {
+                return m_preparedToSend;
+            }
         }
 
         public void AddMessage(IMessage msg)

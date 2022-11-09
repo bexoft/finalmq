@@ -57,7 +57,7 @@ namespace finalmq
         {
             IProtocol protocol = m_protocolFactory.CreateProtocol(/* todo m_bindProperties.ProtocolData */);
             IProtocolSessionPrivate protocolSession = new ProtocolSession(m_callback, m_executor, protocol, m_protocolSessionList, m_bindProperties, m_contentType);
-            protocolSession.SetConnection(connection, !protocol.DoesSupportSession());
+            protocolSession.SetConnection(connection, !protocol.DoesSupportSession);
             return protocol;
         }
 

@@ -93,6 +93,7 @@ namespace finalmq
         BufferRef GetReceiveHeader();
         BufferRef GetReceivePayload();
         BufferRef ResizeReceiveBuffer(int size);
+        BufferRef SetReceiveBuffer(byte[] buffer, int size);
         void SetHeaderSize(int sizeHeader);
 
         // for the framework
@@ -113,7 +114,7 @@ namespace finalmq
         // for the protocol to check which protocol created the message
         uint ProtocolId { get; }
 
-        bool WasSent();
+        bool WasSent { get; }
 
         void AddMessage(IMessage msg);
         IMessage? GetMessage(uint protocolId);
