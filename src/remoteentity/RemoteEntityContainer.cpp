@@ -152,28 +152,43 @@ void RemoteEntityContainer::init(const IExecutorPtr& executor, int cycleTime, Fu
     m_protocolSessionContainer->init(executor, cycleTime, std::move(funcTimer), checkReconnectInterval);
 }
 
-int RemoteEntityContainer::bind(const std::string& endpoint, const BindProperties& bindProperties)
+static std::string endpointToProtocolEndpoint(const std::string& endpoint, std::string* contentTypeName = nullptr)
 {
     size_t ixEndpoint = endpoint.find_last_of(':');
     if (ixEndpoint == std::string::npos)
     {
+        return "";
+    }
+    if (contentTypeName)
+    {
+        *contentTypeName = endpoint.substr(ixEndpoint + 1, endpoint.size() - (ixEndpoint + 1));
+    }
+    return endpoint.substr(0, ixEndpoint);
+}
+
+
+int RemoteEntityContainer::bind(const std::string& endpoint, const BindProperties& bindProperties)
+{
+    std::string contentTypeName;
+    const std::string endpointProtocol = endpointToProtocolEndpoint(endpoint, &contentTypeName);
+    if (endpointProtocol.empty())
+    {
         return -1;
     }
-    std::string contentTypeName = endpoint.substr(ixEndpoint + 1, endpoint.size() - (ixEndpoint + 1));
     int contentType = RemoteEntityFormatRegistry::instance().getContentType(contentTypeName);
     if (contentType == 0)
     {
         streamError << "ContentType not found: " << contentTypeName;
         return -1;
     }
-    std::string endpointProtocol = endpoint.substr(0, ixEndpoint);
 
     return m_protocolSessionContainer->bind(endpointProtocol, this, bindProperties, contentType);
 }
 
 void RemoteEntityContainer::unbind(const std::string& endpoint)
 {
-    m_protocolSessionContainer->unbind(endpoint);
+    const std::string endpointProtocol = endpointToProtocolEndpoint(endpoint);
+    m_protocolSessionContainer->unbind(endpointProtocol);
 }
 
 IProtocolSessionPtr RemoteEntityContainer::connect(const std::string& endpoint, const ConnectProperties& connectProperties)
