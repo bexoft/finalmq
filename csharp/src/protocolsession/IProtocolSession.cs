@@ -24,7 +24,7 @@
 namespace finalmq 
 {
 
-    interface IProtocolSession
+    public interface IProtocolSession
     {
         IMessage CreateMessage();
         void SendMessage(IMessage msg, bool isReply = false);
@@ -43,7 +43,7 @@ namespace finalmq
     }
 
 
-    interface IProtocolSessionCallback
+    public interface IProtocolSessionCallback
     {
         void Connected(IProtocolSession session);
         void Disconnected(IProtocolSession session);

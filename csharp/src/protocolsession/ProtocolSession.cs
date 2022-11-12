@@ -115,7 +115,7 @@ namespace finalmq
                 }
                 else
                 {
-                    if (m_protocolSet)
+                    if (!m_protocolSet)
                     {
                         m_messagesBuffered.Add(msg);
                         return;
@@ -246,9 +246,9 @@ namespace finalmq
                 throw new System.ArgumentException("Wrong endpoint format: " + endpoint);
             }
             string protocolName = endpoint.Substring(ixEndpoint + 1, endpoint.Length - (ixEndpoint + 1));
-            IProtocolFactory protocolFactory = ProtocolRegistry.Instance.GetProtocolFactory(protocolName);
+            FuncCreateProtocol protocolFactory = ProtocolRegistry.Instance.GetProtocolFactory(protocolName);
 
-            IProtocol? protocol = protocolFactory.CreateProtocol(/* todo connectionProperties.ProtocolData */);
+            IProtocol? protocol = protocolFactory(/* todo connectionProperties.ProtocolData */);
             Debug.Assert(protocol != null);
 
 

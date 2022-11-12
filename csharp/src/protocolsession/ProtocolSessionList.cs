@@ -31,6 +31,7 @@ namespace finalmq
         void RemoveProtocolSession(long sessionId);
         IList<IProtocolSessionPrivate> GetAllSessions();
         IProtocolSession GetSession(long sessionId);
+        IProtocolSession? TryGetSession(long sessionId);
         IProtocolSessionPrivate? FindSessionByName(string sessionName);
         bool SetSessionName(long sessionId, string sessionName);
     }
@@ -77,6 +78,15 @@ namespace finalmq
         }
         public IProtocolSession GetSession(long sessionId)
         {
+            IProtocolSession? session = TryGetSession(sessionId);
+            if (session != null)
+            {
+                return session;
+            }
+            throw new System.Collections.Generic.KeyNotFoundException("Session ID " + sessionId + " not found");
+        }
+        public IProtocolSession? TryGetSession(long sessionId)
+        {
             lock (m_mutex)
             {
                 SessionData? sessionData = null;
@@ -86,7 +96,7 @@ namespace finalmq
                     return sessionData.session;
                 }
             }
-            throw new System.Collections.Generic.KeyNotFoundException("Session ID " + sessionId + " not found");
+            return null;
         }
         public IProtocolSessionPrivate? FindSessionByName(string sessionName)
         {

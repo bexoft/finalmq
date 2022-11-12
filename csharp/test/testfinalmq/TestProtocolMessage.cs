@@ -13,9 +13,6 @@ namespace testfinalmq
 {
 
 
-
-
-    [Collection("TestCollectionSocket")]
     public class TestProtocolMessage : IDisposable
     {
         readonly static uint PROTOCOL_ID = 123;

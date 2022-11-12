@@ -15,22 +15,6 @@ using System.Security.Authentication;
 namespace testfinalmq
 {
 
-    class StreamConnectionCallbackSsl : IStreamConnectionCallback
-    {
-        public IStreamConnectionCallback? Connected(IStreamConnection connection)
-        {
-            return null;
-        }
-        public void Disconnected(IStreamConnection connection)
-        {
-
-        }
-        public void Received(IStreamConnection connection, byte[] buffer, int count)
-        {
-        }
-    }
-
-
 
     [Collection("TestCollectionSocket")]
     public class TestIntegrationStreamConnectionContainerSsl : IDisposable
@@ -40,7 +24,6 @@ namespace testfinalmq
         readonly Mock<IStreamConnectionCallback> m_mockClientCallback = new Mock<IStreamConnectionCallback>();
         readonly Mock<IStreamConnectionCallback> m_mockServerCallback = new Mock<IStreamConnectionCallback>();
         readonly string MESSAGE1_BUFFER = "Hello";
-
 
         public TestIntegrationStreamConnectionContainerSsl()
         {
@@ -229,61 +212,6 @@ namespace testfinalmq
         }
 
         [Fact]
-        public void TestSendConnectBind()
-        {
-            IStreamConnection? connBind = null;
-            IStreamConnection? connConnect = null;
-            CondVar condVarReceived = new CondVar();
-
-            m_mockBindCallback.Setup(x => x.Connected(It.IsAny<IStreamConnection>()))
-                .Callback((IStreamConnection connection) =>
-                {
-                    connBind = connection;
-                })
-                .Returns(m_mockServerCallback.Object);
-            m_mockClientCallback.Setup(x => x.Connected(It.IsAny<IStreamConnection>()))
-                .Callback((IStreamConnection connection) => {
-                    connConnect = connection;
-                })
-                .Returns((IStreamConnectionCallback?)null);
-            m_mockServerCallback.Setup(x => x.Connected(It.IsAny<IStreamConnection>()))
-                .Callback((IStreamConnection connection) => {
-                })
-                .Returns((IStreamConnectionCallback?)null);
-            m_mockServerCallback.Setup(x => x.Received(It.IsAny<IStreamConnection>(), It.IsAny<byte[]>(), It.IsAny<int>()))
-                .Callback((IStreamConnection connection, byte[] buffer, int count) =>
-                {
-                    Debug.Assert(Encoding.UTF8.GetString(buffer, 0, count) == MESSAGE1_BUFFER);
-                    condVarReceived.Set();
-                });
-
-
-            IStreamConnection connection = m_connectionContainer.CreateConnection(m_mockClientCallback.Object);
-            IMessage message = new ProtocolMessage(0);
-            message.AddSendPayload(Encoding.UTF8.GetBytes(MESSAGE1_BUFFER));
-            connection.SendMessage(message);
-
-            m_connectionContainer.Connect("tcp://localhost:3333", connection, 
-                new ConnectProperties(new SslClientOptions("", new RemoteCertificateValidationCallback(ValidateServerCertificate)), new ConnectConfig(1)));
-
-            Thread.Sleep(4000);
-
-            m_connectionContainer.Bind("tcp://*:3333", m_mockBindCallback.Object, new BindProperties(new SslServerOptions(new X509Certificate("ssl-certificate.pfx"))));
-
-
-            Debug.Assert(condVarReceived.Wait(5000));
-
-            //m_mockBindCallback.Verify(x => x.Connected(It.IsAny<IStreamConnection>()), Times.Once);
-            //m_mockClientCallback.Verify(x => x.Connected(It.IsAny<IStreamConnection>()), Times.Once);
-            //m_mockServerCallback.Verify(x => x.Connected(It.IsAny<IStreamConnection>()), Times.Once);
-
-            Debug.Assert(connBind != null);
-            Debug.Assert(connConnect != null);
-            Debug.Assert(connConnect == connection);
-            Debug.Assert(connBind.ConnectionData.Endpoint == "tcp://*:3333");
-        }
-
-        [Fact]
         public void TestReconnectExpires()
         {
             IStreamConnection? connDisconnect = null;
@@ -421,9 +349,6 @@ namespace testfinalmq
             Debug.Assert(connConnect != null);
             Debug.Assert(connConnect == connection);
             Debug.Assert(connBind.ConnectionData.Endpoint == "tcp://*:3333");
-
-            Debug.Assert(connBind.ConnectionData.Endpoint == "tcp://*:3333");
-            Debug.Assert(connConnect == connection);
 
             IList<IStreamConnection> connections = m_connectionContainer.GetAllConnections();
             Debug.Assert(connections.Count() == 2);

@@ -26,6 +26,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace finalmq
 {
@@ -192,9 +193,16 @@ namespace finalmq
     };
 
 
-    //class ProtocolStreamFactory: IProtocolFactory
-    //{
-    //    // IProtocolFactory
-    //    public IProtocol CreateProtocol(/*todo Variant data*/);
-    //}
+    //---------------------------------------
+    // register factory
+    //---------------------------------------
+    class RegisterProtocolStreamFactory
+    {
+        [ModuleInitializer]
+        internal static void Register()
+        {
+            ProtocolRegistry.Instance.RegisterProtocolFactory(ProtocolStream.PROTOCOL_NAME, ProtocolStream.PROTOCOL_ID, () => { return new ProtocolStream(); } );
+        }
+    }
+
 }

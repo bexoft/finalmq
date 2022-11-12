@@ -27,7 +27,7 @@ namespace finalmq
 
     public delegate void FuncTimer();
 
-    interface IProtocolSessionContainer : IDisposable
+    public interface IProtocolSessionContainer : IDisposable
     {
         int CheckReconnectInterval { get; set; }
         void Bind(string endpoint, IProtocolSessionCallback callback, BindProperties? bindProperties = null, int contentType = 0);
@@ -36,13 +36,14 @@ namespace finalmq
         IProtocolSession CreateSession(IProtocolSessionCallback callback);
         IList<IProtocolSession> GetAllSessions();
         IProtocolSession GetSession(long sessionId);
+        IProtocolSession? TryGetSession(long sessionId);
         IExecutor? GetExecutor();
     }
 
 
     class ProtocolBind : IStreamConnectionCallback
     {
-        public ProtocolBind(IProtocolSessionCallback callback, IExecutor? executor, IProtocolFactory protocolFactory, IProtocolSessionList protocolSessionList, BindProperties? bindProperties = null, int contentType = 0)
+        public ProtocolBind(IProtocolSessionCallback callback, IExecutor? executor, FuncCreateProtocol protocolFactory, IProtocolSessionList protocolSessionList, BindProperties? bindProperties = null, int contentType = 0)
         {
             m_callback = callback;
             m_executor = executor;
@@ -55,7 +56,7 @@ namespace finalmq
         // IStreamConnectionCallback
         public IStreamConnectionCallback? Connected(IStreamConnection connection)
         {
-            IProtocol protocol = m_protocolFactory.CreateProtocol(/* todo m_bindProperties.ProtocolData */);
+            IProtocol protocol = m_protocolFactory(/* todo m_bindProperties.ProtocolData */);
             IProtocolSessionPrivate protocolSession = new ProtocolSession(m_callback, m_executor, protocol, m_protocolSessionList, m_bindProperties, m_contentType);
             protocolSession.SetConnection(connection, !protocol.DoesSupportSession);
             return protocol;
@@ -75,18 +76,15 @@ namespace finalmq
 
         readonly IProtocolSessionCallback m_callback;
         readonly IExecutor? m_executor;
-        readonly IProtocolFactory m_protocolFactory;
+        readonly FuncCreateProtocol m_protocolFactory;
         readonly IProtocolSessionList m_protocolSessionList;
         readonly BindProperties? m_bindProperties;
         readonly int m_contentType;
     }
 
-
-
-
-    class ProtocolSessionContainer : IProtocolSessionContainer
+    public class ProtocolSessionContainer : IProtocolSessionContainer
     {
-        public ProtocolSessionContainer(IExecutor? executor)
+        public ProtocolSessionContainer(IExecutor? executor = null)
         {
             m_executor = executor;
         }
@@ -134,17 +132,26 @@ namespace finalmq
             get => m_streamConnectionContainer.CheckReconnectInterval;
             set => m_streamConnectionContainer.CheckReconnectInterval = value;
         }
-        public void Bind(string endpoint, IProtocolSessionCallback callback, BindProperties? bindProperties = null, int contentType = 0)
+
+        private static string endpointToStreamEndpoint(string endpoint, out string protocolName)
         {
+            protocolName = "";
             int ixEndpoint = endpoint.LastIndexOf(':');
             if (ixEndpoint == -1)
             {
-                throw new ArgumentException("':' missing in endpoint");
+                return "";
             }
-            string protocolName = endpoint.Substring(ixEndpoint + 1, endpoint.Length - (ixEndpoint + 1));
-            IProtocolFactory protocolFactory = ProtocolRegistry.Instance.GetProtocolFactory(protocolName);
 
-            string endpointStreamConnection = endpoint.Substring(0, ixEndpoint);
+            protocolName = endpoint.Substring(ixEndpoint + 1, endpoint.Length - (ixEndpoint + 1));
+
+            return endpoint.Substring(0, ixEndpoint);
+        }
+
+        public void Bind(string endpoint, IProtocolSessionCallback callback, BindProperties? bindProperties = null, int contentType = 0)
+        {
+            string protocolName;
+            string endpointStreamConnection = endpointToStreamEndpoint(endpoint, out protocolName);
+            FuncCreateProtocol protocolFactory = ProtocolRegistry.Instance.GetProtocolFactory(protocolName);
 
             ProtocolBind? bind = null;
             lock (m_mutex)
@@ -171,7 +178,9 @@ namespace finalmq
                 if (m_endpoint2Bind.ContainsKey(endpoint))
                 {
                     m_endpoint2Bind.Remove(endpoint);
-                    m_streamConnectionContainer.Unbind(endpoint);
+                    string protocolName;
+                    string endpointStreamConnection = endpointToStreamEndpoint(endpoint, out protocolName);
+                    m_streamConnectionContainer.Unbind(endpointStreamConnection);
                 }
             }
         }
@@ -183,9 +192,9 @@ namespace finalmq
                 throw new ArgumentException("':' missing in endpoint");
             }
             string protocolName = endpoint.Substring(ixEndpoint + 1, endpoint.Length - (ixEndpoint + 1));
-            IProtocolFactory protocolFactory = ProtocolRegistry.Instance.GetProtocolFactory(protocolName);
+            FuncCreateProtocol protocolFactory = ProtocolRegistry.Instance.GetProtocolFactory(protocolName);
 
-            IProtocol protocol = protocolFactory.CreateProtocol(/* todo connectProperties.protocolData*/);
+            IProtocol protocol = protocolFactory(/* todo connectProperties.protocolData*/);
 
             string endpointStreamConnection = endpoint.Substring(0, ixEndpoint);
 
@@ -208,6 +217,11 @@ namespace finalmq
         public IProtocolSession GetSession(long sessionId)
         {
             IProtocolSession protocolSession = m_protocolSessionList.GetSession(sessionId);
+            return protocolSession;
+        }
+        public IProtocolSession? TryGetSession(long sessionId)
+        {
+            IProtocolSession? protocolSession = m_protocolSessionList.TryGetSession(sessionId);
             return protocolSession;
         }
         public IExecutor? GetExecutor()

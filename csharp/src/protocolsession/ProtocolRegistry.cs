@@ -27,22 +27,22 @@ namespace finalmq
 
     interface IProtocolRegistry
     {
-        void RegisterProtocolFactory(string protocolName, int protocolId, IProtocolFactory protocolFactory);
-        IProtocolFactory GetProtocolFactory(string protocolName);
-        IProtocolFactory GetProtocolFactory(int protocolId);
+        void RegisterProtocolFactory(string protocolName, uint protocolId, FuncCreateProtocol protocolFactory);
+        FuncCreateProtocol GetProtocolFactory(string protocolName);
+        FuncCreateProtocol GetProtocolFactory(uint protocolId);
     };
 
     class ProtocolRegistryImpl : IProtocolRegistry
     {
-        public void RegisterProtocolFactory(string protocolName, int protocolId, IProtocolFactory protocolFactory)
+        public void RegisterProtocolFactory(string protocolName, uint protocolId, FuncCreateProtocol protocolFactory)
         {
             m_protocolNameToFactory[protocolName] = protocolFactory;
             m_protocolIdToFactory[protocolId] = protocolFactory;
         }
 
-        public IProtocolFactory GetProtocolFactory(string protocolName)
+        public FuncCreateProtocol GetProtocolFactory(string protocolName)
         {
-            IProtocolFactory? factory = null;
+            FuncCreateProtocol? factory = null;
             m_protocolNameToFactory.TryGetValue(protocolName, out factory);
             if (factory != null)
             {
@@ -51,9 +51,9 @@ namespace finalmq
             throw new System.Collections.Generic.KeyNotFoundException("Protocol name " + protocolName + " not found");
         }
 
-        public IProtocolFactory GetProtocolFactory(int protocolId)
+        public FuncCreateProtocol GetProtocolFactory(uint protocolId)
         {
-            IProtocolFactory? factory = null;
+            FuncCreateProtocol? factory = null;
             m_protocolIdToFactory.TryGetValue(protocolId, out factory);
             if (factory != null)
             {
@@ -62,8 +62,8 @@ namespace finalmq
             throw new System.Collections.Generic.KeyNotFoundException("Protocol ID " + protocolId + " not found");
         }
 
-        private IDictionary<string, IProtocolFactory>   m_protocolNameToFactory = new Dictionary<string, IProtocolFactory>();
-        private IDictionary<int, IProtocolFactory>      m_protocolIdToFactory   = new Dictionary<int, IProtocolFactory>();
+        private IDictionary<string, FuncCreateProtocol>   m_protocolNameToFactory = new Dictionary<string, FuncCreateProtocol>();
+        private IDictionary<uint, FuncCreateProtocol>     m_protocolIdToFactory   = new Dictionary<uint, FuncCreateProtocol>();
     };
 
 
