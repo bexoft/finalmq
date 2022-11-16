@@ -677,7 +677,7 @@ namespace finalmq
                         foreach (BufferRef bufferRef in payloads)
                         {
                             Debug.Assert(offset + bufferRef.Length <= sizePayload);
-                            bufferRef.Buffer.CopyTo(payload.Buffer, offset);
+                            bufferRef.Buffer.CopyTo(payload.Buffer, payload.Offset + offset);
                             offset += bufferRef.Length;
                         }
                         Debug.Assert(offset == sizePayload);
