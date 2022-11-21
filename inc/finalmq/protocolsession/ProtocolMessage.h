@@ -70,6 +70,7 @@ private:
     virtual BufferRef getReceiveHeader() const override;
     virtual BufferRef getReceivePayload() const override;
     virtual char* resizeReceiveBuffer(ssize_t size) override;
+    virtual void setReceiveBuffer(const std::shared_ptr<std::string>& receiveBuffer, ssize_t offset, ssize_t size) override;
     virtual void setHeaderSize(ssize_t header) override;
 
     // for the framework
@@ -114,8 +115,8 @@ private:
     ssize_t                     m_sizeSendPayloadTotal = 0;
 
     // receive
-    std::string                 m_receiveBuffer;
-    ssize_t                     m_sizeReceiveBuffer = 0;
+    std::shared_ptr<std::string> m_receiveBuffer;
+    BufferRef                    m_receiveBufferRef;
 
     ssize_t                     m_sizeHeader = 0;
     ssize_t                     m_sizeTrailer = 0;
