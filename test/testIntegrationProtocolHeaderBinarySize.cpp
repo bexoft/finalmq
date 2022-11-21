@@ -152,7 +152,7 @@ TEST_F(TestIntegrationProtocolHeaderBinarySize, testConnectBind)
 }
 
 
-TEST_F(TestIntegrationProtocolHeaderBinarySize, testSendConnectBind)
+TEST_F(TestIntegrationProtocolHeaderBinarySize, testConnectSendBind)
 {
     EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(1);
     EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);

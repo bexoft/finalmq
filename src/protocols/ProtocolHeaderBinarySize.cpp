@@ -125,8 +125,8 @@ bool ProtocolHeaderBinarySize::isSendRequestByPoll() const
 
 bool ProtocolHeaderBinarySize::doesSupportFileTransfer() const
 {
-    return false;
 }
+    return false;
 
 IProtocol::FuncCreateMessage ProtocolHeaderBinarySize::getMessageFactory() const
 {
@@ -146,9 +146,9 @@ void ProtocolHeaderBinarySize::sendMessage(IMessagePtr message)
         ssize_t sizePayload = message->getTotalSendPayloadSize();
         const std::list<BufferRef>& buffers = message->getAllSendBuffers();
         assert(!buffers.empty());
-        assert(buffers.begin()->second >= 4);
+        assert(buffers.begin()->second >= HEADERSIZE);
         char* header = buffers.begin()->first;
-        for (int i = 0; i < 4; ++i)
+        for (int i = 0; i < HEADERSIZE; ++i)
         {
             header[i] = (sizePayload >> (i * 8)) & 0xff;
         }
