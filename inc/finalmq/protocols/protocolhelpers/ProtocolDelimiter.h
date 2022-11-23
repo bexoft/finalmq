@@ -66,14 +66,20 @@ private:
     std::weak_ptr<IProtocolCallback>    m_callback;
     IStreamConnectionPtr                m_connection;
 
-    std::string                         m_delimiter;
+    const std::string                   m_delimiter;
+    const char                          m_delimiterStart;
+    ssize_t                             m_indexStartMessage = 0;
+    std::shared_ptr<std::string>        m_receiveBuffer;
+    ssize_t                             m_bufferSize = 0;
 
-    std::list<std::string>              m_receiveBuffers;
-    ssize_t                             m_indexStartBuffer = 0;
-    ssize_t                             m_characterCounter = 0;
-    ssize_t                             m_indexDelimiter = -1;
-
-    std::string                         m_delimiterPartial;
+    struct ReceiveBufferStore
+    {
+        std::shared_ptr<std::string> receiveBuffer;
+        ssize_t                      indexStartMessage = -1;
+        ssize_t                      indexEndMessage = -1;
+    };
+    std::vector<ReceiveBufferStore>     m_receiveBuffers;
+    ssize_t                             m_receiveBuffersTotal = 0;
 };
 
 
