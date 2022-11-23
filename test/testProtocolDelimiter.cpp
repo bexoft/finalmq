@@ -23,7 +23,7 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
-#include "finalmq/protocols/protocolHelpers/ProtocolDelimiter.h"
+#include "finalmq/protocols/protocolhelpers/ProtocolDelimiter.h"
 #include "finalmq//protocolsession/ProtocolMessage.h"
 #include "MockIProtocolCallback.h"
 #include "finalmq/helpers/OperatingSystem.h"
