@@ -20,7 +20,7 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-    
+using System.Diagnostics;
 
 namespace finalmq
 {
@@ -32,9 +32,25 @@ namespace finalmq
     {
         public BufferRef(byte[] buffer, int offset = 0, int length = 0)
         {
+            Set(buffer, offset, length);
+        }
+        public void Set(byte[] buffer, int offset = 0, int length = 0)
+        {
+            Debug.Assert(offset + length <= buffer.Length);
             m_buffer = buffer;
             m_offset = offset;
             m_length = length;
+        }
+        public byte this[int index] 
+        {
+            get
+            {
+                return m_buffer[m_offset + index];
+            }
+            set
+            {
+                m_buffer[m_offset + index] = value;
+            }
         }
         public byte[] Buffer
         {
@@ -58,10 +74,47 @@ namespace finalmq
             }
             set
             {
+                Debug.Assert(this.Offset + value <= this.Buffer.Length);
                 this.m_length = value;
             }
         }
-        private readonly byte[] m_buffer;
+        public static void Copy(BufferRef source, BufferRef destination, int length)
+        {
+            Debug.Assert(source.Offset + length <= source.Buffer.Length);
+            Debug.Assert(destination.Offset + length <= destination.Buffer.Length);
+            Debug.Assert(length <= destination.Length);
+            Array.Copy(source.Buffer, source.Offset, destination.Buffer, destination.Offset, length);
+        }
+        public void CopyTo(BufferRef destination, int length)
+        {
+            Debug.Assert(this.Offset + length <= this.Buffer.Length);
+            Debug.Assert(destination.Offset + length <= destination.Buffer.Length);
+            Debug.Assert(length <= destination.Length);
+            Array.Copy(this.Buffer, this.Offset, destination.Buffer, destination.Offset, length);
+        }
+        public void CopyTo(BufferRef destination)
+        {
+            CopyTo(destination, this.Length);
+        }
+        public void CopyToEnd(BufferRef destination)
+        {
+            int length = this.Length;
+            Debug.Assert(destination.Offset + destination.Length + length <= destination.Buffer.Length);
+            destination.Length += this.Length;
+            CopyTo(destination, length);
+        }
+        public void AddOffset(int delta)
+        {
+            this.m_offset += delta;
+            this.m_length -= delta;
+            Debug.Assert(this.m_length >= 0);
+            Debug.Assert(this.m_offset + this.m_length <= m_buffer.Length);
+        }
+        public void Clear()
+        {
+            this.m_length = 0;
+        }
+        private byte[] m_buffer;
         private int m_offset;
         private int m_length;
     }
@@ -93,7 +146,7 @@ namespace finalmq
         BufferRef GetReceiveHeader();
         BufferRef GetReceivePayload();
         BufferRef ResizeReceiveBuffer(int size);
-        BufferRef SetReceiveBuffer(byte[] buffer, int size);
+        void SetReceiveBuffer(byte[] buffer, int offset, int size);
         void SetHeaderSize(int sizeHeader);
 
         // for the framework

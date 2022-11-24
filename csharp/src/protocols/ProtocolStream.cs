@@ -68,7 +68,7 @@ namespace finalmq
         public void Received(IStreamConnection connection, byte[] buffer, int count)
         {
             IMessage message = new ProtocolMessage(0);
-            message.SetReceiveBuffer(buffer, count);
+            message.SetReceiveBuffer(buffer, 0, count);
             var callback = m_callback;
             if (callback != null)
             {

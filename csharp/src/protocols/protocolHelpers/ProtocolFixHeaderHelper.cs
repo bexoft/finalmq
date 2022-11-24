@@ -32,100 +32,133 @@ namespace finalmq
 {
     class ProtocolFixHeaderHelper
     {
-        public delegate int FuncGetPayloadSize(byte[] header);
+        public delegate int FuncGetPayloadSize(BufferRef header);
 
         public ProtocolFixHeaderHelper(int sizeHeader, FuncGetPayloadSize funcGetPayloadSize)
         {
             m_funcGetPayloadSize = funcGetPayloadSize;
-            m_header = new byte[sizeHeader];
+            m_sizeHeader = sizeHeader;
+            m_headerBuffer = new byte[sizeHeader];
+            m_header = new BufferRef(m_headerBuffer);
         }
 
         public void Receive(byte[] buffer, int count, IList<IMessage> messages)
         {
-            m_indexSource = 0;
-            m_bytesToRead = count;
+            BufferRef receiveBuffer = new BufferRef(buffer, 0, count);
             m_messages = messages;
-            while (m_bytesToRead > 0)
+            while (receiveBuffer.Length > 0)
             {
                 switch (m_state)
                 {
-                case State.WAITFORHEADER:
-                    ReceiveHeader(buffer);
-                    break;
-                case State.WAITFORPAYLOAD:
-                    ReceivePayload(buffer);
-                    break;
-                default:
-                    Debug.Assert(false);
-                    break;
+                    case State.STARTHEADER:
+                        StartHeader(receiveBuffer);
+                        break;
+                    case State.WAITFORHEADER:
+                        ReceiveHeader(receiveBuffer);
+                        break;
+                    case State.WAITFORPAYLOAD:
+                        ReceivePayload(receiveBuffer);
+                        break;
+                    default:
+                        Debug.Assert(false);
+                        break;
                 }
             }
             m_messages = null;
         }
 
-        void ReceiveHeader(byte[] buffer)
+        void StartHeader(BufferRef receiveBuffer)
         {
-            Debug.Assert(m_state == State.WAITFORHEADER);
-            Debug.Assert(m_sizeCurrent < m_header.Length);
+            Debug.Assert(m_state == State.STARTHEADER);
 
-            int sizeRead = m_header.Length - m_sizeCurrent;
-            if (m_bytesToRead < sizeRead)
+            if (receiveBuffer.Length < m_sizeHeader)
             {
-                sizeRead = m_bytesToRead;
-            }
-            Array.Copy(buffer, m_indexSource, m_header, m_sizeCurrent, sizeRead);
-
-            m_bytesToRead -= sizeRead;
-            Debug.Assert(m_bytesToRead >= 0);
-            m_indexSource += sizeRead;
-            m_sizeCurrent += sizeRead;
-            Debug.Assert(m_sizeCurrent <= m_header.Length);
-            if (m_sizeCurrent == m_header.Length)
-            {
-                m_sizeCurrent = 0;
-                Debug.Assert(m_funcGetPayloadSize != null);
-                int sizePayload = m_funcGetPayloadSize(m_header);
-                SetPayloadSize(sizePayload);
-            }
-        }
-
-        void SetPayloadSize(int sizePayload)
-        {
-            Debug.Assert(m_state == State.WAITFORHEADER);
-            Debug.Assert(sizePayload >= 0);
-            m_sizePayload = sizePayload;
-            m_message = new ProtocolMessage(0, m_header.Length);
-            m_buffer = m_message.ResizeReceiveBuffer(m_header.Length + sizePayload);
-            Array.Copy(m_header, 0, m_buffer.Buffer, 0, m_header.Length);
-            if (sizePayload != 0)
-            {
-                m_state = State.WAITFORPAYLOAD;
+                m_header.Set(m_headerBuffer, 0, m_sizeHeader);
+                int sizeRead = receiveBuffer.Length;
+                receiveBuffer.CopyTo(m_header, sizeRead);
+                receiveBuffer.AddOffset(sizeRead);
+                m_header.AddOffset(sizeRead);
+                m_state = State.WAITFORHEADER;
             }
             else
             {
-                HandlePayloadReceived();
+                m_header.Set(receiveBuffer.Buffer, receiveBuffer.Offset, m_sizeHeader);
+                receiveBuffer.AddOffset(m_sizeHeader);
+                Debug.Assert(m_funcGetPayloadSize != null);
+                int sizePayload = m_funcGetPayloadSize(m_header);
+                SetPayloadSize(receiveBuffer, sizePayload);
             }
         }
 
-        void ReceivePayload(byte[] buffer)
+        void ReceiveHeader(BufferRef receiveBuffer)
+        {
+            Debug.Assert(m_state == State.WAITFORHEADER);
+            Debug.Assert(m_header != null);
+
+            int sizeRead = m_header.Length;
+            if (receiveBuffer.Length < sizeRead)
+            {
+                sizeRead = receiveBuffer.Length;
+            }
+            receiveBuffer.CopyTo(m_header, sizeRead);
+            receiveBuffer.AddOffset(sizeRead);
+            m_header.AddOffset(sizeRead);
+
+            if (m_header.Length == 0)
+            {
+                m_header.AddOffset(-m_sizeHeader);
+                Debug.Assert(m_funcGetPayloadSize != null);
+                int sizePayload = m_funcGetPayloadSize(m_header);
+                SetPayloadSize(receiveBuffer, sizePayload);
+            }
+        }
+
+        void SetPayloadSize(BufferRef receiveBuffer, int sizePayload)
+        {
+            Debug.Assert(m_state == State.STARTHEADER || m_state == State.WAITFORHEADER);
+            Debug.Assert(sizePayload >= 0);
+            Debug.Assert(m_header != null);
+            m_sizePayload = sizePayload;
+            m_message = new ProtocolMessage(0, m_sizeHeader);
+            if ((m_state == State.STARTHEADER) && (m_sizePayload <= receiveBuffer.Length))
+            {
+                m_message.SetReceiveBuffer(receiveBuffer.Buffer, receiveBuffer.Offset - m_sizeHeader, m_sizeHeader + sizePayload);
+                receiveBuffer.AddOffset(sizePayload);
+                HandlePayloadReceived();
+            }
+            else
+            {
+                m_buffer = m_message.ResizeReceiveBuffer(m_sizeHeader + sizePayload);
+                m_header.CopyTo(m_buffer, m_sizeHeader);
+                m_buffer.AddOffset(m_sizeHeader);
+                if (sizePayload != 0)
+                {
+                    m_state = State.WAITFORPAYLOAD;
+                }
+                else
+                {
+                    HandlePayloadReceived();
+                }
+            }
+        }
+
+        void ReceivePayload(BufferRef receiveBuffer)
         {
             Debug.Assert(m_state == State.WAITFORPAYLOAD);
-            Debug.Assert(m_sizeCurrent < m_sizePayload);
-
-            int sizeRead = m_sizePayload - m_sizeCurrent;
-            if (m_bytesToRead < sizeRead)
-            {
-                sizeRead = m_bytesToRead;
-            }
             Debug.Assert(m_buffer != null);
-            Array.Copy(buffer, m_indexSource, m_buffer.Buffer, m_header.Length + m_sizeCurrent, sizeRead);
-            m_bytesToRead -= sizeRead;
-            Debug.Assert(m_bytesToRead >= 0);
-            m_sizeCurrent += sizeRead;
-            Debug.Assert(m_sizeCurrent <= m_sizePayload);
-            if (m_sizeCurrent == m_sizePayload)
+
+            int sizeRead = m_buffer.Length;
+            if (receiveBuffer.Length < sizeRead)
             {
-                m_sizeCurrent = 0;
+                sizeRead = receiveBuffer.Length;
+            }
+
+            receiveBuffer.CopyTo(m_buffer, sizeRead);
+            receiveBuffer.AddOffset(sizeRead);
+            m_buffer.AddOffset(sizeRead);
+            if (m_buffer.Length == 0)
+            {
+                m_buffer.AddOffset(-m_sizePayload);
                 HandlePayloadReceived();
             }
         }
@@ -143,29 +176,27 @@ namespace finalmq
             m_sizePayload = 0;
             m_message = null;
             m_buffer = null;
-            m_sizeCurrent = 0;
-            m_state = State.WAITFORHEADER;
+            m_state = State.STARTHEADER;
         }
 
         enum State
         {
+            STARTHEADER,
             WAITFORHEADER,
             WAITFORPAYLOAD
         };
 
-        readonly byte[] m_header;
-        State m_state = State.WAITFORHEADER;
-        int m_sizeCurrent = 0;
-        int m_indexSource = 0;
-        int m_bytesToRead = 0;
-
+        readonly byte[] m_headerBuffer;
+        readonly BufferRef m_header;
+        readonly int m_sizeHeader;
         int m_sizePayload = 0;
+        State m_state = State.STARTHEADER;
+
         IMessage? m_message = null;
         BufferRef? m_buffer = null;
 
         IList<IMessage>? m_messages = null;
         readonly FuncGetPayloadSize m_funcGetPayloadSize;
     };
-
 
 }

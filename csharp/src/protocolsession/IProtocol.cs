@@ -24,7 +24,7 @@
 namespace finalmq 
 {
 
-    interface IProtocolCallback
+    public interface IProtocolCallback
     {
         void Connected();
         void Disconnected();
@@ -44,7 +44,7 @@ namespace finalmq
 
     public delegate IMessage FuncCreateMessage();
 
-    interface IProtocol : IStreamConnectionCallback
+    public interface IProtocol : IStreamConnectionCallback
     {
         void SetCallback(IProtocolCallback callback);
         void SetConnection(IStreamConnection connection);
@@ -65,6 +65,6 @@ namespace finalmq
         void Subscribe(IList<string> subscribtions);
     }
 
-    delegate IProtocol FuncCreateProtocol(/*todo Variant data*/);
+    public delegate IProtocol FuncCreateProtocol(/*todo Variant data*/);
 
 }   // namespace finalmq

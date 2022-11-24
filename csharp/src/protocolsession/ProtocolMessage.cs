@@ -237,7 +237,7 @@ namespace finalmq {
             {
                 throw new System.InvalidOperationException();
             }
-            return new BufferRef(m_receiveBuffer, 0, m_sizeHeader);
+            return new BufferRef(m_receiveBuffer, m_offsetReceiveBuffer, m_sizeHeader);
         }
         public BufferRef GetReceivePayload()
         {
@@ -245,22 +245,30 @@ namespace finalmq {
             {
                 throw new System.InvalidOperationException();
             }
-            return new BufferRef(m_receiveBuffer, m_sizeHeader, m_sizeReceiveBuffer - m_sizeHeader);
+            return new BufferRef(m_receiveBuffer, m_offsetReceiveBuffer + m_sizeHeader, m_sizeReceiveBuffer - m_sizeHeader);
         }
         public BufferRef ResizeReceiveBuffer(int size)
         {
-            if (m_receiveBuffer == null || size > m_receiveBuffer.Length)
+            if (m_receiveBuffer == null || (m_offsetReceiveBuffer + size > m_receiveBuffer.Length))
             {
-                m_receiveBuffer = new byte[size];
+                byte[] newReceiveBuffer = new byte[size];
+                if (m_receiveBuffer != null)
+                {
+                    Array.Copy(m_receiveBuffer, m_offsetReceiveBuffer, newReceiveBuffer, 0, m_sizeReceiveBuffer);
+                }
+                m_offsetReceiveBuffer = 0;
+                m_receiveBuffer = newReceiveBuffer;
             }
             m_sizeReceiveBuffer = size;
-            return new BufferRef(m_receiveBuffer, 0, size);
+            Debug.Assert(m_offsetReceiveBuffer + size <= m_receiveBuffer.Length);
+            return new BufferRef(m_receiveBuffer, m_offsetReceiveBuffer, m_sizeReceiveBuffer);
         }
-        public BufferRef SetReceiveBuffer(byte[] buffer, int size)
+        public void SetReceiveBuffer(byte[] buffer, int offset, int size)
         {
+            Debug.Assert(offset + size <= buffer.Length);
             m_receiveBuffer = buffer;
+            m_offsetReceiveBuffer = offset;
             m_sizeReceiveBuffer = size;
-            return new BufferRef(m_receiveBuffer, 0, size);
         }
         public void SetHeaderSize(int sizeHeader)
         {
@@ -424,6 +432,7 @@ namespace finalmq {
 
         // receive
         byte[]? m_receiveBuffer = null;
+        int m_offsetReceiveBuffer = 0;
         int m_sizeReceiveBuffer = 0;
 
         int m_sizeHeader = 0;

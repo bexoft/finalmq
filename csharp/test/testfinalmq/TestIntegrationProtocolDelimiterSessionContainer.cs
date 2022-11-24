@@ -9,17 +9,50 @@ using Xunit;
 using Moq;
 
 using finalmq;
+using System.Runtime.CompilerServices;
 
 namespace testfinalmq
 {
 
+    class ProtocolDelimiterTestLong : ProtocolDelimiter
+    {
+        public static readonly uint PROTOCOL_ID = 12345;
+        public static readonly string PROTOCOL_NAME = "delimiter_long";
+
+        public static readonly byte[] DELIMITER = Encoding.UTF8.GetBytes("lolololololololololololololololololololololololololololololololololo\n");
+
+        public ProtocolDelimiterTestLong()
+            : base(DELIMITER)
+        {
+        }
+
+        // IProtocol
+        public override uint ProtocolId
+        {
+            get
+            {
+                return PROTOCOL_ID;
+            }
+        }
+    };
+    class RegisterProtocolDelimiterTestLongFactory
+    {
+        [ModuleInitializer]
+        internal static void Register()
+        {
+            ProtocolRegistry.Instance.RegisterProtocolFactory(ProtocolDelimiterTestLong.PROTOCOL_NAME, ProtocolDelimiterTestLong.PROTOCOL_ID, () => { return new ProtocolDelimiterTestLong(); });
+        }
+    }
+
+
     [Collection("TestCollectionSocket")]
-    public class TestIntegrationProtocolHeaderBinarySizeSessionContainer : IDisposable
+    public class TestIntegrationProtocolDelimiterSessionContainer : IDisposable
     {
         readonly IProtocolSessionContainer m_sessionContainer = new ProtocolSessionContainer();
         readonly Mock<IProtocolSessionCallback> m_mockClientCallback = new Mock<IProtocolSessionCallback>();
         readonly Mock<IProtocolSessionCallback> m_mockServerCallback = new Mock<IProtocolSessionCallback>();
         readonly string MESSAGE1_BUFFER = "Hello";
+        readonly string MESSAGE2_BUFFER = new string('A', 500000);
 
         public void Dispose()
         {
@@ -29,20 +62,20 @@ namespace testfinalmq
         [Fact]
         public void TestBind()
         {
-            m_sessionContainer.Bind("tcp://*:3333:headersize", m_mockServerCallback.Object);
+            m_sessionContainer.Bind("tcp://*:3333:delimiter_long", m_mockServerCallback.Object);
         }
 
         [Fact]
         public void TestUnbind()
         {
-            m_sessionContainer.Bind("tcp://*:3333:headersize", m_mockServerCallback.Object);
-            m_sessionContainer.Unbind("tcp://*:3333:headersize");
+            m_sessionContainer.Bind("tcp://*:3333:delimiter_long", m_mockServerCallback.Object);
+            m_sessionContainer.Unbind("tcp://*:3333:delimiter_long");
         }
 
         [Fact]
         public void TestBindConnect()
         {
-            m_sessionContainer.Bind("tcp://*:3333:headersize", m_mockServerCallback.Object);
+            m_sessionContainer.Bind("tcp://*:3333:delimiter_long", m_mockServerCallback.Object);
 
             IProtocolSession? connConnect = null;
             CondVar connectClient = new CondVar();
@@ -60,7 +93,7 @@ namespace testfinalmq
                 });
 
 
-            IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3333:headersize", m_mockClientCallback.Object);
+            IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3333:delimiter_long", m_mockClientCallback.Object);
 
             Debug.Assert(connectClient.Wait(5000));
             Debug.Assert(connectServer.Wait(5000));
@@ -74,7 +107,7 @@ namespace testfinalmq
         [Fact]
         public void TestBindConnectSend()
         {
-            m_sessionContainer.Bind("tcp://*:3333:headersize", m_mockServerCallback.Object);
+            m_sessionContainer.Bind("tcp://*:3333:delimiter_long", m_mockServerCallback.Object);
 
             IProtocolSession? connConnect = null;
             CondVar condVarReceived = new CondVar();
@@ -96,7 +129,7 @@ namespace testfinalmq
                     condVarReceived.Set();
                 });
 
-            IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3333:headersize", m_mockClientCallback.Object);
+            IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3333:delimiter_long", m_mockClientCallback.Object);
 
             IMessage message = new ProtocolMessage(0);
             message.AddSendPayload(Encoding.UTF8.GetBytes(MESSAGE1_BUFFER));
@@ -104,7 +137,7 @@ namespace testfinalmq
 
             Debug.Assert(condVarReceived.Wait(5000));
 
-            Debug.Assert(connConnect != null);
+//            Debug.Assert(connConnect != null);
             Debug.Assert(connConnect == connection);
         }
 
@@ -127,11 +160,11 @@ namespace testfinalmq
                 });
 
 
-            IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3333:headersize", m_mockClientCallback.Object, new ConnectProperties(null, new ConnectConfig(1)));
+            IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3333:delimiter_long", m_mockClientCallback.Object, new ConnectProperties(null, new ConnectConfig(1)));
 
             Thread.Sleep(4000);
 
-            m_sessionContainer.Bind("tcp://*:3333:headersize", m_mockServerCallback.Object);
+            m_sessionContainer.Bind("tcp://*:3333:delimiter_long", m_mockServerCallback.Object);
 
             Debug.Assert(condVarConnectClient.Wait(5000));
             Debug.Assert(condVarConnectServer.Wait(5000));
@@ -155,9 +188,9 @@ namespace testfinalmq
                     condVarDisconnectClient.Set();
                 });
 
-            IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3333:headersize", m_mockClientCallback.Object, new ConnectProperties(null, new ConnectConfig(1, 1)));
+            IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3333:delimiter_long", m_mockClientCallback.Object, new ConnectProperties(null, new ConnectConfig(1, 1)));
 
-            Debug.Assert(condVarDisconnectClient.Wait(5000));
+            Debug.Assert(condVarDisconnectClient.Wait(10000));
 
             Debug.Assert(connDisconnect != null);
             Debug.Assert(connDisconnect == connection);
@@ -168,7 +201,7 @@ namespace testfinalmq
         [Fact]
         public void TestBindConnectDisconnect()
         {
-            m_sessionContainer.Bind("tcp://*:3333:headersize", m_mockServerCallback.Object);
+            m_sessionContainer.Bind("tcp://*:3333:delimiter_long", m_mockServerCallback.Object);
 
             IProtocolSession? connConnect = null;
             CondVar condVarConnectClient = new CondVar();
@@ -187,7 +220,7 @@ namespace testfinalmq
                 });
 
 
-            IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3333:headersize", m_mockClientCallback.Object);
+            IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3333:delimiter_long", m_mockClientCallback.Object);
 
             Debug.Assert(condVarConnectClient.Wait(5000));
             Debug.Assert(condVarConnectServer.Wait(5000));
@@ -223,7 +256,7 @@ namespace testfinalmq
         [Fact]
         public void testGetAllSessions()
         {
-            m_sessionContainer.Bind("tcp://*:3333:headersize", m_mockServerCallback.Object);
+            m_sessionContainer.Bind("tcp://*:3333:delimiter_long", m_mockServerCallback.Object);
 
             IProtocolSession? connBind = null;
             IProtocolSession? connConnect = null;
@@ -243,7 +276,7 @@ namespace testfinalmq
                 });
 
 
-            IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3333:headersize", m_mockClientCallback.Object);
+            IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3333:delimiter_long", m_mockClientCallback.Object);
 
             Debug.Assert(condVarConnectClient.Wait(5000));
             Debug.Assert(condVarConnectServer.Wait(5000));
@@ -269,7 +302,7 @@ namespace testfinalmq
         [Fact]
         public void TestBindLateConnect()
         {
-            m_sessionContainer.Bind("tcp://*:3333:headersize", m_mockServerCallback.Object);
+            m_sessionContainer.Bind("tcp://*:3333:delimiter_long", m_mockServerCallback.Object);
 
             IProtocolSession? connConnect = null;
             CondVar connectClient = new CondVar();
@@ -287,10 +320,10 @@ namespace testfinalmq
                 });
 
             IProtocolSession connection = m_sessionContainer.CreateSession(m_mockClientCallback.Object);
-            connection.Connect("tcp://localhost:3333:headersize", new ConnectProperties(null, new ConnectConfig(1)));
+            connection.Connect("tcp://localhost:3333:delimiter_long", new ConnectProperties(null, new ConnectConfig(1)));
 
-            Debug.Assert(connectClient.Wait(5000));
-            Debug.Assert(connectServer.Wait(5000));
+            Debug.Assert(connectClient.Wait(10000));
+            Debug.Assert(connectServer.Wait(10000));
 
             Debug.Assert(connConnect != null);
             Debug.Assert(connConnect == connection);
@@ -326,14 +359,14 @@ namespace testfinalmq
             message.AddSendPayload(Encoding.UTF8.GetBytes(MESSAGE1_BUFFER));
             connection.SendMessage(message);
 
-            connection.Connect("tcp://localhost:3333:headersize", new ConnectProperties(null, new ConnectConfig(1)));
+            connection.Connect("tcp://localhost:3333:delimiter_long", new ConnectProperties(null, new ConnectConfig(1)));
 
             Thread.Sleep(4000);
 
-            m_sessionContainer.Bind("tcp://*:3333:headersize", m_mockServerCallback.Object);
+            m_sessionContainer.Bind("tcp://*:3333:delimiter_long", m_mockServerCallback.Object);
 
 
-            Debug.Assert(condVarReceived.Wait(5000));
+            Debug.Assert(condVarReceived.Wait(10000));
 
             Debug.Assert(connConnect != null);
             Debug.Assert(connConnect == connection);
@@ -359,7 +392,7 @@ namespace testfinalmq
         [Fact]
         public void TestSendMultipleMessages()
         {
-            m_sessionContainer.Bind("tcp://*:3333:headersize", m_mockServerCallback.Object);
+            m_sessionContainer.Bind("tcp://*:3333:delimiter_long", m_mockServerCallback.Object);
 
             CondVar condVarReceived = new CondVar();
 
@@ -369,22 +402,53 @@ namespace testfinalmq
                 {
                     BufferRef bufferRef = message.GetReceivePayload();
                     Debug.Assert(Encoding.UTF8.GetString(bufferRef.Buffer, bufferRef.Offset, bufferRef.Length) == MESSAGE1_BUFFER);
-                    if (Interlocked.Increment(ref messageCounter) == 100000)
+                    if (Interlocked.Increment(ref messageCounter) == 10000)
                     {
                         condVarReceived.Set();
                     }
                 });
 
-            IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3333:headersize", m_mockClientCallback.Object);
+            IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3333:delimiter_long", m_mockClientCallback.Object);
 
             IMessage message = new ProtocolMessage(0);
             message.AddSendPayload(Encoding.UTF8.GetBytes(MESSAGE1_BUFFER));
-            for (int i = 0; i < 100000; ++i)
+            for (int i = 0; i < 10000; ++i)
             {
                 connection.SendMessage(message);
             }
 
-            Debug.Assert(condVarReceived.Wait(50000));
+            Debug.Assert(condVarReceived.Wait(10000));
+        }
+
+        [Fact]
+        public void TestSendBigMultipleMessages()
+        {
+            m_sessionContainer.Bind("tcp://*:3333:delimiter_long", m_mockServerCallback.Object);
+
+            CondVar condVarReceived = new CondVar();
+
+            int messageCounter = 0;
+            m_mockServerCallback.Setup(x => x.Received(It.IsAny<IProtocolSession>(), It.IsAny<IMessage>()))
+                .Callback((IProtocolSession connection, IMessage message) =>
+                {
+                    BufferRef bufferRef = message.GetReceivePayload();
+                    Debug.Assert(Encoding.UTF8.GetString(bufferRef.Buffer, bufferRef.Offset, bufferRef.Length) == MESSAGE2_BUFFER);
+                    if (Interlocked.Increment(ref messageCounter) == 1000)
+                    {
+                        condVarReceived.Set();
+                    }
+                });
+
+            IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3333:delimiter_long", m_mockClientCallback.Object);
+
+            IMessage message = new ProtocolMessage(0);
+            message.AddSendPayload(Encoding.UTF8.GetBytes(MESSAGE2_BUFFER));
+            for (int i = 0; i < 1000; ++i)
+            {
+                connection.SendMessage(message);
+            }
+
+            Debug.Assert(condVarReceived.Wait(100000000));
         }
 
     }

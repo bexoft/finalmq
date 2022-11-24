@@ -23,6 +23,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Net.Security;
+using System.Diagnostics;
 
 
 namespace finalmq {
@@ -216,32 +217,54 @@ namespace finalmq {
             return connection;
         }
 
+        
+        private void ReadingHelper(IAsyncResult? ar, Stream stream, IStreamConnectionPrivate connection, byte[] buffer, AsyncCallback callback)
+        {
+            if (ar != null && ar.CompletedSynchronously)
+            {
+                return;
+            }
+            try
+            {
+                for (; ; )
+                {
+                    if (ar != null)
+                    {
+                        int count = stream.EndRead(ar);
+                        if (count > 0)
+                        {
+                            connection.Received(buffer, count);
+                        }
+                        else
+                        {
+                            ((IStreamConnectionContainerPrivate)this).Disconnect(connection);
+                            return;
+                        }
+                    }
+                    ar = stream.BeginRead(buffer, 0, buffer.Length, callback, null);
+                    if (!ar.CompletedSynchronously)
+                    {
+                        return;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                ((IStreamConnectionContainerPrivate)this).Disconnect(connection);
+            }
+        }
+
         private void StartReading(Stream stream, IStreamConnectionPrivate connection)
         {
             long connectionId = connection.ConnectionId;
             byte[] buffer = new byte[4096];
-            AsyncCallback callbackRead = new AsyncCallback((IAsyncResult ar) => {
-                try
-                {
-                    int count = stream.EndRead(ar);
-                    if (count > 0)
-                    {
-                        connection.Received(buffer, count);
-                        AsyncCallback? c = (AsyncCallback?)ar.AsyncState;
-                        stream.BeginRead(buffer, 0, buffer.Length, c, c);
-                    }
-                    else
-                    {
-                        ((IStreamConnectionContainerPrivate)this).Disconnect(connection);
-                    }
-                }
-                catch (Exception)
-                {
-                    ((IStreamConnectionContainerPrivate)this).Disconnect(connection);
-                }
+            AsyncCallback? callbackRead = null;
+            callbackRead = new AsyncCallback((IAsyncResult ar) => {
+                Debug.Assert(callbackRead != null);
+                ReadingHelper(ar, stream, connection, buffer, callbackRead);
             });
-            stream.BeginRead(buffer, 0, buffer.Length, callbackRead, callbackRead);
-        }
+            ReadingHelper(null, stream, connection, buffer, callbackRead);
+        }        
 
         public IStreamConnection Connect(string endpoint, IStreamConnectionCallback callback, ConnectProperties? connectProperties = null)
         {

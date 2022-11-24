@@ -39,7 +39,7 @@ namespace finalmq
 
         public ProtocolHeaderBinarySize()
         {
-            m_headerHelper = new ProtocolFixHeaderHelper(HEADERSIZE, (byte[] header) => {
+            m_headerHelper = new ProtocolFixHeaderHelper(HEADERSIZE, (BufferRef header) => {
                     Debug.Assert(header.Length == 4);
                     uint value = 0;
                     for (int i = 0; i < 4; ++i)

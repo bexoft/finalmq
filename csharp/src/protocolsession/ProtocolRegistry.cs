@@ -25,7 +25,7 @@
 namespace finalmq 
 {
 
-    interface IProtocolRegistry
+    public interface IProtocolRegistry
     {
         void RegisterProtocolFactory(string protocolName, uint protocolId, FuncCreateProtocol protocolFactory);
         FuncCreateProtocol GetProtocolFactory(string protocolName);
@@ -67,7 +67,7 @@ namespace finalmq
     };
 
 
-    class ProtocolRegistry
+    public class ProtocolRegistry
     {
         public static IProtocolRegistry Instance
         {
