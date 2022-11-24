@@ -156,12 +156,8 @@ bool ProtocolDelimiter::received(const IStreamConnectionPtr& /*connection*/, con
     ssize_t indexStart = 0;
     if (receiveBufferOld != nullptr)
     {
-        indexStart = m_bufferSize - (m_delimiter.size() - 1) + m_indexStartMessage;
+        indexStart = m_indexStartMessage;
         ssize_t indexEnd = m_bufferSize;
-        if (indexStart < 0)
-        {
-            indexStart = 0;
-        }
         sizeDelimiterPrefix = indexEnd - indexStart;
         m_indexStartMessage = 0;
     }
@@ -250,15 +246,7 @@ bool ProtocolDelimiter::received(const IStreamConnectionPtr& /*connection*/, con
             {
                 m_receiveBuffers.emplace_back(ReceiveBufferStore{ m_receiveBuffer, m_indexStartMessage, offsetEnd });
                 m_receiveBuffersTotal += offsetEnd - m_indexStartMessage;
-                m_indexStartMessage = 0;
-            }
-            else
-            {
-                if (m_indexStartMessage > 0)
-                {
-                    assert(offsetEnd >= 0);
-                    m_indexStartMessage -= offsetEnd;
-                }
+                m_indexStartMessage = offsetEnd;
             }
         }
     }
