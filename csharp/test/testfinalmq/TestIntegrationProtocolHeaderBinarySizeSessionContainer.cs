@@ -369,7 +369,7 @@ namespace testfinalmq
                 {
                     BufferRef bufferRef = message.GetReceivePayload();
                     Debug.Assert(Encoding.UTF8.GetString(bufferRef.Buffer, bufferRef.Offset, bufferRef.Length) == MESSAGE1_BUFFER);
-                    if (Interlocked.Increment(ref messageCounter) == 100000)
+                    if (Interlocked.Increment(ref messageCounter) == 10000)
                     {
                         condVarReceived.Set();
                     }
@@ -379,12 +379,12 @@ namespace testfinalmq
 
             IMessage message = new ProtocolMessage(0);
             message.AddSendPayload(Encoding.UTF8.GetBytes(MESSAGE1_BUFFER));
-            for (int i = 0; i < 100000; ++i)
+            for (int i = 0; i < 10000; ++i)
             {
                 connection.SendMessage(message);
             }
 
-            Debug.Assert(condVarReceived.Wait(50000));
+            Debug.Assert(condVarReceived.Wait(5000));
         }
 
     }

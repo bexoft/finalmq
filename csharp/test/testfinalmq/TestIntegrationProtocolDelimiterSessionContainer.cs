@@ -417,7 +417,7 @@ namespace testfinalmq
                 connection.SendMessage(message);
             }
 
-            Debug.Assert(condVarReceived.Wait(10000));
+            Debug.Assert(condVarReceived.Wait(5000));
         }
 
         [Fact]
@@ -433,7 +433,7 @@ namespace testfinalmq
                 {
                     BufferRef bufferRef = message.GetReceivePayload();
                     Debug.Assert(Encoding.UTF8.GetString(bufferRef.Buffer, bufferRef.Offset, bufferRef.Length) == MESSAGE2_BUFFER);
-                    if (Interlocked.Increment(ref messageCounter) == 1000)
+                    if (Interlocked.Increment(ref messageCounter) == 100)
                     {
                         condVarReceived.Set();
                     }
@@ -443,12 +443,12 @@ namespace testfinalmq
 
             IMessage message = new ProtocolMessage(0);
             message.AddSendPayload(Encoding.UTF8.GetBytes(MESSAGE2_BUFFER));
-            for (int i = 0; i < 1000; ++i)
+            for (int i = 0; i < 100; ++i)
             {
                 connection.SendMessage(message);
             }
 
-            Debug.Assert(condVarReceived.Wait(100000000));
+            Debug.Assert(condVarReceived.Wait(5000));
         }
 
     }

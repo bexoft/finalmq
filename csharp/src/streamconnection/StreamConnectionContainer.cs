@@ -148,30 +148,46 @@ namespace finalmq {
             if (listener != null && bindData != null)
             {
                 listener.Start();
-                AsyncCallback callbackAccept = new AsyncCallback((IAsyncResult ar) => {
+
+                AsyncCallback? callbackAccept = null;
+                callbackAccept = new AsyncCallback((IAsyncResult ar) => {
+                    Debug.Assert(callbackAccept != null);
+                    if (ar != null && ar.CompletedSynchronously)
+                    {
+                        return;
+                    }
                     try
                     {
-                        TcpClient tcpClient = listener.EndAcceptTcpClient(ar);
-                        if (bindProperties != null && bindProperties.SslServerOptions != null)
+                        for (; ; )
                         {
-                            SslServerOptions sslServerOptions = bindProperties.SslServerOptions;
-                            SslStream sslStream = new SslStream(tcpClient.GetStream(), false, sslServerOptions.UserCertificateValidationCallback,
-                                                                sslServerOptions.UserCertificateSelectionCallback, sslServerOptions.EncryptionPolicy);
-                            StartIncomingSslConnection(bindData, sslStream, sslServerOptions);
+                            if (ar != null)
+                            {
+                                TcpClient tcpClient = listener.EndAcceptTcpClient(ar);
+                                if (bindProperties != null && bindProperties.SslServerOptions != null)
+                                {
+                                    SslServerOptions sslServerOptions = bindProperties.SslServerOptions;
+                                    SslStream sslStream = new SslStream(tcpClient.GetStream(), false, sslServerOptions.UserCertificateValidationCallback,
+                                                                        sslServerOptions.UserCertificateSelectionCallback, sslServerOptions.EncryptionPolicy);
+                                    StartIncomingSslConnection(bindData, sslStream, sslServerOptions);
+                                }
+                                else
+                                {
+                                    Stream stream = tcpClient.GetStream();
+                                    StartIncomingConnection(bindData, stream);
+                                }
+                            }
+                            ar = listener.BeginAcceptTcpClient(callbackAccept, null);
+                            if (!ar.CompletedSynchronously)
+                            {
+                                return;
+                            }
                         }
-                        else
-                        {
-                            Stream stream = tcpClient.GetStream();
-                            StartIncomingConnection(bindData, stream);
-                        }
-                        AsyncCallback? c = (AsyncCallback?)ar.AsyncState;
-                        listener.BeginAcceptTcpClient(c, c);
                     }
                     catch (Exception)
                     {
                     }
                 });
-                listener.BeginAcceptTcpClient(callbackAccept, callbackAccept);
+                callbackAccept(null);
             }
         }
 
@@ -216,44 +232,7 @@ namespace finalmq {
             }
             return connection;
         }
-
         
-        private void ReadingHelper(IAsyncResult? ar, Stream stream, IStreamConnectionPrivate connection, byte[] buffer, AsyncCallback callback)
-        {
-            if (ar != null && ar.CompletedSynchronously)
-            {
-                return;
-            }
-            try
-            {
-                for (; ; )
-                {
-                    if (ar != null)
-                    {
-                        int count = stream.EndRead(ar);
-                        if (count > 0)
-                        {
-                            connection.Received(buffer, count);
-                        }
-                        else
-                        {
-                            ((IStreamConnectionContainerPrivate)this).Disconnect(connection);
-                            return;
-                        }
-                    }
-                    ar = stream.BeginRead(buffer, 0, buffer.Length, callback, null);
-                    if (!ar.CompletedSynchronously)
-                    {
-                        return;
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                ((IStreamConnectionContainerPrivate)this).Disconnect(connection);
-            }
-        }
-
         private void StartReading(Stream stream, IStreamConnectionPrivate connection)
         {
             long connectionId = connection.ConnectionId;
@@ -261,9 +240,40 @@ namespace finalmq {
             AsyncCallback? callbackRead = null;
             callbackRead = new AsyncCallback((IAsyncResult ar) => {
                 Debug.Assert(callbackRead != null);
-                ReadingHelper(ar, stream, connection, buffer, callbackRead);
+                if (ar != null && ar.CompletedSynchronously)
+                {
+                    return;
+                }
+                try
+                {
+                    for (; ; )
+                    {
+                        if (ar != null)
+                        {
+                            int count = stream.EndRead(ar);
+                            if (count > 0)
+                            {
+                                connection.Received(buffer, count);
+                            }
+                            else
+                            {
+                                ((IStreamConnectionContainerPrivate)this).Disconnect(connection);
+                                return;
+                            }
+                        }
+                        ar = stream.BeginRead(buffer, 0, buffer.Length, callbackRead, null);
+                        if (!ar.CompletedSynchronously)
+                        {
+                            return;
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    ((IStreamConnectionContainerPrivate)this).Disconnect(connection);
+                }
             });
-            ReadingHelper(null, stream, connection, buffer, callbackRead);
+            callbackRead(null);
         }        
 
         public IStreamConnection Connect(string endpoint, IStreamConnectionCallback callback, ConnectProperties? connectProperties = null)

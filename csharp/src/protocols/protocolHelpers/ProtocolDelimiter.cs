@@ -170,8 +170,6 @@ namespace finalmq
                 m_indexStartMessage = 0;
             }
         }
-        byte[] m_delimiterPrefix;
-        int m_sizeDelimiterPrefix = 0;
 
         // IProtocol
         public void SetCallback(IProtocolCallback callback)
@@ -299,6 +297,8 @@ namespace finalmq
         int m_indexStartMessage = 0;
         byte[]? m_receiveBuffer = null;
         int m_bufferSize = 0;
+        byte[] m_delimiterPrefix;
+        int m_sizeDelimiterPrefix = 0;
 
         class ReceiveBufferStore
         {
