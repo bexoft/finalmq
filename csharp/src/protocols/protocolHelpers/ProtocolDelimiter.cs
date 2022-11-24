@@ -39,6 +39,7 @@ namespace finalmq
             Debug.Assert(delimiter.Length > 0);
             m_delimiter = delimiter;
             m_delimiterStart = delimiter[0];
+            m_delimiterPrefix = new byte[delimiter.Length - 1];
         }
         ~ProtocolDelimiter()
         {
@@ -68,30 +69,19 @@ namespace finalmq
         }
         public void Received(IStreamConnection connection, byte[] buffer, int count)
         {
-            byte[]? receiveBufferOld = m_receiveBuffer;
-            int sizeDelimiterPrefix = 0;
-            int indexStart = 0;
-            if (receiveBufferOld != null)
+            if (m_sizeDelimiterPrefix > 0)
             {
-                indexStart = m_indexStartMessage;
-                int indexEnd = m_bufferSize;
-                sizeDelimiterPrefix = indexEnd - indexStart;
-                m_indexStartMessage = 0;
-            }
-
-            if (sizeDelimiterPrefix > 0 && receiveBufferOld != null)
-            {
-                m_receiveBuffer = new byte[sizeDelimiterPrefix + count];
-                Array.Copy(receiveBufferOld, indexStart, m_receiveBuffer, 0, sizeDelimiterPrefix);
-                Array.Copy(buffer, 0, m_receiveBuffer, sizeDelimiterPrefix, count);
+                m_receiveBuffer = new byte[m_sizeDelimiterPrefix + count];
+                Array.Copy(m_delimiterPrefix, 0, m_receiveBuffer, 0, m_sizeDelimiterPrefix);
+                Array.Copy(buffer, 0, m_receiveBuffer, m_sizeDelimiterPrefix, count);
             }
             else
             {
-                m_receiveBuffer = (byte[])buffer.Clone();
+                m_receiveBuffer = (byte[])buffer;
             }
             var callback = m_callback;
             int bytesReceived = count;
-            m_bufferSize = sizeDelimiterPrefix + bytesReceived;
+            m_bufferSize = m_sizeDelimiterPrefix + bytesReceived;
             int offsetEnd = m_bufferSize - (m_delimiter.Length - 1);
             for (int i = m_indexStartMessage; i < offsetEnd; ++i)
             {
@@ -152,17 +142,36 @@ namespace finalmq
                 m_receiveBuffer = null;
                 m_bufferSize = 0;
                 m_indexStartMessage = 0;
+                m_sizeDelimiterPrefix = 0;
             }
             else
             {
                 if (m_indexStartMessage < offsetEnd)
                 {
-                    m_receiveBuffers.Add(new ReceiveBufferStore(m_receiveBuffer, m_indexStartMessage, offsetEnd));
-                    m_receiveBuffersTotal += offsetEnd - m_indexStartMessage;
+                    int size = offsetEnd - m_indexStartMessage;
+
+                    if (m_indexStartMessage > 0)
+                    {
+                        byte[] bufferStore = new byte[size];
+                        Array.Copy(m_receiveBuffer, m_indexStartMessage, bufferStore, 0, size);
+                        m_receiveBuffers.Add(new ReceiveBufferStore(bufferStore, 0, size));
+                    }
+                    else
+                    {
+                        m_receiveBuffers.Add(new ReceiveBufferStore((byte[])m_receiveBuffer.Clone(), m_indexStartMessage, offsetEnd));
+                    }
+                    m_receiveBuffersTotal += size;
                     m_indexStartMessage = offsetEnd;
                 }
+                m_sizeDelimiterPrefix = m_bufferSize - m_indexStartMessage;
+                Debug.Assert(m_sizeDelimiterPrefix > 0);
+                Debug.Assert(m_sizeDelimiterPrefix <= m_delimiterPrefix.Length);
+                Array.Copy(m_receiveBuffer, m_indexStartMessage, m_delimiterPrefix, 0, m_sizeDelimiterPrefix);
+                m_indexStartMessage = 0;
             }
         }
+        byte[] m_delimiterPrefix;
+        int m_sizeDelimiterPrefix = 0;
 
         // IProtocol
         public void SetCallback(IProtocolCallback callback)
