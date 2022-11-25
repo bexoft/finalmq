@@ -32,7 +32,10 @@ namespace finalmq
     {
         public BufferRef(byte[] buffer, int offset = 0, int length = 0)
         {
-            Set(buffer, offset, length);
+            Debug.Assert(offset + length <= buffer.Length);
+            m_buffer = buffer;
+            m_offset = offset;
+            m_length = length;
         }
         public void Set(byte[] buffer, int offset = 0, int length = 0)
         {

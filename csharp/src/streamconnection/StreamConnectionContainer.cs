@@ -187,7 +187,9 @@ namespace finalmq {
                     {
                     }
                 });
+#pragma warning disable CS8625 // Ein NULL-Literal kann nicht in einen Non-Nullable-Verweistyp konvertiert werden.
                 callbackAccept(null);
+#pragma warning restore CS8625 // Ein NULL-Literal kann nicht in einen Non-Nullable-Verweistyp konvertiert werden.
             }
         }
 
@@ -273,7 +275,9 @@ namespace finalmq {
                     ((IStreamConnectionContainerPrivate)this).Disconnect(connection);
                 }
             });
+#pragma warning disable CS8625 // Ein NULL-Literal kann nicht in einen Non-Nullable-Verweistyp konvertiert werden.
             callbackRead(null);
+#pragma warning restore CS8625 // Ein NULL-Literal kann nicht in einen Non-Nullable-Verweistyp konvertiert werden.
         }        
 
         public IStreamConnection Connect(string endpoint, IStreamConnectionCallback callback, ConnectProperties? connectProperties = null)
