@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-
+using System.Reflection;
 
 namespace finalmq
 {
@@ -36,6 +36,10 @@ namespace finalmq
                 {
                     return m_value.Data;
                 }
+                else
+                {
+                    return Convertion.Convert<T>(m_value.Data);
+                }
             }
             return default(T);
         }
@@ -62,6 +66,24 @@ namespace finalmq
             }
         }
 
+        public T GetData<T>(string name)
+        {
+            Variant v = GetVariant(name);
+            if (v == null)
+            {
+                return v.GetData<T>();
+            }
+            return default(T);
+        }
+
+        public void SetData<T>(string name, T data)
+        {
+            Variant v = GetVariant(name);
+            if (v == null)
+            {
+                v.SetData<T>(data);
+            }
+        }
         public Variant GetVariant(string name)
         {
             if (name.Length == 0)
@@ -163,7 +185,26 @@ namespace finalmq
             return new Variant(m_value.Clone());
         }
 
+        public static implicit operator bool(Variant v) { return v.GetData<bool>(); }
+        public static implicit operator int(Variant v) { return v.GetData<int>(); }
+        public static implicit operator uint(Variant v) { return v.GetData<uint>(); }
+        public static implicit operator long(Variant v) { return v.GetData<long>(); }
+        public static implicit operator ulong(Variant v) { return v.GetData<ulong>(); }
+        public static implicit operator float(Variant v) { return v.GetData<float>(); }
+        public static implicit operator double(Variant v) { return v.GetData<double>(); }
+        public static implicit operator string(Variant v) { return v.GetData<string>(); }
+        public static implicit operator byte[](Variant v) { return v.GetData<byte[]>(); }
+        public static implicit operator bool[](Variant v) { return v.GetData<bool[]>(); }
+        public static implicit operator int[](Variant v) { return v.GetData<int[]>(); }
+        public static implicit operator uint[](Variant v) { return v.GetData<uint[]>(); }
+        public static implicit operator long[](Variant v) { return v.GetData<long[]>(); }
+        public static implicit operator ulong[](Variant v) { return v.GetData<ulong[]>(); }
+        public static implicit operator float[](Variant v) { return v.GetData<float[]>(); }
+        public static implicit operator double[](Variant v) { return v.GetData<double[]>(); }
+        public static implicit operator string[](Variant v) { return v.GetData<string[]>(); }
+        public static implicit operator byte[][](Variant v) { return v.GetData<byte[][]>(); }
 
         IVariantValue? m_value = null;
+
     }
 }
