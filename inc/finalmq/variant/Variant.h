@@ -51,6 +51,12 @@ public:
     }
 
     template<class T>
+    void operator =(T data)
+    {
+        m_value = std::make_shared<typename VariantValueTypeInfo<T>::VariantValueType>(std::move(data));
+    }
+
+    template<class T>
     operator T*()
     {
         if (m_value)
