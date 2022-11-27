@@ -36,14 +36,16 @@ namespace finalmq
             {
                 if (typeof(T) == typeof(bool))
                 {
-                    if (from == "true" || from == "True")
+                    if (from != "true" && from != "True")
                     {
-                        return (dynamic)true;
+                        double value = 0;
+                        Double.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value);
+                        if (value == 0)
+                        {
+                            return (dynamic)false;
+                        }
                     }
-                    else
-                    {
-                        return (dynamic)false;
-                    }
+                    return (dynamic)true;
                 }
                 else if (typeof(T) == typeof(int))
                 {
@@ -52,46 +54,54 @@ namespace finalmq
                     {
                         return (dynamic)value;
                     }
+                    double d = 0;
+                    Double.TryParse((string)from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
+                    return (dynamic)(int)d;
                 }
                 else if (typeof(T) == typeof(uint))
                 {
                     uint value;
-                    if (UInt32.TryParse(from, out value))
+                    if (UInt32.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
                     {
                         return (dynamic)value;
                     }
+                    double d = 0;
+                    Double.TryParse((string)from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
+                    return (dynamic)(uint)d;
                 }
                 else if (typeof(T) == typeof(long))
                 {
                     long value;
-                    if (Int64.TryParse(from, out value))
+                    if (Int64.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
                     {
                         return (dynamic)value;
                     }
+                    double d = 0;
+                    Double.TryParse((string)from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
+                    return (dynamic)(long)d;
                 }
                 else if (typeof(T) == typeof(ulong))
                 {
                     ulong value;
-                    if (UInt64.TryParse(from, out value))
+                    if (UInt64.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
                     {
                         return (dynamic)value;
                     }
+                    double d = 0;
+                    Double.TryParse((string)from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
+                    return (dynamic)(ulong)d;
                 }
                 else if (typeof(T) == typeof(float))
                 {
                     double value;
-                    if (Double.TryParse(from, out value))
-                    {
-                        return (dynamic)(float)value;
-                    }
+                    Double.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value);
+                    return (dynamic)(float)value;
                 }
                 else if (typeof(T) == typeof(double))
                 {
                     double value;
-                    if (Double.TryParse(from, out value))
-                    {
-                        return (dynamic)value;
-                    }
+                    Double.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value);
+                    return (dynamic)value;
                 }
             }
             else

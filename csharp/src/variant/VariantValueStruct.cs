@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -162,7 +163,7 @@ namespace finalmq
         [ModuleInitializer]
         internal static void Register()
         {
-            VariantValueFactory.Instance.Register<VariantStruct>((dynamic data) => { return new VariantValueList(data); });
+            VariantValueFactory.Instance.Register<VariantStruct>((dynamic data) => { return new VariantValueStruct(data); });
         }
     }
 }

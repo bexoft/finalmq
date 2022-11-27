@@ -69,7 +69,7 @@ namespace finalmq
         public T GetData<T>(string name)
         {
             Variant v = GetVariant(name);
-            if (v == null)
+            if (v != null)
             {
                 return v.GetData<T>();
             }
@@ -79,7 +79,7 @@ namespace finalmq
         public void SetData<T>(string name, T data)
         {
             Variant v = GetVariant(name);
-            if (v == null)
+            if (v != null)
             {
                 v.SetData<T>(data);
             }
@@ -146,10 +146,19 @@ namespace finalmq
         }
 
         public bool Add(string name, Variant variant)
-        {   
+        {
             if (m_value != null)
             {
                 return m_value.Add(name, variant);
+            }
+            return false;
+        }
+
+        public bool Add<T>(string name, T data)
+        {
+            if (m_value != null)
+            {
+                return m_value.Add(name, Create(data));
             }
             return false;
         }
@@ -159,6 +168,14 @@ namespace finalmq
             if (m_value != null)
             {
                 return m_value.Add(variant);
+            }
+            return false;
+        }
+        public bool Add<T>(T data)
+        {
+            if (m_value != null)
+            {
+                return m_value.Add(Create(data));
             }
             return false;
         }

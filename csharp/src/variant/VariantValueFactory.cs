@@ -49,12 +49,39 @@ namespace finalmq
         public IVariantValue? CreateVariantValue<T>(T data)
         {
             Debug.Assert(data != null);
+            Type? type = typeof(T);
             Entry? entry = null;
-            m_factoryMethods.TryGetValue(typeof(T), out entry);
+            m_factoryMethods.TryGetValue(type, out entry);
             if (entry != null)
             {
                 Debug.Assert(entry.Func != null);
                 return entry.Func(data);
+            }
+            else
+            {
+                Type[] interfaces = type.GetInterfaces();
+                foreach(var interf in interfaces)
+                {
+                    m_factoryMethods.TryGetValue(interf, out entry);
+                    if (entry != null)
+                    {
+                        Debug.Assert(entry.Func != null);
+                        return entry.Func(data);
+                    }
+                }
+            }
+            while (type != null)
+            {
+                type = type.BaseType;
+                if (type != null)
+                {
+                    m_factoryMethods.TryGetValue(type, out entry);
+                    if (entry != null)
+                    {
+                        Debug.Assert(entry.Func != null);
+                        return entry.Func(data);
+                    }
+                }
             }
             return null;
         }
