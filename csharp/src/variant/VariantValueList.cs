@@ -71,7 +71,7 @@ namespace finalmq
 
             Debug.Assert(partname != null);
             // check if next key is in map (if not -> null)
-            Variant variant = Find(partname);
+            Variant? variant = Find(partname);
             if (variant == null)
             {
                 return null;

@@ -9,7 +9,7 @@ namespace finalmq
 {
     public class Convertion
     {
-        public static T Convert<T>(dynamic from)
+        public static T? Convert<T>(dynamic from)
         {
             Type typeFrom = from.GetType();
             if (typeof(T) == typeof(string))
@@ -116,7 +116,7 @@ namespace finalmq
                     T value = (T)from;
                     return value;
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                 }
             }

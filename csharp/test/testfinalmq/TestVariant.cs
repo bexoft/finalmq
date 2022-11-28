@@ -205,7 +205,7 @@ namespace testfinalmq
             Variant variant = Variant.Create(VALUE);
             byte[] val = variant;
             Debug.Assert(val == VALUE);
-            Variant pvariant = variant.GetVariant("abc");
+            Variant? pvariant = variant.GetVariant("abc");
             Debug.Assert(pvariant == null);
 
             bool bval = variant;
@@ -373,7 +373,7 @@ namespace testfinalmq
             variant.Add("world", "200.5");
             variant.Add("sub", new VariantStruct());
 
-            Variant sub = variant.GetVariant("sub");
+            Variant? sub = variant.GetVariant("sub");
             Debug.Assert(sub != null);
 
             sub.Add("a", 100);
@@ -386,7 +386,7 @@ namespace testfinalmq
             double v = variant.GetData<double>("sub.b");
             Debug.Assert(v == 200.0);
 
-            Variant var = variant.GetVariant("hello.b");
+            Variant? var = variant.GetVariant("hello.b");
             Debug.Assert(var == null);
         }
 
@@ -397,7 +397,7 @@ namespace testfinalmq
             variant.Add(-123);
             variant.Add("200.5");
 
-            Variant var = variant.GetVariant("0");
+            Variant? var = variant.GetVariant("0");
             Debug.Assert(var != null);
             Debug.Assert(var == -123);
             
@@ -419,13 +419,13 @@ namespace testfinalmq
             variant.Add("200.5");
             variant.Add(new VariantStruct());
 
-            Variant sub = variant.GetVariant("2");
+            Variant? sub = variant.GetVariant("2");
             Debug.Assert(sub != null);
 
             sub.Add("a", 100);
             sub.Add("b", 200);
 
-            Variant var = variant.GetVariant("2.b");
+            Variant? var = variant.GetVariant("2.b");
             Debug.Assert(var != null);
             Debug.Assert(var == sub.GetVariant("b"));
 

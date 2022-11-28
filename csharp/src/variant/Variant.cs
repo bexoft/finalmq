@@ -68,7 +68,7 @@ namespace finalmq
 
         public T GetData<T>(string name)
         {
-            Variant v = GetVariant(name);
+            Variant? v = GetVariant(name);
             if (v != null)
             {
                 return v.GetData<T>();
@@ -78,13 +78,13 @@ namespace finalmq
 
         public void SetData<T>(string name, T data)
         {
-            Variant v = GetVariant(name);
+            Variant? v = GetVariant(name);
             if (v != null)
             {
                 v.SetData<T>(data);
             }
         }
-        public Variant GetVariant(string name)
+        public Variant? GetVariant(string name)
         {
             if (name.Length == 0)
             {
