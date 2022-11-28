@@ -74,7 +74,7 @@ namespace finalmq
             m_fields.Add(f);
             m_name2Field.Add(f.Name, f);
         }
-        public int Length
+        public int FieldsSize
         {
             get { return m_fields.Count; }
         }

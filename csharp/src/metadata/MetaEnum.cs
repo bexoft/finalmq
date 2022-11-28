@@ -163,7 +163,7 @@ namespace finalmq
             m_alias2Entry.Add(entry.Alias, entry);
         }
 
-        public int Length
+        public int EntrySize
         {
             get { return m_entries.Count; }
         }
