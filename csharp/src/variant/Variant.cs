@@ -5,11 +5,14 @@ using System.Reflection;
 
 namespace finalmq
 {
+    using VariantList = List<Variant>;
+    using VariantStruct = List<NameValue>;
+
     public class Variant
     {
         private readonly int VARTYPE_NONE = 0;
 
-        Variant()
+        public Variant()
         {
         }
 
@@ -41,7 +44,7 @@ namespace finalmq
                     return Convertion.Convert<T>(m_value.Data);
                 }
             }
-            return default(T);
+            return Default<T>();
         }
 
         public void SetData<T>(T data)
@@ -73,7 +76,7 @@ namespace finalmq
             {
                 return v.GetData<T>();
             }
-            return default(T);
+            return Default<T>();
         }
 
         public void SetData<T>(string name, T data)
@@ -202,6 +205,68 @@ namespace finalmq
             return new Variant(m_value.Clone());
         }
 
+        private T Default<T>()
+        {
+            T? v = default(T);
+            if (v == null)
+            {
+                if (typeof(T) == typeof(string))
+                {
+                    return (dynamic)EmptyString;
+                }
+                if (typeof(T) == typeof(byte[]))
+                {
+                    return (dynamic)EmptyBytes;
+                }
+                if (typeof(T) == typeof(bool[]))
+                {
+                    return (dynamic)EmptyArrayBool;
+                }
+                if (typeof(T) == typeof(int[]))
+                {
+                    return (dynamic)EmptyArrayInt32;
+                }
+                if (typeof(T) == typeof(uint[]))
+                {
+                    return (dynamic)EmptyArrayUInt32;
+                }
+                if (typeof(T) == typeof(long[]))
+                {
+                    return (dynamic)EmptyArrayInt64;
+                }
+                if (typeof(T) == typeof(ulong[]))
+                {
+                    return (dynamic)EmptyArrayUInt64;
+                }
+                if (typeof(T) == typeof(float[]))
+                {
+                    return (dynamic)EmptyArrayFloat;
+                }
+                if (typeof(T) == typeof(double[]))
+                {
+                    return (dynamic)EmptyArrayDouble;
+                }
+                if (typeof(T) == typeof(string[]))
+                {
+                    return (dynamic)EmptyArrayString;
+                }
+                if (typeof(T) == typeof(byte[][]))
+                {
+                    return (dynamic)EmptyArrayBytes;
+                }
+                if (typeof(T) == typeof(VariantList))
+                {
+                    return (dynamic)new VariantList();
+                }
+                if (typeof(T) == typeof(VariantStruct))
+                {
+                    return (dynamic)new VariantStruct();
+                }
+                throw new InvalidOperationException("Type " + typeof(T).Name + " not supported");
+            }
+            return v;
+        }
+
         public static implicit operator bool(Variant v) { return v.GetData<bool>(); }
         public static implicit operator int(Variant v) { return v.GetData<int>(); }
         public static implicit operator uint(Variant v) { return v.GetData<uint>(); }
@@ -223,5 +288,16 @@ namespace finalmq
 
         IVariantValue? m_value = null;
 
+        static readonly string EmptyString = "";
+        static readonly byte[] EmptyBytes = new byte[0];
+        static readonly bool[] EmptyArrayBool = new bool[0];
+        static readonly int[] EmptyArrayInt32 = new int[0];
+        static readonly uint[] EmptyArrayUInt32 = new uint[0];
+        static readonly long[] EmptyArrayInt64 = new long[0];
+        static readonly ulong[] EmptyArrayUInt64 = new ulong[0];
+        static readonly float[] EmptyArrayFloat = new float[0];
+        static readonly double[] EmptyArrayDouble = new double[0];
+        static readonly string[] EmptyArrayString = new string[0];
+        static readonly byte[][] EmptyArrayBytes = new byte[0][];
     }
 }

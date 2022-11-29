@@ -89,7 +89,9 @@ namespace finalmq
         public void Register<T>(IVariantValueFactory.FuncCreateVariantValue func)
         {
             Debug.Assert(func != null);
+#pragma warning disable CS8604 // Mögliches Nullverweisargument.
             int vartype = func(default(T)).VarType;
+#pragma warning restore CS8604 // Mögliches Nullverweisargument.
             m_factoryMethods.Add(typeof(T), new Entry(vartype, func));
         }
         

@@ -65,7 +65,7 @@ namespace finalmq
                     }
                     else
                     {
-                        m_stackFieldsDone.Add(new bool[0]);
+                        m_stackFieldsDone.Add(EmptyArrayBool);
                     }
                 }
                 else
@@ -438,17 +438,17 @@ namespace finalmq
         readonly IList<bool[]> m_stackFieldsDone = new List<bool[]>();
         int m_varValueActive = 0;
 
-        readonly string EmptyString = "";
-        readonly byte[] EmptyBytes = new byte[0];
-        readonly bool[] EmptyArrayBool = new bool[0];
-        readonly int[] EmptyArrayInt32 = new int[0];
-        readonly uint[] EmptyArrayUInt32 = new uint[0];
-        readonly long[] EmptyArrayInt64 = new long[0];
-        readonly ulong[] EmptyArrayUInt64 = new ulong[0];
-        readonly float[] EmptyArrayFloat = new float[0];
-        readonly double[] EmptyArrayDouble = new double[0];
-        readonly string[] EmptyArrayString = new string[0];
-        readonly byte[][] EmptyArrayBytes = new byte[0][];
+        static readonly string EmptyString = "";
+        static readonly byte[] EmptyBytes = new byte[0];
+        static readonly bool[] EmptyArrayBool = new bool[0];
+        static readonly int[] EmptyArrayInt32 = new int[0];
+        static readonly uint[] EmptyArrayUInt32 = new uint[0];
+        static readonly long[] EmptyArrayInt64 = new long[0];
+        static readonly ulong[] EmptyArrayUInt64 = new ulong[0];
+        static readonly float[] EmptyArrayFloat = new float[0];
+        static readonly double[] EmptyArrayDouble = new double[0];
+        static readonly string[] EmptyArrayString = new string[0];
+        static readonly byte[][] EmptyArrayBytes = new byte[0][];
     }
 
 }

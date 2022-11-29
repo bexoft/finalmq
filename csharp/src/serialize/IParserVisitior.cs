@@ -6,7 +6,6 @@ namespace finalmq
 {
     interface IParserVisitor
     {
-
         void NotifyError(string str, string message);
         void StartStruct(MetaStruct stru);
         void Finished();
