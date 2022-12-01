@@ -78,6 +78,7 @@ void ParserConverter::enterStruct(const MetaField& field)
 }
 void ParserConverter::exitStruct(const MetaField& field)
 {
+    assert(m_visitor);
     if (field.typeId == MetaTypeId::TYPE_STRUCT)
     {
         m_visitor->exitStruct(field);
@@ -86,6 +87,7 @@ void ParserConverter::exitStruct(const MetaField& field)
 
 void ParserConverter::enterArrayStruct(const MetaField& field)
 {
+    assert(m_visitor);
     if (field.typeId == MetaTypeId::TYPE_ARRAY_STRUCT)
     {
         m_visitor->enterArrayStruct(field);
@@ -93,6 +95,7 @@ void ParserConverter::enterArrayStruct(const MetaField& field)
 }
 void ParserConverter::exitArrayStruct(const MetaField& field)
 {
+    assert(m_visitor);
     if (field.typeId == MetaTypeId::TYPE_ARRAY_STRUCT)
     {
         m_visitor->exitArrayStruct(field);
@@ -584,7 +587,9 @@ void ParserConverter::convertNumber(const MetaField& field, T value)
         break;
     case MetaTypeId::TYPE_ARRAY_BYTES:
         {
-            m_visitor->enterArrayString(field, {std::to_string(value)});
+            std::string str = std::to_string(value);
+            Bytes bytes(str.begin(), str.end());
+            m_visitor->enterArrayBytes(field, { bytes });
         }
         break;
     case MetaTypeId::TYPE_ARRAY_ENUM:

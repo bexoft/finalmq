@@ -63,7 +63,7 @@ public:
     const char* parse(const char* str, ssize_t size = CHECK_ON_ZEROTERM);
 
 private:
-    const char* parseValue(const char* str, ssize_t size = CHECK_ON_ZEROTERM);
+    const char* parseValue(const char* str);
     inline const char* parseWhiteSpace(const char* str);
     const char* parseObject(const char* str);
     const char* parseArray(const char* str);

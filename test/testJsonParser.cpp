@@ -279,6 +279,17 @@ TEST_F(TestJsonParser, testDouble)
     EXPECT_EQ(size, json.size());
 }
 
+TEST_F(TestJsonParser, testDoubleExponent)
+{
+    EXPECT_CALL(m_mockJsonParserVisitor, enterDouble(100.0)).Times(1);
+    EXPECT_CALL(m_mockJsonParserVisitor, finished()).Times(1);
+    std::string json = "1e2";
+    const char* res = m_parser->parse(json.c_str());
+    EXPECT_NE(res, nullptr);
+    ssize_t size = res - json.c_str();
+    EXPECT_EQ(size, json.size());
+}
+
 
 
 TEST_F(TestJsonParser, testDoubleWrongFormat)
