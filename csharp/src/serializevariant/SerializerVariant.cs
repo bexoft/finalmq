@@ -61,7 +61,7 @@ namespace finalmq
                     //m_outer.m_parserProcessDefaultValues->resetVarValueActive();
                     // m_outer.m_parserProcessDefaultValues->setVisitor(*this);
                     //m_varValueToVariant->convert();
-                    //m_varValueToVariant->setExitNotification(nullptr);
+                    //m_varValueToVariant->setExitNotification(-1);
                     //});
                 }
                 else
