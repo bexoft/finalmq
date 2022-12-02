@@ -296,5 +296,533 @@ namespace testfinalmq
             m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
         }
 
+        [Fact]
+        public void TestEmptyStringWithSpaces()
+        {
+            string json = "\t\n\r \"\"\t\n\r ";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == json.Length);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterString(""), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestString()
+        {
+            string json = "\"Hello World\"";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == json.Length);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterString("Hello World"), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestStringSimpleEscape()
+        {
+            string json = "\" \\\" \\\\ \\/ \\b \\f \\n \\r \\t \"";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == json.Length);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterString(" \" \\ / \b \f \n \r \t "), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestStringSimpleEscapeEarlyEnd()
+        {
+            string json = "\"\\t";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == -1);
+
+            m_mockJsonParserVisitor.Verify(x => x.SyntaxError("", It.IsAny<string>()), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestStringEscapeU16()
+        {
+            string json = "\"\\u00E4\"";
+            string cmp = Encoding.UTF8.GetString(new byte[] { 0xc3, 0xa4 });
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == json.Length);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterString(cmp), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestStringEscapeU16Invalid()
+        {
+            string json = "\"\\u00H4\"";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == -1);
+
+            m_mockJsonParserVisitor.Verify(x => x.SyntaxError("H4\"", It.IsAny<string>()), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestStringEscapeU16EarlyEnd()
+        {
+            string json = "\"\\u00E";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == -1);
+
+            m_mockJsonParserVisitor.Verify(x => x.SyntaxError("", It.IsAny<string>()), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestStringEscapeU32()
+        {
+            string json = "\"\\uD802\\uDDAA\""; // codepoint=68010=0x109aa
+            string cmp = Encoding.UTF8.GetString(new byte[] { 0xf0, 0x90, 0xa6, 0xaa });
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == json.Length);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterString(cmp), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestStringEscapeU32Invalid()
+        {
+            string json = "\"\\uD801\\uDEH1\"";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == -1);
+
+            m_mockJsonParserVisitor.Verify(x => x.SyntaxError("H1\"", It.IsAny<string>()), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestStringEscapeU32EarlyEnd()
+        {
+            string json = "\"\\uD801\\uDE01";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == -1);
+
+            m_mockJsonParserVisitor.Verify(x => x.SyntaxError("", It.IsAny<string>()), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestStringEscapeU32UnknownEscape()
+        {
+            string json = "\"\\z\"";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == json.Length);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterString("\\z"), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestEmptyArray()
+        {
+            string json = "[]";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == json.Length);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterArray(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.ExitArray(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestEmptyArrayWithSpaces()
+        {
+            string json = "\t\n\r [\t\n\r ]\t\n\r ";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == json.Length);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterArray(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.ExitArray(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestArrayWithOneValue()
+        {
+            string json = "[123]";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == json.Length);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterArray(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterUInt32(123), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.ExitArray(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestArrayWithOneValueWithSpaces()
+        {
+            string json = "\t\n\r [\t\n\r 123\t\n\r ]\t\n\r ";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == json.Length);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterArray(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterUInt32(123), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.ExitArray(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestArrayWithTwoValues()
+        {
+            string json = "[123,\"Hello\"]";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == json.Length);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterArray(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterUInt32(123), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterString("Hello"), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.ExitArray(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestArrayWithTwoValuesWithSpaces()
+        {
+            string json = " [ 123 , \"Hello\" ] ";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == json.Length);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterArray(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterUInt32(123), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterString("Hello"), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.ExitArray(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestArrayTolerateLastCommaTwoValues()
+        {
+            string json = "[123,\"Hello\",]";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == json.Length);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterArray(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterUInt32(123), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterString("Hello"), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.ExitArray(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestArrayTolerateLastCommaWithSpacesTwoValues()
+        {
+            string json = " [ 123 , \"Hello\" , ] ";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == json.Length);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterArray(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterUInt32(123), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterString("Hello"), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.ExitArray(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestArrayTolerateLastCommaOneValue()
+        {
+            string json = "[123,]";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == json.Length);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterArray(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterUInt32(123), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.ExitArray(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestArrayTolerateLastCommaOneValueWithSpaces()
+        {
+            string json = " [ 123 , ] ";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == json.Length);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterArray(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterUInt32(123), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.ExitArray(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestEmptyArrayOneComma()
+        {
+            string json = "[,]";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == -1);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterArray(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.SyntaxError(",]", It.IsAny<string>()), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void testEmptyArrayOneCommaWithSpaces()
+        {
+            string json = " [ , ] ";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == -1);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterArray(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.SyntaxError(", ] ", It.IsAny<string>()), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestArrayTwoCommas()
+        {
+            string json = "[123,,]";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == -1);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterArray(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterUInt32(123), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.SyntaxError(",]", It.IsAny<string>()), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestArrayTwoCommasWithSpaces()
+        {
+            string json = " [ 123 , , ] ";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == -1);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterArray(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterUInt32(123), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.SyntaxError(", ] ", It.IsAny<string>()), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestArrayMissingComma()
+        {
+            string json = "[123 12]";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == -1);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterArray(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterUInt32(123), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.SyntaxError("12]", It.IsAny<string>()), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestArrayEarlyEnd()
+        {
+            string json = "[123,";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == -1);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterArray(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterUInt32(123), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.SyntaxError("", It.IsAny<string>()), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestEmptyObjectNoEnd()
+        {
+            string json = "{";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == -1);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterObject(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.SyntaxError("", It.IsAny<string>()), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestEmptyObject()
+        {
+            string json = "{}";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == json.Length);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterObject(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.ExitObject(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestEmptyObjectWithSpaces()
+        {
+            string json = "\t\n\r {\t\n\r }\t\n\r ";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == json.Length);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterObject(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.ExitObject(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestObjectWithOneEntry()
+        {
+            string json = "{\"key\":123}";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == json.Length);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterObject(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterKey("key"), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterUInt32(123), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.ExitObject(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void testObjectWithOneEntryWithSpaces()
+        {
+            string json = " { \"key\" : 123 } ";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == json.Length);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterObject(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterKey("key"), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterUInt32(123), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.ExitObject(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestObjectMissingColen()
+        {
+            string json = "{\"key\" 123}";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == -1);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterObject(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterKey("key"), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.SyntaxError("123}", It.IsAny<string>()), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestObjectMissingKeyString()
+        {
+            string json = "{key:123}";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == -1);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterObject(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.SyntaxError("key:123}", It.IsAny<string>()), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestObjectMissingKeyStringWithSpaces()
+        {
+            string json = " { key : 123 } ";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == -1);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterObject(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.SyntaxError("key : 123 } ", It.IsAny<string>()), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestObjectMissingComma()
+        {
+            string json = "{\"key\":123 \"next\":123}";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == -1);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterObject(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterKey("key"), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterUInt32(123), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.SyntaxError("\"next\":123}", It.IsAny<string>()), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestObjectWithOneEntryTolerateLastComma()
+        {
+            string json = "{\"key\":123,}";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == json.Length);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterObject(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterKey("key"), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterUInt32(123), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.ExitObject(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestObjectTwoCommas()
+        {
+            string json = "{\"key\":123,,\"next\":123}";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == -1);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterObject(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterKey("key"), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterUInt32(123), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.SyntaxError(",\"next\":123}", It.IsAny<string>()), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestObjectTwoCommasWithSpaces()
+        {
+            string json = "{\"key\":123 , ,\"next\":123}";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == -1);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterObject(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterKey("key"), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterUInt32(123), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.SyntaxError(",\"next\":123}", It.IsAny<string>()), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestObjectEarlyEndInKey()
+        {
+            string json = "{\"key";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == -1);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterObject(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.SyntaxError("", It.IsAny<string>()), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestObjectInvalidValue()
+        {
+            string json = "{\"key\":12-12";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == -1);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterObject(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterKey("key"), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.SyntaxError("12-12", It.IsAny<string>()), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void testObjectKeyWithEscape()
+        {
+            string json = "{\"ke\\ty\":123}";
+            int res = m_parser.Parse(json);
+            Debug.Assert(res == json.Length);
+
+            m_mockJsonParserVisitor.Verify(x => x.EnterObject(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterKey("ke\ty"), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.EnterUInt32(123), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.ExitObject(), Times.Once);
+            m_mockJsonParserVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
     }
 }
+
