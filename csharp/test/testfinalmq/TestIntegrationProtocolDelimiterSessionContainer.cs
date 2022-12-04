@@ -336,11 +336,13 @@ namespace testfinalmq
         {
             IProtocolSession? connConnect = null;
             CondVar condVarReceived = new CondVar();
+            CondVar condVarConnectClient = new CondVar();
 
             m_mockClientCallback.Setup(x => x.Connected(It.IsAny<IProtocolSession>()))
                 .Callback((IProtocolSession connection) =>
                 {
                     connConnect = connection;
+                    condVarConnectClient.Set();
                 });
             m_mockServerCallback.Setup(x => x.Connected(It.IsAny<IProtocolSession>()))
                 .Callback((IProtocolSession connection) => {
@@ -367,6 +369,7 @@ namespace testfinalmq
 
 
             Debug.Assert(condVarReceived.Wait(10000));
+            Debug.Assert(condVarConnectClient.Wait(1000));
 
             Debug.Assert(connConnect != null);
             Debug.Assert(connConnect == connection);

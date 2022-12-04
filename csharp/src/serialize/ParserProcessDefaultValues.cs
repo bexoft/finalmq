@@ -303,6 +303,15 @@ namespace finalmq
                 m_visitor.EnterString(field, value);
             }
         }
+        public void EnterString(MetaField field, byte[] buffer, int offset, int size)
+        {
+            Debug.Assert(m_visitor != null);
+            MarkAsDone(field);
+            if (size != 0 || !m_skipDefaultValues)
+            {
+                m_visitor.EnterString(field, buffer, offset, size);
+            }
+        }
         public void EnterBytes(MetaField field, byte[] value)
         {
             Debug.Assert(m_visitor != null);

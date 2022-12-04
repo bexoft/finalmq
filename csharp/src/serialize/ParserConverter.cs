@@ -164,6 +164,18 @@ namespace finalmq
                 ConvertString(field, value);
             }
         }
+        public void EnterString(MetaField field, byte[] buffer, int offset, int size)
+        {
+            Debug.Assert(m_visitor != null);
+            if (field.TypeId == MetaTypeId.TYPE_STRING)
+            {
+                m_visitor.EnterString(field, buffer, offset, size);
+            }
+            else
+            {
+                ConvertString(field, Encoding.UTF8.GetString(buffer, offset, size));
+            }
+        }
         public void EnterBytes(MetaField field, byte[] value)
         {
             Debug.Assert(m_visitor != null);

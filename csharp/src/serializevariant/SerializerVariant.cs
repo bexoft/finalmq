@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-
+using System.Text;
 
 namespace finalmq
 {
@@ -193,6 +193,10 @@ namespace finalmq
             public void EnterString(MetaField field, string value)
             {
                 Add(field, value);
+            }
+            public void EnterString(MetaField field, byte[] buffer, int offset, int size)
+            {
+                Add(field, Encoding.UTF8.GetString(buffer, offset, size));
             }
             public void EnterBytes(MetaField field, byte[] value)
             {

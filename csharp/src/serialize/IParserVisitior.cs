@@ -24,6 +24,7 @@ namespace finalmq
         void EnterFloat(MetaField field, float value);
         void EnterDouble(MetaField field, double value);
         void EnterString(MetaField field, string value);
+        void EnterString(MetaField field, byte[] buffer, int offset, int size);
         void EnterBytes(MetaField field, byte[] value);
         void EnterEnum(MetaField field, int value);
         void EnterEnum(MetaField field, string value);

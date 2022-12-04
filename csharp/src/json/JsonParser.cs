@@ -37,11 +37,13 @@ namespace finalmq
         void EnterUInt64(ulong value);
         void EnterDouble(double value);
         void EnterString(string value);
+        void EnterString(byte[] buffer, int offset, int size);
         void EnterArray();
         void ExitArray();
         void EnterObject();
         void ExitObject();
         void EnterKey(string key);
+        void EnterKey(byte[] buffer, int offset, int size);
         void Finished();
     };
 
@@ -347,14 +349,13 @@ namespace finalmq
                 if (c == '\"')
                 {
                     int size = offset - offsetBegin;
-                    string value = Encoding.UTF8.GetString(m_buffer, offsetBegin, size);
                     if (key)
                     {
-                        m_visitor.EnterKey(value);
+                        m_visitor.EnterKey(m_buffer, offsetBegin, size);
                     }
                     else
                     {
-                        m_visitor.EnterString(value);
+                        m_visitor.EnterString(m_buffer, offsetBegin, size);
                     }
                     offset++;
                     return offset;
@@ -373,13 +374,20 @@ namespace finalmq
             }
 
             // fast parse was not possible, go ahead with escaping
-            MemoryStream dest = new MemoryStream(2048);
-            dest.Write(m_buffer, offsetBegin, offset - offsetBegin);
+            if (m_dest == null)
+            {
+                m_dest = new StringBuilder(2048);
+            }
+            else
+            {
+                m_dest.Clear();
+            }
+            m_dest.Append(Encoding.UTF8.GetString(m_buffer, offsetBegin, offset - offsetBegin));
             while ((c = GetChar(offset)) != 0)
             {
                 if (c == '\"')
                 {
-                    string value = Encoding.UTF8.GetString(dest.ToArray());
+                    string value = m_dest.ToString();
                     if (key)
                     {
                         m_visitor.EnterKey(value);
@@ -401,27 +409,27 @@ namespace finalmq
                             case '\"':
                             case '\\':
                             case '/':
-                                dest.WriteByte((byte)c);
+                                m_dest.Append(c);
                                 break;
                             case 'b':
-                                dest.WriteByte((byte)'\b');
+                                m_dest.Append('\b');
                                 break;
                             case 'f':
-                                dest.WriteByte((byte)'\f');
+                                m_dest.Append('\f');
                                 break;
                             case 'n':
-                                dest.WriteByte((byte)'\n');
+                                m_dest.Append('\n');
                                 break;
                             case 'r':
-                                dest.WriteByte((byte)'\r');
+                                m_dest.Append('\r');
                                 break;
                             case 't':
-                                dest.WriteByte((byte)'\t');
+                                m_dest.Append('\t');
                                 break;
                             case 'u':
                                 {
                                     offset++;
-                                    uint num = 0;
+                                    int num = 0;
                                     offset = ParseUEscape(offset, out num);
                                     if (offset == -1)
                                     {
@@ -441,7 +449,7 @@ namespace finalmq
                                             return -1;
                                         }
                                         offset++;
-                                        uint num2 = 0;
+                                        int num2 = 0;
                                         offset = ParseUEscape(offset, out num2);
                                         if (offset == -1)
                                         {
@@ -464,39 +472,25 @@ namespace finalmq
 
                                     if (num <= 0x7F)
                                     {
-                                        dest.WriteByte((byte)(num & 0xff));
-                                    }
-                                    else if (num <= 0x7FF)
-                                    {
-                                        dest.WriteByte((byte)(0xC0 | ((num >> 6) & 0xFF)));
-                                        dest.WriteByte((byte)(0x80 | ((num & 0x3F))));
-                                    }
-                                    else if (num <= 0xFFFF)
-                                    {
-                                        dest.WriteByte((byte)(0xE0 | ((num >> 12) & 0xFF)));
-                                        dest.WriteByte((byte)(0x80 | ((num >> 6) & 0x3F)));
-                                        dest.WriteByte((byte)(0x80 | (num & 0x3F)));
+                                        m_dest.Append((char)(num & 0xff));
                                     }
                                     else
                                     {
                                         Debug.Assert(num <= 0x10FFFF);
-                                        dest.WriteByte((byte)(0xF0 | ((num >> 18) & 0xFF)));
-                                        dest.WriteByte((byte)(0x80 | ((num >> 12) & 0x3F)));
-                                        dest.WriteByte((byte)(0x80 | ((num >> 6) & 0x3F)));
-                                        dest.WriteByte((byte)(0x80 | (num & 0x3F)));
+                                        m_dest.Append(Char.ConvertFromUtf32(num));
                                     }
                                 }
                                 break;
                             default:
-                                dest.WriteByte((byte)'\\');
-                                dest.WriteByte((byte)c);
+                                m_dest.Append('\\');
+                                m_dest.Append(c);
                                 break;
                         }
                     }
                 }
                 else
                 {
-                    dest.WriteByte((byte)c);
+                    m_dest.Append(c);
                 }
                 offset++;
             }
@@ -566,7 +560,7 @@ namespace finalmq
             return -1;
         }
 
-        int ParseUEscape(int offset, out uint value)
+        int ParseUEscape(int offset, out int value)
         {
             value = 0;
             for (int i = 0; i < 4; ++i)
@@ -578,7 +572,7 @@ namespace finalmq
                     return -1;
                 }
                 v <<= 12 - 4 * i;
-                value += (uint)v;
+                value += v;
                 offset++;
             }
             return offset;
@@ -598,6 +592,7 @@ namespace finalmq
         IJsonParserVisitor m_visitor;
         byte[] m_buffer = new byte[0];
         int m_end = 0;
+        StringBuilder? m_dest = null;
     };
 
 }   // namespace finalmq
