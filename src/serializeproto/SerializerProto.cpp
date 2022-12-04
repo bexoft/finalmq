@@ -301,20 +301,18 @@ void SerializerProto::Internal::reserveSpace(ssize_t space)
     ssize_t sizeRemaining = m_bufferEnd - m_buffer;
     if (sizeRemaining < space)
     {
+        if (m_buffer != nullptr)
+        {
+            ssize_t size = m_buffer - m_bufferStart;
+            assert(size >= 0);
+            m_zeroCopybuffer.downsizeLastBuffer(size);
+        }
+
         const ssize_t sizeRemainingZeroCopyBuffer = m_zeroCopybuffer.getRemainingSize();
         ssize_t sizeNew = m_maxBlockSize;
-        if (sizeRemainingZeroCopyBuffer >= space)
+        if (space <= sizeRemainingZeroCopyBuffer)
         {
-            sizeNew = std::min(m_maxBlockSize, sizeRemainingZeroCopyBuffer);
-        }
-        else
-        {
-            if (m_buffer != nullptr)
-            {
-                ssize_t size = m_buffer - m_bufferStart;
-                assert(size >= 0);
-                m_zeroCopybuffer.downsizeLastBuffer(size);
-            }
+            sizeNew = sizeRemainingZeroCopyBuffer;
         }
         sizeNew = std::max(sizeNew, space);
         char* bufferStartNew = m_zeroCopybuffer.addBuffer(sizeNew);

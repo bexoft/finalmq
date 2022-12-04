@@ -157,6 +157,15 @@ TEST_F(TestJsonBuilder, testInt64_1234567890123456789)
     EXPECT_EQ(m_data, "1234567890123456789");
 }
 
+TEST_F(TestJsonBuilder, testInt64_n1234567890123456789)
+{
+    static const std::int64_t VALUE = -1234567890123456789;
+
+    m_builder->enterInt64(VALUE);
+    m_builder->finished();
+    EXPECT_EQ(m_data, "-1234567890123456789");
+}
+
 TEST_F(TestJsonBuilder, testUInt64_2234567890123456789)
 {
     static const std::uint64_t VALUE = 2234567890123456789;
