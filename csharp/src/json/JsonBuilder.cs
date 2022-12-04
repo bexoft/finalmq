@@ -101,7 +101,7 @@ namespace finalmq
         }
         public void EnterDouble(double value)
         {
-            ReserveSpace(350);
+            ReserveSpace(50);
             Debug.Assert(m_buffer != null);
             string s = value.ToString(System.Globalization.CultureInfo.InvariantCulture);
             m_offset += Encoding.UTF8.GetBytes(s, 0, s.Length, m_buffer, m_offset);
@@ -169,20 +169,18 @@ namespace finalmq
             int sizeRemaining = m_offsetEnd - m_offset;
             if (sizeRemaining < space)
             {
+                if (m_bufferStart != null)
+                {
+                    int size = m_offset - m_bufferStart.Offset;
+                    Debug.Assert(size >= 0);
+                    m_zeroCopybuffer.DownsizeLastBuffer(size);
+                }
+
                 int sizeRemainingZeroCopyBuffer = m_zeroCopybuffer.RemainingSize;
                 int sizeNew = m_maxBlockSize;
-                if (sizeRemainingZeroCopyBuffer >= space)
+                if (space <= sizeRemainingZeroCopyBuffer)
                 {
-                    sizeNew = Math.Min(m_maxBlockSize, sizeRemainingZeroCopyBuffer);
-                }
-                else
-                {
-                    if (m_bufferStart != null)
-                    {
-                        int size = m_offset - m_bufferStart.Offset;
-                        Debug.Assert(size >= 0);
-                        m_zeroCopybuffer.DownsizeLastBuffer(size);
-                    }
+                    sizeNew = sizeRemainingZeroCopyBuffer;
                 }
                 sizeNew = Math.Max(sizeNew, space);
                 BufferRef bufferStartNew = m_zeroCopybuffer.AddBuffer(sizeNew);

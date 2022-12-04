@@ -23,14 +23,11 @@ namespace testfinalmq
         byte[] m_data = new byte[MAX_BLOCK_SIZE];
         int m_size = MAX_BLOCK_SIZE;
         BufferRef m_bufferRef;
-        Mock<IZeroCopyBuffer> m_mockBuffer = new Mock<IZeroCopyBuffer>();
+        Mock<IZeroCopyBuffer>? m_mockBuffer = null;
 
         public TestJsonBuilder()
         {
-            //EXPECT_CALL(m_mockBuffer, addBuffer(MAX_BLOCK_SIZE, _)).Times(1).WillOnce(Return((char*)m_data.data()));
-            //EXPECT_CALL(m_mockBuffer, downsizeLastBuffer(_)).Times(1).WillOnce(Invoke(&m_data, &String::resize));
-            //EXPECT_CALL(m_mockBuffer, getRemainingSize()).WillRepeatedly(Return(0));
-
+            m_mockBuffer = new Mock<IZeroCopyBuffer>();
             m_bufferRef = new BufferRef(m_data, 0, m_data.Length);
 
             m_mockBuffer.Setup(x => x.AddBuffer(MAX_BLOCK_SIZE, It.IsAny<int>())).Returns(m_bufferRef);
@@ -44,9 +41,12 @@ namespace testfinalmq
 
         public void Dispose()
         {
-            m_mockBuffer.Verify(x => x.AddBuffer(MAX_BLOCK_SIZE, It.IsAny<int>()), Times.Once);
-            m_mockBuffer.Verify(x => x.DownsizeLastBuffer(It.IsAny<int>()), Times.Once);
-            m_mockBuffer.Verify(x => x.RemainingSize, Times.Once);
+            if (m_mockBuffer != null)
+            {
+                m_mockBuffer.Verify(x => x.AddBuffer(MAX_BLOCK_SIZE, It.IsAny<int>()), Times.Once);
+                m_mockBuffer.Verify(x => x.DownsizeLastBuffer(It.IsAny<int>()), Times.Once);
+                m_mockBuffer.Verify(x => x.RemainingSize, Times.Once);
+            }
         }
 
 
@@ -377,7 +377,73 @@ namespace testfinalmq
             Debug.Assert(s == "{\"name\":\"Elvis\",\"age\":42,\"arr\":[1.234,2.345,3.456]}");
         }
 
+        [Fact]
+        public void TestWithRealZeroCopyBuffer()
+        {
+            m_mockBuffer = null;
 
+            IMessage message = new ProtocolMessage(0);
+            m_builder = new JsonBuilder(message, 8);
+
+            m_builder.EnterObject();
+            m_builder.EnterKey("name");
+            m_builder.EnterString("This is Elvis");
+            m_builder.EnterKey("age");
+            m_builder.EnterInt32(42);
+            m_builder.EnterKey("arr");
+            m_builder.EnterArray();
+            m_builder.EnterString("This is a loooooooooooooooooooooooooooooooooooooooooooong text");
+            m_builder.EnterDouble(1.234);
+            m_builder.EnterDouble(2.345);
+            m_builder.EnterDouble(3.456);
+            m_builder.ExitArray();
+            m_builder.ExitObject();
+            m_builder.Finished();
+
+            string result = "";
+            IList<BufferRef> buffers = message.GetAllSendBuffers();
+            foreach (var buffer in buffers)
+            {
+                result += Encoding.UTF8.GetString(buffer.Buffer, buffer.Offset, buffer.Length);
+            }
+            Debug.Assert(result == "{\"name\":\"This is Elvis\",\"age\":42,\"arr\":[\"This is a loooooooooooooooooooooooooooooooooooooooooooong text\",1.234,2.345,3.456]}");
+        }
+
+        [Fact]
+        public void TestWithRealZeroCopyBufferPreAllocateBuffer()
+        {
+            m_mockBuffer = null;
+
+            IMessage message = new ProtocolMessage(0);
+            BufferRef preBuffer = message.AddBuffer(40, 100);
+            Encoding.UTF8.GetBytes("PRE").CopyTo(preBuffer.Buffer, preBuffer.Offset);
+            message.DownsizeLastBuffer(3);
+
+            m_builder = new JsonBuilder(message, 8);
+
+            m_builder.EnterObject();
+            m_builder.EnterKey("name");
+            m_builder.EnterString("This is Elvis");
+            m_builder.EnterKey("age");
+            m_builder.EnterInt32(42);
+            m_builder.EnterKey("arr");
+            m_builder.EnterArray();
+            m_builder.EnterString("This is a loooooooooooooooooooooooooooooooooooooooooooong text");
+            m_builder.EnterDouble(1.234);
+            m_builder.EnterDouble(2.345);
+            m_builder.EnterDouble(3.456);
+            m_builder.ExitArray();
+            m_builder.ExitObject();
+            m_builder.Finished();
+
+            string result = "";
+            IList<BufferRef> buffers = message.GetAllSendBuffers();
+            foreach (var buffer in buffers)
+            {
+                result += Encoding.UTF8.GetString(buffer.Buffer, buffer.Offset, buffer.Length);
+            }
+            Debug.Assert(result == "PRE{\"name\":\"This is Elvis\",\"age\":42,\"arr\":[\"This is a loooooooooooooooooooooooooooooooooooooooooooong text\",1.234,2.345,3.456]}");
+        }
     }
 }
 
