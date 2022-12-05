@@ -28,6 +28,7 @@
 #include "finalmq/metadata/MetaData.h"
 #include "MockIParserVisitor.h"
 
+#include <cmath>
 //#include <thread>
 //#include <chrono>
 

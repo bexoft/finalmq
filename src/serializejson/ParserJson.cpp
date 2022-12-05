@@ -33,6 +33,7 @@
 #include <assert.h>
 //#include <memory.h>
 #include <iostream>
+#include <cmath>
 
 
 namespace finalmq {

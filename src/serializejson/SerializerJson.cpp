@@ -28,6 +28,7 @@
 
 #include <assert.h>
 #include <algorithm>
+#include <cmath>
 
 namespace finalmq {
 

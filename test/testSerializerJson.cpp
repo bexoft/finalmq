@@ -30,6 +30,8 @@
 #include "test.pb.h"
 #include "finalmq/metadataserialize/variant.fmq.h"
 
+#include <cmath>
+
 
 using ::testing::_;
 using ::testing::Return;
