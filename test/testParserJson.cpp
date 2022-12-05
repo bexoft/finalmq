@@ -57,6 +57,38 @@ MATCHER_P(MatcherDouble, value, "")
     return (arg == value || (std::isnan(arg) && std::isnan(value)));
 }
 
+MATCHER_P(MatcherArrayFloat, value, "")
+{
+    if (arg.size() != value.size())
+    {
+        return false;
+    }
+    for (size_t i = 0; i < arg.size(); ++i)
+    {
+        if (!(arg[i] == value[i] || (std::isnan(arg[i]) && std::isnan(value[i]))))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+MATCHER_P(MatcherArrayDouble, value, "")
+{
+    if (arg.size() != value.size())
+    {
+        return false;
+    }
+    for (size_t i = 0; i < arg.size(); ++i)
+    {
+        if (!(arg[i] == value[i] || (std::isnan(arg[i]) && std::isnan(value[i]))))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 
 MATCHER_P2(ArrayEq, compareArray, n, "")
 {
@@ -856,11 +888,35 @@ TEST_F(TestParserJson, testArrayFloat)
     {
         testing::InSequence seq;
         EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
-        EXPECT_CALL(mockVisitor, enterArrayFloat(MatcherMetaField(*fieldValue), std::vector<float>({VALUE1, VALUE2, VALUE3, VALUE4}))).Times(1);
+        EXPECT_CALL(mockVisitor, enterArrayFloat(MatcherMetaField(*fieldValue), std::vector<float>({ VALUE1, VALUE2, VALUE3, VALUE4 }))).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
 
     std::string data = "{\"value\":[-2.1,0,2.1,222.1]}";
+    ParserJson parser(mockVisitor, data.data(), data.size());
+    bool res = parser.parseStruct("test.TestArrayFloat");
+    EXPECT_EQ(res, true);
+}
+
+TEST_F(TestParserJson, testArrayFloatNaN)
+{
+    static const float VALUE1 = NAN;
+    static const float VALUE2 = INFINITY;
+    static const float VALUE3 = -INFINITY;
+
+    const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestArrayFloat", "value");
+    ASSERT_NE(fieldValue, nullptr);
+
+    MockIParserVisitor mockVisitor;
+
+    {
+        testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
+        EXPECT_CALL(mockVisitor, enterArrayFloat(MatcherMetaField(*fieldValue), MatcherArrayFloat(std::vector<float>({ VALUE1, VALUE2, VALUE3 })))).Times(1);
+        EXPECT_CALL(mockVisitor, finished()).Times(1);
+    }
+
+    std::string data = "{\"value\":[\"NaN\",\"Infinity\",\"-Infinity\"]}";
     ParserJson parser(mockVisitor, data.data(), data.size());
     bool res = parser.parseStruct("test.TestArrayFloat");
     EXPECT_EQ(res, true);
@@ -887,6 +943,30 @@ TEST_F(TestParserJson, testArrayDouble)
     }
 
     std::string data = "{\"value\":[-2.1,0,2.1,222.1]}";
+    ParserJson parser(mockVisitor, data.data(), data.size());
+    bool res = parser.parseStruct("test.TestArrayDouble");
+    EXPECT_EQ(res, true);
+}
+
+TEST_F(TestParserJson, testArrayDoubleNaN)
+{
+    static const double VALUE1 = NAN;
+    static const double VALUE2 = INFINITY;
+    static const double VALUE3 = -INFINITY;
+
+    const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestArrayDouble", "value");
+    ASSERT_NE(fieldValue, nullptr);
+
+    MockIParserVisitor mockVisitor;
+
+    {
+        testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
+        EXPECT_CALL(mockVisitor, enterArrayDouble(MatcherMetaField(*fieldValue), MatcherArrayDouble(std::vector<double>({ VALUE1, VALUE2, VALUE3 })))).Times(1);
+        EXPECT_CALL(mockVisitor, finished()).Times(1);
+    }
+
+    std::string data = "{\"value\":[\"NaN\",\"Infinity\",\"-Infinity\"]}";
     ParserJson parser(mockVisitor, data.data(), data.size());
     bool res = parser.parseStruct("test.TestArrayDouble");
     EXPECT_EQ(res, true);

@@ -63,6 +63,9 @@ private:
     template<class T>
     void enterNumber(T value);
 
+    template< class T>
+    T convert(const char* value, ssize_t size);
+
     struct State
     {
         explicit State(const MetaField* f)

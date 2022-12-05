@@ -549,13 +549,27 @@ TEST_F(TestSerializerJson, testArrayFloat)
     static const float VALUE1 = -1;
     static const float VALUE2 = 0;
     static const float VALUE3 = 1;
-    static const std::vector<float> VALUE = {VALUE1, VALUE2, VALUE3};
+    static const std::vector<float> VALUE = { VALUE1, VALUE2, VALUE3 };
 
     m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestArrayFloat"));
-    m_serializer->enterArrayFloat({MetaTypeId::TYPE_ARRAY_FLOAT, "", "value", "", 0}, VALUE.data(), VALUE.size());
+    m_serializer->enterArrayFloat({ MetaTypeId::TYPE_ARRAY_FLOAT, "", "value", "", 0 }, VALUE.data(), VALUE.size());
     m_serializer->finished();
 
     ASSERT_EQ(m_data, "{\"value\":[-1.0,0.0,1.0]}");
+}
+
+TEST_F(TestSerializerJson, testArrayFloatNaN)
+{
+    static const float VALUE1 = NAN;
+    static const float VALUE2 = INFINITY;
+    static const float VALUE3 = -INFINITY;
+    static const std::vector<float> VALUE = { VALUE1, VALUE2, VALUE3 };
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestArrayFloat"));
+    m_serializer->enterArrayFloat({ MetaTypeId::TYPE_ARRAY_FLOAT, "", "value", "", 0 }, VALUE.data(), VALUE.size());
+    m_serializer->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":[\"NaN\",\"Infinity\",\"-Infinity\"]}");
 }
 
 TEST_F(TestSerializerJson, testArrayDouble)
@@ -572,6 +586,19 @@ TEST_F(TestSerializerJson, testArrayDouble)
     ASSERT_EQ(m_data, "{\"value\":[-1.1,0.0,1.1]}");
 }
 
+TEST_F(TestSerializerJson, testArrayDoubleNaN)
+{
+    static const double VALUE1 = NAN;
+    static const double VALUE2 = INFINITY;
+    static const double VALUE3 = -INFINITY;
+    static const std::vector<double> VALUE = { VALUE1, VALUE2, VALUE3 };
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestArrayDouble"));
+    m_serializer->enterArrayDouble({ MetaTypeId::TYPE_ARRAY_DOUBLE, "", "value", "", 0 }, VALUE.data(), VALUE.size());
+    m_serializer->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":[\"NaN\",\"Infinity\",\"-Infinity\"]}");
+}
 
 TEST_F(TestSerializerJson, testArrayString)
 {

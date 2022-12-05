@@ -141,19 +141,18 @@ void SerializerJson::Internal::enterUInt64(const MetaField& field, std::uint64_t
     m_jsonBuilder.enterString(std::to_string(value));
 }
 
-void SerializerJson::Internal::enterFloat(const MetaField& field, float value)
+template <class T>
+void SerializerJson::Internal::handleDouble(T value)
 {
-    assert(field.typeId == MetaTypeId::TYPE_FLOAT);
-    setKey(field);
     if (std::isnan(value))
     {
         m_jsonBuilder.enterString("NaN");
     }
-    else if (value == std::numeric_limits<double>::infinity())
+    else if (value == std::numeric_limits<T>::infinity())
     {
         m_jsonBuilder.enterString("Infinity");
     }
-    else if (value == -std::numeric_limits<double>::infinity())
+    else if (value == -std::numeric_limits<T>::infinity())
     {
         m_jsonBuilder.enterString("-Infinity");
     }
@@ -163,26 +162,19 @@ void SerializerJson::Internal::enterFloat(const MetaField& field, float value)
     }
 }
 
+
+void SerializerJson::Internal::enterFloat(const MetaField& field, float value)
+{
+    assert(field.typeId == MetaTypeId::TYPE_FLOAT);
+    setKey(field);
+    handleDouble(value);
+}
+
 void SerializerJson::Internal::enterDouble(const MetaField& field, double value)
 {
     assert(field.typeId == MetaTypeId::TYPE_DOUBLE);
     setKey(field);
-    if (std::isnan(value))
-    {
-        m_jsonBuilder.enterString("NaN");
-    }
-    else if (value == std::numeric_limits<double>::infinity())
-    {
-        m_jsonBuilder.enterString("Infinity");
-    }
-    else if (value == -std::numeric_limits<double>::infinity())
-    {
-        m_jsonBuilder.enterString("-Infinity");
-    }
-    else
-    {
-        m_jsonBuilder.enterDouble(value);
-    }
+    handleDouble(value);
 }
 
 void SerializerJson::Internal::enterString(const MetaField& field, std::string&& value)
@@ -362,22 +354,7 @@ void SerializerJson::Internal::enterArrayFloat(const MetaField& field, const flo
     setKey(field);
     m_jsonBuilder.enterArray();
     std::for_each(value, value + size, [this] (float entry) {
-        if (std::isnan(entry))
-        {
-            m_jsonBuilder.enterString("NaN");
-        }
-        else if (entry == std::numeric_limits<double>::infinity())
-        {
-            m_jsonBuilder.enterString("Infinity");
-        }
-        else if (entry == -std::numeric_limits<double>::infinity())
-        {
-            m_jsonBuilder.enterString("-Infinity");
-        }
-        else
-        {
-            m_jsonBuilder.enterDouble(entry);
-        }
+        handleDouble(entry);
     });
     m_jsonBuilder.exitArray();
 }
@@ -393,23 +370,8 @@ void SerializerJson::Internal::enterArrayDouble(const MetaField& field, const do
     setKey(field);
     m_jsonBuilder.enterArray();
     std::for_each(value, value + size, [this] (double entry) {
-        if (std::isnan(entry))
-        {
-            m_jsonBuilder.enterString("NaN");
-        }
-        else if (entry == std::numeric_limits<double>::infinity())
-        {
-            m_jsonBuilder.enterString("Infinity");
-        }
-        else if (entry == -std::numeric_limits<double>::infinity())
-        {
-            m_jsonBuilder.enterString("-Infinity");
-        }
-        else
-        {
-            m_jsonBuilder.enterDouble(entry);
-        }
-        });
+        handleDouble(entry);
+    });
     m_jsonBuilder.exitArray();
 }
 
