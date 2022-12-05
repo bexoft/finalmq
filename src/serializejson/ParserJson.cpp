@@ -242,13 +242,45 @@ void ParserJson::enterString(const char* value, ssize_t size)
         break;
     case MetaTypeId::TYPE_FLOAT:
         {
-            float v = strtof32(value, nullptr);
+            float v = 0;
+            if (size == 3 && memcmp(value, "NaN", 3) == 0)
+            {
+                v = NAN;
+            }
+            else if (size == 8 && memcmp(value, "Infinity", 8) == 0)
+            {
+                v = std::numeric_limits<float>::infinity();;
+            }
+            else if (size == 9 && memcmp(value, "-Infinity", 9) == 0)
+            {
+                v = -std::numeric_limits<float>::infinity();;
+            }
+            else
+            {
+                v = strtof32(value, nullptr);
+            }
             m_visitor.enterFloat(*m_fieldCurrent, v);
         }
         break;
     case MetaTypeId::TYPE_DOUBLE:
         {
-            double v = strtof64(value, nullptr);
+            double v = 0;
+            if (size == 3 && memcmp(value, "NaN", 3) == 0)
+            {
+                v = NAN;
+            }
+            else if (size == 8 && memcmp(value, "Infinity", 8) == 0)
+            {
+                v = std::numeric_limits<double>::infinity();;
+            }
+            else if (size == 9 && memcmp(value, "-Infinity", 9) == 0)
+            {
+                v = -std::numeric_limits<double>::infinity();;
+            }
+            else
+            {
+                v = strtof64(value, nullptr);
+            }
             m_visitor.enterDouble(*m_fieldCurrent, v);
         }
         break;
@@ -298,13 +330,45 @@ void ParserJson::enterString(const char* value, ssize_t size)
         break;
     case MetaTypeId::TYPE_ARRAY_FLOAT:
         {
-            float v = strtof32(value, nullptr);
+            float v = 0;
+            if (size == 3 && memcmp(value, "NaN", 3) == 0)
+            {
+                v = NAN;
+            }
+            else if (size == 8 && memcmp(value, "Infinity", 8) == 0)
+            {
+                v = std::numeric_limits<float>::infinity();;
+            }
+            else if (size == 9 && memcmp(value, "-Infinity", 9) == 0)
+            {
+                v = -std::numeric_limits<float>::infinity();;
+            }
+            else
+            {
+                v = strtof32(value, nullptr);
+            }
             m_arrayFloat.push_back(v);
         }
         break;
     case MetaTypeId::TYPE_ARRAY_DOUBLE:
         {
-            double v = strtof64(value, nullptr);
+            double v = 0;
+            if (size == 3 && memcmp(value, "NaN", 3) == 0)
+            {
+                v = NAN;
+            }
+            else if (size == 8 && memcmp(value, "Infinity", 8) == 0)
+            {
+                v = std::numeric_limits<double>::infinity();;
+            }
+            else if (size == 9 && memcmp(value, "-Infinity", 9) == 0)
+            {
+                v = -std::numeric_limits<double>::infinity();;
+            }
+            else
+            {
+                v = strtof64(value, nullptr);
+            }
             m_arrayDouble.push_back(v);
         }
         break;
@@ -378,13 +442,45 @@ void ParserJson::enterString(std::string&& value)
         break;
     case MetaTypeId::TYPE_FLOAT:
         {
-            float v = strtof32(value.c_str(), nullptr);
+            float v = 0;
+            if (value.size() == 3 && memcmp(value.c_str(), "NaN", 3) == 0)
+            {
+                v = NAN;
+            }
+            else if (value.size() == 8 && memcmp(value.c_str(), "Infinity", 8) == 0)
+            {
+                v = std::numeric_limits<float>::infinity();;
+            }
+            else if (value.size() == 9 && memcmp(value.c_str(), "-Infinity", 9) == 0)
+            {
+                v = -std::numeric_limits<float>::infinity();;
+            }
+            else
+            {
+                v = strtof32(value.c_str(), nullptr);
+            }
             m_visitor.enterFloat(*m_fieldCurrent, v);
         }
         break;
     case MetaTypeId::TYPE_DOUBLE:
         {
-            double v = strtof64(value.c_str(), nullptr);
+            double v = 0;
+            if (value.size() == 3 && memcmp(value.c_str(), "NaN", 3) == 0)
+            {
+                v = NAN;
+            }
+            else if (value.size() == 8 && memcmp(value.c_str(), "Infinity", 8) == 0)
+            {
+                v = std::numeric_limits<double>::infinity();;
+            }
+            else if (value.size() == 9 && memcmp(value.c_str(), "-Infinity", 9) == 0)
+            {
+                v = -std::numeric_limits<double>::infinity();;
+            }
+            else
+            {
+                v = strtof64(value.c_str(), nullptr);
+            }
             m_visitor.enterDouble(*m_fieldCurrent, v);
         }
         break;
@@ -434,13 +530,45 @@ void ParserJson::enterString(std::string&& value)
         break;
     case MetaTypeId::TYPE_ARRAY_FLOAT:
         {
-            float v = strtof32(value.c_str(), nullptr);
+            float v = 0;
+            if (value.size() == 3 && memcmp(value.c_str(), "NaN", 3) == 0)
+            {
+                v = NAN;
+            }
+            else if (value.size() == 8 && memcmp(value.c_str(), "Infinity", 8) == 0)
+            {
+                v = std::numeric_limits<float>::infinity();;
+            }
+            else if (value.size() == 9 && memcmp(value.c_str(), "-Infinity", 9) == 0)
+            {
+                v = -std::numeric_limits<float>::infinity();;
+            }
+            else
+            {
+                v = strtof32(value.c_str(), nullptr);
+            }
             m_arrayFloat.push_back(v);
         }
         break;
     case MetaTypeId::TYPE_ARRAY_DOUBLE:
         {
-            double v = strtof64(value.c_str(), nullptr);
+            double v = 0;
+            if (value.size() == 3 && memcmp(value.c_str(), "NaN", 3) == 0)
+            {
+                v = NAN;
+            }
+            else if (value.size() == 8 && memcmp(value.c_str(), "Infinity", 8) == 0)
+            {
+                v = std::numeric_limits<double>::infinity();;
+            }
+            else if (value.size() == 9 && memcmp(value.c_str(), "-Infinity", 9) == 0)
+            {
+                v = -std::numeric_limits<double>::infinity();;
+            }
+            else
+            {
+                v = strtof64(value.c_str(), nullptr);
+            }
             m_arrayDouble.push_back(v);
         }
         break;

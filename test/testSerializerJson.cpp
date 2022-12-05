@@ -169,7 +169,7 @@ TEST_F(TestSerializerJson, testInt64)
     m_serializer->enterInt64({MetaTypeId::TYPE_INT64, "", "value", "", 0}, VALUE);
     m_serializer->finished();
 
-    ASSERT_EQ(m_data, "{\"value\":-2}");
+    ASSERT_EQ(m_data, "{\"value\":\"-2\"}");
 }
 
 TEST_F(TestSerializerJson, testUInt64)
@@ -190,10 +190,43 @@ TEST_F(TestSerializerJson, testFloat)
     static const float VALUE = -2;
 
     m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestFloat"));
-    m_serializer->enterFloat({MetaTypeId::TYPE_FLOAT, "", "value", "", 0}, VALUE);
+    m_serializer->enterFloat({ MetaTypeId::TYPE_FLOAT, "", "value", "", 0 }, VALUE);
     m_serializer->finished();
 
     ASSERT_EQ(m_data, "{\"value\":-2.0}");
+}
+
+TEST_F(TestSerializerJson, testFloatNaN)
+{
+    static const float VALUE = NAN;
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestFloat"));
+    m_serializer->enterFloat({ MetaTypeId::TYPE_FLOAT, "", "value", "", 0 }, VALUE);
+    m_serializer->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":\"NaN\"}");
+}
+
+TEST_F(TestSerializerJson, testFloatInfinity)
+{
+    static const float VALUE = INFINITY;
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestFloat"));
+    m_serializer->enterFloat({ MetaTypeId::TYPE_FLOAT, "", "value", "", 0 }, VALUE);
+    m_serializer->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":\"Infinity\"}");
+}
+
+TEST_F(TestSerializerJson, testFloatNInfinity)
+{
+    static const float VALUE = -INFINITY;
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestFloat"));
+    m_serializer->enterFloat({ MetaTypeId::TYPE_FLOAT, "", "value", "", 0 }, VALUE);
+    m_serializer->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":\"-Infinity\"}");
 }
 
 
@@ -202,10 +235,43 @@ TEST_F(TestSerializerJson, testDouble)
     static const double VALUE = -2.1;
 
     m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestDouble"));
-    m_serializer->enterDouble({MetaTypeId::TYPE_DOUBLE, "", "value", "", 0}, VALUE);
+    m_serializer->enterDouble({ MetaTypeId::TYPE_DOUBLE, "", "value", "", 0 }, VALUE);
     m_serializer->finished();
 
     ASSERT_EQ(m_data, "{\"value\":-2.1}");
+}
+
+TEST_F(TestSerializerJson, testDoubleNaN)
+{
+    static const double VALUE = NAN;
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestDouble"));
+    m_serializer->enterDouble({ MetaTypeId::TYPE_DOUBLE, "", "value", "", 0 }, VALUE);
+    m_serializer->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":\"NaN\"}");
+}
+
+TEST_F(TestSerializerJson, testDoubleInfinity)
+{
+    static const double VALUE = INFINITY;
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestDouble"));
+    m_serializer->enterDouble({ MetaTypeId::TYPE_DOUBLE, "", "value", "", 0 }, VALUE);
+    m_serializer->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":\"Infinity\"}");
+}
+
+TEST_F(TestSerializerJson, testDoubleNInfinity)
+{
+    static const double VALUE = -INFINITY;
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestDouble"));
+    m_serializer->enterDouble({ MetaTypeId::TYPE_DOUBLE, "", "value", "", 0 }, VALUE);
+    m_serializer->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":\"-Infinity\"}");
 }
 
 
@@ -459,7 +525,7 @@ TEST_F(TestSerializerJson, testArrayInt64)
     m_serializer->enterArrayInt64({MetaTypeId::TYPE_ARRAY_INT64, "", "value", "", 0}, VALUE.data(), VALUE.size());
     m_serializer->finished();
 
-    ASSERT_EQ(m_data, "{\"value\":[-1,0,1]}");
+    ASSERT_EQ(m_data, "{\"value\":[\"-1\",\"0\",\"1\"]}");
 }
 
 TEST_F(TestSerializerJson, testArrayUInt64)
