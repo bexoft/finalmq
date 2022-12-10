@@ -254,11 +254,11 @@ namespace finalmq
             {
                 Add(field, value);
             }
-            public void EnterArrayString(MetaField field, string[] value)
+            public void EnterArrayString(MetaField field, IList<string> value)
             {
                 Add(field, value);
             }
-            public void EnterArrayBytes(MetaField field, byte[][] value)
+            public void EnterArrayBytes(MetaField field, IList<byte[]> value)
             {
                 Add(field, value);
             }
@@ -280,7 +280,7 @@ namespace finalmq
                     Add(field, value);
                 }
             }
-            public void EnterArrayEnum(MetaField field, string[] value)
+            public void EnterArrayEnum(MetaField field, IList<string> value)
             {
                 if (m_enumAsString)
                 {
@@ -288,7 +288,7 @@ namespace finalmq
                 }
                 else
                 {
-                    int[] enums = new int[value.Length];
+                    int[] enums = new int[value.Count];
                     for (int i = 0; i < enums.Length; ++i)
                     {
                         enums[i] = MetaDataGlobal.Instance.GetEnumValueByName(field, value[i]);

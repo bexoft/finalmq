@@ -320,12 +320,12 @@ namespace testfinalmq
         [Fact]
         public void TestArrayString()
         {
-            string[] VALUE = { "Hello", "", "World" };
+            IList<string> VALUE = new List<string>{ "Hello", "", "World" };
             Variant variant = Variant.Create(VALUE);
-            string[] val = variant;
+            List<string> val = variant;
             Debug.Assert(val == VALUE);
 
-            string[] VALUE2 = { "Hi", "Sky" };
+            IList<string> VALUE2 = new List<string> { "Hi", "Sky" };
             variant.SetData(VALUE2);
             val = variant;
             Debug.Assert(val == VALUE2);
@@ -334,12 +334,12 @@ namespace testfinalmq
         [Fact]
         public void TestArrayBytes()
         {
-            byte[][] VALUE = { new byte[] { 1, 2, 3 }, new byte[] { 2, 3, 4 }, new byte[] { 3, 4, 5 }, new byte[] { 4, 5, 6 } };
+            IList<byte[]> VALUE = new List<byte[]>{ new byte[] { 1, 2, 3 }, new byte[] { 2, 3, 4 }, new byte[] { 3, 4, 5 }, new byte[] { 4, 5, 6 } };
             Variant variant = Variant.Create(VALUE);
-            byte[][] val = variant;
+            List<byte[]> val = variant;
             Debug.Assert(val == VALUE);
 
-            byte[][] VALUE2 = { new byte[] { 1, 2, 3 }, new byte[] { 3, 4, 5 }, new byte[] { 4, 5, 6 } };
+            IList<byte[]> VALUE2 = new List<byte[]> { new byte[] { 1, 2, 3 }, new byte[] { 3, 4, 5 }, new byte[] { 4, 5, 6 } };
             variant.SetData(VALUE2);
             val = variant;
             Debug.Assert(val == VALUE2);

@@ -404,20 +404,20 @@ namespace finalmq
                 m_visitor.EnterArrayDouble(field, value);
             }
         }
-        public void EnterArrayString(MetaField field, string[] value)
+        public void EnterArrayString(MetaField field, IList<string> value)
         {
             Debug.Assert(m_visitor != null);
             MarkAsDone(field);
-            if (value.Length != 0 || !m_skipDefaultValues)
+            if (value.Count != 0 || !m_skipDefaultValues)
             {
                 m_visitor.EnterArrayString(field, value);
             }
         }
-        public void EnterArrayBytes(MetaField field, byte[][] value)
+        public void EnterArrayBytes(MetaField field, IList<byte[]> value)
         {
             Debug.Assert(m_visitor != null);
             MarkAsDone(field);
-            if (value.Length != 0 || !m_skipDefaultValues)
+            if (value.Count != 0 || !m_skipDefaultValues)
             {
                 m_visitor.EnterArrayBytes(field, value);
             }
@@ -431,11 +431,11 @@ namespace finalmq
                 m_visitor.EnterArrayEnum(field, value);
             }
         }
-        public void EnterArrayEnum(MetaField field, string[] value)
+        public void EnterArrayEnum(MetaField field, IList<string> value)
         {
             Debug.Assert(m_visitor != null);
             MarkAsDone(field);
-            if (value.Length != 0 || !m_skipDefaultValues)
+            if (value.Count != 0 || !m_skipDefaultValues)
             {
                 m_visitor.EnterArrayEnum(field, value);
             }
@@ -456,8 +456,8 @@ namespace finalmq
         static readonly ulong[] EmptyArrayUInt64 = new ulong[0];
         static readonly float[] EmptyArrayFloat = new float[0];
         static readonly double[] EmptyArrayDouble = new double[0];
-        static readonly string[] EmptyArrayString = new string[0];
-        static readonly byte[][] EmptyArrayBytes = new byte[0][];
+        static readonly IList<string> EmptyArrayString = new List<string>();
+        static readonly IList<byte[]> EmptyArrayBytes = new List<byte[]>();
     }
 
 }

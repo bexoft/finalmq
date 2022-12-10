@@ -286,9 +286,9 @@ namespace finalmq
                 }
             }
 
-            string strNumber = Encoding.UTF8.GetString(m_buffer, first, offset - first);
             if (isFloat)
             {
+                string strNumber = Encoding.UTF8.GetString(m_buffer, first, offset - first);
                 double value;
                 if (!Double.TryParse(strNumber, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
                 {
@@ -299,8 +299,9 @@ namespace finalmq
             }
             else if (isNegative)
             {
-                long value;
-                if (!Int64.TryParse(strNumber, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
+                bool ok;
+                long value = Convertion.ConvertByteStringToInt64(m_buffer, first, offset - first, out ok);
+                if (!ok)
                 {
                     m_visitor.SyntaxError(GetCurrentText(first), "wrong number format");
                     return -1;
@@ -317,8 +318,9 @@ namespace finalmq
             }
             else
             {
-                ulong value;
-                if (!UInt64.TryParse(strNumber, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
+                bool ok;
+                ulong value = Convertion.ConvertByteStringToUInt64(m_buffer, first, offset - first, out ok);
+                if (!ok)
                 {
                     m_visitor.SyntaxError(GetCurrentText(first), "wrong number format");
                     return -1;
@@ -332,6 +334,55 @@ namespace finalmq
                     m_visitor.EnterUInt64(value);
                 }
             }
+
+            /*
+                        string strNumber = Encoding.UTF8.GetString(m_buffer, first, offset - first);
+                        if (isFloat)
+                        {
+                            double value;
+                            if (!Double.TryParse(strNumber, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
+                            {
+                                m_visitor.SyntaxError(GetCurrentText(first), "wrong number format");
+                                return -1;
+                            }
+                            m_visitor.EnterDouble(value);
+                        }
+                        else if (isNegative)
+                        {
+                            long value;
+                            if (!Int64.TryParse(strNumber, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
+                            {
+                                m_visitor.SyntaxError(GetCurrentText(first), "wrong number format");
+                                return -1;
+                            }
+                            Debug.Assert(value < 0);
+                            if (value >= Int32.MinValue)
+                            {
+                                m_visitor.EnterInt32((int)value);
+                            }
+                            else
+                            {
+                                m_visitor.EnterInt64(value);
+                            }
+                        }
+                        else
+                        {
+                            ulong value;
+                            if (!UInt64.TryParse(strNumber, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
+                            {
+                                m_visitor.SyntaxError(GetCurrentText(first), "wrong number format");
+                                return -1;
+                            }
+                            if (value <= UInt32.MaxValue)
+                            {
+                                m_visitor.EnterUInt32((uint)value);
+                            }
+                            else
+                            {
+                                m_visitor.EnterUInt64(value);
+                            }
+                        }
+             */
 
             return offset;
         }

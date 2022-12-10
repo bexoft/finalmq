@@ -157,10 +157,10 @@ namespace finalmq
                     m_visitor.EnterArrayDouble(field, sub);
                     break;
                 case MetaTypeId.TYPE_ARRAY_STRING:
-                    m_visitor.EnterArrayString(field, sub);
+                    m_visitor.EnterArrayString(field, sub.GetData<IList<string>>());
                     break;
                 case MetaTypeId.TYPE_ARRAY_BYTES:
-                    m_visitor.EnterArrayBytes(field, sub);
+                    m_visitor.EnterArrayBytes(field, sub.GetData<IList<byte[]>>());
                     break;
                 case MetaTypeId.TYPE_ARRAY_STRUCT:
                     {
@@ -186,7 +186,7 @@ namespace finalmq
                     {
                         if (sub.VarType == (int)MetaTypeId.TYPE_ARRAY_STRING)
                         {
-                            string[] value = sub;
+                            IList<string> value = sub.GetData<IList<string>>();
                             m_visitor.EnterArrayEnum(field, value);
                         }
                         else

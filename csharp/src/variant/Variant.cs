@@ -246,13 +246,13 @@ namespace finalmq
                 {
                     return (dynamic)EmptyArrayDouble;
                 }
-                if (typeof(T) == typeof(string[]))
+                if (typeof(T) == typeof(IList<string>))
                 {
-                    return (dynamic)EmptyArrayString;
+                    return (dynamic)EmptyListString;
                 }
-                if (typeof(T) == typeof(byte[][]))
+                if (typeof(T) == typeof(IList<byte[]>))
                 {
-                    return (dynamic)EmptyArrayBytes;
+                    return (dynamic)EmptyListBytes;
                 }
                 if (typeof(T) == typeof(VariantList))
                 {
@@ -283,8 +283,28 @@ namespace finalmq
         public static implicit operator ulong[](Variant v) { return v.GetData<ulong[]>(); }
         public static implicit operator float[](Variant v) { return v.GetData<float[]>(); }
         public static implicit operator double[](Variant v) { return v.GetData<double[]>(); }
-        public static implicit operator string[](Variant v) { return v.GetData<string[]>(); }
-        public static implicit operator byte[][](Variant v) { return v.GetData<byte[][]>(); }
+        public static implicit operator List<string>(Variant v) 
+        {
+            List<string>? list = null;
+            IList<string>? ilist = v.GetData<IList<string>>();
+            list = ilist as List<string>;
+            if (list == null)
+            {
+                list = new List<string>(ilist);
+            }
+            return list;
+        }
+        public static implicit operator List<byte[]>(Variant v)
+        {
+            List<byte[]>? list = null;
+            IList<byte[]>? ilist = v.GetData<IList<byte[]>>();
+            list = ilist as List<byte[]>;
+            if (list == null)
+            {
+                list = new List<byte[]>(ilist);
+            }
+            return list;
+        }
 
         IVariantValue? m_value = null;
 
@@ -297,7 +317,7 @@ namespace finalmq
         static readonly ulong[] EmptyArrayUInt64 = new ulong[0];
         static readonly float[] EmptyArrayFloat = new float[0];
         static readonly double[] EmptyArrayDouble = new double[0];
-        static readonly string[] EmptyArrayString = new string[0];
-        static readonly byte[][] EmptyArrayBytes = new byte[0][];
+        static readonly IList<string> EmptyListString = new List<string>();
+        static readonly IList<byte[]> EmptyListBytes = new List<byte[]>();
     }
 }

@@ -97,9 +97,14 @@ namespace finalmq
                 }
                 else if (typeof(T) == typeof(float))
                 {
-                    double value;
-                    Double.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value);
-                    return (dynamic)(float)value;
+                    float value;
+                    if (Single.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
+                    {
+                        return (dynamic)value;
+                    }
+                    double d = 0;
+                    Double.TryParse((string)from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
+                    return (dynamic)(float)d;
                 }
                 else if (typeof(T) == typeof(double))
                 {
@@ -125,6 +130,207 @@ namespace finalmq
                 }
             }
             return default(T);
+        }
+
+        public static int ConvertByteStringToInt32(byte[] buffer, int offset, int size, out bool ok)
+        {
+            if (size == 0)
+            {
+                ok = false;
+                return 0;
+            }
+
+            ok = true;
+            int value = 0;
+
+            int i = 0;
+            bool neg = false;
+            if (buffer[offset] == '-')
+            {
+                neg = true;
+                i = 1;
+            }
+            for ( ; i < size; i++)
+            {
+                byte c = buffer[offset + i];
+                if (i == 0 && c == '-')
+                {
+                    neg = true;
+                }
+                else if (c >= '0' && c <= '9')
+                {
+                    int diff = (c - '0');
+                    if ((value <= 0x0CCCCCCB) || !((value >= 0x0CCCCCCD) || (value == 0x0CCCCCCC && (diff >= 9 || diff == 8 && !neg))))
+                    {
+                        value *= 10;
+                        value += diff;
+                    }
+                    else
+                    {
+                        ok = false;
+                        break;
+                    }
+                }
+                else
+                {
+                    ok = false;
+                    break;
+                }
+            }
+
+            if (ok)
+            {
+                if (neg)
+                {
+                    value *= -1;
+                }
+            }
+            else
+            {
+                value = 0;
+            }
+
+            return value;
+        }
+
+        public static uint ConvertByteStringToUInt32(byte[] buffer, int offset, int size, out bool ok)
+        {
+            if (size == 0)
+            {
+                ok = false;
+                return 0;
+            }
+
+            ok = true;
+            uint value = 0;
+
+            for (int i = 0; i < size; i++)
+            {
+                byte c = buffer[offset + i];
+                if (c >= '0' && c <= '9')
+                {
+                    uint diff = (uint)(c - '0');
+                    if ((value <= 0x19999998) || !((value >= 0x1999999A) || (value == 0x19999999 && diff >= 6)))
+                    {
+                        value *= 10;
+                        value += diff;
+                    }
+                    else
+                    {
+                        ok = false;
+                        break;
+                    }
+                }
+                else
+                {
+                    ok = false;
+                    break;
+                }
+            }
+
+            if (!ok)
+            {
+                value = 0;
+            }
+            return value;
+        }
+
+        public static long ConvertByteStringToInt64(byte[] buffer, int offset, int size, out bool ok)
+        {
+            if (size == 0)
+            {
+                ok = false;
+                return 0;
+            }
+
+            ok = true;
+            long value = 0;
+
+            int i = 0;
+            bool neg = false;
+            if (buffer[offset] == '-')
+            {
+                neg = true;
+                i = 1;
+            }
+            for ( ; i < size; i++)
+            {
+                byte c = buffer[offset + i];
+                if (c >= '0' && c <= '9')
+                {
+                    int diff = (c - '0');
+                    if ((value <= 0x0CCCCCCCCCCCCCCB) || !((value >= 0x0CCCCCCCCCCCCCCD) || (value == 0x0CCCCCCCCCCCCCCC && (diff >= 9 || diff == 8 && !neg))))
+                    {
+                        value *= 10;
+                        value += diff;
+                    }
+                    else
+                    {
+                        ok = false;
+                        break;
+                    }
+                }
+                else
+                {
+                    ok = false;
+                    break;
+                }
+            }
+
+            if (ok)
+            {
+                if (neg)
+                {
+                    value *= -1;
+                }
+            }
+            else
+            {
+                value = 0;
+            }
+
+            return value;
+        }
+
+        public static ulong ConvertByteStringToUInt64(byte[] buffer, int offset, int size, out bool ok)
+        {
+            if (size == 0)
+            {
+                ok = false;
+                return 0;
+            }
+
+            ok = true;
+            ulong value = 0;
+
+            for (int i = 0; i < size; i++)
+            {
+                byte c = buffer[offset + i];
+                if (c >= '0' && c <= '9')
+                {
+                    uint diff = (uint)(c - '0');
+                    if ((value <= 0x1999999999999998) || !((value >= 0x199999999999999A) || (value == 0x1999999999999999 && diff >= 6)))
+                    {
+                        value *= 10;
+                        value += diff;
+                    }
+                    else
+                    {
+                        ok = false;
+                        break;
+                    }
+                }
+                else
+                {
+                    ok = false;
+                    break;
+                }
+            }
+            if (!ok)
+            {
+                value = 0;
+            }
+            return value;
         }
     }
 }

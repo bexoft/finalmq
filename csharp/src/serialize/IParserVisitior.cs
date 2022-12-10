@@ -36,10 +36,10 @@ namespace finalmq
         void EnterArrayUInt64(MetaField field, ulong[] value);
         void EnterArrayFloat(MetaField field, float[] value);
         void EnterArrayDouble(MetaField field, double[] value);
-        void EnterArrayString(MetaField field, string[] value);
-        void EnterArrayBytes(MetaField field, byte[][] value);
+        void EnterArrayString(MetaField field, IList<string> value);
+        void EnterArrayBytes(MetaField field, IList<byte[]> value);
         void EnterArrayEnum(MetaField field, int[] value);
-        void EnterArrayEnum(MetaField field, string[] value);
+        void EnterArrayEnum(MetaField field, IList<string> value);
     }
 
 }

@@ -297,7 +297,7 @@ namespace finalmq
                 ConvertArraytNumber(field, value);
             }
         }
-        public void EnterArrayString(MetaField field, string[] value)
+        public void EnterArrayString(MetaField field, IList<string> value)
         {
             Debug.Assert(m_visitor != null);
             if (field.TypeId == MetaTypeId.TYPE_ARRAY_STRING)
@@ -309,7 +309,7 @@ namespace finalmq
                 ConvertArraytString(field, value);
             }
         }
-        public void EnterArrayBytes(MetaField field, byte[][] value)
+        public void EnterArrayBytes(MetaField field, IList<byte[]> value)
         {
             Debug.Assert(m_visitor != null);
             if (field.TypeId == MetaTypeId.TYPE_ARRAY_BYTES)
@@ -333,7 +333,7 @@ namespace finalmq
                 ConvertArraytNumber(field, value);
             }
         }
-        public void EnterArrayEnum(MetaField field, string[] value)
+        public void EnterArrayEnum(MetaField field, IList<string> value)
         {
             Debug.Assert(m_visitor != null);
             if (field.TypeId == MetaTypeId.TYPE_ARRAY_ENUM)
@@ -610,7 +610,7 @@ namespace finalmq
             }
         }
 
-        void ConvertArraytString(MetaField field, string[] value)
+        void ConvertArraytString(MetaField field, IList<string> value)
         {
             Debug.Assert(m_visitor != null);
 
@@ -618,8 +618,8 @@ namespace finalmq
             {
             case MetaTypeId.TYPE_ARRAY_BOOL:
                 {
-                    bool[] v = new bool[value.Length];
-                    for (int i = 0; i < value.Length; ++i)
+                    bool[] v = new bool[value.Count];
+                    for (int i = 0; i < value.Count; ++i)
                     {
                         v[i] = Convertion.Convert((dynamic)value[i]);
                     }
@@ -628,8 +628,8 @@ namespace finalmq
                 break;
             case MetaTypeId.TYPE_ARRAY_INT32:
                 {
-                    int[] v = new int[value.Length];
-                    for (int i = 0; i < value.Length; ++i)
+                    int[] v = new int[value.Count];
+                    for (int i = 0; i < value.Count; ++i)
                     {
                         v[i] = Convertion.Convert((dynamic)value[i]);
                     }
@@ -638,8 +638,8 @@ namespace finalmq
                 break;
             case MetaTypeId.TYPE_ARRAY_UINT32:
                 {
-                    uint[] v = new uint[value.Length];
-                    for (int i = 0; i < value.Length; ++i)
+                    uint[] v = new uint[value.Count];
+                    for (int i = 0; i < value.Count; ++i)
                     {
                         v[i] = Convertion.Convert((dynamic)value[i]);
                     }
@@ -648,8 +648,8 @@ namespace finalmq
                 break;
             case MetaTypeId.TYPE_ARRAY_INT64:
                 {
-                    long[] v = new long[value.Length];
-                    for (int i = 0; i < value.Length; ++i)
+                    long[] v = new long[value.Count];
+                    for (int i = 0; i < value.Count; ++i)
                     {
                         v[i] = Convertion.Convert((dynamic)value[i]);
                     }
@@ -658,8 +658,8 @@ namespace finalmq
                 break;
             case MetaTypeId.TYPE_ARRAY_UINT64:
                 {
-                    ulong[] v = new ulong[value.Length];
-                    for (int i = 0; i < value.Length; ++i)
+                    ulong[] v = new ulong[value.Count];
+                    for (int i = 0; i < value.Count; ++i)
                     {
                         v[i] = Convertion.Convert((dynamic)value[i]);
                     }
@@ -668,8 +668,8 @@ namespace finalmq
                 break;
             case MetaTypeId.TYPE_ARRAY_FLOAT:
                 {
-                    float[] v = new float[value.Length];
-                    for (int i = 0; i < value.Length; ++i)
+                    float[] v = new float[value.Count];
+                    for (int i = 0; i < value.Count; ++i)
                     {
                         v[i] = Convertion.Convert((dynamic)value[i]);
                     }
@@ -678,8 +678,8 @@ namespace finalmq
                 break;
             case MetaTypeId.TYPE_ARRAY_DOUBLE:
                 {
-                    double[] v = new double[value.Length];
-                    for (int i = 0; i < value.Length; ++i)
+                    double[] v = new double[value.Count];
+                    for (int i = 0; i < value.Count; ++i)
                     {
                         v[i] = Convertion.Convert((dynamic)value[i]);
                     }

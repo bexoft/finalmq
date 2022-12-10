@@ -171,13 +171,13 @@ namespace finalmq
     }
     public class VariantValueArrayString : VariantValueBase
     {
-        public VariantValueArrayString(string[] data) : base(data) { }
+        public VariantValueArrayString(IList<string> data) : base(data) { }
         public override int VarType { get { return (int)MetaTypeId.TYPE_ARRAY_STRING; } }
         public override IVariantValue Clone() { return new VariantValueArrayString(Data.Clone()); }
     }
     public class VariantValueArrayBytes : VariantValueBase
     {
-        public VariantValueArrayBytes(byte[][] data) : base(data) { }
+        public VariantValueArrayBytes(IList<byte[]> data) : base(data) { }
         public override int VarType { get { return (int)MetaTypeId.TYPE_ARRAY_BYTES; } }
         public override IVariantValue Clone() { return new VariantValueArrayBytes(Data.Clone()); }
     }
@@ -203,8 +203,8 @@ namespace finalmq
             VariantValueFactory.Instance.Register<ulong[]>((dynamic data) => { return new VariantValueArrayUInt64(data); });
             VariantValueFactory.Instance.Register<float[]>((dynamic data) => { return new VariantValueArrayFloat(data); });
             VariantValueFactory.Instance.Register<double[]>((dynamic data) => { return new VariantValueArrayDouble(data); });
-            VariantValueFactory.Instance.Register<string[]>((dynamic data) => { return new VariantValueArrayString(data); });
-            VariantValueFactory.Instance.Register<byte[][]>((dynamic data) => { return new VariantValueArrayBytes(data); });
+            VariantValueFactory.Instance.Register<IList<string>>((dynamic data) => { return new VariantValueArrayString(data); });
+            VariantValueFactory.Instance.Register<IList<byte[]>>((dynamic data) => { return new VariantValueArrayBytes(data); });
         }
     }
 }
