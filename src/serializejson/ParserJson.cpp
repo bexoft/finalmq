@@ -647,7 +647,7 @@ void ParserJson::exitArray()
         if (!m_stack.empty())
         {
 //            m_stack.pop_back();
-            m_fieldCurrent = m_stack.back().field;
+            m_fieldCurrent = m_stack.back();
             if (m_fieldCurrent)
             {
                 m_visitor.exitArrayStruct(*m_fieldCurrent);
@@ -657,7 +657,7 @@ void ParserJson::exitArray()
 
         if (!m_stack.empty())
         {
-            m_fieldCurrent = m_stack.back().field;
+            m_fieldCurrent = m_stack.back();
             if (m_fieldCurrent)
             {
                 m_structCurrent = MetaDataGlobal::instance().getStruct(*m_fieldCurrent);
@@ -700,7 +700,7 @@ void ParserJson::exitObject()
     m_fieldCurrent = nullptr;
     if (!m_stack.empty())
     {
-        m_fieldCurrent = m_stack.back().field;
+        m_fieldCurrent = m_stack.back();
                               // the outer object shall not trigger exitStruct
         if (m_fieldCurrent && (m_stack.size() > 1))
         {
@@ -710,7 +710,7 @@ void ParserJson::exitObject()
     }
     if (!m_stack.empty())
     {
-        m_fieldCurrent = m_stack.back().field;
+        m_fieldCurrent = m_stack.back();
         if (m_fieldCurrent)
         {
             if ((int)m_fieldCurrent->typeId & (int)MetaTypeId::OFFSET_ARRAY_FLAG)
