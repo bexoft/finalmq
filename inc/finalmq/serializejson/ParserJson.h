@@ -68,8 +68,8 @@ private:
 
     const char*         m_ptr = nullptr;
     ssize_t             m_size = 0;
-    IParserVisitor&     m_visitor;
     JsonParser          m_parser;
+    IParserVisitor&     m_visitor;
 
     std::deque<const MetaField*>   m_stack;
     const MetaStruct*   m_structCurrent = nullptr;

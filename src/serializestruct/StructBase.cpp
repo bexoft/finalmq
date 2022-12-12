@@ -87,7 +87,7 @@ StructBase* StructBase::add(ssize_t index)
                 if (arrayStructAdapter)
                 {
                     int offset = fieldInfo->getOffset();
-                    void* array = reinterpret_cast<void*>(reinterpret_cast<char*>(this) + offset);
+                    char& array = *(reinterpret_cast<char*>(this) + offset);
                     return arrayStructAdapter->add(array);
                 }
             }

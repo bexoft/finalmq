@@ -40,9 +40,9 @@ class StructBase;
 struct IArrayStructAdapter
 {
     virtual ~IArrayStructAdapter() {}
-    virtual StructBase* add(void* array) = 0;
-    virtual ssize_t size(const void* array) const = 0;
-    virtual const StructBase& at(const void* array, ssize_t index) const = 0;
+    virtual StructBase* add(char& array) = 0;
+    virtual ssize_t size(const char& array) const = 0;
+    virtual const StructBase& at(const char& array, ssize_t index) const = 0;
 };
 
 
@@ -51,22 +51,22 @@ class ArrayStructAdapter : public IArrayStructAdapter
 {
 private:
     // IArrayStructAdapter
-    virtual StructBase* add(void* array) override
+    virtual StructBase* add(char& array) override
     {
-        std::vector<T>& vect = *reinterpret_cast<std::vector<T>*>(array);
+        std::vector<T>& vect = reinterpret_cast<std::vector<T>&>(array);
         vect.resize(vect.size() + 1);
         return &vect.back();
     }
 
-    virtual ssize_t size(const void* array) const override
+    virtual ssize_t size(const char& array) const override
     {
-        const std::vector<T>& vect = *reinterpret_cast<const std::vector<T>*>(array);
+        const std::vector<T>& vect = reinterpret_cast<const std::vector<T>&>(array);
         return vect.size();
     }
 
-    virtual const StructBase& at(const void* array, ssize_t index) const override
+    virtual const StructBase& at(const char& array, ssize_t index) const override
     {
-        const std::vector<T>& vect = *reinterpret_cast<const std::vector<T>*>(array);
+        const std::vector<T>& vect = reinterpret_cast<const std::vector<T>&>(array);
         assert(index >= 0 && index < static_cast<ssize_t>(vect.size()));
         return vect[index];
     }
@@ -177,21 +177,11 @@ public:
     }
 
     template<class T>
-    const T* getData(const MetaField& field) const
+    const T& getValue(const FieldInfo& fieldInfo) const
     {
-        return const_cast<StructBase*>(this)->getData<T>(field);
-    }
-
-    template<class T>
-    const T& getValue(const MetaField& field) const
-    {
-        const T* data = getData<T>(field);
-        if (data)
-        {
-            return *data;
-        }
-        static const T defaultValue = T();
-        return defaultValue;
+        int offset = fieldInfo.getOffset();
+        const T& data = *reinterpret_cast<T*>(reinterpret_cast<char*>(const_cast<StructBase*>(this)) + offset);
+        return data;
     }
 
     virtual const StructInfo& getStructInfo() const = 0;
