@@ -335,55 +335,6 @@ namespace finalmq
                 }
             }
 
-            /*
-                        string strNumber = Encoding.UTF8.GetString(m_buffer, first, offset - first);
-                        if (isFloat)
-                        {
-                            double value;
-                            if (!Double.TryParse(strNumber, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
-                            {
-                                m_visitor.SyntaxError(GetCurrentText(first), "wrong number format");
-                                return -1;
-                            }
-                            m_visitor.EnterDouble(value);
-                        }
-                        else if (isNegative)
-                        {
-                            long value;
-                            if (!Int64.TryParse(strNumber, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
-                            {
-                                m_visitor.SyntaxError(GetCurrentText(first), "wrong number format");
-                                return -1;
-                            }
-                            Debug.Assert(value < 0);
-                            if (value >= Int32.MinValue)
-                            {
-                                m_visitor.EnterInt32((int)value);
-                            }
-                            else
-                            {
-                                m_visitor.EnterInt64(value);
-                            }
-                        }
-                        else
-                        {
-                            ulong value;
-                            if (!UInt64.TryParse(strNumber, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
-                            {
-                                m_visitor.SyntaxError(GetCurrentText(first), "wrong number format");
-                                return -1;
-                            }
-                            if (value <= UInt32.MaxValue)
-                            {
-                                m_visitor.EnterUInt32((uint)value);
-                            }
-                            else
-                            {
-                                m_visitor.EnterUInt64(value);
-                            }
-                        }
-             */
-
             return offset;
         }
         int ParseString(int offset, bool key)

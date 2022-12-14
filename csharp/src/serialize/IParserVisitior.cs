@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace finalmq
 {
-    interface IParserVisitor
+    public interface IParserVisitor
     {
         void NotifyError(string str, string message);
         void StartStruct(MetaStruct stru);

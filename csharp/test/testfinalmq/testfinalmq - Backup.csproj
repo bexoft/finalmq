@@ -27,8 +27,4 @@
     <ProjectReference Include="..\..\finalmq.csproj" />
   </ItemGroup>
 
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="node ../../../codegenerator/csharp/csharp.js --input=./test.fmq --outpath=.&#xD;&#xA;" />
-  </Target>
-
 </Project>

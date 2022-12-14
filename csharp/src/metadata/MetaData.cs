@@ -24,7 +24,7 @@ using System.Diagnostics;
 
 namespace finalmq
 {
-    interface IMetaData
+    public interface IMetaData
     {
         MetaStruct? GetStruct(string typeName);
         MetaEnum? GetEnum(string typeName);
@@ -43,7 +43,7 @@ namespace finalmq
         IDictionary<string, MetaEnum> AllEnums { get; }
     };
 
-    class MetaData : IMetaData
+    public class MetaData : IMetaData
     {
 
         // IMetaData
@@ -224,7 +224,7 @@ namespace finalmq
         readonly object m_mutex = new object();
     }
 
-    class MetaDataGlobal
+    public class MetaDataGlobal
     {
         public static IMetaData Instance
         {

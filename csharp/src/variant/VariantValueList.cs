@@ -134,7 +134,9 @@ namespace finalmq
 
     class RegisterVariantList
     {
+#pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
         [ModuleInitializer]
+#pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
         internal static void Register()
         {
             VariantValueFactory.Instance.Register<VariantList>((dynamic data) => { return new VariantValueList(data); });

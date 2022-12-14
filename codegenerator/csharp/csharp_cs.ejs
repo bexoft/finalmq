@@ -1,0 +1,96 @@
+
+using System.Runtime.CompilerServices;
+
+
+#pragma warning disable IDE1006 // Benennungsstile
+
+<%
+if (data.namespace)
+{
+data.namespace.trim();
+if (data.namespace.length > 0)
+{
+var namespaces = data.namespace.split('.')
+for (var i = 0; i < namespaces.length; i++) { 
+var ns = namespaces[i] 
+%>
+namespace <%- ns %> { <% -%>
+<% }}} %>    
+
+
+//////////////////////////////
+// Enums
+//////////////////////////////
+
+<% for (var i = 0; i < data.enums.length; i++) {
+    var en = data.enums[i]
+    var plaintype = helper.getPlainType(en.type) %>
+[finalmq.MetaEnum("<%- en.desc %>")]
+enum <%- plaintype %>
+{<% for (var n = 0; n < en.entries.length; n++) { 
+    var entry = en.entries[n] %>
+	[finalmq.MetaEnumEntry("<%- entry.desc %>", "<%- entry.alias %>")]
+    <%- entry.name %> = <%- entry.id %>,<% -%>
+<% } %>
+}
+class Register<%- plaintype %>
+{
+#pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+    [ModuleInitializer]
+#pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+    internal static void RegisterEnum()
+    {
+        finalmq.TypeRegistry.Instance.RegisterType(typeof(<%- en.type %>));
+    }
+}
+<% } %>
+
+
+
+//////////////////////////////
+// Structs
+//////////////////////////////
+
+
+<% for (var i = 0; i < data.structs.length; i++)
+{
+    var stru = data.structs[i]
+    var plaintype = helper.getPlainType(stru.type) %>
+[finalmq.MetaStruct("<%- stru.desc %>")]
+class <%- plaintype %>
+{<% for (var n = 0; n < stru.fields.length; n++) { 
+        field = stru.fields[n] %>
+	[finalmq.MetaField("<%- field.desc %>"<% if (field.flags.length > 0) {%>, <% for (var m = 0; m < field.flags.length; m++) { %>finalmq.MetaFieldFlags.<%- field.flags[m]%><% if (m != field.flags.length - 1) { %> | <% }}} %>)]
+    public <%- helper.tid2type(data, field.tid, field.type) %> <%- field.name %>
+	{
+		get { return m_<%- field.name %>; }
+		set { m_<%- field.name %> = value; }
+	}
+<% } -%>
+<% for (var n = 0; n < stru.fields.length; n++) { 
+        field = stru.fields[n] %>
+    <%- helper.tid2type(data, field.tid, field.type) %> m_<%- field.name %><% if (helper.tid2default(data, field.tid, field.type)){%> = <%- helper.tid2default(data, field.tid, field.type)%><% } %>;<% -%>
+<% } %>
+
+#pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+    [ModuleInitializer]
+#pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+    internal static void RegisterStruct()
+    {
+        finalmq.TypeRegistry.Instance.RegisterType(typeof(<%- stru.type %>), () => { return new <%- stru.type %>(); } );
+    }
+}
+<% } %>
+
+<%
+if (data.namespace)
+{
+if (data.namespace.length > 0)
+{
+for (var i = 0; i < namespaces.length; i++) { 
+var ns = namespaces[namespaces.length - 1 - i] %>
+} // close namespace <%- ns %> <% -%>
+<% }}} %>    
+
+#pragma warning restore IDE1006 // Benennungsstile
+

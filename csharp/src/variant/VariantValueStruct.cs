@@ -160,10 +160,9 @@ namespace finalmq
 
     class RegisterVariantStruct
     {
+#pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
         [ModuleInitializer]
-        internal static void Register()
-        {
-            VariantValueFactory.Instance.Register<VariantStruct>((dynamic data) => { return new VariantValueStruct(data); });
-        }
+#pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+        internal static void Register() => VariantValueFactory.Instance.Register<VariantStruct>((dynamic data) => { return new VariantValueStruct(data); });
     }
 }

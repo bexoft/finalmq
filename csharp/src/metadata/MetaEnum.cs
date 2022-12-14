@@ -24,9 +24,9 @@ using System.Diagnostics;
 
 namespace finalmq
 {
-    class MetaEnumEntry
+    public class MetaEnumEntry
     {
-        public MetaEnumEntry(string name, int id, string description, string alias)
+        public MetaEnumEntry(string name, int id, string description, string? alias)
         {
             m_name = name;
             m_id = id;
@@ -37,15 +37,15 @@ namespace finalmq
         public string Name { get { return m_name; } }
         public int Id { get { return m_id; } }
         public string Description { get { return m_description; } }
-        public string Alias { get { return m_alias; } }
+        public string? Alias { get { return m_alias; } }
         
         readonly string m_name;
         readonly int m_id = 0;
         readonly string m_description;
-        readonly string m_alias;
+        readonly string? m_alias;
     };
 
-    class MetaEnum
+    public class MetaEnum
     {
         public MetaEnum(string typeName, string description, IList<MetaEnumEntry> entries)
         {
@@ -123,12 +123,12 @@ namespace finalmq
             }
             return "";
         }
-        public string GetAliasByValue(int value)
+        public string? GetAliasByValue(int value)
         {
             MetaEnumEntry? entry = GetEntryById(value);
             if (entry != null)
             {
-                if (entry.Alias.Length != 0)
+                if (entry.Alias?.Length != 0)
                 {
                     return entry.Alias;
                 }
@@ -139,7 +139,7 @@ namespace finalmq
                 entry = GetEntryById(0);
                 if (entry != null)
                 {
-                    if (entry.Alias.Length != 0)
+                    if (entry.Alias?.Length != 0)
                     {
                         return entry.Alias;
                     }
@@ -160,7 +160,10 @@ namespace finalmq
             m_entries.Add(entry);
             m_id2Entry.Add(entry.Id, entry);
             m_name2Entry.Add(entry.Name, entry);
-            m_alias2Entry.Add(entry.Alias, entry);
+            if (entry.Alias != null && entry.Alias != "")
+            {
+                m_alias2Entry.Add(entry.Alias, entry);
+            }
         }
 
         public int EntrySize

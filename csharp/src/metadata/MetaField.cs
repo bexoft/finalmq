@@ -24,14 +24,14 @@
 namespace finalmq
 {
 
-    enum MetaFieldFlags
+    public enum MetaFieldFlags
     {
         METAFLAG_NONE = 0,
         METAFLAG_PROTO_VARINT = 1,
         METAFLAG_PROTO_ZIGZAG = 2,
     };
 
-    class MetaField
+    public class MetaField
     {
         public MetaField(MetaTypeId typeId, string typeName, string name, string description, int flags = 0, int index = -1)
         {

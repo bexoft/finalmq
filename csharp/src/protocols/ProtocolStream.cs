@@ -198,7 +198,9 @@ namespace finalmq
     //---------------------------------------
     class RegisterProtocolStreamFactory
     {
+#pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
         [ModuleInitializer]
+#pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
         internal static void Register()
         {
             ProtocolRegistry.Instance.RegisterProtocolFactory(ProtocolStream.PROTOCOL_NAME, ProtocolStream.PROTOCOL_ID, () => { return new ProtocolStream(); } );

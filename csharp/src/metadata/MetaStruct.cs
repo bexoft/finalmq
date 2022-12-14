@@ -23,7 +23,7 @@
 
 namespace finalmq
 {
-    class MetaStruct
+    public class MetaStruct
     {
         public MetaStruct(string typeName, string description, IList<MetaField> fields)
         {
