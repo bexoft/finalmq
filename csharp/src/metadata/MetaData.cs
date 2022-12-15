@@ -114,7 +114,7 @@ namespace finalmq
         public MetaField? GetArrayField(MetaField field)
         {
             Debug.Assert((field.TypeId & MetaTypeId.OFFSET_ARRAY_FLAG) != 0);
-            if (field.FieldWithoutArray != null)
+            if (field.FieldWithoutArray == null)
             {
                 MetaTypeId typeId = field.TypeId & ~MetaTypeId.OFFSET_ARRAY_FLAG;
                 field.FieldWithoutArray = new MetaField(typeId, field.TypeName, "", field.Description, field.Flags, field.Index);

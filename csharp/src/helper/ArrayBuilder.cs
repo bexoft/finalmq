@@ -41,7 +41,7 @@ namespace finalmq
         {
             m_totalElements = 0;
             m_indexElement = 0;
-            m_indexBlocks = 0;
+            m_indexBlocks = -1;
         }
 
         public int Length

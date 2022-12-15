@@ -478,11 +478,11 @@ namespace finalmq
                         m_arrayDouble.Clear();
                         break;
                     case MetaTypeId.TYPE_ARRAY_STRING:
-                        m_visitor.EnterArrayString(m_fieldCurrent, m_arrayString.ToArray());
+                        m_visitor.EnterArrayString(m_fieldCurrent, m_arrayString);
                         m_arrayString.Clear();
                         break;
                     case MetaTypeId.TYPE_ARRAY_BYTES:
-                        m_visitor.EnterArrayBytes(m_fieldCurrent, m_arrayBytes.ToArray());
+                        m_visitor.EnterArrayBytes(m_fieldCurrent, m_arrayBytes);
                         m_arrayBytes.Clear();
                         break;
                     case MetaTypeId.TYPE_ARRAY_ENUM:
@@ -615,108 +615,68 @@ namespace finalmq
             switch (m_fieldCurrent.TypeId)
             {
                 case MetaTypeId.TYPE_BOOL:
-                    m_visitor.EnterBool(m_fieldCurrent, v);
+                    m_visitor.EnterBool(m_fieldCurrent, (bool)v);
                     break;
                 case MetaTypeId.TYPE_INT32:
-                    m_visitor.EnterInt32(m_fieldCurrent, v);
+                    m_visitor.EnterInt32(m_fieldCurrent, (int)v);
                     break;
                 case MetaTypeId.TYPE_UINT32:
-                    m_visitor.EnterUInt32(m_fieldCurrent, v);
+                    m_visitor.EnterUInt32(m_fieldCurrent, (uint)v);
                     break;
                 case MetaTypeId.TYPE_INT64:
-                    m_visitor.EnterInt64(m_fieldCurrent, v);
+                    m_visitor.EnterInt64(m_fieldCurrent, (long)v);
                     break;
                 case MetaTypeId.TYPE_UINT64:
-                    m_visitor.EnterUInt64(m_fieldCurrent, v);
+                    m_visitor.EnterUInt64(m_fieldCurrent, (ulong)v);
                     break;
                 case MetaTypeId.TYPE_FLOAT:
-                    m_visitor.EnterFloat(m_fieldCurrent, v);
+                    m_visitor.EnterFloat(m_fieldCurrent, (float)v);
                     break;
                 case MetaTypeId.TYPE_DOUBLE:
-                    m_visitor.EnterDouble(m_fieldCurrent, v);
+                    m_visitor.EnterDouble(m_fieldCurrent, (double)v);
                     break;
                 case MetaTypeId.TYPE_STRING:
-                    m_visitor.EnterString(m_fieldCurrent, v);
+                    m_visitor.EnterString(m_fieldCurrent, v.ToString());
                     break;
                 case MetaTypeId.TYPE_ENUM:
-                    m_visitor.EnterEnum(m_fieldCurrent, v);
+                    m_visitor.EnterEnum(m_fieldCurrent, (int)v);
                     break;
                 case MetaTypeId.TYPE_ARRAY_BOOL:
-                    if (m_arrayBool == null)
-                    {
-                        m_arrayBool = new ArrayBuilder<bool>();
-                    }
-                    m_arrayBool.Add(v);
+                    m_arrayBool.Add((bool)v);
                     break;
                 case MetaTypeId.TYPE_ARRAY_INT32:
-                    if (m_arrayInt32 == null)
-                    {
-                        m_arrayInt32 = new ArrayBuilder<int>();
-                    }
-                    m_arrayInt32.Add(v);
+                    m_arrayInt32.Add((int)v);
                     break;
                 case MetaTypeId.TYPE_ARRAY_UINT32:
-                    if (m_arrayUInt32 == null)
-                    {
-                        m_arrayUInt32 = new ArrayBuilder<uint>();
-                    }
-                    m_arrayUInt32.Add(v);
+                    m_arrayUInt32.Add((uint)v);
                     break;
                 case MetaTypeId.TYPE_ARRAY_INT64:
-                    if (m_arrayInt64 == null)
-                    {
-                        m_arrayInt64 = new ArrayBuilder<long>();
-                    }
-                    m_arrayInt64.Add(v);
+                    m_arrayInt64.Add((long)v);
                     break;
                 case MetaTypeId.TYPE_ARRAY_UINT64:
-                    if (m_arrayUInt64 == null)
-                    {
-                        m_arrayUInt64 = new ArrayBuilder<ulong>();
-                    }
-                    m_arrayUInt64.Add(v);
+                    m_arrayUInt64.Add((ulong)v);
                     break;
                 case MetaTypeId.TYPE_ARRAY_FLOAT:
-                    if (m_arrayFloat == null)
-                    {
-                        m_arrayFloat = new ArrayBuilder<float>();
-                    }
-                    m_arrayFloat.Add(v);
+                    m_arrayFloat.Add((float)v);
                     break;
                 case MetaTypeId.TYPE_ARRAY_DOUBLE:
-                    if (m_arrayDouble == null)
-                    {
-                        m_arrayDouble = new ArrayBuilder<double>();
-                    }
-                    m_arrayDouble.Add(v);
+                    m_arrayDouble.Add((double)v);
                     break;
                 case MetaTypeId.TYPE_ARRAY_STRING:
-                    if (m_arrayString == null)
-                    {
-                        m_arrayString = new List<string>();
-                    }
-                    m_arrayString.Add(v);
+                    m_arrayString.Add(v.ToString());
                     break;
                 case MetaTypeId.TYPE_ARRAY_BYTES:
-                    if (m_arrayBytes == null)
-                    {
-                        m_arrayBytes = new List<byte[]>();
-                    }
-                    m_arrayBytes.Add(v);
+                    m_arrayBytes.Add(Encoding.UTF8.GetBytes(v.ToString()));
                     break;
                 case MetaTypeId.TYPE_ARRAY_ENUM:
                     if ((m_arrayString == null || m_arrayString.Count == 0) || 
                         (m_arrayInt32 != null && m_arrayInt32.Length != 0))
                     {
-                        if (m_arrayInt32 == null)
-                        {
-                            m_arrayInt32 = new ArrayBuilder<int>();
-                        }
-                        m_arrayInt32.Add(v);
+                        m_arrayInt32.Add((int)v);
                     }
                     else
                     {
-                        string s = MetaDataGlobal.Instance.GetEnumAliasByValue(m_fieldCurrent, v);
+                        string s = MetaDataGlobal.Instance.GetEnumAliasByValue(m_fieldCurrent, (int)v);
                         m_arrayString.Add(s);
                     }
                     break;
