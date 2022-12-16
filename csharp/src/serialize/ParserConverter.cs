@@ -6,7 +6,7 @@ using System.Text;
 namespace finalmq
 {
 
-    class ParserConverter : IParserVisitor
+    public class ParserConverter : IParserVisitor
     {
         public ParserConverter(IParserVisitor? visitor = null)
         {

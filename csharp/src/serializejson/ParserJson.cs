@@ -806,19 +806,19 @@ namespace finalmq
         readonly IParserVisitor m_visitor;
         readonly JsonParser m_parser;
 
-        IList<MetaField?> m_stack = new List<MetaField?>();
+        readonly IList<MetaField?> m_stack = new List<MetaField?>();
         MetaStruct? m_structCurrent = null;
         MetaField? m_fieldCurrent = null;
 
-        ArrayBuilder<bool> m_arrayBool = new ArrayBuilder<bool>();
-        ArrayBuilder<int> m_arrayInt32 = new ArrayBuilder<int>();
-        ArrayBuilder<uint> m_arrayUInt32 = new ArrayBuilder<uint>();
-        ArrayBuilder<long> m_arrayInt64 = new ArrayBuilder<long>();
-        ArrayBuilder<ulong> m_arrayUInt64 = new ArrayBuilder<ulong>();
-        ArrayBuilder<float> m_arrayFloat = new ArrayBuilder<float>();
-        ArrayBuilder<double> m_arrayDouble = new ArrayBuilder<double>();
-        IList<string> m_arrayString = new List<string>();
-        IList<byte[]> m_arrayBytes = new List<byte[]>();
+        readonly ArrayBuilder<bool> m_arrayBool = new ArrayBuilder<bool>();
+        readonly ArrayBuilder<int> m_arrayInt32 = new ArrayBuilder<int>();
+        readonly ArrayBuilder<uint> m_arrayUInt32 = new ArrayBuilder<uint>();
+        readonly ArrayBuilder<long> m_arrayInt64 = new ArrayBuilder<long>();
+        readonly ArrayBuilder<ulong> m_arrayUInt64 = new ArrayBuilder<ulong>();
+        readonly ArrayBuilder<float> m_arrayFloat = new ArrayBuilder<float>();
+        readonly ArrayBuilder<double> m_arrayDouble = new ArrayBuilder<double>();
+        readonly IList<string> m_arrayString = new List<string>();
+        readonly IList<byte[]> m_arrayBytes = new List<byte[]>();
     }
     
 }

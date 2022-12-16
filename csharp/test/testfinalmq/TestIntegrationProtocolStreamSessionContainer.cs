@@ -13,7 +13,7 @@ using finalmq;
 namespace testfinalmq
 {
 
-    [Collection("TestCollectionSocket")]
+    [Collection("TestCollectionProtocolStreamSessionContainer")]
     public class TestIntegrationProtocolStreamSessionContainer : IDisposable
     {
         readonly IProtocolSessionContainer m_sessionContainer = new ProtocolSessionContainer();
@@ -29,20 +29,20 @@ namespace testfinalmq
         [Fact]
         public void TestBind()
         {
-            m_sessionContainer.Bind("tcp://*:3333:stream", m_mockServerCallback.Object);
+            m_sessionContainer.Bind("tcp://*:3003:stream", m_mockServerCallback.Object);
         }
 
         [Fact]
         public void TestUnbind()
         {
-            m_sessionContainer.Bind("tcp://*:3333:stream", m_mockServerCallback.Object);
-            m_sessionContainer.Unbind("tcp://*:3333:stream");
+            m_sessionContainer.Bind("tcp://*:3003:stream", m_mockServerCallback.Object);
+            m_sessionContainer.Unbind("tcp://*:3003:stream");
         }
 
         [Fact]
         public void TestBindConnect()
         {
-            m_sessionContainer.Bind("tcp://*:3333:stream", m_mockServerCallback.Object);
+            m_sessionContainer.Bind("tcp://*:3003:stream", m_mockServerCallback.Object);
 
             IProtocolSession? connConnect = null;
             CondVar connectClient = new CondVar();
@@ -60,7 +60,7 @@ namespace testfinalmq
                 });
 
 
-            IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3333:stream", m_mockClientCallback.Object);
+            IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3003:stream", m_mockClientCallback.Object);
 
             Debug.Assert(connectClient.Wait(5000));
             Debug.Assert(connectServer.Wait(5000));
@@ -74,15 +74,17 @@ namespace testfinalmq
         [Fact]
         public void TestBindConnectSend()
         {
-            m_sessionContainer.Bind("tcp://*:3333:stream", m_mockServerCallback.Object);
+            m_sessionContainer.Bind("tcp://*:3003:stream", m_mockServerCallback.Object);
 
             IProtocolSession? connConnect = null;
             CondVar condVarReceived = new CondVar();
+            CondVar condVarClientConnected = new CondVar();
 
             m_mockClientCallback.Setup(x => x.Connected(It.IsAny<IProtocolSession>()))
                 .Callback((IProtocolSession connection) =>
                 {
                     connConnect = connection;
+                    condVarClientConnected.Set();
                 });
             m_mockServerCallback.Setup(x => x.Connected(It.IsAny<IProtocolSession>()))
                 .Callback((IProtocolSession connection) =>
@@ -96,13 +98,14 @@ namespace testfinalmq
                     condVarReceived.Set();
                 });
 
-            IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3333:stream", m_mockClientCallback.Object);
+            IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3003:stream", m_mockClientCallback.Object);
 
             IMessage message = new ProtocolMessage(0);
             message.AddSendPayload(Encoding.UTF8.GetBytes(MESSAGE1_BUFFER));
             connection.SendMessage(message);
 
             Debug.Assert(condVarReceived.Wait(5000));
+            Debug.Assert(condVarClientConnected.Wait(5000));
 
             Debug.Assert(connConnect != null);
             Debug.Assert(connConnect == connection);
@@ -127,11 +130,11 @@ namespace testfinalmq
                 });
 
 
-            IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3333:stream", m_mockClientCallback.Object, new ConnectProperties(null, new ConnectConfig(1)));
+            IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3003:stream", m_mockClientCallback.Object, new ConnectProperties(null, new ConnectConfig(1)));
 
             Thread.Sleep(4000);
 
-            m_sessionContainer.Bind("tcp://*:3333:stream", m_mockServerCallback.Object);
+            m_sessionContainer.Bind("tcp://*:3003:stream", m_mockServerCallback.Object);
 
             Debug.Assert(condVarConnectClient.Wait(5000));
             Debug.Assert(condVarConnectServer.Wait(5000));
@@ -155,7 +158,7 @@ namespace testfinalmq
                     condVarDisconnectClient.Set();
                 });
 
-            IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3333:stream", m_mockClientCallback.Object, new ConnectProperties(null, new ConnectConfig(1, 1)));
+            IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3003:stream", m_mockClientCallback.Object, new ConnectProperties(null, new ConnectConfig(1, 1)));
 
             Debug.Assert(condVarDisconnectClient.Wait(5000));
 
@@ -168,7 +171,7 @@ namespace testfinalmq
         [Fact]
         public void TestBindConnectDisconnect()
         {
-            m_sessionContainer.Bind("tcp://*:3333:stream", m_mockServerCallback.Object);
+            m_sessionContainer.Bind("tcp://*:3003:stream", m_mockServerCallback.Object);
 
             IProtocolSession? connConnect = null;
             CondVar condVarConnectClient = new CondVar();
@@ -187,7 +190,7 @@ namespace testfinalmq
                 });
 
 
-            IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3333:stream", m_mockClientCallback.Object);
+            IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3003:stream", m_mockClientCallback.Object);
 
             Debug.Assert(condVarConnectClient.Wait(5000));
             Debug.Assert(condVarConnectServer.Wait(5000));
@@ -223,7 +226,7 @@ namespace testfinalmq
         [Fact]
         public void testGetAllSessions()
         {
-            m_sessionContainer.Bind("tcp://*:3333:stream", m_mockServerCallback.Object);
+            m_sessionContainer.Bind("tcp://*:3003:stream", m_mockServerCallback.Object);
 
             IProtocolSession? connBind = null;
             IProtocolSession? connConnect = null;
@@ -243,7 +246,7 @@ namespace testfinalmq
                 });
 
 
-            IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3333:stream", m_mockClientCallback.Object);
+            IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3003:stream", m_mockClientCallback.Object);
 
             Debug.Assert(condVarConnectClient.Wait(5000));
             Debug.Assert(condVarConnectServer.Wait(5000));
@@ -251,7 +254,7 @@ namespace testfinalmq
             Debug.Assert(connBind != null);
             Debug.Assert(connConnect != null);
             Debug.Assert(connConnect == connection);
-            Debug.Assert(connBind.ConnectionData.Endpoint == "tcp://*:3333");
+            Debug.Assert(connBind.ConnectionData.Endpoint == "tcp://*:3003");
 
             IList<IProtocolSession> connections = m_sessionContainer.GetAllSessions();
             Debug.Assert(connections.Count() == 2);
@@ -269,7 +272,7 @@ namespace testfinalmq
         [Fact]
         public void TestBindLateConnect()
         {
-            m_sessionContainer.Bind("tcp://*:3333:stream", m_mockServerCallback.Object);
+            m_sessionContainer.Bind("tcp://*:3003:stream", m_mockServerCallback.Object);
 
             IProtocolSession? connConnect = null;
             CondVar connectClient = new CondVar();
@@ -287,7 +290,7 @@ namespace testfinalmq
                 });
 
             IProtocolSession connection = m_sessionContainer.CreateSession(m_mockClientCallback.Object);
-            connection.Connect("tcp://localhost:3333:stream", new ConnectProperties(null, new ConnectConfig(1)));
+            connection.Connect("tcp://localhost:3003:stream", new ConnectProperties(null, new ConnectConfig(1)));
 
             Debug.Assert(connectClient.Wait(5000));
             Debug.Assert(connectServer.Wait(5000));
@@ -326,11 +329,11 @@ namespace testfinalmq
             message.AddSendPayload(Encoding.UTF8.GetBytes(MESSAGE1_BUFFER));
             connection.SendMessage(message);
 
-            connection.Connect("tcp://localhost:3333:stream", new ConnectProperties(null, new ConnectConfig(1)));
+            connection.Connect("tcp://localhost:3003:stream", new ConnectProperties(null, new ConnectConfig(1)));
 
             Thread.Sleep(4000);
 
-            m_sessionContainer.Bind("tcp://*:3333:stream", m_mockServerCallback.Object);
+            m_sessionContainer.Bind("tcp://*:3003:stream", m_mockServerCallback.Object);
 
 
             Debug.Assert(condVarReceived.Wait(5000));

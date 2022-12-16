@@ -14,7 +14,7 @@ namespace test {
 
 
 [finalmq.MetaEnum("desc")]
-enum Foo
+public enum Foo
 {
 	[finalmq.MetaEnumEntry("desc", "")]
     FOO_WORLD = 0,
@@ -44,7 +44,7 @@ class RegisterFoo
 
 
 [finalmq.MetaStruct("desc")]
-class TestBool
+public class TestBool
 {
 	[finalmq.MetaField("desc")]
     public bool value
@@ -65,7 +65,7 @@ class TestBool
 }
 
 [finalmq.MetaStruct("desc")]
-class TestInt32
+public class TestInt32
 {
 	[finalmq.MetaField("desc")]
     public int value
@@ -86,7 +86,7 @@ class TestInt32
 }
 
 [finalmq.MetaStruct("desc")]
-class TestUInt32
+public class TestUInt32
 {
 	[finalmq.MetaField("desc")]
     public uint value
@@ -107,7 +107,7 @@ class TestUInt32
 }
 
 [finalmq.MetaStruct("desc")]
-class TestInt64
+public class TestInt64
 {
 	[finalmq.MetaField("desc")]
     public long value
@@ -128,7 +128,7 @@ class TestInt64
 }
 
 [finalmq.MetaStruct("desc")]
-class TestUInt64
+public class TestUInt64
 {
 	[finalmq.MetaField("desc")]
     public ulong value
@@ -149,7 +149,7 @@ class TestUInt64
 }
 
 [finalmq.MetaStruct("desc")]
-class TestFloat
+public class TestFloat
 {
 	[finalmq.MetaField("desc")]
     public float value
@@ -170,7 +170,7 @@ class TestFloat
 }
 
 [finalmq.MetaStruct("desc")]
-class TestDouble
+public class TestDouble
 {
 	[finalmq.MetaField("desc")]
     public double value
@@ -191,7 +191,7 @@ class TestDouble
 }
 
 [finalmq.MetaStruct("desc")]
-class TestString
+public class TestString
 {
 	[finalmq.MetaField("desc")]
     public string value
@@ -212,7 +212,7 @@ class TestString
 }
 
 [finalmq.MetaStruct("desc")]
-class TestBytes
+public class TestBytes
 {
 	[finalmq.MetaField("desc")]
     public byte[] value
@@ -233,7 +233,7 @@ class TestBytes
 }
 
 [finalmq.MetaStruct("desc")]
-class TestStruct
+public class TestStruct
 {
 	[finalmq.MetaField("desc")]
     public test.TestInt32 struct_int32
@@ -270,7 +270,7 @@ class TestStruct
 }
 
 [finalmq.MetaStruct("desc")]
-class TestStructBlockSize
+public class TestStructBlockSize
 {
 	[finalmq.MetaField("desc")]
     public test.TestInt32 struct_int32
@@ -307,7 +307,7 @@ class TestStructBlockSize
 }
 
 [finalmq.MetaStruct("desc")]
-class TestEnum
+public class TestEnum
 {
 	[finalmq.MetaField("desc")]
     public test.Foo value
@@ -328,7 +328,7 @@ class TestEnum
 }
 
 [finalmq.MetaStruct("desc")]
-class TestVariant
+public class TestVariant
 {
 	[finalmq.MetaField("desc")]
     public finalmq.Variant value
@@ -365,7 +365,7 @@ class TestVariant
 }
 
 [finalmq.MetaStruct("desc")]
-class TestArrayBool
+public class TestArrayBool
 {
 	[finalmq.MetaField("desc")]
     public bool[] value
@@ -386,7 +386,7 @@ class TestArrayBool
 }
 
 [finalmq.MetaStruct("desc")]
-class TestArrayInt32
+public class TestArrayInt32
 {
 	[finalmq.MetaField("desc")]
     public int[] value
@@ -407,7 +407,7 @@ class TestArrayInt32
 }
 
 [finalmq.MetaStruct("desc")]
-class TestArrayUInt32
+public class TestArrayUInt32
 {
 	[finalmq.MetaField("desc")]
     public uint[] value
@@ -428,7 +428,7 @@ class TestArrayUInt32
 }
 
 [finalmq.MetaStruct("desc")]
-class TestArrayInt64
+public class TestArrayInt64
 {
 	[finalmq.MetaField("desc")]
     public long[] value
@@ -449,7 +449,7 @@ class TestArrayInt64
 }
 
 [finalmq.MetaStruct("desc")]
-class TestArrayUInt64
+public class TestArrayUInt64
 {
 	[finalmq.MetaField("desc")]
     public ulong[] value
@@ -470,7 +470,7 @@ class TestArrayUInt64
 }
 
 [finalmq.MetaStruct("desc")]
-class TestArrayFloat
+public class TestArrayFloat
 {
 	[finalmq.MetaField("desc")]
     public float[] value
@@ -491,7 +491,7 @@ class TestArrayFloat
 }
 
 [finalmq.MetaStruct("desc")]
-class TestArrayDouble
+public class TestArrayDouble
 {
 	[finalmq.MetaField("desc")]
     public double[] value
@@ -512,7 +512,7 @@ class TestArrayDouble
 }
 
 [finalmq.MetaStruct("desc")]
-class TestArrayString
+public class TestArrayString
 {
 	[finalmq.MetaField("desc")]
     public IList<string> value
@@ -533,7 +533,7 @@ class TestArrayString
 }
 
 [finalmq.MetaStruct("desc")]
-class TestArrayBytes
+public class TestArrayBytes
 {
 	[finalmq.MetaField("desc")]
     public IList<byte[]> value
@@ -554,7 +554,7 @@ class TestArrayBytes
 }
 
 [finalmq.MetaStruct("desc")]
-class TestArrayStruct
+public class TestArrayStruct
 {
 	[finalmq.MetaField("desc")]
     public IList<test.TestStruct> value
@@ -583,7 +583,7 @@ class TestArrayStruct
 }
 
 [finalmq.MetaStruct("desc")]
-class TestArrayEnum
+public class TestArrayEnum
 {
 	[finalmq.MetaField("desc")]
     public IList<test.Foo> value
@@ -604,7 +604,7 @@ class TestArrayEnum
 }
 
 [finalmq.MetaStruct("desc")]
-class TestRequest
+public class TestRequest
 {
 	[finalmq.MetaField("desc")]
     public string datarequest
@@ -625,7 +625,7 @@ class TestRequest
 }
 
 [finalmq.MetaStruct("desc")]
-class TestReply
+public class TestReply
 {
 	[finalmq.MetaField("desc")]
     public string datareply

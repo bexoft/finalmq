@@ -256,7 +256,8 @@ namespace finalmq
                 case "System.Byte[]":
                     return MetaTypeId.TYPE_BYTES;
                 case "finalmq.Variant":
-                    return MetaTypeId.TYPE_VARIANT;
+                    typeName = "finalmq.variant.VarValue";
+                    return MetaTypeId.TYPE_STRUCT;
                 case "System.Boolean[]":
                     return MetaTypeId.TYPE_ARRAY_BOOL;
                 case "System.Int32[]":

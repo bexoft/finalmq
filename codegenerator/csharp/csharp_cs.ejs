@@ -26,7 +26,7 @@ namespace <%- ns %> { <% -%>
     var en = data.enums[i]
     var plaintype = helper.getPlainType(en.type) %>
 [finalmq.MetaEnum("<%- en.desc %>")]
-enum <%- plaintype %>
+public enum <%- plaintype %>
 {<% for (var n = 0; n < en.entries.length; n++) { 
     var entry = en.entries[n] %>
 	[finalmq.MetaEnumEntry("<%- entry.desc %>", "<%- entry.alias %>")]
@@ -57,7 +57,7 @@ class Register<%- plaintype %>
     var stru = data.structs[i]
     var plaintype = helper.getPlainType(stru.type) %>
 [finalmq.MetaStruct("<%- stru.desc %>")]
-class <%- plaintype %>
+public class <%- plaintype %>
 {<% for (var n = 0; n < stru.fields.length; n++) { 
         field = stru.fields[n] %>
 	[finalmq.MetaField("<%- field.desc %>"<% if (field.flags.length > 0) {%>, <% for (var m = 0; m < field.flags.length; m++) { %>finalmq.MetaFieldFlags.<%- field.flags[m]%><% if (m != field.flags.length - 1) { %> | <% }}} %>)]

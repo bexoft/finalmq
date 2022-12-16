@@ -15,7 +15,7 @@ namespace variant {
 
 
 [finalmq.MetaEnum("desc")]
-enum VarTypeId
+public enum VarTypeId
 {
 	[finalmq.MetaEnumEntry("desc", "none")]
     T_NONE = 0,
@@ -81,7 +81,7 @@ class RegisterVarTypeId
 
 
 [finalmq.MetaStruct("desc")]
-class VarValue
+public class VarValue
 {
 	[finalmq.MetaField("name is only used for elements in valstruct")]
     public string name

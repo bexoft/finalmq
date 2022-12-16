@@ -14,7 +14,7 @@ namespace finalmq {
 
 
 [finalmq.MetaEnum("desc")]
-enum SerializeMetaTypeId
+public enum SerializeMetaTypeId
 {
 	[finalmq.MetaEnumEntry("desc", "none")]
     TYPE_NONE = 0,
@@ -79,7 +79,7 @@ class RegisterSerializeMetaTypeId
 }
 
 [finalmq.MetaEnum("desc")]
-enum SerializeMetaFieldFlags
+public enum SerializeMetaFieldFlags
 {
 	[finalmq.MetaEnumEntry("desc", "")]
     METAFLAG_NONE = 0,
@@ -109,7 +109,7 @@ class RegisterSerializeMetaFieldFlags
 
 
 [finalmq.MetaStruct("desc")]
-class SerializeMetaEnumEntry
+public class SerializeMetaEnumEntry
 {
 	[finalmq.MetaField("desc")]
     public string name
@@ -154,7 +154,7 @@ class SerializeMetaEnumEntry
 }
 
 [finalmq.MetaStruct("desc")]
-class SerializeMetaEnum
+public class SerializeMetaEnum
 {
 	[finalmq.MetaField("desc")]
     public string type
@@ -191,7 +191,7 @@ class SerializeMetaEnum
 }
 
 [finalmq.MetaStruct("desc")]
-class SerializeMetaField
+public class SerializeMetaField
 {
 	[finalmq.MetaField("desc")]
     public finalmq.SerializeMetaTypeId tid
@@ -244,7 +244,7 @@ class SerializeMetaField
 }
 
 [finalmq.MetaStruct("desc")]
-class SerializeMetaStruct
+public class SerializeMetaStruct
 {
 	[finalmq.MetaField("desc")]
     public string type
@@ -281,7 +281,7 @@ class SerializeMetaStruct
 }
 
 [finalmq.MetaStruct("desc")]
-class SerializeMetaData
+public class SerializeMetaData
 {
 	[finalmq.MetaField("desc")]
     public IList<finalmq.SerializeMetaEnum> enums

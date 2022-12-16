@@ -17,28 +17,6 @@ using System.Reflection.Metadata;
 namespace testfinalmq
 {
 
-    [MetaEnum("Hello")]
-    public enum MyEnum
-    {
-        [MetaEnumEntry("Hello", alias:"entry1")] 
-        MY_ENTRY1 = 0,
-        [MetaEnumEntry("Hello", alias:"entry2")] 
-        MY_ENTRY2 = 1,
-    }
-
-    [MetaStruct("Hello")]
-    public class MyTestClass
-    {
-        [MetaField("Hello", flags : MetaFieldFlags.METAFLAG_PROTO_VARINT | MetaFieldFlags.METAFLAG_PROTO_ZIGZAG)]
-        public int value
-        {
-            get { return m_a; }
-            set { m_a = value; }
-        }
-
-        private int m_a = 0;
-    }
-
     public class TestParserJson : IDisposable
     {
         public TestParserJson()

@@ -99,7 +99,7 @@ namespace finalmq
         public MetaEnum? GetEnum(MetaField field)
         {
             Debug.Assert(field.TypeId == MetaTypeId.TYPE_ENUM || field.TypeId == MetaTypeId.TYPE_ARRAY_ENUM);
-            if (field.MetaEnum != null)
+            if (field.MetaEnum == null)
             {
                 MetaEnum? en = GetEnum(field.TypeName);
                 field.MetaEnum = en;
