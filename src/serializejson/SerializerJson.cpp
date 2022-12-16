@@ -141,18 +141,17 @@ void SerializerJson::Internal::enterUInt64(const MetaField& field, std::uint64_t
     m_jsonBuilder.enterString(std::to_string(value));
 }
 
-template <class T>
-void SerializerJson::Internal::handleDouble(T value)
+void SerializerJson::Internal::handleDouble(double value)
 {
     if (std::isnan(value))
     {
         m_jsonBuilder.enterString("NaN");
     }
-    else if (value == std::numeric_limits<T>::infinity())
+    else if (value == std::numeric_limits<double>::infinity())
     {
         m_jsonBuilder.enterString("Infinity");
     }
-    else if (value == -std::numeric_limits<T>::infinity())
+    else if (value == -std::numeric_limits<double>::infinity())
     {
         m_jsonBuilder.enterString("-Infinity");
     }
@@ -161,7 +160,6 @@ void SerializerJson::Internal::handleDouble(T value)
         m_jsonBuilder.enterDouble(value);
     }
 }
-
 
 void SerializerJson::Internal::enterFloat(const MetaField& field, float value)
 {

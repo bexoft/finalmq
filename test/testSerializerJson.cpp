@@ -27,7 +27,7 @@
 #include "finalmq/serializejson/SerializerJson.h"
 #include "finalmq/metadata/MetaData.h"
 #include "MockIZeroCopyBuffer.h"
-#include "test.pb.h"
+#include "test.fmq.h"
 #include "finalmq/metadataserialize/variant.fmq.h"
 
 #include <cmath>
@@ -327,7 +327,7 @@ TEST_F(TestSerializerJson, testStruct)
 
 TEST_F(TestSerializerJson, testEnum)
 {
-    static const fmq::test::Foo VALUE = fmq::test::Foo::FOO_HELLO;
+    static const test::Foo VALUE = test::Foo::FOO_HELLO;
 
     m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestEnum"));
     m_serializer->enterEnum({ MetaTypeId::TYPE_ENUM, "test.Foo", "value", "", 0 }, VALUE);
@@ -339,7 +339,7 @@ TEST_F(TestSerializerJson, testEnum)
 
 TEST_F(TestSerializerJson, testEnumAlias)
 {
-    static const fmq::test::Foo VALUE = fmq::test::Foo::FOO_WORLD2;
+    static const test::Foo VALUE = test::Foo::FOO_WORLD2;
 
     m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestEnum"));
     m_serializer->enterEnum({ MetaTypeId::TYPE_ENUM, "test.Foo", "value", "", 0 }, VALUE);
@@ -351,7 +351,7 @@ TEST_F(TestSerializerJson, testEnumAlias)
 
 TEST_F(TestSerializerJson, testEnumAsInt)
 {
-    static const fmq::test::Foo VALUE = fmq::test::Foo::FOO_HELLO;
+    static const test::Foo VALUE = test::Foo::FOO_HELLO;
 
     m_serializerEnumAsInt->startStruct(*MetaDataGlobal::instance().getStruct("test.TestEnum"));
     m_serializerEnumAsInt->enterEnum({MetaTypeId::TYPE_ENUM, "test.Foo", "value", "", 0}, VALUE);
@@ -674,10 +674,10 @@ TEST_F(TestSerializerJson, testArrayStruct)
 
 TEST_F(TestSerializerJson, testArrayEnum)
 {
-    static const fmq::test::Foo VALUE1 = fmq::test::Foo::FOO_HELLO;
-    static const fmq::test::Foo VALUE2 = fmq::test::Foo::FOO_WORLD;
-    static const fmq::test::Foo VALUE3 = fmq::test::Foo::FOO_WORLD2;
-    static const fmq::test::Foo VALUE4 = (fmq::test::Foo)123;
+    static const test::Foo VALUE1 = test::Foo::FOO_HELLO;
+    static const test::Foo VALUE2 = test::Foo::FOO_WORLD;
+    static const test::Foo VALUE3 = test::Foo::FOO_WORLD2;
+    static const test::Foo VALUE4 = (test::Foo::Enum)123;
     static const std::vector<std::int32_t> VALUE = {VALUE1, VALUE2, VALUE3, VALUE4};
 
     m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestArrayEnum"));
@@ -690,10 +690,10 @@ TEST_F(TestSerializerJson, testArrayEnum)
 
 TEST_F(TestSerializerJson, testArrayEnumAsInt)
 {
-    static const fmq::test::Foo VALUE1 = fmq::test::Foo::FOO_HELLO;
-    static const fmq::test::Foo VALUE2 = fmq::test::Foo::FOO_WORLD;
-    static const fmq::test::Foo VALUE3 = fmq::test::Foo::FOO_WORLD2;
-    static const fmq::test::Foo VALUE4 = (fmq::test::Foo)123;
+    static const test::Foo VALUE1 = test::Foo::FOO_HELLO;
+    static const test::Foo VALUE2 = test::Foo::FOO_WORLD;
+    static const test::Foo VALUE3 = test::Foo::FOO_WORLD2;
+    static const test::Foo VALUE4 = (test::Foo::Enum)123;
     static const std::vector<std::int32_t> VALUE = {VALUE1, VALUE2, VALUE3, VALUE4};
 
     m_serializerEnumAsInt->startStruct(*MetaDataGlobal::instance().getStruct("test.TestArrayEnum"));

@@ -92,15 +92,12 @@ private:
 
         void setKey(const MetaField& field);
 
-        template <class T>
-        void handleDouble(T value);
+        void handleDouble(double value);
 
         std::unique_ptr<IJsonParserVisitor> m_uniqueJsonBuilder;
         IJsonParserVisitor&                 m_jsonBuilder;
         bool                                m_enumAsString = true;
     };
-
-    IParserVisitor& getIParserVisitorForParserConverter(bool skipDefaultValues);
 
     Internal                            m_internal;
     std::unique_ptr<IParserVisitor>     m_parserProcessDefaultValues;
