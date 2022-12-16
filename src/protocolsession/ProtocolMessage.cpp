@@ -82,6 +82,7 @@ char* ProtocolMessage::addBuffer(ssize_t size, ssize_t reserve)
     {
         // remove the trailer of the last payload
         BufferRef& lastRef = m_sendBufferRefs.back();
+        assert(lastRef.second >= m_sizeTrailer);
         lastRef.second -= m_sizeTrailer;
         if (lastRef.second == 0)
         {
@@ -152,6 +153,20 @@ void ProtocolMessage::downsizeLastBuffer(ssize_t newSize)
         m_payloadBuffers.pop_back();
         m_offset = -1;
     }
+}
+
+ssize_t ProtocolMessage::getRemainingSize() const
+{
+    if (m_offset != -1)
+    {
+        assert(!m_payloadBuffers.empty());
+        const std::string& bufLast = m_payloadBuffers.back();
+        ssize_t remaining = bufLast.size() - m_offset - m_sizeTrailer;
+        assert(remaining >= 0);
+        return remaining;
+    }
+
+    return 0;
 }
 
 
@@ -249,12 +264,12 @@ void ProtocolMessage::downsizeLastSendPayload(ssize_t newSize)
 // for receive
 BufferRef ProtocolMessage::getReceiveHeader() const
 {
-    return { const_cast<char*>(m_receiveBuffer.data()), m_sizeHeader };
+    return { m_receiveBufferRef.first, m_sizeHeader };
 }
 
 BufferRef ProtocolMessage::getReceivePayload() const
 {
-    return { const_cast<char*>(m_receiveBuffer.data() + m_sizeHeader), m_sizeReceiveBuffer - m_sizeHeader };
+    return { const_cast<char*>(m_receiveBufferRef.first + m_sizeHeader), m_receiveBufferRef.second - m_sizeHeader };
 }
 
 
@@ -264,12 +279,26 @@ char* ProtocolMessage::resizeReceiveBuffer(ssize_t size)
     {
         size = 0;
     }
-    if (static_cast<size_t>(size) > m_receiveBuffer.size())
+    if (m_receiveBuffer == nullptr)
     {
-        m_receiveBuffer.resize(size);
+        m_receiveBuffer = std::make_shared<std::string>();
     }
-    m_sizeReceiveBuffer = size;
-    return const_cast<char*>(m_receiveBuffer.data());
+    if (static_cast<size_t>(size) > m_receiveBuffer->size())
+    {
+        m_receiveBuffer->resize(size);
+        m_receiveBufferRef.first = const_cast<char*>(m_receiveBuffer->data());
+    }
+    m_receiveBufferRef.second = size;
+    return const_cast<char*>(m_receiveBufferRef.first);
+}
+
+void ProtocolMessage::setReceiveBuffer(const std::shared_ptr<std::string>& receiveBuffer, ssize_t offset, ssize_t size)
+{
+    assert(receiveBuffer != nullptr);
+    assert(offset + size <= static_cast<ssize_t>(receiveBuffer->size()));
+    m_receiveBuffer = receiveBuffer;
+    m_receiveBufferRef.first = const_cast<char*>(m_receiveBuffer->data()) + offset;
+    m_receiveBufferRef.second = size;
 }
 
 void ProtocolMessage::setHeaderSize(ssize_t sizeHeader)

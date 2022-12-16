@@ -59,7 +59,14 @@ void JsonBuilder::reserveSpace(ssize_t space)
             assert(size >= 0);
             m_zeroCopybuffer.downsizeLastBuffer(size);
         }
-        ssize_t sizeNew = std::max(m_maxBlockSize, space);
+
+        const ssize_t sizeRemainingZeroCopyBuffer = m_zeroCopybuffer.getRemainingSize();
+        ssize_t sizeNew = m_maxBlockSize;
+        if (space <= sizeRemainingZeroCopyBuffer)
+        {
+            sizeNew = sizeRemainingZeroCopyBuffer;
+        }
+        sizeNew = std::max(sizeNew, space);
         char* bufferStartNew = m_zeroCopybuffer.addBuffer(sizeNew);
         m_bufferStart = bufferStartNew;
         m_bufferEnd = m_bufferStart + sizeNew;
@@ -150,7 +157,7 @@ void JsonBuilder::enterUInt64(std::uint64_t value)
 
 void JsonBuilder::enterDouble(double value)
 {
-    reserveSpace(350);
+    reserveSpace(50);
     assert(m_buffer);
     m_buffer = rapidjson::dtoa(value, m_buffer);
     *m_buffer = ',';

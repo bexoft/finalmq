@@ -37,7 +37,7 @@ class SYMBOLEXP ProtocolHttpServer : public IProtocol
                                    , public std::enable_shared_from_this<ProtocolHttpServer>
 {
 public:
-    static const int PROTOCOL_ID;           // 4
+    static const std::uint32_t PROTOCOL_ID;           // 4
     static const std::string PROTOCOL_NAME; // httpserver
 
     static const std::string FMQ_HTTP;
@@ -68,7 +68,7 @@ private:
     virtual bool isSendRequestByPoll() const override;
     virtual bool doesSupportFileTransfer() const override;
     virtual FuncCreateMessage getMessageFactory() const override;
-    virtual bool sendMessage(IMessagePtr message) override;
+    virtual void sendMessage(IMessagePtr message) override;
     virtual void moveOldProtocolState(IProtocol& protocolOld) override;
     virtual bool received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) override;
     virtual hybrid_ptr<IStreamConnectionCallback> connected(const IStreamConnectionPtr& connection) override;
@@ -85,7 +85,7 @@ private:
     void cookiesToSessionIds(const std::string& cookies);
     bool handleInternalCommands(const std::shared_ptr<IProtocolCallback>& callback, bool& ok);
 
-    enum State
+    enum class State
     {
         STATE_FIND_FIRST_LINE,
         STATE_FIND_HEADERS,
@@ -93,7 +93,7 @@ private:
         STATE_CONTENT_DONE
     };
 
-    enum StateSessionId
+    enum class StateSessionId
     {
         SESSIONID_NONE = 0,
         SESSIONID_COOKIE = 1,
@@ -104,10 +104,10 @@ private:
     std::mt19937                                    m_randomGenerator;
     std::uniform_int_distribution<std::uint64_t>    m_randomVariable;
     IMessage::Metainfo                              m_headerSendNext;
-    StateSessionId                                  m_stateSessionId = SESSIONID_NONE;
+    StateSessionId                                  m_stateSessionId = StateSessionId::SESSIONID_NONE;
     std::vector<std::string>                        m_sessionNames;
 
-    State                               m_state = STATE_FIND_FIRST_LINE;
+    State                               m_state = State::STATE_FIND_FIRST_LINE;
     std::string                         m_receiveBuffer;
     ssize_t                             m_offsetRemaining = 0;
     ssize_t                             m_sizeRemaining = 0;

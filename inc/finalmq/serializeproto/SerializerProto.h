@@ -33,7 +33,7 @@ namespace finalmq {
 class SYMBOLEXP SerializerProto : public ParserConverter
 {
 public:
-    SerializerProto(IZeroCopyBuffer& buffer, int maxBlockSize = 1024);
+    SerializerProto(IZeroCopyBuffer& buffer, int maxBlockSize = 512);
 
 private:
     enum WireType
@@ -157,7 +157,7 @@ private:
         };
 
         IZeroCopyBuffer&        m_zeroCopybuffer;
-        ssize_t                 m_maxBlockSize = 1024;
+        ssize_t                 m_maxBlockSize = 512;
         char*                   m_bufferStart = nullptr;
         char*                   m_buffer = nullptr;
         char*                   m_bufferEnd = nullptr;

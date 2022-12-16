@@ -49,11 +49,11 @@ struct IProtocolCallback
     virtual void reconnect() = 0;
     virtual bool findSessionByName(const std::string& sessionName, const IProtocolPtr& protocol) = 0;
     virtual void setSessionName(const std::string& sessionName, const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) = 0;
-    virtual void pollRequest(std::int64_t connectionId, int timeout, int pollCountMax) = 0;
+    virtual void pollRequest(const IProtocolPtr& protocol, int timeout, int pollCountMax) = 0;
     virtual void activity() = 0;
     virtual void setActivityTimeout(int timeout) = 0;
     virtual void setPollMaxRequests(int maxRequests) = 0;
-    virtual void disconnectedMultiConnection(const IStreamConnectionPtr& connection) = 0;
+    virtual void disconnectedMultiConnection(const IProtocolPtr& protocol) = 0;
 };
 
 struct IProtocolSession;
@@ -77,14 +77,12 @@ struct IProtocol : public IStreamConnectionCallback
     virtual bool isSendRequestByPoll() const = 0;
     virtual bool doesSupportFileTransfer() const = 0;
     virtual FuncCreateMessage getMessageFactory() const = 0;
-    virtual bool sendMessage(IMessagePtr message) = 0;
+    virtual void sendMessage(IMessagePtr message) = 0;
     virtual void moveOldProtocolState(IProtocol& protocolOld) = 0;
     virtual IMessagePtr pollReply(std::deque<IMessagePtr>&& messages) = 0;
     virtual void subscribe(const std::vector<std::string>& subscribtions) = 0;
     virtual void cycleTime() = 0;
 };
-
-
 
 
 struct IProtocolFactory

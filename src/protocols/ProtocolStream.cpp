@@ -34,7 +34,7 @@ namespace finalmq {
 // ProtocolStream
 //---------------------------------------
 
-const int ProtocolStream::PROTOCOL_ID = 1;
+const std::uint32_t ProtocolStream::PROTOCOL_ID = 1;
 const std::string ProtocolStream::PROTOCOL_NAME = "stream";
 
 
@@ -74,8 +74,10 @@ IStreamConnectionPtr ProtocolStream::getConnection() const
 
 void ProtocolStream::disconnect()
 {
-    assert(m_connection);
-    m_connection->disconnect();
+    if (m_connection)
+    {
+        m_connection->disconnect();
+    }
 }
 
 std::uint32_t ProtocolStream::getProtocolId() const
@@ -125,14 +127,18 @@ IProtocol::FuncCreateMessage ProtocolStream::getMessageFactory() const
     };
 }
 
-bool ProtocolStream::sendMessage(IMessagePtr message)
+void ProtocolStream::sendMessage(IMessagePtr message)
 {
+    if (message == nullptr)
+    {
+        return;
+    }
     if (!message->wasSent())
     {
         message->prepareMessageToSend();
     }
     assert(m_connection);
-    return m_connection->sendMessage(message);
+    m_connection->sendMessage(message);
 }
 
 void ProtocolStream::moveOldProtocolState(IProtocol& /*protocolOld*/)

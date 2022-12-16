@@ -35,7 +35,9 @@ namespace finalmq {
 
 ProtocolDelimiter::ProtocolDelimiter(const std::string& delimiter)
     : m_delimiter(delimiter)
+    , m_delimiterStart((!delimiter.empty()) ? delimiter[0] : ' ')
 {
+    assert(!delimiter.empty());
 }
 
 
@@ -115,85 +117,16 @@ IProtocol::FuncCreateMessage ProtocolDelimiter::getMessageFactory() const
     };
 }
 
-std::vector<ssize_t> ProtocolDelimiter::findEndOfMessage(const char* buffer, ssize_t size)
+
+
+
+
+void ProtocolDelimiter::sendMessage(IMessagePtr message)
 {
-    if (m_delimiter.empty())
+    if (message == nullptr)
     {
-        return {size};
+        return;
     }
-
-    ssize_t sizeDelimiterPartial = m_delimiterPartial.size();
-
-    std::vector<ssize_t> positions;
-    ssize_t indexStartBuffer = 0;
-    // was the delimiter not finished in last buffer?
-    if (m_indexDelimiter != -1)
-    {
-        ssize_t a = 0;
-        ssize_t b = m_indexDelimiter;
-        for ( ; a < size && b < static_cast<ssize_t>(m_delimiter.size()); ++a, ++b)
-        {
-            if (buffer[a] != m_delimiter[b])
-            {
-                break;
-            }
-        }
-        if (b == static_cast<ssize_t>(m_delimiter.size()))
-        {
-            positions.push_back(0 - m_indexDelimiter - sizeDelimiterPartial);
-            indexStartBuffer = a;
-            m_indexDelimiter = -1;
-            m_delimiterPartial.clear();
-        }
-        else if (a == size)
-        {
-            m_indexDelimiter = b;
-            indexStartBuffer = a;
-            m_delimiterPartial += buffer;
-        }
-        else
-        {
-            // missmatch
-            m_delimiterPartial.clear();
-        }
-    }
-
-    char c = m_delimiter[0];
-    for (ssize_t i = indexStartBuffer; i < size; ++i)
-    {
-        m_delimiterPartial.clear();
-        if (buffer[i] == c)
-        {
-            ssize_t a = i + 1;
-            size_t b = 1;
-            for ( ; a < size && b < m_delimiter.size(); ++a, ++b)
-            {
-                if (buffer[a] != m_delimiter[b])
-                {
-                    break;
-                }
-            }
-            if (b == m_delimiter.size())
-            {
-                positions.push_back(i - sizeDelimiterPartial);
-                i = a - 1;  // -1, because ot the ++i in the for loop
-            }
-            else if (a == size)
-            {
-                m_indexDelimiter = b;
-                m_delimiterPartial = std::string(&buffer[i], a - i);
-                break;
-            }
-        }
-    }
-    return positions;
-}
-
-
-
-
-bool ProtocolDelimiter::sendMessage(IMessagePtr message)
-{
     if (!message->wasSent())
     {
         const std::list<BufferRef>& buffers = message->getAllSendBuffers();
@@ -206,7 +139,7 @@ bool ProtocolDelimiter::sendMessage(IMessagePtr message)
         }
     }
     assert(m_connection);
-    return m_connection->sendMessage(message);
+    m_connection->sendMessage(message);
 }
 
 
@@ -216,125 +149,108 @@ void ProtocolDelimiter::moveOldProtocolState(IProtocol& /*protocolOld*/)
 }
 
 
-
 bool ProtocolDelimiter::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
 {
-    std::string receiveBuffer;
-    ssize_t sizeDelimiterPartial = m_delimiterPartial.size();
-    receiveBuffer.resize(sizeDelimiterPartial + bytesToRead);
-    if (sizeDelimiterPartial > 0)
+    std::shared_ptr<std::string> receiveBufferOld = m_receiveBuffer;
+    ssize_t sizeDelimiterPrefix = 0;
+    ssize_t indexStart = 0;
+    if (receiveBufferOld != nullptr)
     {
-        memcpy(const_cast<char*>(receiveBuffer.data()), &m_delimiterPartial[0], sizeDelimiterPartial);
+        indexStart = m_indexStartMessage;
+        ssize_t indexEnd = m_bufferSize;
+        sizeDelimiterPrefix = indexEnd - indexStart;
+        m_indexStartMessage = 0;
     }
-    ssize_t bytesReceived = 0;
-    int res = 0;
-    do
+
+    m_receiveBuffer = std::make_shared<std::string>();
+    m_receiveBuffer->resize(sizeDelimiterPrefix + bytesToRead);
+    if (sizeDelimiterPrefix > 0)
     {
-        res = socket->receive(const_cast<char*>(receiveBuffer.data() + bytesReceived + sizeDelimiterPartial), static_cast<int>(bytesToRead - bytesReceived));
-        if (res > 0)
-        {
-            bytesReceived += res;
-        }
-    } while (res > 0 && bytesReceived < bytesToRead);
-    if (res >= 0)
+        memcpy(const_cast<char*>(m_receiveBuffer->data()), const_cast<char*>(receiveBufferOld->data() + indexStart), sizeDelimiterPrefix);
+    }
+    int res = socket->receive(const_cast<char*>(m_receiveBuffer->data()) + sizeDelimiterPrefix, static_cast<int>(bytesToRead));
+    if (res > 0)
     {
+        auto callback = m_callback.lock();
+        const char* buffer = m_receiveBuffer->data();
+        ssize_t bytesReceived = res;
+        m_bufferSize = sizeDelimiterPrefix + bytesReceived;
+        ssize_t offsetEnd = m_bufferSize - (m_delimiter.size() - 1);
         assert(bytesReceived <= bytesToRead);
-        ssize_t sizeOfReceiveBuffer = sizeDelimiterPartial + bytesReceived;
-        std::vector<ssize_t> positions = findEndOfMessage(receiveBuffer.data(), sizeOfReceiveBuffer);
-        if (!positions.empty())
+        for (ssize_t i = m_indexStartMessage; i < offsetEnd; ++i)
         {
-            ssize_t pos = positions[0];
-            IMessagePtr message = std::make_shared<ProtocolMessage>(0);
-            message->resizeReceiveBuffer(m_characterCounter + pos);
-            m_characterCounter += bytesReceived;
-            assert(m_characterCounter >= 0);
-
-            ssize_t offset = 0;
-
-            if (pos < 0)
+            const char c = buffer[i];
+            if (c == m_delimiterStart)
             {
-                for (auto it = m_receiveBuffers.begin(); it != m_receiveBuffers.end(); )
+                bool match = true;
+                for (ssize_t j = 1; j < static_cast<ssize_t>(m_delimiter.size()); ++j)
                 {
-                    const std::string& buffer = *it;
-                    ++it;
-                    ssize_t size = buffer.size() - m_indexStartBuffer;
-                    if (it == m_receiveBuffers.end())
+                    if (buffer[i + j] != m_delimiter[j])
                     {
-                        size += pos;
+                        match = false;
+                        break;
                     }
-                    memcpy(message->getReceivePayload().first + offset, buffer.c_str() + m_indexStartBuffer, size);
-                    offset += size;
-                    m_characterCounter -= size;
-                    assert(m_characterCounter >= 0);
-                    m_indexStartBuffer = 0;
                 }
-                m_characterCounter -= m_delimiter.size();
-            }
-            else
-            {
-                for (auto it = m_receiveBuffers.begin(); it != m_receiveBuffers.end(); ++it)
+                if (match)
                 {
-                    const std::string& buffer = *it;
-                    ssize_t sizeBuffer = buffer.size();
-                    ssize_t size = sizeBuffer - m_indexStartBuffer;
-                    assert(size >= 0);
-                    memcpy(message->getReceivePayload().first + offset, buffer.c_str() + m_indexStartBuffer, size);
-                    offset += size;
-                    m_characterCounter -= size;
-                    assert(m_characterCounter >= 0);
-                    m_indexStartBuffer = 0;
+                    IMessagePtr message = std::make_shared<ProtocolMessage>(0);
+                    if (m_receiveBuffers.empty())
+                    {
+                        ssize_t size = i - m_indexStartMessage;
+                        assert(size >= 0);
+                        message->setReceiveBuffer(m_receiveBuffer, m_indexStartMessage, size);
+                    }
+                    else
+                    {
+                        assert(m_indexStartMessage == 0);
+                        ssize_t sizeLast = i - m_indexStartMessage;
+                        assert(sizeLast >= 0);
+                        m_receiveBuffersTotal += sizeLast;
+                        assert(m_receiveBuffersTotal >= 0);
+                        std::shared_ptr<std::string> receiveBufferHelper = std::make_shared<std::string>();
+                        receiveBufferHelper->resize(m_receiveBuffersTotal);
+                        ssize_t offset = 0;
+                        for (size_t n = 0; n < m_receiveBuffers.size(); ++n)
+                        {
+                            const auto& receiveBufferStore = m_receiveBuffers[n];
+                            ssize_t sizeCopy = receiveBufferStore.indexEndMessage - receiveBufferStore.indexStartMessage;
+                            memcpy(const_cast<char*>(receiveBufferHelper->data()) + offset,
+                                const_cast<char*>(receiveBufferStore.receiveBuffer->data()) + receiveBufferStore.indexStartMessage,
+                                sizeCopy);
+                            offset += sizeCopy;
+                        }
+                        memcpy(const_cast<char*>(receiveBufferHelper->data()) + offset, const_cast<char*>(m_receiveBuffer->data()), sizeLast);
+                        message->setReceiveBuffer(receiveBufferHelper, 0, m_receiveBuffersTotal);
+                        m_receiveBuffersTotal = 0;
+                        m_receiveBuffers.clear();
+                    }
+                    if (callback)
+                    {
+                        callback->received(message);
+                    }
+                    i += m_delimiter.size();
+                    m_indexStartMessage = i;
+                    --i;
                 }
-                memcpy(message->getReceivePayload().first + offset, receiveBuffer.c_str() + sizeDelimiterPartial, pos);
-                m_characterCounter -= pos + m_delimiter.size();
-                assert(m_characterCounter >= 0);
             }
-            m_receiveBuffers.clear();
-            auto callback = m_callback.lock();
-            if (callback)
-            {
-                callback->received(message);
-            }
-
-            m_indexStartBuffer = pos + m_delimiter.size();
-
-            for (size_t i = 1; i < positions.size(); ++i)
-            {
-                pos = positions[i];
-                message = std::make_shared<ProtocolMessage>(0);
-                ssize_t size = pos - m_indexStartBuffer;
-                message->resizeReceiveBuffer(size);
-                memcpy(message->getReceivePayload().first, receiveBuffer.c_str() + m_indexStartBuffer + sizeDelimiterPartial, size);
-                m_characterCounter -= size + m_delimiter.size();
-                assert(m_characterCounter >= 0);
-                m_indexStartBuffer = pos + m_delimiter.size();
-                if (callback)
-                {
-                    callback->received(message);
-                }
-            }
+        }
+        if (m_indexStartMessage == m_bufferSize)
+        {
+            m_receiveBuffer = nullptr;
+            m_bufferSize = 0;
+            m_indexStartMessage = 0;
         }
         else
         {
-            m_characterCounter += bytesReceived;
-        }
-
-        if (m_characterCounter == 0)
-        {
-            m_indexStartBuffer = 0;
-        }
-        else
-        {
-            if (sizeDelimiterPartial == 0)
+            if (m_indexStartMessage < offsetEnd)
             {
-                m_receiveBuffers.push_back(std::move(receiveBuffer));
-            }
-            else
-            {
-                m_receiveBuffers.emplace_back(&receiveBuffer[sizeDelimiterPartial], receiveBuffer.size() - sizeDelimiterPartial);
+                m_receiveBuffers.emplace_back(ReceiveBufferStore{ m_receiveBuffer, m_indexStartMessage, offsetEnd });
+                m_receiveBuffersTotal += offsetEnd - m_indexStartMessage;
+                m_indexStartMessage = offsetEnd;
             }
         }
     }
-    return true;
+    return (res > 0);
 }
 
 

@@ -35,7 +35,7 @@ namespace finalmq {
 class MockIStreamConnection : public IStreamConnection
 {
 public:
-    MOCK_METHOD(bool, sendMessage, (const IMessagePtr& msg), (override));
+    MOCK_METHOD(void, sendMessage, (const IMessagePtr& msg), (override));
     MOCK_METHOD(ConnectionData, getConnectionData, (), (const override));
     MOCK_METHOD(ConnectionState, getConnectionState, (), (const override));
     MOCK_METHOD(std::int64_t, getConnectionId, (), (const override));

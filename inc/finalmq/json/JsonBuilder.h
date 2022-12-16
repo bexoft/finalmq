@@ -30,7 +30,7 @@ namespace finalmq {
 class SYMBOLEXP JsonBuilder : public IJsonParserVisitor
 {
 public:
-    JsonBuilder(IZeroCopyBuffer& buffer, int maxBlockSize = 1024);
+    JsonBuilder(IZeroCopyBuffer& buffer, int maxBlockSize = 512);
     ~JsonBuilder();
 
 private:
@@ -59,7 +59,7 @@ private:
     void escapeString(const char* str, ssize_t size);
 
     IZeroCopyBuffer&        m_zeroCopybuffer;
-    ssize_t                 m_maxBlockSize = 1024;
+    ssize_t                 m_maxBlockSize = 512;
     char*                   m_bufferStart = nullptr;
     char*                   m_buffer = nullptr;
     char*                   m_bufferEnd = nullptr;

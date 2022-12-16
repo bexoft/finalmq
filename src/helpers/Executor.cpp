@@ -38,12 +38,12 @@ void ExecutorBase::registerActionNotification(std::function<void()> func)
 
 void ExecutorBase::run()
 {
-    while (!m_terminate)
+    while (!m_terminate.load())
     {
         bool wasAvailable = runAvailableActionBatch([this]() {
             return m_terminate.load();
         });
-        if (!wasAvailable && !m_terminate)
+        if (!wasAvailable && !m_terminate.load())
         {
             m_newActions.wait();
         }
@@ -109,6 +109,7 @@ bool Executor::runAvailableActions(const FuncIsAbort& funcIsAbort)
     }
 }
     
+
 bool Executor::areRunnableActionsAvailable() const
 {
     if (m_runningIds.size() == m_storedIds.size() && (m_zeroIdCounter == 0))
@@ -287,7 +288,31 @@ bool ExecutorIgnoreOrderOfInstance::runAvailableActions(const FuncIsAbort& funcI
 
 bool ExecutorIgnoreOrderOfInstance::runAvailableActionBatch(const FuncIsAbort& funcIsAbort)
 {
-    return runAvailableActions(funcIsAbort);
+    bool wasAvailable = false;
+    bool stillActions = false;
+    std::unique_lock<std::mutex> lock(m_mutex);
+    std::function<void()> action;
+    if (!m_actions.empty())
+    {
+        action = std::move(m_actions.front());
+        m_actions.pop_front();
+        wasAvailable = true;
+        stillActions = (!m_actions.empty());
+    }
+    lock.unlock();
+    if (stillActions)
+    {
+        m_newActions = true;
+    }
+    if (action)
+    {
+        if (!funcIsAbort || !funcIsAbort())
+        {
+            action();
+        }
+    }
+
+    return wasAvailable;
 }
 
 void ExecutorIgnoreOrderOfInstance::addAction(std::function<void()> func, std::int64_t /*instanceId*/)

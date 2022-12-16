@@ -27,8 +27,10 @@
 #include "finalmq/serializejson/SerializerJson.h"
 #include "finalmq/metadata/MetaData.h"
 #include "MockIZeroCopyBuffer.h"
-#include "test.pb.h"
+#include "test.fmq.h"
 #include "finalmq/metadataserialize/variant.fmq.h"
+
+#include <cmath>
 
 
 using ::testing::_;
@@ -69,6 +71,7 @@ protected:
         m_data.resize(MAX_BLOCK_SIZE);
         EXPECT_CALL(m_mockBuffer, addBuffer(MAX_BLOCK_SIZE, _)).Times(1).WillOnce(Return((char*)m_data.data()));
         EXPECT_CALL(m_mockBuffer, downsizeLastBuffer(_)).Times(1).WillOnce(Invoke(&m_data, &String::resize));
+        EXPECT_CALL(m_mockBuffer, getRemainingSize()).WillRepeatedly(Return(0));
         m_serializer = std::make_unique<SerializerJson>(m_mockBuffer, MAX_BLOCK_SIZE);
         m_serializerDefault = std::make_unique<SerializerJson>(m_mockBuffer, MAX_BLOCK_SIZE, true, false);
         m_serializerEnumAsInt = std::make_unique<SerializerJson>(m_mockBuffer, MAX_BLOCK_SIZE, false);
@@ -168,7 +171,7 @@ TEST_F(TestSerializerJson, testInt64)
     m_serializer->enterInt64({MetaTypeId::TYPE_INT64, "", "value", "", 0}, VALUE);
     m_serializer->finished();
 
-    ASSERT_EQ(m_data, "{\"value\":-2}");
+    ASSERT_EQ(m_data, "{\"value\":\"-2\"}");
 }
 
 TEST_F(TestSerializerJson, testUInt64)
@@ -189,10 +192,43 @@ TEST_F(TestSerializerJson, testFloat)
     static const float VALUE = -2;
 
     m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestFloat"));
-    m_serializer->enterFloat({MetaTypeId::TYPE_FLOAT, "", "value", "", 0}, VALUE);
+    m_serializer->enterFloat({ MetaTypeId::TYPE_FLOAT, "", "value", "", 0 }, VALUE);
     m_serializer->finished();
 
     ASSERT_EQ(m_data, "{\"value\":-2.0}");
+}
+
+TEST_F(TestSerializerJson, testFloatNaN)
+{
+    static const float VALUE = NAN;
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestFloat"));
+    m_serializer->enterFloat({ MetaTypeId::TYPE_FLOAT, "", "value", "", 0 }, VALUE);
+    m_serializer->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":\"NaN\"}");
+}
+
+TEST_F(TestSerializerJson, testFloatInfinity)
+{
+    static const float VALUE = INFINITY;
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestFloat"));
+    m_serializer->enterFloat({ MetaTypeId::TYPE_FLOAT, "", "value", "", 0 }, VALUE);
+    m_serializer->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":\"Infinity\"}");
+}
+
+TEST_F(TestSerializerJson, testFloatNInfinity)
+{
+    static const float VALUE = -INFINITY;
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestFloat"));
+    m_serializer->enterFloat({ MetaTypeId::TYPE_FLOAT, "", "value", "", 0 }, VALUE);
+    m_serializer->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":\"-Infinity\"}");
 }
 
 
@@ -201,10 +237,43 @@ TEST_F(TestSerializerJson, testDouble)
     static const double VALUE = -2.1;
 
     m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestDouble"));
-    m_serializer->enterDouble({MetaTypeId::TYPE_DOUBLE, "", "value", "", 0}, VALUE);
+    m_serializer->enterDouble({ MetaTypeId::TYPE_DOUBLE, "", "value", "", 0 }, VALUE);
     m_serializer->finished();
 
     ASSERT_EQ(m_data, "{\"value\":-2.1}");
+}
+
+TEST_F(TestSerializerJson, testDoubleNaN)
+{
+    static const double VALUE = NAN;
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestDouble"));
+    m_serializer->enterDouble({ MetaTypeId::TYPE_DOUBLE, "", "value", "", 0 }, VALUE);
+    m_serializer->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":\"NaN\"}");
+}
+
+TEST_F(TestSerializerJson, testDoubleInfinity)
+{
+    static const double VALUE = INFINITY;
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestDouble"));
+    m_serializer->enterDouble({ MetaTypeId::TYPE_DOUBLE, "", "value", "", 0 }, VALUE);
+    m_serializer->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":\"Infinity\"}");
+}
+
+TEST_F(TestSerializerJson, testDoubleNInfinity)
+{
+    static const double VALUE = -INFINITY;
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestDouble"));
+    m_serializer->enterDouble({ MetaTypeId::TYPE_DOUBLE, "", "value", "", 0 }, VALUE);
+    m_serializer->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":\"-Infinity\"}");
 }
 
 
@@ -258,7 +327,7 @@ TEST_F(TestSerializerJson, testStruct)
 
 TEST_F(TestSerializerJson, testEnum)
 {
-    static const fmq::test::Foo VALUE = fmq::test::Foo::FOO_HELLO;
+    static const test::Foo VALUE = test::Foo::FOO_HELLO;
 
     m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestEnum"));
     m_serializer->enterEnum({ MetaTypeId::TYPE_ENUM, "test.Foo", "value", "", 0 }, VALUE);
@@ -270,7 +339,7 @@ TEST_F(TestSerializerJson, testEnum)
 
 TEST_F(TestSerializerJson, testEnumAlias)
 {
-    static const fmq::test::Foo VALUE = fmq::test::Foo::FOO_WORLD2;
+    static const test::Foo VALUE = test::Foo::FOO_WORLD2;
 
     m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestEnum"));
     m_serializer->enterEnum({ MetaTypeId::TYPE_ENUM, "test.Foo", "value", "", 0 }, VALUE);
@@ -282,7 +351,7 @@ TEST_F(TestSerializerJson, testEnumAlias)
 
 TEST_F(TestSerializerJson, testEnumAsInt)
 {
-    static const fmq::test::Foo VALUE = fmq::test::Foo::FOO_HELLO;
+    static const test::Foo VALUE = test::Foo::FOO_HELLO;
 
     m_serializerEnumAsInt->startStruct(*MetaDataGlobal::instance().getStruct("test.TestEnum"));
     m_serializerEnumAsInt->enterEnum({MetaTypeId::TYPE_ENUM, "test.Foo", "value", "", 0}, VALUE);
@@ -458,7 +527,7 @@ TEST_F(TestSerializerJson, testArrayInt64)
     m_serializer->enterArrayInt64({MetaTypeId::TYPE_ARRAY_INT64, "", "value", "", 0}, VALUE.data(), VALUE.size());
     m_serializer->finished();
 
-    ASSERT_EQ(m_data, "{\"value\":[-1,0,1]}");
+    ASSERT_EQ(m_data, "{\"value\":[\"-1\",\"0\",\"1\"]}");
 }
 
 TEST_F(TestSerializerJson, testArrayUInt64)
@@ -480,13 +549,27 @@ TEST_F(TestSerializerJson, testArrayFloat)
     static const float VALUE1 = -1;
     static const float VALUE2 = 0;
     static const float VALUE3 = 1;
-    static const std::vector<float> VALUE = {VALUE1, VALUE2, VALUE3};
+    static const std::vector<float> VALUE = { VALUE1, VALUE2, VALUE3 };
 
     m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestArrayFloat"));
-    m_serializer->enterArrayFloat({MetaTypeId::TYPE_ARRAY_FLOAT, "", "value", "", 0}, VALUE.data(), VALUE.size());
+    m_serializer->enterArrayFloat({ MetaTypeId::TYPE_ARRAY_FLOAT, "", "value", "", 0 }, VALUE.data(), VALUE.size());
     m_serializer->finished();
 
     ASSERT_EQ(m_data, "{\"value\":[-1.0,0.0,1.0]}");
+}
+
+TEST_F(TestSerializerJson, testArrayFloatNaN)
+{
+    static const float VALUE1 = NAN;
+    static const float VALUE2 = INFINITY;
+    static const float VALUE3 = -INFINITY;
+    static const std::vector<float> VALUE = { VALUE1, VALUE2, VALUE3 };
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestArrayFloat"));
+    m_serializer->enterArrayFloat({ MetaTypeId::TYPE_ARRAY_FLOAT, "", "value", "", 0 }, VALUE.data(), VALUE.size());
+    m_serializer->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":[\"NaN\",\"Infinity\",\"-Infinity\"]}");
 }
 
 TEST_F(TestSerializerJson, testArrayDouble)
@@ -503,6 +586,19 @@ TEST_F(TestSerializerJson, testArrayDouble)
     ASSERT_EQ(m_data, "{\"value\":[-1.1,0.0,1.1]}");
 }
 
+TEST_F(TestSerializerJson, testArrayDoubleNaN)
+{
+    static const double VALUE1 = NAN;
+    static const double VALUE2 = INFINITY;
+    static const double VALUE3 = -INFINITY;
+    static const std::vector<double> VALUE = { VALUE1, VALUE2, VALUE3 };
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestArrayDouble"));
+    m_serializer->enterArrayDouble({ MetaTypeId::TYPE_ARRAY_DOUBLE, "", "value", "", 0 }, VALUE.data(), VALUE.size());
+    m_serializer->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":[\"NaN\",\"Infinity\",\"-Infinity\"]}");
+}
 
 TEST_F(TestSerializerJson, testArrayString)
 {
@@ -578,10 +674,10 @@ TEST_F(TestSerializerJson, testArrayStruct)
 
 TEST_F(TestSerializerJson, testArrayEnum)
 {
-    static const fmq::test::Foo VALUE1 = fmq::test::Foo::FOO_HELLO;
-    static const fmq::test::Foo VALUE2 = fmq::test::Foo::FOO_WORLD;
-    static const fmq::test::Foo VALUE3 = fmq::test::Foo::FOO_WORLD2;
-    static const fmq::test::Foo VALUE4 = (fmq::test::Foo)123;
+    static const test::Foo VALUE1 = test::Foo::FOO_HELLO;
+    static const test::Foo VALUE2 = test::Foo::FOO_WORLD;
+    static const test::Foo VALUE3 = test::Foo::FOO_WORLD2;
+    static const test::Foo VALUE4 = (test::Foo::Enum)123;
     static const std::vector<std::int32_t> VALUE = {VALUE1, VALUE2, VALUE3, VALUE4};
 
     m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestArrayEnum"));
@@ -594,10 +690,10 @@ TEST_F(TestSerializerJson, testArrayEnum)
 
 TEST_F(TestSerializerJson, testArrayEnumAsInt)
 {
-    static const fmq::test::Foo VALUE1 = fmq::test::Foo::FOO_HELLO;
-    static const fmq::test::Foo VALUE2 = fmq::test::Foo::FOO_WORLD;
-    static const fmq::test::Foo VALUE3 = fmq::test::Foo::FOO_WORLD2;
-    static const fmq::test::Foo VALUE4 = (fmq::test::Foo)123;
+    static const test::Foo VALUE1 = test::Foo::FOO_HELLO;
+    static const test::Foo VALUE2 = test::Foo::FOO_WORLD;
+    static const test::Foo VALUE3 = test::Foo::FOO_WORLD2;
+    static const test::Foo VALUE4 = (test::Foo::Enum)123;
     static const std::vector<std::int32_t> VALUE = {VALUE1, VALUE2, VALUE3, VALUE4};
 
     m_serializerEnumAsInt->startStruct(*MetaDataGlobal::instance().getStruct("test.TestArrayEnum"));

@@ -56,12 +56,12 @@ namespace finalmq {
             }
         }
 
-        bool sendRequest(const hybrid_ptr<IRemoteEntity>& entity, const PeerId& peerId, const std::string& path, const StructBase& structBase)
+        void sendRequest(const hybrid_ptr<IRemoteEntity>& entity, const PeerId& peerId, const std::string& path, const StructBase& structBase)
         {
             assert(!m_waitForReply);
             if (m_waitForReply)
             {
-                return false;
+                return;
             }
             m_entity = entity;
             m_correlationId = entity.lock()->sendRequest(peerId, path, structBase,
@@ -71,14 +71,13 @@ namespace finalmq {
                     Run();
                 });
             m_waitForReply = true;
-            return (m_correlationId != CORRELATIONID_NONE);
         }
-        bool sendRequest(const hybrid_ptr<IRemoteEntity>& entity, const PeerId& peerId, const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase)
+        void sendRequest(const hybrid_ptr<IRemoteEntity>& entity, const PeerId& peerId, const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase)
         {
             assert(!m_waitForReply);
             if (m_waitForReply)
             {
-                return false;
+                return;
             }
             m_entity = entity;
             m_correlationId = entity.lock()->sendRequest(peerId, path, std::move(metainfo), structBase,
@@ -89,14 +88,13 @@ namespace finalmq {
                     Run();
                 });
             m_waitForReply = true;
-            return (m_correlationId != CORRELATIONID_NONE);
         }
-        bool sendRequest(const hybrid_ptr<IRemoteEntity>& entity, const PeerId& peerId, const StructBase& structBase)
+        void sendRequest(const hybrid_ptr<IRemoteEntity>& entity, const PeerId& peerId, const StructBase& structBase)
         {
             assert(!m_waitForReply);
             if (m_waitForReply)
             {
-                return false;
+                return;
             }
             m_entity = entity;
             m_correlationId = entity.lock()->sendRequest(peerId, structBase,
@@ -106,14 +104,13 @@ namespace finalmq {
                     Run();
                 });
             m_waitForReply = true;
-            return (m_correlationId != CORRELATIONID_NONE);
         }
-        bool sendRequest(const hybrid_ptr<IRemoteEntity>& entity, const PeerId& peerId, IMessage::Metainfo&& metainfo, const StructBase& structBase)
+        void sendRequest(const hybrid_ptr<IRemoteEntity>& entity, const PeerId& peerId, IMessage::Metainfo&& metainfo, const StructBase& structBase)
         {
             assert(!m_waitForReply);
             if (m_waitForReply)
             {
-                return false;
+                return;
             }
             m_entity = entity;
             m_correlationId = entity.lock()->sendRequest(peerId, std::move(metainfo), structBase,
@@ -124,7 +121,6 @@ namespace finalmq {
                     Run();
                 });
             m_waitForReply = true;
-            return (m_correlationId != CORRELATIONID_NONE);
         }
 
         template<class R>

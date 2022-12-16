@@ -45,7 +45,6 @@ ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, 
     , m_sessionId(protocolSessionList->getNextSessionId())
     , m_instanceId(m_sessionId | INSTANCEID_PREFIX)
     , m_contentType(contentType)
-    , m_incomingConnection(true)
     , m_bindProperties(bindProperties)
 {
 }
@@ -59,7 +58,6 @@ ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, 
     , m_sessionId(protocolSessionList->getNextSessionId())
     , m_instanceId(m_sessionId | INSTANCEID_PREFIX)
     , m_contentType(contentType)
-    , m_incomingConnection(false)
     , m_streamConnectionContainer(streamConnectionContainer)
     , m_endpointStreamConnection(endpointStreamConnection)
     , m_connectionProperties(connectProperties)
@@ -86,7 +84,6 @@ ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, 
     , m_protocolSessionList(protocolSessionList)
     , m_sessionId(protocolSessionList->getNextSessionId())
     , m_instanceId(m_sessionId | INSTANCEID_PREFIX)
-    , m_incomingConnection(false)
     , m_streamConnectionContainer(streamConnectionContainer)
 {
 }
@@ -146,19 +143,17 @@ bool ProtocolSession::connect()
 
 void ProtocolSession::setConnection(const IStreamConnectionPtr& connection, bool verified)
 {
-    if (m_protocol)
-    {
-        initProtocolValues();
-        m_protocol->setCallback(shared_from_this());
-        m_protocol->setConnection(connection);
-    }
     if (connection)
     {
-        m_connectionId = connection->getConnectionId();
-        if (m_incomingConnection)
+        if (m_protocol)
         {
-            m_activityTimer.setTimeout(m_activityTimeout);
+            initProtocolValues();
+            m_protocol->setCallback(shared_from_this());
+            m_protocol->setConnection(connection);
         }
+
+        m_connectionId = connection->getConnectionId();
+        activity();
     }
     addSessionToList(verified);
 }
@@ -179,6 +174,10 @@ IMessagePtr ProtocolSession::createMessage() const
 IMessagePtr ProtocolSession::convertMessageToProtocol(const IMessagePtr& msg)
 {
     // mutext is already locked
+    if (msg == nullptr)
+    {
+        return nullptr;
+    }
     IMessagePtr message = msg;
     if (message->getProtocolId() != m_protocolId ||
         (!m_protocolFlagMessagesResendable && message->wasSent()) ||
@@ -242,63 +241,39 @@ void ProtocolSession::getProtocolFromConnectionId(IProtocolPtr& protocol, std::i
 }
 
 
-bool ProtocolSession::sendMessage(const IMessagePtr& msg, bool isReply)
+void ProtocolSession::sendMessage(const IMessagePtr& msg, bool isReply)
 {
-    bool ok = false;
     // lock whole function, because the protocol can be changed by setProtocol (lock also over sendMessage, because the protocol could increment a sequential message counter and the order of the counter shall be like the messages that are sent.)
     std::unique_lock<std::mutex> lock(m_mutex);
 
     if (!isReply && m_protocolFlagIsSendRequestByPoll)
     {
-        if (m_pollWaiting)
+        if (m_pollProtocol)
         {
-            assert(m_pollReply == nullptr);
-            IProtocolPtr protocol = m_protocol;
-            if (m_protocolFlagIsMultiConnectionSession)
+            m_pollCounter++;
+            IMessagePtr pollReply = m_pollProtocol->pollReply({ msg });
+            sendMessage(pollReply, m_pollProtocol);
+            if (m_pollCountMax >= 0 && m_pollCounter >= m_pollCountMax)
             {
-                getProtocolFromConnectionId(protocol, m_pollConnectionId);
+                pollRelease();
             }
-            if (protocol)
-            {
-                m_pollCounter++;
-                m_pollReply = protocol->pollReply({ msg });
-                ok = sendMessage(m_pollReply, protocol);
-                if (ok)
-                {
-                    m_pollReply = nullptr;
-                }
-                if (m_pollCountMax >= 0 && m_pollCounter >= m_pollCountMax)
-                {
-                    pollRelease();
-                }
-            }
-            else
-            {
-                m_pollWaiting = false;
-                m_pollConnectionId = 0;
-                m_pollTimer.stop();
-                m_pollMessages.push_back(msg);
-            }
-            ok = true;
         }
         else
         {
             m_pollMessages.push_back(msg);
-            ok = true;
         }
         if (m_pollMaxRequests != -1 && static_cast<ssize_t>(m_pollMessages.size()) >= m_pollMaxRequests)
         {
             lock.unlock();
             disconnect();
         }
-        return ok;
     }
     else
     {
         if (!m_protocolSet.load(std::memory_order_relaxed))  // relaxed, because already locked
         {
             m_messagesBuffered.push_back(msg);
-            return true;
+            return;
         }
 
         IProtocolPtr protocol = m_protocol;
@@ -309,9 +284,8 @@ bool ProtocolSession::sendMessage(const IMessagePtr& msg, bool isReply)
             getProtocolFromConnectionId(protocol, connectionId);
         }
 
-        ok = sendMessage(msg, protocol);
+        sendMessage(msg, protocol);
     }
-    return ok;
 }
 
 
@@ -394,6 +368,10 @@ bool ProtocolSession::doesSupportFileTransfer() const
 void ProtocolSession::disconnect()
 {
     std::unique_lock<std::mutex> lock(m_mutex);
+    m_messagesBuffered.clear();
+    m_pollMessages.clear();
+    m_pollProtocol = nullptr;
+    m_pollTimer.stop();
     IProtocolSessionListPtr protocolSessionList = m_protocolSessionList.lock();
     std::vector<IProtocolPtr> protocols;
     protocols.reserve(m_multiProtocols.size() + 1);
@@ -568,6 +546,8 @@ void ProtocolSession::disconnected()
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     pollRelease();
+    m_messagesBuffered.clear();
+    m_pollMessages.clear();
     IProtocolSessionListPtr protocolSessionList = m_protocolSessionList.lock();
     bool doDisconnected = (!m_triggerDisconnected) && (m_triggerConnected || m_protocolSet.load(std::memory_order_relaxed));   // relaxed, because already locked
     m_triggerDisconnected = true;
@@ -637,10 +617,7 @@ void ProtocolSession::disconnectedVirtualSession(const std::string& virtualSessi
 
 void ProtocolSession::received(const IMessagePtr& message, std::int64_t connectionId)
 {
-    if (m_incomingConnection)
-    {
-        m_activityTimer.setTimeout(m_activityTimeout);
-    }
+    activity();
     bool writeChannelIdIntoEchoData = false;
     if (m_protocolFlagIsMultiConnectionSession && connectionId)
     {
@@ -774,7 +751,7 @@ void ProtocolSession::cycleTime()
         }
     }
     
-    if (m_pollWaiting && m_pollTimer.isExpired())
+    if (m_pollProtocol && m_pollTimer.isExpired())
     {
         pollRelease();
     }
@@ -863,16 +840,16 @@ bool ProtocolSession::findSessionByName(const std::string& sessionName, const IP
                 }
                 else
                 {
-                    disconnected(); // we are in the poller loop  thread
+                    disconnected(); // we are in the poller loop thread
 
                     lock.lock();
-                    IProtocolPtr protocol = m_protocol;
+                    IProtocolPtr prot = m_protocol;
                     m_protocol = nullptr;
                     m_connectionId = 0;
                     lock.unlock();
 
-                    assert(protocol);
-                    session->setProtocol(protocol);
+                    assert(prot);
+                    session->setProtocol(prot);
                 }
             }
             return true;
@@ -896,7 +873,7 @@ void ProtocolSession::setSessionNameInternal(const std::string& sessionName)
             m_verified = true;
             m_sessionName = sessionName;
             lock.unlock();
-            connected();    // we are in the poller loop  thread
+            connected();    // we are in the poller loop thread
         }
     }
 }
@@ -917,7 +894,7 @@ void ProtocolSession::setSessionName(const std::string& sessionName, const IProt
             m_verified = true;
             m_sessionName = sessionName;
             lock.unlock();
-            connected();    // we are in the poller loop  thread
+            connected();    // we are in the poller loop thread
         }
         else
         {
@@ -930,85 +907,46 @@ void ProtocolSession::setSessionName(const std::string& sessionName, const IProt
 
 
 
-
-
 void ProtocolSession::pollRelease()
 {
     // mutext is already locked
-    if (m_pollWaiting)
+    if (m_pollProtocol)
     {
-        assert(m_pollReply == nullptr);
-        IProtocolPtr protocol = m_protocol;
-        if (m_protocolFlagIsMultiConnectionSession)
+        IMessagePtr reply = m_pollProtocol->pollReply({});
+        if (reply)
         {
-            getProtocolFromConnectionId(protocol, m_pollConnectionId);
-        }
-        if (protocol)
-        {
-            IMessagePtr reply = protocol->pollReply({});
             Variant& controlData = reply->getControlData();
             controlData.add("fmq_poll_stop", true);
-            sendMessage(reply, protocol);
+            sendMessage(reply, m_pollProtocol);
         }
-        m_pollWaiting = false;
-        m_pollConnectionId = 0;
+        m_pollProtocol = nullptr;
         m_pollTimer.stop();
     }
 }
 
 
 
-void ProtocolSession::pollRequest(std::int64_t connectionId, int timeout, int pollCountMax)
+void ProtocolSession::pollRequest(const IProtocolPtr& protocol, int timeout, int pollCountMax)
 {
-    if (m_incomingConnection)
-    {
-        m_activityTimer.setTimeout(m_activityTimeout);
-    }
+    assert(protocol);
+    activity();
     std::unique_lock<std::mutex> lock(m_mutex);
     pollRelease();
     m_pollCounter = 0;
     m_pollCountMax = pollCountMax;
-    assert(!m_pollWaiting);
-    if (m_pollReply)
-    {
-        IProtocolPtr protocol = m_protocol;
-        if (m_protocolFlagIsMultiConnectionSession)
-        {
-            getProtocolFromConnectionId(protocol, connectionId);
-        }
-        m_pollCounter++;
-        bool ok = sendMessage(m_pollReply, protocol);
-        if (ok)
-        {
-            m_pollReply = nullptr;
-        }
-    }
-    else if (!m_pollMessages.empty())
-    {
-        IProtocolPtr protocol = m_protocol;
-        if (m_protocolFlagIsMultiConnectionSession)
-        {
-            getProtocolFromConnectionId(protocol, connectionId);
-        }
-        std::deque<IMessagePtr> messages;
-        if (protocol)
-        {
-            messages = std::move(m_pollMessages);
-            m_pollMessages.clear();
-            m_pollCounter++;
-            m_pollReply = protocol->pollReply(std::move(messages));
-            bool ok = sendMessage(m_pollReply, protocol);
-            if (ok)
-            {
-                m_pollReply = nullptr;
-            }
-        }
-    }
-    m_pollWaiting = true;
-    m_pollConnectionId = connectionId;
+    m_pollProtocol = protocol;
+    m_pollTimer.stop();
     if (timeout > 0)
     {
         m_pollTimer.setTimeout(timeout);
+    }
+
+    if (!m_pollMessages.empty())
+    {
+        m_pollCounter++;
+        IMessagePtr pollReply = protocol->pollReply(std::move(m_pollMessages));
+        m_pollMessages.clear();
+        sendMessage(pollReply, protocol);
     }
 
     if (timeout == 0 || (m_pollCountMax >= 0 && m_pollCounter >= m_pollCountMax))
@@ -1022,11 +960,7 @@ void ProtocolSession::pollRequest(std::int64_t connectionId, int timeout, int po
 
 void ProtocolSession::activity()
 {
-//    std::unique_lock<std::mutex> lock(m_mutex);
-    if (m_incomingConnection)
-    {
-        m_activityTimer.setTimeout(m_activityTimeout);
-    }
+    m_activityTimer.setTimeout(m_activityTimeout);
 }
 
 
@@ -1041,14 +975,12 @@ void ProtocolSession::setPollMaxRequests(int maxRequests)
 }
 
 
-void ProtocolSession::disconnectedMultiConnection(const IStreamConnectionPtr& connection)
+void ProtocolSession::disconnectedMultiConnection(const IProtocolPtr& protocol)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
-    std::int64_t connectionId = connection->getConnectionId();
-    if (m_pollWaiting && m_pollConnectionId == connectionId)
+    if (m_pollProtocol == protocol)
     {
-        m_pollWaiting = false;
-        m_pollConnectionId = 0;
+        m_pollProtocol = nullptr;
         m_pollTimer.stop();
     }
     lock.unlock();
@@ -1061,16 +993,14 @@ void ProtocolSession::disconnectedMultiConnection(const IStreamConnectionPtr& co
 
 
 
-bool ProtocolSession::sendMessage(const IMessagePtr& message, const IProtocolPtr& protocol)
+void ProtocolSession::sendMessage(const IMessagePtr& message, const IProtocolPtr& protocol)
 {
     // the mutex must be locked before calling sendMessage, lock also over sendMessage, because the protocol could increment a sequential message counter and the order of the counter shall be like the messages that are sent.
-    bool ok = false;
-    if (protocol)
+    if (protocol && message)
     {
         IMessagePtr messageProtocol = convertMessageToProtocol(message);
-        ok = protocol->sendMessage(messageProtocol);
+        protocol->sendMessage(messageProtocol);
     }
-    return ok;
 }
 
 

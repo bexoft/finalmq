@@ -121,23 +121,39 @@ void ProtocolSessionContainer::init(const IExecutorPtr& executor, int cycleTime,
     }
 }
 
-int ProtocolSessionContainer::bind(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const BindProperties& bindProperties, int contentType)
+static std::string endpointToStreamEndpoint(const std::string& endpoint, std::string* protocolName = nullptr)
 {
     size_t ixEndpoint = endpoint.find_last_of(':');
     if (ixEndpoint == std::string::npos)
     {
+        return "";
+    }
+
+    if (protocolName)
+    {
+        *protocolName = endpoint.substr(ixEndpoint + 1, endpoint.size() - (ixEndpoint + 1));
+    }
+
+    return endpoint.substr(0, ixEndpoint);
+}
+
+
+int ProtocolSessionContainer::bind(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const BindProperties& bindProperties, int contentType)
+{
+    std::string protocolName;
+    const std::string endpointStreamConnection = endpointToStreamEndpoint(endpoint, &protocolName);
+    if (endpointStreamConnection.empty())
+    {
         return -1;
     }
-    std::string protocolName = endpoint.substr(ixEndpoint + 1, endpoint.size() - (ixEndpoint + 1));
+
     IProtocolFactoryPtr protocolFactory = ProtocolRegistry::instance().getProtocolFactory(protocolName);
     if (!protocolFactory)
     {
         return -1;
     }
 
-    std::string endpointStreamConnection = endpoint.substr(0, ixEndpoint);
-
-    int err = 0;
+    int err = -1;
     std::unique_lock<std::mutex> lock(m_mutex);
     auto it = m_endpoint2Bind.find(endpoint);
     if (it == m_endpoint2Bind.end())
@@ -158,7 +174,8 @@ void ProtocolSessionContainer::unbind(const std::string& endpoint)
     if (it != m_endpoint2Bind.end())
     {
         m_endpoint2Bind.erase(it);
-        m_streamConnectionContainer->unbind(endpoint);
+        const std::string endpointStreamConnection = endpointToStreamEndpoint(endpoint);
+        m_streamConnectionContainer->unbind(endpointStreamConnection);
     }
 }
 

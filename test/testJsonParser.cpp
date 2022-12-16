@@ -279,6 +279,17 @@ TEST_F(TestJsonParser, testDouble)
     EXPECT_EQ(size, json.size());
 }
 
+TEST_F(TestJsonParser, testDoubleExponent)
+{
+    EXPECT_CALL(m_mockJsonParserVisitor, enterDouble(100.0)).Times(1);
+    EXPECT_CALL(m_mockJsonParserVisitor, finished()).Times(1);
+    std::string json = "1e2";
+    const char* res = m_parser->parse(json.c_str());
+    EXPECT_NE(res, nullptr);
+    ssize_t size = res - json.c_str();
+    EXPECT_EQ(size, json.size());
+}
+
 
 
 TEST_F(TestJsonParser, testDoubleWrongFormat)
@@ -379,17 +390,6 @@ TEST_F(TestJsonParser, testStringEscapeU16)
 }
 
 
-TEST_F(TestJsonParser, testStringEscapeU16Small)
-{
-    std::string json = "\"\\u00e4\"";
-    std::string cmp = {(char)0xc3, (char)0xa4};
-    EXPECT_CALL(m_mockJsonParserVisitor, enterString(std::move(cmp))).Times(1);
-    EXPECT_CALL(m_mockJsonParserVisitor, finished()).Times(1);
-    const char* res = m_parser->parse(json.c_str());
-    EXPECT_NE(res, nullptr);
-    ssize_t size = res - json.c_str();
-    EXPECT_EQ(size, json.size());
-}
 
 
 TEST_F(TestJsonParser, testStringEscapeU16Invalid)

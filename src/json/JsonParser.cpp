@@ -32,9 +32,6 @@
 
 namespace finalmq {
 
-static const int IGNORE_SIZE = -2;
-
-
 
 JsonParser::JsonParser(IJsonParserVisitor& visitor)
     : m_visitor(visitor)
@@ -73,15 +70,6 @@ const char* JsonParser::parseWhiteSpace(const char* str)
 
 const char* JsonParser::parse(const char* str, ssize_t size)
 {
-    const char* ret = parseValue(str, size);
-    m_visitor.finished();
-    return ret;
-}
-
-
-
-const char* JsonParser::parseValue(const char* str, ssize_t size)
-{
     if (size >= CHECK_ON_ZEROTERM)
     {
         if (size == CHECK_ON_ZEROTERM)
@@ -93,6 +81,15 @@ const char* JsonParser::parseValue(const char* str, ssize_t size)
             m_end = str + size;
         }
     }
+    const char* ret = parseValue(str);
+    m_visitor.finished();
+    return ret;
+}
+
+
+
+const char* JsonParser::parseValue(const char* str)
+{
     str = parseWhiteSpace(str);
     char c = getChar(str);
     if (c == 0)
@@ -223,11 +220,11 @@ const char* JsonParser::parseNumber(const char* str)
     bool isFloat = false;
     while ((c = getChar(str)) != 0)
     {
-        if ((c >= '0' && c <= '9') || (c == '+') || (c == '-') || (c == 'e') || (c == 'E'))
+        if ((c >= '0' && c <= '9') || (c == '+') || (c == '-'))
         {
             str++;
         }
-        else if (c == '.')
+        else if ((c == '.') || (c == 'e') || (c == 'E'))
         {
             str++;
             isFloat = true;
@@ -514,7 +511,7 @@ const char* JsonParser::parseArray(const char* str)
             m_visitor.exitArray();
             return str;
         }
-        str = parseValue(str, IGNORE_SIZE);
+        str = parseValue(str);
         if (str == nullptr)
         {
             return nullptr;
@@ -571,7 +568,7 @@ const char* JsonParser::parseObject(const char* str)
         }
 
         str++;
-        str = parseValue(str, IGNORE_SIZE);
+        str = parseValue(str);
         if (str == nullptr)
         {
             return nullptr;

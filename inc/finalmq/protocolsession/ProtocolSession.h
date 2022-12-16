@@ -69,7 +69,7 @@ public:
 private:
     // IProtocolSession
     virtual IMessagePtr createMessage() const override;
-    virtual bool sendMessage(const IMessagePtr& msg, bool isReply = false) override;
+    virtual void sendMessage(const IMessagePtr& msg, bool isReply = false) override;
     virtual std::int64_t getSessionId() const;
     virtual ConnectionData getConnectionData() const override;
     virtual int getContentType() const override;
@@ -107,18 +107,18 @@ private:
     virtual void reconnect() override;
     virtual bool findSessionByName(const std::string& sessionName, const IProtocolPtr& protocol) override;
     virtual void setSessionName(const std::string& sessionName, const IProtocolPtr& protocol, const IStreamConnectionPtr& connection) override;
-    virtual void pollRequest(std::int64_t connectionId, int timeout, int pollCountMax) override;
+    virtual void pollRequest(const IProtocolPtr& protocol, int timeout, int pollCountMax) override;
     virtual void activity() override;
     virtual void setActivityTimeout(int timeout) override;
     virtual void setPollMaxRequests(int maxRequests) override;
-    virtual void disconnectedMultiConnection(const IStreamConnectionPtr& connection) override;
+    virtual void disconnectedMultiConnection(const IProtocolPtr& protocol) override;
 
     IMessagePtr convertMessageToProtocol(const IMessagePtr& msg);
     void initProtocolValues();
     void sendBufferedMessages();
     void addSessionToList(bool verified);
     void getProtocolFromConnectionId(IProtocolPtr& protocol, std::int64_t connectionId);
-    bool sendMessage(const IMessagePtr& message, const IProtocolPtr& protocol);
+    void sendMessage(const IMessagePtr& message, const IProtocolPtr& protocol);
     void cleanupMultiConnection();
     void pollRelease();
 
@@ -146,7 +146,6 @@ private:
     std::atomic_bool                                m_protocolSet{false};
     bool                                            m_triggerConnected = false;
     bool                                            m_triggerDisconnected = false;
-    const bool                                      m_incomingConnection = false;
 
     const std::shared_ptr<IStreamConnectionContainer>   m_streamConnectionContainer;
     std::string                                         m_endpointStreamConnection;
@@ -158,14 +157,13 @@ private:
 
     std::deque<IMessagePtr>                         m_pollMessages;
     int                                             m_pollMaxRequests = 10000;
-    IMessagePtr                                     m_pollReply;
-    bool                                            m_pollWaiting = false;
-    std::int64_t                                    m_pollConnectionId = 0;
+//    IMessagePtr                                     m_pollReply;
+    IProtocolPtr                                    m_pollProtocol = nullptr;
     PollingTimer                                    m_pollTimer;
     int                                             m_pollCountMax = 0;
     int                                             m_pollCounter = 0;
 
-    int                                             m_activityTimeout = -1;
+    std::atomic<int>                                m_activityTimeout{ -1 };
     PollingTimer                                    m_activityTimer;
 
     bool                                            m_verified = false;

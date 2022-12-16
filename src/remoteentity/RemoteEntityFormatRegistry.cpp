@@ -25,6 +25,7 @@
 #include "finalmq/variant/Variant.h"
 #include "finalmq/variant/VariantValueStruct.h"
 #include "finalmq/variant/VariantValues.h"
+#include "finalmq/helpers/ModulenameFinalmq.h"
 
 #include <mutex>
 #include <atomic>
@@ -100,6 +101,7 @@ bool RemoteEntityFormatRegistryImpl::serialize(IMessage& message, int contentTyp
         it->second->serialize(message, header, structBase);
         return true;
     }
+    streamError << "ContentType not found: " << contentType;
     return false;
 }
 
@@ -139,6 +141,7 @@ bool RemoteEntityFormatRegistryImpl::serializeData(IMessage& message, int conten
         it->second->serializeData(message, structBase);
         return true;
     }
+    streamError << "ContentType not found: " << contentType;
     return false;
 }
 
@@ -232,9 +235,8 @@ static void metainfoToHeader(Header& header, IMessage::Metainfo& metainfo)
 }
 
 
-bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, const std::string& virtualSessionId, Header& header, Variant&& echoData, const StructBase* structBase, IMessage::Metainfo* metainfo, Variant* controlData)
+void RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, const std::string& virtualSessionId, Header& header, Variant&& echoData, const StructBase* structBase, IMessage::Metainfo* metainfo, Variant* controlData)
 {
-    bool ok = true;
     assert(session);
     if (shallSend(header, session))
     {
@@ -297,6 +299,7 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, co
         }
         if (pureData == nullptr)
         {
+            bool ok = false;
             if (!session->doesSupportMetainfo() || (session->isSendRequestByPoll() && header.mode == MsgMode::MSG_REQUEST))
             {
                 ok = serialize(*message, session->getContentType(), header, structBase);
@@ -305,23 +308,23 @@ bool RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, co
             {
                 ok = serializeData(*message, session->getContentType(), structBase);
             }
+            if (!ok)
+            {
+                streamError << "Could not send, because of error in serialization (content type). should never happen, because bind() or connect() have failed before.";
+                throw std::logic_error("Could not send, because of error in serialization (content type). should never happen, because bind() or connect() have failed before.");
+            }
         }
         else
         {
-            ok = true;
             message->addSendPayload(pureData->data(), pureData->size());
         }
-        if (ok)
+        if (!virtualSessionId.empty())
         {
-            if (!virtualSessionId.empty())
-            {
-                Variant& controlData = message->getControlData();
-                controlData.add(FMQ_VIRTUAL_SESSION_ID, virtualSessionId);
-            }
-            ok = session->sendMessage(message, (header.mode == MsgMode::MSG_REPLY));
+            Variant& controlData = message->getControlData();
+            controlData.add(FMQ_VIRTUAL_SESSION_ID, virtualSessionId);
         }
+        session->sendMessage(message, (header.mode == MsgMode::MSG_REPLY));
     }
-    return ok;
 }
 
 

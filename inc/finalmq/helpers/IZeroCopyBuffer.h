@@ -34,6 +34,7 @@ struct IZeroCopyBuffer
 
     virtual char* addBuffer(ssize_t size, ssize_t reserve = 0) = 0;
     virtual void downsizeLastBuffer(ssize_t newSize) = 0;
+    virtual ssize_t getRemainingSize() const = 0;
 };
 
 

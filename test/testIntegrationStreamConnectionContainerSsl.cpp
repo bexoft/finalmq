@@ -54,7 +54,7 @@ public:
     {
         std::string message;
         message.resize(bytesToRead);
-        socket->receive((char*)message.data(), message.size());
+        socket->receive(const_cast<char*>(message.data()), static_cast<int>(message.size()));
         m_messagesServer.push_back(std::move(message));
         return true;
     }

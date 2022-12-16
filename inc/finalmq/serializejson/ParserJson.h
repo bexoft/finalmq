@@ -63,21 +63,15 @@ private:
     template<class T>
     void enterNumber(T value);
 
-    struct State
-    {
-        explicit State(const MetaField* f)
-            : field(f)
-        {
-        }
-        const MetaField* field;
-    };
+    template< class T>
+    T convert(const char* value, ssize_t size);
 
     const char*         m_ptr = nullptr;
     ssize_t             m_size = 0;
     IParserVisitor&     m_visitor;
     JsonParser          m_parser;
 
-    std::deque<State>   m_stack;
+    std::deque<const MetaField*>   m_stack;
     const MetaStruct*   m_structCurrent = nullptr;
     const MetaField*    m_fieldCurrent = nullptr;
 

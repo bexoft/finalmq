@@ -106,8 +106,6 @@ private:
         SerializerVariant&              m_outer;
     };
 
-    IParserVisitor& getIParserVisitorForParserConverter(bool skipDefaultValues);
-
     Internal                                    m_internal;
     std::shared_ptr<ParserProcessDefaultValues> m_parserProcessDefaultValues;
 };

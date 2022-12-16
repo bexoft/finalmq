@@ -32,7 +32,7 @@ namespace finalmq {
 // ProtocolStream
 //---------------------------------------
 
-const int ProtocolDelimiterLinefeed::PROTOCOL_ID = 3;
+const std::uint32_t ProtocolDelimiterLinefeed::PROTOCOL_ID = 3;
 const std::string ProtocolDelimiterLinefeed::PROTOCOL_NAME = "delimiter_lf";
 
 

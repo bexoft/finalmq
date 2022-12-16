@@ -84,7 +84,7 @@ struct IStreamConnectionCallback
 struct IStreamConnection
 {
     virtual ~IStreamConnection() {}
-    virtual bool sendMessage(const IMessagePtr& msg) = 0;
+    virtual void sendMessage(const IMessagePtr& msg) = 0;
     virtual ConnectionData getConnectionData() const = 0;
     virtual ConnectionState getConnectionState() const = 0;
     virtual std::int64_t getConnectionId() const = 0;
@@ -122,7 +122,7 @@ public:
 
 private:
     // IStreamConnection
-    virtual bool sendMessage(const IMessagePtr& msg) override;
+    virtual void sendMessage(const IMessagePtr& msg) override;
     virtual ConnectionData getConnectionData() const override;
     virtual ConnectionState getConnectionState() const override;
     virtual std::int64_t getConnectionId() const override;

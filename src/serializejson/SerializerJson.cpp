@@ -28,6 +28,7 @@
 
 #include <assert.h>
 #include <algorithm>
+#include <cmath>
 
 namespace finalmq {
 
@@ -130,7 +131,7 @@ void SerializerJson::Internal::enterInt64(const MetaField& field, std::int64_t v
 {
     assert(field.typeId == MetaTypeId::TYPE_INT64);
     setKey(field);
-    m_jsonBuilder.enterInt64(value);
+    m_jsonBuilder.enterString(std::to_string(value));
 }
 
 void SerializerJson::Internal::enterUInt64(const MetaField& field, std::uint64_t value)
@@ -140,18 +141,38 @@ void SerializerJson::Internal::enterUInt64(const MetaField& field, std::uint64_t
     m_jsonBuilder.enterString(std::to_string(value));
 }
 
+void SerializerJson::Internal::handleDouble(double value)
+{
+    if (std::isnan(value))
+    {
+        m_jsonBuilder.enterString("NaN");
+    }
+    else if (value == std::numeric_limits<double>::infinity())
+    {
+        m_jsonBuilder.enterString("Infinity");
+    }
+    else if (value == -std::numeric_limits<double>::infinity())
+    {
+        m_jsonBuilder.enterString("-Infinity");
+    }
+    else
+    {
+        m_jsonBuilder.enterDouble(value);
+    }
+}
+
 void SerializerJson::Internal::enterFloat(const MetaField& field, float value)
 {
     assert(field.typeId == MetaTypeId::TYPE_FLOAT);
     setKey(field);
-    m_jsonBuilder.enterDouble(value);
+    handleDouble(value);
 }
 
 void SerializerJson::Internal::enterDouble(const MetaField& field, double value)
 {
     assert(field.typeId == MetaTypeId::TYPE_DOUBLE);
     setKey(field);
-    m_jsonBuilder.enterDouble(value);
+    handleDouble(value);
 }
 
 void SerializerJson::Internal::enterString(const MetaField& field, std::string&& value)
@@ -299,7 +320,7 @@ void SerializerJson::Internal::enterArrayInt64(const MetaField& field, const std
     setKey(field);
     m_jsonBuilder.enterArray();
     std::for_each(value, value + size, [this] (std::int64_t entry) {
-        m_jsonBuilder.enterInt64(entry);
+        m_jsonBuilder.enterString(std::to_string(entry));
     });
     m_jsonBuilder.exitArray();
 }
@@ -331,7 +352,7 @@ void SerializerJson::Internal::enterArrayFloat(const MetaField& field, const flo
     setKey(field);
     m_jsonBuilder.enterArray();
     std::for_each(value, value + size, [this] (float entry) {
-        m_jsonBuilder.enterDouble(entry);
+        handleDouble(entry);
     });
     m_jsonBuilder.exitArray();
 }
@@ -347,7 +368,7 @@ void SerializerJson::Internal::enterArrayDouble(const MetaField& field, const do
     setKey(field);
     m_jsonBuilder.enterArray();
     std::for_each(value, value + size, [this] (double entry) {
-        m_jsonBuilder.enterDouble(entry);
+        handleDouble(entry);
     });
     m_jsonBuilder.exitArray();
 }

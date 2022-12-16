@@ -33,6 +33,7 @@
 #include <assert.h>
 //#include <memory.h>
 #include <iostream>
+#include <cmath>
 
 
 namespace finalmq {
@@ -201,6 +202,54 @@ void ParserJson::enterDouble(double value)
     enterNumber(value);
 }
 
+
+template<>
+float ParserJson::convert<float>(const char* value, ssize_t size)
+{
+    float v = 0;
+    if (size == 3 && memcmp(value, "NaN", 3) == 0)
+    {
+        v = NAN;
+    }
+    else if (size == 8 && memcmp(value, "Infinity", 8) == 0)
+    {
+        v = std::numeric_limits<float>::infinity();;
+    }
+    else if (size == 9 && memcmp(value, "-Infinity", 9) == 0)
+    {
+        v = -std::numeric_limits<float>::infinity();;
+    }
+    else
+    {
+        v = strtof32(value, nullptr);
+    }
+    return v;
+}
+
+template<>
+double ParserJson::convert<double>(const char* value, ssize_t size)
+{
+    double v = 0;
+    if (size == 3 && memcmp(value, "NaN", 3) == 0)
+    {
+        v = NAN;
+    }
+    else if (size == 8 && memcmp(value, "Infinity", 8) == 0)
+    {
+        v = std::numeric_limits<double>::infinity();;
+    }
+    else if (size == 9 && memcmp(value, "-Infinity", 9) == 0)
+    {
+        v = -std::numeric_limits<double>::infinity();;
+    }
+    else
+    {
+        v = strtof64(value, nullptr);
+    }
+    return v;
+}
+
+
 void ParserJson::enterString(const char* value, ssize_t size)
 {
     if (!m_fieldCurrent)
@@ -242,13 +291,13 @@ void ParserJson::enterString(const char* value, ssize_t size)
         break;
     case MetaTypeId::TYPE_FLOAT:
         {
-            float v = strtof32(value, nullptr);
+            float v = convert<float>(value, size);
             m_visitor.enterFloat(*m_fieldCurrent, v);
         }
         break;
     case MetaTypeId::TYPE_DOUBLE:
         {
-            double v = strtof64(value, nullptr);
+            double v = convert<double>(value, size);
             m_visitor.enterDouble(*m_fieldCurrent, v);
         }
         break;
@@ -298,13 +347,13 @@ void ParserJson::enterString(const char* value, ssize_t size)
         break;
     case MetaTypeId::TYPE_ARRAY_FLOAT:
         {
-            float v = strtof32(value, nullptr);
+            float v = convert<float>(value, size);
             m_arrayFloat.push_back(v);
         }
         break;
     case MetaTypeId::TYPE_ARRAY_DOUBLE:
         {
-            double v = strtof64(value, nullptr);
+            double v = convert<double>(value, size);
             m_arrayDouble.push_back(v);
         }
         break;
@@ -378,13 +427,13 @@ void ParserJson::enterString(std::string&& value)
         break;
     case MetaTypeId::TYPE_FLOAT:
         {
-            float v = strtof32(value.c_str(), nullptr);
+            float v = convert<float>(value.c_str(), value.size());
             m_visitor.enterFloat(*m_fieldCurrent, v);
         }
         break;
     case MetaTypeId::TYPE_DOUBLE:
         {
-            double v = strtof64(value.c_str(), nullptr);
+            double v = convert<double>(value.c_str(), value.size());
             m_visitor.enterDouble(*m_fieldCurrent, v);
         }
         break;
@@ -434,13 +483,13 @@ void ParserJson::enterString(std::string&& value)
         break;
     case MetaTypeId::TYPE_ARRAY_FLOAT:
         {
-            float v = strtof32(value.c_str(), nullptr);
+            float v = convert<float>(value.c_str(), value.size());
             m_arrayFloat.push_back(v);
         }
         break;
     case MetaTypeId::TYPE_ARRAY_DOUBLE:
         {
-            double v = strtof64(value.c_str(), nullptr);
+            double v = convert<double>(value.c_str(), value.size());
             m_arrayDouble.push_back(v);
         }
         break;
@@ -598,7 +647,7 @@ void ParserJson::exitArray()
         if (!m_stack.empty())
         {
 //            m_stack.pop_back();
-            m_fieldCurrent = m_stack.back().field;
+            m_fieldCurrent = m_stack.back();
             if (m_fieldCurrent)
             {
                 m_visitor.exitArrayStruct(*m_fieldCurrent);
@@ -608,7 +657,7 @@ void ParserJson::exitArray()
 
         if (!m_stack.empty())
         {
-            m_fieldCurrent = m_stack.back().field;
+            m_fieldCurrent = m_stack.back();
             if (m_fieldCurrent)
             {
                 m_structCurrent = MetaDataGlobal::instance().getStruct(*m_fieldCurrent);
@@ -651,7 +700,7 @@ void ParserJson::exitObject()
     m_fieldCurrent = nullptr;
     if (!m_stack.empty())
     {
-        m_fieldCurrent = m_stack.back().field;
+        m_fieldCurrent = m_stack.back();
                               // the outer object shall not trigger exitStruct
         if (m_fieldCurrent && (m_stack.size() > 1))
         {
@@ -661,7 +710,7 @@ void ParserJson::exitObject()
     }
     if (!m_stack.empty())
     {
-        m_fieldCurrent = m_stack.back().field;
+        m_fieldCurrent = m_stack.back();
         if (m_fieldCurrent)
         {
             if ((int)m_fieldCurrent->typeId & (int)MetaTypeId::OFFSET_ARRAY_FLAG)

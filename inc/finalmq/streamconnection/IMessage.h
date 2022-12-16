@@ -72,6 +72,7 @@ struct IMessage : public IZeroCopyBuffer
     virtual BufferRef getReceiveHeader() const = 0;
     virtual BufferRef getReceivePayload() const = 0;
     virtual char* resizeReceiveBuffer(ssize_t size) = 0;
+    virtual void setReceiveBuffer(const std::shared_ptr<std::string>& receiveBuffer, ssize_t offset, ssize_t size) = 0;
     virtual void setHeaderSize(ssize_t sizeHeader) = 0;
 
     // for the framework

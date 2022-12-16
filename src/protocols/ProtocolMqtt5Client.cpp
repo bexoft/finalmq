@@ -50,7 +50,7 @@
 
 namespace finalmq {
 
-const int ProtocolMqtt5Client::PROTOCOL_ID = 5;
+const std::uint32_t ProtocolMqtt5Client::PROTOCOL_ID = 5;
 const std::string ProtocolMqtt5Client::PROTOCOL_NAME = "mqtt5client";
 
 const std::string ProtocolMqtt5Client::KEY_USERNAME = "username";
@@ -305,8 +305,12 @@ IProtocol::FuncCreateMessage ProtocolMqtt5Client::getMessageFactory() const
     };
 }
 
-bool ProtocolMqtt5Client::sendMessage(IMessagePtr message)
+void ProtocolMqtt5Client::sendMessage(IMessagePtr message)
 {
+    if (message == nullptr)
+    {
+        return;
+    }
     std::unique_lock<std::mutex> lock(m_mutex);
     IStreamConnectionPtr connection = m_connection;
     lock.unlock();
@@ -355,7 +359,6 @@ bool ProtocolMqtt5Client::sendMessage(IMessagePtr message)
         data.topic = std::move(topic);
         m_client->publish(connection, std::move(data), message);
     }
-    return true;
 }
 
 void ProtocolMqtt5Client::moveOldProtocolState(IProtocol& /*protocolOld*/) 

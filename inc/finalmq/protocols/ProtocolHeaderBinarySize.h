@@ -34,7 +34,7 @@ namespace finalmq {
 class SYMBOLEXP ProtocolHeaderBinarySize : public IProtocol
 {
 public:
-    static const int PROTOCOL_ID;           // 2
+    static const std::uint32_t PROTOCOL_ID;           // 2
     static const std::string PROTOCOL_NAME; // headersize
 
     ProtocolHeaderBinarySize();
@@ -55,7 +55,7 @@ private:
     virtual bool isSendRequestByPoll() const override;
     virtual bool doesSupportFileTransfer() const override;
     virtual FuncCreateMessage getMessageFactory() const override;
-    virtual bool sendMessage(IMessagePtr message) override;
+    virtual void sendMessage(IMessagePtr message) override;
     virtual void moveOldProtocolState(IProtocol& protocolOld) override;
     virtual bool received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) override;
     virtual hybrid_ptr<IStreamConnectionCallback> connected(const IStreamConnectionPtr& connection) override;

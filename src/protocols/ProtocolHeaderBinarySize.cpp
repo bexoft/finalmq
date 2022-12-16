@@ -30,7 +30,7 @@
 
 namespace finalmq {
 
-const int ProtocolHeaderBinarySize::PROTOCOL_ID = 2;
+const std::uint32_t ProtocolHeaderBinarySize::PROTOCOL_ID = 2;
 const std::string ProtocolHeaderBinarySize::PROTOCOL_NAME = "headersize";
 
 
@@ -135,23 +135,27 @@ IProtocol::FuncCreateMessage ProtocolHeaderBinarySize::getMessageFactory() const
     };
 }
 
-bool ProtocolHeaderBinarySize::sendMessage(IMessagePtr message)
+void ProtocolHeaderBinarySize::sendMessage(IMessagePtr message)
 {
+    if (message == nullptr)
+    {
+        return;
+    }
     if (!message->wasSent())
     {
         ssize_t sizePayload = message->getTotalSendPayloadSize();
         const std::list<BufferRef>& buffers = message->getAllSendBuffers();
         assert(!buffers.empty());
-        assert(buffers.begin()->second >= 4);
+        assert(buffers.begin()->second >= HEADERSIZE);
         char* header = buffers.begin()->first;
-        for (int i = 0; i < 4; ++i)
+        for (int i = 0; i < HEADERSIZE; ++i)
         {
             header[i] = (sizePayload >> (i * 8)) & 0xff;
         }
         message->prepareMessageToSend();
     }
     assert(m_connection);
-    return m_connection->sendMessage(message);
+    m_connection->sendMessage(message);
 }
 
 void ProtocolHeaderBinarySize::moveOldProtocolState(IProtocol& /*protocolOld*/)

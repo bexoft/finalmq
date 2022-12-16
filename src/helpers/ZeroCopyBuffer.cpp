@@ -79,4 +79,9 @@ void ZeroCopyBuffer::downsizeLastBuffer(ssize_t newSize)
     }
 }
 
+ssize_t ZeroCopyBuffer::getRemainingSize() const
+{
+    return 0;
+}
+
 }   // namespace finalmq

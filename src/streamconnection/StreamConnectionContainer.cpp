@@ -195,6 +195,10 @@ int StreamConnectionContainer::bind(const std::string& endpoint, hybrid_ptr<IStr
             m_sd2binds.emplace(sd->getDescriptor(), BindData{connectionData, socket, callbackDefault});
             m_poller->addSocketEnableRead(sd);
         }
+        else
+        {
+            err = -1;
+        }
         locker.unlock();
     }
     return err;

@@ -58,6 +58,7 @@ protected:
         m_data.resize(MAX_BLOCK_SIZE);
         EXPECT_CALL(m_mockBuffer, addBuffer(MAX_BLOCK_SIZE, _)).Times(1).WillOnce(Return((char*)m_data.data()));
         EXPECT_CALL(m_mockBuffer, downsizeLastBuffer(_)).Times(1).WillOnce(Invoke(&m_data, &String::resize));
+        EXPECT_CALL(m_mockBuffer, getRemainingSize()).WillRepeatedly(Return(0));
 
         m_builder = std::unique_ptr<JsonBuilder>(new JsonBuilder(m_mockBuffer, MAX_BLOCK_SIZE));
     }
@@ -154,6 +155,15 @@ TEST_F(TestJsonBuilder, testInt64_1234567890123456789)
     m_builder->enterInt64(VALUE);
     m_builder->finished();
     EXPECT_EQ(m_data, "1234567890123456789");
+}
+
+TEST_F(TestJsonBuilder, testInt64_n1234567890123456789)
+{
+    static const std::int64_t VALUE = -1234567890123456789;
+
+    m_builder->enterInt64(VALUE);
+    m_builder->finished();
+    EXPECT_EQ(m_data, "-1234567890123456789");
 }
 
 TEST_F(TestJsonBuilder, testUInt64_2234567890123456789)

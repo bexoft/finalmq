@@ -33,7 +33,7 @@ namespace finalmq {
 class SYMBOLEXP SerializerJson : public ParserConverter
 {
 public:
-    SerializerJson(IZeroCopyBuffer& buffer, int maxBlockSize = 1024, bool enumAsString = true, bool skipDefaultValues = true);
+    SerializerJson(IZeroCopyBuffer& buffer, int maxBlockSize = 512, bool enumAsString = true, bool skipDefaultValues = true);
 
 private:
     class Internal : public IParserVisitor
@@ -92,12 +92,12 @@ private:
 
         void setKey(const MetaField& field);
 
+        void handleDouble(double value);
+
         std::unique_ptr<IJsonParserVisitor> m_uniqueJsonBuilder;
         IJsonParserVisitor&                 m_jsonBuilder;
         bool                                m_enumAsString = true;
     };
-
-    IParserVisitor& getIParserVisitorForParserConverter(bool skipDefaultValues);
 
     Internal                            m_internal;
     std::unique_ptr<IParserVisitor>     m_parserProcessDefaultValues;
