@@ -149,6 +149,8 @@ void VarValueToVariant::processVarValue(const variant::VarValue& varValue, Varia
             }
         }
         break;
+    default:
+        break;
     }
 }
 
