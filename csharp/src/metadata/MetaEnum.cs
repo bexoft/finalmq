@@ -123,14 +123,16 @@ namespace finalmq
             }
             return "";
         }
-        public string? GetAliasByValue(int value)
+        public string GetAliasByValue(int value)
         {
             MetaEnumEntry? entry = GetEntryById(value);
             if (entry != null)
             {
-                if (entry.Alias?.Length != 0)
+                string? alias = entry.Alias;
+                if (alias?.Length != 0)
                 {
-                    return entry.Alias;
+                    Debug.Assert(alias != null);
+                    return alias;
                 }
                 return entry.Name;
             }
@@ -139,14 +141,16 @@ namespace finalmq
                 entry = GetEntryById(0);
                 if (entry != null)
                 {
-                    if (entry.Alias?.Length != 0)
+                    string? alias = entry.Alias;
+                    if (alias?.Length != 0)
                     {
-                        return entry.Alias;
+                        Debug.Assert(alias != null);
+                        return alias;
                     }
                     return entry.Name;
                 }
             }
-            return "";
+            return "Unknown enum value (" + value + ") of " + m_typeName + ", default enum is also not defined";
         }
 
         public void AddEntry(MetaEnumEntry entry)

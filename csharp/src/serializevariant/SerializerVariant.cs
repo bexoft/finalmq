@@ -49,20 +49,20 @@ namespace finalmq
 
                 if (field.TypeName == STR_VARVALUE)
                 {
-                    //todo                    m_varValueToVariant = null;
+                    m_varValueToVariant = null;
                     Variant variant = new Variant();
                     m_current.Add(field.Name, variant);
-                    //todo                    m_varValueToVariant = new VarValueToVariant(variant);
-                    //todo                    m_outer.SetVisitor(m_varValueToVariant.GetVisitor());
-                    //todo                    m_outer.m_parserProcessDefaultValues.SetVisitor(m_varValueToVariant.GetVisitor());
-                    //                    m_varValueToVariant.SetExitNotification([this, &field]() {
-                    //                        assert(m_varValueToVariant);
-                    //m_outer.ParserConverter::setVisitor(*m_outer.m_parserProcessDefaultValues);
-                    //m_outer.m_parserProcessDefaultValues->resetVarValueActive();
-                    // m_outer.m_parserProcessDefaultValues->setVisitor(*this);
-                    //m_varValueToVariant->convert();
-                    //m_varValueToVariant->setExitNotification(-1);
-                    //});
+                    m_varValueToVariant = new VarValueToVariant(variant);
+//todo                    m_outer.SetVisitor(m_varValueToVariant.GetVisitor());
+//todo                    m_outer.m_parserProcessDefaultValues.SetVisitor(m_varValueToVariant.GetVisitor());
+                    m_varValueToVariant.SetExitNotification(() => {
+                        Debug.Assert(m_varValueToVariant != null);
+                        m_outer.SetVisitor(m_outer.m_parserProcessDefaultValues);
+                        m_outer.m_parserProcessDefaultValues.ResetVarValueActive();
+                        m_outer.m_parserProcessDefaultValues.SetVisitor(this);
+                        m_varValueToVariant.Convert();
+                        m_varValueToVariant.SetExitNotification(null);
+                    });
                 }
                 else
                 {
@@ -302,7 +302,7 @@ namespace finalmq
             Variant? m_current = null;
             readonly IList<Variant> m_stack = new List<Variant>();
             readonly bool m_enumAsString = true;
-//todo            VarValueToVariant m_varValueToVariant;
+            VarValueToVariant? m_varValueToVariant = null;
             readonly SerializerVariant m_outer;
         }
 

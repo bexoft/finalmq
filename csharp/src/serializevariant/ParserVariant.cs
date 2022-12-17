@@ -102,8 +102,8 @@ namespace finalmq
                         m_visitor.EnterStruct(field);
                         if (field.TypeName == STR_VARVALUE)
                         {
-//todo                            VariantToVarValue variantToVarValue(*sub, m_visitor);
-//todo                            variantToVarValue.convert();
+                            VariantToVarValue variantToVarValue = new VariantToVarValue(sub, m_visitor);
+                            variantToVarValue.Convert();
                         }
                         else
                         {
@@ -238,8 +238,8 @@ namespace finalmq
                         m_visitor.EnterStruct(field);
                         if (field.TypeName == STR_VARVALUE)
                         {
-//todo                            VariantToVarValue variantToVarValue(Variant(), m_visitor);
-//todo                            variantToVarValue.convert();
+                            VariantToVarValue variantToVarValue = new VariantToVarValue(new Variant(), m_visitor);
+                            variantToVarValue.Convert();
                         }
                         else
                         {

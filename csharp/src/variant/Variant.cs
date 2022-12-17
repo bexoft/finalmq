@@ -121,7 +121,7 @@ namespace finalmq
             return m_value.Equals(rhs.m_value);
         }
 
-        public void Accept(IVariantVisitor visitor, int index, int level, int size, string name)
+        public void Accept(IVariantVisitor visitor, int index = 0, int level = 0, int size = 0, string name = "")
         {
             if (m_value != null)
             {

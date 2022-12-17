@@ -18,7 +18,7 @@ namespace finalmq
         {
             m_visitor = visitor;
         }
-        public void resetVarValueActive()
+        public void ResetVarValueActive()
         {
             m_varValueActive = 0;
         }
