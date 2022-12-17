@@ -23,11 +23,12 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Net.Security;
+using System.Diagnostics;
 
 
 namespace finalmq {
 
-    public interface IStreamConnectionContainer
+    public interface IStreamConnectionContainer : IDisposable
     {
         int CheckReconnectInterval { get; set; }
         void Bind(string endpoint, IStreamConnectionCallback callback, BindProperties? bindProperties = null);
@@ -49,7 +50,6 @@ namespace finalmq {
 
     public class StreamConnectionContainer : IStreamConnectionContainer
                                            , IStreamConnectionContainerPrivate
-                                           , IDisposable
     {
         private bool m_disposed = false;
 
@@ -57,6 +57,7 @@ namespace finalmq {
         {
             m_timerReconnect.Elapsed += (Object? source, System.Timers.ElapsedEventArgs e) => { DoReconnect(); };
             m_timerReconnect.AutoReset = true;
+            m_timerReconnect.Interval = 1000;
             m_timerReconnect.Enabled = true;
         }
 
@@ -67,7 +68,10 @@ namespace finalmq {
 
         public void Dispose()
         {
-            Dispose(true);
+            lock (m_mutex)
+            {
+                Dispose(true);
+            }
             GC.SuppressFinalize(this);
         }
 
@@ -129,6 +133,10 @@ namespace finalmq {
             BindData? bindData = null;
             lock (m_mutex)
             {
+                if (m_disposed)
+                {
+                    throw new ObjectDisposedException(GetType().FullName);
+                }
                 if (!m_endpoint2binds.ContainsKey(endpoint))
                 {
                     listener = new TcpListener(address, connectionData.Port);
@@ -140,30 +148,48 @@ namespace finalmq {
             if (listener != null && bindData != null)
             {
                 listener.Start();
-                AsyncCallback callbackAccept = new AsyncCallback((IAsyncResult ar) => {
+
+                AsyncCallback? callbackAccept = null;
+                callbackAccept = new AsyncCallback((IAsyncResult ar) => {
+                    Debug.Assert(callbackAccept != null);
+                    if (ar != null && ar.CompletedSynchronously)
+                    {
+                        return;
+                    }
                     try
                     {
-                        TcpClient tcpClient = listener.EndAcceptTcpClient(ar);
-                        if (bindProperties != null && bindProperties.SslServerOptions != null)
+                        for (; ; )
                         {
-                            SslServerOptions sslServerOptions = bindProperties.SslServerOptions;
-                            SslStream sslStream = new SslStream(tcpClient.GetStream(), false, sslServerOptions.UserCertificateValidationCallback,
-                                                                sslServerOptions.UserCertificateSelectionCallback, sslServerOptions.EncryptionPolicy);
-                            StartIncomingSslConnection(bindData, sslStream, sslServerOptions);
+                            if (ar != null)
+                            {
+                                TcpClient tcpClient = listener.EndAcceptTcpClient(ar);
+                                if (bindProperties != null && bindProperties.SslServerOptions != null)
+                                {
+                                    SslServerOptions sslServerOptions = bindProperties.SslServerOptions;
+                                    SslStream sslStream = new SslStream(tcpClient.GetStream(), false, sslServerOptions.UserCertificateValidationCallback,
+                                                                        sslServerOptions.UserCertificateSelectionCallback, sslServerOptions.EncryptionPolicy);
+                                    StartIncomingSslConnection(bindData, sslStream, sslServerOptions);
+                                }
+                                else
+                                {
+                                    Stream stream = tcpClient.GetStream();
+                                    StartIncomingConnection(bindData, stream);
+                                }
+                            }
+                            ar = listener.BeginAcceptTcpClient(callbackAccept, null);
+                            if (!ar.CompletedSynchronously)
+                            {
+                                return;
+                            }
                         }
-                        else
-                        {
-                            Stream stream = tcpClient.GetStream();
-                            StartIncomingConnection(bindData, stream);
-                        }
-                        AsyncCallback? c = (AsyncCallback?)ar.AsyncState;
-                        listener.BeginAcceptTcpClient(c, c);
                     }
                     catch (Exception)
                     {
                     }
                 });
-                listener.BeginAcceptTcpClient(callbackAccept, callbackAccept);
+#pragma warning disable CS8625 // Ein NULL-Literal kann nicht in einen Non-Nullable-Verweistyp konvertiert werden.
+                callbackAccept(null);
+#pragma warning restore CS8625 // Ein NULL-Literal kann nicht in einen Non-Nullable-Verweistyp konvertiert werden.
             }
         }
 
@@ -200,28 +226,48 @@ namespace finalmq {
             IStreamConnectionPrivate connection = new StreamConnection(connectionData, stream, callback, this);
             lock (m_mutex)
             {
+                if (m_disposed)
+                {
+                    throw new ObjectDisposedException(GetType().FullName);
+                }
                 m_connectionId2Connection[connectionId] = connection;
             }
             return connection;
         }
-
+        
         private void StartReading(Stream stream, IStreamConnectionPrivate connection)
         {
             long connectionId = connection.ConnectionId;
             byte[] buffer = new byte[4096];
-            AsyncCallback callbackRead = new AsyncCallback((IAsyncResult ar) => {
+            AsyncCallback? callbackRead = null;
+            callbackRead = new AsyncCallback((IAsyncResult ar) => {
+                Debug.Assert(callbackRead != null);
+                if (ar != null && ar.CompletedSynchronously)
+                {
+                    return;
+                }
                 try
                 {
-                    int count = stream.EndRead(ar);
-                    if (count > 0)
+                    for (; ; )
                     {
-                        connection.Received(buffer, count);
-                        AsyncCallback? c = (AsyncCallback?)ar.AsyncState;
-                        stream.BeginRead(buffer, 0, buffer.Length, c, c);
-                    }
-                    else
-                    {
-                        ((IStreamConnectionContainerPrivate)this).Disconnect(connection);
+                        if (ar != null)
+                        {
+                            int count = stream.EndRead(ar);
+                            if (count > 0)
+                            {
+                                connection.Received(buffer, count);
+                            }
+                            else
+                            {
+                                ((IStreamConnectionContainerPrivate)this).Disconnect(connection);
+                                return;
+                            }
+                        }
+                        ar = stream.BeginRead(buffer, 0, buffer.Length, callbackRead, null);
+                        if (!ar.CompletedSynchronously)
+                        {
+                            return;
+                        }
                     }
                 }
                 catch (Exception)
@@ -229,8 +275,10 @@ namespace finalmq {
                     ((IStreamConnectionContainerPrivate)this).Disconnect(connection);
                 }
             });
-            stream.BeginRead(buffer, 0, buffer.Length, callbackRead, callbackRead);
-        }
+#pragma warning disable CS8625 // Ein NULL-Literal kann nicht in einen Non-Nullable-Verweistyp konvertiert werden.
+            callbackRead(null);
+#pragma warning restore CS8625 // Ein NULL-Literal kann nicht in einen Non-Nullable-Verweistyp konvertiert werden.
+        }        
 
         public IStreamConnection Connect(string endpoint, IStreamConnectionCallback callback, ConnectProperties? connectProperties = null)
         {
@@ -270,6 +318,10 @@ namespace finalmq {
 
             lock (m_mutex)
             {
+                if (m_disposed)
+                {
+                    throw new ObjectDisposedException(GetType().FullName);
+                }
                 m_connectionId2Conns[connectionData.ConnectionId] = new ConnData(tcpClient);
             }
 
@@ -344,6 +396,10 @@ namespace finalmq {
             IList<IStreamConnection> connections = new List<IStreamConnection>();
             lock (m_mutex)
             {
+                if (m_disposed)
+                {
+                    throw new ObjectDisposedException(GetType().FullName);
+                }
                 foreach (var entry in m_connectionId2Connection)
                 {
                     connections.Add(entry.Value);
@@ -356,6 +412,10 @@ namespace finalmq {
         {
             lock (m_mutex)
             {
+                if (m_disposed)
+                {
+                    throw new ObjectDisposedException(GetType().FullName);
+                }
                 IStreamConnectionPrivate? connection = null;
                 m_connectionId2Connection.TryGetValue(connectionId, out connection);
                 if (connection != null)
@@ -371,6 +431,10 @@ namespace finalmq {
             IStreamConnectionPrivate? connection = null;
             lock (m_mutex)
             {
+                if (m_disposed)
+                {
+                    throw new ObjectDisposedException(GetType().FullName);
+                }
                 m_connectionId2Connection.TryGetValue(connectionId, out connection);
             }
             return connection;
@@ -389,15 +453,16 @@ namespace finalmq {
         {
             lock (m_mutex)
             {
+                if (m_disposed)
+                {
+                    throw new ObjectDisposedException(GetType().FullName);
+                }
                 BindData? bindData = null;
                 m_endpoint2binds.TryGetValue(endpoint, out bindData);
                 if (bindData != null)
                 {
                     bindData.TcpListener.Stop();
-                    lock (m_mutex)
-                    {
-                        m_endpoint2binds.Remove(endpoint);
-                    }
+                    m_endpoint2binds.Remove(endpoint);
                 }
             }
         }
@@ -407,9 +472,12 @@ namespace finalmq {
             IList<IStreamConnectionPrivate> connections = new List<IStreamConnectionPrivate>();
             lock (m_mutex)
             {
-                foreach (var entry in m_connectionId2Connection)
+                if (!m_disposed)
                 {
-                    connections.Add(entry.Value);
+                    foreach (var entry in m_connectionId2Connection)
+                    {
+                        connections.Add(entry.Value);
+                    }
                 }
             }
 

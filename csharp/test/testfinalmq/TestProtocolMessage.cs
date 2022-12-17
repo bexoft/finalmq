@@ -13,12 +13,9 @@ namespace testfinalmq
 {
 
 
-
-
-    [Collection("TestCollectionSocket")]
     public class TestProtocolMessage : IDisposable
     {
-        readonly static int PROTOCOL_ID = 123;
+        readonly static uint PROTOCOL_ID = 123;
         readonly static int SIZE_HEADER = 12;
         readonly static int SIZE_TRAILER = 8;
 

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -19,5 +19,9 @@
     <PackageReference Include="Moq" Version="4.18.1" />
     <PackageReference Include="xunit" Version="2.4.1" />
   </ItemGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="node ../codegenerator/csharp/csharp.js --input=./src/metadataserialize/metadata.fmq --outpath=./src/metadataserialize&#xD;&#xA;node ../codegenerator/csharp/csharp.js --input=./src/metadataserialize/variant.fmq --outpath=./src/metadataserialize" />
+  </Target>
 
 </Project>

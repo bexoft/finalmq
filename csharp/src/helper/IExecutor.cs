@@ -8,12 +8,13 @@ namespace finalmq
 {
     public delegate void DelegateNotification();
     public delegate void DelegateAction();
+    public delegate bool DelegateIsAbort();
 
     public interface IExecutor
     {
         void RegisterActionNotification(DelegateNotification func);
-        void RunAvailableActions();
-        bool RunOneAvailableAction();
+        bool RunAvailableActions(DelegateIsAbort? funcIsAbort = null);
+        bool RunAvailableActionBatch(DelegateIsAbort? funcIsAbort = null);
         void AddAction(DelegateAction func, Int64 instanceId = 0);
         void Run();
         void Terminate();

@@ -29,6 +29,7 @@ namespace finalmq
     {
         BufferRef AddBuffer(int size, int reserve = 0);
         void DownsizeLastBuffer(int size);
+        int RemainingSize { get; }
     }
 
 

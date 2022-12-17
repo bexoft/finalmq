@@ -201,7 +201,10 @@ namespace finalmq {
 
         public void Dispose()
         {
-            Dispose(true);
+            lock (m_mutex)
+            {
+                Dispose(true);
+            }
             GC.SuppressFinalize(this);
         }
 
@@ -224,25 +227,32 @@ namespace finalmq {
             bool removeConnection = false;
             lock (m_mutex)
             {
-                bool reconnectExpired = false;
-                if (!GetDisconnectFlag() && (m_connectionData.ConnectionState == ConnectionState.CONNECTIONSTATE_CONNECTING))
+                if (!m_disposed)
                 {
-                    TimeSpan dur = DateTime.Now - m_connectionData.StartTime;
-                    int delta = dur.Milliseconds;
-                    if (m_connectionData.TotalReconnectDuration >= 0 && (delta < 0 || delta >= m_connectionData.TotalReconnectDuration))
+                    bool reconnectExpired = false;
+                    if (!GetDisconnectFlag() && (m_connectionData.ConnectionState == ConnectionState.CONNECTIONSTATE_CONNECTING))
                     {
-                        reconnectExpired = true;
+                        TimeSpan dur = DateTime.Now - m_connectionData.StartTime;
+                        int delta = dur.Milliseconds;
+                        if (m_connectionData.TotalReconnectDuration >= 0 && (delta < 0 || delta >= m_connectionData.TotalReconnectDuration))
+                        {
+                            reconnectExpired = true;
+                        }
+                        else
+                        {
+                            m_connectionData.ConnectionState = ConnectionState.CONNECTIONSTATE_CONNECTING_FAILED;
+                        }
                     }
-                    else
+
+                    if (GetDisconnectFlag() || (m_connectionData.ConnectionState == ConnectionState.CONNECTIONSTATE_CONNECTED) || reconnectExpired)
                     {
-                        m_connectionData.ConnectionState = ConnectionState.CONNECTIONSTATE_CONNECTING_FAILED;
+                        removeConnection = true;
+                        m_connectionData.ConnectionState = ConnectionState.CONNECTIONSTATE_DISCONNECTED;
                     }
                 }
-
-                if (GetDisconnectFlag() || (m_connectionData.ConnectionState == ConnectionState.CONNECTIONSTATE_CONNECTED) || reconnectExpired)
+                else
                 {
                     removeConnection = true;
-                    m_connectionData.ConnectionState = ConnectionState.CONNECTIONSTATE_DISCONNECTED;
                 }
             }
             return removeConnection;
@@ -254,12 +264,16 @@ namespace finalmq {
             ConnectionData connectionData;
             lock (m_mutex)
             {
+                if (m_disposed)
+                {
+                    throw new ObjectDisposedException(GetType().FullName);
+                }
                 connectionData = m_connectionData;
             }
             if (connectionData.ConnectionState == ConnectionState.CONNECTIONSTATE_CREATED ||
                 connectionData.ConnectionState == ConnectionState.CONNECTIONSTATE_CONNECTING_FAILED)
             {
-                m_streamConnectionContainer.Connect(m_connectionData.Endpoint, this, m_connectionData.ConnectProperties);
+                m_streamConnectionContainer.Connect(connectionData.Endpoint, this, connectionData.ConnectProperties);
                 connecting = true;
             }
             return connecting;
@@ -378,6 +392,10 @@ namespace finalmq {
             IList<BufferRef> buffers = msg.GetAllSendBuffers();
             lock (m_mutex)
             {
+                if (m_disposed)
+                {
+                    throw new ObjectDisposedException(GetType().FullName);
+                }
                 var connectionState = m_connectionData.ConnectionState;
                 if (connectionState == ConnectionState.CONNECTIONSTATE_CREATED ||
                     connectionState == ConnectionState.CONNECTIONSTATE_CONNECTING ||
@@ -403,12 +421,15 @@ namespace finalmq {
         {
             lock (m_mutex)
             {
-                m_connectionData = connectionData;
-                Stream? stream = m_connectionData.Stream;
-                if (stream != null)
+                if (!m_disposed)
                 {
-                    SendBuffers(stream, m_pendingBuffers);
-                    m_pendingBuffers.Clear();
+                    m_connectionData = connectionData;
+                    Stream? stream = m_connectionData.Stream;
+                    if (stream != null)
+                    {
+                        SendBuffers(stream, m_pendingBuffers);
+                        m_pendingBuffers.Clear();
+                    }
                 }
             }
         }

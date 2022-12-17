@@ -28,7 +28,7 @@ namespace finalmq {
 
     public class ProtocolMessage : IMessage
     {
-        public ProtocolMessage(int protocolId, int sizeHeader = 0, int sizeTrailer = 0)
+        public ProtocolMessage(uint protocolId, int sizeHeader = 0, int sizeTrailer = 0)
         {
             m_sizeHeader = sizeHeader;
             m_sizeTrailer = sizeTrailer;
@@ -87,8 +87,8 @@ namespace finalmq {
             {
                 // remove the trailer of the last payload
                 BufferRef lastRef = m_sendBufferRefs.Last<BufferRef>();
+                Debug.Assert(lastRef.Length >= m_sizeTrailer);
                 lastRef.Length -= m_sizeTrailer;
-                Debug.Assert(lastRef.Length >= 0);
                 if (lastRef.Length == 0)
                 {
                     m_sendBufferRefs.RemoveAt(m_sendBufferRefs.Count - 1);
@@ -165,6 +165,22 @@ namespace finalmq {
             }
         }
 
+        public int RemainingSize 
+        {
+            get
+            {
+                if (m_offset != -1 && m_sendBufferRefs != null)
+                {
+                    Debug.Assert(m_sendBufferRefs.Count > 0);
+                    BufferRef bufLast = m_sendBufferRefs.Last<BufferRef>();
+                    int remaining = bufLast.Buffer.Length - m_offset - m_sizeTrailer;
+                    Debug.Assert(remaining >= 0);
+                    return remaining;
+                }
+                return 0;
+            }
+        }
+
         // metainfo
         public Metainfo GetAllMetainfo()
         {
@@ -221,7 +237,7 @@ namespace finalmq {
             {
                 throw new System.InvalidOperationException();
             }
-            return new BufferRef(m_receiveBuffer, 0, m_sizeHeader);
+            return new BufferRef(m_receiveBuffer, m_offsetReceiveBuffer, m_sizeHeader);
         }
         public BufferRef GetReceivePayload()
         {
@@ -229,16 +245,30 @@ namespace finalmq {
             {
                 throw new System.InvalidOperationException();
             }
-            return new BufferRef(m_receiveBuffer, m_sizeHeader, m_sizeReceiveBuffer - m_sizeHeader);
+            return new BufferRef(m_receiveBuffer, m_offsetReceiveBuffer + m_sizeHeader, m_sizeReceiveBuffer - m_sizeHeader);
         }
         public BufferRef ResizeReceiveBuffer(int size)
         {
-            if (m_receiveBuffer == null || size > m_receiveBuffer.Length)
+            if (m_receiveBuffer == null || (m_offsetReceiveBuffer + size > m_receiveBuffer.Length))
             {
-                m_receiveBuffer = new byte[size];
+                byte[] newReceiveBuffer = new byte[size];
+                if (m_receiveBuffer != null)
+                {
+                    Array.Copy(m_receiveBuffer, m_offsetReceiveBuffer, newReceiveBuffer, 0, m_sizeReceiveBuffer);
+                }
+                m_offsetReceiveBuffer = 0;
+                m_receiveBuffer = newReceiveBuffer;
             }
             m_sizeReceiveBuffer = size;
-            return new BufferRef(m_receiveBuffer, 0, size);
+            Debug.Assert(m_offsetReceiveBuffer + size <= m_receiveBuffer.Length);
+            return new BufferRef(m_receiveBuffer, m_offsetReceiveBuffer, m_sizeReceiveBuffer);
+        }
+        public void SetReceiveBuffer(byte[] buffer, int offset, int size)
+        {
+            Debug.Assert(offset + size <= buffer.Length);
+            m_receiveBuffer = buffer;
+            m_offsetReceiveBuffer = offset;
+            m_sizeReceiveBuffer = size;
         }
         public void SetHeaderSize(int sizeHeader)
         {
@@ -356,24 +386,27 @@ namespace finalmq {
         }
 
         // for the protocol to check if which protocol created the message
-        public int GetProtocolId()
+        public uint ProtocolId 
         {
-            return m_protocolId;
+            get => m_protocolId;
         }
-        public bool WasSent()
+        public bool WasSent
         {
-            return m_preparedToSend;
+            get
+            {
+                return m_preparedToSend;
+            }
         }
 
         public void AddMessage(IMessage msg)
         {
             if (m_messages == null)
             {
-                m_messages = new Dictionary<int, IMessage>();
+                m_messages = new Dictionary<uint, IMessage>();
             }
-            m_messages[msg.GetProtocolId()] = msg;
+            m_messages[msg.ProtocolId] = msg;
         }
-        public IMessage? GetMessage(int protocolId)
+        public IMessage? GetMessage(uint protocolId)
         {
             if (m_messages == null)
             {
@@ -399,15 +432,16 @@ namespace finalmq {
 
         // receive
         byte[]? m_receiveBuffer = null;
+        int m_offsetReceiveBuffer = 0;
         int m_sizeReceiveBuffer = 0;
 
         int m_sizeHeader = 0;
         int m_sizeTrailer = 0;
 
         bool m_preparedToSend = false;
-        readonly int m_protocolId = 0;
+        readonly uint m_protocolId = 0;
 
-        IDictionary<int, IMessage>? m_messages = null;
+        IDictionary<uint, IMessage>? m_messages = null;
     }
 
 

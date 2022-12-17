@@ -122,7 +122,7 @@ namespace finalmq
             set => m_incomingConnection = value;
         }
 
-        public Stream Stream
+        public Stream? Stream
         {
             get => m_stream;
             set => m_stream = value;

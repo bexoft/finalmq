@@ -22,7 +22,6 @@ namespace testfinalmq
         IPoller m_poller = new PollerImplSelect();
         Socket m_controlSocketRead = new Socket(SocketType.Stream, ProtocolType.Tcp);
         Socket m_controlSocketWrite = new Socket(SocketType.Stream, ProtocolType.Tcp);
-        Mock<IPlatform> m_mockPlatform = new Mock<IPlatform>();
 
         public TestIntegrationSelect()
         {
