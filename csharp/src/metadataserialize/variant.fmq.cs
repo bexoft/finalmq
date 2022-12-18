@@ -83,6 +83,38 @@ class RegisterVarTypeId
 [finalmq.MetaStruct("desc")]
 public class VarValue
 {
+    public VarValue()
+	{
+	}
+	
+
+    public VarValue(string name, finalmq.variant.VarTypeId type, bool valbool, int valint32, uint valuint32, long valint64, ulong valuint64, float valfloat, double valdouble, string valstring, byte[] valbytes, IList<finalmq.variant.VarValue> vallist, bool[] valarrbool, int[] valarrint32, uint[] valarruint32, long[] valarrint64, ulong[] valarruint64, float[] valarrfloat, double[] valarrdouble, IList<string> valarrstring, IList<byte[]> valarrbytes)
+	{
+		m_name = name;
+		m_type = type;
+		m_valbool = valbool;
+		m_valint32 = valint32;
+		m_valuint32 = valuint32;
+		m_valint64 = valint64;
+		m_valuint64 = valuint64;
+		m_valfloat = valfloat;
+		m_valdouble = valdouble;
+		m_valstring = valstring;
+		m_valbytes = valbytes;
+		m_vallist = vallist;
+		m_valarrbool = valarrbool;
+		m_valarrint32 = valarrint32;
+		m_valarruint32 = valarruint32;
+		m_valarrint64 = valarrint64;
+		m_valarruint64 = valarruint64;
+		m_valarrfloat = valarrfloat;
+		m_valarrdouble = valarrdouble;
+		m_valarrstring = valarrstring;
+		m_valarrbytes = valarrbytes;
+	}
+
+
+
 	[finalmq.MetaField("name is only used for elements in valstruct")]
     public string name
 	{

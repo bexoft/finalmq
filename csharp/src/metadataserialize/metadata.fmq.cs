@@ -111,6 +111,21 @@ class RegisterSerializeMetaFieldFlags
 [finalmq.MetaStruct("desc")]
 public class SerializeMetaEnumEntry
 {
+    public SerializeMetaEnumEntry()
+	{
+	}
+	
+
+    public SerializeMetaEnumEntry(string name, int id, string desc, string alias)
+	{
+		m_name = name;
+		m_id = id;
+		m_desc = desc;
+		m_alias = alias;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public string name
 	{
@@ -156,6 +171,20 @@ public class SerializeMetaEnumEntry
 [finalmq.MetaStruct("desc")]
 public class SerializeMetaEnum
 {
+    public SerializeMetaEnum()
+	{
+	}
+	
+
+    public SerializeMetaEnum(string type, string desc, IList<finalmq.SerializeMetaEnumEntry> entries)
+	{
+		m_type = type;
+		m_desc = desc;
+		m_entries = entries;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public string type
 	{
@@ -193,6 +222,22 @@ public class SerializeMetaEnum
 [finalmq.MetaStruct("desc")]
 public class SerializeMetaField
 {
+    public SerializeMetaField()
+	{
+	}
+	
+
+    public SerializeMetaField(finalmq.SerializeMetaTypeId tid, string type, string name, string desc, IList<finalmq.SerializeMetaFieldFlags> flags)
+	{
+		m_tid = tid;
+		m_type = type;
+		m_name = name;
+		m_desc = desc;
+		m_flags = flags;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public finalmq.SerializeMetaTypeId tid
 	{
@@ -246,6 +291,20 @@ public class SerializeMetaField
 [finalmq.MetaStruct("desc")]
 public class SerializeMetaStruct
 {
+    public SerializeMetaStruct()
+	{
+	}
+	
+
+    public SerializeMetaStruct(string type, string desc, IList<finalmq.SerializeMetaField> fields)
+	{
+		m_type = type;
+		m_desc = desc;
+		m_fields = fields;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public string type
 	{
@@ -283,6 +342,19 @@ public class SerializeMetaStruct
 [finalmq.MetaStruct("desc")]
 public class SerializeMetaData
 {
+    public SerializeMetaData()
+	{
+	}
+	
+
+    public SerializeMetaData(IList<finalmq.SerializeMetaEnum> enums, IList<finalmq.SerializeMetaStruct> structs)
+	{
+		m_enums = enums;
+		m_structs = structs;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public IList<finalmq.SerializeMetaEnum> enums
 	{

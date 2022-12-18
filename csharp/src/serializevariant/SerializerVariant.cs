@@ -53,8 +53,8 @@ namespace finalmq
                     Variant variant = new Variant();
                     m_current.Add(field.Name, variant);
                     m_varValueToVariant = new VarValueToVariant(variant);
-//todo                    m_outer.SetVisitor(m_varValueToVariant.GetVisitor());
-//todo                    m_outer.m_parserProcessDefaultValues.SetVisitor(m_varValueToVariant.GetVisitor());
+                    m_outer.SetVisitor(m_varValueToVariant.GetVisitor());
+                    m_outer.m_parserProcessDefaultValues.SetVisitor(m_varValueToVariant.GetVisitor());
                     m_varValueToVariant.SetExitNotification(() => {
                         Debug.Assert(m_varValueToVariant != null);
                         m_outer.SetVisitor(m_outer.m_parserProcessDefaultValues);

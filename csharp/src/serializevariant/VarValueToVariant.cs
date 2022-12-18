@@ -15,18 +15,17 @@ namespace finalmq
         {
             m_variant = variant;
             m_varValue = new variant.VarValue();
-//todo            m_serializerStruct = new SerializerStruct(m_varValue);
+            m_serializerStruct = new SerializerStruct(m_varValue);
         }
 
-        public IParserVisitor? GetVisitor()
+        public IParserVisitor GetVisitor()
         {
-            return null;
-//            return m_serializerStruct;
+            return m_serializerStruct;
         }
 
         public void SetExitNotification(FuncExit? funcExit)
         {
-//            m_serializerStruct.SetExitNotification(funcExit);
+            m_serializerStruct.SetExitNotification(funcExit);
         }
         public void Convert()
         {
@@ -119,7 +118,7 @@ namespace finalmq
         }
 
         readonly Variant m_variant;
-//        readonly SerializerStruct m_serializerStruct;
+        readonly SerializerStruct m_serializerStruct;
         readonly variant.VarValue m_varValue;
     };
 
