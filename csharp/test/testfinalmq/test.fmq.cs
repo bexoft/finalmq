@@ -46,6 +46,18 @@ class RegisterFoo
 [finalmq.MetaStruct("desc")]
 public class TestBool
 {
+    public TestBool()
+	{
+	}
+	
+
+    public TestBool(bool value)
+	{
+		m_value = value;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public bool value
 	{
@@ -67,6 +79,18 @@ public class TestBool
 [finalmq.MetaStruct("desc")]
 public class TestInt32
 {
+    public TestInt32()
+	{
+	}
+	
+
+    public TestInt32(int value)
+	{
+		m_value = value;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public int value
 	{
@@ -88,6 +112,18 @@ public class TestInt32
 [finalmq.MetaStruct("desc")]
 public class TestUInt32
 {
+    public TestUInt32()
+	{
+	}
+	
+
+    public TestUInt32(uint value)
+	{
+		m_value = value;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public uint value
 	{
@@ -109,6 +145,18 @@ public class TestUInt32
 [finalmq.MetaStruct("desc")]
 public class TestInt64
 {
+    public TestInt64()
+	{
+	}
+	
+
+    public TestInt64(long value)
+	{
+		m_value = value;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public long value
 	{
@@ -130,6 +178,18 @@ public class TestInt64
 [finalmq.MetaStruct("desc")]
 public class TestUInt64
 {
+    public TestUInt64()
+	{
+	}
+	
+
+    public TestUInt64(ulong value)
+	{
+		m_value = value;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public ulong value
 	{
@@ -151,6 +211,18 @@ public class TestUInt64
 [finalmq.MetaStruct("desc")]
 public class TestFloat
 {
+    public TestFloat()
+	{
+	}
+	
+
+    public TestFloat(float value)
+	{
+		m_value = value;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public float value
 	{
@@ -172,6 +244,18 @@ public class TestFloat
 [finalmq.MetaStruct("desc")]
 public class TestDouble
 {
+    public TestDouble()
+	{
+	}
+	
+
+    public TestDouble(double value)
+	{
+		m_value = value;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public double value
 	{
@@ -193,6 +277,18 @@ public class TestDouble
 [finalmq.MetaStruct("desc")]
 public class TestString
 {
+    public TestString()
+	{
+	}
+	
+
+    public TestString(string value)
+	{
+		m_value = value;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public string value
 	{
@@ -214,6 +310,18 @@ public class TestString
 [finalmq.MetaStruct("desc")]
 public class TestBytes
 {
+    public TestBytes()
+	{
+	}
+	
+
+    public TestBytes(byte[] value)
+	{
+		m_value = value;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public byte[] value
 	{
@@ -235,6 +343,20 @@ public class TestBytes
 [finalmq.MetaStruct("desc")]
 public class TestStruct
 {
+    public TestStruct()
+	{
+	}
+	
+
+    public TestStruct(test.TestInt32 struct_int32, test.TestString struct_string, uint last_value)
+	{
+		m_struct_int32 = struct_int32;
+		m_struct_string = struct_string;
+		m_last_value = last_value;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public test.TestInt32 struct_int32
 	{
@@ -272,6 +394,20 @@ public class TestStruct
 [finalmq.MetaStruct("desc")]
 public class TestStructBlockSize
 {
+    public TestStructBlockSize()
+	{
+	}
+	
+
+    public TestStructBlockSize(test.TestInt32 struct_int32, test.TestString struct_string, uint last_value)
+	{
+		m_struct_int32 = struct_int32;
+		m_struct_string = struct_string;
+		m_last_value = last_value;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public test.TestInt32 struct_int32
 	{
@@ -309,6 +445,18 @@ public class TestStructBlockSize
 [finalmq.MetaStruct("desc")]
 public class TestEnum
 {
+    public TestEnum()
+	{
+	}
+	
+
+    public TestEnum(test.Foo value)
+	{
+		m_value = value;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public test.Foo value
 	{
@@ -330,6 +478,20 @@ public class TestEnum
 [finalmq.MetaStruct("desc")]
 public class TestVariant
 {
+    public TestVariant()
+	{
+	}
+	
+
+    public TestVariant(finalmq.Variant value, int valueInt32, finalmq.Variant value2)
+	{
+		m_value = value;
+		m_valueInt32 = valueInt32;
+		m_value2 = value2;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public finalmq.Variant value
 	{
@@ -367,6 +529,18 @@ public class TestVariant
 [finalmq.MetaStruct("desc")]
 public class TestArrayBool
 {
+    public TestArrayBool()
+	{
+	}
+	
+
+    public TestArrayBool(bool[] value)
+	{
+		m_value = value;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public bool[] value
 	{
@@ -388,6 +562,18 @@ public class TestArrayBool
 [finalmq.MetaStruct("desc")]
 public class TestArrayInt32
 {
+    public TestArrayInt32()
+	{
+	}
+	
+
+    public TestArrayInt32(int[] value)
+	{
+		m_value = value;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public int[] value
 	{
@@ -409,6 +595,18 @@ public class TestArrayInt32
 [finalmq.MetaStruct("desc")]
 public class TestArrayUInt32
 {
+    public TestArrayUInt32()
+	{
+	}
+	
+
+    public TestArrayUInt32(uint[] value)
+	{
+		m_value = value;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public uint[] value
 	{
@@ -430,6 +628,18 @@ public class TestArrayUInt32
 [finalmq.MetaStruct("desc")]
 public class TestArrayInt64
 {
+    public TestArrayInt64()
+	{
+	}
+	
+
+    public TestArrayInt64(long[] value)
+	{
+		m_value = value;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public long[] value
 	{
@@ -451,6 +661,18 @@ public class TestArrayInt64
 [finalmq.MetaStruct("desc")]
 public class TestArrayUInt64
 {
+    public TestArrayUInt64()
+	{
+	}
+	
+
+    public TestArrayUInt64(ulong[] value)
+	{
+		m_value = value;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public ulong[] value
 	{
@@ -472,6 +694,18 @@ public class TestArrayUInt64
 [finalmq.MetaStruct("desc")]
 public class TestArrayFloat
 {
+    public TestArrayFloat()
+	{
+	}
+	
+
+    public TestArrayFloat(float[] value)
+	{
+		m_value = value;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public float[] value
 	{
@@ -493,6 +727,18 @@ public class TestArrayFloat
 [finalmq.MetaStruct("desc")]
 public class TestArrayDouble
 {
+    public TestArrayDouble()
+	{
+	}
+	
+
+    public TestArrayDouble(double[] value)
+	{
+		m_value = value;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public double[] value
 	{
@@ -514,6 +760,18 @@ public class TestArrayDouble
 [finalmq.MetaStruct("desc")]
 public class TestArrayString
 {
+    public TestArrayString()
+	{
+	}
+	
+
+    public TestArrayString(IList<string> value)
+	{
+		m_value = value;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public IList<string> value
 	{
@@ -535,6 +793,18 @@ public class TestArrayString
 [finalmq.MetaStruct("desc")]
 public class TestArrayBytes
 {
+    public TestArrayBytes()
+	{
+	}
+	
+
+    public TestArrayBytes(IList<byte[]> value)
+	{
+		m_value = value;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public IList<byte[]> value
 	{
@@ -556,6 +826,19 @@ public class TestArrayBytes
 [finalmq.MetaStruct("desc")]
 public class TestArrayStruct
 {
+    public TestArrayStruct()
+	{
+	}
+	
+
+    public TestArrayStruct(IList<test.TestStruct> value, uint last_value)
+	{
+		m_value = value;
+		m_last_value = last_value;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public IList<test.TestStruct> value
 	{
@@ -585,6 +868,18 @@ public class TestArrayStruct
 [finalmq.MetaStruct("desc")]
 public class TestArrayEnum
 {
+    public TestArrayEnum()
+	{
+	}
+	
+
+    public TestArrayEnum(IList<test.Foo> value)
+	{
+		m_value = value;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public IList<test.Foo> value
 	{
@@ -606,6 +901,18 @@ public class TestArrayEnum
 [finalmq.MetaStruct("desc")]
 public class TestRequest
 {
+    public TestRequest()
+	{
+	}
+	
+
+    public TestRequest(string datarequest)
+	{
+		m_datarequest = datarequest;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public string datarequest
 	{
@@ -627,6 +934,18 @@ public class TestRequest
 [finalmq.MetaStruct("desc")]
 public class TestReply
 {
+    public TestReply()
+	{
+	}
+	
+
+    public TestReply(string datareply)
+	{
+		m_datareply = datareply;
+	}
+
+
+
 	[finalmq.MetaField("desc")]
     public string datareply
 	{

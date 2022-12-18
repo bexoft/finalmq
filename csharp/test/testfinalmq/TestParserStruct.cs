@@ -17,27 +17,51 @@ using System.Reflection.Metadata;
 namespace testfinalmq
 {
 
-    public class TestParserJson : IDisposable
+    public class TestParserStruct : IDisposable
     {
-        public TestParserJson()
+        MetaField? m_fieldValue = null;
+        MetaField? m_fieldValue2 = null;
+        MetaField? m_fieldValueInt32 = null;
+        MetaField? m_fieldName = null;
+        MetaField? m_fieldType = null;
+        MetaField? m_fieldInt32 = null;
+        MetaField? m_fieldString = null;
+        MetaField? m_fieldList = null;
+        MetaField? m_fieldListWithoutArray = null;
+
+        public TestParserStruct()
         {
+            MetaStruct? structTestVariant = MetaDataGlobal.Instance.GetStruct("test.TestVariant");
+            Debug.Assert(structTestVariant != null);
+            m_fieldValue = structTestVariant.GetFieldByName("value");
+            Debug.Assert(m_fieldValue != null);
+            Debug.Assert(m_fieldValue.TypeName == "finalmq.variant.VarValue");
+            m_fieldValue2 = structTestVariant.GetFieldByName("value2");
+            Debug.Assert(m_fieldValue2 != null);
+            Debug.Assert(m_fieldValue2.TypeName == "finalmq.variant.VarValue");
+            m_fieldValueInt32 = structTestVariant.GetFieldByName("valueInt32");
+            Debug.Assert(m_fieldValueInt32 != null);
+
+            MetaStruct? structVarVariant = MetaDataGlobal.Instance.GetStruct("finalmq.variant.VarValue");
+            Debug.Assert(structVarVariant != null);
+
+            m_fieldName = structVarVariant.GetFieldByName("name");
+            m_fieldType = structVarVariant.GetFieldByName("type");
+            m_fieldInt32 = structVarVariant.GetFieldByName("valint32");
+            m_fieldString = structVarVariant.GetFieldByName("valstring");
+            m_fieldList = structVarVariant.GetFieldByName("vallist");
+            m_fieldListWithoutArray = MetaDataGlobal.Instance.GetArrayField(m_fieldList);
+
+            Debug.Assert(m_fieldName != null);
+            Debug.Assert(m_fieldType != null);
+            Debug.Assert(m_fieldInt32 != null);
+            Debug.Assert(m_fieldString != null);
+            Debug.Assert(m_fieldList != null);
+            Debug.Assert(m_fieldListWithoutArray != null);
         }
 
         public void Dispose()
         {
-        }
-
-        [Fact]
-        public void TestUnknownStruct()
-        {
-            Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
-            string data = "{}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.BlaBla");
-            Debug.Assert(res == -1);
-
-            mockVisitor.Verify(x => x.NotifyError(data, It.IsAny<string>()), Times.Once);
-            mockVisitor.Verify(x => x.Finished(), Times.Once);
         }
 
         [Fact]
@@ -50,10 +74,10 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            string data = "{\"value\":true}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestBool");
-            Debug.Assert(res != -1);
+            var root = new test.TestBool(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterBool(fieldValue, VALUE), Times.Once);
@@ -70,10 +94,10 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            string data = "{\"value\":-2}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestInt32");
-            Debug.Assert(res != -1);
+            var root = new test.TestInt32(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterInt32(fieldValue, VALUE), Times.Once);
@@ -90,10 +114,10 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            string data = "{\"value\":130}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestUInt32");
-            Debug.Assert(res != -1);
+            var root = new test.TestUInt32(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterUInt32(fieldValue, VALUE), Times.Once);
@@ -110,10 +134,10 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            string data = "{\"value\":-2}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestInt64");
-            Debug.Assert(res != -1);
+            var root = new test.TestInt64(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterInt64(fieldValue, VALUE), Times.Once);
@@ -130,10 +154,10 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            string data = "{\"value\":130}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestUInt64");
-            Debug.Assert(res != -1);
+            var root = new test.TestUInt64(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterUInt64(fieldValue, VALUE), Times.Once);
@@ -150,10 +174,10 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            string data = "{\"value\":-1.1}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestFloat");
-            Debug.Assert(res != -1);
+            var root = new test.TestFloat(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterFloat(fieldValue, VALUE), Times.Once);
@@ -170,10 +194,10 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            string data = "{\"value\":\"NaN\"}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestFloat");
-            Debug.Assert(res != -1);
+            var root = new test.TestFloat(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterFloat(fieldValue, VALUE), Times.Once);
@@ -190,10 +214,10 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            string data = "{\"value\":\"Infinity\"}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestFloat");
-            Debug.Assert(res != -1);
+            var root = new test.TestFloat(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterFloat(fieldValue, VALUE), Times.Once);
@@ -210,10 +234,10 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            string data = "{\"value\":\"-Infinity\"}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestFloat");
-            Debug.Assert(res != -1);
+            var root = new test.TestFloat(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterFloat(fieldValue, VALUE), Times.Once);
@@ -230,10 +254,10 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            string data = "{\"value\":-1.1}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestDouble");
-            Debug.Assert(res != -1);
+            var root = new test.TestDouble(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterDouble(fieldValue, VALUE), Times.Once);
@@ -250,10 +274,10 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            string data = "{\"value\":\"NaN\"}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestDouble");
-            Debug.Assert(res != -1);
+            var root = new test.TestDouble(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterDouble(fieldValue, VALUE), Times.Once);
@@ -270,10 +294,10 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            string data = "{\"value\":\"Infinity\"}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestDouble");
-            Debug.Assert(res != -1);
+            var root = new test.TestDouble(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterDouble(fieldValue, VALUE), Times.Once);
@@ -290,10 +314,10 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            string data = "{\"value\":\"-Infinity\"}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestDouble");
-            Debug.Assert(res != -1);
+            var root = new test.TestDouble(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterDouble(fieldValue, VALUE), Times.Once);
@@ -310,20 +334,13 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            mockVisitor.Setup(x => x.EnterString(fieldValue, It.IsAny<byte[]>(), 10, 11))
-                .Callback((MetaField field, byte[] buffer, int offset, int size) =>
-                {
-                    string v = Encoding.UTF8.GetString(buffer, offset, size);
-                    Debug.Assert(v == VALUE);
-            });
-
-            string data = "{\"value\":\"Hello World\"}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestString");
-            Debug.Assert(res != -1);
+            var root = new test.TestString(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
-            mockVisitor.Verify(x => x.EnterString(fieldValue, It.IsAny<byte[]>(), 10, 11), Times.Once);
+            mockVisitor.Verify(x => x.EnterString(fieldValue, VALUE), Times.Once);
             mockVisitor.Verify(x => x.Finished(), Times.Once);
         }
 
@@ -337,10 +354,10 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            string data = "{\"value\":\"I6oAakAA\"}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestBytes");
-            Debug.Assert(res != -1);
+            var root = new test.TestBytes(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterBytes(fieldValue, VALUE), Times.Once);
@@ -372,85 +389,18 @@ namespace testfinalmq
                     Debug.Assert(v == VALUE_STRING);
                 });
 
-            string data = "{\"struct_int32\":{\"value\":-2},\"struct_string\":{\"value\":\"Hello World\"}}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestStruct");
-            Debug.Assert(res != -1);
+            var root = new test.TestStruct(new test.TestInt32(VALUE_INT32), new test.TestString(VALUE_STRING), 0);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterStruct(fieldStructInt32), Times.Once);
             mockVisitor.Verify(x => x.EnterInt32(fieldInt32, VALUE_INT32), Times.Once);
             mockVisitor.Verify(x => x.ExitStruct(fieldStructInt32), Times.Once);
             mockVisitor.Verify(x => x.EnterStruct(fieldStructString), Times.Once);
-            mockVisitor.Verify(x => x.EnterString(fieldString, It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>()), Times.Once);
+            mockVisitor.Verify(x => x.EnterString(fieldString, It.IsAny<string>()), Times.Once);
             mockVisitor.Verify(x => x.ExitStruct(fieldStructString), Times.Once);
-            mockVisitor.Verify(x => x.Finished(), Times.Once);
-        }
-
-        [Fact]
-        public void TestUndefinedStruct()
-        {
-            int VALUE_INT32 = -2;
-            string VALUE_STRING = "Hello World";
-
-            MetaField? fieldStructInt32 = MetaDataGlobal.Instance.GetField("test.TestStruct", "struct_int32");
-            MetaField? fieldStructString = MetaDataGlobal.Instance.GetField("test.TestStruct", "struct_string");
-            MetaField? fieldInt32 = MetaDataGlobal.Instance.GetField("test.TestInt32", "value");
-            MetaField? fieldString = MetaDataGlobal.Instance.GetField("test.TestString", "value");
-
-            Debug.Assert(fieldStructInt32 != null);
-            Debug.Assert(fieldStructString != null);
-            Debug.Assert(fieldInt32 != null);
-            Debug.Assert(fieldString != null);
-
-            Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
-
-            mockVisitor.Setup(x => x.EnterString(fieldString, It.IsAny<byte[]>(), 10, 11))
-                .Callback((MetaField field, byte[] buffer, int offset, int size) =>
-                {
-                    string v = Encoding.UTF8.GetString(buffer, offset, size);
-                    Debug.Assert(v == VALUE_STRING);
-                });
-
-            string data = "{\"undefined\":{\"undefined\":{\"undefined\":{\"undefined\":{}},\"undefined2\":{\"undefined\":{\"undefined\":1234}}}},\"struct_int32\":{\"value\":-2},\"undefined3\":{\"undefined\":{}},\"struct_string\":{\"value\":\"Hello World\",\"undefine4\":1234,\"undefined5\":{\"undefined\":{}}},\"undefined6\":{\"undefined\":{}}}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestStruct");
-            Debug.Assert(res != -1);
-
-            mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
-            mockVisitor.Verify(x => x.EnterStruct(fieldStructInt32), Times.Once);
-            mockVisitor.Verify(x => x.EnterInt32(fieldInt32, VALUE_INT32), Times.Once);
-            mockVisitor.Verify(x => x.ExitStruct(fieldStructInt32), Times.Once);
-            mockVisitor.Verify(x => x.EnterStruct(fieldStructString), Times.Once);
-            mockVisitor.Verify(x => x.EnterString(fieldString, It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>()), Times.Once);
-            mockVisitor.Verify(x => x.ExitStruct(fieldStructString), Times.Once);
-            mockVisitor.Verify(x => x.Finished(), Times.Once);
-        }
-
-        [Fact]
-        public void TestUndefinedValues()
-        {
-            string VALUE = "Hello World";
-
-            MetaField? fieldValue = MetaDataGlobal.Instance.GetField("test.TestString", "value");
-            Debug.Assert(fieldValue != null);
-
-            Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
-
-            mockVisitor.Setup(x => x.EnterString(fieldValue, It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>()))
-                .Callback((MetaField field, byte[] buffer, int offset, int size) =>
-                {
-                    string v = Encoding.UTF8.GetString(buffer, offset, size);
-                    Debug.Assert(v == VALUE);
-            });
-
-            string data = "{\"unknown1\":1234,\"value\":\"Hello World\",\"unknown2\":1234}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestString");
-            Debug.Assert(res != -1);
-
-            mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
-            mockVisitor.Verify(x => x.EnterString(fieldValue, It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>()), Times.Once);
             mockVisitor.Verify(x => x.Finished(), Times.Once);
         }
 
@@ -464,30 +414,10 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            string data = "{\"value\":-2}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestEnum");
-            Debug.Assert(res != -1);
-
-            mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
-            mockVisitor.Verify(x => x.EnterEnum(fieldValue, VALUE), Times.Once);
-            mockVisitor.Verify(x => x.Finished(), Times.Once);
-        }
-
-        [Fact]
-        public void TestEnumAsString()
-        {
-            string VALUE = "FOO_HELLO";
-
-            MetaField? fieldValue = MetaDataGlobal.Instance.GetField("test.TestEnum", "value");
-            Debug.Assert(fieldValue != null);
-
-            Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
-
-            string data = "{\"value\":\"FOO_HELLO\"}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestEnum");
-            Debug.Assert(res != -1);
+            var root = new test.TestEnum(test.Foo.FOO_HELLO);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterEnum(fieldValue, VALUE), Times.Once);
@@ -504,10 +434,10 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            string data = "{\"value\":42}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestEnum");
-            Debug.Assert(res != -1);
+            var root = new test.TestEnum((test.Foo)VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterEnum(fieldValue, VALUE), Times.Once);
@@ -515,52 +445,56 @@ namespace testfinalmq
         }
 
         [Fact]
-        public void TestEnumNotAvailableString()
+        public void TestVariantEmpty()
         {
-            string VALUE = "blabla";
-
-            MetaField? fieldValue = MetaDataGlobal.Instance.GetField("test.TestEnum", "value");
-            Debug.Assert(fieldValue != null);
-
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            string data = "{\"value\":\"blabla\"}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestEnum");
-            Debug.Assert(res != -1);
+            var root = new test.TestVariant();
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
-            mockVisitor.Verify(x => x.EnterEnum(fieldValue, VALUE), Times.Once);
+            mockVisitor.Verify(x => x.EnterStruct(m_fieldValue!), Times.Once);
+            mockVisitor.Verify(x => x.EnterEnum(m_fieldType!, (int)finalmq.variant.VarTypeId.T_NONE), Times.Exactly(2));
+            mockVisitor.Verify(x => x.ExitStruct(m_fieldValue!), Times.Once);
+
+            mockVisitor.Verify(x => x.EnterInt32(m_fieldValueInt32!, 0), Times.Once);
+
+            mockVisitor.Verify(x => x.EnterStruct(m_fieldValue2!), Times.Once);
+//            mockVisitor.Verify(x => x.EnterEnum(m_fieldType!, variant.VarTypeId.T_NONE), Times.Once);
+            mockVisitor.Verify(x => x.ExitStruct(m_fieldValue2!), Times.Once);
+
             mockVisitor.Verify(x => x.Finished(), Times.Once);
         }
 
         [Fact]
-        public void TestArrayNoArray()
+        public void TestVariantString()
         {
+            string VALUE_STRING = "123";
+
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            string data = "{\"value\":[]}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestEnum");
-            Debug.Assert(res != -1);
+            var root = new test.TestVariant(Variant.Create(VALUE_STRING), 0, new Variant());
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
+            mockVisitor.Verify(x => x.EnterStruct(m_fieldValue!), Times.Once);
+            mockVisitor.Verify(x => x.EnterEnum(m_fieldType!, (int)finalmq.variant.VarTypeId.T_STRING), Times.Exactly(1));
+            mockVisitor.Verify(x => x.EnterString(m_fieldString!, VALUE_STRING), Times.Exactly(1));
+            mockVisitor.Verify(x => x.ExitStruct(m_fieldValue!), Times.Once);
+
+            mockVisitor.Verify(x => x.EnterInt32(m_fieldValueInt32!, 0), Times.Once);
+
+            mockVisitor.Verify(x => x.EnterStruct(m_fieldValue2!), Times.Once);
+            mockVisitor.Verify(x => x.EnterEnum(m_fieldType!, (int)finalmq.variant.VarTypeId.T_NONE), Times.Once);
+            mockVisitor.Verify(x => x.ExitStruct(m_fieldValue2!), Times.Once);
+
             mockVisitor.Verify(x => x.Finished(), Times.Once);
         }
 
-        [Fact]
-        public void TestArrayUnknownValue()
-        {
-            Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
-
-            string data = "{\"blabla\":[]}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestEnum");
-            Debug.Assert(res != -1);
-
-            mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
-            mockVisitor.Verify(x => x.Finished(), Times.Once);
-        }
 
         [Fact]
         public void TestArrayBool()
@@ -572,10 +506,10 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            string data = "{\"value\":[true,false,false,true]}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestArrayBool");
-            Debug.Assert(res != -1);
+            var root = new test.TestArrayBool(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterArrayBool(fieldValue, VALUE), Times.Once);
@@ -592,10 +526,10 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            string data = "{\"value\":[-2,0,2,222]}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestArrayInt32");
-            Debug.Assert(res != -1);
+            var root = new test.TestArrayInt32(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterArrayInt32(fieldValue, VALUE), Times.Once);
@@ -612,10 +546,10 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            string data = "{\"value\":[4294967294,0,2,222]}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestArrayUInt32");
-            Debug.Assert(res != -1);
+            var root = new test.TestArrayUInt32(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterArrayUInt32(fieldValue, VALUE), Times.Once);
@@ -632,10 +566,10 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            string data = "{\"value\":[\"-2\",\"0\",\"2\",\"222\"]}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestArrayInt64");
-            Debug.Assert(res != -1);
+            var root = new test.TestArrayInt64(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterArrayInt64(fieldValue, VALUE), Times.Once);
@@ -652,10 +586,10 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            string data = "{\"value\":[\"1152921504606846975\",\"0\",\"2\",\"222\"]}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestArrayUInt64");
-            Debug.Assert(res != -1);
+            var root = new test.TestArrayUInt64(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterArrayUInt64(fieldValue, VALUE), Times.Once);
@@ -672,10 +606,10 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            string data = "{\"value\":[-2.1,0,2.1,222.1]}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestArrayFloat");
-            Debug.Assert(res != -1);
+            var root = new test.TestArrayFloat(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterArrayFloat(fieldValue, VALUE), Times.Once);
@@ -692,10 +626,10 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            string data = "{\"value\":[\"NaN\",\"Infinity\",\"-Infinity\"]}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestArrayFloat");
-            Debug.Assert(res != -1);
+            var root = new test.TestArrayFloat(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterArrayFloat(fieldValue, VALUE), Times.Once);
@@ -712,10 +646,10 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            string data = "{\"value\":[-2.1,0,2.1,222.1]}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestArrayDouble");
-            Debug.Assert(res != -1);
+            var root = new test.TestArrayDouble(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterArrayDouble(fieldValue, VALUE), Times.Once);
@@ -732,10 +666,10 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            string data = "{\"value\":[\"NaN\",\"Infinity\",\"-Infinity\"]}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestArrayDouble");
-            Debug.Assert(res != -1);
+            var root = new test.TestArrayDouble(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterArrayDouble(fieldValue, VALUE), Times.Once);
@@ -762,10 +696,10 @@ namespace testfinalmq
                     Debug.Assert(value.SequenceEqual(VALUE));
                 });
 
-            string data = "{\"value\":[\"Hello\",\"\",\"World\",\"Foo\"]}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestArrayString");
-            Debug.Assert(res != -1);
+            var root = new test.TestArrayString(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterArrayString(fieldValue, It.IsAny<IList<string>>()), Times.Once);
@@ -796,10 +730,10 @@ namespace testfinalmq
                     }
                 });
 
-            string data = "{\"value\":[\"I6oAakAA\",\"\",\"ABEiM0RVZneImaq7zN3u/w==\",\"AA==\"]}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestArrayBytes");
-            Debug.Assert(res != -1);
+            var root = new test.TestArrayBytes(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterArrayBytes(fieldValue, It.IsAny<IList<byte[]>>()), Times.Once);
@@ -810,9 +744,9 @@ namespace testfinalmq
         public void TestArrayStruct()
         {
             int VALUE1_INT32 = -2;
-//            string VALUE1_STRING = "Hello World";
+            string VALUE1_STRING = "Hello World";
             int VALUE2_INT32 = 345;
-//            string VALUE2_STRING = "foo";
+            string VALUE2_STRING = "foo";
 
             MetaField? fieldStruct = MetaDataGlobal.Instance.GetField("test.TestArrayStruct", "value");
             MetaField? fieldStructWithoutArray = MetaDataGlobal.Instance.GetArrayField("test.TestArrayStruct", "value");
@@ -829,34 +763,34 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            string data = "{\"value\":[{\"struct_int32\":{\"value\":-2},\"struct_string\":{\"value\":\"Hello World\"}},{\"struct_int32\":{\"value\":345},\"struct_string\":{\"value\":\"foo\"}},{}]}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestArrayStruct");
-            Debug.Assert(res != -1);
+            var root = new test.TestArrayStruct(new List<test.TestStruct> { new test.TestStruct(new test.TestInt32(VALUE1_INT32), new test.TestString(VALUE1_STRING), 0), new test.TestStruct(new test.TestInt32(VALUE2_INT32), new test.TestString(VALUE2_STRING), 0), new test.TestStruct() }, 0);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterArrayStruct(fieldStruct), Times.Once);
 
             mockVisitor.Verify(x => x.EnterStruct(fieldStructWithoutArray), Times.Exactly(3));
-            mockVisitor.Verify(x => x.EnterStruct(fieldStructInt32), Times.Exactly(2));
+            mockVisitor.Verify(x => x.EnterStruct(fieldStructInt32), Times.Exactly(3));
             mockVisitor.Verify(x => x.EnterInt32(fieldInt32, VALUE1_INT32), Times.Once);
-            mockVisitor.Verify(x => x.ExitStruct(fieldStructInt32), Times.Exactly(2));
-            mockVisitor.Verify(x => x.EnterStruct(fieldStructString), Times.Exactly(2));
-            mockVisitor.Verify(x => x.EnterString(fieldString, It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>()), Times.Exactly(2));
-            mockVisitor.Verify(x => x.ExitStruct(fieldStructString), Times.Exactly(2));
+            mockVisitor.Verify(x => x.ExitStruct(fieldStructInt32), Times.Exactly(3));
+            mockVisitor.Verify(x => x.EnterStruct(fieldStructString), Times.Exactly(3));
+            mockVisitor.Verify(x => x.EnterString(fieldString, It.IsAny<string>()), Times.Exactly(3));
+            mockVisitor.Verify(x => x.ExitStruct(fieldStructString), Times.Exactly(3));
             mockVisitor.Verify(x => x.ExitStruct(fieldStructWithoutArray), Times.Exactly(3));
 
-//            mockVisitor.Verify(x => x.EnterStruct(fieldStructWithoutArray), Times.Once);
-//            mockVisitor.Verify(x => x.EnterStruct(fieldStructInt32), Times.Once);
+            //            mockVisitor.Verify(x => x.EnterStruct(fieldStructWithoutArray), Times.Once);
+            //            mockVisitor.Verify(x => x.EnterStruct(fieldStructInt32), Times.Once);
             mockVisitor.Verify(x => x.EnterInt32(fieldInt32, VALUE2_INT32), Times.Once);
-//            mockVisitor.Verify(x => x.ExitStruct(fieldStructInt32), Times.Once);
-//            mockVisitor.Verify(x => x.EnterStruct(fieldStructString), Times.Once);
-//            mockVisitor.Verify(x => x.EnterString(fieldString, It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>()), Times.Once);
-//            mockVisitor.Verify(x => x.ExitStruct(fieldStructString), Times.Once);
-//            mockVisitor.Verify(x => x.ExitStruct(fieldStructWithoutArray), Times.Once);
+            //            mockVisitor.Verify(x => x.ExitStruct(fieldStructInt32), Times.Once);
+            //            mockVisitor.Verify(x => x.EnterStruct(fieldStructString), Times.Once);
+            //            mockVisitor.Verify(x => x.EnterString(fieldString, It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>()), Times.Once);
+            //            mockVisitor.Verify(x => x.ExitStruct(fieldStructString), Times.Once);
+            //            mockVisitor.Verify(x => x.ExitStruct(fieldStructWithoutArray), Times.Once);
 
-//            mockVisitor.Verify(x => x.EnterStruct(fieldStructWithoutArray), Times.Once);
-//            mockVisitor.Verify(x => x.ExitStruct(fieldStructWithoutArray), Times.Once);
+            //            mockVisitor.Verify(x => x.EnterStruct(fieldStructWithoutArray), Times.Once);
+            //            mockVisitor.Verify(x => x.ExitStruct(fieldStructWithoutArray), Times.Once);
 
             mockVisitor.Verify(x => x.Finished(), Times.Once);
         }
@@ -864,30 +798,26 @@ namespace testfinalmq
         [Fact]
         public void TestArrayEnum()
         {
-            IList<string> VALUE = new List<string>();
-            VALUE.Add("FOO_HELLO");
-            VALUE.Add("FOO_WORLD");
-            VALUE.Add("FOO_WORLD2");
-            VALUE.Add("blabla");
+            IList<test.Foo> VALUE = new List<test.Foo>();
+            VALUE.Add(test.Foo.FOO_HELLO);
+            VALUE.Add(test.Foo.FOO_WORLD);
+            VALUE.Add(test.Foo.FOO_WORLD2);
+            VALUE.Add((test.Foo)42);
+
+            int[] VALUE_INT = new int[]{-2, 0, 1, 42 };
 
             MetaField? fieldValue = MetaDataGlobal.Instance.GetField("test.TestArrayEnum", "value");
             Debug.Assert(fieldValue != null);
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            mockVisitor.Setup(x => x.EnterArrayEnum(fieldValue, It.IsAny<IList<string>>()))
-                .Callback((MetaField field, IList<string> value) =>
-                {
-                    Debug.Assert(value.SequenceEqual(VALUE));
-                });
-
-            string data = "{\"value\":[\"FOO_HELLO\",\"FOO_WORLD\",\"FOO_WORLD2\",\"blabla\"]}";
-            ParserJson parser = new ParserJson(mockVisitor.Object, data);
-            int res = parser.ParseStruct("test.TestArrayEnum");
-            Debug.Assert(res != -1);
+            var root = new test.TestArrayEnum(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
-            mockVisitor.Verify(x => x.EnterArrayEnum(fieldValue, It.IsAny<IList<string>>()), Times.Once);
+            mockVisitor.Verify(x => x.EnterArrayEnum(fieldValue, VALUE_INT), Times.Once);
             mockVisitor.Verify(x => x.Finished(), Times.Once);
         }
 
