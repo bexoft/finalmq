@@ -16,6 +16,8 @@ using System.Reflection.Metadata;
 
 namespace testfinalmq
 {
+    using VariantStruct = List<NameValue>;
+    using VariantList = List<Variant>;
 
     public class TestParserStruct : IDisposable
     {
@@ -50,7 +52,7 @@ namespace testfinalmq
             m_fieldInt32 = structVarVariant.GetFieldByName("valint32");
             m_fieldString = structVarVariant.GetFieldByName("valstring");
             m_fieldList = structVarVariant.GetFieldByName("vallist");
-            m_fieldListWithoutArray = MetaDataGlobal.Instance.GetArrayField(m_fieldList);
+            m_fieldListWithoutArray = MetaDataGlobal.Instance.GetArrayField(m_fieldList!);
 
             Debug.Assert(m_fieldName != null);
             Debug.Assert(m_fieldType != null);
@@ -462,7 +464,7 @@ namespace testfinalmq
             mockVisitor.Verify(x => x.EnterInt32(m_fieldValueInt32!, 0), Times.Once);
 
             mockVisitor.Verify(x => x.EnterStruct(m_fieldValue2!), Times.Once);
-//            mockVisitor.Verify(x => x.EnterEnum(m_fieldType!, variant.VarTypeId.T_NONE), Times.Once);
+            //            mockVisitor.Verify(x => x.EnterEnum(m_fieldType!, variant.VarTypeId.T_NONE), Times.Once);
             mockVisitor.Verify(x => x.ExitStruct(m_fieldValue2!), Times.Once);
 
             mockVisitor.Verify(x => x.Finished(), Times.Once);
@@ -493,6 +495,83 @@ namespace testfinalmq
             mockVisitor.Verify(x => x.ExitStruct(m_fieldValue2!), Times.Once);
 
             mockVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+
+        [Fact]
+        public void TestVariantStruct()
+        {
+            Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
+
+            var root = new test.TestVariant(Variant.Create(new VariantStruct{ new NameValue("key1", Variant.Create(data: new VariantList{ Variant.Create(2), Variant.Create("Hello")})), 
+                                                                              new NameValue("key2", Variant.Create(new VariantStruct{ new NameValue("a", Variant.Create(3)), new NameValue("b", Variant.Create("Hi"))})),
+                                                                              new NameValue("key3", new Variant() ),
+                                                                             }), 0, new Variant());
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
+
+            mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Exactly(1));
+            // VariantStruct{ {"value", VariantStruct{
+            mockVisitor.Verify(x => x.EnterStruct(m_fieldValue!), Times.Once);
+            mockVisitor.Verify(x => x.EnterEnum(m_fieldType!, (int)finalmq.variant.VarTypeId.T_STRUCT), Times.Exactly(2));
+            mockVisitor.Verify(x => x.EnterArrayStruct(m_fieldList!), Times.Exactly(3));
+            // {"key1", VariantList{
+            mockVisitor.Verify(x => x.EnterStruct(m_fieldListWithoutArray!), Times.Exactly(7));
+            mockVisitor.Verify(x => x.EnterString(m_fieldName!, "key1"), Times.Exactly(1));
+            mockVisitor.Verify(x => x.EnterEnum(m_fieldType!, (int)finalmq.variant.VarTypeId.T_LIST), Times.Exactly(1));
+//            mockVisitor.Verify(x => x.EnterArrayStruct(m_fieldList!), Times.Once);
+            // 2
+//            mockVisitor.Verify(x => x.EnterStruct(m_fieldListWithoutArray!), Times.Once);
+            mockVisitor.Verify(x => x.EnterEnum(m_fieldType!, (int)finalmq.variant.VarTypeId.T_INT32), Times.Exactly(2));
+            mockVisitor.Verify(x => x.EnterInt32(m_fieldInt32!, 2), Times.Exactly(1));
+            mockVisitor.Verify(x => x.ExitStruct(m_fieldListWithoutArray!), Times.Exactly(7));
+            // , std::string("Hello")
+//            mockVisitor.Verify(x => x.EnterStruct(m_fieldListWithoutArray!), Times.Once);
+            mockVisitor.Verify(x => x.EnterEnum(m_fieldType!, (int)finalmq.variant.VarTypeId.T_STRING), Times.Exactly(2));
+            mockVisitor.Verify(x => x.EnterString(m_fieldString!, "Hello"), Times.Exactly(1));
+//            mockVisitor.Verify(x => x.ExitStruct(m_fieldListWithoutArray!), Times.Once);
+            // }
+            mockVisitor.Verify(x => x.ExitArrayStruct(m_fieldList!), Times.Exactly(3));
+//            mockVisitor.Verify(x => x.ExitStruct(m_fieldListWithoutArray!), Times.Once);
+
+            // {"key2", VariantStruct{
+//            mockVisitor.Verify(x => x.EnterStruct(m_fieldListWithoutArray!), Times.Once);
+            mockVisitor.Verify(x => x.EnterString(m_fieldName!, "key2"), Times.Exactly(1));
+//            mockVisitor.Verify(x => x.EnterEnum(m_fieldType!, (int)finalmq.variant.VarTypeId.T_STRUCT), Times.Exactly(1));
+//            mockVisitor.Verify(x => x.EnterArrayStruct(m_fieldList!), Times.Exactly(1));
+            // {"a", 3},
+//            mockVisitor.Verify(x => x.EnterStruct(m_fieldListWithoutArray!), Times.Once);
+            mockVisitor.Verify(x => x.EnterString(m_fieldName!, "a"), Times.Exactly(1));
+//            mockVisitor.Verify(x => x.EnterEnum(m_fieldType!, (int)finalmq.variant.VarTypeId.T_INT32), Times.Exactly(1));
+            mockVisitor.Verify(x => x.EnterInt32(m_fieldInt32!, 3), Times.Exactly(1));
+//            mockVisitor.Verify(x => x.ExitStruct(m_fieldListWithoutArray!), Times.Once);
+            // {"b", std::string("Hi")}
+//            mockVisitor.Verify(x => x.EnterStruct(m_fieldListWithoutArray!), Times.Once);
+            mockVisitor.Verify(x => x.EnterString(m_fieldName!, "b"), Times.Exactly(1));
+//            mockVisitor.Verify(x => x.EnterEnum(m_fieldType!, (int)finalmq.variant.VarTypeId.T_STRING), Times.Exactly(1));
+            mockVisitor.Verify(x => x.EnterString(m_fieldString!, "Hi"), Times.Exactly(1));
+//            mockVisitor.Verify(x => x.ExitStruct(m_fieldListWithoutArray!), Times.Once);
+            // }
+//            mockVisitor.Verify(x => x.ExitArrayStruct(m_fieldList!), Times.Once);
+//            mockVisitor.Verify(x => x.ExitStruct(m_fieldListWithoutArray!), Times.Once);
+
+            // {
+//            mockVisitor.Verify(x => x.EnterStruct(m_fieldListWithoutArray!), Times.Once);
+            mockVisitor.Verify(x => x.EnterString(m_fieldName!, "key3"), Times.Exactly(1));
+            mockVisitor.Verify(x => x.EnterEnum(m_fieldType!, (int)finalmq.variant.VarTypeId.T_NONE), Times.Exactly(2));
+//            mockVisitor.Verify(x => x.ExitStruct(m_fieldListWithoutArray!), Times.Once);
+            // }}
+//            mockVisitor.Verify(x => x.ExitArrayStruct(m_fieldList!), Times.Once);
+            mockVisitor.Verify(x => x.ExitStruct(m_fieldValue!), Times.Once);
+
+            mockVisitor.Verify(x => x.EnterInt32(m_fieldValueInt32!, 0), Times.Exactly(1));
+
+            mockVisitor.Verify(x => x.EnterStruct(m_fieldValue2!), Times.Once);
+//            mockVisitor.Verify(x => x.EnterEnum(m_fieldType!, (int)finalmq.variant.VarTypeId.T_NONE), Times.Exactly(1));
+            mockVisitor.Verify(x => x.ExitStruct(m_fieldValue2!), Times.Once);
+
+            mockVisitor.Verify(x => x.Finished(), Times.Exactly(1));
         }
 
 
