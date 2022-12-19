@@ -165,6 +165,10 @@ namespace testfinalmq
             Debug.Assert(connDisconnect != null);
             Debug.Assert(connDisconnect == connection);
             Debug.Assert(connection.ConnectionData.ConnectionState == ConnectionState.CONNECTIONSTATE_DISCONNECTED);
+            if (m_sessionContainer.TryGetSession(connection.SessionId) != null)
+            {
+                Thread.Sleep(100);
+            }
             Debug.Assert(m_sessionContainer.TryGetSession(connection.SessionId) == null);
         }
 

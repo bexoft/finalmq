@@ -145,7 +145,7 @@ namespace finalmq
             int subsize = m_value.Count;
             foreach (NameValue entry in m_value)
             {
-                entry.Value.Accept(visitor, i, level, subsize, "");
+                entry.Value.Accept(visitor, i, level, subsize, entry.Name);
                 i++;
             }
             --level;
