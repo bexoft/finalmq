@@ -8,7 +8,7 @@ namespace finalmq
     using VariantStruct = List<NameValue>;
     using VariantList = List<Variant>;
 
-    class VarValueToVariant
+    public class VarValueToVariant
     {
         public delegate void FuncExit();
         public VarValueToVariant(Variant variant)

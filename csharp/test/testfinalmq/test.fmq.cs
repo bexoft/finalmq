@@ -30,7 +30,8 @@ class RegisterFoo
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterEnum()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(Foo));
+		finalmq.MetaEnum metaEnum = finalmq.StructBase.CreateMetaEnum(typeof(Foo));
+        finalmq.TypeRegistry.Instance.RegisterEnum(typeof(Foo), metaEnum);
     }
 }
 
@@ -44,7 +45,7 @@ class RegisterFoo
 
 
 [finalmq.MetaStruct("desc")]
-public class TestBool
+public class TestBool : finalmq.StructBase
 {
     public TestBool()
 	{
@@ -67,17 +68,31 @@ public class TestBool
 
     bool m_value = false;
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestBool));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(TestBool), () => { return new TestBool(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestBool));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(TestBool), m_metaStruct, () => { return new TestBool(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestInt32
+public class TestInt32 : finalmq.StructBase
 {
     public TestInt32()
 	{
@@ -100,17 +115,31 @@ public class TestInt32
 
     int m_value = 0;
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestInt32));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(TestInt32), () => { return new TestInt32(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestInt32));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(TestInt32), m_metaStruct, () => { return new TestInt32(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestUInt32
+public class TestUInt32 : finalmq.StructBase
 {
     public TestUInt32()
 	{
@@ -133,17 +162,31 @@ public class TestUInt32
 
     uint m_value = 0;
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestUInt32));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(TestUInt32), () => { return new TestUInt32(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestUInt32));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(TestUInt32), m_metaStruct, () => { return new TestUInt32(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestInt64
+public class TestInt64 : finalmq.StructBase
 {
     public TestInt64()
 	{
@@ -166,17 +209,31 @@ public class TestInt64
 
     long m_value = 0;
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestInt64));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(TestInt64), () => { return new TestInt64(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestInt64));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(TestInt64), m_metaStruct, () => { return new TestInt64(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestUInt64
+public class TestUInt64 : finalmq.StructBase
 {
     public TestUInt64()
 	{
@@ -199,17 +256,31 @@ public class TestUInt64
 
     ulong m_value = 0;
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestUInt64));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(TestUInt64), () => { return new TestUInt64(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestUInt64));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(TestUInt64), m_metaStruct, () => { return new TestUInt64(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestFloat
+public class TestFloat : finalmq.StructBase
 {
     public TestFloat()
 	{
@@ -232,17 +303,31 @@ public class TestFloat
 
     float m_value = 0.0f;
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestFloat));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(TestFloat), () => { return new TestFloat(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestFloat));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(TestFloat), m_metaStruct, () => { return new TestFloat(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestDouble
+public class TestDouble : finalmq.StructBase
 {
     public TestDouble()
 	{
@@ -265,17 +350,31 @@ public class TestDouble
 
     double m_value = 0.0;
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestDouble));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(TestDouble), () => { return new TestDouble(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestDouble));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(TestDouble), m_metaStruct, () => { return new TestDouble(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestString
+public class TestString : finalmq.StructBase
 {
     public TestString()
 	{
@@ -298,17 +397,31 @@ public class TestString
 
     string m_value = "";
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestString));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(TestString), () => { return new TestString(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestString));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(TestString), m_metaStruct, () => { return new TestString(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestBytes
+public class TestBytes : finalmq.StructBase
 {
     public TestBytes()
 	{
@@ -331,17 +444,31 @@ public class TestBytes
 
     byte[] m_value = new byte[0];
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestBytes));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(TestBytes), () => { return new TestBytes(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestBytes));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(TestBytes), m_metaStruct, () => { return new TestBytes(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestStruct
+public class TestStruct : finalmq.StructBase
 {
     public TestStruct()
 	{
@@ -382,17 +509,31 @@ public class TestStruct
     test.TestString m_struct_string = new test.TestString();
     uint m_last_value = 0;
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestStruct));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(TestStruct), () => { return new TestStruct(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestStruct));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(TestStruct), m_metaStruct, () => { return new TestStruct(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestStructBlockSize
+public class TestStructBlockSize : finalmq.StructBase
 {
     public TestStructBlockSize()
 	{
@@ -433,17 +574,31 @@ public class TestStructBlockSize
     test.TestString m_struct_string = new test.TestString();
     uint m_last_value = 0;
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestStructBlockSize));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(TestStructBlockSize), () => { return new TestStructBlockSize(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestStructBlockSize));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(TestStructBlockSize), m_metaStruct, () => { return new TestStructBlockSize(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestEnum
+public class TestEnum : finalmq.StructBase
 {
     public TestEnum()
 	{
@@ -466,17 +621,31 @@ public class TestEnum
 
     test.Foo m_value = new test.Foo();
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestEnum));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(TestEnum), () => { return new TestEnum(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestEnum));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(TestEnum), m_metaStruct, () => { return new TestEnum(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestVariant
+public class TestVariant : finalmq.StructBase
 {
     public TestVariant()
 	{
@@ -517,17 +686,31 @@ public class TestVariant
     int m_valueInt32 = 0;
     finalmq.Variant m_value2 = new finalmq.Variant();
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestVariant));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(TestVariant), () => { return new TestVariant(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestVariant));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(TestVariant), m_metaStruct, () => { return new TestVariant(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestArrayBool
+public class TestArrayBool : finalmq.StructBase
 {
     public TestArrayBool()
 	{
@@ -550,17 +733,31 @@ public class TestArrayBool
 
     bool[] m_value = new bool[0];
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestArrayBool));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(TestArrayBool), () => { return new TestArrayBool(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestArrayBool));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(TestArrayBool), m_metaStruct, () => { return new TestArrayBool(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestArrayInt32
+public class TestArrayInt32 : finalmq.StructBase
 {
     public TestArrayInt32()
 	{
@@ -583,17 +780,31 @@ public class TestArrayInt32
 
     int[] m_value = new int[0];
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestArrayInt32));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(TestArrayInt32), () => { return new TestArrayInt32(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestArrayInt32));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(TestArrayInt32), m_metaStruct, () => { return new TestArrayInt32(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestArrayUInt32
+public class TestArrayUInt32 : finalmq.StructBase
 {
     public TestArrayUInt32()
 	{
@@ -616,17 +827,31 @@ public class TestArrayUInt32
 
     uint[] m_value = new uint[0];
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestArrayUInt32));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(TestArrayUInt32), () => { return new TestArrayUInt32(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestArrayUInt32));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(TestArrayUInt32), m_metaStruct, () => { return new TestArrayUInt32(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestArrayInt64
+public class TestArrayInt64 : finalmq.StructBase
 {
     public TestArrayInt64()
 	{
@@ -649,17 +874,31 @@ public class TestArrayInt64
 
     long[] m_value = new long[0];
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestArrayInt64));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(TestArrayInt64), () => { return new TestArrayInt64(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestArrayInt64));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(TestArrayInt64), m_metaStruct, () => { return new TestArrayInt64(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestArrayUInt64
+public class TestArrayUInt64 : finalmq.StructBase
 {
     public TestArrayUInt64()
 	{
@@ -682,17 +921,31 @@ public class TestArrayUInt64
 
     ulong[] m_value = new ulong[0];
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestArrayUInt64));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(TestArrayUInt64), () => { return new TestArrayUInt64(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestArrayUInt64));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(TestArrayUInt64), m_metaStruct, () => { return new TestArrayUInt64(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestArrayFloat
+public class TestArrayFloat : finalmq.StructBase
 {
     public TestArrayFloat()
 	{
@@ -715,17 +968,31 @@ public class TestArrayFloat
 
     float[] m_value = new float[0];
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestArrayFloat));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(TestArrayFloat), () => { return new TestArrayFloat(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestArrayFloat));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(TestArrayFloat), m_metaStruct, () => { return new TestArrayFloat(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestArrayDouble
+public class TestArrayDouble : finalmq.StructBase
 {
     public TestArrayDouble()
 	{
@@ -748,17 +1015,31 @@ public class TestArrayDouble
 
     double[] m_value = new double[0];
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestArrayDouble));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(TestArrayDouble), () => { return new TestArrayDouble(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestArrayDouble));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(TestArrayDouble), m_metaStruct, () => { return new TestArrayDouble(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestArrayString
+public class TestArrayString : finalmq.StructBase
 {
     public TestArrayString()
 	{
@@ -781,17 +1062,31 @@ public class TestArrayString
 
     IList<string> m_value = new string[0];
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestArrayString));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(TestArrayString), () => { return new TestArrayString(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestArrayString));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(TestArrayString), m_metaStruct, () => { return new TestArrayString(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestArrayBytes
+public class TestArrayBytes : finalmq.StructBase
 {
     public TestArrayBytes()
 	{
@@ -814,17 +1109,31 @@ public class TestArrayBytes
 
     IList<byte[]> m_value = new List<byte[]>();
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestArrayBytes));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(TestArrayBytes), () => { return new TestArrayBytes(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestArrayBytes));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(TestArrayBytes), m_metaStruct, () => { return new TestArrayBytes(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestArrayStruct
+public class TestArrayStruct : finalmq.StructBase
 {
     public TestArrayStruct()
 	{
@@ -856,17 +1165,31 @@ public class TestArrayStruct
     IList<test.TestStruct> m_value = new List<test.TestStruct>();
     uint m_last_value = 0;
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestArrayStruct));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(TestArrayStruct), () => { return new TestArrayStruct(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestArrayStruct));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(TestArrayStruct), m_metaStruct, () => { return new TestArrayStruct(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestArrayEnum
+public class TestArrayEnum : finalmq.StructBase
 {
     public TestArrayEnum()
 	{
@@ -889,17 +1212,31 @@ public class TestArrayEnum
 
     IList<test.Foo> m_value = new List<test.Foo>();
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestArrayEnum));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(TestArrayEnum), () => { return new TestArrayEnum(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestArrayEnum));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(TestArrayEnum), m_metaStruct, () => { return new TestArrayEnum(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestRequest
+public class TestRequest : finalmq.StructBase
 {
     public TestRequest()
 	{
@@ -922,17 +1259,31 @@ public class TestRequest
 
     string m_datarequest = "";
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestRequest));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(TestRequest), () => { return new TestRequest(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestRequest));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(TestRequest), m_metaStruct, () => { return new TestRequest(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestReply
+public class TestReply : finalmq.StructBase
 {
     public TestReply()
 	{
@@ -955,12 +1306,26 @@ public class TestReply
 
     string m_datareply = "";
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestReply));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(TestReply), () => { return new TestReply(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestReply));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(TestReply), m_metaStruct, () => { return new TestReply(); } );
     }
 }
 

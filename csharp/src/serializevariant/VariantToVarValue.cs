@@ -5,7 +5,7 @@ using System.Diagnostics;
 
 namespace finalmq
 {
-    class VariantToVarValue : IVariantVisitor
+    public class VariantToVarValue : IVariantVisitor
     {
         public VariantToVarValue(Variant variant, IParserVisitor visitor)
         {

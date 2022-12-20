@@ -74,7 +74,8 @@ class RegisterSerializeMetaTypeId
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterEnum()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(SerializeMetaTypeId));
+		finalmq.MetaEnum metaEnum = finalmq.StructBase.CreateMetaEnum(typeof(SerializeMetaTypeId));
+        finalmq.TypeRegistry.Instance.RegisterEnum(typeof(SerializeMetaTypeId), metaEnum);
     }
 }
 
@@ -95,7 +96,8 @@ class RegisterSerializeMetaFieldFlags
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterEnum()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(SerializeMetaFieldFlags));
+		finalmq.MetaEnum metaEnum = finalmq.StructBase.CreateMetaEnum(typeof(SerializeMetaFieldFlags));
+        finalmq.TypeRegistry.Instance.RegisterEnum(typeof(SerializeMetaFieldFlags), metaEnum);
     }
 }
 
@@ -109,7 +111,7 @@ class RegisterSerializeMetaFieldFlags
 
 
 [finalmq.MetaStruct("desc")]
-public class SerializeMetaEnumEntry
+public class SerializeMetaEnumEntry : finalmq.StructBase
 {
     public SerializeMetaEnumEntry()
 	{
@@ -159,17 +161,31 @@ public class SerializeMetaEnumEntry
     string m_desc = "";
     string m_alias = "";
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(SerializeMetaEnumEntry));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(SerializeMetaEnumEntry), () => { return new SerializeMetaEnumEntry(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(SerializeMetaEnumEntry));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(SerializeMetaEnumEntry), m_metaStruct, () => { return new SerializeMetaEnumEntry(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class SerializeMetaEnum
+public class SerializeMetaEnum : finalmq.StructBase
 {
     public SerializeMetaEnum()
 	{
@@ -210,17 +226,31 @@ public class SerializeMetaEnum
     string m_desc = "";
     IList<finalmq.SerializeMetaEnumEntry> m_entries = new List<finalmq.SerializeMetaEnumEntry>();
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(SerializeMetaEnum));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(SerializeMetaEnum), () => { return new SerializeMetaEnum(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(SerializeMetaEnum));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(SerializeMetaEnum), m_metaStruct, () => { return new SerializeMetaEnum(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class SerializeMetaField
+public class SerializeMetaField : finalmq.StructBase
 {
     public SerializeMetaField()
 	{
@@ -279,17 +309,31 @@ public class SerializeMetaField
     string m_desc = "";
     IList<finalmq.SerializeMetaFieldFlags> m_flags = new List<finalmq.SerializeMetaFieldFlags>();
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(SerializeMetaField));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(SerializeMetaField), () => { return new SerializeMetaField(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(SerializeMetaField));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(SerializeMetaField), m_metaStruct, () => { return new SerializeMetaField(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class SerializeMetaStruct
+public class SerializeMetaStruct : finalmq.StructBase
 {
     public SerializeMetaStruct()
 	{
@@ -330,17 +374,31 @@ public class SerializeMetaStruct
     string m_desc = "";
     IList<finalmq.SerializeMetaField> m_fields = new List<finalmq.SerializeMetaField>();
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(SerializeMetaStruct));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(SerializeMetaStruct), () => { return new SerializeMetaStruct(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(SerializeMetaStruct));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(SerializeMetaStruct), m_metaStruct, () => { return new SerializeMetaStruct(); } );
     }
 }
 
 [finalmq.MetaStruct("desc")]
-public class SerializeMetaData
+public class SerializeMetaData : finalmq.StructBase
 {
     public SerializeMetaData()
 	{
@@ -372,12 +430,26 @@ public class SerializeMetaData
     IList<finalmq.SerializeMetaEnum> m_enums = new List<finalmq.SerializeMetaEnum>();
     IList<finalmq.SerializeMetaStruct> m_structs = new List<finalmq.SerializeMetaStruct>();
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(SerializeMetaData));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(SerializeMetaData), () => { return new SerializeMetaData(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(SerializeMetaData));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(SerializeMetaData), m_metaStruct, () => { return new SerializeMetaData(); } );
     }
 }
 

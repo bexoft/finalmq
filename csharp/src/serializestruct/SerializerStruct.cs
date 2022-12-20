@@ -7,11 +7,11 @@ using System.Text;
 namespace finalmq
 {
 
-    class SerializerStruct : ParserConverter
+    public class SerializerStruct : ParserRedirect
     {
         static readonly string STR_VARVALUE = "finalmq.variant.VarValue";
 
-        public SerializerStruct(object root)
+        public SerializerStruct(StructBase root)
         {
             m_internal = new Internal(this, root);
             SetVisitor(m_internal);
@@ -22,7 +22,7 @@ namespace finalmq
         }
         class Internal : IParserVisitor
         {
-            public Internal(SerializerStruct outer, object root)
+            public Internal(SerializerStruct outer, StructBase root)
             {
                 m_root = root;
                 m_outer = outer;
@@ -35,17 +35,19 @@ namespace finalmq
                 m_funcExit = funcExit;
             }
 
-            void ClearStruct(object stru)
+            void ClearStruct(StructBase stru)
             {
                 Type type = stru.GetType();
-                object? struEmpty = Activator.CreateInstance(type);
+                StructBase? struEmpty = Activator.CreateInstance(type) as StructBase;
                 if (struEmpty != null)
                 {
                     PropertyInfo[] properties = type.GetProperties();
                     foreach (var property in properties)
                     {
-                        Type typeProp = property.PropertyType;
-                        property.SetValue(stru, property.GetValue(struEmpty));
+                        if (property.CanWrite)
+                        {
+                            property.SetValue(stru, property.GetValue(struEmpty));
+                        }
                     }
                 }
             }
@@ -65,6 +67,10 @@ namespace finalmq
 
             public void EnterStruct(MetaField field)
             {
+                if (field.TypeId != MetaTypeId.TYPE_STRUCT)
+                {
+                    return;
+                }
                 Debug.Assert(m_stack.Count != 0);
                 Debug.Assert(m_current != null);
 
@@ -72,7 +78,7 @@ namespace finalmq
                 {
                     m_varValueToVariant = null;
                     Variant? variant = null;
-                    object? structBase = m_current.StructBase;
+                    StructBase? structBase = m_current.StructBase;
                     if (structBase != null)
                     {
                         PropertyInfo? property = structBase.GetType().GetProperty(field.Name);
@@ -99,8 +105,8 @@ namespace finalmq
                 }
                 else
                 {
-                    object? sub = null;
-                    object? structBase = m_current.StructBase;
+                    StructBase? sub = null;
+                    StructBase? structBase = m_current.StructBase;
                     if (structBase != null)
                     {
                         PropertyInfo? property = structBase.GetType().GetProperty(field.Name);
@@ -108,16 +114,11 @@ namespace finalmq
                         {
                             if (m_current.StructArrayIndex == -1)
                             {
-                                sub = property.GetValue(structBase);
+                                sub = property.GetValue(structBase) as StructBase;
                             }
                             else
                             {
-                                object? arr = property.GetValue(structBase);
-                                if (arr == null)
-                                {
-                                    arr = Activator.CreateInstance(property.PropertyType);
-                                    property.SetValue(structBase, arr);
-                                }
+                                StructBase? arr = property.GetValue(structBase) as StructBase;
                                 if (arr != null)
                                 {
                                     System.Collections.IList list = (System.Collections.IList)arr;
@@ -127,7 +128,7 @@ namespace finalmq
                                         if (genericTypes != null && genericTypes.Length > 0)
                                         {
                                             Type genericType = genericTypes[0];
-                                            sub = Activator.CreateInstance(genericType);
+                                            sub = Activator.CreateInstance(genericType) as StructBase;
                                             list.Add(sub);
                                         }
                                     }
@@ -141,6 +142,10 @@ namespace finalmq
             }
             public void ExitStruct(MetaField field)
             {
+                if (field.TypeId != MetaTypeId.TYPE_STRUCT)
+                {
+                    return;
+                }
                 if (m_stack.Count != 0)
                 {
                     m_stack.RemoveAt(m_stack.Count - 1);
@@ -161,280 +166,843 @@ namespace finalmq
 
             public void EnterArrayStruct(MetaField field)
             {
+                if (field.TypeId != MetaTypeId.TYPE_ARRAY_STRUCT)
+                {
+                    return;
+                }
                 Debug.Assert(m_current != null);
                 m_current.StructArrayIndex = field.Index;
             }
             public void ExitArrayStruct(MetaField field)
             {
+                if (field.TypeId != MetaTypeId.TYPE_ARRAY_STRUCT)
+                {
+                    return;
+                }
                 Debug.Assert(m_current != null);
                 m_current.StructArrayIndex = -1;
             }
 
-            void SetValue<T>(string fieldName, T value)
+            void SetValue<T>(PropertyInfo property, T value)
             {
                 Debug.Assert(m_current != null);
-                object? structBase = m_current.StructBase;
+                StructBase? structBase = m_current.StructBase;
                 if (structBase != null)
                 {
-                    PropertyInfo? property = structBase.GetType().GetProperty(fieldName);
-                    if (property != null)
+                    property.SetValue(structBase, value);
+                }
+            }
+
+            object? GetValue(PropertyInfo property)
+            {
+                Debug.Assert(m_current != null);
+                StructBase? structBase = m_current.StructBase;
+                if (structBase != null)
+                {
+                    return property.GetValue(structBase);
+                }
+                return null;
+            }
+
+            PropertyInfo? GetProperty(string fieldName)
+            {
+                Debug.Assert(m_current != null);
+                StructBase? structBase = m_current.StructBase;
+                if (structBase != null)
+                {
+                    return structBase.GetType().GetProperty(fieldName);
+                }
+                return null;
+            }
+
+            public dynamic? ConvertNumber(PropertyInfo property, dynamic value)
+            {
+                Type propertyType = property.PropertyType;
+                try
+                {
+                    if (propertyType == typeof(bool))
                     {
-                        property.SetValue(structBase, value);
+                        return (bool)value;
+                    }
+                    else if (propertyType == typeof(int))
+                    {
+                        return (int)value;
+                    }
+                    else if (propertyType == typeof(uint))
+                    {
+                        return (uint)value;
+                    }
+                    else if (propertyType == typeof(long))
+                    {
+                        return (long)value;
+                    }
+                    else if (propertyType == typeof(ulong))
+                    {
+                        return (ulong)value;
+                    }
+                    else if (propertyType == typeof(float))
+                    {
+                        return (float)value;
+                    }
+                    else if (propertyType == typeof(double))
+                    {
+                        return (double)value;
+                    }
+                    else if (propertyType == typeof(string))
+                    {
+                        return Convertion.Convert<string>(value);
+                    }
+                    else if (propertyType.IsEnum)
+                    {
+                        int v = (int)value;
+                        return ConvertIntToEnum(propertyType, v);
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(bool[])))
+                    {
+                        return new bool[] { (bool)value };
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(int[])))
+                    {
+                        return new int[] { (int)value };
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(uint[])))
+                    {
+                        return new uint[] { (uint)value };
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(long[])))
+                    {
+                        return new long[] { (long)value };
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(ulong[])))
+                    {
+                        return new ulong[] { (ulong)value };
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(float[])))
+                    {
+                        return new float[] { (float)value };
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(double[])))
+                    {
+                        return new double[] { (double)value };
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(IList<string>)))
+                    {
+                        return new List<string> { Convertion.Convert<string>(value) };
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(IList<byte[]>)))
+                    {
+                        return new List<byte[]> { Encoding.UTF8.GetBytes(Convertion.Convert<string>(value)) };
+                    }
+                    else if (propertyType.IsGenericType && (propertyType.GenericTypeArguments.Length == 1) && propertyType.GenericTypeArguments[0].IsEnum)
+                    {
+                        Type typeEnum = propertyType.GenericTypeArguments[0];
+                        int v = (int)value;
+                        dynamic? valueEnum = ConvertIntToEnum(typeEnum, v);
+                        if (valueEnum != null)
+                        {
+                            object? propertyValue = GetValue(property);
+                            System.Collections.IList? list = propertyValue as System.Collections.IList;
+                            if (list != null)
+                            {
+                                list.Add(valueEnum);
+                            }
+                            return list;
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                }
+                return null;
+            }
+
+            T[] ConvertArrayToType<T, D>(D[] value)
+            {
+                Debug.Assert(value != null);
+                T[] arr = new T[value.Length];
+                int i = 0;
+                foreach (var v in value)
+                {
+                    Debug.Assert(v != null);
+                    arr[i] = (T)(dynamic)v;
+                    ++i;
+                }
+                return arr;
+            }
+            T[] ConvertArrayToType<T>(IList<string> value)
+            {
+                T[] arr = new T[value.Count];
+                int i = 0;
+                foreach (var v in value)
+                {
+                    T? valueT = Convertion.Convert<T>(v ?? "");
+                    Debug.Assert(valueT != null);
+                    arr[i] = valueT;
+                }
+                return arr;
+            }
+            public dynamic? ConvertArrayNumber<T>(PropertyInfo property, T[] value)
+            {
+                Type propertyType = property.PropertyType;
+                Debug.Assert(value != null);
+                dynamic? valueOne = null;
+                if (value.Length != 0)
+                {
+                    valueOne = value[0];
+                }
+                try
+                {
+                    if (propertyType == typeof(bool))
+                    {
+                        if (valueOne != null)
+                        {
+                            return (bool)valueOne;
+                        }
+                    }
+                    else if (propertyType == typeof(int))
+                    {
+                        if (valueOne != null)
+                        {
+                            return (int)valueOne;
+                        }
+                    }
+                    else if (propertyType == typeof(uint))
+                    {
+                        if (valueOne != null)
+                        {
+                            return (uint)valueOne;
+                        }
+                    }
+                    else if (propertyType == typeof(long))
+                    {
+                        if (valueOne != null)
+                        {
+                            return (long)valueOne;
+                        }
+                    }
+                    else if (propertyType == typeof(ulong))
+                    {
+                        if (valueOne != null)
+                        {
+                            return (ulong)valueOne;
+                        }
+                    }
+                    else if (propertyType == typeof(float))
+                    {
+                        if (valueOne != null)
+                        {
+                            return (float)valueOne;
+                        }
+                    }
+                    else if (propertyType == typeof(double))
+                    {
+                        if (valueOne != null)
+                        {
+                            return (double)valueOne;
+                        }
+                    }
+                    else if (propertyType == typeof(string))
+                    {
+                        if (valueOne != null)
+                        {
+                            return Convertion.Convert<string>(valueOne);
+                        }
+                    }
+                    else if (propertyType.IsEnum)
+                    {
+                        if (valueOne != null)
+                        {
+                            int v = (int)valueOne;
+                            return ConvertIntToEnum(propertyType, v);
+                        }
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(bool[])))
+                    {
+                        return ConvertArrayToType<bool, T>(value);
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(int[])))
+                    {
+                        return ConvertArrayToType<int, T>(value);
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(uint[])))
+                    {
+                        return ConvertArrayToType<uint, T>(value);
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(long[])))
+                    {
+                        return ConvertArrayToType<long, T>(value);
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(ulong[])))
+                    {
+                        return ConvertArrayToType<ulong, T>(value);
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(float[])))
+                    {
+                        return ConvertArrayToType<float, T>(value);
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(double[])))
+                    {
+                        return ConvertArrayToType<double, T>(value);
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(IList<string>)))
+                    {
+                        IList<string> list = new List<string>();
+                        foreach (var v in value)
+                        {
+                            Debug.Assert(v != null);
+                            list.Add(Convertion.Convert<string>(v) ?? "");
+                        }
+                        return list;
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(IList<byte[]>)))
+                    {
+                        IList<byte[]> list = new List<byte[]>();
+                        foreach (var v in value)
+                        {
+                            Debug.Assert(v != null);
+                            list.Add(Encoding.UTF8.GetBytes(Convertion.Convert<string>(v) ?? ""));
+                        }
+                        return list;
+                    }
+                    else if (propertyType.IsGenericType && (propertyType.GenericTypeArguments.Length == 1) && propertyType.GenericTypeArguments[0].IsEnum)
+                    {
+                        Type typeEnum = propertyType.GenericTypeArguments[0];
+                        object? propertyValue = GetValue(property);
+                        System.Collections.IList? list = propertyValue as System.Collections.IList;
+                        if (list != null)
+                        {
+                            foreach (var v in value)
+                            {
+                                Debug.Assert(v != null);
+                                dynamic? valueEnum = ConvertIntToEnum(typeEnum, (int)(dynamic)v);
+                                list.Add(valueEnum);
+                            }
+                            return null;
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                }
+                return null;
+            }
+
+            dynamic? ConvertString(PropertyInfo property, string value)
+            {
+                Type propertyType = property.PropertyType;
+                try
+                {
+                    if (propertyType == typeof(bool))
+                    {
+                        return Convertion.Convert<bool>(value);
+                    }
+                    else if (propertyType == typeof(int))
+                    {
+                        return Convertion.Convert<int>(value);
+                    }
+                    else if (propertyType == typeof(uint))
+                    {
+                        return Convertion.Convert<uint>(value);
+                    }
+                    else if (propertyType == typeof(long))
+                    {
+                        return Convertion.Convert<long>(value);
+                    }
+                    else if (propertyType == typeof(ulong))
+                    {
+                        return Convertion.Convert<ulong>(value);
+                    }
+                    else if (propertyType == typeof(float))
+                    {
+                        return Convertion.Convert<float>(value);
+                    }
+                    else if (propertyType == typeof(double))
+                    {
+                        return Convertion.Convert<double>(value);
+                    }
+                    else if (propertyType == typeof(string))
+                    {
+                        return value;
+                    }
+                    else if (propertyType.IsEnum)
+                    {
+                        return ConvertStringToEnum(propertyType, value);
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(bool[])))
+                    {
+                        return new bool[] { Convertion.Convert<bool>(value) };
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(int[])))
+                    {
+                        return new int[] { Convertion.Convert<int>(value) };
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(uint[])))
+                    {
+                        return new uint[] { Convertion.Convert<uint>(value) };
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(long[])))
+                    {
+                        return new long[] { Convertion.Convert<long>(value) };
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(ulong[])))
+                    {
+                        return new ulong[] { Convertion.Convert<ulong>(value) };
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(float[])))
+                    {
+                        return new float[] { Convertion.Convert<float>(value) };
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(double[])))
+                    {
+                        return new double[] { Convertion.Convert<double>(value) };
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(IList<string>)))
+                    {
+                        return new List<string> { value };
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(IList<byte[]>)))
+                    {
+                        return new List<byte[]> { Encoding.UTF8.GetBytes(value) };
+                    }
+                    else if (propertyType.IsGenericType && (propertyType.GenericTypeArguments.Length == 1) && propertyType.GenericTypeArguments[0].IsEnum)
+                    {
+                        Type typeEnum = propertyType.GenericTypeArguments[0];
+                        dynamic? valueEnum = ConvertStringToEnum(typeEnum, value);
+                        if (valueEnum != null)
+                        {
+                            object? propertyValue = GetValue(property);
+                            System.Collections.IList? list = propertyValue as System.Collections.IList;
+                            if (list != null)
+                            {
+                                list.Add(valueEnum);
+                            }
+                            return null;
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                }
+                return null;
+            }
+
+            public dynamic? ConvertArrayString(PropertyInfo property, IList<string> value)
+            {
+                Type propertyType = property.PropertyType;
+                Debug.Assert(value != null);
+                string? valueOne = null;
+                if (value.Count != 0)
+                {
+                    valueOne = value[0];
+                }
+                try
+                {
+                    if (propertyType == typeof(bool))
+                    {
+                        if (valueOne != null)
+                        {
+                            return Convertion.Convert<bool>(valueOne);
+                        }
+                    }
+                    else if (propertyType == typeof(int))
+                    {
+                        if (valueOne != null)
+                        {
+                            return Convertion.Convert<int>(valueOne);
+                        }
+                    }
+                    else if (propertyType == typeof(uint))
+                    {
+                        if (valueOne != null)
+                        {
+                            return Convertion.Convert<uint>(valueOne);
+                        }
+                    }
+                    else if (propertyType == typeof(long))
+                    {
+                        if (valueOne != null)
+                        {
+                            return Convertion.Convert<long>(valueOne);
+                        }
+                    }
+                    else if (propertyType == typeof(ulong))
+                    {
+                        if (valueOne != null)
+                        {
+                            return Convertion.Convert<ulong>(valueOne);
+                        }
+                    }
+                    else if (propertyType == typeof(float))
+                    {
+                        if (valueOne != null)
+                        {
+                            return Convertion.Convert<float>(valueOne);
+                        }
+                    }
+                    else if (propertyType == typeof(double))
+                    {
+                        if (valueOne != null)
+                        {
+                            return Convertion.Convert<double>(valueOne);
+                        }
+                    }
+                    else if (propertyType == typeof(string))
+                    {
+                        if (valueOne != null)
+                        {
+                            return valueOne;
+                        }
+                    }
+                    else if (propertyType.IsEnum)
+                    {
+                        if (valueOne != null)
+                        {
+                            return ConvertStringToEnum(propertyType, valueOne);
+                        }
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(bool[])))
+                    {
+                        return ConvertArrayToType<bool>(value);
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(int[])))
+                    {
+                        return ConvertArrayToType<int>(value);
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(uint[])))
+                    {
+                        return ConvertArrayToType<uint>(value);
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(long[])))
+                    {
+                        return ConvertArrayToType<long>(value);
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(ulong[])))
+                    {
+                        return ConvertArrayToType<ulong>(value);
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(float[])))
+                    {
+                        return ConvertArrayToType<float>(value);
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(double[])))
+                    {
+                        return ConvertArrayToType<double>(value);
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(IList<string>)))
+                    {
+                        return value;
+                    }
+                    else if (propertyType.IsSubclassOf(typeof(IList<byte[]>)))
+                    {
+                        IList<byte[]> list = new List<byte[]>();
+                        foreach (var v in value)
+                        {
+                            Debug.Assert(v != null);
+                            list.Add(Encoding.UTF8.GetBytes(Convertion.Convert<string>(v) ?? ""));
+                        }
+                        return list;
+                    }
+                    else if (propertyType.IsGenericType && (propertyType.GenericTypeArguments.Length == 1) && propertyType.GenericTypeArguments[0].IsEnum)
+                    {
+                        Type typeEnum = propertyType.GenericTypeArguments[0];
+                        object? propertyValue = GetValue(property);
+                        System.Collections.IList? list = propertyValue as System.Collections.IList;
+                        if (list != null)
+                        {
+                            foreach (var v in value)
+                            {
+                                Debug.Assert(v != null);
+                                dynamic? valueEnum = ConvertStringToEnum(typeEnum, v);
+                                list.Add(valueEnum);
+                            }
+                            return null;
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                }
+                return null;
+            }
+
+
+            void SetValueNumber<T>(string fieldName, T value)
+            {
+                Debug.Assert(value != null);
+                PropertyInfo? property = GetProperty(fieldName);
+                if (property != null)
+                {
+                    Type propertyType = property.PropertyType;
+                    if (propertyType == typeof(T))
+                    {
+                        SetValue(property, value);
+                    }
+                    else
+                    {
+                        dynamic? v = ConvertNumber(property, value);
+                        if (v != null)
+                        {
+                            SetValue(property, v);
+                        }
                     }
                 }
             }
+
+            void SetValueArrayNumber<T>(string fieldName, T[] value)
+            {
+                Debug.Assert(value != null);
+                PropertyInfo? property = GetProperty(fieldName);
+                if (property != null)
+                {
+                    Type propertyType = property.PropertyType;
+                    if (propertyType.IsSubclassOf(typeof(T[])))
+                    {
+                        SetValue(property, value);
+                    }
+                    else
+                    {
+                        dynamic? v = ConvertArrayNumber(property, value);
+                        if (v != null)
+                        {
+                            SetValue(property, v);
+                        }
+                    }
+                }
+            }
+
+            void SetValueString(string fieldName, string value)
+            {
+                PropertyInfo? property = GetProperty(fieldName);
+                if (property != null)
+                {
+                    Type propertyType = property.PropertyType;
+                    if (propertyType == typeof(string))
+                    {
+                        SetValue(property, value);
+                    }
+                    else
+                    {
+                        dynamic? v = ConvertString(property, value);
+                        if (v != null)
+                        {
+                            SetValue(property, v);
+                        }
+                    }
+                }
+            }
+
+            void SetValueArrayString(string fieldName, IList<string> value)
+            {
+                Debug.Assert(value != null);
+                PropertyInfo? property = GetProperty(fieldName);
+                if (property != null)
+                {
+                    Type propertyType = property.PropertyType;
+                    if (propertyType.IsSubclassOf(typeof(IList<string>)))
+                    {
+                        SetValue(property, value);
+                    }
+                    else
+                    {
+                        dynamic? v = ConvertArrayString(property, value);
+                        if (v != null)
+                        {
+                            SetValue(property, v);
+                        }
+                    }
+                }
+            }
+
             public void EnterBool(MetaField field, bool value)
             {
-                SetValue(field.Name, value);
+                SetValueNumber(field.Name, value);
             }
             public void EnterInt32(MetaField field, int value)
             {
-                SetValue(field.Name, value);
+                SetValueNumber(field.Name, value);
             }
             public void EnterUInt32(MetaField field, uint value)
             {
-                SetValue(field.Name, value);
+                SetValueNumber(field.Name, value);
             }
             public void EnterInt64(MetaField field, long value)
             {
-                SetValue(field.Name, value);
+                SetValueNumber(field.Name, value);
             }
             public void EnterUInt64(MetaField field, ulong value)
             {
-                SetValue(field.Name, value);
+                SetValueNumber(field.Name, value);
             }
             public void EnterFloat(MetaField field, float value)
             {
-                SetValue(field.Name, value);
+                SetValueNumber(field.Name, value);
             }
             public void EnterDouble(MetaField field, double value)
             {
-                SetValue(field.Name, value);
+                SetValueNumber(field.Name, value);
             }
             public void EnterString(MetaField field, string value)
             {
-                SetValue(field.Name, value);
+                //todo
+                SetValueString(field.Name, value);
             }
             public void EnterString(MetaField field, byte[] buffer, int offset, int size)
             {
-                SetValue(field.Name, Encoding.UTF8.GetString(buffer, offset, size));
+                SetValueString(field.Name, Encoding.UTF8.GetString(buffer, offset, size));
             }
             public void EnterBytes(MetaField field, byte[] value)
             {
-                SetValue(field.Name, value);
+                string fieldName = field.Name;
+                PropertyInfo? property = GetProperty(fieldName);
+                if (property != null)
+                {
+                    Type propertyType = property.PropertyType;
+                    if (propertyType == typeof(byte[]))
+                    {
+                        SetValue(property, value);
+                    }
+                    else
+                    {
+                        string valueString = Encoding.ASCII.GetString(value);
+                        dynamic? v = ConvertString(property, valueString);
+                        if (v != null)
+                        {
+                            SetValue(property, v);
+                        }
+                    }
+                }
+            }
+
+            private object? ConvertIntToEnum(Type enumType, int value)
+            {
+                object? enumValue = null;
+                if (enumType.IsEnum)
+                {
+                    System.Array enumValues = System.Enum.GetValues(enumType);
+                    foreach (var enumEntry in enumValues)
+                    {
+                        int enumVal = System.Convert.ToInt32(enumEntry);
+                        if (enumVal == value)
+                        {
+                            enumValue = enumEntry;
+                            break;
+                        }
+                        if (enumVal == 0)
+                        {
+                            enumValue = enumEntry;
+                        }
+                    }
+                }
+                return enumValue;
+            }
+            private object? ConvertStringToEnum(Type enumType, string value)
+            {
+                object? enumValue = null;
+                if (enumType.IsEnum)
+                {
+                    System.Array enumValues = System.Enum.GetValues(enumType);
+                    foreach (var enumEntry in enumValues)
+                    {
+                        if (enumEntry.ToString() == value)
+                        {
+                            enumValue = enumEntry;
+                            break;
+                        }
+                        int enumVal = System.Convert.ToInt32(enumEntry);
+                        if (enumVal == 0)
+                        {
+                            enumValue = enumEntry;
+                        }
+                    }
+                }
+                return enumValue;
             }
             public void EnterEnum(MetaField field, int value)
             {
-                Debug.Assert(m_current != null);
-                object? structBase = m_current.StructBase;
-                if (structBase != null)
-                {
-                    PropertyInfo? property = structBase.GetType().GetProperty(field.Name);
-                    if (property != null)
-                    {
-                        Type typeEnum = property.PropertyType;
-                        if (typeEnum.IsEnum)
-                        {
-                            System.Array enumValues = System.Enum.GetValues(typeEnum);
-                            object? enumValueToSet = null;
-                            foreach (var enumEntry in enumValues)
-                            {
-                                int enumVal = System.Convert.ToInt32(enumEntry);
-                                if (enumVal == value)
-                                {
-                                    enumValueToSet = enumEntry;
-                                    break;
-                                }
-                                if (enumVal == 0)
-                                {
-                                    enumValueToSet = enumEntry;
-                                }
-                            }
-                            if (enumValueToSet != null)
-                            {
-                                property.SetValue(structBase, enumValueToSet);
-                            }
-                        }
-                    }
-                }
+                SetValueNumber(field.Name, value);
             }
             public void EnterEnum(MetaField field, string value)
             {
-                Debug.Assert(m_current != null);
-                object? structBase = m_current.StructBase;
-                if (structBase != null)
-                {
-                    PropertyInfo? property = structBase.GetType().GetProperty(field.Name);
-                    if (property != null)
-                    {
-                        Type typeEnum = property.PropertyType;
-                        if (typeEnum.IsEnum)
-                        {
-                            System.Array enumValues = System.Enum.GetValues(typeEnum);
-                            object? enumValueToSet = null;
-                            foreach (var enumEntry in enumValues)
-                            {
-                                if (enumEntry.ToString() == value)
-                                {
-                                    enumValueToSet = enumEntry;
-                                    break;
-                                }
-                                int enumVal = System.Convert.ToInt32(enumEntry);
-                                if (enumVal == 0)
-                                {
-                                    enumValueToSet = enumEntry;
-                                }
-                            }
-                            if (enumValueToSet != null)
-                            {
-                                property.SetValue(structBase, enumValueToSet);
-                            }
-                        }
-                    }
-                }
+                SetValueString(field.Name, value);
             }
 
             public void EnterArrayBool(MetaField field, bool[] value)
             {
-                SetValue(field.Name, value);
+                SetValueArrayNumber(field.Name, value);
             }
             public void EnterArrayInt32(MetaField field, int[] value)
             {
-                SetValue(field.Name, value);
+                SetValueArrayNumber(field.Name, value);
             }
             public void EnterArrayUInt32(MetaField field, uint[] value)
             {
-                SetValue(field.Name, value);
+                SetValueArrayNumber(field.Name, value);
             }
             public void EnterArrayInt64(MetaField field, long[] value)
             {
-                SetValue(field.Name, value);
+                SetValueArrayNumber(field.Name, value);
             }
             public void EnterArrayUInt64(MetaField field, ulong[] value)
             {
-                SetValue(field.Name, value);
+                SetValueArrayNumber(field.Name, value);
             }
             public void EnterArrayFloat(MetaField field, float[] value)
             {
-                SetValue(field.Name, value);
+                SetValueArrayNumber(field.Name, value);
             }
             public void EnterArrayDouble(MetaField field, double[] value)
             {
-                SetValue(field.Name, value);
+                SetValueArrayNumber(field.Name, value);
             }
             public void EnterArrayString(MetaField field, IList<string> value)
             {
-                SetValue(field.Name, value);
+                SetValueArrayString(field.Name, value);
             }
             public void EnterArrayBytes(MetaField field, IList<byte[]> value)
             {
-                SetValue(field.Name, value);
+                string fieldName = field.Name;
+                Debug.Assert(value != null);
+                PropertyInfo? property = GetProperty(fieldName);
+                if (property != null)
+                {
+                    Type propertyType = property.PropertyType;
+                    if (propertyType.IsSubclassOf(typeof(IList<byte[]>)))
+                    {
+                        SetValue(property, value);
+                    }
+                    else
+                    {
+                        IList<string> listString = new List<string>();
+                        foreach (var e in value)
+                        {
+                            string entryString = Encoding.ASCII.GetString(e);
+                            listString.Add(entryString);
+                        }
+                        dynamic? v = ConvertArrayString(property, listString);
+                        if (v != null)
+                        {
+                            SetValue(property, v);
+                        }
+                    }
+                }
             }
             public void EnterArrayEnum(MetaField field, int[] value)
             {
-                Debug.Assert(m_current != null);
-                object? structBase = m_current.StructBase;
-                if (structBase != null)
-                {
-                    PropertyInfo? property = structBase.GetType().GetProperty(field.Name);
-                    if (property != null)
-                    {
-                        Type typeArrayEnum = property.PropertyType;
-                        Type[] typesGeneric = typeArrayEnum.GenericTypeArguments;
-                        if (typesGeneric.Length > 0)
-                        {
-                            Type typeEnum = typesGeneric[0];
-                            if (typeEnum.IsEnum)
-                            {
-                                System.Collections.IList? list = Activator.CreateInstance(typeArrayEnum) as Array;
-                                if (list != null)
-                                {
-                                    System.Array enumValues = System.Enum.GetValues(typeEnum);
-                                    foreach (var val in value)
-                                    {
-                                        object? enumValueToSet = null;
-                                        foreach (var enumEntry in enumValues)
-                                        {
-                                            int enumVal = System.Convert.ToInt32(enumEntry);
-                                            if (enumVal == val)
-                                            {
-                                                enumValueToSet = enumEntry;
-                                                break;
-                                            }
-                                            if (enumVal == 0)
-                                            {
-                                                enumValueToSet = enumEntry;
-                                            }
-                                        }
-                                        if (enumValueToSet != null)
-                                        {
-                                            list.Add(enumValueToSet);
-                                        }
-                                    }
-                                    property.SetValue(structBase, list);
-                                }
-                            }
-                        }
-                    }
-                }
+                SetValueArrayNumber(field.Name, value);
             }
             public void EnterArrayEnum(MetaField field, IList<string> value)
             {
-                Debug.Assert(m_current != null);
-                object? structBase = m_current.StructBase;
-                if (structBase != null)
-                {
-                    PropertyInfo? property = structBase.GetType().GetProperty(field.Name);
-                    if (property != null)
-                    {
-                        Type typeArrayEnum = property.PropertyType;
-                        Type[] typesGeneric = typeArrayEnum.GenericTypeArguments;
-                        if (typesGeneric.Length > 0)
-                        {
-                            Type typeEnum = typesGeneric[0];
-                            if (typeEnum.IsEnum)
-                            {
-                                System.Collections.IList? list = Activator.CreateInstance(typeArrayEnum) as Array;
-                                if (list != null)
-                                {
-                                    System.Array enumValues = System.Enum.GetValues(typeEnum);
-                                    foreach (var val in value)
-                                    {
-                                        object? enumValueToSet = null;
-                                        foreach (var enumEntry in enumValues)
-                                        {
-                                            if (enumEntry.ToString() == val)
-                                            {
-                                                enumValueToSet = enumEntry;
-                                                break;
-                                            }
-                                            int enumVal = System.Convert.ToInt32(enumEntry);
-                                            if (enumVal == 0)
-                                            {
-                                                enumValueToSet = enumEntry;
-                                            }
-                                        }
-                                        if (enumValueToSet != null)
-                                        {
-                                            list.Add(enumValueToSet);
-                                        }
-                                    }
-                                    property.SetValue(structBase, list);
-                                }
-                            }
-                        }
-                    }
-                }
+                SetValueArrayString(field.Name, value);
             }
 
             class StackEntry
             {
-                public StackEntry(object? structBase, int structArrayIndex)
+                public StackEntry(StructBase? structBase, int structArrayIndex)
                 {
                     m_structBase = structBase;
                     m_structArrayIndex = structArrayIndex;
                 }
-                public object? StructBase
+                public StructBase? StructBase
                 {
                     get { return m_structBase; }
                     set { m_structBase = value; }
@@ -444,11 +1012,11 @@ namespace finalmq
                     get { return m_structArrayIndex; }
                     set { m_structArrayIndex = value; }
                 }
-                object? m_structBase = null;
+                StructBase? m_structBase = null;
                 int m_structArrayIndex = -1;
             };
 
-            readonly object m_root;
+            readonly StructBase m_root;
             StackEntry? m_current = null;
             readonly IList<StackEntry> m_stack = new List<StackEntry>();
             VarValueToVariant.FuncExit? m_funcExit = null;
