@@ -510,8 +510,8 @@ namespace finalmq
 #pragma warning disable CS8600 // Das NULL-Literal oder ein möglicher NULL-Wert wird in einen Non-Nullable-Typ konvertiert.
                             v[i] = (int)(dynamic)value[i];
 #pragma warning restore CS8600 // Das NULL-Literal oder ein möglicher NULL-Wert wird in einen Non-Nullable-Typ konvertiert.
-                        }
-                        m_visitor.EnterArrayInt32(field, v);
+                    }
+                    m_visitor.EnterArrayInt32(field, v);
                 }
                 break;
             case MetaTypeId.TYPE_ARRAY_UINT32:

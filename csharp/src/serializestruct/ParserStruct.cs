@@ -9,7 +9,7 @@ namespace finalmq
     {
         static readonly string STR_VARVALUE = "finalmq.variant.VarValue";
 
-        public ParserStruct(IParserVisitor visitor, object structBase)
+        public ParserStruct(IParserVisitor visitor, StructBase structBase)
         {
             m_visitor = visitor;
             m_root = structBase;
@@ -17,17 +17,7 @@ namespace finalmq
 
         public bool ParseStruct()
         {
-            Type type = m_root.GetType();
-            string? typeName = type.FullName;
-            if (typeName == null)
-            {
-                return false;
-            }
-            MetaStruct? stru = MetaDataGlobal.Instance.GetStruct(typeName);
-            if (stru == null)
-            {
-                return false;
-            }
+            MetaStruct stru = m_root.MetaStruct;
 
             m_visitor.StartStruct(stru);
             ParseStruct(m_root, stru);
@@ -35,7 +25,7 @@ namespace finalmq
             return true;
         }
 
-        void ParseStruct(object structBase, MetaStruct stru)
+        void ParseStruct(StructBase structBase, MetaStruct stru)
         {
             Type type = structBase.GetType();
             int size = stru.FieldsSize;
@@ -49,7 +39,7 @@ namespace finalmq
                 }
             }
         }
-        void ProcessField(object structBase, MetaField field, PropertyInfo property)
+        void ProcessField(StructBase structBase, MetaField field, PropertyInfo property)
         {
             object? value = property.GetValue(structBase);
             if (value == null)
@@ -127,17 +117,12 @@ namespace finalmq
                     }
                     else
                     {
-                        Type type = value.GetType();
-                        string? typeName = type.FullName;
-                        if (typeName != null)
+                        StructBase? sub = value as StructBase;
+                        if (sub != null)
                         {
-                            MetaStruct? stru = MetaDataGlobal.Instance.GetStruct(typeName);
-                            if (stru != null)
-                            {
-                                m_visitor.EnterStruct(field);
-                                ParseStruct(value, stru);
-                                m_visitor.ExitStruct(field);
-                            }
+                            m_visitor.EnterStruct(field);
+                            ParseStruct(sub, sub.MetaStruct);
+                            m_visitor.ExitStruct(field);
                         }
                     }
                     break;
@@ -220,19 +205,13 @@ namespace finalmq
                         System.Collections.IEnumerable? enumerable = value as System.Collections.IEnumerable;
                         if (enumerable != null && fieldWithoutArray != null)
                         {
-                            foreach (var sub in enumerable)
+                            foreach (StructBase sub in enumerable)
                             {
-                                Type type = sub.GetType();
-                                string? typeName = type.FullName;
-                                if (typeName != null)
+                                if (sub != null)
                                 {
-                                    MetaStruct? stru = MetaDataGlobal.Instance.GetStruct(typeName);
-                                    if (stru != null)
-                                    {
-                                        m_visitor.EnterStruct(fieldWithoutArray);
-                                        ParseStruct(sub, stru);
-                                        m_visitor.ExitStruct(fieldWithoutArray);
-                                    }
+                                    m_visitor.EnterStruct(fieldWithoutArray);
+                                    ParseStruct(sub, sub.MetaStruct);
+                                    m_visitor.ExitStruct(fieldWithoutArray);
                                 }
                             }
                         }
@@ -275,6 +254,6 @@ namespace finalmq
         }
 
         IParserVisitor  m_visitor;
-        object          m_root;
+        StructBase      m_root;
     }
 }

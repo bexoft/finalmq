@@ -67,7 +67,8 @@ class RegisterVarTypeId
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterEnum()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(VarTypeId));
+		finalmq.MetaEnum metaEnum = finalmq.StructBase.CreateMetaEnum(typeof(VarTypeId));
+        finalmq.TypeRegistry.Instance.RegisterEnum(typeof(VarTypeId), metaEnum);
     }
 }
 
@@ -81,7 +82,7 @@ class RegisterVarTypeId
 
 
 [finalmq.MetaStruct("desc")]
-public class VarValue
+public class VarValue : finalmq.StructBase
 {
     public VarValue()
 	{
@@ -284,12 +285,26 @@ public class VarValue
     IList<string> m_valarrstring = new string[0];
     IList<byte[]> m_valarrbytes = new List<byte[]>();
 
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(VarValue));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     [ModuleInitializer]
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
     internal static void RegisterStruct()
     {
-        finalmq.TypeRegistry.Instance.RegisterType(typeof(VarValue), () => { return new VarValue(); } );
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(VarValue));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(VarValue), m_metaStruct, () => { return new VarValue(); } );
     }
 }
 

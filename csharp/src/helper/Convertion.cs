@@ -59,7 +59,7 @@ namespace finalmq
                         return (dynamic)value;
                     }
                     double d = 0;
-                    Double.TryParse((string)from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
+                    Double.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
                     return (dynamic)(int)d;
                 }
                 else if (typeof(T) == typeof(uint))
@@ -70,7 +70,7 @@ namespace finalmq
                         return (dynamic)value;
                     }
                     double d = 0;
-                    Double.TryParse((string)from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
+                    Double.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
                     return (dynamic)(uint)d;
                 }
                 else if (typeof(T) == typeof(long))
@@ -81,7 +81,7 @@ namespace finalmq
                         return (dynamic)value;
                     }
                     double d = 0;
-                    Double.TryParse((string)from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
+                    Double.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
                     return (dynamic)(long)d;
                 }
                 else if (typeof(T) == typeof(ulong))
@@ -92,7 +92,7 @@ namespace finalmq
                         return (dynamic)value;
                     }
                     double d = 0;
-                    Double.TryParse((string)from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
+                    Double.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
                     return (dynamic)(ulong)d;
                 }
                 else if (typeof(T) == typeof(float))
@@ -103,7 +103,7 @@ namespace finalmq
                         return (dynamic)value;
                     }
                     double d = 0;
-                    Double.TryParse((string)from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
+                    Double.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
                     return (dynamic)(float)d;
                 }
                 else if (typeof(T) == typeof(double))
@@ -130,6 +130,113 @@ namespace finalmq
                 }
             }
             return default(T);
+        }
+
+        public static dynamic? Convert(dynamic? from, Type typeTo)
+        {
+            if (from == null)
+            {
+                return null;
+            }
+            Type typeFrom = from.GetType();
+            if (typeTo == typeof(string))
+            {
+                if (typeFrom == typeof(bool))
+                {
+                    if ((bool)from)
+                    {
+                        dynamic t = "true";
+                        return t;
+                    }
+                    else
+                    {
+                        dynamic f = "false";
+                        return f;
+                    }
+                }
+                else
+                {
+                    return System.Convert.ToString(from, System.Globalization.CultureInfo.InvariantCulture);
+                }
+            }
+            else if (typeFrom == typeof(string))
+            {
+                if (typeTo == typeof(bool))
+                {
+                    if (from != "true" && from != "True")
+                    {
+                        double value = 0;
+                        Double.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value);
+                        if (value == 0)
+                        {
+                            return (dynamic)false;
+                        }
+                    }
+                    return (dynamic)true;
+                }
+                else if (typeTo == typeof(int))
+                {
+                    int value;
+                    if (Int32.TryParse(from, out value))
+                    {
+                        return value;
+                    }
+                    double d = 0;
+                    Double.TryParse((string)from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
+                    return (int)d;
+                }
+                else if (typeTo == typeof(uint))
+                {
+                    uint value;
+                    if (UInt32.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
+                    {
+                        return value;
+                    }
+                    double d = 0;
+                    Double.TryParse((string)from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
+                    return (uint)d;
+                }
+                else if (typeTo == typeof(long))
+                {
+                    long value;
+                    if (Int64.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
+                    {
+                        return (dynamic)value;
+                    }
+                    double d = 0;
+                    Double.TryParse((string)from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
+                    return (long)d;
+                }
+                else if (typeTo == typeof(ulong))
+                {
+                    ulong value;
+                    if (UInt64.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
+                    {
+                        return value;
+                    }
+                    double d = 0;
+                    Double.TryParse((string)from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
+                    return (ulong)d;
+                }
+                else if (typeTo == typeof(float))
+                {
+                    float value;
+                    if (Single.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
+                    {
+                        return value;
+                    }
+                    double d = 0;
+                    Double.TryParse((string)from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
+                    return (float)d;
+                }
+                else if (typeTo == typeof(double))
+                {
+                    double value;
+                    Double.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value);
+                    return value;
+                }
+            }
+            return null;
         }
 
         public static int ConvertByteStringToInt32(byte[] buffer, int offset, int size, out bool ok)
