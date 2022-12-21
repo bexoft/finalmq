@@ -178,6 +178,22 @@ namespace testfinalmq
             Debug.Assert(root.value == cmp.value);
         }
 
+        [Fact]
+        public void TestEnumAsString()
+        {
+            test.Foo VALUE = test.Foo.FOO_WORLD2;
+
+            var root = new test.TestEnum();
+            IParserVisitor serializer = new SerializerStruct(root);
+
+            serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestEnum")!);
+            serializer.EnterEnum(new MetaField(MetaTypeId.TYPE_ENUM, "test.Foo", "value", "", 0, 0), "world2");
+            serializer.Finished();
+
+            var cmp = new test.TestEnum(VALUE);
+            Debug.Assert(root.value == cmp.value);
+        }
+
 
         [Fact]
         public void TestArrayEnum()

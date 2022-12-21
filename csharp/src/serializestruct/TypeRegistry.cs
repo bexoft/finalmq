@@ -34,6 +34,9 @@ namespace finalmq
         void RegisterStruct(Type type, MetaStruct metaStruct, FuncStructBaseFactory factory);
         void RegisterEnum(Type type, MetaEnum metaEnum);
         StructBase? CreateStruct(string typeName);
+
+        System.Enum? IntToEnum(Type type, int value);
+        System.Enum? StringToEnum(Type type, string value); //todo process also alias string
     };
 
     class TypeRegistryImpl : ITypeRegistry
@@ -57,6 +60,8 @@ namespace finalmq
 
         public void RegisterEnum(Type type, MetaEnum metaEnum)
         {
+            EnumData enumData = new EnumData(type, metaEnum);
+            m_enumData.Add(type, enumData);
             MetaDataGlobal.Instance.AddEnum(metaEnum);
         }
 
@@ -69,8 +74,78 @@ namespace finalmq
             return null;
         }
 
-        IDictionary<string, FuncStructBaseFactory> m_factories = new Dictionary<string, FuncStructBaseFactory>();
+        public System.Enum? IntToEnum(Type type, int value)
+        {
+            if (m_enumData.TryGetValue(type, out var enumData))
+            {
+                return enumData.IntToEnum(type, value);
+            }
+            return null;
+        }
+        public System.Enum? StringToEnum(Type type, string value)
+        {
+            if (m_enumData.TryGetValue(type, out var enumData))
+            {
+                return enumData.StringToEnum(type, value);
+            }
+            return null;
+        }
+
+        readonly IDictionary<string, FuncStructBaseFactory> m_factories = new Dictionary<string, FuncStructBaseFactory>();
+        readonly IDictionary<Type, EnumData> m_enumData = new Dictionary<Type, EnumData>();
     };
+
+    class EnumData
+    {
+        public EnumData(Type type, MetaEnum metaEnum)
+        {
+            System.Array enumValues = System.Enum.GetValues(type);
+            foreach (System.Enum enumEntry in enumValues)
+            {
+                int enumVal = System.Convert.ToInt32(enumEntry);
+                string enumString = enumEntry.ToString()!;
+                string alias = metaEnum.GetAliasByValue(enumVal);
+                m_intToEnum.Add(enumVal, enumEntry);
+                m_stringToEnum.Add(enumString, enumEntry);
+                if (alias.Length != 0)
+                {
+                    m_aliasToEnum.Add(alias, enumEntry);
+                }
+            }
+        }
+        public System.Enum? IntToEnum(Type type, int value)
+        {
+            if (m_intToEnum.TryGetValue(value, out var en1))
+            {
+                return en1;
+            }
+            if (m_intToEnum.TryGetValue(0, out var en2))
+            {
+                return en2;
+            }
+            return null;
+        }
+        public System.Enum? StringToEnum(Type type, string value)
+        {
+            if (m_stringToEnum.TryGetValue(value, out var en1))
+            {
+                return en1;
+            }
+            if (m_aliasToEnum.TryGetValue(value, out var en2))
+            {
+                return en2;
+            }
+            if (m_intToEnum.TryGetValue(0, out var en3))
+            {
+                return en3;
+            }
+            return null;
+        }
+
+        IDictionary<int, System.Enum> m_intToEnum = new Dictionary<int, System.Enum>();
+        IDictionary<string, System.Enum> m_stringToEnum = new Dictionary<string, System.Enum>();
+        IDictionary<string, System.Enum> m_aliasToEnum = new Dictionary<string, System.Enum>();
+    }
 
 
     public class TypeRegistry
