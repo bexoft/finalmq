@@ -873,49 +873,13 @@ namespace finalmq
                 }
             }
 
-            private object? ConvertIntToEnum(Type enumType, int value)
+            private System.Enum? ConvertIntToEnum(Type enumType, int value)
             {
-                object? enumValue = null;
-                if (enumType.IsEnum)
-                {
-                    System.Array enumValues = System.Enum.GetValues(enumType);
-                    foreach (var enumEntry in enumValues)
-                    {
-                        int enumVal = System.Convert.ToInt32(enumEntry);
-                        if (enumVal == value)
-                        {
-                            enumValue = enumEntry;
-                            break;
-                        }
-                        if (enumVal == 0)
-                        {
-                            enumValue = enumEntry;
-                        }
-                    }
-                }
-                return enumValue;
+                return TypeRegistry.Instance.IntToEnum(enumType, value);
             }
-            private object? ConvertStringToEnum(Type enumType, string value)
+            private System.Enum? ConvertStringToEnum(Type enumType, string value)
             {
-                object? enumValue = null;
-                if (enumType.IsEnum)
-                {
-                    System.Array enumValues = System.Enum.GetValues(enumType);
-                    foreach (var enumEntry in enumValues)
-                    {
-                        if (enumEntry.ToString() == value)
-                        {
-                            enumValue = enumEntry;
-                            break;
-                        }
-                        int enumVal = System.Convert.ToInt32(enumEntry);
-                        if (enumVal == 0)
-                        {
-                            enumValue = enumEntry;
-                        }
-                    }
-                }
-                return enumValue;
+                return TypeRegistry.Instance.StringToEnum(enumType, value);
             }
             public void EnterEnum(MetaField field, int value)
             {
