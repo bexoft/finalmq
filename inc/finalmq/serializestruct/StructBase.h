@@ -164,7 +164,7 @@ public:
 
 
 template<class T>
-static T* getDataOfStructBase(StructBase& structBase, const FieldInfo& fieldInfo)
+T* getDataOfStructBase(StructBase& structBase, const FieldInfo& fieldInfo)
 {
     const MetaField* fieldDest = fieldInfo.getField();
     if (fieldDest)
@@ -179,7 +179,7 @@ static T* getDataOfStructBase(StructBase& structBase, const FieldInfo& fieldInfo
 }
 
 template<>
-static std::int32_t* getDataOfStructBase<std::int32_t>(StructBase& structBase, const FieldInfo& fieldInfo)
+std::int32_t* getDataOfStructBase<std::int32_t>(StructBase& structBase, const FieldInfo& fieldInfo)
 {
     const MetaField* fieldDest = fieldInfo.getField();
     if (fieldDest)
@@ -194,7 +194,7 @@ static std::int32_t* getDataOfStructBase<std::int32_t>(StructBase& structBase, c
 }
 
 template<>
-static std::vector<std::int32_t>* getDataOfStructBase<std::vector<std::int32_t>>(StructBase& structBase, const FieldInfo& fieldInfo)
+std::vector<std::int32_t>* getDataOfStructBase<std::vector<std::int32_t>>(StructBase& structBase, const FieldInfo& fieldInfo)
 {
     const MetaField* fieldDest = fieldInfo.getField();
     if (fieldDest)
@@ -220,8 +220,20 @@ public:
     template<class T>
     T* getData(const FieldInfo& fieldInfo)
     {
-        return getDataOfStructBase<T>(*this, fieldInfo);
+        const MetaField* fieldDest = fieldInfo.getField();
+        if (fieldDest)
+        {
+            if ((fieldDest->typeId == MetaTypeInfo<T>::TypeId) 
+                || ((MetaTypeInfo<T>::TypeId == MetaTypeInfo<std::int32_t>::TypeId) && (fieldDest->typeId == MetaTypeId::TYPE_ENUM))
+                || ((MetaTypeInfo<T>::TypeId == MetaTypeInfo<std::vector<std::int32_t>>::TypeId) && (fieldDest->typeId == MetaTypeId::TYPE_ARRAY_ENUM)))
+            {
+                int offset = fieldInfo.getOffset();
+                return reinterpret_cast<T*>(reinterpret_cast<char*>(this) + offset);
+            }
+        }
+        return nullptr;
     }
+
 
     template<class T>
     const T& getValue(const FieldInfo& fieldInfo) const
