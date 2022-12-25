@@ -25,7 +25,7 @@
 #include "finalmq/metadata/MetaField.h"
 #include "finalmq/metadata/MetaEnum.h"
 #include "finalmq/metadata/MetaStruct.h"
-#include "finalmq/variant/variant.h"
+#include "finalmq/variant/Variant.h"
 
 #include <functional>
 #include <cstdint>
