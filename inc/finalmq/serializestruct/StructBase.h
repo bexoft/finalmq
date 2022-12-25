@@ -163,52 +163,6 @@ public:
 };
 
 
-template<class T>
-T* getDataOfStructBase(StructBase& structBase, const FieldInfo& fieldInfo)
-{
-    const MetaField* fieldDest = fieldInfo.getField();
-    if (fieldDest)
-    {
-        if (fieldDest->typeId == MetaTypeInfo<T>::TypeId)
-        {
-            int offset = fieldInfo.getOffset();
-            return reinterpret_cast<T*>(reinterpret_cast<char*>(&structBase) + offset);
-        }
-    }
-    return nullptr;
-}
-
-template<>
-std::int32_t* getDataOfStructBase<std::int32_t>(StructBase& structBase, const FieldInfo& fieldInfo)
-{
-    const MetaField* fieldDest = fieldInfo.getField();
-    if (fieldDest)
-    {
-        if (fieldDest->typeId == MetaTypeInfo<std::int32_t>::TypeId || fieldDest->typeId == MetaTypeId::TYPE_ENUM)
-        {
-            int offset = fieldInfo.getOffset();
-            return reinterpret_cast<std::int32_t*>(reinterpret_cast<char*>(&structBase) + offset);
-        }
-    }
-    return nullptr;
-}
-
-template<>
-std::vector<std::int32_t>* getDataOfStructBase<std::vector<std::int32_t>>(StructBase& structBase, const FieldInfo& fieldInfo)
-{
-    const MetaField* fieldDest = fieldInfo.getField();
-    if (fieldDest)
-    {
-        if (fieldDest->typeId == MetaTypeInfo<std::vector<std::int32_t>>::TypeId || fieldDest->typeId == MetaTypeId::TYPE_ARRAY_ENUM)
-        {
-            int offset = fieldInfo.getOffset();
-            return reinterpret_cast<std::vector<std::int32_t>*>(reinterpret_cast<char*>(&structBase) + offset);
-        }
-    }
-    return nullptr;
-}
-
-
 
 class SYMBOLEXP StructBase
 {
