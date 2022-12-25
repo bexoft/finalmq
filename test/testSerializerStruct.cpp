@@ -788,8 +788,7 @@ TEST_F(TestSerializerStruct, testArrayEnumString)
     static const test::Foo VALUE1 = test::Foo::FOO_HELLO;
     static const test::Foo VALUE2 = test::Foo::FOO_WORLD;
     static const test::Foo VALUE3 = test::Foo::FOO_WORLD2;
-    static const test::Foo VALUE4 = (test::Foo::Enum)123;
-    static const std::vector<std::string> VALUEString = {VALUE1.toString(), VALUE2.toString(), VALUE3.toString(), VALUE4.toString()};
+    static const std::vector<std::string> VALUEString = {VALUE1.toString(), VALUE2.toString(), VALUE3.toString(), "BlaBla"};
 
     test::TestArrayEnum root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);

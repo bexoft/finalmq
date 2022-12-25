@@ -209,7 +209,7 @@ void ParserConverter::enterBytes(const MetaField& field, Bytes&& value)
     }
     else
     {
-        streamError << "bytes not expected";
+        convertString(field, value.data(), value.size());
     }
 }
 void ParserConverter::enterBytes(const MetaField& field, const BytesElement* value, ssize_t size)
@@ -220,7 +220,7 @@ void ParserConverter::enterBytes(const MetaField& field, const BytesElement* val
     }
     else
     {
-        streamError << "bytes not expected";
+        convertString(field, value, size);
     }
 }
 void ParserConverter::enterEnum(const MetaField& field, std::int32_t value)

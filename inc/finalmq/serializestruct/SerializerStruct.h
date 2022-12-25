@@ -95,10 +95,35 @@ private:
         virtual void enterArrayEnum(const MetaField& field, const std::vector<std::string>& value) override;
 
         template <class T>
-        void setValue(const MetaField& field, const T& value);
+        void setValue(StructBase& structBase, const FieldInfo& fieldInfoDest, const T& value);
 
         template <class T>
-        void setValue(const MetaField& field, T&& value);
+        void setValue(StructBase& structBase, const FieldInfo& fieldInfoDest, T&& value);
+
+        template<class T>
+        void convertNumber(StructBase& structBase, const FieldInfo& fieldInfoDest, T value);
+            
+        void convertString(StructBase& structBase, const FieldInfo& fieldInfoDest, const char* value, ssize_t size);
+            
+        template<class T>
+        void convertArrayNumber(StructBase& structBase, const FieldInfo& fieldInfoDest, const T* value, ssize_t size);
+            
+        void convertArrayString(StructBase& structBase, const FieldInfo& fieldInfoDest, const std::vector<std::string>& value);
+            
+        template<class T>
+        void setValueNumber(const MetaField& field, T value);
+
+        void setValueString(const MetaField& field, const char* value, ssize_t size);
+            
+        template<class T>
+        void setValueArrayNumber(const MetaField& field, const T* value, ssize_t size);
+        template<class T>
+        void setValueArrayNumber(const MetaField& field, std::vector<T>&& value);
+
+        void setValueArrayString(const MetaField& field, const std::vector<std::string>& value);
+        void setValueArrayString(const MetaField& field, const std::vector<std::string>&& value);
+        
+        const FieldInfo* getFieldInfoDest(const MetaField& field);
 
         struct StackEntry
         {
@@ -113,6 +138,7 @@ private:
         std::shared_ptr<VarValueToVariant> m_varValueToVariant;
         bool                            m_wasStartStructCalled = false;
         SerializerStruct&               m_outer;
+        Variant                         m_variantDummy;
     };
 
     Internal                            m_internal;

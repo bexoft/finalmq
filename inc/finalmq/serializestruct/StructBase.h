@@ -25,6 +25,7 @@
 #include "finalmq/metadata/MetaField.h"
 #include "finalmq/metadata/MetaEnum.h"
 #include "finalmq/metadata/MetaStruct.h"
+#include "finalmq/variant/variant.h"
 
 #include <functional>
 #include <cstdint>
@@ -148,6 +149,19 @@ private:
     const MetaEnum&   m_metaEnum;
 };
 
+template <>
+class MetaTypeInfo<Variant>
+{
+public:
+    static const int TypeId = MetaTypeId::TYPE_STRUCT;
+};
+template <>
+class MetaTypeInfo<StructBase>
+{
+public:
+    static const int TypeId = MetaTypeId::TYPE_STRUCT;
+};
+
 
 class SYMBOLEXP StructBase
 {
@@ -157,20 +171,45 @@ public:
     virtual void clear() = 0;
 
     template<class T>
-    T* getData(const MetaField& field)
+    T* getData(const FieldInfo& fieldInfo)
     {
-        const StructInfo& structInfo = getStructInfo();
-        const FieldInfo* fieldInfo = structInfo.getField(field.index);
-        if (fieldInfo)
+        const MetaField* fieldDest = fieldInfo.getField();
+        if (fieldDest)
         {
-            const MetaField* fieldDest = fieldInfo->getField();
-            if (fieldDest)
+            if (fieldDest->typeId == MetaTypeInfo<T>::TypeId)
             {
-                if (fieldDest->typeId == field.typeId && (field.typeName.empty() || field.typeName == fieldDest->typeName))
-                {
-                    int offset = fieldInfo->getOffset();
-                    return reinterpret_cast<T*>(reinterpret_cast<char*>(this) + offset);
-                }
+                int offset = fieldInfo.getOffset();
+                return reinterpret_cast<T*>(reinterpret_cast<char*>(this) + offset);
+            }
+        }
+        return nullptr;
+    }
+
+    template<>
+    std::int32_t* getData<std::int32_t>(const FieldInfo& fieldInfo)
+    {
+        const MetaField* fieldDest = fieldInfo.getField();
+        if (fieldDest)
+        {
+            if (fieldDest->typeId == MetaTypeInfo<std::int32_t>::TypeId || fieldDest->typeId == MetaTypeId::TYPE_ENUM)
+            {
+                int offset = fieldInfo.getOffset();
+                return reinterpret_cast<std::int32_t*>(reinterpret_cast<char*>(this) + offset);
+            }
+        }
+        return nullptr;
+    }
+
+    template<>
+    std::vector<std::int32_t>* getData<std::vector<std::int32_t>>(const FieldInfo& fieldInfo)
+    {
+        const MetaField* fieldDest = fieldInfo.getField();
+        if (fieldDest)
+        {
+            if (fieldDest->typeId == MetaTypeInfo<std::vector<std::int32_t>>::TypeId || fieldDest->typeId == MetaTypeId::TYPE_ARRAY_ENUM)
+            {
+                int offset = fieldInfo.getOffset();
+                return reinterpret_cast<std::vector<std::int32_t>*>(reinterpret_cast<char*>(this) + offset);
             }
         }
         return nullptr;
