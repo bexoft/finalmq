@@ -185,7 +185,21 @@ namespace finalmq
             }
             else
             {
-//todo                streamError << "bytes not expected";
+                string? s = null;
+                try
+                {
+                    s = Encoding.UTF8.GetString(value);
+                }
+                catch (Exception)
+                {
+                }
+
+                if (s == null)
+                {
+                    s = Encoding.ASCII.GetString(value);
+                }
+
+                ConvertString(field, s);
             }
         }
         public void EnterEnum(MetaField field, int value)
@@ -318,7 +332,24 @@ namespace finalmq
             }
             else
             {
-//                streamError << "bytes array not expected";
+                IList<string> valueStringArray = new List<string>();
+                foreach (byte[] v in value)
+                {
+                    string? s = null;
+                    try
+                    {
+                        s = Encoding.UTF8.GetString(v);
+                    }
+                    catch (Exception)
+                    {
+                    }
+
+                    if (s == null)
+                    {
+                        s = Encoding.ASCII.GetString(v);
+                    }
+                }
+                ConvertArraytString(field, valueStringArray);
             }
         }
         public void EnterArrayEnum(MetaField field, int[] value)
@@ -490,6 +521,83 @@ namespace finalmq
             Debug.Assert(value != null);
             switch (field.TypeId)
             {
+            case MetaTypeId.TYPE_BOOL:
+                if (value.Length > 0)
+                {
+                    T v = value[0];
+                    Debug.Assert(v != null);
+                    m_visitor.EnterBool(field, (bool)(dynamic)v);
+                }
+                break;
+            case MetaTypeId.TYPE_INT32:
+                if (value.Length > 0)
+                {
+                    T v = value[0];
+                    Debug.Assert(v != null);
+                    m_visitor.EnterInt32(field, (int)(dynamic)v);
+                }
+                break;
+            case MetaTypeId.TYPE_UINT32:
+                if (value.Length > 0)
+                {
+                    T v = value[0];
+                    Debug.Assert(v != null);
+                    m_visitor.EnterUInt32(field, (uint)(dynamic)v);
+                }
+                break;
+            case MetaTypeId.TYPE_INT64:
+                if (value.Length > 0)
+                {
+                    T v = value[0];
+                    Debug.Assert(v != null);
+                    m_visitor.EnterInt64(field, (long)(dynamic)v);
+                }
+                break;
+            case MetaTypeId.TYPE_UINT64:
+                if (value.Length > 0)
+                {
+                    T v = value[0];
+                    Debug.Assert(v != null);
+                    m_visitor.EnterUInt64(field, (ulong)(dynamic)v);
+                }
+                break;
+            case MetaTypeId.TYPE_FLOAT:
+                if (value.Length > 0)
+                {
+                    T v = value[0];
+                    Debug.Assert(v != null);
+                    m_visitor.EnterFloat(field, (float)(dynamic)v);
+                }
+                break;
+            case MetaTypeId.TYPE_DOUBLE:
+                if (value.Length > 0)
+                {
+                    T v = value[0];
+                    Debug.Assert(v != null);
+                    m_visitor.EnterDouble(field, (double)(dynamic)v);
+                }
+                break;
+            case MetaTypeId.TYPE_STRING:
+                if (value.Length > 0)
+                {
+                    T v = value[0];
+                    Debug.Assert(v != null);
+                    string? s = System.Convert.ToString(v, System.Globalization.CultureInfo.InvariantCulture);
+                    if (s == null)
+                    {
+                        s = "";
+                    }
+                    m_visitor.EnterString(field, s);
+                }
+                break;
+            case MetaTypeId.TYPE_ENUM:
+                if (value.Length > 0)
+                {
+                    T v = value[0];
+                    Debug.Assert(v != null);
+                    m_visitor.EnterEnum(field, (int)(dynamic)v);
+                }
+                break;
             case MetaTypeId.TYPE_ARRAY_BOOL:
                 {
                     bool[] v = new bool[value.Length];
@@ -616,6 +724,60 @@ namespace finalmq
 
             switch (field.TypeId)
             {
+            case MetaTypeId.TYPE_BOOL:
+                if (value.Count > 0)
+                {
+                    m_visitor.EnterBool(field, Convertion.Convert<bool>(value[0]));
+                }
+                break;
+            case MetaTypeId.TYPE_INT32:
+                if (value.Count > 0)
+                {
+                    m_visitor.EnterInt32(field, Convertion.Convert<int>(value[0]));
+                }
+                break;
+            case MetaTypeId.TYPE_UINT32:
+                if (value.Count > 0)
+                {
+                    m_visitor.EnterUInt32(field, Convertion.Convert<uint>(value[0]));
+                }
+                break;
+            case MetaTypeId.TYPE_INT64:
+                if (value.Count > 0)
+                {
+                    m_visitor.EnterInt64(field, Convertion.Convert<long>(value[0]));
+                }
+                break;
+            case MetaTypeId.TYPE_UINT64:
+                if (value.Count > 0)
+                {
+                    m_visitor.EnterUInt64(field, Convertion.Convert<ulong>(value[0]));
+                }
+                break;
+            case MetaTypeId.TYPE_FLOAT:
+                if (value.Count > 0)
+                {
+                    m_visitor.EnterFloat(field, Convertion.Convert<float>(value[0]));
+                }
+                break;
+            case MetaTypeId.TYPE_DOUBLE:
+                if (value.Count > 0)
+                {
+                    m_visitor.EnterDouble(field, Convertion.Convert<double>(value[0]));
+                }
+                break;
+            case MetaTypeId.TYPE_STRING:
+                if (value.Count > 0)
+                {
+                    m_visitor.EnterString(field, value[0]);
+                }
+                break;
+            case MetaTypeId.TYPE_ENUM:
+                if (value.Count > 0)
+                {
+                    m_visitor.EnterEnum(field, value[0]);
+                }
+                break;
             case MetaTypeId.TYPE_ARRAY_BOOL:
                 {
                     bool[] v = new bool[value.Count];
