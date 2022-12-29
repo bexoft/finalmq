@@ -441,7 +441,13 @@ void ParserConverter::enterArrayBytesMove(const MetaField& field, std::vector<By
     }
     else
     {
-        streamError << "bytes array not expected";
+        std::vector<std::string> valueArrayString;
+        valueArrayString.reserve(value.size());
+        for (size_t i = 0; i < value.size(); ++i)
+        {
+            valueArrayString.emplace_back(value[i].data(), value[i].size());
+        }
+        convertArraytString(field, valueArrayString);
     }
 }
 void ParserConverter::enterArrayBytes(const MetaField& field, const std::vector<Bytes>& value)
@@ -452,7 +458,13 @@ void ParserConverter::enterArrayBytes(const MetaField& field, const std::vector<
     }
     else
     {
-        streamError << "bytes array not expected";
+        std::vector<std::string> valueArrayString;
+        valueArrayString.reserve(value.size());
+        for (size_t i = 0; i < value.size(); ++i)
+        {
+            valueArrayString.emplace_back(value[i].data(), value[i].size());
+        }
+        convertArraytString(field, valueArrayString);
     }
 }
 void ParserConverter::enterArrayEnum(const MetaField& field, std::vector<std::int32_t>&& value)
