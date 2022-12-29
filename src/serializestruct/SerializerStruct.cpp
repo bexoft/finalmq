@@ -42,53 +42,46 @@ static const std::string STR_VARVALUE = "finalmq.variant.VarValue";
 
 
 SerializerStruct::SerializerStruct(StructBase& root)
-    : ParserConverter()
-    , m_internal(*this, root)
-{
-    setVisitor(m_internal);
-}
-
-
-void SerializerStruct::setExitNotification(std::function<void()> funcExit)
-{
-    m_internal.setExitNotification(std::move(funcExit));
-}
-
-
-
-SerializerStruct::Internal::Internal(SerializerStruct& outer, StructBase& root)
-    : m_root(root)
-    , m_outer(outer)
+    : IParserVisitor()
+    , m_root(root)
 {
     m_root.clear();
     m_stack.push_back({ &m_root, -1 });
     m_current = &m_stack.back();
 }
 
-void SerializerStruct::Internal::setExitNotification(std::function<void()> funcExit)
+
+void SerializerStruct::setExitNotification(std::function<void()> funcExit)
 {
     m_funcExit = std::move(funcExit);
 }
 
 
+
 // IParserVisitor
-void SerializerStruct::Internal::notifyError(const char* /*str*/, const char* /*message*/)
+void SerializerStruct::notifyError(const char* /*str*/, const char* /*message*/)
 {
 }
 
 
-void SerializerStruct::Internal::startStruct(const MetaStruct& /*stru*/)
+void SerializerStruct::startStruct(const MetaStruct& /*stru*/)
 {
     m_wasStartStructCalled = true;
 }
 
-void SerializerStruct::Internal::finished()
+void SerializerStruct::finished()
 {
 }
 
 
-void SerializerStruct::Internal::enterStruct(const MetaField& field)
+void SerializerStruct::enterStruct(const MetaField& field)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterStruct(field);
+        return;
+    }
+
     assert(!m_stack.empty());
     assert(m_current);
 
@@ -103,10 +96,10 @@ void SerializerStruct::Internal::enterStruct(const MetaField& field)
         }
         assert(variant);
         m_varValueToVariant = std::make_shared<VarValueToVariant>(*variant);
-        m_outer.ParserConverter::setVisitor(m_varValueToVariant->getVisitor());
+        m_visitor = &m_varValueToVariant->getVisitor();
         m_varValueToVariant->setExitNotification([this, &field]() {
             assert(m_varValueToVariant);
-            m_outer.ParserConverter::setVisitor(*this);
+            m_visitor = nullptr;
             m_varValueToVariant->convert();
             m_varValueToVariant->setExitNotification(nullptr);
         });
@@ -134,8 +127,14 @@ void SerializerStruct::Internal::enterStruct(const MetaField& field)
     }
 }
 
-void SerializerStruct::Internal::exitStruct(const MetaField& /*field*/)
+void SerializerStruct::exitStruct(const MetaField& field)
 {
+    if (m_visitor)
+    {
+        m_visitor->exitStruct(field);
+        return;
+    }
+
     if (!m_stack.empty())
     {
         m_stack.pop_back();
@@ -155,14 +154,26 @@ void SerializerStruct::Internal::exitStruct(const MetaField& /*field*/)
 }
 
 
-void SerializerStruct::Internal::enterArrayStruct(const MetaField& field)
+void SerializerStruct::enterArrayStruct(const MetaField& field)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterArrayStruct(field);
+        return;
+    }
+
     assert(m_current);
     m_current->structArrayIndex = field.index;
 }
 
-void SerializerStruct::Internal::exitArrayStruct(const MetaField& /*field*/)
+void SerializerStruct::exitArrayStruct(const MetaField& field)
 {
+    if (m_visitor)
+    {
+        m_visitor->exitArrayStruct(field);
+        return;
+    }
+
     assert(m_current);
     m_current->structArrayIndex = -1;
 }
@@ -170,7 +181,7 @@ void SerializerStruct::Internal::exitArrayStruct(const MetaField& /*field*/)
 
 
 template <class T>
-void SerializerStruct::Internal::setValue(StructBase& structBase, const FieldInfo& fieldInfoDest, const T& value)
+void SerializerStruct::setValue(StructBase& structBase, const FieldInfo& fieldInfoDest, const T& value)
 {
     T* pval = structBase.getData<T>(fieldInfoDest);
     if (pval)
@@ -180,7 +191,7 @@ void SerializerStruct::Internal::setValue(StructBase& structBase, const FieldInf
 }
 
 template <class T>
-void SerializerStruct::Internal::setValue(StructBase& structBase, const FieldInfo& fieldInfoDest, T&& value)
+void SerializerStruct::setValue(StructBase& structBase, const FieldInfo& fieldInfoDest, T&& value)
 {
     T* pval = structBase.getData<T>(fieldInfoDest);
     if (pval)
@@ -190,7 +201,7 @@ void SerializerStruct::Internal::setValue(StructBase& structBase, const FieldInf
 }
 
 
-const FieldInfo* SerializerStruct::Internal::getFieldInfoDest(const MetaField& field)
+const FieldInfo* SerializerStruct::getFieldInfoDest(const MetaField& field)
 {
     assert(m_current);
     StructBase* structBase = m_current->structBase;
@@ -204,7 +215,7 @@ const FieldInfo* SerializerStruct::Internal::getFieldInfoDest(const MetaField& f
 
 
 template<class T>
-void SerializerStruct::Internal::convertNumber(StructBase& structBase, const FieldInfo& fieldInfoDest, T value)
+void SerializerStruct::convertNumber(StructBase& structBase, const FieldInfo& fieldInfoDest, T value)
 {
     const MetaField* fieldDest = fieldInfoDest.getField();
     if (fieldDest == nullptr)
@@ -317,7 +328,7 @@ void SerializerStruct::Internal::convertNumber(StructBase& structBase, const Fie
 }
 
 
-void SerializerStruct::Internal::convertString(StructBase& structBase, const FieldInfo& fieldInfoDest, const char* value, ssize_t size)
+void SerializerStruct::convertString(StructBase& structBase, const FieldInfo& fieldInfoDest, const char* value, ssize_t size)
 {
     const MetaField* fieldDest = fieldInfoDest.getField();
     if (fieldDest == nullptr)
@@ -449,7 +460,7 @@ void SerializerStruct::Internal::convertString(StructBase& structBase, const Fie
 }
 
 template<class T>
-void SerializerStruct::Internal::convertArrayNumber(StructBase& structBase, const FieldInfo& fieldInfoDest, const T* value, ssize_t size)
+void SerializerStruct::convertArrayNumber(StructBase& structBase, const FieldInfo& fieldInfoDest, const T* value, ssize_t size)
 {
     const MetaField* fieldDest = fieldInfoDest.getField();
     if (fieldDest == nullptr)
@@ -634,7 +645,7 @@ void SerializerStruct::Internal::convertArrayNumber(StructBase& structBase, cons
     }
 }
 
-void SerializerStruct::Internal::convertArrayString(StructBase& structBase, const FieldInfo& fieldInfoDest, const std::vector<std::string>& value)
+void SerializerStruct::convertArrayString(StructBase& structBase, const FieldInfo& fieldInfoDest, const std::vector<std::string>& value)
 {
     const size_t size = value.size();
     const MetaField* fieldDest = fieldInfoDest.getField();
@@ -816,7 +827,7 @@ void SerializerStruct::Internal::convertArrayString(StructBase& structBase, cons
 
 
 template<class T>
-void SerializerStruct::Internal::setValueNumber(const MetaField& field, T value)
+void SerializerStruct::setValueNumber(const MetaField& field, T value)
 {
     const FieldInfo* fieldInfoDest = getFieldInfoDest(field);
     if (fieldInfoDest == nullptr)
@@ -844,7 +855,7 @@ void SerializerStruct::Internal::setValueNumber(const MetaField& field, T value)
     }
 }
 
-void SerializerStruct::Internal::setValueString(const MetaField& field, const char* value, ssize_t size)
+void SerializerStruct::setValueString(const MetaField& field, const char* value, ssize_t size)
 {
     const FieldInfo* fieldInfoDest = getFieldInfoDest(field);
     if (fieldInfoDest == nullptr)
@@ -873,7 +884,7 @@ void SerializerStruct::Internal::setValueString(const MetaField& field, const ch
 }
 
 template<class T>
-void SerializerStruct::Internal::setValueArrayNumber(const MetaField& field, const T* value, ssize_t size)
+void SerializerStruct::setValueArrayNumber(const MetaField& field, const T* value, ssize_t size)
 {
     const FieldInfo* fieldInfoDest = getFieldInfoDest(field);
     if (fieldInfoDest == nullptr)
@@ -902,7 +913,7 @@ void SerializerStruct::Internal::setValueArrayNumber(const MetaField& field, con
 }
 
 template<class T>
-void SerializerStruct::Internal::setValueArrayNumber(const MetaField& field, std::vector<T>&& value)
+void SerializerStruct::setValueArrayNumber(const MetaField& field, std::vector<T>&& value)
 {
     const FieldInfo* fieldInfoDest = getFieldInfoDest(field);
     if (fieldInfoDest == nullptr)
@@ -931,7 +942,7 @@ void SerializerStruct::Internal::setValueArrayNumber(const MetaField& field, std
 }
 
 
-void SerializerStruct::Internal::setValueArrayString(const MetaField& field, const std::vector<std::string>& value)
+void SerializerStruct::setValueArrayString(const MetaField& field, const std::vector<std::string>& value)
 {
     const FieldInfo* fieldInfoDest = getFieldInfoDest(field);
     if (fieldInfoDest == nullptr)
@@ -959,7 +970,7 @@ void SerializerStruct::Internal::setValueArrayString(const MetaField& field, con
     }
 }
 
-void SerializerStruct::Internal::setValueArrayString(const MetaField& field, const std::vector<std::string>&& value)
+void SerializerStruct::setValueArrayString(const MetaField& field, const std::vector<std::string>&& value)
 {
     const FieldInfo* fieldInfoDest = getFieldInfoDest(field);
     if (fieldInfoDest == nullptr)
@@ -989,43 +1000,91 @@ void SerializerStruct::Internal::setValueArrayString(const MetaField& field, con
 
 
 
-void SerializerStruct::Internal::enterBool(const MetaField& field, bool value)
+void SerializerStruct::enterBool(const MetaField& field, bool value)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterBool(field, value);
+        return;
+    }
+
     setValueNumber<bool>(field, value);
 }
 
-void SerializerStruct::Internal::enterInt32(const MetaField& field, std::int32_t value)
+void SerializerStruct::enterInt32(const MetaField& field, std::int32_t value)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterInt32(field, value);
+        return;
+    }
+
     setValueNumber<std::int32_t>(field, value);
 }
 
-void SerializerStruct::Internal::enterUInt32(const MetaField& field, std::uint32_t value)
+void SerializerStruct::enterUInt32(const MetaField& field, std::uint32_t value)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterUInt32(field, value);
+        return;
+    }
+
     setValueNumber<std::uint32_t>(field, value);
 }
 
-void SerializerStruct::Internal::enterInt64(const MetaField& field, std::int64_t value)
+void SerializerStruct::enterInt64(const MetaField& field, std::int64_t value)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterInt64(field, value);
+        return;
+    }
+
     setValueNumber<std::int64_t>(field, value);
 }
 
-void SerializerStruct::Internal::enterUInt64(const MetaField& field, std::uint64_t value)
+void SerializerStruct::enterUInt64(const MetaField& field, std::uint64_t value)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterUInt64(field, value);
+        return;
+    }
+
     setValueNumber<std::uint64_t>(field, value);
 }
 
-void SerializerStruct::Internal::enterFloat(const MetaField& field, float value)
+void SerializerStruct::enterFloat(const MetaField& field, float value)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterFloat(field, value);
+        return;
+    }
+
     setValueNumber<float>(field, value);
 }
 
-void SerializerStruct::Internal::enterDouble(const MetaField& field, double value)
+void SerializerStruct::enterDouble(const MetaField& field, double value)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterDouble(field, value);
+        return;
+    }
+
     setValueNumber<double>(field, value);
 }
 
-void SerializerStruct::Internal::enterString(const MetaField& field, std::string&& value)
+void SerializerStruct::enterString(const MetaField& field, std::string&& value)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterString(field, std::move(value));
+        return;
+    }
+
     const FieldInfo* fieldInfoDest = getFieldInfoDest(field);
     if (fieldInfoDest == nullptr)
     {
@@ -1052,13 +1111,25 @@ void SerializerStruct::Internal::enterString(const MetaField& field, std::string
     }
 }
 
-void SerializerStruct::Internal::enterString(const MetaField& field, const char* value, ssize_t size)
+void SerializerStruct::enterString(const MetaField& field, const char* value, ssize_t size)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterString(field, value, size);
+        return;
+    }
+
     setValueString(field, value, size);
 }
 
-void SerializerStruct::Internal::enterBytes(const MetaField& field, Bytes&& value)
+void SerializerStruct::enterBytes(const MetaField& field, Bytes&& value)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterBytes(field, std::move(value));
+        return;
+    }
+
     const FieldInfo* fieldInfoDest = getFieldInfoDest(field);
     if (fieldInfoDest == nullptr)
     {
@@ -1085,8 +1156,14 @@ void SerializerStruct::Internal::enterBytes(const MetaField& field, Bytes&& valu
     }
 }
 
-void SerializerStruct::Internal::enterBytes(const MetaField& field, const BytesElement* value, ssize_t size)
+void SerializerStruct::enterBytes(const MetaField& field, const BytesElement* value, ssize_t size)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterBytes(field, value, size);
+        return;
+    }
+
     const FieldInfo* fieldInfoDest = getFieldInfoDest(field);
     if (fieldInfoDest == nullptr)
     {
@@ -1113,8 +1190,14 @@ void SerializerStruct::Internal::enterBytes(const MetaField& field, const BytesE
     }
 }
 
-void SerializerStruct::Internal::enterEnum(const MetaField& field, std::int32_t value)
+void SerializerStruct::enterEnum(const MetaField& field, std::int32_t value)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterEnum(field, value);
+        return;
+    }
+
     const FieldInfo* fieldInfoDest = getFieldInfoDest(field);
     if (fieldInfoDest == nullptr)
     {
@@ -1143,8 +1226,14 @@ void SerializerStruct::Internal::enterEnum(const MetaField& field, std::int32_t 
 }
 
 
-void SerializerStruct::Internal::enterEnum(const MetaField& field, std::string&& value)
+void SerializerStruct::enterEnum(const MetaField& field, std::string&& value)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterEnum(field, std::move(value));
+        return;
+    }
+
     const FieldInfo* fieldInfoDest = getFieldInfoDest(field);
     if (fieldInfoDest == nullptr)
     {
@@ -1172,8 +1261,14 @@ void SerializerStruct::Internal::enterEnum(const MetaField& field, std::string&&
     }
 }
 
-void SerializerStruct::Internal::enterEnum(const MetaField& field, const char* value, ssize_t size)
+void SerializerStruct::enterEnum(const MetaField& field, const char* value, ssize_t size)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterEnum(field, value, size);
+        return;
+    }
+
     const FieldInfo* fieldInfoDest = getFieldInfoDest(field);
     if (fieldInfoDest == nullptr)
     {
@@ -1201,8 +1296,14 @@ void SerializerStruct::Internal::enterEnum(const MetaField& field, const char* v
     }
 }
 
-void SerializerStruct::Internal::enterArrayBoolMove(const MetaField& field, std::vector<bool>&& value)
+void SerializerStruct::enterArrayBoolMove(const MetaField& field, std::vector<bool>&& value)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterArrayBoolMove(field, std::move(value));
+        return;
+    }
+
     const FieldInfo* fieldInfoDest = getFieldInfoDest(field);
     if (fieldInfoDest == nullptr)
     {
@@ -1235,8 +1336,14 @@ void SerializerStruct::Internal::enterArrayBoolMove(const MetaField& field, std:
     }
 }
 
-void SerializerStruct::Internal::enterArrayBool(const MetaField& field, const std::vector<bool>& value)
+void SerializerStruct::enterArrayBool(const MetaField& field, const std::vector<bool>& value)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterArrayBool(field, value);
+        return;
+    }
+
     const FieldInfo* fieldInfoDest = getFieldInfoDest(field);
     if (fieldInfoDest == nullptr)
     {
@@ -1269,78 +1376,168 @@ void SerializerStruct::Internal::enterArrayBool(const MetaField& field, const st
     }
 }
 
-void SerializerStruct::Internal::enterArrayInt32(const MetaField& field, std::vector<std::int32_t>&& value)
+void SerializerStruct::enterArrayInt32(const MetaField& field, std::vector<std::int32_t>&& value)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterArrayInt32(field, std::move(value));
+        return;
+    }
+
     setValueArrayNumber<std::int32_t>(field, std::move(value));
 }
 
-void SerializerStruct::Internal::enterArrayInt32(const MetaField& field, const std::int32_t* value, ssize_t size)
+void SerializerStruct::enterArrayInt32(const MetaField& field, const std::int32_t* value, ssize_t size)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterArrayInt32(field, value, size);
+        return;
+    }
+
     setValueArrayNumber<std::int32_t>(field, value, size);
 }
 
-void SerializerStruct::Internal::enterArrayUInt32(const MetaField& field, std::vector<std::uint32_t>&& value)
+void SerializerStruct::enterArrayUInt32(const MetaField& field, std::vector<std::uint32_t>&& value)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterArrayUInt32(field, std::move(value));
+        return;
+    }
+
     setValueArrayNumber<std::uint32_t>(field, std::move(value));
 }
 
-void SerializerStruct::Internal::enterArrayUInt32(const MetaField& field, const std::uint32_t* value, ssize_t size)
+void SerializerStruct::enterArrayUInt32(const MetaField& field, const std::uint32_t* value, ssize_t size)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterArrayUInt32(field, value, size);
+        return;
+    }
+
     setValueArrayNumber<std::uint32_t>(field, value, size);
 }
 
-void SerializerStruct::Internal::enterArrayInt64(const MetaField& field, std::vector<std::int64_t>&& value)
+void SerializerStruct::enterArrayInt64(const MetaField& field, std::vector<std::int64_t>&& value)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterArrayInt64(field, std::move(value));
+        return;
+    }
+
     setValueArrayNumber<std::int64_t>(field, std::move(value));
 }
 
-void SerializerStruct::Internal::enterArrayInt64(const MetaField& field, const std::int64_t* value, ssize_t size)
+void SerializerStruct::enterArrayInt64(const MetaField& field, const std::int64_t* value, ssize_t size)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterArrayInt64(field, value, size);
+        return;
+    }
+
     setValueArrayNumber<std::int64_t>(field, value, size);
 }
 
-void SerializerStruct::Internal::enterArrayUInt64(const MetaField& field, std::vector<std::uint64_t>&& value)
+void SerializerStruct::enterArrayUInt64(const MetaField& field, std::vector<std::uint64_t>&& value)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterArrayUInt64(field, std::move(value));
+        return;
+    }
+
     setValueArrayNumber<std::uint64_t>(field, std::move(value));
 }
 
-void SerializerStruct::Internal::enterArrayUInt64(const MetaField& field, const std::uint64_t* value, ssize_t size)
+void SerializerStruct::enterArrayUInt64(const MetaField& field, const std::uint64_t* value, ssize_t size)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterArrayUInt64(field, value, size);
+        return;
+    }
+
     setValueArrayNumber<std::uint64_t>(field, value, size);
 }
 
-void SerializerStruct::Internal::enterArrayFloat(const MetaField& field, std::vector<float>&& value)
+void SerializerStruct::enterArrayFloat(const MetaField& field, std::vector<float>&& value)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterArrayFloat(field, std::move(value));
+        return;
+    }
+
     setValueArrayNumber<float>(field, std::move(value));
 }
 
-void SerializerStruct::Internal::enterArrayFloat(const MetaField& field, const float* value, ssize_t size)
+void SerializerStruct::enterArrayFloat(const MetaField& field, const float* value, ssize_t size)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterArrayFloat(field, value, size);
+        return;
+    }
+
     setValueArrayNumber<float>(field, value, size);
 }
 
-void SerializerStruct::Internal::enterArrayDouble(const MetaField& field, std::vector<double>&& value)
+void SerializerStruct::enterArrayDouble(const MetaField& field, std::vector<double>&& value)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterArrayDouble(field, std::move(value));
+        return;
+    }
+
     setValueArrayNumber<double>(field, std::move(value));
 }
 
-void SerializerStruct::Internal::enterArrayDouble(const MetaField& field, const double* value, ssize_t size)
+void SerializerStruct::enterArrayDouble(const MetaField& field, const double* value, ssize_t size)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterArrayDouble(field, value, size);
+        return;
+    }
+
     setValueArrayNumber<double>(field, value, size);
 }
 
-void SerializerStruct::Internal::enterArrayStringMove(const MetaField& field, std::vector<std::string>&& value)
+void SerializerStruct::enterArrayStringMove(const MetaField& field, std::vector<std::string>&& value)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterArrayStringMove(field, std::move(value));
+        return;
+    }
+
     setValueArrayString(field, std::move(value));
 }
 
-void SerializerStruct::Internal::enterArrayString(const MetaField& field, const std::vector<std::string>& value)
+void SerializerStruct::enterArrayString(const MetaField& field, const std::vector<std::string>& value)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterArrayString(field, value);
+        return;
+    }
+
     setValueArrayString(field, value);
 }
 
-void SerializerStruct::Internal::enterArrayBytesMove(const MetaField& field, std::vector<Bytes>&& value)
+void SerializerStruct::enterArrayBytesMove(const MetaField& field, std::vector<Bytes>&& value)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterArrayBytesMove(field, std::move(value));
+        return;
+    }
+
     const FieldInfo* fieldInfoDest = getFieldInfoDest(field);
     if (fieldInfoDest == nullptr)
     {
@@ -1373,8 +1570,14 @@ void SerializerStruct::Internal::enterArrayBytesMove(const MetaField& field, std
     }
 }
 
-void SerializerStruct::Internal::enterArrayBytes(const MetaField& field, const std::vector<Bytes>& value)
+void SerializerStruct::enterArrayBytes(const MetaField& field, const std::vector<Bytes>& value)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterArrayBytes(field, value);
+        return;
+    }
+
     const FieldInfo* fieldInfoDest = getFieldInfoDest(field);
     if (fieldInfoDest == nullptr)
     {
@@ -1407,23 +1610,47 @@ void SerializerStruct::Internal::enterArrayBytes(const MetaField& field, const s
     }
 }
 
-void SerializerStruct::Internal::enterArrayEnum(const MetaField& field, std::vector<std::int32_t>&& value)
+void SerializerStruct::enterArrayEnum(const MetaField& field, std::vector<std::int32_t>&& value)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterArrayEnum(field, std::move(value));
+        return;
+    }
+
     setValueArrayNumber<std::int32_t>(field, std::move(value));
 }
 
-void SerializerStruct::Internal::enterArrayEnum(const MetaField& field, const std::int32_t* value, ssize_t size)
+void SerializerStruct::enterArrayEnum(const MetaField& field, const std::int32_t* value, ssize_t size)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterArrayEnum(field, value, size);
+        return;
+    }
+
     setValueArrayNumber<std::int32_t>(field, value, size);
 }
 
-void SerializerStruct::Internal::enterArrayEnumMove(const MetaField& field, std::vector<std::string>&& value)
+void SerializerStruct::enterArrayEnumMove(const MetaField& field, std::vector<std::string>&& value)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterArrayEnumMove(field, std::move(value));
+        return;
+    }
+
     setValueArrayString(field, std::move(value));
 }
 
-void SerializerStruct::Internal::enterArrayEnum(const MetaField& field, const std::vector<std::string>& value)
+void SerializerStruct::enterArrayEnum(const MetaField& field, const std::vector<std::string>& value)
 {
+    if (m_visitor)
+    {
+        m_visitor->enterArrayEnum(field, value);
+        return;
+    }
+
     setValueArrayString(field, value);
 }
 
