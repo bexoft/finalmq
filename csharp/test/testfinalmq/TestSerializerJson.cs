@@ -386,7 +386,6 @@ namespace testfinalmq
         {
             MetaStruct? stru = MetaDataGlobal.Instance.GetStruct("test.TestVariant");
             Debug.Assert(stru != null);
-            MetaStruct? struValue = MetaDataGlobal.Instance.GetStruct(stru.GetFieldByName("value")!.TypeName);
             m_serializerDefault.StartStruct(stru);
             m_serializerDefault.Finished();
 

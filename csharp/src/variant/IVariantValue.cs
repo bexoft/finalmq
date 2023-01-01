@@ -15,13 +15,12 @@ namespace finalmq
 
 
 
-    public interface IVariantValue
+    public interface IVariantValue : IEquatable<IVariantValue>
     {
         int VarType { get; }
         dynamic Data { get; set; }
         Variant? GetVariant(string name);
         IVariantValue Clone();
-        bool Equals(IVariantValue rhs);
         bool Add(string name, Variant variant);
         bool Add(Variant variant);
         int Length { get; }

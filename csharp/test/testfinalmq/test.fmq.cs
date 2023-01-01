@@ -45,7 +45,7 @@ class RegisterFoo
 
 
 [finalmq.MetaStruct("desc")]
-public class TestBool : finalmq.StructBase
+public class TestBool : finalmq.StructBase, IEquatable<TestBool>
 {
     public TestBool()
 	{
@@ -57,8 +57,6 @@ public class TestBool : finalmq.StructBase
 		m_value = value;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public bool value
 	{
@@ -67,6 +65,26 @@ public class TestBool : finalmq.StructBase
 	}
 
     bool m_value = false;
+
+	public bool Equals(TestBool? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+ 		if (m_value != rhs.m_value)
+		{
+			return false;
+		}
+   
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -92,7 +110,7 @@ public class TestBool : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestInt32 : finalmq.StructBase
+public class TestInt32 : finalmq.StructBase, IEquatable<TestInt32>
 {
     public TestInt32()
 	{
@@ -104,8 +122,6 @@ public class TestInt32 : finalmq.StructBase
 		m_value = value;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public int value
 	{
@@ -114,6 +130,26 @@ public class TestInt32 : finalmq.StructBase
 	}
 
     int m_value = 0;
+
+	public bool Equals(TestInt32? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+ 		if (m_value != rhs.m_value)
+		{
+			return false;
+		}
+   
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -139,7 +175,7 @@ public class TestInt32 : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestUInt32 : finalmq.StructBase
+public class TestUInt32 : finalmq.StructBase, IEquatable<TestUInt32>
 {
     public TestUInt32()
 	{
@@ -151,8 +187,6 @@ public class TestUInt32 : finalmq.StructBase
 		m_value = value;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public uint value
 	{
@@ -161,6 +195,26 @@ public class TestUInt32 : finalmq.StructBase
 	}
 
     uint m_value = 0;
+
+	public bool Equals(TestUInt32? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+ 		if (m_value != rhs.m_value)
+		{
+			return false;
+		}
+   
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -186,7 +240,7 @@ public class TestUInt32 : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestInt64 : finalmq.StructBase
+public class TestInt64 : finalmq.StructBase, IEquatable<TestInt64>
 {
     public TestInt64()
 	{
@@ -198,8 +252,6 @@ public class TestInt64 : finalmq.StructBase
 		m_value = value;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public long value
 	{
@@ -208,6 +260,26 @@ public class TestInt64 : finalmq.StructBase
 	}
 
     long m_value = 0;
+
+	public bool Equals(TestInt64? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+ 		if (m_value != rhs.m_value)
+		{
+			return false;
+		}
+   
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -233,7 +305,7 @@ public class TestInt64 : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestUInt64 : finalmq.StructBase
+public class TestUInt64 : finalmq.StructBase, IEquatable<TestUInt64>
 {
     public TestUInt64()
 	{
@@ -245,8 +317,6 @@ public class TestUInt64 : finalmq.StructBase
 		m_value = value;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public ulong value
 	{
@@ -255,6 +325,26 @@ public class TestUInt64 : finalmq.StructBase
 	}
 
     ulong m_value = 0;
+
+	public bool Equals(TestUInt64? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+ 		if (m_value != rhs.m_value)
+		{
+			return false;
+		}
+   
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -280,7 +370,7 @@ public class TestUInt64 : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestFloat : finalmq.StructBase
+public class TestFloat : finalmq.StructBase, IEquatable<TestFloat>
 {
     public TestFloat()
 	{
@@ -292,8 +382,6 @@ public class TestFloat : finalmq.StructBase
 		m_value = value;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public float value
 	{
@@ -302,6 +390,26 @@ public class TestFloat : finalmq.StructBase
 	}
 
     float m_value = 0.0f;
+
+	public bool Equals(TestFloat? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+ 		if (m_value != rhs.m_value)
+		{
+			return false;
+		}
+   
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -327,7 +435,7 @@ public class TestFloat : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestDouble : finalmq.StructBase
+public class TestDouble : finalmq.StructBase, IEquatable<TestDouble>
 {
     public TestDouble()
 	{
@@ -339,8 +447,6 @@ public class TestDouble : finalmq.StructBase
 		m_value = value;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public double value
 	{
@@ -349,6 +455,26 @@ public class TestDouble : finalmq.StructBase
 	}
 
     double m_value = 0.0;
+
+	public bool Equals(TestDouble? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+ 		if (m_value != rhs.m_value)
+		{
+			return false;
+		}
+   
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -374,7 +500,7 @@ public class TestDouble : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestString : finalmq.StructBase
+public class TestString : finalmq.StructBase, IEquatable<TestString>
 {
     public TestString()
 	{
@@ -386,8 +512,6 @@ public class TestString : finalmq.StructBase
 		m_value = value;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public string value
 	{
@@ -396,6 +520,26 @@ public class TestString : finalmq.StructBase
 	}
 
     string m_value = "";
+
+	public bool Equals(TestString? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+ 		if (m_value != rhs.m_value)
+		{
+			return false;
+		}
+   
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -421,7 +565,7 @@ public class TestString : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestBytes : finalmq.StructBase
+public class TestBytes : finalmq.StructBase, IEquatable<TestBytes>
 {
     public TestBytes()
 	{
@@ -433,8 +577,6 @@ public class TestBytes : finalmq.StructBase
 		m_value = value;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public byte[] value
 	{
@@ -443,6 +585,26 @@ public class TestBytes : finalmq.StructBase
 	}
 
     byte[] m_value = new byte[0];
+
+	public bool Equals(TestBytes? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+  		if (!m_value.Equals(rhs.m_value))
+		{
+			return false;
+		}
+  
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -468,7 +630,7 @@ public class TestBytes : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestStruct : finalmq.StructBase
+public class TestStruct : finalmq.StructBase, IEquatable<TestStruct>
 {
     public TestStruct()
 	{
@@ -482,22 +644,18 @@ public class TestStruct : finalmq.StructBase
 		m_last_value = last_value;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public test.TestInt32 struct_int32
 	{
 		get { return m_struct_int32; }
 		set { m_struct_int32 = value; }
 	}
-
 	[finalmq.MetaField("desc")]
     public test.TestString struct_string
 	{
 		get { return m_struct_string; }
 		set { m_struct_string = value; }
 	}
-
 	[finalmq.MetaField("desc")]
     public uint last_value
 	{
@@ -508,6 +666,34 @@ public class TestStruct : finalmq.StructBase
     test.TestInt32 m_struct_int32 = new test.TestInt32();
     test.TestString m_struct_string = new test.TestString();
     uint m_last_value = 0;
+
+	public bool Equals(TestStruct? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+  		if (!m_struct_int32.Equals(rhs.m_struct_int32))
+		{
+			return false;
+		}
+    		if (!m_struct_string.Equals(rhs.m_struct_string))
+		{
+			return false;
+		}
+   		if (m_last_value != rhs.m_last_value)
+		{
+			return false;
+		}
+   
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -533,7 +719,7 @@ public class TestStruct : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestStructBlockSize : finalmq.StructBase
+public class TestStructBlockSize : finalmq.StructBase, IEquatable<TestStructBlockSize>
 {
     public TestStructBlockSize()
 	{
@@ -547,22 +733,18 @@ public class TestStructBlockSize : finalmq.StructBase
 		m_last_value = last_value;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public test.TestInt32 struct_int32
 	{
 		get { return m_struct_int32; }
 		set { m_struct_int32 = value; }
 	}
-
 	[finalmq.MetaField("desc")]
     public test.TestString struct_string
 	{
 		get { return m_struct_string; }
 		set { m_struct_string = value; }
 	}
-
 	[finalmq.MetaField("desc", finalmq.MetaFieldFlags.METAFLAG_PROTO_VARINT)]
     public uint last_value
 	{
@@ -573,6 +755,34 @@ public class TestStructBlockSize : finalmq.StructBase
     test.TestInt32 m_struct_int32 = new test.TestInt32();
     test.TestString m_struct_string = new test.TestString();
     uint m_last_value = 0;
+
+	public bool Equals(TestStructBlockSize? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+  		if (!m_struct_int32.Equals(rhs.m_struct_int32))
+		{
+			return false;
+		}
+    		if (!m_struct_string.Equals(rhs.m_struct_string))
+		{
+			return false;
+		}
+   		if (m_last_value != rhs.m_last_value)
+		{
+			return false;
+		}
+   
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -598,7 +808,7 @@ public class TestStructBlockSize : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestEnum : finalmq.StructBase
+public class TestEnum : finalmq.StructBase, IEquatable<TestEnum>
 {
     public TestEnum()
 	{
@@ -610,8 +820,6 @@ public class TestEnum : finalmq.StructBase
 		m_value = value;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public test.Foo value
 	{
@@ -620,6 +828,26 @@ public class TestEnum : finalmq.StructBase
 	}
 
     test.Foo m_value = new test.Foo();
+
+	public bool Equals(TestEnum? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+ 		if (m_value != rhs.m_value)
+		{
+			return false;
+		}
+   
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -645,7 +873,7 @@ public class TestEnum : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestVariant : finalmq.StructBase
+public class TestVariant : finalmq.StructBase, IEquatable<TestVariant>
 {
     public TestVariant()
 	{
@@ -659,22 +887,18 @@ public class TestVariant : finalmq.StructBase
 		m_value2 = value2;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public finalmq.Variant value
 	{
 		get { return m_value; }
 		set { m_value = value; }
 	}
-
 	[finalmq.MetaField("desc")]
     public int valueInt32
 	{
 		get { return m_valueInt32; }
 		set { m_valueInt32 = value; }
 	}
-
 	[finalmq.MetaField("desc")]
     public finalmq.Variant value2
 	{
@@ -685,6 +909,34 @@ public class TestVariant : finalmq.StructBase
     finalmq.Variant m_value = new finalmq.Variant();
     int m_valueInt32 = 0;
     finalmq.Variant m_value2 = new finalmq.Variant();
+
+	public bool Equals(TestVariant? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+  		if (!m_value.Equals(rhs.m_value))
+		{
+			return false;
+		}
+   		if (m_valueInt32 != rhs.m_valueInt32)
+		{
+			return false;
+		}
+     		if (!m_value2.Equals(rhs.m_value2))
+		{
+			return false;
+		}
+  
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -710,7 +962,7 @@ public class TestVariant : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestArrayBool : finalmq.StructBase
+public class TestArrayBool : finalmq.StructBase, IEquatable<TestArrayBool>
 {
     public TestArrayBool()
 	{
@@ -722,8 +974,6 @@ public class TestArrayBool : finalmq.StructBase
 		m_value = value;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public bool[] value
 	{
@@ -732,6 +982,26 @@ public class TestArrayBool : finalmq.StructBase
 	}
 
     bool[] m_value = new bool[0];
+
+	public bool Equals(TestArrayBool? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+  		if (!m_value.Equals(rhs.m_value))
+		{
+			return false;
+		}
+  
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -757,7 +1027,7 @@ public class TestArrayBool : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestArrayInt32 : finalmq.StructBase
+public class TestArrayInt32 : finalmq.StructBase, IEquatable<TestArrayInt32>
 {
     public TestArrayInt32()
 	{
@@ -769,8 +1039,6 @@ public class TestArrayInt32 : finalmq.StructBase
 		m_value = value;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public int[] value
 	{
@@ -779,6 +1047,26 @@ public class TestArrayInt32 : finalmq.StructBase
 	}
 
     int[] m_value = new int[0];
+
+	public bool Equals(TestArrayInt32? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+  		if (!m_value.Equals(rhs.m_value))
+		{
+			return false;
+		}
+  
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -804,7 +1092,7 @@ public class TestArrayInt32 : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestArrayUInt32 : finalmq.StructBase
+public class TestArrayUInt32 : finalmq.StructBase, IEquatable<TestArrayUInt32>
 {
     public TestArrayUInt32()
 	{
@@ -816,8 +1104,6 @@ public class TestArrayUInt32 : finalmq.StructBase
 		m_value = value;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public uint[] value
 	{
@@ -826,6 +1112,26 @@ public class TestArrayUInt32 : finalmq.StructBase
 	}
 
     uint[] m_value = new uint[0];
+
+	public bool Equals(TestArrayUInt32? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+  		if (!m_value.Equals(rhs.m_value))
+		{
+			return false;
+		}
+  
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -851,7 +1157,7 @@ public class TestArrayUInt32 : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestArrayInt64 : finalmq.StructBase
+public class TestArrayInt64 : finalmq.StructBase, IEquatable<TestArrayInt64>
 {
     public TestArrayInt64()
 	{
@@ -863,8 +1169,6 @@ public class TestArrayInt64 : finalmq.StructBase
 		m_value = value;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public long[] value
 	{
@@ -873,6 +1177,26 @@ public class TestArrayInt64 : finalmq.StructBase
 	}
 
     long[] m_value = new long[0];
+
+	public bool Equals(TestArrayInt64? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+  		if (!m_value.Equals(rhs.m_value))
+		{
+			return false;
+		}
+  
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -898,7 +1222,7 @@ public class TestArrayInt64 : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestArrayUInt64 : finalmq.StructBase
+public class TestArrayUInt64 : finalmq.StructBase, IEquatable<TestArrayUInt64>
 {
     public TestArrayUInt64()
 	{
@@ -910,8 +1234,6 @@ public class TestArrayUInt64 : finalmq.StructBase
 		m_value = value;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public ulong[] value
 	{
@@ -920,6 +1242,26 @@ public class TestArrayUInt64 : finalmq.StructBase
 	}
 
     ulong[] m_value = new ulong[0];
+
+	public bool Equals(TestArrayUInt64? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+  		if (!m_value.Equals(rhs.m_value))
+		{
+			return false;
+		}
+  
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -945,7 +1287,7 @@ public class TestArrayUInt64 : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestArrayFloat : finalmq.StructBase
+public class TestArrayFloat : finalmq.StructBase, IEquatable<TestArrayFloat>
 {
     public TestArrayFloat()
 	{
@@ -957,8 +1299,6 @@ public class TestArrayFloat : finalmq.StructBase
 		m_value = value;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public float[] value
 	{
@@ -967,6 +1307,26 @@ public class TestArrayFloat : finalmq.StructBase
 	}
 
     float[] m_value = new float[0];
+
+	public bool Equals(TestArrayFloat? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+  		if (!m_value.Equals(rhs.m_value))
+		{
+			return false;
+		}
+  
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -992,7 +1352,7 @@ public class TestArrayFloat : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestArrayDouble : finalmq.StructBase
+public class TestArrayDouble : finalmq.StructBase, IEquatable<TestArrayDouble>
 {
     public TestArrayDouble()
 	{
@@ -1004,8 +1364,6 @@ public class TestArrayDouble : finalmq.StructBase
 		m_value = value;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public double[] value
 	{
@@ -1014,6 +1372,26 @@ public class TestArrayDouble : finalmq.StructBase
 	}
 
     double[] m_value = new double[0];
+
+	public bool Equals(TestArrayDouble? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+  		if (!m_value.Equals(rhs.m_value))
+		{
+			return false;
+		}
+  
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -1039,7 +1417,7 @@ public class TestArrayDouble : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestArrayString : finalmq.StructBase
+public class TestArrayString : finalmq.StructBase, IEquatable<TestArrayString>
 {
     public TestArrayString()
 	{
@@ -1051,8 +1429,6 @@ public class TestArrayString : finalmq.StructBase
 		m_value = value;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public IList<string> value
 	{
@@ -1061,6 +1437,26 @@ public class TestArrayString : finalmq.StructBase
 	}
 
     IList<string> m_value = new string[0];
+
+	public bool Equals(TestArrayString? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+   		if (!m_value.SequenceEqual(rhs.m_value))
+		{
+			return false;
+		}
+ 
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -1086,7 +1482,7 @@ public class TestArrayString : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestArrayBytes : finalmq.StructBase
+public class TestArrayBytes : finalmq.StructBase, IEquatable<TestArrayBytes>
 {
     public TestArrayBytes()
 	{
@@ -1098,8 +1494,6 @@ public class TestArrayBytes : finalmq.StructBase
 		m_value = value;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public IList<byte[]> value
 	{
@@ -1108,6 +1502,26 @@ public class TestArrayBytes : finalmq.StructBase
 	}
 
     IList<byte[]> m_value = new List<byte[]>();
+
+	public bool Equals(TestArrayBytes? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+   		if (!m_value.SequenceEqual(rhs.m_value))
+		{
+			return false;
+		}
+ 
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -1133,7 +1547,7 @@ public class TestArrayBytes : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestArrayStruct : finalmq.StructBase
+public class TestArrayStruct : finalmq.StructBase, IEquatable<TestArrayStruct>
 {
     public TestArrayStruct()
 	{
@@ -1146,15 +1560,12 @@ public class TestArrayStruct : finalmq.StructBase
 		m_last_value = last_value;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public IList<test.TestStruct> value
 	{
 		get { return m_value; }
 		set { m_value = value; }
 	}
-
 	[finalmq.MetaField("desc")]
     public uint last_value
 	{
@@ -1164,6 +1575,30 @@ public class TestArrayStruct : finalmq.StructBase
 
     IList<test.TestStruct> m_value = new List<test.TestStruct>();
     uint m_last_value = 0;
+
+	public bool Equals(TestArrayStruct? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+   		if (!m_value.SequenceEqual(rhs.m_value))
+		{
+			return false;
+		}
+  		if (m_last_value != rhs.m_last_value)
+		{
+			return false;
+		}
+   
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -1189,7 +1624,7 @@ public class TestArrayStruct : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestArrayEnum : finalmq.StructBase
+public class TestArrayEnum : finalmq.StructBase, IEquatable<TestArrayEnum>
 {
     public TestArrayEnum()
 	{
@@ -1201,8 +1636,6 @@ public class TestArrayEnum : finalmq.StructBase
 		m_value = value;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public IList<test.Foo> value
 	{
@@ -1211,6 +1644,26 @@ public class TestArrayEnum : finalmq.StructBase
 	}
 
     IList<test.Foo> m_value = new List<test.Foo>();
+
+	public bool Equals(TestArrayEnum? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+   		if (!m_value.SequenceEqual(rhs.m_value))
+		{
+			return false;
+		}
+ 
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -1236,7 +1689,7 @@ public class TestArrayEnum : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestRequest : finalmq.StructBase
+public class TestRequest : finalmq.StructBase, IEquatable<TestRequest>
 {
     public TestRequest()
 	{
@@ -1248,8 +1701,6 @@ public class TestRequest : finalmq.StructBase
 		m_datarequest = datarequest;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public string datarequest
 	{
@@ -1258,6 +1709,26 @@ public class TestRequest : finalmq.StructBase
 	}
 
     string m_datarequest = "";
+
+	public bool Equals(TestRequest? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+ 		if (m_datarequest != rhs.m_datarequest)
+		{
+			return false;
+		}
+   
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -1283,7 +1754,7 @@ public class TestRequest : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class TestReply : finalmq.StructBase
+public class TestReply : finalmq.StructBase, IEquatable<TestReply>
 {
     public TestReply()
 	{
@@ -1295,8 +1766,6 @@ public class TestReply : finalmq.StructBase
 		m_datareply = datareply;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public string datareply
 	{
@@ -1305,6 +1774,26 @@ public class TestReply : finalmq.StructBase
 	}
 
     string m_datareply = "";
+
+	public bool Equals(TestReply? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+ 		if (m_datareply != rhs.m_datareply)
+		{
+			return false;
+		}
+   
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{

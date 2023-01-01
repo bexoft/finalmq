@@ -115,6 +115,10 @@ namespace finalmq
                 Type? propertyType = propertyInfo.PropertyType;
                 if (propertyType != null)
                 {
+                    if (propertyType.FullName == "finalmq.MetaStruct")  // skip property "public override finalmq.MetaStruct MetaStruct"
+                    {
+                        continue;
+                    }
                     bool isEnum = propertyType.IsEnum;
                     bool isClass = propertyType.IsClass;
                     Type[]? genericTypes = propertyType.GenericTypeArguments;

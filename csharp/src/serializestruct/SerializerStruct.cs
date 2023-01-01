@@ -27,7 +27,7 @@ namespace finalmq
                 m_root = root;
                 m_outer = outer;
                 ClearStruct(m_root);
-                m_stack.Add(new StackEntry(m_root, -1));
+                m_stack.Add(new StackEntry(m_root, null));
                 m_current = m_stack.Last();
             }
             public void SetExitNotification(VarValueToVariant.FuncExit? funcExit)
@@ -109,34 +109,34 @@ namespace finalmq
                     StructBase? structBase = m_current.StructBase;
                     if (structBase != null)
                     {
-                        PropertyInfo? property = structBase.GetType().GetProperty(field.Name);
-                        if (property != null)
+                        if (m_current.StructArrayName == null)
                         {
-                            if (m_current.StructArrayIndex == -1)
+                            PropertyInfo? property = structBase.GetType().GetProperty(field.Name);
+                            if (property != null)
                             {
                                 sub = property.GetValue(structBase) as StructBase;
                             }
-                            else
+                        }
+                        else
+                        {
+                            PropertyInfo? property = structBase.GetType().GetProperty(m_current.StructArrayName);
+                            if (property != null)
                             {
-                                StructBase? arr = property.GetValue(structBase) as StructBase;
-                                if (arr != null)
+                                System.Collections.IList? list = property.GetValue(structBase) as System.Collections.IList;
+                                if (list != null)
                                 {
-                                    System.Collections.IList list = (System.Collections.IList)arr;
-                                    if (list != null)
+                                    Type[]? genericTypes = property.PropertyType.GenericTypeArguments;
+                                    if (genericTypes != null && genericTypes.Length > 0)
                                     {
-                                        Type[]? genericTypes = property.PropertyType.GenericTypeArguments;
-                                        if (genericTypes != null && genericTypes.Length > 0)
-                                        {
-                                            Type genericType = genericTypes[0];
-                                            sub = Activator.CreateInstance(genericType) as StructBase;
-                                            list.Add(sub);
-                                        }
+                                        Type genericType = genericTypes[0];
+                                        sub = Activator.CreateInstance(genericType) as StructBase;
+                                        list.Add(sub);
                                     }
                                 }
                             }
                         }
                     }
-                    m_stack.Add(new StackEntry( sub, -1 ));
+                    m_stack.Add(new StackEntry( sub, null ));
                     m_current = m_stack.Last();
                 }
             }
@@ -171,7 +171,7 @@ namespace finalmq
                     return;
                 }
                 Debug.Assert(m_current != null);
-                m_current.StructArrayIndex = field.Index;
+                m_current.StructArrayName = field.Name;
             }
             public void ExitArrayStruct(MetaField field)
             {
@@ -180,7 +180,7 @@ namespace finalmq
                     return;
                 }
                 Debug.Assert(m_current != null);
-                m_current.StructArrayIndex = -1;
+                m_current.StructArrayName = null;
             }
 
             void SetValue<T>(PropertyInfo property, T value)
@@ -863,7 +863,7 @@ namespace finalmq
                     }
                     else
                     {
-                        string valueString = Encoding.ASCII.GetString(value);
+                        string valueString = Encoding.UTF8.GetString(value);
                         dynamic? v = ConvertString(property, valueString);
                         if (v != null)
                         {
@@ -939,7 +939,7 @@ namespace finalmq
                         IList<string> listString = new List<string>();
                         foreach (var e in value)
                         {
-                            string entryString = Encoding.ASCII.GetString(e);
+                            string entryString = Encoding.UTF8.GetString(e);
                             listString.Add(entryString);
                         }
                         dynamic? v = ConvertArrayString(property, listString);
@@ -961,23 +961,23 @@ namespace finalmq
 
             class StackEntry
             {
-                public StackEntry(StructBase? structBase, int structArrayIndex)
+                public StackEntry(StructBase? structBase, string? structArrayName)
                 {
                     m_structBase = structBase;
-                    m_structArrayIndex = structArrayIndex;
+                    m_structArrayName = structArrayName;
                 }
                 public StructBase? StructBase
                 {
                     get { return m_structBase; }
                     set { m_structBase = value; }
                 }
-                public int StructArrayIndex
+                public string? StructArrayName
                 {
-                    get { return m_structArrayIndex; }
-                    set { m_structArrayIndex = value; }
+                    get { return m_structArrayName; }
+                    set { m_structArrayName = value; }
                 }
                 StructBase? m_structBase = null;
-                int m_structArrayIndex = -1;
+                string? m_structArrayName;
             };
 
             readonly StructBase m_root;

@@ -21,45 +21,38 @@ namespace testfinalmq
 
     public class TestSerializerStruct : IDisposable
     {
-        MetaField? m_fieldValue = null;
-        MetaField? m_fieldValue2 = null;
-        MetaField? m_fieldValueInt32 = null;
-        MetaField? m_fieldName = null;
-        MetaField? m_fieldType = null;
-        MetaField? m_fieldInt32 = null;
-        MetaField? m_fieldString = null;
-        MetaField? m_fieldList = null;
-        MetaField? m_fieldListWithoutArray = null;
+        MetaField m_fieldValue;
+        MetaField m_fieldValue2;
+        MetaField m_fieldValueInt32;
+        MetaField m_fieldName;
+        MetaField m_fieldType;
+        MetaField m_fieldInt32;
+        MetaField m_fieldString;
+        MetaField m_fieldList;
+        MetaField m_fieldListWithoutArray;
 
         public TestSerializerStruct()
         {
             MetaStruct? structTestVariant = MetaDataGlobal.Instance.GetStruct("test.TestVariant");
             Debug.Assert(structTestVariant != null);
-            m_fieldValue = structTestVariant.GetFieldByName("value");
+            m_fieldValue = structTestVariant.GetFieldByName("value")!;
             Debug.Assert(m_fieldValue != null);
             Debug.Assert(m_fieldValue.TypeName == "finalmq.variant.VarValue");
-            m_fieldValue2 = structTestVariant.GetFieldByName("value2");
+            m_fieldValue2 = structTestVariant.GetFieldByName("value2")!;
             Debug.Assert(m_fieldValue2 != null);
             Debug.Assert(m_fieldValue2.TypeName == "finalmq.variant.VarValue");
-            m_fieldValueInt32 = structTestVariant.GetFieldByName("valueInt32");
+            m_fieldValueInt32 = structTestVariant.GetFieldByName("valueInt32")!;
             Debug.Assert(m_fieldValueInt32 != null);
 
             MetaStruct? structVarVariant = MetaDataGlobal.Instance.GetStruct("finalmq.variant.VarValue");
             Debug.Assert(structVarVariant != null);
 
-            m_fieldName = structVarVariant.GetFieldByName("name");
-            m_fieldType = structVarVariant.GetFieldByName("type");
-            m_fieldInt32 = structVarVariant.GetFieldByName("valint32");
-            m_fieldString = structVarVariant.GetFieldByName("valstring");
-            m_fieldList = structVarVariant.GetFieldByName("vallist");
-            m_fieldListWithoutArray = MetaDataGlobal.Instance.GetArrayField(m_fieldList!);
-
-            Debug.Assert(m_fieldName != null);
-            Debug.Assert(m_fieldType != null);
-            Debug.Assert(m_fieldInt32 != null);
-            Debug.Assert(m_fieldString != null);
-            Debug.Assert(m_fieldList != null);
-            Debug.Assert(m_fieldListWithoutArray != null);
+            m_fieldName = structVarVariant.GetFieldByName("name")!;
+            m_fieldType = structVarVariant.GetFieldByName("type")!;
+            m_fieldInt32 = structVarVariant.GetFieldByName("valint32")!;
+            m_fieldString = structVarVariant.GetFieldByName("valstring")!;
+            m_fieldList = structVarVariant.GetFieldByName("vallist")!;
+            m_fieldListWithoutArray = MetaDataGlobal.Instance.GetArrayField(m_fieldList!)!;
         }
 
         public void Dispose()
@@ -79,7 +72,7 @@ namespace testfinalmq
             serializer.Finished();
 
             var cmp = new test.TestBool(VALUE);
-            Debug.Assert(root.value == cmp.value);
+            Debug.Assert(root.Equals(cmp));
         }
 
         [Fact]
@@ -95,7 +88,7 @@ namespace testfinalmq
             serializer.Finished();
 
             var cmp = new test.TestInt32(VALUE);
-            Debug.Assert(root.value == cmp.value);
+            Debug.Assert(root.Equals(cmp));
         }
 
         [Fact]
@@ -111,7 +104,7 @@ namespace testfinalmq
             serializer.Finished();
 
             var cmp = new test.TestUInt32(VALUE);
-            Debug.Assert(root.value == cmp.value);
+            Debug.Assert(root.Equals(cmp));
         }
 
         [Fact]
@@ -127,7 +120,7 @@ namespace testfinalmq
             serializer.Finished();
 
             var cmp = new test.TestInt64(VALUE);
-            Debug.Assert(root.value == cmp.value);
+            Debug.Assert(root.Equals(cmp));
         }
 
         [Fact]
@@ -143,7 +136,7 @@ namespace testfinalmq
             serializer.Finished();
 
             var cmp = new test.TestUInt64(VALUE);
-            Debug.Assert(root.value == cmp.value);
+            Debug.Assert(root.Equals(cmp));
         }
 
         [Fact]
@@ -159,8 +152,81 @@ namespace testfinalmq
             serializer.Finished();
 
             var cmp = new test.TestFloat(VALUE);
-            Debug.Assert(root.value == cmp.value);
+            Debug.Assert(root.Equals(cmp));
         }
+
+        [Fact]
+        public void TestDouble()
+        {
+            double VALUE = -2.1;
+
+            var root = new test.TestDouble();
+            IParserVisitor serializer = new SerializerStruct(root);
+
+            serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestDouble")!);
+            serializer.EnterDouble(new MetaField(MetaTypeId.TYPE_DOUBLE, "", "value", "", 0, 0), VALUE);
+            serializer.Finished();
+
+            var cmp = new test.TestDouble(VALUE);
+            Debug.Assert(root.Equals(cmp));
+        }
+
+        [Fact]
+        public void TestString()
+        {
+            string VALUE = "Hello World";
+
+            var root = new test.TestString();
+            IParserVisitor serializer = new SerializerStruct(root);
+
+            serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestString")!);
+            serializer.EnterString(new MetaField(MetaTypeId.TYPE_STRING, "", "value", "", 0, 0), VALUE);
+            serializer.Finished();
+
+            var cmp = new test.TestString(VALUE);
+            Debug.Assert(root.Equals(cmp));
+        }
+
+        [Fact]
+        public void TestBytes()
+        {
+            byte[] VALUE = { (byte)'H', (byte)'e', (byte)'l', 0, 13, (byte)'l', (byte)'o' };
+
+            var root = new test.TestBytes();
+            IParserVisitor serializer = new SerializerStruct(root);
+
+            serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestString")!);
+            serializer.EnterBytes(new MetaField(MetaTypeId.TYPE_BYTES, "", "value", "", 0, 0), VALUE);
+            serializer.Finished();
+
+            var cmp = new test.TestBytes(VALUE);
+            Debug.Assert(root.Equals(cmp));
+        }
+
+        [Fact]
+        public void TestStruct()
+        {
+            int VALUE_INT32 = -2;
+            string VALUE_STRING = "Hello World";
+            uint VALUE_UINT32 = 123;
+
+            var root = new test.TestStruct();
+            IParserVisitor serializer = new SerializerStruct(root);
+
+            serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestStruct")!);
+            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0));
+            serializer.EnterInt32(new MetaField(MetaTypeId.TYPE_INT32, "", "value", "", 0, 0), VALUE_INT32);
+            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0));
+            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "", 0, 1));
+            serializer.EnterString(new MetaField(MetaTypeId.TYPE_STRING, "", "value", "", 0, 0), VALUE_STRING);
+            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "", 0, 1));
+            serializer.EnterUInt32(new MetaField(MetaTypeId.TYPE_UINT32, "", "last_value", "", 0, 1), VALUE_UINT32);
+            serializer.Finished();
+
+            var cmp = new test.TestStruct(new test.TestInt32(VALUE_INT32), new test.TestString(VALUE_STRING), VALUE_UINT32);
+            Debug.Assert(root.Equals(cmp));
+        }
+
 
         [Fact]
         public void TestEnum()
@@ -194,6 +260,138 @@ namespace testfinalmq
             Debug.Assert(root.value == cmp.value);
         }
 
+        [Fact]
+        public void TestVariantEmptyDefault()
+        {
+            var root = new test.TestVariant();
+            IParserVisitor serializer = new SerializerStruct(root);
+
+            serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestVariant")!);
+            serializer.Finished();
+
+            var cmp = new test.TestVariant();
+            Debug.Assert(root.Equals(cmp));
+        }
+
+        [Fact]
+        public void TestVariantEmpty()
+        {
+            var root = new test.TestVariant();
+            IParserVisitor serializer = new SerializerStruct(root);
+
+            serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestVariant")!);
+            serializer.EnterStruct(m_fieldValue);
+            serializer.EnterEnum(m_fieldType, (int)finalmq.variant.VarTypeId.T_NONE);
+            serializer.ExitStruct(m_fieldValue);
+            serializer.Finished();
+
+            var cmp = new test.TestVariant();
+            Debug.Assert(root.Equals(cmp));
+        }
+
+        [Fact]
+        public void TestVariantInt32()
+        {
+            int VALUE = -2;
+
+            var root = new test.TestVariant();
+            IParserVisitor serializer = new SerializerStruct(root);
+
+            MetaStruct? stru = MetaDataGlobal.Instance.GetStruct("test.TestVariant");
+            Debug.Assert(stru != null);
+            MetaStruct? struValue = MetaDataGlobal.Instance.GetStruct(stru.GetFieldByName("value")!.TypeName);
+            serializer.StartStruct(stru);
+            serializer.EnterStruct(stru.GetFieldByName("value")!);
+            serializer.EnterEnum(struValue!.GetFieldByName("type")!, "int32");
+            serializer.EnterInt32(struValue!.GetFieldByName("valint32")!, VALUE);
+            serializer.ExitStruct(stru.GetFieldByName("value")!);
+            serializer.Finished();
+
+            var cmp = new test.TestVariant(Variant.Create(VALUE), 0, new Variant());
+            Debug.Assert(root.Equals(cmp));
+        }
+
+        [Fact]
+        public void TestVariantStruct()
+        {
+            MetaStruct structTestVariant = MetaDataGlobal.Instance.GetStruct("test.TestVariant")!;
+            MetaField fieldValue = structTestVariant.GetFieldByName("value")!;
+            MetaField fieldValue2 = structTestVariant.GetFieldByName("value2")!;
+            MetaField fieldValueInt32 = structTestVariant.GetFieldByName("valueInt32")!;
+
+            MetaStruct structVarVariant = MetaDataGlobal.Instance.GetStruct("finalmq.variant.VarValue")!;
+
+            MetaField fieldName = structVarVariant.GetFieldByName("name")!;
+            MetaField fieldType = structVarVariant.GetFieldByName("type")!;
+            MetaField fieldInt32 = structVarVariant.GetFieldByName("valint32")!;
+            MetaField fieldString = structVarVariant.GetFieldByName("valstring")!;
+            MetaField fieldList = structVarVariant.GetFieldByName("vallist")!;
+            MetaField fieldListWithoutArray = MetaDataGlobal.Instance.GetArrayField(fieldList)!;
+
+            var root = new test.TestVariant();
+            IParserVisitor serializer = new SerializerStruct(root);
+
+            // VariantStruct{ {"value", VariantStruct{
+            serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestVariant")!);
+            serializer.EnterStruct(fieldValue);
+            serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_STRUCT);
+            serializer.EnterArrayStruct(fieldList);
+            // {"key1", VariantList{
+            serializer.EnterStruct(fieldListWithoutArray);
+            serializer.EnterString(fieldName, "key1");
+            serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_LIST);
+            serializer.EnterArrayStruct(fieldList);
+            // 2
+            serializer.EnterStruct(fieldListWithoutArray);
+            serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_INT32);
+            serializer.EnterInt32(fieldInt32, 2);
+            serializer.ExitStruct(fieldListWithoutArray);
+            // , std::string("Hello")
+            serializer.EnterStruct(fieldListWithoutArray);
+            serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_STRING);
+            serializer.EnterString(fieldString, "Hello");
+            serializer.ExitStruct(fieldListWithoutArray);
+            // }
+            serializer.ExitArrayStruct(fieldList);
+            serializer.ExitStruct(fieldListWithoutArray);
+
+            // {"key2", VariantStruct{
+            serializer.EnterStruct(fieldListWithoutArray);
+            serializer.EnterString(fieldName, "key2");
+            serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_STRUCT);
+            serializer.EnterArrayStruct(fieldList);
+            // {"a", 3},
+            serializer.EnterStruct(fieldListWithoutArray);
+            serializer.EnterString(fieldName, "a");
+            serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_INT32);
+            serializer.EnterInt32(fieldInt32, 3);
+            serializer.ExitStruct(fieldListWithoutArray);
+            // {"b", std::string("Hi")}
+            serializer.EnterStruct(fieldListWithoutArray);
+            serializer.EnterString(fieldName, "b");
+            serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_STRING);
+            serializer.EnterString(fieldString, "Hi");
+            serializer.ExitStruct(fieldListWithoutArray);
+            // }
+            serializer.ExitArrayStruct(fieldList);
+            serializer.ExitStruct(fieldListWithoutArray);
+
+            // {
+            serializer.EnterStruct(fieldListWithoutArray);
+            serializer.EnterString(fieldName, "key3");
+            serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_NONE);
+            serializer.ExitStruct(fieldListWithoutArray);
+            // }}
+            serializer.ExitArrayStruct(fieldList);
+            serializer.ExitStruct(fieldValue);
+            serializer.Finished();
+
+            var cmp = new test.TestVariant(Variant.Create(new VariantStruct{ new NameValue("key1", Variant.Create(new VariantList{ Variant.Create(2), Variant.Create("Hello") })),
+                                                                             new NameValue("key2", Variant.Create(new VariantStruct{ new NameValue("a", Variant.Create(3)), new NameValue("b", Variant.Create("Hi")) })),
+                                                                             new NameValue("key3", new Variant())
+                                                                           }), 0, new Variant());
+            Debug.Assert(root.Equals(cmp));
+        }
 
         [Fact]
         public void TestArrayEnum()
@@ -209,7 +407,7 @@ namespace testfinalmq
             serializer.Finished();
 
             var cmp = new test.TestArrayEnum(VALUE_CMP);
-            Debug.Assert(root.value.SequenceEqual(cmp.value));
+            Debug.Assert(root.Equals(cmp));
         }
 
     }

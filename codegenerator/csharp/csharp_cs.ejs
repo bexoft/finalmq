@@ -58,7 +58,7 @@ class Register<%- plaintype %>
     var stru = data.structs[i]
     var plaintype = helper.getPlainType(stru.type) %>
 [finalmq.MetaStruct("<%- stru.desc %>")]
-public class <%- plaintype %> : finalmq.StructBase
+public class <%- plaintype %> : finalmq.StructBase, IEquatable<<%- plaintype %>>
 {
     public <%- plaintype %>()
 	{
@@ -69,17 +69,17 @@ public class <%- plaintype %> : finalmq.StructBase
 <% for (var n = 0; n < stru.fields.length; n++) { 
         field = stru.fields[n] %><% -%>
 <%- helper.tid2type(data, field.tid, field.type) %> <%- field.name %><% if (n < stru.fields.length-1){ %>, <% } %><% -%>
-<% } %>)
+<% } -%>)
 	{
 <% for (var n = 0; n < stru.fields.length; n++) { 
         field = stru.fields[n] %><% -%>
 		m_<%- field.name %> = <%- field.name %>;
 <% } -%>
 	}
-<% } %>
+<% } -%>
 
 <% for (var n = 0; n < stru.fields.length; n++) { 
-        field = stru.fields[n] %>
+        field = stru.fields[n] -%>
 	[finalmq.MetaField("<%- field.desc %>"<% if (field.flags.length > 0) {%>, <% for (var m = 0; m < field.flags.length; m++) { %>finalmq.MetaFieldFlags.<%- field.flags[m]%><% if (m != field.flags.length - 1) { %> | <% }}} %>)]
     public <%- helper.tid2type(data, field.tid, field.type) %> <%- field.name %>
 	{
@@ -91,6 +91,44 @@ public class <%- plaintype %> : finalmq.StructBase
         field = stru.fields[n] %>
     <%- helper.tid2type(data, field.tid, field.type) %> m_<%- field.name %><% if (helper.tid2default(data, field.tid, field.type)){%> = <%- helper.tid2default(data, field.tid, field.type)%><% } %>;<% -%>
 <% } %>
+
+	public bool Equals(<%- plaintype %>? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+<% for (var n = 0; n < stru.fields.length; n++) { 
+        field = stru.fields[n] 
+	    compareType = helper.tid2CompareType(field.tid) -%>
+ <%if (compareType == 0) { -%>
+		if (m_<%- field.name %> != rhs.m_<%- field.name %>)
+		{
+			return false;
+		}
+ <% } -%>
+ <%if (compareType == 1) { -%>
+		if (!m_<%- field.name %>.Equals(rhs.m_<%- field.name %>))
+		{
+			return false;
+		}
+ <% } -%>
+ <%if (compareType == 2) { -%>
+		if (!m_<%- field.name %>.SequenceEqual(rhs.m_<%- field.name %>))
+		{
+			return false;
+		}
+ <% } -%>
+<% } -%>
+
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{

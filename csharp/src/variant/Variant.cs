@@ -8,7 +8,7 @@ namespace finalmq
     using VariantList = List<Variant>;
     using VariantStruct = List<NameValue>;
 
-    public class Variant
+    public class Variant : IEquatable<Variant>
     {
         private readonly int VARTYPE_NONE = 0;
 
@@ -101,8 +101,13 @@ namespace finalmq
             return m_value.GetVariant(name);
         }
 
-        public bool Equals(Variant rhs)
+        public bool Equals(Variant? rhs)
         {
+            if (rhs == null)
+            {
+                return false;
+            }
+
             if (this == rhs)
             {
                 return true;
