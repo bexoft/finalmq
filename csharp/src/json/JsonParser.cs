@@ -288,7 +288,7 @@ namespace finalmq
 
             if (isFloat)
             {
-                string strNumber = Encoding.UTF8.GetString(m_buffer, first, offset - first);
+                string strNumber = Encoding.ASCII.GetString(m_buffer, first, offset - first);
                 double value;
                 if (!Double.TryParse(strNumber, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
                 {

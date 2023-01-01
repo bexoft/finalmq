@@ -31,8 +31,13 @@ namespace finalmq
         {
             return null;
         }
-        public bool Equals(IVariantValue rhs)
+        public bool Equals(IVariantValue? rhs)
         {
+            if (rhs == null)
+            {
+                return false;
+            }
+
             if (this == rhs)
             {
                 return true;

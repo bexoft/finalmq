@@ -138,6 +138,63 @@ module.exports = {
         }
     },
 
+	// return
+	// 0: compare with ==
+	// 1: compare with Equals
+	// 2: compare with SequenceEqual
+    tid2CompareType : function(tid) { 
+
+        switch (tid)
+        {
+            case 'bool':
+            case 'TYPE_BOOL': return 0;
+            case 'int32':
+            case 'TYPE_INT32': return 0;
+            case 'uint32':
+            case 'TYPE_UINT32': return 0;
+            case 'int64':
+            case 'TYPE_INT64': return 0;
+            case 'uint64':
+            case 'TYPE_UINT64': return 0;
+            case 'float':
+            case 'TYPE_FLOAT': return 0;
+            case 'double':
+            case 'TYPE_DOUBLE': return 0;
+            case 'string':
+            case 'TYPE_STRING': return 0;
+            case 'bytes':
+            case 'TYPE_BYTES': return 1;
+            case 'struct':
+            case 'TYPE_STRUCT': return 1;
+            case 'enum':
+            case 'TYPE_ENUM': return 0;
+            case 'variant':
+            case 'TYPE_VARIANT': return 1;
+            case 'bool[]':
+            case 'TYPE_ARRAY_BOOL': return 1;
+            case 'int32[]':
+            case 'TYPE_ARRAY_INT32': return 1;
+            case 'uint32[]':
+            case 'TYPE_ARRAY_UINT32': return 1;
+            case 'int64[]':
+            case 'TYPE_ARRAY_INT64': return 1;
+            case 'uint64[]':
+            case 'TYPE_ARRAY_UINT64': return 1;
+            case 'float[]':
+            case 'TYPE_ARRAY_FLOAT': return 1;
+            case 'double[]':
+            case 'TYPE_ARRAY_DOUBLE': return 1;
+            case 'string[]':
+            case 'TYPE_ARRAY_STRING': return 2;
+            case 'bytes[]':
+            case 'TYPE_ARRAY_BYTES': return 2;
+            case 'struct[]':
+            case 'TYPE_ARRAY_STRUCT': return 2;
+            case 'enum[]':
+            case 'TYPE_ARRAY_ENUM': return 2;
+        }
+    },
+
     tid2default : function(data, tid, type) { 
 
         switch (tid)

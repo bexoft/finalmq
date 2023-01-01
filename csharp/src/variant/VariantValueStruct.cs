@@ -8,7 +8,7 @@ namespace finalmq
 {
     using VariantStruct = IList<NameValue>;
 
-    public class NameValue
+    public class NameValue : IEquatable<NameValue>
     {
         public NameValue(string name, Variant value)
         {
@@ -23,6 +23,26 @@ namespace finalmq
         { 
             get { return m_value; } 
             set { m_value = value; }
+        }
+
+        public bool Equals(NameValue? rhs)
+        {
+            if (rhs == null)
+            {
+                return false;
+            }
+
+            if (this == rhs)
+            {
+                return true;
+            }
+
+            if (m_name != rhs.m_name)
+            {
+                return false;
+            }
+
+            return m_value.Equals(rhs.m_value);
         }
 
         readonly string m_name;
@@ -101,8 +121,13 @@ namespace finalmq
             // m_value[name].getValue( with remaining name )
             return variant.GetVariant(restname);
         }
-        public bool Equals(IVariantValue rhs)
+        public bool Equals(IVariantValue? rhs)
         {
+            if (rhs == null)
+            {
+                return false;
+            }
+
             if (this == rhs)
             {
                 return true;
@@ -113,7 +138,13 @@ namespace finalmq
                 return false;
             }
 
-            return m_value.Equals(rhs.Data);
+            VariantStruct? rhsData = rhs.Data as VariantStruct;
+            if (rhsData == null)
+            {
+                return false;
+            }
+
+            return m_value.SequenceEqual(rhsData);
         }
         public bool Add(string name, Variant variant)
         {

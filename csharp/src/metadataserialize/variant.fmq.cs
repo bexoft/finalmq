@@ -82,7 +82,7 @@ class RegisterVarTypeId
 
 
 [finalmq.MetaStruct("desc")]
-public class VarValue : finalmq.StructBase
+public class VarValue : finalmq.StructBase, IEquatable<VarValue>
 {
     public VarValue()
 	{
@@ -114,148 +114,126 @@ public class VarValue : finalmq.StructBase
 		m_valarrbytes = valarrbytes;
 	}
 
-
-
 	[finalmq.MetaField("name is only used for elements in valstruct")]
     public string name
 	{
 		get { return m_name; }
 		set { m_name = value; }
 	}
-
 	[finalmq.MetaField("")]
     public finalmq.variant.VarTypeId type
 	{
 		get { return m_type; }
 		set { m_type = value; }
 	}
-
 	[finalmq.MetaField("")]
     public bool valbool
 	{
 		get { return m_valbool; }
 		set { m_valbool = value; }
 	}
-
 	[finalmq.MetaField("")]
     public int valint32
 	{
 		get { return m_valint32; }
 		set { m_valint32 = value; }
 	}
-
 	[finalmq.MetaField("")]
     public uint valuint32
 	{
 		get { return m_valuint32; }
 		set { m_valuint32 = value; }
 	}
-
 	[finalmq.MetaField("")]
     public long valint64
 	{
 		get { return m_valint64; }
 		set { m_valint64 = value; }
 	}
-
 	[finalmq.MetaField("")]
     public ulong valuint64
 	{
 		get { return m_valuint64; }
 		set { m_valuint64 = value; }
 	}
-
 	[finalmq.MetaField("")]
     public float valfloat
 	{
 		get { return m_valfloat; }
 		set { m_valfloat = value; }
 	}
-
 	[finalmq.MetaField("")]
     public double valdouble
 	{
 		get { return m_valdouble; }
 		set { m_valdouble = value; }
 	}
-
 	[finalmq.MetaField("")]
     public string valstring
 	{
 		get { return m_valstring; }
 		set { m_valstring = value; }
 	}
-
 	[finalmq.MetaField("")]
     public byte[] valbytes
 	{
 		get { return m_valbytes; }
 		set { m_valbytes = value; }
 	}
-
 	[finalmq.MetaField("")]
     public IList<finalmq.variant.VarValue> vallist
 	{
 		get { return m_vallist; }
 		set { m_vallist = value; }
 	}
-
 	[finalmq.MetaField("")]
     public bool[] valarrbool
 	{
 		get { return m_valarrbool; }
 		set { m_valarrbool = value; }
 	}
-
 	[finalmq.MetaField("")]
     public int[] valarrint32
 	{
 		get { return m_valarrint32; }
 		set { m_valarrint32 = value; }
 	}
-
 	[finalmq.MetaField("")]
     public uint[] valarruint32
 	{
 		get { return m_valarruint32; }
 		set { m_valarruint32 = value; }
 	}
-
 	[finalmq.MetaField("")]
     public long[] valarrint64
 	{
 		get { return m_valarrint64; }
 		set { m_valarrint64 = value; }
 	}
-
 	[finalmq.MetaField("")]
     public ulong[] valarruint64
 	{
 		get { return m_valarruint64; }
 		set { m_valarruint64 = value; }
 	}
-
 	[finalmq.MetaField("")]
     public float[] valarrfloat
 	{
 		get { return m_valarrfloat; }
 		set { m_valarrfloat = value; }
 	}
-
 	[finalmq.MetaField("")]
     public double[] valarrdouble
 	{
 		get { return m_valarrdouble; }
 		set { m_valarrdouble = value; }
 	}
-
 	[finalmq.MetaField("")]
     public IList<string> valarrstring
 	{
 		get { return m_valarrstring; }
 		set { m_valarrstring = value; }
 	}
-
 	[finalmq.MetaField("")]
     public IList<byte[]> valarrbytes
 	{
@@ -284,6 +262,106 @@ public class VarValue : finalmq.StructBase
     double[] m_valarrdouble = new double[0];
     IList<string> m_valarrstring = new string[0];
     IList<byte[]> m_valarrbytes = new List<byte[]>();
+
+	public bool Equals(VarValue? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+ 		if (m_name != rhs.m_name)
+		{
+			return false;
+		}
+    		if (m_type != rhs.m_type)
+		{
+			return false;
+		}
+    		if (m_valbool != rhs.m_valbool)
+		{
+			return false;
+		}
+    		if (m_valint32 != rhs.m_valint32)
+		{
+			return false;
+		}
+    		if (m_valuint32 != rhs.m_valuint32)
+		{
+			return false;
+		}
+    		if (m_valint64 != rhs.m_valint64)
+		{
+			return false;
+		}
+    		if (m_valuint64 != rhs.m_valuint64)
+		{
+			return false;
+		}
+    		if (m_valfloat != rhs.m_valfloat)
+		{
+			return false;
+		}
+    		if (m_valdouble != rhs.m_valdouble)
+		{
+			return false;
+		}
+    		if (m_valstring != rhs.m_valstring)
+		{
+			return false;
+		}
+     		if (!m_valbytes.Equals(rhs.m_valbytes))
+		{
+			return false;
+		}
+     		if (!m_vallist.SequenceEqual(rhs.m_vallist))
+		{
+			return false;
+		}
+   		if (!m_valarrbool.Equals(rhs.m_valarrbool))
+		{
+			return false;
+		}
+    		if (!m_valarrint32.Equals(rhs.m_valarrint32))
+		{
+			return false;
+		}
+    		if (!m_valarruint32.Equals(rhs.m_valarruint32))
+		{
+			return false;
+		}
+    		if (!m_valarrint64.Equals(rhs.m_valarrint64))
+		{
+			return false;
+		}
+    		if (!m_valarruint64.Equals(rhs.m_valarruint64))
+		{
+			return false;
+		}
+    		if (!m_valarrfloat.Equals(rhs.m_valarrfloat))
+		{
+			return false;
+		}
+    		if (!m_valarrdouble.Equals(rhs.m_valarrdouble))
+		{
+			return false;
+		}
+     		if (!m_valarrstring.SequenceEqual(rhs.m_valarrstring))
+		{
+			return false;
+		}
+    		if (!m_valarrbytes.SequenceEqual(rhs.m_valarrbytes))
+		{
+			return false;
+		}
+ 
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{

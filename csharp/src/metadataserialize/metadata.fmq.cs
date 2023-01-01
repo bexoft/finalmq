@@ -111,7 +111,7 @@ class RegisterSerializeMetaFieldFlags
 
 
 [finalmq.MetaStruct("desc")]
-public class SerializeMetaEnumEntry : finalmq.StructBase
+public class SerializeMetaEnumEntry : finalmq.StructBase, IEquatable<SerializeMetaEnumEntry>
 {
     public SerializeMetaEnumEntry()
 	{
@@ -126,29 +126,24 @@ public class SerializeMetaEnumEntry : finalmq.StructBase
 		m_alias = alias;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public string name
 	{
 		get { return m_name; }
 		set { m_name = value; }
 	}
-
 	[finalmq.MetaField("desc")]
     public int id
 	{
 		get { return m_id; }
 		set { m_id = value; }
 	}
-
 	[finalmq.MetaField("desc")]
     public string desc
 	{
 		get { return m_desc; }
 		set { m_desc = value; }
 	}
-
 	[finalmq.MetaField("desc")]
     public string alias
 	{
@@ -160,6 +155,38 @@ public class SerializeMetaEnumEntry : finalmq.StructBase
     int m_id = 0;
     string m_desc = "";
     string m_alias = "";
+
+	public bool Equals(SerializeMetaEnumEntry? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+ 		if (m_name != rhs.m_name)
+		{
+			return false;
+		}
+    		if (m_id != rhs.m_id)
+		{
+			return false;
+		}
+    		if (m_desc != rhs.m_desc)
+		{
+			return false;
+		}
+    		if (m_alias != rhs.m_alias)
+		{
+			return false;
+		}
+   
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -185,7 +212,7 @@ public class SerializeMetaEnumEntry : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class SerializeMetaEnum : finalmq.StructBase
+public class SerializeMetaEnum : finalmq.StructBase, IEquatable<SerializeMetaEnum>
 {
     public SerializeMetaEnum()
 	{
@@ -199,22 +226,18 @@ public class SerializeMetaEnum : finalmq.StructBase
 		m_entries = entries;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public string type
 	{
 		get { return m_type; }
 		set { m_type = value; }
 	}
-
 	[finalmq.MetaField("desc")]
     public string desc
 	{
 		get { return m_desc; }
 		set { m_desc = value; }
 	}
-
 	[finalmq.MetaField("desc")]
     public IList<finalmq.SerializeMetaEnumEntry> entries
 	{
@@ -225,6 +248,34 @@ public class SerializeMetaEnum : finalmq.StructBase
     string m_type = "";
     string m_desc = "";
     IList<finalmq.SerializeMetaEnumEntry> m_entries = new List<finalmq.SerializeMetaEnumEntry>();
+
+	public bool Equals(SerializeMetaEnum? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+ 		if (m_type != rhs.m_type)
+		{
+			return false;
+		}
+    		if (m_desc != rhs.m_desc)
+		{
+			return false;
+		}
+      		if (!m_entries.SequenceEqual(rhs.m_entries))
+		{
+			return false;
+		}
+ 
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -250,7 +301,7 @@ public class SerializeMetaEnum : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class SerializeMetaField : finalmq.StructBase
+public class SerializeMetaField : finalmq.StructBase, IEquatable<SerializeMetaField>
 {
     public SerializeMetaField()
 	{
@@ -266,36 +317,30 @@ public class SerializeMetaField : finalmq.StructBase
 		m_flags = flags;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public finalmq.SerializeMetaTypeId tid
 	{
 		get { return m_tid; }
 		set { m_tid = value; }
 	}
-
 	[finalmq.MetaField("desc")]
     public string type
 	{
 		get { return m_type; }
 		set { m_type = value; }
 	}
-
 	[finalmq.MetaField("desc")]
     public string name
 	{
 		get { return m_name; }
 		set { m_name = value; }
 	}
-
 	[finalmq.MetaField("desc")]
     public string desc
 	{
 		get { return m_desc; }
 		set { m_desc = value; }
 	}
-
 	[finalmq.MetaField("desc")]
     public IList<finalmq.SerializeMetaFieldFlags> flags
 	{
@@ -308,6 +353,42 @@ public class SerializeMetaField : finalmq.StructBase
     string m_name = "";
     string m_desc = "";
     IList<finalmq.SerializeMetaFieldFlags> m_flags = new List<finalmq.SerializeMetaFieldFlags>();
+
+	public bool Equals(SerializeMetaField? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+ 		if (m_tid != rhs.m_tid)
+		{
+			return false;
+		}
+    		if (m_type != rhs.m_type)
+		{
+			return false;
+		}
+    		if (m_name != rhs.m_name)
+		{
+			return false;
+		}
+    		if (m_desc != rhs.m_desc)
+		{
+			return false;
+		}
+      		if (!m_flags.SequenceEqual(rhs.m_flags))
+		{
+			return false;
+		}
+ 
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -333,7 +414,7 @@ public class SerializeMetaField : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class SerializeMetaStruct : finalmq.StructBase
+public class SerializeMetaStruct : finalmq.StructBase, IEquatable<SerializeMetaStruct>
 {
     public SerializeMetaStruct()
 	{
@@ -347,22 +428,18 @@ public class SerializeMetaStruct : finalmq.StructBase
 		m_fields = fields;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public string type
 	{
 		get { return m_type; }
 		set { m_type = value; }
 	}
-
 	[finalmq.MetaField("desc")]
     public string desc
 	{
 		get { return m_desc; }
 		set { m_desc = value; }
 	}
-
 	[finalmq.MetaField("desc")]
     public IList<finalmq.SerializeMetaField> fields
 	{
@@ -373,6 +450,34 @@ public class SerializeMetaStruct : finalmq.StructBase
     string m_type = "";
     string m_desc = "";
     IList<finalmq.SerializeMetaField> m_fields = new List<finalmq.SerializeMetaField>();
+
+	public bool Equals(SerializeMetaStruct? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+ 		if (m_type != rhs.m_type)
+		{
+			return false;
+		}
+    		if (m_desc != rhs.m_desc)
+		{
+			return false;
+		}
+      		if (!m_fields.SequenceEqual(rhs.m_fields))
+		{
+			return false;
+		}
+ 
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
@@ -398,7 +503,7 @@ public class SerializeMetaStruct : finalmq.StructBase
 }
 
 [finalmq.MetaStruct("desc")]
-public class SerializeMetaData : finalmq.StructBase
+public class SerializeMetaData : finalmq.StructBase, IEquatable<SerializeMetaData>
 {
     public SerializeMetaData()
 	{
@@ -411,15 +516,12 @@ public class SerializeMetaData : finalmq.StructBase
 		m_structs = structs;
 	}
 
-
-
 	[finalmq.MetaField("desc")]
     public IList<finalmq.SerializeMetaEnum> enums
 	{
 		get { return m_enums; }
 		set { m_enums = value; }
 	}
-
 	[finalmq.MetaField("desc")]
     public IList<finalmq.SerializeMetaStruct> structs
 	{
@@ -429,6 +531,30 @@ public class SerializeMetaData : finalmq.StructBase
 
     IList<finalmq.SerializeMetaEnum> m_enums = new List<finalmq.SerializeMetaEnum>();
     IList<finalmq.SerializeMetaStruct> m_structs = new List<finalmq.SerializeMetaStruct>();
+
+	public bool Equals(SerializeMetaData? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+   		if (!m_enums.SequenceEqual(rhs.m_enums))
+		{
+			return false;
+		}
+    		if (!m_structs.SequenceEqual(rhs.m_structs))
+		{
+			return false;
+		}
+ 
+		return true;
+	}
 
 	public override finalmq.MetaStruct MetaStruct
 	{
