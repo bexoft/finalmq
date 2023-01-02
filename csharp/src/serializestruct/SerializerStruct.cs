@@ -129,8 +129,17 @@ namespace finalmq
                                     if (genericTypes != null && genericTypes.Length > 0)
                                     {
                                         Type genericType = genericTypes[0];
-                                        sub = Activator.CreateInstance(genericType) as StructBase;
-                                        list.Add(sub);
+                                        try
+                                        {
+                                            sub = Activator.CreateInstance(genericType) as StructBase;
+                                        }
+                                        catch (Exception)
+                                        {
+                                        }
+                                        if (sub != null)
+                                        {
+                                            list.Add(sub);
+                                        }
                                     }
                                 }
                             }
@@ -257,39 +266,39 @@ namespace finalmq
                         int v = (int)value;
                         return ConvertIntToEnum(propertyType, v);
                     }
-                    else if (propertyType.IsSubclassOf(typeof(bool[])))
+                    else if (IsTypeOf(propertyType, typeof(bool[])))
                     {
                         return new bool[] { (bool)value };
                     }
-                    else if (propertyType.IsSubclassOf(typeof(int[])))
+                    else if (IsTypeOf(propertyType, typeof(int[])))
                     {
                         return new int[] { (int)value };
                     }
-                    else if (propertyType.IsSubclassOf(typeof(uint[])))
+                    else if (IsTypeOf(propertyType, typeof(uint[])))
                     {
                         return new uint[] { (uint)value };
                     }
-                    else if (propertyType.IsSubclassOf(typeof(long[])))
+                    else if (IsTypeOf(propertyType, typeof(long[])))
                     {
                         return new long[] { (long)value };
                     }
-                    else if (propertyType.IsSubclassOf(typeof(ulong[])))
+                    else if (IsTypeOf(propertyType, typeof(ulong[])))
                     {
                         return new ulong[] { (ulong)value };
                     }
-                    else if (propertyType.IsSubclassOf(typeof(float[])))
+                    else if (IsTypeOf(propertyType, typeof(float[])))
                     {
                         return new float[] { (float)value };
                     }
-                    else if (propertyType.IsSubclassOf(typeof(double[])))
+                    else if (IsTypeOf(propertyType, typeof(double[])))
                     {
                         return new double[] { (double)value };
                     }
-                    else if (propertyType.IsSubclassOf(typeof(IList<string>)))
+                    else if (IsTypeOf(propertyType, typeof(IList<string>)))
                     {
                         return new List<string> { Convertion.Convert<string>(value) };
                     }
-                    else if (propertyType.IsSubclassOf(typeof(IList<byte[]>)))
+                    else if (IsTypeOf(propertyType, typeof(IList<byte[]>)))
                     {
                         return new List<byte[]> { Encoding.UTF8.GetBytes(Convertion.Convert<string>(value)) };
                     }
@@ -321,11 +330,24 @@ namespace finalmq
                 Debug.Assert(value != null);
                 T[] arr = new T[value.Length];
                 int i = 0;
-                foreach (var v in value)
+                if (typeof(T) == typeof(bool))
                 {
-                    Debug.Assert(v != null);
-                    arr[i] = (T)(dynamic)v;
-                    ++i;
+                    foreach (var v in value)
+                    {
+                        Debug.Assert(v != null);
+                        T? val = Convertion.Convert<T>(v);
+                        arr[i] = val ?? default(T)!;
+                        ++i;
+                    }
+                }
+                else
+                {
+                    foreach (var v in value)
+                    {
+                        Debug.Assert(v != null);
+                        arr[i] = (T)(dynamic)v;
+                        ++i;
+                    }
                 }
                 return arr;
             }
@@ -416,35 +438,35 @@ namespace finalmq
                             return ConvertIntToEnum(propertyType, v);
                         }
                     }
-                    else if (propertyType.IsSubclassOf(typeof(bool[])))
+                    else if (IsTypeOf(propertyType, typeof(bool[])))
                     {
                         return ConvertArrayToType<bool, T>(value);
                     }
-                    else if (propertyType.IsSubclassOf(typeof(int[])))
+                    else if (IsTypeOf(propertyType, typeof(int[])))
                     {
                         return ConvertArrayToType<int, T>(value);
                     }
-                    else if (propertyType.IsSubclassOf(typeof(uint[])))
+                    else if (IsTypeOf(propertyType, typeof(uint[])))
                     {
                         return ConvertArrayToType<uint, T>(value);
                     }
-                    else if (propertyType.IsSubclassOf(typeof(long[])))
+                    else if (IsTypeOf(propertyType, typeof(long[])))
                     {
                         return ConvertArrayToType<long, T>(value);
                     }
-                    else if (propertyType.IsSubclassOf(typeof(ulong[])))
+                    else if (IsTypeOf(propertyType, typeof(ulong[])))
                     {
                         return ConvertArrayToType<ulong, T>(value);
                     }
-                    else if (propertyType.IsSubclassOf(typeof(float[])))
+                    else if (IsTypeOf(propertyType, typeof(float[])))
                     {
                         return ConvertArrayToType<float, T>(value);
                     }
-                    else if (propertyType.IsSubclassOf(typeof(double[])))
+                    else if (IsTypeOf(propertyType, typeof(double[])))
                     {
                         return ConvertArrayToType<double, T>(value);
                     }
-                    else if (propertyType.IsSubclassOf(typeof(IList<string>)))
+                    else if (IsTypeOf(propertyType, typeof(IList<string>)))
                     {
                         IList<string> list = new List<string>();
                         foreach (var v in value)
@@ -454,7 +476,7 @@ namespace finalmq
                         }
                         return list;
                     }
-                    else if (propertyType.IsSubclassOf(typeof(IList<byte[]>)))
+                    else if (IsTypeOf(propertyType, typeof(IList<byte[]>)))
                     {
                         IList<byte[]> list = new List<byte[]>();
                         foreach (var v in value)
@@ -474,7 +496,7 @@ namespace finalmq
                             foreach (var v in value)
                             {
                                 Debug.Assert(v != null);
-                                dynamic? valueEnum = ConvertIntToEnum(typeEnum, (int)(dynamic)v);
+                                dynamic? valueEnum = ConvertIntToEnum(typeEnum, Convertion.Convert<int>(v));
                                 list.Add(valueEnum);
                             }
                             return null;
@@ -528,39 +550,39 @@ namespace finalmq
                     {
                         return ConvertStringToEnum(propertyType, value);
                     }
-                    else if (propertyType.IsSubclassOf(typeof(bool[])))
+                    else if (IsTypeOf(propertyType, typeof(bool[])))
                     {
                         return new bool[] { Convertion.Convert<bool>(value) };
                     }
-                    else if (propertyType.IsSubclassOf(typeof(int[])))
+                    else if (IsTypeOf(propertyType, typeof(int[])))
                     {
                         return new int[] { Convertion.Convert<int>(value) };
                     }
-                    else if (propertyType.IsSubclassOf(typeof(uint[])))
+                    else if (IsTypeOf(propertyType, typeof(uint[])))
                     {
                         return new uint[] { Convertion.Convert<uint>(value) };
                     }
-                    else if (propertyType.IsSubclassOf(typeof(long[])))
+                    else if (IsTypeOf(propertyType, typeof(long[])))
                     {
                         return new long[] { Convertion.Convert<long>(value) };
                     }
-                    else if (propertyType.IsSubclassOf(typeof(ulong[])))
+                    else if (IsTypeOf(propertyType, typeof(ulong[])))
                     {
                         return new ulong[] { Convertion.Convert<ulong>(value) };
                     }
-                    else if (propertyType.IsSubclassOf(typeof(float[])))
+                    else if (IsTypeOf(propertyType, typeof(float[])))
                     {
                         return new float[] { Convertion.Convert<float>(value) };
                     }
-                    else if (propertyType.IsSubclassOf(typeof(double[])))
+                    else if (IsTypeOf(propertyType, typeof(double[])))
                     {
                         return new double[] { Convertion.Convert<double>(value) };
                     }
-                    else if (propertyType.IsSubclassOf(typeof(IList<string>)))
+                    else if (IsTypeOf(propertyType, typeof(IList<string>)))
                     {
                         return new List<string> { value };
                     }
-                    else if (propertyType.IsSubclassOf(typeof(IList<byte[]>)))
+                    else if (IsTypeOf(propertyType, typeof(IList<byte[]>)))
                     {
                         return new List<byte[]> { Encoding.UTF8.GetBytes(value) };
                     }
@@ -660,39 +682,39 @@ namespace finalmq
                             return ConvertStringToEnum(propertyType, valueOne);
                         }
                     }
-                    else if (propertyType.IsSubclassOf(typeof(bool[])))
+                    else if (IsTypeOf(propertyType, typeof(bool[])))
                     {
                         return ConvertArrayToType<bool>(value);
                     }
-                    else if (propertyType.IsSubclassOf(typeof(int[])))
+                    else if (IsTypeOf(propertyType, typeof(int[])))
                     {
                         return ConvertArrayToType<int>(value);
                     }
-                    else if (propertyType.IsSubclassOf(typeof(uint[])))
+                    else if (IsTypeOf(propertyType, typeof(uint[])))
                     {
                         return ConvertArrayToType<uint>(value);
                     }
-                    else if (propertyType.IsSubclassOf(typeof(long[])))
+                    else if (IsTypeOf(propertyType, typeof(long[])))
                     {
                         return ConvertArrayToType<long>(value);
                     }
-                    else if (propertyType.IsSubclassOf(typeof(ulong[])))
+                    else if (IsTypeOf(propertyType, typeof(ulong[])))
                     {
                         return ConvertArrayToType<ulong>(value);
                     }
-                    else if (propertyType.IsSubclassOf(typeof(float[])))
+                    else if (IsTypeOf(propertyType, typeof(float[])))
                     {
                         return ConvertArrayToType<float>(value);
                     }
-                    else if (propertyType.IsSubclassOf(typeof(double[])))
+                    else if (IsTypeOf(propertyType, typeof(double[])))
                     {
                         return ConvertArrayToType<double>(value);
                     }
-                    else if (propertyType.IsSubclassOf(typeof(IList<string>)))
+                    else if (IsTypeOf(propertyType, typeof(IList<string>)))
                     {
                         return value;
                     }
-                    else if (propertyType.IsSubclassOf(typeof(IList<byte[]>)))
+                    else if (IsTypeOf(propertyType, typeof(IList<byte[]>)))
                     {
                         IList<byte[]> list = new List<byte[]>();
                         foreach (var v in value)
@@ -748,6 +770,11 @@ namespace finalmq
                 }
             }
 
+            static bool IsTypeOf(Type type, Type typeOf)
+            {
+                return type == typeOf || type.IsSubclassOf(typeOf);
+            }
+
             void SetValueArrayNumber<T>(string fieldName, T[] value)
             {
                 Debug.Assert(value != null);
@@ -755,7 +782,7 @@ namespace finalmq
                 if (property != null)
                 {
                     Type propertyType = property.PropertyType;
-                    if (propertyType.IsSubclassOf(typeof(T[])))
+                    if (IsTypeOf(propertyType, typeof(T[])))
                     {
                         SetValue(property, value);
                     }
@@ -798,7 +825,7 @@ namespace finalmq
                 if (property != null)
                 {
                     Type propertyType = property.PropertyType;
-                    if (propertyType.IsSubclassOf(typeof(IList<string>)))
+                    if (IsTypeOf(propertyType, typeof(IList<string>)))
                     {
                         SetValue(property, value);
                     }
@@ -930,7 +957,7 @@ namespace finalmq
                 if (property != null)
                 {
                     Type propertyType = property.PropertyType;
-                    if (propertyType.IsSubclassOf(typeof(IList<byte[]>)))
+                    if (IsTypeOf(propertyType, typeof(IList<byte[]>)))
                     {
                         SetValue(property, value);
                     }

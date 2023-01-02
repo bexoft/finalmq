@@ -113,6 +113,18 @@ namespace finalmq
                     return (dynamic)value;
                 }
             }
+            else if (typeof(T) == typeof(bool))
+            {
+                if (typeFrom == typeof(bool))
+                {
+                    return from;
+                }
+                if ((int)from != 0)
+                {
+                    return (dynamic)true;
+                }
+                return (dynamic)false;
+            }
             else
             {
                 if (typeFrom == typeof(bool))

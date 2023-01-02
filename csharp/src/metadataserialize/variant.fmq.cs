@@ -323,35 +323,35 @@ public class VarValue : finalmq.StructBase, IEquatable<VarValue>
 		{
 			return false;
 		}
-   		if (!m_valarrbool.Equals(rhs.m_valarrbool))
+    		if (!m_valarrbool.SequenceEqual(rhs.m_valarrbool))
 		{
 			return false;
 		}
-    		if (!m_valarrint32.Equals(rhs.m_valarrint32))
+    		if (!m_valarrint32.SequenceEqual(rhs.m_valarrint32))
 		{
 			return false;
 		}
-    		if (!m_valarruint32.Equals(rhs.m_valarruint32))
+    		if (!m_valarruint32.SequenceEqual(rhs.m_valarruint32))
 		{
 			return false;
 		}
-    		if (!m_valarrint64.Equals(rhs.m_valarrint64))
+    		if (!m_valarrint64.SequenceEqual(rhs.m_valarrint64))
 		{
 			return false;
 		}
-    		if (!m_valarruint64.Equals(rhs.m_valarruint64))
+    		if (!m_valarruint64.SequenceEqual(rhs.m_valarruint64))
 		{
 			return false;
 		}
-    		if (!m_valarrfloat.Equals(rhs.m_valarrfloat))
+    		if (!m_valarrfloat.SequenceEqual(rhs.m_valarrfloat))
 		{
 			return false;
 		}
-    		if (!m_valarrdouble.Equals(rhs.m_valarrdouble))
+    		if (!m_valarrdouble.SequenceEqual(rhs.m_valarrdouble))
 		{
 			return false;
 		}
-     		if (!m_valarrstring.SequenceEqual(rhs.m_valarrstring))
+    		if (!m_valarrstring.SequenceEqual(rhs.m_valarrstring))
 		{
 			return false;
 		}

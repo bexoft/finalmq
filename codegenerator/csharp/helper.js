@@ -171,19 +171,19 @@ module.exports = {
             case 'variant':
             case 'TYPE_VARIANT': return 1;
             case 'bool[]':
-            case 'TYPE_ARRAY_BOOL': return 1;
+            case 'TYPE_ARRAY_BOOL': return 2;
             case 'int32[]':
-            case 'TYPE_ARRAY_INT32': return 1;
+            case 'TYPE_ARRAY_INT32': return 2;
             case 'uint32[]':
-            case 'TYPE_ARRAY_UINT32': return 1;
+            case 'TYPE_ARRAY_UINT32': return 2;
             case 'int64[]':
-            case 'TYPE_ARRAY_INT64': return 1;
+            case 'TYPE_ARRAY_INT64': return 2;
             case 'uint64[]':
-            case 'TYPE_ARRAY_UINT64': return 1;
+            case 'TYPE_ARRAY_UINT64': return 2;
             case 'float[]':
-            case 'TYPE_ARRAY_FLOAT': return 1;
+            case 'TYPE_ARRAY_FLOAT': return 2;
             case 'double[]':
-            case 'TYPE_ARRAY_DOUBLE': return 1;
+            case 'TYPE_ARRAY_DOUBLE': return 2;
             case 'string[]':
             case 'TYPE_ARRAY_STRING': return 2;
             case 'bytes[]':
