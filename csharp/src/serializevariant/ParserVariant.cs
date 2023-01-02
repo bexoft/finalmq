@@ -7,7 +7,7 @@ namespace finalmq
 {
     using VariantList = IList<Variant>;
 
-    class ParserVariant
+    public class ParserVariant
     {
         private static string STR_VARVALUE = "finalmq.variant.VarValue";
 
