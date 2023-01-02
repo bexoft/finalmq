@@ -443,7 +443,10 @@ TEST_F(TestSerializerStruct, testVariantStruct)
     serializer->exitStruct(*m_fieldValue);
     serializer->finished();
 
-    test::TestVariant cmp{ VariantStruct{ {"key1", VariantList{std::int32_t(2), std::string("Hello")}}, {"key2", VariantStruct{{"a", std::int32_t(3)}, {"b", std::string("Hi")}}}, {"key3", Variant()} }, 0, {} };
+    test::TestVariant cmp{ VariantStruct{ {"key1", VariantList{std::int32_t(2), std::string("Hello")}}, 
+                                          {"key2", VariantStruct{{"a", std::int32_t(3)}, {"b", std::string("Hi")}}}, 
+                                          {"key3", Variant()} 
+                                        }, 0, {} };
     ASSERT_EQ(root == cmp, true);
 }
 
@@ -526,7 +529,10 @@ TEST_F(TestSerializerStruct, testVariantStruct2)
 
     serializer->finished();
 
-    test::TestVariant cmp{ VariantStruct{ {"key1", VariantList{std::int32_t(2), std::string("Hello")}}, {"key2", VariantStruct{{"a", std::int32_t(3)}, {"b", std::string("Hi")}}}, {"key3", Variant()} }, std::int32_t(5), VariantStruct{ {"key1", std::string("Hello")} } };
+    test::TestVariant cmp{ VariantStruct{ {"key1", VariantList{std::int32_t(2), std::string("Hello")}}, 
+                                          {"key2", VariantStruct{{"a", std::int32_t(3)}, {"b", std::string("Hi")}}}, 
+                                          {"key3", Variant()} }, 
+                                          std::int32_t(5), VariantStruct{ {"key1", std::string("Hello")} } };
     ASSERT_EQ(root == cmp, true);
 }
 
