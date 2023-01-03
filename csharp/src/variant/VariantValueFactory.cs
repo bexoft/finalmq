@@ -57,7 +57,7 @@ namespace finalmq
                 Debug.Assert(entry.Func != null);
                 return entry.Func(data);
             }
-            else
+            else if (type.BaseType == null || type.BaseType.FullName != "System.Array")
             {
                 Type[] interfaces = type.GetInterfaces();
                 foreach(var interf in interfaces)

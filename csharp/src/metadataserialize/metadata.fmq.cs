@@ -168,23 +168,23 @@ public class SerializeMetaEnumEntry : finalmq.StructBase, IEquatable<SerializeMe
 			return true;
 		}
 
- 		if (m_name != rhs.m_name)
+		if (m_name != rhs.m_name)
 		{
 			return false;
 		}
-    		if (m_id != rhs.m_id)
+		if (m_id != rhs.m_id)
 		{
 			return false;
 		}
-    		if (m_desc != rhs.m_desc)
+		if (m_desc != rhs.m_desc)
 		{
 			return false;
 		}
-    		if (m_alias != rhs.m_alias)
+		if (m_alias != rhs.m_alias)
 		{
 			return false;
 		}
-   
+
 		return true;
 	}
 
@@ -261,19 +261,19 @@ public class SerializeMetaEnum : finalmq.StructBase, IEquatable<SerializeMetaEnu
 			return true;
 		}
 
- 		if (m_type != rhs.m_type)
+		if (m_type != rhs.m_type)
 		{
 			return false;
 		}
-    		if (m_desc != rhs.m_desc)
+		if (m_desc != rhs.m_desc)
 		{
 			return false;
 		}
-      		if (!m_entries.SequenceEqual(rhs.m_entries))
+		if (!m_entries.SequenceEqual(rhs.m_entries))
 		{
 			return false;
 		}
- 
+
 		return true;
 	}
 
@@ -366,27 +366,27 @@ public class SerializeMetaField : finalmq.StructBase, IEquatable<SerializeMetaFi
 			return true;
 		}
 
- 		if (m_tid != rhs.m_tid)
+		if (m_tid != rhs.m_tid)
 		{
 			return false;
 		}
-    		if (m_type != rhs.m_type)
+		if (m_type != rhs.m_type)
 		{
 			return false;
 		}
-    		if (m_name != rhs.m_name)
+		if (m_name != rhs.m_name)
 		{
 			return false;
 		}
-    		if (m_desc != rhs.m_desc)
+		if (m_desc != rhs.m_desc)
 		{
 			return false;
 		}
-      		if (!m_flags.SequenceEqual(rhs.m_flags))
+		if (!m_flags.SequenceEqual(rhs.m_flags))
 		{
 			return false;
 		}
- 
+
 		return true;
 	}
 
@@ -463,19 +463,19 @@ public class SerializeMetaStruct : finalmq.StructBase, IEquatable<SerializeMetaS
 			return true;
 		}
 
- 		if (m_type != rhs.m_type)
+		if (m_type != rhs.m_type)
 		{
 			return false;
 		}
-    		if (m_desc != rhs.m_desc)
+		if (m_desc != rhs.m_desc)
 		{
 			return false;
 		}
-      		if (!m_fields.SequenceEqual(rhs.m_fields))
+		if (!m_fields.SequenceEqual(rhs.m_fields))
 		{
 			return false;
 		}
- 
+
 		return true;
 	}
 
@@ -544,15 +544,15 @@ public class SerializeMetaData : finalmq.StructBase, IEquatable<SerializeMetaDat
 			return true;
 		}
 
-   		if (!m_enums.SequenceEqual(rhs.m_enums))
+		if (!m_enums.SequenceEqual(rhs.m_enums))
 		{
 			return false;
 		}
-    		if (!m_structs.SequenceEqual(rhs.m_structs))
+		if (!m_structs.SequenceEqual(rhs.m_structs))
 		{
 			return false;
 		}
- 
+
 		return true;
 	}
 

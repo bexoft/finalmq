@@ -8,7 +8,7 @@ namespace finalmq
     using VariantList = List<Variant>;
     using VariantStruct = List<NameValue>;
 
-    class SerializerVariant : ParserConverter
+    public class SerializerVariant : ParserConverter
     {
         private static string STR_VARVALUE = "finalmq.variant.VarValue";
 
@@ -268,10 +268,10 @@ namespace finalmq
 
                 if (m_enumAsString)
                 {
-                    string[] enums = new string[value.Length];
-                    for (int i = 0; i < enums.Length; ++i)
+                    IList<string> enums = new List<string>();
+                    for (int i = 0; i < value.Length; ++i)
                     {
-                        enums[i] = MetaDataGlobal.Instance.GetEnumAliasByValue(field, value[i]);
+                        enums.Add(MetaDataGlobal.Instance.GetEnumAliasByValue(field, value[i]));
                     }
                     Add(field, enums);
                 }

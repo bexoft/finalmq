@@ -107,24 +107,39 @@ public class <%- plaintype %> : finalmq.StructBase, IEquatable<<%- plaintype %>>
 <% for (var n = 0; n < stru.fields.length; n++) { 
         field = stru.fields[n] 
 	    compareType = helper.tid2CompareType(field.tid) -%>
- <%if (compareType == 0) { -%>
+<%if (compareType == 0) { -%>
 		if (m_<%- field.name %> != rhs.m_<%- field.name %>)
 		{
 			return false;
 		}
- <% } -%>
- <%if (compareType == 1) { -%>
+<% } -%>
+<%if (compareType == 1) { -%>
 		if (!m_<%- field.name %>.Equals(rhs.m_<%- field.name %>))
 		{
 			return false;
 		}
- <% } -%>
- <%if (compareType == 2) { -%>
+<% } -%>
+<%if (compareType == 2) { -%>
 		if (!m_<%- field.name %>.SequenceEqual(rhs.m_<%- field.name %>))
 		{
 			return false;
 		}
- <% } -%>
+<% } -%>
+<%if (compareType == 3) { -%>
+        if (m_<%- field.name %>.Count != rhs.m_<%- field.name %>.Count)
+		{
+			return false;
+		}
+		for (int i = 0; i < m_<%- field.name %>.Count; i++)
+		{
+			byte[] arr1 = m_<%- field.name %>[i];
+			byte[] arr2 = rhs.m_<%- field.name %>[i];
+			if (!arr1.SequenceEqual(arr2))
+			{
+				return false;
+			}
+		}
+<% } -%>
 <% } -%>
 
 		return true;

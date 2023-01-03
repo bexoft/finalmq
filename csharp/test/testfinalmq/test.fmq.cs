@@ -78,11 +78,11 @@ public class TestBool : finalmq.StructBase, IEquatable<TestBool>
 			return true;
 		}
 
- 		if (m_value != rhs.m_value)
+		if (m_value != rhs.m_value)
 		{
 			return false;
 		}
-   
+
 		return true;
 	}
 
@@ -143,11 +143,11 @@ public class TestInt32 : finalmq.StructBase, IEquatable<TestInt32>
 			return true;
 		}
 
- 		if (m_value != rhs.m_value)
+		if (m_value != rhs.m_value)
 		{
 			return false;
 		}
-   
+
 		return true;
 	}
 
@@ -208,11 +208,11 @@ public class TestUInt32 : finalmq.StructBase, IEquatable<TestUInt32>
 			return true;
 		}
 
- 		if (m_value != rhs.m_value)
+		if (m_value != rhs.m_value)
 		{
 			return false;
 		}
-   
+
 		return true;
 	}
 
@@ -273,11 +273,11 @@ public class TestInt64 : finalmq.StructBase, IEquatable<TestInt64>
 			return true;
 		}
 
- 		if (m_value != rhs.m_value)
+		if (m_value != rhs.m_value)
 		{
 			return false;
 		}
-   
+
 		return true;
 	}
 
@@ -338,11 +338,11 @@ public class TestUInt64 : finalmq.StructBase, IEquatable<TestUInt64>
 			return true;
 		}
 
- 		if (m_value != rhs.m_value)
+		if (m_value != rhs.m_value)
 		{
 			return false;
 		}
-   
+
 		return true;
 	}
 
@@ -403,11 +403,11 @@ public class TestFloat : finalmq.StructBase, IEquatable<TestFloat>
 			return true;
 		}
 
- 		if (m_value != rhs.m_value)
+		if (m_value != rhs.m_value)
 		{
 			return false;
 		}
-   
+
 		return true;
 	}
 
@@ -468,11 +468,11 @@ public class TestDouble : finalmq.StructBase, IEquatable<TestDouble>
 			return true;
 		}
 
- 		if (m_value != rhs.m_value)
+		if (m_value != rhs.m_value)
 		{
 			return false;
 		}
-   
+
 		return true;
 	}
 
@@ -533,11 +533,11 @@ public class TestString : finalmq.StructBase, IEquatable<TestString>
 			return true;
 		}
 
- 		if (m_value != rhs.m_value)
+		if (m_value != rhs.m_value)
 		{
 			return false;
 		}
-   
+
 		return true;
 	}
 
@@ -598,11 +598,11 @@ public class TestBytes : finalmq.StructBase, IEquatable<TestBytes>
 			return true;
 		}
 
-  		if (!m_value.Equals(rhs.m_value))
+		if (!m_value.SequenceEqual(rhs.m_value))
 		{
 			return false;
 		}
-  
+
 		return true;
 	}
 
@@ -679,19 +679,19 @@ public class TestStruct : finalmq.StructBase, IEquatable<TestStruct>
 			return true;
 		}
 
-  		if (!m_struct_int32.Equals(rhs.m_struct_int32))
+		if (!m_struct_int32.Equals(rhs.m_struct_int32))
 		{
 			return false;
 		}
-    		if (!m_struct_string.Equals(rhs.m_struct_string))
+		if (!m_struct_string.Equals(rhs.m_struct_string))
 		{
 			return false;
 		}
-   		if (m_last_value != rhs.m_last_value)
+		if (m_last_value != rhs.m_last_value)
 		{
 			return false;
 		}
-   
+
 		return true;
 	}
 
@@ -768,19 +768,19 @@ public class TestStructBlockSize : finalmq.StructBase, IEquatable<TestStructBloc
 			return true;
 		}
 
-  		if (!m_struct_int32.Equals(rhs.m_struct_int32))
+		if (!m_struct_int32.Equals(rhs.m_struct_int32))
 		{
 			return false;
 		}
-    		if (!m_struct_string.Equals(rhs.m_struct_string))
+		if (!m_struct_string.Equals(rhs.m_struct_string))
 		{
 			return false;
 		}
-   		if (m_last_value != rhs.m_last_value)
+		if (m_last_value != rhs.m_last_value)
 		{
 			return false;
 		}
-   
+
 		return true;
 	}
 
@@ -841,11 +841,11 @@ public class TestEnum : finalmq.StructBase, IEquatable<TestEnum>
 			return true;
 		}
 
- 		if (m_value != rhs.m_value)
+		if (m_value != rhs.m_value)
 		{
 			return false;
 		}
-   
+
 		return true;
 	}
 
@@ -922,19 +922,19 @@ public class TestVariant : finalmq.StructBase, IEquatable<TestVariant>
 			return true;
 		}
 
-  		if (!m_value.Equals(rhs.m_value))
+		if (!m_value.Equals(rhs.m_value))
 		{
 			return false;
 		}
-   		if (m_valueInt32 != rhs.m_valueInt32)
+		if (m_valueInt32 != rhs.m_valueInt32)
 		{
 			return false;
 		}
-     		if (!m_value2.Equals(rhs.m_value2))
+		if (!m_value2.Equals(rhs.m_value2))
 		{
 			return false;
 		}
-  
+
 		return true;
 	}
 
@@ -995,11 +995,11 @@ public class TestArrayBool : finalmq.StructBase, IEquatable<TestArrayBool>
 			return true;
 		}
 
-   		if (!m_value.SequenceEqual(rhs.m_value))
+		if (!m_value.SequenceEqual(rhs.m_value))
 		{
 			return false;
 		}
- 
+
 		return true;
 	}
 
@@ -1060,11 +1060,11 @@ public class TestArrayInt32 : finalmq.StructBase, IEquatable<TestArrayInt32>
 			return true;
 		}
 
-   		if (!m_value.SequenceEqual(rhs.m_value))
+		if (!m_value.SequenceEqual(rhs.m_value))
 		{
 			return false;
 		}
- 
+
 		return true;
 	}
 
@@ -1125,11 +1125,11 @@ public class TestArrayUInt32 : finalmq.StructBase, IEquatable<TestArrayUInt32>
 			return true;
 		}
 
-   		if (!m_value.SequenceEqual(rhs.m_value))
+		if (!m_value.SequenceEqual(rhs.m_value))
 		{
 			return false;
 		}
- 
+
 		return true;
 	}
 
@@ -1190,11 +1190,11 @@ public class TestArrayInt64 : finalmq.StructBase, IEquatable<TestArrayInt64>
 			return true;
 		}
 
-   		if (!m_value.SequenceEqual(rhs.m_value))
+		if (!m_value.SequenceEqual(rhs.m_value))
 		{
 			return false;
 		}
- 
+
 		return true;
 	}
 
@@ -1255,11 +1255,11 @@ public class TestArrayUInt64 : finalmq.StructBase, IEquatable<TestArrayUInt64>
 			return true;
 		}
 
-   		if (!m_value.SequenceEqual(rhs.m_value))
+		if (!m_value.SequenceEqual(rhs.m_value))
 		{
 			return false;
 		}
- 
+
 		return true;
 	}
 
@@ -1320,11 +1320,11 @@ public class TestArrayFloat : finalmq.StructBase, IEquatable<TestArrayFloat>
 			return true;
 		}
 
-   		if (!m_value.SequenceEqual(rhs.m_value))
+		if (!m_value.SequenceEqual(rhs.m_value))
 		{
 			return false;
 		}
- 
+
 		return true;
 	}
 
@@ -1385,11 +1385,11 @@ public class TestArrayDouble : finalmq.StructBase, IEquatable<TestArrayDouble>
 			return true;
 		}
 
-   		if (!m_value.SequenceEqual(rhs.m_value))
+		if (!m_value.SequenceEqual(rhs.m_value))
 		{
 			return false;
 		}
- 
+
 		return true;
 	}
 
@@ -1450,11 +1450,11 @@ public class TestArrayString : finalmq.StructBase, IEquatable<TestArrayString>
 			return true;
 		}
 
-   		if (!m_value.SequenceEqual(rhs.m_value))
+		if (!m_value.SequenceEqual(rhs.m_value))
 		{
 			return false;
 		}
- 
+
 		return true;
 	}
 
@@ -1515,11 +1515,20 @@ public class TestArrayBytes : finalmq.StructBase, IEquatable<TestArrayBytes>
 			return true;
 		}
 
-   		if (!m_value.SequenceEqual(rhs.m_value))
+        if (m_value.Count != rhs.m_value.Count)
 		{
 			return false;
 		}
- 
+		for (int i = 0; i < m_value.Count; i++)
+		{
+			byte[] arr1 = m_value[i];
+			byte[] arr2 = rhs.m_value[i];
+			if (!arr1.SequenceEqual(arr2))
+			{
+				return false;
+			}
+		}
+
 		return true;
 	}
 
@@ -1588,15 +1597,15 @@ public class TestArrayStruct : finalmq.StructBase, IEquatable<TestArrayStruct>
 			return true;
 		}
 
-   		if (!m_value.SequenceEqual(rhs.m_value))
+		if (!m_value.SequenceEqual(rhs.m_value))
 		{
 			return false;
 		}
-  		if (m_last_value != rhs.m_last_value)
+		if (m_last_value != rhs.m_last_value)
 		{
 			return false;
 		}
-   
+
 		return true;
 	}
 
@@ -1657,11 +1666,11 @@ public class TestArrayEnum : finalmq.StructBase, IEquatable<TestArrayEnum>
 			return true;
 		}
 
-   		if (!m_value.SequenceEqual(rhs.m_value))
+		if (!m_value.SequenceEqual(rhs.m_value))
 		{
 			return false;
 		}
- 
+
 		return true;
 	}
 
@@ -1722,11 +1731,11 @@ public class TestRequest : finalmq.StructBase, IEquatable<TestRequest>
 			return true;
 		}
 
- 		if (m_datarequest != rhs.m_datarequest)
+		if (m_datarequest != rhs.m_datarequest)
 		{
 			return false;
 		}
-   
+
 		return true;
 	}
 
@@ -1787,11 +1796,11 @@ public class TestReply : finalmq.StructBase, IEquatable<TestReply>
 			return true;
 		}
 
- 		if (m_datareply != rhs.m_datareply)
+		if (m_datareply != rhs.m_datareply)
 		{
 			return false;
 		}
-   
+
 		return true;
 	}
 

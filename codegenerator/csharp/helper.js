@@ -142,6 +142,7 @@ module.exports = {
 	// 0: compare with ==
 	// 1: compare with Equals
 	// 2: compare with SequenceEqual
+	// 3: compare list of arrays with SequenceEqual (only IList<byte[]>
     tid2CompareType : function(tid) { 
 
         switch (tid)
@@ -163,7 +164,7 @@ module.exports = {
             case 'string':
             case 'TYPE_STRING': return 0;
             case 'bytes':
-            case 'TYPE_BYTES': return 1;
+            case 'TYPE_BYTES': return 2;
             case 'struct':
             case 'TYPE_STRUCT': return 1;
             case 'enum':
@@ -187,7 +188,7 @@ module.exports = {
             case 'string[]':
             case 'TYPE_ARRAY_STRING': return 2;
             case 'bytes[]':
-            case 'TYPE_ARRAY_BYTES': return 2;
+            case 'TYPE_ARRAY_BYTES': return 3;
             case 'struct[]':
             case 'TYPE_ARRAY_STRUCT': return 2;
             case 'enum[]':

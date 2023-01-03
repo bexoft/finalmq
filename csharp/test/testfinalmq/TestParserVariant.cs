@@ -67,6 +67,19 @@ namespace testfinalmq
         }
 
         [Fact]
+        public void TestUnknownStruct()
+        {
+            Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
+            Variant root = new Variant();
+            ParserVariant parser = new ParserVariant(mockVisitor.Object, root);
+            bool res = parser.ParseStruct("test.BlaBla");
+            Debug.Assert(!res);
+
+            mockVisitor.Verify(x => x.NotifyError(It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+            mockVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
         public void TestBool()
         {
             bool VALUE = true;
