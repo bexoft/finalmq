@@ -275,91 +275,100 @@ public class VarValue : finalmq.StructBase, IEquatable<VarValue>
 			return true;
 		}
 
- 		if (m_name != rhs.m_name)
+		if (m_name != rhs.m_name)
 		{
 			return false;
 		}
-    		if (m_type != rhs.m_type)
+		if (m_type != rhs.m_type)
 		{
 			return false;
 		}
-    		if (m_valbool != rhs.m_valbool)
+		if (m_valbool != rhs.m_valbool)
 		{
 			return false;
 		}
-    		if (m_valint32 != rhs.m_valint32)
+		if (m_valint32 != rhs.m_valint32)
 		{
 			return false;
 		}
-    		if (m_valuint32 != rhs.m_valuint32)
+		if (m_valuint32 != rhs.m_valuint32)
 		{
 			return false;
 		}
-    		if (m_valint64 != rhs.m_valint64)
+		if (m_valint64 != rhs.m_valint64)
 		{
 			return false;
 		}
-    		if (m_valuint64 != rhs.m_valuint64)
+		if (m_valuint64 != rhs.m_valuint64)
 		{
 			return false;
 		}
-    		if (m_valfloat != rhs.m_valfloat)
+		if (m_valfloat != rhs.m_valfloat)
 		{
 			return false;
 		}
-    		if (m_valdouble != rhs.m_valdouble)
+		if (m_valdouble != rhs.m_valdouble)
 		{
 			return false;
 		}
-    		if (m_valstring != rhs.m_valstring)
+		if (m_valstring != rhs.m_valstring)
 		{
 			return false;
 		}
-     		if (!m_valbytes.Equals(rhs.m_valbytes))
+		if (!m_valbytes.SequenceEqual(rhs.m_valbytes))
 		{
 			return false;
 		}
-     		if (!m_vallist.SequenceEqual(rhs.m_vallist))
+		if (!m_vallist.SequenceEqual(rhs.m_vallist))
 		{
 			return false;
 		}
-    		if (!m_valarrbool.SequenceEqual(rhs.m_valarrbool))
+		if (!m_valarrbool.SequenceEqual(rhs.m_valarrbool))
 		{
 			return false;
 		}
-    		if (!m_valarrint32.SequenceEqual(rhs.m_valarrint32))
+		if (!m_valarrint32.SequenceEqual(rhs.m_valarrint32))
 		{
 			return false;
 		}
-    		if (!m_valarruint32.SequenceEqual(rhs.m_valarruint32))
+		if (!m_valarruint32.SequenceEqual(rhs.m_valarruint32))
 		{
 			return false;
 		}
-    		if (!m_valarrint64.SequenceEqual(rhs.m_valarrint64))
+		if (!m_valarrint64.SequenceEqual(rhs.m_valarrint64))
 		{
 			return false;
 		}
-    		if (!m_valarruint64.SequenceEqual(rhs.m_valarruint64))
+		if (!m_valarruint64.SequenceEqual(rhs.m_valarruint64))
 		{
 			return false;
 		}
-    		if (!m_valarrfloat.SequenceEqual(rhs.m_valarrfloat))
+		if (!m_valarrfloat.SequenceEqual(rhs.m_valarrfloat))
 		{
 			return false;
 		}
-    		if (!m_valarrdouble.SequenceEqual(rhs.m_valarrdouble))
+		if (!m_valarrdouble.SequenceEqual(rhs.m_valarrdouble))
 		{
 			return false;
 		}
-    		if (!m_valarrstring.SequenceEqual(rhs.m_valarrstring))
+		if (!m_valarrstring.SequenceEqual(rhs.m_valarrstring))
 		{
 			return false;
 		}
-    		if (!m_valarrbytes.SequenceEqual(rhs.m_valarrbytes))
+        if (m_valarrbytes.Count != rhs.m_valarrbytes.Count)
 		{
 			return false;
 		}
- 
+		for (int i = 0; i < m_valarrbytes.Count; i++)
+		{
+			byte[] arr1 = m_valarrbytes[i];
+			byte[] arr2 = rhs.m_valarrbytes[i];
+			if (!arr1.SequenceEqual(arr2))
+			{
+				return false;
+			}
+		}
+
 		return true;
 	}
 
