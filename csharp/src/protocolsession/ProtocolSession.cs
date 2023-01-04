@@ -26,6 +26,7 @@ using System.Diagnostics;
 namespace finalmq 
 {
 
+    using VariantStruct = List<NameValue>;
 
     internal interface IProtocolSessionPrivate : IProtocolSession
     {
@@ -124,8 +125,8 @@ namespace finalmq
                     IProtocol? protocol = m_protocol;
                     if (m_protocolFlagIsMultiConnectionSession)
                     {
-                        //todo                        Variant & echoData = msg->getEchoData();
-                        long connectionId = 0;  //todo echoData.getDataValue<std::int64_t>(FMQ_CONNECTION_ID);
+                        Variant echoData = msg.EchoData;
+                        long connectionId = echoData.GetData<long>(FMQ_CONNECTION_ID);
                         GetProtocolFromConnectionId(ref protocol, connectionId);
                     }
 
@@ -248,7 +249,8 @@ namespace finalmq
             string protocolName = endpoint.Substring(ixEndpoint + 1, endpoint.Length - (ixEndpoint + 1));
             FuncCreateProtocol protocolFactory = ProtocolRegistry.Instance.GetProtocolFactory(protocolName);
 
-            IProtocol? protocol = protocolFactory(/* todo connectionProperties.ProtocolData */);
+            Variant? protocolData = connectionProperties?.ProtocolData;
+            IProtocol? protocol = protocolFactory(protocolData);
             Debug.Assert(protocol != null);
 
 
@@ -456,16 +458,15 @@ namespace finalmq
 
             if (writeChannelIdIntoEchoData)
             {
-                //todo
-                //Variant & echoData = message->getEchoData();
-                //if (echoData.getType() == VARTYPE_NONE)
-                //{
-                //    echoData = VariantStruct{ { FMQ_CONNECTION_ID, connectionId} };
-                //}
-                //else
-                //{
-                //    echoData.add(FMQ_CONNECTION_ID, connectionId);
-                //}
+                Variant echoData = message.EchoData;
+                if (echoData.VarType == Variant.VARTYPE_NONE)
+                {
+                    echoData = Variant.Create( new VariantStruct{ new NameValue( FMQ_CONNECTION_ID, Variant.Create(connectionId)) } );
+                }
+                else
+                {
+                    echoData.Add(FMQ_CONNECTION_ID, connectionId);
+                }
             }
 
             if (m_executor != null)
@@ -667,7 +668,7 @@ namespace finalmq
                 if (message == null)
                 {
                     message = CreateMessage();
-//todo                    message.GetAllMetainfo() = msg.GetAllMetainfo();
+                    message.AllMetainfo = msg.AllMetainfo.Clone();
                     int sizePayload = msg.GetTotalSendPayloadSize();
                     if (sizePayload > 0)
                     {
@@ -760,8 +761,8 @@ namespace finalmq
                 Debug.Assert(reply != null);
                 if (reply != null)
                 {
-                    //todo  Variant & controlData = reply->getControlData();
-                    //todo  controlData.add("fmq_poll_stop", true);
+                    Variant controlData = reply.ControlData;
+                    controlData.Add("fmq_poll_stop", true);
                     SendMessage(reply, m_pollProtocol);
                 }
                 m_pollProtocol = null;
@@ -770,7 +771,7 @@ namespace finalmq
         }
 
         static readonly long INSTANCEID_PREFIX = 0x0100000000000000;
-        //todo static readonly string FMQ_CONNECTION_ID = "fmq_echo_connid";
+        static readonly string FMQ_CONNECTION_ID = "fmq_echo_connid";
 
 
         readonly IProtocolSessionCallback               m_callback;

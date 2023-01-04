@@ -182,39 +182,76 @@ namespace finalmq {
         }
 
         // metainfo
-        public Metainfo GetAllMetainfo()
+        public Metainfo AllMetainfo
         {
-            throw new System.NotImplementedException();
+            get
+            {
+                if (m_metainfo == null)
+                {
+                    m_metainfo = new Metainfo();
+                }
+                return m_metainfo;
+            }
+
+            set
+            {
+                m_metainfo = value;
+            }
         }
 
         public void AddMetainfo(string key, string value)
         {
-            throw new System.NotImplementedException();
+            if (m_metainfo == null)
+            {
+                m_metainfo = new Metainfo();
+            }
+            m_metainfo.Add(key, value);
         }
         public string GetMetainfo(string key)
         {
-            throw new System.NotImplementedException();
+            if (m_metainfo != null &&
+                m_metainfo.TryGetValue(key, out var metainfo))
+            {
+                return metainfo;
+            }
+            return "";
         }
 
         // controlData
-        //public Variant GetControlData()
-        //{
-        //    throw new System.NotImplementedException();
-        //}
-        //public Variant GetControlData()
-        //{
-        //    throw new System.NotImplementedException();
-        //}
+        public Variant ControlData
+        {
+            get
+            {
+                if (m_controlData == null)
+                {
+                    m_controlData = new Variant();
+                }
+                return m_controlData;
+            }
+
+            set
+            {
+                m_controlData = value;
+            }
+        }
 
         // echoData
-        //public Variant GetEchoData()
-        //{
-        //    throw new System.NotImplementedException();
-        //}
-        //public Variant GetEchoData() const
-        //{
-        //    throw new System.NotImplementedException();
-        //}
+        public Variant EchoData
+        {
+            get
+            {
+                if (m_echoData == null)
+                {
+                    m_echoData = new Variant();
+                }
+                return m_echoData;
+            }
+
+            set
+            {
+                m_echoData = value;
+            }
+        }
 
         // for send
         public void AddSendPayload(byte[] payload)
@@ -418,9 +455,9 @@ namespace finalmq {
         }
 
 
-        //Metainfo m_metainfo;
-        //Variant m_controlData;
-        //Variant m_echoData;
+        Metainfo? m_metainfo = null;
+        Variant? m_controlData = null;
+        Variant? m_echoData = null;
 
         // send
         IList<BufferRef>? m_sendBufferRefs = null;

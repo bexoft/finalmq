@@ -65,6 +65,6 @@ namespace finalmq
         void Subscribe(IList<string> subscribtions);
     }
 
-    public delegate IProtocol FuncCreateProtocol(/*todo Variant data*/);
+    public delegate IProtocol FuncCreateProtocol(Variant? data);
 
 }   // namespace finalmq

@@ -307,7 +307,14 @@ namespace finalmq {
             connectionData.IncomingConnection = false;
             connectionData.ReconnectInterval = connectPropertiesNoneNull.ConnectConfig.ReconnectInterval;
             connectionData.TotalReconnectDuration = connectPropertiesNoneNull.ConnectConfig.TotalReconnectDuration;
-            connectionData.StartTime = DateTime.Now;
+            if (streamConnection.ConnectionData.ConnectionState == ConnectionState.CONNECTIONSTATE_CREATED)
+            {
+                connectionData.StartTime = DateTime.Now;
+            }
+            else
+            {
+                connectionData.StartTime = streamConnection.ConnectionData.StartTime;
+            }
             connectionData.Ssl = connectPropertiesNoneNull.SslClientOptions != null ? true : false;
             connectionData.ConnectionState = ConnectionState.CONNECTIONSTATE_CONNECTING;
             connectionData.ConnectProperties = connectProperties;
@@ -351,7 +358,17 @@ namespace finalmq {
                     }
                     catch (Exception)
                     {
-                        ((IStreamConnectionContainerPrivate)this).Disconnect(connection);
+                        DateTime now = DateTime.Now;
+                        TimeSpan dur = now - connectionData.StartTime;
+                        int delta = (int)dur.TotalMilliseconds;
+                        if (delta < 0 || delta >= connectionData.TotalReconnectDuration)
+                        {
+                            ((IStreamConnectionContainerPrivate)this).Disconnect(connection);
+                        }
+                        else
+                        {
+                            connectionData.ConnectionState = ConnectionState.CONNECTIONSTATE_CONNECTING_FAILED;
+                        }
                     }
                 }, null);
         }
