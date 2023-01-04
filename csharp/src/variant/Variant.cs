@@ -10,7 +10,7 @@ namespace finalmq
 
     public class Variant : IEquatable<Variant>
     {
-        private readonly int VARTYPE_NONE = 0;
+        public static readonly int VARTYPE_NONE = 0;
 
         public Variant()
         {

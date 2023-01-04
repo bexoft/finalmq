@@ -236,7 +236,7 @@ namespace finalmq
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
         internal static void Register()
         {
-            ProtocolRegistry.Instance.RegisterProtocolFactory(ProtocolHeaderBinarySize.PROTOCOL_NAME, ProtocolHeaderBinarySize.PROTOCOL_ID, () => { return new ProtocolHeaderBinarySize(); } );
+            ProtocolRegistry.Instance.RegisterProtocolFactory(ProtocolHeaderBinarySize.PROTOCOL_NAME, ProtocolHeaderBinarySize.PROTOCOL_ID, (Variant? data) => { return new ProtocolHeaderBinarySize(); } );
         }
     }
 

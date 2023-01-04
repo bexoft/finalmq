@@ -227,10 +227,11 @@ namespace testfinalmq
                     condVarDisconnectClient.Set();
                 });
 
+            m_connectionContainer.CheckReconnectInterval = 1;
             IStreamConnection connection = m_connectionContainer.Connect("tcp://localhost:3005", m_mockClientCallback.Object, 
                 new ConnectProperties(new SslClientOptions("", new RemoteCertificateValidationCallback(ValidateServerCertificate)), new ConnectConfig(1, 1)));
 
-            Debug.Assert(condVarDisconnectClient.Wait(5000));
+            Debug.Assert(condVarDisconnectClient.Wait(10000));
 
             //m_mockClientCallback.Verify(x => x.Disconnected(It.IsAny<IStreamConnection>()), Times.Once);
 
@@ -419,16 +420,20 @@ namespace testfinalmq
             IStreamConnection? connBind = null;
             IStreamConnection? connConnect = null;
             CondVar condVarReceived = new CondVar();
+            CondVar condVarConnectClient = new CondVar();
+            CondVar condVarBindServer = new CondVar();
 
             m_mockBindCallback.Setup(x => x.Connected(It.IsAny<IStreamConnection>()))
                 .Callback((IStreamConnection connection) =>
                 {
                     connBind = connection;
+                    condVarBindServer.Set();
                 })
                 .Returns(m_mockServerCallback.Object);
             m_mockClientCallback.Setup(x => x.Connected(It.IsAny<IStreamConnection>()))
                 .Callback((IStreamConnection connection) => {
                     connConnect = connection;
+                    condVarConnectClient.Set();
                 })
                 .Returns((IStreamConnectionCallback?)null);
             m_mockServerCallback.Setup(x => x.Connected(It.IsAny<IStreamConnection>()))
@@ -457,6 +462,8 @@ namespace testfinalmq
 
 
             Debug.Assert(condVarReceived.Wait(5000));
+            Debug.Assert(condVarConnectClient.Wait(5000));
+            Debug.Assert(condVarBindServer.Wait(5000));
 
             //m_mockBindCallback.Verify(x => x.Connected(It.IsAny<IStreamConnection>()), Times.Once);
             //m_mockClientCallback.Verify(x => x.Connected(It.IsAny<IStreamConnection>()), Times.Once);

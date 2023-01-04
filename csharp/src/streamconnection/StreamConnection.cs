@@ -68,13 +68,16 @@ namespace finalmq {
 
     public class BindProperties
     {
-        public BindProperties(SslServerOptions? sslServerOptions = null)
+        public BindProperties(SslServerOptions? sslServerOptions = null, Variant? protocolData = null)
         {
-            this.sslServerOptions = sslServerOptions;
+            m_sslServerOptions = sslServerOptions;
+            m_protocolData = protocolData;
         }
-        public SslServerOptions? SslServerOptions { get => sslServerOptions; set => sslServerOptions = value; }
+        public SslServerOptions? SslServerOptions { get => m_sslServerOptions; set => m_sslServerOptions = value; }
+        public Variant? ProtocolData { get => m_protocolData; set => m_protocolData = value; }
 
-        private SslServerOptions? sslServerOptions = null;
+        private SslServerOptions? m_sslServerOptions = null;
+        private Variant? m_protocolData = null;
     }
 
     public class ConnectConfig
@@ -133,20 +136,22 @@ namespace finalmq {
 
     public class ConnectProperties
     {
-        public ConnectProperties(SslClientOptions? sslClientOptions = null, ConnectConfig? config = null)
+        public ConnectProperties(SslClientOptions? sslClientOptions = null, ConnectConfig? config = null, Variant? protocolData = null)
         {
-            this.sslClientOptions = sslClientOptions;
+            m_sslClientOptions = sslClientOptions;
             if (config != null)
             {
-                this.config = config;
+                m_config = config;
             }
+            m_protocolData = protocolData;
         }
-        public SslClientOptions? SslClientOptions { get => sslClientOptions; set => sslClientOptions = value; }
-        public ConnectConfig ConnectConfig { get => config; set => config = value; }
+        public SslClientOptions? SslClientOptions { get => m_sslClientOptions; set => m_sslClientOptions = value; }
+        public ConnectConfig ConnectConfig { get => m_config; set => m_config = value; }
+        public Variant? ProtocolData { get => m_protocolData; set => m_protocolData = value; }
 
-        private SslClientOptions? sslClientOptions = null;
-        private ConnectConfig config = new ConnectConfig();
-    //    Variant protocolData;
+        private SslClientOptions? m_sslClientOptions = null;
+        private ConnectConfig m_config = new ConnectConfig();
+        private Variant? m_protocolData = null;
     }
 
 
@@ -233,7 +238,7 @@ namespace finalmq {
                     if (!GetDisconnectFlag() && (m_connectionData.ConnectionState == ConnectionState.CONNECTIONSTATE_CONNECTING))
                     {
                         TimeSpan dur = DateTime.Now - m_connectionData.StartTime;
-                        int delta = dur.Milliseconds;
+                        int delta = (int)dur.TotalMilliseconds;
                         if (m_connectionData.TotalReconnectDuration >= 0 && (delta < 0 || delta >= m_connectionData.TotalReconnectDuration))
                         {
                             reconnectExpired = true;
@@ -271,7 +276,7 @@ namespace finalmq {
                 connectionData = m_connectionData;
             }
             if (connectionData.ConnectionState == ConnectionState.CONNECTIONSTATE_CREATED ||
-                connectionData.ConnectionState == ConnectionState.CONNECTIONSTATE_CONNECTING_FAILED)
+                connectionData.ConnectionState == ConnectionState.CONNECTIONSTATE_CONNECTING_RECONNECT)
             {
                 m_streamConnectionContainer.Connect(connectionData.Endpoint, this, connectionData.ConnectProperties);
                 connecting = true;
@@ -334,9 +339,10 @@ namespace finalmq {
             {
                 DateTime now = DateTime.Now;
                 TimeSpan dur = now - m_lastReconnectTime;
-                int delta = dur.Milliseconds;
+                int delta = (int)dur.TotalMilliseconds;
                 if (delta < 0 || delta >= m_connectionData.ReconnectInterval)
                 {
+                    connectionData.ConnectionState = ConnectionState.CONNECTIONSTATE_CONNECTING_RECONNECT;
                     m_lastReconnectTime = now;
                     reconnecting = Connect();
                 }

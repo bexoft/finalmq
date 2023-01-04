@@ -36,7 +36,7 @@ namespace finalmq
         StructBase? CreateStruct(string typeName);
 
         System.Enum? IntToEnum(Type type, int value);
-        System.Enum? StringToEnum(Type type, string value); //todo process also alias string
+        System.Enum? StringToEnum(Type type, string value);
     };
 
     class TypeRegistryImpl : ITypeRegistry

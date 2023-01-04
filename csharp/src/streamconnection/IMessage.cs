@@ -24,8 +24,17 @@ using System.Diagnostics;
 
 namespace finalmq
 {
-    public interface Metainfo : IDictionary<string, string>
+    public class Metainfo : Dictionary<string, string>
     {
+        public Metainfo Clone()
+        {
+            var newMetainfo = new Metainfo();
+            foreach (var entry in this)
+            {
+                newMetainfo.Add(entry.Key, entry.Value);
+            }
+            return newMetainfo;
+        }
     }
 
     public class BufferRef
@@ -127,17 +136,15 @@ namespace finalmq
     {
         
         // metainfo
-        Metainfo GetAllMetainfo();
-        void AddMetainfo(string key, string value);
+        Metainfo AllMetainfo { get; set; }
         string GetMetainfo(string key);
+        void AddMetainfo(string key, string value);
 
-        //// controlData
-        //virtual Variant& getControlData() = 0;
-        //virtual const Variant& getControlData() const = 0;
+        // controlData
+        Variant ControlData { get; set; }
 
-        //// echoData
-        //virtual Variant& getEchoData() = 0;
-        //virtual const Variant& getEchoData() const = 0;
+        // echoData
+        Variant EchoData { get; set; }
 
         // for send
         void AddSendPayload(byte[] payload);

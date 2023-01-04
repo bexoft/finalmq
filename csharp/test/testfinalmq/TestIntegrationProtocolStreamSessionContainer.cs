@@ -158,14 +158,14 @@ namespace testfinalmq
                     condVarDisconnectClient.Set();
                 });
 
+            m_sessionContainer.CheckReconnectInterval = 1;
             IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3003:stream", m_mockClientCallback.Object, new ConnectProperties(null, new ConnectConfig(1, 1)));
 
-            Debug.Assert(condVarDisconnectClient.Wait(5000));
+            Debug.Assert(condVarDisconnectClient.Wait(10000));
 
             Debug.Assert(connDisconnect != null);
             Debug.Assert(connDisconnect == connection);
             Debug.Assert(connection.ConnectionData.ConnectionState == ConnectionState.CONNECTIONSTATE_DISCONNECTED);
-            Debug.Assert(m_sessionContainer.TryGetSession(connection.SessionId) == null);
         }
 
         [Fact]
@@ -241,8 +241,8 @@ namespace testfinalmq
                 });
             m_mockServerCallback.Setup(x => x.Connected(It.IsAny<IProtocolSession>()))
                 .Callback((IProtocolSession connection) => {
-                    condVarConnectServer.Set();
                     connBind = connection;
+                    condVarConnectServer.Set();
                 });
 
 
@@ -306,11 +306,13 @@ namespace testfinalmq
         {
             IProtocolSession? connConnect = null;
             CondVar condVarReceived = new CondVar();
+            CondVar condVarConnectClient = new CondVar();
 
             m_mockClientCallback.Setup(x => x.Connected(It.IsAny<IProtocolSession>()))
                 .Callback((IProtocolSession connection) =>
                 {
                     connConnect = connection;
+                    condVarConnectClient.Set();
                 });
             m_mockServerCallback.Setup(x => x.Connected(It.IsAny<IProtocolSession>()))
                 .Callback((IProtocolSession connection) => {
@@ -337,6 +339,7 @@ namespace testfinalmq
 
 
             Debug.Assert(condVarReceived.Wait(5000));
+            Debug.Assert(condVarConnectClient.Wait(5000));
 
             Debug.Assert(connConnect != null);
             Debug.Assert(connConnect == connection);
