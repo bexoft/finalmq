@@ -99,21 +99,18 @@ bool ParserProto::parseString(const char*& buffer, ssize_t& size)
     if (wireType == WIRETYPE_LENGTH_DELIMITED)
     {
         int sizeBuffer = static_cast<std::int32_t>(parseVarint());
-        if (m_ptr)
+        if ((sizeBuffer >= 0 && sizeBuffer <= m_size) && m_ptr)
         {
-            if (sizeBuffer >= 0 && sizeBuffer <= m_size)
-            {
-                buffer = m_ptr;
-                size = sizeBuffer;
-                m_ptr += sizeBuffer;
-                m_size -= sizeBuffer;
-            }
-            else
-            {
-                m_ptr = nullptr;
-                m_size = 0;
-                ok = false;
-            }
+            buffer = m_ptr;
+            size = sizeBuffer;
+            m_ptr += sizeBuffer;
+            m_size -= sizeBuffer;
+        }
+        else
+        {
+            m_ptr = nullptr;
+            m_size = 0;
+            ok = false;
         }
     }
     else
@@ -142,30 +139,27 @@ void ParserProto::parseStructWire(const MetaField& field)
     if (wireType == WIRETYPE_LENGTH_DELIMITED)
     {
         int sizeBuffer = static_cast<std::int32_t>(parseVarint());
-        if (m_ptr && sizeBuffer > 0)
+        if ((sizeBuffer >= 0 && sizeBuffer <= m_size) && m_ptr)
         {
-            if (sizeBuffer >= 0 && sizeBuffer <= m_size)
+            m_visitor.enterStruct(field);
+            ParserProto parser(m_visitor, m_ptr, sizeBuffer);
+            bool res = parser.parseStructIntern(*stru);
+            m_visitor.exitStruct(field);
+            if (res)
             {
-                m_visitor.enterStruct(field);
-                ParserProto parser(m_visitor, m_ptr, sizeBuffer);
-                bool res = parser.parseStructIntern(*stru);
-                m_visitor.exitStruct(field);
-                if (res)
-                {
-                    m_ptr += sizeBuffer;
-                    m_size -= sizeBuffer;
-                }
-                else
-                {
-                    m_ptr = nullptr;
-                    m_size = 0;
-                }
+                m_ptr += sizeBuffer;
+                m_size -= sizeBuffer;
             }
             else
             {
                 m_ptr = nullptr;
                 m_size = 0;
             }
+        }
+        else
+        {
+            m_ptr = nullptr;
+            m_size = 0;
         }
     }
     else
@@ -222,6 +216,12 @@ bool ParserProto::parseArrayFixed(std::vector<T>& array)
                     m_tag = 0;
                     break;
                 }
+            }
+            else
+            {
+                m_ptr = nullptr;
+                m_size = 0;
+                ok = false;
             }
         } while ((m_tag == tag) && m_ptr);
         break;
@@ -287,6 +287,12 @@ bool ParserProto::parseArrayVarint(std::vector<T>& array)
                     m_tag = 0;
                     break;
                 }
+            }
+            else
+            {
+                m_ptr = nullptr;
+                m_size = 0;
+                ok = false;
             }
         } while ((m_tag == tag) && m_ptr);
         break;
