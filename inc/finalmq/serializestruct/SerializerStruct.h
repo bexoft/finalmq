@@ -115,7 +115,7 @@ private:
     void setValueArrayNumber(const MetaField& field, std::vector<T>&& value);
 
     void setValueArrayString(const MetaField& field, const std::vector<std::string>& value);
-    void setValueArrayString(const MetaField& field, const std::vector<std::string>&& value);
+    void setValueArrayString(const MetaField& field, std::vector<std::string>&& value);
         
     const FieldInfo* getFieldInfoDest(const MetaField& field);
 

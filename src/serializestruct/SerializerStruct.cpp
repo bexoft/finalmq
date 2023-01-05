@@ -970,7 +970,7 @@ void SerializerStruct::setValueArrayString(const MetaField& field, const std::ve
     }
 }
 
-void SerializerStruct::setValueArrayString(const MetaField& field, const std::vector<std::string>&& value)
+void SerializerStruct::setValueArrayString(const MetaField& field, std::vector<std::string>&& value)
 {
     const FieldInfo* fieldInfoDest = getFieldInfoDest(field);
     if (fieldInfoDest == nullptr)

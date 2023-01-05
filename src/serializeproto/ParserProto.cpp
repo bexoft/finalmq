@@ -501,7 +501,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                     break;
                 case MetaTypeId::TYPE_BOOL:
                     {
-                        bool value = 0;
+                        bool value = false;
                         bool ok = parseVarint(value);
                         if (ok)
                         {
@@ -768,7 +768,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         bool ok = parseArrayString(array);
                         if (ok)
                         {
-                            m_visitor.enterArrayString(*field, std::move(array));
+                            m_visitor.enterArrayStringMove(*field, std::move(array));
                         }
                     }
                     break;
@@ -778,7 +778,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         bool ok = parseArrayString(array);
                         if (ok)
                         {
-                            m_visitor.enterArrayBytes(*field, std::move(array));
+                            m_visitor.enterArrayBytesMove(*field, std::move(array));
                         }
                     }
                     break;
