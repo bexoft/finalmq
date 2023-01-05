@@ -112,6 +112,7 @@ bool ParserProto::parseString(const char*& buffer, ssize_t& size)
             {
                 m_ptr = nullptr;
                 m_size = 0;
+                ok = false;
             }
         }
     }
@@ -244,6 +245,7 @@ bool ParserProto::parseArrayFixed(std::vector<T>& array)
                 {
                     m_ptr = nullptr;
                     m_size = 0;
+                    ok = false;
                 }
             }
         }
@@ -305,6 +307,7 @@ bool ParserProto::parseArrayVarint(std::vector<T>& array)
                 {
                     m_ptr = nullptr;
                     m_size = 0;
+                    ok = false;
                 }
             }
         }
@@ -323,39 +326,42 @@ bool ParserProto::parseArrayVarint(std::vector<T>& array)
 template<class T>
 bool ParserProto::parseArrayString(std::vector<T>& array)
 {
+    if (m_ptr == nullptr)
+    {
+        return false;
+    }
     bool ok = true;
     WireType wireType = static_cast<WireType>(m_tag & 0x7);
-    std::uint32_t tag = m_tag;
+    const std::uint32_t tag = m_tag;
     m_tag = 0;
     if (wireType == WIRETYPE_LENGTH_DELIMITED)
     {
         do
         {
             int sizeBuffer = static_cast<std::int32_t>(parseVarint());
-            if (m_ptr)
+            if (sizeBuffer >= 0 && sizeBuffer <= m_size)
             {
-                if (sizeBuffer >= 0 && sizeBuffer <= m_size)
+                array.emplace_back(m_ptr, m_ptr + sizeBuffer);
+                m_ptr += sizeBuffer;
+                m_size -= sizeBuffer;
+                if (m_size > 0)
                 {
-                    array.emplace_back(m_ptr, m_ptr + sizeBuffer);
-                    m_ptr += sizeBuffer;
-                    m_size -= sizeBuffer;
-                    if (m_size > 0)
-                    {
-                        m_tag = static_cast<std::uint32_t>(parseVarint());
-                    }
-                    else
-                    {
-                        m_tag = 0;
-                        break;
-                    }
+                    m_tag = static_cast<std::uint32_t>(parseVarint());
                 }
                 else
                 {
-                    m_ptr = nullptr;
-                    m_size = 0;
+                    m_tag = 0;
+                    break;
                 }
             }
-        } while ((m_tag == tag) && m_ptr);
+            else
+            {
+                m_ptr = nullptr;
+                m_size = 0;
+                ok = false;
+                break;
+            }
+        } while (m_tag == tag);
     }
     else
     {
@@ -371,6 +377,11 @@ bool ParserProto::parseArrayString(std::vector<T>& array)
 
 void ParserProto::parseArrayStruct(const MetaField& field)
 {
+    if (m_ptr == nullptr)
+    {
+        return;
+    }
+
     WireType wireType = static_cast<WireType>(m_tag & 0x7);
 
     const MetaStruct* stru = MetaDataGlobal::instance().getStruct(field);
@@ -381,7 +392,7 @@ void ParserProto::parseArrayStruct(const MetaField& field)
         return;
     }
 
-    std::uint32_t tag = m_tag;
+    const std::uint32_t tag = m_tag;
     m_tag = 0;
     if (wireType == WIRETYPE_LENGTH_DELIMITED)
     {
@@ -392,7 +403,7 @@ void ParserProto::parseArrayStruct(const MetaField& field)
         do
         {
             int sizeBuffer = static_cast<std::int32_t>(parseVarint());
-            if (m_ptr && (sizeBuffer >= 0 && sizeBuffer <= m_size))
+            if (sizeBuffer >= 0 && sizeBuffer <= m_size)
             {
                 m_visitor.enterStruct(*fieldWithoutArray);
                 ParserProto parser(m_visitor, m_ptr, sizeBuffer);
@@ -407,6 +418,7 @@ void ParserProto::parseArrayStruct(const MetaField& field)
                 {
                     m_ptr = nullptr;
                     m_size = 0;
+                    break;
                 }
 
                 if (m_size > 0)
@@ -423,8 +435,9 @@ void ParserProto::parseArrayStruct(const MetaField& field)
             {
                 m_ptr = nullptr;
                 m_size = 0;
+                break;
             }
-        } while ((m_tag == tag) && m_ptr);
+        } while (m_tag == tag);
         m_visitor.exitArrayStruct(field);
     }
     else
@@ -436,8 +449,11 @@ void ParserProto::parseArrayStruct(const MetaField& field)
 
 bool ParserProto::parseStruct(const std::string& typeName)
 {
-    assert(m_ptr);
-    assert(m_size >= 0);
+    if (!m_ptr || m_size < 0)
+    {
+        // end of data
+        return false;
+    }
 
     const MetaStruct* stru = MetaDataGlobal::instance().getStruct(typeName);
     if (!stru)
@@ -456,9 +472,6 @@ bool ParserProto::parseStruct(const std::string& typeName)
 
 bool ParserProto::parseStructIntern(const MetaStruct& stru)
 {
-    assert(m_ptr);
-    assert(m_size >= 0);
-
     if (!m_ptr || m_size < 0)
     {
         // end of data
@@ -486,7 +499,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                     {
                         bool value = 0;
                         bool ok = parseVarint(value);
-                        if (ok && m_ptr)
+                        if (ok)
                         {
                             m_visitor.enterBool(*field, value);
                         }
@@ -508,7 +521,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         {
                             ok = parseFixedValue<std::int32_t, WIRETYPE_FIXED32>(value);
                         }
-                        if (ok && m_ptr)
+                        if (ok)
                         {
                             m_visitor.enterInt32(*field, value);
                         }
@@ -526,7 +539,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         {
                             ok = parseFixedValue<std::uint32_t, WIRETYPE_FIXED32>(value);
                         }
-                        if (ok && m_ptr)
+                        if (ok)
                         {
                             m_visitor.enterUInt32(*field, value);
                         }
@@ -548,7 +561,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         {
                             ok = parseFixedValue<std::int64_t, WIRETYPE_FIXED64>(value);
                         }
-                        if (ok && m_ptr)
+                        if (ok)
                         {
                             m_visitor.enterInt64(*field, value);
                         }
@@ -566,7 +579,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         {
                             ok = parseFixedValue<std::uint64_t, WIRETYPE_FIXED64>(value);
                         }
-                        if (ok && m_ptr)
+                        if (ok)
                         {
                             m_visitor.enterUInt64(*field, value);
                         }
@@ -576,7 +589,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                     {
                         float value = 0.0;
                         bool ok = parseFixedValue<float, WIRETYPE_FIXED32>(value);
-                        if (ok && m_ptr)
+                        if (ok)
                         {
                             m_visitor.enterFloat(*field, value);
                         }
@@ -586,7 +599,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                     {
                         double value = 0.0;
                         bool ok = parseFixedValue<double, WIRETYPE_FIXED64>(value);
-                        if (ok && m_ptr)
+                        if (ok)
                         {
                             m_visitor.enterDouble(*field, value);
                         }
@@ -597,7 +610,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         const char* buffer = nullptr;
                         ssize_t size = 0;
                         bool ok = parseString(buffer, size);
-                        if (ok && m_ptr)
+                        if (ok)
                         {
                             m_visitor.enterString(*field, buffer, size);
                         }
@@ -608,7 +621,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         const char* buffer = nullptr;
                         ssize_t size = 0;
                         bool ok = parseString(buffer, size);
-                        if (ok && m_ptr)
+                        if (ok)
                         {
                             m_visitor.enterBytes(*field, buffer, size);
                         }
@@ -621,7 +634,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                     {
                         std::int32_t value = 0;
                         bool ok = parseVarint(value);
-                        if (ok && m_ptr)
+                        if (ok)
                         {
                             const MetaEnum* metaEnum = MetaDataGlobal::instance().getEnum(*field);
                             if (metaEnum)
@@ -639,7 +652,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                     {
                         std::vector<bool> array;
                         bool ok = parseArrayVarint(array);
-                        if (ok && m_ptr)
+                        if (ok)
                         {
                             m_visitor.enterArrayBool(*field, std::move(array));
                         }
@@ -661,7 +674,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         {
                             ok = parseArrayFixed<std::int32_t, WIRETYPE_FIXED32>(array);
                         }
-                        if (ok && m_ptr)
+                        if (ok)
                         {
                             m_visitor.enterArrayInt32(*field, std::move(array));
                         }
@@ -679,7 +692,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         {
                             ok = parseArrayFixed<std::uint32_t, WIRETYPE_FIXED32>(array);
                         }
-                        if (ok && m_ptr)
+                        if (ok)
                         {
                             m_visitor.enterArrayUInt32(*field, std::move(array));
                         }
@@ -701,7 +714,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         {
                             ok = parseArrayFixed<std::int64_t, WIRETYPE_FIXED64>(array);
                         }
-                        if (ok && m_ptr)
+                        if (ok)
                         {
                             m_visitor.enterArrayInt64(*field, std::move(array));
                         }
@@ -719,7 +732,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         {
                             ok = parseArrayFixed<std::uint64_t, WIRETYPE_FIXED64>(array);
                         }
-                        if (ok && m_ptr)
+                        if (ok)
                         {
                             m_visitor.enterArrayUInt64(*field, std::move(array));
                         }
@@ -729,7 +742,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                     {
                         std::vector<float> array;
                         bool ok = parseArrayFixed<float, WIRETYPE_FIXED32>(array);
-                        if (ok && m_ptr)
+                        if (ok)
                         {
                             m_visitor.enterArrayFloat(*field, std::move(array));
                         }
@@ -739,7 +752,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                     {
                         std::vector<double> array;
                         bool ok = parseArrayFixed<double, WIRETYPE_FIXED64>(array);
-                        if (ok && m_ptr)
+                        if (ok)
                         {
                             m_visitor.enterArrayDouble(*field, std::move(array));
                         }
@@ -749,7 +762,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                     {
                         std::vector<std::string> array;
                         bool ok = parseArrayString(array);
-                        if (ok && m_ptr)
+                        if (ok)
                         {
                             m_visitor.enterArrayString(*field, std::move(array));
                         }
@@ -759,7 +772,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                     {
                         std::vector<Bytes> array;
                         bool ok = parseArrayString(array);
-                        if (ok && m_ptr)
+                        if (ok)
                         {
                             m_visitor.enterArrayBytes(*field, std::move(array));
                         }
@@ -772,7 +785,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                     {
                         std::vector<std::int32_t> array;
                         bool ok = parseArrayVarint(array);
-                        if (ok && m_ptr)
+                        if (ok)
                         {
                             const MetaEnum* metaEnum = MetaDataGlobal::instance().getEnum(*field);
                             if (metaEnum)
@@ -891,8 +904,11 @@ void ParserProto::skip(WireType wireType)
     case WIRETYPE_FIXED64:
         if (m_size >= static_cast<ssize_t>(sizeof(std::uint64_t)))
         {
-            m_ptr += sizeof(std::uint64_t);
-            m_size -= sizeof(std::uint64_t);
+            if (m_ptr)
+            {
+                m_ptr += sizeof(std::uint64_t);
+                m_size -= sizeof(std::uint64_t);
+            }
         }
         else
         {
