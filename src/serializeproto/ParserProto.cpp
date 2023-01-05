@@ -196,6 +196,10 @@ bool ParserProto::parseFixedValue(T& value)
 template<class T, int WIRETYPE>
 bool ParserProto::parseArrayFixed(std::vector<T>& array)
 {
+    if (m_ptr == nullptr)
+    {
+        return false;
+    }
     bool ok = true;
     WireType wireType = static_cast<WireType>(m_tag & 0x7);
     std::uint32_t tag = m_tag;
@@ -224,29 +228,26 @@ bool ParserProto::parseArrayFixed(std::vector<T>& array)
     case WIRETYPE_LENGTH_DELIMITED:
         {
             int sizeBuffer = static_cast<std::int32_t>(parseVarint());
-            if (m_ptr)
+            if ((sizeBuffer >= 0 && sizeBuffer <= m_size) && m_ptr)
             {
-                if (sizeBuffer >= 0 && sizeBuffer <= m_size)
-                {
-                    ssize_t sizeElements = sizeBuffer / sizeof(T);
-                    array.resize(sizeElements);
+                ssize_t sizeElements = sizeBuffer / sizeof(T);
+                array.resize(sizeElements);
 #ifdef FINALMQ_LITTLE_ENDIAN
-                    memcpy(array.data(), m_ptr, sizeElements * sizeof(T));
+                memcpy(array.data(), m_ptr, sizeElements * sizeof(T));
 #else
-                    for (ssize_t i = 0; i < sizeElements; i++)
-                    {
-                        EndianHelper<sizeof(T)>::read(&m_ptr[i * sizeof(T)], &array[i]);
-                    }
-#endif
-                    m_ptr += sizeBuffer;
-                    m_size -= sizeBuffer;
-                }
-                else
+                for (ssize_t i = 0; i < sizeElements; i++)
                 {
-                    m_ptr = nullptr;
-                    m_size = 0;
-                    ok = false;
+                    EndianHelper<sizeof(T)>::read(&m_ptr[i * sizeof(T)], &array[i]);
                 }
+#endif
+                m_ptr += sizeBuffer;
+                m_size -= sizeBuffer;
+            }
+            else
+            {
+                m_ptr = nullptr;
+                m_size = 0;
+                ok = false;
             }
         }
         break;
@@ -292,23 +293,20 @@ bool ParserProto::parseArrayVarint(std::vector<T>& array)
     case WIRETYPE_LENGTH_DELIMITED:
         {
             int sizeBuffer = static_cast<std::int32_t>(parseVarint());
-            if (m_ptr)
+            if ((sizeBuffer >= 0 && sizeBuffer <= m_size) && m_ptr)
             {
-                if (sizeBuffer >= 0 && sizeBuffer <= m_size)
+                while (m_size > 0)
                 {
-                    while (m_size > 0)
-                    {
-                        std::uint64_t value = parseVarint();
-                        T v = (ZIGZAG) ? static_cast<T>(zigzag(value)) : static_cast<T>(value);
-                        array.push_back(v);
-                    }
+                    std::uint64_t value = parseVarint();
+                    T v = (ZIGZAG) ? static_cast<T>(zigzag(value)) : static_cast<T>(value);
+                    array.push_back(v);
                 }
-                else
-                {
-                    m_ptr = nullptr;
-                    m_size = 0;
-                    ok = false;
-                }
+            }
+            else
+            {
+                m_ptr = nullptr;
+                m_size = 0;
+                ok = false;
             }
         }
         break;
@@ -339,7 +337,7 @@ bool ParserProto::parseArrayString(std::vector<T>& array)
         do
         {
             int sizeBuffer = static_cast<std::int32_t>(parseVarint());
-            if (sizeBuffer >= 0 && sizeBuffer <= m_size)
+            if ((sizeBuffer >= 0 && sizeBuffer <= m_size) && m_ptr)
             {
                 array.emplace_back(m_ptr, m_ptr + sizeBuffer);
                 m_ptr += sizeBuffer;
@@ -361,7 +359,7 @@ bool ParserProto::parseArrayString(std::vector<T>& array)
                 ok = false;
                 break;
             }
-        } while (m_tag == tag);
+        } while ((m_tag == tag) && m_ptr);
     }
     else
     {
@@ -403,7 +401,7 @@ void ParserProto::parseArrayStruct(const MetaField& field)
         do
         {
             int sizeBuffer = static_cast<std::int32_t>(parseVarint());
-            if (sizeBuffer >= 0 && sizeBuffer <= m_size)
+            if ((sizeBuffer >= 0 && sizeBuffer <= m_size) && m_ptr)
             {
                 m_visitor.enterStruct(*fieldWithoutArray);
                 ParserProto parser(m_visitor, m_ptr, sizeBuffer);
@@ -437,7 +435,7 @@ void ParserProto::parseArrayStruct(const MetaField& field)
                 m_size = 0;
                 break;
             }
-        } while (m_tag == tag);
+        } while ((m_tag == tag) && m_ptr);
         m_visitor.exitArrayStruct(field);
     }
     else
@@ -902,18 +900,10 @@ void ParserProto::skip(WireType wireType)
         parseVarint();
         break;
     case WIRETYPE_FIXED64:
-        if (m_size >= static_cast<ssize_t>(sizeof(std::uint64_t)))
+        if (m_ptr)
         {
-            if (m_ptr)
-            {
-                m_ptr += sizeof(std::uint64_t);
-                m_size -= sizeof(std::uint64_t);
-            }
-        }
-        else
-        {
-            m_ptr = nullptr;
-            m_size = 0;
+            m_ptr += sizeof(std::uint64_t);
+            m_size -= sizeof(std::uint64_t);
         }
         break;
     case WIRETYPE_LENGTH_DELIMITED:
@@ -923,30 +913,25 @@ void ParserProto::skip(WireType wireType)
             {
                 m_ptr += len;
                 m_size -= len;
-                if (m_size < 0)
-                {
-                    m_ptr = nullptr;
-                    m_size = 0;
-                }
             }
         }
         break;
     case WIRETYPE_FIXED32:
-        if (m_size >= static_cast<ssize_t>(sizeof(std::uint32_t)))
+        if (m_ptr)
         {
             m_ptr += sizeof(std::uint32_t);
             m_size -= sizeof(std::uint32_t);
-        }
-        else
-        {
-            m_ptr = nullptr;
-            m_size = 0;
         }
         break;
     default:
         m_ptr = nullptr;
         m_size = 0;
         break;
+    }
+    if (m_size < 0)
+    {
+        m_ptr = nullptr;
+        m_size = 0;
     }
 }
 
