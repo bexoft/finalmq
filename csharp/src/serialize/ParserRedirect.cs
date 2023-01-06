@@ -113,10 +113,10 @@ namespace finalmq
             Debug.Assert(m_visitor != null);
             m_visitor.EnterString(field, buffer, offset, size);
         }
-        public void EnterBytes(MetaField field, byte[] value)
+        public void EnterBytes(MetaField field, byte[] value, int offset, int size)
         {
             Debug.Assert(m_visitor != null);
-            m_visitor.EnterBytes(field, value);
+            m_visitor.EnterBytes(field, value, offset, size);
         }
         public void EnterEnum(MetaField field, int value)
         {

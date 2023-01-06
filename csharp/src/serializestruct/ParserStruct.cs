@@ -100,7 +100,7 @@ namespace finalmq
                     var vBytes = value as byte[];
                     if (vBytes != null)
                     {
-                        m_visitor.EnterBytes(field, vBytes);
+                        m_visitor.EnterBytes(field, vBytes, 0, vBytes.Length);
                     }
                     break;
                 case MetaTypeId.TYPE_STRUCT:

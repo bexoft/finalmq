@@ -343,7 +343,7 @@ namespace testfinalmq
             Debug.Assert(res != -1);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
-            mockVisitor.Verify(x => x.EnterBytes(fieldValue, VALUE), Times.Once);
+            mockVisitor.Verify(x => x.EnterBytes(fieldValue, VALUE, 0, VALUE.Length), Times.Once);
             mockVisitor.Verify(x => x.Finished(), Times.Once);
         }
 
