@@ -152,7 +152,7 @@ namespace finalmq
                     {
                         // convert from base64
                         byte[] v = System.Convert.FromBase64String(value);
-                        m_visitor.EnterBytes(m_fieldCurrent, v);
+                        m_visitor.EnterBytes(m_fieldCurrent, v, 0, v.Length);
                     }
                     break;
                 case MetaTypeId.TYPE_ENUM:
@@ -298,7 +298,7 @@ namespace finalmq
                         // convert from base64
                         string s = Encoding.ASCII.GetString(buffer, offset, size);
                         byte[] v = System.Convert.FromBase64String(s);
-                        m_visitor.EnterBytes(m_fieldCurrent, v);
+                        m_visitor.EnterBytes(m_fieldCurrent, v, 0, v.Length);
                     }
                     break;
                 case MetaTypeId.TYPE_ENUM:

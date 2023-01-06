@@ -176,19 +176,19 @@ namespace finalmq
                 ConvertString(field, Encoding.UTF8.GetString(buffer, offset, size));
             }
         }
-        public void EnterBytes(MetaField field, byte[] value)
+        public void EnterBytes(MetaField field, byte[] value, int offset, int size)
         {
             Debug.Assert(m_visitor != null);
             if (field.TypeId == MetaTypeId.TYPE_BYTES)
             {
-                m_visitor.EnterBytes(field, value);
+                m_visitor.EnterBytes(field, value, offset, size);
             }
             else
             {
                 string? s = null;
                 try
                 {
-                    s = Encoding.UTF8.GetString(value);
+                    s = Encoding.UTF8.GetString(value, offset, size);
                 }
                 catch (Exception)
                 {

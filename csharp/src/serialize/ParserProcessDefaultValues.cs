@@ -141,7 +141,7 @@ namespace finalmq
                             m_visitor.EnterString(field, EmptyString);
                             break;
                         case MetaTypeId.TYPE_BYTES:
-                            m_visitor.EnterBytes(field, EmptyBytes);
+                            m_visitor.EnterBytes(field, EmptyBytes, 0, EmptyBytes.Length);
                             break;
                         case MetaTypeId.TYPE_STRUCT:
                             {
@@ -312,13 +312,13 @@ namespace finalmq
                 m_visitor.EnterString(field, buffer, offset, size);
             }
         }
-        public void EnterBytes(MetaField field, byte[] value)
+        public void EnterBytes(MetaField field, byte[] value, int offset, int size)
         {
             Debug.Assert(m_visitor != null);
             MarkAsDone(field);
-            if (value.Length != 0 || !m_skipDefaultValues)
+            if (size != 0 || !m_skipDefaultValues)
             {
-                m_visitor.EnterBytes(field, value);
+                m_visitor.EnterBytes(field, value, offset, size);
             }
         }
         public void EnterEnum(MetaField field, int value)

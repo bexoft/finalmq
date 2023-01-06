@@ -196,7 +196,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerStruct(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestString")!);
-            serializer.EnterBytes(new MetaField(MetaTypeId.TYPE_BYTES, "", "value", "", 0, 0), VALUE);
+            serializer.EnterBytes(new MetaField(MetaTypeId.TYPE_BYTES, "", "value", "", 0, 0), VALUE, 0, VALUE.Length);
             serializer.Finished();
 
             var cmp = new test.TestBytes(VALUE);

@@ -877,8 +877,16 @@ namespace finalmq
             {
                 SetValueString(field.Name, Encoding.UTF8.GetString(buffer, offset, size));
             }
-            public void EnterBytes(MetaField field, byte[] value)
+            public void EnterBytes(MetaField field, byte[] value, int offset, int size)
             {
+                Debug.Assert(offset >= 0);
+                Debug.Assert(offset + size <= value.Length);
+                if (offset != 0 || size != value.Length)
+                {
+                    byte[] newValue = new byte[size];
+                    Array.Copy(value, offset, newValue, 0, size);
+                    value = newValue;
+                }
                 string fieldName = field.Name;
                 PropertyInfo? property = GetProperty(fieldName);
                 if (property != null)

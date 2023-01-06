@@ -95,7 +95,10 @@ namespace finalmq
                     m_visitor.EnterString(field, sub);
                     break;
                 case MetaTypeId.TYPE_BYTES:
-                    m_visitor.EnterBytes(field, sub);
+                    {
+                        byte[] v = sub;
+                        m_visitor.EnterBytes(field, v, 0, v.Length);
+                    }
                     break;
                 case MetaTypeId.TYPE_STRUCT:
                     {
@@ -231,7 +234,7 @@ namespace finalmq
                     m_visitor.EnterString(field, EmptyString);
                     break;
                 case MetaTypeId.TYPE_BYTES:
-                    m_visitor.EnterBytes(field, EmptyBytes);
+                    m_visitor.EnterBytes(field, EmptyBytes, 0, EmptyBytes.Length);
                     break;
                 case MetaTypeId.TYPE_STRUCT:
                     {

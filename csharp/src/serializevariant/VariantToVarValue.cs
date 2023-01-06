@@ -176,7 +176,7 @@ namespace finalmq
                         MetaField? fieldBytes = m_fieldBytes;
                         Debug.Assert(fieldBytes != null);
                         byte[] data = variant;
-                        m_visitor.EnterBytes(fieldBytes, data);
+                        m_visitor.EnterBytes(fieldBytes, data, 0, data.Length);
                     }
                     break;
 

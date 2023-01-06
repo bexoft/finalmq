@@ -198,8 +198,16 @@ namespace finalmq
             {
                 Add(field, Encoding.UTF8.GetString(buffer, offset, size));
             }
-            public void EnterBytes(MetaField field, byte[] value)
+            public void EnterBytes(MetaField field, byte[] value, int offset, int size)
             {
+                Debug.Assert(offset >= 0);
+                Debug.Assert(offset + size <= value.Length);
+                if (offset != 0 || size != value.Length)
+                {
+                    byte[] newValue = new byte[size];
+                    Array.Copy(value, offset, newValue, 0, size);
+                    value = newValue;
+                }
                 Add(field, value);
             }
             public void EnterEnum(MetaField field, int value)
