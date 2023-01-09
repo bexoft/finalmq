@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+using System.Text;
 
 namespace finalmq
 {
@@ -156,8 +157,8 @@ namespace finalmq
                                 break;
                             case MetaTypeId.TYPE_BOOL:
                                 {
-                                    ulong value = 0;
-                                    bool ok = ParseVarintUInt64(out value);
+                                    bool ok = false;
+                                    ulong value = ParseVarintUInt64(out ok);
                                     if (ok)
                                     {
                                         m_visitor.EnterBool(field, (value != 0));
@@ -170,15 +171,15 @@ namespace finalmq
                                     bool ok = false;
                                     if ((field.Flags & (int)MetaFieldFlags.METAFLAG_PROTO_VARINT) != 0)
                                     {
-                                        ok = ParseVarintUInt64(out value);
+                                        value = ParseVarintUInt64(out ok);
                                     }
                                     else if ((field.Flags & (int)MetaFieldFlags.METAFLAG_PROTO_ZIGZAG) != 0)
                                     {
-                                        ok = ParseZigZagUInt64(out value);
+                                        value = ParseZigZagUInt64(out ok);
                                     }
                                     else
                                     {
-                                        ok = ParseFixedValueUInt32(out value);
+                                        value = ParseFixedValueUInt32(out ok);
                                     }
                                     if (ok)
                                     {
@@ -192,11 +193,11 @@ namespace finalmq
                                     bool ok = false;
                                     if ((field.Flags & (int)MetaFieldFlags.METAFLAG_PROTO_VARINT) != 0)
                                     {
-                                        ok = ParseVarintUInt64(out value);
+                                        value = ParseVarintUInt64(out ok);
                                     }
                                     else
                                     {
-                                        ok = ParseFixedValueUInt32(out value);
+                                        value = ParseFixedValueUInt32(out ok);
                                     }
                                     if (ok)
                                     {
@@ -210,15 +211,15 @@ namespace finalmq
                                     bool ok = false;
                                     if ((field.Flags & (int)MetaFieldFlags.METAFLAG_PROTO_VARINT) != 0)
                                     {
-                                        ok = ParseVarintUInt64(out value);
+                                        value = ParseVarintUInt64(out ok);
                                     }
                                     else if ((field.Flags & (int)MetaFieldFlags.METAFLAG_PROTO_ZIGZAG) != 0)
                                     {
-                                        ok = ParseZigZagUInt64(out value);
+                                        value = ParseZigZagUInt64(out ok);
                                     }
                                     else
                                     {
-                                        ok = ParseFixedValueUInt64(out value);
+                                        value = ParseFixedValueUInt64(out ok);
                                     }
                                     if (ok)
                                     {
@@ -232,11 +233,11 @@ namespace finalmq
                                     bool ok = false;
                                     if ((field.Flags & (int)MetaFieldFlags.METAFLAG_PROTO_VARINT) != 0)
                                     {
-                                        ok = ParseVarintUInt64(out value);
+                                        value = ParseVarintUInt64(out ok);
                                     }
                                     else
                                     {
-                                        ok = ParseFixedValueUInt64(out value);
+                                        value = ParseFixedValueUInt64(out ok);
                                     }
                                     if (ok)
                                     {
@@ -246,8 +247,8 @@ namespace finalmq
                                 break;
                             case MetaTypeId.TYPE_FLOAT:
                                 {
-                                    ulong value = 0;
-                                    bool ok = ParseFixedValueUInt32(out value);
+                                    bool ok = false;
+                                    ulong value = ParseFixedValueUInt32(out ok);
                                     if (ok)
                                     {
                                         float v = BitConverter.UInt32BitsToSingle((uint)value);
@@ -257,8 +258,8 @@ namespace finalmq
                                 break;
                             case MetaTypeId.TYPE_DOUBLE:
                                 {
-                                    ulong value = 0;
-                                    bool ok = ParseFixedValueUInt64(out value);
+                                    bool ok = false;
+                                    ulong value = ParseFixedValueUInt64(out ok);
                                     if (ok)
                                     {
                                         double v = BitConverter.UInt64BitsToDouble(value);
@@ -293,19 +294,11 @@ namespace finalmq
                                 break;
                             case MetaTypeId.TYPE_ENUM:
                                 {
-                                    ulong value = 0;
-                                    bool ok = ParseVarintUInt64(out value);
+                                    bool ok = false;
+                                    ulong value = ParseVarintUInt64(out ok);
                                     if (ok)
                                     {
-                                        MetaEnum? metaEnum = MetaDataGlobal.Instance.GetEnum(field);
-                                        if (metaEnum != null)
-                                        {
-                                            if (!metaEnum.IsId((int)value))
-                                            {
-                                                value = 0;
-                                            }
-                                            m_visitor.EnterEnum(field, (int)value);
-                                        }
+                                        m_visitor.EnterEnum(field, (int)value);
                                     }
                                 }
                                 break;
@@ -331,7 +324,7 @@ namespace finalmq
                                     }
                                     else
                                     {
-                                        array = ParseArrayFixed<int>(WireType.WIRETYPE_FIXED32);
+                                        array = ParseArrayFixedUInt32<int>();
                                     }
                                     if (array != null)
                                     {
@@ -339,128 +332,109 @@ namespace finalmq
                                     }
                                 }
                                 break;
-                            //case MetaTypeId.TYPE_ARRAY_UINT32:
-                            //    {
-                            //        std::vector<std::uint32_t> array;
-                            //        bool ok = false;
-                            //        if (field->flags & METAFLAG_PROTO_VARINT)
-                            //        {
-                            //            ok = parseArrayVarint(array);
-                            //        }
-                            //        else
-                            //        {
-                            //            ok = parseArrayFixed<std::uint32_t, WIRETYPE_FIXED32>(array);
-                            //        }
-                            //        if (ok)
-                            //        {
-                            //            m_visitor.enterArrayUInt32(*field, std::move(array));
-                            //        }
-                            //    }
-                            //    break;
-                            //case MetaTypeId.TYPE_ARRAY_INT64:
-                            //    {
-                            //        std::vector<std::int64_t> array;
-                            //        bool ok = false;
-                            //        if (field->flags & METAFLAG_PROTO_VARINT)
-                            //        {
-                            //            ok = parseArrayVarint(array);
-                            //        }
-                            //        else if (field->flags & METAFLAG_PROTO_ZIGZAG)
-                            //        {
-                            //            ok = parseArrayVarint < std::int64_t, true > (array);
-                            //        }
-                            //        else
-                            //        {
-                            //            ok = parseArrayFixed<std::int64_t, WIRETYPE_FIXED64>(array);
-                            //        }
-                            //        if (ok)
-                            //        {
-                            //            m_visitor.enterArrayInt64(*field, std::move(array));
-                            //        }
-                            //    }
-                            //    break;
-                            //case MetaTypeId.TYPE_ARRAY_UINT64:
-                            //    {
-                            //        std::vector<std::uint64_t> array;
-                            //        bool ok = false;
-                            //        if (field->flags & METAFLAG_PROTO_VARINT)
-                            //        {
-                            //            ok = parseArrayVarint(array);
-                            //        }
-                            //        else
-                            //        {
-                            //            ok = parseArrayFixed<std::uint64_t, WIRETYPE_FIXED64>(array);
-                            //        }
-                            //        if (ok)
-                            //        {
-                            //            m_visitor.enterArrayUInt64(*field, std::move(array));
-                            //        }
-                            //    }
-                            //    break;
-                            //case MetaTypeId.TYPE_ARRAY_FLOAT:
-                            //    {
-                            //        std::vector<float> array;
-                            //        bool ok = parseArrayFixed<float, WIRETYPE_FIXED32>(array);
-                            //        if (ok)
-                            //        {
-                            //            m_visitor.enterArrayFloat(*field, std::move(array));
-                            //        }
-                            //    }
-                            //    break;
-                            //case MetaTypeId.TYPE_ARRAY_DOUBLE:
-                            //    {
-                            //        std::vector<double> array;
-                            //        bool ok = parseArrayFixed<double, WIRETYPE_FIXED64>(array);
-                            //        if (ok)
-                            //        {
-                            //            m_visitor.enterArrayDouble(*field, std::move(array));
-                            //        }
-                            //    }
-                            //    break;
-                            //case MetaTypeId.TYPE_ARRAY_STRING:
-                            //    {
-                            //        std::vector < std::string> array;
-                            //        bool ok = parseArrayString(array);
-                            //        if (ok)
-                            //        {
-                            //            m_visitor.enterArrayString(*field, std::move(array));
-                            //        }
-                            //    }
-                            //    break;
-                            //case MetaTypeId.TYPE_ARRAY_BYTES:
-                            //    {
-                            //        std::vector<Bytes> array;
-                            //        bool ok = parseArrayString(array);
-                            //        if (ok)
-                            //        {
-                            //            m_visitor.enterArrayBytes(*field, std::move(array));
-                            //        }
-                            //    }
-                            //    break;
-                            //case MetaTypeId.TYPE_ARRAY_STRUCT:
-                            //    parseArrayStruct(*field);
-                            //    break;
-                            //case MetaTypeId.TYPE_ARRAY_ENUM:
-                            //    {
-                            //        std::vector<std::int32_t> array;
-                            //        bool ok = parseArrayVarint(array);
-                            //        if (ok)
-                            //        {
-                            //            const MetaEnum* metaEnum = MetaDataGlobal::instance().getEnum(*field);
-                            //            if (metaEnum)
-                            //            {
-                            //                for (size_t i = 0; i < array.size(); ++i)
-                            //                {
-                            //                    if (!metaEnum->isId(array[i]))
-                            //                    {
-                            //                        array[i] = 0;
-                            //                    }
-                            //                }
-                            //                m_visitor.enterArrayEnum(*field, std::move(array));
-                            //            }
-                            //        }
-                            //    }
-                            //    break;
+                            case MetaTypeId.TYPE_ARRAY_UINT32:
+                                {
+                                    uint[]? array = null;
+                                    if ((field.Flags & (int)MetaFieldFlags.METAFLAG_PROTO_VARINT) != 0)
+                                    {
+                                        array = ParseArrayVarint<uint>();
+                                    }
+                                    else
+                                    {
+                                        array = ParseArrayFixedUInt32<uint>();
+                                    }
+                                    if (array != null)
+                                    {
+                                        m_visitor.EnterArrayUInt32(field, array);
+                                    }
+                                }
+                                break;
+                            case MetaTypeId.TYPE_ARRAY_INT64:
+                                {
+                                    long[]? array = null;
+                                    if ((field.Flags & (int)MetaFieldFlags.METAFLAG_PROTO_VARINT) != 0)
+                                    {
+                                        array = ParseArrayVarint<long>();
+                                    }
+                                    else if ((field.Flags & (int)MetaFieldFlags.METAFLAG_PROTO_ZIGZAG) != 0)
+                                    {
+                                        array = ParseArrayVarint<long>(true);
+                                    }
+                                    else
+                                    {
+                                        array = ParseArrayFixedUInt64<long>();
+                                    }
+                                    if (array != null)
+                                    {
+                                        m_visitor.EnterArrayInt64(field, array);
+                                    }
+                                }
+                                break;
+                            case MetaTypeId.TYPE_ARRAY_UINT64:
+                                {
+                                    ulong[]? array = null;
+                                    if ((field.Flags & (int)MetaFieldFlags.METAFLAG_PROTO_VARINT) != 0)
+                                    {
+                                        array = ParseArrayVarint<ulong>();
+                                    }
+                                    else
+                                    {
+                                        array = ParseArrayFixedUInt64<ulong>();
+                                    }
+                                    if (array != null)
+                                    {
+                                        m_visitor.EnterArrayUInt64(field, array);
+                                    }
+                                }
+                                break;
+                            case MetaTypeId.TYPE_ARRAY_FLOAT:
+                                {
+                                    float[]? array = ParseArrayFixedFloat();
+                                    if (array != null)
+                                    {
+                                        m_visitor.EnterArrayFloat(field, array);
+                                    }
+                                }
+                                break;
+                            case MetaTypeId.TYPE_ARRAY_DOUBLE:
+                                {
+                                    double[]? array = ParseArrayFixedDouble();
+                                    if (array != null)
+                                    {
+                                        m_visitor.EnterArrayDouble(field, array);
+                                    }
+                                }
+                                break;
+                            case MetaTypeId.TYPE_ARRAY_STRING:
+                                {
+                                    IList<string>? array = ParseArrayString();
+                                    if (array != null)
+                                    {
+                                        m_visitor.EnterArrayString(field, array);
+                                    }
+                                }
+                                break;
+                            case MetaTypeId.TYPE_ARRAY_BYTES:
+                                {
+                                    IList<byte[]>? array = ParseArrayBytes();
+                                    if (array != null)
+                                    {
+                                        m_visitor.EnterArrayBytes(field, array);
+                                    }
+                                }
+                                break;
+                            case MetaTypeId.TYPE_ARRAY_STRUCT:
+                                ParseArrayStruct(field);
+                                break;
+                            case MetaTypeId.TYPE_ARRAY_ENUM:
+                                {
+                                    int[]? array = ParseArrayVarint<int>();
+                                    if (array != null)
+                                    {
+                                        m_visitor.EnterArrayEnum(field, array);
+                                    }
+                                }
+                                break;
                             case MetaTypeId.OFFSET_ARRAY_FLAG:
                                 Debug.Assert(false);
                                 break;
@@ -482,47 +456,226 @@ namespace finalmq
         }
 
 
-        void ParseArrayStruct(MetaField field, int offset, int size)
+        void ParseArrayStruct(MetaField field)
         {
+            if (m_offset == -1)
+            {
+                return;
+            }
 
+            WireType wireType = (WireType)(m_tag & 0x7);
+
+            MetaStruct? stru = MetaDataGlobal.Instance.GetStruct(field);
+            if (stru == null)
+            {
+                m_visitor.NotifyError("", "typename not found");
+                Skip(wireType);
+                return;
+            }
+
+            uint tag = m_tag;
+            m_tag = 0;
+            if (wireType == WireType.WIRETYPE_LENGTH_DELIMITED)
+            {
+
+                MetaField? fieldWithoutArray = MetaDataGlobal.Instance.GetArrayField(field);
+                Debug.Assert(fieldWithoutArray != null);
+                m_visitor.EnterArrayStruct(field);
+                do
+                {
+                    int sizeBuffer = (int)ParseVarint();
+                    if ((sizeBuffer >= 0 && sizeBuffer <= m_size) && (m_offset != -1))
+                    {
+                        m_visitor.EnterStruct(fieldWithoutArray);
+                        ParserProto parser = new ParserProto(m_visitor, m_buffer, m_offset, sizeBuffer);
+                        bool res = parser.ParseStructIntern(stru);
+                        m_visitor.ExitStruct(fieldWithoutArray);
+                        if (res)
+                        {
+                            m_offset += sizeBuffer;
+                            m_size -= sizeBuffer;
+                        }
+                        else
+                        {
+                            m_offset = -1;
+                            m_size = 0;
+                            break;
+                        }
+
+                        if (m_size > 0)
+                        {
+                            m_tag = (uint)ParseVarint();
+                        }
+                        else
+                        {
+                            m_tag = 0;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        m_offset = -1;
+                        m_size = 0;
+                        break;
+                    }
+                } while ((m_tag == tag) && (m_offset != -1));
+                m_visitor.ExitArrayStruct(field);
+            }
+            else
+            {
+                Skip(wireType);
+            }
         }
 
-        bool parseArrayString<T>(IList<T> array)
+        IList<string>? ParseArrayString()
         {
-            return false;
+            if (m_offset == -1)
+            {
+                return null;
+            }
+            IList<string>? arr = null;
+            WireType wireType = (WireType)(m_tag & 0x7);
+            uint tag = m_tag;
+            m_tag = 0;
+            if (wireType == WireType.WIRETYPE_LENGTH_DELIMITED)
+            {
+                arr = new List<string>();
+                do
+                {
+                    int sizeBuffer = (int)ParseVarint();
+                    if ((sizeBuffer >= 0 && sizeBuffer <= m_size) && (m_offset != -1))
+                    {
+                        string v = Encoding.UTF8.GetString(m_buffer, m_offset, sizeBuffer);
+                        arr.Add(v);
+                        m_offset += sizeBuffer;
+                        m_size -= sizeBuffer;
+                        if (m_size > 0)
+                        {
+                            m_tag = (uint)ParseVarint();
+                        }
+                        else
+                        {
+                            m_tag = 0;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        m_offset = -1;
+                        m_size = 0;
+                        break;
+                    }
+                } while ((m_tag == tag) && (m_offset != -1));
+            }
+            else
+            {
+                Skip(wireType);
+            }
+
+            return arr;
         }
 
-        bool ParseFixedValueUInt32(out ulong value)
+        IList<byte[]>? ParseArrayBytes()
+        {
+            if (m_offset == -1)
+            {
+                return null;
+            }
+            IList<byte[]>? arr = null;
+            WireType wireType = (WireType)(m_tag & 0x7);
+            uint tag = m_tag;
+            m_tag = 0;
+            if (wireType == WireType.WIRETYPE_LENGTH_DELIMITED)
+            {
+                arr = new List<byte[]>();
+                do
+                {
+                    int sizeBuffer = (int)ParseVarint();
+                    if ((sizeBuffer >= 0 && sizeBuffer <= m_size) && (m_offset != -1))
+                    {
+                        byte[] v = new byte[sizeBuffer];
+                        System.Array.Copy(m_buffer, m_offset, v, 0, sizeBuffer);
+                        arr.Add(v);
+                        m_offset += sizeBuffer;
+                        m_size -= sizeBuffer;
+                        if (m_size > 0)
+                        {
+                            m_tag = (uint)ParseVarint();
+                        }
+                        else
+                        {
+                            m_tag = 0;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        m_offset = -1;
+                        m_size = 0;
+                        break;
+                    }
+                } while ((m_tag == tag) && (m_offset != -1));
+            }
+            else
+            {
+                Skip(wireType);
+            }
+
+            return arr;
+        }
+
+        T ParseFixedValue<T>(out bool ok)
         {
             WireType wireType = (WireType)(m_tag & 0x7);
             m_tag = 0;
             if (wireType == WireType.WIRETYPE_FIXED32)
             {
-                value = ParseFixedUInt32();
-                return true;
+                ok = true;
+                uint v = ParseFixedUInt32();
+                return (T)(dynamic)v;
+            }
+            else if (wireType == WireType.WIRETYPE_FIXED64)
+            {
+                ok = true;
+                ulong v = ParseFixedUInt64();
+                return (T)(dynamic)v;
             }
             Skip(wireType);
-            value = 0;
-            return false;
+            ok = false;
+            return (T)(dynamic)0;
         }
 
-        bool ParseFixedValueUInt64(out ulong value)
+        uint ParseFixedValueUInt32(out bool ok)
+        {
+            WireType wireType = (WireType)(m_tag & 0x7);
+            m_tag = 0;
+            if (wireType == WireType.WIRETYPE_FIXED32)
+            {
+                ok = true;
+                return ParseFixedUInt32();
+            }
+            Skip(wireType);
+            ok = false;
+            return 0;
+        }
+
+        ulong ParseFixedValueUInt64(out bool ok)
         {
             WireType wireType = (WireType)(m_tag & 0x7);
             m_tag = 0;
             if (wireType == WireType.WIRETYPE_FIXED64)
             {
-                value = ParseFixedUInt64();
-                return true;
+                ok = true;
+                return ParseFixedUInt64();
             }
             Skip(wireType);
-            value = 0;
-            return false;
+            ok = false;
+            return 0;
         }
 
-        ulong ParseFixedUInt32()
+        uint ParseFixedUInt32()
         {
-            ulong value = 0;
+            uint value = 0;
             if (m_size >= sizeof(uint))
             {
                 value |= m_buffer[m_offset];
@@ -580,18 +733,31 @@ namespace finalmq
             return 0;
         }
 
-        bool ParseVarintUInt64(out ulong value)
+        T ParseVarint<T>(out bool ok)
         {
             WireType wireType = (WireType)(m_tag & 0x7);
             m_tag = 0;
             if (wireType == WireType.WIRETYPE_VARINT)
             {
-                value = ParseVarint();
-                return true;
+                ok = true;
+                return (T)(dynamic)ParseVarint();
             }
-            value = 0;
             Skip(wireType);
-            return false;
+            ok = false;
+            return (T)(dynamic)0;
+        }
+        ulong ParseVarintUInt64(out bool ok)
+        {
+            WireType wireType = (WireType)(m_tag & 0x7);
+            m_tag = 0;
+            if (wireType == WireType.WIRETYPE_VARINT)
+            {
+                ok = true;
+                return ParseVarint();
+            }
+            Skip(wireType);
+            ok = false;
+            return 0;
         }
         ulong ParseVarint()
         {
@@ -631,21 +797,365 @@ namespace finalmq
         }
 
 
-        bool ParseZigZagUInt64(out ulong value)
+        ulong ParseZigZagUInt64(out bool ok)
         {
-            bool ok = ParseVarintUInt64(out value);
+            ulong value = ParseVarintUInt64(out ok);
             value = ZigZagUInt64(value);
-            return ok;
+            return value;
         }
 
-        T[]? ParseArrayFixed<T>(WireType wireType)
+        T ParseZigZag<T>(out bool ok)
         {
-            return null;
+            ulong value = ParseVarintUInt64(out ok);
+            value = ZigZagUInt64(value);
+            return (T)(dynamic)value;
+        }
+
+        T[]? ParseArrayFixedUInt32<T>()
+        {
+            if (m_offset == -1)
+            {
+                return null;
+            }
+            WireType wireType = (WireType)(m_tag & 0x7);
+            uint tag = m_tag;
+            m_tag = 0;
+            T[]? arr = null;
+            switch (wireType)
+            {
+                case WireType.WIRETYPE_FIXED32:
+                    ArrayBuilder<T> arrayBuilder = new ArrayBuilder<T>();
+                    do
+                    {
+                        uint value = ParseFixedUInt32();
+                        if (m_offset != -1)
+                        {
+                            arrayBuilder.Add((T)(dynamic)value);
+                            if (m_size > 0)
+                            {
+                                m_tag = (uint)ParseVarint();
+                            }
+                            else
+                            {
+                                m_tag = 0;
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            m_offset = -1;
+                            m_size = 0;
+                        }
+                    } while ((m_tag == tag) && (m_offset != -1));
+                    if (m_offset != -1)
+                    {
+                        arr = arrayBuilder.ToArray();
+                    }
+                    break;
+
+                case WireType.WIRETYPE_LENGTH_DELIMITED:
+                    int sizeBuffer = (int)ParseVarint();
+                    if ((sizeBuffer >= 0 && sizeBuffer <= m_size) && (m_offset != -1))
+                    {
+                        int sizeElements = sizeBuffer / 4;
+                        T[] array = new T[sizeElements];
+
+                        for (int i = 0; i < sizeElements; i++)
+                        {
+                            array[i] = (T)(dynamic)ParseFixedUInt32();
+                        }
+                        arr = array;
+                    }
+                    else
+                    {
+                        m_offset = -1;
+                        m_size = 0;
+                    }
+                    break;
+                default:
+                    Skip(wireType);
+                    break;
+            }
+
+            return arr;
+        }
+
+        T[]? ParseArrayFixedUInt64<T>()
+        {
+            if (m_offset == -1)
+            {
+                return null;
+            }
+            WireType wireType = (WireType)(m_tag & 0x7);
+            uint tag = m_tag;
+            m_tag = 0;
+            T[]? arr = null;
+            switch (wireType)
+            {
+                case WireType.WIRETYPE_FIXED64:
+                    ArrayBuilder<T> arrayBuilder = new ArrayBuilder<T>();
+                    do
+                    {
+                        ulong value = ParseFixedUInt64();
+                        if (m_offset != -1)
+                        {
+                            arrayBuilder.Add((T)(dynamic)value);
+                            if (m_size > 0)
+                            {
+                                m_tag = (uint)ParseVarint();
+                            }
+                            else
+                            {
+                                m_tag = 0;
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            m_offset = -1;
+                            m_size = 0;
+                        }
+                    } while ((m_tag == tag) && (m_offset != -1));
+                    if (m_offset != -1)
+                    {
+                        arr = arrayBuilder.ToArray();
+                    }
+                    break;
+
+                case WireType.WIRETYPE_LENGTH_DELIMITED:
+                    int sizeBuffer = (int)ParseVarint();
+                    if ((sizeBuffer >= 0 && sizeBuffer <= m_size) && (m_offset != -1))
+                    {
+                        int sizeElements = sizeBuffer / 8;
+                        T[] array = new T[sizeElements];
+
+                        for (int i = 0; i < sizeElements; i++)
+                        {
+                            array[i] = (T)(dynamic)ParseFixedUInt64();
+                        }
+                        arr = array;
+                    }
+                    else
+                    {
+                        m_offset = -1;
+                        m_size = 0;
+                    }
+                    break;
+                default:
+                    Skip(wireType);
+                    break;
+            }
+
+            return arr;
+        }
+
+        float[]? ParseArrayFixedFloat()
+        {
+            if (m_offset == -1)
+            {
+                return null;
+            }
+            WireType wireType = (WireType)(m_tag & 0x7);
+            uint tag = m_tag;
+            m_tag = 0;
+            float[]? arr = null;
+            switch (wireType)
+            {
+                case WireType.WIRETYPE_FIXED32:
+                    ArrayBuilder<float> arrayBuilder = new ArrayBuilder<float>();
+                    do
+                    {
+                        uint value = ParseFixedUInt32();
+                        if (m_offset != -1)
+                        {
+                            float v = BitConverter.UInt32BitsToSingle(value);
+                            arrayBuilder.Add(v);
+                            if (m_size > 0)
+                            {
+                                m_tag = (uint)ParseVarint();
+                            }
+                            else
+                            {
+                                m_tag = 0;
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            m_offset = -1;
+                            m_size = 0;
+                        }
+                    } while ((m_tag == tag) && (m_offset != -1));
+                    if (m_offset != -1)
+                    {
+                        arr = arrayBuilder.ToArray();
+                    }
+                    break;
+
+                case WireType.WIRETYPE_LENGTH_DELIMITED:
+                    int sizeBuffer = (int)ParseVarint();
+                    if ((sizeBuffer >= 0 && sizeBuffer <= m_size) && (m_offset != -1))
+                    {
+                        int sizeElements = sizeBuffer / 4;
+                        float[] array = new float[sizeElements];
+
+                        for (int i = 0; i < sizeElements; i++)
+                        {
+                            float v = BitConverter.UInt32BitsToSingle(ParseFixedUInt32());
+                            array[i] = v;
+                        }
+                        arr = array;
+                    }
+                    else
+                    {
+                        m_offset = -1;
+                        m_size = 0;
+                    }
+                    break;
+                default:
+                    Skip(wireType);
+                    break;
+            }
+
+            return arr;
+        }
+
+        double[]? ParseArrayFixedDouble()
+        {
+            if (m_offset == -1)
+            {
+                return null;
+            }
+            WireType wireType = (WireType)(m_tag & 0x7);
+            uint tag = m_tag;
+            m_tag = 0;
+            double[]? arr = null;
+            switch (wireType)
+            {
+                case WireType.WIRETYPE_FIXED64:
+                    ArrayBuilder<double> arrayBuilder = new ArrayBuilder<double>();
+                    do
+                    {
+                        ulong value = ParseFixedUInt64();
+                        if (m_offset != -1)
+                        {
+                            double v = BitConverter.UInt64BitsToDouble(value);
+                            arrayBuilder.Add(v);
+                            if (m_size > 0)
+                            {
+                                m_tag = (uint)ParseVarint();
+                            }
+                            else
+                            {
+                                m_tag = 0;
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            m_offset = -1;
+                            m_size = 0;
+                        }
+                    } while ((m_tag == tag) && (m_offset != -1));
+                    if (m_offset != -1)
+                    {
+                        arr = arrayBuilder.ToArray();
+                    }
+                    break;
+
+                case WireType.WIRETYPE_LENGTH_DELIMITED:
+                    int sizeBuffer = (int)ParseVarint();
+                    if ((sizeBuffer >= 0 && sizeBuffer <= m_size) && (m_offset != -1))
+                    {
+                        int sizeElements = sizeBuffer / 8;
+                        double[] array = new double[sizeElements];
+
+                        for (int i = 0; i < sizeElements; i++)
+                        {
+                            double v = BitConverter.UInt64BitsToDouble(ParseFixedUInt32());
+                            array[i] = v;
+                        }
+                        arr = array;
+                    }
+                    else
+                    {
+                        m_offset = -1;
+                        m_size = 0;
+                    }
+                    break;
+                default:
+                    Skip(wireType);
+                    break;
+            }
+
+            return arr;
         }
 
         T[]? ParseArrayVarint<T>(bool zigzag = false)
         {
-            return null;
+            WireType wireType = (WireType)(m_tag & 0x7);
+            uint tag = m_tag;
+            m_tag = 0;
+            ArrayBuilder<T>? array = null;
+            switch (wireType)
+            {
+                case WireType.WIRETYPE_VARINT:
+                    array = new ArrayBuilder<T>();
+                    do
+                    {
+                        ulong value = ParseVarint();
+                        if (m_offset != -1)
+                        {
+                            ulong v = (zigzag) ? ZigZagUInt64(value) : value;
+                            array.Add((T)(dynamic)v);
+                            if (m_size > 0)
+                            {
+                                m_tag = (uint)ParseVarint();
+                            }
+                            else
+                            {
+                                m_tag = 0;
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            m_offset = -1;
+                            m_size = 0;
+                            array = null;
+                            break;
+                        }
+                    } while ((m_tag == tag) && (m_offset != -1));
+                    break;
+                case WireType.WIRETYPE_LENGTH_DELIMITED:
+                    {
+                        array = new ArrayBuilder<T>();
+                        int sizeBuffer = (int)ParseVarint();
+                        if ((sizeBuffer >= 0 && sizeBuffer <= m_size) && (m_offset != -1))
+                        {
+                            int sizeEnd = m_size - sizeBuffer;
+                            sizeEnd = Math.Max(sizeEnd, 0);
+                            while (m_size > sizeEnd)
+                            {
+                                ulong value = ParseVarint();
+                                ulong v = (zigzag) ? ZigZagUInt64(value) : value;
+                                array.Add((T)(dynamic)v);
+                            }
+                        }
+                        else
+                        {
+                            m_offset = -1;
+                            m_size = 0;
+                            array = null;
+                        }
+                    }
+                    break;
+                default:
+                    Skip(wireType);
+                    break;
+            }
+
+            return array?.ToArray();
         }
 
         ulong ZigZagUInt64(ulong value)
@@ -655,6 +1165,45 @@ namespace finalmq
 
         void Skip(WireType wireType)
         {
+            switch (wireType)
+            {
+                case WireType.WIRETYPE_VARINT:
+                    ParseVarint();
+                    break;
+                case WireType.WIRETYPE_FIXED64:
+                    if (m_offset != -1)
+                    {
+                        m_offset += sizeof(ulong);
+                        m_size -= sizeof(ulong);
+                    }
+                    break;
+                case WireType.WIRETYPE_LENGTH_DELIMITED:
+                    {
+                        int len = (int)ParseVarint();
+                        if (m_offset != -1)
+                        {
+                            m_offset += len;
+                            m_size -= len;
+                        }
+                    }
+                    break;
+                case WireType.WIRETYPE_FIXED32:
+                    if (m_offset != -1)
+                    {
+                        m_offset += sizeof(uint);
+                        m_size -= sizeof(uint);
+                    }
+                    break;
+                default:
+                    m_offset = -1;
+                    m_size = 0;
+                    break;
+            }
+            if (m_size < 0)
+            {
+                m_offset = -1;
+                m_size = 0;
+            }
         }
 
         byte[] m_buffer;
