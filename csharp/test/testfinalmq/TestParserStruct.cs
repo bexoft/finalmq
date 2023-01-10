@@ -384,10 +384,9 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            mockVisitor.Setup(x => x.EnterString(fieldString, It.IsAny<byte[]>(), 10, 11))
-                .Callback((MetaField field, byte[] buffer, int offset, int size) =>
+            mockVisitor.Setup(x => x.EnterString(fieldString, It.IsAny<string>()))
+                .Callback((MetaField field, string v) =>
                 {
-                    string v = Encoding.UTF8.GetString(buffer, offset, size);
                     Debug.Assert(v == VALUE_STRING);
                 });
 

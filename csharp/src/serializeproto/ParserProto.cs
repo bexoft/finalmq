@@ -25,7 +25,7 @@ namespace finalmq
             Debug.Assert(m_offset + m_size <= buffer.Length);
         }
 
-        bool ParseStruct(string typeName)
+        public bool ParseStruct(string typeName)
         {
             if (m_offset < 0 || m_size < 0)
             {
@@ -545,7 +545,15 @@ namespace finalmq
                     int sizeBuffer = (int)ParseVarint();
                     if ((sizeBuffer >= 0 && sizeBuffer <= m_size) && (m_offset != -1))
                     {
-                        string v = Encoding.UTF8.GetString(m_buffer, m_offset, sizeBuffer);
+                        string? v = null;
+                        try
+                        {
+                            v = Encoding.UTF8.GetString(m_buffer, m_offset, sizeBuffer);
+                        }
+                        catch (Exception)
+                        {
+                            v = Encoding.ASCII.GetString(m_buffer, m_offset, sizeBuffer);
+                        }
                         arr.Add(v);
                         m_offset += sizeBuffer;
                         m_size -= sizeBuffer;
@@ -680,14 +688,11 @@ namespace finalmq
             {
                 value |= m_buffer[m_offset];
                 ++m_offset;
-                value <<= 8;
-                value |= m_buffer[m_offset];
+                value |= (uint)m_buffer[m_offset] << 8;
                 ++m_offset;
-                value <<= 8;
-                value |= m_buffer[m_offset];
+                value |= (uint)m_buffer[m_offset] << 16;
                 ++m_offset;
-                value <<= 8;
-                value |= m_buffer[m_offset];
+                value |= (uint)m_buffer[m_offset] << 24;
                 ++m_offset;
                 m_size -= sizeof(uint);
                 return value;
@@ -704,26 +709,19 @@ namespace finalmq
             {
                 value |= m_buffer[m_offset];
                 ++m_offset;
-                value <<= 8;
-                value |= m_buffer[m_offset];
+                value |= (ulong)m_buffer[m_offset] << 8;
                 ++m_offset;
-                value <<= 8;
-                value |= m_buffer[m_offset];
+                value |= (ulong)m_buffer[m_offset] << 16;
                 ++m_offset;
-                value <<= 8;
-                value |= m_buffer[m_offset];
+                value |= (ulong)m_buffer[m_offset] << 24;
                 ++m_offset;
-                value <<= 8;
-                value |= m_buffer[m_offset];
+                value |= (ulong)m_buffer[m_offset] << 32;
                 ++m_offset;
-                value <<= 8;
-                value |= m_buffer[m_offset];
+                value |= (ulong)m_buffer[m_offset] << 40;
                 ++m_offset;
-                value <<= 8;
-                value |= m_buffer[m_offset];
+                value |= (ulong)m_buffer[m_offset] << 48;
                 ++m_offset;
-                value <<= 8;
-                value |= m_buffer[m_offset];
+                value |= (ulong)m_buffer[m_offset] << 56;
                 ++m_offset;
                 m_size -= sizeof(ulong);
                 return value;
