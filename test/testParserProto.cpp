@@ -438,7 +438,7 @@ TEST_F(TestParserProto, testEnumNotAvailable)
     {
         testing::InSequence seq;
         EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
-        EXPECT_CALL(mockVisitor, enterEnum(MatcherMetaField(*fieldValue), 0)).Times(1);
+        EXPECT_CALL(mockVisitor, enterEnum(MatcherMetaField(*fieldValue), VALUE)).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
 
@@ -871,7 +871,7 @@ TEST_F(TestParserProto, testArrayEnum)
     {
         testing::InSequence seq;
         EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
-        EXPECT_CALL(mockVisitor, enterArrayEnum(MatcherMetaField(*fieldValue), std::vector<std::int32_t>({VALUE1, VALUE2, VALUE3, 0}))).Times(1);
+        EXPECT_CALL(mockVisitor, enterArrayEnum(MatcherMetaField(*fieldValue), std::vector<std::int32_t>({VALUE1, VALUE2, VALUE3, VALUE4}))).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
 

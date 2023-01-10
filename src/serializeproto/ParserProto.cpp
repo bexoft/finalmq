@@ -301,7 +301,9 @@ bool ParserProto::parseArrayVarint(std::vector<T>& array)
             int sizeBuffer = static_cast<std::int32_t>(parseVarint());
             if ((sizeBuffer >= 0 && sizeBuffer <= m_size) && m_ptr)
             {
-                while (m_size > 0)
+                int sizeEnd = m_size - sizeBuffer;
+                sizeEnd = std::max(sizeEnd, 0);
+                while (m_size > sizeEnd)
                 {
                     std::uint64_t value = parseVarint();
                     T v = (ZIGZAG) ? static_cast<T>(zigzag(value)) : static_cast<T>(value);
@@ -640,15 +642,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         bool ok = parseVarint(value);
                         if (ok)
                         {
-                            const MetaEnum* metaEnum = MetaDataGlobal::instance().getEnum(*field);
-                            if (metaEnum)
-                            {
-                                if (!metaEnum->isId(value))
-                                {
-                                    value = 0;
-                                }
-                                m_visitor.enterEnum(*field, value);
-                            }
+                            m_visitor.enterEnum(*field, value);
                         }
                     }
                     break;
@@ -791,18 +785,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         bool ok = parseArrayVarint(array);
                         if (ok)
                         {
-                            const MetaEnum* metaEnum = MetaDataGlobal::instance().getEnum(*field);
-                            if (metaEnum)
-                            {
-                                for (size_t i = 0; i < array.size(); ++i)
-                                {
-                                    if (!metaEnum->isId(array[i]))
-                                    {
-                                        array[i] = 0;
-                                    }
-                                }
-                                m_visitor.enterArrayEnum(*field, std::move(array));
-                            }
+                            m_visitor.enterArrayEnum(*field, std::move(array));
                         }
                     }
                     break;
