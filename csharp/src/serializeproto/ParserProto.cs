@@ -148,7 +148,7 @@ namespace finalmq
                 {
                     int id = (int)(m_tag >> 3);
                     int index = id - INDEX2ID;
-                    MetaField field = stru.GetFieldByIndex(index);
+                    MetaField? field = stru.GetFieldByIndex(index);
                     if (field != null)
                     {
                         switch (field.TypeId)
@@ -304,7 +304,7 @@ namespace finalmq
                                 break;
                             case MetaTypeId.TYPE_ARRAY_BOOL:
                                 {
-                                    bool[]? array = ParseArrayVarint<bool>();
+                                    bool[]? array = ParseArrayVarintBool();
                                     if (array != null)
                                     {
                                         m_visitor.EnterArrayBool(field, array);
@@ -1070,7 +1070,7 @@ namespace finalmq
 
                         for (int i = 0; i < sizeElements; i++)
                         {
-                            double v = BitConverter.UInt64BitsToDouble(ParseFixedUInt32());
+                            double v = BitConverter.UInt64BitsToDouble(ParseFixedUInt64());
                             array[i] = v;
                         }
                         arr = array;
@@ -1138,6 +1138,71 @@ namespace finalmq
                                 ulong value = ParseVarint();
                                 ulong v = (zigzag) ? ZigZagUInt64(value) : value;
                                 array.Add((T)(dynamic)v);
+                            }
+                        }
+                        else
+                        {
+                            m_offset = -1;
+                            m_size = 0;
+                            array = null;
+                        }
+                    }
+                    break;
+                default:
+                    Skip(wireType);
+                    break;
+            }
+
+            return array?.ToArray();
+        }
+
+        bool[]? ParseArrayVarintBool()
+        {
+            WireType wireType = (WireType)(m_tag & 0x7);
+            uint tag = m_tag;
+            m_tag = 0;
+            ArrayBuilder<bool>? array = null;
+            switch (wireType)
+            {
+                case WireType.WIRETYPE_VARINT:
+                    array = new ArrayBuilder<bool>();
+                    do
+                    {
+                        ulong value = ParseVarint();
+                        if (m_offset != -1)
+                        {
+                            array.Add(value != 0);
+                            if (m_size > 0)
+                            {
+                                m_tag = (uint)ParseVarint();
+                            }
+                            else
+                            {
+                                m_tag = 0;
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            m_offset = -1;
+                            m_size = 0;
+                            array = null;
+                            break;
+                        }
+                    } while ((m_tag == tag) && (m_offset != -1));
+                    break;
+                case WireType.WIRETYPE_LENGTH_DELIMITED:
+                    {
+                        array = new ArrayBuilder<bool>();
+                        int sizeBuffer = (int)ParseVarint();
+                        if ((sizeBuffer >= 0 && sizeBuffer <= m_size) && (m_offset != -1))
+                        {
+                            int sizeEnd = m_size - sizeBuffer;
+                            sizeEnd = Math.Max(sizeEnd, 0);
+                            while (m_size > sizeEnd)
+                            {
+                                ulong value = ParseVarint();
+                                array.Add(value != 0);
                             }
                         }
                         else

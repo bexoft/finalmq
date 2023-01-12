@@ -45,9 +45,13 @@ namespace finalmq
             get { return m_description; }
             set { m_description = value; }
         }
-        public MetaField GetFieldByIndex(int index)
+        public MetaField? GetFieldByIndex(int index)
         {
-            return m_fields[index];
+            if (index >= 0 && index < m_fields.Count)
+            {
+                return m_fields[index];
+            }
+            return null;
         }
 
         public MetaField? GetFieldByName(string name)
