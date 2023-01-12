@@ -31,7 +31,7 @@ namespace finalmq
             int size = stru.FieldsSize;
             for (int i = 0; i < size; ++i)
             {
-                MetaField field = stru.GetFieldByIndex(i);
+                MetaField field = stru.GetFieldByIndex(i)!;
                 PropertyInfo? property = type.GetProperty(field.Name);
                 if (property != null)
                 {

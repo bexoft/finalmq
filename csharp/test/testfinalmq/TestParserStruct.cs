@@ -841,7 +841,9 @@ namespace testfinalmq
 
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
-            var root = new test.TestArrayStruct(new List<test.TestStruct> { new test.TestStruct(new test.TestInt32(VALUE1_INT32), new test.TestString(VALUE1_STRING), 0), new test.TestStruct(new test.TestInt32(VALUE2_INT32), new test.TestString(VALUE2_STRING), 0), new test.TestStruct() }, 0);
+            var root = new test.TestArrayStruct(new List<test.TestStruct> { new test.TestStruct(new test.TestInt32(VALUE1_INT32), new test.TestString(VALUE1_STRING), 0), 
+                                                                            new test.TestStruct(new test.TestInt32(VALUE2_INT32), new test.TestString(VALUE2_STRING), 0), 
+                                                                            new test.TestStruct() }, 0);
             ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
             bool res = parser.ParseStruct();
             Debug.Assert(res);
@@ -868,8 +870,18 @@ namespace testfinalmq
             //            mockVisitor.Verify(x => x.ExitStruct(fieldStructWithoutArray), Times.Once);
 
             //            mockVisitor.Verify(x => x.EnterStruct(fieldStructWithoutArray), Times.Once);
+            //            mockVisitor.Verify(x => x.EnterStruct(fieldStructInt32), Times.Once);
+            mockVisitor.Verify(x => x.EnterInt32(fieldInt32, 0), Times.Once);
+            //            mockVisitor.Verify(x => x.ExitStruct(fieldStructInt32), Times.Once);
+            //            mockVisitor.Verify(x => x.EnterStruct(fieldStructString), Times.Once);
+            //            mockVisitor.Verify(x => x.EnterString(fieldString, It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>()), Times.Once);
+            //            mockVisitor.Verify(x => x.ExitStruct(fieldStructString), Times.Once);
             //            mockVisitor.Verify(x => x.ExitStruct(fieldStructWithoutArray), Times.Once);
 
+            //            mockVisitor.Verify(x => x.EnterStruct(fieldStructWithoutArray), Times.Once);
+            //            mockVisitor.Verify(x => x.ExitStruct(fieldStructWithoutArray), Times.Once);
+
+            mockVisitor.Verify(x => x.ExitArrayStruct(fieldStruct), Times.Once);
             mockVisitor.Verify(x => x.Finished(), Times.Once);
         }
 
