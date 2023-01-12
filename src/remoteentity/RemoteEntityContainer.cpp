@@ -83,7 +83,6 @@ const EnumInfo ConnectionEvent::_enumInfo = {
 
 RemoteEntityContainer::RemoteEntityContainer()
     : m_protocolSessionContainer(std::make_unique<ProtocolSessionContainer>())
-    , m_fileTransferReply(std::make_shared<FileTransferReply>())
     , m_executor(m_protocolSessionContainer->getExecutor())
 {
 }
@@ -304,7 +303,7 @@ EntityId RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> remoteE
         m_name2entity[name] = remoteEntity;
     }
 
-    re->initEntity(entityId, name, m_fileTransferReply, m_executor);
+    re->initEntity(entityId, name, m_executor);
     m_entityId2entity[entityId] = remoteEntity;
     m_entitiesChanged.fetch_add(1, std::memory_order_acq_rel);
     lock.unlock();

@@ -1005,13 +1005,12 @@ bool RemoteEntity::isEntityRegistered() const
 
 
 
-void RemoteEntity::initEntity(EntityId entityId, const std::string& entityName, const std::shared_ptr<FileTransferReply>& fileTransferReply, const IExecutorPtr& executor)
+void RemoteEntity::initEntity(EntityId entityId, const std::string& entityName, const IExecutorPtr& executor)
 {
     // an entity shall not be registered twice.
     assert(!m_initialized.load(std::memory_order_acquire));
     if (!m_initialized.load(std::memory_order_acquire))
     {
-        m_fileTransferReply = fileTransferReply;
         m_entityId = entityId;
         m_entityName = entityName;
         m_peerManager->setEntityId(entityId);
@@ -1174,7 +1173,7 @@ void RemoteEntity::receivedRequest(ReceiveData& receiveData)
         assert(func);
     }
 
-    RequestContextPtr requestContext = std::make_shared<RequestContext>(m_peerManager, m_entityId, receiveData, m_fileTransferReply);
+    RequestContextPtr requestContext = std::make_shared<RequestContext>(m_peerManager, m_entityId, receiveData);
     assert(requestContext);
 
     if (func && *func)

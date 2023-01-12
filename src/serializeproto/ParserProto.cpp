@@ -301,7 +301,7 @@ bool ParserProto::parseArrayVarint(std::vector<T>& array)
             int sizeBuffer = static_cast<std::int32_t>(parseVarint());
             if ((sizeBuffer >= 0 && sizeBuffer <= m_size) && m_ptr)
             {
-                int sizeEnd = m_size - sizeBuffer;
+                int sizeEnd = static_cast<int>(m_size - sizeBuffer);
                 sizeEnd = std::max(sizeEnd, 0);
                 while (m_size > sizeEnd)
                 {

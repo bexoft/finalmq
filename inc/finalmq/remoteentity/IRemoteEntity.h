@@ -567,7 +567,7 @@ struct IRemoteEntity
 
 private:
     // methods for RemoteEntityContainer
-    virtual void initEntity(EntityId entityId, const std::string& entityName, const std::shared_ptr<FileTransferReply>& fileTransferReply, const IExecutorPtr& executorPollerThread) = 0;
+    virtual void initEntity(EntityId entityId, const std::string& entityName, const IExecutorPtr& executorPollerThread) = 0;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) = 0;
     virtual void virtualSessionDisconnected(const IProtocolSessionPtr& session, const std::string& virtualSessionId) = 0;
     virtual void receivedRequest(ReceiveData& receiveData) = 0;

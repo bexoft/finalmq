@@ -223,7 +223,6 @@ private:
     std::chrono::time_point<std::chrono::steady_clock>          m_lastCheckTime;
     std::list<std::string>                                      m_pureDataPaths;
 //    std::list<std::string>                                      m_pureDataPathPrefixes;
-    const std::shared_ptr<FileTransferReply>                    m_fileTransferReply;
     const IExecutorPtr                                          m_executor;
 
     std::atomic_int64_t                                         m_entitiesChanged = {};

@@ -33,15 +33,6 @@ namespace finalmq {
 
 
 
-FileTransferReply::FileTransferReply()
-{
-}
-
-FileTransferReply::~FileTransferReply()
-{
-}
-
-
 bool FileTransferReply::replyFile(const RequestContextPtr& requestContext, const std::string& filename, IMessage::Metainfo* metainfo)
 {
     bool handeled = false;

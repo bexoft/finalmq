@@ -35,13 +35,10 @@ typedef std::shared_ptr<RequestContext> RequestContextPtr;
 class SYMBOLEXP FileTransferReply
 {
 public:
-    FileTransferReply();
-    ~FileTransferReply();
-
-    bool replyFile(const RequestContextPtr& requestContext, const std::string& filename, IMessage::Metainfo* metainfo = nullptr);
+    static bool replyFile(const RequestContextPtr& requestContext, const std::string& filename, IMessage::Metainfo* metainfo = nullptr);
 
 private:
-    std::string                 m_baseDirectory;
+    FileTransferReply() = delete;
 };
 
 

@@ -142,7 +142,7 @@ typedef std::shared_ptr<PeerManager> PeerManagerPtr;
 class RequestContext : public std::enable_shared_from_this<RequestContext>
 {
 public:
-    inline RequestContext(const PeerManagerPtr& sessionIdEntityIdToPeerId, EntityId entityIdSrc, ReceiveData& receiveData, const std::shared_ptr<FileTransferReply>& fileTransferReply)
+    inline RequestContext(const PeerManagerPtr& sessionIdEntityIdToPeerId, EntityId entityIdSrc, ReceiveData& receiveData)
         : m_peerManager(sessionIdEntityIdToPeerId)
         , m_session(receiveData.session)
         , m_virtualSessionId(std::move(receiveData.virtualSessionId))
@@ -152,7 +152,6 @@ public:
         , m_replySent(false)
         , m_metainfo(std::move(receiveData.message->getAllMetainfo()))
         , m_echoData(std::move(receiveData.message->getEchoData()))
-        , m_fileTransferReply(fileTransferReply)
     {
     }
 
@@ -208,7 +207,7 @@ public:
 
     bool replyFile(const std::string& filename, IMessage::Metainfo* metainfo = nullptr)
     {
-        bool handeled = m_fileTransferReply->replyFile(shared_from_this(), filename, metainfo);
+        bool handeled = FileTransferReply::replyFile(shared_from_this(), filename, metainfo);
         return handeled;
     }
 
@@ -275,7 +274,6 @@ private:
     bool                            m_replySent = false;
     IMessage::Metainfo              m_metainfo;
     Variant                         m_echoData;
-    std::shared_ptr<FileTransferReply>  m_fileTransferReply;
 
     friend class RemoteEntity;
 };
@@ -327,7 +325,7 @@ public:
     virtual PeerId createPublishPeer(const IProtocolSessionPtr& session, const std::string& entityName) override;
 
 private:
-    virtual void initEntity(EntityId entityId, const std::string& entityName, const std::shared_ptr<FileTransferReply>& fileTransferReply, const IExecutorPtr& executor) override;
+    virtual void initEntity(EntityId entityId, const std::string& entityName, const IExecutorPtr& executor) override;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) override;
     virtual void virtualSessionDisconnected(const IProtocolSessionPtr& session, const std::string& virtualSessionId) override;
     virtual void receivedRequest(ReceiveData& receiveData) override;
@@ -380,7 +378,6 @@ private:
     std::list<FunctionVar>              m_funcCommandsVar;
     std::list<FunctionVar>              m_funcCommandsVarStar;
     const std::shared_ptr<PeerManager>  m_peerManager;
-    std::shared_ptr<FileTransferReply>  m_fileTransferReply;
     IExecutorPtr                        m_executor;
     std::atomic<bool>                   m_initialized{false};
     mutable std::atomic_uint64_t        m_nextCorrelationId{1};
