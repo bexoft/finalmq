@@ -378,8 +378,8 @@ void ProtocolMessage::downsizeLastSendHeader(ssize_t newSize)
     assert(!m_headerBuffers.empty());
     assert(m_sendBufferRefs.size() == m_payloadBuffers.size() + m_headerBuffers.size());
     auto itSendBufferRefs = m_itSendBufferRefsPayloadBegin;
+    assert(itSendBufferRefs != m_sendBufferRefs.begin());
     --itSendBufferRefs;
-    assert(itSendBufferRefs != m_sendBufferRefs.end());
     ssize_t& sizeCurrent = itSendBufferRefs->second;
     assert(newSize <= sizeCurrent);
     m_sizeSendBufferTotal += (newSize - sizeCurrent);

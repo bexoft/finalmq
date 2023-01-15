@@ -190,28 +190,40 @@ void RemoteEntityContainer::unbind(const std::string& endpoint)
     m_protocolSessionContainer->unbind(endpointProtocol);
 }
 
-IProtocolSessionPtr RemoteEntityContainer::connect(const std::string& endpoint, const ConnectProperties& connectProperties)
+SessionInfo RemoteEntityContainer::connect(const std::string& endpoint, const ConnectProperties& connectProperties)
 {
     size_t ixEndpoint = endpoint.find_last_of(':');
     if (ixEndpoint == std::string::npos)
     {
-        return nullptr;
+        return {};
     }
     std::string contentTypeName = endpoint.substr(ixEndpoint + 1, endpoint.size() - (ixEndpoint + 1));
     int contentType = RemoteEntityFormatRegistry::instance().getContentType(contentTypeName);
     if (contentType == 0)
     {
         streamError << "ContentType not found: " << contentTypeName;
-        return nullptr;
+        return {};
     }
     std::string endpointProtocol = endpoint.substr(0, ixEndpoint);
 
     IProtocolSessionPtr session = m_protocolSessionContainer->connect(endpointProtocol, this, connectProperties, contentType);
     subscribeEntityNames(session);
-    return session;
+    std::weak_ptr<IRemoteEntityContainer> thisEntityContainer = weak_from_this();
+    return createSessionInfo(session);
 }
 
-
+SessionInfo RemoteEntityContainer::createSessionInfo(const IProtocolSessionPtr& session)
+{
+    std::weak_ptr<IRemoteEntityContainer> thisEntityContainer = weak_from_this();
+    if (thisEntityContainer.lock())
+    {
+        return { thisEntityContainer, session };
+    }
+    else
+    {
+        return { this, session };
+    }
+}
 
 void RemoteEntityContainer::subscribeEntityNames(const IProtocolSessionPtr& session)
 {
@@ -279,31 +291,33 @@ EntityId RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> remoteE
     }
 
     auto re = remoteEntity.lock();
-    if (!re || re->isEntityRegistered())
+    if (!re)
     {
-        streamError << "entity is invalid or already registered";
+        streamError << "entity is invalid";
         return ENTITYID_INVALID;
     }
 
     std::unique_lock<std::mutex> lock(m_mutex);
+
     if (!name.empty())
     {
         auto it = m_name2entity.find(name);
         if (it != m_name2entity.end())
         {
+            streamError << "Entity with name " << name << " was already registered";
             return ENTITYID_INVALID;
         }
     }
 
-    EntityId entityId = m_nextEntityId;
-    ++m_nextEntityId;
+    EntityId entityId = re->getEntityId();
+
+    m_entityId2name[entityId] = name;
 
     if (!name.empty())
     {
         m_name2entity[name] = remoteEntity;
     }
 
-    re->initEntity(entityId, name, m_executor);
     m_entityId2entity[entityId] = remoteEntity;
     m_entitiesChanged.fetch_add(1, std::memory_order_acq_rel);
     lock.unlock();
@@ -384,10 +398,22 @@ hybrid_ptr<IRemoteEntity> RemoteEntityContainer::getEntity(EntityId entityId) co
     return nullptr;
 }
 
+std::string RemoteEntityContainer::getEntityName(EntityId entityId, bool& registered) const
+{
+    registered = false;
+    std::unique_lock<std::mutex> lock(m_mutex);
+    auto it = m_entityId2name.find(entityId);
+    if (it != m_entityId2name.end())
+    {
+        registered = true;
+        return it->second;
+    }
+    return {};
+}
 
 
 
-inline void RemoteEntityContainer::triggerConnectionEvent(const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) const
+inline void RemoteEntityContainer::triggerConnectionEvent(const SessionInfo& session, ConnectionEvent connectionEvent) const
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     std::shared_ptr<FuncConnectionEvent> funcConnectionEvent = m_funcConnectionEvent;
@@ -402,12 +428,12 @@ inline void RemoteEntityContainer::triggerConnectionEvent(const IProtocolSession
 // IProtocolSessionCallback
 void RemoteEntityContainer::connected(const IProtocolSessionPtr& session)
 {
-    triggerConnectionEvent(session, ConnectionEvent::CONNECTIONEVENT_CONNECTED);
+    triggerConnectionEvent(createSessionInfo(session), ConnectionEvent::CONNECTIONEVENT_CONNECTED);
 }
 
 void RemoteEntityContainer::disconnected(const IProtocolSessionPtr& session)
 {
-    triggerConnectionEvent(session, ConnectionEvent::CONNECTIONEVENT_DISCONNECTED);
+    triggerConnectionEvent(createSessionInfo(session), ConnectionEvent::CONNECTIONEVENT_DISCONNECTED);
 
     std::vector<hybrid_ptr<IRemoteEntity>> entities;
     std::unique_lock<std::mutex> lock(m_mutex);
@@ -516,7 +542,7 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     //}
 
     bool syntaxError = false;
-    ReceiveData receiveData{ session, {}, message, {}, {} };
+    ReceiveData receiveData{ createSessionInfo(session), {}, message, {}, {} };
     //if (!pureData)
     //{
         if (!session->doesSupportMetainfo())
@@ -613,12 +639,12 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
 
 void RemoteEntityContainer::socketConnected(const IProtocolSessionPtr& session)
 {
-    triggerConnectionEvent(session, ConnectionEvent::CONNECTIONEVENT_SOCKET_CONNECTED);
+    triggerConnectionEvent(createSessionInfo(session), ConnectionEvent::CONNECTIONEVENT_SOCKET_CONNECTED);
 }
 
 void RemoteEntityContainer::socketDisconnected(const IProtocolSessionPtr& session)
 {
-    triggerConnectionEvent(session, ConnectionEvent::CONNECTIONEVENT_SOCKET_DISCONNECTED);
+    triggerConnectionEvent(createSessionInfo(session), ConnectionEvent::CONNECTIONEVENT_SOCKET_DISCONNECTED);
 }
 
 

@@ -42,7 +42,7 @@ public:
 
 private:
     void init();
-    IProtocolSessionPtr createRegistrySession(const std::string& hostname, const ConnectProperties& connectProperties = {});
+    SessionInfo createRegistrySession(const std::string& hostname, const ConnectProperties& connectProperties = {});
 
     bool                                m_init = false;
     hybrid_ptr<IRemoteEntityContainer>  m_remoteEntityContainer;

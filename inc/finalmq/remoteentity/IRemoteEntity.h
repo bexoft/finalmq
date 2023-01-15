@@ -44,12 +44,83 @@ using EntityId = std::uint64_t;
 static constexpr EntityId ENTITYID_DEFAULT = 0;
 static constexpr EntityId ENTITYID_INVALID = 0x7fffffffffffffffull;
 
+struct IRemoteEntityContainer;
+
+class SessionInfo
+{
+public:
+    SessionInfo(const hybrid_ptr<IRemoteEntityContainer>& entityContainer, const IProtocolSessionPtr& session)
+        : m_entityContainer(entityContainer)
+        , m_session(session)
+    {
+        assert(m_entityContainer.lock());
+        assert(m_session);
+        m_sessionId = session->getSessionId();
+    }
+
+    SessionInfo()
+    {
+    }
+
+    const hybrid_ptr<IRemoteEntityContainer>& getEntityContainer() const
+    {
+        return m_entityContainer;
+    }
+    const IProtocolSessionPtr& getSession() const
+    {
+        return m_session;
+    }
+
+    std::int64_t getSessionId() const
+    {
+        return m_sessionId;
+    }
+
+    operator bool() const
+    {
+        return (m_session != nullptr);
+    }
+
+    void disconnect() const
+    {
+        if (m_session)
+        {
+            m_session->disconnect();
+        }
+    }
+
+    ConnectionData getConnectionData() const
+    {
+        if (m_session)
+        {
+            return m_session->getConnectionData();
+        }
+        return {};
+    }
+
+    bool doesSupportFileTransfer() const
+    {
+        if (m_session)
+        {
+            return m_session->doesSupportFileTransfer();
+        }
+        return false;
+    }
+
+private:
+    hybrid_ptr<IRemoteEntityContainer> m_entityContainer;
+    IProtocolSessionPtr m_session;
+    std::int64_t m_sessionId = 0;
+};
+
+
+
 struct ReceiveData
 {
-    IProtocolSessionPtr         session;
+    SessionInfo                 session;
     std::string                 virtualSessionId;
     IMessagePtr                 message;
-    Header        header;
+    Header                      header;
     std::shared_ptr<StructBase> structBase;
 };
 
@@ -59,7 +130,7 @@ struct ReceiveData
 typedef std::function<void(PeerId peerId, Status status, const StructBasePtr& structBase)> FuncReply;
 typedef std::function<void(PeerId peerId, Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase)> FuncReplyMeta;
 typedef std::function<void(RequestContextPtr& requestContext, const StructBasePtr& structBase)> FuncCommand;
-typedef std::function<void(PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, PeerEvent peerEvent, bool incoming)> FuncPeerEvent;
+typedef std::function<void(PeerId peerId, const SessionInfo& sessionInfo, EntityId entityId, PeerEvent peerEvent, bool incoming)> FuncPeerEvent;
 typedef std::function<bool(CorrelationId correlationId, Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase)> FuncReplyEvent; // return bool reply handled -> skip looking for reply lambda.
 typedef std::function<void(PeerId peerId, Status status)> FuncReplyConnect;
 
@@ -340,7 +411,7 @@ struct IRemoteEntity
      * @param funcReplyConnect is the callback for this connection, it will indicate if the connection was successful.
      * @return the peer ID. Use this ID to send requests/events to the remote entity.
      */
-    virtual PeerId connect(const IProtocolSessionPtr& session, const std::string& entityName, FuncReplyConnect funcReplyConnect = {}) = 0;
+    virtual PeerId connect(const SessionInfo& session, const std::string& entityName, FuncReplyConnect funcReplyConnect = {}) = 0;
 
     /**
      * @brief connect the entity with a remote entity. This entity-to-entity connection is represented by a peer ID.
@@ -351,7 +422,7 @@ struct IRemoteEntity
      * @param funcReplyConnect is the callback for this connection, it will indicate if the connection was successful.
      * @return the peer ID. Use this ID to send requests/events to the remote entity.
      */
-    virtual PeerId connect(const IProtocolSessionPtr& session, EntityId entityId, FuncReplyConnect funcReplyConnect = {}) = 0;
+    virtual PeerId connect(const SessionInfo& session, EntityId entityId, FuncReplyConnect funcReplyConnect = {}) = 0;
 
     /**
      * @brief disconnect releases the entity-to-entity connection. Open requests which were not answered, yet, will be
@@ -384,7 +455,7 @@ struct IRemoteEntity
      * @param peerId the peer ID.
      * @return the session of the peer ID.
      */
-    virtual IProtocolSessionPtr getSession(PeerId peerId) const = 0;
+    virtual SessionInfo getSession(PeerId peerId) const = 0;
 
     // low level methods
 
@@ -392,10 +463,11 @@ struct IRemoteEntity
      * @brief createPeer creates an entity-to-entity connection (peer) without a session and entity identifier.
      * Use this method, when you want to send requests without knowing to whom. As soon as you know the session
      * and remote entity, then call connect that has a peerId as a parameter.
+     * @param entityContainer an instance of IRemoteEntityContainer 
      * @param funcReplyConnect is the callback that indicates if a later connection was successful.
      * @return the peer ID. Use it to send requests/events and to connect with a session and entity identifier.
      */
-    virtual PeerId createPeer(FuncReplyConnect funcReplyConnect = {}) = 0;
+    virtual PeerId createPeer(IRemoteEntityContainer& entityContainer, FuncReplyConnect funcReplyConnect = {}) = 0;
 
     /**
      * @brief connect connects the peer that was created with createPeer().
@@ -403,7 +475,7 @@ struct IRemoteEntity
      * @param session is the session that is used for this entity-to-entity connection.
      * @param entityName is the name of the remote entity to which this entity shall be connected.
      */
-    virtual void connect(PeerId peerId, const IProtocolSessionPtr& session, const std::string& entityName) = 0;
+    virtual void connect(PeerId peerId, const SessionInfo& session, const std::string& entityName) = 0;
 
     /**
      * @brief connect connects the peer that was created with createPeer().
@@ -411,7 +483,7 @@ struct IRemoteEntity
      * @param session is the session that is used for this entity-to-entity connection.
      * @param entityId is the ID of the remote entity to which this entity shall be connected.
      */
-    virtual void connect(PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId) = 0;
+    virtual void connect(PeerId peerId, const SessionInfo& session, EntityId entityId) = 0;
 
     /**
      * @brief connect connects the peer that was created with createPeer().
@@ -421,7 +493,7 @@ struct IRemoteEntity
      * the name is empty then the entityId will be used to identify the repote entity.
      * @param entityId is the ID of the remote entity to which this entity shall be connected.
      */
-    virtual void connect(PeerId peerId, const IProtocolSessionPtr& session, const std::string& entityName, EntityId entityId) = 0;
+    virtual void connect(PeerId peerId, const SessionInfo& session, const std::string& entityName, EntityId entityId) = 0;
 
     /**
      * @brief registerCommandFunction registers a callback function for executing a request or event.
@@ -537,12 +609,6 @@ struct IRemoteEntity
     virtual bool cancelReply(CorrelationId correlationId) = 0;
 
     /**
-     * @brief isEntityRegistered returns the information, if the entity was registered at a RemoteEntityContainer.
-     * @return true, if the entity was registered, otherwise false.
-     */
-    virtual bool isEntityRegistered() const = 0;
-
-    /**
      * @brief registerReplyEvent registers a callback, which is triggered for every received reply.
      * With this callback a match with the correlation ID can be done by the application.
      * @param funcReplyEvent is the callback function.
@@ -550,24 +616,16 @@ struct IRemoteEntity
     virtual void registerReplyEvent(FuncReplyEvent funcReplyEvent) = 0;
 
     /**
-     * @brief getExecutor returns the executor. Even if no executor was passed at RemoteEntityContainer::init(),
-     * it will return an executor that executes actions inside the poller thread.
-     * @return the executor. With this executor, you can execute actions inside the executor's thread context.
-     */
-    virtual IExecutorPtr getExecutor() const = 0;
-
-    /**
     * @brief creates a peer at the own entity, so that the peer will publish events to the session.
     * This can be used e.g. for mqtt sessions.
     * @param entityName is the name of the destination. The mqtt topic will look like this: "/<entityName>/<message type>".
     * @return the created peer id.
     */
-    virtual PeerId createPublishPeer(const IProtocolSessionPtr& session, const std::string& entityName) = 0;
+    virtual PeerId createPublishPeer(const SessionInfo& session, const std::string& entityName) = 0;
 
 
 private:
     // methods for RemoteEntityContainer
-    virtual void initEntity(EntityId entityId, const std::string& entityName, const IExecutorPtr& executorPollerThread) = 0;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) = 0;
     virtual void virtualSessionDisconnected(const IProtocolSessionPtr& session, const std::string& virtualSessionId) = 0;
     virtual void receivedRequest(ReceiveData& receiveData) = 0;

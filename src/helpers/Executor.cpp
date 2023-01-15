@@ -164,9 +164,9 @@ bool Executor::runAvailableActionBatch(const FuncIsAbort& funcIsAbort)
             if (erased && it != m_actions.end())
             {
                 auto itPrev = it;
-                --itPrev;
-                if (itPrev != m_actions.end())
+                if (itPrev != m_actions.begin())
                 {
+                    --itPrev;
                     if (itPrev->instanceId == it->instanceId)
                     {
                         itPrev->funcs.insert(itPrev->funcs.end(), std::make_move_iterator(it->funcs.begin()), std::make_move_iterator(it->funcs.end()));
