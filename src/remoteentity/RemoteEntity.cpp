@@ -477,7 +477,7 @@ const SessionInfo& PeerManager::getSession(PeerId peerId) const
 //////////////////////////////////////////////
 
 
-std::atomic<EntityId> RemoteEntity::m_entityIdNext = 0;
+std::atomic<EntityId> RemoteEntity::m_entityIdNext{0};
 
 
 RemoteEntity::RemoteEntity()
