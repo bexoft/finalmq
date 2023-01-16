@@ -855,12 +855,21 @@ namespace finalmq
                     int sizeBuffer = (int)ParseVarint();
                     if ((sizeBuffer >= 0 && sizeBuffer <= m_size) && (m_offset != -1))
                     {
-                        int sizeElements = sizeBuffer / 4;
+                        int sizeElements = sizeBuffer / sizeof(uint);
                         T[] array = new T[sizeElements];
 
-                        for (int i = 0; i < sizeElements; i++)
+                        if (BitConverter.IsLittleEndian)
                         {
-                            array[i] = (T)(dynamic)ParseFixedUInt32();
+                            Buffer.BlockCopy(m_buffer, m_offset, array, 0, sizeElements * sizeof(uint));
+                            m_offset += sizeBuffer;
+                            m_size -= sizeBuffer;
+                        }
+                        else
+                        {
+                            for (int i = 0; i < sizeElements; i++)
+                            {
+                                array[i] = (T)(dynamic)ParseFixedUInt32();
+                            }
                         }
                         arr = array;
                     }
@@ -924,12 +933,21 @@ namespace finalmq
                     int sizeBuffer = (int)ParseVarint();
                     if ((sizeBuffer >= 0 && sizeBuffer <= m_size) && (m_offset != -1))
                     {
-                        int sizeElements = sizeBuffer / 8;
+                        int sizeElements = sizeBuffer / sizeof(ulong);
                         T[] array = new T[sizeElements];
 
-                        for (int i = 0; i < sizeElements; i++)
+                        if (BitConverter.IsLittleEndian)
                         {
-                            array[i] = (T)(dynamic)ParseFixedUInt64();
+                            Buffer.BlockCopy(m_buffer, m_offset, array, 0, sizeElements * sizeof(ulong));
+                            m_offset += sizeBuffer;
+                            m_size -= sizeBuffer;
+                        }
+                        else
+                        {
+                            for (int i = 0; i < sizeElements; i++)
+                            {
+                                array[i] = (T)(dynamic)ParseFixedUInt64();
+                            }
                         }
                         arr = array;
                     }
@@ -994,13 +1012,22 @@ namespace finalmq
                     int sizeBuffer = (int)ParseVarint();
                     if ((sizeBuffer >= 0 && sizeBuffer <= m_size) && (m_offset != -1))
                     {
-                        int sizeElements = sizeBuffer / 4;
+                        int sizeElements = sizeBuffer / sizeof(float);
                         float[] array = new float[sizeElements];
 
-                        for (int i = 0; i < sizeElements; i++)
+                        if (BitConverter.IsLittleEndian)
                         {
-                            float v = BitConverter.UInt32BitsToSingle(ParseFixedUInt32());
-                            array[i] = v;
+                            Buffer.BlockCopy(m_buffer, m_offset, array, 0, sizeElements * sizeof(float));
+                            m_offset += sizeBuffer;
+                            m_size -= sizeBuffer;
+                        }
+                        else
+                        {
+                            for (int i = 0; i < sizeElements; i++)
+                            {
+                                float v = BitConverter.UInt32BitsToSingle(ParseFixedUInt32());
+                                array[i] = v;
+                            }
                         }
                         arr = array;
                     }
@@ -1065,13 +1092,22 @@ namespace finalmq
                     int sizeBuffer = (int)ParseVarint();
                     if ((sizeBuffer >= 0 && sizeBuffer <= m_size) && (m_offset != -1))
                     {
-                        int sizeElements = sizeBuffer / 8;
+                        int sizeElements = sizeBuffer / sizeof(double);
                         double[] array = new double[sizeElements];
 
-                        for (int i = 0; i < sizeElements; i++)
+                        if (BitConverter.IsLittleEndian)
                         {
-                            double v = BitConverter.UInt64BitsToDouble(ParseFixedUInt64());
-                            array[i] = v;
+                            Buffer.BlockCopy(m_buffer, m_offset, array, 0, sizeElements * sizeof(double));
+                            m_offset += sizeBuffer;
+                            m_size -= sizeBuffer;
+                        }
+                        else
+                        {
+                            for (int i = 0; i < sizeElements; i++)
+                            {
+                                double v = BitConverter.UInt64BitsToDouble(ParseFixedUInt64());
+                                array[i] = v;
+                            }
                         }
                         arr = array;
                     }
