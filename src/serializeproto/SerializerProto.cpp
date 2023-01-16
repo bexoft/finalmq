@@ -72,8 +72,7 @@ void SerializerProto::Internal::serializeVarint(std::uint64_t value)
 
 
 
-template<class T>
-void SerializerProto::Internal::serializeVarintValue(int id, T value)
+void SerializerProto::Internal::serializeVarintValue(int id, std::uint64_t value)
 {
     if (value == 0)
     {
@@ -84,15 +83,14 @@ void SerializerProto::Internal::serializeVarintValue(int id, T value)
 
     std::uint32_t tag = (id << 3) | WIRETYPE_VARINT;
     serializeVarint(tag);
-    serializeVarint(static_cast<std::uint64_t>(value));
+    serializeVarint(value);
 }
 
 
 
 
 
-template<class T>
-void SerializerProto::Internal::serializeZigZagValue(int id, T value)
+void SerializerProto::Internal::serializeZigZagValue(int id, std::int64_t value)
 {
     if (value == 0)
     {
@@ -103,11 +101,6 @@ void SerializerProto::Internal::serializeZigZagValue(int id, T value)
     serializeVarintValue(id, v);
 }
 
-
-std::uint32_t SerializerProto::Internal::zigzag(std::int32_t value)
-{
-    return (static_cast<std::uint32_t>(value) << 1) ^ static_cast<std::uint32_t>(value >> 31);
-}
 
 std::uint64_t SerializerProto::Internal::zigzag(std::int64_t value)
 {
