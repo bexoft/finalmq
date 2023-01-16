@@ -220,7 +220,7 @@ namespace testfinalmq
             serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "", 0, 1));
             serializer.EnterString(new MetaField(MetaTypeId.TYPE_STRING, "", "value", "", 0, 0), VALUE_STRING);
             serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "", 0, 1));
-            serializer.EnterUInt32(new MetaField(MetaTypeId.TYPE_UINT32, "", "last_value", "", 0, 1), VALUE_UINT32);
+            serializer.EnterUInt32(new MetaField(MetaTypeId.TYPE_UINT32, "", "last_value", "", 0, 2), VALUE_UINT32);
             serializer.Finished();
 
             var cmp = new test.TestStruct(new test.TestInt32(VALUE_INT32), new test.TestString(VALUE_STRING), VALUE_UINT32);
@@ -654,34 +654,34 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerStruct(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayStruct")!);
-            serializer.EnterArrayStruct(new MetaField(MetaTypeId.TYPE_ARRAY_STRUCT, "test.TestStruct", "value", "desc"));
+            serializer.EnterArrayStruct(new MetaField(MetaTypeId.TYPE_ARRAY_STRUCT, "test.TestStruct", "value", "desc", 0, 0));
 
-            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0));
-            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0));
-            serializer.EnterInt32(new MetaField(MetaTypeId.TYPE_INT32, "", "value", "desc", 0), VALUE1_INT32);
-            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0));
-            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "desc", 1));
-            serializer.EnterString(new MetaField(MetaTypeId.TYPE_STRING, "", "value", "desc", 0), VALUE1_STRING);
-            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "desc", 1));
-            serializer.EnterUInt32(new MetaField(MetaTypeId.TYPE_UINT32, "", "last_value", "desc", 2), VALUE1_UINT32);
-            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0));
+            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0, 0));
+            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0, 0));
+            serializer.EnterInt32(new MetaField(MetaTypeId.TYPE_INT32, "", "value", "desc", 0, 0), VALUE1_INT32);
+            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0, 0));
+            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "desc", 0, 1));
+            serializer.EnterString(new MetaField(MetaTypeId.TYPE_STRING, "", "value", "desc", 0, 0), VALUE1_STRING);
+            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "desc", 0, 1));
+            serializer.EnterUInt32(new MetaField(MetaTypeId.TYPE_UINT32, "", "last_value", "desc", 0, 2), VALUE1_UINT32);
+            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0, 0));
 
-            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0));
-            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0));
-            serializer.EnterInt32(new MetaField(MetaTypeId.TYPE_INT32, "", "value", "desc", 0), VALUE2_INT32);
-            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0));
-            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "desc", 1));
-            serializer.EnterString(new MetaField(MetaTypeId.TYPE_STRING, "", "value", "desc", 0), VALUE2_STRING);
-            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "desc", 1));
-            serializer.EnterUInt32(new MetaField(MetaTypeId.TYPE_UINT32, "", "last_value", "desc", 2), VALUE2_UINT32);
-            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0));
+            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0, 0));
+            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0, 0));
+            serializer.EnterInt32(new MetaField(MetaTypeId.TYPE_INT32, "", "value", "desc", 0, 0), VALUE2_INT32);
+            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0, 0));
+            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "desc", 0, 1));
+            serializer.EnterString(new MetaField(MetaTypeId.TYPE_STRING, "", "value", "desc", 0, 0), VALUE2_STRING);
+            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "desc", 0, 1));
+            serializer.EnterUInt32(new MetaField(MetaTypeId.TYPE_UINT32, "", "last_value", "desc", 0, 2), VALUE2_UINT32);
+            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0, 0));
 
-            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0));
-            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0));
+            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0, 0));
+            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0, 0));
 
-            serializer.ExitArrayStruct(new MetaField(MetaTypeId.TYPE_ARRAY_STRUCT, "test.TestStruct", "value", "desc"));
+            serializer.ExitArrayStruct(new MetaField(MetaTypeId.TYPE_ARRAY_STRUCT, "test.TestStruct", "value", "desc", 0, 0));
 
-            serializer.EnterUInt32(new MetaField(MetaTypeId.TYPE_UINT32, "", "last_value", "desc", 1), LAST_VALUE);
+            serializer.EnterUInt32(new MetaField(MetaTypeId.TYPE_UINT32, "", "last_value", "desc", 0, 1), LAST_VALUE);
 
             serializer.Finished();
 

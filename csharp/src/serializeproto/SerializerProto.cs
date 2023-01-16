@@ -577,7 +577,7 @@ namespace finalmq
                     return;
                 }
 
-                int sizeByte = size * sizeof(float);
+                int sizeByte = size * sizeof(double);
                 ReserveSpace(MAX_VARINT_SIZE + sizeByte);
 
                 uint tag = ((uint)id << 3) | (uint)WireType.WIRETYPE_LENGTH_DELIMITED;
@@ -633,7 +633,7 @@ namespace finalmq
 
                 foreach (var v in value)
                 {
-                    SerializeString(id, v, 0, value.Count, false);
+                    SerializeString(id, v, 0, v.Length, false);
                 }
             }
 
