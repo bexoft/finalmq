@@ -26,38 +26,40 @@ namespace Fmq.Test {
           string.Concat(
             "Cgp0ZXN0LnByb3RvEghmbXEudGVzdBoNdmFyaWFudC5wcm90byIZCghUZXN0",
             "Qm9vbBINCgV2YWx1ZRgBIAEoCCIaCglUZXN0SW50MzISDQoFdmFsdWUYASAB",
-            "KA8iGwoKVGVzdFVJbnQzMhINCgV2YWx1ZRgBIAEoByIaCglUZXN0SW50NjQS",
-            "DQoFdmFsdWUYASABKBAiGwoKVGVzdFVJbnQ2NBINCgV2YWx1ZRgBIAEoBiIa",
-            "CglUZXN0RmxvYXQSDQoFdmFsdWUYASABKAIiGwoKVGVzdERvdWJsZRINCgV2",
-            "YWx1ZRgBIAEoASIbCgpUZXN0U3RyaW5nEg0KBXZhbHVlGAEgASgJIhoKCVRl",
-            "c3RCeXRlcxINCgV2YWx1ZRgBIAEoDCJ4CgpUZXN0U3RydWN0EikKDHN0cnVj",
-            "dF9pbnQzMhgBIAEoCzITLmZtcS50ZXN0LlRlc3RJbnQzMhIrCg1zdHJ1Y3Rf",
-            "c3RyaW5nGAIgASgLMhQuZm1xLnRlc3QuVGVzdFN0cmluZxISCgpsYXN0X3Zh",
-            "bHVlGAMgASgHIoEBChNUZXN0U3RydWN0QmxvY2tTaXplEikKDHN0cnVjdF9p",
-            "bnQzMhgBIAEoCzITLmZtcS50ZXN0LlRlc3RJbnQzMhIrCg1zdHJ1Y3Rfc3Ry",
-            "aW5nGAIgASgLMhQuZm1xLnRlc3QuVGVzdFN0cmluZxISCgpsYXN0X3ZhbHVl",
-            "GAMgASgNIigKCFRlc3RFbnVtEhwKBXZhbHVlGAEgASgOMg0uZm1xLnRlc3Qu",
-            "Rm9vIn4KC1Rlc3RWYXJpYW50EiwKBXZhbHVlGAEgASgLMh0uZm1xLmZpbmFs",
-            "bXEudmFyaWFudC5WYXJWYWx1ZRISCgp2YWx1ZUludDMyGAIgASgPEi0KBnZh",
-            "bHVlMhgDIAEoCzIdLmZtcS5maW5hbG1xLnZhcmlhbnQuVmFyVmFsdWUiHgoN",
-            "VGVzdEFycmF5Qm9vbBINCgV2YWx1ZRgBIAMoCCIfCg5UZXN0QXJyYXlJbnQz",
-            "MhINCgV2YWx1ZRgBIAMoDyIgCg9UZXN0QXJyYXlVSW50MzISDQoFdmFsdWUY",
-            "ASADKAciHwoOVGVzdEFycmF5SW50NjQSDQoFdmFsdWUYASADKBAiIAoPVGVz",
-            "dEFycmF5VUludDY0Eg0KBXZhbHVlGAEgAygGIh8KDlRlc3RBcnJheUZsb2F0",
-            "Eg0KBXZhbHVlGAEgAygCIiAKD1Rlc3RBcnJheURvdWJsZRINCgV2YWx1ZRgB",
-            "IAMoASIgCg9UZXN0QXJyYXlTdHJpbmcSDQoFdmFsdWUYASADKAkiHwoOVGVz",
-            "dEFycmF5Qnl0ZXMSDQoFdmFsdWUYASADKAwiSgoPVGVzdEFycmF5U3RydWN0",
-            "EiMKBXZhbHVlGAEgAygLMhQuZm1xLnRlc3QuVGVzdFN0cnVjdBISCgpsYXN0",
-            "X3ZhbHVlGAIgASgHIi0KDVRlc3RBcnJheUVudW0SHAoFdmFsdWUYASADKA4y",
-            "DS5mbXEudGVzdC5Gb28iIgoLVGVzdFJlcXVlc3QSEwoLZGF0YXJlcXVlc3QY",
-            "ASABKAkiHgoJVGVzdFJlcGx5EhEKCWRhdGFyZXBseRgBIAEoCSo8CgNGb28S",
-            "DQoJRk9PX1dPUkxEEAASFgoJRk9PX0hFTExPEP7//////////wESDgoKRk9P",
-            "X1dPUkxEMhABYgZwcm90bzM="));
+            "KA8iIAoPVGVzdEludDMyWmlnWmFnEg0KBXZhbHVlGAEgASgRIhsKClRlc3RV",
+            "SW50MzISDQoFdmFsdWUYASABKAciGgoJVGVzdEludDY0Eg0KBXZhbHVlGAEg",
+            "ASgQIhsKClRlc3RVSW50NjQSDQoFdmFsdWUYASABKAYiGgoJVGVzdEZsb2F0",
+            "Eg0KBXZhbHVlGAEgASgCIhsKClRlc3REb3VibGUSDQoFdmFsdWUYASABKAEi",
+            "GwoKVGVzdFN0cmluZxINCgV2YWx1ZRgBIAEoCSIaCglUZXN0Qnl0ZXMSDQoF",
+            "dmFsdWUYASABKAwieAoKVGVzdFN0cnVjdBIpCgxzdHJ1Y3RfaW50MzIYASAB",
+            "KAsyEy5mbXEudGVzdC5UZXN0SW50MzISKwoNc3RydWN0X3N0cmluZxgCIAEo",
+            "CzIULmZtcS50ZXN0LlRlc3RTdHJpbmcSEgoKbGFzdF92YWx1ZRgDIAEoByKB",
+            "AQoTVGVzdFN0cnVjdEJsb2NrU2l6ZRIpCgxzdHJ1Y3RfaW50MzIYASABKAsy",
+            "Ey5mbXEudGVzdC5UZXN0SW50MzISKwoNc3RydWN0X3N0cmluZxgCIAEoCzIU",
+            "LmZtcS50ZXN0LlRlc3RTdHJpbmcSEgoKbGFzdF92YWx1ZRgDIAEoDSIoCghU",
+            "ZXN0RW51bRIcCgV2YWx1ZRgBIAEoDjINLmZtcS50ZXN0LkZvbyJ+CgtUZXN0",
+            "VmFyaWFudBIsCgV2YWx1ZRgBIAEoCzIdLmZtcS5maW5hbG1xLnZhcmlhbnQu",
+            "VmFyVmFsdWUSEgoKdmFsdWVJbnQzMhgCIAEoDxItCgZ2YWx1ZTIYAyABKAsy",
+            "HS5mbXEuZmluYWxtcS52YXJpYW50LlZhclZhbHVlIh4KDVRlc3RBcnJheUJv",
+            "b2wSDQoFdmFsdWUYASADKAgiHwoOVGVzdEFycmF5SW50MzISDQoFdmFsdWUY",
+            "ASADKA8iIAoPVGVzdEFycmF5VUludDMyEg0KBXZhbHVlGAEgAygHIh8KDlRl",
+            "c3RBcnJheUludDY0Eg0KBXZhbHVlGAEgAygQIiAKD1Rlc3RBcnJheVVJbnQ2",
+            "NBINCgV2YWx1ZRgBIAMoBiIfCg5UZXN0QXJyYXlGbG9hdBINCgV2YWx1ZRgB",
+            "IAMoAiIgCg9UZXN0QXJyYXlEb3VibGUSDQoFdmFsdWUYASADKAEiIAoPVGVz",
+            "dEFycmF5U3RyaW5nEg0KBXZhbHVlGAEgAygJIh8KDlRlc3RBcnJheUJ5dGVz",
+            "Eg0KBXZhbHVlGAEgAygMIkoKD1Rlc3RBcnJheVN0cnVjdBIjCgV2YWx1ZRgB",
+            "IAMoCzIULmZtcS50ZXN0LlRlc3RTdHJ1Y3QSEgoKbGFzdF92YWx1ZRgCIAEo",
+            "ByItCg1UZXN0QXJyYXlFbnVtEhwKBXZhbHVlGAEgAygOMg0uZm1xLnRlc3Qu",
+            "Rm9vIiIKC1Rlc3RSZXF1ZXN0EhMKC2RhdGFyZXF1ZXN0GAEgASgJIh4KCVRl",
+            "c3RSZXBseRIRCglkYXRhcmVwbHkYASABKAkqPAoDRm9vEg0KCUZPT19XT1JM",
+            "RBAAEhYKCUZPT19IRUxMTxD+//////////8BEg4KCkZPT19XT1JMRDIQAWIG",
+            "cHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Fmq.Finalmq.Variant.VariantReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(new[] {typeof(global::Fmq.Test.Foo), }, null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::Fmq.Test.TestBool), global::Fmq.Test.TestBool.Parser, new[]{ "Value" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Fmq.Test.TestInt32), global::Fmq.Test.TestInt32.Parser, new[]{ "Value" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Fmq.Test.TestInt32ZigZag), global::Fmq.Test.TestInt32ZigZag.Parser, new[]{ "Value" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Fmq.Test.TestUInt32), global::Fmq.Test.TestUInt32.Parser, new[]{ "Value" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Fmq.Test.TestInt64), global::Fmq.Test.TestInt64.Parser, new[]{ "Value" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Fmq.Test.TestUInt64), global::Fmq.Test.TestUInt64.Parser, new[]{ "Value" }, null, null, null, null),
@@ -475,6 +477,195 @@ namespace Fmq.Test {
 
   }
 
+  public sealed partial class TestInt32ZigZag : pb::IMessage<TestInt32ZigZag>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<TestInt32ZigZag> _parser = new pb::MessageParser<TestInt32ZigZag>(() => new TestInt32ZigZag());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<TestInt32ZigZag> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[2]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public TestInt32ZigZag() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public TestInt32ZigZag(TestInt32ZigZag other) : this() {
+      value_ = other.value_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public TestInt32ZigZag Clone() {
+      return new TestInt32ZigZag(this);
+    }
+
+    /// <summary>Field number for the "value" field.</summary>
+    public const int ValueFieldNumber = 1;
+    private int value_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int Value {
+      get { return value_; }
+      set {
+        value_ = value;
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as TestInt32ZigZag);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(TestInt32ZigZag other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (Value != other.Value) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (Value != 0) hash ^= Value.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (Value != 0) {
+        output.WriteRawTag(8);
+        output.WriteSInt32(Value);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (Value != 0) {
+        output.WriteRawTag(8);
+        output.WriteSInt32(Value);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (Value != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeSInt32Size(Value);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(TestInt32ZigZag other) {
+      if (other == null) {
+        return;
+      }
+      if (other.Value != 0) {
+        Value = other.Value;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 8: {
+            Value = input.ReadSInt32();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 8: {
+            Value = input.ReadSInt32();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
   public sealed partial class TestUInt32 : pb::IMessage<TestUInt32>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -489,7 +680,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[2]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[3]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -678,7 +869,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[3]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[4]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -867,7 +1058,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[4]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[5]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1056,7 +1247,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[5]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[6]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1245,7 +1436,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[6]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[7]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1434,7 +1625,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[7]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[8]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1623,7 +1814,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[8]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[9]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1812,7 +2003,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[9]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[10]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2093,7 +2284,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[10]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[11]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2374,7 +2565,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[11]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[12]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2563,7 +2754,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[12]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[13]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2844,7 +3035,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[13]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[14]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3024,7 +3215,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[14]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[15]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3204,7 +3395,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[15]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[16]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3384,7 +3575,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[16]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[17]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3564,7 +3755,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[17]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[18]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3744,7 +3935,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[18]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[19]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3924,7 +4115,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[19]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[20]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -4104,7 +4295,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[20]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[21]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -4282,7 +4473,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[21]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[22]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -4460,7 +4651,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[22]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[23]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -4675,7 +4866,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[23]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[24]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -4855,7 +5046,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[24]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[25]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -5044,7 +5235,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[25]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[26]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]

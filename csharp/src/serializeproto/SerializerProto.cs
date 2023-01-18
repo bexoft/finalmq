@@ -56,9 +56,9 @@ namespace finalmq
             public void EnterStruct(MetaField field)
             {
                 int id = field.Index + INDEX2ID;
-                int bufferStructStart = SerializeStruct(id);
+                int offsetStructStart = SerializeStruct(id);
                 bool arrayEntry = (m_stackStruct.Count != 0) ? m_stackStruct.Last().arrayParent : m_arrayParent;
-                m_stackStruct.Add(new StructData(bufferStructStart, m_offset, m_offset + RESERVE_STRUCT_SIZE, arrayEntry));
+                m_stackStruct.Add(new StructData(m_buffer, offsetStructStart, m_offset, m_offset + RESERVE_STRUCT_SIZE, arrayEntry));
                 m_offset += RESERVE_STRUCT_SIZE;
             }
             public void ExitStruct(MetaField field)
@@ -70,25 +70,28 @@ namespace finalmq
                 Debug.Assert(structSize >= 0);
                 if (structSize == 0 && !structData.allocateNextDataBuffer && !structData.arrayEntry)
                 {
-                    m_offset = structData.bufferStructStart;
+                    m_buffer = structData.bufferStructStart;
+                    m_offset = structData.offsetStructStart;
                 }
                 else if (structSize <= STRUCT_SIZE_COPY && !structData.allocateNextDataBuffer)
                 {
-                    m_offset = structData.bufferStructSize;
+                    m_offset = structData.offsetStructSize;
                     SerializeVarint((ulong)structSize);
-                    Buffer.BlockCopy(m_buffer, structData.bufferStructSize + RESERVE_STRUCT_SIZE, m_buffer, m_offset, structSize);
+                    Buffer.BlockCopy(m_buffer, structData.offsetStructSize + RESERVE_STRUCT_SIZE, m_buffer, m_offset, structSize);
                     m_offset += structSize;
                 }
                 else
                 {
                     int remainingSize = CalculateStructSize(ref structSize);
 
+                    byte[] bufferCurrent = m_buffer;
                     int offsetCurrent = m_offset;
-                    m_offset = structData.bufferStructSize;
+                    m_buffer = structData.bufferStructStart;
+                    m_offset = structData.offsetStructSize;
 
                     SerializeVarint((ulong)structSize);
                     Debug.Assert(remainingSize <= 7 && remainingSize >= 3);
-                    int remainingSizeFromBuffer = structData.bufferStructSize + RESERVE_STRUCT_SIZE - m_offset;
+                    int remainingSizeFromBuffer = structData.offsetStructSize + RESERVE_STRUCT_SIZE - m_offset;
                     if (remainingSizeFromBuffer != remainingSize)
                     {
 //todo                        streamFatal << "Struct calculations are wrong";
@@ -98,8 +101,9 @@ namespace finalmq
 
                     remainingSize -= 2;
                     FillRemainingStruct(remainingSize);
-                    Debug.Assert(m_offset == structData.bufferStructSize + RESERVE_STRUCT_SIZE);
+                    Debug.Assert(m_offset == structData.offsetStructSize + RESERVE_STRUCT_SIZE);
                     m_offset = offsetCurrent;
+                    m_buffer = bufferCurrent;
                 }
                 m_stackStruct.RemoveAt(m_stackStruct.Count - 1);
             }
@@ -827,15 +831,17 @@ namespace finalmq
 
             class StructData
             {
-                public StructData(int bstart, int bsize, int offs, bool ae)
+                public StructData(byte[] bufstart, int offstart, int offsize, int offs, bool ae)
                 {
-                    bufferStructStart = bstart;
-                    bufferStructSize = bsize;
+                    bufferStructStart = bufstart;
+                    offsetStructStart = offstart;
+                    offsetStructSize = offsize;
                     offset = offs;
                     arrayEntry = ae;
                 }
-                public int bufferStructStart;
-                public int bufferStructSize;
+                public byte[] bufferStructStart;
+                public int offsetStructStart;
+                public int offsetStructSize;
                 public int offset;
                 public int size = 0;
                 public bool allocateNextDataBuffer = false;

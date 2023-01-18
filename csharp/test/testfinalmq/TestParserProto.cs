@@ -124,6 +124,26 @@ namespace testfinalmq
         }
 
         [Fact]
+        public void TestInt32ZigZag()
+        {
+            int VALUE = -2;
+
+            MetaField? fieldValue = MetaDataGlobal.Instance.GetField("test.TestInt32ZigZag", "value");
+            Debug.Assert(fieldValue != null);
+
+            Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
+
+            var root = new Fmq.Test.TestInt32 { Value = VALUE };
+            ParserProto parser = new ParserProto(mockVisitor.Object, root.ToByteArray());
+            bool res = parser.ParseStruct("test.TestInt32ZigZag");
+            Debug.Assert(res);
+
+            mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
+            mockVisitor.Verify(x => x.EnterInt32(fieldValue, VALUE), Times.Once);
+            mockVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
         public void TestUInt32()
         {
             uint VALUE = 130;

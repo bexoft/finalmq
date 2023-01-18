@@ -39,15 +39,23 @@ namespace finalmq
 
     public class BufferRef
     {
-        public BufferRef(byte[] buffer, int offset = 0, int length = 0)
+        public BufferRef(byte[] buffer, int offset = 0, int length = -1)
         {
+            if (length == -1)
+            {
+                length = buffer.Length;
+            }
             Debug.Assert(offset + length <= buffer.Length);
             m_buffer = buffer;
             m_offset = offset;
             m_length = length;
         }
-        public void Set(byte[] buffer, int offset = 0, int length = 0)
+        public void Set(byte[] buffer, int offset = 0, int length = -1)
         {
+            if (length == -1)
+            {
+                length = buffer.Length;
+            }
             Debug.Assert(offset + length <= buffer.Length);
             m_buffer = buffer;
             m_offset = offset;

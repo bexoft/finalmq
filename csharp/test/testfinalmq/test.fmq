@@ -14,6 +14,9 @@
         {"type":"TestInt32","desc":"desc","fields":[
             {"tid":"TYPE_INT32","type":"","name":"value","desc":"desc","flags":[]}
         ]},
+        {"type":"TestInt32ZigZag","desc":"desc","fields":[
+            {"tid":"TYPE_INT32","type":"","name":"value","desc":"desc","flags":["METAFLAG_PROTO_ZIGZAG"]}
+        ]},
         {"type":"TestUInt32","desc":"desc","fields":[
             {"tid":"TYPE_UINT32","type":"","name":"value","desc":"desc","flags":[]}
         ]},
