@@ -40,6 +40,11 @@ message TestInt32
     sfixed32 value = 1;
 };
 
+message TestInt32ZigZag
+{
+    sint32 value = 1;
+};
+
 message TestUInt32
 {
     fixed32 value = 1;

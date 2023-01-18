@@ -158,7 +158,7 @@ namespace finalmq
                             case MetaTypeId.TYPE_BOOL:
                                 {
                                     bool ok = false;
-                                    ulong value = ParseVarintUInt64(out ok);
+                                    ulong value = ParseValueUInt64(out ok, false);
                                     if (ok)
                                     {
                                         m_visitor.EnterBool(field, (value != 0));
@@ -167,63 +167,36 @@ namespace finalmq
                                 break;
                             case MetaTypeId.TYPE_INT32:
                                 {
-                                    ulong value = 0;
+                                    int value = 0;
+                                    bool zz = ((field.Flags & (int)MetaFieldFlags.METAFLAG_PROTO_ZIGZAG) != 0);
                                     bool ok = false;
-                                    if ((field.Flags & (int)MetaFieldFlags.METAFLAG_PROTO_VARINT) != 0)
-                                    {
-                                        value = ParseVarintUInt64(out ok);
-                                    }
-                                    else if ((field.Flags & (int)MetaFieldFlags.METAFLAG_PROTO_ZIGZAG) != 0)
-                                    {
-                                        value = ParseZigZagUInt64(out ok);
-                                    }
-                                    else
-                                    {
-                                        value = ParseFixedValueUInt32(out ok);
-                                    }
+                                    value = (int)ParseValueUInt32(out ok, zz);
                                     if (ok)
                                     {
-                                        m_visitor.EnterInt32(field, (int)value);
+                                        m_visitor.EnterInt32(field, value);
                                     }
                                 }
                                 break;
                             case MetaTypeId.TYPE_UINT32:
                                 {
-                                    ulong value = 0;
+                                    uint value = 0;
                                     bool ok = false;
-                                    if ((field.Flags & (int)MetaFieldFlags.METAFLAG_PROTO_VARINT) != 0)
-                                    {
-                                        value = ParseVarintUInt64(out ok);
-                                    }
-                                    else
-                                    {
-                                        value = ParseFixedValueUInt32(out ok);
-                                    }
+                                    value = ParseValueUInt32(out ok, false);
                                     if (ok)
                                     {
-                                        m_visitor.EnterUInt32(field, (uint)value);
+                                        m_visitor.EnterUInt32(field, value);
                                     }
                                 }
                                 break;
                             case MetaTypeId.TYPE_INT64:
                                 {
-                                    ulong value = 0;
+                                    long value = 0;
+                                    bool zz = ((field.Flags & (int)MetaFieldFlags.METAFLAG_PROTO_ZIGZAG) != 0);
                                     bool ok = false;
-                                    if ((field.Flags & (int)MetaFieldFlags.METAFLAG_PROTO_VARINT) != 0)
-                                    {
-                                        value = ParseVarintUInt64(out ok);
-                                    }
-                                    else if ((field.Flags & (int)MetaFieldFlags.METAFLAG_PROTO_ZIGZAG) != 0)
-                                    {
-                                        value = ParseZigZagUInt64(out ok);
-                                    }
-                                    else
-                                    {
-                                        value = ParseFixedValueUInt64(out ok);
-                                    }
+                                    value = (long)ParseValueUInt64(out ok, zz);
                                     if (ok)
                                     {
-                                        m_visitor.EnterInt64(field, (long)value);
+                                        m_visitor.EnterInt64(field, value);
                                     }
                                 }
                                 break;
@@ -231,14 +204,7 @@ namespace finalmq
                                 {
                                     ulong value = 0;
                                     bool ok = false;
-                                    if ((field.Flags & (int)MetaFieldFlags.METAFLAG_PROTO_VARINT) != 0)
-                                    {
-                                        value = ParseVarintUInt64(out ok);
-                                    }
-                                    else
-                                    {
-                                        value = ParseFixedValueUInt64(out ok);
-                                    }
+                                    value = (ulong)ParseValueUInt64(out ok, false);
                                     if (ok)
                                     {
                                         m_visitor.EnterUInt64(field, value);
@@ -248,10 +214,10 @@ namespace finalmq
                             case MetaTypeId.TYPE_FLOAT:
                                 {
                                     bool ok = false;
-                                    ulong value = ParseFixedValueUInt32(out ok);
+                                    uint value = ParseFixedValueUInt32(out ok);
                                     if (ok)
                                     {
-                                        float v = BitConverter.UInt32BitsToSingle((uint)value);
+                                        float v = BitConverter.UInt32BitsToSingle(value);
                                         m_visitor.EnterFloat(field, v);
                                     }
                                 }
@@ -295,10 +261,10 @@ namespace finalmq
                             case MetaTypeId.TYPE_ENUM:
                                 {
                                     bool ok = false;
-                                    ulong value = ParseVarintUInt64(out ok);
+                                    int value = (int)ParseValueUInt32(out ok, false);
                                     if (ok)
                                     {
-                                        m_visitor.EnterEnum(field, (int)value);
+                                        m_visitor.EnterEnum(field, value);
                                     }
                                 }
                                 break;
@@ -632,27 +598,6 @@ namespace finalmq
             return arr;
         }
 
-        T ParseFixedValue<T>(out bool ok)
-        {
-            WireType wireType = (WireType)(m_tag & 0x7);
-            m_tag = 0;
-            if (wireType == WireType.WIRETYPE_FIXED32)
-            {
-                ok = true;
-                uint v = ParseFixedUInt32();
-                return (T)(dynamic)v;
-            }
-            else if (wireType == WireType.WIRETYPE_FIXED64)
-            {
-                ok = true;
-                ulong v = ParseFixedUInt64();
-                return (T)(dynamic)v;
-            }
-            Skip(wireType);
-            ok = false;
-            return (T)(dynamic)0;
-        }
-
         uint ParseFixedValueUInt32(out bool ok)
         {
             WireType wireType = (WireType)(m_tag & 0x7);
@@ -730,28 +675,63 @@ namespace finalmq
             m_size = 0;
             return 0;
         }
-
-        T ParseVarint<T>(out bool ok)
+        uint ParseValueUInt32(out bool ok, bool zz)
         {
             WireType wireType = (WireType)(m_tag & 0x7);
             m_tag = 0;
             if (wireType == WireType.WIRETYPE_VARINT)
             {
                 ok = true;
-                return (T)(dynamic)ParseVarint();
+                if (!zz)
+                {
+                    return (uint)ParseVarint();
+                }
+                else
+                {
+                    ulong v = ParseVarint();
+                    return (uint)ZigZagUInt64(v);
+                }
+            }
+            else if (wireType == WireType.WIRETYPE_FIXED32)
+            {
+                ok = true;
+                return ParseFixedUInt32();
+            }
+            else if (wireType == WireType.WIRETYPE_FIXED64)
+            {
+                ok = true;
+                return (uint)ParseFixedUInt64();
             }
             Skip(wireType);
             ok = false;
-            return (T)(dynamic)0;
+            return 0;
         }
-        ulong ParseVarintUInt64(out bool ok)
+        ulong ParseValueUInt64(out bool ok, bool zz)
         {
             WireType wireType = (WireType)(m_tag & 0x7);
             m_tag = 0;
             if (wireType == WireType.WIRETYPE_VARINT)
             {
                 ok = true;
-                return ParseVarint();
+                if (!zz)
+                {
+                    return ParseVarint();
+                }
+                else
+                {
+                    ulong v = ParseVarint();
+                    return ZigZagUInt64(v);
+                }
+            }
+            else if (wireType == WireType.WIRETYPE_FIXED32)
+            {
+                ok = true;
+                return ParseFixedUInt32();
+            }
+            else if (wireType == WireType.WIRETYPE_FIXED64)
+            {
+                ok = true;
+                return ParseFixedUInt64();
             }
             Skip(wireType);
             ok = false;
@@ -794,19 +774,9 @@ namespace finalmq
             return 0;
         }
 
-
-        ulong ParseZigZagUInt64(out bool ok)
+        ulong ZigZagUInt64(ulong value)
         {
-            ulong value = ParseVarintUInt64(out ok);
-            value = ZigZagUInt64(value);
-            return value;
-        }
-
-        T ParseZigZag<T>(out bool ok)
-        {
-            ulong value = ParseVarintUInt64(out ok);
-            value = ZigZagUInt64(value);
-            return (T)(dynamic)value;
+            return ((value >> 1) ^ (~(value & 1) + 1));
         }
 
         T[]? ParseArrayFixedUInt32<T>()
@@ -1255,11 +1225,6 @@ namespace finalmq
             }
 
             return array?.ToArray();
-        }
-
-        ulong ZigZagUInt64(ulong value)
-        {
-            return ((value >> 1) ^ (~(value & 1) + 1));
         }
 
         void Skip(WireType wireType)

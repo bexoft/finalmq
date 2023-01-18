@@ -175,6 +175,71 @@ public class TestInt32 : finalmq.StructBase, IEquatable<TestInt32>
 }
 
 [finalmq.MetaStruct("desc")]
+public class TestInt32ZigZag : finalmq.StructBase, IEquatable<TestInt32ZigZag>
+{
+    public TestInt32ZigZag()
+	{
+	}
+	
+
+    public TestInt32ZigZag(int value)
+	{
+		m_value = value;
+	}
+
+	[finalmq.MetaField("desc", finalmq.MetaFieldFlags.METAFLAG_PROTO_ZIGZAG)]
+    public int value
+	{
+		get { return m_value; }
+		set { m_value = value; }
+	}
+
+    int m_value = 0;
+
+	public bool Equals(TestInt32ZigZag? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+		if (m_value != rhs.m_value)
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestInt32ZigZag));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
+#pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+    [ModuleInitializer]
+#pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+    internal static void RegisterStruct()
+    {
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestInt32ZigZag));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(TestInt32ZigZag), m_metaStruct, () => { return new TestInt32ZigZag(); } );
+    }
+}
+
+[finalmq.MetaStruct("desc")]
 public class TestUInt32 : finalmq.StructBase, IEquatable<TestUInt32>
 {
     public TestUInt32()
