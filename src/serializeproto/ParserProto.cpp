@@ -46,7 +46,7 @@ ParserProto::ParserProto(IParserVisitor& visitor, const char* ptr, ssize_t size)
 
 
 template<class T>
-bool ParserProto::parseVarint(T& value)
+bool ParserProto::parseValue(T& value, bool zz)
 {
     bool ok = true;
     WireType wireType = static_cast<WireType>(m_tag & 0x7);
@@ -55,30 +55,17 @@ bool ParserProto::parseVarint(T& value)
     {
     case WIRETYPE_VARINT:
         value = static_cast<T>(parseVarint());
-        break;
-    default:
-        skip(wireType);
-        ok = false;
-        break;
-    }
-    return ok;
-}
-
-
-template<class T, class D>
-bool ParserProto::parseZigZag(T& value)
-{
-    bool ok = true;
-    WireType wireType = static_cast<WireType>(m_tag & 0x7);
-    m_tag = 0;
-    switch (wireType)
-    {
-    case WIRETYPE_VARINT:
+        if (zz)
         {
-            D v = static_cast<D>(parseVarint());
-            value = zigzag(v);
+            value = static_cast<T>(zigzag(value));
         }
         break;
+    case WIRETYPE_FIXED32:
+        value = static_cast<T>(parseFixed<std::uint32_t>());
+        break;
+    case WIRETYPE_FIXED64:
+        value = static_cast<T>(parseFixed<std::uint64_t>());
+        break;
     default:
         skip(wireType);
         ok = false;
@@ -86,6 +73,35 @@ bool ParserProto::parseZigZag(T& value)
     }
     return ok;
 }
+
+
+//template<class T, class D>
+//bool ParserProto::parseZigZagValue(T& value)
+//{
+//    bool ok = true;
+//    WireType wireType = static_cast<WireType>(m_tag & 0x7);
+//    m_tag = 0;
+//    switch (wireType)
+//    {
+//    case WIRETYPE_VARINT:
+//        {
+//            D v = static_cast<D>(parseVarint());
+//            value = zigzag(v);
+//        }
+//        break;
+//    case WIRETYPE_FIXED32:
+//        value = static_cast<T>(parseFixed<std::uint32_t>());
+//        break;
+//    case WIRETYPE_FIXED64:
+//        value = static_cast<T>(parseFixed<std::uint64_t>());
+//        break;
+//    default:
+//        skip(wireType);
+//        ok = false;
+//        break;
+//    }
+//    return ok;
+//}
 
 
 
@@ -504,7 +520,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                 case MetaTypeId::TYPE_BOOL:
                     {
                         bool value = false;
-                        bool ok = parseVarint(value);
+                        bool ok = parseValue(value, false);
                         if (ok)
                         {
                             m_visitor.enterBool(*field, value);
@@ -514,19 +530,8 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                 case MetaTypeId::TYPE_INT32:
                     {
                         std::int32_t value = 0;
-                        bool ok = false;
-                        if (field->flags & METAFLAG_PROTO_VARINT)
-                        {
-                            ok = parseVarint(value);
-                        }
-                        else if (field->flags & METAFLAG_PROTO_ZIGZAG)
-                        {
-                            ok = parseZigZag<std::int32_t, std::uint32_t>(value);
-                        }
-                        else
-                        {
-                            ok = parseFixedValue<std::int32_t, WIRETYPE_FIXED32>(value);
-                        }
+                        bool zz = (field->flags & METAFLAG_PROTO_ZIGZAG);
+                        bool ok = parseValue(value, zz);
                         if (ok)
                         {
                             m_visitor.enterInt32(*field, value);
@@ -536,15 +541,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                 case MetaTypeId::TYPE_UINT32:
                     {
                         std::uint32_t value = 0;
-                        bool ok = false;
-                        if (field->flags & METAFLAG_PROTO_VARINT)
-                        {
-                            ok = parseVarint(value);
-                        }
-                        else
-                        {
-                            ok = parseFixedValue<std::uint32_t, WIRETYPE_FIXED32>(value);
-                        }
+                        bool ok = parseValue(value, false);
                         if (ok)
                         {
                             m_visitor.enterUInt32(*field, value);
@@ -554,19 +551,8 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                 case MetaTypeId::TYPE_INT64:
                     {
                         std::int64_t value = 0;
-                        bool ok = false;
-                        if (field->flags & METAFLAG_PROTO_VARINT)
-                        {
-                            ok = parseVarint(value);
-                        }
-                        else if (field->flags & METAFLAG_PROTO_ZIGZAG)
-                        {
-                            ok = parseZigZag<std::int64_t, std::uint64_t>(value);
-                        }
-                        else
-                        {
-                            ok = parseFixedValue<std::int64_t, WIRETYPE_FIXED64>(value);
-                        }
+                        bool zz = (field->flags & METAFLAG_PROTO_ZIGZAG);
+                        bool ok = parseValue(value, zz);
                         if (ok)
                         {
                             m_visitor.enterInt64(*field, value);
@@ -576,15 +562,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                 case MetaTypeId::TYPE_UINT64:
                     {
                         std::uint64_t value = 0;
-                        bool ok = false;
-                        if (field->flags & METAFLAG_PROTO_VARINT)
-                        {
-                            ok = parseVarint(value);
-                        }
-                        else
-                        {
-                            ok = parseFixedValue<std::uint64_t, WIRETYPE_FIXED64>(value);
-                        }
+                        bool ok = parseValue(value, false);
                         if (ok)
                         {
                             m_visitor.enterUInt64(*field, value);
@@ -639,7 +617,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                 case MetaTypeId::TYPE_ENUM:
                     {
                         std::int32_t value = 0;
-                        bool ok = parseVarint(value);
+                        bool ok = parseValue(value, false);
                         if (ok)
                         {
                             m_visitor.enterEnum(*field, value);
@@ -869,10 +847,10 @@ T ParserProto::parseFixed()
 }
 
 
-std::int32_t ParserProto::zigzag(std::uint32_t value)
-{
-    return static_cast<std::int32_t>((value >> 1) ^ (~(value & 1) + 1));
-}
+//std::int32_t ParserProto::zigzag(std::uint32_t value)
+//{
+//    return static_cast<std::int32_t>((value >> 1) ^ (~(value & 1) + 1));
+//}
 
 std::int64_t ParserProto::zigzag(std::uint64_t value)
 {

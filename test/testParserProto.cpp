@@ -151,6 +151,33 @@ TEST_F(TestParserProto, testInt32)
     EXPECT_EQ(res, true);
 }
 
+TEST_F(TestParserProto, testInt32ZigZag)
+{
+    static const int VALUE = -2;
+
+    const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestInt32ZigZag", "value");
+    ASSERT_NE(fieldValue, nullptr);
+
+    std::string data;
+
+    fmq::test::TestInt32ZigZag message;
+    message.set_value(VALUE);
+    message.SerializeToString(&data);
+
+    MockIParserVisitor mockVisitor;
+
+    {
+        testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
+        EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*fieldValue), VALUE)).Times(1);
+        EXPECT_CALL(mockVisitor, finished()).Times(1);
+    }
+
+    ParserProto parser(mockVisitor, data.data(), data.size());
+    bool res = parser.parseStruct("test.TestInt32ZigZag");
+    EXPECT_EQ(res, true);
+}
+
 
 TEST_F(TestParserProto, testUInt32)
 {
