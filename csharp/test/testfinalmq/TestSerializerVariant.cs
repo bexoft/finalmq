@@ -642,8 +642,8 @@ namespace testfinalmq
         [Fact]
         public void TestArrayBytes()
         {
-            IList<byte[]> VALUE = new List<byte[]> { Encoding.ASCII.GetBytes("Hello"), new byte[0], Encoding.ASCII.GetBytes("World") };
-            IList<byte[]> VALUE_CPM = new List<byte[]> { Encoding.ASCII.GetBytes("Hello"), new byte[0], Encoding.ASCII.GetBytes("World") };
+            IList<byte[]> VALUE = new List<byte[]> { Encoding.ASCII.GetBytes("Hello"), Array.Empty<byte>(), Encoding.ASCII.GetBytes("World") };
+            IList<byte[]> VALUE_CPM = new List<byte[]> { Encoding.ASCII.GetBytes("Hello"), Array.Empty<byte>(), Encoding.ASCII.GetBytes("World") };
 
             var root = new Variant();
             IParserVisitor serializer = new SerializerVariant(root);

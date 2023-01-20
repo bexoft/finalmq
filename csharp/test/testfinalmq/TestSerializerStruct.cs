@@ -626,7 +626,7 @@ namespace testfinalmq
         [Fact]
         public void TestArrayBytes()
         {
-            IList<byte[]> VALUE = new List<byte[]> { Encoding.ASCII.GetBytes("Hello"), new byte[0], Encoding.ASCII.GetBytes("World") };
+            IList<byte[]> VALUE = new List<byte[]> { Encoding.ASCII.GetBytes("Hello"), Array.Empty<byte>(), Encoding.ASCII.GetBytes("World") };
 
             var root = new test.TestArrayBytes();
             IParserVisitor serializer = new SerializerStruct(root);

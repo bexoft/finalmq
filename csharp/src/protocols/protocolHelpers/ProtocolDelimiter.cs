@@ -176,16 +176,10 @@ namespace finalmq
         {
             m_callback = callback;
         }
-        public void SetConnection(IStreamConnection connection)
-        {
-            m_connection = connection;
-        }
         public IStreamConnection? Connection
         {
-            get
-            {
-                return m_connection;
-            }
+            get => m_connection;
+            set => m_connection = value;
         }
         public void Disconnect()
         {

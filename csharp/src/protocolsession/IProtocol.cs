@@ -47,8 +47,7 @@ namespace finalmq
     public interface IProtocol : IStreamConnectionCallback
     {
         void SetCallback(IProtocolCallback callback);
-        void SetConnection(IStreamConnection connection);
-        IStreamConnection? Connection { get; }
+        IStreamConnection? Connection { get; set; }
         void Disconnect();
         uint ProtocolId { get; }
         bool AreMessagesResendable { get; }

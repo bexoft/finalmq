@@ -649,7 +649,7 @@ public class TestBytes : finalmq.StructBase, IEquatable<TestBytes>
 		set { m_value = value; }
 	}
 
-    byte[] m_value = new byte[0];
+    byte[] m_value = Array.Empty<byte>();
 
 	public bool Equals(TestBytes? rhs)
 	{
@@ -1046,7 +1046,7 @@ public class TestArrayBool : finalmq.StructBase, IEquatable<TestArrayBool>
 		set { m_value = value; }
 	}
 
-    bool[] m_value = new bool[0];
+    bool[] m_value = Array.Empty<bool>();
 
 	public bool Equals(TestArrayBool? rhs)
 	{
@@ -1111,7 +1111,7 @@ public class TestArrayInt32 : finalmq.StructBase, IEquatable<TestArrayInt32>
 		set { m_value = value; }
 	}
 
-    int[] m_value = new int[0];
+    int[] m_value = Array.Empty<int>();
 
 	public bool Equals(TestArrayInt32? rhs)
 	{
@@ -1176,7 +1176,7 @@ public class TestArrayUInt32 : finalmq.StructBase, IEquatable<TestArrayUInt32>
 		set { m_value = value; }
 	}
 
-    uint[] m_value = new uint[0];
+    uint[] m_value = Array.Empty<uint>();
 
 	public bool Equals(TestArrayUInt32? rhs)
 	{
@@ -1241,7 +1241,7 @@ public class TestArrayInt64 : finalmq.StructBase, IEquatable<TestArrayInt64>
 		set { m_value = value; }
 	}
 
-    long[] m_value = new long[0];
+    long[] m_value = Array.Empty<long>();
 
 	public bool Equals(TestArrayInt64? rhs)
 	{
@@ -1306,7 +1306,7 @@ public class TestArrayUInt64 : finalmq.StructBase, IEquatable<TestArrayUInt64>
 		set { m_value = value; }
 	}
 
-    ulong[] m_value = new ulong[0];
+    ulong[] m_value = Array.Empty<ulong>();
 
 	public bool Equals(TestArrayUInt64? rhs)
 	{
@@ -1371,7 +1371,7 @@ public class TestArrayFloat : finalmq.StructBase, IEquatable<TestArrayFloat>
 		set { m_value = value; }
 	}
 
-    float[] m_value = new float[0];
+    float[] m_value = Array.Empty<float>();
 
 	public bool Equals(TestArrayFloat? rhs)
 	{
@@ -1436,7 +1436,7 @@ public class TestArrayDouble : finalmq.StructBase, IEquatable<TestArrayDouble>
 		set { m_value = value; }
 	}
 
-    double[] m_value = new double[0];
+    double[] m_value = Array.Empty<double>();
 
 	public bool Equals(TestArrayDouble? rhs)
 	{
@@ -1501,7 +1501,7 @@ public class TestArrayString : finalmq.StructBase, IEquatable<TestArrayString>
 		set { m_value = value; }
 	}
 
-    IList<string> m_value = new string[0];
+    IList<string> m_value = new List<string>();
 
 	public bool Equals(TestArrayString? rhs)
 	{

@@ -592,7 +592,7 @@ namespace finalmq
         }
 
         IJsonParserVisitor m_visitor;
-        byte[] m_buffer = new byte[0];
+        byte[] m_buffer = Array.Empty<byte>();
         int m_end = 0;
         StringBuilder? m_dest = null;
     };

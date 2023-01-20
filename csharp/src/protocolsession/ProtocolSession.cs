@@ -268,7 +268,7 @@ namespace finalmq
                 m_connectionId = connection.ConnectionId;
                 InitProtocolValues();
                 m_protocol.SetCallback(this);
-                m_protocol.SetConnection(connection);
+                m_protocol.Connection = connection;
                 SendBufferedMessages();
             }
 
@@ -326,7 +326,7 @@ namespace finalmq
                 {
                     InitProtocolValues();
                     m_protocol.SetCallback(this);
-                    m_protocol.SetConnection(connection);
+                    m_protocol.Connection = connection;
                 }
 
                 m_connectionId = connection.ConnectionId;
@@ -520,7 +520,7 @@ namespace finalmq
                 endpointStreamConnection = m_endpointStreamConnection;
             }
             m_connectionId = connection.ConnectionId;
-            protocol.SetConnection(connection);
+            protocol.Connection = connection;
             m_streamConnectionContainer.Connect(endpointStreamConnection, connection, m_connectionProperties);
         }
         public bool FindSessionByName(string sessionName, IProtocol protocol)

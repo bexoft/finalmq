@@ -234,7 +234,7 @@ namespace finalmq
                     m_visitor.EnterString(field, EmptyString);
                     break;
                 case MetaTypeId.TYPE_BYTES:
-                    m_visitor.EnterBytes(field, EmptyBytes, 0, EmptyBytes.Length);
+                    m_visitor.EnterBytes(field, Array.Empty<byte>(), 0, 0);
                     break;
                 case MetaTypeId.TYPE_STRUCT:
                     {
@@ -263,38 +263,38 @@ namespace finalmq
                     m_visitor.EnterEnum(field, 0);
                     break;
                 case MetaTypeId.TYPE_ARRAY_BOOL:
-                    m_visitor.EnterArrayBool(field, EmptyArrayBool);
+                    m_visitor.EnterArrayBool(field, Array.Empty<bool>());
                     break;
                 case MetaTypeId.TYPE_ARRAY_INT32:
-                    m_visitor.EnterArrayInt32(field, EmptyArrayInt32);
+                    m_visitor.EnterArrayInt32(field, Array.Empty<int>());
                     break;
                 case MetaTypeId.TYPE_ARRAY_UINT32:
-                    m_visitor.EnterArrayUInt32(field, EmptyArrayUInt32);
+                    m_visitor.EnterArrayUInt32(field, Array.Empty<uint>());
                     break;
                 case MetaTypeId.TYPE_ARRAY_INT64:
-                    m_visitor.EnterArrayInt64(field, EmptyArrayInt64);
+                    m_visitor.EnterArrayInt64(field, Array.Empty<long>());
                     break;
                 case MetaTypeId.TYPE_ARRAY_UINT64:
-                    m_visitor.EnterArrayUInt64(field, EmptyArrayUInt64);
+                    m_visitor.EnterArrayUInt64(field, Array.Empty<ulong>());
                     break;
                 case MetaTypeId.TYPE_ARRAY_FLOAT:
-                    m_visitor.EnterArrayFloat(field, EmptyArrayFloat);
+                    m_visitor.EnterArrayFloat(field, Array.Empty<float>());
                     break;
                 case MetaTypeId.TYPE_ARRAY_DOUBLE:
-                    m_visitor.EnterArrayDouble(field, EmptyArrayDouble);
+                    m_visitor.EnterArrayDouble(field, Array.Empty<double>());
                     break;
                 case MetaTypeId.TYPE_ARRAY_STRING:
-                    m_visitor.EnterArrayString(field, EmptyArrayString);
+                    m_visitor.EnterArrayString(field, Array.Empty<string>());
                     break;
                 case MetaTypeId.TYPE_ARRAY_BYTES:
-                    m_visitor.EnterArrayBytes(field, EmptyArrayBytes);
+                    m_visitor.EnterArrayBytes(field, Array.Empty<byte[]>());
                     break;
                 case MetaTypeId.TYPE_ARRAY_STRUCT:
                     m_visitor.EnterArrayStruct(field);
                     m_visitor.ExitArrayStruct(field);
                     break;
                 case MetaTypeId.TYPE_ARRAY_ENUM:
-                    m_visitor.EnterArrayEnum(field, EmptyArrayInt32);
+                    m_visitor.EnterArrayEnum(field, Array.Empty<int>());
                     break;
                 default:
                     Debug.Assert(false);
@@ -306,15 +306,5 @@ namespace finalmq
         Variant         m_root;
 
         static readonly string EmptyString = "";
-        static readonly byte[] EmptyBytes = new byte[0];
-        static readonly bool[] EmptyArrayBool = new bool[0];
-        static readonly int[] EmptyArrayInt32 = new int[0];
-        static readonly uint[] EmptyArrayUInt32 = new uint[0];
-        static readonly long[] EmptyArrayInt64 = new long[0];
-        static readonly ulong[] EmptyArrayUInt64 = new ulong[0];
-        static readonly float[] EmptyArrayFloat = new float[0];
-        static readonly double[] EmptyArrayDouble = new double[0];
-        static readonly string[] EmptyArrayString = new string[0];
-        static readonly byte[][] EmptyArrayBytes = new byte[0][];
     }
 }
