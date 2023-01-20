@@ -251,16 +251,16 @@ public class VarValue : finalmq.StructBase, IEquatable<VarValue>
     float m_valfloat = 0.0f;
     double m_valdouble = 0.0;
     string m_valstring = "";
-    byte[] m_valbytes = new byte[0];
+    byte[] m_valbytes = Array.Empty<byte>();
     IList<finalmq.variant.VarValue> m_vallist = new List<finalmq.variant.VarValue>();
-    bool[] m_valarrbool = new bool[0];
-    int[] m_valarrint32 = new int[0];
-    uint[] m_valarruint32 = new uint[0];
-    long[] m_valarrint64 = new long[0];
-    ulong[] m_valarruint64 = new ulong[0];
-    float[] m_valarrfloat = new float[0];
-    double[] m_valarrdouble = new double[0];
-    IList<string> m_valarrstring = new string[0];
+    bool[] m_valarrbool = Array.Empty<bool>();
+    int[] m_valarrint32 = Array.Empty<int>();
+    uint[] m_valarruint32 = Array.Empty<uint>();
+    long[] m_valarrint64 = Array.Empty<long>();
+    ulong[] m_valarruint64 = Array.Empty<ulong>();
+    float[] m_valarrfloat = Array.Empty<float>();
+    double[] m_valarrdouble = Array.Empty<double>();
+    IList<string> m_valarrstring = new List<string>();
     IList<byte[]> m_valarrbytes = new List<byte[]>();
 
 	public bool Equals(VarValue? rhs)

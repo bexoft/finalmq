@@ -852,7 +852,7 @@ namespace finalmq
             readonly IZeroCopyBuffer m_zeroCopybuffer;
             readonly int m_maxBlockSize = 512;
             int m_bufferStart = -1;
-            byte[] m_buffer = new byte[0];
+            byte[] m_buffer = Array.Empty<byte>();
             int m_offset = -1;
             int m_bufferEnd = -1;
             bool m_arrayParent = false;

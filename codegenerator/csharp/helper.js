@@ -217,7 +217,7 @@ module.exports = {
             case 'string':
             case 'TYPE_STRING': return '\"\"'
             case 'bytes':
-            case 'TYPE_BYTES': return 'new byte[0]'
+            case 'TYPE_BYTES': return 'Array.Empty<byte>()'
             case 'struct':
             case 'TYPE_STRUCT': return 'new ' + this.tid2type(data, tid, type) + '()'
             case 'enum':
@@ -225,21 +225,21 @@ module.exports = {
             case 'variant':
             case 'TYPE_VARIANT': return 'new finalmq.Variant()'
             case 'bool[]':
-            case 'TYPE_ARRAY_BOOL': return 'new bool[0]'
+            case 'TYPE_ARRAY_BOOL': return 'Array.Empty<bool>()'
             case 'int32[]':
-            case 'TYPE_ARRAY_INT32': return 'new int[0]'
+            case 'TYPE_ARRAY_INT32': return 'Array.Empty<int>()'
             case 'uint32[]':
-            case 'TYPE_ARRAY_UINT32': return 'new uint[0]'
+            case 'TYPE_ARRAY_UINT32': return 'Array.Empty<uint>()'
             case 'int64[]':
-            case 'TYPE_ARRAY_INT64': return 'new long[0]'
+            case 'TYPE_ARRAY_INT64': return 'Array.Empty<long>()'
             case 'uint64[]':
-            case 'TYPE_ARRAY_UINT64': return 'new ulong[0]'
+            case 'TYPE_ARRAY_UINT64': return 'Array.Empty<ulong>()'
             case 'float[]':
-            case 'TYPE_ARRAY_FLOAT': return 'new float[0]'
+            case 'TYPE_ARRAY_FLOAT': return 'Array.Empty<float>()'
             case 'double[]':
-            case 'TYPE_ARRAY_DOUBLE': return 'new double[0]'
+            case 'TYPE_ARRAY_DOUBLE': return 'Array.Empty<double>()'
             case 'string[]':
-            case 'TYPE_ARRAY_STRING': return 'new string[0]'
+            case 'TYPE_ARRAY_STRING': return 'new List<string>()'
             case 'bytes[]':
             case 'TYPE_ARRAY_BYTES': return 'new List<byte[]>()'
             case 'struct[]':

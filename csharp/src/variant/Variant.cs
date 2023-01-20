@@ -21,7 +21,7 @@ namespace finalmq
             m_value = value;
         }
 
-        public static Variant Create<T>(T data)
+        public static Variant Create<T>(T data) where T : notnull
         {
             IVariantValue? value = VariantValueFactory.Instance.CreateVariantValue(data);
             if (value == null)
@@ -31,7 +31,7 @@ namespace finalmq
             return new Variant(value);
         }
 
-        public T GetData<T>()
+        public T GetData<T>() where T : notnull
         {
             if (m_value != null)
             {
@@ -41,13 +41,17 @@ namespace finalmq
                 }
                 else
                 {
-                    return Convertion.Convert<T>(m_value.Data);
+                    T? data = Convertion.Convert<T>(m_value.Data);
+                    if (data != null)
+                    {
+                        return data;
+                    }
                 }
             }
             return Default<T>();
         }
 
-        public void SetData<T>(T data)
+        public void SetData<T>(T data) where T : notnull
         {
             if (data == null)
             {
@@ -69,7 +73,7 @@ namespace finalmq
             }
         }
 
-        public T GetData<T>(string name)
+        public T GetData<T>(string name) where T : notnull
         {
             Variant? v = GetVariant(name);
             if (v != null)
@@ -79,7 +83,7 @@ namespace finalmq
             return Default<T>();
         }
 
-        public void SetData<T>(string name, T data)
+        public void SetData<T>(string name, T data) where T : notnull
         {
             Variant? v = GetVariant(name);
             if (v != null)
@@ -162,7 +166,7 @@ namespace finalmq
             return false;
         }
 
-        public bool Add<T>(string name, T data)
+        public bool Add<T>(string name, T data) where T : notnull
         {
             if (m_value != null)
             {
@@ -179,7 +183,7 @@ namespace finalmq
             }
             return false;
         }
-        public bool Add<T>(T data)
+        public bool Add<T>(T data) where T : notnull
         {
             if (m_value != null)
             {
@@ -217,55 +221,55 @@ namespace finalmq
             {
                 if (typeof(T) == typeof(string))
                 {
-                    return (dynamic)EmptyString;
+                    return (dynamic)string.Empty;
                 }
                 if (typeof(T) == typeof(byte[]))
                 {
-                    return (dynamic)EmptyBytes;
+                    return (dynamic)Array.Empty<byte>();
                 }
                 if (typeof(T) == typeof(bool[]))
                 {
-                    return (dynamic)EmptyArrayBool;
+                    return (dynamic)Array.Empty<bool>();
                 }
                 if (typeof(T) == typeof(int[]))
                 {
-                    return (dynamic)EmptyArrayInt32;
+                    return (dynamic)Array.Empty<int>();
                 }
                 if (typeof(T) == typeof(uint[]))
                 {
-                    return (dynamic)EmptyArrayUInt32;
+                    return (dynamic)Array.Empty<uint>();
                 }
                 if (typeof(T) == typeof(long[]))
                 {
-                    return (dynamic)EmptyArrayInt64;
+                    return (dynamic)Array.Empty<long>();
                 }
                 if (typeof(T) == typeof(ulong[]))
                 {
-                    return (dynamic)EmptyArrayUInt64;
+                    return (dynamic)Array.Empty<ulong>();
                 }
                 if (typeof(T) == typeof(float[]))
                 {
-                    return (dynamic)EmptyArrayFloat;
+                    return (dynamic)Array.Empty<float>();
                 }
                 if (typeof(T) == typeof(double[]))
                 {
-                    return (dynamic)EmptyArrayDouble;
+                    return (dynamic)Array.Empty<double>();
                 }
                 if (typeof(T) == typeof(IList<string>))
                 {
-                    return (dynamic)EmptyListString;
+                    return (dynamic)Array.Empty<string>();
                 }
                 if (typeof(T) == typeof(IList<byte[]>))
                 {
-                    return (dynamic)EmptyListBytes;
+                    return (dynamic)Array.Empty<byte[]>();
                 }
                 if (typeof(T) == typeof(VariantList))
                 {
-                    return (dynamic)new VariantList();
+                    return (dynamic)Array.Empty<Variant>();
                 }
                 if (typeof(T) == typeof(VariantStruct))
                 {
-                    return (dynamic)new VariantStruct();
+                    return (dynamic)Array.Empty<NameValue>();
                 }
                 throw new InvalidOperationException("Type " + typeof(T).Name + " not supported");
             }
@@ -312,17 +316,5 @@ namespace finalmq
         }
 
         IVariantValue? m_value = null;
-
-        static readonly string EmptyString = "";
-        static readonly byte[] EmptyBytes = new byte[0];
-        static readonly bool[] EmptyArrayBool = new bool[0];
-        static readonly int[] EmptyArrayInt32 = new int[0];
-        static readonly uint[] EmptyArrayUInt32 = new uint[0];
-        static readonly long[] EmptyArrayInt64 = new long[0];
-        static readonly ulong[] EmptyArrayUInt64 = new ulong[0];
-        static readonly float[] EmptyArrayFloat = new float[0];
-        static readonly double[] EmptyArrayDouble = new double[0];
-        static readonly IList<string> EmptyListString = new List<string>();
-        static readonly IList<byte[]> EmptyListBytes = new List<byte[]>();
     }
 }
