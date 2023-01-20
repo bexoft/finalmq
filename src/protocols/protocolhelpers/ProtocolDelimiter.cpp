@@ -54,23 +54,31 @@ ProtocolDelimiter::~ProtocolDelimiter()
 // IProtocol
 void ProtocolDelimiter::setCallback(const std::weak_ptr<IProtocolCallback>& callback)
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     m_callback = callback;
 }
 
 void ProtocolDelimiter::setConnection(const IStreamConnectionPtr& connection)
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     m_connection = connection;
 }
 
 IStreamConnectionPtr ProtocolDelimiter::getConnection() const
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     return m_connection;
 }
 
 void ProtocolDelimiter::disconnect()
 {
-    assert(m_connection);
-    m_connection->disconnect();
+    std::unique_lock<std::mutex> lock(m_mutex);
+    IStreamConnectionPtr conn = m_connection;
+    lock.unlock();
+    if (conn)
+    {
+        conn->disconnect();
+    }
 }
 
 bool ProtocolDelimiter::areMessagesResendable() const

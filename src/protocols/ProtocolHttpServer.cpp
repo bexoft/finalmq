@@ -104,8 +104,10 @@ ProtocolHttpServer::~ProtocolHttpServer()
 // IProtocol
 void ProtocolHttpServer::setCallback(const std::weak_ptr<IProtocolCallback>& callback)
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     m_callback = callback;
     std::shared_ptr<IProtocolCallback> cb = callback.lock();
+    lock.unlock();
     if (cb)
     {
         // 5 minutes session timeout
@@ -115,18 +117,25 @@ void ProtocolHttpServer::setCallback(const std::weak_ptr<IProtocolCallback>& cal
 
 void ProtocolHttpServer::setConnection(const IStreamConnectionPtr& connection)
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     m_connection = connection;
 }
 
 IStreamConnectionPtr ProtocolHttpServer::getConnection() const
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     return m_connection;
 }
 
 void ProtocolHttpServer::disconnect()
 {
-    assert(m_connection);
-    m_connection->disconnect();
+    std::unique_lock<std::mutex> lock(m_mutex);
+    IStreamConnectionPtr conn = m_connection;
+    lock.unlock();
+    if (conn)
+    {
+        conn->disconnect();
+    }
 }
 
 std::uint32_t ProtocolHttpServer::getProtocolId() const

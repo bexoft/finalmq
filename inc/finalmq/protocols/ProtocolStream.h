@@ -64,6 +64,7 @@ private:
 
     std::weak_ptr<IProtocolCallback>    m_callback;
     IStreamConnectionPtr                m_connection;
+    mutable std::mutex                  m_mutex;
 };
 
 

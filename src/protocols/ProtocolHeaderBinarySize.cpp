@@ -69,21 +69,25 @@ ProtocolHeaderBinarySize::~ProtocolHeaderBinarySize()
 // IProtocol
 void ProtocolHeaderBinarySize::setCallback(const std::weak_ptr<IProtocolCallback>& callback)
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     m_callback = callback;
 }
 
 void ProtocolHeaderBinarySize::setConnection(const IStreamConnectionPtr& connection)
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     m_connection = connection;
 }
 
 IStreamConnectionPtr ProtocolHeaderBinarySize::getConnection() const
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     return m_connection;
 }
 
 void ProtocolHeaderBinarySize::disconnect()
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     assert(m_connection);
     m_connection->disconnect();
 }

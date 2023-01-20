@@ -80,6 +80,8 @@ private:
     };
     std::vector<ReceiveBufferStore>     m_receiveBuffers;
     ssize_t                             m_receiveBuffersTotal = 0;
+
+    mutable std::mutex                  m_mutex;
 };
 
 
