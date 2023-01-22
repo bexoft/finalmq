@@ -508,7 +508,7 @@ void SerializerProto::Internal::exitStruct(const MetaField& /*field*/)
     m_stackStruct.pop_back();
 }
 
-void SerializerProto::Internal::enterStructNull(const MetaField& field)
+void SerializerProto::Internal::enterStructNull(const MetaField& /*field*/)
 {
 }
 

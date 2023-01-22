@@ -282,6 +282,79 @@ TEST_F(TestSerializerStruct, testStruct)
     ASSERT_EQ(root, cmp);
 }
 
+TEST_F(TestSerializerStruct, testStructNullableNotNull)
+{
+    static const std::int32_t VALUE_INT32 = -2;
+    static const std::string VALUE_STRING = "Hello World";
+    static const std::uint32_t VALUE_UINT32 = 123;
+
+    test::TestStructNullable root;
+    std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
+
+    serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestStructNullable"));
+    serializer->enterStruct({ MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0, 0 });
+    serializer->enterInt32({ MetaTypeId::TYPE_INT32, "", "value", "desc", 0, 0 }, VALUE_INT32);
+    serializer->exitStruct({ MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0, 0 });
+    serializer->enterStruct({ MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "desc", 0, 1 });
+    serializer->enterString({ MetaTypeId::TYPE_STRING, "", "value", "desc", 0, 0 }, VALUE_STRING.data(), VALUE_STRING.size());
+    serializer->exitStruct({ MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "desc", 0, 1 });
+    serializer->enterUInt32({ MetaTypeId::TYPE_UINT32, "", "last_value", "desc", 0, 2 }, VALUE_UINT32);
+
+    serializer->finished();
+
+    test::TestStructNullable cmp;
+    cmp.struct_int32 = std::make_shared<test::TestInt32>(VALUE_INT32);
+    cmp.struct_string.value = VALUE_STRING;
+    cmp.last_value = VALUE_UINT32;
+    ASSERT_EQ(root, cmp);
+}
+
+TEST_F(TestSerializerStruct, testStructNullableNull)
+{
+    static const std::string VALUE_STRING = "Hello World";
+    static const std::uint32_t VALUE_UINT32 = 123;
+
+    test::TestStructNullable root;
+    std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
+
+    serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestStructNullable"));
+    serializer->enterStructNull({ MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0, 0 });
+    serializer->enterStruct({ MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "desc", 0, 1 });
+    serializer->enterString({ MetaTypeId::TYPE_STRING, "", "value", "desc", 0, 0 }, VALUE_STRING.data(), VALUE_STRING.size());
+    serializer->exitStruct({ MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "desc", 0, 1 });
+    serializer->enterUInt32({ MetaTypeId::TYPE_UINT32, "", "last_value", "desc", 0, 2 }, VALUE_UINT32);
+
+    serializer->finished();
+
+    test::TestStructNullable cmp;
+    cmp.struct_string.value = VALUE_STRING;
+    cmp.last_value = VALUE_UINT32;
+    ASSERT_EQ(root, cmp);
+}
+
+TEST_F(TestSerializerStruct, testStructNullableNoCallOfEnterStructNull)
+{
+    static const std::string VALUE_STRING = "Hello World";
+    static const std::uint32_t VALUE_UINT32 = 123;
+
+    test::TestStructNullable root;
+    root.struct_int32 = std::make_shared<test::TestInt32>(-2);
+    std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
+
+    serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestStructNullable"));
+    serializer->enterStruct({ MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "desc", 0, 1 });
+    serializer->enterString({ MetaTypeId::TYPE_STRING, "", "value", "desc", 0, 0 }, VALUE_STRING.data(), VALUE_STRING.size());
+    serializer->exitStruct({ MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "desc", 0, 1 });
+    serializer->enterUInt32({ MetaTypeId::TYPE_UINT32, "", "last_value", "desc", 0, 2 }, VALUE_UINT32);
+
+    serializer->finished();
+
+    test::TestStructNullable cmp;
+    cmp.struct_string.value = VALUE_STRING;
+    cmp.last_value = VALUE_UINT32;
+    ASSERT_EQ(root, cmp);
+}
+
 
 TEST_F(TestSerializerStruct, testEnum)
 {

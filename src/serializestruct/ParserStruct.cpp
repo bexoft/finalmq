@@ -93,27 +93,38 @@ void ParserStruct::processField(const StructBase& structBase, const FieldInfo& f
         }
         break;
     case TYPE_STRUCT:
-        m_visitor.enterStruct(field);
         if (field.typeName == STR_VARVALUE)
         {
+            m_visitor.enterStruct(field);
             const Variant& value = structBase.getValue<Variant>(fieldInfo);
             VariantToVarValue variantToVarValue(value, m_visitor);
             variantToVarValue.convert();
+            m_visitor.exitStruct(field);
         }
         else
         {
             if (!(field.flags & METAFLAG_NULLABLE))
             {
                 const StructBase& value = structBase.getValue<StructBase>(fieldInfo);
+                m_visitor.enterStruct(field);
                 parseStruct(value);
+                m_visitor.exitStruct(field);
             }
             else
             {
                 const StructBasePtr& value = structBase.getValue<StructBasePtr>(fieldInfo);
-                parseStruct(*value);
+                if (value)
+                {
+                    m_visitor.enterStruct(field);
+                    parseStruct(*value);
+                    m_visitor.exitStruct(field);
+                }
+                else
+                {
+                    m_visitor.enterStructNull(field);
+                }
             }
         }
-        m_visitor.exitStruct(field);
         break;
     case TYPE_ENUM:
         m_visitor.enterEnum(field, structBase.getValue<std::int32_t>(fieldInfo));

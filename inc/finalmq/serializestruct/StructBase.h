@@ -87,7 +87,7 @@ namespace finalmq {
         // IStructPtrAdapter
         virtual StructBasePtr create() const override
         {
-            return std::make_pair<T>();
+            return std::make_shared<T>();
         }
     };
 

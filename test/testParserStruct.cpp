@@ -363,6 +363,88 @@ TEST_F(TestParserStruct, testStruct)
 
 
 
+TEST_F(TestParserStruct, testStructNullableNotNull)
+{
+    static const std::int32_t VALUE_INT32 = -2;
+    static const std::string VALUE_STRING = "Hello World";
+    static const std::uint32_t VALUE_LAST = 12;
+
+    const MetaField* fieldStructNullableInt32 = MetaDataGlobal::instance().getField("test.TestStructNullable", "struct_int32");
+    const MetaField* fieldStructNullableString = MetaDataGlobal::instance().getField("test.TestStructNullable", "struct_string");
+    const MetaField* fieldStructNullableLastValue = MetaDataGlobal::instance().getField("test.TestStructNullable", "last_value");
+    const MetaField* fieldInt32 = MetaDataGlobal::instance().getField("test.TestInt32", "value");
+    const MetaField* fieldString = MetaDataGlobal::instance().getField("test.TestString", "value");
+    ASSERT_NE(fieldStructNullableInt32, nullptr);
+    ASSERT_NE(fieldStructNullableString, nullptr);
+    ASSERT_NE(fieldStructNullableLastValue, nullptr);
+    ASSERT_NE(fieldInt32, nullptr);
+    ASSERT_NE(fieldString, nullptr);
+
+    MockIParserVisitor mockVisitor;
+
+    {
+        testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
+        EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldStructNullableInt32))).Times(1);
+        EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*fieldInt32), VALUE_INT32)).Times(1);
+        EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldStructNullableInt32))).Times(1);
+        EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldStructNullableString))).Times(1);
+        EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*fieldString), ArrayEq(VALUE_STRING.data(), VALUE_STRING.size()), VALUE_STRING.size())).Times(1);
+        EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldStructNullableString))).Times(1);
+        EXPECT_CALL(mockVisitor, enterUInt32(MatcherMetaField(*fieldStructNullableLastValue), VALUE_LAST)).Times(1);
+        EXPECT_CALL(mockVisitor, finished()).Times(1);
+    }
+
+    test::TestStructNullable root = {
+        std::make_shared<test::TestInt32>(VALUE_INT32),
+        {VALUE_STRING},
+        VALUE_LAST
+    };
+    ParserStruct parser(mockVisitor, root);
+    bool res = parser.parseStruct();
+    ASSERT_EQ(res, true);
+}
+
+
+TEST_F(TestParserStruct, testStructNullableNull)
+{
+    static const std::string VALUE_STRING = "Hello World";
+    static const std::uint32_t VALUE_LAST = 12;
+
+    const MetaField* fieldStructNullableInt32 = MetaDataGlobal::instance().getField("test.TestStructNullable", "struct_int32");
+    const MetaField* fieldStructNullableString = MetaDataGlobal::instance().getField("test.TestStructNullable", "struct_string");
+    const MetaField* fieldStructNullableLastValue = MetaDataGlobal::instance().getField("test.TestStructNullable", "last_value");
+    const MetaField* fieldString = MetaDataGlobal::instance().getField("test.TestString", "value");
+    ASSERT_NE(fieldStructNullableInt32, nullptr);
+    ASSERT_NE(fieldStructNullableString, nullptr);
+    ASSERT_NE(fieldStructNullableLastValue, nullptr);
+    ASSERT_NE(fieldString, nullptr);
+
+    MockIParserVisitor mockVisitor;
+
+    {
+        testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
+        EXPECT_CALL(mockVisitor, enterStructNull(MatcherMetaField(*fieldStructNullableInt32))).Times(1);
+        EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldStructNullableString))).Times(1);
+        EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*fieldString), ArrayEq(VALUE_STRING.data(), VALUE_STRING.size()), VALUE_STRING.size())).Times(1);
+        EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldStructNullableString))).Times(1);
+        EXPECT_CALL(mockVisitor, enterUInt32(MatcherMetaField(*fieldStructNullableLastValue), VALUE_LAST)).Times(1);
+        EXPECT_CALL(mockVisitor, finished()).Times(1);
+    }
+
+    test::TestStructNullable root = {
+        nullptr,
+        {VALUE_STRING},
+        VALUE_LAST
+    };
+    ParserStruct parser(mockVisitor, root);
+    bool res = parser.parseStruct();
+    ASSERT_EQ(res, true);
+}
+
+
+
 
 
 TEST_F(TestParserStruct, testEnumAsInt)
