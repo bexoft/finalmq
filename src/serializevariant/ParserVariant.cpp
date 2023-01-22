@@ -26,6 +26,7 @@
 #include "finalmq/metadata/MetaData.h"
 #include "finalmq/variant/VariantValues.h"
 #include "finalmq/variant/VariantValueList.h"
+#include "finalmq/variant/VariantValueStruct.h"
 
 #include <assert.h>
 
@@ -120,6 +121,7 @@ void ParserVariant::processField(const Variant* sub, const MetaField* field)
     }
         break;
     case TYPE_STRUCT:
+        if (sub->getType() != VARTYPE_NONE)
         {
             m_visitor.enterStruct(*field);            
             if (field->typeName == STR_VARVALUE)
@@ -140,6 +142,13 @@ void ParserVariant::processField(const Variant* sub, const MetaField* field)
                 }
             }
             m_visitor.exitStruct(*field);
+        }
+        else
+        {
+            if (field->flags & METAFLAG_NULLABLE)
+            {
+                m_visitor.enterStructNull(*field);
+            }
         }
         break;
     case TYPE_ENUM:
@@ -363,6 +372,7 @@ void ParserVariant::processEmptyField(const MetaField* field)
         m_visitor.enterBytes(*field, Bytes());
         break;
     case TYPE_STRUCT:
+        if (!(field->flags & METAFLAG_NULLABLE))
         {
             m_visitor.enterStruct(*field);
             if (field->typeName == STR_VARVALUE)
@@ -383,6 +393,10 @@ void ParserVariant::processEmptyField(const MetaField* field)
                 }
             }
             m_visitor.exitStruct(*field);
+        }
+        else
+        {
+            m_visitor.enterStructNull(*field);
         }
         break;
     case TYPE_ENUM:

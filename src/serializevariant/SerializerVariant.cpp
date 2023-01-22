@@ -136,6 +136,24 @@ void SerializerVariant::Internal::exitStruct(const MetaField& /*field*/)
     }
 }
 
+void SerializerVariant::Internal::enterStructNull(const MetaField& field)
+{
+    assert(m_current);
+
+    if (m_current->getType() == TYPE_STRUCT)
+    {
+        m_current->add(field.name, Variant());
+    }
+    else
+    {
+        assert(m_current->getType() == VARTYPE_LIST);
+        m_current->add(VariantStruct());
+        VariantList* list = *m_current;
+        assert(list);
+        m_stack.push_back(&list->back());
+    }
+}
+
 
 void SerializerVariant::Internal::enterArrayStruct(const MetaField& field)
 {

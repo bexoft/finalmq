@@ -49,6 +49,7 @@ private:
 
     virtual void enterArrayStruct(const MetaField& field) override;
     virtual void exitArrayStruct(const MetaField& field) override;
+    virtual void enterStructNull(const MetaField& field) override;
 
     virtual void enterBool(const MetaField& field, bool value) override;
     virtual void enterInt32(const MetaField& field, std::int32_t value) override;

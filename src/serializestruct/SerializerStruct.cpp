@@ -114,7 +114,22 @@ void SerializerStruct::enterStruct(const MetaField& field)
                 const FieldInfo* fieldInfoDest = getFieldInfoDest(field);
                 if (fieldInfoDest)
                 {
-                    sub = m_current->structBase->getData<StructBase>(*fieldInfoDest);
+                    if (!(fieldInfoDest->getField()->flags & METAFLAG_NULLABLE))
+                    {
+                        sub = m_current->structBase->getData<StructBase>(*fieldInfoDest);
+                    }
+                    else
+                    {
+                        StructBasePtr* subNullable = m_current->structBase->getData<StructBasePtr>(*fieldInfoDest);
+                        if (subNullable)
+                        {
+                            if (subNullable->get() == nullptr)
+                            {
+                                *subNullable = fieldInfoDest->createStruct();
+                            }
+                            sub = subNullable->get();
+                        }
+                    }
                 }
             }
             else
@@ -153,6 +168,33 @@ void SerializerStruct::exitStruct(const MetaField& field)
     }
 }
 
+void SerializerStruct::enterStructNull(const MetaField& field)
+{
+    if (m_visitor)
+    {
+        m_visitor->enterStructNull(field);
+        return;
+    }
+
+    assert(!m_stack.empty());
+    assert(m_current);
+
+    if (m_current->structBase)
+    {
+        const FieldInfo* fieldInfoDest = getFieldInfoDest(field);
+        if (fieldInfoDest)
+        {
+            if (fieldInfoDest->getField()->flags & METAFLAG_NULLABLE)
+            {
+                StructBasePtr* subNullable = m_current->structBase->getData<StructBasePtr>(*fieldInfoDest);
+                if (subNullable)
+                {
+                    *subNullable = nullptr;
+                }
+            }
+        }
+    }
+}
 
 void SerializerStruct::enterArrayStruct(const MetaField& field)
 {

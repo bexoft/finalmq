@@ -93,6 +93,11 @@ void SerializerJson::Internal::exitStruct(const MetaField& /*field*/)
     m_jsonBuilder.exitObject();
 }
 
+void SerializerJson::Internal::enterStructNull(const MetaField& /*field*/)
+{
+    m_jsonBuilder.enterNull();
+}
+
 
 void SerializerJson::Internal::enterArrayStruct(const MetaField& field)
 {

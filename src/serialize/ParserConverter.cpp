@@ -85,6 +85,15 @@ void ParserConverter::exitStruct(const MetaField& field)
     }
 }
 
+void ParserConverter::enterStructNull(const MetaField& field)
+{
+    assert(m_visitor);
+    if (field.typeId == MetaTypeId::TYPE_STRUCT)
+    {
+        m_visitor->enterStructNull(field);
+    }
+}
+
 void ParserConverter::enterArrayStruct(const MetaField& field)
 {
     assert(m_visitor);

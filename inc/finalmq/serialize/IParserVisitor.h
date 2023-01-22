@@ -39,6 +39,7 @@ struct IParserVisitor
 
     virtual void enterStruct(const MetaField& field) = 0;
     virtual void exitStruct(const MetaField& field) = 0;
+    virtual void enterStructNull(const MetaField& field) = 0;
 
     virtual void enterArrayStruct(const MetaField& field) = 0;
     virtual void exitArrayStruct(const MetaField& field) = 0;

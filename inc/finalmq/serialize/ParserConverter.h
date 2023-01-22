@@ -43,6 +43,7 @@ private:
 
     virtual void enterStruct(const MetaField& field) override;
     virtual void exitStruct(const MetaField& field) override;
+    virtual void enterStructNull(const MetaField& field) override;
 
     virtual void enterArrayStruct(const MetaField& field) override;
     virtual void exitArrayStruct(const MetaField& field) override;

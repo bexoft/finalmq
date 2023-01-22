@@ -30,70 +30,65 @@
 namespace finalmq {
 
 
-FieldInfo::FieldInfo(int offset, IArrayStructAdapter* arrayStructAdapter)
-    : m_offset(offset)
-    , m_arrayStructAdapter(arrayStructAdapter)
-{
-
-}
-
-void FieldInfo::setField(const MetaField* field)
-{
-    m_field = field;
-}
-
-
-
-StructInfo::StructInfo(const std::string& typeName, const std::string& description, FuncStructBaseFactory factory, std::vector<MetaField>&& fields, std::vector<FieldInfo>&& fieldInfos)
-    : m_metaStruct(MetaDataGlobal::instance().addStruct({typeName, description, std::move(fields)}))
-    , m_fieldInfos(std::move(fieldInfos))
-{
-    StructFactoryRegistry::instance().registerFactory(typeName, factory);
-    ssize_t size = std::min(m_metaStruct.getFieldsSize(), static_cast<ssize_t>(m_fieldInfos.size()));
-    for (ssize_t i = 0; i < size; ++i)
+    FieldInfo::FieldInfo(int offset, IArrayStructAdapter* arrayStructAdapter, IStructPtrAdapter* structPtrAdapter)
+        : m_offset(offset)
+        , m_arrayStructAdapter(arrayStructAdapter)
+        , m_structPtrAdapter(structPtrAdapter)
     {
-        m_fieldInfos[i].setField(m_metaStruct.getFieldByIndex(i));
+
     }
-}
 
-
-
-
-EnumInfo::EnumInfo(const std::string& typeName, const std::string& description, std::vector<MetaEnumEntry>&& entries)
-    : m_metaEnum(MetaDataGlobal::instance().addEnum({typeName, description, std::move(entries)}))
-{
-}
-
-const MetaEnum& EnumInfo::getMetaEnum() const
-{
-    return m_metaEnum;
-}
-
-
-
-
-StructBase* StructBase::add(ssize_t index)
-{
-    const StructInfo& structInfo = getStructInfo();
-    const FieldInfo* fieldInfo = structInfo.getField(index);
-    if (fieldInfo)
+    void FieldInfo::setField(const MetaField* field)
     {
-        const MetaField* field = fieldInfo->getField();
-        if (field)
+        m_field = field;
+    }
+
+
+    StructInfo::StructInfo(const std::string& typeName, const std::string& description, FuncStructBaseFactory factory, std::vector<MetaField>&& fields, std::vector<FieldInfo>&& fieldInfos)
+        : m_metaStruct(MetaDataGlobal::instance().addStruct({ typeName, description, std::move(fields) }))
+        , m_fieldInfos(std::move(fieldInfos))
+    {
+        StructFactoryRegistry::instance().registerFactory(typeName, factory);
+        ssize_t size = std::min(m_metaStruct.getFieldsSize(), static_cast<ssize_t>(m_fieldInfos.size()));
+        for (ssize_t i = 0; i < size; ++i)
         {
-            if (field->typeId == TYPE_ARRAY_STRUCT)
+            m_fieldInfos[i].setField(m_metaStruct.getFieldByIndex(i));
+        }
+    }
+
+
+    EnumInfo::EnumInfo(const std::string& typeName, const std::string& description, std::vector<MetaEnumEntry>&& entries)
+        : m_metaEnum(MetaDataGlobal::instance().addEnum({ typeName, description, std::move(entries) }))
+    {
+    }
+
+    const MetaEnum& EnumInfo::getMetaEnum() const
+    {
+        return m_metaEnum;
+    }
+
+    StructBase* StructBase::add(ssize_t index)
+    {
+        const StructInfo& structInfo = getStructInfo();
+        const FieldInfo* fieldInfo = structInfo.getField(index);
+        if (fieldInfo)
+        {
+            const MetaField* field = fieldInfo->getField();
+            if (field)
             {
-                IArrayStructAdapter* arrayStructAdapter = fieldInfo->getArrayStructAdapter();
-                if (arrayStructAdapter)
+                if (field->typeId == TYPE_ARRAY_STRUCT)
                 {
-                    int offset = fieldInfo->getOffset();
-                    char& array = *(reinterpret_cast<char*>(this) + offset);
-                    return arrayStructAdapter->add(array);
+                    IArrayStructAdapter* arrayStructAdapter = fieldInfo->getArrayStructAdapter();
+                    if (arrayStructAdapter)
+                    {
+                        int offset = fieldInfo->getOffset();
+                        char& array = *(reinterpret_cast<char*>(this) + offset);
+                        return arrayStructAdapter->add(array);
+                    }
                 }
             }
         }
+        return nullptr;
     }
-    return nullptr;
-}
 
 }   // namespace finalmq

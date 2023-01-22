@@ -86,7 +86,16 @@ void ParserJson::syntaxError(const char* /*str*/, const char* /*message*/)
 
 void ParserJson::enterNull()
 {
-
+    if (!m_fieldCurrent)
+    {
+        // unknown key
+        return;
+    }
+    if (m_fieldCurrent->typeId == MetaTypeId::TYPE_STRUCT &&
+        m_fieldCurrent->flags & METAFLAG_NULLABLE)
+    {
+        m_visitor.enterStructNull(*m_fieldCurrent);
+    }
 }
 
 template<class T>

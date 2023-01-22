@@ -138,6 +138,11 @@ void ParserProcessDefaultValues::exitStruct(const MetaField& field)
 }
 
 
+void ParserProcessDefaultValues::enterStructNull(const MetaField& field)
+{
+    markAsDone(field);
+    m_visitor->enterStructNull(field);
+}
 
 
 void ParserProcessDefaultValues::processDefaultValues(const MetaStruct& stru, const std::vector<bool>& fieldsDone)
@@ -185,6 +190,7 @@ void ParserProcessDefaultValues::processDefaultValues(const MetaStruct& stru, co
                     }
                     break;
                 case MetaTypeId::TYPE_STRUCT:
+                    if (!(field->flags & METAFLAG_NULLABLE))
                     {
                         m_visitor->enterStruct(*field);
                         const MetaStruct* substru = MetaDataGlobal::instance().getStruct(*field);
@@ -194,6 +200,10 @@ void ParserProcessDefaultValues::processDefaultValues(const MetaStruct& stru, co
                             processDefaultValues(*substru, subfieldsDone);
                         }
                         m_visitor->exitStruct(*field);
+                    }
+                    else
+                    {
+                        m_visitor->enterStructNull(*field);
                     }
                     break;
                 case MetaTypeId::TYPE_ENUM:
