@@ -25,7 +25,6 @@
 #include "finalmq/conversions/itoa.h"
 #include "finalmq/conversions/dtoa.h"
 #include "finalmq/logger/LogStream.h"
-#include "finalmq/helpers/ModulenameFinalmq.h"
 
 #include <assert.h>
 #include <string.h>
