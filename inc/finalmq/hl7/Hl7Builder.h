@@ -62,7 +62,7 @@ private:
     char*                   m_bufferEnd = nullptr;
 
 
-    static const std::uint32_t LAYER_MAX = 4U;
+    static const int LAYER_MAX = 4;
 
     int                     m_waitForDeleimiterField = 0;
     int                     m_level = 0;
