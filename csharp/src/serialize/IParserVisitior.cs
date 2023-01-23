@@ -12,6 +12,7 @@ namespace finalmq
 
         void EnterStruct(MetaField field);
         void ExitStruct(MetaField field);
+        void EnterStructNull(MetaField field);
 
         void EnterArrayStruct(MetaField field);
         void ExitArrayStruct(MetaField field);

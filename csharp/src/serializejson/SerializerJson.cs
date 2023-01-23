@@ -46,6 +46,11 @@ namespace finalmq
             {
                 m_jsonBuilder.ExitObject();
             }
+            public void EnterStructNull(MetaField field)
+            {
+                SetKey(field);
+                m_jsonBuilder.EnterNull();
+            }
 
             public void EnterArrayStruct(MetaField field) 
             {

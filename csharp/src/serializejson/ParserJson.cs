@@ -66,7 +66,16 @@ namespace finalmq
         }
         public void EnterNull()
         {
-
+            if (m_fieldCurrent == null)
+            {
+                // unknown key
+                return;
+            }
+            if ((m_fieldCurrent.TypeId == MetaTypeId.TYPE_STRUCT) &&
+                ((m_fieldCurrent.Flags & (int)MetaFieldFlags.METAFLAG_NULLABLE) != 0))
+            {
+                m_visitor.EnterStructNull(m_fieldCurrent);
+            }
         }
         public void EnterBool(bool value)
         {

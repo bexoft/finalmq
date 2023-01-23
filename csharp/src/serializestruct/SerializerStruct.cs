@@ -115,6 +115,17 @@ namespace finalmq
                             if (property != null)
                             {
                                 sub = property.GetValue(structBase) as StructBase;
+                                if (sub == null)
+                                {
+                                    try
+                                    {
+                                        sub = Activator.CreateInstance(property.PropertyType) as StructBase;
+                                    }
+                                    catch (Exception)
+                                    {
+                                    }
+                                    property.SetValue(structBase, sub);
+                                }
                             }
                         }
                         else
@@ -169,6 +180,44 @@ namespace finalmq
                         {
                             m_funcExit();
                         }
+                    }
+                }
+            }
+
+            private bool IsNullable(PropertyInfo property)
+            {
+                object[]? attributes = property.GetCustomAttributes(false);
+                if (attributes != null)
+                {
+                    foreach (var attribute in attributes)
+                    {
+                        MetaFieldAttribute? attr = attribute as MetaFieldAttribute;
+                        if (attr != null)
+                        {
+                            bool nullable = (attr.Flags & MetaFieldFlags.METAFLAG_NULLABLE) != 0;
+                            return nullable;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            public void EnterStructNull(MetaField field)
+            {
+                if (field.TypeId != MetaTypeId.TYPE_STRUCT)
+                {
+                    return;
+                }
+                Debug.Assert(m_stack.Count != 0);
+                Debug.Assert(m_current != null);
+
+                StructBase? structBase = m_current.StructBase;
+                if (structBase != null)
+                {
+                    PropertyInfo? property = structBase.GetType().GetProperty(field.Name);
+                    if (property != null && IsNullable(property))
+                    {
+                        property.SetValue(structBase, null);
                     }
                 }
             }

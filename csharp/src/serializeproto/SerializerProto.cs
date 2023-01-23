@@ -108,6 +108,10 @@ namespace finalmq
                 m_stackStruct.RemoveAt(m_stackStruct.Count - 1);
             }
 
+            public void EnterStructNull(MetaField field)
+            {
+            }
+
             public void EnterArrayStruct(MetaField field)
             {
                 if (m_stackStruct.Count != 0)

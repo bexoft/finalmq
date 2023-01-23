@@ -135,7 +135,7 @@ namespace finalmq
                         isGenericClass = genericType.IsClass;
                     }
 
-                    object[]? attributesProperty = propertyType.GetCustomAttributes(false);
+                    object[]? attributesProperty = propertyInfo.GetCustomAttributes(false);
                     string descriptionProperty = "";
                     MetaFieldFlags flags = MetaFieldFlags.METAFLAG_NONE;
                     if (attributesProperty != null)

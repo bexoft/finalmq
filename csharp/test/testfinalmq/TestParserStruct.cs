@@ -371,14 +371,17 @@ namespace testfinalmq
         {
             int VALUE_INT32 = -2;
             string VALUE_STRING = "Hello World";
+            uint VALUE_LAST = 12;
 
             MetaField? fieldStructInt32 = MetaDataGlobal.Instance.GetField("test.TestStruct", "struct_int32");
             MetaField? fieldStructString = MetaDataGlobal.Instance.GetField("test.TestStruct", "struct_string");
+            MetaField? fieldLastValue = MetaDataGlobal.Instance.GetField("test.TestStruct", "last_value");
             MetaField? fieldInt32 = MetaDataGlobal.Instance.GetField("test.TestInt32", "value");
             MetaField? fieldString = MetaDataGlobal.Instance.GetField("test.TestString", "value");
 
             Debug.Assert(fieldStructInt32 != null);
             Debug.Assert(fieldStructString != null);
+            Debug.Assert(fieldLastValue != null);
             Debug.Assert(fieldInt32 != null);
             Debug.Assert(fieldString != null);
 
@@ -390,7 +393,7 @@ namespace testfinalmq
                     Debug.Assert(v == VALUE_STRING);
                 });
 
-            var root = new test.TestStruct(new test.TestInt32(VALUE_INT32), new test.TestString(VALUE_STRING), 0);
+            var root = new test.TestStruct(new test.TestInt32(VALUE_INT32), new test.TestString(VALUE_STRING), VALUE_LAST);
             ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
             bool res = parser.ParseStruct();
             Debug.Assert(res);
@@ -402,6 +405,90 @@ namespace testfinalmq
             mockVisitor.Verify(x => x.EnterStruct(fieldStructString), Times.Once);
             mockVisitor.Verify(x => x.EnterString(fieldString, It.IsAny<string>()), Times.Once);
             mockVisitor.Verify(x => x.ExitStruct(fieldStructString), Times.Once);
+            mockVisitor.Verify(x => x.EnterUInt32(fieldLastValue, VALUE_LAST), Times.Once);
+            mockVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestStructNullableNotNull()
+        {
+            int VALUE_INT32 = -2;
+            string VALUE_STRING = "Hello World";
+            uint VALUE_LAST = 12;
+
+            MetaField? fieldStructNullableInt32 = MetaDataGlobal.Instance.GetField("test.TestStructNullable", "struct_int32");
+            MetaField? fieldStructString = MetaDataGlobal.Instance.GetField("test.TestStructNullable", "struct_string");
+            MetaField? fieldLastValue = MetaDataGlobal.Instance.GetField("test.TestStructNullable", "last_value");
+            MetaField? fieldInt32 = MetaDataGlobal.Instance.GetField("test.TestInt32", "value");
+            MetaField? fieldString = MetaDataGlobal.Instance.GetField("test.TestString", "value");
+
+            Debug.Assert(fieldStructNullableInt32 != null);
+            Debug.Assert(fieldStructString != null);
+            Debug.Assert(fieldLastValue != null);
+            Debug.Assert(fieldInt32 != null);
+            Debug.Assert(fieldString != null);
+
+            Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
+
+            mockVisitor.Setup(x => x.EnterString(fieldString, It.IsAny<string>()))
+                .Callback((MetaField field, string v) =>
+                {
+                    Debug.Assert(v == VALUE_STRING);
+                });
+
+            var root = new test.TestStructNullable(new test.TestInt32(VALUE_INT32), new test.TestString(VALUE_STRING), VALUE_LAST);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
+
+            mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
+            mockVisitor.Verify(x => x.EnterStruct(fieldStructNullableInt32), Times.Once);
+            mockVisitor.Verify(x => x.EnterInt32(fieldInt32, VALUE_INT32), Times.Once);
+            mockVisitor.Verify(x => x.ExitStruct(fieldStructNullableInt32), Times.Once);
+            mockVisitor.Verify(x => x.EnterStruct(fieldStructString), Times.Once);
+            mockVisitor.Verify(x => x.EnterString(fieldString, It.IsAny<string>()), Times.Once);
+            mockVisitor.Verify(x => x.ExitStruct(fieldStructString), Times.Once);
+            mockVisitor.Verify(x => x.EnterUInt32(fieldLastValue, VALUE_LAST), Times.Once);
+            mockVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestStructNullableNull()
+        {
+            string VALUE_STRING = "Hello World";
+            uint VALUE_LAST = 12;
+
+            MetaField? fieldStructNullableInt32 = MetaDataGlobal.Instance.GetField("test.TestStructNullable", "struct_int32");
+            MetaField? fieldStructString = MetaDataGlobal.Instance.GetField("test.TestStructNullable", "struct_string");
+            MetaField? fieldLastValue = MetaDataGlobal.Instance.GetField("test.TestStructNullable", "last_value");
+            MetaField? fieldInt32 = MetaDataGlobal.Instance.GetField("test.TestInt32", "value");
+            MetaField? fieldString = MetaDataGlobal.Instance.GetField("test.TestString", "value");
+
+            Debug.Assert(fieldStructNullableInt32 != null);
+            Debug.Assert(fieldStructString != null);
+            Debug.Assert(fieldLastValue != null);
+            Debug.Assert(fieldInt32 != null);
+            Debug.Assert(fieldString != null);
+
+            Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
+
+            mockVisitor.Setup(x => x.EnterString(fieldString, It.IsAny<string>()))
+                .Callback((MetaField field, string v) =>
+                {
+                    Debug.Assert(v == VALUE_STRING);
+                });
+
+            var root = new test.TestStructNullable(null, new test.TestString(VALUE_STRING), VALUE_LAST);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
+
+            mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
+            mockVisitor.Verify(x => x.EnterStructNull(fieldStructNullableInt32), Times.Once);
+            mockVisitor.Verify(x => x.EnterStruct(fieldStructString), Times.Once);
+            mockVisitor.Verify(x => x.EnterString(fieldString, It.IsAny<string>()), Times.Once);
+            mockVisitor.Verify(x => x.ExitStruct(fieldStructString), Times.Once);
+            mockVisitor.Verify(x => x.EnterUInt32(fieldLastValue, VALUE_LAST), Times.Once);
             mockVisitor.Verify(x => x.Finished(), Times.Once);
         }
 

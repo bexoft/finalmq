@@ -10,7 +10,8 @@ namespace finalmq
 
     public class SerializerVariant : ParserConverter
     {
-        private static string STR_VARVALUE = "finalmq.variant.VarValue";
+        private static readonly string STR_VARVALUE = "finalmq.variant.VarValue";
+        private static readonly int VARTYPE_LIST = (int)MetaTypeId.TYPE_ARRAY_STRUCT;
 
         public SerializerVariant(Variant root, bool enumAsString = true, bool skipDefaultValues = false)
         {
@@ -66,19 +67,16 @@ namespace finalmq
                 }
                 else
                 {
+                    Variant variant = Variant.Create(new VariantStruct());
                     if (m_current.VarType == (int)MetaTypeId.TYPE_STRUCT)
                     {
-                        Variant variant = Variant.Create(new VariantStruct());
                         m_current.Add(field.Name, variant);
-                        m_stack.Add(variant);
                     }
-                    else
+                    else if (m_current.VarType == VARTYPE_LIST)
                     {
-                        Debug.Assert(m_current.VarType == (int)MetaTypeId.TYPE_ARRAY_STRUCT);   // VariantList
-                        Variant variant = Variant.Create(new VariantStruct());
                         m_current.Add(variant);
-                        m_stack.Add(variant);
                     }
+                    m_stack.Add(variant);
                     m_current = m_stack.Last();
                 }
             }
@@ -97,6 +95,20 @@ namespace finalmq
                     }
                 }
             }
+            public void EnterStructNull(MetaField field)
+            {
+                Debug.Assert(m_current != null);
+
+                if (m_current.VarType == (int)MetaTypeId.TYPE_STRUCT)
+                {
+                    m_current.Add(field.Name, new Variant());
+                }
+                else if (m_current.VarType == VARTYPE_LIST)
+                {
+                    m_current.Add(new Variant());
+                }
+            }
+
             public void EnterArrayStruct(MetaField field)
             {
                 if (m_stack.Count != 0)
@@ -149,7 +161,7 @@ namespace finalmq
                 }
             }
 
-            void Add<T>(MetaField field, T value)
+            void Add<T>(MetaField field, T value) where T : notnull
             {
                 if (m_current != null)
                 {

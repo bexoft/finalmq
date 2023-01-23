@@ -50,6 +50,14 @@ namespace finalmq
                 m_visitor.ExitStruct(field);
             }
         }
+        public void EnterStructNull(MetaField field)
+        {
+            Debug.Assert(m_visitor != null);
+            if (field.TypeId == MetaTypeId.TYPE_STRUCT)
+            {
+                m_visitor.EnterStructNull(field);
+            }
+        }
 
         public void EnterArrayStruct(MetaField field)
         {
