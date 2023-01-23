@@ -121,7 +121,7 @@ void ParserVariant::processField(const Variant* sub, const MetaField* field)
     }
         break;
     case TYPE_STRUCT:
-        if (sub->getType() != VARTYPE_NONE)
+        if ((sub->getType() != VARTYPE_NONE) || !(field->flags & METAFLAG_NULLABLE))
         {
             m_visitor.enterStruct(*field);            
             if (field->typeName == STR_VARVALUE)
@@ -145,10 +145,7 @@ void ParserVariant::processField(const Variant* sub, const MetaField* field)
         }
         else
         {
-            if (field->flags & METAFLAG_NULLABLE)
-            {
-                m_visitor.enterStructNull(*field);
-            }
+            m_visitor.enterStructNull(*field);
         }
         break;
     case TYPE_ENUM:

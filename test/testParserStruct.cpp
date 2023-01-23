@@ -327,12 +327,12 @@ TEST_F(TestParserStruct, testStruct)
 
     const MetaField* fieldStructInt32 = MetaDataGlobal::instance().getField("test.TestStruct", "struct_int32");
     const MetaField* fieldStructString = MetaDataGlobal::instance().getField("test.TestStruct", "struct_string");
-    const MetaField* fieldStructLastValue = MetaDataGlobal::instance().getField("test.TestStruct", "last_value");
+    const MetaField* fieldLastValue = MetaDataGlobal::instance().getField("test.TestStruct", "last_value");
     const MetaField* fieldInt32 = MetaDataGlobal::instance().getField("test.TestInt32", "value");
     const MetaField* fieldString = MetaDataGlobal::instance().getField("test.TestString", "value");
     ASSERT_NE(fieldStructInt32, nullptr);
     ASSERT_NE(fieldStructString, nullptr);
-    ASSERT_NE(fieldStructLastValue, nullptr);
+    ASSERT_NE(fieldLastValue, nullptr);
     ASSERT_NE(fieldInt32, nullptr);
     ASSERT_NE(fieldString, nullptr);
 
@@ -347,7 +347,7 @@ TEST_F(TestParserStruct, testStruct)
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldStructString))).Times(1);
         EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*fieldString), ArrayEq(VALUE_STRING.data(), VALUE_STRING.size()), VALUE_STRING.size())).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldStructString))).Times(1);
-        EXPECT_CALL(mockVisitor, enterUInt32(MatcherMetaField(*fieldStructLastValue), VALUE_LAST)).Times(1);
+        EXPECT_CALL(mockVisitor, enterUInt32(MatcherMetaField(*fieldLastValue), VALUE_LAST)).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
 
@@ -370,13 +370,13 @@ TEST_F(TestParserStruct, testStructNullableNotNull)
     static const std::uint32_t VALUE_LAST = 12;
 
     const MetaField* fieldStructNullableInt32 = MetaDataGlobal::instance().getField("test.TestStructNullable", "struct_int32");
-    const MetaField* fieldStructNullableString = MetaDataGlobal::instance().getField("test.TestStructNullable", "struct_string");
-    const MetaField* fieldStructNullableLastValue = MetaDataGlobal::instance().getField("test.TestStructNullable", "last_value");
+    const MetaField* fieldStructString = MetaDataGlobal::instance().getField("test.TestStructNullable", "struct_string");
+    const MetaField* fieldLastValue = MetaDataGlobal::instance().getField("test.TestStructNullable", "last_value");
     const MetaField* fieldInt32 = MetaDataGlobal::instance().getField("test.TestInt32", "value");
     const MetaField* fieldString = MetaDataGlobal::instance().getField("test.TestString", "value");
     ASSERT_NE(fieldStructNullableInt32, nullptr);
-    ASSERT_NE(fieldStructNullableString, nullptr);
-    ASSERT_NE(fieldStructNullableLastValue, nullptr);
+    ASSERT_NE(fieldStructString, nullptr);
+    ASSERT_NE(fieldLastValue, nullptr);
     ASSERT_NE(fieldInt32, nullptr);
     ASSERT_NE(fieldString, nullptr);
 
@@ -388,10 +388,10 @@ TEST_F(TestParserStruct, testStructNullableNotNull)
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldStructNullableInt32))).Times(1);
         EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*fieldInt32), VALUE_INT32)).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldStructNullableInt32))).Times(1);
-        EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldStructNullableString))).Times(1);
+        EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldStructString))).Times(1);
         EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*fieldString), ArrayEq(VALUE_STRING.data(), VALUE_STRING.size()), VALUE_STRING.size())).Times(1);
-        EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldStructNullableString))).Times(1);
-        EXPECT_CALL(mockVisitor, enterUInt32(MatcherMetaField(*fieldStructNullableLastValue), VALUE_LAST)).Times(1);
+        EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldStructString))).Times(1);
+        EXPECT_CALL(mockVisitor, enterUInt32(MatcherMetaField(*fieldLastValue), VALUE_LAST)).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
 

@@ -138,11 +138,14 @@ void ParserProcessDefaultValues::exitStruct(const MetaField& field)
 }
 
 
-void ParserProcessDefaultValues::enterStructNull(const MetaField& field)
-{
-    markAsDone(field);
-    m_visitor->enterStructNull(field);
-}
+    void ParserProcessDefaultValues::enterStructNull(const MetaField& field)
+    {
+        markAsDone(field);
+        if (!m_skipDefaultValues)
+        {
+            m_visitor->enterStructNull(field);
+        }
+    }
 
 
 void ParserProcessDefaultValues::processDefaultValues(const MetaStruct& stru, const std::vector<bool>& fieldsDone)
