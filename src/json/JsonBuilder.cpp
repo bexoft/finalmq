@@ -376,7 +376,7 @@ void JsonBuilder::escapeString(const char* str, ssize_t size)
                 m_buffer++;
                 *m_buffer = '0';
                 m_buffer++;
-                *m_buffer = hexDigits[(c >> 4)];
+                *m_buffer = hexDigits[(c >> 4) & 0x0f];
                 m_buffer++;
                 *m_buffer = hexDigits[(c & 0x0f)];
                 m_buffer++;
