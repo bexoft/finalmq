@@ -85,8 +85,23 @@ module.exports = {
         return list[list.length - 1]
     },
      
-    tid2type : function(data, tid, type) { 
+    isNullable: function (field) {
+        var flagArray = field.flags;
+        if (flagArray) {
+            for (var i = 0; i < flagArray.length; i++) {
+                if (flagArray[i] == 'METAFLAG_NULLABLE') {
+                    return true;
+                }
+            }
+        }
+        return false;
+    },
 
+    tid2type : function(data, field) {
+
+        var tid = field.tid;
+        var type = field.type;
+        var nullable = this.isNullable(field);
         switch (tid)
         {
             case 'bool':
@@ -108,7 +123,13 @@ module.exports = {
             case 'bytes':
             case 'TYPE_BYTES': return 'byte[]'
             case 'struct':
-            case 'TYPE_STRUCT': return this.typeWithNamespace(data, type, '.')
+            case 'TYPE_STRUCT':
+                if (!nullable) {
+                    return this.typeWithNamespace(data, type, '.')
+                }
+                else {
+                    return this.typeWithNamespace(data, type, '.') + '?'
+                }
             case 'enum':
             case 'TYPE_ENUM': return this.typeWithNamespace(data, type, '.')
             case 'variant':
@@ -143,7 +164,11 @@ module.exports = {
 	// 1: compare with Equals
 	// 2: compare with SequenceEqual
 	// 3: compare list of arrays with SequenceEqual (only IList<byte[]>
-    tid2CompareType : function(tid) { 
+	// 4: compare as nullable struct
+    tid2CompareType : function(field) {
+
+        var tid = field.tid;
+        var nullable = this.isNullable(field);
 
         switch (tid)
         {
@@ -166,7 +191,13 @@ module.exports = {
             case 'bytes':
             case 'TYPE_BYTES': return 2;
             case 'struct':
-            case 'TYPE_STRUCT': return 1;
+            case 'TYPE_STRUCT': 
+                if (!nullable) {
+                    return 1;
+                }
+                else {
+                    return 4;
+                }
             case 'enum':
             case 'TYPE_ENUM': return 0;
             case 'variant':
@@ -196,7 +227,11 @@ module.exports = {
         }
     },
 
-    tid2default : function(data, tid, type) { 
+    tid2default : function(data, field) { 
+
+        var tid = field.tid;
+        var type = field.type;
+        var nullable = this.isNullable(field);
 
         switch (tid)
         {
@@ -219,9 +254,15 @@ module.exports = {
             case 'bytes':
             case 'TYPE_BYTES': return 'Array.Empty<byte>()'
             case 'struct':
-            case 'TYPE_STRUCT': return 'new ' + this.tid2type(data, tid, type) + '()'
+            case 'TYPE_STRUCT': 
+                if (!nullable) {
+                    return 'new ' + this.tid2type(data, field) + '()'
+                }
+                else {
+                    return 'null'
+                }
             case 'enum':
-            case 'TYPE_ENUM': return 'new ' + this.tid2type(data, tid, type) + '()'
+            case 'TYPE_ENUM': return 'new ' + this.tid2type(data, field) + '()'
             case 'variant':
             case 'TYPE_VARIANT': return 'new finalmq.Variant()'
             case 'bool[]':

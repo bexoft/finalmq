@@ -227,6 +227,52 @@ namespace testfinalmq
             Debug.Assert(root.Equals(cmp));
         }
 
+        [Fact]
+        public void TestStructNullableNotNull()
+        {
+            int VALUE_INT32 = -2;
+            string VALUE_STRING = "Hello World";
+            uint VALUE_UINT32 = 123;
+
+            var root = new test.TestStructNullable();
+            IParserVisitor serializer = new SerializerStruct(root);
+
+            serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestStructNullable")!);
+            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0));
+            serializer.EnterInt32(new MetaField(MetaTypeId.TYPE_INT32, "", "value", "", 0, 0), VALUE_INT32);
+            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0));
+            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "", 0, 1));
+            serializer.EnterString(new MetaField(MetaTypeId.TYPE_STRING, "", "value", "", 0, 0), VALUE_STRING);
+            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "", 0, 1));
+            serializer.EnterUInt32(new MetaField(MetaTypeId.TYPE_UINT32, "", "last_value", "", 0, 2), VALUE_UINT32);
+            serializer.Finished();
+
+            var cmp = new test.TestStructNullable(new test.TestInt32(VALUE_INT32), new test.TestString(VALUE_STRING), VALUE_UINT32);
+            Debug.Assert(root.Equals(cmp));
+        }
+
+        [Fact]
+        public void TestStructNullableNull()
+        {
+            int VALUE_INT32 = -2;
+            string VALUE_STRING = "Hello World";
+            uint VALUE_UINT32 = 123;
+
+            var root = new test.TestStructNullable();
+            IParserVisitor serializer = new SerializerStruct(root);
+
+            serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestStructNullable")!);
+            serializer.EnterStructNull(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0));
+            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "", 0, 1));
+            serializer.EnterString(new MetaField(MetaTypeId.TYPE_STRING, "", "value", "", 0, 0), VALUE_STRING);
+            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "", 0, 1));
+            serializer.EnterUInt32(new MetaField(MetaTypeId.TYPE_UINT32, "", "last_value", "", 0, 2), VALUE_UINT32);
+            serializer.Finished();
+
+            var cmp = new test.TestStructNullable(null, new test.TestString(VALUE_STRING), VALUE_UINT32);
+            Debug.Assert(root.Equals(cmp));
+        }
+
 
         [Fact]
         public void TestEnum()

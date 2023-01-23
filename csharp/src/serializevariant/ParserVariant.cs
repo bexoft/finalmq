@@ -101,6 +101,7 @@ namespace finalmq
                     }
                     break;
                 case MetaTypeId.TYPE_STRUCT:
+                    if ((sub.VarType != (int)Variant.VARTYPE_NONE) || ((field.Flags & (int)MetaFieldFlags.METAFLAG_NULLABLE) == 0))
                     {
                         m_visitor.EnterStruct(field);
                         if (field.TypeName == STR_VARVALUE)
@@ -121,6 +122,10 @@ namespace finalmq
                             }
                         }
                         m_visitor.ExitStruct(field);
+                    }
+                    else
+                    {
+                        m_visitor.EnterStructNull(field);
                     }
                     break;
                 case MetaTypeId.TYPE_ENUM:
@@ -237,6 +242,7 @@ namespace finalmq
                     m_visitor.EnterBytes(field, Array.Empty<byte>(), 0, 0);
                     break;
                 case MetaTypeId.TYPE_STRUCT:
+                    if ((field.Flags & (int)MetaFieldFlags.METAFLAG_NULLABLE) == 0)
                     {
                         m_visitor.EnterStruct(field);
                         if (field.TypeName == STR_VARVALUE)
@@ -257,6 +263,10 @@ namespace finalmq
                             }
                         }
                         m_visitor.ExitStruct(field);
+                    }
+                    else
+                    {
+                        m_visitor.EnterStructNull(field);
                     }
                     break;
                 case MetaTypeId.TYPE_ENUM:

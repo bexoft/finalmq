@@ -36,24 +36,27 @@ namespace Fmq.Test {
             "CzIULmZtcS50ZXN0LlRlc3RTdHJpbmcSEgoKbGFzdF92YWx1ZRgDIAEoByKB",
             "AQoTVGVzdFN0cnVjdEJsb2NrU2l6ZRIpCgxzdHJ1Y3RfaW50MzIYASABKAsy",
             "Ey5mbXEudGVzdC5UZXN0SW50MzISKwoNc3RydWN0X3N0cmluZxgCIAEoCzIU",
-            "LmZtcS50ZXN0LlRlc3RTdHJpbmcSEgoKbGFzdF92YWx1ZRgDIAEoDSIoCghU",
-            "ZXN0RW51bRIcCgV2YWx1ZRgBIAEoDjINLmZtcS50ZXN0LkZvbyJ+CgtUZXN0",
-            "VmFyaWFudBIsCgV2YWx1ZRgBIAEoCzIdLmZtcS5maW5hbG1xLnZhcmlhbnQu",
-            "VmFyVmFsdWUSEgoKdmFsdWVJbnQzMhgCIAEoDxItCgZ2YWx1ZTIYAyABKAsy",
-            "HS5mbXEuZmluYWxtcS52YXJpYW50LlZhclZhbHVlIh4KDVRlc3RBcnJheUJv",
-            "b2wSDQoFdmFsdWUYASADKAgiHwoOVGVzdEFycmF5SW50MzISDQoFdmFsdWUY",
-            "ASADKA8iIAoPVGVzdEFycmF5VUludDMyEg0KBXZhbHVlGAEgAygHIh8KDlRl",
-            "c3RBcnJheUludDY0Eg0KBXZhbHVlGAEgAygQIiAKD1Rlc3RBcnJheVVJbnQ2",
-            "NBINCgV2YWx1ZRgBIAMoBiIfCg5UZXN0QXJyYXlGbG9hdBINCgV2YWx1ZRgB",
-            "IAMoAiIgCg9UZXN0QXJyYXlEb3VibGUSDQoFdmFsdWUYASADKAEiIAoPVGVz",
-            "dEFycmF5U3RyaW5nEg0KBXZhbHVlGAEgAygJIh8KDlRlc3RBcnJheUJ5dGVz",
-            "Eg0KBXZhbHVlGAEgAygMIkoKD1Rlc3RBcnJheVN0cnVjdBIjCgV2YWx1ZRgB",
-            "IAMoCzIULmZtcS50ZXN0LlRlc3RTdHJ1Y3QSEgoKbGFzdF92YWx1ZRgCIAEo",
-            "ByItCg1UZXN0QXJyYXlFbnVtEhwKBXZhbHVlGAEgAygOMg0uZm1xLnRlc3Qu",
-            "Rm9vIiIKC1Rlc3RSZXF1ZXN0EhMKC2RhdGFyZXF1ZXN0GAEgASgJIh4KCVRl",
-            "c3RSZXBseRIRCglkYXRhcmVwbHkYASABKAkqPAoDRm9vEg0KCUZPT19XT1JM",
-            "RBAAEhYKCUZPT19IRUxMTxD+//////////8BEg4KCkZPT19XT1JMRDIQAWIG",
-            "cHJvdG8z"));
+            "LmZtcS50ZXN0LlRlc3RTdHJpbmcSEgoKbGFzdF92YWx1ZRgDIAEoDSKAAQoS",
+            "VGVzdFN0cnVjdE51bGxhYmxlEikKDHN0cnVjdF9pbnQzMhgBIAEoCzITLmZt",
+            "cS50ZXN0LlRlc3RJbnQzMhIrCg1zdHJ1Y3Rfc3RyaW5nGAIgASgLMhQuZm1x",
+            "LnRlc3QuVGVzdFN0cmluZxISCgpsYXN0X3ZhbHVlGAMgASgHIigKCFRlc3RF",
+            "bnVtEhwKBXZhbHVlGAEgASgOMg0uZm1xLnRlc3QuRm9vIn4KC1Rlc3RWYXJp",
+            "YW50EiwKBXZhbHVlGAEgASgLMh0uZm1xLmZpbmFsbXEudmFyaWFudC5WYXJW",
+            "YWx1ZRISCgp2YWx1ZUludDMyGAIgASgPEi0KBnZhbHVlMhgDIAEoCzIdLmZt",
+            "cS5maW5hbG1xLnZhcmlhbnQuVmFyVmFsdWUiHgoNVGVzdEFycmF5Qm9vbBIN",
+            "CgV2YWx1ZRgBIAMoCCIfCg5UZXN0QXJyYXlJbnQzMhINCgV2YWx1ZRgBIAMo",
+            "DyIgCg9UZXN0QXJyYXlVSW50MzISDQoFdmFsdWUYASADKAciHwoOVGVzdEFy",
+            "cmF5SW50NjQSDQoFdmFsdWUYASADKBAiIAoPVGVzdEFycmF5VUludDY0Eg0K",
+            "BXZhbHVlGAEgAygGIh8KDlRlc3RBcnJheUZsb2F0Eg0KBXZhbHVlGAEgAygC",
+            "IiAKD1Rlc3RBcnJheURvdWJsZRINCgV2YWx1ZRgBIAMoASIgCg9UZXN0QXJy",
+            "YXlTdHJpbmcSDQoFdmFsdWUYASADKAkiHwoOVGVzdEFycmF5Qnl0ZXMSDQoF",
+            "dmFsdWUYASADKAwiSgoPVGVzdEFycmF5U3RydWN0EiMKBXZhbHVlGAEgAygL",
+            "MhQuZm1xLnRlc3QuVGVzdFN0cnVjdBISCgpsYXN0X3ZhbHVlGAIgASgHIi0K",
+            "DVRlc3RBcnJheUVudW0SHAoFdmFsdWUYASADKA4yDS5mbXEudGVzdC5Gb28i",
+            "IgoLVGVzdFJlcXVlc3QSEwoLZGF0YXJlcXVlc3QYASABKAkiHgoJVGVzdFJl",
+            "cGx5EhEKCWRhdGFyZXBseRgBIAEoCSo8CgNGb28SDQoJRk9PX1dPUkxEEAAS",
+            "FgoJRk9PX0hFTExPEP7//////////wESDgoKRk9PX1dPUkxEMhABYgZwcm90",
+            "bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Fmq.Finalmq.Variant.VariantReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(new[] {typeof(global::Fmq.Test.Foo), }, null, new pbr::GeneratedClrTypeInfo[] {
@@ -69,6 +72,7 @@ namespace Fmq.Test {
             new pbr::GeneratedClrTypeInfo(typeof(global::Fmq.Test.TestBytes), global::Fmq.Test.TestBytes.Parser, new[]{ "Value" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Fmq.Test.TestStruct), global::Fmq.Test.TestStruct.Parser, new[]{ "StructInt32", "StructString", "LastValue" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Fmq.Test.TestStructBlockSize), global::Fmq.Test.TestStructBlockSize.Parser, new[]{ "StructInt32", "StructString", "LastValue" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Fmq.Test.TestStructNullable), global::Fmq.Test.TestStructNullable.Parser, new[]{ "StructInt32", "StructString", "LastValue" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Fmq.Test.TestEnum), global::Fmq.Test.TestEnum.Parser, new[]{ "Value" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Fmq.Test.TestVariant), global::Fmq.Test.TestVariant.Parser, new[]{ "Value", "ValueInt32", "Value2" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Fmq.Test.TestArrayBool), global::Fmq.Test.TestArrayBool.Parser, new[]{ "Value" }, null, null, null, null),
@@ -2551,6 +2555,287 @@ namespace Fmq.Test {
 
   }
 
+  public sealed partial class TestStructNullable : pb::IMessage<TestStructNullable>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<TestStructNullable> _parser = new pb::MessageParser<TestStructNullable>(() => new TestStructNullable());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<TestStructNullable> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[12]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public TestStructNullable() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public TestStructNullable(TestStructNullable other) : this() {
+      structInt32_ = other.structInt32_ != null ? other.structInt32_.Clone() : null;
+      structString_ = other.structString_ != null ? other.structString_.Clone() : null;
+      lastValue_ = other.lastValue_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public TestStructNullable Clone() {
+      return new TestStructNullable(this);
+    }
+
+    /// <summary>Field number for the "struct_int32" field.</summary>
+    public const int StructInt32FieldNumber = 1;
+    private global::Fmq.Test.TestInt32 structInt32_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::Fmq.Test.TestInt32 StructInt32 {
+      get { return structInt32_; }
+      set {
+        structInt32_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "struct_string" field.</summary>
+    public const int StructStringFieldNumber = 2;
+    private global::Fmq.Test.TestString structString_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::Fmq.Test.TestString StructString {
+      get { return structString_; }
+      set {
+        structString_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "last_value" field.</summary>
+    public const int LastValueFieldNumber = 3;
+    private uint lastValue_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public uint LastValue {
+      get { return lastValue_; }
+      set {
+        lastValue_ = value;
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as TestStructNullable);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(TestStructNullable other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (!object.Equals(StructInt32, other.StructInt32)) return false;
+      if (!object.Equals(StructString, other.StructString)) return false;
+      if (LastValue != other.LastValue) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (structInt32_ != null) hash ^= StructInt32.GetHashCode();
+      if (structString_ != null) hash ^= StructString.GetHashCode();
+      if (LastValue != 0) hash ^= LastValue.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (structInt32_ != null) {
+        output.WriteRawTag(10);
+        output.WriteMessage(StructInt32);
+      }
+      if (structString_ != null) {
+        output.WriteRawTag(18);
+        output.WriteMessage(StructString);
+      }
+      if (LastValue != 0) {
+        output.WriteRawTag(29);
+        output.WriteFixed32(LastValue);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (structInt32_ != null) {
+        output.WriteRawTag(10);
+        output.WriteMessage(StructInt32);
+      }
+      if (structString_ != null) {
+        output.WriteRawTag(18);
+        output.WriteMessage(StructString);
+      }
+      if (LastValue != 0) {
+        output.WriteRawTag(29);
+        output.WriteFixed32(LastValue);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (structInt32_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(StructInt32);
+      }
+      if (structString_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(StructString);
+      }
+      if (LastValue != 0) {
+        size += 1 + 4;
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(TestStructNullable other) {
+      if (other == null) {
+        return;
+      }
+      if (other.structInt32_ != null) {
+        if (structInt32_ == null) {
+          StructInt32 = new global::Fmq.Test.TestInt32();
+        }
+        StructInt32.MergeFrom(other.StructInt32);
+      }
+      if (other.structString_ != null) {
+        if (structString_ == null) {
+          StructString = new global::Fmq.Test.TestString();
+        }
+        StructString.MergeFrom(other.StructString);
+      }
+      if (other.LastValue != 0) {
+        LastValue = other.LastValue;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 10: {
+            if (structInt32_ == null) {
+              StructInt32 = new global::Fmq.Test.TestInt32();
+            }
+            input.ReadMessage(StructInt32);
+            break;
+          }
+          case 18: {
+            if (structString_ == null) {
+              StructString = new global::Fmq.Test.TestString();
+            }
+            input.ReadMessage(StructString);
+            break;
+          }
+          case 29: {
+            LastValue = input.ReadFixed32();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 10: {
+            if (structInt32_ == null) {
+              StructInt32 = new global::Fmq.Test.TestInt32();
+            }
+            input.ReadMessage(StructInt32);
+            break;
+          }
+          case 18: {
+            if (structString_ == null) {
+              StructString = new global::Fmq.Test.TestString();
+            }
+            input.ReadMessage(StructString);
+            break;
+          }
+          case 29: {
+            LastValue = input.ReadFixed32();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
   public sealed partial class TestEnum : pb::IMessage<TestEnum>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -2565,7 +2850,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[12]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[13]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2754,7 +3039,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[13]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[14]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3035,7 +3320,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[14]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[15]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3215,7 +3500,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[15]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[16]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3395,7 +3680,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[16]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[17]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3575,7 +3860,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[17]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[18]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3755,7 +4040,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[18]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[19]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3935,7 +4220,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[19]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[20]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -4115,7 +4400,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[20]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[21]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -4295,7 +4580,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[21]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[22]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -4473,7 +4758,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[22]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[23]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -4651,7 +4936,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[23]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[24]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -4866,7 +5151,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[24]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[25]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -5046,7 +5331,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[25]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[26]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -5235,7 +5520,7 @@ namespace Fmq.Test {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[26]; }
+      get { return global::Fmq.Test.TestReflection.Descriptor.MessageTypes[27]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]

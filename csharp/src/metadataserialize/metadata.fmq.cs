@@ -88,6 +88,8 @@ public enum SerializeMetaFieldFlags
     METAFLAG_PROTO_VARINT = 1,
 	[finalmq.MetaEnumEntry("desc", "")]
     METAFLAG_PROTO_ZIGZAG = 2,
+	[finalmq.MetaEnumEntry("desc", "")]
+    METAFLAG_NULLABLE = 4,
 }
 class RegisterSerializeMetaFieldFlags
 {

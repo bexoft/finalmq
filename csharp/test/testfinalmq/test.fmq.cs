@@ -873,6 +873,95 @@ public class TestStructBlockSize : finalmq.StructBase, IEquatable<TestStructBloc
 }
 
 [finalmq.MetaStruct("desc")]
+public class TestStructNullable : finalmq.StructBase, IEquatable<TestStructNullable>
+{
+    public TestStructNullable()
+	{
+	}
+	
+
+    public TestStructNullable(test.TestInt32? struct_int32, test.TestString struct_string, uint last_value)
+	{
+		m_struct_int32 = struct_int32;
+		m_struct_string = struct_string;
+		m_last_value = last_value;
+	}
+
+	[finalmq.MetaField("desc", finalmq.MetaFieldFlags.METAFLAG_NULLABLE)]
+    public test.TestInt32? struct_int32
+	{
+		get { return m_struct_int32; }
+		set { m_struct_int32 = value; }
+	}
+	[finalmq.MetaField("desc")]
+    public test.TestString struct_string
+	{
+		get { return m_struct_string; }
+		set { m_struct_string = value; }
+	}
+	[finalmq.MetaField("desc")]
+    public uint last_value
+	{
+		get { return m_last_value; }
+		set { m_last_value = value; }
+	}
+
+    test.TestInt32? m_struct_int32 = null;
+    test.TestString m_struct_string = new test.TestString();
+    uint m_last_value = 0;
+
+	public bool Equals(TestStructNullable? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+		if (!((struct_int32 == rhs.struct_int32) || ((struct_int32 != null) && (struct_int32 != null) && struct_int32.Equals(rhs.struct_int32))))
+		{
+			return false;
+		}
+		if (!m_struct_string.Equals(rhs.m_struct_string))
+		{
+			return false;
+		}
+		if (m_last_value != rhs.m_last_value)
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestStructNullable));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
+#pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+    [ModuleInitializer]
+#pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+    internal static void RegisterStruct()
+    {
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(TestStructNullable));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(TestStructNullable), m_metaStruct, () => { return new TestStructNullable(); } );
+    }
+}
+
+[finalmq.MetaStruct("desc")]
 public class TestEnum : finalmq.StructBase, IEquatable<TestEnum>
 {
     public TestEnum()

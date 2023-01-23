@@ -94,6 +94,13 @@ message TestStructBlockSize
     uint32 last_value = 3;
 };
 
+message TestStructNullable
+{
+    fmq.test.TestInt32 struct_int32 = 1;
+    fmq.test.TestString struct_string = 2;
+    fixed32 last_value = 3;
+};
+
 message TestEnum
 {
     fmq.test.Foo value = 1;

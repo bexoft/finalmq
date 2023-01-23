@@ -39,59 +39,74 @@ namespace finalmq
                 }
             }
         }
+
+        private bool IsNullable(PropertyInfo property)
+        {
+            object[]? attributes = property.GetCustomAttributes(false);
+            if (attributes != null)
+            {
+                foreach (var attribute in attributes)
+                {
+                    MetaFieldAttribute? attr = attribute as MetaFieldAttribute;
+                    if (attr != null)
+                    {
+                        bool nullable = (attr.Flags & MetaFieldFlags.METAFLAG_NULLABLE) != 0;
+                        return nullable;
+                    }
+                }
+            }
+            return false;
+        }
+
         void ProcessField(StructBase structBase, MetaField field, PropertyInfo property)
         {
             object? value = property.GetValue(structBase);
-            if (value == null)
-            {
-                return;
-            }
             switch (field.TypeId)
             {
                 case MetaTypeId.TYPE_BOOL:
-                    if (value.GetType() == typeof(bool))
+                    if (value != null && value.GetType() == typeof(bool))
                     {
                         m_visitor.EnterBool(field, (bool)value);
                     }
                     break;
                 case MetaTypeId.TYPE_INT32:
-                    if (value.GetType() == typeof(int))
+                    if (value != null && value.GetType() == typeof(int))
                     {
                         m_visitor.EnterInt32(field, (int)value);
                     }
                     break;
                 case MetaTypeId.TYPE_UINT32:
-                    if (value.GetType() == typeof(uint))
+                    if (value != null && value.GetType() == typeof(uint))
                     {
                         m_visitor.EnterUInt32(field, (uint)value);
                     }
                     break;
                 case MetaTypeId.TYPE_INT64:
-                    if (value.GetType() == typeof(long))
+                    if (value != null && value.GetType() == typeof(long))
                     {
                         m_visitor.EnterInt64(field, (long)value);
                     }
                     break;
                 case MetaTypeId.TYPE_UINT64:
-                    if (value.GetType() == typeof(ulong))
+                    if (value != null && value.GetType() == typeof(ulong))
                     {
                         m_visitor.EnterUInt64(field, (ulong)value);
                     }
                     break;
                 case MetaTypeId.TYPE_FLOAT:
-                    if (value.GetType() == typeof(float))
+                    if (value != null && value.GetType() == typeof(float))
                     {
                         m_visitor.EnterFloat(field, (float)value);
                     }
                     break;
                 case MetaTypeId.TYPE_DOUBLE:
-                    if (value.GetType() == typeof(double))
+                    if (value != null && value.GetType() == typeof(double))
                     {
                         m_visitor.EnterDouble(field, (double)value);
                     }
                     break;
                 case MetaTypeId.TYPE_STRING:
-                    if (value.GetType() == typeof(string))
+                    if (value != null && value.GetType() == typeof(string))
                     {
                         m_visitor.EnterString(field, (string)value);
                     }
@@ -118,11 +133,34 @@ namespace finalmq
                     else
                     {
                         StructBase? sub = value as StructBase;
-                        if (sub != null)
+                        if ((sub != null) || !IsNullable(property))
                         {
-                            m_visitor.EnterStruct(field);
-                            ParseStruct(sub, sub.MetaStruct);
-                            m_visitor.ExitStruct(field);
+                            if (sub != null)
+                            {
+                                m_visitor.EnterStruct(field);
+                                ParseStruct(sub, sub.MetaStruct);
+                                m_visitor.ExitStruct(field);
+                            }
+                            else
+                            {
+                                try
+                                {
+                                    sub = Activator.CreateInstance(property.PropertyType) as StructBase;
+                                }
+                                catch (Exception)
+                                {
+                                }
+                                if (sub != null)
+                                {
+                                    m_visitor.EnterStruct(field);
+                                    ParseStruct(sub, sub.MetaStruct);
+                                    m_visitor.ExitStruct(field);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            m_visitor.EnterStructNull(field);
                         }
                     }
                     break;

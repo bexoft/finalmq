@@ -48,6 +48,11 @@
             {"tid":"TYPE_STRUCT","type":"TestString","name":"struct_string","desc":"desc","flags":[]},
             {"tid":"TYPE_UINT32","type":"","name":"last_value","desc":"desc","flags":["METAFLAG_PROTO_VARINT"]}
         ]},
+        {"type":"TestStructNullable","desc":"desc","fields":[
+            {"tid":"TYPE_STRUCT","type":"TestInt32","name":"struct_int32","desc":"desc","flags":["METAFLAG_NULLABLE"]},
+            {"tid":"TYPE_STRUCT","type":"TestString","name":"struct_string","desc":"desc","flags":[]},
+            {"tid":"TYPE_UINT32","type":"","name":"last_value","desc":"desc","flags":[]}
+        ]},
         {"type":"TestEnum","desc":"desc","fields":[
             {"tid":"TYPE_ENUM","type":"Foo","name":"value","desc":"desc","flags":[]}
         ]},

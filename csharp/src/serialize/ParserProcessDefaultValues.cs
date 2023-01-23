@@ -101,6 +101,16 @@ namespace finalmq
             m_visitor.ExitStruct(field);
         }
 
+        public void EnterStructNull(MetaField field)
+        {
+            Debug.Assert(m_visitor != null);
+            MarkAsDone(field);
+            if (!m_skipDefaultValues)
+            {
+                m_visitor.EnterStructNull(field);
+            }
+        }
+
         void ProcessDefaultValues(MetaStruct stru, bool[] fieldsDone)
         {
             Debug.Assert(m_visitor != null);
@@ -144,6 +154,7 @@ namespace finalmq
                             m_visitor.EnterBytes(field, Array.Empty<byte>(), 0, 0);
                             break;
                         case MetaTypeId.TYPE_STRUCT:
+                            if ((field.Flags & (int)MetaFieldFlags.METAFLAG_NULLABLE) == 0)
                             {
                                 m_visitor.EnterStruct(field);
                                 MetaStruct? substru = MetaDataGlobal.Instance.GetStruct(field);
@@ -153,6 +164,10 @@ namespace finalmq
                                     ProcessDefaultValues(substru, subfieldsDone);
                                 }
                                 m_visitor.ExitStruct(field);
+                            }
+                            else
+                            {
+                                m_visitor.EnterStructNull(field);
                             }
                             break;
                         case MetaTypeId.TYPE_ENUM:
@@ -446,8 +461,6 @@ namespace finalmq
         MetaStruct? m_struct = null;
         readonly IList<bool[]> m_stackFieldsDone = new List<bool[]>();
         int m_varValueActive = 0;
-
-        static readonly string EmptyString = "";
     }
 
 }
