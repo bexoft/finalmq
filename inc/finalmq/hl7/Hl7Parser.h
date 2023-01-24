@@ -26,54 +26,50 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 namespace finalmq {
 
-struct IHl7ParserVisitor
+static const ssize_t CHECK_ON_ZEROTERM = -1;
+    
+struct IHl7Parser
 {
-    virtual ~IHl7ParserVisitor() {}
-    virtual void syntaxError(const char* str, const char* message) = 0;
-    virtual void enterStruct() = 0;
-    virtual void exitStruct() = 0;
-    virtual void enterArray() = 0;
-    virtual void exitArray() = 0;
-    virtual void enterNull() = 0;
-    virtual void enterEmpty() = 0;
-    virtual void enterInt64(std::int64_t value) = 0;
-    virtual void enterUInt64(std::uint64_t value) = 0;
-    virtual void enterDouble(double value) = 0;
-    virtual void enterString(const char* value, ssize_t size) = 0;
-    virtual void enterString(std::string&& value) = 0;
-    virtual void finished() = 0;
+    virtual ~IHl7Parser() {}
+    virtual int startParse(const char* str, ssize_t size = CHECK_ON_ZEROTERM) = 0;
+    virtual int parseToken(int level, std::string& token) = 0;
+    virtual int parseTokenArray(int level, std::vector<std::string>& array) = 0;
+    virtual int parseTillEndOfStruct(int level) = 0;
+    virtual const char* getCurrentPosition() const = 0;
 };
 
 
-static const ssize_t CHECK_ON_ZEROTERM = -1;
-
-/*
-class SYMBOLEXP JsonParser
+class SYMBOLEXP Hl7Parser : public IHl7Parser
 {
 public:
-    JsonParser(IJsonParserVisitor& visitor);
+    Hl7Parser();
 
-    const char* parse(const char* str, ssize_t size = CHECK_ON_ZEROTERM);
+    virtual int startParse(const char* str, ssize_t size = CHECK_ON_ZEROTERM) override;
+    virtual int parseToken(int level, std::string& token) override;
+    virtual int parseTokenArray(int level, std::vector<std::string>& array) override;
+    virtual int parseTillEndOfStruct(int level) override;
+    virtual const char* getCurrentPosition() const override;
 
 private:
-    const char* parseValue(const char* str);
-    inline const char* parseWhiteSpace(const char* str);
-    const char* parseObject(const char* str);
-    const char* parseArray(const char* str);
-    const char* parseNumber(const char* str);
-    const char* parseString(const char* str, bool key);
-    const char* parseNull(const char* str);
-    const char* parseTrue(const char* str);
-    const char* parseFalse(const char* str);
-    const char* cmpString(const char* str, const char* strCmp);
-    const char* parseUEscape(const char* str, std::uint32_t& value);
     inline char getChar(const char* str) const;
+    void skipControlCharacters();
+    int isDelimiter(char c) const;
+    std::string deEscape(const char* start, const char* end) const;
 
-    IJsonParserVisitor& m_visitor;
     const char* m_end = nullptr;
+    const char* m_str = nullptr;
+
+    int m_level = 0;
+
+    static const int LAYER_MAX = 4;
+
+    char                    m_delimiterField[LAYER_MAX];
+    char                    m_delimiterRepeat;
+    char                    m_escape;
 };
-*/
+
 }   // namespace finalmq

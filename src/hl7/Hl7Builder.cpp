@@ -294,14 +294,12 @@ void Hl7Builder::escapeString(const char* str, ssize_t size)
             m_buffer++;
             *m_buffer = hexDigits[(c & 0x0f)];
             m_buffer++;
-            *m_buffer = 'X';
-            m_buffer++;
             *m_buffer = m_escape;
             m_buffer++;
         }
         else
         {
-            if (c == m_delimiterField[0])   // '|'
+            if (c == m_delimiterField[1])   // '|'
             {
                 *m_buffer = m_escape;
                 m_buffer++;
@@ -310,7 +308,7 @@ void Hl7Builder::escapeString(const char* str, ssize_t size)
                 *m_buffer = m_escape;
                 m_buffer++;
             }
-            else if (c == m_delimiterField[1])   // '^'
+            else if (c == m_delimiterField[2])   // '^'
             {
                 *m_buffer = m_escape;
                 m_buffer++;
@@ -319,7 +317,7 @@ void Hl7Builder::escapeString(const char* str, ssize_t size)
                 *m_buffer = m_escape;
                 m_buffer++;
             }
-            else if (c == m_delimiterField[2])   // '&'
+            else if (c == m_delimiterField[3])   // '&'
             {
                 *m_buffer = m_escape;
                 m_buffer++;
@@ -337,7 +335,7 @@ void Hl7Builder::escapeString(const char* str, ssize_t size)
                 *m_buffer = m_escape;
                 m_buffer++;
             }
-            else if (c == m_escape)   // '~'
+            else if (c == m_delimiterRepeat)   // '~'
             {
                 *m_buffer = m_escape;
                 m_buffer++;

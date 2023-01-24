@@ -67,7 +67,7 @@ protected:
     {
     }
 
-    std::unique_ptr<IHl7ParserVisitor>  m_builder;
+    std::unique_ptr<IHl7BuilderVisitor>  m_builder;
     String                              m_data;
     MockIZeroCopyBuffer                 m_mockBuffer;
 };
@@ -282,4 +282,58 @@ TEST_F(TestHl7Builder, testArray)
     m_builder->exitStruct();
     m_builder->finished();
     EXPECT_EQ(m_data, "MSG|^~\\&|a1|a2.1~a2.2~a2.3|b1^b2.1~b2.2~b2.3~~^c1&c2.1~c2.2~c2.3&c3&c4^b3^b4|a3|a4\rTST\r");
+}
+
+
+TEST_F(TestHl7Builder, testTypes)
+{
+    m_builder->enterStruct();
+    m_builder->enterString("MSG");
+    m_builder->enterString("");
+    m_builder->enterUInt64(123);
+    m_builder->enterDouble(0.123);
+
+    m_builder->enterStruct();
+    m_builder->enterInt64(-2);
+    m_builder->enterInt64(12);
+
+    m_builder->enterStruct();
+    m_builder->enterInt64(1);
+    m_builder->enterInt64(2);
+    m_builder->enterInt64(-3);
+    m_builder->enterInt64(-4);
+    m_builder->exitStruct();
+
+    m_builder->enterDouble(1.1);
+    m_builder->enterDouble(2.1);
+    m_builder->exitStruct();
+
+    m_builder->enterUInt64(1);
+    m_builder->enterUInt64(2);
+    m_builder->exitStruct();
+
+    m_builder->enterStruct();
+    m_builder->enterString("TST");
+    m_builder->exitStruct();
+    m_builder->finished();
+    EXPECT_EQ(m_data, "MSG|^~\\&|123|0.123|-2^12^1&2&-3&-4^1.1^2.1|1|2\rTST\r");
+}
+
+TEST_F(TestHl7Builder, testEscape)
+{
+    m_builder->enterStruct();
+
+    m_builder->enterString("MSG");
+    m_builder->enterString("");
+    m_builder->enterString("\r\n\t|^&~\\");
+    m_builder->enterString("a");
+    m_builder->exitStruct();
+
+    m_builder->enterStruct();
+    m_builder->enterString("TST");
+    m_builder->exitStruct();
+
+    m_builder->finished();
+
+    EXPECT_EQ(m_data, "MSG|^~\\&|\\X0D\\\\X0A\\\\X09\\\\F\\\\S\\\\T\\\\R\\\\E\\|a\rTST\r");
 }

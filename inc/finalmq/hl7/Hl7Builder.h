@@ -22,19 +22,39 @@
 
 #pragma once
 
-#include "finalmq/hl7/Hl7Parser.h"
 #include "finalmq/helpers/IZeroCopyBuffer.h"
+#include <string>
 
 namespace finalmq {
 
-class SYMBOLEXP Hl7Builder : public IHl7ParserVisitor
+struct IHl7BuilderVisitor
+{
+    virtual ~IHl7BuilderVisitor() {}
+    virtual void syntaxError(const char* str, const char* message) = 0;
+    virtual void enterStruct() = 0;
+    virtual void exitStruct() = 0;
+    virtual void enterArray() = 0;
+    virtual void exitArray() = 0;
+    virtual void enterNull() = 0;
+    virtual void enterEmpty() = 0;
+    virtual void enterInt64(std::int64_t value) = 0;
+    virtual void enterUInt64(std::uint64_t value) = 0;
+    virtual void enterDouble(double value) = 0;
+    virtual void enterString(const char* value, ssize_t size) = 0;
+    virtual void enterString(std::string&& value) = 0;
+    virtual void finished() = 0;
+};
+
+
+
+class SYMBOLEXP Hl7Builder : public IHl7BuilderVisitor
 {
 public:
     Hl7Builder(IZeroCopyBuffer& buffer, int maxBlockSize = 512, const std::string& delimiters = "|^~\\&");
     ~Hl7Builder();
 
 private:
-    // IHl7ParserVisitor
+    // IHl7BuilderVisitor
     virtual void syntaxError(const char* str, const char* message) override;
     virtual void enterStruct() override;
     virtual void exitStruct() override;
