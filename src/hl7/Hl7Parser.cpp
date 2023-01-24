@@ -282,7 +282,6 @@ std::string Hl7Parser::deEscape(const char* start, const char* end) const
 {
     std::string dest;
     const char* src = start;
-    int ix = 0;
     while (src < end)
     {
         char c = *src;
