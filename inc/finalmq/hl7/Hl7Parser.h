@@ -35,7 +35,7 @@ static const ssize_t CHECK_ON_ZEROTERM = -1;
 struct IHl7Parser
 {
     virtual ~IHl7Parser() {}
-    virtual int startParse(const char* str, ssize_t size = CHECK_ON_ZEROTERM) = 0;
+    virtual bool startParse(const char* str, ssize_t size = CHECK_ON_ZEROTERM) = 0;
     virtual int parseToken(int level, std::string& token) = 0;
     virtual int parseTokenArray(int level, std::vector<std::string>& array) = 0;
     virtual int parseTillEndOfStruct(int level) = 0;
@@ -48,7 +48,7 @@ class SYMBOLEXP Hl7Parser : public IHl7Parser
 public:
     Hl7Parser();
 
-    virtual int startParse(const char* str, ssize_t size = CHECK_ON_ZEROTERM) override;
+    virtual bool startParse(const char* str, ssize_t size = CHECK_ON_ZEROTERM) override;
     virtual int parseToken(int level, std::string& token) override;
     virtual int parseTokenArray(int level, std::vector<std::string>& array) override;
     virtual int parseTillEndOfStruct(int level) override;
@@ -70,6 +70,8 @@ private:
     char                    m_delimiterField[LAYER_MAX];
     char                    m_delimiterRepeat;
     char                    m_escape;
+
+    int                     m_waitForDeleimiterField = 0;
 };
 
 }   // namespace finalmq
