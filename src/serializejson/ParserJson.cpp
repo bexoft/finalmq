@@ -65,8 +65,7 @@ const char* ParserJson::parseStruct(const std::string& typeName)
         return nullptr;
     }
 
-    MetaField field{MetaTypeId::TYPE_STRUCT, typeName};
-    field.metaStruct = stru;
+    MetaField field(MetaTypeId::TYPE_STRUCT, typeName, {}, {});
     m_fieldCurrent = &field;
 
     m_visitor.startStruct(*stru);
