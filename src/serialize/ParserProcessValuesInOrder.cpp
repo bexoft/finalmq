@@ -135,7 +135,7 @@ void ParserProcessValuesInOrder::Internal::exitStruct(const MetaField& field)
             {
                 // no struct array
                 assert(field.index >= 0);
-                if ((field.index + 1) < m_currentCalls->calls.size())
+                if ((field.index + 1) < static_cast<int>(m_currentCalls->calls.size()))
                 {
                     m_currentCalls->calls[field.index + 1] = callsSub;
                 }
