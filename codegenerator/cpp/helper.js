@@ -233,6 +233,22 @@ module.exports = {
         return flags
     },
 
+    convertStructFlags : function(flagArray)
+    {
+        var flags = 'finalmq::METASTRUCTFLAG_NONE'
+        if (flagArray)
+        {
+            for (var i = 0; i < flagArray.length; i++)
+            {
+				if (flagArray[i].startsWith('METASTRUCTFLAG_'))
+				{
+					flags += ' | finalmq::' + flagArray[i]
+				}
+            }
+        }
+        return flags
+    },
+
     getOffset : function(tid)
     {
         if (tid == 'TYPE_STRUCT')

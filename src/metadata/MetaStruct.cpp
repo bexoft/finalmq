@@ -27,6 +27,7 @@ namespace finalmq {
 
 
 MetaStruct::MetaStruct()
+    : m_flags(0)
 {
 
 }

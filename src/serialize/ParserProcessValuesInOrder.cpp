@@ -154,7 +154,7 @@ void ParserProcessValuesInOrder::Internal::enterStructNull(const MetaField& fiel
 {
     if ((m_currentCalls != nullptr) && ((field.index + 1) < static_cast<int>(m_currentCalls->calls.size())))
     {
-        m_currentCalls->calls[(field.index + 1)] = [this, field]() {m_visitor->enterStruct(field); };
+        m_currentCalls->calls[(field.index + 1)] = [this, field]() {m_visitor->enterStructNull(field); };
     }
 }
 

@@ -227,13 +227,14 @@ void Hl7Builder::enterString(const char* value, ssize_t size)
     }
 }
 
-void Hl7Builder::enterString(std::string&& value)
+void Hl7Builder::enterString(const std::string& value)
 {
     enterString(value.c_str(), value.size());
 }
 
 void Hl7Builder::finished()
 {
+    correctDelimiters();
     resizeBuffer();
 }
 

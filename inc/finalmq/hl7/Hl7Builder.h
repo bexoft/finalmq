@@ -41,7 +41,7 @@ struct IHl7BuilderVisitor
     virtual void enterUInt64(std::uint64_t value) = 0;
     virtual void enterDouble(double value) = 0;
     virtual void enterString(const char* value, ssize_t size) = 0;
-    virtual void enterString(std::string&& value) = 0;
+    virtual void enterString(const std::string& value) = 0;
     virtual void finished() = 0;
 };
 
@@ -66,7 +66,7 @@ private:
     virtual void enterUInt64(std::uint64_t value) override;
     virtual void enterDouble(double value) override;
     virtual void enterString(const char* value, ssize_t size) override;
-    virtual void enterString(std::string&& value) override;
+    virtual void enterString(const std::string& value) override;
     virtual void finished() override;
 
     void reserveSpace(ssize_t space);

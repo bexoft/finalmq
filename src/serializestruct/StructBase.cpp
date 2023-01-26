@@ -44,8 +44,8 @@ namespace finalmq {
     }
 
 
-    StructInfo::StructInfo(const std::string& typeName, const std::string& description, FuncStructBaseFactory factory, std::vector<MetaField>&& fields, std::vector<FieldInfo>&& fieldInfos)
-        : m_metaStruct(MetaDataGlobal::instance().addStruct({ typeName, description, std::move(fields) }))
+    StructInfo::StructInfo(const std::string& typeName, const std::string& description, int flags, FuncStructBaseFactory factory, std::vector<MetaField>&& fields, std::vector<FieldInfo>&& fieldInfos)
+        : m_metaStruct(MetaDataGlobal::instance().addStruct({ typeName, description, std::move(fields), flags }))
         , m_fieldInfos(std::move(fieldInfos))
     {
         StructFactoryRegistry::instance().registerFactory(typeName, factory);

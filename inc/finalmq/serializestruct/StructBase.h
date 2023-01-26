@@ -133,7 +133,7 @@ namespace finalmq {
     class SYMBOLEXP StructInfo
     {
     public:
-        StructInfo(const std::string& typeName, const std::string& description, FuncStructBaseFactory factory, std::vector<MetaField>&& fields, std::vector<FieldInfo>&& fieldInfos);
+        StructInfo(const std::string& typeName, const std::string& description, int flags, FuncStructBaseFactory factory, std::vector<MetaField>&& fields, std::vector<FieldInfo>&& fieldInfos);
 
         inline const std::string& getTypeName() const
         {
