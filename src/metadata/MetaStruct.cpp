@@ -31,9 +31,10 @@ MetaStruct::MetaStruct()
 
 }
 
-MetaStruct::MetaStruct(const std::string& typeName, const std::string& description, const std::vector<MetaField>& fields)
+MetaStruct::MetaStruct(const std::string& typeName, const std::string& description, const std::vector<MetaField>& fields, int flags)
     : m_typeName(typeName)
     , m_description(description)
+    , m_flags(flags)
 {
     for (size_t i = 0 ; i < fields.size(); ++i)
     {
@@ -41,9 +42,10 @@ MetaStruct::MetaStruct(const std::string& typeName, const std::string& descripti
     }
 }
 
-MetaStruct::MetaStruct(const std::string& typeName, const std::string& description, std::vector<MetaField>&& fields)
+MetaStruct::MetaStruct(const std::string& typeName, const std::string& description, std::vector<MetaField>&& fields, int flags)
     : m_typeName(typeName)
     , m_description(description)
+    , m_flags(flags)
 {
     for (size_t i = 0 ; i < fields.size(); ++i)
     {
@@ -71,6 +73,16 @@ void MetaStruct::setDescription(const std::string& description)
 const std::string& MetaStruct::getDescription() const
 {
     return m_description;
+}
+
+void MetaStruct::setFlags(int flags)
+{
+    m_flags = flags;
+}
+
+int MetaStruct::getFlags() const
+{
+    return m_flags;
 }
 
 
