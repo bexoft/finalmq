@@ -83,7 +83,7 @@ bool Hl7Parser::startParse(const char* str, ssize_t size)
             }
         }
 
-        if (m_str[0] == 'M' && m_str[1] == 'S' && m_str[2] == 'G')
+        if (m_str[0] == 'M' && m_str[1] == 'S' && m_str[2] == 'H')
         {
             m_delimiterField[0] = SEGMENT_END;      // segment delimiter '\r', 0x0D
             m_delimiterField[1] = m_str[3 + 0];    // |
@@ -123,19 +123,17 @@ int Hl7Parser::isDelimiter(char c) const
 
 int Hl7Parser::parseToken(int level, std::string& token)
 {
-    if (m_waitForDeleimiterField <= 2)
-    {
-        ++m_waitForDeleimiterField;
-    }
-
     int l = level;
-    if (m_waitForDeleimiterField == 2)
+    if (m_waitForDeleimiterField == 1)
     {
-        m_str--;
-        if (m_str + 5 < m_end)
+        token = std::string(m_str - 1, m_str);
+    }
+    else if (m_waitForDeleimiterField == 2)
+    {
+        if (m_str + 4 < m_end)
         {
-            token = std::string(m_str, m_str + 5);
-            m_str += 5 + 1;
+            token = std::string(m_str, m_str + 4);
+            m_str += 4 + 1;
         }
     }
     else
@@ -172,6 +170,12 @@ int Hl7Parser::parseToken(int level, std::string& token)
             l = parseTillEndOfStruct(level);
         }
     }
+
+    if (m_waitForDeleimiterField < 3)
+    {
+        ++m_waitForDeleimiterField;
+    }
+
     assert(l <= level);
     return l;
 }

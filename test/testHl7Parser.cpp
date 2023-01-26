@@ -64,28 +64,28 @@ TEST_F(TestHl7Parser, testStartParseWrongMessageStart)
 
 TEST_F(TestHl7Parser, testStartParseMessageTooShort)
 {
-    std::string hl7 = "MSG|";
+    std::string hl7 = "MSH|";
     bool res = m_parser->startParse(hl7.c_str());
     EXPECT_EQ(false, res);
 }
 
 TEST_F(TestHl7Parser, testStartParseMessageTooShortWithSize)
 {
-    std::string hl7 = "MSG|";
+    std::string hl7 = "MSH|";
     bool res = m_parser->startParse(hl7.c_str(), hl7.size());
     EXPECT_EQ(false, res);
 }
 
 TEST_F(TestHl7Parser, testStartParse)
 {
-    std::string hl7 = "MSG|^~\\&";
+    std::string hl7 = "MSH|^~\\&";
     bool res = m_parser->startParse(hl7.c_str());
     EXPECT_EQ(true, res);
 }
 
 TEST_F(TestHl7Parser, testParseToken)
 {
-    std::string hl7 = "MSG|^~\\&|a\x0d";
+    std::string hl7 = "MSH|^~\\&|a\x0d";
     bool res = m_parser->startParse(hl7.c_str());
     EXPECT_EQ(true, res);
 
@@ -93,11 +93,15 @@ TEST_F(TestHl7Parser, testParseToken)
     int level;
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "MSG");
+    EXPECT_EQ(token, "MSH");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "|^~\\&");
+    EXPECT_EQ(token, "|");
+
+    level = m_parser->parseToken(1, token);
+    EXPECT_EQ(1, level);
+    EXPECT_EQ(token, "^~\\&");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(0, level);
@@ -116,7 +120,7 @@ TEST_F(TestHl7Parser, testParseToken)
 
 TEST_F(TestHl7Parser, testParseTokenWithGivenSize)
 {
-    std::string hl7 = "MSG|^~\\&|a\x0d";
+    std::string hl7 = "MSH|^~\\&|a\x0d";
     bool res = m_parser->startParse(hl7.c_str(), hl7.size());
     EXPECT_EQ(true, res);
 
@@ -124,11 +128,15 @@ TEST_F(TestHl7Parser, testParseTokenWithGivenSize)
     int level;
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "MSG");
+    EXPECT_EQ(token, "MSH");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "|^~\\&");
+    EXPECT_EQ(token, "|");
+
+    level = m_parser->parseToken(1, token);
+    EXPECT_EQ(1, level);
+    EXPECT_EQ(token, "^~\\&");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(0, level);
@@ -147,7 +155,7 @@ TEST_F(TestHl7Parser, testParseTokenWithGivenSize)
 
 TEST_F(TestHl7Parser, testParseTokenWithStartCharacters)
 {
-    std::string hl7 = "\x0BMSG|^~\\&|a\x0d";
+    std::string hl7 = "\x0BMSH|^~\\&|a\x0d";
     bool res = m_parser->startParse(hl7.c_str());
     EXPECT_EQ(true, res);
 
@@ -155,11 +163,15 @@ TEST_F(TestHl7Parser, testParseTokenWithStartCharacters)
     int level;
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "MSG");
+    EXPECT_EQ(token, "MSH");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "|^~\\&");
+    EXPECT_EQ(token, "|");
+
+    level = m_parser->parseToken(1, token);
+    EXPECT_EQ(1, level);
+    EXPECT_EQ(token, "^~\\&");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(0, level);
@@ -178,7 +190,7 @@ TEST_F(TestHl7Parser, testParseTokenWithStartCharacters)
 
 TEST_F(TestHl7Parser, testParseTokenWithStartAndEndCharacters)
 {
-    std::string hl7 = "\x0BMSG|^~\\&|a\x0d\x1c\x0d";
+    std::string hl7 = "\x0BMSH|^~\\&|a\x0d\x1c\x0d";
     bool res = m_parser->startParse(hl7.c_str());
     EXPECT_EQ(true, res);
 
@@ -186,11 +198,15 @@ TEST_F(TestHl7Parser, testParseTokenWithStartAndEndCharacters)
     int level;
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "MSG");
+    EXPECT_EQ(token, "MSH");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "|^~\\&");
+    EXPECT_EQ(token, "|");
+
+    level = m_parser->parseToken(1, token);
+    EXPECT_EQ(1, level);
+    EXPECT_EQ(token, "^~\\&");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(0, level);
@@ -216,7 +232,7 @@ TEST_F(TestHl7Parser, testParseTokenWithStartAndEndCharacters)
 
 TEST_F(TestHl7Parser, testParseTokenLevel2)
 {
-    std::string hl7 = "MSG|^~\\&|a^b|a^b\x0d";
+    std::string hl7 = "MSH|^~\\&|a^b|a^b\x0d";
     bool res = m_parser->startParse(hl7.c_str());
     EXPECT_EQ(true, res);
 
@@ -224,11 +240,15 @@ TEST_F(TestHl7Parser, testParseTokenLevel2)
     int level;
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "MSG");
+    EXPECT_EQ(token, "MSH");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "|^~\\&");
+    EXPECT_EQ(token, "|");
+
+    level = m_parser->parseToken(1, token);
+    EXPECT_EQ(1, level);
+    EXPECT_EQ(token, "^~\\&");
 
     level = m_parser->parseToken(2, token);
     EXPECT_EQ(2, level);
@@ -253,7 +273,7 @@ TEST_F(TestHl7Parser, testParseTokenLevel2)
 
 TEST_F(TestHl7Parser, testParseTokenLevel3)
 {
-    std::string hl7 = "MSG|^~\\&|a^b1&b2|\x0d";
+    std::string hl7 = "MSH|^~\\&|a^b1&b2|\x0d";
     bool res = m_parser->startParse(hl7.c_str());
     EXPECT_EQ(true, res);
 
@@ -261,11 +281,15 @@ TEST_F(TestHl7Parser, testParseTokenLevel3)
     int level;
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "MSG");
+    EXPECT_EQ(token, "MSH");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "|^~\\&");
+    EXPECT_EQ(token, "|");
+
+    level = m_parser->parseToken(1, token);
+    EXPECT_EQ(1, level);
+    EXPECT_EQ(token, "^~\\&");
 
     level = m_parser->parseToken(2, token);
     EXPECT_EQ(2, level);
@@ -290,7 +314,7 @@ TEST_F(TestHl7Parser, testParseTokenLevel3)
 
 TEST_F(TestHl7Parser, testParseTokenLevel3to2)
 {
-    std::string hl7 = "MSG|^~\\&|a^b1&b2^c|\x0d";
+    std::string hl7 = "MSH|^~\\&|a^b1&b2^c|\x0d";
     bool res = m_parser->startParse(hl7.c_str());
     EXPECT_EQ(true, res);
 
@@ -298,11 +322,15 @@ TEST_F(TestHl7Parser, testParseTokenLevel3to2)
     int level;
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "MSG");
+    EXPECT_EQ(token, "MSH");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "|^~\\&");
+    EXPECT_EQ(token, "|");
+
+    level = m_parser->parseToken(1, token);
+    EXPECT_EQ(1, level);
+    EXPECT_EQ(token, "^~\\&");
 
     level = m_parser->parseToken(2, token);
     EXPECT_EQ(2, level);
@@ -331,7 +359,7 @@ TEST_F(TestHl7Parser, testParseTokenLevel3to2)
 
 TEST_F(TestHl7Parser, testParseTokenLevelSkipStructLevel3to2)
 {
-    std::string hl7 = "MSG|^~\\&|a^b1&b2^c|\x0d";
+    std::string hl7 = "MSH|^~\\&|a^b1&b2^c|\x0d";
     bool res = m_parser->startParse(hl7.c_str());
     EXPECT_EQ(true, res);
 
@@ -339,11 +367,15 @@ TEST_F(TestHl7Parser, testParseTokenLevelSkipStructLevel3to2)
     int level;
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "MSG");
+    EXPECT_EQ(token, "MSH");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "|^~\\&");
+    EXPECT_EQ(token, "|");
+
+    level = m_parser->parseToken(1, token);
+    EXPECT_EQ(1, level);
+    EXPECT_EQ(token, "^~\\&");
 
     level = m_parser->parseToken(2, token);
     EXPECT_EQ(2, level);
@@ -371,7 +403,7 @@ TEST_F(TestHl7Parser, testParseTokenLevelSkipStructLevel3to2)
 
 TEST_F(TestHl7Parser, testParseTokenLevelSkipStructLevel3to1)
 {
-    std::string hl7 = "MSG|^~\\&|a^b1&b2^c|d\x0d";
+    std::string hl7 = "MSH|^~\\&|a^b1&b2^c|d\x0d";
     bool res = m_parser->startParse(hl7.c_str());
     EXPECT_EQ(true, res);
 
@@ -379,11 +411,15 @@ TEST_F(TestHl7Parser, testParseTokenLevelSkipStructLevel3to1)
     int level;
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "MSG");
+    EXPECT_EQ(token, "MSH");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "|^~\\&");
+    EXPECT_EQ(token, "|");
+
+    level = m_parser->parseToken(1, token);
+    EXPECT_EQ(1, level);
+    EXPECT_EQ(token, "^~\\&");
 
     level = m_parser->parseToken(2, token);
     EXPECT_EQ(2, level);
@@ -407,7 +443,7 @@ TEST_F(TestHl7Parser, testParseTokenLevelSkipStructLevel3to1)
 
 TEST_F(TestHl7Parser, testParseTokenLevelSkipStructLevel3to1Last)
 {
-    std::string hl7 = "MSG|^~\\&|a^b1&b2^c\x0d";
+    std::string hl7 = "MSH|^~\\&|a^b1&b2^c\x0d";
     bool res = m_parser->startParse(hl7.c_str());
     EXPECT_EQ(true, res);
 
@@ -415,11 +451,15 @@ TEST_F(TestHl7Parser, testParseTokenLevelSkipStructLevel3to1Last)
     int level;
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "MSG");
+    EXPECT_EQ(token, "MSH");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "|^~\\&");
+    EXPECT_EQ(token, "|");
+
+    level = m_parser->parseToken(1, token);
+    EXPECT_EQ(1, level);
+    EXPECT_EQ(token, "^~\\&");
 
     level = m_parser->parseToken(2, token);
     EXPECT_EQ(2, level);
@@ -439,7 +479,7 @@ TEST_F(TestHl7Parser, testParseTokenLevelSkipStructLevel3to1Last)
 
 TEST_F(TestHl7Parser, testParseTokenLevelSkipStructLevel3to1LastEnd)
 {
-    std::string hl7 = "MSG|^~\\&|a^b1&b2^c";
+    std::string hl7 = "MSH|^~\\&|a^b1&b2^c";
     bool res = m_parser->startParse(hl7.c_str());
     EXPECT_EQ(true, res);
 
@@ -447,11 +487,15 @@ TEST_F(TestHl7Parser, testParseTokenLevelSkipStructLevel3to1LastEnd)
     int level;
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "MSG");
+    EXPECT_EQ(token, "MSH");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "|^~\\&");
+    EXPECT_EQ(token, "|");
+
+    level = m_parser->parseToken(1, token);
+    EXPECT_EQ(1, level);
+    EXPECT_EQ(token, "^~\\&");
 
     level = m_parser->parseToken(2, token);
     EXPECT_EQ(2, level);
@@ -468,7 +512,7 @@ TEST_F(TestHl7Parser, testParseTokenLevelSkipStructLevel3to1LastEnd)
 
 TEST_F(TestHl7Parser, testParseTokenWrongLevel)
 {
-    std::string hl7 = "MSG|^~\\&|a^b1&b2^c|d\x0d";
+    std::string hl7 = "MSH|^~\\&|a^b1&b2^c|d\x0d";
     bool res = m_parser->startParse(hl7.c_str());
     EXPECT_EQ(true, res);
 
@@ -476,11 +520,15 @@ TEST_F(TestHl7Parser, testParseTokenWrongLevel)
     int level;
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "MSG");
+    EXPECT_EQ(token, "MSH");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "|^~\\&");
+    EXPECT_EQ(token, "|");
+
+    level = m_parser->parseToken(1, token);
+    EXPECT_EQ(1, level);
+    EXPECT_EQ(token, "^~\\&");
 
     level = m_parser->parseToken(2, token);
     EXPECT_EQ(2, level);
@@ -506,7 +554,7 @@ TEST_F(TestHl7Parser, testParseTokenWrongLevel)
 
 TEST_F(TestHl7Parser, testParseTokenArray)
 {
-    std::string hl7 = "MSG|^~\\&|a^b1~b2~~^c|d\x0d";
+    std::string hl7 = "MSH|^~\\&|a^b1~b2~~^c|d\x0d";
     bool res = m_parser->startParse(hl7.c_str());
     EXPECT_EQ(true, res);
 
@@ -514,11 +562,15 @@ TEST_F(TestHl7Parser, testParseTokenArray)
     int level;
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "MSG");
+    EXPECT_EQ(token, "MSH");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "|^~\\&");
+    EXPECT_EQ(token, "|");
+
+    level = m_parser->parseToken(1, token);
+    EXPECT_EQ(1, level);
+    EXPECT_EQ(token, "^~\\&");
 
     level = m_parser->parseToken(2, token);
     EXPECT_EQ(2, level);
@@ -548,7 +600,7 @@ TEST_F(TestHl7Parser, testParseTokenArray)
 
 TEST_F(TestHl7Parser, testParseTokenArrayWrongLevel)
 {
-    std::string hl7 = "MSG|^~\\&|a^b1~b2~~&b4^c|d\x0d";
+    std::string hl7 = "MSH|^~\\&|a^b1~b2~~&b4^c|d\x0d";
     bool res = m_parser->startParse(hl7.c_str());
     EXPECT_EQ(true, res);
 
@@ -556,11 +608,15 @@ TEST_F(TestHl7Parser, testParseTokenArrayWrongLevel)
     int level;
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "MSG");
+    EXPECT_EQ(token, "MSH");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "|^~\\&");
+    EXPECT_EQ(token, "|");
+
+    level = m_parser->parseToken(1, token);
+    EXPECT_EQ(1, level);
+    EXPECT_EQ(token, "^~\\&");
 
     level = m_parser->parseToken(2, token);
     EXPECT_EQ(2, level);
@@ -592,7 +648,7 @@ TEST_F(TestHl7Parser, testParseTokenArrayWrongLevel)
 
 TEST_F(TestHl7Parser, testParseTokenWrongArray)
 {
-    std::string hl7 = "MSG|^~\\&|a^b1~b2~~^c|d\x0d";
+    std::string hl7 = "MSH|^~\\&|a^b1~b2~~^c|d\x0d";
     bool res = m_parser->startParse(hl7.c_str());
     EXPECT_EQ(true, res);
 
@@ -600,11 +656,15 @@ TEST_F(TestHl7Parser, testParseTokenWrongArray)
     int level;
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "MSG");
+    EXPECT_EQ(token, "MSH");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "|^~\\&");
+    EXPECT_EQ(token, "|");
+
+    level = m_parser->parseToken(1, token);
+    EXPECT_EQ(1, level);
+    EXPECT_EQ(token, "^~\\&");
 
     level = m_parser->parseToken(2, token);
     EXPECT_EQ(2, level);
@@ -630,7 +690,7 @@ TEST_F(TestHl7Parser, testParseTokenWrongArray)
 
 TEST_F(TestHl7Parser, testParseTokenEscape)
 {
-    std::string hl7 = "MSG|^~\\&|\\X0D\\\\X0A\\\\X09\\\\F\\\\S\\\\T\\\\R\\\\E\\|a\rTST\r";
+    std::string hl7 = "MSH|^~\\&|\\X0D\\\\X0A\\\\X09\\\\F\\\\S\\\\T\\\\R\\\\E\\|a\rTST\r";
     bool res = m_parser->startParse(hl7.c_str());
     EXPECT_EQ(true, res);
 
@@ -638,11 +698,15 @@ TEST_F(TestHl7Parser, testParseTokenEscape)
     int level;
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "MSG");
+    EXPECT_EQ(token, "MSH");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "|^~\\&");
+    EXPECT_EQ(token, "|");
+
+    level = m_parser->parseToken(1, token);
+    EXPECT_EQ(1, level);
+    EXPECT_EQ(token, "^~\\&");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
@@ -663,7 +727,7 @@ TEST_F(TestHl7Parser, testParseTokenEscape)
 
 TEST_F(TestHl7Parser, testParseTokenEscapeSmallHexCode)
 {
-    std::string hl7 = "MSG|^~\\&|\\X0d\\|a\rTST\r";
+    std::string hl7 = "MSH|^~\\&|\\X0d\\|a\rTST\r";
     bool res = m_parser->startParse(hl7.c_str());
     EXPECT_EQ(true, res);
 
@@ -671,11 +735,15 @@ TEST_F(TestHl7Parser, testParseTokenEscapeSmallHexCode)
     int level;
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "MSG");
+    EXPECT_EQ(token, "MSH");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "|^~\\&");
+    EXPECT_EQ(token, "|");
+
+    level = m_parser->parseToken(1, token);
+    EXPECT_EQ(1, level);
+    EXPECT_EQ(token, "^~\\&");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
@@ -696,7 +764,7 @@ TEST_F(TestHl7Parser, testParseTokenEscapeSmallHexCode)
 
 TEST_F(TestHl7Parser, testParseTokenEscapeWrong1)
 {
-    std::string hl7 = "MSG|^~\\&|\\X0D|a\rTST\r";
+    std::string hl7 = "MSH|^~\\&|\\X0D|a\rTST\r";
     bool res = m_parser->startParse(hl7.c_str());
     EXPECT_EQ(true, res);
 
@@ -704,11 +772,15 @@ TEST_F(TestHl7Parser, testParseTokenEscapeWrong1)
     int level;
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "MSG");
+    EXPECT_EQ(token, "MSH");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "|^~\\&");
+    EXPECT_EQ(token, "|");
+
+    level = m_parser->parseToken(1, token);
+    EXPECT_EQ(1, level);
+    EXPECT_EQ(token, "^~\\&");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
@@ -729,7 +801,7 @@ TEST_F(TestHl7Parser, testParseTokenEscapeWrong1)
 
 TEST_F(TestHl7Parser, testParseTokenEscapeWrong2)
 {
-    std::string hl7 = "MSG|^~\\&|\\|a\rTST\r";
+    std::string hl7 = "MSH|^~\\&|\\|a\rTST\r";
     bool res = m_parser->startParse(hl7.c_str());
     EXPECT_EQ(true, res);
 
@@ -737,11 +809,15 @@ TEST_F(TestHl7Parser, testParseTokenEscapeWrong2)
     int level;
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "MSG");
+    EXPECT_EQ(token, "MSH");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "|^~\\&");
+    EXPECT_EQ(token, "|");
+
+    level = m_parser->parseToken(1, token);
+    EXPECT_EQ(1, level);
+    EXPECT_EQ(token, "^~\\&");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
@@ -762,7 +838,7 @@ TEST_F(TestHl7Parser, testParseTokenEscapeWrong2)
 
 TEST_F(TestHl7Parser, testParseTokenEscapeWrong3)
 {
-    std::string hl7 = "MSG|^~\\&|\\F|a\rTST\r";
+    std::string hl7 = "MSH|^~\\&|\\F|a\rTST\r";
     bool res = m_parser->startParse(hl7.c_str());
     EXPECT_EQ(true, res);
 
@@ -770,11 +846,15 @@ TEST_F(TestHl7Parser, testParseTokenEscapeWrong3)
     int level;
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "MSG");
+    EXPECT_EQ(token, "MSH");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "|^~\\&");
+    EXPECT_EQ(token, "|");
+
+    level = m_parser->parseToken(1, token);
+    EXPECT_EQ(1, level);
+    EXPECT_EQ(token, "^~\\&");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
@@ -795,7 +875,7 @@ TEST_F(TestHl7Parser, testParseTokenEscapeWrong3)
 
 TEST_F(TestHl7Parser, testParseTokenEscapeWrong4)
 {
-    std::string hl7 = "MSG|^~\\&|\\Xwp\\|a\rTST\r";
+    std::string hl7 = "MSH|^~\\&|\\Xwp\\|a\rTST\r";
     bool res = m_parser->startParse(hl7.c_str());
     EXPECT_EQ(true, res);
 
@@ -803,11 +883,15 @@ TEST_F(TestHl7Parser, testParseTokenEscapeWrong4)
     int level;
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "MSG");
+    EXPECT_EQ(token, "MSH");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "|^~\\&");
+    EXPECT_EQ(token, "|");
+
+    level = m_parser->parseToken(1, token);
+    EXPECT_EQ(1, level);
+    EXPECT_EQ(token, "^~\\&");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
@@ -828,7 +912,7 @@ TEST_F(TestHl7Parser, testParseTokenEscapeWrong4)
 
 TEST_F(TestHl7Parser, testParseTokenEscapeWrong5)
 {
-    std::string hl7 = "MSG|^~\\&|\\X0p\\|a\rTST\r";
+    std::string hl7 = "MSH|^~\\&|\\X0p\\|a\rTST\r";
     bool res = m_parser->startParse(hl7.c_str());
     EXPECT_EQ(true, res);
 
@@ -836,11 +920,15 @@ TEST_F(TestHl7Parser, testParseTokenEscapeWrong5)
     int level;
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "MSG");
+    EXPECT_EQ(token, "MSH");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "|^~\\&");
+    EXPECT_EQ(token, "|");
+
+    level = m_parser->parseToken(1, token);
+    EXPECT_EQ(1, level);
+    EXPECT_EQ(token, "^~\\&");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
@@ -861,7 +949,7 @@ TEST_F(TestHl7Parser, testParseTokenEscapeWrong5)
 
 TEST_F(TestHl7Parser, testParseTokenEscapeWrong6)
 {
-    std::string hl7 = "MSG|^~\\&|\\X0|a\rTST\r";
+    std::string hl7 = "MSH|^~\\&|\\X0|a\rTST\r";
     bool res = m_parser->startParse(hl7.c_str());
     EXPECT_EQ(true, res);
 
@@ -869,11 +957,15 @@ TEST_F(TestHl7Parser, testParseTokenEscapeWrong6)
     int level;
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "MSG");
+    EXPECT_EQ(token, "MSH");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "|^~\\&");
+    EXPECT_EQ(token, "|");
+
+    level = m_parser->parseToken(1, token);
+    EXPECT_EQ(1, level);
+    EXPECT_EQ(token, "^~\\&");
 
     level = m_parser->parseToken(1, token);
     EXPECT_EQ(1, level);

@@ -204,12 +204,7 @@ void Hl7Builder::enterDouble(double value)
 
 void Hl7Builder::enterString(const char* value, ssize_t size)
 {
-    if (m_waitForDeleimiterField <= 2)
-    {
-        ++m_waitForDeleimiterField;
-    }
-
-    if (m_waitForDeleimiterField != 2)
+    if (m_waitForDeleimiterField != 1 && m_waitForDeleimiterField != 2)
     {
         reserveSpace(size * 6 + 1); // string*6 + delimiter
         escapeString(value, size);
@@ -217,13 +212,18 @@ void Hl7Builder::enterString(const char* value, ssize_t size)
         ++m_buffer;
     }
 
-    if (m_waitForDeleimiterField == 1)
+    if (m_waitForDeleimiterField == 0)
     {
         reserveSpace(m_delimitersForField.size() + 1); // string + delimiter
         memcpy(m_buffer, m_delimitersForField.c_str(), m_delimitersForField.size());
         m_buffer += m_delimitersForField.size();
         *m_buffer = m_delimiterCurrent;
         ++m_buffer;
+    }
+
+    if (m_waitForDeleimiterField < 3)
+    {
+        ++m_waitForDeleimiterField;
     }
 }
 
