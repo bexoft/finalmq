@@ -769,7 +769,7 @@ void SerializerStruct::convertArrayString(StructBase& structBase, const FieldInf
         std::vector<bool> v;
         v.reserve(size);
         std::for_each(value.begin(), value.end(), [&v](const std::string& entry) {
-            bool val = (entry.size() == 4 && (memcmp(entry.c_str(), "true", 4) == 0));
+            bool val = (entry.size() == 4 && (memcmp(entry.c_str(), "true", 4) == 0)) || (entry.size() >= 1 && (entry[0] == 1));
             v.push_back(val);
             });
         setValue<std::vector<bool>>(structBase, fieldInfoDest, std::move(v));

@@ -260,12 +260,14 @@
 
 
 
-        {"type":"SPM_STRUCT","desc":"desc","flags":["METASTRUCTFLAG_HL7_STRUCT"],"fields":[
+
+
+        {"type":"SPM_STRUCT","desc":"desc","fields":[
             {"tid":"struct",    "type":"SPM",           "name":"spm",                               "desc":""},
             {"tid":"struct[]",  "type":"OBX",           "name":"obx",                               "desc":""}
         ]},
 
-        {"type":"SAC_STRUCT","desc":"desc","flags":["METASTRUCTFLAG_HL7_STRUCT"],"fields":[
+        {"type":"SAC_STRUCT","desc":"desc","fields":[
             {"tid":"struct",    "type":"SAC",           "name":"sac",                               "desc":""},
             {"tid":"struct[]",  "type":"OBX",           "name":"obx",                               "desc":""},
             {"tid":"struct[]",  "type":"NTE",           "name":"nte",                               "desc":""},

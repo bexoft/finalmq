@@ -120,6 +120,26 @@ int Hl7Parser::isDelimiter(char c) const
 }
 
 
+void Hl7Parser::getSegmentId(std::string& token) const
+{
+    token.clear();
+    int i = 0;
+    while (true)
+    {
+        char c = getChar(m_str + i);
+        if (isDelimiter(c) == LAYER_MAX)
+        {
+            token += c;
+        }
+        else
+        {
+            break;
+        }
+        ++i;
+    }
+}
+
+
 
 int Hl7Parser::parseToken(int level, std::string& token)
 {
@@ -269,7 +289,7 @@ static char hex2char(char c)
     else if ('a' <= c && c <= 'f')
     {
         num = (c - 'a') + 10;
-    }
+    }   
     else if ('A' <= c && c <= 'F')
     {
         num = (c - 'A') + 10;

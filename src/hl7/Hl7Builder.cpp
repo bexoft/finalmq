@@ -234,7 +234,6 @@ void Hl7Builder::enterString(const std::string& value)
 
 void Hl7Builder::finished()
 {
-    correctDelimiters();
     resizeBuffer();
 }
 

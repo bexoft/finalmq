@@ -39,6 +39,7 @@ struct IHl7Parser
     virtual int parseToken(int level, std::string& token) = 0;
     virtual int parseTokenArray(int level, std::vector<std::string>& array) = 0;
     virtual int parseTillEndOfStruct(int level) = 0;
+    virtual void getSegmentId(std::string& token) const = 0;
     virtual const char* getCurrentPosition() const = 0;
 };
 
@@ -52,6 +53,7 @@ public:
     virtual int parseToken(int level, std::string& token) override;
     virtual int parseTokenArray(int level, std::vector<std::string>& array) override;
     virtual int parseTillEndOfStruct(int level) override;
+    virtual void getSegmentId(std::string& token) const override;
     virtual const char* getCurrentPosition() const override;
 
 private:
@@ -67,7 +69,7 @@ private:
 
     static const int LAYER_MAX = 4;
 
-    char                    m_delimiterField[LAYER_MAX];
+    char                    m_delimiterField[LAYER_MAX] = {0, 0, 0, 0};
     char                    m_delimiterRepeat;
     char                    m_escape;
 
