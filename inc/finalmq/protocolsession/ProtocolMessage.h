@@ -34,9 +34,12 @@
 
 namespace finalmq {
 
+
 class SYMBOLEXP ProtocolMessage : public IMessage
 {
 public:
+    static const std::string FMQ_PROTOCOLDATA;
+    
     ProtocolMessage(std::uint32_t protocolId, ssize_t sizeHeader = 0, ssize_t sizeTrailer = 0);
 
 private:

@@ -36,8 +36,8 @@ const std::uint32_t ProtocolDelimiterLinefeed::PROTOCOL_ID = 3;
 const std::string ProtocolDelimiterLinefeed::PROTOCOL_NAME = "delimiter_lf";
 
 
-ProtocolDelimiterLinefeed::ProtocolDelimiterLinefeed()
-    : ProtocolDelimiter("\n")
+ProtocolDelimiterLinefeed::ProtocolDelimiterLinefeed(const Variant& data)
+    : ProtocolDelimiter("\n", data)
 {
 
 }
@@ -67,9 +67,9 @@ struct RegisterProtocolDelimiterLinefeedFactory
 
 
 // IProtocolFactory
-IProtocolPtr ProtocolDelimiterLinefeedFactory::createProtocol(const Variant& /*data*/)
+IProtocolPtr ProtocolDelimiterLinefeedFactory::createProtocol(const Variant& data)
 {
-    return std::make_shared<ProtocolDelimiterLinefeed>();
+    return std::make_shared<ProtocolDelimiterLinefeed>(data);
 }
 
 

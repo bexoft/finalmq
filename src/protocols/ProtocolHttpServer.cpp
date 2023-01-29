@@ -85,9 +85,10 @@ enum ChunkedState
 
 std::atomic_int64_t ProtocolHttpServer::m_nextSessionNameCounter{ 1 };
 
-ProtocolHttpServer::ProtocolHttpServer()
+ProtocolHttpServer::ProtocolHttpServer(const Variant& data)
     : m_randomDevice()
     , m_randomGenerator(m_randomDevice())
+    , m_data(data)
 {
 
 }
@@ -1112,6 +1113,7 @@ bool ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, co
                 bool handled = handleInternalCommands(callback, ok);
                 if (!handled)
                 {
+                    m_message->getControlData().add(ProtocolMessage::FMQ_PROTOCOLDATA, m_data);
                     callback->received(m_message, m_connectionId);
                 }
             }
@@ -1231,9 +1233,9 @@ struct RegisterProtocolHttpServerFactory
 
 
 // IProtocolFactory
-IProtocolPtr ProtocolHttpServerFactory::createProtocol(const Variant& /*data*/)
+IProtocolPtr ProtocolHttpServerFactory::createProtocol(const Variant& data)
 {
-    return std::make_shared<ProtocolHttpServer>();
+    return std::make_shared<ProtocolHttpServer>(data);
 }
 
 

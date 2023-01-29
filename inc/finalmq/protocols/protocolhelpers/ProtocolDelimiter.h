@@ -34,7 +34,7 @@ namespace finalmq {
 class SYMBOLEXP ProtocolDelimiter : public IProtocol
 {
 public:
-    ProtocolDelimiter(const std::string& delimiter);
+    ProtocolDelimiter(const std::string& delimiter, const Variant& data);
     ~ProtocolDelimiter();
 
 private:
@@ -80,6 +80,8 @@ private:
     };
     std::vector<ReceiveBufferStore>     m_receiveBuffers;
     ssize_t                             m_receiveBuffersTotal = 0;
+
+    Variant                             m_data;
 
     mutable std::mutex                  m_mutex;
 };

@@ -34,7 +34,7 @@ public:
     static const std::uint32_t PROTOCOL_ID;           // 3
     static const std::string PROTOCOL_NAME; // delimiter_lf
 
-    ProtocolDelimiterLinefeed();
+    ProtocolDelimiterLinefeed(const Variant& data);
 
 private:
     // IProtocol

@@ -53,7 +53,7 @@ public:
     static const std::string PROTOCOL_NAME;
 
     ProtocolDelimiterTestLong()
-        : ProtocolDelimiter(DELIMITER)
+        : ProtocolDelimiter(DELIMITER, Variant())
     {
     }
 private:

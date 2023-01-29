@@ -33,9 +33,10 @@ namespace finalmq {
 //---------------------------------------
 
 
-ProtocolDelimiter::ProtocolDelimiter(const std::string& delimiter)
+ProtocolDelimiter::ProtocolDelimiter(const std::string& delimiter, const Variant& data)
     : m_delimiter(delimiter)
     , m_delimiterStart((!delimiter.empty()) ? delimiter[0] : ' ')
+    , m_data(data)
 {
     assert(!delimiter.empty());
 }
@@ -234,6 +235,7 @@ bool ProtocolDelimiter::received(const IStreamConnectionPtr& /*connection*/, con
                     }
                     if (callback)
                     {
+                        message->getControlData().add(ProtocolMessage::FMQ_PROTOCOLDATA, m_data);
                         callback->received(message);
                     }
                     i += m_delimiter.size();

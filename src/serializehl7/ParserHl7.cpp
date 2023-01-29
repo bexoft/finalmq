@@ -24,7 +24,6 @@
 #include "finalmq/serializehl7/ParserHl7.h"
 #include "finalmq/metadata/MetaData.h"
 #include "finalmq/logger/LogStream.h"
-#include "finalmq/helpers/ModulenameFinalmq.h"
 #include "finalmq/helpers/base64.h"
 
 #include "finalmq/conversions/itoa.h"

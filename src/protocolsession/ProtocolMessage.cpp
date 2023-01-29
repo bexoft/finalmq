@@ -30,6 +30,8 @@ namespace finalmq {
 // ProtocolMessage
 //---------------------------------------
 
+const std::string ProtocolMessage::FMQ_PROTOCOLDATA = "fmq_protocoldata";
+
 
 ProtocolMessage::ProtocolMessage(std::uint32_t protocolId, ssize_t sizeHeader, ssize_t sizeTrailer)
     : m_sizeHeader(sizeHeader)
