@@ -34,7 +34,7 @@
 
 namespace finalmq {
 
-
+static const int PARSER_HL7_ERROR = -2;
 
 ParserHl7::ParserHl7(IParserVisitor& visitor, const char* ptr, ssize_t size)
     : m_ptr(ptr)
@@ -71,7 +71,7 @@ const char* ParserHl7::parseStruct(const std::string& typeName)
     int level = parseStruct(0, 0, *stru);
     m_visitor.finished();
 
-    if (level < 0)
+    if (level <= PARSER_HL7_ERROR)
     {
         return nullptr;
     }
@@ -90,10 +90,6 @@ int ParserHl7::parseStruct(int levelStruct, int levelSegment, const MetaStruct& 
     {
         std::string tokenSegId;
         int levelNew = m_parser.parseToken(levelSegment, tokenSegId);
-        if (levelNew == -1)
-        {
-            return -1;
-        }
         if (levelNew < levelSegment)
         {
             return levelNew;
@@ -128,23 +124,19 @@ int ParserHl7::parseStruct(int levelStruct, int levelSegment, const MetaStruct& 
                 const MetaStruct* subStruct = MetaDataGlobal::instance().getStruct(*field);
                 if (subStruct == nullptr)
                 {
-                    return -1;
+                    return PARSER_HL7_ERROR;
                 }
                 m_visitor.enterStruct(*field);
+                int levelNew = levelSegment;
                 if ((levelSegment > 0) || (subStruct->getFlags() & METASTRUCTFLAG_HL7_SEGMENT))
                 {
-                    int levelNew = parseStruct(levelStruct + 1, levelSegment + 1, *subStruct);
-                    if (levelNew == -1)
-                    {
-                        return -1;
-                    }
-                    if (levelNew < levelSegment)
-                    {
-                        m_visitor.exitStruct(*field);
-                        return levelNew;
-                    }
+                    levelNew = parseStruct(levelStruct + 1, levelSegment + 1, *subStruct);
                 }
                 m_visitor.exitStruct(*field);
+                if (levelNew < levelSegment)
+                {
+                    return levelNew;
+                }
             }
         }
         else if (field->typeId == TYPE_ARRAY_STRUCT)
@@ -168,7 +160,7 @@ int ParserHl7::parseStruct(int levelStruct, int levelSegment, const MetaStruct& 
                         const MetaStruct* subStruct = MetaDataGlobal::instance().getStruct(*field);
                         if (subStruct == nullptr)
                         {
-                            return -1;
+                            return PARSER_HL7_ERROR;
                         }
                         m_visitor.enterStruct(*field);
                         int LevelSegmentNext = levelSegment;
@@ -177,16 +169,11 @@ int ParserHl7::parseStruct(int levelStruct, int levelSegment, const MetaStruct& 
                             ++LevelSegmentNext;
                         }
                         int levelNew = parseStruct(levelStruct + 1, LevelSegmentNext, *subStruct);
-                        if (levelNew == -1)
-                        {
-                            return -1;
-                        }
+                        m_visitor.exitStruct(*field);
                         if (levelNew < levelSegment)
                         {
-                            m_visitor.exitStruct(*field);
                             return levelNew;
                         }
-                        m_visitor.exitStruct(*field);
                     }
                     else
                     {
@@ -206,10 +193,6 @@ int ParserHl7::parseStruct(int levelStruct, int levelSegment, const MetaStruct& 
                 std::vector<std::string> array;
                 int levelNew = m_parser.parseTokenArray(levelSegment, array);
                 m_visitor.enterArrayString(*field, std::move(array));
-                if (levelNew == -1)
-                {
-                    return -1;
-                }
                 if (levelNew < levelSegment)
                 {
                     return levelNew;
@@ -223,10 +206,6 @@ int ParserHl7::parseStruct(int levelStruct, int levelSegment, const MetaStruct& 
                 std::string token;
                 int levelNew = m_parser.parseToken(levelSegment, token);
                 m_visitor.enterString(*field, std::move(token));
-                if (levelNew == -1)
-                {
-                    return -1;
-                }
                 if (levelNew < levelSegment)
                 {
                     return levelNew;
