@@ -520,7 +520,10 @@ void ProtocolMqtt5Client::receivedPublish(const PublishData& data, const IMessag
             }
             message->addMetainfo(FMQ_CORRID, std::string(data.correlationData.begin(), data.correlationData.end()));
             message->addMetainfo(FMQ_VIRTUAL_SESSION_ID, data.responseTopic);
-            message->getControlData().add(ProtocolMessage::FMQ_PROTOCOLDATA, m_data);
+            if (m_data.getType() != VARTYPE_NONE)
+            {
+                message->getControlData().add(ProtocolMessage::FMQ_PROTOCOLDATA, m_data);
+            }
             callback->received(message);
         }
     }

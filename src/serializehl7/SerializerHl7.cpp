@@ -112,7 +112,7 @@ void SerializerHl7::Internal::enterStruct(const MetaField& field)
     }
 }
 
-void SerializerHl7::Internal::exitStruct(const MetaField& field)
+void SerializerHl7::Internal::exitStruct(const MetaField& /*field*/)
 {
     if (m_levelSegment > 0)
     {
@@ -341,7 +341,7 @@ void SerializerHl7::Internal::enterArrayBoolMove(const MetaField& field, std::ve
     enterArrayBool(field, value);
 }
 
-void SerializerHl7::Internal::enterArrayBool(const MetaField& field, const std::vector<bool>& value)
+void SerializerHl7::Internal::enterArrayBool(const MetaField& /*field*/, const std::vector<bool>& value)
 {
     if (!m_indexOfLeyer.empty())
     {
@@ -363,7 +363,7 @@ void SerializerHl7::Internal::enterArrayInt32(const MetaField& field, std::vecto
     enterArrayInt32(field, value.data(), value.size());
 }
 
-void SerializerHl7::Internal::enterArrayInt32(const MetaField& field, const std::int32_t* value, ssize_t size)
+void SerializerHl7::Internal::enterArrayInt32(const MetaField& /*field*/, const std::int32_t* value, ssize_t size)
 {
     if (!m_indexOfLeyer.empty())
     {
@@ -385,7 +385,7 @@ void SerializerHl7::Internal::enterArrayUInt32(const MetaField& field, std::vect
     enterArrayUInt32(field, value.data(), value.size());
 }
 
-void SerializerHl7::Internal::enterArrayUInt32(const MetaField& field, const std::uint32_t* value, ssize_t size)
+void SerializerHl7::Internal::enterArrayUInt32(const MetaField& /*field*/, const std::uint32_t* value, ssize_t size)
 {
     if (!m_indexOfLeyer.empty())
     {
@@ -407,7 +407,7 @@ void SerializerHl7::Internal::enterArrayInt64(const MetaField& field, std::vecto
     enterArrayInt64(field, value.data(), value.size());
 }
 
-void SerializerHl7::Internal::enterArrayInt64(const MetaField& field, const std::int64_t* value, ssize_t size)
+void SerializerHl7::Internal::enterArrayInt64(const MetaField& /*field*/, const std::int64_t* value, ssize_t size)
 {
     if (!m_indexOfLeyer.empty())
     {
@@ -429,7 +429,7 @@ void SerializerHl7::Internal::enterArrayUInt64(const MetaField& field, std::vect
     enterArrayUInt64(field, value.data(), value.size());
 }
 
-void SerializerHl7::Internal::enterArrayUInt64(const MetaField& field, const std::uint64_t* value, ssize_t size)
+void SerializerHl7::Internal::enterArrayUInt64(const MetaField& /*field*/, const std::uint64_t* value, ssize_t size)
 {
     if (!m_indexOfLeyer.empty())
     {
@@ -451,7 +451,7 @@ void SerializerHl7::Internal::enterArrayFloat(const MetaField& field, std::vecto
     enterArrayFloat(field, value.data(), value.size());
 }
 
-void SerializerHl7::Internal::enterArrayFloat(const MetaField& field, const float* value, ssize_t size)
+void SerializerHl7::Internal::enterArrayFloat(const MetaField& /*field*/, const float* value, ssize_t size)
 {
     if (!m_indexOfLeyer.empty())
     {
@@ -473,7 +473,7 @@ void SerializerHl7::Internal::enterArrayDouble(const MetaField& field, std::vect
     enterArrayDouble(field, value.data(), value.size());
 }
 
-void SerializerHl7::Internal::enterArrayDouble(const MetaField& field, const double* value, ssize_t size)
+void SerializerHl7::Internal::enterArrayDouble(const MetaField& /*field*/, const double* value, ssize_t size)
 {
     if (!m_indexOfLeyer.empty())
     {
@@ -495,7 +495,7 @@ void SerializerHl7::Internal::enterArrayStringMove(const MetaField& field, std::
     enterArrayString(field, value);
 }
 
-void SerializerHl7::Internal::enterArrayString(const MetaField& field, const std::vector<std::string>& value)
+void SerializerHl7::Internal::enterArrayString(const MetaField& /*field*/, const std::vector<std::string>& value)
 {
     if (!m_indexOfLeyer.empty())
     {
@@ -504,7 +504,7 @@ void SerializerHl7::Internal::enterArrayString(const MetaField& field, const std
     if (m_levelSegment > 0)
     {
         m_hl7Builder.enterArray();
-        for (ssize_t i = 0; i < value.size(); ++i)
+        for (size_t i = 0; i < value.size(); ++i)
         {
             m_hl7Builder.enterString(value[i]);
         }
@@ -517,7 +517,7 @@ void SerializerHl7::Internal::enterArrayBytesMove(const MetaField& field, std::v
     enterArrayBytes(field, value);
 }
 
-void SerializerHl7::Internal::enterArrayBytes(const MetaField& field, const std::vector<Bytes>& value)
+void SerializerHl7::Internal::enterArrayBytes(const MetaField& /*field*/, const std::vector<Bytes>& value)
 {
     if (!m_indexOfLeyer.empty())
     {
@@ -526,7 +526,7 @@ void SerializerHl7::Internal::enterArrayBytes(const MetaField& field, const std:
     if (m_levelSegment > 0)
     {
         m_hl7Builder.enterArray();
-        for (ssize_t i = 0; i < value.size(); ++i)
+        for (size_t i = 0; i < value.size(); ++i)
         {
             // convert to base64
             std::string base64;
@@ -586,14 +586,14 @@ void SerializerHl7::Internal::enterArrayEnum(const MetaField& field, const std::
         m_hl7Builder.enterArray();
         if (m_enumAsString)
         {
-            for (ssize_t i = 0; i < value.size(); ++i)
+            for (size_t i = 0; i < value.size(); ++i)
             {
                 m_hl7Builder.enterString(value[i].c_str(), value.size());
             }
         }
         else
         {
-            for (ssize_t i = 0; i < value.size(); ++i)
+            for (size_t i = 0; i < value.size(); ++i)
             {
                 std::int32_t v = MetaDataGlobal::instance().getEnumValueByName(field, value[i]);
                 m_hl7Builder.enterInt64(v);

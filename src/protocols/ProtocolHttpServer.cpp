@@ -1113,7 +1113,10 @@ bool ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, co
                 bool handled = handleInternalCommands(callback, ok);
                 if (!handled)
                 {
-                    m_message->getControlData().add(ProtocolMessage::FMQ_PROTOCOLDATA, m_data);
+                    if (m_data.getType() != VARTYPE_NONE)
+                    {
+                        m_message->getControlData().add(ProtocolMessage::FMQ_PROTOCOLDATA, m_data);
+                    }
                     callback->received(m_message, m_connectionId);
                 }
             }
