@@ -22,6 +22,7 @@
 
 #include "finalmq/remoteentity/RemoteEntityFormatRegistry.h"
 #include "finalmq/remoteentity/entitydata.fmq.h"
+#include "finalmq/protocolsession/ProtocolMessage.h"
 #include "finalmq/variant/Variant.h"
 #include "finalmq/variant/VariantValueStruct.h"
 #include "finalmq/variant/VariantValues.h"
@@ -587,6 +588,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(IMessage& mess
 {
     syntaxError = false;
     BufferRef bufferRef = message.getReceivePayload();
+    Variant* protocolData = message.getControlData().getVariant(ProtocolMessage::FMQ_PROTOCOLDATA);
 
     std::shared_ptr<StructBase> structBase;
 
@@ -594,7 +596,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(IMessage& mess
     if (it != m_contentTypeToFormat.end())
     {
         assert(it->second);
-        structBase = it->second->parse(bufferRef, storeRawData, name2Entity, header, syntaxError);
+        structBase = it->second->parse(bufferRef, protocolData, storeRawData, name2Entity, header, syntaxError);
         metainfoToMessage(message, header.meta);
     }
 

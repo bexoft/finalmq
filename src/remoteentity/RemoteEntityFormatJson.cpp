@@ -164,7 +164,7 @@ static const std::string FMQ_PATH = "fmq_path";
 
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& bufferRef, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, bool& syntaxError)
+std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& bufferRef, const Variant* /*protocolData*/, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, bool& syntaxError)
 {
     syntaxError = false;
     char* buffer = bufferRef.first;

@@ -38,7 +38,7 @@ class Header;
 struct IRemoteEntityFormat
 {
     virtual ~IRemoteEntityFormat() {}
-    virtual std::shared_ptr<StructBase> parse(const BufferRef& bufferRef, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, bool& syntaxError) = 0;
+    virtual std::shared_ptr<StructBase> parse(const BufferRef& bufferRef, const Variant* protocolData, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, bool& syntaxError) = 0;
     virtual std::shared_ptr<StructBase> parseData(const BufferRef& bufferRef, bool storeRawData, std::string& type, bool& syntaxError) = 0;
     virtual void serialize(IMessage& message, const Header& header, const StructBase* structBase = nullptr) = 0;
     virtual void serializeData(IMessage& message, const StructBase* structBase = nullptr) = 0;

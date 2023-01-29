@@ -118,7 +118,7 @@ void RemoteEntityFormatProto::serializeData(IMessage& message, const StructBase*
 
 static const std::string FMQ_PATH = "fmq_path";
 
-std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const BufferRef& bufferRef, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, bool& syntaxError)
+std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const BufferRef& bufferRef, const Variant* /*protocolData*/, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, bool& syntaxError)
 {
     syntaxError = false;
     char* buffer = bufferRef.first;
@@ -133,13 +133,13 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const BufferRef& buff
     ssize_t sizeHeader = 0;
     if (sizeBuffer >= 4)
     {
-        sizeHeader = (unsigned char)*buffer;
+        sizeHeader = (ssize_t)*buffer;
         ++buffer;
-        sizeHeader |= ((unsigned char)*buffer) << 8;
+        sizeHeader |= ((ssize_t)*buffer) << 8;
         ++buffer;
-        sizeHeader |= ((unsigned char)*buffer) << 16;
+        sizeHeader |= ((ssize_t)*buffer) << 16;
         ++buffer;
-        sizeHeader |= ((unsigned char)*buffer) << 24;
+        sizeHeader |= ((ssize_t)*buffer) << 24;
         ++buffer;
     }
     bool ok = false;
@@ -224,13 +224,13 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parseData(const BufferRef& 
         ssize_t sizeDataInStream = 0;
         if (ok)
         {
-            sizeDataInStream = (unsigned char)*buffer;
+            sizeDataInStream = (ssize_t)*buffer;
             ++buffer;
-            sizeDataInStream |= ((unsigned char)*buffer) << 8;
+            sizeDataInStream |= ((ssize_t)*buffer) << 8;
             ++buffer;
-            sizeDataInStream |= ((unsigned char)*buffer) << 16;
+            sizeDataInStream |= ((ssize_t)*buffer) << 16;
             ++buffer;
-            sizeDataInStream |= ((unsigned char)*buffer) << 24;
+            sizeDataInStream |= ((ssize_t)*buffer) << 24;
             ++buffer;
             sizeRemaining -= 4;
         }
