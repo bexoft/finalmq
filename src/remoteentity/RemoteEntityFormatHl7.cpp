@@ -53,9 +53,9 @@ struct RegisterFormatHl7
 
 
 
-#define JSONBLOCKSIZE   512
+#define HL7BLOCKSIZE   512
 
-void RemoteEntityFormatHl7::serialize(IMessage& message, const Header& header, const StructBase* structBase)
+void RemoteEntityFormatHl7::serialize(IMessage& message, const Header& /*header*/, const StructBase* structBase)
 {
     serializeData(message, structBase);
 }
@@ -87,7 +87,7 @@ void RemoteEntityFormatHl7::serializeData(IMessage& message, const StructBase* s
 
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatHl7::parse(const BufferRef& bufferRef, const Variant* protocolData, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, bool& syntaxError)
+std::shared_ptr<StructBase> RemoteEntityFormatHl7::parse(const BufferRef& bufferRef, const Variant* protocolData, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& /*name2Entity*/, Header& header, bool& syntaxError)
 {
     syntaxError = false;
     char* buffer = bufferRef.first;

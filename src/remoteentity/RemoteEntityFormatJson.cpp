@@ -54,11 +54,11 @@ struct RegisterFormatJson
 
 
 
-#define JSONBLOCKSIZE   512
+#define HL7BLOCKSIZE   512
 
 void RemoteEntityFormatJson::serialize(IMessage& message, const Header& header, const StructBase* structBase)
 {
-    message.addSendPayload("[", 1, JSONBLOCKSIZE);
+    message.addSendPayload("[", 1, HL7BLOCKSIZE);
 
     SerializerJson serializerHeader(message);
     ParserStruct parserHeader(serializerHeader, header);
@@ -69,11 +69,11 @@ void RemoteEntityFormatJson::serialize(IMessage& message, const Header& header, 
     if (structBase)
     {
         // delimiter between header and payload
-        message.addSendPayload(",\t", 2, JSONBLOCKSIZE);
+        message.addSendPayload(",\t", 2, HL7BLOCKSIZE);
 
         serializeData(message, structBase);
 
-        message.addSendPayload("]\t", 2, JSONBLOCKSIZE);
+        message.addSendPayload("]\t", 2, HL7BLOCKSIZE);
     }
     else
     {
