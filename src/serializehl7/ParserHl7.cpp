@@ -80,7 +80,7 @@ const char* ParserHl7::parseStruct(const std::string& typeName)
 
 static std::string removeNamespace(const std::string& typeName)
 {
-    return typeName.substr(typeName.find_last_of('.') + 1);
+    return typeName.substr(typeName.find_last_of('.') + 1, 3);
 }
 
 int ParserHl7::parseStruct(int levelStruct, int levelSegment, const MetaStruct& stru)
@@ -94,7 +94,7 @@ int ParserHl7::parseStruct(int levelStruct, int levelSegment, const MetaStruct& 
         {
             return levelNew;
         }
-        if ((tokenSegId != removeNamespace(stru.getTypeName())) && (tokenSegId + "_STRUCT" != removeNamespace(stru.getTypeName()))) //todo: optimize
+        if (tokenSegId != removeNamespace(stru.getTypeName()))
         {
             return m_parser.parseTillEndOfStruct(0);
         }
@@ -108,12 +108,27 @@ int ParserHl7::parseStruct(int levelStruct, int levelSegment, const MetaStruct& 
 
         if (field->typeId == TYPE_STRUCT)
         {
+            const MetaStruct* subStruct = MetaDataGlobal::instance().getStruct(*field);
+            if (subStruct == nullptr)
+            {
+                return PARSER_HL7_ERROR;
+            }
             bool processStruct = true;
             if (levelSegment == 0)
             {
+                std::string typeName = removeNamespace(field->typeName);
                 std::string segId;
                 m_parser.getSegmentId(segId);
-                if (segId != removeNamespace(field->typeName))
+                const MetaField* subField = nullptr;
+                if ((segId != typeName) && !(subStruct->getFlags() & METASTRUCTFLAG_HL7_SEGMENT) && (subStruct->getFieldsSize() > 0))
+                {
+                    subField = subStruct->getFieldByIndex(0);
+                }
+                if ((segId == typeName) || (subField != nullptr && segId == removeNamespace(subField->typeName)))
+                {
+                    processStruct = true;
+                }
+                else
                 {
                     processStruct = false;
                     m_parser.parseTillEndOfStruct(0);
@@ -121,17 +136,13 @@ int ParserHl7::parseStruct(int levelStruct, int levelSegment, const MetaStruct& 
             }
             if (processStruct)
             {
-                const MetaStruct* subStruct = MetaDataGlobal::instance().getStruct(*field);
-                if (subStruct == nullptr)
-                {
-                    return PARSER_HL7_ERROR;
-                }
                 m_visitor.enterStruct(*field);
-                int levelNew = levelSegment;
-                if ((levelSegment > 0) || (subStruct->getFlags() & METASTRUCTFLAG_HL7_SEGMENT))
+                int LevelSegmentNext = levelSegment;
+                if ((LevelSegmentNext > 0) || (subStruct->getFlags() & METASTRUCTFLAG_HL7_SEGMENT))
                 {
-                    levelNew = parseStruct(levelStruct + 1, levelSegment + 1, *subStruct);
+                    ++LevelSegmentNext;
                 }
+                int levelNew = parseStruct(levelStruct + 1, LevelSegmentNext, *subStruct);
                 m_visitor.exitStruct(*field);
                 if (levelNew < levelSegment)
                 {
@@ -143,28 +154,32 @@ int ParserHl7::parseStruct(int levelStruct, int levelSegment, const MetaStruct& 
         {
             if (levelSegment == 0)
             {
+                const MetaStruct* subStruct = MetaDataGlobal::instance().getStruct(*field);
+                if (subStruct == nullptr)
+                {
+                    return PARSER_HL7_ERROR;
+                }
+                const MetaField* subField = nullptr;
+                if (!(subStruct->getFlags() & METASTRUCTFLAG_HL7_SEGMENT) && (subStruct->getFieldsSize() > 0))
+                {
+                    subField = subStruct->getFieldByIndex(0);
+                }
                 std::string typeName = removeNamespace(field->typeName);
-                typeName = typeName.substr(0, 3);   // todo: remove _STRUCT
                 bool firstLoop = true;
                 do
                 {
                     std::string segId;
                     m_parser.getSegmentId(segId);
-                    if (segId == typeName)
+                    if ((segId == typeName) || (subField != nullptr && segId == removeNamespace(subField->typeName)))
                     {
                         if (firstLoop)
                         {
                             firstLoop = false;
                             m_visitor.enterArrayStruct(*field);
                         }
-                        const MetaStruct* subStruct = MetaDataGlobal::instance().getStruct(*field);
-                        if (subStruct == nullptr)
-                        {
-                            return PARSER_HL7_ERROR;
-                        }
                         m_visitor.enterStruct(*field);
                         int LevelSegmentNext = levelSegment;
-                        if (subStruct->getFlags() & METASTRUCTFLAG_HL7_SEGMENT)
+                        if ((LevelSegmentNext > 0) || (subStruct->getFlags() & METASTRUCTFLAG_HL7_SEGMENT))
                         {
                             ++LevelSegmentNext;
                         }

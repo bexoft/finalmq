@@ -43,8 +43,6 @@ const int RemoteEntityFormatJson::CONTENT_TYPE = 2;
 const std::string RemoteEntityFormatJson::CONTENT_TYPE_NAME = "json";
 
 
-static const std::string FMQ_METHOD = "fmq_method";
-
 
 struct RegisterFormatJson
 {
@@ -175,12 +173,12 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
         return nullptr;
     }
 
-    if (buffer[0] == '[')
+    if (sizeBuffer > 0 && buffer[0] == '[')
     {
         ++buffer;
         --sizeBuffer;
     }
-    if (buffer[sizeBuffer - 1] == ']')
+    if (sizeBuffer > 0 && buffer[sizeBuffer - 1] == ']')
     {
         --sizeBuffer;
     }

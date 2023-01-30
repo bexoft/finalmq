@@ -372,27 +372,41 @@ inline static bool isDestAndSubPathDefined(const Header& header)
     return (isDestinationDefined(header) && isSubPathDefined(header));
 }
 
+//static size_t findEndOfPath(const char* buffer)
+//{
+//    int i = 0;
+//    char cOld = 0;
+//    char c;
+//    while ((c = buffer[i]))
+//    {
+//        if (c == '{')
+//        {
+//            char cNext = buffer[i + 1];
+//            if (cOld != '/' && (cNext == '\"' || cNext == '}'))
+//            {
+//                return i;
+//            }
+//        }
+//        cOld = c;
+//        ++i;
+//    }
+//    return i;
+//}
+
 static size_t findEndOfPath(const char* buffer)
 {
     int i = 0;
-    char cOld = 0;
     char c;
     while ((c = buffer[i]))
     {
         if (c == '{')
         {
-            char cNext = buffer[i + 1];
-            if (cOld != '/' && (cNext == '\"' || cNext == '}'))
-            {
-                return i;
-            }
+            return i;
         }
-        cOld = c;
         ++i;
     }
     return i;
 }
-
 
 
 std::string RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header)

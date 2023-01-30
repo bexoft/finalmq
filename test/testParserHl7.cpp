@@ -65,6 +65,11 @@ protected:
 TEST_F(TestParserHl7, testSSU_U03)
 {
     hl7::SSU_U03 cmp;
+    cmp.msh.fieldSeparator = "|";
+    cmp.msh.encodingCharacters = "^~\\&";
+    cmp.msh.messageType.messageCode = "SSU";
+    cmp.msh.messageType.triggerEvent = "U03";
+    cmp.msh.messageType.messageStructure = "SSU_U03";
     cmp.msh.countryCode = "de";
     cmp.uac = std::make_shared<hl7::UAC>();
     cmp.uac->userAuthenticationCredential.typeOfData = "hello";
@@ -90,5 +95,6 @@ TEST_F(TestParserHl7, testSSU_U03)
     ParserHl7 parser(serializer, data.data());
     parser.parseStruct("hl7.SSU_U03");
 
+    ASSERT_EQ(cmp, msg);
 }
 
