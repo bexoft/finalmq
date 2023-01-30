@@ -542,7 +542,7 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     //}
 
     int formatStatus = 0;
-    ReceiveData receiveData{ createSessionInfo(session), {}, message, {}, {} };
+    ReceiveData receiveData{ createSessionInfo(session), {}, message, {}, false, {} };
     //if (!pureData)
     //{
         if (!session->doesSupportMetainfo())
