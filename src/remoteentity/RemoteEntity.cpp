@@ -1167,7 +1167,6 @@ void RemoteEntity::receivedRequest(ReceiveData& receiveData)
     {
         static std::string STR_DUMMY = "dummy";
         bool added{};
-        const std::string& virtualSessionId = receiveData.virtualSessionId;
         std::uint64_t srcid = receiveData.header.srcid;
         if (srcid == 0)
         {
