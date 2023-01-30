@@ -108,12 +108,11 @@ static ssize_t pickEndpointEntry(const std::vector<fmqreg::Endpoint>& endpoints,
 class FuncGetServiceReplyAndConnect
 {
 public:
-    FuncGetServiceReplyAndConnect(int retries, const IRemoteEntityPtr& entityRegistry, PeerId peerIdRegistry, const std::string& serviceName, const hybrid_ptr<IRemoteEntityContainer>& remoteEntityContainer, const IProtocolSessionPtr& sessionRegistry, const ConnectProperties& connectProperties, EntityId entityId, PeerId peerId, bool local, const std::string& hostname)
+    FuncGetServiceReplyAndConnect(int retries, const IRemoteEntityPtr& entityRegistry, PeerId peerIdRegistry, const std::string& serviceName, const SessionInfo& sessionRegistry, const ConnectProperties& connectProperties, EntityId entityId, PeerId peerId, bool local, const std::string& hostname)
         : m_retries(retries)
         , m_entityRegistry(entityRegistry)
         , m_peerIdRegistry(peerIdRegistry)
         , m_serviceName(serviceName)
-        , m_remoteEntityContainer(remoteEntityContainer)
         , m_sessionRegistry(sessionRegistry)
         , m_connectProperties(connectProperties)
         , m_entityId(entityId)
@@ -127,7 +126,7 @@ public:
     {
         bool connectDone = false;
         bool retry = false;
-        auto remoteEntityContainer = m_remoteEntityContainer.lock();
+        auto remoteEntityContainer = m_sessionRegistry.getEntityContainer().lock();
         if (remoteEntityContainer)
         {
             auto re = remoteEntityContainer->getEntity(m_entityId).lock();
@@ -149,7 +148,7 @@ public:
                         }
 
                         connectDone = true;
-                        IProtocolSessionPtr session = remoteEntityContainer->connect(endpoint, m_connectProperties);
+                        SessionInfo session = remoteEntityContainer->connect(endpoint, m_connectProperties);
                         re->connect(m_peerId, session, reply->service.entityname, reply->service.entityid);
                     }
                 }
@@ -178,7 +177,7 @@ public:
         }
         if (!retry)
         {
-            m_sessionRegistry->disconnect();
+            m_sessionRegistry.disconnect();
         }
     }
 
@@ -187,8 +186,7 @@ private:
     IRemoteEntityPtr            m_entityRegistry;
     PeerId                      m_peerIdRegistry;
     std::string                 m_serviceName;
-    hybrid_ptr<IRemoteEntityContainer>   m_remoteEntityContainer;
-    IProtocolSessionPtr         m_sessionRegistry;
+    SessionInfo                 m_sessionRegistry;
     ConnectProperties           m_connectProperties;
     EntityId                    m_entityId;
     PeerId                      m_peerId;
@@ -214,7 +212,7 @@ PeerId FmqRegistryClient::connectService(const std::string& serviceName, EntityI
         return PEERID_INVALID;
     }
 
-    PeerId peerId = re->createPeer(std::move(funcReplyConnect));
+    PeerId peerId = re->createPeer(*remoteEntityContainer, std::move(funcReplyConnect));
 
     std::string hostname;
     std::string remainingServiceName = serviceName;
@@ -238,7 +236,7 @@ PeerId FmqRegistryClient::connectService(const std::string& serviceName, EntityI
     ConnectProperties connectPropertiesRegistry;
     connectPropertiesRegistry.config.reconnectInterval = connectProperties.config.reconnectInterval;
     connectPropertiesRegistry.config.totalReconnectDuration = connectProperties.config.totalReconnectDuration;
-    IProtocolSessionPtr sessionRegistry = createRegistrySession(hostname, connectPropertiesRegistry);
+    SessionInfo sessionRegistry = createRegistrySession(hostname, connectPropertiesRegistry);
     if (sessionRegistry)
     {
         PeerId peerIdRegistry = m_entityRegistry->connect(sessionRegistry, "fmqreg");
@@ -248,7 +246,7 @@ PeerId FmqRegistryClient::connectService(const std::string& serviceName, EntityI
         {
             retries = connectProperties.config.totalReconnectDuration / connectProperties.config.reconnectInterval;
         }
-        FuncGetServiceReplyAndConnect funcGetServiceReply(retries, m_entityRegistry, peerIdRegistry, remainingServiceName, m_remoteEntityContainer, sessionRegistry, connectProperties, entityId, peerId, local, hostname);
+        FuncGetServiceReplyAndConnect funcGetServiceReply(retries, m_entityRegistry, peerIdRegistry, remainingServiceName, sessionRegistry, connectProperties, entityId, peerId, local, hostname);
         m_entityRegistry->requestReply<GetServiceReply>(peerIdRegistry, GetService{remainingServiceName}, funcGetServiceReply);
     }
 
@@ -276,14 +274,14 @@ void FmqRegistryClient::getService(const std::string& serviceName, FuncGetServic
 
     ConnectProperties connectPropertiesRegistry;
     connectPropertiesRegistry.config.totalReconnectDuration = 0;
-    IProtocolSessionPtr sessionRegistry = createRegistrySession(hostname, connectPropertiesRegistry);
+    SessionInfo sessionRegistry = createRegistrySession(hostname, connectPropertiesRegistry);
     if (sessionRegistry)
     {
         PeerId peerIdRegistry = m_entityRegistry->connect(sessionRegistry, "fmqreg");
 
         m_entityRegistry->requestReply<GetServiceReply>(peerIdRegistry, GetService{remainingServiceName}, [sessionRegistry, funcGetServiceReply{std::move(funcGetServiceReply)}]
                 (PeerId /*peerId*/, Status status, const std::shared_ptr<GetServiceReply>& reply) {
-            sessionRegistry->disconnect();
+            sessionRegistry.disconnect();
             if (funcGetServiceReply)
             {
                 funcGetServiceReply(status, reply);
@@ -302,12 +300,12 @@ void FmqRegistryClient::registerService(const finalmq::fmqreg::Service& service,
 
     ConnectProperties connectProperties;
     connectProperties.config.totalReconnectDuration = retryDurationMs;
-    IProtocolSessionPtr session = createRegistrySession("127.0.0.1", connectProperties);
+    SessionInfo session = createRegistrySession("127.0.0.1", connectProperties);
     if (session)
     {
         PeerId peerId = m_entityRegistry->connect(session, "fmqreg");
         m_entityRegistry->sendRequest(peerId, RegisterService{service}, [session] (PeerId /*peerId*/, Status /*status*/, const StructBasePtr& /*reply*/) {
-            session->disconnect();
+            session.disconnect();
         });
     }
 }
@@ -316,14 +314,14 @@ void FmqRegistryClient::registerService(const finalmq::fmqreg::Service& service,
 
 
 
-IProtocolSessionPtr FmqRegistryClient::createRegistrySession(const std::string& hostname, const ConnectProperties& connectProperties)
+SessionInfo FmqRegistryClient::createRegistrySession(const std::string& hostname, const ConnectProperties& connectProperties)
 {
     std::string endpoint = "tcp://";
     endpoint += hostname;
     endpoint += ":";
     endpoint += PORTNUMBER_PROTO;
     endpoint += ":headersize:protobuf";
-    IProtocolSessionPtr session;
+    SessionInfo session;
     auto remoteEntityContainer = m_remoteEntityContainer.lock();
     if (remoteEntityContainer)
     {

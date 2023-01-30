@@ -46,7 +46,7 @@ using finalmq::PeerId;
 using finalmq::EntityId;
 using finalmq::PeerEvent;
 using finalmq::RequestContextPtr;
-using finalmq::IProtocolSessionPtr;
+using finalmq::SessionInfo;
 using finalmq::ConnectionData;
 using finalmq::ConnectionEvent;
 using finalmq::Logger;
@@ -67,7 +67,7 @@ public:
     EntityServer()
     {
         // register peer events to see when a remote entity connects or disconnects.
-        registerPeerEvent([] (PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, PeerEvent peerEvent, bool incoming) {
+        registerPeerEvent([] (PeerId peerId, const SessionInfo& session, EntityId entityId, PeerEvent peerEvent, bool incoming) {
             streamInfo << "peer event " << peerEvent.toString();
         });
 
@@ -169,8 +169,8 @@ int main()
 #endif
 
     // register lambda for connection events to see when a network node connects or disconnects.
-    entityContainer.registerConnectionEvent([] (const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) {
-        const ConnectionData connectionData = session->getConnectionData();
+    entityContainer.registerConnectionEvent([] (const SessionInfo& session, ConnectionEvent connectionEvent) {
+        const ConnectionData connectionData = session.getConnectionData();
         streamInfo << "connection event at " << connectionData.endpoint
                   << " remote: " << connectionData.endpointPeer
                   << " event: " << connectionEvent.toString();

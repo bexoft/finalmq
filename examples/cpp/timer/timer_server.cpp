@@ -51,7 +51,7 @@ using finalmq::PeerId;
 using finalmq::EntityId;
 using finalmq::PeerEvent;
 using finalmq::RequestContextPtr;
-using finalmq::IProtocolSessionPtr;
+using finalmq::SessionInfo;
 using finalmq::ConnectionData;
 using finalmq::ConnectionEvent;
 using finalmq::Logger;
@@ -86,7 +86,7 @@ public:
     EntityServer()
     {
         // register peer events to see when a remote entity connects or disconnects.
-        registerPeerEvent([] (PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, PeerEvent peerEvent, bool incoming) {
+        registerPeerEvent([] (PeerId peerId, const SessionInfo& session, EntityId entityId, PeerEvent peerEvent, bool incoming) {
             std::cout << "peer event " << peerEvent.toString() << std::endl;
         });
 
@@ -147,8 +147,8 @@ int main()
     entityContainer.init();
 
     // register lambda for connection events to see when a network node connects or disconnects.
-    entityContainer.registerConnectionEvent([] (const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) {
-        const ConnectionData connectionData = session->getConnectionData();
+    entityContainer.registerConnectionEvent([] (const SessionInfo& session, ConnectionEvent connectionEvent) {
+        const ConnectionData connectionData = session.getConnectionData();
         std::cout << "connection event at " << connectionData.endpoint
                   << " remote: " << connectionData.endpointPeer
                   << " event: " << connectionEvent.toString() << std::endl;
@@ -176,7 +176,7 @@ int main()
     entityContainer.bind("tcp://*:8080:httpserver:json");
 
     //// if you want to use mqtt5 -> connect to broker
-    //IProtocolSessionPtr session = entityContainer.connect("tcp://broker.emqx.io:1883:mqtt5client:json", { {},{},
+    //SessionInfo session = entityContainer.connect("tcp://broker.emqx.io:1883:mqtt5client:json", { {},{},
     //    VariantStruct{  //{ProtocolMqtt5Client::KEY_USERNAME, std::string("")},
     //                    //{ProtocolMqtt5Client::KEY_PASSWORD, std::string("")},
     //                    {ProtocolMqtt5Client::KEY_SESSIONEXPIRYINTERVAL, 300},

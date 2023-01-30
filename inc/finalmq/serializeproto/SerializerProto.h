@@ -58,6 +58,7 @@ private:
 
         virtual void enterStruct(const MetaField& field) override;
         virtual void exitStruct(const MetaField& field) override;
+        virtual void enterStructNull(const MetaField& field) override;
 
         virtual void enterArrayStruct(const MetaField& field) override;
         virtual void exitArrayStruct(const MetaField& field) override;
@@ -100,20 +101,15 @@ private:
         virtual void enterArrayEnumMove(const MetaField& field, std::vector<std::string>&& value) override;
         virtual void enterArrayEnum(const MetaField& field, const std::vector<std::string>& value) override;
 
-        int m_levelStruct = 0;
-
         template<bool ignoreZeroLength>
         void serializeString(int id, const char* value, ssize_t size);
 
         char* serializeStruct(int id);
 
-        template<class T>
-        void serializeVarintValue(int id, T value);
+        void serializeVarintValue(int id, std::uint64_t value);
 
-        template<class T>
-        void serializeZigZagValue(int id, T value);
+        void serializeZigZagValue(int id, std::int64_t value);
 
-        inline std::uint32_t zigzag(std::int32_t value);
         inline std::uint64_t zigzag(std::int64_t value);
 
         template<class T, int WIRETYPE>

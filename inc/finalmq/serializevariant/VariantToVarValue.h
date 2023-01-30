@@ -48,7 +48,7 @@ private:
 
     Variant&                    m_variant;
     IParserVisitor&             m_visitor;
-    static const MetaStruct*    m_struct;
+    static const MetaStruct*    m_structVarValue;
 };
 
 }   // namespace finalmq

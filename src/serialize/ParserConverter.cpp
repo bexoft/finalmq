@@ -85,6 +85,15 @@ void ParserConverter::exitStruct(const MetaField& field)
     }
 }
 
+void ParserConverter::enterStructNull(const MetaField& field)
+{
+    assert(m_visitor);
+    if (field.typeId == MetaTypeId::TYPE_STRUCT)
+    {
+        m_visitor->enterStructNull(field);
+    }
+}
+
 void ParserConverter::enterArrayStruct(const MetaField& field)
 {
     assert(m_visitor);
@@ -209,7 +218,7 @@ void ParserConverter::enterBytes(const MetaField& field, Bytes&& value)
     }
     else
     {
-        streamError << "bytes not expected";
+        convertString(field, value.data(), value.size());
     }
 }
 void ParserConverter::enterBytes(const MetaField& field, const BytesElement* value, ssize_t size)
@@ -220,7 +229,7 @@ void ParserConverter::enterBytes(const MetaField& field, const BytesElement* val
     }
     else
     {
-        streamError << "bytes not expected";
+        convertString(field, value, size);
     }
 }
 void ParserConverter::enterEnum(const MetaField& field, std::int32_t value)
@@ -441,7 +450,13 @@ void ParserConverter::enterArrayBytesMove(const MetaField& field, std::vector<By
     }
     else
     {
-        streamError << "bytes array not expected";
+        std::vector<std::string> valueArrayString;
+        valueArrayString.reserve(value.size());
+        for (size_t i = 0; i < value.size(); ++i)
+        {
+            valueArrayString.emplace_back(value[i].data(), value[i].size());
+        }
+        convertArraytString(field, valueArrayString);
     }
 }
 void ParserConverter::enterArrayBytes(const MetaField& field, const std::vector<Bytes>& value)
@@ -452,7 +467,13 @@ void ParserConverter::enterArrayBytes(const MetaField& field, const std::vector<
     }
     else
     {
-        streamError << "bytes array not expected";
+        std::vector<std::string> valueArrayString;
+        valueArrayString.reserve(value.size());
+        for (size_t i = 0; i < value.size(); ++i)
+        {
+            valueArrayString.emplace_back(value[i].data(), value[i].size());
+        }
+        convertArraytString(field, valueArrayString);
     }
 }
 void ParserConverter::enterArrayEnum(const MetaField& field, std::vector<std::int32_t>&& value)
@@ -721,6 +742,60 @@ void ParserConverter::convertArraytNumber(const MetaField& field, const T* value
 {
     switch (field.typeId)
     {
+    case MetaTypeId::TYPE_BOOL:
+        if (value && size > 0)
+        {
+            m_visitor->enterBool(field, value[0]);
+        }
+        break;
+    case MetaTypeId::TYPE_INT32:
+        if (value && size > 0)
+        {
+            m_visitor->enterInt32(field, static_cast<std::int32_t>(value[0]));
+        }
+        break;
+    case MetaTypeId::TYPE_UINT32:
+        if (value && size > 0)
+        {
+            m_visitor->enterUInt32(field, static_cast<std::uint32_t>(value[0]));
+        }
+        break;
+    case MetaTypeId::TYPE_INT64:
+        if (value && size > 0)
+        {
+            m_visitor->enterInt64(field, static_cast<std::int64_t>(value[0]));
+        }
+        break;
+    case MetaTypeId::TYPE_UINT64:
+        if (value && size > 0)
+        {
+            m_visitor->enterUInt64(field, static_cast<std::uint64_t>(value[0]));
+        }
+        break;
+    case MetaTypeId::TYPE_FLOAT:
+        if (value && size > 0)
+        {
+            m_visitor->enterFloat(field, static_cast<float>(value[0]));
+        }
+        break;
+    case MetaTypeId::TYPE_DOUBLE:
+        if (value && size > 0)
+        {
+            m_visitor->enterDouble(field, static_cast<double>(value[0]));
+        }
+        break;
+    case MetaTypeId::TYPE_STRING:
+        if (value && size > 0)
+        {
+            m_visitor->enterString(field, std::to_string(value[0]));
+        }
+        break;
+    case MetaTypeId::TYPE_ENUM:
+        if (value && size > 0)
+        {
+            m_visitor->enterEnum(field, static_cast<std::int32_t>(value[0]));
+        }
+        break;
     case MetaTypeId::TYPE_ARRAY_BOOL:
         {
             std::vector<bool> v;
@@ -823,6 +898,60 @@ void ParserConverter::convertArraytNumber(const MetaField& field, const std::vec
     ssize_t size = value.size();
     switch (field.typeId)
     {
+    case MetaTypeId::TYPE_BOOL:
+        if (value.size() > 0)
+        {
+            m_visitor->enterBool(field, value[0]);
+        }
+        break;
+    case MetaTypeId::TYPE_INT32:
+        if (value.size() > 0)
+        {
+            m_visitor->enterInt32(field, static_cast<std::int32_t>(value[0]));
+        }
+        break;
+    case MetaTypeId::TYPE_UINT32:
+        if (value.size() > 0)
+        {
+            m_visitor->enterUInt32(field, static_cast<std::uint32_t>(value[0]));
+        }
+        break;
+    case MetaTypeId::TYPE_INT64:
+        if (value.size() > 0)
+        {
+            m_visitor->enterInt64(field, static_cast<std::int64_t>(value[0]));
+        }
+        break;
+    case MetaTypeId::TYPE_UINT64:
+        if (value.size() > 0)
+        {
+            m_visitor->enterUInt64(field, static_cast<std::uint64_t>(value[0]));
+        }
+        break;
+    case MetaTypeId::TYPE_FLOAT:
+        if (value.size() > 0)
+        {
+            m_visitor->enterFloat(field, static_cast<float>(value[0]));
+        }
+        break;
+    case MetaTypeId::TYPE_DOUBLE:
+        if (value.size() > 0)
+        {
+            m_visitor->enterDouble(field, static_cast<double>(value[0]));
+        }
+        break;
+    case MetaTypeId::TYPE_STRING:
+        if (value.size() > 0)
+        {
+            m_visitor->enterString(field, std::to_string(value[0]));
+        }
+        break;
+    case MetaTypeId::TYPE_ENUM:
+        if (value.size() > 0)
+        {
+            m_visitor->enterEnum(field, static_cast<std::int32_t>(value[0]));
+        }
+        break;
     case MetaTypeId::TYPE_ARRAY_BOOL:
         {
             std::vector<bool> v;
@@ -924,12 +1053,73 @@ void ParserConverter::convertArraytString(const MetaField& field, const std::vec
     size_t size = value.size();
     switch (field.typeId)
     {
+    case MetaTypeId::TYPE_BOOL:
+        if (!value.empty())
+        {
+            bool v = (value[0].size() == 4 && (memcmp(value[0].c_str(), "true", 4) == 0));
+            m_visitor->enterBool(field, v);
+        }
+        break;
+    case MetaTypeId::TYPE_INT32:
+        if (!value.empty())
+        {
+            std::int32_t v = strtol(value[0].c_str(), nullptr, 10);
+            m_visitor->enterInt32(field, v);
+        }
+        break;
+    case MetaTypeId::TYPE_UINT32:
+        if (!value.empty())
+        {
+            std::uint32_t v = strtoul(value[0].c_str(), nullptr, 10);
+            m_visitor->enterUInt32(field, v);
+        }
+        break;
+    case MetaTypeId::TYPE_INT64:
+        if (!value.empty())
+        {
+            std::int64_t v = strtoll(value[0].c_str(), nullptr, 10);
+            m_visitor->enterInt64(field, v);
+        }
+        break;
+    case MetaTypeId::TYPE_UINT64:
+        if (!value.empty())
+        {
+            std::uint64_t v = strtoull(value[0].c_str(), nullptr, 10);
+            m_visitor->enterUInt64(field, v);
+        }
+        break;
+    case MetaTypeId::TYPE_FLOAT:
+        if (!value.empty())
+        {
+            float v = strtof32(value[0].c_str(), nullptr);
+            m_visitor->enterFloat(field, v);
+        }
+        break;
+    case MetaTypeId::TYPE_DOUBLE:
+        if (!value.empty())
+        {
+            double v = strtof64(value[0].c_str(), nullptr);
+            m_visitor->enterDouble(field, v);
+        }
+        break;
+    case MetaTypeId::TYPE_STRING:
+        if (!value.empty())
+        {
+            m_visitor->enterString(field, value[0].c_str(), value[0].size());
+        }
+        break;
+    case MetaTypeId::TYPE_ENUM:
+        if (!value.empty())
+        {
+            m_visitor->enterEnum(field, value[0].c_str(), value[0].size());
+        }
+        break;
     case MetaTypeId::TYPE_ARRAY_BOOL:
         {
             std::vector<bool> v;
             v.reserve(size);
             std::for_each(value.begin(), value.end(), [&v] (const std::string& entry) {
-                bool val = (entry.size() == 4 && (memcmp(entry.c_str(), "true", 4) == 0));
+                bool val = (entry.size() == 4 && (memcmp(entry.c_str(), "true", 4) == 0)) || (entry.size() >= 1 && (entry[0] == 1));
                 v.push_back(val);
             });
             m_visitor->enterArrayBool(field, std::move(v));

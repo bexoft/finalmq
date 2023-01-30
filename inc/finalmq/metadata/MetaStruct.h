@@ -34,17 +34,27 @@
 namespace finalmq {
 
 
+enum MetaStructFlags : std::int32_t
+{
+    METASTRUCTFLAG_NONE = 0,
+    METASTRUCTFLAG_HL7_STRUCT = 1,
+    METASTRUCTFLAG_HL7_SEGMENT = 2,
+};
+
+
 class SYMBOLEXP MetaStruct
 {
 public:
     MetaStruct();
-    MetaStruct(const std::string& typeName, const std::string& description, const std::vector<MetaField>& fields);
-    MetaStruct(const std::string& typeName, const std::string& description, std::vector<MetaField>&& fields);
+    MetaStruct(const std::string& typeName, const std::string& description, const std::vector<MetaField>& fields, int flags = 0);
+    MetaStruct(const std::string& typeName, const std::string& description, std::vector<MetaField>&& fields, int flags = 0);
 
     void setTypeName(const std::string& typeName);
     const std::string& getTypeName() const;
     void setDescription(const std::string& description);
     const std::string& getDescription() const;
+    void setFlags(int flags);
+    int getFlags() const;
 
     const MetaField* getFieldByIndex(ssize_t index) const;
     const MetaField* getFieldByName(const std::string& name) const;
@@ -61,6 +71,7 @@ private:
     std::string                                                         m_typeName;
     std::string                                                         m_description;
     std::vector<std::shared_ptr<const MetaField>>                       m_fields;
+    int                                                                 m_flags;
     std::unordered_map<std::string, std::shared_ptr<const MetaField>>   m_name2Field;
 };
 

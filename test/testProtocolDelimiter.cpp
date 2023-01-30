@@ -56,7 +56,7 @@ class ProtocolDelimiterTest : public ProtocolDelimiter
 public:
 
     ProtocolDelimiterTest() 
-        : ProtocolDelimiter("lol")
+        : ProtocolDelimiter("lol", Variant())
     {
     }
 

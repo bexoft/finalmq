@@ -44,7 +44,7 @@ using finalmq::PeerEvent;
 using finalmq::RequestContextPtr;
 using finalmq::ProtocolHeaderBinarySizeFactory;
 using finalmq::ProtocolDelimiterLinefeedFactory;
-using finalmq::IProtocolSessionPtr;
+using finalmq::SessionInfo;
 using finalmq::ConnectionData;
 using finalmq::ConnectionEvent;
 using finalmq::Logger;
@@ -74,8 +74,8 @@ int main()
     entityContainer.init();
 
     // register lambda for connection events to see when a network node connects or disconnects.
-    entityContainer.registerConnectionEvent([] (const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) {
-        const ConnectionData connectionData = session->getConnectionData();
+    entityContainer.registerConnectionEvent([] (const SessionInfo& session, ConnectionEvent connectionEvent) {
+        const ConnectionData connectionData = session.getConnectionData();
         std::cout << "connection event at " << connectionData.endpoint
                   << " remote: " << connectionData.endpointPeer
                   << " event: " << connectionEvent.toString() << std::endl;

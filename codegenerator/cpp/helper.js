@@ -84,9 +84,27 @@ module.exports = {
         list = type.split('.')
         return list[list.length - 1]
     },
+	
+	isNullable : function(field)
+	{
+		var flagArray = field.flags;
+		if (flagArray)
+		{
+			for (var i = 0; i < flagArray.length; i++)
+			{
+				if (flagArray[i] == 'METAFLAG_NULLABLE')
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	},
      
-    tid2type : function(data, tid, type) { 
-
+    tid2type : function(data, field) { 
+		var tid = field.tid;
+		var type = field.type;
+		var nullable = this.isNullable(field);
         switch (tid)
         {
             case 'bool':
@@ -108,7 +126,15 @@ module.exports = {
             case 'bytes':
             case 'TYPE_BYTES': return 'finalmq::Bytes'
             case 'struct':
-            case 'TYPE_STRUCT': return this.typeWithNamespace(data, type, '::')
+            case 'TYPE_STRUCT': 
+				if (!nullable)
+				{
+					return this.typeWithNamespace(data, type, '::')
+				}
+				else
+				{
+					return 'std::shared_ptr<' + this.typeWithNamespace(data, type, '::') + '>';
+				}
             case 'enum':
             case 'TYPE_ENUM': return this.typeWithNamespace(data, type, '::')
             case 'variant':
@@ -199,6 +225,22 @@ module.exports = {
             for (var i = 0; i < flagArray.length; i++)
             {
 				if (flagArray[i].startsWith('METAFLAG_'))
+				{
+					flags += ' | finalmq::' + flagArray[i]
+				}
+            }
+        }
+        return flags
+    },
+
+    convertStructFlags : function(flagArray)
+    {
+        var flags = 'finalmq::METASTRUCTFLAG_NONE'
+        if (flagArray)
+        {
+            for (var i = 0; i < flagArray.length; i++)
+            {
+				if (flagArray[i].startsWith('METASTRUCTFLAG_'))
 				{
 					flags += ' | finalmq::' + flagArray[i]
 				}

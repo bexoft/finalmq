@@ -74,7 +74,7 @@ const char* JsonParser::parse(const char* str, ssize_t size)
     {
         if (size == CHECK_ON_ZEROTERM)
         {
-            m_end = (char*)nullptr - 1;
+            m_end = (char*)nullptr - 1; // highest possible address
         }
         else
         {

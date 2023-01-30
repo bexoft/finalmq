@@ -173,8 +173,8 @@ const std::string& MetaEnum::getAliasByValue(std::int32_t value) const
             return entry->name;
         }
     }
-    static std::string empty;
-    return empty;
+    static const std::string unknownEnum = "Unknown enum value, default enum is also not defined";
+    return unknownEnum;
 }
 
 

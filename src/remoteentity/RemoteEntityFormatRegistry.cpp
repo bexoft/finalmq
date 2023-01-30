@@ -22,6 +22,7 @@
 
 #include "finalmq/remoteentity/RemoteEntityFormatRegistry.h"
 #include "finalmq/remoteentity/entitydata.fmq.h"
+#include "finalmq/protocolsession/ProtocolMessage.h"
 #include "finalmq/variant/Variant.h"
 #include "finalmq/variant/VariantValueStruct.h"
 #include "finalmq/variant/VariantValues.h"
@@ -371,27 +372,41 @@ inline static bool isDestAndSubPathDefined(const Header& header)
     return (isDestinationDefined(header) && isSubPathDefined(header));
 }
 
+//static size_t findEndOfPath(const char* buffer)
+//{
+//    int i = 0;
+//    char cOld = 0;
+//    char c;
+//    while ((c = buffer[i]))
+//    {
+//        if (c == '{')
+//        {
+//            char cNext = buffer[i + 1];
+//            if (cOld != '/' && (cNext == '\"' || cNext == '}'))
+//            {
+//                return i;
+//            }
+//        }
+//        cOld = c;
+//        ++i;
+//    }
+//    return i;
+//}
+
 static size_t findEndOfPath(const char* buffer)
 {
     int i = 0;
-    char cOld = 0;
     char c;
     while ((c = buffer[i]))
     {
         if (c == '{')
         {
-            char cNext = buffer[i + 1];
-            if (cOld != '/' && (cNext == '\"' || cNext == '}'))
-            {
-                return i;
-            }
+            return i;
         }
-        cOld = c;
         ++i;
     }
     return i;
 }
-
 
 
 std::string RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header)
@@ -548,11 +563,11 @@ std::string RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, con
 }
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainfo(IMessage& message, int contentType, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, bool& syntaxError)
+std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainfo(IMessage& message, int contentType, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus)
 {
     std::string data = parseMetainfo(message, name2Entity, header);
 
-    syntaxError = false;
+    formatStatus = 0;
     BufferRef bufferRef = message.getReceivePayload();
 
     std::shared_ptr<StructBase> structBase;
@@ -570,7 +585,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainf
         if (it != m_contentTypeToFormat.end())
         {
             assert(it->second);
-            structBase = it->second->parseData(bufferRef, storeRawData, header.type, syntaxError);
+            structBase = it->second->parseData(bufferRef, storeRawData, header.type, formatStatus);
         }
     }
     else
@@ -583,10 +598,11 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainf
     return structBase;
 }
 
-std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(IMessage& message, int contentType, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, bool& syntaxError)
+std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(IMessage& message, int contentType, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus)
 {
-    syntaxError = false;
+    formatStatus = 0;
     BufferRef bufferRef = message.getReceivePayload();
+    Variant* protocolData = message.getControlData().getVariant(ProtocolMessage::FMQ_PROTOCOLDATA);
 
     std::shared_ptr<StructBase> structBase;
 
@@ -594,7 +610,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(IMessage& mess
     if (it != m_contentTypeToFormat.end())
     {
         assert(it->second);
-        structBase = it->second->parse(bufferRef, storeRawData, name2Entity, header, syntaxError);
+        structBase = it->second->parse(bufferRef, protocolData, storeRawData, name2Entity, header, formatStatus);
         metainfoToMessage(message, header.meta);
     }
 

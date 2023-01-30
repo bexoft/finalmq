@@ -102,17 +102,17 @@ public:
     PeerId getPeerId(std::int64_t sessionId, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName) const;
     ReadyToSend getRequestHeader(const PeerId& peerId, const std::string& path, const StructBase& structBase, CorrelationId correlationId, Header& header, IProtocolSessionPtr& session, std::string& virtualSessionId);
     std::string getEntityName(const PeerId& peerId);
-    PeerId addPeer(const IProtocolSessionPtr& session, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName, bool incoming, bool& added, const std::function<void()>& funcBeforeFirePeerEvent);
+    PeerId addPeer(const SessionInfo& session, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName, bool incoming, bool& added, const std::function<void()>& funcBeforeFirePeerEvent);
     PeerId addPeer();
-    std::deque<PeerManager::Request> connect(PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, const std::string& entityName);
+    std::deque<PeerManager::Request> connect(PeerId peerId, const SessionInfo& session, EntityId entityId, const std::string& entityName);
     void setEntityId(EntityId entityId);
     void setPeerEvent(const std::shared_ptr<FuncPeerEvent>& funcPeerEvent);
-    IProtocolSessionPtr getSession(PeerId peerId) const;
+    const SessionInfo& getSession(PeerId peerId) const;
 
 private:
     struct Peer
     {
-        IProtocolSessionPtr session;
+        SessionInfo         session;
         std::string         virtualSessionId;
         EntityId            entityId{ ENTITYID_INVALID };
         std::string         entityName;
@@ -142,7 +142,7 @@ typedef std::shared_ptr<PeerManager> PeerManagerPtr;
 class RequestContext : public std::enable_shared_from_this<RequestContext>
 {
 public:
-    inline RequestContext(const PeerManagerPtr& sessionIdEntityIdToPeerId, EntityId entityIdSrc, ReceiveData& receiveData, const std::shared_ptr<FileTransferReply>& fileTransferReply)
+    inline RequestContext(const PeerManagerPtr& sessionIdEntityIdToPeerId, EntityId entityIdSrc, ReceiveData& receiveData)
         : m_peerManager(sessionIdEntityIdToPeerId)
         , m_session(receiveData.session)
         , m_virtualSessionId(std::move(receiveData.virtualSessionId))
@@ -152,7 +152,6 @@ public:
         , m_replySent(false)
         , m_metainfo(std::move(receiveData.message->getAllMetainfo()))
         , m_echoData(std::move(receiveData.message->getEchoData()))
-        , m_fileTransferReply(fileTransferReply)
     {
     }
 
@@ -171,7 +170,7 @@ public:
             assert(m_peerManager);
             assert(m_session);
             // get peer
-            m_peerId = m_peerManager->getPeerId(m_session->getSessionId(), m_virtualSessionId, m_entityIdDest, "");
+            m_peerId = m_peerManager->getPeerId(m_session.getSessionId(), m_virtualSessionId, m_entityIdDest, "");
         }
         return m_peerId;
     }
@@ -181,7 +180,7 @@ public:
         if (!m_replySent)
         {
             Header header{ m_entityIdDest, "", m_entityIdSrc, MsgMode::MSG_REPLY, Status::STATUS_OK, {}, structBase.getStructInfo().getTypeName(), m_correlationId, {} };
-            RemoteEntityFormatRegistry::instance().send(m_session, m_virtualSessionId, header, std::move(m_echoData), &structBase, metainfo);
+            RemoteEntityFormatRegistry::instance().send(m_session.getSession(), m_virtualSessionId, header, std::move(m_echoData), &structBase, metainfo);
             m_replySent = true;
         }
     }
@@ -191,7 +190,7 @@ public:
         if (!m_replySent)
         {
             Header header{ m_entityIdDest, "", m_entityIdSrc, MsgMode::MSG_REPLY, Status::STATUS_OK, {}, {}, m_correlationId, {} };
-            RemoteEntityFormatRegistry::instance().send(m_session, m_virtualSessionId, header, std::move(m_echoData), nullptr, metainfo, &controlData);
+            RemoteEntityFormatRegistry::instance().send(m_session.getSession(), m_virtualSessionId, header, std::move(m_echoData), nullptr, metainfo, &controlData);
             m_replySent = true;
         }
     }
@@ -201,14 +200,14 @@ public:
         if (!m_replySent)
         {
             Header header{ m_entityIdDest, "", m_entityIdSrc, MsgMode::MSG_REPLY, status, {}, {}, m_correlationId, {} };
-            RemoteEntityFormatRegistry::instance().send(m_session, m_virtualSessionId, header, std::move(m_echoData));
+            RemoteEntityFormatRegistry::instance().send(m_session.getSession(), m_virtualSessionId, header, std::move(m_echoData));
             m_replySent = true;
         }
     }
 
     bool replyFile(const std::string& filename, IMessage::Metainfo* metainfo = nullptr)
     {
-        bool handeled = m_fileTransferReply->replyFile(shared_from_this(), filename, metainfo);
+        bool handeled = FileTransferReply::replyFile(shared_from_this(), filename, metainfo);
         return handeled;
     }
 
@@ -242,7 +241,7 @@ public:
 
     bool doesSupportFileTransfer() const
     {
-        return m_session->doesSupportFileTransfer();
+        return m_session.doesSupportFileTransfer();
     }
 
     const std::string& getVirtualSessionId() const
@@ -250,8 +249,7 @@ public:
         return m_virtualSessionId;
     }
 
-private:
-    inline const IProtocolSessionPtr& session() const
+    inline const SessionInfo& session() const
     {
         return m_session;
     }
@@ -260,13 +258,15 @@ private:
         return m_entityIdDest;
     }
 
+private:
+
     RequestContext(const RequestContext&) = delete;
     const RequestContext& operator =(const RequestContext&) = delete;
     RequestContext(const RequestContext&&) = delete;
     const RequestContext& operator =(const RequestContext&&) = delete;
 private:
     PeerManagerPtr                  m_peerManager;
-    IProtocolSessionPtr             m_session;
+    SessionInfo                     m_session;
     std::string                     m_virtualSessionId;
     EntityId                        m_entityIdDest = ENTITYID_INVALID;
     EntityId                        m_entityIdSrc = ENTITYID_INVALID;
@@ -275,7 +275,6 @@ private:
     bool                            m_replySent = false;
     IMessage::Metainfo              m_metainfo;
     Variant                         m_echoData;
-    std::shared_ptr<FileTransferReply>  m_fileTransferReply;
 
     friend class RemoteEntity;
 };
@@ -286,6 +285,7 @@ private:
 
 
 class SYMBOLEXP RemoteEntity : public IRemoteEntity
+                             , private std::enable_shared_from_this<RemoteEntity>
 {
 public:
     RemoteEntity();
@@ -301,17 +301,17 @@ public:
     virtual void sendEventToAllPeers(IMessage::Metainfo&& metainfo, const StructBase& structBase) override;
     virtual void sendEventToAllPeers(const std::string& path, const StructBase& structBase) override;
     virtual void sendEventToAllPeers(const std::string& path, IMessage::Metainfo&& metainfo, const StructBase& structBase) override;
-    virtual PeerId connect(const IProtocolSessionPtr& session, const std::string& entityName, FuncReplyConnect funcReplyConnect = {}) override;
-    virtual PeerId connect(const IProtocolSessionPtr& session, EntityId entityId, FuncReplyConnect funcReplyConnect = {}) override;
+    virtual PeerId connect(const SessionInfo& session, const std::string& entityName, FuncReplyConnect funcReplyConnect = {}) override;
+    virtual PeerId connect(const SessionInfo& session, EntityId entityId, FuncReplyConnect funcReplyConnect = {}) override;
     virtual void disconnect(PeerId peerId) override;
     virtual std::vector<PeerId> getAllPeers() const override;
     virtual void registerPeerEvent(FuncPeerEvent funcPeerEvent) override;
     virtual EntityId getEntityId() const override;
-    virtual IProtocolSessionPtr getSession(PeerId peerId) const override;
-    virtual PeerId createPeer(FuncReplyConnect funcReplyConnect = {}) override;
-    virtual void connect(PeerId peerId, const IProtocolSessionPtr& session, const std::string& entityName) override;
-    virtual void connect(PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId) override;
-    virtual void connect(PeerId peerId, const IProtocolSessionPtr& session, const std::string& entityName, EntityId entityId) override;
+    virtual SessionInfo getSession(PeerId peerId) const override;
+    virtual PeerId createPeer(IRemoteEntityContainer& entityContainer, FuncReplyConnect funcReplyConnect = {}) override;
+    virtual void connect(PeerId peerId, const SessionInfo& session, const std::string& entityName) override;
+    virtual void connect(PeerId peerId, const SessionInfo& session, EntityId entityId) override;
+    virtual void connect(PeerId peerId, const SessionInfo& session, const std::string& entityName, EntityId entityId) override;
     virtual void registerCommandFunction(const std::string& path, const std::string& type, FuncCommand funcCommand) override;
     virtual std::string getTypeOfCommandFunction(std::string& path, const std::string* method = nullptr) override;
     virtual CorrelationId getNextCorrelationId() const override;
@@ -321,24 +321,21 @@ public:
     virtual CorrelationId sendRequest(const PeerId& peerId, const StructBase& structBase, FuncReply funcReply) override;
     virtual CorrelationId sendRequest(const PeerId& peerId, IMessage::Metainfo&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply) override;
     virtual bool cancelReply(CorrelationId correlationId) override;
-    virtual bool isEntityRegistered() const override;
     virtual void registerReplyEvent(FuncReplyEvent funcReplyEvent) override;
-    virtual IExecutorPtr getExecutor() const override;
-    virtual PeerId createPublishPeer(const IProtocolSessionPtr& session, const std::string& entityName) override;
+    virtual PeerId createPublishPeer(const SessionInfo& session, const std::string& entityName) override;
 
 private:
-    virtual void initEntity(EntityId entityId, const std::string& entityName, const std::shared_ptr<FileTransferReply>& fileTransferReply, const IExecutorPtr& executor) override;
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) override;
     virtual void virtualSessionDisconnected(const IProtocolSessionPtr& session, const std::string& virtualSessionId) override;
     virtual void receivedRequest(ReceiveData& receiveData) override;
     virtual void receivedReply(const ReceiveData& receiveData) override;
     virtual void deinit() override;
 
-    PeerId connectIntern(const IProtocolSessionPtr& session, const std::string& virtualSessionId, const std::string& entityName, EntityId, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect);
-    void connectIntern(PeerId peerId, const IProtocolSessionPtr& session, const std::string& entityName, EntityId entityId);
+    PeerId connectIntern(const SessionInfo& session, const std::string& virtualSessionId, const std::string& entityName, EntityId, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect);
+    void connectIntern(PeerId peerId, const SessionInfo& session, const std::string& entityName, EntityId entityId);
     void removePeer(PeerId peerId, Status status);
     void replyReceived(const ReceiveData& receiveData);
-    void sendConnectEntity(PeerId peerId, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect);
+    void sendConnectEntity(PeerId peerId, IRemoteEntityContainer& entityContainer, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect);
 
     struct Function
     {
@@ -370,8 +367,8 @@ private:
     };
 
 
-    EntityId                            m_entityId{ ENTITYID_INVALID };
-    std::string                         m_entityName;
+    const EntityId                      m_entityId{ ENTITYID_INVALID };
+    static std::atomic<EntityId>        m_entityIdNext;
 
     std::vector<FuncReplyEvent>         m_funcsReplyEvent;
     std::atomic_int64_t                 m_funcsReplyEventChanged = {};
@@ -380,11 +377,9 @@ private:
     std::list<FunctionVar>              m_funcCommandsVar;
     std::list<FunctionVar>              m_funcCommandsVarStar;
     const std::shared_ptr<PeerManager>  m_peerManager;
-    std::shared_ptr<FileTransferReply>  m_fileTransferReply;
-    IExecutorPtr                        m_executor;
-    std::atomic<bool>                   m_initialized{false};
     mutable std::atomic_uint64_t        m_nextCorrelationId{1};
     mutable std::mutex                  m_mutex;
+    mutable std::mutex                  m_mutexRequests;
     mutable std::mutex                  m_mutexFunctions;
 };
 

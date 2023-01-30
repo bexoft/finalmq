@@ -38,7 +38,8 @@ const std::uint32_t ProtocolStream::PROTOCOL_ID = 1;
 const std::string ProtocolStream::PROTOCOL_NAME = "stream";
 
 
-ProtocolStream::ProtocolStream()
+ProtocolStream::ProtocolStream(const Variant& data)
+    : m_data(data)
 {
 
 }
@@ -58,16 +59,19 @@ ProtocolStream::~ProtocolStream()
 // IProtocol
 void ProtocolStream::setCallback(const std::weak_ptr<IProtocolCallback>& callback)
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     m_callback = callback;
 }
 
 void ProtocolStream::setConnection(const IStreamConnectionPtr& connection)
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     m_connection = connection;
 }
 
 IStreamConnectionPtr ProtocolStream::getConnection() const
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     return m_connection;
 }
 
@@ -160,6 +164,10 @@ bool ProtocolStream::received(const IStreamConnectionPtr& /*connection*/, const 
         auto callback = m_callback.lock();
         if (callback)
         {
+            if (m_data.getType() != VARTYPE_NONE)
+            {
+                message->getControlData().add(ProtocolMessage::FMQ_PROTOCOLDATA, m_data);
+            }
             callback->received(message);
         }
     }
@@ -220,9 +228,9 @@ struct RegisterProtocolStreamFactory
 
 
 // IProtocolFactory
-IProtocolPtr ProtocolStreamFactory::createProtocol(const Variant& /*data*/)
+IProtocolPtr ProtocolStreamFactory::createProtocol(const Variant& data)
 {
-    return std::make_shared<ProtocolStream>();
+    return std::make_shared<ProtocolStream>(data);
 }
 
 }   // namespace finalmq

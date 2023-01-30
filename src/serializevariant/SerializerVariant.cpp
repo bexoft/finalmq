@@ -108,13 +108,16 @@ void SerializerVariant::Internal::enterStruct(const MetaField& field)
             assert(stru);
             m_stack.push_back(&stru->back().second);
         }
-        else
+        else if (m_current->getType() == VARTYPE_LIST)
         {
-            assert(m_current->getType() == VARTYPE_LIST);
             m_current->add(VariantStruct());
             VariantList* list = *m_current;
             assert(list);
             m_stack.push_back(&list->back());
+        }
+        else
+        {
+            m_stack.push_back(nullptr);
         }
         m_current = m_stack.back();
     }
@@ -133,6 +136,20 @@ void SerializerVariant::Internal::exitStruct(const MetaField& /*field*/)
         {
             m_current = nullptr;
         }
+    }
+}
+
+void SerializerVariant::Internal::enterStructNull(const MetaField& field)
+{
+    assert(m_current);
+
+    if (m_current->getType() == TYPE_STRUCT)
+    {
+        m_current->add(field.name, Variant());
+    }
+    else if (m_current->getType() == VARTYPE_LIST)
+    {
+        m_current->add(Variant());
     }
 }
 

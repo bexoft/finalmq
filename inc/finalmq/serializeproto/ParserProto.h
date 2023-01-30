@@ -64,10 +64,10 @@ private:
     bool parseFixedValue(T& value);
 
     template<class T>
-    bool parseVarint(T& value);
+    bool parseValue(T& value, bool zz);
 
-    template<class T, class D>
-    bool parseZigZag(T& value);
+//    template<class T, class D>
+//    bool parseZigZagValue(T& value);
 
     template<class T, int WIRETYPE>
     bool parseArrayFixed(std::vector<T>& array);
@@ -80,7 +80,7 @@ private:
     template<class T>
     T parseFixed();
 
-    inline std::int32_t zigzag(std::uint32_t value);
+//    inline std::int32_t zigzag(std::uint32_t value);
     inline std::int64_t zigzag(std::uint64_t value);
 
     void skip(WireType wireType);

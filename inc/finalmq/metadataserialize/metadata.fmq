@@ -31,7 +31,15 @@
         {"type":"SerializeMetaFieldFlags","desc":"desc","entries":[
             {"name":"METAFLAG_NONE",            "id":0,     "desc":"desc"},
             {"name":"METAFLAG_PROTO_VARINT",    "id":1,     "desc":"desc"},
-            {"name":"METAFLAG_PROTO_ZIGZAG",    "id":2,     "desc":"desc"}
+            {"name":"METAFLAG_PROTO_ZIGZAG",    "id":2,     "desc":"desc"},
+            {"name":"METAFLAG_NULLABLE",        "id":4,     "desc":"desc"},
+            {"name":"METAFLAG_HL7_STRUCT",      "id":5,     "desc":"desc"},
+            {"name":"METAFLAG_HL7_SEGMENT",     "id":6,     "desc":"desc"}
+        ]},
+        {"type":"SerializeMetaStructFlags","desc":"desc","entries":[
+            {"name":"METASTRUCTFLAG_NONE",            "id":0,     "desc":"desc"},
+            {"name":"METASTRUCTFLAG_HL7_STRUCT",      "id":1,     "desc":"desc"},
+            {"name":"METASTRUCTFLAG_HL7_SEGMANT",     "id":2,     "desc":"desc"}
         ]}
     ],
 
@@ -57,7 +65,8 @@
         {"type":"SerializeMetaStruct","desc":"desc","fields":[
             {"tid":"TYPE_STRING",       "type":"",                          "name":"type",      "desc":"desc","flags":[]},
             {"tid":"TYPE_STRING",       "type":"",                          "name":"desc",      "desc":"desc","flags":[]},
-            {"tid":"TYPE_ARRAY_STRUCT", "type":"SerializeMetaField",        "name":"fields",    "desc":"desc","flags":[]}
+            {"tid":"TYPE_ARRAY_STRUCT", "type":"SerializeMetaField",        "name":"fields",    "desc":"desc","flags":[]},
+            {"tid":"TYPE_ARRAY_ENUM",   "type":"SerializeMetaStructFlags",  "name":"flags",     "desc":"desc","flags":[]}
         ]},
         {"type":"SerializeMetaData","desc":"desc","fields":[
             {"tid":"TYPE_ARRAY_STRUCT", "type":"SerializeMetaEnum",         "name":"enums",     "desc":"desc","flags":[]},

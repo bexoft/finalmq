@@ -574,7 +574,7 @@ TEST_F(TestParserVariant, testVariantEmpty)
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
 
-    Variant root = VariantStruct{ };
+    Variant root = VariantStruct{ {"value", Variant()}};
     ParserVariant parser(mockVisitor, root);
     bool res = parser.parseStruct("test.TestVariant");
     EXPECT_EQ(res, true);

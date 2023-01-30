@@ -53,7 +53,7 @@ private:
 };
 
 
-typedef std::function<void(const IProtocolSessionPtr& session, ConnectionEvent connectionEvent)> FuncConnectionEvent;
+typedef std::function<void(const SessionInfo& session, ConnectionEvent connectionEvent)> FuncConnectionEvent;
 
 
 struct IRemoteEntityContainer
@@ -103,7 +103,7 @@ struct IRemoteEntityContainer
      * @param connectProperties contains properties for the connect, e.g. SSL/TLS properties.
      * @return the session.
      */
-    virtual IProtocolSessionPtr connect(const std::string& endpoint, const ConnectProperties& connectProperties = {}) = 0;
+    virtual SessionInfo connect(const std::string& endpoint, const ConnectProperties& connectProperties = {}) = 0;
 
     /**
      * @brief run activates the poller loop (it handles all socket connections). You can call it from any thread. All callbacks will be called from the thread which calles run(). run() blocks till terminatePollerLoop() is called. Do not call it in case of passing an executor in the init() (in this case the callbacks will be called from the executor's context).
@@ -164,7 +164,15 @@ struct IRemoteEntityContainer
      * @brief getEntity gets an entity object by its ID.
      * @return the entity.
      */
-    virtual hybrid_ptr<IRemoteEntity> getEntity(EntityId) const = 0;
+    virtual hybrid_ptr<IRemoteEntity> getEntity(EntityId entityId) const = 0;
+
+    /**
+     * @brief gets the name of an entity
+     * @param entityId the ID of the entity
+     * @param registered outputs true, if the entity was registered
+     * @return the name of the entity
+     */
+    virtual std::string getEntityName(EntityId entityId, bool& registered) const = 0;
 };
 
 typedef std::shared_ptr<IRemoteEntityContainer> IRemoteEntityContainerPtr;
@@ -175,6 +183,7 @@ typedef std::shared_ptr<IRemoteEntityContainer> IRemoteEntityContainerPtr;
 
 class SYMBOLEXP RemoteEntityContainer : public IRemoteEntityContainer
                                       , private IProtocolSessionCallback
+                                      , private std::enable_shared_from_this<RemoteEntityContainer>
 {
 public:
     RemoteEntityContainer();
@@ -184,7 +193,7 @@ public:
     virtual void init(const IExecutorPtr& executor = nullptr, int cycleTime = 100, FuncTimer funcTimer = {}, bool storeRawDataInReceiveStruct = false, int checkReconnectInterval = 1000) override;
     virtual int bind(const std::string& endpoint, const BindProperties& bindProperties = {}) override;
     virtual void unbind(const std::string& endpoint) override;
-    virtual IProtocolSessionPtr connect(const std::string& endpoint, const ConnectProperties& connectProperties = {}) override;
+    virtual SessionInfo connect(const std::string& endpoint, const ConnectProperties& connectProperties = {}) override;
     virtual void run() override;
     virtual void terminatePollerLoop() override;
     virtual IExecutorPtr getExecutor() const override;
@@ -196,6 +205,7 @@ public:
 
     virtual std::vector<EntityId> getAllEntities() const override;
     virtual hybrid_ptr<IRemoteEntity> getEntity(EntityId entityId) const override;
+    virtual std::string getEntityName(EntityId entityId, bool& registered) const override;
 
 private:
     // IProtocolSessionCallback
@@ -206,7 +216,8 @@ private:
     virtual void socketConnected(const IProtocolSessionPtr& session) override;
     virtual void socketDisconnected(const IProtocolSessionPtr& session) override;
 
-    inline void triggerConnectionEvent(const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) const;
+    SessionInfo createSessionInfo(const IProtocolSessionPtr& session);
+    inline void triggerConnectionEvent(const SessionInfo& session, ConnectionEvent connectionEvent) const;
     void deinit();
 //    bool isPureDataPath(const std::string& path);
     void subscribeEntityNames(const IProtocolSessionPtr& session);
@@ -217,13 +228,12 @@ private:
     const std::unique_ptr<IProtocolSessionContainer>            m_protocolSessionContainer;
     std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>  m_name2entity;
     std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>>     m_entityId2entity;
-    EntityId                                                    m_nextEntityId = 1;
+    std::unordered_map<EntityId, std::string>                   m_entityId2name;
     std::shared_ptr<FuncConnectionEvent>                        m_funcConnectionEvent;
     bool                                                        m_storeRawDataInReceiveStruct = false;
     std::chrono::time_point<std::chrono::steady_clock>          m_lastCheckTime;
     std::list<std::string>                                      m_pureDataPaths;
 //    std::list<std::string>                                      m_pureDataPathPrefixes;
-    const std::shared_ptr<FileTransferReply>                    m_fileTransferReply;
     const IExecutorPtr                                          m_executor;
 
     std::atomic_int64_t                                         m_entitiesChanged = {};

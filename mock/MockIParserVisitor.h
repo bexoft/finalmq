@@ -38,6 +38,7 @@ public:
 
     MOCK_METHOD(void, enterStruct, (const MetaField& field), (override));
     MOCK_METHOD(void, exitStruct, (const MetaField& field), (override));
+    MOCK_METHOD(void, enterStructNull, (const MetaField& field), (override));
 
     MOCK_METHOD(void, enterArrayStruct, (const MetaField& field), (override));
     MOCK_METHOD(void, exitArrayStruct, (const MetaField& field), (override));

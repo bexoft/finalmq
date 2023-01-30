@@ -40,25 +40,39 @@ struct IMetaData;
 
 enum MetaFieldFlags : std::int32_t
 {
-    METAFLAG_NONE         = 0,
-    METAFLAG_PROTO_VARINT = 1,
-    METAFLAG_PROTO_ZIGZAG = 2,
+    METAFLAG_NONE           = 0,
+    METAFLAG_PROTO_VARINT   = 1,
+    METAFLAG_PROTO_ZIGZAG   = 2,
+    METAFLAG_NULLABLE       = 4,    // only for struct
 };
 
 
 class MetaField
 {
 public:
+    MetaField(MetaTypeId tId, const std::string& tName, const std::string& n,
+            const std::string& desc, int flgs = 0, int ix = -1)
+        : typeId(tId)
+        , typeName(tName)
+        , name(n)
+        , description(desc)
+        , flags(flgs)
+        , index(ix)
+    {
+    }
     MetaTypeId      typeId;                                 ///< type id of the parameter
     std::string     typeName;                               ///< is needed for struct and enum
     std::string     name{};                                 ///< parameter name
     std::string     description{};                          ///< description of the parameter
-    int             flags = 0;                              ///< flaggs of the parameter
-    int             index = -1;                             ///< index of field inside struct
+    int             flags;                                  ///< flaggs of the parameter
+    int             index;                                  ///< index of field inside struct
 
+private:
     mutable const MetaEnum*     metaEnum    = nullptr;      ///< cache to find MetaEnum of typeName faster
     mutable const MetaStruct*   metaStruct  = nullptr;      ///< cache to find MetaStruct of typeName faster
     mutable std::shared_ptr<MetaField> fieldWithoutArray{}; ///< in case of an array, this is the MetaField for its entries
+
+    friend class MetaData;
 };
 
 

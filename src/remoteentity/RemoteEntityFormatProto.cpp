@@ -118,9 +118,9 @@ void RemoteEntityFormatProto::serializeData(IMessage& message, const StructBase*
 
 static const std::string FMQ_PATH = "fmq_path";
 
-std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const BufferRef& bufferRef, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, bool& syntaxError)
+std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const BufferRef& bufferRef, const Variant* /*protocolData*/, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus)
 {
-    syntaxError = false;
+    formatStatus = 0;
     char* buffer = bufferRef.first;
     ssize_t sizeBuffer = bufferRef.second;
     if (sizeBuffer < 4)
@@ -133,13 +133,13 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const BufferRef& buff
     ssize_t sizeHeader = 0;
     if (sizeBuffer >= 4)
     {
-        sizeHeader = (unsigned char)*buffer;
+        sizeHeader = (unsigned int)(unsigned char)*buffer;
         ++buffer;
-        sizeHeader |= ((unsigned char)*buffer) << 8;
+        sizeHeader |= ((unsigned int)(unsigned char)*buffer) << 8;
         ++buffer;
-        sizeHeader |= ((unsigned char)*buffer) << 16;
+        sizeHeader |= ((unsigned int)(unsigned char)*buffer) << 16;
         ++buffer;
-        sizeHeader |= ((unsigned char)*buffer) << 24;
+        sizeHeader |= ((unsigned int)(unsigned char)*buffer) << 24;
         ++buffer;
     }
     bool ok = false;
@@ -190,7 +190,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const BufferRef& buff
         buffer += sizeHeader;
 
         BufferRef bufferRefData = { buffer, sizeData };
-        data = parseData(bufferRefData, storeRawData, header.type, syntaxError);
+        data = parseData(bufferRefData, storeRawData, header.type, formatStatus);
     }
 
     return data;
@@ -198,9 +198,9 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const BufferRef& buff
 
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatProto::parseData(const BufferRef& bufferRef, bool storeRawData, std::string& type, bool& syntaxError)
+std::shared_ptr<StructBase> RemoteEntityFormatProto::parseData(const BufferRef& bufferRef, bool storeRawData, std::string& type, int& formatStatus)
 {
-    syntaxError = false;
+    formatStatus = 0;
     const char* buffer = bufferRef.first;
     ssize_t sizeBuffer = bufferRef.second;
     if (sizeBuffer < 4)
@@ -224,13 +224,13 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parseData(const BufferRef& 
         ssize_t sizeDataInStream = 0;
         if (ok)
         {
-            sizeDataInStream = (unsigned char)*buffer;
+            sizeDataInStream = (unsigned int)(unsigned char)*buffer;
             ++buffer;
-            sizeDataInStream |= ((unsigned char)*buffer) << 8;
+            sizeDataInStream |= ((unsigned int)(unsigned char)*buffer) << 8;
             ++buffer;
-            sizeDataInStream |= ((unsigned char)*buffer) << 16;
+            sizeDataInStream |= ((unsigned int)(unsigned char)*buffer) << 16;
             ++buffer;
-            sizeDataInStream |= ((unsigned char)*buffer) << 24;
+            sizeDataInStream |= ((unsigned int)(unsigned char)*buffer) << 24;
             ++buffer;
             sizeRemaining -= 4;
         }
@@ -251,7 +251,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parseData(const BufferRef& 
                 ok = parserData.parseStruct(type);
                 if (!ok)
                 {
-                    syntaxError = true;
+                    formatStatus |= FORMATSTATUS_SYNTAX_ERROR;
                     data = nullptr;
                 }
             }

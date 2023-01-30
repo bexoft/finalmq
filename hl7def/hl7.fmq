@@ -1,0 +1,304 @@
+{
+    "namespace":"hl7",
+    "enums": [
+    ],
+    "structs":[
+        {"type":"HD","desc":"desc","fields":[
+            {"tid":"string",    "type":"",      "name":"namespaceId",                               "desc":""},
+            {"tid":"string",    "type":"",      "name":"universalId",                               "desc":""},
+            {"tid":"string",    "type":"",      "name":"universalIdType",                           "desc":""}
+        ]},
+        
+        {"type":"MSG","desc":"desc","fields":[
+            {"tid":"string",    "type":"",      "name":"messageCode",                               "desc":""},
+            {"tid":"string",    "type":"",      "name":"triggerEvent",                              "desc":""},
+            {"tid":"string",    "type":"",      "name":"messageStructure",                          "desc":""}
+        ]},
+        
+        {"type":"PT","desc":"desc","fields":[
+            {"tid":"string",    "type":"",      "name":"processingId",                              "desc":""},
+            {"tid":"string",    "type":"",      "name":"processingMode",                            "desc":""}
+        ]},
+        
+        {"type":"CWE","desc":"desc","fields":[
+            {"tid":"string",    "type":"",      "name":"identifier",                                "desc":""},
+            {"tid":"string",    "type":"",      "name":"text",                                      "desc":""},
+            {"tid":"string",    "type":"",      "name":"nameOfCodingSystem",                        "desc":""},
+            {"tid":"string",    "type":"",      "name":"alternateIdentifier",                       "desc":""},
+            {"tid":"string",    "type":"",      "name":"alternateText",                             "desc":""},
+            {"tid":"string",    "type":"",      "name":"nameOfAlternateCodingSystem",               "desc":""}
+        ]},
+
+        {"type":"VID","desc":"desc","fields":[
+            {"tid":"string",    "type":"",      "name":"versionId",                                 "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"internationalizationCode",                  "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"internationalizationVersionId",             "desc":""}
+        ]},
+
+        {"type":"XON","desc":"desc","fields":[
+            {"tid":"string",    "type":"",      "name":"organizationName",                          "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"organizationNameTypeCode",                  "desc":""},
+            {"tid":"string",    "type":"",      "name":"idNumber",                                  "desc":""},
+            {"tid":"string",    "type":"",      "name":"identifierCheckDigit",                      "desc":""},
+            {"tid":"string",    "type":"",      "name":"checkDigitScheme",                          "desc":""},
+            {"tid":"struct",    "type":"HD",    "name":"assigningAuthority",                        "desc":""},
+            {"tid":"string",    "type":"",      "name":"identifierTypeCode",                        "desc":""},
+            {"tid":"struct",    "type":"HD",    "name":"assigningFacility",                         "desc":""},
+            {"tid":"string",    "type":"",      "name":"nameRepresentationCode",                    "desc":""},
+            {"tid":"string",    "type":"",      "name":"organizationIdentifier",                    "desc":""}
+        ]},
+
+        {"type":"ED","desc":"desc","fields":[
+            {"tid":"struct",    "type":"HD",    "name":"sourceApplication",                         "desc":""},
+            {"tid":"string",    "type":"",      "name":"typeOfData",                                "desc":""},
+            {"tid":"string",    "type":"",      "name":"dataSubtype",                               "desc":""},
+            {"tid":"string",    "type":"",      "name":"encoding",                                  "desc":""},
+            {"tid":"string",    "type":"",      "name":"data",                                      "desc":""}
+        ]},
+
+        {"type":"ERL","desc":"desc","fields":[
+            {"tid":"string",    "type":"",      "name":"segmentId",                                 "desc":""},
+            {"tid":"string",    "type":"",      "name":"segmentSequence",                           "desc":""},
+            {"tid":"string",    "type":"",      "name":"fieldPosition",                             "desc":""},
+            {"tid":"string",    "type":"",      "name":"fieldRepetition",                           "desc":""},
+            {"tid":"string",    "type":"",      "name":"componentNumber",                           "desc":""},
+            {"tid":"string",    "type":"",      "name":"subcomponentNumber",                        "desc":""}
+        ]},
+
+        {"type":"XCN","desc":"desc","fields":[
+            {"tid":"string",    "type":"",      "name":"personIdentifier",                          "desc":""},
+            {"tid":"string",    "type":"",      "name":"familyName",                                "desc":""},
+            {"tid":"string",    "type":"",      "name":"givenName",                                 "desc":""},
+            {"tid":"string",    "type":"",      "name":"secondOrFurtherGivenNames",                 "desc":""}
+        ]},
+
+        {"type":"EI","desc":"desc","fields":[
+            {"tid":"string",    "type":"",      "name":"entityIdentifier",                          "desc":""},
+            {"tid":"string",    "type":"",      "name":"namespaceId",                               "desc":""},
+            {"tid":"string",    "type":"",      "name":"universalId",                               "desc":""},
+            {"tid":"string",    "type":"",      "name":"universalIdType",                           "desc":""}
+        ]},
+
+
+
+        
+        {"type":"MSH","desc":"desc","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[
+            {"tid":"string",    "type":"",      "name":"fieldSeparator",                            "desc":""},
+            {"tid":"string",    "type":"",      "name":"encodingCharacters",                        "desc":""},
+            {"tid":"struct",    "type":"HD",    "name":"sendingApplication",                        "desc":""},
+            {"tid":"struct",    "type":"HD",    "name":"sendingFacility",                           "desc":""},
+            {"tid":"struct",    "type":"HD",    "name":"receivingApplication",                      "desc":""},
+            {"tid":"struct",    "type":"HD",    "name":"receivingFacility",                         "desc":""},
+            {"tid":"string",    "type":"",      "name":"dateTimeOfMessage",                         "desc":""},
+            {"tid":"string",    "type":"",      "name":"security",                                  "desc":""},
+            {"tid":"struct",    "type":"MSG",   "name":"messageType",                               "desc":""},
+            {"tid":"string",    "type":"",      "name":"messageControlId",                          "desc":""},
+            {"tid":"struct",    "type":"PT",    "name":"processingId",                              "desc":""},
+            {"tid":"struct",    "type":"VID",   "name":"versionId",                                 "desc":""},
+            {"tid":"string",    "type":"",      "name":"sequenceNumber",                            "desc":""},
+            {"tid":"string",    "type":"",      "name":"continuationPointer",                       "desc":""},
+            {"tid":"string",    "type":"",      "name":"acceptAcknowledgmentType",                  "desc":""},
+            {"tid":"string",    "type":"",      "name":"applicationAcknowledgmentType",             "desc":""},
+            {"tid":"string",    "type":"",      "name":"countryCode",                               "desc":""},
+            {"tid":"string",    "type":"",      "name":"characterSet",                              "desc":""},
+            {"tid":"string",    "type":"",      "name":"principalLanguageOfMessage",                "desc":""},
+            {"tid":"string",    "type":"",      "name":"alternateCharacterSetHandlingScheme",       "desc":""},
+            {"tid":"string",    "type":"",      "name":"messageProfileIdentifier",                  "desc":""},
+            {"tid":"string",    "type":"",      "name":"sendingResponsibleOrganization",            "desc":""},
+            {"tid":"string",    "type":"",      "name":"receivingResponsibleOrganization",          "desc":""},
+            {"tid":"string",    "type":"",      "name":"sendingNetworkAddress",                     "desc":""},
+            {"tid":"string",    "type":"",      "name":"receivingNetworkAddress",                   "desc":""}
+        ]},
+
+        {"type":"SFT","desc":"desc","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[
+            {"tid":"struct",    "type":"XON",   "name":"softwareVendorOrganization",                "desc":""},
+            {"tid":"string",    "type":"",      "name":"softwareCertifiedVersionOrReleaseNumber",   "desc":""},
+            {"tid":"string",    "type":"",      "name":"softwareBinaryID",                          "desc":""},
+            {"tid":"string",    "type":"",      "name":"softwareProductInformation",                "desc":""},
+            {"tid":"string",    "type":"",      "name":"softwareInstallDate",                       "desc":""}
+        ]},
+
+        {"type":"UAC","desc":"desc","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[
+            {"tid":"struct",    "type":"CWE",   "name":"userAuthenticationCredentialTypeCode",      "desc":""},
+            {"tid":"struct",    "type":"ED",    "name":"userAuthenticationCredential",              "desc":""}
+        ]},
+
+        {"type":"MSA","desc":"desc","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[
+            {"tid":"string",    "type":"",      "name":"acknowledgementCode",                       "desc":""},
+            {"tid":"string",    "type":"",      "name":"messageControlId",                          "desc":""},
+            {"tid":"string",    "type":"",      "name":"textMessage",                               "desc":""},
+            {"tid":"string",    "type":"",      "name":"expectedSequenceNumber",                    "desc":""},
+            {"tid":"string",    "type":"",      "name":"delayedAcknowledgementType",                "desc":""},
+            {"tid":"string",    "type":"",      "name":"errorCondition",                            "desc":""},
+            {"tid":"string",    "type":"",      "name":"messageWaitingNumber",                      "desc":""},
+            {"tid":"string",    "type":"",      "name":"messageWaitingPriority",                    "desc":""}
+        ]},
+
+        {"type":"ERR","desc":"desc","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[
+            {"tid":"string",    "type":"",      "name":"errorCodeAndLocation",                      "desc":""},
+            {"tid":"struct",    "type":"ERL",   "name":"errorLocation",                             "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"hl7ErrorCode",                              "desc":""},
+            {"tid":"string",    "type":"",      "name":"severity",                                  "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"applicationErrorCode",                      "desc":""},
+            {"tid":"string",    "type":"",      "name":"applicationErrorParameter",                 "desc":""},
+            {"tid":"string",    "type":"",      "name":"diagnosticInformation",                     "desc":""},
+            {"tid":"string",    "type":"",      "name":"userMessage",                               "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"informPersonIndicator",                     "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"overrideType",                              "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"overrideReasonCode",                        "desc":""},
+            {"tid":"string",    "type":"",      "name":"helpDeskContactPoint",                      "desc":""}
+        ]},
+
+        {"type":"SAC","desc":"desc","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[
+            {"tid":"struct",    "type":"EI",    "name":"externalAccessionIdentifier",               "desc":""},
+            {"tid":"struct",    "type":"EI",    "name":"accessionIdentifier",                       "desc":""},
+            {"tid":"struct",    "type":"EI",    "name":"containerIdentifier",                       "desc":""},
+            {"tid":"struct",    "type":"EI",    "name":"primaryParentContainerIdentifier",          "desc":""},
+            {"tid":"struct",    "type":"EI",    "name":"equipmentContainerIdentifier",              "desc":""},
+            {"tid":"string",    "type":"",      "name":"specimenSource",                            "desc":""},
+            {"tid":"string",    "type":"",      "name":"registrationDateTime",                      "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"containerStatus",                           "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"carrierType",                               "desc":""},
+            {"tid":"struct",    "type":"EI",    "name":"carrierId",                                 "desc":""},
+            {"tid":"string",    "type":"",      "name":"positionInCarrier",                         "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"trayTypeSAC",                               "desc":""},
+            {"tid":"struct",    "type":"EI",    "name":"trayIdentifier",                            "desc":""},
+            {"tid":"string",    "type":"",      "name":"positionInTray",                            "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"location",                                  "desc":""},
+            {"tid":"string",    "type":"",      "name":"containerHeight",                           "desc":""},
+            {"tid":"string",    "type":"",      "name":"containerDiamenter",                        "desc":""},
+            {"tid":"string",    "type":"",      "name":"barrierDelta",                              "desc":""},
+            {"tid":"string",    "type":"",      "name":"bottomDelta",                               "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"containerHeightDiameterUnit",               "desc":""},
+            {"tid":"string",    "type":"",      "name":"containerVolume",                           "desc":""},
+            {"tid":"string",    "type":"",      "name":"availableSpecimenVolume",                   "desc":""},
+            {"tid":"string",    "type":"",      "name":"initialSpecimenVolume",                     "desc":""}
+        ]},
+
+        {"type":"OBX","desc":"desc","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[
+            {"tid":"string",    "type":"",      "name":"setId",                                     "desc":""},
+            {"tid":"string",    "type":"",      "name":"valueType",                                 "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"observationIdentifier",                     "desc":""},
+            {"tid":"string",    "type":"",      "name":"observationSubId",                          "desc":""},
+            {"tid":"string",    "type":"",      "name":"observationValue",                          "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"units",                                     "desc":""},
+            {"tid":"string",    "type":"",      "name":"referencesRange",                           "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"interpretationCodes",                       "desc":""},
+            {"tid":"string",    "type":"",      "name":"probability",                               "desc":""},
+            {"tid":"string",    "type":"",      "name":"natureOfAbnormalTest",                      "desc":""},
+            {"tid":"string",    "type":"",      "name":"observationResultStatus",                   "desc":""},
+            {"tid":"string",    "type":"",      "name":"effectiveDateOfReferenceRange",             "desc":""},
+            {"tid":"string",    "type":"",      "name":"userDefinedAccessChecks",                   "desc":""},
+            {"tid":"string",    "type":"",      "name":"dateTimeOfTheObservation",                  "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"producersId",                               "desc":""},
+            {"tid":"struct",    "type":"XCN",   "name":"responsibleObserver",                       "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"observationMethod",                         "desc":""},
+            {"tid":"struct",    "type":"EI",   "name":"equipmentInstanceIdentifier",                "desc":""},
+            {"tid":"string",    "type":"",      "name":"dateTimeOfTheAnalysis",                     "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"observationSite",                           "desc":""},
+            {"tid":"struct",    "type":"EI",   "name":"observationInstanceIdentifier",              "desc":""},
+            {"tid":"string",    "type":"",      "name":"moodCode",                                  "desc":""},
+            {"tid":"struct",    "type":"XON",   "name":"performingOrganizationName",                "desc":""},
+            {"tid":"string",    "type":"",      "name":"performingOrganizationAddress",             "desc":""},
+            {"tid":"struct",    "type":"XCN",   "name":"performingOrganizationMedicalDirector",     "desc":""},
+            {"tid":"string",    "type":"",      "name":"patientsResultsReleaseCategory",            "desc":""}
+        ]},
+
+        {"type":"NTE","desc":"desc","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[
+            {"tid":"string",    "type":"",      "name":"setId",                                     "desc":""},
+            {"tid":"string",    "type":"",      "name":"sourceOfComment",                           "desc":""},
+            {"tid":"string",    "type":"",      "name":"comment",                                   "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"commentType",                               "desc":""},
+            {"tid":"struct",    "type":"XCN",   "name":"enteredBy",                                 "desc":""},
+            {"tid":"string",    "type":"",      "name":"enteredDateTime",                           "desc":""},
+            {"tid":"string",    "type":"",      "name":"effectiveStartDate",                        "desc":""},
+            {"tid":"string",    "type":"",      "name":"expirationDate",                            "desc":""}
+        ]},
+
+        {"type":"SPM","desc":"desc","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[
+            {"tid":"string",    "type":"",      "name":"setIdSpm",                                  "desc":""},
+            {"tid":"string",    "type":"",      "name":"specimenId",                                "desc":""},
+            {"tid":"string",    "type":"",      "name":"specimenParentIds",                         "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"specimenType",                              "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"specimenTypeModifier",                      "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"specimenAdditives",                         "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"specimenCollectionMethod",                  "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"specimenSourceSite",                        "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"specimenSourceSiteModifier",                "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"specimenCollectionSite",                    "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"specimenRole",                              "desc":""},
+            {"tid":"string",    "type":"",      "name":"specimenCollectionAmount",                  "desc":""},
+            {"tid":"string",    "type":"",      "name":"groupedSpecimenCount",                      "desc":""},
+            {"tid":"string",    "type":"",      "name":"specimenDescription",                       "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"specimenHandlingCode",                      "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"specimenRiskCode",                          "desc":""},
+            {"tid":"string",    "type":"",      "name":"specimenCollectionDateTime",                "desc":""},
+            {"tid":"string",    "type":"",      "name":"specimenReceivedDateTime",                  "desc":""},
+            {"tid":"string",    "type":"",      "name":"specimenExpirationDateTime",                "desc":""},
+            {"tid":"string",    "type":"",      "name":"specimenAvailabiity",                       "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"specimenRejectReason",                      "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"specimenQuality",                           "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"specimenAppropriateness",                   "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"specimenCondition",                         "desc":""},
+            {"tid":"string",    "type":"",      "name":"specimenCurrentQuantity",                   "desc":""},
+            {"tid":"string",    "type":"",      "name":"numberOfSpecimenContainers",                "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"containerType",                             "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"containerCondition",                        "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"specimenChildRole",                         "desc":""},
+            {"tid":"string",    "type":"",      "name":"accessionId",                               "desc":""},
+            {"tid":"string",    "type":"",      "name":"otherSpecimenId",                           "desc":""},
+            {"tid":"struct",    "type":"EI",    "name":"shipmentId",                                "desc":""}
+        ]},
+
+        {"type":"EQU","desc":"desc","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[
+            {"tid":"struct",    "type":"EI",   "name":"equipmentInstanceIdentifier",                "desc":""},
+            {"tid":"string",    "type":"",      "name":"eventDateTime",                             "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"equipmentState",                            "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"localRemoteControlState",                   "desc":""},
+            {"tid":"struct",    "type":"CWE",   "name":"alertLevel",                                "desc":""}
+        ]},
+
+
+
+
+
+        {"type":"SPM_STRUCT","desc":"desc","fields":[
+            {"tid":"struct",    "type":"SPM",           "name":"spm",                               "desc":""},
+            {"tid":"struct[]",  "type":"OBX",           "name":"obx",                               "desc":""}
+        ]},
+
+        {"type":"SAC_STRUCT","desc":"desc","fields":[
+            {"tid":"struct",    "type":"SAC",           "name":"sac",                               "desc":""},
+            {"tid":"struct[]",  "type":"OBX",           "name":"obx",                               "desc":""},
+            {"tid":"struct[]",  "type":"NTE",           "name":"nte",                               "desc":""},
+            {"tid":"struct[]",  "type":"SPM_STRUCT",    "name":"spm",                               "desc":""}
+        ]},
+
+
+
+
+
+
+
+
+        {"type":"ACK","desc":"desc","fields":[
+            {"tid":"struct",    "type":"MSH",   "name":"msh",                                       "desc":""},
+            {"tid":"struct[]",  "type":"SFT",   "name":"sft",                                       "desc":""},
+            {"tid":"struct",    "type":"UAC",   "name":"uac",                                       "desc":"",  "flags":["METAFLAG_NULLABLE"]},
+            {"tid":"struct",    "type":"MSA",   "name":"msa",                                       "desc":""},
+            {"tid":"struct[]",  "type":"MSH",   "name":"err",                                       "desc":""}
+
+        ]},
+
+        {"type":"SSU_U03","desc":"desc","fields":[
+            {"tid":"struct",    "type":"MSH",           "name":"msh",                               "desc":""},
+            {"tid":"struct[]",  "type":"SFT",           "name":"sft",                               "desc":""},
+            {"tid":"struct",    "type":"UAC",           "name":"uac",                               "desc":"",  "flags":["METAFLAG_NULLABLE"]},
+            {"tid":"struct",    "type":"EQU",           "name":"equ",                               "desc":""},
+            {"tid":"struct[]",  "type":"SAC_STRUCT",    "name":"sac",                               "desc":""}
+        ]}
+
+    ]
+}
+
+

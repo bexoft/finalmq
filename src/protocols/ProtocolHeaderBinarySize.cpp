@@ -42,7 +42,7 @@ static const int HEADERSIZE = 4;
 //---------------------------------------
 
 
-ProtocolHeaderBinarySize::ProtocolHeaderBinarySize()
+ProtocolHeaderBinarySize::ProtocolHeaderBinarySize(const Variant& data)
     : m_headerHelper(HEADERSIZE, [] (const std::string& header) {
             assert(header.size() == 4);
             int sizePayload = 0;
@@ -52,6 +52,7 @@ ProtocolHeaderBinarySize::ProtocolHeaderBinarySize()
             }
             return sizePayload;
       })
+    , m_data(data)
 {
 
 }
@@ -69,21 +70,25 @@ ProtocolHeaderBinarySize::~ProtocolHeaderBinarySize()
 // IProtocol
 void ProtocolHeaderBinarySize::setCallback(const std::weak_ptr<IProtocolCallback>& callback)
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     m_callback = callback;
 }
 
 void ProtocolHeaderBinarySize::setConnection(const IStreamConnectionPtr& connection)
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     m_connection = connection;
 }
 
 IStreamConnectionPtr ProtocolHeaderBinarySize::getConnection() const
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     return m_connection;
 }
 
 void ProtocolHeaderBinarySize::disconnect()
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     assert(m_connection);
     m_connection->disconnect();
 }
@@ -172,6 +177,10 @@ bool ProtocolHeaderBinarySize::received(const IStreamConnectionPtr& /*connection
     {
         for (const auto &message : messages)
         {
+            if (m_data.getType() != VARTYPE_NONE)
+            {
+                message->getControlData().add(ProtocolMessage::FMQ_PROTOCOLDATA, m_data);
+            }
             callback->received(message);
         }
     }
@@ -230,9 +239,9 @@ struct RegisterProtocolHeaderBinarySizeFactory
 
 
 // IProtocolFactory
-IProtocolPtr ProtocolHeaderBinarySizeFactory::createProtocol(const Variant& /*data*/)
+IProtocolPtr ProtocolHeaderBinarySizeFactory::createProtocol(const Variant& data)
 {
-    return std::make_shared<ProtocolHeaderBinarySize>();
+    return std::make_shared<ProtocolHeaderBinarySize>(data);
 }
 
 

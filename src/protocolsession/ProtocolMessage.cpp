@@ -30,6 +30,8 @@ namespace finalmq {
 // ProtocolMessage
 //---------------------------------------
 
+const std::string ProtocolMessage::FMQ_PROTOCOLDATA = "fmq_protocoldata";
+
 
 ProtocolMessage::ProtocolMessage(std::uint32_t protocolId, ssize_t sizeHeader, ssize_t sizeTrailer)
     : m_sizeHeader(sizeHeader)
@@ -378,8 +380,8 @@ void ProtocolMessage::downsizeLastSendHeader(ssize_t newSize)
     assert(!m_headerBuffers.empty());
     assert(m_sendBufferRefs.size() == m_payloadBuffers.size() + m_headerBuffers.size());
     auto itSendBufferRefs = m_itSendBufferRefsPayloadBegin;
+    assert(itSendBufferRefs != m_sendBufferRefs.begin());
     --itSendBufferRefs;
-    assert(itSendBufferRefs != m_sendBufferRefs.end());
     ssize_t& sizeCurrent = itSendBufferRefs->second;
     assert(newSize <= sizeCurrent);
     m_sizeSendBufferTotal += (newSize - sizeCurrent);

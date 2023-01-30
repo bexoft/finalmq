@@ -31,7 +31,7 @@
 namespace finalmq {
 
 
-const MetaStruct* VariantToVarValue::m_struct = nullptr;
+const MetaStruct* VariantToVarValue::m_structVarValue = nullptr;
 
 
 VariantToVarValue::VariantToVarValue(const Variant& variant, IParserVisitor& visitor)
@@ -43,11 +43,11 @@ VariantToVarValue::VariantToVarValue(const Variant& variant, IParserVisitor& vis
 
 void VariantToVarValue::convert()
 {
-    if (m_struct == nullptr)
+    if (m_structVarValue == nullptr)
     {
-        m_struct = MetaDataGlobal::instance().getStruct("finalmq.variant.VarValue");
+        m_structVarValue = MetaDataGlobal::instance().getStruct("finalmq.variant.VarValue");
     }
-    assert(m_struct);
+    assert(m_structVarValue);
     m_variant.accept(*this);
 }
 
@@ -58,7 +58,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
 {
     const Variant& variant = var;
 
-    static const MetaField* fieldStruct = m_struct->getFieldByName("vallist");
+    static const MetaField* fieldStruct = m_structVarValue->getFieldByName("vallist");
     assert(fieldStruct);
     static const MetaField* fieldStructWithoutArray = MetaDataGlobal::instance().getArrayField(*fieldStruct);
     assert(fieldStructWithoutArray);
@@ -70,12 +70,12 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
 
     if (!name.empty())
     {
-        static const MetaField* fieldName = m_struct->getFieldByName("name");
+        static const MetaField* fieldName = m_structVarValue->getFieldByName("name");
         assert(fieldName);
         m_visitor.enterString(*fieldName, name.data(), name.size());
     }
 
-    static const MetaField* fieldType = m_struct->getFieldByName("type");
+    static const MetaField* fieldType = m_structVarValue->getFieldByName("type");
     assert(fieldType);
     m_visitor.enterEnum(*fieldType, type);
 
@@ -85,7 +85,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
         break;
     case TYPE_BOOL:
         {
-            static const MetaField* fieldBool = m_struct->getFieldByName("valbool");
+            static const MetaField* fieldBool = m_structVarValue->getFieldByName("valbool");
             assert(fieldBool);
             const bool* data = variant;
             assert(data);
@@ -94,7 +94,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
         break;
     case TYPE_INT32:
         {
-            static const MetaField* fieldInt32 = m_struct->getFieldByName("valint32");
+            static const MetaField* fieldInt32 = m_structVarValue->getFieldByName("valint32");
             assert(fieldInt32);
             const std::int32_t* data = variant;
             assert(data);
@@ -103,7 +103,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
         break;
     case TYPE_UINT32:
         {
-            static const MetaField* fieldUInt32 = m_struct->getFieldByName("valuint32");
+            static const MetaField* fieldUInt32 = m_structVarValue->getFieldByName("valuint32");
             assert(fieldUInt32);
             const std::uint32_t* data = variant;
             assert(data);
@@ -112,7 +112,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
         break;
     case TYPE_INT64:
         {
-            static const MetaField* fieldInt64 = m_struct->getFieldByName("valint64");
+            static const MetaField* fieldInt64 = m_structVarValue->getFieldByName("valint64");
             assert(fieldInt64);
             const std::int64_t* data = variant;
             assert(data);
@@ -121,7 +121,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
         break;
     case TYPE_UINT64:
         {
-            static const MetaField* fieldUInt64 = m_struct->getFieldByName("valuint64");
+            static const MetaField* fieldUInt64 = m_structVarValue->getFieldByName("valuint64");
             assert(fieldUInt64);
             const std::uint64_t* data = variant;
             assert(data);
@@ -130,7 +130,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
         break;
     case TYPE_FLOAT:
         {
-            static const MetaField* fieldFloat = m_struct->getFieldByName("valfloat");
+            static const MetaField* fieldFloat = m_structVarValue->getFieldByName("valfloat");
             assert(fieldFloat);
             const float* data = variant;
             assert(data);
@@ -139,7 +139,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
         break;
     case TYPE_DOUBLE:
         {
-            static const MetaField* fieldDouble = m_struct->getFieldByName("valdouble");
+            static const MetaField* fieldDouble = m_structVarValue->getFieldByName("valdouble");
             assert(fieldDouble);
             const double* data = variant;
             assert(data);
@@ -148,7 +148,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
         break;
     case TYPE_STRING:
         {
-            static const MetaField* fieldString = m_struct->getFieldByName("valstring");
+            static const MetaField* fieldString = m_structVarValue->getFieldByName("valstring");
             assert(fieldString);
             const std::string* data = variant;
             assert(data);
@@ -157,7 +157,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
         break;
     case TYPE_BYTES:
         {
-            static const MetaField* fieldBytes = m_struct->getFieldByName("valbytes");
+            static const MetaField* fieldBytes = m_structVarValue->getFieldByName("valbytes");
             assert(fieldBytes);
             const Bytes* data = variant;
             assert(data);
@@ -167,7 +167,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
 
     case TYPE_ARRAY_BOOL:
         {
-            static const MetaField* fieldArrBool = m_struct->getFieldByName("valarrbool");
+            static const MetaField* fieldArrBool = m_structVarValue->getFieldByName("valarrbool");
             assert(fieldArrBool);
             const std::vector<bool>* data = variant;
             assert(data);
@@ -176,7 +176,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
         break;
     case TYPE_ARRAY_INT32:
         {
-            static const MetaField* fieldArrInt32 = m_struct->getFieldByName("valarrint32");
+            static const MetaField* fieldArrInt32 = m_structVarValue->getFieldByName("valarrint32");
             assert(fieldArrInt32);
             const std::vector<std::int32_t>* data = variant;
             assert(data);
@@ -185,7 +185,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
         break;
     case TYPE_ARRAY_UINT32:
         {
-            static const MetaField* fieldArrUInt32 = m_struct->getFieldByName("valarruint32");
+            static const MetaField* fieldArrUInt32 = m_structVarValue->getFieldByName("valarruint32");
             assert(fieldArrUInt32);
             const std::vector<std::uint32_t>* data = variant;
             assert(data);
@@ -194,7 +194,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
         break;
     case TYPE_ARRAY_INT64:
         {
-            static const MetaField* fieldArrInt64 = m_struct->getFieldByName("valarrint64");
+            static const MetaField* fieldArrInt64 = m_structVarValue->getFieldByName("valarrint64");
             assert(fieldArrInt64);
             const std::vector<std::int64_t>* data = variant;
             assert(data);
@@ -203,7 +203,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
         break;
     case TYPE_ARRAY_UINT64:
         {
-            static const MetaField* fieldArrUInt64 = m_struct->getFieldByName("valarruint64");
+            static const MetaField* fieldArrUInt64 = m_structVarValue->getFieldByName("valarruint64");
             assert(fieldArrUInt64);
             const std::vector<std::uint64_t>* data = variant;
             assert(data);
@@ -212,7 +212,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
         break;
     case TYPE_ARRAY_FLOAT:
         {
-            static const MetaField* fieldArrFloat = m_struct->getFieldByName("valarrfloat");
+            static const MetaField* fieldArrFloat = m_structVarValue->getFieldByName("valarrfloat");
             assert(fieldArrFloat);
             const std::vector<float>* data = variant;
             assert(data);
@@ -221,7 +221,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
         break;
     case TYPE_ARRAY_DOUBLE:
         {
-            static const MetaField* fieldArrDouble = m_struct->getFieldByName("valarrdouble");
+            static const MetaField* fieldArrDouble = m_structVarValue->getFieldByName("valarrdouble");
             assert(fieldArrDouble);
             const std::vector<double>* data = variant;
             assert(data);
@@ -230,7 +230,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
         break;
     case TYPE_ARRAY_STRING:
         {
-            static const MetaField* fieldArrString = m_struct->getFieldByName("valarrstring");
+            static const MetaField* fieldArrString = m_structVarValue->getFieldByName("valarrstring");
             assert(fieldArrString);
             const std::vector<std::string>* data = variant;
             assert(data);
@@ -239,7 +239,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
         break;
     case TYPE_ARRAY_BYTES:
         {
-            static const MetaField* fieldArrBytes = m_struct->getFieldByName("valarrbytes");
+            static const MetaField* fieldArrBytes = m_structVarValue->getFieldByName("valarrbytes");
             assert(fieldArrBytes);
             const std::vector<Bytes>* data = variant;
             assert(data);
@@ -256,7 +256,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
 
 void VariantToVarValue::enterStruct(Variant& /*variant*/, int type, ssize_t /*index*/, int level, ssize_t /*size*/, const std::string& name)
 {
-    static const MetaField* fieldList = m_struct->getFieldByName("vallist");
+    static const MetaField* fieldList = m_structVarValue->getFieldByName("vallist");
     assert(fieldList);
     static const MetaField* fieldListWithoutArray = MetaDataGlobal::instance().getArrayField(*fieldList);
     assert(fieldListWithoutArray);
@@ -268,12 +268,12 @@ void VariantToVarValue::enterStruct(Variant& /*variant*/, int type, ssize_t /*in
 
     if (!name.empty())
     {
-        static const MetaField* fieldName = m_struct->getFieldByName("name");
+        static const MetaField* fieldName = m_structVarValue->getFieldByName("name");
         assert(fieldName);
         m_visitor.enterString(*fieldName, name.data(), name.size());
     }
 
-    static const MetaField* fieldType = m_struct->getFieldByName("type");
+    static const MetaField* fieldType = m_structVarValue->getFieldByName("type");
     assert(fieldType);
     m_visitor.enterEnum(*fieldType, type);
 
@@ -282,7 +282,7 @@ void VariantToVarValue::enterStruct(Variant& /*variant*/, int type, ssize_t /*in
 
 void VariantToVarValue::exitStruct(Variant& /*variant*/, int /*type*/, ssize_t /*index*/, int level, ssize_t /*size*/, const std::string& /*name*/)
 {
-    static const MetaField* fieldList = m_struct->getFieldByName("vallist");
+    static const MetaField* fieldList = m_structVarValue->getFieldByName("vallist");
     assert(fieldList);
     m_visitor.exitArrayStruct(*fieldList);
     static const MetaField* fieldListWithoutArray = MetaDataGlobal::instance().getArrayField(*fieldList);

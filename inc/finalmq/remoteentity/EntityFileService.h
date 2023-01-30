@@ -23,7 +23,6 @@
 #pragma once
 
 #include "finalmq/remoteentity/RemoteEntity.h"
-#include "finalmq/remoteentity/FileTransferReply.h"
 
 
 namespace finalmq {

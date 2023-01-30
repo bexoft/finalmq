@@ -83,6 +83,31 @@
             {"tid":"TYPE_BYTES",       "type":"",          "name":"data",     "desc":"The data","flags":[]}
         ]},
         {"type":"NoData","desc":"Use this type for the request if you register a command with a path and the rquest does not have any data","fields":[
+        ]},
+    
+        {"type":"HD_RE","desc":"desc","fields":[
+            {"tid":"string",    "type":"",      "name":"namespaceId",                               "desc":""},
+            {"tid":"string",    "type":"",      "name":"universalId",                               "desc":""},
+            {"tid":"string",    "type":"",      "name":"universalIdType",                           "desc":""}
+        ]},        
+        {"type":"MSG_RE","desc":"desc","fields":[
+            {"tid":"string",    "type":"",      "name":"messageCode",                               "desc":""},
+            {"tid":"string",    "type":"",      "name":"triggerEvent",                              "desc":""},
+            {"tid":"string",    "type":"",      "name":"messageStructure",                          "desc":""}
+        ]},
+        {"type":"MSH_RE","desc":"desc","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[
+            {"tid":"string",    "type":"",      "name":"fieldSeparator",                            "desc":""},
+            {"tid":"string",    "type":"",      "name":"encodingCharacters",                        "desc":""},
+            {"tid":"struct",    "type":"HD_RE", "name":"sendingApplication",                        "desc":""},
+            {"tid":"struct",    "type":"HD_RE", "name":"sendingFacility",                           "desc":""},
+            {"tid":"struct",    "type":"HD_RE", "name":"receivingApplication",                      "desc":""},
+            {"tid":"struct",    "type":"HD_RE", "name":"receivingFacility",                         "desc":""},
+            {"tid":"string",    "type":"",      "name":"dateTimeOfMessage",                         "desc":""},
+            {"tid":"string",    "type":"",      "name":"security",                                  "desc":""},
+            {"tid":"struct",    "type":"MSG_RE","name":"messageType",                               "desc":""}
+        ]},
+        {"type":"Hl7Header","desc":"desc","fields":[
+            {"tid":"struct",    "type":"MSH_RE",        "name":"msh",                               "desc":""}
         ]}
     ]
 }

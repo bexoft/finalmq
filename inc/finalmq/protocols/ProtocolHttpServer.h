@@ -50,10 +50,20 @@ public:
     static const std::string HTTP_REQUEST;
     static const std::string HTTP_RESPONSE;
 
-    ProtocolHttpServer();
+    ProtocolHttpServer(const Variant& data);
     virtual ~ProtocolHttpServer();
 
 private:
+
+    enum ChunkedState
+    {
+        STATE_STOP = 0,
+        STATE_START_CHUNK_STREAM = 1,
+        STATE_FIRST_CHUNK = 2,
+        STATE_BEGIN_MULTIPART = 3,
+        STATE_CONTINUE = 4,
+    };
+
     // IProtocol
     virtual void setCallback(const std::weak_ptr<IProtocolCallback>& callback) override;
     virtual void setConnection(const IStreamConnectionPtr& connection) override;
@@ -120,12 +130,15 @@ private:
     std::string                         m_sessionName;
     std::weak_ptr<IProtocolCallback>    m_callback;
     IStreamConnectionPtr                m_connection;
-    int                                 m_chunkedState = 0;
+    ChunkedState                        m_chunkedState = STATE_STOP;
     bool                                m_multipart = false;
 
     // path
     std::string*                        m_path = nullptr;
 
+    Variant                             m_data;
+
+    mutable std::mutex                  m_mutex;
     static std::atomic_int64_t          m_nextSessionNameCounter;
 };
 

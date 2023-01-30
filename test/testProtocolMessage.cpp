@@ -64,8 +64,8 @@ TEST_F(TestProtocolMessage, addSendPayloadMultiple)
 
     const std::list<BufferRef>& sendBuffers = imessage.getAllSendBuffers();
     const std::list<BufferRef>& sendPayloads = imessage.getAllSendPayloads();
-    int totalSendBufferSize = imessage.getTotalSendBufferSize();
-    int totalSendPayloadSize = imessage.getTotalSendPayloadSize();
+    ssize_t totalSendBufferSize = imessage.getTotalSendBufferSize();
+    ssize_t totalSendPayloadSize = imessage.getTotalSendPayloadSize();
 
     ASSERT_EQ(sendBuffers.size(), 3);
     ASSERT_EQ(sendPayloads.size(), 3);
@@ -108,8 +108,8 @@ TEST_F(TestProtocolMessage, addSendPayloadMultipleWithUnchangedDownsize)
 
     const std::list<BufferRef>& sendBuffers = imessage.getAllSendBuffers();
     const std::list<BufferRef>& sendPayloads = imessage.getAllSendPayloads();
-    int totalSendBufferSize = imessage.getTotalSendBufferSize();
-    int totalSendPayloadSize = imessage.getTotalSendPayloadSize();
+    ssize_t totalSendBufferSize = imessage.getTotalSendBufferSize();
+    ssize_t totalSendPayloadSize = imessage.getTotalSendPayloadSize();
 
     ASSERT_EQ(sendBuffers.size(), 3);
     ASSERT_EQ(sendPayloads.size(), 3);
@@ -150,8 +150,8 @@ TEST_F(TestProtocolMessage, addSendPayloadMultipleWithChangedDownsize)
 
     const std::list<BufferRef>& sendBuffers = imessage.getAllSendBuffers();
     const std::list<BufferRef>& sendPayloads = imessage.getAllSendPayloads();
-    int totalSendBufferSize = imessage.getTotalSendBufferSize();
-    int totalSendPayloadSize = imessage.getTotalSendPayloadSize();
+    ssize_t totalSendBufferSize = imessage.getTotalSendBufferSize();
+    ssize_t totalSendPayloadSize = imessage.getTotalSendPayloadSize();
 
     ASSERT_EQ(sendBuffers.size(), 3);
     ASSERT_EQ(sendPayloads.size(), 3);
@@ -203,8 +203,8 @@ TEST_F(TestProtocolMessage, addSendPayloadMultipleWithMultipleDownsize)
 
     const std::list<BufferRef>& sendBuffers = imessage.getAllSendBuffers();
     const std::list<BufferRef>& sendPayloads = imessage.getAllSendPayloads();
-    int totalSendBufferSize = imessage.getTotalSendBufferSize();
-    int totalSendPayloadSize = imessage.getTotalSendPayloadSize();
+    ssize_t totalSendBufferSize = imessage.getTotalSendBufferSize();
+    ssize_t totalSendPayloadSize = imessage.getTotalSendPayloadSize();
 
     ASSERT_EQ(sendBuffers.size(), 1);
     ASSERT_EQ(sendPayloads.size(), 1);
@@ -242,8 +242,8 @@ TEST_F(TestProtocolMessage, addSendPayloadMultipleWithMultipleDownsize2)
 
     const std::list<BufferRef>& sendBuffers = imessage.getAllSendBuffers();
     const std::list<BufferRef>& sendPayloads = imessage.getAllSendPayloads();
-    int totalSendBufferSize = imessage.getTotalSendBufferSize();
-    int totalSendPayloadSize = imessage.getTotalSendPayloadSize();
+    ssize_t totalSendBufferSize = imessage.getTotalSendBufferSize();
+    ssize_t totalSendPayloadSize = imessage.getTotalSendPayloadSize();
 
     ASSERT_EQ(sendBuffers.size(), 2);
     ASSERT_EQ(sendPayloads.size(), 2);
@@ -285,8 +285,8 @@ TEST_F(TestProtocolMessage, addSendPayloadMultipleWithMultipleDownsize3)
 
     const std::list<BufferRef>& sendBuffers = imessage.getAllSendBuffers();
     const std::list<BufferRef>& sendPayloads = imessage.getAllSendPayloads();
-    int totalSendBufferSize = imessage.getTotalSendBufferSize();
-    int totalSendPayloadSize = imessage.getTotalSendPayloadSize();
+    ssize_t totalSendBufferSize = imessage.getTotalSendBufferSize();
+    ssize_t totalSendPayloadSize = imessage.getTotalSendPayloadSize();
 
     ASSERT_EQ(sendBuffers.size(), 2);
     ASSERT_EQ(sendPayloads.size(), 2);
@@ -325,8 +325,8 @@ TEST_F(TestProtocolMessage, addSendPayloadWithDownsizeAndMultipleAddSendPayloadF
 
     const std::list<BufferRef>& sendBuffers = imessage.getAllSendBuffers();
     const std::list<BufferRef>& sendPayloads = imessage.getAllSendPayloads();
-    int totalSendBufferSize = imessage.getTotalSendBufferSize();
-    int totalSendPayloadSize = imessage.getTotalSendPayloadSize();
+    ssize_t totalSendBufferSize = imessage.getTotalSendBufferSize();
+    ssize_t totalSendPayloadSize = imessage.getTotalSendPayloadSize();
 
     ASSERT_EQ(sendBuffers.size(), 1);
     ASSERT_EQ(sendPayloads.size(), 1);
@@ -361,8 +361,8 @@ TEST_F(TestProtocolMessage, addSendPayloadWithDownsizeAndMultipleAddSendPayloadF
 
     const std::list<BufferRef>& sendBuffers = imessage.getAllSendBuffers();
     const std::list<BufferRef>& sendPayloads = imessage.getAllSendPayloads();
-    int totalSendBufferSize = imessage.getTotalSendBufferSize();
-    int totalSendPayloadSize = imessage.getTotalSendPayloadSize();
+    ssize_t totalSendBufferSize = imessage.getTotalSendBufferSize();
+    ssize_t totalSendPayloadSize = imessage.getTotalSendPayloadSize();
 
     ASSERT_EQ(sendBuffers.size(), 2);
     ASSERT_EQ(sendPayloads.size(), 2);
@@ -399,8 +399,8 @@ TEST_F(TestProtocolMessage, addSendPayloadWithDownsizeAndMultipleAddSendPayloadF
 
     const std::list<BufferRef>& sendBuffers = imessage.getAllSendBuffers();
     const std::list<BufferRef>& sendPayloads = imessage.getAllSendPayloads();
-    int totalSendBufferSize = imessage.getTotalSendBufferSize();
-    int totalSendPayloadSize = imessage.getTotalSendPayloadSize();
+    ssize_t totalSendBufferSize = imessage.getTotalSendBufferSize();
+    ssize_t totalSendPayloadSize = imessage.getTotalSendPayloadSize();
 
     ASSERT_EQ(sendBuffers.size(), 2);
     ASSERT_EQ(sendPayloads.size(), 2);
@@ -434,8 +434,8 @@ TEST_F(TestProtocolMessage, addSendPayloadMultipleWithDownsizeZeroNoTrailer)
 
     const std::list<BufferRef>& sendBuffers = imessage.getAllSendBuffers();
     const std::list<BufferRef>& sendPayloads = imessage.getAllSendPayloads();
-    int totalSendBufferSize = imessage.getTotalSendBufferSize();
-    int totalSendPayloadSize = imessage.getTotalSendPayloadSize();
+    ssize_t totalSendBufferSize = imessage.getTotalSendBufferSize();
+    ssize_t totalSendPayloadSize = imessage.getTotalSendPayloadSize();
 
     ASSERT_EQ(sendBuffers.size(), 1);
     ASSERT_EQ(sendPayloads.size(), 1);
@@ -465,8 +465,8 @@ TEST_F(TestProtocolMessage, addSendPayloadMultipleWithDownsizeZeroAdAnotherSendP
 
     const std::list<BufferRef>& sendBuffers = imessage.getAllSendBuffers();
     const std::list<BufferRef>& sendPayloads = imessage.getAllSendPayloads();
-    int totalSendBufferSize = imessage.getTotalSendBufferSize();
-    int totalSendPayloadSize = imessage.getTotalSendPayloadSize();
+    ssize_t totalSendBufferSize = imessage.getTotalSendBufferSize();
+    ssize_t totalSendPayloadSize = imessage.getTotalSendPayloadSize();
 
     ASSERT_EQ(sendBuffers.size(), 2);
     ASSERT_EQ(sendPayloads.size(), 2);
@@ -498,8 +498,8 @@ TEST_F(TestProtocolMessage, firstDownsizeZeroBlock)
 
     const std::list<BufferRef>& sendBuffers = imessage.getAllSendBuffers();
     const std::list<BufferRef>& sendPayloads = imessage.getAllSendPayloads();
-    int totalSendBufferSize = imessage.getTotalSendBufferSize();
-    int totalSendPayloadSize = imessage.getTotalSendPayloadSize();
+    ssize_t totalSendBufferSize = imessage.getTotalSendBufferSize();
+    ssize_t totalSendPayloadSize = imessage.getTotalSendPayloadSize();
 
     ASSERT_EQ(sendBuffers.size(), 1);
     ASSERT_EQ(sendPayloads.size(), 1);
@@ -525,8 +525,8 @@ TEST_F(TestProtocolMessage, firstDownsizeZeroBlockRemoveBlock)
 
     const std::list<BufferRef>& sendBuffers = imessage.getAllSendBuffers();
     const std::list<BufferRef>& sendPayloads = imessage.getAllSendPayloads();
-    int totalSendBufferSize = imessage.getTotalSendBufferSize();
-    int totalSendPayloadSize = imessage.getTotalSendPayloadSize();
+    ssize_t totalSendBufferSize = imessage.getTotalSendBufferSize();
+    ssize_t totalSendPayloadSize = imessage.getTotalSendPayloadSize();
 
     ASSERT_EQ(sendBuffers.size(), 0);
     ASSERT_EQ(sendPayloads.size(), 0);
@@ -544,8 +544,8 @@ TEST_F(TestProtocolMessage, firstDownsizeZeroBlockRemoveBlockRepeatDownsize)
 
     const std::list<BufferRef>& sendBuffers = imessage.getAllSendBuffers();
     const std::list<BufferRef>& sendPayloads = imessage.getAllSendPayloads();
-    int totalSendBufferSize = imessage.getTotalSendBufferSize();
-    int totalSendPayloadSize = imessage.getTotalSendPayloadSize();
+    ssize_t totalSendBufferSize = imessage.getTotalSendBufferSize();
+    ssize_t totalSendPayloadSize = imessage.getTotalSendPayloadSize();
 
     ASSERT_EQ(sendBuffers.size(), 0);
     ASSERT_EQ(sendPayloads.size(), 0);
@@ -565,8 +565,8 @@ TEST_F(TestProtocolMessage, firstDownsizeZeroBlockRemoveBlockAddSendPayload)
 
     const std::list<BufferRef>& sendBuffers = imessage.getAllSendBuffers();
     const std::list<BufferRef>& sendPayloads = imessage.getAllSendPayloads();
-    int totalSendBufferSize = imessage.getTotalSendBufferSize();
-    int totalSendPayloadSize = imessage.getTotalSendPayloadSize();
+    ssize_t totalSendBufferSize = imessage.getTotalSendBufferSize();
+    ssize_t totalSendPayloadSize = imessage.getTotalSendPayloadSize();
 
     ASSERT_EQ(sendBuffers.size(), 1);
     ASSERT_EQ(sendPayloads.size(), 1);
@@ -596,8 +596,8 @@ TEST_F(TestProtocolMessage, addSendHeaderAfterAddPayload)
 
     const std::list<BufferRef>& sendBuffers = imessage.getAllSendBuffers();
     const std::list<BufferRef>& sendPayloads = imessage.getAllSendPayloads();
-    int totalSendBufferSize = imessage.getTotalSendBufferSize();
-    int totalSendPayloadSize = imessage.getTotalSendPayloadSize();
+    ssize_t totalSendBufferSize = imessage.getTotalSendBufferSize();
+    ssize_t totalSendPayloadSize = imessage.getTotalSendPayloadSize();
 
     ASSERT_EQ(sendBuffers.size(), 3);
     ASSERT_EQ(sendPayloads.size(), 1);
@@ -633,8 +633,8 @@ TEST_F(TestProtocolMessage, addSendHeaderBeforeAddPayload)
 
     const std::list<BufferRef>& sendBuffers = imessage.getAllSendBuffers();
     const std::list<BufferRef>& sendPayloads = imessage.getAllSendPayloads();
-    int totalSendBufferSize = imessage.getTotalSendBufferSize();
-    int totalSendPayloadSize = imessage.getTotalSendPayloadSize();
+    ssize_t totalSendBufferSize = imessage.getTotalSendBufferSize();
+    ssize_t totalSendPayloadSize = imessage.getTotalSendPayloadSize();
 
     ASSERT_EQ(sendBuffers.size(), 3);
     ASSERT_EQ(sendPayloads.size(), 1);
@@ -662,13 +662,13 @@ TEST_F(TestProtocolMessage, addSendHeaderAndRemoveItWithPayload)
     IMessage& imessage = message;
     char* buffer1 = imessage.addSendPayload(8);
     imessage.downsizeLastSendPayload(4);
-    char* buffer2 = imessage.addSendHeader(8);
+    /*char* buffer2 =*/ imessage.addSendHeader(8);
     imessage.downsizeLastSendHeader(0);
 
     const std::list<BufferRef>& sendBuffers = imessage.getAllSendBuffers();
     const std::list<BufferRef>& sendPayloads = imessage.getAllSendPayloads();
-    int totalSendBufferSize = imessage.getTotalSendBufferSize();
-    int totalSendPayloadSize = imessage.getTotalSendPayloadSize();
+    ssize_t totalSendBufferSize = imessage.getTotalSendBufferSize();
+    ssize_t totalSendPayloadSize = imessage.getTotalSendPayloadSize();
 
     ASSERT_EQ(sendBuffers.size(), 1);
     ASSERT_EQ(sendPayloads.size(), 1);
@@ -688,13 +688,13 @@ TEST_F(TestProtocolMessage, addSendHeaderAndRemoveItWithoutPayload)
 {
     ProtocolMessage message(PROTOCOL_ID, 0, 0);
     IMessage& imessage = message;
-    char* buffer1 = imessage.addSendHeader(8);
+    /*char* buffer1 =*/ imessage.addSendHeader(8);
     imessage.downsizeLastSendHeader(0);
 
     const std::list<BufferRef>& sendBuffers = imessage.getAllSendBuffers();
     const std::list<BufferRef>& sendPayloads = imessage.getAllSendPayloads();
-    int totalSendBufferSize = imessage.getTotalSendBufferSize();
-    int totalSendPayloadSize = imessage.getTotalSendPayloadSize();
+    ssize_t totalSendBufferSize = imessage.getTotalSendBufferSize();
+    ssize_t totalSendPayloadSize = imessage.getTotalSendPayloadSize();
 
     ASSERT_EQ(sendBuffers.size(), 0);
     ASSERT_EQ(sendPayloads.size(), 0);

@@ -69,6 +69,15 @@ static const std::string FMQ_PATH_REMOVESESSION = "/fmq/removesession";
 static const std::string FMQ_MULTIPART_BOUNDARY = "B9BMAhxAhY.mQw1IDRBA";
 
 
+enum ChunkedState
+{
+    STATE_STOP = 0,
+    STATE_START_CHUNK_STREAM = 1,
+    STATE_FIRST_CHUNK = 2,
+    STATE_BEGIN_MULTIPART = 3,
+    STATE_CONTINUE = 4,
+};
+
 //---------------------------------------
 // ProtocolHttpServer
 //---------------------------------------
@@ -76,9 +85,10 @@ static const std::string FMQ_MULTIPART_BOUNDARY = "B9BMAhxAhY.mQw1IDRBA";
 
 std::atomic_int64_t ProtocolHttpServer::m_nextSessionNameCounter{ 1 };
 
-ProtocolHttpServer::ProtocolHttpServer()
+ProtocolHttpServer::ProtocolHttpServer(const Variant& data)
     : m_randomDevice()
     , m_randomGenerator(m_randomDevice())
+    , m_data(data)
 {
 
 }
@@ -95,8 +105,10 @@ ProtocolHttpServer::~ProtocolHttpServer()
 // IProtocol
 void ProtocolHttpServer::setCallback(const std::weak_ptr<IProtocolCallback>& callback)
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     m_callback = callback;
     std::shared_ptr<IProtocolCallback> cb = callback.lock();
+    lock.unlock();
     if (cb)
     {
         // 5 minutes session timeout
@@ -106,18 +118,25 @@ void ProtocolHttpServer::setCallback(const std::weak_ptr<IProtocolCallback>& cal
 
 void ProtocolHttpServer::setConnection(const IStreamConnectionPtr& connection)
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     m_connection = connection;
 }
 
 IStreamConnectionPtr ProtocolHttpServer::getConnection() const
 {
+    std::unique_lock<std::mutex> lock(m_mutex);
     return m_connection;
 }
 
 void ProtocolHttpServer::disconnect()
 {
-    assert(m_connection);
-    m_connection->disconnect();
+    std::unique_lock<std::mutex> lock(m_mutex);
+    IStreamConnectionPtr conn = m_connection;
+    lock.unlock();
+    if (conn)
+    {
+        conn->disconnect();
+    }
 }
 
 std::uint32_t ProtocolHttpServer::getProtocolId() const
@@ -327,7 +346,7 @@ void ProtocolHttpServer::checkSessionName()
             assert(m_connection);
             callback->setSessionName(m_sessionName, shared_from_this(), m_connection);
             m_headerSendNext[FMQ_SET_SESSION] = m_sessionName;
-            m_headerSendNext[HTTP_SET_COOKIE] = COOKIE_PREFIX + m_sessionName + "; path=/";
+            m_headerSendNext[HTTP_SET_COOKIE] = COOKIE_PREFIX + m_sessionName + "; path=/; Partitioned";
         }
     }
     m_sessionNames.clear();
@@ -579,7 +598,7 @@ void ProtocolHttpServer::sendMessage(IMessagePtr message)
     std::string firstLine;
     const Variant& controlData = message->getControlData();
     bool pollStop = false;
-    if (m_chunkedState)
+    if (m_chunkedState != STATE_STOP)
     {
         const bool* pPollStop = controlData.getData<bool>("fmq_poll_stop");
         if (pPollStop && *pPollStop)
@@ -601,7 +620,7 @@ void ProtocolHttpServer::sendMessage(IMessagePtr message)
         }
     }
     const std::string* http = controlData.getData<std::string>(FMQ_HTTP);
-    if (m_chunkedState < 2)
+    if (m_chunkedState < STATE_FIRST_CHUNK)
     {
         if (http && *http == HTTP_REQUEST)
         {
@@ -678,7 +697,7 @@ void ProtocolHttpServer::sendMessage(IMessagePtr message)
     }
 
     size_t sumHeaderSize = 0;
-    if (m_chunkedState < 2)
+    if (m_chunkedState < STATE_FIRST_CHUNK)
     {
         sumHeaderSize += firstLine.size() + 2 + 2;   // 2 = '\r\n' and 2 = last empty line
         sumHeaderSize += HEADER_KEEP_ALIVE.size();  // Connection: keep-alive\r\n
@@ -695,7 +714,7 @@ void ProtocolHttpServer::sendMessage(IMessagePtr message)
     }
 
     ProtocolMessage::Metainfo& metainfo = message->getAllMetainfo();
-    if (m_chunkedState == 0)
+    if (m_chunkedState == STATE_STOP)
     {
         metainfo[CONTENT_LENGTH] = std::to_string(sizeBody);
     }
@@ -718,15 +737,15 @@ void ProtocolHttpServer::sendMessage(IMessagePtr message)
     size_t index = 0;
     if (!pollStop || m_multipart)
     {
-        if (m_chunkedState >= 2)
+        if (m_chunkedState >= STATE_FIRST_CHUNK)
         {
             assert(sumHeaderSize == 0);
             message->addSendPayload("\r\n");
             int sizeChunkedData = static_cast<int>(sizeBody);
             firstLine.clear();
-            if (m_chunkedState == 2 || m_chunkedState == 3)
+            if (m_chunkedState == STATE_FIRST_CHUNK || m_chunkedState == STATE_BEGIN_MULTIPART)
             {
-                m_chunkedState = 4;
+                m_chunkedState = STATE_CONTINUE;
             }
             else
             {
@@ -769,7 +788,7 @@ void ProtocolHttpServer::sendMessage(IMessagePtr message)
     }
 
     // Connection: keep-alive\r\n
-    if (m_chunkedState < 2)
+    if (m_chunkedState < STATE_FIRST_CHUNK)
     {
         assert(index + HEADER_KEEP_ALIVE.size() <= sumHeaderSize);
         memcpy(headerBuffer + index, HEADER_KEEP_ALIVE.data(), HEADER_KEEP_ALIVE.size());
@@ -793,7 +812,7 @@ void ProtocolHttpServer::sendMessage(IMessagePtr message)
             index += 2;
         }
     }
-    if (m_chunkedState < 2)
+    if (m_chunkedState < STATE_FIRST_CHUNK)
     {
         assert(index + 2 == sumHeaderSize);
         memcpy(headerBuffer + index, "\r\n", 2);
@@ -802,7 +821,7 @@ void ProtocolHttpServer::sendMessage(IMessagePtr message)
     if (pollStop)
     {
         message->addSendPayload("0\r\n\r\n");
-        m_chunkedState = 0;
+        m_chunkedState = STATE_STOP;
         m_multipart = false;
     }
 
@@ -900,7 +919,7 @@ bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolC
     {
         if (*m_path == FMQ_PATH_POLL)
         {
-            m_chunkedState = 1;
+            m_chunkedState = STATE_START_CHUNK_STREAM;
             assert(m_message);
             handled = true;
             std::int32_t timeout = -1;
@@ -942,7 +961,7 @@ bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolC
             message->addMetainfo("Content-Type", contentType);
             message->addMetainfo("Transfer-Encoding", "chunked");
             sendMessage(message);
-            m_chunkedState = 2;
+            m_chunkedState = STATE_FIRST_CHUNK;
             callback->pollRequest(shared_from_this(), timeout, pollCountMax);
         }
         else if (*m_path == FMQ_PATH_PING)
@@ -1094,6 +1113,10 @@ bool ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, co
                 bool handled = handleInternalCommands(callback, ok);
                 if (!handled)
                 {
+                    if (m_data.getType() != VARTYPE_NONE)
+                    {
+                        m_message->getControlData().add(ProtocolMessage::FMQ_PROTOCOLDATA, m_data);
+                    }
                     callback->received(m_message, m_connectionId);
                 }
             }
@@ -1141,9 +1164,9 @@ IMessagePtr ProtocolHttpServer::pollReply(std::deque<IMessagePtr>&& messages)
             for (auto it = messages.begin(); it != messages.end(); ++it)
             {
                 std::string payload;
-                if (m_chunkedState == 2)
+                if (m_chunkedState == STATE_FIRST_CHUNK)
                 {
-                    m_chunkedState = 3;
+                    m_chunkedState = STATE_BEGIN_MULTIPART;
                     payload += "--" + FMQ_MULTIPART_BOUNDARY;
                 }
                 payload += "\r\n\r\n";
@@ -1159,9 +1182,9 @@ IMessagePtr ProtocolHttpServer::pollReply(std::deque<IMessagePtr>&& messages)
         else
         {
             std::string payload;
-            if (m_chunkedState == 2)
+            if (m_chunkedState == STATE_FIRST_CHUNK)
             {
-                m_chunkedState = 3;
+                m_chunkedState = STATE_BEGIN_MULTIPART;
                 payload += "--" + FMQ_MULTIPART_BOUNDARY + "--\r\n";
             }
             else
@@ -1213,9 +1236,9 @@ struct RegisterProtocolHttpServerFactory
 
 
 // IProtocolFactory
-IProtocolPtr ProtocolHttpServerFactory::createProtocol(const Variant& /*data*/)
+IProtocolPtr ProtocolHttpServerFactory::createProtocol(const Variant& data)
 {
-    return std::make_shared<ProtocolHttpServer>();
+    return std::make_shared<ProtocolHttpServer>(data);
 }
 
 

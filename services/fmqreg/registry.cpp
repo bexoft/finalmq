@@ -26,7 +26,7 @@
 #define MODULENAME "FmqRegistry"
 
 using finalmq::PeerId;
-using finalmq::IProtocolSessionPtr;
+using finalmq::SessionInfo;
 using finalmq::EntityId;
 using finalmq::PeerEvent;
 using finalmq::RequestContextPtr;
@@ -40,7 +40,7 @@ using finalmq::fmqreg::Service;
 Registry::Registry()
 {
     // register peer events to see when a remote entity connects or disconnects.
-    registerPeerEvent([] (PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, PeerEvent peerEvent, bool incoming) {
+    registerPeerEvent([] (PeerId peerId, const SessionInfo& session, EntityId entityId, PeerEvent peerEvent, bool incoming) {
         streamInfo << "peer event " << peerEvent.toString();
     });
 

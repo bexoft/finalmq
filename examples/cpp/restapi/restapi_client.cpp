@@ -50,7 +50,7 @@ using finalmq::RequestContextPtr;
 using finalmq::PeerId;
 using finalmq::EntityId;
 using finalmq::PeerEvent;
-using finalmq::IProtocolSessionPtr;
+using finalmq::SessionInfo;
 using finalmq::ConnectionData;
 using finalmq::ConnectionEvent;
 using finalmq::Status;
@@ -131,8 +131,8 @@ int main()
     });
 
     // register lambda for connection events to see when a network node connects or disconnects.
-    entityContainer.registerConnectionEvent([] (const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) {
-        const ConnectionData connectionData = session->getConnectionData();
+    entityContainer.registerConnectionEvent([] (const SessionInfo& session, ConnectionEvent connectionEvent) {
+        const ConnectionData connectionData = session.getConnectionData();
         streamInfo << "connection event at " << connectionData.endpoint
                   << " remote: " << connectionData.endpointPeer
                   << " event: " << connectionEvent.toString();
@@ -141,7 +141,6 @@ int main()
     // Create client entity and register it at the entityContainer
     // note: multiple entities can be registered.
     RemoteEntity entityClient;
-    entityContainer.registerEntity(&entityClient);
 
     entityClient.registerCommand<PersonChanged>("events/personChanged",
         [](const RequestContextPtr& requestContext, const std::shared_ptr<PersonChanged>& request)
@@ -151,7 +150,7 @@ int main()
     });
 
     // register peer events to see when a remote entity connects or disconnects.
-    entityClient.registerPeerEvent([] (PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, PeerEvent peerEvent, bool incoming) {
+    entityClient.registerPeerEvent([] (PeerId peerId, const SessionInfo& session, EntityId entityId, PeerEvent peerEvent, bool incoming) {
         streamInfo << "peer event " << peerEvent.toString();
     });
 
@@ -162,11 +161,11 @@ int main()
     // A client can be started before the server is started. The connect is been retried in the background till the server
     // becomes available. Use the ConnectProperties to change the reconnect properties
     // (default is: try to connect every 5s forever till the server becomes available).
-    IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:7777:headersize:protobuf");
-//    IProtocolSessionPtr sessionClient = entityContainer.connect("ipc://my_uds:headersize:protobuf");
+    SessionInfo sessionClient = entityContainer.connect("tcp://localhost:7777:headersize:protobuf");
+//    SessionInfo sessionClient = entityContainer.connect("ipc://my_uds:headersize:protobuf");
 
     //// if you want to use mqtt5 -> connect to broker
-    //IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://broker.emqx.io:1883:mqtt5client:json", { {},{},
+    //SessionInfo sessionClient = entityContainer.connect("tcp://broker.emqx.io:1883:mqtt5client:json", { {},{},
     //    VariantStruct{  //{ProtocolMqtt5Client::KEY_USERNAME, std::string("")},
     //                    //{ProtocolMqtt5Client::KEY_PASSWORD, std::string("")},
     //                    {ProtocolMqtt5Client::KEY_SESSIONEXPIRYINTERVAL, 300},

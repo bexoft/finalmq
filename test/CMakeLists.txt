@@ -68,6 +68,13 @@ add_custom_command(
 )
 
 add_custom_command(
+    COMMAND node ${CODEGENERATOR}/cpp/cpp.js --input=${CMAKE_SOURCE_DIR}/hl7def/hl7.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${CMAKE_SOURCE_DIR}/hl7def/hl7.fmq
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/hl7.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/hl7.fmq.h
+    COMMENT "Generating cpp code out of hl7.fmq."
+)
+
+add_custom_command(
     COMMAND node ${CODEGENERATOR_PROTO} --input=${CMAKE_SOURCE_DIR}/inc/finalmq/metadataserialize/variant.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}
     DEPENDS ${CMAKE_SOURCE_DIR}/inc/finalmq/metadataserialize/variant.fmq
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/variant.proto
@@ -92,13 +99,13 @@ include_directories("${CMAKE_BINARY_DIR}/test")
 include_directories("${CMAKE_SOURCE_DIR}/mock")
 
 file(GLOB TESTSOURCES "*.cpp")
-#file(GLOB GENCODE ${CMAKE_CURRENT_BINARY_DIR}/test.fmq.cpp)
+#file(GLOB GENCODE ${CMAKE_CURRENT_BINARY_DIR}/test.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/hl7.fmq.cpp)
 
 # Now simply link against gtest or gtest_main as needed. Eg
 if (WIN32)
 SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -D_ALLOW_KEYWORD_MACROS" )
 endif()
-add_executable(testfinalmq ${TESTSOURCES} ${PROTO_SRCS} ${PROTO_HDRS} ${CMAKE_CURRENT_BINARY_DIR}/test.fmq.cpp ../services/fmqreg/registry.cpp)
+add_executable(testfinalmq ${TESTSOURCES} ${PROTO_SRCS} ${PROTO_HDRS} ${CMAKE_CURRENT_BINARY_DIR}/test.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/hl7.fmq.cpp ../services/fmqreg/registry.cpp)
 
 
 if (FINALMQ_USE_SSL)

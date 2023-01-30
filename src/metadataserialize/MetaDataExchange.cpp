@@ -74,7 +74,11 @@ void MetaDataExchange::importMetaData(const SerializeMetaData& metadata)
             });
             fields.push_back({convert(fieldSource.tid), fieldSource.type, fieldSource.name, fieldSource.desc, flags});
         }
-        MetaDataGlobal::instance().addStruct({structSource.type, structSource.desc, std::move(fields)});
+        int flagsStruct = 0;
+        std::for_each(structSource.flags.begin(), structSource.flags.end(), [&flagsStruct](const SerializeMetaStructFlags& flag) {
+            flagsStruct |= flag;
+        });
+        MetaDataGlobal::instance().addStruct({structSource.type, structSource.desc, std::move(fields), flagsStruct});
     }
 }
 
