@@ -121,6 +121,7 @@ struct ReceiveData
     std::string                 virtualSessionId;
     IMessagePtr                 message;
     Header                      header;
+    bool                        automaticConnect = false;
     std::shared_ptr<StructBase> structBase;
 };
 

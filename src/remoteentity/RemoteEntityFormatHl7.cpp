@@ -87,9 +87,9 @@ void RemoteEntityFormatHl7::serializeData(IMessage& message, const StructBase* s
 
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatHl7::parse(const BufferRef& bufferRef, const Variant* protocolData, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& /*name2Entity*/, Header& header, bool& syntaxError)
+std::shared_ptr<StructBase> RemoteEntityFormatHl7::parse(const BufferRef& bufferRef, const Variant* protocolData, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& /*name2Entity*/, Header& header, int& formatStatus)
 {
-    syntaxError = false;
+    formatStatus = 0;
     char* buffer = bufferRef.first;
     ssize_t sizeBuffer = bufferRef.second;
 
@@ -136,9 +136,16 @@ std::shared_ptr<StructBase> RemoteEntityFormatHl7::parse(const BufferRef& buffer
             header.destname = "hl7";
         }
         header.type = type;
+        if (header.path.empty())
+        {
+            header.path = header.type;
+        }
+        header.corrid = 1;
 
         BufferRef bufferRefData = { buffer, sizeBuffer };
-        data = parseData(bufferRefData, storeRawData, header.type, syntaxError);
+        data = parseData(bufferRefData, storeRawData, header.type, formatStatus);
+
+        formatStatus |= FORMATSTATUS_AUTOMATIC_CONNECT;
     }
 
     return data;
@@ -146,9 +153,9 @@ std::shared_ptr<StructBase> RemoteEntityFormatHl7::parse(const BufferRef& buffer
 
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatHl7::parseData(const BufferRef& bufferRef, bool storeRawData, std::string& type, bool& syntaxError)
+std::shared_ptr<StructBase> RemoteEntityFormatHl7::parseData(const BufferRef& bufferRef, bool storeRawData, std::string& type, int& formatStatus)
 {
-    syntaxError = false;
+    formatStatus = 0;
     const char* buffer = bufferRef.first;
     ssize_t sizeBuffer = bufferRef.second;
 
@@ -179,7 +186,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatHl7::parseData(const BufferRef& bu
                 const char* endData = parserData.parseStruct(type);
                 if (!endData)
                 {
-                    syntaxError = true;
+                    formatStatus |= FORMATSTATUS_SYNTAX_ERROR;
                     data = nullptr;
                 }
             }

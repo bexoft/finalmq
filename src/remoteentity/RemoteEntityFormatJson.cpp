@@ -162,9 +162,9 @@ static const std::string FMQ_PATH = "fmq_path";
 
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& bufferRef, const Variant* /*protocolData*/, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, bool& syntaxError)
+std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& bufferRef, const Variant* /*protocolData*/, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus)
 {
-    syntaxError = false;
+    formatStatus = 0;
     char* buffer = bufferRef.first;
     ssize_t sizeBuffer = bufferRef.second;
 
@@ -303,7 +303,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
         assert(sizeData >= 0);
 
         BufferRef bufferRefData = {buffer, sizeData};
-        data = parseData(bufferRefData, storeRawData, header.type, syntaxError);
+        data = parseData(bufferRefData, storeRawData, header.type, formatStatus);
     }
 
     return data;
@@ -311,9 +311,9 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
 
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatJson::parseData(const BufferRef& bufferRef, bool storeRawData, std::string& type, bool& syntaxError)
+std::shared_ptr<StructBase> RemoteEntityFormatJson::parseData(const BufferRef& bufferRef, bool storeRawData, std::string& type, int& formatStatus)
 {
-    syntaxError = false;
+    formatStatus = 0;
     const char* buffer = bufferRef.first;
     ssize_t sizeBuffer = bufferRef.second;
 
@@ -334,7 +334,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parseData(const BufferRef& b
                 const char* endData = parserData.parseStruct(type);
                 if (!endData)
                 {
-                    syntaxError = true;
+                    formatStatus |= FORMATSTATUS_SYNTAX_ERROR;
                     data = nullptr;
                 }
             }

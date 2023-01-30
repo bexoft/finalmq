@@ -563,11 +563,11 @@ std::string RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, con
 }
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainfo(IMessage& message, int contentType, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, bool& syntaxError)
+std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainfo(IMessage& message, int contentType, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus)
 {
     std::string data = parseMetainfo(message, name2Entity, header);
 
-    syntaxError = false;
+    formatStatus = 0;
     BufferRef bufferRef = message.getReceivePayload();
 
     std::shared_ptr<StructBase> structBase;
@@ -585,7 +585,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainf
         if (it != m_contentTypeToFormat.end())
         {
             assert(it->second);
-            structBase = it->second->parseData(bufferRef, storeRawData, header.type, syntaxError);
+            structBase = it->second->parseData(bufferRef, storeRawData, header.type, formatStatus);
         }
     }
     else
@@ -598,9 +598,9 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainf
     return structBase;
 }
 
-std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(IMessage& message, int contentType, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, bool& syntaxError)
+std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(IMessage& message, int contentType, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus)
 {
-    syntaxError = false;
+    formatStatus = 0;
     BufferRef bufferRef = message.getReceivePayload();
     Variant* protocolData = message.getControlData().getVariant(ProtocolMessage::FMQ_PROTOCOLDATA);
 
@@ -610,7 +610,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(IMessage& mess
     if (it != m_contentTypeToFormat.end())
     {
         assert(it->second);
-        structBase = it->second->parse(bufferRef, protocolData, storeRawData, name2Entity, header, syntaxError);
+        structBase = it->second->parse(bufferRef, protocolData, storeRawData, name2Entity, header, formatStatus);
         metainfoToMessage(message, header.meta);
     }
 

@@ -249,7 +249,6 @@ public:
         return m_virtualSessionId;
     }
 
-private:
     inline const SessionInfo& session() const
     {
         return m_session;
@@ -258,6 +257,8 @@ private:
     {
         return m_entityIdDest;
     }
+
+private:
 
     RequestContext(const RequestContext&) = delete;
     const RequestContext& operator =(const RequestContext&) = delete;

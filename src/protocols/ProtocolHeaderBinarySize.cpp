@@ -177,7 +177,10 @@ bool ProtocolHeaderBinarySize::received(const IStreamConnectionPtr& /*connection
     {
         for (const auto &message : messages)
         {
-            message->getControlData().add(ProtocolMessage::FMQ_PROTOCOLDATA, m_data);
+            if (m_data.getType() != VARTYPE_NONE)
+            {
+                message->getControlData().add(ProtocolMessage::FMQ_PROTOCOLDATA, m_data);
+            }
             callback->received(message);
         }
     }

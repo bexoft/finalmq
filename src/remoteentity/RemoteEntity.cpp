@@ -619,12 +619,19 @@ void RemoteEntity::sendRequest(const PeerId& peerId, const std::string& path, co
         ReceiveData receiveData;
         receiveData.header.corrid = correlationId;
         receiveData.header.status = status;
-        IExecutorPtr executor = session->getExecutor();
-        assert(executor);
-        executor->addAction([this, receiveData]()
-            {
-                receivedReply(receiveData);
-            });
+        if (session != nullptr)
+        {
+            IExecutorPtr executor = session->getExecutor();
+            assert(executor);
+            executor->addAction([this, receiveData]()
+                {
+                    receivedReply(receiveData);
+                });
+        }
+        else
+        {
+            receivedReply(receiveData);
+        }
     }
 }
 
@@ -1156,6 +1163,19 @@ const RemoteEntity::Function* RemoteEntity::getFunction(const std::string& path,
 
 void RemoteEntity::receivedRequest(ReceiveData& receiveData)
 {
+    if (receiveData.automaticConnect)
+    {
+        static std::string STR_DUMMY = "dummy";
+        bool added{};
+        const std::string& virtualSessionId = receiveData.virtualSessionId;
+        std::uint64_t srcid = receiveData.header.srcid;
+        if (srcid == 0)
+        {
+            srcid = ENTITYID_INVALID;
+        }
+        m_peerManager->addPeer(receiveData.session, receiveData.virtualSessionId, srcid, STR_DUMMY, true, added, nullptr);
+    }
+
     std::shared_ptr<FuncCommand> func;
     const RemoteEntity::Function* funcData = getFunction(receiveData.header.path, &receiveData.message->getAllMetainfo());
     if (funcData)

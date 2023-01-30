@@ -515,7 +515,7 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
 {
     assert(session);
     assert(message);
-
+    
     ThreadLocalDataEntities& threadLocalDataEntities = t_threadLocalDataEntities;
     std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2entityNoLock = threadLocalDataEntities.name2entityNoLock;
     std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>>& entityId2entityNoLock = threadLocalDataEntities.entityId2entityNoLock;
@@ -541,17 +541,17 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     //    }
     //}
 
-    bool syntaxError = false;
+    int formatStatus = 0;
     ReceiveData receiveData{ createSessionInfo(session), {}, message, {}, {} };
     //if (!pureData)
     //{
         if (!session->doesSupportMetainfo())
         {
-            receiveData.structBase = RemoteEntityFormatRegistry::instance().parse(*message, session->getContentType(), m_storeRawDataInReceiveStruct, name2entityNoLock, receiveData.header, syntaxError);
+            receiveData.structBase = RemoteEntityFormatRegistry::instance().parse(*message, session->getContentType(), m_storeRawDataInReceiveStruct, name2entityNoLock, receiveData.header, formatStatus);
         }
         else
         {
-            receiveData.structBase = RemoteEntityFormatRegistry::instance().parseHeaderInMetainfo(*message, session->getContentType(), m_storeRawDataInReceiveStruct, name2entityNoLock, receiveData.header, syntaxError);
+            receiveData.structBase = RemoteEntityFormatRegistry::instance().parseHeaderInMetainfo(*message, session->getContentType(), m_storeRawDataInReceiveStruct, name2entityNoLock, receiveData.header, formatStatus);
         }
     //}
     //else
@@ -598,8 +598,9 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
                 receiveData.virtualSessionId = it->second;
             }
         }
+        receiveData.automaticConnect = ((formatStatus & FORMATSTATUS_AUTOMATIC_CONNECT) != 0);
         Status replyStatus = Status::STATUS_OK;
-        if (!syntaxError)
+        if (!(formatStatus & FORMATSTATUS_SYNTAX_ERROR))
         {
             if (entity)
             {

@@ -57,6 +57,7 @@ using finalmq::ExecutorWorker;
 using finalmq::VariantStruct;
 using finalmq::ProtocolMqtt5Client;
 using finalmq::NoData;
+using finalmq::IProtocolSessionPtr;
 
 
 
@@ -70,73 +71,133 @@ public:
             streamInfo << "peer event " << peerEvent.toString();
         });
 
-        // handle the HelloRequest
-        // this is fun - try to access the server with the json interface at port 8888:
-        // telnet localhost 8888  (or: netcat localhost 8888) and type:
-        //   /MyService/helloworld.HelloRequest!4711{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
-        // or open a browser and type:
-        //   localhost:8080/MyService/helloworld.HelloRequest{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
-        // or use a HTTP client and do an HTTP request (the method GET, POST, ... does not matter) to localhost:8080 with:
-        //   /MyService/helloworld.HelloRequest
-        //   and payload: {"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
-        registerCommand<hl7::SSU_U03>([] (const RequestContextPtr& requestContext, const std::shared_ptr<hl7::SSU_U03>& request) {
+        registerCommand<hl7::SSU_U03>([this] (const RequestContextPtr& requestContext, const std::shared_ptr<hl7::SSU_U03>& request) {
             assert(request);
 
             // prepare the reply
-            std::string prefix("Hello ");
             hl7::SSU_U03 reply = *request;
-
-            reply.equ.alertLevel.alternateIdentifier = "Hello this is a test";
-
-//            PeerId peerid = requestContext->peerId();
-
-            // send reply
-            requestContext->reply(std::move(reply));
-
-            // note:
-            // The reply does not have to be sent immediately:
-            // The requestContext is a shared_ptr, store it and reply later.
-
-            // note:
-            // The requestContext has the method requestContext->peerId()
-            // The returned peerId can be used for calling requestReply() or sendEvent().
-            // So, also a server entity can act as a client and can send requestReply()
-            // to the peer entity that is calling this request.
-            // An entity can act as a client and as a server. It is bidirectional (symmetric), like a socket.
-        });
-
-        
-        // just to demonstrate REST API. You can access the service with either an HTTP PUT with path: "mypath/1234".
-        // Or with "maypath/1234/PUT" and the HTTP method (like: GET, POST, PUT, ...) does not matter.
-        // try to access the server with the json interface at port 8888:
-        // telnet localhost 8888  (or: netcat localhost 8888) and type:
-        //   /MyService/mypath/1234/PUT!4711{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
-        // or open a browser and type:
-        //   localhost:8080/MyService/mypath/1234/PUT{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
-        // or use a HTTP client and do an HTTP PUT request to localhost:8080 with:
-        //   /MyService/mypath/1234
-        //   and payload: {"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
-        registerCommand<NoData>("ssu_u03/GET", [](const RequestContextPtr& requestContext, const std::shared_ptr<NoData>& request) {
-            assert(request);
-
-            hl7::SSU_U03 reply;
             reply.msh.countryCode = "de";
+            reply.equ.alertLevel.alternateIdentifier = "Hello this is a test";
             reply.uac = std::make_shared<hl7::UAC>();
             reply.uac->userAuthenticationCredential.typeOfData = "hello";
-            reply.sft.resize(3);
+            reply.sft.resize(2);
             reply.sft[0].softwareBinaryID = "world";
-            reply.sac.resize(4);
+            reply.sft[1].softwareProductInformation = "world";
+            reply.sac.resize(2);
             reply.sac[0].sac.positionInTray = "hey";
             reply.sac[0].sac.specimenSource = "hh";
             reply.sac[0].sac.carrierId.entityIdentifier = "uu";
             reply.sac[0].sac.carrierId.universalId = "bbb";
             reply.sac[0].obx.resize(2);
+            reply.sac[0].obx[0].effectiveDateOfReferenceRange = "aaaa";
+            reply.sac[0].obx[1].equipmentInstanceIdentifier.namespaceId = "bbbbb";
             reply.sac[0].nte.resize(1);
-            reply.sac[0].spm.resize(3);
+            reply.sac[0].nte[0].commentType.alternateText = "This is text";
+            reply.sac[0].spm.resize(2);
             reply.sac[0].spm[0].spm.accessionId = "ggg";
             reply.sac[0].spm[0].spm.containerCondition.alternateText = "tt";
             reply.sac[0].spm[0].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
-            reply.sac[0].spm[0].obx.resize(5);
+            reply.sac[0].spm[0].obx.resize(1);
+            reply.sac[0].spm[0].obx[0].effectiveDateOfReferenceRange = "aaaa";
+            reply.sac[0].spm[0].obx[0].equipmentInstanceIdentifier.namespaceId = "bbbbb";
+            reply.sac[0].spm[1].spm.accessionId = "ggg";
+            reply.sac[0].spm[1].spm.containerCondition.alternateText = "tt";
+            reply.sac[0].spm[1].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
+            reply.sac[0].spm[1].obx.resize(1);
+            reply.sac[0].spm[1].obx[0].effectiveDateOfReferenceRange = "aaaa";
+            reply.sac[0].spm[1].obx[0].equipmentInstanceIdentifier.namespaceId = "bbbbb";
+            reply.sac[1].sac.positionInTray = "hey";
+            reply.sac[1].sac.specimenSource = "hh";
+            reply.sac[1].sac.carrierId.entityIdentifier = "uu";
+            reply.sac[1].sac.carrierId.universalId = "bbb";
+            reply.sac[1].obx.resize(2);
+            reply.sac[1].obx[0].effectiveDateOfReferenceRange = "aaaa";
+            reply.sac[1].obx[1].equipmentInstanceIdentifier.namespaceId = "bbbbb";
+            reply.sac[1].nte.resize(1);
+            reply.sac[1].nte[0].commentType.alternateText = "This is text";
+            reply.sac[1].spm.resize(2);
+            reply.sac[1].spm[0].spm.accessionId = "ggg";
+            reply.sac[1].spm[0].spm.containerCondition.alternateText = "tt";
+            reply.sac[1].spm[0].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
+            reply.sac[1].spm[0].obx.resize(1);
+            reply.sac[1].spm[0].obx[0].effectiveDateOfReferenceRange = "aaaa";
+            reply.sac[1].spm[0].obx[0].equipmentInstanceIdentifier.namespaceId = "bbbbb";
+            reply.sac[1].spm[1].spm.accessionId = "ggg";
+            reply.sac[1].spm[1].spm.containerCondition.alternateText = "tt";
+            reply.sac[1].spm[1].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
+            reply.sac[1].spm[1].obx.resize(1);
+            reply.sac[1].spm[1].obx[0].effectiveDateOfReferenceRange = "aaaa";
+            reply.sac[1].spm[1].obx[0].equipmentInstanceIdentifier.namespaceId = "bbbbb";
+
+            // send reply
+            requestContext->reply(std::move(reply));
+        });
+
+        
+        registerCommand<NoData>("tubes/{id}/GET", [this](const RequestContextPtr& requestContext, const std::shared_ptr<NoData>& request) {
+            assert(request);
+
+            std::string* filter = requestContext->getMetainfo("QUERY_filter");
+            std::string f = (filter) ? *filter : "default";
+
+            std::string* id = requestContext->getMetainfo("PATH_id");
+            assert(id);
+
+            hl7::SSU_U03 reply;
+            reply.msh.countryCode = "de";
+            reply.equ.alertLevel.alternateIdentifier = "Hello this is a test";
+            reply.equ.equipmentInstanceIdentifier.entityIdentifier = *id;
+            reply.uac = std::make_shared<hl7::UAC>();
+            reply.uac->userAuthenticationCredentialTypeCode.alternateIdentifier = f;
+            reply.uac->userAuthenticationCredential.typeOfData = "hello";
+            reply.sft.resize(2);
+            reply.sft[0].softwareBinaryID = "world";
+            reply.sft[1].softwareProductInformation = "world";
+            reply.sac.resize(2);
+            reply.sac[0].sac.positionInTray = "hey";
+            reply.sac[0].sac.specimenSource = "hh";
+            reply.sac[0].sac.carrierId.entityIdentifier = "uu";
+            reply.sac[0].sac.carrierId.universalId = "bbb";
+            reply.sac[0].obx.resize(2);
+            reply.sac[0].obx[0].effectiveDateOfReferenceRange = "aaaa";
+            reply.sac[0].obx[1].equipmentInstanceIdentifier.namespaceId = "bbbbb";
+            reply.sac[0].nte.resize(1);
+            reply.sac[0].nte[0].commentType.alternateText = "This is text";
+            reply.sac[0].spm.resize(2);
+            reply.sac[0].spm[0].spm.accessionId = "ggg";
+            reply.sac[0].spm[0].spm.containerCondition.alternateText = "tt";
+            reply.sac[0].spm[0].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
+            reply.sac[0].spm[0].obx.resize(1);
+            reply.sac[0].spm[0].obx[0].effectiveDateOfReferenceRange = "aaaa";
+            reply.sac[0].spm[0].obx[0].equipmentInstanceIdentifier.namespaceId = "bbbbb";
+            reply.sac[0].spm[1].spm.accessionId = "ggg";
+            reply.sac[0].spm[1].spm.containerCondition.alternateText = "tt";
+            reply.sac[0].spm[1].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
+            reply.sac[0].spm[1].obx.resize(1);
+            reply.sac[0].spm[1].obx[0].effectiveDateOfReferenceRange = "aaaa";
+            reply.sac[0].spm[1].obx[0].equipmentInstanceIdentifier.namespaceId = "bbbbb";
+            reply.sac[1].sac.positionInTray = "hey";
+            reply.sac[1].sac.specimenSource = "hh";
+            reply.sac[1].sac.carrierId.entityIdentifier = "uu";
+            reply.sac[1].sac.carrierId.universalId = "bbb";
+            reply.sac[1].obx.resize(2);
+            reply.sac[1].obx[0].effectiveDateOfReferenceRange = "aaaa";
+            reply.sac[1].obx[1].equipmentInstanceIdentifier.namespaceId = "bbbbb";
+            reply.sac[1].nte.resize(1);
+            reply.sac[1].nte[0].commentType.alternateText = "This is text";
+            reply.sac[1].spm.resize(2);
+            reply.sac[1].spm[0].spm.accessionId = "ggg";
+            reply.sac[1].spm[0].spm.containerCondition.alternateText = "tt";
+            reply.sac[1].spm[0].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
+            reply.sac[1].spm[0].obx.resize(1);
+            reply.sac[1].spm[0].obx[0].effectiveDateOfReferenceRange = "aaaa";
+            reply.sac[1].spm[0].obx[0].equipmentInstanceIdentifier.namespaceId = "bbbbb";
+            reply.sac[1].spm[1].spm.accessionId = "ggg";
+            reply.sac[1].spm[1].spm.containerCondition.alternateText = "tt";
+            reply.sac[1].spm[1].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
+            reply.sac[1].spm[1].obx.resize(1);
+            reply.sac[1].spm[1].obx[0].effectiveDateOfReferenceRange = "aaaa";
+            reply.sac[1].spm[1].obx[0].equipmentInstanceIdentifier.namespaceId = "bbbbb";
 
             // send reply
             requestContext->reply(std::move(reply));
@@ -144,8 +205,6 @@ public:
     }
 };
 
-
-//#define MULTITHREADED
 
 
 int main()
@@ -160,14 +219,7 @@ int main()
     // This means, an entity can send (client) and receive (server) a request command.
     RemoteEntityContainer entityContainer;
 
-#ifndef MULTITHREADED
     entityContainer.init();
-#else
-    // If you want that the commands and events shall be executed in extra threads, 
-    // then call entityContainer.init with an executor.
-    ExecutorWorker<Executor> worker(4);
-    entityContainer.init(worker.getExecutor());
-#endif
 
     // register lambda for connection events to see when a network node connects or disconnects.
     entityContainer.registerConnectionEvent([] (const SessionInfo& session, ConnectionEvent connectionEvent) {
@@ -228,13 +280,9 @@ int main()
     // And by the way, also connect()s are possible for an EntityContainer. An EntityContainer can be client and server at the same time.
 
 
-#ifndef MULTITHREADED
     // run the entity container. this call blocks the execution. 
     // If you do not want to block, then execute run() in another thread
     entityContainer.run();
-#else
-    std::this_thread::sleep_for(std::chrono::seconds(100000000));
-#endif
 
     return 0;
 }
