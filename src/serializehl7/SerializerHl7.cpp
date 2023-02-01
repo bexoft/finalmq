@@ -121,7 +121,7 @@ void SerializerHl7::Internal::exitStruct(const MetaField& /*field*/)
     }
 }
 
-void SerializerHl7::Internal::enterStructNull(const MetaField& field)
+void SerializerHl7::Internal::enterStructNull(const MetaField& /*field*/)
 {
 }
 
