@@ -105,7 +105,7 @@ void Hl7Builder::resizeBuffer()
 class Hl7Node
 {
 public:
-    void Hl7Node::enterString(const int* levelIndex, int sizeLevelIndex, int index, std::string&& value)
+    void enterString(const int* levelIndex, int sizeLevelIndex, int index, std::string&& value)
     {
         if (value.size() == 0)
         {
@@ -121,7 +121,7 @@ public:
         {
             i = levelIndex[0];
         }
-        if (i + 1 > m_nodes.size())
+        if (i + 1 > static_cast<int>(m_nodes.size()))
         {
             m_nodes.reserve(std::max((i + 1) * 2, 30));
             m_nodes.resize(i + 1);
