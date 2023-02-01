@@ -135,8 +135,13 @@ bool ProtocolHeaderBinarySize::doesSupportFileTransfer() const
 
 IProtocol::FuncCreateMessage ProtocolHeaderBinarySize::getMessageFactory() const
 {
-    return []() {
-        return std::make_shared<ProtocolMessage>(PROTOCOL_ID, HEADERSIZE);
+    return [data = m_data]() {
+        IMessagePtr message = std::make_shared<ProtocolMessage>(PROTOCOL_ID, HEADERSIZE);
+        if (data.getType() != VARTYPE_NONE)
+        {
+            message->getControlData().add(ProtocolMessage::FMQ_PROTOCOLDATA, data);
+        }
+        return message;
     };
 }
 

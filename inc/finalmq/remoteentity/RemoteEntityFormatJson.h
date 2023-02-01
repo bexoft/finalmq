@@ -34,6 +34,9 @@ public:
     static const int CONTENT_TYPE;              // 2
     static const std::string CONTENT_TYPE_NAME; // json
 
+    static const std::string PROPERTY_SERIALIZE_ENUM_AS_STRING;         // enumAsSt
+    static const std::string PROPERTY_SERIALIZE_SKIP_DEFAULT_VALUES;    // skipDefVal
+
 private:
     virtual std::shared_ptr<StructBase> parse(const BufferRef& bufferRef, const Variant* protocolData, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus) override;
     virtual std::shared_ptr<StructBase> parseData(const BufferRef& bufferRef, bool storeRawData, std::string& type, int& formatStatus) override;

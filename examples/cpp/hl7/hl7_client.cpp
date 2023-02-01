@@ -23,7 +23,7 @@
 
 
 #include "finalmq/remoteentity/RemoteEntityContainer.h"
-#include "finalmq/remoteentity/RemoteEntityFormatProto.h"
+#include "finalmq/remoteentity/RemoteEntityFormatHl7.h"
 #include "finalmq/remoteentity/RemoteEntityFormatJson.h"
 #include "finalmq/logger/Logger.h"
 #include "finalmq/variant/VariantValueStruct.h"
@@ -43,28 +43,7 @@
 #define MODULENAME  "helloworld_server"
 
 
-using finalmq::RemoteEntity;
-using finalmq::IRemoteEntity;
-using finalmq::IRemoteEntityPtr;
-using finalmq::RemoteEntityContainer;
-using finalmq::RemoteEntityFormatProto;
-using finalmq::RemoteEntityFormatJson;
-using finalmq::IRemoteEntityContainer;
-using finalmq::PeerId;
-using finalmq::EntityId;
-using finalmq::PeerEvent;
-using finalmq::SessionInfo;
-using finalmq::ConnectionData;
-using finalmq::ConnectionEvent;
-using finalmq::Status;
-using finalmq::Logger;
-using finalmq::LogContext;
-using finalmq::VariantStruct;
-using finalmq::ProtocolMqtt5Client;
-using finalmq::IExecutorPtr;
-using finalmq::Executor;
-using finalmq::ExecutorWorker;
-using finalmq::RequestContextPtr;
+using namespace finalmq;
 
 
 class EntityClient : public RemoteEntity
@@ -139,12 +118,15 @@ int main()
     // (default is: try to connect every 5s forever till the server becomes available).
     //SessionInfo sessionClient = entityContainer.connect("tcp://localhost:7777:headersize:protobuf");
     //SessionInfo sessionClient = entityContainer.connect("ipc://my_uds:headersize:protobuf");
+
     SessionInfo sessionClient = entityContainer.connect("tcp://localhost:7000:delimiter_lf:hl7", { {}, {},
-        VariantStruct{  {"hl7namespace", std::string{"hl7"}},
-                        {"hl7entity", std::string{"Hl7Entity"}} } });
+        VariantStruct{  {RemoteEntityFormatHl7::PROPERTY_NAMESPACE, std::string{"hl7"}},
+                        {RemoteEntityFormatHl7::PROPERTY_ENTITY, std::string{"Hl7Entity"}} } });
 
 
-    //SessionInfo sessionClient = entityContainer.connect("tcp://localhost:7001:delimiter_lf:json");
+    //SessionInfo sessionClient = entityContainer.connect("tcp://localhost:7001:delimiter_lf:json", { {}, {},
+    //    VariantStruct{  {RemoteEntityFormatJson::PROPERTY_SERIALIZE_ENUM_AS_STRING, true},
+    //                    {RemoteEntityFormatJson::PROPERTY_SERIALIZE_SKIP_DEFAULT_VALUES, true} } });
 
 
     //// if you want to use mqtt5 -> connect to broker
@@ -186,20 +168,20 @@ int main()
 
     for (int i = 0; i < 10000; i++)
     {
-        entityClient.sendEvent(peerId, msg);
+//        entityClient.sendEvent(peerId, msg);
 
-        //entityClient.requestReply<hl7::SSU_U03>(peerId,
-        //    msg,
-        //    [](PeerId peerId, Status status, const std::shared_ptr<hl7::SSU_U03>& reply) {
-        //        if (reply)
-        //        {
-        //            std::cout << ".";
-        //        }
-        //        else
-        //        {
-        //            std::cout << "REPLY error: " << status.toString() << std::endl;
-        //        }
-        //    });
+        entityClient.requestReply<hl7::SSU_U03>(peerId,
+            msg,
+            [](PeerId peerId, Status status, const std::shared_ptr<hl7::SSU_U03>& reply) {
+                if (reply)
+                {
+                    std::cout << ".";
+                }
+                else
+                {
+                    std::cout << "REPLY error: " << status.toString() << std::endl;
+                }
+            });
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(10000000));

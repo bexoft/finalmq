@@ -92,21 +92,6 @@ void Variant::accept(IVariantVisitor& visitor, ssize_t index, int level, ssize_t
 
 
 
-int Variant::getType() const
-{
-    if (m_value)
-    {
-        return m_value->getType();
-    }
-    else
-    {
-        return VARTYPE_NONE;
-    }
-}
-
-
-
-
 Variant* Variant::getVariant(const std::string& name)
 {
     if (name.empty())

@@ -181,8 +181,13 @@ bool ProtocolHttpServer::doesSupportFileTransfer() const
 
 IProtocol::FuncCreateMessage ProtocolHttpServer::getMessageFactory() const
 {
-    return []() {
-        return std::make_shared<ProtocolMessage>(PROTOCOL_ID);
+    return [data=m_data]() {
+        IMessagePtr message = std::make_shared<ProtocolMessage>(PROTOCOL_ID);
+        if (data.getType() != VARTYPE_NONE)
+        {
+            message->getControlData().add(ProtocolMessage::FMQ_PROTOCOLDATA, data);
+        }
+        return message;
     };
 }
 

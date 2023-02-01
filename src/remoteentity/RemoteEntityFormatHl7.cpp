@@ -28,6 +28,7 @@
 #include "finalmq/serializestruct/SerializerStruct.h"
 #include "finalmq/serializestruct/StructFactoryRegistry.h"
 #include "finalmq/variant/VariantValues.h"
+#include "finalmq/protocolsession/ProtocolMessage.h"
 
 #include "finalmq/remoteentity/entitydata.fmq.h"
 
@@ -40,6 +41,9 @@ namespace finalmq {
 
 const int RemoteEntityFormatHl7::CONTENT_TYPE = 3;
 const std::string RemoteEntityFormatHl7::CONTENT_TYPE_NAME = "hl7";
+
+const std::string RemoteEntityFormatHl7::PROPERTY_NAMESPACE = "namespace";
+const std::string RemoteEntityFormatHl7::PROPERTY_ENTITY = "entity";
 
 
 
@@ -120,8 +124,8 @@ std::shared_ptr<StructBase> RemoteEntityFormatHl7::parse(const BufferRef& buffer
         const std::string* hl7DestName = nullptr;
         if (protocolData != nullptr)
         {
-            hl7Namespace = protocolData->getData<std::string>("hl7namespace");
-            hl7DestName = protocolData->getData<std::string>("hl7entity");
+            hl7Namespace = protocolData->getData<std::string>(PROPERTY_NAMESPACE);
+            hl7DestName = protocolData->getData<std::string>(PROPERTY_ENTITY);
         }
         if (hl7Namespace != nullptr)
         {

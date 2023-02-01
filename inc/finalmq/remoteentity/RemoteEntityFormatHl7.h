@@ -31,8 +31,12 @@ namespace finalmq {
 class SYMBOLEXP RemoteEntityFormatHl7 : public IRemoteEntityFormat
 {
 public:
-    static const int CONTENT_TYPE;              // 3
-    static const std::string CONTENT_TYPE_NAME; // hl7
+    static const int CONTENT_TYPE;                  // 3
+    static const std::string CONTENT_TYPE_NAME;     // hl7
+
+    static const std::string PROPERTY_NAMESPACE;    // hl7namespace
+    static const std::string PROPERTY_ENTITY;       // hl7entity
+
 
 private:
     virtual std::shared_ptr<StructBase> parse(const BufferRef& bufferRef, const Variant* protocolData, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus) override;

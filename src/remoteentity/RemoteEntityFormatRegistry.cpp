@@ -602,8 +602,13 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(IMessage& mess
 {
     formatStatus = 0;
     BufferRef bufferRef = message.getReceivePayload();
-    Variant* protocolData = message.getControlData().getVariant(ProtocolMessage::FMQ_PROTOCOLDATA);
-
+    Variant* protocolData = nullptr;
+    Variant* controlData = message.getControlDataIfAvailable();
+    if (controlData != nullptr)
+    {
+        protocolData = controlData->getVariant(ProtocolMessage::FMQ_PROTOCOLDATA);
+    }
+            
     std::shared_ptr<StructBase> structBase;
 
     auto it = m_contentTypeToFormat.find(contentType);

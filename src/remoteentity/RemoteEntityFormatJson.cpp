@@ -27,6 +27,7 @@
 #include "finalmq/serializejson/ParserJson.h"
 #include "finalmq/serializestruct/SerializerStruct.h"
 #include "finalmq/serializestruct/StructFactoryRegistry.h"
+#include "finalmq/protocolsession/ProtocolMessage.h"
 
 #include "finalmq/remoteentity/entitydata.fmq.h"
 
@@ -41,6 +42,9 @@ namespace finalmq {
 
 const int RemoteEntityFormatJson::CONTENT_TYPE = 2;
 const std::string RemoteEntityFormatJson::CONTENT_TYPE_NAME = "json";
+
+const std::string RemoteEntityFormatJson::PROPERTY_SERIALIZE_ENUM_AS_STRING = "enumAsSt";
+const std::string RemoteEntityFormatJson::PROPERTY_SERIALIZE_SKIP_DEFAULT_VALUES = "skipDefVal";
 
 
 
@@ -96,7 +100,28 @@ void RemoteEntityFormatJson::serializeData(IMessage& message, const StructBase* 
         }
         else
         {
-            SerializerJson serializerData(message, 512, true, false);
+            bool enumAsString = true;
+            bool skipDefaultValues = false;
+            Variant* controlData = message.getControlDataIfAvailable();
+            if (controlData != nullptr)
+            {
+                Variant* protocolData = controlData->getVariant(ProtocolMessage::FMQ_PROTOCOLDATA);
+                if (protocolData != nullptr)
+                {
+                    const bool* propEnumAsString = protocolData->getData<bool>(PROPERTY_SERIALIZE_ENUM_AS_STRING);
+                    const bool* propSkipDefaultValues = protocolData->getData<bool>(PROPERTY_SERIALIZE_SKIP_DEFAULT_VALUES);
+                    if (propEnumAsString != nullptr)
+                    {
+                        enumAsString = *propEnumAsString;
+                    }
+                    if (propSkipDefaultValues != nullptr)
+                    {
+                        skipDefaultValues = *propSkipDefaultValues;
+                    }
+                }
+            }
+            
+            SerializerJson serializerData(message, 512, enumAsString, skipDefaultValues);
             ParserStruct parserData(serializerData, *structBase);
             parserData.parseStruct();
         }

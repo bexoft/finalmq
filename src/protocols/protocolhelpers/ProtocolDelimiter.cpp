@@ -121,8 +121,13 @@ IProtocol::FuncCreateMessage ProtocolDelimiter::getMessageFactory() const
 {
     size_t sizeDelimiter = m_delimiter.size();
     int protocolId = getProtocolId();
-    return [protocolId, sizeDelimiter]() {
-        return std::make_shared<ProtocolMessage>(protocolId, 0, sizeDelimiter);
+    return [protocolId, sizeDelimiter, data = m_data]() {
+        IMessagePtr message = std::make_shared<ProtocolMessage>(protocolId, 0, sizeDelimiter);
+        if (data.getType() != VARTYPE_NONE)
+        {
+            message->getControlData().add(ProtocolMessage::FMQ_PROTOCOLDATA, data);
+        }
+        return message;
     };
 }
 
