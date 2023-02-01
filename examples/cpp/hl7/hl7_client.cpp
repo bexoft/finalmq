@@ -143,6 +143,10 @@ int main()
         VariantStruct{  {"hl7namespace", std::string{"hl7"}},
                         {"hl7entity", std::string{"Hl7Entity"}} } });
 
+
+    //SessionInfo sessionClient = entityContainer.connect("tcp://localhost:7001:delimiter_lf:json");
+
+
     //// if you want to use mqtt5 -> connect to broker
     //SessionInfo sessionClient = entityContainer.connect("tcp://localhost:1883:mqtt5client:json", { {},{},
     //    VariantStruct{  //{ProtocolMqtt5Client::KEY_USERNAME, std::string("")},
@@ -183,6 +187,19 @@ int main()
     for (int i = 0; i < 10000; i++)
     {
         entityClient.sendEvent(peerId, msg);
+
+        //entityClient.requestReply<hl7::SSU_U03>(peerId,
+        //    msg,
+        //    [](PeerId peerId, Status status, const std::shared_ptr<hl7::SSU_U03>& reply) {
+        //        if (reply)
+        //        {
+        //            std::cout << ".";
+        //        }
+        //        else
+        //        {
+        //            std::cout << "REPLY error: " << status.toString() << std::endl;
+        //        }
+        //    });
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(10000000));

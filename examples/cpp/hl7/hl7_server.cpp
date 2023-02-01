@@ -247,6 +247,15 @@ int main()
         VariantStruct{  {"hl7namespace", std::string{"hl7"}},
                         {"hl7entity", std::string{"MyService"}} } });
 
+#ifndef WIN32
+    entityContainer.bind("ipc://udp_hl7:delimiter_lf:hl7", { {},
+        VariantStruct{  {"hl7namespace", std::string{"hl7"}},
+                        {"hl7entity", std::string{"MyService"}} } });
+#endif
+
+    entityContainer.bind("tcp://*:7001:delimiter_lf:json"),
+    entityContainer.bind("tcp://*:7002:headersize:protobuf"),
+
     entityContainer.bind("tcp://*:8081:httpserver:hl7");
 
     entityContainer.bind("tcp://*:8082:httpserver:json");
