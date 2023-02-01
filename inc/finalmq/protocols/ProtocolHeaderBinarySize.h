@@ -37,7 +37,7 @@ public:
     static const std::uint32_t PROTOCOL_ID;           // 2
     static const std::string PROTOCOL_NAME; // headersize
 
-    ProtocolHeaderBinarySize(const Variant& data);
+    ProtocolHeaderBinarySize();
     ~ProtocolHeaderBinarySize();
 
 private:
@@ -67,7 +67,6 @@ private:
     std::weak_ptr<IProtocolCallback>    m_callback;
     IStreamConnectionPtr                m_connection;
     ProtocolFixHeaderHelper             m_headerHelper;
-    Variant                             m_data;
     mutable std::mutex                  m_mutex;
 };
 

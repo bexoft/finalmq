@@ -225,17 +225,17 @@ int main()
     // content type in payload: protobuf
     entityContainer.bind("tcp://*:7777:headersize:protobuf");
 
-    entityContainer.bind("tcp://*:7000:delimiter_lf:hl7", { {},
+    entityContainer.bind("tcp://*:7000:delimiter_lf:hl7", { {}, {},
         VariantStruct{  {RemoteEntityFormatHl7::PROPERTY_NAMESPACE, std::string{"hl7"}},
                         {RemoteEntityFormatHl7::PROPERTY_ENTITY, std::string{"MyService"}} } });
 
 #ifndef WIN32
-    entityContainer.bind("ipc://udp_hl7:delimiter_lf:hl7", { {},
+    entityContainer.bind("ipc://udp_hl7:delimiter_lf:hl7", { {}, {},
         VariantStruct{  {"hl7namespace", std::string{"hl7"}},
                         {"hl7entity", std::string{"MyService"}} } });
 #endif
 
-    entityContainer.bind("tcp://*:7001:delimiter_lf:json", { {},
+    entityContainer.bind("tcp://*:7001:delimiter_lf:json", { {}, {},
         VariantStruct{ {RemoteEntityFormatJson::PROPERTY_SERIALIZE_ENUM_AS_STRING, true},
                        {RemoteEntityFormatJson::PROPERTY_SERIALIZE_SKIP_DEFAULT_VALUES, true} }
     });

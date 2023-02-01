@@ -61,7 +61,6 @@ class ProtocolSession : public IProtocolSessionPrivate
 public:
     ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const IProtocolPtr& protocol, const std::shared_ptr<IProtocolSessionList>& protocolSessionList, const BindProperties& bindProperties, int contentType);
     ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const IProtocolPtr& protocol, const std::shared_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, const std::string& endpointStreamConnection, const ConnectProperties& connectProperties, int contentType);
-//    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, int contentType);
     ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const std::shared_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer);
 
     virtual ~ProtocolSession();
@@ -83,6 +82,7 @@ private:
     virtual bool connect(const std::string& endpoint, const ConnectProperties& connectionProperties = {}, int contentType = 0) override;
     virtual IExecutorPtr getExecutor() const override;
     virtual void subscribe(const std::vector<std::string>& subscribtions) override;
+    virtual const Variant& getFormatData() const override;
 
     //// IStreamConnectionCallback
     //virtual hybrid_ptr<IStreamConnectionCallback> connected(const IStreamConnectionPtr& connection) override;
@@ -152,6 +152,7 @@ private:
 
     const BindProperties                            m_bindProperties;
     ConnectProperties                               m_connectionProperties;
+    Variant                                         m_formatData;
 
     std::deque<IMessagePtr>                         m_messagesBuffered;
 

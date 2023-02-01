@@ -50,6 +50,7 @@ struct BindProperties
 {
     CertificateData certificateData;
     Variant protocolData;
+    Variant formatData;                 ///< data for the serialization format
 };
 
 struct ConnectConfig
@@ -63,6 +64,7 @@ struct ConnectProperties
     CertificateData certificateData;
     ConnectConfig config;
     Variant protocolData;
+    Variant formatData;                 ///< data for the serialization format
 };
 
 

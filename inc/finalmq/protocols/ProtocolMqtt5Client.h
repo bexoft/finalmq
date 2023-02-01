@@ -110,7 +110,6 @@ private:
     std::weak_ptr<IProtocolCallback>    m_callback;
     IStreamConnectionPtr                m_connection;
     std::unique_ptr<IMqtt5Client>       m_client;
-    Variant                             m_data;
     mutable std::mutex                  m_mutex;
 };
 

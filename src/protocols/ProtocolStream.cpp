@@ -38,8 +38,7 @@ const std::uint32_t ProtocolStream::PROTOCOL_ID = 1;
 const std::string ProtocolStream::PROTOCOL_NAME = "stream";
 
 
-ProtocolStream::ProtocolStream(const Variant& data)
-    : m_data(data)
+ProtocolStream::ProtocolStream()
 {
 
 }
@@ -126,13 +125,8 @@ bool ProtocolStream::doesSupportFileTransfer() const
 
 IProtocol::FuncCreateMessage ProtocolStream::getMessageFactory() const
 {
-    return [data = m_data]() {
-        IMessagePtr message = std::make_shared<ProtocolMessage>(PROTOCOL_ID);
-        if (data.getType() != VARTYPE_NONE)
-        {
-            message->getControlData().add(ProtocolMessage::FMQ_PROTOCOLDATA, data);
-        }
-        return message;
+    return []() {
+        return std::make_shared<ProtocolMessage>(PROTOCOL_ID);
     };
 }
 
@@ -169,10 +163,6 @@ bool ProtocolStream::received(const IStreamConnectionPtr& /*connection*/, const 
         auto callback = m_callback.lock();
         if (callback)
         {
-            if (m_data.getType() != VARTYPE_NONE)
-            {
-                message->getControlData().add(ProtocolMessage::FMQ_PROTOCOLDATA, m_data);
-            }
             callback->received(message);
         }
     }
@@ -233,9 +223,9 @@ struct RegisterProtocolStreamFactory
 
 
 // IProtocolFactory
-IProtocolPtr ProtocolStreamFactory::createProtocol(const Variant& data)
+IProtocolPtr ProtocolStreamFactory::createProtocol(const Variant& /*data*/)
 {
-    return std::make_shared<ProtocolStream>(data);
+    return std::make_shared<ProtocolStream>();
 }
 
 }   // namespace finalmq

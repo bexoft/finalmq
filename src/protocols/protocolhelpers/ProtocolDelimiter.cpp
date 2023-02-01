@@ -33,10 +33,9 @@ namespace finalmq {
 //---------------------------------------
 
 
-ProtocolDelimiter::ProtocolDelimiter(const std::string& delimiter, const Variant& data)
+ProtocolDelimiter::ProtocolDelimiter(const std::string& delimiter)
     : m_delimiter(delimiter)
     , m_delimiterStart((!delimiter.empty()) ? delimiter[0] : ' ')
-    , m_data(data)
 {
     assert(!delimiter.empty());
 }
@@ -121,13 +120,8 @@ IProtocol::FuncCreateMessage ProtocolDelimiter::getMessageFactory() const
 {
     size_t sizeDelimiter = m_delimiter.size();
     int protocolId = getProtocolId();
-    return [protocolId, sizeDelimiter, data = m_data]() {
-        IMessagePtr message = std::make_shared<ProtocolMessage>(protocolId, 0, sizeDelimiter);
-        if (data.getType() != VARTYPE_NONE)
-        {
-            message->getControlData().add(ProtocolMessage::FMQ_PROTOCOLDATA, data);
-        }
-        return message;
+    return [protocolId, sizeDelimiter]() {
+        return std::make_shared<ProtocolMessage>(protocolId, 0, sizeDelimiter);
     };
 }
 
@@ -240,10 +234,6 @@ bool ProtocolDelimiter::received(const IStreamConnectionPtr& /*connection*/, con
                     }
                     if (callback)
                     {
-                        if (m_data.getType() != VARTYPE_NONE)
-                        {
-                            message->getControlData().add(ProtocolMessage::FMQ_PROTOCOLDATA, m_data);
-                        }
                         callback->received(message);
                     }
                     i += m_delimiter.size();

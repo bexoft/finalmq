@@ -85,10 +85,9 @@ enum ChunkedState
 
 std::atomic_int64_t ProtocolHttpServer::m_nextSessionNameCounter{ 1 };
 
-ProtocolHttpServer::ProtocolHttpServer(const Variant& data)
+ProtocolHttpServer::ProtocolHttpServer()
     : m_randomDevice()
     , m_randomGenerator(m_randomDevice())
-    , m_data(data)
 {
 
 }
@@ -181,13 +180,8 @@ bool ProtocolHttpServer::doesSupportFileTransfer() const
 
 IProtocol::FuncCreateMessage ProtocolHttpServer::getMessageFactory() const
 {
-    return [data=m_data]() {
-        IMessagePtr message = std::make_shared<ProtocolMessage>(PROTOCOL_ID);
-        if (data.getType() != VARTYPE_NONE)
-        {
-            message->getControlData().add(ProtocolMessage::FMQ_PROTOCOLDATA, data);
-        }
-        return message;
+    return []() {
+        return std::make_shared<ProtocolMessage>(PROTOCOL_ID);
     };
 }
 
@@ -1118,10 +1112,6 @@ bool ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, co
                 bool handled = handleInternalCommands(callback, ok);
                 if (!handled)
                 {
-                    if (m_data.getType() != VARTYPE_NONE)
-                    {
-                        m_message->getControlData().add(ProtocolMessage::FMQ_PROTOCOLDATA, m_data);
-                    }
                     callback->received(m_message, m_connectionId);
                 }
             }
@@ -1241,9 +1231,9 @@ struct RegisterProtocolHttpServerFactory
 
 
 // IProtocolFactory
-IProtocolPtr ProtocolHttpServerFactory::createProtocol(const Variant& data)
+IProtocolPtr ProtocolHttpServerFactory::createProtocol(const Variant& /*data*/)
 {
-    return std::make_shared<ProtocolHttpServer>(data);
+    return std::make_shared<ProtocolHttpServer>();
 }
 
 

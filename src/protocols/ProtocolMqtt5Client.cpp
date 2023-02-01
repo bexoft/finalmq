@@ -166,7 +166,6 @@ static std::string getUuid()
 
 ProtocolMqtt5Client::ProtocolMqtt5Client(const Variant& data)
     : m_client(std::make_unique<Mqtt5Client>())
-    , m_data(data)
 {
     m_username = data.getDataValue<std::string>(KEY_USERNAME);
     m_password = data.getDataValue<std::string>(KEY_PASSWORD);
@@ -301,13 +300,8 @@ bool ProtocolMqtt5Client::doesSupportFileTransfer() const
 
 IProtocol::FuncCreateMessage ProtocolMqtt5Client::getMessageFactory() const
 {
-    return [data = m_data]() {
-        IMessagePtr message = std::make_shared<ProtocolMessage>(PROTOCOL_ID);
-        if (data.getType() != VARTYPE_NONE)
-        {
-            message->getControlData().add(ProtocolMessage::FMQ_PROTOCOLDATA, data);
-        }
-        return message;
+    return []() {
+        return std::make_shared<ProtocolMessage>(PROTOCOL_ID);
     };
 }
 
@@ -525,10 +519,6 @@ void ProtocolMqtt5Client::receivedPublish(const PublishData& data, const IMessag
             }
             message->addMetainfo(FMQ_CORRID, std::string(data.correlationData.begin(), data.correlationData.end()));
             message->addMetainfo(FMQ_VIRTUAL_SESSION_ID, data.responseTopic);
-            if (m_data.getType() != VARTYPE_NONE)
-            {
-                message->getControlData().add(ProtocolMessage::FMQ_PROTOCOLDATA, m_data);
-            }
             callback->received(message);
         }
     }

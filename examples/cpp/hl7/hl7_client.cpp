@@ -119,12 +119,12 @@ int main()
     //SessionInfo sessionClient = entityContainer.connect("tcp://localhost:7777:headersize:protobuf");
     //SessionInfo sessionClient = entityContainer.connect("ipc://my_uds:headersize:protobuf");
 
-    SessionInfo sessionClient = entityContainer.connect("tcp://localhost:7000:delimiter_lf:hl7", { {}, {},
+    SessionInfo sessionClient = entityContainer.connect("tcp://localhost:7000:delimiter_lf:hl7", { {}, {}, {},
         VariantStruct{  {RemoteEntityFormatHl7::PROPERTY_NAMESPACE, std::string{"hl7"}},
                         {RemoteEntityFormatHl7::PROPERTY_ENTITY, std::string{"Hl7Entity"}} } });
 
 
-    //SessionInfo sessionClient = entityContainer.connect("tcp://localhost:7001:delimiter_lf:json", { {}, {},
+    //SessionInfo sessionClient = entityContainer.connect("tcp://localhost:7001:delimiter_lf:json", { {}, {}, {},
     //    VariantStruct{  {RemoteEntityFormatJson::PROPERTY_SERIALIZE_ENUM_AS_STRING, true},
     //                    {RemoteEntityFormatJson::PROPERTY_SERIALIZE_SKIP_DEFAULT_VALUES, true} } });
 

@@ -64,7 +64,7 @@ protected:
         EXPECT_CALL(*m_mockOperatingSystem, setLinger(3, true, 0)).WillOnce(Return(3));
         m_socket->create(0, 0, 0);
 
-        m_protocol = std::make_shared<ProtocolHttpServer>(Variant());
+        m_protocol = std::make_shared<ProtocolHttpServer>();
         EXPECT_CALL(*m_mockCallback, setActivityTimeout(_));
         m_protocol->setCallback(m_mockCallback);
     }

@@ -50,7 +50,7 @@ public:
     static const std::string HTTP_REQUEST;
     static const std::string HTTP_RESPONSE;
 
-    ProtocolHttpServer(const Variant& data);
+    ProtocolHttpServer();
     virtual ~ProtocolHttpServer();
 
 private:
@@ -135,8 +135,6 @@ private:
 
     // path
     std::string*                        m_path = nullptr;
-
-    Variant                             m_data;
 
     mutable std::mutex                  m_mutex;
     static std::atomic_int64_t          m_nextSessionNameCounter;
