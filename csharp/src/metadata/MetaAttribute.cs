@@ -48,9 +48,10 @@ namespace finalmq
 
     public class MetaStructAttribute : Attribute
     {
-        public MetaStructAttribute(string desc)
+        public MetaStructAttribute(string desc, MetaStructFlags flags = MetaStructFlags.METASTRUCTFLAG_NONE)
         {
             m_desc = desc;
+            m_flags = flags;
         }
 
         public string Desc
@@ -58,7 +59,13 @@ namespace finalmq
             get { return m_desc; }
         }
 
+        public MetaStructFlags Flags
+        {
+            get { return m_flags; }
+        }
+
         readonly string m_desc;
+        readonly MetaStructFlags m_flags;
     }
 
     public class MetaEnumAttribute : Attribute

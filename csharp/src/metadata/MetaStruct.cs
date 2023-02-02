@@ -23,12 +23,21 @@
 
 namespace finalmq
 {
+
+    public enum MetaStructFlags
+    {
+        METASTRUCTFLAG_NONE = 0,
+        METASTRUCTFLAG_HL7_SEGMENT = 1,
+    };
+
+
     public class MetaStruct
     {
-        public MetaStruct(string typeName, string description, IList<MetaField> fields)
+        public MetaStruct(string typeName, string description, IList<MetaField> fields, int flags = 0)
         {
             m_typeName = typeName;
             m_description = description;
+            m_flags = flags;
             foreach (var field in fields)
             {
                 AddField(field);
@@ -82,6 +91,7 @@ namespace finalmq
         string m_typeName;
         string m_description;
         readonly IList<MetaField>                 m_fields = new List<MetaField>();
+        int                                       m_flags;
         readonly IDictionary<string, MetaField>   m_name2Field = new Dictionary<string, MetaField>();
     }
 

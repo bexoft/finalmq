@@ -254,7 +254,6 @@ namespace testfinalmq
         [Fact]
         public void TestStructNullableNull()
         {
-            int VALUE_INT32 = -2;
             string VALUE_STRING = "Hello World";
             uint VALUE_UINT32 = 123;
 

@@ -56,8 +56,17 @@ class Register<%- plaintype %>
 <% for (var i = 0; i < data.structs.length; i++)
 {
     var stru = data.structs[i]
-    var plaintype = helper.getPlainType(stru.type) %>
-[finalmq.MetaStruct("<%- stru.desc %>")]
+    var plaintype = helper.getPlainType(stru.type)
+    if (stru.desc == null)
+    {
+        stru.desc = '';
+    }
+    if (stru.flags == null)
+    {
+        stru.flags = 0
+    }
+    %>
+[finalmq.MetaStruct("<%- stru.desc %>"<% if (stru.flags.length > 0) {%>, <% for (var m = 0; m < stru.flags.length; m++) { %>finalmq.MetaStructFlags.<%- stru.flags[m]%><% if (m != stru.flags.length - 1) { %> | <% }}} %>)]
 public class <%- plaintype %> : finalmq.StructBase, IEquatable<<%- plaintype %>>
 {
     public <%- plaintype %>()
@@ -67,7 +76,16 @@ public class <%- plaintype %> : finalmq.StructBase, IEquatable<<%- plaintype %>>
 <% if (stru.fields.length > 0) { %>
     public <%- plaintype %>(<% -%>
 <% for (var n = 0; n < stru.fields.length; n++) { 
-        field = stru.fields[n] %><% -%>
+        field = stru.fields[n] 
+        if (field.desc == null)
+        {
+            field.desc = '';
+        }
+        if (field.flags == null)
+        {
+            field.flags = 0
+        }
+        %><% -%>
 <%- helper.tid2type(data, field) %> <%- field.name %><% if (n < stru.fields.length-1){ %>, <% } %><% -%>
 <% } -%>)
 	{
@@ -79,7 +97,8 @@ public class <%- plaintype %> : finalmq.StructBase, IEquatable<<%- plaintype %>>
 <% } -%>
 
 <% for (var n = 0; n < stru.fields.length; n++) { 
-        field = stru.fields[n] -%>
+        field = stru.fields[n] 
+        -%>
 	[finalmq.MetaField("<%- field.desc %>"<% if (field.flags.length > 0) {%>, <% for (var m = 0; m < field.flags.length; m++) { %>finalmq.MetaFieldFlags.<%- field.flags[m]%><% if (m != field.flags.length - 1) { %> | <% }}} %>)]
     public <%- helper.tid2type(data, field) %> <%- field.name %>
 	{
@@ -88,7 +107,8 @@ public class <%- plaintype %> : finalmq.StructBase, IEquatable<<%- plaintype %>>
 	}
 <% } -%>
 <% for (var n = 0; n < stru.fields.length; n++) { 
-        field = stru.fields[n] %>
+        field = stru.fields[n] 
+        %>
     <%- helper.tid2type(data, field) %> m_<%- field.name %><% if (helper.tid2default(data, field)){%> = <%- helper.tid2default(data, field)%><% } %>;<% -%>
 <% } %>
 
