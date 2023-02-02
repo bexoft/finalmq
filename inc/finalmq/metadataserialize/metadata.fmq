@@ -38,8 +38,7 @@
         ]},
         {"type":"SerializeMetaStructFlags","desc":"desc","entries":[
             {"name":"METASTRUCTFLAG_NONE",            "id":0,     "desc":"desc"},
-            {"name":"METASTRUCTFLAG_HL7_STRUCT",      "id":1,     "desc":"desc"},
-            {"name":"METASTRUCTFLAG_HL7_SEGMANT",     "id":2,     "desc":"desc"}
+            {"name":"METASTRUCTFLAG_HL7_SEGMENT",     "id":1,     "desc":"desc"}
         ]}
     ],
 
