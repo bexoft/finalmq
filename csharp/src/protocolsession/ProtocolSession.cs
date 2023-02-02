@@ -51,6 +51,7 @@ namespace finalmq
             m_instanceId = m_sessionId | INSTANCEID_PREFIX;
             m_contentType = contentType;
             m_bindProperties = bindProperties;
+            m_formatData = bindProperties?.FormatData;
         }
         public ProtocolSession(IProtocolSessionCallback callback, IExecutor? executor, IProtocol protocol, IProtocolSessionList protocolSessionList, IStreamConnectionContainer streamConnectionContainer, string endpointStreamConnection, ConnectProperties? connectProperties, int contentType)
         {
@@ -64,6 +65,7 @@ namespace finalmq
             m_streamConnectionContainer = streamConnectionContainer;
             m_endpointStreamConnection = endpointStreamConnection;
             m_connectionProperties = connectProperties;
+            m_formatData = connectProperties?.FormatData;
         }
         public ProtocolSession(IProtocolSessionCallback callback, IExecutor? executor, IProtocolSessionList protocolSessionList, IStreamConnectionContainer streamConnectionContainer)
         {
@@ -263,6 +265,7 @@ namespace finalmq
             {
                 m_endpointStreamConnection = endpoint.Substring(0, ixEndpoint);
                 m_connectionProperties = connectionProperties;
+                m_formatData = connectionProperties?.FormatData;
                 m_contentType = contentType;
                 m_protocol = protocol;
                 m_connectionId = connection.ConnectionId;
@@ -296,6 +299,15 @@ namespace finalmq
                 protocol.Subscribe(subscribtions);
             }
         }
+
+        public Variant? FormatData 
+        { 
+            get
+            {
+                return m_formatData;
+            }
+        }
+
 
         // IProtocolSessionPrivate
         public void Connect()
@@ -801,6 +813,7 @@ namespace finalmq
 
         BindProperties?                                 m_bindProperties = null;
         ConnectProperties?                              m_connectionProperties = null;
+        Variant?                                        m_formatData = null;
 
         IList<IMessage>                                 m_messagesBuffered = new List<IMessage>();
 

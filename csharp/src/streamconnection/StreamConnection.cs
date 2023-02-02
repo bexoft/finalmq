@@ -68,16 +68,19 @@ namespace finalmq {
 
     public class BindProperties
     {
-        public BindProperties(SslServerOptions? sslServerOptions = null, Variant? protocolData = null)
+        public BindProperties(SslServerOptions? sslServerOptions = null, Variant? protocolData = null, Variant? formatData = null)
         {
             m_sslServerOptions = sslServerOptions;
             m_protocolData = protocolData;
+            m_formatData = formatData;
         }
         public SslServerOptions? SslServerOptions { get => m_sslServerOptions; set => m_sslServerOptions = value; }
         public Variant? ProtocolData { get => m_protocolData; set => m_protocolData = value; }
+        public Variant? FormatData { get => m_formatData; set => m_formatData = value; }
 
         private SslServerOptions? m_sslServerOptions = null;
         private Variant? m_protocolData = null;
+        private Variant? m_formatData = null;                 ///< data for the serialization format
     }
 
     public class ConnectConfig
@@ -136,7 +139,7 @@ namespace finalmq {
 
     public class ConnectProperties
     {
-        public ConnectProperties(SslClientOptions? sslClientOptions = null, ConnectConfig? config = null, Variant? protocolData = null)
+        public ConnectProperties(SslClientOptions? sslClientOptions = null, ConnectConfig? config = null, Variant? protocolData = null, Variant? formatData = null)
         {
             m_sslClientOptions = sslClientOptions;
             if (config != null)
@@ -144,14 +147,17 @@ namespace finalmq {
                 m_config = config;
             }
             m_protocolData = protocolData;
+            m_formatData = formatData;
         }
         public SslClientOptions? SslClientOptions { get => m_sslClientOptions; set => m_sslClientOptions = value; }
         public ConnectConfig ConnectConfig { get => m_config; set => m_config = value; }
         public Variant? ProtocolData { get => m_protocolData; set => m_protocolData = value; }
+        public Variant? FormatData { get => m_formatData; set => m_formatData = value; }
 
         private SslClientOptions? m_sslClientOptions = null;
         private ConnectConfig m_config = new ConnectConfig();
         private Variant? m_protocolData = null;
+        private Variant? m_formatData = null;                 ///< data for the serialization format
     }
 
 

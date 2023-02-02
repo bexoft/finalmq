@@ -40,6 +40,7 @@ namespace finalmq
         void Connect(string endpoint, ConnectProperties? connectionProperties = null, int contentType = 0);
         IExecutor? Executor { get; }
         void Subscribe(IList<string> subscribtions);
+        Variant? FormatData { get; }
     }
 
 
