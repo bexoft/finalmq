@@ -60,7 +60,7 @@ message <%- plaintype %>
         {
             field.flags = 0
         }
-        -%>
+        %>
     <%- helper.tid2type(data, field.tid, field.type, field.flags) %> <%- field.name %> = <%- (n+1) %>;<% -%>
 <% } %>
 };
