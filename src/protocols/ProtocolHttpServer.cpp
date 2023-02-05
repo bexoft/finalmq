@@ -196,14 +196,13 @@ static void splitOnce(const std::string& src, ssize_t indexBegin, ssize_t indexE
     ssize_t len = pos - indexBegin;
     assert(len >= 0);
     dest.emplace_back(&src[indexBegin], len);
-    indexBegin += len + 1;
+    ++pos;
 
-    if (indexBegin < indexEnd)
+    if (pos < indexEnd)
     {
-        ssize_t len = indexEnd - indexBegin;
+        len = indexEnd - pos;
         assert(len >= 0);
-        dest.emplace_back(&src[indexBegin], len);
-        indexBegin += len + 1;
+        dest.emplace_back(&src[pos], len);
     }
 }
 
@@ -1012,24 +1011,18 @@ bool ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, co
 
     if (m_state != State::STATE_CONTENT)
     {
-        if (m_offsetRemaining == 0)
+        if (m_offsetRemaining == 0 || m_sizeRemaining == 0)
         {
             m_receiveBuffer.resize(m_sizeRemaining + bytesToRead);
         }
         else
         {
-            std::string temp;
-            if (m_sizeRemaining > 0)
-            {
-                temp = std::move(m_receiveBuffer);
-            }
+            std::string temp = std::move(m_receiveBuffer);
+            m_receiveBuffer.clear();
             m_receiveBuffer.resize(m_sizeRemaining + bytesToRead);
-            if (m_sizeRemaining > 0)
-            {
-                memcpy(&m_receiveBuffer[0], &temp[m_offsetRemaining], m_sizeRemaining);
-            }
-            m_offsetRemaining = 0;
+            memcpy(&m_receiveBuffer[0], &temp[m_offsetRemaining], m_sizeRemaining);
         }
+        m_offsetRemaining = 0;
 
         ssize_t bytesReceived = 0;
         int res = 0;
@@ -1047,6 +1040,7 @@ bool ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, co
             ok = receiveHeaders(bytesReceived);
             if (ok && m_state == State::STATE_CONTENT)
             {
+                assert(m_message != nullptr);
                 BufferRef payload = m_message->getReceivePayload();
                 assert(payload.second == m_contentLength);
                 if (m_sizeRemaining <= m_contentLength)
