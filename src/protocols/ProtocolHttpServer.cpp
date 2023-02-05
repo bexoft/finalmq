@@ -198,7 +198,7 @@ static void splitOnce(const std::string& src, ssize_t indexBegin, ssize_t indexE
     dest.emplace_back(&src[indexBegin], len);
     ++pos;
 
-    if (pos < indexEnd)
+    if (static_cast<ssize_t>(pos) < indexEnd)
     {
         len = indexEnd - pos;
         assert(len >= 0);
