@@ -764,12 +764,15 @@ namespace finalmq
                 m_multiProtocols.Remove(connectionId);
             }
         }
+
+        static readonly IList<IMessage> EMPTY_MESSAGE_LIST = new List<IMessage>();
+
         private void PollRelease()
         {
             // mutext is already locked
             if (m_pollProtocol != null)
             {
-                IMessage? reply = m_pollProtocol.PollReply();    // wrong implementation of the protocol
+                IMessage? reply = m_pollProtocol.PollReply(EMPTY_MESSAGE_LIST);
                 Debug.Assert(reply != null);
                 if (reply != null)
                 {

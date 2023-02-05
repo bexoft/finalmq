@@ -57,10 +57,25 @@ namespace finalmq
         static readonly string FMQ_PATH_CONFIG = "/fmq/config";
         static readonly string FMQ_PATH_CREATESESSION = "/fmq/createsession";
         static readonly string FMQ_PATH_REMOVESESSION = "/fmq/removesession";
-        static readonly string FMQ_MULTIPART_BOUNDARY = "B9BMAhxAhY.mQw1IDRBA";
-
+        static readonly byte[] FMQ_MULTIPART_BOUNDARY = Encoding.ASCII.GetBytes("B9BMAhxAhY.mQw1IDRBA");
+        static readonly byte[] CR_LF_MINUS_MINUS_MULTIPART_BOUNDARY = Encoding.ASCII.GetBytes("\r\n--B9BMAhxAhY.mQw1IDRBA");
+        static readonly byte[] MINUS_MINUS_MULTIPART_BOUNDARY_MINUS_MINUS_CR_LF = Encoding.ASCII.GetBytes("--B9BMAhxAhY.mQw1IDRBA--\r\n");
+        static readonly byte[] MINUS_MINUS_CR_LF = Encoding.ASCII.GetBytes("--\r\n");
         static readonly string FILE_NOT_FOUND = "file not found";
-        static readonly string HEADER_KEEP_ALIVE = "Connection: keep-alive\r\n";
+        static readonly byte[] HEADER_KEEP_ALIVE = Encoding.ASCII.GetBytes("Connection: keep-alive\r\n");
+
+        static readonly byte[] CR_LF = Encoding.ASCII.GetBytes("\r\n");
+        static readonly byte[] COLON = Encoding.ASCII.GetBytes(": ");
+        static readonly byte[] POLL_STOP = Encoding.ASCII.GetBytes("0\r\n\r\n");
+        static readonly byte[] SPACE_HTTP_VERSION = Encoding.ASCII.GetBytes(" HTTP/1.1");
+        static readonly byte[] HTTP_VERSION_SPACE = Encoding.ASCII.GetBytes("HTTP/1.1 ");
+        static readonly byte[] NUMBER_200_SPACE = Encoding.ASCII.GetBytes("200 ");
+        static readonly byte[] BYTES_OK = Encoding.ASCII.GetBytes("OK");
+        static readonly byte[] MINUS_MINUS = Encoding.ASCII.GetBytes("--");
+        static readonly byte[] CR_LF_CR_LF = Encoding.ASCII.GetBytes("\r\n\r\n");
+
+        static readonly string FORMAT_X8 = "X8";
+        static readonly string FORMAT_X = "X";
 
         enum ChunkedState
         {
@@ -86,10 +101,14 @@ namespace finalmq
         // IStreamConnectionCallback
         public IStreamConnectionCallback? Connected(IStreamConnection connection)
         {
-            var callback = m_callback;
-            if (callback != null)
+            ConnectionData connectionData = connection.ConnectionData;
+            m_headerHost = Encoding.ASCII.GetBytes("Host: " + connectionData.Hostname + ":" + connectionData.Port.ToString() + "\r\n");
+            m_connectionId = connectionData.ConnectionId;
+            // for incomming connection -> do the connection event after checking the session ID
+            if (connectionData.IncomingConnection)
+            if (connectionData.IncomingConnection)
             {
-                callback.Connected();
+                //        m_checkSessionName = true;
             }
             return null;
         }
@@ -101,15 +120,103 @@ namespace finalmq
                 callback.Disconnected();
             }
         }
+
+        private void ResizeReceiveBuffer(int newSize)
+        {
+            byte[] bufferOld = m_receiveBuffer;
+            m_receiveBuffer = new byte[newSize];
+            if (bufferOld.Length > 0)
+            {
+                Array.Copy(bufferOld, 0, m_receiveBuffer, 0, Math.Min(bufferOld.Length, newSize));
+            }
+        }
         public void Received(IStreamConnection connection, byte[] buffer, int count)
         {
-            IMessage message = new ProtocolMessage(0);
-            message.SetReceiveBuffer(buffer, 0, count);
-            var callback = m_callback;
-            if (callback != null)
+            bool ok = true;
+
+            if (m_state != State.STATE_CONTENT)
             {
-                callback.Received(message);
+                if (m_offsetRemaining == 0 || m_sizeRemaining == 0)
+                {
+                    ResizeReceiveBuffer(m_sizeRemaining + count);
+                }
+                else
+                {
+                    byte[] temp = m_receiveBuffer;
+                    m_receiveBuffer = Array.Empty<byte>();
+                    ResizeReceiveBuffer(m_sizeRemaining + count);
+                    Array.Copy(temp, m_offsetRemaining, m_receiveBuffer, 0, m_sizeRemaining);
+                }
+                m_offsetRemaining = 0;
+
+                Array.Copy(buffer, 0, m_receiveBuffer, m_sizeRemaining, count);
+
+                ok = ReceiveHeaders(count);
+                if (ok && m_state == State.STATE_CONTENT)
+                {
+                    Debug.Assert(m_message != null);
+                    BufferRef payload = m_message.GetReceivePayload();
+                    Debug.Assert(payload.Length == m_contentLength);
+                    if (m_sizeRemaining <= m_contentLength)
+                    {
+                        Array.Copy(m_receiveBuffer, m_offsetRemaining, payload.Buffer, 0, m_sizeRemaining);
+                        m_indexFilled = m_sizeRemaining;
+                        Debug.Assert(m_indexFilled <= m_contentLength);
+                        if (m_indexFilled == m_contentLength)
+                        {
+                            m_state = State.STATE_CONTENT_DONE;
+                        }
+                    }
+                    else
+                    {
+                        // too much content
+                        ok = false;
+                    }
+                }
             }
+            else
+            {
+                Debug.Assert(m_message != null);
+                BufferRef payload = m_message.GetReceivePayload();
+                Debug.Assert(payload.Length == m_contentLength);
+                int remainingContent = m_contentLength - m_indexFilled;
+                if (count <= remainingContent)
+                {
+                    Array.Copy(buffer, 0, m_receiveBuffer, m_sizeRemaining, count);
+
+                    m_indexFilled += count;
+                    Debug.Assert(m_indexFilled <= m_contentLength);
+                    if (m_indexFilled == m_contentLength)
+                    {
+                        m_state = State.STATE_CONTENT_DONE;
+                    }
+                }
+                else
+                {
+                    // too much content
+                    ok = false;
+                }
+            }
+
+            if (ok)
+            {
+                if (m_state == State.STATE_CONTENT_DONE)
+                {
+                    Debug.Assert(m_message != null);
+                    CheckSessionName();
+                    var callback = m_callback;
+                    if (callback != null)
+                    {
+//                        bool handled = HandleInternalCommands(callback, ok);
+//                        if (!handled)
+                        {
+                            callback.Received(m_message, m_connectionId);
+                        }
+                    }
+                    Reset();
+                }
+            }
+            //todo return ok;
         }
 
         // IProtocol
@@ -198,13 +305,15 @@ namespace finalmq
                     };
             }
         }
+
+
         public void SendMessage(IMessage message)
         {
             Debug.Assert(!message.WasSent);
-            StringBuilder firstLine = new StringBuilder();
+            MemoryStream firstLine = new MemoryStream();
             Variant controlData = message.ControlData;
             bool pollStop = false;
-            if (m_chunkedState != (int)ChunkedState.STATE_STOP)
+            if (m_chunkedState != ChunkedState.STATE_STOP)
             {
                 pollStop = controlData.GetData<bool>("fmq_poll_stop");
             }
@@ -217,7 +326,7 @@ namespace finalmq
                 message.DownsizeLastSendPayload(0);
             }
             string? http = controlData.GetData<string>(FMQ_HTTP);
-            if (m_chunkedState < (int)ChunkedState.STATE_FIRST_CHUNK)
+            if (m_chunkedState < ChunkedState.STATE_FIRST_CHUNK)
             {
                 if (http != null && http == HTTP_REQUEST)
                 {
@@ -230,9 +339,9 @@ namespace finalmq
                     if (method != null && path != null)
                     {
                         string pathEncode = Encode(path);
-                        firstLine.Append(method);
-                        firstLine.Append(' ');
-                        firstLine.Append(pathEncode);
+                        firstLine.Write(Encoding.ASCII.GetBytes(method));
+                        firstLine.WriteByte((byte)' ');
+                        firstLine.Write(Encoding.ASCII.GetBytes(pathEncode));
 
                         VariantStruct? queries = controlData.GetData<VariantStruct>("queries");
                         if (queries != null)
@@ -241,21 +350,21 @@ namespace finalmq
                             {
                                 if (query == queries.First())
                                 {
-                                    firstLine.Append('?');
+                                    firstLine.WriteByte((byte)'?');
                                 }
                                 else
                                 {
-                                    firstLine.Append('&');
+                                    firstLine.WriteByte((byte)'&');
                                 }
                                 string key = Encode(query.Name); ;
                                 string value = Encode(query.Value);
-                                firstLine.Append(key);
-                                firstLine.Append('=');
-                                firstLine.Append(value);
+                                firstLine.Write(Encoding.ASCII.GetBytes(key));
+                                firstLine.WriteByte((byte)'=');
+                                firstLine.Write(Encoding.ASCII.GetBytes(value));
                             }
                         }
 
-                        firstLine.Append(" HTTP/1.1");
+                        firstLine.Write(SPACE_HTTP_VERSION);
                     }
                 }
                 else
@@ -267,31 +376,31 @@ namespace finalmq
                         status = "404";
                         statustext = FILE_NOT_FOUND;
                     }
-                    firstLine.Append("HTTP/1.1 ");
+                    firstLine.Write(HTTP_VERSION_SPACE);
                     if (status.Length != 0)
                     {
-                        firstLine.Append(status);
-                        firstLine.Append(' ');
+                        firstLine.Write(Encoding.ASCII.GetBytes(status));
+                        firstLine.WriteByte((byte)' ');
                     }
                     else
                     {
-                        firstLine.Append("200 ");
+                        firstLine.Write(NUMBER_200_SPACE);
                     }
                     if (statustext != string.Empty)
                     {
-                        firstLine.Append(statustext);
+                        firstLine.Write(Encoding.ASCII.GetBytes(statustext));
                     }
                     else
                     {
-                        firstLine.Append("OK");
+                        firstLine.Write(BYTES_OK);
                     }
                 }
             }
 
             int sumHeaderSize = 0;
-            if (m_chunkedState < (int)ChunkedState.STATE_FIRST_CHUNK)
+            if (m_chunkedState < ChunkedState.STATE_FIRST_CHUNK)
             {
-                sumHeaderSize += firstLine.Length + 2 + 2;   // 2 = '\r\n' and 2 = last empty line
+                sumHeaderSize += (int)firstLine.Length + 2 + 2;   // 2 = '\r\n' and 2 = last empty line
                 sumHeaderSize += HEADER_KEEP_ALIVE.Length;  // Connection: keep-alive\r\n
             }
             
@@ -306,7 +415,7 @@ namespace finalmq
                 sizeBody = filesize;
             }
             Metainfo metainfo = message.AllMetainfo;
-            if (m_chunkedState == (int)ChunkedState.STATE_STOP)
+            if (m_chunkedState == ChunkedState.STATE_STOP)
             {
                 metainfo[CONTENT_LENGTH] = sizeBody.ToString();
             }
@@ -329,178 +438,213 @@ namespace finalmq
             }
 
             BufferRef? headerBuffer = null;
-/*
-            size_t index = 0;
+
+            int index = 0;
             if (!pollStop || m_multipart)
             {
-                if (m_chunkedState >= STATE_FIRST_CHUNK)
+                if (m_chunkedState >= ChunkedState.STATE_FIRST_CHUNK)
                 {
-                    assert(sumHeaderSize == 0);
-                    message->addSendPayload("\r\n");
-                    int sizeChunkedData = static_cast<int>(sizeBody);
-                    firstLine.clear();
-                    if (m_chunkedState == STATE_FIRST_CHUNK || m_chunkedState == STATE_BEGIN_MULTIPART)
+                    Debug.Assert(sumHeaderSize == 0);
+                    message.AddSendPayload(CR_LF);
+                    int sizeChunkedData = sizeBody;
+                    firstLine = new MemoryStream();     // clear
+                    if (m_chunkedState == ChunkedState.STATE_FIRST_CHUNK || m_chunkedState == ChunkedState.STATE_BEGIN_MULTIPART)
                     {
-                        m_chunkedState = STATE_CONTINUE;
+                        m_chunkedState = ChunkedState.STATE_CONTINUE;
                     }
                     else
                     {
                         //                firstLine = "\r\n";
                     }
-                    char buffer[50];
-            # ifdef WIN32
-                    _itoa_s(sizeChunkedData, buffer, sizeof(buffer), 16);
-            #else
-                    snprintf(buffer, sizeof(buffer), "%X", sizeChunkedData);
-            #endif
-                    firstLine += buffer;
-                    for (auto & c : firstLine)
-                    {
-                        c = toupper(c);
-                    }
-                    sumHeaderSize += firstLine.size() + 2;  // "\r\n"
+                    firstLine.Write(Encoding.ASCII.GetBytes(sizeChunkedData.ToString(FORMAT_X)));
+                    sumHeaderSize += (int)firstLine.Length + 2;  // "\r\n"
                 }
 
+                byte[] bytesFirstLine = firstLine.ToArray();
                 headerBuffer = message.AddSendHeader(sumHeaderSize);
                 index = 0;
-                assert(index + firstLine.size() + 2 <= sumHeaderSize);
-                memcpy(headerBuffer + index, firstLine.data(), firstLine.size());
-                index += firstLine.size();
-                memcpy(headerBuffer + index, "\r\n", 2);
+                Debug.Assert(index + bytesFirstLine.Length + 2 <= sumHeaderSize);
+                Array.Copy(bytesFirstLine, 0, headerBuffer.Buffer, index, bytesFirstLine.Length);
+                index += bytesFirstLine.Length;
+                Array.Copy(CR_LF, 0, headerBuffer.Buffer, index, 2);
                 index += 2;
             }
             else
             {
-                headerBuffer = message->addSendHeader(sumHeaderSize);
+                headerBuffer = message.AddSendHeader(sumHeaderSize);
                 index = 0;
             }
 
-            if (http && *http == HTTP_REQUEST)
+            if (http != null && http == HTTP_REQUEST)
             {
                 // Host: hostname\r\n
-                assert(index + m_headerHost.size() <= sumHeaderSize);
-                memcpy(headerBuffer + index, m_headerHost.data(), m_headerHost.size());
-                index += m_headerHost.size();
+                Debug.Assert(index + m_headerHost.Length <= sumHeaderSize);
+                Array.Copy(m_headerHost, 0, headerBuffer.Buffer, index, m_headerHost.Length);
+                index += m_headerHost.Length;
             }
 
             // Connection: keep-alive\r\n
-            if (m_chunkedState < STATE_FIRST_CHUNK)
+            if (m_chunkedState < ChunkedState.STATE_FIRST_CHUNK)
             {
-                assert(index + HEADER_KEEP_ALIVE.size() <= sumHeaderSize);
-                memcpy(headerBuffer + index, HEADER_KEEP_ALIVE.data(), HEADER_KEEP_ALIVE.size());
-                index += HEADER_KEEP_ALIVE.size();
+                Debug.Assert(index + HEADER_KEEP_ALIVE.Length <= sumHeaderSize);
+                Array.Copy(HEADER_KEEP_ALIVE, 0, headerBuffer.Buffer, index, HEADER_KEEP_ALIVE.Length);
+                index += HEADER_KEEP_ALIVE.Length;
             }
 
-            for (auto it = metainfo.begin(); it != metainfo.end(); ++it)
+            foreach (var info in metainfo)
             {
-                const std::string&key = it->first;
-                const std::string&value = it->second;
-                if (!key.empty())
+//                byte[] bytesKey = Encoding.ASCII.GetBytes(info.Key);
+//                byte[] bytesValue = Encoding.ASCII.GetBytes(info.Value);
+                if (info.Key.Length != 0)
                 {
-                    assert(index + key.size() + value.size() + 4 <= sumHeaderSize);
-                    memcpy(headerBuffer + index, key.data(), key.size());
-                    index += key.size();
-                    memcpy(headerBuffer + index, ": ", 2);
+                    Debug.Assert(index + info.Key.Length + info.Value.Length + 4 <= sumHeaderSize);
+//                    Array.Copy(bytesKey, 0, headerBuffer.Buffer, index, bytesKey.Length);
+                    Encoding.ASCII.GetBytes(info.Key, 0, info.Key.Length, headerBuffer.Buffer, index);
+                    index += info.Key.Length;
+                    Array.Copy(COLON, 0, headerBuffer.Buffer, index, 2);
                     index += 2;
-                    memcpy(headerBuffer + index, value.data(), value.size());
-                    index += value.size();
-                    memcpy(headerBuffer + index, "\r\n", 2);
+//                    Array.Copy(bytesValue, 0, headerBuffer.Buffer, index, bytesValue.Length);
+                    Encoding.ASCII.GetBytes(info.Value, 0, info.Value.Length, headerBuffer.Buffer, index);
+                    index += info.Value.Length;
+                    Array.Copy(CR_LF, 0, headerBuffer.Buffer, index, 2);
                     index += 2;
                 }
             }
-            if (m_chunkedState < STATE_FIRST_CHUNK)
+            if (m_chunkedState < ChunkedState.STATE_FIRST_CHUNK)
             {
-                assert(index + 2 == sumHeaderSize);
-                memcpy(headerBuffer + index, "\r\n", 2);
+                Debug.Assert(index + 2 == sumHeaderSize);
+                Array.Copy(CR_LF, 0, headerBuffer.Buffer, index, 2);
             }
 
             if (pollStop)
             {
-                message->addSendPayload("0\r\n\r\n");
-                m_chunkedState = STATE_STOP;
+                message.AddSendPayload(POLL_STOP);
+                m_chunkedState = ChunkedState.STATE_STOP;
                 m_multipart = false;
             }
 
-            message->prepareMessageToSend();
+            message.PrepareMessageToSend();
 
-            assert(m_connection);
-            m_connection->sendMessage(message);
+            Debug.Assert(m_connection != null);
+            m_connection.SendMessage(message);
 
 
-            if (filename)
+            if (filename != null)
             {
-                std::string file = *filename;
-                std::weak_ptr<ProtocolHttpServer> pThisWeak = shared_from_this();
-                GlobalExecutorWorker::instance().addAction([pThisWeak, file, filesize]() {
-                    std::shared_ptr<ProtocolHttpServer> pThis = pThisWeak.lock () ;
-                    if (!pThis)
+                string file = filename;
+                GlobalExecutorWorker.Instance.AddAction(() => {
+                    
+                    using (var fs = new FileStream(file, FileMode.Open))
                     {
-                        return;
-                    }
-                    int flags = O_RDONLY;
-            # ifdef WIN32
-                    flags |= O_BINARY;
-            #endif
-                    int fd = OperatingSystem::instance().open(file.c_str(), flags);
-                    if (fd != -1)
-                    {
-                        int len = static_cast<int>(filesize);
-                        int err = 0;
-                        int lenReceived = 0;
-                        bool ex = false;
-                        while (!ex)
+                        if (fs != null)
                         {
-                            int size = std::min(1024, len);
-                            IMessagePtr messageData = std::make_shared<ProtocolMessage>(0);
-                            char* buf = messageData->addSendPayload(size);
-                            do
+                            long len = fs.Length;
+                            int err = 0;
+                            int lenReceived = 0;
+                            bool ex = false;
+                            while (!ex)
                             {
-                                err = OperatingSystem::instance().read(fd, buf, size);
-                            } while (err == -1 && OperatingSystem::instance().getLastError() == SOCKETERROR(EINTR));
+                                int size = (int)Math.Min(1024, len);
+                                IMessage messageData = new ProtocolMessage(0);
+                                BufferRef buf = messageData.AddSendPayload(size);
 
-                            if (err > 0)
-                            {
-                                assert(err <= size);
-                                if (err < size)
+                                try
                                 {
-                                    messageData->downsizeLastSendPayload(err);
+                                    err = fs.Read(buf.Buffer, 0, size);
                                 }
-                                pThis->m_connection->sendMessage(messageData);
-                                buf += err;
-                                len -= err;
-                                lenReceived += err;
-                                err = 0;
-                                assert(len >= 0);
-                                if (len == 0)
+                                catch (IOException)
+                                {
+                                    err = -1;
+                                }
+
+                                if (err > 0)
+                                {
+                                    Debug.Assert(err <= size);
+                                    if (err < size)
+                                    {
+                                        messageData.DownsizeLastSendPayload(err);
+                                    }
+                                    m_connection.SendMessage(messageData);
+                                    buf.AddOffset(err);
+                                    len -= err;
+                                    lenReceived += err;
+                                    err = 0;
+                                    Debug.Assert(len >= 0);
+                                    if (len == 0)
+                                    {
+                                        ex = true;
+                                    }
+                                }
+                                else
                                 {
                                     ex = true;
                                 }
                             }
-                            else
+                            if (lenReceived < filesize)
                             {
-                                ex = true;
+                                m_connection.Disconnect();
                             }
                         }
-                        if (lenReceived < filesize)
+                        else
                         {
-                            pThis->m_connection->disconnect();
+                            m_connection.Disconnect();
                         }
-                    }
-                    else
-                    {
-                        pThis->m_connection->disconnect();
                     }
                 });
             }
-            */
+            
         }
         public void MoveOldProtocolState(IProtocol protocolOld)
         {
 
         }
-        public IMessage? PollReply(IList<IMessage>? messages = null)
+
+
+        public IMessage? PollReply(IList<IMessage> messages)
         {
-            return null;
+            IMessage message = MessageFactory();
+            if (m_multipart)
+            {
+                if (messages.Count != 0)
+                {
+                    foreach (var msg in messages)
+                    {
+                        MemoryStream payload = new MemoryStream();
+                        if (m_chunkedState == ChunkedState.STATE_FIRST_CHUNK)
+                        {
+                            m_chunkedState = ChunkedState.STATE_BEGIN_MULTIPART;
+                            payload.Write(MINUS_MINUS);
+                            payload.Write(FMQ_MULTIPART_BOUNDARY);
+                        }
+                        payload.Write(CR_LF_CR_LF);
+                        message.AddSendPayload(payload.ToArray());
+                        IList<BufferRef> payloads = msg.GetAllSendPayloads();
+                        message.MoveSendBuffers(payloads);
+                        message.AddSendPayload(CR_LF_MINUS_MINUS_MULTIPART_BOUNDARY);
+                    }
+                }
+                else
+                {
+                    if (m_chunkedState == ChunkedState.STATE_FIRST_CHUNK)
+                    {
+                        m_chunkedState = ChunkedState.STATE_BEGIN_MULTIPART;
+                        message.AddSendPayload(MINUS_MINUS_MULTIPART_BOUNDARY_MINUS_MINUS_CR_LF);
+                    }
+                    else
+                    {
+                        message.AddSendPayload(MINUS_MINUS_CR_LF);
+                    }
+                }
+            }
+            else
+            {
+                foreach (var msg in messages)
+                {
+                    IList<BufferRef> payloads = msg.GetAllSendPayloads();
+                    message.MoveSendBuffers(payloads);
+                }
+            }
+            return message;
         }
         public void Subscribe(IList<string> subscribtions)
         {
@@ -546,7 +690,6 @@ namespace finalmq
         static string Decode(string src)
         {
             StringBuilder dest = new StringBuilder();
-            ulong c = 0;
 
             int len = src.Length;
             for (int i = 0; i < len; ++i)
@@ -565,6 +708,341 @@ namespace finalmq
                 }
             }
             return dest.ToString();
+        }
+
+        static void SplitOnce(string src, int indexBegin, int indexEnd, char delimiter, IList<string> dest)
+        {
+            int count = indexEnd - indexBegin;
+            int pos = src.IndexOf(delimiter, indexBegin, count);
+            if (pos == -1 || pos > indexEnd)
+            {
+                pos = indexEnd;
+            }
+            int len = pos - indexBegin;
+            Debug.Assert(len >= 0);
+            dest.Add(src.Substring(indexBegin, len));
+            ++pos;
+
+            if (pos < indexEnd)
+            {
+                len = indexEnd - pos;
+                Debug.Assert(len >= 0);
+                dest.Add(src.Substring(pos, len));
+            }
+        }
+
+
+        string CreateSessionName()
+        {
+            long sessionCounter = Interlocked.Increment(ref m_nextSessionNameCounter);
+            long v1 = m_randomGenerator1.NextInt64();
+            long v2 = m_randomGenerator2.NextInt64();
+
+            string sessionName = v1.ToString(FORMAT_X8) + v2.ToString(FORMAT_X8) + "." + sessionCounter.ToString();
+            return sessionName;
+        }
+
+
+        
+        void CheckSessionName()
+        {
+            if (m_path != null && m_path == FMQ_PATH_CREATESESSION)
+            {
+                m_createSession = true;
+            }
+            
+            var callback = m_callback;
+            if (callback != null)
+            {
+                bool found = false;
+                if (!m_createSession)
+                {
+                    Debug.Assert(m_connection != null);
+                    IList<string> sessionMatched = new List<string>();
+                    foreach (string sessionName in m_sessionNames)
+                    {
+                        bool foundInNames = callback.FindSessionByName(sessionName, this);
+                        if (foundInNames)
+                        {
+                            sessionMatched.Add(sessionName);
+                        }
+                    }
+                    string? sessionFound = null;
+                    if (sessionMatched.Count == 1)
+                    {
+                        sessionFound = sessionMatched[0];
+                    }
+                    else
+                    {
+                        long counterMax = 0;
+                        foreach (string session in sessionMatched)
+                        {
+                            int pos = session.IndexOf('.');
+                            if (pos != -1)
+                            {
+                                try
+                                {
+                                    long counter = Int64.Parse(session.Substring(pos + 1));
+                                    if (counter > counterMax)
+                                    {
+                                        counterMax = counter;
+                                        sessionFound = session;
+                                    }
+                                }
+                                catch (Exception)
+                                {
+                                }
+                            }
+                        }
+                    }
+                    if (sessionFound != null && sessionFound.Length != 0)
+                    {
+                        found = true;
+                        if (m_sessionName != sessionFound)
+                        {
+                            m_sessionName = sessionFound;
+                        }
+                    }
+                }
+                if (m_createSession || !found)
+                {
+                    m_sessionName = CreateSessionName();
+                    Debug.Assert(m_connection != null);
+                    callback.SetSessionName(m_sessionName, this, m_connection);
+                    m_headerSendNext[FMQ_SET_SESSION] = m_sessionName;
+                    m_headerSendNext[HTTP_SET_COOKIE] = COOKIE_PREFIX + m_sessionName + "; path=/; Partitioned";
+                }
+            }
+            m_sessionNames.Clear();
+        }
+
+
+        void CookiesToSessionIds(string cookies)
+        {
+            m_sessionNames.Clear();
+            int posStart = 0;
+            while (posStart != -1)
+            {
+                int posEnd = cookies.IndexOf(';', posStart);
+                string cookie;
+                if (posEnd != -1)
+                {
+                    cookie = cookies.Substring(posStart, posEnd - posStart);
+                    posStart = posEnd + 1;
+                }
+                else
+                {
+                    cookie = cookies.Substring(posStart);
+                    posStart = posEnd;
+                }
+
+                int pos = cookie.IndexOf("fmq=");
+                if (pos != -1)
+                {
+                    pos += 4;
+                    string sessionId = cookie.Substring(pos);
+                    if (sessionId.Length != 0)
+                    {
+                        m_sessionNames.Add(sessionId);
+                    }
+                }
+            }
+        }
+
+
+
+        bool ReceiveHeaders(int bytesReceived)
+        {
+            bool ok = true;
+            bytesReceived += m_sizeRemaining;
+            Debug.Assert(bytesReceived <= m_receiveBuffer.Length);
+            while (m_offsetRemaining < bytesReceived && ok)
+            {
+                int index = Array.IndexOf(m_receiveBuffer, '\n', m_offsetRemaining);
+                if (index != -1)
+                {
+                    int indexEndLine = index;
+                    --indexEndLine; // goto '\r'
+                    int len = indexEndLine - m_offsetRemaining;
+                    if (len < 0 || m_receiveBuffer[indexEndLine] != '\r')
+                    {
+                        ok = false;
+                    }
+                    if (ok)
+                    {
+                        if (m_state == State.STATE_FIND_FIRST_LINE)
+                        {
+                            m_contentLength = 0;
+                            if (len < 4)
+                            {
+                                ok = false;
+                            }
+                            else
+                            {
+                                // is response
+                                if (m_receiveBuffer[m_offsetRemaining] == 'H' && m_receiveBuffer[m_offsetRemaining + 1] == 'T')
+                                {
+                                    string line = Encoding.ASCII.GetString(m_receiveBuffer, m_offsetRemaining, indexEndLine - m_offsetRemaining);
+                                    string[] lineSplit = line.Split(' ');
+                                    if (lineSplit.Length == 3)
+                                    {
+                                        m_message = new ProtocolMessage(0);
+                                        Variant controlData = m_message.ControlData;
+                                        controlData.Add(FMQ_HTTP, HTTP_RESPONSE);
+                                        controlData.Add(FMQ_PROTOCOL, lineSplit[0]);
+                                        controlData.Add(FMQ_HTTP_STATUS, lineSplit[1]);
+                                        controlData.Add(FMQ_HTTP_STATUSTEXT, lineSplit[2]);
+                                        m_state = State.STATE_FIND_HEADERS;
+                                    }
+                                    else
+                                    {
+                                        ok = false;
+                                    }
+                                }
+                                else
+                                {
+                                    string line = Encoding.ASCII.GetString(m_receiveBuffer, m_offsetRemaining, indexEndLine - m_offsetRemaining);
+                                    string[] lineSplit = line.Split(' ');
+                                    if (lineSplit.Length == 3)
+                                    {
+                                        string[] pathquerySplit = lineSplit[1].Split('?');
+                                        m_message = new ProtocolMessage(0);
+                                        Metainfo metainfo = m_message.AllMetainfo;
+                                        metainfo[FMQ_HTTP] = HTTP_REQUEST;
+                                        metainfo[FMQ_METHOD] = lineSplit[0];
+                                        metainfo[FMQ_PROTOCOL] = lineSplit[2];
+                                        if (pathquerySplit.Length >= 1)
+                                        {
+                                            string path = Decode(pathquerySplit[0]);
+                                            metainfo[FMQ_PATH] = path;
+                                            m_path = path;
+                                        }
+                                        if (pathquerySplit.Length >= 2)
+                                        {
+                                            string[] querySplit = pathquerySplit[1].Split('&');
+                                            foreach (string query in querySplit)
+                                            {
+                                                string queryTotal = Decode(query);
+                                                string[] queryNameValue = queryTotal.Split('=');
+                                                if (queryNameValue.Length == 1)
+                                                {
+                                                    metainfo[FMQ_QUERY_PREFIX + queryNameValue[0]] = string.Empty;
+                                                }
+                                                else if (queryNameValue.Length >= 2)
+                                                {
+                                                    metainfo[FMQ_QUERY_PREFIX + queryNameValue[0]] = queryNameValue[1];
+                                                }
+                                            }
+                                        }
+                                        m_state = State.STATE_FIND_HEADERS;
+                                    }
+                                    else
+                                    {
+                                        ok = false;
+                                    }
+                                }
+                            }
+                        }
+                        else if (m_state == State.STATE_FIND_HEADERS)
+                        {
+                            Debug.Assert(m_message != null);
+                            if (len == 0)
+                            {
+                                if (m_contentLength == 0)
+                                {
+                                    m_state = State.STATE_CONTENT_DONE;
+                                }
+                                else
+                                {
+                                    m_state = State.STATE_CONTENT;
+                                    m_message.ResizeReceiveBuffer(m_contentLength);
+                                }
+                                m_indexFilled = 0;
+                                m_offsetRemaining += 2;
+                                break;
+                            }
+                            else
+                            {
+                                IList<string> lineSplit = new List<string>();
+                                string line = Encoding.ASCII.GetString(m_receiveBuffer, m_offsetRemaining, indexEndLine - m_offsetRemaining);
+                                SplitOnce(line, 0, line.Length, ':', lineSplit);
+                                if (lineSplit.Count == 2)
+                                {
+                                    string value = lineSplit[1];
+                                    if (value.Length != 0 && value[0] == ' ')
+                                    {
+                                        value = value.Substring(1);
+                                    }
+                                    if (lineSplit[0] == CONTENT_LENGTH)
+                                    {
+                                        try
+                                        {
+                                            m_contentLength = Int32.Parse(value);
+                                        }
+                                        catch (Exception)
+                                        {
+                                            m_contentLength = 0;
+                                        }
+                                    }
+                                    else if (lineSplit[0] == FMQ_CREATESESSION)
+                                    {
+                                        m_createSession = true;
+                                    }
+                                    else if (lineSplit[0] == FMQ_SESSIONID)
+                                    {
+                                        m_sessionNames.Clear();
+                                        if (value.Length != 0)
+                                        {
+                                            m_sessionNames.Add(value);
+                                        }
+                                        m_stateSessionId = StateSessionId.SESSIONID_FMQ;
+                                    }
+                                    else if (lineSplit[0] == HTTP_COOKIE)
+                                    {
+                                        if (m_stateSessionId == StateSessionId.SESSIONID_NONE)
+                                        {
+                                            CookiesToSessionIds(value);
+                                            m_stateSessionId = StateSessionId.SESSIONID_COOKIE;
+                                        }
+                                    }
+                                    m_message.AddMetainfo(lineSplit[0], lineSplit[1]);
+                                }
+                                else if (lineSplit.Count == 1)
+                                {
+                                    m_message.AddMetainfo(lineSplit[0], "");
+                                }
+                                else
+                                {
+                                    Debug.Assert(false);
+                                    ok = false;
+                                }
+                            }
+                        }
+                        m_offsetRemaining += len + 2;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+            m_sizeRemaining = bytesReceived - m_offsetRemaining;
+            Debug.Assert(m_sizeRemaining >= 0);
+            return ok;
+        }
+
+        void Reset()
+        {
+            m_offsetRemaining = 0;
+            m_sizeRemaining = 0;
+            m_contentLength = 0;
+            m_indexFilled = 0;
+            m_message = null;
+            m_state = State.STATE_FIND_FIRST_LINE;
+            m_stateSessionId = StateSessionId.SESSIONID_NONE;
+            m_createSession = false;
+            m_sessionNames.Clear();
+            m_path = null;
         }
 
 
@@ -598,14 +1076,16 @@ namespace finalmq
         IMessage? m_message = null;
         int m_contentLength = 0;
         int m_indexFilled = 0;
-        string m_headerHost = "";
+        byte[] m_headerHost = Array.Empty<byte>();
         long m_connectionId = 0;
         bool m_createSession = false;
         string m_sessionName = "";
         IProtocolCallback? m_callback = null;
         IStreamConnection? m_connection = null;
-        int m_chunkedState = (int)ChunkedState.STATE_STOP;
+        ChunkedState m_chunkedState = ChunkedState.STATE_STOP;
         bool m_multipart = false;
+        Random m_randomGenerator1 = new Random(Guid.NewGuid().GetHashCode());
+        Random m_randomGenerator2 = new Random(Guid.NewGuid().GetHashCode());
 
         // path
         string? m_path = null;

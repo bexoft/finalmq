@@ -60,7 +60,7 @@ namespace finalmq
         FuncCreateMessage MessageFactory { get; }
         void SendMessage(IMessage message);
         void MoveOldProtocolState(IProtocol protocolOld);
-        IMessage? PollReply(IList<IMessage>? messages = null);
+        IMessage? PollReply(IList<IMessage> messages);
         void Subscribe(IList<string> subscribtions);
     }
 
