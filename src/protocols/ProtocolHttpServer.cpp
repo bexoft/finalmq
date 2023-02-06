@@ -541,7 +541,7 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
                                     m_stateSessionId = StateSessionId::SESSIONID_COOKIE;
                                 }
                             }
-                            m_message->addMetainfo(std::move(lineSplit[0]), std::move(lineSplit[1]));
+                            m_message->addMetainfo(std::move(lineSplit[0]), std::move(value));
                         }
                         else if (lineSplit.size() == 1)
                         {
