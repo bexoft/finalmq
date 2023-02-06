@@ -1,0 +1,183 @@
+syntax = "proto3";
+
+
+import "variant.proto";
+
+
+
+
+package fmq.test;
+
+
+
+//////////////////////////////
+// Enums
+//////////////////////////////
+
+
+
+enum Foo {
+    FOO_WORLD = 0;
+    FOO_HELLO = -2;
+    FOO_WORLD2 = 1;
+}
+
+
+
+
+//////////////////////////////
+// Structs
+//////////////////////////////
+
+
+message TestBool
+{
+    bool value = 1;
+};
+
+message TestInt32
+{
+    sfixed32 value = 1;
+};
+
+message TestInt32ZigZag
+{
+    sint32 value = 1;
+};
+
+message TestUInt32
+{
+    fixed32 value = 1;
+};
+
+message TestInt64
+{
+    sfixed64 value = 1;
+};
+
+message TestUInt64
+{
+    fixed64 value = 1;
+};
+
+message TestFloat
+{
+    float value = 1;
+};
+
+message TestDouble
+{
+    double value = 1;
+};
+
+message TestString
+{
+    string value = 1;
+};
+
+message TestBytes
+{
+    bytes value = 1;
+};
+
+message TestStruct
+{
+    fmq.test.TestInt32 struct_int32 = 1;
+    fmq.test.TestString struct_string = 2;
+    fixed32 last_value = 3;
+};
+
+message TestStructBlockSize
+{
+    fmq.test.TestInt32 struct_int32 = 1;
+    fmq.test.TestString struct_string = 2;
+    uint32 last_value = 3;
+};
+
+message TestStructNullable
+{
+    fmq.test.TestInt32 struct_int32 = 1;
+    fmq.test.TestString struct_string = 2;
+    fixed32 last_value = 3;
+};
+
+message TestEnum
+{
+    fmq.test.Foo value = 1;
+};
+
+message TestVariant
+{
+    finalmq.variant.VarValue value = 1;
+    sfixed32 valueInt32 = 2;
+    finalmq.variant.VarValue value2 = 3;
+};
+
+message TestArrayBool
+{
+    repeated bool value = 1;
+};
+
+message TestArrayInt32
+{
+    repeated sfixed32 value = 1;
+};
+
+message TestArrayUInt32
+{
+    repeated fixed32 value = 1;
+};
+
+message TestArrayInt64
+{
+    repeated sfixed64 value = 1;
+};
+
+message TestArrayUInt64
+{
+    repeated fixed64 value = 1;
+};
+
+message TestArrayFloat
+{
+    repeated float value = 1;
+};
+
+message TestArrayDouble
+{
+    repeated double value = 1;
+};
+
+message TestArrayString
+{
+    repeated string value = 1;
+};
+
+message TestArrayBytes
+{
+    repeated bytes value = 1;
+};
+
+message TestArrayStruct
+{
+    repeated fmq.test.TestStruct value = 1;
+    fixed32 last_value = 2;
+};
+
+message TestArrayEnum
+{
+    repeated fmq.test.Foo value = 1;
+};
+
+message TestRequest
+{
+    string datarequest = 1;
+};
+
+message TestReply
+{
+    string datareply = 1;
+};
+
+
+

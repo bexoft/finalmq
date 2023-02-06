@@ -67,7 +67,7 @@ namespace finalmq
                 callback.Disconnected();
             }
         }
-        public void Received(IStreamConnection connection, byte[] buffer, int count)
+        public bool Received(IStreamConnection connection, byte[] buffer, int count)
         {
             if (m_sizeDelimiterPrefix > 0)
             {
@@ -169,6 +169,8 @@ namespace finalmq
                 Array.Copy(m_receiveBuffer, m_indexStartMessage, m_delimiterPrefix, 0, m_sizeDelimiterPrefix);
                 m_indexStartMessage = 0;
             }
+
+            return true;
         }
 
         // IProtocol
@@ -176,16 +178,10 @@ namespace finalmq
         {
             m_callback = callback;
         }
-        public void SetConnection(IStreamConnection connection)
-        {
-            m_connection = connection;
-        }
         public IStreamConnection? Connection
         {
-            get
-            {
-                return m_connection;
-            }
+            get => m_connection;
+            set => m_connection = value;
         }
         public void Disconnect()
         {

@@ -18,7 +18,7 @@ namespace finalmq
         {
             m_visitor = visitor;
         }
-        public void resetVarValueActive()
+        public void ResetVarValueActive()
         {
             m_varValueActive = 0;
         }
@@ -65,7 +65,7 @@ namespace finalmq
                     }
                     else
                     {
-                        m_stackFieldsDone.Add(EmptyArrayBool);
+                        m_stackFieldsDone.Add(Array.Empty<bool>());
                     }
                 }
                 else
@@ -99,6 +99,16 @@ namespace finalmq
             }
 
             m_visitor.ExitStruct(field);
+        }
+
+        public void EnterStructNull(MetaField field)
+        {
+            Debug.Assert(m_visitor != null);
+            MarkAsDone(field);
+            if (!m_skipDefaultValues)
+            {
+                m_visitor.EnterStructNull(field);
+            }
         }
 
         void ProcessDefaultValues(MetaStruct stru, bool[] fieldsDone)
@@ -138,12 +148,13 @@ namespace finalmq
                             m_visitor.EnterDouble(field, 0.0);
                             break;
                         case MetaTypeId.TYPE_STRING:
-                            m_visitor.EnterString(field, EmptyString);
+                            m_visitor.EnterString(field, String.Empty);
                             break;
                         case MetaTypeId.TYPE_BYTES:
-                            m_visitor.EnterBytes(field, EmptyBytes);
+                            m_visitor.EnterBytes(field, Array.Empty<byte>(), 0, 0);
                             break;
                         case MetaTypeId.TYPE_STRUCT:
+                            if ((field.Flags & (int)MetaFieldFlags.METAFLAG_NULLABLE) == 0)
                             {
                                 m_visitor.EnterStruct(field);
                                 MetaStruct? substru = MetaDataGlobal.Instance.GetStruct(field);
@@ -154,43 +165,47 @@ namespace finalmq
                                 }
                                 m_visitor.ExitStruct(field);
                             }
+                            else
+                            {
+                                m_visitor.EnterStructNull(field);
+                            }
                             break;
                         case MetaTypeId.TYPE_ENUM:
                             m_visitor.EnterEnum(field, 0);
                             break;
                         case MetaTypeId.TYPE_ARRAY_BOOL:
-                            m_visitor.EnterArrayBool(field, EmptyArrayBool);
+                            m_visitor.EnterArrayBool(field, Array.Empty<bool>());
                             break;
                         case MetaTypeId.TYPE_ARRAY_INT32:
-                            m_visitor.EnterArrayInt32(field, EmptyArrayInt32);
+                            m_visitor.EnterArrayInt32(field, Array.Empty<int>());
                             break;
                         case MetaTypeId.TYPE_ARRAY_UINT32:
-                            m_visitor.EnterArrayUInt32(field, EmptyArrayUInt32);
+                            m_visitor.EnterArrayUInt32(field, Array.Empty<uint>());
                             break;
                         case MetaTypeId.TYPE_ARRAY_INT64:
-                            m_visitor.EnterArrayInt64(field, EmptyArrayInt64);
+                            m_visitor.EnterArrayInt64(field, Array.Empty<long>());
                             break;
                         case MetaTypeId.TYPE_ARRAY_UINT64:
-                            m_visitor.EnterArrayUInt64(field, EmptyArrayUInt64);
+                            m_visitor.EnterArrayUInt64(field, Array.Empty<ulong>());
                             break;
                         case MetaTypeId.TYPE_ARRAY_FLOAT:
-                            m_visitor.EnterArrayFloat(field, EmptyArrayFloat);
+                            m_visitor.EnterArrayFloat(field, Array.Empty<float>());
                             break;
                         case MetaTypeId.TYPE_ARRAY_DOUBLE:
-                            m_visitor.EnterArrayDouble(field, EmptyArrayDouble);
+                            m_visitor.EnterArrayDouble(field, Array.Empty<double>());
                             break;
                         case MetaTypeId.TYPE_ARRAY_STRING:
-                            m_visitor.EnterArrayString(field, EmptyArrayString);
+                            m_visitor.EnterArrayString(field, new List<string>());
                             break;
                         case MetaTypeId.TYPE_ARRAY_BYTES:
-                            m_visitor.EnterArrayBytes(field, EmptyArrayBytes);
+                            m_visitor.EnterArrayBytes(field, new List<byte[]>());
                             break;
                         case MetaTypeId.TYPE_ARRAY_STRUCT:
                             m_visitor.EnterArrayStruct(field);
                             m_visitor.ExitArrayStruct(field);
                             break;
                         case MetaTypeId.TYPE_ARRAY_ENUM:
-                            m_visitor.EnterArrayEnum(field, EmptyArrayInt32);
+                            m_visitor.EnterArrayEnum(field, Array.Empty<int>());
                             break;
                         case MetaTypeId.OFFSET_ARRAY_FLAG:
                             Debug.Assert(false);
@@ -312,13 +327,13 @@ namespace finalmq
                 m_visitor.EnterString(field, buffer, offset, size);
             }
         }
-        public void EnterBytes(MetaField field, byte[] value)
+        public void EnterBytes(MetaField field, byte[] value, int offset, int size)
         {
             Debug.Assert(m_visitor != null);
             MarkAsDone(field);
-            if (value.Length != 0 || !m_skipDefaultValues)
+            if (size != 0 || !m_skipDefaultValues)
             {
-                m_visitor.EnterBytes(field, value);
+                m_visitor.EnterBytes(field, value, offset, size);
             }
         }
         public void EnterEnum(MetaField field, int value)
@@ -446,18 +461,6 @@ namespace finalmq
         MetaStruct? m_struct = null;
         readonly IList<bool[]> m_stackFieldsDone = new List<bool[]>();
         int m_varValueActive = 0;
-
-        static readonly string EmptyString = "";
-        static readonly byte[] EmptyBytes = new byte[0];
-        static readonly bool[] EmptyArrayBool = new bool[0];
-        static readonly int[] EmptyArrayInt32 = new int[0];
-        static readonly uint[] EmptyArrayUInt32 = new uint[0];
-        static readonly long[] EmptyArrayInt64 = new long[0];
-        static readonly ulong[] EmptyArrayUInt64 = new ulong[0];
-        static readonly float[] EmptyArrayFloat = new float[0];
-        static readonly double[] EmptyArrayDouble = new double[0];
-        static readonly IList<string> EmptyArrayString = new List<string>();
-        static readonly IList<byte[]> EmptyArrayBytes = new List<byte[]>();
     }
 
 }

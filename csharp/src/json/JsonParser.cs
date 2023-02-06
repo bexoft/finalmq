@@ -288,7 +288,7 @@ namespace finalmq
 
             if (isFloat)
             {
-                string strNumber = Encoding.UTF8.GetString(m_buffer, first, offset - first);
+                string strNumber = Encoding.ASCII.GetString(m_buffer, first, offset - first);
                 double value;
                 if (!Double.TryParse(strNumber, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
                 {
@@ -592,7 +592,7 @@ namespace finalmq
         }
 
         IJsonParserVisitor m_visitor;
-        byte[] m_buffer = new byte[0];
+        byte[] m_buffer = Array.Empty<byte>();
         int m_end = 0;
         StringBuilder? m_dest = null;
     };

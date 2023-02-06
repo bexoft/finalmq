@@ -46,6 +46,11 @@ namespace finalmq
             {
                 m_jsonBuilder.ExitObject();
             }
+            public void EnterStructNull(MetaField field)
+            {
+                SetKey(field);
+                m_jsonBuilder.EnterNull();
+            }
 
             public void EnterArrayStruct(MetaField field) 
             {
@@ -111,12 +116,12 @@ namespace finalmq
                 SetKey(field);
                 m_jsonBuilder.EnterString(Encoding.UTF8.GetString(buffer, offset, size));
             }
-            public void EnterBytes(MetaField field, byte[] value) 
+            public void EnterBytes(MetaField field, byte[] value, int offset, int size) 
             {
                 Debug.Assert(field.TypeId == MetaTypeId.TYPE_BYTES);
                 SetKey(field);
                 // convert to base64
-                string base64 = System.Convert.ToBase64String(value);
+                string base64 = System.Convert.ToBase64String(value, offset, size);
                 m_jsonBuilder.EnterString(base64);
             }
             public void EnterEnum(MetaField field, int value) 

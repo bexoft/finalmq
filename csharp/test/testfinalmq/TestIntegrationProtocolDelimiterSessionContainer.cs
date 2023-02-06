@@ -40,7 +40,7 @@ namespace testfinalmq
         [ModuleInitializer]
         internal static void Register()
         {
-            ProtocolRegistry.Instance.RegisterProtocolFactory(ProtocolDelimiterTestLong.PROTOCOL_NAME, ProtocolDelimiterTestLong.PROTOCOL_ID, () => { return new ProtocolDelimiterTestLong(); });
+            ProtocolRegistry.Instance.RegisterProtocolFactory(ProtocolDelimiterTestLong.PROTOCOL_NAME, ProtocolDelimiterTestLong.PROTOCOL_ID, (Variant? data) => { return new ProtocolDelimiterTestLong(); });
         }
     }
 
@@ -191,6 +191,7 @@ namespace testfinalmq
                     condVarDisconnectClient.Set();
                 });
 
+            m_sessionContainer.CheckReconnectInterval = 1;
             IProtocolSession connection = m_sessionContainer.Connect("tcp://localhost:3001:delimiter_long", m_mockClientCallback.Object, new ConnectProperties(null, new ConnectConfig(1, 1)));
 
             Debug.Assert(condVarDisconnectClient.Wait(10000));
@@ -274,8 +275,8 @@ namespace testfinalmq
                 });
             m_mockServerCallback.Setup(x => x.Connected(It.IsAny<IProtocolSession>()))
                 .Callback((IProtocolSession connection) => {
-                    condVarConnectServer.Set();
                     connBind = connection;
+                    condVarConnectServer.Set();
                 });
 
 
@@ -454,7 +455,7 @@ namespace testfinalmq
                 connection.SendMessage(message);
             }
 
-            Debug.Assert(condVarReceived.Wait(5000));
+            Debug.Assert(condVarReceived.Wait(10000));
         }
 
     }

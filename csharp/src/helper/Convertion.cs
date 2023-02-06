@@ -11,12 +11,147 @@ namespace finalmq
     {
         public static T? Convert<T>(dynamic? from)
         {
+            try
+            {
+                if (from == null)
+                {
+                    return default(T);
+                }
+                Type typeFrom = from.GetType();
+                if (typeof(T) == typeof(string))
+                {
+                    if (typeFrom == typeof(bool))
+                    {
+                        if ((bool)from)
+                        {
+                            dynamic t = "true";
+                            return t;
+                        }
+                        else
+                        {
+                            dynamic f = "false";
+                            return f;
+                        }
+                    }
+                    else
+                    {
+                        return System.Convert.ToString(from, System.Globalization.CultureInfo.InvariantCulture);
+                    }
+                }
+                else if (typeFrom == typeof(string))
+                {
+                    if (typeof(T) == typeof(bool))
+                    {
+                        if (from != "true" && from != "True")
+                        {
+                            double value = 0;
+                            Double.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value);
+                            if (value == 0)
+                            {
+                                return (dynamic)false;
+                            }
+                        }
+                        return (dynamic)true;
+                    }
+                    else if (typeof(T) == typeof(int))
+                    {
+                        int value;
+                        if (Int32.TryParse(from, out value))
+                        {
+                            return (dynamic)value;
+                        }
+                        double d = 0;
+                        Double.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
+                        return (dynamic)(int)d;
+                    }
+                    else if (typeof(T) == typeof(uint))
+                    {
+                        uint value;
+                        if (UInt32.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
+                        {
+                            return (dynamic)value;
+                        }
+                        double d = 0;
+                        Double.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
+                        return (dynamic)(uint)d;
+                    }
+                    else if (typeof(T) == typeof(long))
+                    {
+                        long value;
+                        if (Int64.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
+                        {
+                            return (dynamic)value;
+                        }
+                        double d = 0;
+                        Double.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
+                        return (dynamic)(long)d;
+                    }
+                    else if (typeof(T) == typeof(ulong))
+                    {
+                        ulong value;
+                        if (UInt64.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
+                        {
+                            return (dynamic)value;
+                        }
+                        double d = 0;
+                        Double.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
+                        return (dynamic)(ulong)d;
+                    }
+                    else if (typeof(T) == typeof(float))
+                    {
+                        float value;
+                        if (Single.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
+                        {
+                            return (dynamic)value;
+                        }
+                        double d = 0;
+                        Double.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
+                        return (dynamic)(float)d;
+                    }
+                    else if (typeof(T) == typeof(double))
+                    {
+                        double value;
+                        Double.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value);
+                        return (dynamic)value;
+                    }
+                }
+                else if (typeof(T) == typeof(bool))
+                {
+                    if (typeFrom == typeof(bool))
+                    {
+                        return from;
+                    }
+                    if ((int)from != 0)
+                    {
+                        return (dynamic)true;
+                    }
+                    return (dynamic)false;
+                }
+                else
+                {
+                    if (typeFrom == typeof(bool))
+                    {
+                        from = (from) ? 1 : 0;
+                    }
+
+                    T value = (T)from;
+                    return value;
+                }
+            }
+            catch (Exception)
+            {
+            }
+            return default(T);
+        }
+
+        public static dynamic? Convert(dynamic? from, Type typeTo)
+        {
             if (from == null)
             {
-                return default(T);
+                return null;
             }
             Type typeFrom = from.GetType();
-            if (typeof(T) == typeof(string))
+            if (typeTo == typeof(string))
             {
                 if (typeFrom == typeof(bool))
                 {
@@ -38,7 +173,7 @@ namespace finalmq
             }
             else if (typeFrom == typeof(string))
             {
-                if (typeof(T) == typeof(bool))
+                if (typeTo == typeof(bool))
                 {
                     if (from != "true" && from != "True")
                     {
@@ -51,29 +186,29 @@ namespace finalmq
                     }
                     return (dynamic)true;
                 }
-                else if (typeof(T) == typeof(int))
+                else if (typeTo == typeof(int))
                 {
                     int value;
                     if (Int32.TryParse(from, out value))
                     {
-                        return (dynamic)value;
+                        return value;
                     }
                     double d = 0;
                     Double.TryParse((string)from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
-                    return (dynamic)(int)d;
+                    return (int)d;
                 }
-                else if (typeof(T) == typeof(uint))
+                else if (typeTo == typeof(uint))
                 {
                     uint value;
                     if (UInt32.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
                     {
-                        return (dynamic)value;
+                        return value;
                     }
                     double d = 0;
                     Double.TryParse((string)from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
-                    return (dynamic)(uint)d;
+                    return (uint)d;
                 }
-                else if (typeof(T) == typeof(long))
+                else if (typeTo == typeof(long))
                 {
                     long value;
                     if (Int64.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
@@ -82,54 +217,38 @@ namespace finalmq
                     }
                     double d = 0;
                     Double.TryParse((string)from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
-                    return (dynamic)(long)d;
+                    return (long)d;
                 }
-                else if (typeof(T) == typeof(ulong))
+                else if (typeTo == typeof(ulong))
                 {
                     ulong value;
                     if (UInt64.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
                     {
-                        return (dynamic)value;
+                        return value;
                     }
                     double d = 0;
                     Double.TryParse((string)from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
-                    return (dynamic)(ulong)d;
+                    return (ulong)d;
                 }
-                else if (typeof(T) == typeof(float))
+                else if (typeTo == typeof(float))
                 {
                     float value;
                     if (Single.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
                     {
-                        return (dynamic)value;
+                        return value;
                     }
                     double d = 0;
                     Double.TryParse((string)from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
-                    return (dynamic)(float)d;
+                    return (float)d;
                 }
-                else if (typeof(T) == typeof(double))
+                else if (typeTo == typeof(double))
                 {
                     double value;
                     Double.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value);
-                    return (dynamic)value;
-                }
-            }
-            else
-            {
-                if (typeFrom == typeof(bool))
-                {
-                    from = (from) ? 1 : 0;
-                }
-
-                try
-                {
-                    T value = (T)from;
                     return value;
                 }
-                catch (Exception)
-                {
-                }
             }
-            return default(T);
+            return null;
         }
 
         public static int ConvertByteStringToInt32(byte[] buffer, int offset, int size, out bool ok)

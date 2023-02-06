@@ -283,7 +283,7 @@ namespace testfinalmq
             MetaStruct? stru = MetaDataGlobal.Instance.GetStruct("test.TestBytes");
             Debug.Assert(stru != null);
             m_serializer.StartStruct(stru);
-            m_serializer.EnterBytes(new MetaField(MetaTypeId.TYPE_BYTES, "", "value", ""), VALUE);
+            m_serializer.EnterBytes(new MetaField(MetaTypeId.TYPE_BYTES, "", "value", ""), VALUE, 0, VALUE.Length);
             m_serializer.Finished();
 
             string s = Encoding.UTF8.GetString(m_data, 0, m_size);
@@ -386,7 +386,6 @@ namespace testfinalmq
         {
             MetaStruct? stru = MetaDataGlobal.Instance.GetStruct("test.TestVariant");
             Debug.Assert(stru != null);
-            MetaStruct? struValue = MetaDataGlobal.Instance.GetStruct(stru.GetFieldByName("value")!.TypeName);
             m_serializerDefault.StartStruct(stru);
             m_serializerDefault.Finished();
 

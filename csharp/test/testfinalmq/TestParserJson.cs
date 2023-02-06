@@ -343,7 +343,7 @@ namespace testfinalmq
             Debug.Assert(res != -1);
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
-            mockVisitor.Verify(x => x.EnterBytes(fieldValue, VALUE), Times.Once);
+            mockVisitor.Verify(x => x.EnterBytes(fieldValue, VALUE, 0, VALUE.Length), Times.Once);
             mockVisitor.Verify(x => x.Finished(), Times.Once);
         }
 
@@ -759,7 +759,7 @@ namespace testfinalmq
             mockVisitor.Setup(x => x.EnterArrayString(fieldValue, It.IsAny<IList<string>>()))
                 .Callback((MetaField field, IList<string> value) =>
                 {
-                    Debug.Assert(value.SequenceEqual(value));
+                    Debug.Assert(value.SequenceEqual(VALUE));
                 });
 
             string data = "{\"value\":[\"Hello\",\"\",\"World\",\"Foo\"]}";
@@ -789,7 +789,11 @@ namespace testfinalmq
             mockVisitor.Setup(x => x.EnterArrayBytes(fieldValue, It.IsAny<IList<byte[]>>()))
                 .Callback((MetaField field, IList<byte[]> value) =>
                 {
-                    Debug.Assert(value.SequenceEqual(value));
+                    Debug.Assert(value.Count == VALUE.Count);
+                    for (int i = 0; i < VALUE.Count; i++)
+                    {
+                        Debug.Assert(value[i].SequenceEqual(VALUE[i]));
+                    }
                 });
 
             string data = "{\"value\":[\"I6oAakAA\",\"\",\"ABEiM0RVZneImaq7zN3u/w==\",\"AA==\"]}";
@@ -874,7 +878,7 @@ namespace testfinalmq
             mockVisitor.Setup(x => x.EnterArrayEnum(fieldValue, It.IsAny<IList<string>>()))
                 .Callback((MetaField field, IList<string> value) =>
                 {
-                    Debug.Assert(value.SequenceEqual(value));
+                    Debug.Assert(value.SequenceEqual(VALUE));
                 });
 
             string data = "{\"value\":[\"FOO_HELLO\",\"FOO_WORLD\",\"FOO_WORLD2\",\"blabla\"]}";

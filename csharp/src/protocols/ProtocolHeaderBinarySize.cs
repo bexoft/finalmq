@@ -79,7 +79,7 @@ namespace finalmq
                 callback.Disconnected();
             }
         }
-        public void Received(IStreamConnection connection, byte[] buffer, int count)
+        public bool Received(IStreamConnection connection, byte[] buffer, int count)
         {
             IList<IMessage> messages = new List<IMessage>();
             m_headerHelper.Receive(buffer, count, messages);
@@ -91,6 +91,8 @@ namespace finalmq
                     callback.Received(message);
                 }
             }
+
+            return true;
         }
 
         // IProtocol
@@ -98,16 +100,10 @@ namespace finalmq
         {
             m_callback = callback;
         }
-        public void SetConnection(IStreamConnection connection)
-        {
-            m_connection = connection;
-        }
         public IStreamConnection? Connection 
-        { 
-            get
-            {
-                return m_connection;
-            }
+        {
+            get => m_connection;
+            set => m_connection = value;
         }
         public void Disconnect()
         {
@@ -236,7 +232,7 @@ namespace finalmq
 #pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
         internal static void Register()
         {
-            ProtocolRegistry.Instance.RegisterProtocolFactory(ProtocolHeaderBinarySize.PROTOCOL_NAME, ProtocolHeaderBinarySize.PROTOCOL_ID, () => { return new ProtocolHeaderBinarySize(); } );
+            ProtocolRegistry.Instance.RegisterProtocolFactory(ProtocolHeaderBinarySize.PROTOCOL_NAME, ProtocolHeaderBinarySize.PROTOCOL_ID, (Variant? data) => { return new ProtocolHeaderBinarySize(); } );
         }
     }
 

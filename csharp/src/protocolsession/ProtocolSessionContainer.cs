@@ -56,7 +56,8 @@ namespace finalmq
         // IStreamConnectionCallback
         public IStreamConnectionCallback? Connected(IStreamConnection connection)
         {
-            IProtocol protocol = m_protocolFactory(/* todo m_bindProperties.ProtocolData */);
+            Variant? protocolData = m_bindProperties?.ProtocolData;
+            IProtocol protocol = m_protocolFactory(protocolData);
             IProtocolSessionPrivate protocolSession = new ProtocolSession(m_callback, m_executor, protocol, m_protocolSessionList, m_bindProperties, m_contentType);
             protocolSession.SetConnection(connection, !protocol.DoesSupportSession);
             return protocol;
@@ -68,10 +69,11 @@ namespace finalmq
             Debug.Assert(false);
         }
 
-        public void Received(IStreamConnection connection, byte[] buffer, int count)
+        public bool Received(IStreamConnection connection, byte[] buffer, int count)
         {
             // should never be called, because the callback will be overriden by connected
             Debug.Assert(false);
+            return false;
         }
 
         readonly IProtocolSessionCallback m_callback;
@@ -194,7 +196,8 @@ namespace finalmq
             string protocolName = endpoint.Substring(ixEndpoint + 1, endpoint.Length - (ixEndpoint + 1));
             FuncCreateProtocol protocolFactory = ProtocolRegistry.Instance.GetProtocolFactory(protocolName);
 
-            IProtocol protocol = protocolFactory(/* todo connectProperties.protocolData*/);
+            Variant? protocolData = connectProperties?.ProtocolData;
+            IProtocol protocol = protocolFactory(protocolData);
 
             string endpointStreamConnection = endpoint.Substring(0, ixEndpoint);
 

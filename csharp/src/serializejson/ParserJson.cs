@@ -66,7 +66,16 @@ namespace finalmq
         }
         public void EnterNull()
         {
-
+            if (m_fieldCurrent == null)
+            {
+                // unknown key
+                return;
+            }
+            if ((m_fieldCurrent.TypeId == MetaTypeId.TYPE_STRUCT) &&
+                ((m_fieldCurrent.Flags & (int)MetaFieldFlags.METAFLAG_NULLABLE) != 0))
+            {
+                m_visitor.EnterStructNull(m_fieldCurrent);
+            }
         }
         public void EnterBool(bool value)
         {
@@ -152,7 +161,7 @@ namespace finalmq
                     {
                         // convert from base64
                         byte[] v = System.Convert.FromBase64String(value);
-                        m_visitor.EnterBytes(m_fieldCurrent, v);
+                        m_visitor.EnterBytes(m_fieldCurrent, v, 0, v.Length);
                     }
                     break;
                 case MetaTypeId.TYPE_ENUM:
@@ -276,14 +285,14 @@ namespace finalmq
                     break;
                 case MetaTypeId.TYPE_FLOAT:
                     {
-                        string s = Encoding.UTF8.GetString(buffer, offset, size);
+                        string s = Encoding.ASCII.GetString(buffer, offset, size);
                         float v = Convertion.Convert<float>(s);
                         m_visitor.EnterFloat(m_fieldCurrent, v);
                     }
                     break;
                 case MetaTypeId.TYPE_DOUBLE:
                     {
-                        string s = Encoding.UTF8.GetString(buffer, offset, size);
+                        string s = Encoding.ASCII.GetString(buffer, offset, size);
                         double v = Convertion.Convert<double>(s);
                         m_visitor.EnterDouble(m_fieldCurrent, v);
                     }
@@ -296,9 +305,9 @@ namespace finalmq
                 case MetaTypeId.TYPE_BYTES:
                     {
                         // convert from base64
-                        string s = Encoding.UTF8.GetString(buffer, offset, size);
+                        string s = Encoding.ASCII.GetString(buffer, offset, size);
                         byte[] v = System.Convert.FromBase64String(s);
-                        m_visitor.EnterBytes(m_fieldCurrent, v);
+                        m_visitor.EnterBytes(m_fieldCurrent, v, 0, v.Length);
                     }
                     break;
                 case MetaTypeId.TYPE_ENUM:
@@ -343,14 +352,14 @@ namespace finalmq
                     break;
                 case MetaTypeId.TYPE_ARRAY_FLOAT:
                     {
-                        string s = Encoding.UTF8.GetString(buffer, offset, size);
+                        string s = Encoding.ASCII.GetString(buffer, offset, size);
                         float v = Convertion.Convert<float>(s);
                         m_arrayFloat.Add(v);
                     }
                     break;
                 case MetaTypeId.TYPE_ARRAY_DOUBLE:
                     {
-                        string s = Encoding.UTF8.GetString(buffer, offset, size);
+                        string s = Encoding.ASCII.GetString(buffer, offset, size);
                         double v = Convertion.Convert<double>(s);
                         m_arrayDouble.Add(v);
                     }
@@ -364,7 +373,7 @@ namespace finalmq
                 case MetaTypeId.TYPE_ARRAY_BYTES:
                     {
                         // convert from base64
-                        string s = Encoding.UTF8.GetString(buffer, offset, size);
+                        string s = Encoding.ASCII.GetString(buffer, offset, size);
                         byte[] v = System.Convert.FromBase64String(s);
                         m_arrayBytes.Add(v);
                     }
@@ -771,7 +780,7 @@ namespace finalmq
             }
             else
             {
-                string s = Encoding.UTF8.GetString(value, offset, size);
+                string s = Encoding.ASCII.GetString(value, offset, size);
                 v = Convertion.Convert<float>(s);
             }
             return v;
@@ -794,7 +803,7 @@ namespace finalmq
             }
             else
             {
-                string s = Encoding.UTF8.GetString(value, offset, size);
+                string s = Encoding.ASCII.GetString(value, offset, size);
                 v = Convertion.Convert<double>(s);
             }
             return v;

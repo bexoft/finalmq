@@ -141,7 +141,7 @@ namespace finalmq
             public IProtocolSessionPrivate session;
             public bool verified = false;
             public string name;
-        };
+        }
 
         private IDictionary<long, SessionData>  m_connectionId2ProtocolSession = new Dictionary<long, SessionData>();
         private static long                     m_nextSessionId = 1;

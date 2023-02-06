@@ -47,8 +47,7 @@ namespace finalmq
     public interface IProtocol : IStreamConnectionCallback
     {
         void SetCallback(IProtocolCallback callback);
-        void SetConnection(IStreamConnection connection);
-        IStreamConnection? Connection { get; }
+        IStreamConnection? Connection { get; set; }
         void Disconnect();
         uint ProtocolId { get; }
         bool AreMessagesResendable { get; }
@@ -61,10 +60,10 @@ namespace finalmq
         FuncCreateMessage MessageFactory { get; }
         void SendMessage(IMessage message);
         void MoveOldProtocolState(IProtocol protocolOld);
-        IMessage? PollReply(IList<IMessage>? messages = null);
+        IMessage? PollReply(IList<IMessage> messages);
         void Subscribe(IList<string> subscribtions);
     }
 
-    public delegate IProtocol FuncCreateProtocol(/*todo Variant data*/);
+    public delegate IProtocol FuncCreateProtocol(Variant? data);
 
 }   // namespace finalmq

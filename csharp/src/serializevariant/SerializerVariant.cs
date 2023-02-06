@@ -8,9 +8,10 @@ namespace finalmq
     using VariantList = List<Variant>;
     using VariantStruct = List<NameValue>;
 
-    class SerializerVariant : ParserConverter
+    public class SerializerVariant : ParserConverter
     {
-        private static string STR_VARVALUE = "finalmq.variant.VarValue";
+        private static readonly string STR_VARVALUE = "finalmq.variant.VarValue";
+        private static readonly int VARTYPE_LIST = (int)MetaTypeId.TYPE_ARRAY_STRUCT;
 
         public SerializerVariant(Variant root, bool enumAsString = true, bool skipDefaultValues = false)
         {
@@ -49,36 +50,33 @@ namespace finalmq
 
                 if (field.TypeName == STR_VARVALUE)
                 {
-                    //todo                    m_varValueToVariant = null;
+                    m_varValueToVariant = null;
                     Variant variant = new Variant();
                     m_current.Add(field.Name, variant);
-                    //todo                    m_varValueToVariant = new VarValueToVariant(variant);
-                    //todo                    m_outer.SetVisitor(m_varValueToVariant.GetVisitor());
-                    //todo                    m_outer.m_parserProcessDefaultValues.SetVisitor(m_varValueToVariant.GetVisitor());
-                    //                    m_varValueToVariant.SetExitNotification([this, &field]() {
-                    //                        assert(m_varValueToVariant);
-                    //m_outer.ParserConverter::setVisitor(*m_outer.m_parserProcessDefaultValues);
-                    //m_outer.m_parserProcessDefaultValues->resetVarValueActive();
-                    // m_outer.m_parserProcessDefaultValues->setVisitor(*this);
-                    //m_varValueToVariant->convert();
-                    //m_varValueToVariant->setExitNotification(-1);
-                    //});
+                    m_varValueToVariant = new VarValueToVariant(variant);
+                    m_outer.SetVisitor(m_varValueToVariant.GetVisitor());
+                    m_outer.m_parserProcessDefaultValues.SetVisitor(m_varValueToVariant.GetVisitor());
+                    m_varValueToVariant.SetExitNotification(() => {
+                        Debug.Assert(m_varValueToVariant != null);
+                        m_outer.SetVisitor(m_outer.m_parserProcessDefaultValues);
+                        m_outer.m_parserProcessDefaultValues.ResetVarValueActive();
+                        m_outer.m_parserProcessDefaultValues.SetVisitor(this);
+                        m_varValueToVariant.Convert();
+                        m_varValueToVariant.SetExitNotification(null);
+                    });
                 }
                 else
                 {
+                    Variant variant = Variant.Create(new VariantStruct());
                     if (m_current.VarType == (int)MetaTypeId.TYPE_STRUCT)
                     {
-                        Variant variant = Variant.Create(new VariantStruct());
                         m_current.Add(field.Name, variant);
-                        m_stack.Add(variant);
                     }
-                    else
+                    else if (m_current.VarType == VARTYPE_LIST)
                     {
-                        Debug.Assert(m_current.VarType == (int)MetaTypeId.TYPE_ARRAY_STRUCT);   // VariantList
-                        Variant variant = Variant.Create(new VariantStruct());
                         m_current.Add(variant);
-                        m_stack.Add(variant);
                     }
+                    m_stack.Add(variant);
                     m_current = m_stack.Last();
                 }
             }
@@ -97,6 +95,20 @@ namespace finalmq
                     }
                 }
             }
+            public void EnterStructNull(MetaField field)
+            {
+                Debug.Assert(m_current != null);
+
+                if (m_current.VarType == (int)MetaTypeId.TYPE_STRUCT)
+                {
+                    m_current.Add(field.Name, new Variant());
+                }
+                else if (m_current.VarType == VARTYPE_LIST)
+                {
+                    m_current.Add(new Variant());
+                }
+            }
+
             public void EnterArrayStruct(MetaField field)
             {
                 if (m_stack.Count != 0)
@@ -149,7 +161,7 @@ namespace finalmq
                 }
             }
 
-            void Add<T>(MetaField field, T value)
+            void Add<T>(MetaField field, T value) where T : notnull
             {
                 if (m_current != null)
                 {
@@ -198,8 +210,16 @@ namespace finalmq
             {
                 Add(field, Encoding.UTF8.GetString(buffer, offset, size));
             }
-            public void EnterBytes(MetaField field, byte[] value)
+            public void EnterBytes(MetaField field, byte[] value, int offset, int size)
             {
+                Debug.Assert(offset >= 0);
+                Debug.Assert(offset + size <= value.Length);
+                if (offset != 0 || size != value.Length)
+                {
+                    byte[] newValue = new byte[size];
+                    Array.Copy(value, offset, newValue, 0, size);
+                    value = newValue;
+                }
                 Add(field, value);
             }
             public void EnterEnum(MetaField field, int value)
@@ -268,10 +288,10 @@ namespace finalmq
 
                 if (m_enumAsString)
                 {
-                    string[] enums = new string[value.Length];
-                    for (int i = 0; i < enums.Length; ++i)
+                    IList<string> enums = new List<string>();
+                    for (int i = 0; i < value.Length; ++i)
                     {
-                        enums[i] = MetaDataGlobal.Instance.GetEnumAliasByValue(field, value[i]);
+                        enums.Add(MetaDataGlobal.Instance.GetEnumAliasByValue(field, value[i]));
                     }
                     Add(field, enums);
                 }
@@ -302,7 +322,7 @@ namespace finalmq
             Variant? m_current = null;
             readonly IList<Variant> m_stack = new List<Variant>();
             readonly bool m_enumAsString = true;
-//todo            VarValueToVariant m_varValueToVariant;
+            VarValueToVariant? m_varValueToVariant = null;
             readonly SerializerVariant m_outer;
         }
 

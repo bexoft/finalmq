@@ -29,6 +29,7 @@ namespace finalmq
         METAFLAG_NONE = 0,
         METAFLAG_PROTO_VARINT = 1,
         METAFLAG_PROTO_ZIGZAG = 2,
+        METAFLAG_NULLABLE = 4,
     };
 
     public class MetaField
@@ -73,7 +74,7 @@ namespace finalmq
         readonly string m_name;                 ///< parameter name
         readonly string m_description;          ///< description of the parameter
         readonly int m_flags;                   ///< flaggs of the parameter
-        int m_index = -1;                       ///< index of field inside struct
+        int m_index;                            ///< index of field inside struct
 
         MetaEnum? m_metaEnum = null;              ///< cache to find MetaEnum of typeName faster
         MetaStruct? m_metaStruct = null;          ///< cache to find MetaStruct of typeName faster

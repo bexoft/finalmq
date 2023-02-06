@@ -68,13 +68,19 @@ namespace finalmq {
 
     public class BindProperties
     {
-        public BindProperties(SslServerOptions? sslServerOptions = null)
+        public BindProperties(SslServerOptions? sslServerOptions = null, Variant? protocolData = null, Variant? formatData = null)
         {
-            this.sslServerOptions = sslServerOptions;
+            m_sslServerOptions = sslServerOptions;
+            m_protocolData = protocolData;
+            m_formatData = formatData;
         }
-        public SslServerOptions? SslServerOptions { get => sslServerOptions; set => sslServerOptions = value; }
+        public SslServerOptions? SslServerOptions { get => m_sslServerOptions; set => m_sslServerOptions = value; }
+        public Variant? ProtocolData { get => m_protocolData; set => m_protocolData = value; }
+        public Variant? FormatData { get => m_formatData; set => m_formatData = value; }
 
-        private SslServerOptions? sslServerOptions = null;
+        private SslServerOptions? m_sslServerOptions = null;
+        private Variant? m_protocolData = null;
+        private Variant? m_formatData = null;                 ///< data for the serialization format
     }
 
     public class ConnectConfig
@@ -133,20 +139,25 @@ namespace finalmq {
 
     public class ConnectProperties
     {
-        public ConnectProperties(SslClientOptions? sslClientOptions = null, ConnectConfig? config = null)
+        public ConnectProperties(SslClientOptions? sslClientOptions = null, ConnectConfig? config = null, Variant? protocolData = null, Variant? formatData = null)
         {
-            this.sslClientOptions = sslClientOptions;
+            m_sslClientOptions = sslClientOptions;
             if (config != null)
             {
-                this.config = config;
+                m_config = config;
             }
+            m_protocolData = protocolData;
+            m_formatData = formatData;
         }
-        public SslClientOptions? SslClientOptions { get => sslClientOptions; set => sslClientOptions = value; }
-        public ConnectConfig ConnectConfig { get => config; set => config = value; }
+        public SslClientOptions? SslClientOptions { get => m_sslClientOptions; set => m_sslClientOptions = value; }
+        public ConnectConfig ConnectConfig { get => m_config; set => m_config = value; }
+        public Variant? ProtocolData { get => m_protocolData; set => m_protocolData = value; }
+        public Variant? FormatData { get => m_formatData; set => m_formatData = value; }
 
-        private SslClientOptions? sslClientOptions = null;
-        private ConnectConfig config = new ConnectConfig();
-    //    Variant protocolData;
+        private SslClientOptions? m_sslClientOptions = null;
+        private ConnectConfig m_config = new ConnectConfig();
+        private Variant? m_protocolData = null;
+        private Variant? m_formatData = null;                 ///< data for the serialization format
     }
 
 
@@ -155,7 +166,7 @@ namespace finalmq {
     {
         IStreamConnectionCallback? Connected(IStreamConnection connection);
         void Disconnected(IStreamConnection connection);
-        void Received(IStreamConnection connection, byte[] buffer, int count);
+        bool Received(IStreamConnection connection, byte[] buffer, int count);
     }
 
 
@@ -180,7 +191,7 @@ namespace finalmq {
         void UpdateConnectionData(ConnectionData connectionData);
         void Connected();
         void Disconnected();
-        void Received(byte[] buffer, int count);
+        bool Received(byte[] buffer, int count);
     };
 
     internal class StreamConnection : IStreamConnectionPrivate
@@ -233,7 +244,7 @@ namespace finalmq {
                     if (!GetDisconnectFlag() && (m_connectionData.ConnectionState == ConnectionState.CONNECTIONSTATE_CONNECTING))
                     {
                         TimeSpan dur = DateTime.Now - m_connectionData.StartTime;
-                        int delta = dur.Milliseconds;
+                        int delta = (int)dur.TotalMilliseconds;
                         if (m_connectionData.TotalReconnectDuration >= 0 && (delta < 0 || delta >= m_connectionData.TotalReconnectDuration))
                         {
                             reconnectExpired = true;
@@ -271,7 +282,7 @@ namespace finalmq {
                 connectionData = m_connectionData;
             }
             if (connectionData.ConnectionState == ConnectionState.CONNECTIONSTATE_CREATED ||
-                connectionData.ConnectionState == ConnectionState.CONNECTIONSTATE_CONNECTING_FAILED)
+                connectionData.ConnectionState == ConnectionState.CONNECTIONSTATE_CONNECTING_RECONNECT)
             {
                 m_streamConnectionContainer.Connect(connectionData.Endpoint, this, connectionData.ConnectProperties);
                 connecting = true;
@@ -334,9 +345,10 @@ namespace finalmq {
             {
                 DateTime now = DateTime.Now;
                 TimeSpan dur = now - m_lastReconnectTime;
-                int delta = dur.Milliseconds;
+                int delta = (int)dur.TotalMilliseconds;
                 if (delta < 0 || delta >= m_connectionData.ReconnectInterval)
                 {
+                    connectionData.ConnectionState = ConnectionState.CONNECTIONSTATE_CONNECTING_RECONNECT;
                     m_lastReconnectTime = now;
                     reconnecting = Connect();
                 }
@@ -382,9 +394,9 @@ namespace finalmq {
             return (Interlocked.Read(ref m_disconnectFlag) != 0);
         }
 
-        public void Received(byte[] buffer, int count)
+        public bool Received(byte[] buffer, int count)
         {
-            m_callback.Received(this, buffer, count);
+            return m_callback.Received(this, buffer, count);
         }
 
         public void SendMessage(IMessage msg)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace finalmq
@@ -80,8 +81,13 @@ namespace finalmq
             // m_value[name].getValue( with remaining name )
             return variant.GetVariant(restname);
         }
-        public bool Equals(IVariantValue rhs)
+        public bool Equals(IVariantValue? rhs)
         {
+            if (rhs == null)
+            {
+                return false;
+            }
+
             if (this == rhs)
             {
                 return true;
@@ -91,8 +97,13 @@ namespace finalmq
             {
                 return false;
             }
+            VariantList? rhsData = rhs.Data as VariantList;
+            if (rhsData == null)
+            {
+                return false;
+            }
 
-            return m_value.Equals(rhs.Data);
+            return m_value.SequenceEqual(rhsData);
         }
         public bool Add(string name, Variant variant)
         {

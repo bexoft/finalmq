@@ -33,23 +33,17 @@ namespace testfinalmq
         public void TestBool()
         {
             Variant variant = Variant.Create(true);
-            bool val = variant;
-            Debug.Assert(val == true);
-            string sval = variant;
-            Debug.Assert(sval == "true");
+            Debug.Assert(variant == true);
+            Debug.Assert(variant == "true");
             Variant? pvariant = variant.GetVariant("abc");
             Debug.Assert(pvariant == null);
-            int ival = variant;
-            Debug.Assert(ival == 1);
-            val = variant;
-            Debug.Assert(val == true);
+            Debug.Assert(variant == 1);
+            Debug.Assert(variant == true);
 
             variant.SetData(false);
-            val = variant;
-            Debug.Assert(val == false);
+            Debug.Assert(variant == false);
             variant.SetData(true);
-            val = variant;
-            Debug.Assert(val == true);
+            Debug.Assert(variant == true);
         }
 
         [Fact]
