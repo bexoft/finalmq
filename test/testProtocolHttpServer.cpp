@@ -250,7 +250,7 @@ TEST_F(TestProtocolHttpServer, testSendMessage)
     controlData.add(ProtocolHttpServer::FMQ_PATH, std::string("/hello"));
     controlData.add("queries", VariantStruct{ {"filter", std::string("world")},{"lang", std::string("en")} });
         
-    message->addSendPayload(std::string("0123456789"));
+    message->addSendPayload("0123456789");
 
     EXPECT_CALL(*m_mockStreamConnection, sendMessage(message));
     m_protocol->setConnection(m_mockStreamConnection);
