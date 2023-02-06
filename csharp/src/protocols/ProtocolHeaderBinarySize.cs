@@ -79,7 +79,7 @@ namespace finalmq
                 callback.Disconnected();
             }
         }
-        public void Received(IStreamConnection connection, byte[] buffer, int count)
+        public bool Received(IStreamConnection connection, byte[] buffer, int count)
         {
             IList<IMessage> messages = new List<IMessage>();
             m_headerHelper.Receive(buffer, count, messages);
@@ -91,6 +91,8 @@ namespace finalmq
                     callback.Received(message);
                 }
             }
+
+            return true;
         }
 
         // IProtocol

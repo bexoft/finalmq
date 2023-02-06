@@ -28,20 +28,20 @@ namespace finalmq
 {
     using VariantStruct = IList<NameValue>;
 
-    class ProtocolHttpServer : IProtocol
+    public class ProtocolHttpServer : IProtocol
     {
         public static readonly uint PROTOCOL_ID = 4;
         public static readonly string PROTOCOL_NAME = "httpserver";
 
-        static readonly string FMQ_HTTP = "fmq_http";
-        static readonly string FMQ_METHOD = "fmq_method";
-        static readonly string FMQ_PROTOCOL = "fmq_protocol";
-        static readonly string FMQ_PATH = "fmq_path";
-        static readonly string FMQ_QUERY_PREFIX = "QUERY_";
-        static readonly string FMQ_HTTP_STATUS = "fmq_http_status";
-        static readonly string FMQ_HTTP_STATUSTEXT = "fmq_http_statustext";
-        static readonly string HTTP_REQUEST = "request";
-        static readonly string HTTP_RESPONSE = "response";
+        public static readonly string FMQ_HTTP = "fmq_http";
+        public static readonly string FMQ_METHOD = "fmq_method";
+        public static readonly string FMQ_PROTOCOL = "fmq_protocol";
+        public static readonly string FMQ_PATH = "fmq_path";
+        public static readonly string FMQ_QUERY_PREFIX = "QUERY_";
+        public static readonly string FMQ_HTTP_STATUS = "fmq_http_status";
+        public static readonly string FMQ_HTTP_STATUSTEXT = "fmq_http_statustext";
+        public static readonly string HTTP_REQUEST = "request";
+        public static readonly string HTTP_RESPONSE = "response";
 
         static readonly string CONTENT_LENGTH = "Content-Length";
         static readonly string FMQ_SESSIONID = "fmq_sessionid";
@@ -121,6 +121,120 @@ namespace finalmq
             }
         }
 
+        bool HandleInternalCommands(IProtocolCallback callback, ref bool ok)
+        {
+            Debug.Assert(callback != null);
+            bool handled = false;
+            if (m_path != null)
+            {
+                if (m_path == FMQ_PATH_POLL)
+                {
+                    m_chunkedState = ChunkedState.STATE_START_CHUNK_STREAM;
+                    Debug.Assert(m_message != null);
+                    handled = true;
+                    int timeout = -1;
+                    int pollCountMax = 1;
+                    string? strTimeout = m_message.GetMetainfo("QUERY_timeout");
+                    string? strCount = m_message.GetMetainfo("QUERY_count");
+                    string? strMultipart = m_message.GetMetainfo("QUERY_multipart");
+                    if (strTimeout != null)
+                    {
+                        try
+                        {
+                            timeout = Int32.Parse(strTimeout);
+                        }
+                        catch(Exception)
+                        {
+                            timeout = -1;
+                        }
+                    }
+                    if (strCount != null)
+                    {
+                        try
+                        {
+                            pollCountMax = Int32.Parse(strCount);
+                        }
+                        catch (Exception)
+                        {
+                            pollCountMax = -1;
+                        }
+                    }
+                    if (strMultipart != null)
+                    {
+                        m_multipart = (strMultipart == "true") ? true : false;
+                    }
+                    IMessage message = MessageFactory();
+                    string contentType;
+                    if (m_multipart)
+                    {
+                        contentType = "multipart/x-mixed-replace; boundary=";
+                        contentType += FMQ_MULTIPART_BOUNDARY;
+                    }
+                    else
+                    {
+                        contentType = "text/event-stream";
+                    }
+                    message.AddMetainfo("Content-Type", contentType);
+                    message.AddMetainfo("Transfer-Encoding", "chunked");
+                    SendMessage(message);
+                    m_chunkedState = ChunkedState.STATE_FIRST_CHUNK;
+                    callback.PollRequest(this, timeout, pollCountMax);
+                }
+                else if (m_path == FMQ_PATH_PING)
+                {
+                    handled = true;
+                    Debug.Assert(m_connection != null);
+                    SendMessage(MessageFactory());
+                    callback.Activity();
+                }
+                else if (m_path == FMQ_PATH_CONFIG)
+                {
+                    Debug.Assert(m_message != null);
+                    handled = true;
+                    string? timeout = m_message.GetMetainfo("QUERY_activitytimeout");
+                    if (timeout != null)
+                    {
+                        try
+                        {
+                            callback.ActivityTimeout = Int32.Parse(timeout);
+                        }
+                        catch (Exception)
+                        {
+                        }
+                    }
+                    string? pollMaxRequests = m_message.GetMetainfo("QUERY_pollmaxrequests");
+                    if (pollMaxRequests != null)
+                    {
+                        try
+                        {
+                            callback.PollMaxRequests = Int32.Parse(pollMaxRequests);
+                        }
+                        catch (Exception)
+                        {
+                        }
+                    }
+                    SendMessage(MessageFactory());
+                    callback.Activity();
+                }
+                else if (m_path == FMQ_PATH_CREATESESSION)
+                {
+                    handled = true;
+                    SendMessage(MessageFactory());
+                    callback.Activity();
+                }
+                else if (m_path == FMQ_PATH_REMOVESESSION)
+                {
+                    handled = true;
+                    ok = false;
+                    SendMessage(MessageFactory());
+                    callback.Disconnected();
+                }
+            }
+
+            return handled;
+        }
+
+
         private void ResizeReceiveBuffer(int newSize)
         {
             byte[] bufferOld = m_receiveBuffer;
@@ -130,7 +244,8 @@ namespace finalmq
                 Array.Copy(bufferOld, 0, m_receiveBuffer, 0, Math.Min(bufferOld.Length, newSize));
             }
         }
-        public void Received(IStreamConnection connection, byte[] buffer, int count)
+
+        public bool Received(IStreamConnection connection, byte[] buffer, int count)
         {
             bool ok = true;
 
@@ -159,7 +274,7 @@ namespace finalmq
                     Debug.Assert(payload.Length == m_contentLength);
                     if (m_sizeRemaining <= m_contentLength)
                     {
-                        Array.Copy(m_receiveBuffer, m_offsetRemaining, payload.Buffer, 0, m_sizeRemaining);
+                        Array.Copy(m_receiveBuffer, m_offsetRemaining, payload.Buffer, payload.Offset, m_sizeRemaining);
                         m_indexFilled = m_sizeRemaining;
                         Debug.Assert(m_indexFilled <= m_contentLength);
                         if (m_indexFilled == m_contentLength)
@@ -182,7 +297,7 @@ namespace finalmq
                 int remainingContent = m_contentLength - m_indexFilled;
                 if (count <= remainingContent)
                 {
-                    Array.Copy(buffer, 0, m_receiveBuffer, m_sizeRemaining, count);
+                    Array.Copy(buffer, 0, payload.Buffer, m_indexFilled, count);
 
                     m_indexFilled += count;
                     Debug.Assert(m_indexFilled <= m_contentLength);
@@ -207,8 +322,8 @@ namespace finalmq
                     var callback = m_callback;
                     if (callback != null)
                     {
-//                        bool handled = HandleInternalCommands(callback, ok);
-//                        if (!handled)
+                        bool handled = HandleInternalCommands(callback, ref ok);
+                        if (!handled)
                         {
                             callback.Received(m_message, m_connectionId);
                         }
@@ -216,7 +331,7 @@ namespace finalmq
                     Reset();
                 }
             }
-            //todo return ok;
+            return ok;
         }
 
         // IProtocol
@@ -317,7 +432,7 @@ namespace finalmq
             {
                 pollStop = controlData.GetData<bool>("fmq_poll_stop");
             }
-            string? filename = controlData.GetData<string>("filetransfer");
+            Variant? filename = controlData.GetVariant("filetransfer");
             int filesize = -1;
             if (filename != null)
             {
@@ -325,7 +440,7 @@ namespace finalmq
                 filesize = (int)fileinfo.Length;
                 message.DownsizeLastSendPayload(0);
             }
-            string? http = controlData.GetData<string>(FMQ_HTTP);
+            Variant? http = controlData.GetVariant(FMQ_HTTP);
             if (m_chunkedState < ChunkedState.STATE_FIRST_CHUNK)
             {
                 if (http != null && http == HTTP_REQUEST)
@@ -334,8 +449,8 @@ namespace finalmq
                     {
                         filesize = 0;
                     }
-                    string? method = controlData.GetData<string> (FMQ_METHOD);
-                    string? path = controlData.GetData<string> (FMQ_PATH);
+                    Variant? method = controlData.GetVariant(FMQ_METHOD);
+                    Variant? path = controlData.GetVariant(FMQ_PATH);
                     if (method != null && path != null)
                     {
                         string pathEncode = Encode(path);
@@ -343,25 +458,22 @@ namespace finalmq
                         firstLine.WriteByte((byte)' ');
                         firstLine.Write(Encoding.ASCII.GetBytes(pathEncode));
 
-                        VariantStruct? queries = controlData.GetData<VariantStruct>("queries");
-                        if (queries != null)
+                        VariantStruct queries = controlData.GetData<VariantStruct>("queries");
+                        foreach (var query in queries)
                         {
-                            foreach (var query in queries)
+                            if (query == queries.First())
                             {
-                                if (query == queries.First())
-                                {
-                                    firstLine.WriteByte((byte)'?');
-                                }
-                                else
-                                {
-                                    firstLine.WriteByte((byte)'&');
-                                }
-                                string key = Encode(query.Name); ;
-                                string value = Encode(query.Value);
-                                firstLine.Write(Encoding.ASCII.GetBytes(key));
-                                firstLine.WriteByte((byte)'=');
-                                firstLine.Write(Encoding.ASCII.GetBytes(value));
+                                firstLine.WriteByte((byte)'?');
                             }
+                            else
+                            {
+                                firstLine.WriteByte((byte)'&');
+                            }
+                            string key = Encode(query.Name); ;
+                            string value = Encode(query.Value);
+                            firstLine.Write(Encoding.ASCII.GetBytes(key));
+                            firstLine.WriteByte((byte)'=');
+                            firstLine.Write(Encoding.ASCII.GetBytes(value));
                         }
 
                         firstLine.Write(SPACE_HTTP_VERSION);
@@ -404,7 +516,7 @@ namespace finalmq
                 sumHeaderSize += HEADER_KEEP_ALIVE.Length;  // Connection: keep-alive\r\n
             }
             
-            if (http == HTTP_REQUEST)
+            if (http != null && http == HTTP_REQUEST)
             {
                 sumHeaderSize += m_headerHost.Length;   // Host: hostname\r\n
             }
@@ -858,7 +970,7 @@ namespace finalmq
             Debug.Assert(bytesReceived <= m_receiveBuffer.Length);
             while (m_offsetRemaining < bytesReceived && ok)
             {
-                int index = Array.IndexOf(m_receiveBuffer, '\n', m_offsetRemaining);
+                int index = Array.IndexOf<byte>(m_receiveBuffer, (byte)'\n', m_offsetRemaining);
                 if (index != -1)
                 {
                     int indexEndLine = index;
@@ -1005,7 +1117,7 @@ namespace finalmq
                                             m_stateSessionId = StateSessionId.SESSIONID_COOKIE;
                                         }
                                     }
-                                    m_message.AddMetainfo(lineSplit[0], lineSplit[1]);
+                                    m_message.AddMetainfo(lineSplit[0], value);
                                 }
                                 else if (lineSplit.Count == 1)
                                 {

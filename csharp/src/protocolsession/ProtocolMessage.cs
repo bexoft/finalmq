@@ -207,14 +207,14 @@ namespace finalmq {
             }
             m_metainfo.Add(key, value);
         }
-        public string GetMetainfo(string key)
+        public string? GetMetainfo(string key)
         {
             if (m_metainfo != null &&
                 m_metainfo.TryGetValue(key, out var metainfo))
             {
                 return metainfo;
             }
-            return "";
+            return null;
         }
 
         // controlData

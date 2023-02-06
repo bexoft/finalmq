@@ -65,7 +65,7 @@ namespace finalmq
                 callback.Disconnected();
             }
         }
-        public void Received(IStreamConnection connection, byte[] buffer, int count)
+        public bool Received(IStreamConnection connection, byte[] buffer, int count)
         {
             IMessage message = new ProtocolMessage(0);
             message.SetReceiveBuffer(buffer, 0, count);
@@ -74,6 +74,7 @@ namespace finalmq
             {
                 callback.Received(message);
             }
+            return true;
         }
 
         // IProtocol

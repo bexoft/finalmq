@@ -253,11 +253,13 @@ namespace finalmq {
                         if (ar != null)
                         {
                             int count = stream.EndRead(ar);
-                            if (count > 0)
+                            bool ok = (count > 0);
+                            if (ok)
                             {
-                                connection.Received(buffer, count);
+                                ok = connection.Received(buffer, count);
                             }
-                            else
+
+                            if (!ok)
                             {
                                 ((IStreamConnectionContainerPrivate)this).Disconnect(connection);
                                 return;

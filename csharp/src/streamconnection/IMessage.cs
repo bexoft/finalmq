@@ -145,7 +145,7 @@ namespace finalmq
         
         // metainfo
         Metainfo AllMetainfo { get; set; }
-        string GetMetainfo(string key);
+        string? GetMetainfo(string key);
         void AddMetainfo(string key, string value);
 
         // controlData

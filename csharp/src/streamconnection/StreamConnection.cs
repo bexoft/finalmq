@@ -166,7 +166,7 @@ namespace finalmq {
     {
         IStreamConnectionCallback? Connected(IStreamConnection connection);
         void Disconnected(IStreamConnection connection);
-        void Received(IStreamConnection connection, byte[] buffer, int count);
+        bool Received(IStreamConnection connection, byte[] buffer, int count);
     }
 
 
@@ -191,7 +191,7 @@ namespace finalmq {
         void UpdateConnectionData(ConnectionData connectionData);
         void Connected();
         void Disconnected();
-        void Received(byte[] buffer, int count);
+        bool Received(byte[] buffer, int count);
     };
 
     internal class StreamConnection : IStreamConnectionPrivate
@@ -394,9 +394,9 @@ namespace finalmq {
             return (Interlocked.Read(ref m_disconnectFlag) != 0);
         }
 
-        public void Received(byte[] buffer, int count)
+        public bool Received(byte[] buffer, int count)
         {
-            m_callback.Received(this, buffer, count);
+            return m_callback.Received(this, buffer, count);
         }
 
         public void SendMessage(IMessage msg)

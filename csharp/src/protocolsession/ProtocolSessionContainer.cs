@@ -69,10 +69,11 @@ namespace finalmq
             Debug.Assert(false);
         }
 
-        public void Received(IStreamConnection connection, byte[] buffer, int count)
+        public bool Received(IStreamConnection connection, byte[] buffer, int count)
         {
             // should never be called, because the callback will be overriden by connected
             Debug.Assert(false);
+            return false;
         }
 
         readonly IProtocolSessionCallback m_callback;
