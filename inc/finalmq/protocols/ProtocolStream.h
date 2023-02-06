@@ -35,7 +35,7 @@ public:
     static const std::uint32_t PROTOCOL_ID; // 1
     static const std::string PROTOCOL_NAME; // stream
 
-    ProtocolStream(const Variant& data);
+    ProtocolStream();
     ~ProtocolStream();
 
 private:
@@ -64,7 +64,6 @@ private:
 
     std::weak_ptr<IProtocolCallback>    m_callback;
     IStreamConnectionPtr                m_connection;
-    Variant                             m_data;
     mutable std::mutex                  m_mutex;
 };
 

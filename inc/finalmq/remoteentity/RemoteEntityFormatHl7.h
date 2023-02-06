@@ -31,14 +31,18 @@ namespace finalmq {
 class SYMBOLEXP RemoteEntityFormatHl7 : public IRemoteEntityFormat
 {
 public:
-    static const int CONTENT_TYPE;              // 3
-    static const std::string CONTENT_TYPE_NAME; // hl7
+    static const int CONTENT_TYPE;                  // 3
+    static const std::string CONTENT_TYPE_NAME;     // hl7
+
+    static const std::string PROPERTY_NAMESPACE;    // hl7namespace
+    static const std::string PROPERTY_ENTITY;       // hl7entity
+
 
 private:
-    virtual std::shared_ptr<StructBase> parse(const BufferRef& bufferRef, const Variant* protocolData, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus) override;
-    virtual std::shared_ptr<StructBase> parseData(const BufferRef& bufferRef, bool storeRawData, std::string& type, int& formatStatus) override;
-    virtual void serialize(IMessage& message, const Header& header, const StructBase* structBase = nullptr) override;
-    virtual void serializeData(IMessage& message, const StructBase* structBase = nullptr) override;
+    virtual std::shared_ptr<StructBase> parse(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus) override;
+    virtual std::shared_ptr<StructBase> parseData(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, std::string& type, int& formatStatus) override;
+    virtual void serialize(const IProtocolSessionPtr& session, IMessage& message, const Header& header, const StructBase* structBase = nullptr) override;
+    virtual void serializeData(const IProtocolSessionPtr& session, IMessage& message, const StructBase* structBase = nullptr) override;
 };
 
 

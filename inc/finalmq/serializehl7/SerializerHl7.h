@@ -25,12 +25,12 @@
 #include "finalmq/metadata/MetaStruct.h"
 #include "finalmq/helpers/IZeroCopyBuffer.h"
 #include "finalmq/serialize/IParserVisitor.h"
-#include "finalmq/serialize/ParserConverter.h"
+#include "finalmq/serialize/ParserProcessDefaultValues.h"
 #include "finalmq/hl7/Hl7Builder.h"
 
 namespace finalmq {
 
-class SYMBOLEXP SerializerHl7 : public ParserConverter
+class SYMBOLEXP SerializerHl7 : public ParserProcessDefaultValues
 {
 public:
     SerializerHl7(IZeroCopyBuffer& buffer, int maxBlockSize = 512, bool enumAsString = true);
@@ -99,16 +99,12 @@ private:
         IHl7BuilderVisitor&                 m_hl7Builder;
         bool                                m_enumAsString = true;
 
-        int                                 m_levelSegment = 0;
+        bool                                m_inSegment = false;
 
-        std::string m_messageCode;
-        std::string m_triggerEvent;
-        std::string m_messageStructure;
-        std::vector<int> m_indexOfLeyer;
+        std::vector<int>                    m_indexOfLayer;
     };
 
     Internal                            m_internal;
-    std::unique_ptr<IParserVisitor>     m_parserProcessValuesInOrder;
 };
 
 }   // namespace finalmq

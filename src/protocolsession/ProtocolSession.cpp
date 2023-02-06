@@ -46,6 +46,7 @@ ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, 
     , m_instanceId(m_sessionId | INSTANCEID_PREFIX)
     , m_contentType(contentType)
     , m_bindProperties(bindProperties)
+    , m_formatData(m_bindProperties.formatData)
 {
 }
 
@@ -61,21 +62,9 @@ ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, 
     , m_streamConnectionContainer(streamConnectionContainer)
     , m_endpointStreamConnection(endpointStreamConnection)
     , m_connectionProperties(connectProperties)
+    , m_formatData(m_connectionProperties.formatData)
 {
 }
-
-//ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const IProtocolPtr& protocol, const std::weak_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, int contentType)
-//    : m_callback(callback)
-//    , m_executor(executor)
-//    , m_executorPollerThread(executorPollerThread)
-//    , m_protocol(protocol)
-//    , m_protocolSessionList(protocolSessionList)
-//    , m_contentType(contentType)
-//    , m_streamConnectionContainer(streamConnectionContainer)
-//{
-//    initProtocolValues();
-//}
-//
 
 ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const std::shared_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer)
     : m_callback(callback)
@@ -421,20 +410,6 @@ void ProtocolSession::sendBufferedMessages()
 }
 
 
-//bool ProtocolSession::connect(const std::string& endpoint, const ConnectProperties& connectionProperties)
-//{
-//    assert(m_protocolConnection.protocol);
-//
-//    std::unique_lock<std::mutex> lock(m_mutex);
-//    m_endpoint = endpoint;
-//    m_connectionProperties = connectionProperties;
-//    sendBufferedMessages();
-//    lock.unlock();
-//
-//    bool res = m_streamConnectionContainer->connect(m_protocolConnection.connection, m_endpoint, m_connectionProperties);
-//    return res;
-//}
-
 void ProtocolSession::addSessionToList(bool verified)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
@@ -472,6 +447,7 @@ bool ProtocolSession::connect(const std::string& endpoint, const ConnectProperti
     assert(m_protocol == nullptr);
     m_endpointStreamConnection = endpoint.substr(0, ixEndpoint);
     m_connectionProperties = connectionProperties;
+    m_formatData = m_connectionProperties.formatData;
     m_contentType = contentType;
     m_protocol = protocol;
     m_connectionId = connection->getConnectionId();
@@ -506,6 +482,10 @@ void ProtocolSession::subscribe(const std::vector<std::string>& subscribtions)
     }
 }
 
+const Variant& ProtocolSession::getFormatData() const
+{
+    return m_formatData;
+}
 
 // IProtocolCallback
 void ProtocolSession::connected()

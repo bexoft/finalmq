@@ -27,6 +27,7 @@
 #include "finalmq/serializejson/ParserJson.h"
 #include "finalmq/serializestruct/SerializerStruct.h"
 #include "finalmq/serializestruct/StructFactoryRegistry.h"
+#include "finalmq/protocolsession/ProtocolMessage.h"
 
 #include "finalmq/remoteentity/entitydata.fmq.h"
 
@@ -42,6 +43,9 @@ namespace finalmq {
 const int RemoteEntityFormatJson::CONTENT_TYPE = 2;
 const std::string RemoteEntityFormatJson::CONTENT_TYPE_NAME = "json";
 
+const std::string RemoteEntityFormatJson::PROPERTY_SERIALIZE_ENUM_AS_STRING = "enumAsSt";
+const std::string RemoteEntityFormatJson::PROPERTY_SERIALIZE_SKIP_DEFAULT_VALUES = "skipDefVal";
+
 
 
 struct RegisterFormatJson
@@ -56,7 +60,7 @@ struct RegisterFormatJson
 
 #define HL7BLOCKSIZE   512
 
-void RemoteEntityFormatJson::serialize(IMessage& message, const Header& header, const StructBase* structBase)
+void RemoteEntityFormatJson::serialize(const IProtocolSessionPtr& session, IMessage& message, const Header& header, const StructBase* structBase)
 {
     message.addSendPayload("[", 1, HL7BLOCKSIZE);
 
@@ -71,7 +75,7 @@ void RemoteEntityFormatJson::serialize(IMessage& message, const Header& header, 
         // delimiter between header and payload
         message.addSendPayload(",\t", 2, HL7BLOCKSIZE);
 
-        serializeData(message, structBase);
+        serializeData(session, message, structBase);
 
         message.addSendPayload("]\t", 2, HL7BLOCKSIZE);
     }
@@ -82,7 +86,7 @@ void RemoteEntityFormatJson::serialize(IMessage& message, const Header& header, 
 }
 
 
-void RemoteEntityFormatJson::serializeData(IMessage& message, const StructBase* structBase)
+void RemoteEntityFormatJson::serializeData(const IProtocolSessionPtr& session, IMessage& message, const StructBase* structBase)
 {
     if (structBase)
     {
@@ -96,7 +100,24 @@ void RemoteEntityFormatJson::serializeData(IMessage& message, const StructBase* 
         }
         else
         {
-            SerializerJson serializerData(message, 512, true, false);
+            bool enumAsString = true;
+            bool skipDefaultValues = false;
+            const Variant& formatData = session->getFormatData();
+            if (formatData.getType() != VARTYPE_NONE)
+            {
+                const bool* propEnumAsString = formatData.getData<bool>(PROPERTY_SERIALIZE_ENUM_AS_STRING);
+                const bool* propSkipDefaultValues = formatData.getData<bool>(PROPERTY_SERIALIZE_SKIP_DEFAULT_VALUES);
+                if (propEnumAsString != nullptr)
+                {
+                    enumAsString = *propEnumAsString;
+                }
+                if (propSkipDefaultValues != nullptr)
+                {
+                    skipDefaultValues = *propSkipDefaultValues;
+                }
+            }
+            
+            SerializerJson serializerData(message, 512, enumAsString, skipDefaultValues);
             ParserStruct parserData(serializerData, *structBase);
             parserData.parseStruct();
         }
@@ -107,18 +128,6 @@ void RemoteEntityFormatJson::serializeData(IMessage& message, const StructBase* 
     }
 }
 
-
-//static ssize_t findFirst(const char* buffer, ssize_t size, char c)
-//{
-//    for (ssize_t i = 0; i < size; ++i)
-//    {
-//        if (buffer[i] == c)
-//        {
-//            return i;
-//        }
-//    }
-//    return -1;
-//}
 
 static ssize_t findLast(const char* buffer, ssize_t size, char c)
 {
@@ -162,7 +171,7 @@ static const std::string FMQ_PATH = "fmq_path";
 
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& bufferRef, const Variant* /*protocolData*/, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus)
+std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus)
 {
     formatStatus = 0;
     char* buffer = bufferRef.first;
@@ -303,7 +312,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
         assert(sizeData >= 0);
 
         BufferRef bufferRefData = {buffer, sizeData};
-        data = parseData(bufferRefData, storeRawData, header.type, formatStatus);
+        data = parseData(session, bufferRefData, storeRawData, header.type, formatStatus);
     }
 
     return data;
@@ -311,7 +320,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const BufferRef& buffe
 
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatJson::parseData(const BufferRef& bufferRef, bool storeRawData, std::string& type, int& formatStatus)
+std::shared_ptr<StructBase> RemoteEntityFormatJson::parseData(const IProtocolSessionPtr& /*session*/, const BufferRef& bufferRef, bool storeRawData, std::string& type, int& formatStatus)
 {
     formatStatus = 0;
     const char* buffer = bufferRef.first;

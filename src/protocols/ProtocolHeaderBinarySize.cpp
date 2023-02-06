@@ -42,7 +42,7 @@ static const int HEADERSIZE = 4;
 //---------------------------------------
 
 
-ProtocolHeaderBinarySize::ProtocolHeaderBinarySize(const Variant& data)
+ProtocolHeaderBinarySize::ProtocolHeaderBinarySize()
     : m_headerHelper(HEADERSIZE, [] (const std::string& header) {
             assert(header.size() == 4);
             int sizePayload = 0;
@@ -52,7 +52,6 @@ ProtocolHeaderBinarySize::ProtocolHeaderBinarySize(const Variant& data)
             }
             return sizePayload;
       })
-    , m_data(data)
 {
 
 }
@@ -177,10 +176,6 @@ bool ProtocolHeaderBinarySize::received(const IStreamConnectionPtr& /*connection
     {
         for (const auto &message : messages)
         {
-            if (m_data.getType() != VARTYPE_NONE)
-            {
-                message->getControlData().add(ProtocolMessage::FMQ_PROTOCOLDATA, m_data);
-            }
             callback->received(message);
         }
     }
@@ -239,9 +234,9 @@ struct RegisterProtocolHeaderBinarySizeFactory
 
 
 // IProtocolFactory
-IProtocolPtr ProtocolHeaderBinarySizeFactory::createProtocol(const Variant& data)
+IProtocolPtr ProtocolHeaderBinarySizeFactory::createProtocol(const Variant& /*data*/)
 {
-    return std::make_shared<ProtocolHeaderBinarySize>(data);
+    return std::make_shared<ProtocolHeaderBinarySize>();
 }
 
 

@@ -56,6 +56,7 @@ private:
     virtual std::string* getMetainfo(const std::string& key) override;
 
     // controlData
+    virtual Variant* getControlDataIfAvailable() override;
     virtual Variant& getControlData() override;
     virtual const Variant& getControlData() const override;
 

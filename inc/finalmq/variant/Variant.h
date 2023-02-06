@@ -129,6 +129,18 @@ public:
         return T();
     }
 
+    inline int getType() const
+    {
+        if (m_value)
+        {
+            return m_value->getType();
+        }
+        else
+        {
+            return VARTYPE_NONE;
+        }
+    }
+
 
     Variant(const Variant& rhs);
     const Variant& operator =(const Variant& rhs);
@@ -137,7 +149,6 @@ public:
 
     void accept(IVariantVisitor& visitor, ssize_t index = 0, int level = 0, ssize_t size = 0, const std::string& name = "");
 
-    int getType() const;
     Variant* getVariant(const std::string& name);
     const Variant* getVariant(const std::string& name) const;
 

@@ -528,36 +528,16 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
         entityId2entityNoLock = m_entityId2entity;
     }
 
-    //bool pureData = false;
-    //if (session->doesSupportMetainfo())
-    //{
-    //    const std::string* path = message->getMetainfo(FMQ_PATH);
-    //    if (path)
-    //    {
-    //        if (isPureDataPath(*path))
-    //        {
-    //            pureData = true;
-    //        }
-    //    }
-    //}
-
     int formatStatus = 0;
     ReceiveData receiveData{ createSessionInfo(session), {}, message, {}, false, {} };
-    //if (!pureData)
-    //{
-        if (!session->doesSupportMetainfo())
-        {
-            receiveData.structBase = RemoteEntityFormatRegistry::instance().parse(*message, session->getContentType(), m_storeRawDataInReceiveStruct, name2entityNoLock, receiveData.header, formatStatus);
-        }
-        else
-        {
-            receiveData.structBase = RemoteEntityFormatRegistry::instance().parseHeaderInMetainfo(*message, session->getContentType(), m_storeRawDataInReceiveStruct, name2entityNoLock, receiveData.header, formatStatus);
-        }
-    //}
-    //else
-    //{
-    //    receiveData.structBase = RemoteEntityFormatRegistry::instance().parsePureData(*message, receiveData.header);
-    //}
+    if (!session->doesSupportMetainfo())
+    {
+        receiveData.structBase = RemoteEntityFormatRegistry::instance().parse(session, *message, m_storeRawDataInReceiveStruct, name2entityNoLock, receiveData.header, formatStatus);
+    }
+    else
+    {
+        receiveData.structBase = RemoteEntityFormatRegistry::instance().parseHeaderInMetainfo(session, *message, m_storeRawDataInReceiveStruct, name2entityNoLock, receiveData.header, formatStatus);
+    }
 
     EntityId entityId = receiveData.header.destid;
     bool foundEntity = false;

@@ -22,7 +22,6 @@
 
 
 #include "finalmq/serializehl7/SerializerHl7.h"
-#include "finalmq/serialize/ParserProcessValuesInOrder.h"
 #include "finalmq/metadata/MetaData.h"
 #include "finalmq/helpers/base64.h"
 #include "finalmq/helpers/Utils.h"
@@ -35,12 +34,10 @@ namespace finalmq {
 
 
 SerializerHl7::SerializerHl7(IZeroCopyBuffer& buffer, int maxBlockSize, bool enumAsString)
-    : ParserConverter()
+    : ParserProcessDefaultValues(false)
     , m_internal(buffer, maxBlockSize, enumAsString)
-    , m_parserProcessValuesInOrder()
 {
-    m_parserProcessValuesInOrder = std::make_unique<ParserProcessValuesInOrder>(false, &m_internal);
-    setVisitor(*m_parserProcessValuesInOrder);
+    setVisitor(m_internal);
 }
 
 
@@ -66,219 +63,155 @@ void SerializerHl7::Internal::notifyError(const char* /*str*/, const char* /*mes
 
 void SerializerHl7::Internal::startStruct(const MetaStruct& stru)
 {
-    m_indexOfLeyer.push_back(-1);
     std::vector<std::string> splitString;
-    Utils::split(stru.getTypeName(), 0, stru.getTypeName().size(), '_', splitString);
+    std::string messageStructure = removeNamespace(stru.getTypeName());
+    Utils::split(messageStructure, 0, messageStructure.size(), '_', splitString);
 
+    m_indexOfLayer.push_back(-1);
+
+    int indexMessageType[3] = { 0, 8 };
     if (splitString.size() >= 1)
     {
-        m_messageCode = removeNamespace(splitString[0]);
+        m_hl7Builder.enterString(indexMessageType, 2, 0, std::move(splitString[0]));
     }
     if (splitString.size() >= 2)
     {
-        m_triggerEvent = removeNamespace(splitString[1]);
+        m_hl7Builder.enterString(indexMessageType, 2, 1, std::move(splitString[1]));
     }
-    m_messageStructure = removeNamespace(stru.getTypeName());
-
+    m_hl7Builder.enterString(indexMessageType, 2, 2, std::move(messageStructure));
 }
 
 
 void SerializerHl7::Internal::finished()
 {
     m_hl7Builder.finished();
-    m_indexOfLeyer.pop_back();
 }
 
 
 void SerializerHl7::Internal::enterStruct(const MetaField& field)
 {
-    if (!m_indexOfLeyer.empty())
-    {
-        ++m_indexOfLeyer.back();
-    }
-    m_indexOfLeyer.push_back(-1);
-
     const MetaStruct* stru = MetaDataGlobal::instance().getStruct(field);
     bool isSegment = (stru && (stru->getFlags() & METASTRUCTFLAG_HL7_SEGMENT));
 
-    if ((m_levelSegment > 0) || isSegment)
+    if (m_inSegment || isSegment)
     {
-        m_hl7Builder.enterStruct();
-        if (m_levelSegment == 0)
+        if (isSegment)
         {
-            m_hl7Builder.enterString(removeNamespace(field.typeName));
+            assert(m_indexOfLayer.size() == 1);
+            ++m_indexOfLayer.back();
+            m_hl7Builder.enterString(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), -1, removeNamespace(stru->getTypeName()));
+            m_inSegment = true;
         }
-        ++m_levelSegment;
+        else
+        {
+            m_indexOfLayer.push_back(field.index);
+        }
     }
 }
 
 void SerializerHl7::Internal::exitStruct(const MetaField& /*field*/)
 {
-    if (m_levelSegment > 0)
+    if (m_indexOfLayer.size() > 1)
     {
-        m_hl7Builder.exitStruct();
+        m_indexOfLayer.pop_back();
     }
-
-    m_indexOfLeyer.pop_back();
-    if (m_levelSegment > 0)
+    else
     {
-        --m_levelSegment;
+        m_inSegment = false;
     }
 }
 
 void SerializerHl7::Internal::enterStructNull(const MetaField& /*field*/)
 {
-    if (!m_indexOfLeyer.empty())
-    {
-        ++m_indexOfLeyer.back();
-    }
-
-    if (m_levelSegment > 0)
-    {
-        m_hl7Builder.enterEmpty();
-    }
 }
 
 
 void SerializerHl7::Internal::enterArrayStruct(const MetaField& /*field*/)
 {
-    if (!m_indexOfLeyer.empty())
-    {
-        ++m_indexOfLeyer.back();
-    }
-    if (m_levelSegment > 0)
-    {
-        m_hl7Builder.enterArray();
-    }
 }
 
 void SerializerHl7::Internal::exitArrayStruct(const MetaField& /*field*/)
 {
-    if (!m_indexOfLeyer.empty())
+}
+
+
+void SerializerHl7::Internal::enterBool(const MetaField& field, bool value)
+{
+    if (!m_indexOfLayer.empty())
     {
-        ++m_indexOfLeyer.back();
+        m_hl7Builder.enterInt64(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value ? 1 : 0);
     }
-    if (m_levelSegment > 0)
+}
+
+void SerializerHl7::Internal::enterInt32(const MetaField& field, std::int32_t value)
+{
+    if (!m_indexOfLayer.empty())
     {
-        m_hl7Builder.exitArray();
+        m_hl7Builder.enterInt64(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value);
+    }
+}
+
+void SerializerHl7::Internal::enterUInt32(const MetaField& field, std::uint32_t value)
+{
+    if (!m_indexOfLayer.empty())
+    {
+        m_hl7Builder.enterUInt64(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value);
+    }
+}
+
+void SerializerHl7::Internal::enterInt64(const MetaField& field, std::int64_t value)
+{
+    if (!m_indexOfLayer.empty())
+    {
+        m_hl7Builder.enterInt64(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value);
+    }
+}
+
+void SerializerHl7::Internal::enterUInt64(const MetaField& field, std::uint64_t value)
+{
+    if (!m_indexOfLayer.empty())
+    {
+        m_hl7Builder.enterUInt64(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value);
     }
 }
 
 
-void SerializerHl7::Internal::enterBool(const MetaField& /*field*/, bool value)
+void SerializerHl7::Internal::enterFloat(const MetaField& field, float value)
 {
-    if (!m_indexOfLeyer.empty())
+    if (!m_indexOfLayer.empty())
     {
-        ++m_indexOfLeyer.back();
-    }
-    if (m_levelSegment > 0)
-    {
-        m_hl7Builder.enterInt64(value ? 1 : 0);
+        m_hl7Builder.enterDouble(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value);
     }
 }
 
-void SerializerHl7::Internal::enterInt32(const MetaField& /*field*/, std::int32_t value)
+void SerializerHl7::Internal::enterDouble(const MetaField& field, double value)
 {
-    if (!m_indexOfLeyer.empty())
+    if (!m_indexOfLayer.empty())
     {
-        ++m_indexOfLeyer.back();
-    }
-    if (m_levelSegment > 0)
-    {
-        m_hl7Builder.enterInt64(value);
-    }
-}
-
-void SerializerHl7::Internal::enterUInt32(const MetaField& /*field*/, std::uint32_t value)
-{
-    if (!m_indexOfLeyer.empty())
-    {
-        ++m_indexOfLeyer.back();
-    }
-    if (m_levelSegment > 0)
-    {
-        m_hl7Builder.enterUInt64(value);
-    }
-}
-
-void SerializerHl7::Internal::enterInt64(const MetaField& /*field*/, std::int64_t value)
-{
-    if (!m_indexOfLeyer.empty())
-    {
-        ++m_indexOfLeyer.back();
-    }
-    if (m_levelSegment > 0)
-    {
-        m_hl7Builder.enterInt64(value);
-    }
-}
-
-void SerializerHl7::Internal::enterUInt64(const MetaField& /*field*/, std::uint64_t value)
-{
-    if (!m_indexOfLeyer.empty())
-    {
-        ++m_indexOfLeyer.back();
-    }
-    if (m_levelSegment > 0)
-    {
-        m_hl7Builder.enterUInt64(value);
-    }
-}
-
-
-void SerializerHl7::Internal::enterFloat(const MetaField& /*field*/, float value)
-{
-    if (!m_indexOfLeyer.empty())
-    {
-        ++m_indexOfLeyer.back();
-    }
-    if (m_levelSegment > 0)
-    {
-        m_hl7Builder.enterDouble(value);
-    }
-}
-
-void SerializerHl7::Internal::enterDouble(const MetaField& /*field*/, double value)
-{
-    if (!m_indexOfLeyer.empty())
-    {
-        ++m_indexOfLeyer.back();
-    }
-    if (m_levelSegment > 0)
-    {
-        m_hl7Builder.enterDouble(value);
+        m_hl7Builder.enterDouble(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value);
     }
 }
 
 void SerializerHl7::Internal::enterString(const MetaField& field, std::string&& value)
 {
-    enterString(field, value.c_str(), value.size());
+    if (!m_indexOfLayer.empty() && value.size() > 0)
+    {
+        // skip message type
+        if (!(m_indexOfLayer.size() == 2 && m_indexOfLayer[0] == 0 && m_indexOfLayer[1] == 8))
+        {
+            m_hl7Builder.enterString(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, std::move(value));
+        }
+    }
 }
 
-void SerializerHl7::Internal::enterString(const MetaField& /*field*/, const char* value, ssize_t size)
+void SerializerHl7::Internal::enterString(const MetaField& field, const char* value, ssize_t size)
 {
-    if (!m_indexOfLeyer.empty())
+    if (!m_indexOfLayer.empty() && size > 0)
     {
-        ++m_indexOfLeyer.back();
-    }
-    if (m_levelSegment > 0)
-    {
-        // set msg.messageType.messageCode, triggerEvent, messageStructure
-        if (m_indexOfLeyer.size() == 3 && m_indexOfLeyer[0] == 0 && m_indexOfLeyer[1] == 8 && m_indexOfLeyer[2] == 0)
+        // skip message type
+        if (!(m_indexOfLayer.size() == 2 && m_indexOfLayer[0] == 0 && m_indexOfLayer[1] == 8))
         {
-            m_hl7Builder.enterString(m_messageCode);
-        }
-        else if (m_indexOfLeyer.size() == 3 && m_indexOfLeyer[0] == 0 && m_indexOfLeyer[1] == 8 && m_indexOfLeyer[2] == 1)
-        {
-            m_hl7Builder.enterString(m_triggerEvent);
-        }
-        else if (m_indexOfLeyer.size() == 3 && m_indexOfLeyer[0] == 0 && m_indexOfLeyer[1] == 8 && m_indexOfLeyer[2] == 2)
-        {
-            m_hl7Builder.enterString(m_messageStructure);
-        }
-        else
-        {
-            m_hl7Builder.enterString(value, size);
+            m_hl7Builder.enterString(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value, size);
         }
     }
 }
@@ -288,7 +221,7 @@ void SerializerHl7::Internal::enterBytes(const MetaField& field, Bytes&& value)
     // convert to base64
     std::string base64;
     Base64::encode(value, base64);
-    enterString(field, base64.data(), base64.size());
+    enterString(field, std::move(base64));
 }
 
 void SerializerHl7::Internal::enterBytes(const MetaField& field, const BytesElement* value, ssize_t size)
@@ -301,7 +234,7 @@ void SerializerHl7::Internal::enterEnum(const MetaField& field, std::int32_t val
     if (m_enumAsString)
     {
         const std::string& name = MetaDataGlobal::instance().getEnumAliasByValue(field, value);
-        enterString(field, name.c_str(), name.size());
+        enterString(field, std::string(name));
     }
     else
     {
@@ -341,20 +274,14 @@ void SerializerHl7::Internal::enterArrayBoolMove(const MetaField& field, std::ve
     enterArrayBool(field, value);
 }
 
-void SerializerHl7::Internal::enterArrayBool(const MetaField& /*field*/, const std::vector<bool>& value)
+void SerializerHl7::Internal::enterArrayBool(const MetaField& field, const std::vector<bool>& value)
 {
-    if (!m_indexOfLeyer.empty())
+    if (!m_indexOfLayer.empty())
     {
-        ++m_indexOfLeyer.back();
-    }
-    if (m_levelSegment > 0)
-    {
-        m_hl7Builder.enterArray();
         for (size_t i = 0; i < value.size(); ++i)
         {
-            m_hl7Builder.enterInt64(value[i] ? 1 : 0);
+            m_hl7Builder.enterInt64(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value[i] ? 1 : 0);
         }
-        m_hl7Builder.exitArray();
     }
 }
 
@@ -363,20 +290,14 @@ void SerializerHl7::Internal::enterArrayInt32(const MetaField& field, std::vecto
     enterArrayInt32(field, value.data(), value.size());
 }
 
-void SerializerHl7::Internal::enterArrayInt32(const MetaField& /*field*/, const std::int32_t* value, ssize_t size)
+void SerializerHl7::Internal::enterArrayInt32(const MetaField& field, const std::int32_t* value, ssize_t size)
 {
-    if (!m_indexOfLeyer.empty())
+    if (!m_indexOfLayer.empty())
     {
-        ++m_indexOfLeyer.back();
-    }
-    if (m_levelSegment > 0)
-    {
-        m_hl7Builder.enterArray();
         for (ssize_t i = 0; i < size; ++i)
         {
-            m_hl7Builder.enterInt64(value[i]);
+            m_hl7Builder.enterInt64(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value[i]);
         }
-        m_hl7Builder.exitArray();
     }
 }
 
@@ -385,20 +306,14 @@ void SerializerHl7::Internal::enterArrayUInt32(const MetaField& field, std::vect
     enterArrayUInt32(field, value.data(), value.size());
 }
 
-void SerializerHl7::Internal::enterArrayUInt32(const MetaField& /*field*/, const std::uint32_t* value, ssize_t size)
+void SerializerHl7::Internal::enterArrayUInt32(const MetaField& field, const std::uint32_t* value, ssize_t size)
 {
-    if (!m_indexOfLeyer.empty())
+    if (!m_indexOfLayer.empty())
     {
-        ++m_indexOfLeyer.back();
-    }
-    if (m_levelSegment > 0)
-    {
-        m_hl7Builder.enterArray();
         for (ssize_t i = 0; i < size; ++i)
         {
-            m_hl7Builder.enterUInt64(value[i]);
+            m_hl7Builder.enterUInt64(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value[i]);
         }
-        m_hl7Builder.exitArray();
     }
 }
 
@@ -407,20 +322,14 @@ void SerializerHl7::Internal::enterArrayInt64(const MetaField& field, std::vecto
     enterArrayInt64(field, value.data(), value.size());
 }
 
-void SerializerHl7::Internal::enterArrayInt64(const MetaField& /*field*/, const std::int64_t* value, ssize_t size)
+void SerializerHl7::Internal::enterArrayInt64(const MetaField& field, const std::int64_t* value, ssize_t size)
 {
-    if (!m_indexOfLeyer.empty())
+    if (!m_indexOfLayer.empty())
     {
-        ++m_indexOfLeyer.back();
-    }
-    if (m_levelSegment > 0)
-    {
-        m_hl7Builder.enterArray();
         for (ssize_t i = 0; i < size; ++i)
         {
-            m_hl7Builder.enterInt64(value[i]);
+            m_hl7Builder.enterInt64(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value[i]);
         }
-        m_hl7Builder.exitArray();
     }
 }
 
@@ -429,20 +338,14 @@ void SerializerHl7::Internal::enterArrayUInt64(const MetaField& field, std::vect
     enterArrayUInt64(field, value.data(), value.size());
 }
 
-void SerializerHl7::Internal::enterArrayUInt64(const MetaField& /*field*/, const std::uint64_t* value, ssize_t size)
+void SerializerHl7::Internal::enterArrayUInt64(const MetaField& field, const std::uint64_t* value, ssize_t size)
 {
-    if (!m_indexOfLeyer.empty())
+    if (!m_indexOfLayer.empty())
     {
-        ++m_indexOfLeyer.back();
-    }
-    if (m_levelSegment > 0)
-    {
-        m_hl7Builder.enterArray();
         for (ssize_t i = 0; i < size; ++i)
         {
-            m_hl7Builder.enterUInt64(value[i]);
+            m_hl7Builder.enterUInt64(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value[i]);
         }
-        m_hl7Builder.exitArray();
     }
 }
 
@@ -451,20 +354,14 @@ void SerializerHl7::Internal::enterArrayFloat(const MetaField& field, std::vecto
     enterArrayFloat(field, value.data(), value.size());
 }
 
-void SerializerHl7::Internal::enterArrayFloat(const MetaField& /*field*/, const float* value, ssize_t size)
+void SerializerHl7::Internal::enterArrayFloat(const MetaField& field, const float* value, ssize_t size)
 {
-    if (!m_indexOfLeyer.empty())
+    if (!m_indexOfLayer.empty())
     {
-        ++m_indexOfLeyer.back();
-    }
-    if (m_levelSegment > 0)
-    {
-        m_hl7Builder.enterArray();
         for (ssize_t i = 0; i < size; ++i)
         {
-            m_hl7Builder.enterDouble(value[i]);
+            m_hl7Builder.enterDouble(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value[i]);
         }
-        m_hl7Builder.exitArray();
     }
 }
 
@@ -473,42 +370,36 @@ void SerializerHl7::Internal::enterArrayDouble(const MetaField& field, std::vect
     enterArrayDouble(field, value.data(), value.size());
 }
 
-void SerializerHl7::Internal::enterArrayDouble(const MetaField& /*field*/, const double* value, ssize_t size)
+void SerializerHl7::Internal::enterArrayDouble(const MetaField& field, const double* value, ssize_t size)
 {
-    if (!m_indexOfLeyer.empty())
+    if (!m_indexOfLayer.empty())
     {
-        ++m_indexOfLeyer.back();
-    }
-    if (m_levelSegment > 0)
-    {
-        m_hl7Builder.enterArray();
         for (ssize_t i = 0; i < size; ++i)
         {
-            m_hl7Builder.enterDouble(value[i]);
+            m_hl7Builder.enterDouble(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value[i]);
         }
-        m_hl7Builder.exitArray();
     }
 }
 
 void SerializerHl7::Internal::enterArrayStringMove(const MetaField& field, std::vector<std::string>&& value)
 {
-    enterArrayString(field, value);
-}
-
-void SerializerHl7::Internal::enterArrayString(const MetaField& /*field*/, const std::vector<std::string>& value)
-{
-    if (!m_indexOfLeyer.empty())
+    if (!m_indexOfLayer.empty())
     {
-        ++m_indexOfLeyer.back();
-    }
-    if (m_levelSegment > 0)
-    {
-        m_hl7Builder.enterArray();
         for (size_t i = 0; i < value.size(); ++i)
         {
-            m_hl7Builder.enterString(value[i]);
+            m_hl7Builder.enterString(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, std::move(value[i]));
         }
-        m_hl7Builder.exitArray();
+    }
+}
+
+void SerializerHl7::Internal::enterArrayString(const MetaField& field, const std::vector<std::string>& value)
+{
+    if (!m_indexOfLayer.empty())
+    {
+        for (size_t i = 0; i < value.size(); ++i)
+        {
+            m_hl7Builder.enterString(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value[i].c_str(), value[i].size());
+        }
     }
 }
 
@@ -517,23 +408,17 @@ void SerializerHl7::Internal::enterArrayBytesMove(const MetaField& field, std::v
     enterArrayBytes(field, value);
 }
 
-void SerializerHl7::Internal::enterArrayBytes(const MetaField& /*field*/, const std::vector<Bytes>& value)
+void SerializerHl7::Internal::enterArrayBytes(const MetaField& field, const std::vector<Bytes>& value)
 {
-    if (!m_indexOfLeyer.empty())
+    if (!m_indexOfLayer.empty())
     {
-        ++m_indexOfLeyer.back();
-    }
-    if (m_levelSegment > 0)
-    {
-        m_hl7Builder.enterArray();
         for (size_t i = 0; i < value.size(); ++i)
         {
             // convert to base64
             std::string base64;
             Base64::encode(value[i], base64);
-            m_hl7Builder.enterString(base64);
+            m_hl7Builder.enterString(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, std::move(base64));
         }
-        m_hl7Builder.exitArray();
     }
 }
 
@@ -544,51 +429,35 @@ void SerializerHl7::Internal::enterArrayEnum(const MetaField& field, std::vector
 
 void SerializerHl7::Internal::enterArrayEnum(const MetaField& field, const std::int32_t* value, ssize_t size)
 {
-    if (!m_indexOfLeyer.empty())
+    if (!m_indexOfLayer.empty())
     {
-        ++m_indexOfLeyer.back();
-    }
-    if (m_levelSegment > 0)
-    {
-        m_hl7Builder.enterArray();
         if (m_enumAsString)
         {
             for (ssize_t i = 0; i < size; ++i)
             {
                 const std::string& name = MetaDataGlobal::instance().getEnumAliasByValue(field, value[i]);
-                m_hl7Builder.enterString(name.c_str(), name.size());
+                m_hl7Builder.enterString(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, name.c_str(), name.size());
             }
         }
         else
         {
             for (ssize_t i = 0; i < size; ++i)
             {
-                m_hl7Builder.enterInt64(value[i]);
+                m_hl7Builder.enterInt64(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value[i]);
             }
         }
-        m_hl7Builder.exitArray();
     }
 }
 
 void SerializerHl7::Internal::enterArrayEnumMove(const MetaField& field, std::vector<std::string>&& value)
 {
-    enterArrayEnum(field, value);
-}
-
-void SerializerHl7::Internal::enterArrayEnum(const MetaField& field, const std::vector<std::string>& value)
-{
-    if (!m_indexOfLeyer.empty())
+    if (!m_indexOfLayer.empty())
     {
-        ++m_indexOfLeyer.back();
-    }
-    if (m_levelSegment > 0)
-    {
-        m_hl7Builder.enterArray();
         if (m_enumAsString)
         {
             for (size_t i = 0; i < value.size(); ++i)
             {
-                m_hl7Builder.enterString(value[i].c_str(), value.size());
+                m_hl7Builder.enterString(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, std::move(value[i]));
             }
         }
         else
@@ -596,10 +465,31 @@ void SerializerHl7::Internal::enterArrayEnum(const MetaField& field, const std::
             for (size_t i = 0; i < value.size(); ++i)
             {
                 std::int32_t v = MetaDataGlobal::instance().getEnumValueByName(field, value[i]);
-                m_hl7Builder.enterInt64(v);
+                m_hl7Builder.enterInt64(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, v);
             }
         }
-        m_hl7Builder.exitArray();
+    }
+}
+
+void SerializerHl7::Internal::enterArrayEnum(const MetaField& field, const std::vector<std::string>& value)
+{
+    if (!m_indexOfLayer.empty())
+    {
+        if (m_enumAsString)
+        {
+            for (size_t i = 0; i < value.size(); ++i)
+            {
+                m_hl7Builder.enterString(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value[i].c_str(), value[i].size());
+            }
+        }
+        else
+        {
+            for (size_t i = 0; i < value.size(); ++i)
+            {
+                std::int32_t v = MetaDataGlobal::instance().getEnumValueByName(field, value[i]);
+                m_hl7Builder.enterInt64(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, v);
+            }
+        }
     }
 }
 

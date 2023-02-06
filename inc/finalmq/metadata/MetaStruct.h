@@ -37,8 +37,7 @@ namespace finalmq {
 enum MetaStructFlags : std::int32_t
 {
     METASTRUCTFLAG_NONE = 0,
-    METASTRUCTFLAG_HL7_STRUCT = 1,
-    METASTRUCTFLAG_HL7_SEGMENT = 2,
+    METASTRUCTFLAG_HL7_SEGMENT = 1,
 };
 
 

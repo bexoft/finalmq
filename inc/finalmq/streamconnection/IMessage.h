@@ -55,6 +55,7 @@ struct IMessage : public IZeroCopyBuffer
     virtual std::string* getMetainfo(const std::string& key) = 0;
 
     // controlData
+    virtual Variant* getControlDataIfAvailable() = 0;
     virtual Variant& getControlData() = 0;
     virtual const Variant& getControlData() const = 0;
 

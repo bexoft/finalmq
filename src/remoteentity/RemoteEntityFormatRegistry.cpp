@@ -93,13 +93,14 @@ int RemoteEntityFormatRegistryImpl::getContentType(const std::string& contentTyp
 
 
 
-bool RemoteEntityFormatRegistryImpl::serialize(IMessage& message, int contentType, const Header& header, const StructBase* structBase)
+bool RemoteEntityFormatRegistryImpl::serialize(const IProtocolSessionPtr& session, IMessage& message, const Header& header, const StructBase* structBase)
 {
+    int contentType = session->getContentType();
     auto it = m_contentTypeToFormat.find(contentType);
     if (it != m_contentTypeToFormat.end())
     {
         assert(it->second);
-        it->second->serialize(message, header, structBase);
+        it->second->serialize(session, message, header, structBase);
         return true;
     }
     streamError << "ContentType not found: " << contentType;
@@ -133,13 +134,14 @@ void RemoteEntityFormatRegistryImpl::serializeHeaderToMetainfo(IMessage& message
 }
 
 
-bool RemoteEntityFormatRegistryImpl::serializeData(IMessage& message, int contentType, const StructBase* structBase)
+bool RemoteEntityFormatRegistryImpl::serializeData(const IProtocolSessionPtr& session, IMessage& message, const StructBase* structBase)
 {
+    int contentType = session->getContentType();
     auto it = m_contentTypeToFormat.find(contentType);
     if (it != m_contentTypeToFormat.end())
     {
         assert(it->second);
-        it->second->serializeData(message, structBase);
+        it->second->serializeData(session, message, structBase);
         return true;
     }
     streamError << "ContentType not found: " << contentType;
@@ -303,11 +305,11 @@ void RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, co
             bool ok = false;
             if (!session->doesSupportMetainfo() || (session->isSendRequestByPoll() && header.mode == MsgMode::MSG_REQUEST))
             {
-                ok = serialize(*message, session->getContentType(), header, structBase);
+                ok = serialize(session, *message, header, structBase);
             }
             else
             {
-                ok = serializeData(*message, session->getContentType(), structBase);
+                ok = serializeData(session, *message, structBase);
             }
             if (!ok)
             {
@@ -563,7 +565,7 @@ std::string RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, con
 }
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainfo(IMessage& message, int contentType, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus)
+std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainfo(const IProtocolSessionPtr& session, IMessage& message, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus)
 {
     std::string data = parseMetainfo(message, name2Entity, header);
 
@@ -581,11 +583,12 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainf
             bufferRef.second = data.size();
         }
 
+        int contentType = session->getContentType();
         auto it = m_contentTypeToFormat.find(contentType);
         if (it != m_contentTypeToFormat.end())
         {
             assert(it->second);
-            structBase = it->second->parseData(bufferRef, storeRawData, header.type, formatStatus);
+            structBase = it->second->parseData(session, bufferRef, storeRawData, header.type, formatStatus);
         }
     }
     else
@@ -598,19 +601,19 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainf
     return structBase;
 }
 
-std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(IMessage& message, int contentType, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus)
+std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(const IProtocolSessionPtr& session, IMessage& message, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus)
 {
     formatStatus = 0;
     BufferRef bufferRef = message.getReceivePayload();
-    Variant* protocolData = message.getControlData().getVariant(ProtocolMessage::FMQ_PROTOCOLDATA);
-
+            
     std::shared_ptr<StructBase> structBase;
 
+    int contentType = session->getContentType();
     auto it = m_contentTypeToFormat.find(contentType);
     if (it != m_contentTypeToFormat.end())
     {
         assert(it->second);
-        structBase = it->second->parse(bufferRef, protocolData, storeRawData, name2Entity, header, formatStatus);
+        structBase = it->second->parse(session, bufferRef, storeRawData, name2Entity, header, formatStatus);
         metainfoToMessage(message, header.meta);
     }
 

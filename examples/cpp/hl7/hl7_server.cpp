@@ -23,6 +23,8 @@
 
 #include "finalmq/remoteentity/RemoteEntityContainer.h"
 #include "finalmq/remoteentity/EntityFileService.h"
+#include "finalmq/remoteentity/RemoteEntityFormatHl7.h"
+#include "finalmq/remoteentity/RemoteEntityFormatJson.h"
 #include "finalmq/logger/Logger.h"
 #include "finalmq/helpers/Executor.h"
 #include "finalmq/variant/VariantValueStruct.h"
@@ -38,27 +40,7 @@
 #define MODULENAME  "helloworld_server"
 
 
-using finalmq::RemoteEntity;
-using finalmq::RemoteEntityContainer;
-using finalmq::IRemoteEntityContainer;
-using finalmq::EntityFileServer;
-using finalmq::PeerId;
-using finalmq::EntityId;
-using finalmq::PeerEvent;
-using finalmq::RequestContextPtr;
-using finalmq::SessionInfo;
-using finalmq::ConnectionData;
-using finalmq::ConnectionEvent;
-using finalmq::Logger;
-using finalmq::LogContext;
-using finalmq::IExecutorPtr;
-using finalmq::Executor;
-using finalmq::ExecutorWorker;
-using finalmq::VariantStruct;
-using finalmq::ProtocolMqtt5Client;
-using finalmq::NoData;
-using finalmq::IProtocolSessionPtr;
-
+using namespace finalmq;
 
 
 class EntityServer : public RemoteEntity
@@ -243,9 +225,22 @@ int main()
     // content type in payload: protobuf
     entityContainer.bind("tcp://*:7777:headersize:protobuf");
 
-    entityContainer.bind("tcp://*:7000:delimiter_lf:hl7", { {},
+    entityContainer.bind("tcp://*:7000:delimiter_lf:hl7", { {}, {},
+        VariantStruct{  {RemoteEntityFormatHl7::PROPERTY_NAMESPACE, std::string{"hl7"}},
+                        {RemoteEntityFormatHl7::PROPERTY_ENTITY, std::string{"MyService"}} } });
+
+#ifndef WIN32
+    entityContainer.bind("ipc://udp_hl7:delimiter_lf:hl7", { {}, {},
         VariantStruct{  {"hl7namespace", std::string{"hl7"}},
                         {"hl7entity", std::string{"MyService"}} } });
+#endif
+
+    entityContainer.bind("tcp://*:7001:delimiter_lf:json", { {}, {},
+        VariantStruct{ {RemoteEntityFormatJson::PROPERTY_SERIALIZE_ENUM_AS_STRING, true},
+                       {RemoteEntityFormatJson::PROPERTY_SERIALIZE_SKIP_DEFAULT_VALUES, true} }
+    });
+
+    entityContainer.bind("tcp://*:7002:headersize:protobuf"),
 
     entityContainer.bind("tcp://*:8081:httpserver:hl7");
 

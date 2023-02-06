@@ -28,6 +28,7 @@
 #include "finalmq/serializestruct/SerializerStruct.h"
 #include "finalmq/serializestruct/StructFactoryRegistry.h"
 #include "finalmq/variant/VariantValues.h"
+#include "finalmq/protocolsession/ProtocolMessage.h"
 
 #include "finalmq/remoteentity/entitydata.fmq.h"
 
@@ -40,6 +41,9 @@ namespace finalmq {
 
 const int RemoteEntityFormatHl7::CONTENT_TYPE = 3;
 const std::string RemoteEntityFormatHl7::CONTENT_TYPE_NAME = "hl7";
+
+const std::string RemoteEntityFormatHl7::PROPERTY_NAMESPACE = "namespace";
+const std::string RemoteEntityFormatHl7::PROPERTY_ENTITY = "entity";
 
 
 
@@ -55,13 +59,13 @@ struct RegisterFormatHl7
 
 #define HL7BLOCKSIZE   512
 
-void RemoteEntityFormatHl7::serialize(IMessage& message, const Header& /*header*/, const StructBase* structBase)
+void RemoteEntityFormatHl7::serialize(const IProtocolSessionPtr& session, IMessage& message, const Header& /*header*/, const StructBase* structBase)
 {
-    serializeData(message, structBase);
+    serializeData(session, message, structBase);
 }
 
 
-void RemoteEntityFormatHl7::serializeData(IMessage& message, const StructBase* structBase)
+void RemoteEntityFormatHl7::serializeData(const IProtocolSessionPtr& /*session*/, IMessage& message, const StructBase* structBase)
 {
     if (structBase)
     {
@@ -87,7 +91,7 @@ void RemoteEntityFormatHl7::serializeData(IMessage& message, const StructBase* s
 
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatHl7::parse(const BufferRef& bufferRef, const Variant* protocolData, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& /*name2Entity*/, Header& header, int& formatStatus)
+std::shared_ptr<StructBase> RemoteEntityFormatHl7::parse(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& /*name2Entity*/, Header& header, int& formatStatus)
 {
     formatStatus = 0;
     char* buffer = bufferRef.first;
@@ -118,10 +122,11 @@ std::shared_ptr<StructBase> RemoteEntityFormatHl7::parse(const BufferRef& buffer
         }
         const std::string* hl7Namespace = nullptr;
         const std::string* hl7DestName = nullptr;
-        if (protocolData != nullptr)
+        const Variant& formatData = session->getFormatData();
+        if (formatData.getType() != VARTYPE_NONE)
         {
-            hl7Namespace = protocolData->getData<std::string>("hl7namespace");
-            hl7DestName = protocolData->getData<std::string>("hl7entity");
+            hl7Namespace = formatData.getData<std::string>(PROPERTY_NAMESPACE);
+            hl7DestName = formatData.getData<std::string>(PROPERTY_ENTITY);
         }
         if (hl7Namespace != nullptr)
         {
@@ -143,7 +148,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatHl7::parse(const BufferRef& buffer
         header.corrid = 1;
 
         BufferRef bufferRefData = { buffer, sizeBuffer };
-        data = parseData(bufferRefData, storeRawData, header.type, formatStatus);
+        data = parseData(session, bufferRefData, storeRawData, header.type, formatStatus);
 
         formatStatus |= FORMATSTATUS_AUTOMATIC_CONNECT;
     }
@@ -153,7 +158,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatHl7::parse(const BufferRef& buffer
 
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatHl7::parseData(const BufferRef& bufferRef, bool storeRawData, std::string& type, int& formatStatus)
+std::shared_ptr<StructBase> RemoteEntityFormatHl7::parseData(const IProtocolSessionPtr& /*session*/, const BufferRef& bufferRef, bool storeRawData, std::string& type, int& formatStatus)
 {
     formatStatus = 0;
     const char* buffer = bufferRef.first;

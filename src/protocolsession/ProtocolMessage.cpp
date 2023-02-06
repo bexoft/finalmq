@@ -211,6 +211,17 @@ std::string* ProtocolMessage::getMetainfo(const std::string& key)
 
 
 // controlData
+
+Variant* ProtocolMessage::getControlDataIfAvailable()
+{
+    if (m_controlData.getType() != VARTYPE_STRUCT)
+    {
+        return nullptr;
+    }
+    return &m_controlData;
+}
+
+
 Variant& ProtocolMessage::getControlData()
 {
     if (m_controlData.getType() != VARTYPE_STRUCT)

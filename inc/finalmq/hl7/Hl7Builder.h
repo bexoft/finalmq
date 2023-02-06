@@ -24,27 +24,25 @@
 
 #include "finalmq/helpers/IZeroCopyBuffer.h"
 #include <string>
+#include <vector>
 
 namespace finalmq {
 
-struct IHl7BuilderVisitor
+
+    struct IHl7BuilderVisitor
 {
     virtual ~IHl7BuilderVisitor() {}
-    virtual void syntaxError(const char* str, const char* message) = 0;
-    virtual void enterStruct() = 0;
-    virtual void exitStruct() = 0;
-    virtual void enterArray() = 0;
-    virtual void exitArray() = 0;
-    virtual void enterNull() = 0;
-    virtual void enterEmpty() = 0;
-    virtual void enterInt64(std::int64_t value) = 0;
-    virtual void enterUInt64(std::uint64_t value) = 0;
-    virtual void enterDouble(double value) = 0;
-    virtual void enterString(const char* value, ssize_t size) = 0;
-    virtual void enterString(const std::string& value) = 0;
+    virtual void enterNull(const int* levelIndex, int sizeLevelIndex, int index) = 0;
+    virtual void enterInt64(const int* levelIndex, int sizeLevelIndex, int index, std::int64_t value) = 0;
+    virtual void enterUInt64(const int* levelIndex, int sizeLevelIndex, int index, std::uint64_t value) = 0;
+    virtual void enterDouble(const int* levelIndex, int sizeLevelIndex, int index, double value) = 0;
+    virtual void enterString(const int* levelIndex, int sizeLevelIndex, int index, const char* value, ssize_t size) = 0;
+    virtual void enterString(const int* levelIndex, int sizeLevelIndex, int index, std::string&& value) = 0;
     virtual void finished() = 0;
 };
 
+
+class Hl7Node;
 
 
 class SYMBOLEXP Hl7Builder : public IHl7BuilderVisitor
@@ -55,25 +53,18 @@ public:
 
 private:
     // IHl7BuilderVisitor
-    virtual void syntaxError(const char* str, const char* message) override;
-    virtual void enterStruct() override;
-    virtual void exitStruct() override;
-    virtual void enterArray() override;
-    virtual void exitArray() override;
-    virtual void enterNull() override;
-    virtual void enterEmpty() override;
-    virtual void enterInt64(std::int64_t value) override;
-    virtual void enterUInt64(std::uint64_t value) override;
-    virtual void enterDouble(double value) override;
-    virtual void enterString(const char* value, ssize_t size) override;
-    virtual void enterString(const std::string& value) override;
+    virtual void enterNull(const int* levelIndex, int sizeLevelIndex, int index) override;
+    virtual void enterInt64(const int* levelIndex, int sizeLevelIndex, int index, std::int64_t value) override;
+    virtual void enterUInt64(const int* levelIndex, int sizeLevelIndex, int index, std::uint64_t value) override;
+    virtual void enterDouble(const int* levelIndex, int sizeLevelIndex, int index, double value) override;
+    virtual void enterString(const int* levelIndex, int sizeLevelIndex, int index, const char* value, ssize_t size) override;
+    virtual void enterString(const int* levelIndex, int sizeLevelIndex, int index, std::string&& value) override;
     virtual void finished() override;
 
     void reserveSpace(ssize_t space);
     void resizeBuffer();
-    void correctDelimiters();
-    void correctOneDelimiter();
     void escapeString(const char* str, ssize_t size);
+    void serialize(const Hl7Node& node, int index, int iStart);
 
     IZeroCopyBuffer&        m_zeroCopybuffer;
     ssize_t                 m_maxBlockSize = 512;
@@ -81,18 +72,15 @@ private:
     char*                   m_buffer = nullptr;
     char*                   m_bufferEnd = nullptr;
 
-
     static const int LAYER_MAX = 4;
-
-    int                     m_waitForDeleimiterField = 0;
-    int                     m_level = 0;
-    bool                    m_array = false;
 
     std::string             m_delimitersForField;
     char                    m_delimiterField[LAYER_MAX];
     char                    m_delimiterRepeat;
     char                    m_escape;
     char                    m_delimiterCurrent = '\0';
+
+    std::unique_ptr<Hl7Node> m_root;
 };
 
 }   // namespace finalmq

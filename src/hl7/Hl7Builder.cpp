@@ -43,9 +43,11 @@ static const char SEGMENT_END = 0x0D;   // '\r'
 Hl7Builder::Hl7Builder(IZeroCopyBuffer& buffer, int maxBlockSize, const std::string& delimiters)
     : m_zeroCopybuffer(buffer)
     , m_maxBlockSize(maxBlockSize)
+    , m_root(std::make_unique<Hl7Node>())
 {
     assert(delimiters.size() == 5);
-    m_delimitersForField = delimiters.substr(1);
+    m_delimitersForField = delimiters;
+    m_delimitersForField += delimiters[0];  // |^~\&|
     m_delimiterField[0] = SEGMENT_END;      // segment delimiter '\r', 0x0D
     m_delimiterField[1] = delimiters[0];    // |
     m_delimiterField[2] = delimiters[1];    // ^
@@ -56,7 +58,7 @@ Hl7Builder::Hl7Builder(IZeroCopyBuffer& buffer, int maxBlockSize, const std::str
 
 Hl7Builder::~Hl7Builder()
 {
-    finished();
+    m_root.reset();
 }
 
 
@@ -100,179 +102,146 @@ void Hl7Builder::resizeBuffer()
 }
 
 
+class Hl7Node
+{
+public:
+    void enterString(const int* levelIndex, int sizeLevelIndex, int index, std::string&& value)
+    {
+        if (value.size() == 0)
+        {
+            return;
+        }
+        if (index == -1 && sizeLevelIndex == 0)
+        {
+            m_segmentId = std::move(value);
+            return;
+        }
+        int i = index;
+        if (sizeLevelIndex > 0)
+        {
+            i = levelIndex[0];
+        }
+        if (i + 1 > static_cast<int>(m_nodes.size()))
+        {
+            m_nodes.reserve(std::max((i + 1) * 2, 30));
+            m_nodes.resize(i + 1);
+        }
+
+        if (sizeLevelIndex == 0)
+        {
+            m_nodes[i].m_strings.emplace_back(std::move(value));
+        }
+        else
+        {
+            m_nodes[i].enterString(levelIndex + 1, sizeLevelIndex - 1, index, std::move(value));
+        }
+    }
+
+    std::string                 m_segmentId;
+    std::vector<Hl7Node>        m_nodes;
+    std::vector<std::string>    m_strings;
+};
 
 // IJsonParserVisitor
-void Hl7Builder::syntaxError(const char* /*str*/, const char* /*message*/)
+
+
+void Hl7Builder::enterNull(const int* levelIndex, int sizeLevelIndex, int index)
 {
+    m_root->enterString(levelIndex, sizeLevelIndex, index, std::string("\"\""));
 }
 
-
-void Hl7Builder::enterStruct()
+void Hl7Builder::enterInt64(const int* levelIndex, int sizeLevelIndex, int index, std::int64_t value)
 {
-    assert(!m_array);
-    assert(m_level < LAYER_MAX - 1);
-    if (m_level < LAYER_MAX - 1)
-    {
-        ++m_level;
-        m_delimiterCurrent = m_delimiterField[m_level];
-    }
+    m_root->enterString(levelIndex, sizeLevelIndex, index, std::to_string(value));
 }
 
-void Hl7Builder::exitStruct()
+void Hl7Builder::enterUInt64(const int* levelIndex, int sizeLevelIndex, int index, std::uint64_t value)
 {
-    assert(!m_array);
-    correctDelimiters();
-    assert(m_level > 0);
-    if (m_level > 0)
-    {
-        --m_level;
-        m_delimiterCurrent = m_delimiterField[m_level];
-
-        reserveSpace(1);
-        assert(m_buffer);
-        *m_buffer = m_delimiterCurrent;
-        ++m_buffer;
-    }
-}
-void Hl7Builder::enterArray()
-{
-    assert(!m_array);
-    m_array = true;
-    m_delimiterCurrent = m_delimiterRepeat;
+    m_root->enterString(levelIndex, sizeLevelIndex, index, std::to_string(value));
 }
 
-void Hl7Builder::exitArray()
+void Hl7Builder::enterDouble(const int* levelIndex, int sizeLevelIndex, int index, double value)
 {
-    correctOneDelimiter();
-    assert(m_array);
-    m_array = false;
-    m_delimiterCurrent = m_delimiterField[m_level];
-
-    reserveSpace(1);
-    assert(m_buffer);
-    *m_buffer = m_delimiterCurrent;
-    ++m_buffer;
+    m_root->enterString(levelIndex, sizeLevelIndex, index, std::to_string(value));
 }
 
-
-void Hl7Builder::enterNull()
+void Hl7Builder::enterString(const int* levelIndex, int sizeLevelIndex, int index, const char* value, ssize_t size)
 {
-    reserveSpace(3);
-    assert(m_buffer);
-    *m_buffer = '"';
-    ++m_buffer;
-    *m_buffer = '"';
-    ++m_buffer;
-    *m_buffer = m_delimiterCurrent;
-    ++m_buffer;
+    m_root->enterString(levelIndex, sizeLevelIndex, index, std::string(value, size));
 }
 
-void Hl7Builder::enterEmpty()
+void Hl7Builder::enterString(const int* levelIndex, int sizeLevelIndex, int index, std::string&& value)
 {
-    reserveSpace(1);
-    assert(m_buffer);
-    *m_buffer = m_delimiterCurrent;
-    ++m_buffer;
-}
-
-void Hl7Builder::enterInt64(std::int64_t value)
-{
-    reserveSpace(30);   // 21 + 1 is enough: 20 digits + 1 minus + 1 delimiter
-    assert(m_buffer);
-    m_buffer = rapidjson::i64toa(value, m_buffer);
-    *m_buffer = m_delimiterCurrent;
-    ++m_buffer;
-}
-
-void Hl7Builder::enterUInt64(std::uint64_t value)
-{
-    reserveSpace(30);   // 20 + 1 is enough: 20 digits + 1 comma
-    assert(m_buffer);
-    m_buffer = rapidjson::u64toa(value, m_buffer);
-    *m_buffer = m_delimiterCurrent;
-    ++m_buffer;
-}
-
-void Hl7Builder::enterDouble(double value)
-{
-    reserveSpace(50);
-    assert(m_buffer);
-    m_buffer = rapidjson::dtoa(value, m_buffer);
-    *m_buffer = m_delimiterCurrent;
-    ++m_buffer;
-}
-
-void Hl7Builder::enterString(const char* value, ssize_t size)
-{
-    if (m_waitForDeleimiterField != 1 && m_waitForDeleimiterField != 2)
-    {
-        reserveSpace(size * 6 + 1); // string*6 + delimiter
-        escapeString(value, size);
-        *m_buffer = m_delimiterCurrent;
-        ++m_buffer;
-    }
-
-    if (m_waitForDeleimiterField == 0)
-    {
-        reserveSpace(m_delimitersForField.size() + 1); // string + delimiter
-        memcpy(m_buffer, m_delimitersForField.c_str(), m_delimitersForField.size());
-        m_buffer += m_delimitersForField.size();
-        *m_buffer = m_delimiterCurrent;
-        ++m_buffer;
-    }
-
-    if (m_waitForDeleimiterField < 3)
-    {
-        ++m_waitForDeleimiterField;
-    }
-}
-
-void Hl7Builder::enterString(const std::string& value)
-{
-    enterString(value.c_str(), value.size());
+    m_root->enterString(levelIndex, sizeLevelIndex, index, std::move(value));
 }
 
 void Hl7Builder::finished()
 {
+    reserveSpace(3 + m_delimitersForField.size());
+    assert(m_buffer);
+    memcpy(m_buffer, "MSH", 3);
+    m_buffer += 3;
+    memcpy(m_buffer, m_delimitersForField.c_str(), m_delimitersForField.size());
+    m_buffer += m_delimitersForField.size();
+
+    serialize(*m_root, 0, 0);
+
     resizeBuffer();
+
+    m_root.reset();
 }
 
-void Hl7Builder::correctDelimiters()
+
+void Hl7Builder::serialize(const Hl7Node& node, int index, int iStart)
 {
-    if (m_buffer)
+    const std::vector<Hl7Node>& nodes = node.m_nodes;
+
+    for (size_t i = iStart; i < nodes.size(); ++i)
     {
-        while (m_buffer > m_bufferStart)
+        const Hl7Node& subNode = nodes[i];        
+
+        if (i != 0 && index == 0 && !subNode.m_segmentId.empty())
         {
-            char c = *(m_buffer - 1);
-            if (c == m_delimiterCurrent)
+            reserveSpace(subNode.m_segmentId.size() + 1);
+            assert(m_buffer);
+            memcpy(m_buffer, subNode.m_segmentId.c_str(), subNode.m_segmentId.size());
+            m_buffer += subNode.m_segmentId.size();
+            if (!subNode.m_nodes.empty())
             {
-                --m_buffer;
+                *m_buffer = m_delimiterField[index + 1];
+                ++m_buffer;
             }
-            else
+        }
+
+        if (!subNode.m_nodes.empty())
+        {
+            serialize(subNode, index + 1, (index == 0 && i == 0) ? 2 : 0);    // skip MSH|^~\&|
+        }
+        else
+        {
+            if (!subNode.m_strings.empty())
             {
-                break;
+                for (size_t n = 0; n < subNode.m_strings.size(); ++n)
+                {
+                    const std::string& str = subNode.m_strings[n];
+                    reserveSpace(str.size() * 6 + 1);
+                    escapeString(str.c_str(), str.size());
+                    if (n < subNode.m_strings.size() - 1)
+                    {
+                        *m_buffer = m_delimiterRepeat;
+                        ++m_buffer;
+                    }
+                }
             }
+        }
+        if ((i < nodes.size() - 1) || (index == 0))
+        {
+            reserveSpace(1);
+            *m_buffer = m_delimiterField[index];
+            ++m_buffer;
         }
     }
 }
-
-void Hl7Builder::correctOneDelimiter()
-{
-    if (m_buffer)
-    {
-        ssize_t size = m_buffer - m_bufferStart;
-        assert(size >= 0);
-        if (size >= 1)
-        {
-            char c = *(m_buffer - 1);
-            if (c == m_delimiterCurrent)
-            {
-                --m_buffer;
-            }
-        }
-    }
-}
-
 
 
 void Hl7Builder::escapeString(const char* str, ssize_t size)

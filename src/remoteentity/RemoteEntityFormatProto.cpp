@@ -60,7 +60,7 @@ struct RegisterFormatProto
 #define PROTOBUFBLOCKSIZE   512
 
 
-void RemoteEntityFormatProto::serialize(IMessage& message, const Header& header, const StructBase* structBase)
+void RemoteEntityFormatProto::serialize(const IProtocolSessionPtr& session, IMessage& message, const Header& header, const StructBase* structBase)
 {
     char* bufferSizeHeader = message.addSendPayload(PROTOBUFBLOCKSIZE);
     message.downsizeLastSendPayload(4);
@@ -79,11 +79,11 @@ void RemoteEntityFormatProto::serialize(IMessage& message, const Header& header,
     ++bufferSizeHeader;
     *bufferSizeHeader = static_cast<unsigned char>(sizeHeader >> 24);
 
-    serializeData(message, structBase);
+    serializeData(session, message, structBase);
 }
 
 
-void RemoteEntityFormatProto::serializeData(IMessage& message, const StructBase* structBase)
+void RemoteEntityFormatProto::serializeData(const IProtocolSessionPtr& /*session*/, IMessage& message, const StructBase* structBase)
 {
     char* bufferSizePayload = message.addSendPayload(4);
     ssize_t sizePayload = 0;
@@ -118,7 +118,7 @@ void RemoteEntityFormatProto::serializeData(IMessage& message, const StructBase*
 
 static const std::string FMQ_PATH = "fmq_path";
 
-std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const BufferRef& bufferRef, const Variant* /*protocolData*/, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus)
+std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus)
 {
     formatStatus = 0;
     char* buffer = bufferRef.first;
@@ -190,7 +190,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const BufferRef& buff
         buffer += sizeHeader;
 
         BufferRef bufferRefData = { buffer, sizeData };
-        data = parseData(bufferRefData, storeRawData, header.type, formatStatus);
+        data = parseData(session, bufferRefData, storeRawData, header.type, formatStatus);
     }
 
     return data;
@@ -198,7 +198,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const BufferRef& buff
 
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatProto::parseData(const BufferRef& bufferRef, bool storeRawData, std::string& type, int& formatStatus)
+std::shared_ptr<StructBase> RemoteEntityFormatProto::parseData(const IProtocolSessionPtr& /*session*/, const BufferRef& bufferRef, bool storeRawData, std::string& type, int& formatStatus)
 {
     formatStatus = 0;
     const char* buffer = bufferRef.first;

@@ -34,11 +34,14 @@ public:
     static const int CONTENT_TYPE;              // 2
     static const std::string CONTENT_TYPE_NAME; // json
 
+    static const std::string PROPERTY_SERIALIZE_ENUM_AS_STRING;         // enumAsSt
+    static const std::string PROPERTY_SERIALIZE_SKIP_DEFAULT_VALUES;    // skipDefVal
+
 private:
-    virtual std::shared_ptr<StructBase> parse(const BufferRef& bufferRef, const Variant* protocolData, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus) override;
-    virtual std::shared_ptr<StructBase> parseData(const BufferRef& bufferRef, bool storeRawData, std::string& type, int& formatStatus) override;
-    virtual void serialize(IMessage& message, const Header& header, const StructBase* structBase = nullptr) override;
-    virtual void serializeData(IMessage& message, const StructBase* structBase = nullptr) override;
+    virtual std::shared_ptr<StructBase> parse(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus) override;
+    virtual std::shared_ptr<StructBase> parseData(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, std::string& type, int& formatStatus) override;
+    virtual void serialize(const IProtocolSessionPtr& session, IMessage& message, const Header& header, const StructBase* structBase = nullptr) override;
+    virtual void serializeData(const IProtocolSessionPtr& session, IMessage& message, const StructBase* structBase = nullptr) override;
 };
 
 

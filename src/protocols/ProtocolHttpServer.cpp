@@ -85,10 +85,9 @@ enum ChunkedState
 
 std::atomic_int64_t ProtocolHttpServer::m_nextSessionNameCounter{ 1 };
 
-ProtocolHttpServer::ProtocolHttpServer(const Variant& data)
+ProtocolHttpServer::ProtocolHttpServer()
     : m_randomDevice()
     , m_randomGenerator(m_randomDevice())
-    , m_data(data)
 {
 
 }
@@ -197,14 +196,13 @@ static void splitOnce(const std::string& src, ssize_t indexBegin, ssize_t indexE
     ssize_t len = pos - indexBegin;
     assert(len >= 0);
     dest.emplace_back(&src[indexBegin], len);
-    indexBegin += len + 1;
+    ++pos;
 
-    if (indexBegin < indexEnd)
+    if (static_cast<ssize_t>(pos) < indexEnd)
     {
-        ssize_t len = indexEnd - indexBegin;
+        len = indexEnd - pos;
         assert(len >= 0);
-        dest.emplace_back(&src[indexBegin], len);
-        indexBegin += len + 1;
+        dest.emplace_back(&src[pos], len);
     }
 }
 
@@ -1013,24 +1011,18 @@ bool ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, co
 
     if (m_state != State::STATE_CONTENT)
     {
-        if (m_offsetRemaining == 0)
+        if (m_offsetRemaining == 0 || m_sizeRemaining == 0)
         {
             m_receiveBuffer.resize(m_sizeRemaining + bytesToRead);
         }
         else
         {
-            std::string temp;
-            if (m_sizeRemaining > 0)
-            {
-                temp = std::move(m_receiveBuffer);
-            }
+            std::string temp = std::move(m_receiveBuffer);
+            m_receiveBuffer.clear();
             m_receiveBuffer.resize(m_sizeRemaining + bytesToRead);
-            if (m_sizeRemaining > 0)
-            {
-                memcpy(&m_receiveBuffer[0], &temp[m_offsetRemaining], m_sizeRemaining);
-            }
-            m_offsetRemaining = 0;
+            memcpy(&m_receiveBuffer[0], &temp[m_offsetRemaining], m_sizeRemaining);
         }
+        m_offsetRemaining = 0;
 
         ssize_t bytesReceived = 0;
         int res = 0;
@@ -1048,6 +1040,7 @@ bool ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, co
             ok = receiveHeaders(bytesReceived);
             if (ok && m_state == State::STATE_CONTENT)
             {
+                assert(m_message != nullptr);
                 BufferRef payload = m_message->getReceivePayload();
                 assert(payload.second == m_contentLength);
                 if (m_sizeRemaining <= m_contentLength)
@@ -1113,10 +1106,6 @@ bool ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, co
                 bool handled = handleInternalCommands(callback, ok);
                 if (!handled)
                 {
-                    if (m_data.getType() != VARTYPE_NONE)
-                    {
-                        m_message->getControlData().add(ProtocolMessage::FMQ_PROTOCOLDATA, m_data);
-                    }
                     callback->received(m_message, m_connectionId);
                 }
             }
@@ -1236,9 +1225,9 @@ struct RegisterProtocolHttpServerFactory
 
 
 // IProtocolFactory
-IProtocolPtr ProtocolHttpServerFactory::createProtocol(const Variant& data)
+IProtocolPtr ProtocolHttpServerFactory::createProtocol(const Variant& /*data*/)
 {
-    return std::make_shared<ProtocolHttpServer>(data);
+    return std::make_shared<ProtocolHttpServer>();
 }
 
 
