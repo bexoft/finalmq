@@ -584,7 +584,7 @@ public class TestString : finalmq.StructBase, IEquatable<TestString>
 		set { m_value = value; }
 	}
 
-    string m_value = "";
+    string m_value = string.Empty;
 
 	public bool Equals(TestString? rhs)
 	{
@@ -1871,7 +1871,7 @@ public class TestRequest : finalmq.StructBase, IEquatable<TestRequest>
 		set { m_datarequest = value; }
 	}
 
-    string m_datarequest = "";
+    string m_datarequest = string.Empty;
 
 	public bool Equals(TestRequest? rhs)
 	{
@@ -1936,7 +1936,7 @@ public class TestReply : finalmq.StructBase, IEquatable<TestReply>
 		set { m_datareply = value; }
 	}
 
-    string m_datareply = "";
+    string m_datareply = string.Empty;
 
 	public bool Equals(TestReply? rhs)
 	{

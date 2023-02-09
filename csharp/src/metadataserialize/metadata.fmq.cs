@@ -153,10 +153,10 @@ public class SerializeMetaEnumEntry : finalmq.StructBase, IEquatable<SerializeMe
 		set { m_alias = value; }
 	}
 
-    string m_name = "";
+    string m_name = string.Empty;
     int m_id = 0;
-    string m_desc = "";
-    string m_alias = "";
+    string m_desc = string.Empty;
+    string m_alias = string.Empty;
 
 	public bool Equals(SerializeMetaEnumEntry? rhs)
 	{
@@ -247,8 +247,8 @@ public class SerializeMetaEnum : finalmq.StructBase, IEquatable<SerializeMetaEnu
 		set { m_entries = value; }
 	}
 
-    string m_type = "";
-    string m_desc = "";
+    string m_type = string.Empty;
+    string m_desc = string.Empty;
     IList<finalmq.SerializeMetaEnumEntry> m_entries = new List<finalmq.SerializeMetaEnumEntry>();
 
 	public bool Equals(SerializeMetaEnum? rhs)
@@ -351,9 +351,9 @@ public class SerializeMetaField : finalmq.StructBase, IEquatable<SerializeMetaFi
 	}
 
     finalmq.SerializeMetaTypeId m_tid = new finalmq.SerializeMetaTypeId();
-    string m_type = "";
-    string m_name = "";
-    string m_desc = "";
+    string m_type = string.Empty;
+    string m_name = string.Empty;
+    string m_desc = string.Empty;
     IList<finalmq.SerializeMetaFieldFlags> m_flags = new List<finalmq.SerializeMetaFieldFlags>();
 
 	public bool Equals(SerializeMetaField? rhs)
@@ -449,8 +449,8 @@ public class SerializeMetaStruct : finalmq.StructBase, IEquatable<SerializeMetaS
 		set { m_fields = value; }
 	}
 
-    string m_type = "";
-    string m_desc = "";
+    string m_type = string.Empty;
+    string m_desc = string.Empty;
     IList<finalmq.SerializeMetaField> m_fields = new List<finalmq.SerializeMetaField>();
 
 	public bool Equals(SerializeMetaStruct? rhs)

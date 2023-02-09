@@ -241,7 +241,7 @@ public class VarValue : finalmq.StructBase, IEquatable<VarValue>
 		set { m_valarrbytes = value; }
 	}
 
-    string m_name = "";
+    string m_name = string.Empty;
     finalmq.variant.VarTypeId m_type = new finalmq.variant.VarTypeId();
     bool m_valbool = false;
     int m_valint32 = 0;
@@ -250,7 +250,7 @@ public class VarValue : finalmq.StructBase, IEquatable<VarValue>
     ulong m_valuint64 = 0;
     float m_valfloat = 0.0f;
     double m_valdouble = 0.0;
-    string m_valstring = "";
+    string m_valstring = string.Empty;
     byte[] m_valbytes = Array.Empty<byte>();
     IList<finalmq.variant.VarValue> m_vallist = new List<finalmq.variant.VarValue>();
     bool[] m_valarrbool = Array.Empty<bool>();

@@ -250,7 +250,7 @@ module.exports = {
             case 'double':
             case 'TYPE_DOUBLE': return '0.0'
             case 'string':
-            case 'TYPE_STRING': return '\"\"'
+            case 'TYPE_STRING': return 'string.Empty'
             case 'bytes':
             case 'TYPE_BYTES': return 'Array.Empty<byte>()'
             case 'struct':

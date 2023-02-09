@@ -155,8 +155,8 @@ namespace finalmq
         Variant EchoData { get; set; }
 
         // for send
-        void AddSendPayload(byte[] payload);
         void AddSendPayload(byte[] payload, int reserve = 0);
+        void AddSendPayload(BufferRef payload, int reserve = 0);
         BufferRef AddSendPayload(int size, int reserve = 0);
         void DownsizeLastSendPayload(int newSize);
 

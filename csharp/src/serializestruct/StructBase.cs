@@ -244,6 +244,48 @@ namespace finalmq
             }
         }
 
+        class RawData
+        {
+            public RawData(string type, int contentType, BufferRef data)
+            {
+                m_type = type;
+                m_contentType = contentType;
+                m_data = data;
+            }
+            public string Type { get { return m_type; } }
+            public int ContentType { get { return m_contentType; } }
+            public BufferRef Data { get { return m_data; } }
+
+            string m_type;
+            int m_contentType;
+            BufferRef m_data;
+        }
+
+        public void SetRawData(string type, int contentType, BufferRef rawData)
+        {
+            if (m_rawData != null)
+            {
+                m_rawData = new RawData(type, contentType, rawData);
+            }
+        }
+        public string? GetRawType()
+        {
+            return m_rawData?.Type;
+        }
+        public int GetRawContentType()
+        {
+            if (m_rawData != null)
+            {
+                return m_rawData.ContentType;
+            }
+            return 0;
+        }
+        public BufferRef? GetRawData()
+        {
+            return m_rawData?.Data;
+        }
+
+        RawData? m_rawData = null;
     }
 
 

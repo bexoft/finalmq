@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="node ../codegenerator/csharp/csharp.js --input=./src/metadataserialize/metadata.fmq --outpath=./src/metadataserialize&#xD;&#xA;node ../codegenerator/csharp/csharp.js --input=./src/metadataserialize/variant.fmq --outpath=./src/metadataserialize" />
+    <Exec Command="node ../codegenerator/csharp/csharp.js --input=./src/metadataserialize/metadata.fmq --outpath=./src/metadataserialize&#xD;&#xA;node ../codegenerator/csharp/csharp.js --input=./src/metadataserialize/variant.fmq --outpath=./src/metadataserialize&#xD;&#xA;node ../codegenerator/csharp/csharp.js --input=./src/remoteentity/entitydata.fmq --outpath=./src/remoteentity" />
   </Target>
 
 </Project>

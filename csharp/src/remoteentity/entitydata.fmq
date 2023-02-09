@@ -1,0 +1,115 @@
+{
+	"imports":[
+	],
+    "namespace":"finalmq",
+    "enums": [
+        {"type":"MsgMode","desc":"","entries":[
+            {"name":"MSG_REQUEST",      "id":0,     "desc":"The message is a request"},
+            {"name":"MSG_REPLY",        "id":1,     "desc":"The message is a reply"},
+            {"name":"MSG_RESERVED2",    "id":2,     "desc":""},
+            {"name":"MSG_RESERVED3",    "id":3,     "desc":""},
+            {"name":"MSG_RESERVED4",    "id":4,     "desc":""},
+            {"name":"MSG_RESERVED5",    "id":5,     "desc":""},
+            {"name":"MSG_RESERVED6",    "id":6,     "desc":""},
+            {"name":"MSG_RESERVED7",    "id":7,     "desc":""},
+            {"name":"MSG_RESERVED8",    "id":8,     "desc":""},
+            {"name":"MSG_RESERVED9",    "id":9,     "desc":""},
+            {"name":"MSG_RESERVED10",   "id":10,    "desc":""},
+            {"name":"MSG_RESERVED11",   "id":11,    "desc":""},
+            {"name":"MSG_RESERVED12",   "id":12,    "desc":""},
+            {"name":"MSG_RESERVED13",   "id":13,    "desc":""},
+            {"name":"MSG_RESERVED14",   "id":14,    "desc":""},
+            {"name":"MSG_RESERVED15",   "id":15,    "desc":""}
+        ]},
+        {"type":"Status","desc":"","entries":[
+            {"name":"STATUS_OK",                        "id":0,     "desc":"OK"},
+            {"name":"STATUS_ENTITY_NOT_FOUND",          "id":1,     "desc":"Peer endity not found"},
+            {"name":"STATUS_WRONG_REPLY_TYPE",          "id":2,     "desc":"Not expected reply type"},
+            {"name":"STATUS_SYNTAX_ERROR",              "id":3,     "desc":"Syntax error at parsing the message"},
+            {"name":"STATUS_REQUEST_NOT_FOUND",         "id":4,     "desc":"The request/command is not registered at the request executor (server)"},
+            {"name":"STATUS_REQUESTTYPE_NOT_KNOWN",     "id":5,     "desc":"The request type is not known"},
+            {"name":"STATUS_REPLYTYPE_NOT_KNOWN",       "id":6,     "desc":"the reply type is not known"},
+            {"name":"STATUS_SESSION_DISCONNECTED",      "id":7,     "desc":"the (socket) session is disconnected"},
+            {"name":"STATUS_PEER_DISCONNECTED",         "id":8,     "desc":"The peer is disconnected"},
+            {"name":"STATUS_NO_REPLY",                  "id":9,     "desc":"No reply was sent by the request executor (server)"},
+            {"name":"STATUS_WRONG_CONTENTTYPE",         "id":10,    "desc":"Wrong content type"},
+            {"name":"STATUS_RESERVED11",                "id":11,    "desc":""},
+            {"name":"STATUS_RESERVED12",                "id":12,    "desc":""},
+            {"name":"STATUS_RESERVED13",                "id":13,    "desc":""},
+            {"name":"STATUS_RESERVED14",                "id":14,    "desc":""},
+            {"name":"STATUS_RESERVED15",                "id":15,    "desc":""},
+            {"name":"STATUS_RESERVED16",                "id":16,    "desc":""},
+            {"name":"STATUS_RESERVED17",                "id":17,    "desc":""},
+            {"name":"STATUS_RESERVED18",                "id":18,    "desc":""},
+            {"name":"STATUS_RESERVED19",                "id":19,    "desc":""},
+            {"name":"STATUS_RESERVED20",                "id":20,    "desc":""},
+            {"name":"STATUS_RESERVED21",                "id":21,    "desc":""},
+            {"name":"STATUS_RESERVED22",                "id":22,    "desc":""},
+            {"name":"STATUS_RESERVED23",                "id":23,    "desc":""},
+            {"name":"STATUS_RESERVED24",                "id":24,    "desc":""},
+            {"name":"STATUS_RESERVED25",                "id":25,    "desc":""},
+            {"name":"STATUS_RESERVED26",                "id":26,    "desc":""},
+            {"name":"STATUS_RESERVED27",                "id":27,    "desc":""},
+            {"name":"STATUS_RESERVED28",                "id":28,    "desc":""},
+            {"name":"STATUS_RESERVED29",                "id":29,    "desc":""},
+            {"name":"STATUS_RESERVED30",                "id":30,    "desc":""},
+            {"name":"STATUS_RESERVED31",                "id":31,    "desc":""}
+        ]}
+    ],
+
+    "structs":[
+        {"type":"Header","desc":"","fields":[
+            {"tid":"TYPE_UINT64",       "type":"",          "name":"destid",    "desc":"ID of destination/receiver endity","flags":["METAFLAG_PROTO_VARINT"]},
+            {"tid":"TYPE_STRING",       "type":"",          "name":"destname",  "desc":"Name of destination/receiver endity","flags":[]},
+            {"tid":"TYPE_UINT64",       "type":"",          "name":"srcid",     "desc":"ID of source/sender endity","flags":["METAFLAG_PROTO_VARINT"]},
+            {"tid":"TYPE_ENUM",         "type":"MsgMode",   "name":"mode",      "desc":"mode: request or reply","flags":[]},
+            {"tid":"TYPE_ENUM",         "type":"Status",    "name":"status",    "desc":"Reply status","flags":[]},
+            {"tid":"TYPE_STRING",       "type":"",          "name":"path",      "desc":"path in the context of the entity, if empty than type is also the path","flags":[]},
+            {"tid":"TYPE_STRING",       "type":"",          "name":"type",      "desc":"Message type in payload","flags":[]},
+            {"tid":"TYPE_UINT64",       "type":"",          "name":"corrid",    "desc":"It is set by the sender of the request. The receiver of the request will reply with the same correlation ID","flags":["METAFLAG_PROTO_VARINT"]},
+            {"tid":"TYPE_ARRAY_STRING", "type":"",          "name":"meta",      "desc":"Additional data for the message","flags":[]}
+        ]},
+        {"type":"RawDataMessage","desc":"Contains only plain message data","fields":[
+        ]},
+        {"type":"ConnectEntity","desc":"If an entity connects to a remote entity it shall send ConnectEntity","fields":[
+            {"tid":"TYPE_STRING",       "type":"",          "name":"entityName",   "desc":"The entity name of the sender of ConnectEntity request","flags":[]}
+        ]},
+        {"type":"ConnectEntityReply","desc":"If an entity receives a ConnectEntity request it shall reply with ConnectEntityReply","fields":[
+            {"tid":"TYPE_UINT64",       "type":"",          "name":"entityid",     "desc":"The entity ID of the sender of ConnectivityReply","flags":["METAFLAG_PROTO_VARINT"]},
+            {"tid":"TYPE_STRING",       "type":"",          "name":"entityName",   "desc":"The entity name of the sender of ConnectivityReply","flags":[]}
+        ]},
+        {"type":"DisconnectEntity","desc":"The entity that will be removed will send DisconnectEntity to all its peers.","fields":[]},
+        {"type":"RawBytes","desc":"Send pure data for protocols with no meta info.","fields":[
+            {"tid":"TYPE_BYTES",       "type":"",          "name":"data",     "desc":"The data","flags":[]}
+        ]},
+        {"type":"NoData","desc":"Use this type for the request if you register a command with a path and the rquest does not have any data","fields":[
+        ]},
+    
+        {"type":"HD_RE","desc":"desc","fields":[
+            {"tid":"string",    "type":"",      "name":"namespaceId",                               "desc":""},
+            {"tid":"string",    "type":"",      "name":"universalId",                               "desc":""},
+            {"tid":"string",    "type":"",      "name":"universalIdType",                           "desc":""}
+        ]},        
+        {"type":"MSG_RE","desc":"desc","fields":[
+            {"tid":"string",    "type":"",      "name":"messageCode",                               "desc":""},
+            {"tid":"string",    "type":"",      "name":"triggerEvent",                              "desc":""},
+            {"tid":"string",    "type":"",      "name":"messageStructure",                          "desc":""}
+        ]},
+        {"type":"MSH_RE","desc":"desc","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[
+            {"tid":"string",    "type":"",      "name":"fieldSeparator",                            "desc":""},
+            {"tid":"string",    "type":"",      "name":"encodingCharacters",                        "desc":""},
+            {"tid":"struct",    "type":"HD_RE", "name":"sendingApplication",                        "desc":""},
+            {"tid":"struct",    "type":"HD_RE", "name":"sendingFacility",                           "desc":""},
+            {"tid":"struct",    "type":"HD_RE", "name":"receivingApplication",                      "desc":""},
+            {"tid":"struct",    "type":"HD_RE", "name":"receivingFacility",                         "desc":""},
+            {"tid":"string",    "type":"",      "name":"dateTimeOfMessage",                         "desc":""},
+            {"tid":"string",    "type":"",      "name":"security",                                  "desc":""},
+            {"tid":"struct",    "type":"MSG_RE","name":"messageType",                               "desc":""}
+        ]},
+        {"type":"Hl7Header","desc":"desc","fields":[
+            {"tid":"struct",    "type":"MSH_RE",        "name":"msh",                               "desc":""}
+        ]}
+    ]
+}
+
+
