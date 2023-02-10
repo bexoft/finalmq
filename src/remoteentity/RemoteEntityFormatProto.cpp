@@ -45,7 +45,7 @@ namespace finalmq {
 const int RemoteEntityFormatProto::CONTENT_TYPE = 1;
 const std::string RemoteEntityFormatProto::CONTENT_TYPE_NAME = "protobuf";
 
-static const std::string FMQ_METHOD = "fmq_method";
+//static const std::string FMQ_METHOD = "fmq_method";
 
 
 struct RegisterFormatProto
@@ -70,14 +70,15 @@ void RemoteEntityFormatProto::serialize(const IProtocolSessionPtr& session, IMes
     parserHeader.parseStruct();
     ssize_t sizeHeader = message.getTotalSendPayloadSize() - 4;
     assert(sizeHeader >= 0);
+    size_t uSizeHeader = sizeHeader;
 
-    *bufferSizeHeader = static_cast<unsigned char>(sizeHeader);
+    *bufferSizeHeader = static_cast<unsigned char>(uSizeHeader);
     ++bufferSizeHeader;
-    *bufferSizeHeader = static_cast<unsigned char>(sizeHeader >> 8);
+    *bufferSizeHeader = static_cast<unsigned char>(uSizeHeader >> 8);
     ++bufferSizeHeader;
-    *bufferSizeHeader = static_cast<unsigned char>(sizeHeader >> 16);
+    *bufferSizeHeader = static_cast<unsigned char>(uSizeHeader >> 16);
     ++bufferSizeHeader;
-    *bufferSizeHeader = static_cast<unsigned char>(sizeHeader >> 24);
+    *bufferSizeHeader = static_cast<unsigned char>(uSizeHeader >> 24);
 
     serializeData(session, message, structBase);
 }
@@ -107,13 +108,14 @@ void RemoteEntityFormatProto::serializeData(const IProtocolSessionPtr& /*session
         sizePayload = sizeEnd - sizeStart;
     }
     assert(sizePayload >= 0);
-    *bufferSizePayload = static_cast<unsigned char>(sizePayload);
+    size_t uSizePayload = sizePayload;
+    *bufferSizePayload = static_cast<unsigned char>(uSizePayload);
     ++bufferSizePayload;
-    *bufferSizePayload = static_cast<unsigned char>(sizePayload >> 8);
+    *bufferSizePayload = static_cast<unsigned char>(uSizePayload >> 8);
     ++bufferSizePayload;
-    *bufferSizePayload = static_cast<unsigned char>(sizePayload >> 16);
+    *bufferSizePayload = static_cast<unsigned char>(uSizePayload >> 16);
     ++bufferSizePayload;
-    *bufferSizePayload = static_cast<unsigned char>(sizePayload >> 24);
+    *bufferSizePayload = static_cast<unsigned char>(uSizePayload >> 24);
 }
 
 static const std::string FMQ_PATH = "fmq_path";

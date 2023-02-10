@@ -163,14 +163,16 @@ struct IRemoteEntity
         assert(funcReply);
         CorrelationId correlationId = sendRequest(peerId, path, structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, Status status, const StructBasePtr& structBase) {
             std::shared_ptr<R> reply;
-            bool typeOk = (!structBase || structBase->getStructInfo().getTypeName() == R::structInfo().getTypeName());
-            if (status == Status::STATUS_OK && structBase && typeOk)
+            if (status == Status::STATUS_OK && structBase != nullptr)
             {
-                reply = std::static_pointer_cast<R>(structBase);
-            }
-            if (!typeOk)
-            {
-                status = Status::STATUS_WRONG_REPLY_TYPE;
+                if (structBase->getStructInfo().getTypeName() == R::structInfo().getTypeName())
+                {
+                    reply = std::static_pointer_cast<R>(structBase);
+                }
+                if (reply == nullptr)
+                {
+                    status = Status::STATUS_WRONG_REPLY_TYPE;
+                }
             }
             funcReply(peerId, status, reply);
         });
@@ -202,14 +204,16 @@ struct IRemoteEntity
         assert(funcReply);
         CorrelationId correlationId = sendRequest(peerId, path, std::move(metainfo), structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase) {
             std::shared_ptr<R> reply;
-            bool typeOk = (!structBase || structBase->getStructInfo().getTypeName() == R::structInfo().getTypeName());
-            if (status == Status::STATUS_OK && structBase && typeOk)
+            if (status == Status::STATUS_OK && structBase != nullptr)
             {
-                reply = std::static_pointer_cast<R>(structBase);
-            }
-            if (!typeOk)
-            {
-                status = Status::STATUS_WRONG_REPLY_TYPE;
+                if (structBase->getStructInfo().getTypeName() == R::structInfo().getTypeName())
+                {
+                    reply = std::static_pointer_cast<R>(structBase);
+                }
+                if (reply == nullptr)
+                {
+                    status = Status::STATUS_WRONG_REPLY_TYPE;
+                }
             }
             funcReply(peerId, status, metainfo, reply);
         });
@@ -235,14 +239,16 @@ struct IRemoteEntity
         assert(funcReply);
         CorrelationId correlationId = sendRequest(peerId, structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, Status status, const StructBasePtr& structBase) {
             std::shared_ptr<R> reply;
-            bool typeOk = (!structBase || structBase->getStructInfo().getTypeName() == R::structInfo().getTypeName());
-            if (status == Status::STATUS_OK && structBase && typeOk)
+            if (status == Status::STATUS_OK && structBase != nullptr)
             {
-                reply = std::static_pointer_cast<R>(structBase);
-            }
-            if (!typeOk)
-            {
-                status = Status::STATUS_WRONG_REPLY_TYPE;
+                if (structBase->getStructInfo().getTypeName() == R::structInfo().getTypeName())
+                {
+                    reply = std::static_pointer_cast<R>(structBase);
+                }
+                if (reply == nullptr)
+                {
+                    status = Status::STATUS_WRONG_REPLY_TYPE;
+                }
             }
             funcReply(peerId, status, reply);
         });
@@ -272,14 +278,16 @@ struct IRemoteEntity
         assert(funcReply);
         CorrelationId correlationId = sendRequest(peerId, std::move(metainfo), structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase) {
             std::shared_ptr<R> reply;
-            bool typeOk = (!structBase || structBase->getStructInfo().getTypeName() == R::structInfo().getTypeName());
-            if (status == Status::STATUS_OK && structBase && typeOk)
+            if (status == Status::STATUS_OK && structBase != nullptr)
             {
-                reply = std::static_pointer_cast<R>(structBase);
-            }
-            if (!typeOk)
-            {
-                status = Status::STATUS_WRONG_REPLY_TYPE;
+                if (structBase->getStructInfo().getTypeName() == R::structInfo().getTypeName())
+                {
+                    reply = std::static_pointer_cast<R>(structBase);
+                }
+                if (reply == nullptr)
+                {
+                    status = Status::STATUS_WRONG_REPLY_TYPE;
+                }
             }
             funcReply(peerId, status, metainfo, reply);
         });
