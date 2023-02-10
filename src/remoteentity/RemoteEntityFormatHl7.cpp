@@ -57,7 +57,6 @@ struct RegisterFormatHl7
 
 
 
-#define HL7BLOCKSIZE   512
 
 void RemoteEntityFormatHl7::serialize(const IProtocolSessionPtr& session, IMessage& message, const Header& /*header*/, const StructBase* structBase)
 {

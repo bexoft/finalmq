@@ -19,6 +19,7 @@
 //LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
+//SOFTWARE.
 
 #include "finalmq/remoteentity/RemoteEntityFormatJson.h"
 
@@ -58,11 +59,11 @@ struct RegisterFormatJson
 
 
 
-#define HL7BLOCKSIZE   512
+#define JSONBLOCKSIZE   512
 
 void RemoteEntityFormatJson::serialize(const IProtocolSessionPtr& session, IMessage& message, const Header& header, const StructBase* structBase)
 {
-    message.addSendPayload("[", 1, HL7BLOCKSIZE);
+    message.addSendPayload("[", 1, JSONBLOCKSIZE);
 
     SerializerJson serializerHeader(message);
     ParserStruct parserHeader(serializerHeader, header);
@@ -73,11 +74,11 @@ void RemoteEntityFormatJson::serialize(const IProtocolSessionPtr& session, IMess
     if (structBase)
     {
         // delimiter between header and payload
-        message.addSendPayload(",\t", 2, HL7BLOCKSIZE);
+        message.addSendPayload(",\t", 2, JSONBLOCKSIZE);
 
         serializeData(session, message, structBase);
 
-        message.addSendPayload("]\t", 2, HL7BLOCKSIZE);
+        message.addSendPayload("]\t", 2, JSONBLOCKSIZE);
     }
     else
     {
@@ -229,7 +230,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const IProtocolSession
         }
         if (foundEntityName)
         {
-            header.destname = std::string(pathWithoutFirstSlash.c_str(), foundEntityName->size());
+            header.destname = *foundEntityName;   // std::string(pathWithoutFirstSlash.c_str(), foundEntityName->size());
             if (pathWithoutFirstSlash.size() > foundEntityName->size())
             {
                 header.path = std::string(&pathWithoutFirstSlash[foundEntityName->size() + 1], pathWithoutFirstSlash.size() - foundEntityName->size() - 1);
@@ -304,7 +305,6 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const IProtocolSession
 
     if (endHeader)
     {
-        assert(endHeader);
         ssize_t sizeHeader = endHeader - buffer;
         assert(sizeHeader >= 0);
         buffer += sizeHeader;

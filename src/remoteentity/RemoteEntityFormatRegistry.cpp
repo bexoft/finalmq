@@ -349,20 +349,20 @@ static void metainfoToMessage(IMessage& message, std::vector<std::string>& meta)
 
 
 
-inline static bool isDestinationIdDefined(const Header& header)
-{
-    return (header.destid != ENTITYID_INVALID && header.destid != ENTITYID_DEFAULT);
-}
+//inline static bool isDestinationIdDefined(const Header& header)
+//{
+//    return (header.destid != ENTITYID_INVALID && header.destid != ENTITYID_DEFAULT);
+//}
 
 inline static bool isDestinationDefined(const Header& header)
 {
     return (!header.destname.empty() || (header.destid != ENTITYID_INVALID && header.destid != ENTITYID_DEFAULT));
 }
 
-inline static bool isTypeDefined(const Header& header)
-{
-    return (!header.type.empty());
-}
+//inline static bool isTypeDefined(const Header& header)
+//{
+//    return (!header.type.empty());
+//}
 
 inline static bool isSubPathDefined(const Header& header)
 {
@@ -372,42 +372,6 @@ inline static bool isSubPathDefined(const Header& header)
 inline static bool isDestAndSubPathDefined(const Header& header)
 {
     return (isDestinationDefined(header) && isSubPathDefined(header));
-}
-
-//static size_t findEndOfPath(const char* buffer)
-//{
-//    int i = 0;
-//    char cOld = 0;
-//    char c;
-//    while ((c = buffer[i]))
-//    {
-//        if (c == '{')
-//        {
-//            char cNext = buffer[i + 1];
-//            if (cOld != '/' && (cNext == '\"' || cNext == '}'))
-//            {
-//                return i;
-//            }
-//        }
-//        cOld = c;
-//        ++i;
-//    }
-//    return i;
-//}
-
-static size_t findEndOfPath(const char* buffer)
-{
-    int i = 0;
-    char c;
-    while ((c = buffer[i]))
-    {
-        if (c == '{')
-        {
-            return i;
-        }
-        ++i;
-    }
-    return i;
 }
 
 
@@ -496,7 +460,11 @@ std::string RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, con
         {
             pathWithoutFirstSlash = path;
         }
-        size_t ixEndHeader = findEndOfPath(pathWithoutFirstSlash.c_str());   //28
+        size_t ixEndHeader = pathWithoutFirstSlash.find_first_of('{');   //28
+        if (ixEndHeader == std::string::npos)
+        {
+            ixEndHeader = pathWithoutFirstSlash.size();
+        }
         data = std::string(&pathWithoutFirstSlash[ixEndHeader], pathWithoutFirstSlash.size() - ixEndHeader);
 
         static const std::string WILDCARD = "*";
