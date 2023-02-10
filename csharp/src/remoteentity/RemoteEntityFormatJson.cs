@@ -22,12 +22,13 @@
 
 using System.Diagnostics;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace finalmq
 {
 
-    public class RemoteEntityFormat : IRemoteEntityFormat
+    public class RemoteEntityFormatJson : IRemoteEntityFormat
     {
         static readonly int CONTENT_TYPE = 2;
         static readonly string CONTENT_TYPE_NAME = "json";
@@ -35,7 +36,7 @@ namespace finalmq
         static readonly string PROPERTY_SERIALIZE_ENUM_AS_STRING = "enumAsSt";
         static readonly string PROPERTY_SERIALIZE_SKIP_DEFAULT_VALUES = "skipDefVal";
 
-        static readonly int HL7BLOCKSIZE = 512;
+        static readonly int JSONBLOCKSIZE = 512;
         static readonly byte[] ARRAY_BEGIN = { (byte)'[' };
         static readonly byte[] ARRAY_END = { (byte)']', (byte)'\t' };
         static readonly byte[] ARRAY_END_NO_DATA = { (byte)',', (byte)'\t', (byte)'{', (byte)'}', (byte)']', (byte)'\t' };
@@ -45,6 +46,15 @@ namespace finalmq
         static readonly string WILDCARD = "*";
 
         static readonly string FMQ_PATH = "fmq_path";
+
+
+#pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+        [ModuleInitializer]
+#pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+        internal static void RegisterFormat()
+        {
+            RemoteEntityFormatRegistry.Instance.RegisterFormat(CONTENT_TYPE_NAME, CONTENT_TYPE, new RemoteEntityFormatJson());
+        }
 
         static int FindEndOfPath(byte[] buffer, int offset, int size)
         {
@@ -156,63 +166,53 @@ namespace finalmq
             }
             else
             {
-                /*
                 SerializerStruct serializerHeader = new SerializerStruct(header);
                 ParserJson parserHeader = new ParserJson(serializerHeader, buffer, sizeBuffer);
-                int endHeader = parserHeader.ParseStruct(header.GetType().FullName);
+                endHeader = parserHeader.ParseStruct(header.GetType().FullName!);
                 if (endHeader != -1)
                 {
                     // skip comma
                     ++endHeader;
                 }
-                if (header.type.empty() && !header.path.empty())
+                if (header.type.Length == 0 && header.path.Length != 0)
                 {
-                    hybrid_ptr<IRemoteEntity> remoteEntity;
-                    auto it = name2Entity.find(header.destname);
-                    if (it != name2Entity.end())
+                    name2Entity.TryGetValue(header.destname, out var remoteEntity);
+                    if (remoteEntity == null)
                     {
-                        remoteEntity = it->second;
+                        name2Entity.TryGetValue(WILDCARD, out remoteEntity);
                     }
-                    else
+                    var entity = remoteEntity;
+                    if (entity != null)
                     {
-                        it = name2Entity.find(WILDCARD);
-                        if (it != name2Entity.end())
-                        {
-                            remoteEntity = it->second;
-                        }
-                    }
-                    auto entity = remoteEntity.lock () ;
-                    if (entity)
-                    {
-                        header.type = entity->getTypeOfCommandFunction(header.path);
+                        string pathTemp = header.path;
+                        header.type = entity.GetTypeOfCommandFunction(ref pathTemp);
+                        header.path = pathTemp;
                     }
                 }
-                if (header.path.empty() && !header.type.empty())
+                if (header.path.Length == 0 && header.type.Length != 0)
                 {
                     header.path = header.type;
                 }
-                else if (!header.path.empty() && header.type.empty())
+                else if (header.path.Length != 0 && header.type.Length == 0)
                 {
                     header.type = header.path;
-                }
-                */
+                }                
             }
-            /*
-            std::shared_ptr<StructBase> data;
+            
+            StructBase? data = null;
 
-            if (endHeader)
+            if (endHeader != -1)
             {
-                assert(endHeader);
-                ssize_t sizeHeader = endHeader - buffer;
-                assert(sizeHeader >= 0);
-                buffer += sizeHeader;
-                ssize_t sizeData = sizeBuffer - sizeHeader;
-                assert(sizeData >= 0);
+                int sizeHeader = endHeader - offset;
+                Debug.Assert(sizeHeader >= 0);
+                offset += sizeHeader;
+                int sizeData = sizeBuffer - sizeHeader;
+                Debug.Assert(sizeData >= 0);
 
-                BufferRef bufferRefData = { buffer, sizeData };
-                data = parseData(session, bufferRefData, storeRawData, header.type, formatStatus);
+                BufferRef bufferRefData = new BufferRef( buffer, offset, sizeData );
+                data = ParseData(session, bufferRefData, storeRawData, header.type, out formatStatus);
             }
-            */
+
             return data;
         }
         public StructBase? ParseData(IProtocolSession session, BufferRef bufferRef, bool storeRawData, string type, out int formatStatus)
@@ -262,7 +262,7 @@ namespace finalmq
         }
         public void Serialize(IProtocolSession session, IMessage message, Header header, StructBase? structBase = null)
         {
-            message.AddSendPayload(ARRAY_BEGIN, HL7BLOCKSIZE);
+            message.AddSendPayload(ARRAY_BEGIN, JSONBLOCKSIZE);
 
             SerializerJson serializerHeader = new SerializerJson(message);
             ParserStruct parserHeader = new ParserStruct(serializerHeader, header);
@@ -272,11 +272,11 @@ namespace finalmq
             if (structBase != null)
             {
                 // delimiter between header and payload
-                message.AddSendPayload(DELIMITER_HEADER_PAYLOAD, HL7BLOCKSIZE);
+                message.AddSendPayload(DELIMITER_HEADER_PAYLOAD, JSONBLOCKSIZE);
 
                 SerializeData(session, message, structBase);
 
-                message.AddSendPayload(ARRAY_END, HL7BLOCKSIZE);
+                message.AddSendPayload(ARRAY_END, JSONBLOCKSIZE);
             }
             else
             {
