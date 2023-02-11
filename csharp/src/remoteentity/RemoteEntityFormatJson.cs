@@ -264,7 +264,7 @@ namespace finalmq
         {
             message.AddSendPayload(ARRAY_BEGIN, JSONBLOCKSIZE);
 
-            SerializerJson serializerHeader = new SerializerJson(message);
+            SerializerJson serializerHeader = new SerializerJson(message, JSONBLOCKSIZE);
             ParserStruct parserHeader = new ParserStruct(serializerHeader, header);
             parserHeader.ParseStruct();
 
@@ -313,7 +313,7 @@ namespace finalmq
                         }
                     }
 
-                    SerializerJson serializerData = new SerializerJson(message, 512, enumAsString, skipDefaultValues);
+                    SerializerJson serializerData = new SerializerJson(message, JSONBLOCKSIZE, enumAsString, skipDefaultValues);
                     ParserStruct parserData = new ParserStruct(serializerData, structBase);
                     parserData.ParseStruct();
                 }
