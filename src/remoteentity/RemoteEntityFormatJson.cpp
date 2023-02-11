@@ -65,7 +65,7 @@ void RemoteEntityFormatJson::serialize(const IProtocolSessionPtr& session, IMess
 {
     message.addSendPayload("[", 1, JSONBLOCKSIZE);
 
-    SerializerJson serializerHeader(message);
+    SerializerJson serializerHeader(message, JSONBLOCKSIZE);
     ParserStruct parserHeader(serializerHeader, header);
     parserHeader.parseStruct();
 
@@ -78,7 +78,7 @@ void RemoteEntityFormatJson::serialize(const IProtocolSessionPtr& session, IMess
 
         serializeData(session, message, structBase);
 
-        message.addSendPayload("]\t", 2, JSONBLOCKSIZE);
+        message.addSendPayload("]\t", 2);
     }
     else
     {
@@ -118,7 +118,7 @@ void RemoteEntityFormatJson::serializeData(const IProtocolSessionPtr& session, I
                 }
             }
             
-            SerializerJson serializerData(message, 512, enumAsString, skipDefaultValues);
+            SerializerJson serializerData(message, JSONBLOCKSIZE, enumAsString, skipDefaultValues);
             ParserStruct parserData(serializerData, *structBase);
             parserData.parseStruct();
         }

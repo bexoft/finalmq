@@ -62,10 +62,9 @@ struct RegisterFormatProto
 
 void RemoteEntityFormatProto::serialize(const IProtocolSessionPtr& session, IMessage& message, const Header& header, const StructBase* structBase)
 {
-    char* bufferSizeHeader = message.addSendPayload(PROTOBUFBLOCKSIZE);
-    message.downsizeLastSendPayload(4);
+    char* bufferSizeHeader = message.addSendPayload(4, PROTOBUFBLOCKSIZE);
 
-    SerializerProto serializerHeader(message);
+    SerializerProto serializerHeader(message, PROTOBUFBLOCKSIZE);
     ParserStruct parserHeader(serializerHeader, header);
     parserHeader.parseStruct();
     ssize_t sizeHeader = message.getTotalSendPayloadSize() - 4;
@@ -86,7 +85,7 @@ void RemoteEntityFormatProto::serialize(const IProtocolSessionPtr& session, IMes
 
 void RemoteEntityFormatProto::serializeData(const IProtocolSessionPtr& /*session*/, IMessage& message, const StructBase* structBase)
 {
-    char* bufferSizePayload = message.addSendPayload(4);
+    char* bufferSizePayload = message.addSendPayload(4, PROTOBUFBLOCKSIZE);
     ssize_t sizePayload = 0;
     if (structBase)
     {
@@ -118,7 +117,6 @@ void RemoteEntityFormatProto::serializeData(const IProtocolSessionPtr& /*session
     *bufferSizePayload = static_cast<unsigned char>(uSizePayload >> 24);
 }
 
-static const std::string FMQ_PATH = "fmq_path";
 
 std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus)
 {
