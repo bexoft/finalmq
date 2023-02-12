@@ -181,11 +181,10 @@ namespace finalmq
                     {
                         name2Entity.TryGetValue(WILDCARD, out remoteEntity);
                     }
-                    var entity = remoteEntity;
-                    if (entity != null)
+                    if (remoteEntity != null)
                     {
                         string pathTemp = header.path;
-                        header.type = entity.GetTypeOfCommandFunction(ref pathTemp);
+                        header.type = remoteEntity.GetTypeOfCommandFunction(ref pathTemp);
                         header.path = pathTemp;
                     }
                 }

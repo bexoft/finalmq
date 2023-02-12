@@ -510,7 +510,7 @@ namespace finalmq {
          * @param funcReplyConnect is the callback that indicates if a later connection was successful.
          * @return the peer ID. Use it to send requests/events and to connect with a session and entity identifier.
          */
-        PeerId CreatePeer(IRemoteEntityContainer entityContainer, FuncReplyConnect funcReplyConnect = null);
+        PeerId CreatePeer(IRemoteEntityContainer entityContainer, FuncReplyConnect? funcReplyConnect = null);
 
         /**
          * @brief connect connects the peer that was created with createPeer().

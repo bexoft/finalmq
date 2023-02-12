@@ -450,7 +450,7 @@ namespace finalmq
             }
 
             IRemoteEntity? remoteEntity = null;
-            BufferRef data = null;
+            BufferRef? data = null;
             if (path != null && !IsDestAndSubPathDefined(header))
             {
                 // 012345678901234567890123456789
