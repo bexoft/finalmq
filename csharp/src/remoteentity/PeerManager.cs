@@ -1,0 +1,301 @@
+//MIT License
+
+//Copyright (c) 2020 bexoft GmbH (mail@bexoft.de)
+
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
+
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
+
+using System.Diagnostics;
+
+namespace finalmq {
+
+    class PeerManager
+    {
+        public enum ReadyToSend
+        {
+            RTS_READY,
+            RTS_SESSION_NOT_AVAILABLE,
+            RTS_PEER_NOT_AVAILABLE,
+        };
+
+        class Request
+        {
+            public Request(StructBase? structBase, CorrelationId correlationId)
+            {
+                m_structBase = structBase;
+                m_correlationId = correlationId;
+            }
+            public StructBase? StructBase
+            { 
+                get { return m_structBase; }
+            }
+            public CorrelationId CorrelationId
+            {
+                get { return m_correlationId; }
+            }
+            StructBase? m_structBase = null;
+            CorrelationId m_correlationId = IRemoteEntity.CORRELATIONID_NONE;
+        };
+
+        public PeerManager()
+        {
+
+        }
+        public IList<PeerId> AllPeers
+        {
+            get 
+            {
+                IList<PeerId> peers = new List<PeerId>();
+                lock (m_mutex)
+                {
+                    foreach (var peer in m_peers)
+                    {
+                        peers.Add(peer.Key);
+                    }
+                }
+                return peers;
+            }
+        }
+        public IList<PeerId> GetAllPeersWithSession(IProtocolSession session)
+        {
+            IList<PeerId> peers = new List<PeerId>();
+            lock (m_mutex)
+            {
+                foreach (var peer in m_peers)
+                {
+                    if (peer.Value.Session.Session == session)
+                    {
+                        peers.Add(peer.Key);
+                    }
+                }
+            }
+            return peers;
+
+        }
+        public IList<PeerId> GetAllPeersWithVirtualSession(IProtocolSession session, string virtualSessionId)
+        {
+            IList<PeerId> peers = new List<PeerId>();
+            lock (m_mutex)
+            {
+                foreach (var peer in m_peers)
+                {
+                    if (peer.Value.Session.Session == session && peer.Value.VirtualSessionId == virtualSessionId)
+                    {
+                        peers.Add(peer.Key);
+                    }
+                }
+            }
+            return peers;
+        }
+
+        void UpdatePeer(PeerId peerId, string virtualSessionId, EntityId entityId, string entityName)
+        {
+            FuncPeerEvent? funcPeerEvent = null;
+            Peer? peer = null;
+            lock (m_mutex)
+            {
+                peer = GetPeer(peerId);
+                if (peer != null)
+                {
+                    peer.EntityId = entityId;
+                    peer.EntityName = entityName;
+                    Debug.Assert(peer.Session != null);
+                    long sessionId = peer.Session.SessionId;
+
+                    if (peer.VirtualSessionId != virtualSessionId)
+                    {
+                        Debug.Assert(peer.VirtualSessionId.Length == 0);
+                        m_sessionEntityToPeerId[sessionId][virtualSessionId] = m_sessionEntityToPeerId[sessionId][peer.VirtualSessionId];
+                        m_sessionEntityToPeerId[sessionId].Remove(peer.VirtualSessionId);
+                        peer.VirtualSessionId = virtualSessionId;
+                    }
+
+                    if (entityId != IRemoteEntity.ENTITYID_INVALID)
+                    {
+                        m_sessionEntityToPeerId[sessionId][peer.VirtualSessionId].Item1[entityId] = peerId;
+                    }
+                    if (entityName.Length != 0)
+                    {
+                        m_sessionEntityToPeerId[sessionId][peer.VirtualSessionId].Item2[entityName] = peerId;
+                    }
+                    funcPeerEvent = m_funcPeerEvent;
+                }
+            }
+            // fire peer event CONNECTED
+            if (funcPeerEvent != null && peer != null)
+            {
+                funcPeerEvent(peerId, peer.Session, entityId, PeerEvent.PEER_CONNECTED, false);
+            }
+        }
+
+        public bool RemovePeer(PeerId peerId, out bool incoming)
+        {
+            bool found = false;
+            incoming = false;
+            FuncPeerEvent? funcPeerEvent = null;
+            Peer? peer = null;
+            lock (m_mutex)
+            {
+                peer = GetPeer(peerId);
+                if (peer != null)
+                {
+                    found = true;
+                    RemovePeerFromSessionEntityToPeerId(peer.Session.SessionId, peer.VirtualSessionId, peer.EntityId, peer.EntityName);
+                    incoming = peer.Incoming;
+                    m_peers.Remove(peerId);
+
+                    funcPeerEvent = m_funcPeerEvent;
+                }
+            }
+            // fire peer event DISCONNECTED
+            if (funcPeerEvent != null && peer != null)
+            {
+                funcPeerEvent(peerId, peer.Session, peer.EntityId, PeerEvent.PEER_DISCONNECTED, incoming);
+            }
+            return found;
+        }
+
+        PeerId GetPeerId(long sessionId, string virtualSessionId, EntityId entityId, string entityName)
+        {
+            lock (m_mutex)
+            {
+                return GetPeerIdIntern(sessionId, virtualSessionId, entityId, entityName);
+            }
+        }
+
+        /*
+        ReadyToSend getRequestHeader(const PeerId& peerId, const std::string& path, const StructBase& structBase, CorrelationId correlationId, Header& header, IProtocolSessionPtr& session, std::string& virtualSessionId);
+        std::string getEntityName(const PeerId& peerId);
+        PeerId addPeer(const SessionInfo& session, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName, bool incoming, bool& added, const std::function<void()>& funcBeforeFirePeerEvent);
+        PeerId addPeer();
+        std::deque<PeerManager::Request> connect(PeerId peerId, const SessionInfo& session, EntityId entityId, const std::string& entityName);
+        void setEntityId(EntityId entityId);
+        void setPeerEvent(const std::shared_ptr<FuncPeerEvent>& funcPeerEvent);
+        const SessionInfo& getSession(PeerId peerId) const;
+        */
+
+        PeerId GetPeerIdIntern(long sessionId, string virtualSessionId, EntityId entityId, string entityName)
+        {
+            // mutex already locked
+            m_sessionEntityToPeerId.TryGetValue(sessionId, out var session);
+            if (session != null)
+            {
+                session.TryGetValue(virtualSessionId, out var entry);
+                if (entry != null)
+                {
+                    if (entityId != IRemoteEntity.ENTITYID_INVALID)
+                    {
+                        var entityIdContainer = entry.Item1;
+                        if (entityIdContainer.TryGetValue(entityId, out var entity))
+                        {
+                            return entity;
+                        }
+                    }
+                    else
+                    {
+                        var entityNameContainer = entry.Item2;
+                        if (entityNameContainer.TryGetValue(entityName, out var entity))
+                        {
+                            return entity;
+                        }
+                    }
+                }
+            }
+            return IRemoteEntity.PEERID_INVALID;
+        }
+
+        void RemovePeerFromSessionEntityToPeerId(long sessionId, string virtualSessionId, EntityId entityId, string entityName)
+        {
+            // mutex already locked
+            // remove from m_sessionEntityToPeerId
+
+            m_sessionEntityToPeerId.TryGetValue(sessionId, out var session);
+            if (session != null)
+            {
+                session.TryGetValue(virtualSessionId, out var entry);
+                if (entry != null)
+                {
+                    var entityIdContainer = entry.Item1;
+                    entityIdContainer.Remove(entityId);
+                    var entityNameContainer = entry.Item2;
+                    entityNameContainer.Remove(entityName);
+                    if (entityIdContainer.Count == 0 && entityNameContainer.Count == 0)
+                    {
+                        session.Remove(virtualSessionId);
+                    }
+                }
+                if (session.Count == 0)
+                {
+                    m_sessionEntityToPeerId.Remove(sessionId);
+                }
+            }
+        }
+
+        Peer? GetPeer(PeerId peerId)
+        {
+            m_peers.TryGetValue(peerId, out var peer);
+            return peer;
+        }
+
+        class Peer
+        {
+            public Peer(SessionInfo session, string virtualSessionId, EntityId entityId, string entityName, bool incoming)
+            {
+                m_session = session;
+                m_virtualSessionId = virtualSessionId;
+                m_entityId = entityId;
+                m_entityName = entityName;
+                m_incoming = incoming;
+            }
+
+            public SessionInfo Session { get { return m_session; } }
+            public string VirtualSessionId 
+            {
+                get { return m_virtualSessionId; }
+                set { m_virtualSessionId = value; }
+            }
+            public EntityId EntityId 
+            {
+                get { return m_entityId; }
+                set { m_entityId = value; }
+            }
+            public string EntityName 
+            {
+                get { return m_entityName; }
+                set { m_entityName = value; }
+            }
+            public bool Incoming { get { return m_incoming;  } }
+
+
+            readonly SessionInfo m_session;
+            string m_virtualSessionId;
+            EntityId m_entityId;
+            string m_entityName;
+            readonly bool m_incoming;
+            IList<Request> m_requests = new List<Request>();
+        };
+
+        EntityId m_entityId = IRemoteEntity.ENTITYID_INVALID;
+        FuncPeerEvent? m_funcPeerEvent = null;
+        IDictionary<PeerId, Peer> m_peers = new Dictionary<PeerId, Peer>();
+        PeerId m_nextPeerId = 1;
+        IDictionary<long, IDictionary<string, Tuple<IDictionary<EntityId, PeerId>, IDictionary<string, PeerId>>>> m_sessionEntityToPeerId = new Dictionary<long, IDictionary<string, Tuple<IDictionary<EntityId, PeerId>, IDictionary<string, PeerId>>>>();
+        readonly object m_mutex = new object();
+    }
+
+}   // namespace finalmq

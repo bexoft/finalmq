@@ -21,13 +21,15 @@
 //SOFTWARE.
 
 
+
+global using PeerId = System.Int64;
+global using CorrelationId = System.UInt64;
+global using EntityId = System.UInt64;
+
 using System.Diagnostics;
 
-namespace finalmq {
 
-    using PeerId = Int64;
-    using CorrelationId = UInt64;
-    using EntityId = UInt64;
+namespace finalmq {
 
 
     // todo remove interface IRemoteEntityContainer
