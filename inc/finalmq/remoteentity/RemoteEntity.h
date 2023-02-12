@@ -118,7 +118,6 @@ private:
         std::string         entityName;
         bool                incoming = false;
         std::deque<Request> requests;
-        IMessagePtr         requestsMessage;
     };
 
 
@@ -131,7 +130,7 @@ private:
     std::shared_ptr<FuncPeerEvent>      m_funcPeerEvent;
     std::unordered_map<PeerId, std::shared_ptr<Peer>>    m_peers;
     PeerId                              m_nextPeerId{1};
-    std::unordered_map<std::uint64_t, std::unordered_map<std::string, std::pair<std::unordered_map<EntityId, PeerId>, std::unordered_map<std::string, PeerId>>>> m_sessionEntityToPeerId;
+    std::unordered_map<std::int64_t, std::unordered_map<std::string, std::pair<std::unordered_map<EntityId, PeerId>, std::unordered_map<std::string, PeerId>>>> m_sessionEntityToPeerId;
     mutable std::mutex  m_mutex;
 };
 typedef std::shared_ptr<PeerManager> PeerManagerPtr;
