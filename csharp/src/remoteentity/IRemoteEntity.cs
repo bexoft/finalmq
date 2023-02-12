@@ -37,6 +37,28 @@ namespace finalmq {
     }
     public class RequestContext
     {
+        public bool DoesSupportFileTransfer
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        public void Reply(Variant controlData, Metainfo? metainfo = null)
+        {
+
+        }
+
+        public void Reply(Status status)
+        {
+
+        }
+
+        public void Reply(StructBase? structBase, Metainfo? metainfo = null)
+        {
+        }
+
 
     }
 
