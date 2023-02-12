@@ -227,8 +227,12 @@ void PeerManager::removePeerFromSessionEntityToPeerId(std::int64_t sessionId, co
 
             if (entityIdContainer.empty() && entityNameContainer.empty())
             {
-                m_sessionEntityToPeerId.erase(it1);
+                it1->second.erase(it2);
             }
+        }
+        if (it1->second.empty())
+        {
+            m_sessionEntityToPeerId.erase(it1);
         }
     }
 }
