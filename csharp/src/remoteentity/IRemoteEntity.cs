@@ -37,32 +37,6 @@ namespace finalmq {
     {
 
     }
-    public class RequestContext
-    {
-        public bool DoesSupportFileTransfer
-        {
-            get
-            {
-                return false;
-            }
-        }
-
-        public void Reply(Variant controlData, Metainfo? metainfo = null)
-        {
-
-        }
-
-        public void Reply(Status status)
-        {
-
-        }
-
-        public void Reply(StructBase? structBase, Metainfo? metainfo = null)
-        {
-        }
-
-
-    }
 
     public class SessionInfo
     {
@@ -70,23 +44,17 @@ namespace finalmq {
         {
             m_entityContainer = entityContainer;
             m_session = session;
-            Debug.Assert(m_entityContainer != null);
-            Debug.Assert(m_session != null);
             m_sessionId = session.SessionId;
         }
 
-        public SessionInfo()
-        {
-        }
-
-        public IRemoteEntityContainer? EntityContainer
+        public IRemoteEntityContainer EntityContainer
         {
             get
             {
                 return m_entityContainer;
             }
         }
-        public IProtocolSession? Session
+        public IProtocolSession Session
         {
             get
             {
@@ -102,17 +70,9 @@ namespace finalmq {
             }
         }
 
-        //operator bool()
-        //{
-        //    return (m_session != null);
-        //}
-
         public void Disconnect()
         {
-            if (m_session != null)
-            {
-                m_session.Disconnect();
-            }
+            m_session.Disconnect();
         }
 
         static readonly ConnectionData EmptyConnectionData = new ConnectionData();
@@ -121,11 +81,7 @@ namespace finalmq {
         {
             get
             {
-                if (m_session != null)
-                {
-                    return m_session.ConnectionData;
-                }
-                return EmptyConnectionData;
+                return m_session.ConnectionData;
             }
         }
 
@@ -133,39 +89,40 @@ namespace finalmq {
         {
             get
             {
-                if (m_session != null)
-                {
-                    return m_session.DoesSupportFileTransfer();
-                }
-                return false;
+                return m_session.DoesSupportFileTransfer();
             }
         }
 
-        IRemoteEntityContainer? m_entityContainer = null;
-        IProtocolSession? m_session = null;
+        IRemoteEntityContainer m_entityContainer;
+        IProtocolSession m_session;
         long m_sessionId = 0;
     };
 
 
 
-    public class ReceiveData
+    internal class ReceiveData
     {
-        public SessionInfo? Session
+        public ReceiveData(SessionInfo session, IMessage message)
+        {
+            m_session = session;
+            m_message = Message;
+        }
+        public SessionInfo Session
         {
             get => m_session;
             set => m_session = value;
         }
-        public string? VirtualSessionId
+        public string VirtualSessionId
         {
             get => m_virtualSessionId;
             set => m_virtualSessionId = value;
         }
-        public IMessage? Message
+        public IMessage Message
         {
             get => m_message;
             set => m_message = value;
         }
-        public Header? Header
+        public Header Header
         {
             get => m_header;
             set => m_header = value;
@@ -181,10 +138,10 @@ namespace finalmq {
             set => m_structBase = value;
         }
 
-        SessionInfo? m_session = null;
-        string? m_virtualSessionId = null;
-        IMessage? m_message = null;
-        Header? m_header = null;
+        SessionInfo m_session;
+        string m_virtualSessionId = String.Empty;
+        IMessage m_message;
+        Header m_header = new Header();
         bool m_automaticConnect = false;
         StructBase? m_structBase = null;
     };
@@ -692,10 +649,10 @@ namespace finalmq {
 
 
         // methods for RemoteEntityContainer
-        IRemoteEntityPrivate InterfacePrivate { get; }
+        internal IRemoteEntityPrivate InterfacePrivate { get; }
     };
 
-    public interface IRemoteEntityPrivate
+    internal interface IRemoteEntityPrivate
     {
         // methods for RemoteEntityContainer
         void SessionDisconnected(IProtocolSession session);

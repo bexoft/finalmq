@@ -268,30 +268,21 @@ namespace finalmq
                 m_rawData = new RawDataStruct(type, contentType, rawData);
             }
         }
-        public string? RawType
+        public string? GetRawType()
         {
-            get
-            {
-                return m_rawData?.Type;
-            }
+            return m_rawData?.Type;
         }
-        public int RawContentType
+        public int GetRawContentType()
         {
-            get
+            if (m_rawData != null)
             {
-                if (m_rawData != null)
-                {
-                    return m_rawData.ContentType;
-                }
-                return 0;
+                return m_rawData.ContentType;
             }
+            return 0;
         }
-        public BufferRef? RawData
+        public BufferRef? GetRawData()
         {
-            get
-            {
-                return m_rawData?.Data;
-            }
+            return m_rawData?.Data;
         }
 
         RawDataStruct? m_rawData = null;

@@ -287,9 +287,9 @@ namespace finalmq
             if (structBase != null)
             {
                 // payload
-                if (structBase.RawContentType == CONTENT_TYPE)
+                if (structBase.GetRawContentType() == CONTENT_TYPE)
                 {
-                    BufferRef? rawData = structBase.RawData;
+                    BufferRef? rawData = structBase.GetRawData();
                     Debug.Assert(rawData != null);
                     message.AddSendPayload(rawData);
                 }

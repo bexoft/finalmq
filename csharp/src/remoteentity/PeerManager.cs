@@ -24,7 +24,7 @@ using System.Diagnostics;
 
 namespace finalmq {
 
-    class PeerManager
+    internal class PeerManager
     {
         public enum ReadyToSend
         {
@@ -78,7 +78,8 @@ namespace finalmq {
             {
                 foreach (var peer in m_peers)
                 {
-                    if (peer.Value.Session.Session == session)
+                    SessionInfo? sessionInfo = peer.Value.Session;
+                    if (sessionInfo != null && sessionInfo.Session == session)
                     {
                         peers.Add(peer.Key);
                     }
@@ -94,7 +95,8 @@ namespace finalmq {
             {
                 foreach (var peer in m_peers)
                 {
-                    if (peer.Value.Session.Session == session && peer.Value.VirtualSessionId == virtualSessionId)
+                    SessionInfo? sessionInfo = peer.Value.Session;
+                    if (sessionInfo != null && sessionInfo.Session == session && peer.Value.VirtualSessionId == virtualSessionId)
                     {
                         peers.Add(peer.Key);
                     }
@@ -139,6 +141,7 @@ namespace finalmq {
             // fire peer event CONNECTED
             if (funcPeerEvent != null && peer != null)
             {
+                Debug.Assert(peer.Session != null);
                 funcPeerEvent(peerId, peer.Session, entityId, PeerEvent.PEER_CONNECTED, false);
             }
         }
@@ -149,28 +152,33 @@ namespace finalmq {
             incoming = false;
             FuncPeerEvent? funcPeerEvent = null;
             Peer? peer = null;
+            SessionInfo? sessionInfo = null;
             lock (m_mutex)
             {
                 peer = GetPeer(peerId);
                 if (peer != null)
                 {
-                    found = true;
-                    RemovePeerFromSessionEntityToPeerId(peer.Session.SessionId, peer.VirtualSessionId, peer.EntityId, peer.EntityName);
-                    incoming = peer.Incoming;
-                    m_peers.Remove(peerId);
+                    sessionInfo = peer.Session;
+                    if (sessionInfo != null)
+                    {
+                        found = true;
+                        RemovePeerFromSessionEntityToPeerId(sessionInfo.SessionId, peer.VirtualSessionId, peer.EntityId, peer.EntityName);
+                        incoming = peer.Incoming;
+                        m_peers.Remove(peerId);
 
-                    funcPeerEvent = m_funcPeerEvent;
+                        funcPeerEvent = m_funcPeerEvent;
+                    }
                 }
             }
             // fire peer event DISCONNECTED
-            if (funcPeerEvent != null && peer != null)
+            if (funcPeerEvent != null && peer != null && sessionInfo != null)
             {
-                funcPeerEvent(peerId, peer.Session, peer.EntityId, PeerEvent.PEER_DISCONNECTED, incoming);
+                funcPeerEvent(peerId, sessionInfo, peer.EntityId, PeerEvent.PEER_DISCONNECTED, incoming);
             }
             return found;
         }
 
-        PeerId GetPeerId(long sessionId, string virtualSessionId, EntityId entityId, string entityName)
+        public PeerId GetPeerId(long sessionId, string virtualSessionId, EntityId entityId, string entityName)
         {
             lock (m_mutex)
             {
@@ -178,10 +186,9 @@ namespace finalmq {
             }
         }
 
-        ReadyToSend GetRequestHeader(PeerId peerId, string path, StructBase structBase, CorrelationId correlationId, out Header? header, out IProtocolSession? session, out string? virtualSessionId)
+        public ReadyToSend GetRequestHeader(PeerId peerId, string path, StructBase structBase, CorrelationId correlationId, Header header, out IProtocolSession? session, out string? virtualSessionId)
         {
             ReadyToSend readyToSend = ReadyToSend.RTS_PEER_NOT_AVAILABLE;
-            header = null;
             session = null;
             virtualSessionId = null;
 
@@ -194,13 +201,21 @@ namespace finalmq {
                     {
                         session = peer.Session.Session;
                         virtualSessionId = peer.VirtualSessionId;
-                        string? typeName = structBase.RawType;
+                        string? typeName = structBase.GetRawType();
                         if (typeName == null)
                         {
                             typeName = structBase.GetType().FullName;
                         }
                         Debug.Assert(typeName != null);
-                        header = new Header( peer.EntityId, (peer.EntityId == IRemoteEntity.ENTITYID_INVALID) ? peer.EntityName : "", m_entityId, MsgMode.MSG_REQUEST, Status.STATUS_OK, path, typeName, correlationId, new List<string>() );
+                        header.destid = peer.EntityId;
+                        header.destname = (peer.EntityId == IRemoteEntity.ENTITYID_INVALID) ? peer.EntityName : "";
+                        header.srcid = m_entityId;
+                        header.mode = MsgMode.MSG_REQUEST;
+                        header.status = Status.STATUS_OK;
+                        header.path = path;
+                        header.type = typeName;
+                        header.corrid = correlationId;
+
                         readyToSend = ReadyToSend.RTS_READY;
                     }
                     else
@@ -338,9 +353,9 @@ namespace finalmq {
             }
         }
 
-        readonly SessionInfo EMPTY_SESSION = new SessionInfo();
+        //readonly SessionInfo EMPTY_SESSION = new SessionInfo();
 
-        SessionInfo GetSession(PeerId peerId)
+        SessionInfo? GetSession(PeerId peerId)
         {
             lock (m_mutex)
             {
@@ -350,7 +365,7 @@ namespace finalmq {
                     return peer.Session;
                 }
             }
-            return EMPTY_SESSION;
+            return null;
         }
 
         PeerId GetPeerIdIntern(long sessionId, string virtualSessionId, EntityId entityId, string entityName)
@@ -420,7 +435,7 @@ namespace finalmq {
         {
             public Peer()
             {
-                m_session = new SessionInfo();
+                m_session = null;
                 m_virtualSessionId = "";
                 m_entityId = IRemoteEntity.ENTITYID_INVALID;
                 m_entityName = "";
@@ -435,7 +450,7 @@ namespace finalmq {
                 m_incoming = incoming;
             }
 
-            public SessionInfo Session 
+            public SessionInfo? Session 
             {
                 get { return m_session; }
                 set { m_session = value; }
@@ -463,7 +478,7 @@ namespace finalmq {
                 set { m_requests = value; }
             }
 
-            SessionInfo m_session;
+            SessionInfo? m_session;
             string m_virtualSessionId;
             EntityId m_entityId;
             string m_entityName;
