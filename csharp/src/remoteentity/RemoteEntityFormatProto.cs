@@ -219,9 +219,9 @@ namespace finalmq
             if (structBase != null)
             {
                 int sizeStart = message.GetTotalSendPayloadSize();
-                if (structBase.GetRawContentType() == CONTENT_TYPE)
+                if (structBase.RawContentType == CONTENT_TYPE)
                 {
-                    BufferRef? rawData = structBase.GetRawData();
+                    BufferRef? rawData = structBase.RawData;
                     Debug.Assert(rawData != null);
                     message.AddSendPayload(rawData);
                 }

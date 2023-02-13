@@ -244,9 +244,9 @@ namespace finalmq
             }
         }
 
-        class RawData
+        class RawDataStruct
         {
-            public RawData(string type, int contentType, BufferRef data)
+            public RawDataStruct(string type, int contentType, BufferRef data)
             {
                 m_type = type;
                 m_contentType = contentType;
@@ -265,27 +265,36 @@ namespace finalmq
         {
             if (m_rawData != null)
             {
-                m_rawData = new RawData(type, contentType, rawData);
+                m_rawData = new RawDataStruct(type, contentType, rawData);
             }
         }
-        public string? GetRawType()
+        public string? RawType
         {
-            return m_rawData?.Type;
-        }
-        public int GetRawContentType()
-        {
-            if (m_rawData != null)
+            get
             {
-                return m_rawData.ContentType;
+                return m_rawData?.Type;
             }
-            return 0;
         }
-        public BufferRef? GetRawData()
+        public int RawContentType
         {
-            return m_rawData?.Data;
+            get
+            {
+                if (m_rawData != null)
+                {
+                    return m_rawData.ContentType;
+                }
+                return 0;
+            }
+        }
+        public BufferRef? RawData
+        {
+            get
+            {
+                return m_rawData?.Data;
+            }
         }
 
-        RawData? m_rawData = null;
+        RawDataStruct? m_rawData = null;
     }
 
 

@@ -178,16 +178,180 @@ namespace finalmq {
             }
         }
 
-        /*
-        ReadyToSend getRequestHeader(const PeerId& peerId, const std::string& path, const StructBase& structBase, CorrelationId correlationId, Header& header, IProtocolSessionPtr& session, std::string& virtualSessionId);
-        std::string getEntityName(const PeerId& peerId);
-        PeerId addPeer(const SessionInfo& session, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName, bool incoming, bool& added, const std::function<void()>& funcBeforeFirePeerEvent);
-        PeerId addPeer();
-        std::deque<PeerManager::Request> connect(PeerId peerId, const SessionInfo& session, EntityId entityId, const std::string& entityName);
-        void setEntityId(EntityId entityId);
-        void setPeerEvent(const std::shared_ptr<FuncPeerEvent>& funcPeerEvent);
-        const SessionInfo& getSession(PeerId peerId) const;
-        */
+        ReadyToSend GetRequestHeader(PeerId peerId, string path, StructBase structBase, CorrelationId correlationId, out Header? header, out IProtocolSession? session, out string? virtualSessionId)
+        {
+            ReadyToSend readyToSend = ReadyToSend.RTS_PEER_NOT_AVAILABLE;
+            header = null;
+            session = null;
+            virtualSessionId = null;
+
+            lock (m_mutex)
+            {
+                Peer? peer = GetPeer(peerId);
+                if (peer != null)
+                {
+                    if (peer.Session != null)
+                    {
+                        session = peer.Session.Session;
+                        virtualSessionId = peer.VirtualSessionId;
+                        string? typeName = structBase.RawType;
+                        if (typeName == null)
+                        {
+                            typeName = structBase.GetType().FullName;
+                        }
+                        Debug.Assert(typeName != null);
+                        header = new Header( peer.EntityId, (peer.EntityId == IRemoteEntity.ENTITYID_INVALID) ? peer.EntityName : "", m_entityId, MsgMode.MSG_REQUEST, Status.STATUS_OK, path, typeName, correlationId, new List<string>() );
+                        readyToSend = ReadyToSend.RTS_READY;
+                    }
+                    else
+                    {
+                        readyToSend = ReadyToSend.RTS_SESSION_NOT_AVAILABLE;
+                        IList<Request>? requests = peer.Requests;
+                        if (requests != null)
+                        {
+                            requests.Add(new Request(structBase, correlationId));
+                        }
+                    }
+                }
+            }
+            return readyToSend;
+        }
+
+        string? GetEntityName(PeerId peerId)
+        {
+            string? entityName = null;
+            lock (m_mutex)
+            {
+                Peer? peer = GetPeer(peerId);
+                if (peer != null)
+                {
+                    entityName = peer.EntityName;
+                }
+            }
+            return entityName;
+        }
+
+        public delegate void FuncAddPeerCallback();
+
+        PeerId AddPeer(SessionInfo session, string virtualSessionId, EntityId entityId, string entityName, bool incoming, bool added, FuncAddPeerCallback? funcBeforeFirePeerEvent)
+        {
+            added = false;
+
+            PeerId peerId;
+            FuncPeerEvent? funcPeerEvent = null;
+            lock (m_mutex)
+            {
+                peerId = GetPeerIdIntern(session.SessionId, virtualSessionId, entityId, entityName);
+
+                if (peerId == IRemoteEntity.PEERID_INVALID)
+                {
+                    peerId = m_nextPeerId;
+                    ++m_nextPeerId;
+                    Peer peer = new Peer(session, virtualSessionId, entityId, entityName, incoming);
+                    m_peers[peerId] = peer;
+                    added = true;
+                    long sessionId = session.SessionId;
+                    if (entityId != IRemoteEntity.ENTITYID_INVALID)
+                    {
+                        m_sessionEntityToPeerId[sessionId][peer.VirtualSessionId].Item1[entityId] = peerId;
+                    }
+                    if (entityName.Length != 0)
+                    {
+                        m_sessionEntityToPeerId[sessionId][peer.VirtualSessionId].Item2[entityName] = peerId;
+                    }
+
+                    funcPeerEvent = m_funcPeerEvent;
+                }
+            }
+
+            if (funcBeforeFirePeerEvent != null)
+            {
+                funcBeforeFirePeerEvent();
+            }
+
+            // fire peer event CONNECTED
+            if (incoming)
+            {
+                if (funcPeerEvent != null)
+                {
+                    funcPeerEvent(peerId, session, entityId, PeerEvent.PEER_CONNECTED, incoming);
+                }
+            }
+
+            return peerId;
+        }
+
+        PeerId AddPeer()
+        {
+            PeerId peerId;
+            lock (m_mutex)
+            {
+                peerId = m_nextPeerId;
+                ++m_nextPeerId;
+                Peer peer = new Peer();
+                m_peers[peerId] = peer;
+            }
+
+            return peerId;
+
+        }
+
+        IList<Request>? Connect(PeerId peerId, SessionInfo session, EntityId entityId, string entityName)
+        {
+            IList<Request>? requests = null;
+            lock (m_mutex)
+            {
+                Peer? peer = GetPeer(peerId);
+                if (peer != null)
+                {
+                    peer.Session = session;
+                    peer.EntityId = entityId;
+                    peer.EntityName = entityName;
+                    long sessionId = session.SessionId;
+                    if (entityId != IRemoteEntity.ENTITYID_INVALID)
+                    {
+                        m_sessionEntityToPeerId[sessionId][peer.VirtualSessionId].Item1[entityId] = peerId;
+                    }
+                    if (entityName.Length != 0)
+                    {
+                        m_sessionEntityToPeerId[sessionId][peer.VirtualSessionId].Item2[entityName] = peerId;
+                    }
+
+                    requests = peer.Requests;
+                    peer.Requests = null;
+                }
+            }
+
+            return requests;
+        }
+
+        void SetEntityId(EntityId entityId)
+        {
+            m_entityId = entityId;
+        }
+
+        void SetPeerEvent(FuncPeerEvent funcPeerEvent)
+        {
+            lock (m_mutex)
+            {
+                m_funcPeerEvent = funcPeerEvent;
+            }
+        }
+
+        readonly SessionInfo EMPTY_SESSION = new SessionInfo();
+
+        SessionInfo GetSession(PeerId peerId)
+        {
+            lock (m_mutex)
+            {
+                Peer? peer = GetPeer(peerId);
+                if (peer != null)
+                {
+                    return peer.Session;
+                }
+            }
+            return EMPTY_SESSION;
+        }
 
         PeerId GetPeerIdIntern(long sessionId, string virtualSessionId, EntityId entityId, string entityName)
         {
@@ -254,6 +418,14 @@ namespace finalmq {
 
         class Peer
         {
+            public Peer()
+            {
+                m_session = new SessionInfo();
+                m_virtualSessionId = "";
+                m_entityId = IRemoteEntity.ENTITYID_INVALID;
+                m_entityName = "";
+                m_incoming = false;
+            }
             public Peer(SessionInfo session, string virtualSessionId, EntityId entityId, string entityName, bool incoming)
             {
                 m_session = session;
@@ -263,7 +435,11 @@ namespace finalmq {
                 m_incoming = incoming;
             }
 
-            public SessionInfo Session { get { return m_session; } }
+            public SessionInfo Session 
+            {
+                get { return m_session; }
+                set { m_session = value; }
+            }
             public string VirtualSessionId 
             {
                 get { return m_virtualSessionId; }
@@ -281,13 +457,18 @@ namespace finalmq {
             }
             public bool Incoming { get { return m_incoming;  } }
 
+            public IList<Request>? Requests
+            {
+                get { return m_requests; }
+                set { m_requests = value; }
+            }
 
-            readonly SessionInfo m_session;
+            SessionInfo m_session;
             string m_virtualSessionId;
             EntityId m_entityId;
             string m_entityName;
             readonly bool m_incoming;
-            IList<Request> m_requests = new List<Request>();
+            IList<Request>? m_requests = new List<Request>();
         };
 
         EntityId m_entityId = IRemoteEntity.ENTITYID_INVALID;
