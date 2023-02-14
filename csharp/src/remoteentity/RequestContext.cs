@@ -28,6 +28,8 @@ namespace finalmq {
     {
         internal RequestContext(PeerManager sessionIdEntityIdToPeerId, EntityId entityIdSrc, ReceiveData receiveData)
         {
+            Debug.Assert(receiveData.Session != null);
+            Debug.Assert(receiveData.Message != null);
             m_peerManager = sessionIdEntityIdToPeerId;
             m_session = receiveData.Session;
             m_virtualSessionId = receiveData.VirtualSessionId;
@@ -156,7 +158,7 @@ namespace finalmq {
                 return m_session;
             }
         }
-        public EntityId entityId
+        public EntityId EntityId
         {
             get
             {

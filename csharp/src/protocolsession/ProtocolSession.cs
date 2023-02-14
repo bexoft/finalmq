@@ -661,7 +661,6 @@ namespace finalmq
             m_protocolFlagSupportFileTransfer = protocol.DoesSupportFileTransfer;
             m_messageFactory = protocol.MessageFactory;
 
-            Thread.MemoryBarrier();
             m_protocolSet = true;
         }
 
@@ -807,7 +806,7 @@ namespace finalmq
         bool                                            m_protocolFlagIsSendRequestByPoll = false;
         bool                                            m_protocolFlagSupportFileTransfer = false;
         FuncCreateMessage?                              m_messageFactory = null;
-        bool                                            m_protocolSet = false;   // atomic
+        volatile bool                                   m_protocolSet = false;   // atomic
         bool                                            m_triggerConnected = false;
         bool                                            m_triggerDisconnected = false;
 

@@ -433,17 +433,17 @@ public class ConnectEntityReply : finalmq.StructBase, IEquatable<ConnectEntityRe
 	}
 	
 
-    public ConnectEntityReply(ulong entityid, string entityName)
+    public ConnectEntityReply(ulong entityId, string entityName)
 	{
-		m_entityid = entityid;
+		m_entityId = entityId;
 		m_entityName = entityName;
 	}
 
 	[finalmq.MetaField("The entity ID of the sender of ConnectivityReply", finalmq.MetaFieldFlags.METAFLAG_PROTO_VARINT)]
-    public ulong entityid
+    public ulong entityId
 	{
-		get { return m_entityid; }
-		set { m_entityid = value; }
+		get { return m_entityId; }
+		set { m_entityId = value; }
 	}
 	[finalmq.MetaField("The entity name of the sender of ConnectivityReply")]
     public string entityName
@@ -452,7 +452,7 @@ public class ConnectEntityReply : finalmq.StructBase, IEquatable<ConnectEntityRe
 		set { m_entityName = value; }
 	}
 
-    ulong m_entityid = 0;
+    ulong m_entityId = 0;
     string m_entityName = string.Empty;
 
 	public bool Equals(ConnectEntityReply? rhs)
@@ -467,7 +467,7 @@ public class ConnectEntityReply : finalmq.StructBase, IEquatable<ConnectEntityRe
 			return true;
 		}
 
-		if (m_entityid != rhs.m_entityid)
+		if (m_entityId != rhs.m_entityId)
 		{
 			return false;
 		}

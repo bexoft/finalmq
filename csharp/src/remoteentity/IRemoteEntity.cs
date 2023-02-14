@@ -35,7 +35,13 @@ namespace finalmq {
     // todo remove interface IRemoteEntityContainer
     public interface IRemoteEntityContainer
     {
+        string GetEntityName(EntityId entityId, out bool registered)
+        {
+            registered = false;
+            return "";
+        }
 
+        void RegisterEntity(IRemoteEntity entity);
     }
 
     public class SessionInfo
@@ -102,12 +108,17 @@ namespace finalmq {
 
     internal class ReceiveData
     {
+        public ReceiveData()
+        {
+            m_session = null;
+            m_message = new ProtocolMessage(0);
+        }
         public ReceiveData(SessionInfo session, IMessage message)
         {
             m_session = session;
             m_message = Message;
         }
-        public SessionInfo Session
+        public SessionInfo? Session
         {
             get => m_session;
             set => m_session = value;
@@ -138,9 +149,9 @@ namespace finalmq {
             set => m_structBase = value;
         }
 
-        SessionInfo m_session;
+        SessionInfo? m_session;
         string m_virtualSessionId = String.Empty;
-        IMessage m_message;
+        IMessage? m_message;
         Header m_header = new Header();
         bool m_automaticConnect = false;
         StructBase? m_structBase = null;
@@ -165,7 +176,7 @@ namespace finalmq {
     public delegate void FuncReplyMetaR<R>(PeerId peerId, Status status, Metainfo metainfo, R? structBase) where R : StructBase;
     public delegate void FuncCommandR<R>(RequestContext requestContext, R structBase) where R : StructBase;
 
-    public interface IRemoteEntity
+    public abstract class IRemoteEntity
     {
         public static readonly PeerId PEERID_INVALID = 0;
         public static CorrelationId CORRELATIONID_NONE = 0;
@@ -185,7 +196,7 @@ namespace finalmq {
          * @param funcReply is the reply callback.
          * @return if successful, valid correlation ID.
          */
-        CorrelationId RequestReply<R>(PeerId peerId,
+        public CorrelationId RequestReply<R>(PeerId peerId,
             string path, StructBase structBase, FuncReplyR<R> funcReply) where R : StructBase
         {
             Debug.Assert(funcReply != null);
@@ -219,7 +230,7 @@ namespace finalmq {
          * @param funcReply is the reply callback.
          * @return if successful, valid correlation ID.
          */
-        CorrelationId RequestReply<R>(PeerId peerId,
+        public CorrelationId RequestReply<R>(PeerId peerId,
             string path, Metainfo metainfo, StructBase structBase, FuncReplyMetaR<R> funcReply) where R : StructBase
         {
             Debug.Assert(funcReply != null);
@@ -249,7 +260,7 @@ namespace finalmq {
          * @param funcReply is the reply callback.
          * @return if successful, valid correlation ID.
          */
-        CorrelationId RequestReply<R>(PeerId peerId,
+        public CorrelationId RequestReply<R>(PeerId peerId,
             StructBase structBase, FuncReplyR<R> funcReply) where R : StructBase
         {
             Debug.Assert(funcReply != null);
@@ -282,7 +293,7 @@ namespace finalmq {
          * @param funcReply is the reply callback.
          * @return if successful, valid correlation ID.
          */
-        CorrelationId RequestReply<R>(PeerId peerId,
+        public CorrelationId RequestReply<R>(PeerId peerId,
             Metainfo metainfo, StructBase structBase, FuncReplyMetaR<R> funcReply) where R : StructBase
         {
             Debug.Assert(funcReply != null);
@@ -309,7 +320,7 @@ namespace finalmq {
          * connections to remote entities, a remote entity must be identified be the peerId.
          * @param structBase is the event message to send (generated code of fmq file).
          */
-        void SendEvent(PeerId peerId, StructBase structBase);
+        public abstract void SendEvent(PeerId peerId, StructBase structBase);
 
         /**
          * @brief sendEvent sends a request to the peer and does not expect a reply.
@@ -322,7 +333,7 @@ namespace finalmq {
          * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
          * @param structBase is the event message to send (generated code of fmq file).
          */
-        void SendEvent(PeerId peerId, Metainfo metainfo, StructBase structBase);
+        public abstract void SendEvent(PeerId peerId, Metainfo metainfo, StructBase structBase);
 
         /**
          * @brief sendEvent sends a request to the peer and does not expect a reply.
@@ -333,7 +344,7 @@ namespace finalmq {
          * @param path is the path that shall be called at the remote entity
          * @param structBase is the event message to send (generated code of fmq file).
          */
-        void SendEvent(PeerId peerId, string path, StructBase structBase);
+        public abstract void SendEvent(PeerId peerId, string path, StructBase structBase);
 
         /**
          * @brief sendEvent sends a request to the peer and does not expect a reply.
@@ -347,13 +358,13 @@ namespace finalmq {
          * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
          * @param structBase is the event message to send (generated code of fmq file).
          */
-        void SendEvent(PeerId peerId, string path, Metainfo metainfo, StructBase structBase);
+        public abstract void SendEvent(PeerId peerId, string path, Metainfo metainfo, StructBase structBase);
 
         /**
          * @brief sendEventToAllPeers sends an event to all connected peers and does not expect a reply.
          * @param structBase is the event message to send (generated code of fmq file).
          */
-        void SendEventToAllPeers(StructBase structBase);
+        public abstract void SendEventToAllPeers(StructBase structBase);
 
         /**
          * @brief sendEventToAllPeers sends an event to all connected peers and does not expect a reply.
@@ -362,14 +373,14 @@ namespace finalmq {
          * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
          * @param structBase is the event message to send (generated code of fmq file).
          */
-        void SendEventToAllPeers(Metainfo metainfo, StructBase structBase);
+        public abstract void SendEventToAllPeers(Metainfo metainfo, StructBase structBase);
 
         /**
          * @brief sendEventToAllPeers sends an event to all connected peers and does not expect a reply.
          * @param path is the path that shall be called at the remote entity
          * @param structBase is the event message to send (generated code of fmq file).
          */
-        void SendEventToAllPeers(string path, StructBase structBase);
+        public abstract void SendEventToAllPeers(string path, StructBase structBase);
 
         /**
          * @brief sendEventToAllPeers sends an event to all connected peers and does not expect a reply.
@@ -379,7 +390,7 @@ namespace finalmq {
          * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
          * @param structBase is the event message to send (generated code of fmq file).
          */
-        void SendEventToAllPeers(string path, Metainfo metainfo, StructBase structBase);
+        public abstract void SendEventToAllPeers(string path, Metainfo metainfo, StructBase structBase);
 
         /**
          * @brief registerCommand registers a callback function for executing a request or event.
@@ -392,7 +403,7 @@ namespace finalmq {
          * the status = NO_REPLY. If the client peer calls sendEvent, but you reply, then the reply
          * will not be sent.
          */
-        void RegisterCommand<R>(FuncCommandR<R> funcCommand) where R : StructBase
+        public void RegisterCommand<R>(FuncCommandR<R> funcCommand) where R : StructBase
         {
             //FuncCommand f = new FuncCommand((RequestContext requestContext, StructBase structBase) => {
             //    R? request = structBase as R;
@@ -414,7 +425,7 @@ namespace finalmq {
          * the status = NO_REPLY. If the client peer calls sendEvent, but you reply, then the reply
          * will not be sent.
          */
-        void RegisterCommand<R>(string path, FuncCommandR<R> funcCommand) where R : StructBase
+        public void RegisterCommand<R>(string path, FuncCommandR<R> funcCommand) where R : StructBase
         {
             //FuncCommand f = new FuncCommand((RequestContext requestContext, StructBase structBase) => {
             //    R? request = structBase as R;
@@ -435,7 +446,7 @@ namespace finalmq {
          * @param funcReplyConnect is the callback for this connection, it will indicate if the connection was successful.
          * @return the peer ID. Use this ID to send requests/events to the remote entity.
          */
-        PeerId Connect(SessionInfo session, string entityName, FuncReplyConnect? funcReplyConnect = null);
+        public abstract PeerId Connect(SessionInfo session, string entityName, FuncReplyConnect? funcReplyConnect = null);
 
         /**
          * @brief connect the entity with a remote entity. This entity-to-entity connection is represented by a peer ID.
@@ -446,40 +457,40 @@ namespace finalmq {
          * @param funcReplyConnect is the callback for this connection, it will indicate if the connection was successful.
          * @return the peer ID. Use this ID to send requests/events to the remote entity.
          */
-        PeerId Connect(SessionInfo session, EntityId entityId, FuncReplyConnect? funcReplyConnect = null);
+        public abstract PeerId Connect(SessionInfo session, EntityId entityId, FuncReplyConnect? funcReplyConnect = null);
 
         /**
          * @brief disconnect releases the entity-to-entity connection. Open requests which were not answered, yet, will be
          * answered with status Status::STATUS_PEER_DISCONNECTED.
          * @param peerId to identify which entity-to-entity connection shall be released.
          */
-        void Disconnect(PeerId peerId);
+        public abstract void Disconnect(PeerId peerId);
 
         /**
          * @brief getAllPeers gets all entity-to-entity connections of this entity.
          * @return a vector of peer IDs.
          */
-        IList<PeerId> AllPeers { get; }
+        public abstract IList<PeerId> AllPeers { get; }
 
         /**
          * @brief registerPeerEvent registers a callback that will be triggered whenever an entity-to-entity connection
          * is established or released.
          * @param funcPeerEvent the callback.
          */
-        void RegisterPeerEvent(FuncPeerEvent funcPeerEvent);
+        public abstract void RegisterPeerEvent(FuncPeerEvent funcPeerEvent);
 
         /**
          * @brief getEntityId returns the entity ID of this entity.
          * @return the entity ID.
          */
-        EntityId EntityId { get; }
+        public abstract EntityId EntityId { get; }
 
         /**
          * @brief getSession returns the session which is used for the entity-to-entity connection of a certain peer ID.
          * @param peerId the peer ID.
          * @return the session of the peer ID.
          */
-        SessionInfo GetSession(PeerId peerId);
+        public abstract SessionInfo? GetSession(PeerId peerId);
 
         // low level methods
 
@@ -491,7 +502,7 @@ namespace finalmq {
          * @param funcReplyConnect is the callback that indicates if a later connection was successful.
          * @return the peer ID. Use it to send requests/events and to connect with a session and entity identifier.
          */
-        PeerId CreatePeer(IRemoteEntityContainer entityContainer, FuncReplyConnect? funcReplyConnect = null);
+        public abstract PeerId CreatePeer(IRemoteEntityContainer entityContainer, FuncReplyConnect? funcReplyConnect = null);
 
         /**
          * @brief connect connects the peer that was created with createPeer().
@@ -499,7 +510,7 @@ namespace finalmq {
          * @param session is the session that is used for this entity-to-entity connection.
          * @param entityName is the name of the remote entity to which this entity shall be connected.
          */
-        void Connect(PeerId peerId, SessionInfo session, string entityName);
+        public abstract void Connect(PeerId peerId, SessionInfo session, string entityName);
 
         /**
          * @brief connect connects the peer that was created with createPeer().
@@ -507,7 +518,7 @@ namespace finalmq {
          * @param session is the session that is used for this entity-to-entity connection.
          * @param entityId is the ID of the remote entity to which this entity shall be connected.
          */
-        void Connect(PeerId peerId, SessionInfo session, EntityId entityId);
+        public abstract void Connect(PeerId peerId, SessionInfo session, EntityId entityId);
 
         /**
          * @brief connect connects the peer that was created with createPeer().
@@ -517,7 +528,7 @@ namespace finalmq {
          * the name is empty then the entityId will be used to identify the repote entity.
          * @param entityId is the ID of the remote entity to which this entity shall be connected.
          */
-        void Connect(PeerId peerId, SessionInfo session, string entityName, EntityId entityId);
+        public abstract void Connect(PeerId peerId, SessionInfo session, string entityName, EntityId entityId);
 
         /**
          * @brief registerCommandFunction registers a callback function for executing a request or event.
@@ -532,7 +543,7 @@ namespace finalmq {
          * the status = NO_REPLY. If the client peer calls sendEvent, but you reply, then the reply
          * will not be sent.
          */
-        void RegisterCommandFunction(string path, string type, FuncCommand funcCommand);
+        public abstract void RegisterCommandFunction(string path, string type, FuncCommand funcCommand);
 
         /**
          * @brief gets the type of the function, which is defined at path.
@@ -540,13 +551,13 @@ namespace finalmq {
          * @param method is a http method (GET,POST,...).
          * @return expected type of the function.
          */
-        string GetTypeOfCommandFunction(ref string path, string? method = null);
+        public abstract string GetTypeOfCommandFunction(ref string path, string? method = null);
 
         /**
          * @brief getNextCorrelationId creates a correlation ID that is unique inside the entity.
          * @return the correlation ID.
          */
-        CorrelationId NextCorrelationId { get; }
+        public abstract CorrelationId NextCorrelationId { get; }
 
         /**
          * @brief sendRequest sends a request to the peer. The reply will be received by the callback,
@@ -561,7 +572,7 @@ namespace finalmq {
          * by registerReplyEvent().
          * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
          */
-        void SendRequest(PeerId peerId, string path, StructBase structBase, CorrelationId correlationId, Metainfo? metainfo = null);
+        public abstract void SendRequest(PeerId peerId, string path, StructBase structBase, CorrelationId correlationId, Metainfo? metainfo = null);
 
         /**
          * @brief sendRequest sends a request to the peer and the funcReply is triggered when
@@ -575,7 +586,7 @@ namespace finalmq {
          * @param funcReply is the reply callback.
          * @return if successful, valid correlation ID.
          */
-        CorrelationId SendRequest(PeerId peerId, string path, StructBase structBase, FuncReply funcReply);
+        public abstract CorrelationId SendRequest(PeerId peerId, string path, StructBase structBase, FuncReply funcReply);
 
         /**
          * @brief sendRequest sends a request to the peer and the funcReply is triggered when
@@ -592,7 +603,7 @@ namespace finalmq {
          * @param funcReply is the reply callback.
          * @return if successful, valid correlation ID.
          */
-        CorrelationId SendRequest(PeerId peerId, string path, Metainfo metainfo, StructBase structBase, FuncReplyMeta funcReply);
+        public abstract CorrelationId SendRequest(PeerId peerId, string path, Metainfo metainfo, StructBase structBase, FuncReplyMeta funcReply);
 
         /**
          * @brief sendRequest sends a request to the peer and the funcReply is triggered when
@@ -605,7 +616,7 @@ namespace finalmq {
          * @param funcReply is the reply callback.
          * @return if successful, valid correlation ID.
          */
-        CorrelationId SendRequest(PeerId peerId, StructBase structBase, FuncReply funcReply);
+        public abstract CorrelationId SendRequest(PeerId peerId, StructBase structBase, FuncReply funcReply);
 
         /**
          * @brief sendRequest sends a request to the peer and the funcReply is triggered when
@@ -621,7 +632,7 @@ namespace finalmq {
          * @param funcReply is the reply callback.
          * @return if successful, valid correlation ID.
          */
-        CorrelationId SendRequest(PeerId peerId, Metainfo metainfo, StructBase structBase, FuncReplyMeta funcReply);
+        public abstract CorrelationId SendRequest(PeerId peerId, Metainfo metainfo, StructBase structBase, FuncReplyMeta funcReply);
 
         /**
         * @brief cancels a reply callback. After calling this function, the expected reply callback will not be called, anymore.
@@ -630,14 +641,14 @@ namespace finalmq {
         * @return true, if the request was still pending and the reply callback was canceled. false, if the reply callback, was already called or 
         * if it is still running.
         */
-        bool cancelReply(CorrelationId correlationId);
+        public abstract bool CancelReply(CorrelationId correlationId);
 
         /**
          * @brief registerReplyEvent registers a callback, which is triggered for every received reply.
          * With this callback a match with the correlation ID can be done by the application.
          * @param funcReplyEvent is the callback function.
          */
-        void registerReplyEvent(FuncReplyEvent funcReplyEvent);
+        public abstract void RegisterReplyEvent(FuncReplyEvent funcReplyEvent);
 
         /**
         * @brief creates a peer at the own entity, so that the peer will publish events to the session.
@@ -645,22 +656,17 @@ namespace finalmq {
         * @param entityName is the name of the destination. The mqtt topic will look like this: "/<entityName>/<message type>".
         * @return the created peer id.
         */
-        PeerId createPublishPeer(SessionInfo session, string entityName);
+        public abstract PeerId CreatePublishPeer(SessionInfo session, string entityName);
 
 
         // methods for RemoteEntityContainer
-        internal IRemoteEntityPrivate InterfacePrivate { get; }
+        internal abstract void SessionDisconnected(IProtocolSession session);
+        internal abstract void VirtualSessionDisconnected(IProtocolSession session, string virtualSessionId);
+        internal abstract void ReceivedRequest(ref ReceiveData receiveData);
+        internal abstract void ReceivedReply(ReceiveData receiveData);
+        internal abstract void Deinit();
     };
 
-    internal interface IRemoteEntityPrivate
-    {
-        // methods for RemoteEntityContainer
-        void SessionDisconnected(IProtocolSession session);
-        void VirtualSessionDisconnected(IProtocolSession session, string virtualSessionId);
-        void ReceivedRequest(ref ReceiveData receiveData);
-        void ReceivedReply(ReceiveData receiveData);
-        void Deinit();
-    }
 
 
 }   // namespace finalmq

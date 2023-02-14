@@ -33,7 +33,7 @@ namespace finalmq {
             RTS_PEER_NOT_AVAILABLE,
         };
 
-        class Request
+        public class Request
         {
             public Request(StructBase? structBase, CorrelationId correlationId)
             {
@@ -105,7 +105,7 @@ namespace finalmq {
             return peers;
         }
 
-        void UpdatePeer(PeerId peerId, string virtualSessionId, EntityId entityId, string entityName)
+        public void UpdatePeer(PeerId peerId, string virtualSessionId, EntityId entityId, string entityName)
         {
             FuncPeerEvent? funcPeerEvent = null;
             Peer? peer = null;
@@ -232,7 +232,7 @@ namespace finalmq {
             return readyToSend;
         }
 
-        string? GetEntityName(PeerId peerId)
+        public string? GetEntityName(PeerId peerId)
         {
             string? entityName = null;
             lock (m_mutex)
@@ -248,7 +248,7 @@ namespace finalmq {
 
         public delegate void FuncAddPeerCallback();
 
-        PeerId AddPeer(SessionInfo session, string virtualSessionId, EntityId entityId, string entityName, bool incoming, bool added, FuncAddPeerCallback? funcBeforeFirePeerEvent)
+        public PeerId AddPeer(SessionInfo session, string virtualSessionId, EntityId entityId, string entityName, bool incoming, out bool added, FuncAddPeerCallback? funcBeforeFirePeerEvent)
         {
             added = false;
 
@@ -296,7 +296,7 @@ namespace finalmq {
             return peerId;
         }
 
-        PeerId AddPeer()
+        public PeerId AddPeer()
         {
             PeerId peerId;
             lock (m_mutex)
@@ -311,7 +311,7 @@ namespace finalmq {
 
         }
 
-        IList<Request>? Connect(PeerId peerId, SessionInfo session, EntityId entityId, string entityName)
+        public IList<Request>? Connect(PeerId peerId, SessionInfo session, EntityId entityId, string entityName)
         {
             IList<Request>? requests = null;
             lock (m_mutex)
@@ -340,12 +340,12 @@ namespace finalmq {
             return requests;
         }
 
-        void SetEntityId(EntityId entityId)
+        public void SetEntityId(EntityId entityId)
         {
             m_entityId = entityId;
         }
 
-        void SetPeerEvent(FuncPeerEvent funcPeerEvent)
+        public void SetPeerEvent(FuncPeerEvent funcPeerEvent)
         {
             lock (m_mutex)
             {
@@ -353,9 +353,7 @@ namespace finalmq {
             }
         }
 
-        //readonly SessionInfo EMPTY_SESSION = new SessionInfo();
-
-        SessionInfo? GetSession(PeerId peerId)
+        public SessionInfo? GetSession(PeerId peerId)
         {
             lock (m_mutex)
             {
