@@ -208,14 +208,13 @@ SessionInfo RemoteEntityContainer::connect(const std::string& endpoint, const Co
 
     IProtocolSessionPtr session = m_protocolSessionContainer->connect(endpointProtocol, this, connectProperties, contentType);
     subscribeEntityNames(session);
-    std::weak_ptr<IRemoteEntityContainer> thisEntityContainer = weak_from_this();
     return createSessionInfo(session);
 }
 
 SessionInfo RemoteEntityContainer::createSessionInfo(const IProtocolSessionPtr& session)
 {
-    IRemoteEntityContainerPtr thisEntityContainer = weak_from_this().lock();
-    if (thisEntityContainer)
+    std::weak_ptr<IRemoteEntityContainer> thisEntityContainer = weak_from_this();
+    if (thisEntityContainer.lock())
     {
         return { thisEntityContainer, session };
     }

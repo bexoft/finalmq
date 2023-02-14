@@ -789,7 +789,7 @@ void RemoteEntity::sendConnectEntity(PeerId peerId, IRemoteEntityContainer& enti
         if (replyReceived)
         {
             const std::string& virtualSessionId = metainfo[FMQ_VIRTUAL_SESSION_ID];
-            m_peerManager->updatePeer(peerId, virtualSessionId, replyReceived->entityid, replyReceived->entityName);
+            m_peerManager->updatePeer(peerId, virtualSessionId, replyReceived->entityId, replyReceived->entityName);
         }
         else if (status == Status::STATUS_ENTITY_NOT_FOUND)
         {
@@ -1069,20 +1069,20 @@ const RemoteEntity::Function* RemoteEntity::getFunction(const std::string& path,
                 bool match = true;
                 for (size_t i = 0; i < pathEntries.size() && match; ++i)
                 {
-                    const std::string& entry = funcVar.pathEntries[i];
-                    if (entry.size() >= 2 && entry[0] == '{')
+                    const std::string& funcVarEntry = funcVar.pathEntries[i];
+                    if (funcVarEntry.size() >= 2 && funcVarEntry[0] == '{')
                     {
-                        if (keys && entry.size() >= 3)
+                        if (keys && funcVarEntry.size() >= 3)
                         {
                             static const std::string PATH_PREFIX = "PATH_";
                             std::string key = PATH_PREFIX;
-                            key.insert(key.end(), entry.data() + 1, entry.data() + entry.size() - 1);
+                            key.insert(key.end(), funcVarEntry.data() + 1, funcVarEntry.data() + funcVarEntry.size() - 1);
                             (*keys)[std::move(key)] = pathEntries[i];
                         }
                     }
                     else
                     {
-                        if (entry != pathEntries[i])
+                        if (funcVarEntry != pathEntries[i])
                         {
                             match = false;
                         }
@@ -1105,8 +1105,8 @@ const RemoteEntity::Function* RemoteEntity::getFunction(const std::string& path,
             size_t j = 0;
             for (size_t i = 0; i < funcVar.pathEntries.size() && match; ++i)
             {
-                const std::string& entry = funcVar.pathEntries[i];
-                if (entry[0] == '*')
+                const std::string& funcVarEntry = funcVar.pathEntries[i];
+                if (funcVarEntry[0] == '*')
                 {
                     std::string nextEntry;
                     ++i;
@@ -1133,11 +1133,11 @@ const RemoteEntity::Function* RemoteEntity::getFunction(const std::string& path,
 
                         if (matchNextEntry || matchLastEntry)
                         {
-                            if (keys && entry.size() >= 3)
+                            if (keys && funcVarEntry.size() >= 3)
                             {
                                 static const std::string PATH_PREFIX = "PATH_";
                                 std::string key = PATH_PREFIX;
-                                key.insert(key.end(), entry.data() + 1, entry.data() + entry.size() - 1);
+                                key.insert(key.end(), funcVarEntry.data() + 1, funcVarEntry.data() + funcVarEntry.size() - 1);
                                 (*keys)[std::move(key)] = std::move(value);
                             }
                             match = true;
@@ -1146,7 +1146,7 @@ const RemoteEntity::Function* RemoteEntity::getFunction(const std::string& path,
                 }
                 else
                 {
-                    if (entry != pathEntries[j])
+                    if (funcVarEntry != pathEntries[j])
                     {
                         match = false;
                     }
