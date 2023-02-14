@@ -353,9 +353,12 @@ namespace finalmq
             Join();
         }
 
-        public IExecutor GetExecutor()
+        public IExecutor Executor
         {
-            return m_executor;
+            get
+            {
+                return m_executor;
+            }
         }
         public void AddAction(DelegateAction func, Int64 instanceId = 0)
         {

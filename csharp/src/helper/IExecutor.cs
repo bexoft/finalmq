@@ -23,7 +23,7 @@ namespace finalmq
 
     public interface IExecutorWorker
     {
-        IExecutor GetExecutor();
+        IExecutor Executor { get; }
         void AddAction(DelegateAction func, Int64 instanceId = 0);
         void Terminate();
         bool IsTerminating();

@@ -31,19 +31,6 @@ using System.Diagnostics;
 
 namespace finalmq {
 
-
-    // todo remove interface IRemoteEntityContainer
-    public interface IRemoteEntityContainer
-    {
-        string GetEntityName(EntityId entityId, out bool registered)
-        {
-            registered = false;
-            return "";
-        }
-
-        void RegisterEntity(IRemoteEntity entity);
-    }
-
     public class SessionInfo
     {
         public SessionInfo(IRemoteEntityContainer entityContainer, IProtocolSession session)
@@ -151,7 +138,7 @@ namespace finalmq {
 
         SessionInfo? m_session;
         string m_virtualSessionId = String.Empty;
-        IMessage? m_message;
+        IMessage m_message;
         Header m_header = new Header();
         bool m_automaticConnect = false;
         StructBase? m_structBase = null;

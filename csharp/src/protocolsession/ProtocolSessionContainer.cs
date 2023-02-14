@@ -37,7 +37,7 @@ namespace finalmq
         IList<IProtocolSession> GetAllSessions();
         IProtocolSession GetSession(long sessionId);
         IProtocolSession? TryGetSession(long sessionId);
-        IExecutor? GetExecutor();
+        IExecutor? Executor { get; }
     }
 
 
@@ -227,9 +227,12 @@ namespace finalmq
             IProtocolSession? protocolSession = m_protocolSessionList.TryGetSession(sessionId);
             return protocolSession;
         }
-        public IExecutor? GetExecutor()
+        public IExecutor? Executor
         {
-            return m_executor;
+            get
+            {
+                return m_executor;
+            }
         }
 
         private readonly IProtocolSessionList m_protocolSessionList = new ProtocolSessionList();
