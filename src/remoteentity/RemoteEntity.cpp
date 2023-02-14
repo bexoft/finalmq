@@ -623,6 +623,7 @@ void RemoteEntity::sendRequest(const PeerId& peerId, const std::string& path, co
         ReceiveData receiveData;
         receiveData.header.corrid = correlationId;
         receiveData.header.status = status;
+        receiveData.message = std::make_shared<ProtocolMessage>(0);
         if (session != nullptr)
         {
             IExecutorPtr executor = session->getExecutor();
@@ -1239,6 +1240,7 @@ void RemoteEntity::receivedReply(const ReceiveData& receiveData)
         receiveData.header.srcid != ENTITYID_INVALID)
     {
         assert(m_peerManager);
+        assert(receiveData.session);
         const std::string& virtualSessionId = receiveData.message->getAllMetainfo()[FMQ_VIRTUAL_SESSION_ID];
         PeerId peerId = m_peerManager->getPeerId(receiveData.session.getSessionId(), virtualSessionId, receiveData.header.srcid, "");
         removePeer(peerId, Status::STATUS_PEER_DISCONNECTED);
