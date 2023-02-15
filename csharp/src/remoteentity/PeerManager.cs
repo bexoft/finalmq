@@ -119,21 +119,35 @@ namespace finalmq {
                     Debug.Assert(peer.Session != null);
                     long sessionId = peer.Session.SessionId;
 
+                    m_sessionEntityToPeerId.TryGetValue(sessionId, out var sessionDict);
+                    if (sessionDict == null)
+                    {
+                        sessionDict = new Dictionary<string, Tuple<IDictionary<EntityId, PeerId>, IDictionary<string, PeerId>>>();
+                        m_sessionEntityToPeerId[sessionId] = sessionDict;
+                    }
+
                     if (peer.VirtualSessionId != virtualSessionId)
                     {
                         Debug.Assert(peer.VirtualSessionId.Length == 0);
-                        m_sessionEntityToPeerId[sessionId][virtualSessionId] = m_sessionEntityToPeerId[sessionId][peer.VirtualSessionId];
-                        m_sessionEntityToPeerId[sessionId].Remove(peer.VirtualSessionId);
+                        sessionDict[virtualSessionId] = m_sessionEntityToPeerId[sessionId][peer.VirtualSessionId];
+                        sessionDict.Remove(peer.VirtualSessionId);
                         peer.VirtualSessionId = virtualSessionId;
+                    }
+
+                    sessionDict.TryGetValue(virtualSessionId, out var virtualSessionTuple);
+                    if (virtualSessionTuple == null)
+                    {
+                        virtualSessionTuple = new Tuple<IDictionary<EntityId, PeerId>, IDictionary<string, PeerId>>(new Dictionary<EntityId, PeerId>(), new Dictionary<string, PeerId>());
+                        sessionDict[virtualSessionId] = virtualSessionTuple;
                     }
 
                     if (entityId != IRemoteEntity.ENTITYID_INVALID)
                     {
-                        m_sessionEntityToPeerId[sessionId][peer.VirtualSessionId].Item1[entityId] = peerId;
+                        virtualSessionTuple.Item1[entityId] = peerId;
                     }
                     if (entityName.Length != 0)
                     {
-                        m_sessionEntityToPeerId[sessionId][peer.VirtualSessionId].Item2[entityName] = peerId;
+                        virtualSessionTuple.Item2[entityName] = peerId;
                     }
                     funcPeerEvent = m_funcPeerEvent;
                 }
@@ -266,13 +280,27 @@ namespace finalmq {
                     m_peers[peerId] = peer;
                     added = true;
                     long sessionId = session.SessionId;
+
+                    m_sessionEntityToPeerId.TryGetValue(sessionId, out var sessionDict);
+                    if (sessionDict == null)
+                    {
+                        sessionDict = new Dictionary<string, Tuple<IDictionary<EntityId, PeerId>, IDictionary<string, PeerId>>>();
+                        m_sessionEntityToPeerId[sessionId] = sessionDict;
+                    }
+                    sessionDict.TryGetValue(virtualSessionId, out var virtualSessionTuple);
+                    if (virtualSessionTuple == null)
+                    {
+                        virtualSessionTuple = new Tuple<IDictionary<EntityId, PeerId>, IDictionary<string, PeerId>>(new Dictionary<EntityId, PeerId>(), new Dictionary<string, PeerId>());
+                        sessionDict[virtualSessionId] = virtualSessionTuple;
+                    }
+
                     if (entityId != IRemoteEntity.ENTITYID_INVALID)
                     {
-                        m_sessionEntityToPeerId[sessionId][peer.VirtualSessionId].Item1[entityId] = peerId;
+                        virtualSessionTuple.Item1[entityId] = peerId;
                     }
                     if (entityName.Length != 0)
                     {
-                        m_sessionEntityToPeerId[sessionId][peer.VirtualSessionId].Item2[entityName] = peerId;
+                        virtualSessionTuple.Item2[entityName] = peerId;
                     }
 
                     funcPeerEvent = m_funcPeerEvent;
@@ -323,13 +351,28 @@ namespace finalmq {
                     peer.EntityId = entityId;
                     peer.EntityName = entityName;
                     long sessionId = session.SessionId;
+
+                    string virtualSessionId = peer.VirtualSessionId;
+                    m_sessionEntityToPeerId.TryGetValue(sessionId, out var sessionDict);
+                    if (sessionDict == null)
+                    {
+                        sessionDict = new Dictionary<string, Tuple<IDictionary<EntityId, PeerId>, IDictionary<string, PeerId>>>();
+                        m_sessionEntityToPeerId[sessionId] = sessionDict;
+                    }
+                    sessionDict.TryGetValue(virtualSessionId, out var virtualSessionTuple);
+                    if (virtualSessionTuple == null)
+                    {
+                        virtualSessionTuple = new Tuple<IDictionary<EntityId, PeerId>, IDictionary<string, PeerId>>(new Dictionary<EntityId, PeerId>(), new Dictionary<string, PeerId>());
+                        sessionDict[virtualSessionId] = virtualSessionTuple;
+                    }
+
                     if (entityId != IRemoteEntity.ENTITYID_INVALID)
                     {
-                        m_sessionEntityToPeerId[sessionId][peer.VirtualSessionId].Item1[entityId] = peerId;
+                        virtualSessionTuple.Item1[entityId] = peerId;
                     }
                     if (entityName.Length != 0)
                     {
-                        m_sessionEntityToPeerId[sessionId][peer.VirtualSessionId].Item2[entityName] = peerId;
+                        virtualSessionTuple.Item2[entityName] = peerId;
                     }
 
                     requests = peer.Requests;

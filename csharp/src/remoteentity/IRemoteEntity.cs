@@ -103,7 +103,7 @@ namespace finalmq {
         public ReceiveData(SessionInfo session, IMessage message)
         {
             m_session = session;
-            m_message = Message;
+            m_message = message;
         }
         public SessionInfo? Session
         {
@@ -392,11 +392,10 @@ namespace finalmq {
          */
         public void RegisterCommand<R>(FuncCommandR<R> funcCommand) where R : StructBase
         {
-            //FuncCommand f = new FuncCommand((RequestContext requestContext, StructBase structBase) => {
-            //    R? request = structBase as R;
-            //    funcCommand(requestContext, request!); 
-            //});
-            FuncCommand? f = funcCommand as FuncCommand;
+            FuncCommand f = new FuncCommand((RequestContext requestContext, StructBase structBase) => {
+                R? request = structBase as R;
+                funcCommand(requestContext, request!); 
+            });
             RegisterCommandFunction(typeof(R).FullName!, typeof(R).FullName!, f!);
         }
 

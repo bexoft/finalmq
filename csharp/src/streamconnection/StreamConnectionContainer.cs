@@ -168,11 +168,13 @@ namespace finalmq {
                                     SslServerOptions sslServerOptions = bindProperties.SslServerOptions;
                                     SslStream sslStream = new SslStream(tcpClient.GetStream(), false, sslServerOptions.UserCertificateValidationCallback,
                                                                         sslServerOptions.UserCertificateSelectionCallback, sslServerOptions.EncryptionPolicy);
+                                    connectionData.Stream = sslStream;
                                     StartIncomingSslConnection(bindData, sslStream, sslServerOptions);
                                 }
                                 else
                                 {
                                     Stream stream = tcpClient.GetStream();
+                                    connectionData.Stream = stream;
                                     StartIncomingConnection(bindData, stream);
                                 }
                             }

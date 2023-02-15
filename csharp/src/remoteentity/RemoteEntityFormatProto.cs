@@ -62,18 +62,21 @@ namespace finalmq
             int sizeHeader = 0;
             if (sizeBuffer >= 4)
             {
-                sizeHeader = (int)buffer[0];
-                sizeHeader |= (int)buffer[1] << 8;
-                sizeHeader |= (int)buffer[2] << 16;
-                sizeHeader |= (int)buffer[3] << 24;
-                offset += 4;
+                sizeHeader = (int)buffer[offset];
+                ++offset;
+                sizeHeader |= (int)buffer[offset] << 8;
+                ++offset;
+                sizeHeader |= (int)buffer[offset] << 16;
+                ++offset;
+                sizeHeader |= (int)buffer[offset] << 24;
+                ++offset;
             }
             bool ok = false;
 
             if (sizeHeader <= sizePayload)
             {
                 SerializerStruct serializerHeader = new SerializerStruct(header);
-                ParserProto parserHeader = new ParserProto(serializerHeader, buffer, sizeHeader);
+                ParserProto parserHeader = new ParserProto(serializerHeader, buffer, offset, sizeHeader);
                 ok = parserHeader.ParseStruct(typeof(Header).FullName!);
                 if (header.type.Length == 0 && header.path.Length != 0)
                 {
@@ -140,11 +143,14 @@ namespace finalmq
                 int sizeDataInStream = 0;
                 if (ok)
                 {
-                    sizeDataInStream = (int)buffer[0];
-                    sizeDataInStream |= (int)buffer[1] << 8;
-                    sizeDataInStream |= (int)buffer[1] << 16;
-                    sizeDataInStream |= (int)buffer[1] << 24;
-                    offset += 4;
+                    sizeDataInStream = (int)buffer[offset];
+                    ++offset;
+                    sizeDataInStream |= (int)buffer[offset] << 8;
+                    ++offset;
+                    sizeDataInStream |= (int)buffer[offset] << 16;
+                    ++offset;
+                    sizeDataInStream |= (int)buffer[offset] << 24;
+                    ++offset;
                     sizeRemaining -= 4;
                 }
 
@@ -157,25 +163,21 @@ namespace finalmq
                 {
                     if (type.Length != 0)
                     {
-                        Type? t = Type.GetType(type);
-                        if (t != null)
-                        {
-                            data = Activator.CreateInstance(t) as StructBase;
-                            Debug.Assert(sizeBuffer >= 0);
+                        data = TypeRegistry.Instance.CreateStruct(type);
+                        Debug.Assert(sizeBuffer >= 0);
 
-                            if (data != null)
+                        if (data != null)
+                        {
+                            if (sizeDataInStream > 0)
                             {
-                                if (sizeBuffer > 0)
+                                Debug.Assert(sizeDataInStream >= 0);
+                                SerializerStruct serializerData = new SerializerStruct(data);
+                                ParserProto parserData = new ParserProto(serializerData, buffer, offset, sizeDataInStream);
+                                ok = parserData.ParseStruct(type);
+                                if (!ok)
                                 {
-                                    Debug.Assert(sizeDataInStream >= 0);
-                                    SerializerStruct serializerData = new SerializerStruct(data);
-                                    ParserProto parserData = new ParserProto(serializerData, buffer, sizeDataInStream);
-                                    ok = parserData.ParseStruct(type);
-                                    if (!ok)
-                                    {
-                                        formatStatus |= (int)FormatStatus.FORMATSTATUS_SYNTAX_ERROR;
-                                        data = null;
-                                    }
+                                    formatStatus |= (int)FormatStatus.FORMATSTATUS_SYNTAX_ERROR;
+                                    data = null;
                                 }
                             }
                         }

@@ -45,7 +45,7 @@ namespace testfinalmq
     }
 
 
-    [Collection("TestCollectionProtocolDelimiterSessionContainert")]
+    [Collection("TestCollectionProtocolDelimiterSessionContainer")]
     public class TestIntegrationProtocolDelimiterSessionContainer : IDisposable
     {
         readonly IProtocolSessionContainer m_sessionContainer = new ProtocolSessionContainer();

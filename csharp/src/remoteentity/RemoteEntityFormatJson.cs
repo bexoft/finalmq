@@ -167,7 +167,7 @@ namespace finalmq
             else
             {
                 SerializerStruct serializerHeader = new SerializerStruct(header);
-                ParserJson parserHeader = new ParserJson(serializerHeader, buffer, sizeBuffer);
+                ParserJson parserHeader = new ParserJson(serializerHeader, buffer, offset, sizeBuffer);
                 endHeader = parserHeader.ParseStruct(header.GetType().FullName!);
                 if (endHeader != -1)
                 {
@@ -225,24 +225,20 @@ namespace finalmq
 
             if (type.Length != 0)
             {
-                Type? t = Type.GetType(type);
-                if (t != null)
-                {
-                    data = Activator.CreateInstance(t) as StructBase;
-                    Debug.Assert(sizeBuffer >= 0);
+                data = TypeRegistry.Instance.CreateStruct(type);
+                Debug.Assert(sizeBuffer >= 0);
 
-                    if (data != null)
+                if (data != null)
+                {
+                    if (sizeBuffer > 0)
                     {
-                        if (sizeBuffer > 0)
+                        SerializerStruct serializerData = new SerializerStruct(data);
+                        ParserJson parserData = new ParserJson(serializerData, buffer, offset, sizeBuffer);
+                        int endData = parserData.ParseStruct(type);
+                        if (endData == -1)
                         {
-                            SerializerStruct serializerData = new SerializerStruct(data);
-                            ParserJson parserData = new ParserJson(serializerData, buffer, offset, sizeBuffer);
-                            int endData = parserData.ParseStruct(type);
-                            if (endData == -1)
-                            {
-                                formatStatus |= (int)FormatStatus.FORMATSTATUS_SYNTAX_ERROR;
-                                data = null;
-                            }
+                            formatStatus |= (int)FormatStatus.FORMATSTATUS_SYNTAX_ERROR;
+                            data = null;
                         }
                     }
                 }

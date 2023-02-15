@@ -24,7 +24,7 @@ using System.Diagnostics;
 
 namespace finalmq {
 
-    class RemoteEntity : IRemoteEntity
+    public class RemoteEntity : IRemoteEntity
     {
         public static readonly string FMQ_VIRTUAL_SESSION_ID = "fmq_virtsessid";
 
@@ -612,7 +612,11 @@ namespace finalmq {
                     }
                     if (replyReceived != null)
                     {
-                        string virtualSessionId = metainfo[FMQ_VIRTUAL_SESSION_ID];
+                        metainfo.TryGetValue(FMQ_VIRTUAL_SESSION_ID, out var virtualSessionId);
+                        if (virtualSessionId == null)
+                        {
+                            virtualSessionId = "";
+                        }
                         m_peerManager.UpdatePeer(peerId, virtualSessionId, replyReceived.entityId, replyReceived.entityName);
                     }
                     else if (status == Status.STATUS_ENTITY_NOT_FOUND)

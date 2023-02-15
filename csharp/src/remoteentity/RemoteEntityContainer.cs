@@ -188,7 +188,7 @@ namespace finalmq {
 
         static string EndpointToProtocolEndpoint(string endpoint, out string contentTypeName)
         {
-            int ixEndpoint = endpoint.IndexOf(':');
+            int ixEndpoint = endpoint.LastIndexOf(':');
             if (ixEndpoint == -1)
             {
                 contentTypeName = "";
@@ -262,7 +262,7 @@ namespace finalmq {
         }
         public SessionInfo Connect(string endpoint, ConnectProperties? connectProperties = null)
         {
-            int ixEndpoint = endpoint.IndexOf(':');
+            int ixEndpoint = endpoint.LastIndexOf(':');
             if (ixEndpoint == -1)
             {
                 throw new ArgumentException("Wrong syntax in endpoint: " + endpoint);
@@ -532,7 +532,7 @@ namespace finalmq {
             {
                 if (remoteEntity != null)
                 {
-                    if ((receiveData.StructBase != null) && (receiveData.Header.status == Status.STATUS_OK) && (type.Length != 0))
+                    if ((receiveData.StructBase == null) && (receiveData.Header.status == Status.STATUS_OK) && (type.Length != 0))
                     {
                         receiveData.Header.status = Status.STATUS_REPLYTYPE_NOT_KNOWN;
                     }
