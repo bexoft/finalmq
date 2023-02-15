@@ -374,7 +374,6 @@ std::vector<EntityId> RemoteEntityContainer::getAllEntities() const
 hybrid_ptr<IRemoteEntity> RemoteEntityContainer::getEntity(EntityId entityId) const
 {
     std::unique_lock<std::mutex> lock(m_mutex);
-    std::vector<EntityId> entities;
     auto it = m_entityId2entity.find(entityId);
     if (it !=  m_entityId2entity.end())
     {
@@ -483,9 +482,6 @@ void RemoteEntityContainer::disconnectedVirtualSession(const IProtocolSessionPtr
 //    return false;
 //}
 
-
-
-static const std::string FMQ_PATH = "fmq_path";
 
 
 struct ThreadLocalDataEntities
