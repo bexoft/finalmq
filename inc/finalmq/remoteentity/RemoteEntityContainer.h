@@ -229,7 +229,6 @@ private:
     std::unordered_map<EntityId, std::string>                   m_entityId2name;
     std::shared_ptr<FuncConnectionEvent>                        m_funcConnectionEvent;
     bool                                                        m_storeRawDataInReceiveStruct = false;
-//    std::chrono::time_point<std::chrono::steady_clock>          m_lastCheckTime;
 //    std::list<std::string>                                      m_pureDataPaths;
 //    std::list<std::string>                                      m_pureDataPathPrefixes;
     const IExecutorPtr                                          m_executor;
