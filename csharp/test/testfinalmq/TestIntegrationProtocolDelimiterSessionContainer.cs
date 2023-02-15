@@ -290,7 +290,7 @@ namespace testfinalmq
             Debug.Assert(connConnect == connection);
             Debug.Assert(connBind.ConnectionData.Endpoint == "tcp://*:3001");
 
-            IList<IProtocolSession> connections = m_sessionContainer.GetAllSessions();
+            IList<IProtocolSession> connections = m_sessionContainer.AllSessions;
             Debug.Assert(connections.Count() == 2);
             if (connections[0] == connBind)
             {

@@ -80,7 +80,7 @@ namespace finalmq
         // IProtocolSession
         public IMessage CreateMessage()
         {
-            if (m_protocolSet && m_messageFactory != null)
+            if ((Interlocked.Read(ref m_protocolSet) != 0) && m_messageFactory != null)
             {
                 return m_messageFactory();
             }
@@ -118,7 +118,7 @@ namespace finalmq
                 }
                 else
                 {
-                    if (!m_protocolSet)
+                    if (Interlocked.Read(ref m_protocolSet) == 0)
                     {
                         m_messagesBuffered.Add(msg);
                         return;
@@ -426,7 +426,7 @@ namespace finalmq
             {
                 PollRelease();
 
-                doDisconnected = (!m_triggerDisconnected) && (m_triggerConnected || m_protocolSet);
+                doDisconnected = (!m_triggerDisconnected) && (m_triggerConnected || (Interlocked.Read(ref m_protocolSet) != 0));
                 m_triggerDisconnected = true;
             }
 
@@ -661,7 +661,7 @@ namespace finalmq
             m_protocolFlagSupportFileTransfer = protocol.DoesSupportFileTransfer;
             m_messageFactory = protocol.MessageFactory;
 
-            m_protocolSet = true;
+            Interlocked.Increment(ref m_protocolSet);
         }
 
         private IMessage ConvertMessageToProtocol(IMessage msg)
@@ -806,7 +806,7 @@ namespace finalmq
         bool                                            m_protocolFlagIsSendRequestByPoll = false;
         bool                                            m_protocolFlagSupportFileTransfer = false;
         FuncCreateMessage?                              m_messageFactory = null;
-        volatile bool                                   m_protocolSet = false;   // atomic
+        ulong                                           m_protocolSet = 0;   // atomic
         bool                                            m_triggerConnected = false;
         bool                                            m_triggerDisconnected = false;
 

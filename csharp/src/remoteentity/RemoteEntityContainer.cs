@@ -34,17 +34,9 @@ namespace finalmq {
 
     public delegate void FuncConnectionEvent(SessionInfo session, ConnectionEvent connectionEvent);
 
-    public interface IRemoteEntityContainer
+    public interface IRemoteEntityContainer : IDisposable
     {
-        /**
-         * @brief init initializes the instance. Call it once after constructing the object.
-         * @param executor decouples the callback thread context from the polling thread.
-         * @param cycleTime is a timer interval in [ms] in which the poller thread will trigger a timer callback (see parameter funcTimer).
-         * @param funcTimer is a callback that is been called every cycleTime.
-         * @param storeRawDataInReceiveStruct is a flag. It is usually false. But if you wish to have the raw data inside a message struct, then you can set this flag to true.
-         * @param checkReconnectInterval is the timer interval in [ms] in which the reconnect timers will be checked (the reconnect timers are not checked every cycleTime). Unit tests which test reconnection, set this parameter to 1ms to have faster tests.
-         */
-        void Init(IExecutor? executor = null, int cycleTime = 100, FuncTimer? funcTimer = null, bool storeRawDataInReceiveStruct = false, int checkReconnectInterval = 1000);
+        int CheckReconnectInterval { get; set; }
 
         /**
          * @brief bind opens a listener socket.
@@ -55,9 +47,8 @@ namespace finalmq {
          * "ipc://my_uds/delimiter_lf:json" = unix domain socket, name my_uds, delimiter linefeed protocol, json data encoding
          * "tcp://*:3000/headersize:protobuf" = tcp socket, port 3000, 4 bytes payload size in header, protobuf data encoding
          * @param bindProperties contains properties for the bind, e.g. SSL/TLS properties.
-         * @return 0 on success and -1 on failure.
          */
-        int Bind(string endpoint, BindProperties? bindProperties = null);
+        void Bind(string endpoint, BindProperties? bindProperties = null);
 
         /**
          * @brief unbind removes the listening socket
@@ -79,7 +70,7 @@ namespace finalmq {
         SessionInfo Connect(string endpoint, ConnectProperties? connectProperties = null);
 
         /**
-         * @brief Executor gets the executor (there is also an executor in case if you do not pass an executor at init()).
+         * @brief Executor gets the executor.
          * Use the executor to run code in the executor context.
          * Example:
          * entityContainer.Executor.AddAction([]() {
@@ -131,16 +122,41 @@ namespace finalmq {
     }
 
     public class RemoteEntityContainer : IRemoteEntityContainer
+                                       , IProtocolSessionCallback
     {
-        public RemoteEntityContainer()
+        public RemoteEntityContainer(IExecutor? executor = null, bool storeRawDataInReceiveStruct = false)
         {
-            m_protocolSessionContainer = new ProtocolSessionContainer();
-            m_executor = m_protocolSessionContainer.Executor;
+            m_storeRawDataInReceiveStruct = storeRawDataInReceiveStruct;
+            m_protocolSessionContainer = new ProtocolSessionContainer(executor);
         }
 
         ~RemoteEntityContainer()
         {
-            Deinit();
+            Dispose(false);
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (m_disposed)
+            {
+                return;
+            }
+            m_disposed = true;
+
+            if (disposing)
+            {
+                Deinit();
+                m_protocolSessionContainer.Dispose();
+            }
+        }
+
+        public void Dispose()
+        {
+            lock (m_mutex)
+            {
+                Dispose(true);
+            }
+            GC.SuppressFinalize(this);
         }
 
         void Deinit()
@@ -163,35 +179,154 @@ namespace finalmq {
             }
         }
 
-
-
-        public void Init(IExecutor? executor = null, int cycleTime = 100, FuncTimer? funcTimer = null, bool storeRawDataInReceiveStruct = false, int checkReconnectInterval = 1000)
-        {
-
+        // IRemoteEntityContainer
+        public int CheckReconnectInterval 
+        { 
+            get => m_protocolSessionContainer.CheckReconnectInterval;
+            set => m_protocolSessionContainer.CheckReconnectInterval = value; 
         }
-        public int Bind(string endpoint, BindProperties? bindProperties = null)
+
+        static string EndpointToProtocolEndpoint(string endpoint, out string contentTypeName)
         {
-            return 0;
+            int ixEndpoint = endpoint.IndexOf(':');
+            if (ixEndpoint == -1)
+            {
+                contentTypeName = "";
+                return "";
+            }
+            contentTypeName = endpoint.Substring(ixEndpoint + 1, endpoint.Length - (ixEndpoint + 1));
+            return endpoint.Substring(0, ixEndpoint);
+        }
+
+        void SubscribeEntityNames(IProtocolSession session)
+        {
+            IList<string> subscribtions = new List<string>();
+            lock (m_mutex)
+            {
+                foreach (var entry in m_name2entity)
+                {
+                    string subscribtion = entry.Key;
+                    if (subscribtion.Length >= 1 && subscribtion[subscribtion.Length - 1] != '*')
+                    {
+                        subscribtions.Add(entry.Key + "/#");
+                    }
+                }
+            }
+
+            session.Subscribe(subscribtions);
+        }
+
+        void SubscribeSessions(string name)
+        {
+            if (name.Length == 0)
+            {
+                return;
+            }
+
+            if (name[name.Length - 1] == '*')
+            {
+                return;
+            }
+
+            name = name + "/#";
+
+            IList<IProtocolSession> sessions = m_protocolSessionContainer.AllSessions;
+            foreach (var session in sessions)
+            {
+                session.Subscribe(new List<string>{ name });
+            }
+        }
+
+
+        public void Bind(string endpoint, BindProperties? bindProperties = null)
+        {
+            string contentTypeName;
+            string endpointProtocol = EndpointToProtocolEndpoint(endpoint, out contentTypeName);
+            if (endpointProtocol.Length == 0)
+            {
+                throw new ArgumentException("Wrong syntax in endpoint: " + endpoint);
+            }
+            int contentType = RemoteEntityFormatRegistry.Instance.GetContentType(contentTypeName);
+            if (contentType == 0)
+            {
+                throw new ArgumentException("ContentType not found: " + contentTypeName);
+            }
+
+            m_protocolSessionContainer.Bind(endpointProtocol, this, bindProperties, contentType);
         }
         public void Unbind(string endpoint)
         {
-
+            string contentTypeName;
+            string endpointProtocol = EndpointToProtocolEndpoint(endpoint, out contentTypeName);
+            m_protocolSessionContainer.Unbind(endpointProtocol);
         }
         public SessionInfo Connect(string endpoint, ConnectProperties? connectProperties = null)
         {
-            return null;
+            int ixEndpoint = endpoint.IndexOf(':');
+            if (ixEndpoint == -1)
+            {
+                throw new ArgumentException("Wrong syntax in endpoint: " + endpoint);
+            }
+            string contentTypeName = endpoint.Substring(ixEndpoint + 1, endpoint.Length - (ixEndpoint + 1));
+            int contentType = RemoteEntityFormatRegistry.Instance.GetContentType(contentTypeName);
+            if (contentType == 0)
+            {
+                throw new ArgumentException("ContentType not found: " + contentTypeName);
+            }
+            string endpointProtocol = endpoint.Substring(0, ixEndpoint);
+
+            IProtocolSession session = m_protocolSessionContainer.Connect(endpointProtocol, this, connectProperties, contentType);
+            SubscribeEntityNames(session);
+            return new SessionInfo(this, session);
         }
         public IExecutor? Executor 
         {
-            get { return null; } 
+            get => m_protocolSessionContainer.Executor;
         }
         public EntityId RegisterEntity(IRemoteEntity remoteEntity, string name = "")
         {
-            return 0;
+            // remove last '/', if available
+            if (name.Length != 0 && name[name.Length - 1] == '/')
+            {
+                name = name.Substring(0, name.Length - 1);
+            }
+
+            IRemoteEntity re = remoteEntity;
+            if (re == null)
+            {
+                throw new ArgumentException("entity is invalid");
+            }
+
+            EntityId entityId = IRemoteEntity.ENTITYID_INVALID;
+            lock (m_mutex)
+            {
+                if ((name.Length != 0) && m_name2entity.ContainsKey(name))
+                {
+                    throw new ArgumentException("Entity with name " + name + " was already registered");
+                }
+
+                entityId = re.EntityId;
+
+                m_entityId2name[entityId] = name;
+
+                if (name.Length != 0)
+                {
+                    m_name2entity[name] = remoteEntity;
+                }
+
+                m_entityId2entity[entityId] = remoteEntity;
+                Interlocked.Increment(ref m_entitiesChanged);
+            }
+
+            if (name.Length != 0)
+            {
+                SubscribeSessions(name);
+            }
+
+            return entityId;
         }
         public void UnregisterEntity(EntityId entityId)
         {
-
         }
         public void RegisterConnectionEvent(FuncConnectionEvent funcConnectionEvent)
         {
@@ -211,17 +346,42 @@ namespace finalmq {
             return "";
         }
 
+        // IProtocolSessionCallback
+
+        public void Connected(IProtocolSession session)
+        {
+
+        }
+        public void Disconnected(IProtocolSession session)
+        {
+
+        }
+        public void DisconnectedVirtualSession(IProtocolSession session, string virtualSessionId)
+        {
+
+        }
+        public void Received(IProtocolSession session, IMessage message)
+        {
+
+        }
+        public void SocketConnected(IProtocolSession session)
+        {
+
+        }
+        public void SocketDisconnected(IProtocolSession session)
+        {
+
+        }
 
         IProtocolSessionContainer m_protocolSessionContainer;
         IDictionary<string, IRemoteEntity> m_name2entity = new Dictionary<string, IRemoteEntity>();
         IDictionary<EntityId, IRemoteEntity> m_entityId2entity = new Dictionary<EntityId, IRemoteEntity>();
         IDictionary<EntityId, string> m_entityId2name = new Dictionary<EntityId, string>();
-        FuncConnectionEvent m_funcConnectionEvent;
+        FuncConnectionEvent? m_funcConnectionEvent = null;
         bool m_storeRawDataInReceiveStruct = false;
-        //std::chrono::time_point<std::chrono::steady_clock> m_lastCheckTime;
-        readonly IExecutor m_executor;
 
         long m_entitiesChanged = 0; //atomic
+        bool m_disposed = false;
 
         readonly object m_mutex = new object();
     }
