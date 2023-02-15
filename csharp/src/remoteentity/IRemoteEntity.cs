@@ -649,7 +649,7 @@ namespace finalmq {
         // methods for RemoteEntityContainer
         internal abstract void SessionDisconnected(IProtocolSession session);
         internal abstract void VirtualSessionDisconnected(IProtocolSession session, string virtualSessionId);
-        internal abstract void ReceivedRequest(ref ReceiveData receiveData);
+        internal abstract void ReceivedRequest(ReceiveData receiveData);
         internal abstract void ReceivedReply(ReceiveData receiveData);
         internal abstract void Deinit();
     };

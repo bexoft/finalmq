@@ -26,7 +26,7 @@ namespace finalmq {
 
     class RemoteEntity : IRemoteEntity
     {
-        static readonly string FMQ_VIRTUAL_SESSION_ID = "fmq_virtsessid";
+        public static readonly string FMQ_VIRTUAL_SESSION_ID = "fmq_virtsessid";
 
         public RemoteEntity()
         {
@@ -365,7 +365,7 @@ namespace finalmq {
             }
         }
         static readonly string STR_DUMMY = "dummy";
-        internal override void ReceivedRequest(ref ReceiveData receiveData)
+        internal override void ReceivedRequest(ReceiveData receiveData)
         {
             if (receiveData.AutomaticConnect)
             {

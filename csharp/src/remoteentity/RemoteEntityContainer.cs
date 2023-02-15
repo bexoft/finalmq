@@ -327,22 +327,65 @@ namespace finalmq {
         }
         public void UnregisterEntity(EntityId entityId)
         {
+            lock (m_mutex)
+            {
+                IList<string> entitiesToRemove = new List<string>();
+                foreach (var entry in m_name2entity)
+                {
+                    IRemoteEntity remoteEntity = entry.Value;
+                    if (remoteEntity.EntityId == entityId)
+                    {
+                        entitiesToRemove.Add(entry.Key);
+                    }
+                }
+                foreach (var name in entitiesToRemove)
+                {
+                    m_name2entity.Remove(name);
+                }
+                m_entityId2entity.Remove(entityId);
+            }
         }
         public void RegisterConnectionEvent(FuncConnectionEvent funcConnectionEvent)
         {
-
+            lock (m_mutex)
+            {
+                m_funcConnectionEvent = funcConnectionEvent;
+            }
         }
         public IList<EntityId> AllEntities 
         { 
-            get { return null; } 
+            get 
+            {
+                IList<EntityId> entities = new List<EntityId>();
+                lock (m_mutex)
+                {
+                    foreach (var entry in m_entityId2entity)
+                    {
+                        entities.Add(entry.Key);
+                    }
+                }
+                return entities;
+            }
         }
         public IRemoteEntity? GetEntity(EntityId entityId)
         {
-            return null;
+            lock (m_mutex)
+            {
+                m_entityId2entity.TryGetValue(entityId, out var entity);
+                return entity;
+            }
         }
         public string GetEntityName(EntityId entityId, out bool registered)
         {
             registered = false;
+            lock (m_mutex)
+            {
+                if (m_entityId2name.TryGetValue(entityId, out var name))
+                {
+                    registered = true;
+                    return name;
+                }
+            }
             return "";
         }
 
@@ -350,27 +393,170 @@ namespace finalmq {
 
         public void Connected(IProtocolSession session)
         {
-
+            TriggerConnectionEvent(new SessionInfo(this, session), ConnectionEvent.CONNECTIONEVENT_CONNECTED);
         }
         public void Disconnected(IProtocolSession session)
         {
+            TriggerConnectionEvent(new SessionInfo(this, session), ConnectionEvent.CONNECTIONEVENT_DISCONNECTED);
 
+            IList<IRemoteEntity> entities = new List<IRemoteEntity>();
+            lock (m_mutex)
+            {
+                foreach (var entry in m_entityId2entity)
+                {
+                    entities.Add(entry.Value);
+                }
+            }
+
+            foreach (var entity in entities)
+            {
+                entity.SessionDisconnected(session);
+            }
         }
         public void DisconnectedVirtualSession(IProtocolSession session, string virtualSessionId)
         {
+            IList<IRemoteEntity> entities = new List<IRemoteEntity>();
+            lock (m_mutex)
+            {
+                foreach (var entry in m_entityId2entity)
+                {
+                    entities.Add(entry.Value);
+                }
+            }
 
+            foreach (var entity in entities)
+            {
+                entity.VirtualSessionDisconnected(session, virtualSessionId);
+            }
         }
+
+
+        class ThreadLocalDataEntities
+        {
+            public long changeId = 0;
+            public IDictionary<string, IRemoteEntity> name2entityNoLock = new Dictionary<string, IRemoteEntity>();
+            public IDictionary<EntityId, IRemoteEntity> entityId2entityNoLock = new Dictionary<EntityId, IRemoteEntity>();
+        };
+        [ThreadStatic]
+        static ThreadLocalDataEntities? t_threadLocalDataEntities = null;
+
+
         public void Received(IProtocolSession session, IMessage message)
         {
+            if (t_threadLocalDataEntities == null)
+            {
+                t_threadLocalDataEntities = new ThreadLocalDataEntities();
+            }
 
+            ThreadLocalDataEntities threadLocalDataEntities = t_threadLocalDataEntities;
+            long changeId = Interlocked.Read(ref m_entitiesChanged);
+            if (changeId != threadLocalDataEntities.changeId)
+            {
+                threadLocalDataEntities.changeId = changeId;
+                lock (m_mutex)
+                {
+                    threadLocalDataEntities.name2entityNoLock = new Dictionary<string, IRemoteEntity>(m_name2entity);
+                    threadLocalDataEntities.entityId2entityNoLock = new Dictionary<EntityId, IRemoteEntity>(m_entityId2entity);
+                }
+            }
+            IDictionary<string, IRemoteEntity> name2entityNoLock = threadLocalDataEntities.name2entityNoLock;
+            IDictionary<EntityId, IRemoteEntity> entityId2entityNoLock = threadLocalDataEntities.entityId2entityNoLock;
+
+            int formatStatus = 0;
+            ReceiveData receiveData = new ReceiveData(new SessionInfo(this, session), message);
+            if (!session.DoesSupportMetainfo())
+            {
+                receiveData.StructBase = RemoteEntityFormatRegistry.Instance.Parse(session, message, m_storeRawDataInReceiveStruct, name2entityNoLock, receiveData.Header, out formatStatus);
+            }
+            else
+            {
+                receiveData.StructBase = RemoteEntityFormatRegistry.Instance.ParseHeaderInMetainfo(session, message, m_storeRawDataInReceiveStruct, name2entityNoLock, receiveData.Header, out formatStatus);
+            }
+
+            EntityId entityId = receiveData.Header.destid;
+            IRemoteEntity? remoteEntity = null;
+            if (entityId == IRemoteEntity.ENTITYID_INVALID || (entityId == IRemoteEntity.ENTITYID_DEFAULT && (receiveData.Header.destname.Length != 0)))
+            {
+                name2entityNoLock.TryGetValue(receiveData.Header.destname, out remoteEntity);
+                if (remoteEntity == null)
+                {
+                    name2entityNoLock.TryGetValue("*", out remoteEntity);
+                }
+            }
+            if (remoteEntity == null && entityId != IRemoteEntity.ENTITYID_INVALID)
+            {
+                entityId2entityNoLock.TryGetValue(entityId, out remoteEntity);
+            }
+
+            string type = receiveData.Header.type;
+
+            if (receiveData.Header.mode == MsgMode.MSG_REQUEST)
+            {
+                Metainfo metainfo = receiveData.Message.AllMetainfo;
+                if (metainfo.Count != 0)
+                {
+                    metainfo.TryGetValue(RemoteEntity.FMQ_VIRTUAL_SESSION_ID, out var virtualSessionId);
+                    if (virtualSessionId != null)
+                    {
+                        receiveData.VirtualSessionId = virtualSessionId;
+                    }
+                }
+                receiveData.AutomaticConnect = ((formatStatus & (int)FormatStatus.FORMATSTATUS_AUTOMATIC_CONNECT) != 0);
+                Status replyStatus = Status.STATUS_OK;
+                if ((formatStatus & (int)FormatStatus.FORMATSTATUS_SYNTAX_ERROR) == 0)
+                {
+                    if (remoteEntity != null)
+                    {
+                        remoteEntity.ReceivedRequest(receiveData);
+                    }
+                    else
+                    {
+                        replyStatus = Status.STATUS_ENTITY_NOT_FOUND;
+                    }
+                }
+                else
+                {
+                    replyStatus = Status.STATUS_SYNTAX_ERROR;
+                }
+                if (replyStatus != Status.STATUS_OK)
+                {
+                    if (remoteEntity != null && (entityId == IRemoteEntity.ENTITYID_INVALID || entityId == IRemoteEntity.ENTITYID_DEFAULT))
+                    {
+                        entityId = remoteEntity.EntityId;
+                    }
+                    Header headerReply = new Header(receiveData.Header.srcid, "", entityId, MsgMode.MSG_REPLY, replyStatus, "", "", receiveData.Header.corrid, Array.Empty<string>() );
+                    RemoteEntityFormatRegistry.Instance.Send(session, receiveData.VirtualSessionId, headerReply, message.EchoData);
+                }
+            }
+            else if (receiveData.Header.mode == MsgMode.MSG_REPLY)
+            {
+                if (remoteEntity != null)
+                {
+                    if ((receiveData.StructBase != null) && (receiveData.Header.status == Status.STATUS_OK) && (type.Length != 0))
+                    {
+                        receiveData.Header.status = Status.STATUS_REPLYTYPE_NOT_KNOWN;
+                    }
+                    remoteEntity.ReceivedReply(receiveData);
+                }
+            }
         }
         public void SocketConnected(IProtocolSession session)
         {
-
+            TriggerConnectionEvent(new SessionInfo(this, session), ConnectionEvent.CONNECTIONEVENT_SOCKET_CONNECTED);
         }
         public void SocketDisconnected(IProtocolSession session)
         {
+            TriggerConnectionEvent(new SessionInfo(this, session), ConnectionEvent.CONNECTIONEVENT_SOCKET_DISCONNECTED);
+        }
 
+
+        void TriggerConnectionEvent(SessionInfo session, ConnectionEvent connectionEvent)
+        {
+            FuncConnectionEvent? funcConnectionEvent = m_funcConnectionEvent;
+            if (funcConnectionEvent != null)
+            {
+                funcConnectionEvent(session, connectionEvent);
+            }
         }
 
         IProtocolSessionContainer m_protocolSessionContainer;
