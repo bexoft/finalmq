@@ -122,28 +122,6 @@ void RemoteEntityContainer::deinit()
 // IRemoteEntityContainer
 
 
-bool RemoteEntityContainer::isTimerExpired(std::chrono::time_point<std::chrono::steady_clock>& lastTime, int interval)
-{
-    bool expired = false;
-    std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
-
-    std::chrono::duration<double> dur = now - lastTime;
-    int delta = static_cast<int>(dur.count() * 1000);
-    if (delta >= interval)
-    {
-        lastTime = now;
-        expired = true;
-    }
-    else if (delta < 0)
-    {
-        lastTime = now;
-    }
-
-    return expired;
-}
-
-//static const int INTERVAL_CHECK = 5000;
-
 
 void RemoteEntityContainer::init(const IExecutorPtr& executor, int cycleTime, FuncTimer funcTimer, bool storeRawDataInReceiveStruct, int checkReconnectInterval)
 {
@@ -232,7 +210,7 @@ void RemoteEntityContainer::subscribeEntityNames(const IProtocolSessionPtr& sess
     for (auto it = m_name2entity.begin(); it != m_name2entity.end(); ++it)
     {
         const std::string& subscribtion = it->first;
-        if (subscribtion[subscribtion.size() - 1] != '*')
+        if ((subscribtion.size() >= 1) && (subscribtion[subscribtion.size() - 1] != '*'))
         {
             subscribtions.push_back(it->first + "/#");
         }
@@ -245,18 +223,26 @@ void RemoteEntityContainer::subscribeEntityNames(const IProtocolSessionPtr& sess
     }
 }
 
-void RemoteEntityContainer::subscribeSessions(const std::string& name)
+void RemoteEntityContainer::subscribeSessions(std::string name)
 {
     if (name.empty())
     {
         return;
     }
+
+    if (name[name.size() - 1] == '*')
+    {
+        return;
+    }
+
+    name = name + "/#";
+
     std::vector< IProtocolSessionPtr > sessions = m_protocolSessionContainer->getAllSessions();
     for (auto it = sessions.begin(); it != sessions.end(); ++it)
     {
-        if (*it && (name[name.size() - 1] != '*'))
+        if (*it)
         {
-            (*it)->subscribe({ name + "/#" });
+            (*it)->subscribe({ name });
         }
     }
 }
