@@ -164,9 +164,12 @@ namespace finalmq
                     m_indexStartMessage = offsetEnd;
                 }
                 m_sizeDelimiterPrefix = m_bufferSize - m_indexStartMessage;
-                Debug.Assert(m_sizeDelimiterPrefix > 0);
+                Debug.Assert(m_sizeDelimiterPrefix >= 0);
                 Debug.Assert(m_sizeDelimiterPrefix <= m_delimiterPrefix.Length);
-                Array.Copy(m_receiveBuffer, m_indexStartMessage, m_delimiterPrefix, 0, m_sizeDelimiterPrefix);
+                if (m_sizeDelimiterPrefix > 0)
+                {
+                    Array.Copy(m_receiveBuffer, m_indexStartMessage, m_delimiterPrefix, 0, m_sizeDelimiterPrefix);
+                }
                 m_indexStartMessage = 0;
             }
 

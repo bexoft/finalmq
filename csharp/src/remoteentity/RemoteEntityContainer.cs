@@ -437,18 +437,21 @@ namespace finalmq {
             public IDictionary<string, IRemoteEntity> name2entityNoLock = new Dictionary<string, IRemoteEntity>();
             public IDictionary<EntityId, IRemoteEntity> entityId2entityNoLock = new Dictionary<EntityId, IRemoteEntity>();
         };
-        [ThreadStatic]
-        static ThreadLocalDataEntities? t_threadLocalDataEntities = null;
+        //[ThreadStatic]
+        //ThreadLocalDataEntities? t_threadLocalDataEntities = null;
 
+        ThreadLocal<ThreadLocalDataEntities> t_threadLocalDataEntities = new ThreadLocal<ThreadLocalDataEntities>(() => new ThreadLocalDataEntities());
 
         public void Received(IProtocolSession session, IMessage message)
         {
-            if (t_threadLocalDataEntities == null)
-            {
-                t_threadLocalDataEntities = new ThreadLocalDataEntities();
-            }
+            //if (t_threadLocalDataEntities == null)
+            //{
+            //    t_threadLocalDataEntities = new ThreadLocalDataEntities;
+            //}
 
-            ThreadLocalDataEntities threadLocalDataEntities = t_threadLocalDataEntities;
+            ThreadLocalDataEntities? threadLocalDataEntities = t_threadLocalDataEntities.Value;
+            Debug.Assert(threadLocalDataEntities != null);
+
             long changeId = Interlocked.Read(ref m_entitiesChanged);
             if (changeId != threadLocalDataEntities.changeId)
             {

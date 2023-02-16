@@ -84,18 +84,18 @@ namespace finalmq
                 return null;
             }
 
-            if (sizeBuffer > 0 && buffer[0] == '[')
+            if (sizeBuffer > 0 && buffer[offset + 0] == '[')
             {
                 ++offset;
                 --sizeBuffer;
             }
-            if (sizeBuffer > 0 && buffer[sizeBuffer - 1] == ']')
+            if (sizeBuffer > 0 && buffer[offset + sizeBuffer - 1] == ']')
             {
                 --sizeBuffer;
             }
-            
+
             int endHeader = -1;
-            if (buffer[0] == '/')
+            if (buffer[offset + 0] == '/')
             {
                 // 012345678901234567890123456789
                 // /MyServer/test.TestRequest!1{}

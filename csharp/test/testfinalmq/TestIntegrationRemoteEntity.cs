@@ -55,6 +55,26 @@ namespace testfinalmq
     };
 
 
+    class EntityServerProto : RemoteEntity
+    {
+        public EntityServerProto(ITestEvents mockEvents)
+        {
+            m_mockEvents = mockEvents;
+            RegisterCommand<TestRequest>((RequestContext requestContext, TestRequest request) => {
+                m_mockEvents.TestRequest(requestContext, request);
+                Debug.Assert(request.datarequest == Constants.DATA_REQUEST);
+                requestContext.Reply(new TestReply(Constants.DATA_REPLY));
+            });
+
+            RegisterPeerEvent((long peerId, SessionInfo session, ulong entityId, PeerEvent peerEvent, bool incoming) => {
+                m_mockEvents.PeerEvent(peerId, session, entityId, peerEvent, incoming);
+            });
+        }
+
+        ITestEvents m_mockEvents;
+    };
+
+
 
 
     [Collection("TestCollectionRemoteEntity")]
@@ -69,14 +89,12 @@ namespace testfinalmq
             m_remoteEntityContainerClient.Dispose();
         }
 
-        static int m_callCounter = 0;
-
         [Fact]
         public void TestProto()
         {
             Mock<ITestEvents> mockEventsServer = new Mock<ITestEvents>();
             Mock<ITestEvents> mockEventsClient = new Mock<ITestEvents>();
-            EntityServer entityServer = new EntityServer(mockEventsServer.Object);
+            EntityServerProto entityServer = new EntityServerProto(mockEventsServer.Object);
             RemoteEntity entityClient = new RemoteEntity();
 
             entityClient.RegisterPeerEvent((long peerId, SessionInfo session, ulong entityId, PeerEvent peerEvent, bool incoming) => {
@@ -92,9 +110,9 @@ namespace testfinalmq
                 mockEventsClient.Object.ConnectReply(peerId, status);
             });
 
-            m_callCounter = 0;
+            int callCounter = 0;
             EventWaitHandle wait = new EventWaitHandle(false, EventResetMode.AutoReset);
-            int LOOP = 100;
+            int LOOP = 1000;
             for (int i = 0; i < LOOP; ++i)
             {
                 entityClient.RequestReply<TestReply>(peerId, new TestRequest(Constants.DATA_REQUEST), (long peerId, Status status, TestReply? reply) =>
@@ -103,15 +121,15 @@ namespace testfinalmq
                     Debug.Assert(reply != null);
                     Debug.Assert(reply.datareply == Constants.DATA_REPLY);
                     mockEventsClient.Object.TestReply(peerId, status, reply);
-                    ++m_callCounter;
-                    if (m_callCounter == LOOP)
+                    ++callCounter;
+                    if (callCounter == LOOP)
                     {
                         wait.Set();
                     }
                 });
             }
 
-            wait.WaitOne(1000000);
+            wait.WaitOne(1000);
 
             m_remoteEntityContainerServer.Dispose();
             m_remoteEntityContainerClient.Dispose();
@@ -148,9 +166,9 @@ namespace testfinalmq
                 mockEventsClient.Object.ConnectReply(peerId, status);
             });
 
-            m_callCounter = 0;
+            int callCounter = 0;
             EventWaitHandle wait = new EventWaitHandle(false, EventResetMode.AutoReset);
-            int LOOP = 40;
+            int LOOP = 1000;
             for (int i = 0; i < LOOP; ++i)
             {
                 entityClient.RequestReply<TestReply>(peerId, new TestRequest(Constants.DATA_REQUEST), (long peerId, Status status, TestReply? reply) =>
@@ -159,15 +177,15 @@ namespace testfinalmq
                     Debug.Assert(reply != null);
                     Debug.Assert(reply.datareply == Constants.DATA_REPLY);
                     mockEventsClient.Object.TestReply(peerId, status, reply);
-                    ++m_callCounter;
-                    if (m_callCounter == LOOP)
+                    ++callCounter;
+                    if (callCounter == LOOP)
                     {
                         wait.Set();
                     }
                 });
             }
 
-            wait.WaitOne(100000);
+            wait.WaitOne(1000);
 
             m_remoteEntityContainerServer.Dispose();
             m_remoteEntityContainerClient.Dispose();

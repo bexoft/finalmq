@@ -197,7 +197,13 @@ namespace finalmq {
                         status = Status.STATUS_WRONG_REPLY_TYPE;
                     }
                 }
-                funcReply(peerId, status, reply);
+                try
+                {
+                    funcReply(peerId, status, reply);
+                }
+                catch (Exception)
+                {
+                }
             });
             return correlationId;
         }
@@ -231,7 +237,13 @@ namespace finalmq {
                         status = Status.STATUS_WRONG_REPLY_TYPE;
                     }
                 }
-                funcReply(peerId, status, metainfo, reply);
+                try
+                {
+                    funcReply(peerId, status, metainfo, reply);
+                }
+                catch (Exception)
+                {
+                }
             });
             return correlationId;
         }
@@ -261,7 +273,13 @@ namespace finalmq {
                         status = Status.STATUS_WRONG_REPLY_TYPE;
                     }
                 }
-                funcReply(peerId, status, reply);
+                try
+                {
+                    funcReply(peerId, status, reply);
+                }
+                catch (Exception)
+                {
+                }
             });
             return correlationId;
         }
@@ -294,7 +312,13 @@ namespace finalmq {
                         status = Status.STATUS_WRONG_REPLY_TYPE;
                     }
                 }
-                funcReply(peerId, status, metainfo, reply);
+                try
+                {
+                    funcReply(peerId, status, metainfo, reply);
+                }
+                catch (Exception)
+                {
+                }
             });
             return correlationId;
         }
@@ -394,7 +418,13 @@ namespace finalmq {
         {
             FuncCommand f = new FuncCommand((RequestContext requestContext, StructBase structBase) => {
                 R? request = structBase as R;
-                funcCommand(requestContext, request!); 
+                try
+                {
+                    funcCommand(requestContext, request!);
+                }
+                catch (Exception)
+                {
+                }
             });
             RegisterCommandFunction(typeof(R).FullName!, typeof(R).FullName!, f!);
         }
@@ -413,11 +443,17 @@ namespace finalmq {
          */
         public void RegisterCommand<R>(string path, FuncCommandR<R> funcCommand) where R : StructBase
         {
-            //FuncCommand f = new FuncCommand((RequestContext requestContext, StructBase structBase) => {
-            //    R? request = structBase as R;
-            //    funcCommand(requestContext, request!); 
-            //});
-            FuncCommand? f = funcCommand as FuncCommand;
+            FuncCommand f = new FuncCommand((RequestContext requestContext, StructBase structBase) =>
+            {
+                R? request = structBase as R;
+                try
+                {
+                    funcCommand(requestContext, request!);
+                }
+                catch (Exception)
+                {
+                }
+            });
             RegisterCommandFunction(path, typeof(R).FullName!, f!);
         }
 

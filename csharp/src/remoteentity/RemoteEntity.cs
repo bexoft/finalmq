@@ -404,17 +404,22 @@ namespace finalmq {
             public long changeId = 0;
             public IList<FuncReplyEvent> funcsReplyEventNoLock = new List<FuncReplyEvent>();
         };
-        
-        [ThreadStatic]
-        static ThreadLocalDataReplyEvent? t_threadLocalDataReplyEvent = null;
+
+        //[ThreadStatic]
+        //ThreadLocalDataReplyEvent? t_threadLocalDataReplyEvent = null;
+
+        ThreadLocal<ThreadLocalDataReplyEvent> t_threadLocalDataReplyEvent = new ThreadLocal<ThreadLocalDataReplyEvent>(() => new ThreadLocalDataReplyEvent());
 
         internal override void ReceivedReply(ReceiveData receiveData)
         {
-            if (t_threadLocalDataReplyEvent == null)
-            {
-                t_threadLocalDataReplyEvent = new ThreadLocalDataReplyEvent();
-            }
-            ThreadLocalDataReplyEvent threadLocalDataReplyEvent = t_threadLocalDataReplyEvent;
+            //if (t_threadLocalDataReplyEvent == null)
+            //{
+            //    t_threadLocalDataReplyEvent = new ThreadLocalDataReplyEvent();
+            //}
+
+            ThreadLocalDataReplyEvent? threadLocalDataReplyEvent = t_threadLocalDataReplyEvent.Value;
+            Debug.Assert(threadLocalDataReplyEvent != null);
+
             long changeId = Interlocked.Read(ref m_funcsReplyEventChanged);
             if (changeId != threadLocalDataReplyEvent.changeId)
             {
