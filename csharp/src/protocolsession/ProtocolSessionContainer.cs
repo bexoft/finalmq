@@ -34,10 +34,10 @@ namespace finalmq
         void Unbind(string endpoint);
         IProtocolSession Connect(string endpoint, IProtocolSessionCallback callback, ConnectProperties? connectProperties = null, int contentType = 0);
         IProtocolSession CreateSession(IProtocolSessionCallback callback);
-        IList<IProtocolSession> GetAllSessions();
+        IList<IProtocolSession> AllSessions { get; }
         IProtocolSession GetSession(long sessionId);
         IProtocolSession? TryGetSession(long sessionId);
-        IExecutor? GetExecutor();
+        IExecutor? Executor { get; }
     }
 
 
@@ -211,11 +211,14 @@ namespace finalmq
             protocolSession.SetConnection(null, true);
             return protocolSession;
         }
-        public IList<IProtocolSession> GetAllSessions()
+        public IList<IProtocolSession> AllSessions
         {
-            IList<IProtocolSessionPrivate> protocolSessions = m_protocolSessionList.GetAllSessions();
-            IList<IProtocolSession> result = new List<IProtocolSession>(protocolSessions);
-            return result;
+            get
+            {
+                IList<IProtocolSessionPrivate> protocolSessions = m_protocolSessionList.GetAllSessions();
+                IList<IProtocolSession> result = new List<IProtocolSession>(protocolSessions);
+                return result;
+            }
         }
         public IProtocolSession GetSession(long sessionId)
         {
@@ -227,9 +230,12 @@ namespace finalmq
             IProtocolSession? protocolSession = m_protocolSessionList.TryGetSession(sessionId);
             return protocolSession;
         }
-        public IExecutor? GetExecutor()
+        public IExecutor? Executor
         {
-            return m_executor;
+            get
+            {
+                return m_executor;
+            }
         }
 
         private readonly IProtocolSessionList m_protocolSessionList = new ProtocolSessionList();

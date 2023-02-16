@@ -173,6 +173,7 @@ namespace finalmq {
                                 else
                                 {
                                     Stream stream = tcpClient.GetStream();
+                                    connectionData.Stream = stream;
                                     StartIncomingConnection(bindData, stream);
                                 }
                             }
@@ -212,6 +213,7 @@ namespace finalmq {
                                                     ConnectionData connectionData = bindData.ConnectionData.Clone();
                                                     connectionData.IncomingConnection = true;
                                                     connectionData.StartTime = DateTime.Now;
+                                                    connectionData.Stream = sslStream;
                                                     connectionData.ConnectionState = ConnectionState.CONNECTIONSTATE_CONNECTED;
                                                     IStreamConnectionPrivate connection = AddConnection(sslStream, connectionData, bindData.Callback);
                                                     connection.Connected();
@@ -346,7 +348,6 @@ namespace finalmq {
                             SslClientOptions sslClientOptions = connectPropertiesNoneNull.SslClientOptions;
                             SslStream sslStream = new SslStream(tcpStream, false, sslClientOptions.UserCertificateValidationCallback,
                                                             sslClientOptions.UserCertificateSelectionCallback, sslClientOptions.EncryptionPolicy);
-                            connectionData.Stream = sslStream;
                             StartOutgoingSslConnection(connection, connectionData, sslStream, connectPropertiesNoneNull.SslClientOptions);
                         }
                         else
@@ -382,6 +383,7 @@ namespace finalmq {
                 (IAsyncResult ar) => 
                 {
                     sslStream.EndAuthenticateAsClient(ar);
+                    connectionData.Stream = sslStream;
                     connectionData.ConnectionState = ConnectionState.CONNECTIONSTATE_CONNECTED;
                     connection.UpdateConnectionData(connectionData);
                     connection.Connected();

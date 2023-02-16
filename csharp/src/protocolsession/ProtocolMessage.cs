@@ -263,6 +263,11 @@ namespace finalmq {
             BufferRef bufferRef = AddSendPayload(payload.Length, reserve);
             payload.CopyTo(bufferRef.Buffer, bufferRef.Offset);
         }
+        public void AddSendPayload(BufferRef payload, int reserve = 0)
+        {
+            BufferRef bufferRef = AddSendPayload(payload.Length, reserve);
+            Array.Copy(payload.Buffer, payload.Offset, bufferRef.Buffer, bufferRef.Offset, payload.Length);
+        }
         public BufferRef AddSendPayload(int size, int reserve = 0) => AddBuffer(size, reserve);
 
         public void DownsizeLastSendPayload(int newSize) => DownsizeLastBuffer(newSize);
