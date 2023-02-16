@@ -234,6 +234,8 @@ private:
     const IExecutorPtr                                          m_executor;
 
     std::atomic_int64_t                                         m_entitiesChanged = {};
+    static std::atomic_uint64_t                                 m_nextContainerId;
+    const std::uint64_t                                         m_containerId;
 
     mutable std::mutex                                          m_mutex;
 };

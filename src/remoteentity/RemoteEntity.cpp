@@ -1207,12 +1207,12 @@ struct ThreadLocalDataReplyEvent
     std::int64_t                changeId = 0;
     std::vector<FuncReplyEvent> funcsReplyEventNoLock;
 };
-thread_local ThreadLocalDataReplyEvent t_threadLocalDataReplyEvent;
+thread_local std::unordered_map<std::uint64_t, ThreadLocalDataReplyEvent> t_threadLocalDataReplyEvent;
 
 
 void RemoteEntity::receivedReply(const ReceiveData& receiveData)
 {
-    ThreadLocalDataReplyEvent& threadLocalDataReplyEvent = t_threadLocalDataReplyEvent;
+    ThreadLocalDataReplyEvent& threadLocalDataReplyEvent = t_threadLocalDataReplyEvent[m_entityId];
     std::vector<FuncReplyEvent>& funcsReplyEventNoLock = threadLocalDataReplyEvent.funcsReplyEventNoLock;
     std::int64_t changeId = m_funcsReplyEventChanged.load(std::memory_order_acquire);
     if (changeId != threadLocalDataReplyEvent.changeId)
