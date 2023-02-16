@@ -64,7 +64,7 @@ bool ProtocolBind::received(const IStreamConnectionPtr& /*connection*/, const So
 {
     // should never be called, because the callback will be overriden by connected
     assert(false);
-    return true;
+    return false;
 }
 
 

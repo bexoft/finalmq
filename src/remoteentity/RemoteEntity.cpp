@@ -227,8 +227,12 @@ void PeerManager::removePeerFromSessionEntityToPeerId(std::int64_t sessionId, co
 
             if (entityIdContainer.empty() && entityNameContainer.empty())
             {
-                m_sessionEntityToPeerId.erase(it1);
+                it1->second.erase(it2);
             }
+        }
+        if (it1->second.empty())
+        {
+            m_sessionEntityToPeerId.erase(it1);
         }
     }
 }
@@ -619,6 +623,7 @@ void RemoteEntity::sendRequest(const PeerId& peerId, const std::string& path, co
         ReceiveData receiveData;
         receiveData.header.corrid = correlationId;
         receiveData.header.status = status;
+        receiveData.message = std::make_shared<ProtocolMessage>(0);
         if (session != nullptr)
         {
             IExecutorPtr executor = session->getExecutor();
@@ -785,7 +790,7 @@ void RemoteEntity::sendConnectEntity(PeerId peerId, IRemoteEntityContainer& enti
         if (replyReceived)
         {
             const std::string& virtualSessionId = metainfo[FMQ_VIRTUAL_SESSION_ID];
-            m_peerManager->updatePeer(peerId, virtualSessionId, replyReceived->entityid, replyReceived->entityName);
+            m_peerManager->updatePeer(peerId, virtualSessionId, replyReceived->entityId, replyReceived->entityName);
         }
         else if (status == Status::STATUS_ENTITY_NOT_FOUND)
         {
@@ -1065,20 +1070,20 @@ const RemoteEntity::Function* RemoteEntity::getFunction(const std::string& path,
                 bool match = true;
                 for (size_t i = 0; i < pathEntries.size() && match; ++i)
                 {
-                    const std::string& entry = funcVar.pathEntries[i];
-                    if (entry.size() >= 2 && entry[0] == '{')
+                    const std::string& funcVarEntry = funcVar.pathEntries[i];
+                    if (funcVarEntry.size() >= 2 && funcVarEntry[0] == '{')
                     {
-                        if (keys && entry.size() >= 3)
+                        if (keys && funcVarEntry.size() >= 3)
                         {
                             static const std::string PATH_PREFIX = "PATH_";
                             std::string key = PATH_PREFIX;
-                            key.insert(key.end(), entry.data() + 1, entry.data() + entry.size() - 1);
+                            key.insert(key.end(), funcVarEntry.data() + 1, funcVarEntry.data() + funcVarEntry.size() - 1);
                             (*keys)[std::move(key)] = pathEntries[i];
                         }
                     }
                     else
                     {
-                        if (entry != pathEntries[i])
+                        if (funcVarEntry != pathEntries[i])
                         {
                             match = false;
                         }
@@ -1101,8 +1106,8 @@ const RemoteEntity::Function* RemoteEntity::getFunction(const std::string& path,
             size_t j = 0;
             for (size_t i = 0; i < funcVar.pathEntries.size() && match; ++i)
             {
-                const std::string& entry = funcVar.pathEntries[i];
-                if (entry[0] == '*')
+                const std::string& funcVarEntry = funcVar.pathEntries[i];
+                if (funcVarEntry[0] == '*')
                 {
                     std::string nextEntry;
                     ++i;
@@ -1129,11 +1134,11 @@ const RemoteEntity::Function* RemoteEntity::getFunction(const std::string& path,
 
                         if (matchNextEntry || matchLastEntry)
                         {
-                            if (keys && entry.size() >= 3)
+                            if (keys && funcVarEntry.size() >= 3)
                             {
                                 static const std::string PATH_PREFIX = "PATH_";
                                 std::string key = PATH_PREFIX;
-                                key.insert(key.end(), entry.data() + 1, entry.data() + entry.size() - 1);
+                                key.insert(key.end(), funcVarEntry.data() + 1, funcVarEntry.data() + funcVarEntry.size() - 1);
                                 (*keys)[std::move(key)] = std::move(value);
                             }
                             match = true;
@@ -1142,7 +1147,7 @@ const RemoteEntity::Function* RemoteEntity::getFunction(const std::string& path,
                 }
                 else
                 {
-                    if (entry != pathEntries[j])
+                    if (funcVarEntry != pathEntries[j])
                     {
                         match = false;
                     }
@@ -1202,12 +1207,12 @@ struct ThreadLocalDataReplyEvent
     std::int64_t                changeId = 0;
     std::vector<FuncReplyEvent> funcsReplyEventNoLock;
 };
-thread_local ThreadLocalDataReplyEvent t_threadLocalDataReplyEvent;
+thread_local std::unordered_map<std::uint64_t, ThreadLocalDataReplyEvent> t_threadLocalDataReplyEvent;
 
 
 void RemoteEntity::receivedReply(const ReceiveData& receiveData)
 {
-    ThreadLocalDataReplyEvent& threadLocalDataReplyEvent = t_threadLocalDataReplyEvent;
+    ThreadLocalDataReplyEvent& threadLocalDataReplyEvent = t_threadLocalDataReplyEvent[m_entityId];
     std::vector<FuncReplyEvent>& funcsReplyEventNoLock = threadLocalDataReplyEvent.funcsReplyEventNoLock;
     std::int64_t changeId = m_funcsReplyEventChanged.load(std::memory_order_acquire);
     if (changeId != threadLocalDataReplyEvent.changeId)
@@ -1235,6 +1240,7 @@ void RemoteEntity::receivedReply(const ReceiveData& receiveData)
         receiveData.header.srcid != ENTITYID_INVALID)
     {
         assert(m_peerManager);
+        assert(receiveData.session);
         const std::string& virtualSessionId = receiveData.message->getAllMetainfo()[FMQ_VIRTUAL_SESSION_ID];
         PeerId peerId = m_peerManager->getPeerId(receiveData.session.getSessionId(), virtualSessionId, receiveData.header.srcid, "");
         removePeer(peerId, Status::STATUS_PEER_DISCONNECTED);

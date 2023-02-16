@@ -81,9 +81,12 @@ const EnumInfo ConnectionEvent::_enumInfo = {
 
 ///////////////////////////////////
 
+std::atomic_uint64_t RemoteEntityContainer::m_nextContainerId = {};
+
 RemoteEntityContainer::RemoteEntityContainer()
     : m_protocolSessionContainer(std::make_unique<ProtocolSessionContainer>())
     , m_executor(m_protocolSessionContainer->getExecutor())
+    , m_containerId(m_nextContainerId.fetch_add(1))
 {
 }
 
@@ -121,28 +124,6 @@ void RemoteEntityContainer::deinit()
 
 // IRemoteEntityContainer
 
-
-bool RemoteEntityContainer::isTimerExpired(std::chrono::time_point<std::chrono::steady_clock>& lastTime, int interval)
-{
-    bool expired = false;
-    std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
-
-    std::chrono::duration<double> dur = now - lastTime;
-    int delta = static_cast<int>(dur.count() * 1000);
-    if (delta >= interval)
-    {
-        lastTime = now;
-        expired = true;
-    }
-    else if (delta < 0)
-    {
-        lastTime = now;
-    }
-
-    return expired;
-}
-
-//static const int INTERVAL_CHECK = 5000;
 
 
 void RemoteEntityContainer::init(const IExecutorPtr& executor, int cycleTime, FuncTimer funcTimer, bool storeRawDataInReceiveStruct, int checkReconnectInterval)
@@ -208,7 +189,6 @@ SessionInfo RemoteEntityContainer::connect(const std::string& endpoint, const Co
 
     IProtocolSessionPtr session = m_protocolSessionContainer->connect(endpointProtocol, this, connectProperties, contentType);
     subscribeEntityNames(session);
-    std::weak_ptr<IRemoteEntityContainer> thisEntityContainer = weak_from_this();
     return createSessionInfo(session);
 }
 
@@ -233,7 +213,7 @@ void RemoteEntityContainer::subscribeEntityNames(const IProtocolSessionPtr& sess
     for (auto it = m_name2entity.begin(); it != m_name2entity.end(); ++it)
     {
         const std::string& subscribtion = it->first;
-        if (subscribtion[subscribtion.size() - 1] != '*')
+        if ((subscribtion.size() >= 1) && (subscribtion[subscribtion.size() - 1] != '*'))
         {
             subscribtions.push_back(it->first + "/#");
         }
@@ -246,18 +226,26 @@ void RemoteEntityContainer::subscribeEntityNames(const IProtocolSessionPtr& sess
     }
 }
 
-void RemoteEntityContainer::subscribeSessions(const std::string& name)
+void RemoteEntityContainer::subscribeSessions(std::string name)
 {
     if (name.empty())
     {
         return;
     }
+
+    if (name[name.size() - 1] == '*')
+    {
+        return;
+    }
+
+    name = name + "/#";
+
     std::vector< IProtocolSessionPtr > sessions = m_protocolSessionContainer->getAllSessions();
     for (auto it = sessions.begin(); it != sessions.end(); ++it)
     {
-        if (*it && (name[name.size() - 1] != '*'))
+        if (*it)
         {
-            (*it)->subscribe({ name + "/#" });
+            (*it)->subscribe({ name });
         }
     }
 }
@@ -389,7 +377,6 @@ std::vector<EntityId> RemoteEntityContainer::getAllEntities() const
 hybrid_ptr<IRemoteEntity> RemoteEntityContainer::getEntity(EntityId entityId) const
 {
     std::unique_lock<std::mutex> lock(m_mutex);
-    std::vector<EntityId> entities;
     auto it = m_entityId2entity.find(entityId);
     if (it !=  m_entityId2entity.end())
     {
@@ -500,23 +487,21 @@ void RemoteEntityContainer::disconnectedVirtualSession(const IProtocolSessionPtr
 
 
 
-static const std::string FMQ_PATH = "fmq_path";
-
-
 struct ThreadLocalDataEntities
 {
     std::int64_t                                                changeId = 0;
     std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>  name2entityNoLock;
     std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>>     entityId2entityNoLock;
 };
-thread_local ThreadLocalDataEntities t_threadLocalDataEntities;
+thread_local std::unordered_map<std::uint64_t, ThreadLocalDataEntities> t_threadLocalDataEntities;
+
 
 void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const IMessagePtr& message)
 {
     assert(session);
     assert(message);
     
-    ThreadLocalDataEntities& threadLocalDataEntities = t_threadLocalDataEntities;
+    ThreadLocalDataEntities& threadLocalDataEntities = t_threadLocalDataEntities[m_containerId];
     std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2entityNoLock = threadLocalDataEntities.name2entityNoLock;
     std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>>& entityId2entityNoLock = threadLocalDataEntities.entityId2entityNoLock;
     std::int64_t changeId = m_entitiesChanged.load(std::memory_order_acquire);
