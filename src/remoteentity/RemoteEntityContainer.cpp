@@ -81,9 +81,12 @@ const EnumInfo ConnectionEvent::_enumInfo = {
 
 ///////////////////////////////////
 
+std::atomic_uint64_t RemoteEntityContainer::m_nextContainerId = {};
+
 RemoteEntityContainer::RemoteEntityContainer()
     : m_protocolSessionContainer(std::make_unique<ProtocolSessionContainer>())
     , m_executor(m_protocolSessionContainer->getExecutor())
+    , m_containerId(m_nextContainerId.fetch_add(1))
 {
 }
 
@@ -490,14 +493,15 @@ struct ThreadLocalDataEntities
     std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>  name2entityNoLock;
     std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>>     entityId2entityNoLock;
 };
-thread_local ThreadLocalDataEntities t_threadLocalDataEntities;
+thread_local std::unordered_map<std::uint64_t, ThreadLocalDataEntities> t_threadLocalDataEntities;
+
 
 void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const IMessagePtr& message)
 {
     assert(session);
     assert(message);
     
-    ThreadLocalDataEntities& threadLocalDataEntities = t_threadLocalDataEntities;
+    ThreadLocalDataEntities& threadLocalDataEntities = t_threadLocalDataEntities[m_containerId];
     std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2entityNoLock = threadLocalDataEntities.name2entityNoLock;
     std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>>& entityId2entityNoLock = threadLocalDataEntities.entityId2entityNoLock;
     std::int64_t changeId = m_entitiesChanged.load(std::memory_order_acquire);
