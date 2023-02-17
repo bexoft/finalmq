@@ -37,6 +37,8 @@
 html
 latex
 build
+bin
+obj
 
 enc_temp_folder
 
@@ -50,6 +52,3 @@ CMakeSettings.json
 # generated files
 *.fmq.h 
 *.fmq.cpp
-*.pdb
-*.cache
-*.CopyComplete
