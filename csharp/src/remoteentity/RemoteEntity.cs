@@ -189,7 +189,7 @@ namespace finalmq {
         public override string GetTypeOfCommandFunction(ref string path, string? method = null)
         {
             Function? function = GetFunction(path);
-            if (function != null && method != null)
+            if (function == null && method != null)
             {
                 string pathWithMethod = path;
                 pathWithMethod += '/';

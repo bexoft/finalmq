@@ -25,6 +25,7 @@ using System.Diagnostics;
 
 namespace finalmq {
 
+    using VariantStruct = List<NameValue>;
 
     public class ProtocolMessage : IMessage
     {
@@ -224,7 +225,7 @@ namespace finalmq {
             {
                 if (m_controlData == null)
                 {
-                    m_controlData = new Variant();
+                    m_controlData = Variant.Create(new VariantStruct());
                 }
                 return m_controlData;
             }
@@ -242,7 +243,7 @@ namespace finalmq {
             {
                 if (m_echoData == null)
                 {
-                    m_echoData = new Variant();
+                    m_echoData = Variant.Create(new VariantStruct());
                 }
                 return m_echoData;
             }
@@ -285,7 +286,7 @@ namespace finalmq {
         {
             if (m_receiveBuffer == null)
             {
-                throw new System.InvalidOperationException();
+                return new BufferRef(Array.Empty<byte>(), 0, 0);
             }
             return new BufferRef(m_receiveBuffer, m_offsetReceiveBuffer + m_sizeHeader, m_sizeReceiveBuffer - m_sizeHeader);
         }

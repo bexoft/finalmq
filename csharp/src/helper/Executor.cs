@@ -341,9 +341,12 @@ namespace finalmq
             m_executor = executor;
             for (int i = 0; i < numberOfWorkerThreads; ++i)
             {
-                m_threads.Add(new Thread(x => { 
+                Thread thread = new Thread(x =>
+                {
                     m_executor.Run();
-                }));
+                });
+                m_threads.Add(thread);
+                thread.Start();
             }
         }
 

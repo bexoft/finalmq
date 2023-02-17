@@ -50,3 +50,6 @@ CMakeSettings.json
 # generated files
 *.fmq.h 
 *.fmq.cpp
+*.pdb
+*.cache
+*.CopyComplete

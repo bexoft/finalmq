@@ -1,0 +1,61 @@
+<html>                                                                          
+
+<head>                                                                          
+<script type="text/javascript" src="fmq.js"></script>
+
+<script type="text/javascript" >
+
+var g_fmqSession = new FmqSession();
+var g_fmqMyService = null;
+
+function printGreetings(outparams)
+{
+    var greetings = outparams.greetings;
+    var title = '<h1>Greetings</h1>';
+    var table = '<table border="1">';
+	for (i=0; i<greetings.length; i++)
+	{
+		var greeting = greetings[i];
+		table += '<tr>';
+		table += '<td width="320" align="left">' + greeting +'</td>';
+		table += '</tr>';
+	}
+    table += '</table>';
+    var el = document.getElementById('rootelement');
+    el.innerHTML = title + '<br>' + table;
+}
+
+function fmqReady()
+{
+    var inparams = {persons:[{name:"Bonnie"},{name:"Clyde"}]};
+    outparams = g_fmqMyService.requestReply('helloworld.HelloRequest', inparams, function(outparams) {
+        if (outparams.fmqheader.status == 'STATUS_OK')
+        {
+            printGreetings(outparams);
+        }
+    });
+}
+
+function pageLoad()
+{
+    g_fmqSession.createSession(function() {
+		g_fmqMyService = g_fmqSession.createEntity('MyService');
+        fmqReady();
+    });
+}
+
+function pageUnload()
+{
+    g_fmqSession.removeSession();
+}
+
+</script>                                                                       
+
+</head>
+
+<body onload="pageLoad()" onunload="pageUnload()">
+<div id="rootelement"></div>
+</body>
+
+</html>
+       

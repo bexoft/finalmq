@@ -437,7 +437,13 @@ namespace finalmq
             if (filename != null)
             {
                 FileInfo fileinfo = new FileInfo(filename);
-                filesize = (int)fileinfo.Length;
+                try
+                {
+                    filesize = (int)fileinfo.Length;
+                }
+                catch (Exception)
+                {
+                }
                 message.DownsizeLastSendPayload(0);
             }
             Variant? http = controlData.GetVariant(FMQ_HTTP);
@@ -809,10 +815,11 @@ namespace finalmq
                 if (src[i] == '%')
                 {
                     ++i;
-                    uint code = HexToUInt(src[i]) << 8;
+                    uint code = HexToUInt(src[i]) << 4;
                     ++i;
                     code |= HexToUInt(src[i]);
-                    dest.Append(code);
+                    char ch = (char)code;
+                    dest.Append(ch);
                 }
                 else
                 {
