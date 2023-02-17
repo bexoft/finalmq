@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -10,5 +10,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\csharp\finalmq.csproj" />
   </ItemGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="node ../../../../codegenerator/csharp/csharp.js --input=../helloworld.fmq --outpath=.&#xD;&#xA;" />
+  </Target>
 
 </Project>
