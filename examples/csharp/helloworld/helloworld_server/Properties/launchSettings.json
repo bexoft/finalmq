@@ -1,8 +1,7 @@
 {
   "profiles": {
     "helloworld_server": {
-      "commandName": "Project",
-      "workingDirectory": "C:\\data\\repos\\finalmq\\examples\\csharp\\helloworld\\helloworld_server"
+      "commandName": "Project"
     }
   }
 }

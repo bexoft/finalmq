@@ -647,66 +647,73 @@ namespace finalmq
             m_connection.SendMessage(message);
 
 
-            if (filename != null)
+            if (filename != null && filesize > 0)
             {
                 string file = filename;
                 GlobalExecutorWorker.Instance.AddAction(() => {
-                    
-                    using (var fs = new FileStream(file, FileMode.Open))
+
+                    try
                     {
-                        if (fs != null)
+                        using (var fs = new FileStream(file, FileMode.Open))
                         {
-                            long len = fs.Length;
-                            int err = 0;
-                            int lenReceived = 0;
-                            bool ex = false;
-                            while (!ex)
+                            if (fs != null)
                             {
-                                int size = (int)Math.Min(1024, len);
-                                IMessage messageData = new ProtocolMessage(0);
-                                BufferRef buf = messageData.AddSendPayload(size);
+                                long len = fs.Length;
+                                int err = 0;
+                                int lenReceived = 0;
+                                bool ex = false;
+                                while (!ex)
+                                {
+                                    int size = (int)Math.Min(1024, len);
+                                    IMessage messageData = new ProtocolMessage(0);
+                                    BufferRef buf = messageData.AddSendPayload(size);
 
-                                try
-                                {
-                                    err = fs.Read(buf.Buffer, 0, size);
-                                }
-                                catch (IOException)
-                                {
-                                    err = -1;
-                                }
-
-                                if (err > 0)
-                                {
-                                    Debug.Assert(err <= size);
-                                    if (err < size)
+                                    try
                                     {
-                                        messageData.DownsizeLastSendPayload(err);
+                                        err = fs.Read(buf.Buffer, 0, size);
                                     }
-                                    m_connection.SendMessage(messageData);
-                                    buf.AddOffset(err);
-                                    len -= err;
-                                    lenReceived += err;
-                                    err = 0;
-                                    Debug.Assert(len >= 0);
-                                    if (len == 0)
+                                    catch (IOException)
+                                    {
+                                        err = -1;
+                                    }
+
+                                    if (err > 0)
+                                    {
+                                        Debug.Assert(err <= size);
+                                        if (err < size)
+                                        {
+                                            messageData.DownsizeLastSendPayload(err);
+                                        }
+                                        m_connection.SendMessage(messageData);
+                                        buf.AddOffset(err);
+                                        len -= err;
+                                        lenReceived += err;
+                                        err = 0;
+                                        Debug.Assert(len >= 0);
+                                        if (len == 0)
+                                        {
+                                            ex = true;
+                                        }
+                                    }
+                                    else
                                     {
                                         ex = true;
                                     }
                                 }
-                                else
+                                if (lenReceived < filesize)
                                 {
-                                    ex = true;
+                                    m_connection.Disconnect();
                                 }
                             }
-                            if (lenReceived < filesize)
+                            else
                             {
                                 m_connection.Disconnect();
                             }
                         }
-                        else
-                        {
-                            m_connection.Disconnect();
-                        }
+                    }
+                    catch (Exception)
+                    {
+                        m_connection.Disconnect();
                     }
                 });
             }

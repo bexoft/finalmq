@@ -154,7 +154,7 @@ namespace finalmq {
 
     public delegate void FuncReply(PeerId peerId, Status status, StructBase? structBase);
     public delegate void FuncReplyMeta(PeerId peerId, Status status, Metainfo metainfo, StructBase? structBase);
-    public delegate void FuncCommand(RequestContext requestContext, StructBase structBase);
+    public delegate void FuncCommand(RequestContext requestContext, StructBase? structBase);
     public delegate void FuncPeerEvent(PeerId peerId, SessionInfo sessionInfo, EntityId entityId, PeerEvent peerEvent, bool incoming);
     public delegate bool FuncReplyEvent(CorrelationId correlationId, Status status, Metainfo metainfo, StructBase structBase); // return bool reply handled -> skip looking for reply lambda.
     public delegate void FuncReplyConnect(PeerId peerId, Status status);
@@ -416,17 +416,25 @@ namespace finalmq {
          */
         public void RegisterCommand<R>(FuncCommandR<R> funcCommand) where R : StructBase
         {
-            FuncCommand f = new FuncCommand((RequestContext requestContext, StructBase structBase) => {
+            FuncCommand f = new FuncCommand((RequestContext requestContext, StructBase? structBase) => {
                 R? request = structBase as R;
-                try
+                if (request != null)
                 {
-                    funcCommand(requestContext, request!);
+                    try
+                    {
+                        funcCommand(requestContext, request);
+                    }
+                    catch (Exception)
+                    {
+                        requestContext.Reply(Status.STATUS_REQUEST_PROCESSING_ERROR);
+                    }
                 }
-                catch (Exception)
+                else
                 {
+                    requestContext.Reply(Status.STATUS_REQUESTTYPE_NOT_KNOWN);
                 }
             });
-            RegisterCommandFunction(typeof(R).FullName!, typeof(R).FullName!, f!);
+            RegisterCommandFunction(typeof(R).FullName!, typeof(R).FullName!, f);
         }
 
         /**
@@ -443,18 +451,26 @@ namespace finalmq {
          */
         public void RegisterCommand<R>(string path, FuncCommandR<R> funcCommand) where R : StructBase
         {
-            FuncCommand f = new FuncCommand((RequestContext requestContext, StructBase structBase) =>
+            FuncCommand f = new FuncCommand((RequestContext requestContext, StructBase? structBase) =>
             {
                 R? request = structBase as R;
-                try
+                if (request != null)
                 {
-                    funcCommand(requestContext, request!);
+                    try
+                    {
+                        funcCommand(requestContext, request);
+                    }
+                    catch (Exception)
+                    {
+                        requestContext.Reply(Status.STATUS_REQUEST_PROCESSING_ERROR);
+                    }
                 }
-                catch (Exception)
+                else
                 {
+                    requestContext.Reply(Status.STATUS_REQUESTTYPE_NOT_KNOWN);
                 }
             });
-            RegisterCommandFunction(path, typeof(R).FullName!, f!);
+            RegisterCommandFunction(path, typeof(R).FullName!, f);
         }
 
         /**

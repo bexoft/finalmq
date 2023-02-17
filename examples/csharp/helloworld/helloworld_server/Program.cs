@@ -34,14 +34,14 @@ namespace helloworld
                     reply.greetings.Add(prefix + person.name);
                 }
 
-                //            PeerId peerid = requestContext->peerId();
+                //PeerId peerid = requestContext.PeerId;
 
                 // send reply
                 requestContext.Reply(reply);
 
                 // note:
                 // The reply does not have to be sent immediately:
-                // The requestContext is a shared_ptr, store it and reply later.
+                // If you want to reply later, then call requestContext.DelayReply(), you can now store the requestContext and reply later from another thread.
 
                 // note:
                 // The requestContext has the method requestContext->peerId()
@@ -107,7 +107,7 @@ namespace helloworld
 
             // register an entity for file download. The name "*" means that if an entity name, given by a client, is not found by name, 
             // then this entity will try to open a file inside the htdocs directory. An entity name can contain slashes ('/')
-            EntityFileServer entityFileServer = new EntityFileServer("htdocs");
+            EntityFileServer entityFileServer = new EntityFileServer("../../../htdocs");
             entityContainer.RegisterEntity(entityFileServer, "*");
 
             // Open listener port 7777 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).

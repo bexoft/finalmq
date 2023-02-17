@@ -86,8 +86,8 @@ public enum Status
     STATUS_NO_REPLY = 9,
 	[finalmq.MetaEnumEntry("Wrong content type", "")]
     STATUS_WRONG_CONTENTTYPE = 10,
-	[finalmq.MetaEnumEntry("", "")]
-    STATUS_RESERVED11 = 11,
+	[finalmq.MetaEnumEntry("Error in request processing", "")]
+    STATUS_REQUEST_PROCESSING_ERROR = 11,
 	[finalmq.MetaEnumEntry("", "")]
     STATUS_RESERVED12 = 12,
 	[finalmq.MetaEnumEntry("", "")]

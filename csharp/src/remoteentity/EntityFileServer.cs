@@ -39,7 +39,7 @@ namespace finalmq {
                 requestContext.Reply(Status.STATUS_ENTITY_NOT_FOUND);
             });
 
-            RegisterCommandFunction("*tail*", "", (RequestContext requestContext, StructBase structBase) => {
+            RegisterCommandFunction("*tail*", "", (RequestContext requestContext, StructBase? structBase) => {
                 string? path = requestContext.GetMetainfo("PATH_tail");
                 if (path != null && path.Length != 0)
                 {

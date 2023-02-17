@@ -391,7 +391,11 @@ namespace finalmq {
 
             if (func != null)
             {
-                func(requestContext, receiveData.StructBase!);
+                func(requestContext, receiveData.StructBase);
+                if (!requestContext.IsDelayedReply)
+                {
+                    requestContext.Reply(Status.STATUS_NO_REPLY);
+                }
             }
             else
             {
