@@ -607,14 +607,7 @@ void ProtocolSession::received(const IMessagePtr& message, std::int64_t connecti
     if (writeChannelIdIntoEchoData)
     {
         Variant& echoData = message->getEchoData();
-        if (echoData.getType() == VARTYPE_NONE)
-        {
-            echoData = VariantStruct{ {FMQ_CONNECTION_ID, connectionId} };
-        }
-        else
-        {
-            echoData.add(FMQ_CONNECTION_ID, connectionId);
-        }
+        echoData.add(FMQ_CONNECTION_ID, connectionId);
     }
 
     if (m_executor)
