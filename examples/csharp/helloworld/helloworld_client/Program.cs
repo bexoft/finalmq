@@ -11,13 +11,13 @@ namespace helloworld
         static readonly int LOOP_PARALLEL = 10000;
         static readonly int LOOP_SEQUENTIAL = 10000;
 
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             // Create and initialize entity container. Entities can be added with registerEntity().
             // Entities are like remote objects, but they can be at the same time client and server.
             // This means, an entity can send (client) and receive (server) a request command.
             RemoteEntityContainer entityContainer = new RemoteEntityContainer();
-
+            
             // register lambda for connection events to see when a network node connects or disconnects.
             entityContainer.RegisterConnectionEvent((SessionInfo session, ConnectionEvent connectionEvent) => {
                 ConnectionData connectionData = session.ConnectionData;
@@ -116,6 +116,21 @@ namespace helloworld
                 wait.WaitOne();
             }
 
+            for (int n = 0; n < 10; ++n)
+            {
+                long starttimeAsync = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+                for (int i = 0; i < LOOP_SEQUENTIAL; ++i)
+                {
+                    ReplyResult<HelloReply> replyResult = await entityClient.RequestReply<HelloReply>(peerId,
+                            new HelloRequest(new List<Person> {
+                                    new Person("Bonnie","Parker",Gender.FEMALE,1910, new Address("somestreet",   12,76875,"Rowena","USA") ),
+                                    new Person("Clyde", "Barrow",Gender.MALE,  1909, new Address("anotherstreet",32,37385,"Telico","USA") )
+                                }));
+                }
+                long now = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+                long dur = now - starttimeAsync;
+                System.Console.WriteLine("time for " + LOOP_SEQUENTIAL + " sequential requests: " + dur + "ms");
+            }
         }
     }
 }
