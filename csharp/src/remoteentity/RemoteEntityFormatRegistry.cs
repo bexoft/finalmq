@@ -277,14 +277,11 @@ namespace finalmq
                 {
                     VariantStruct varstruct = message.ControlData.GetData<VariantStruct>();
                     VariantStruct varstruct2 = controlData.GetData<VariantStruct>();
-                    if (varstruct.Count != 0 && varstruct2.Count != 0)
+                    foreach (var entry in varstruct2)
                     {
-                        foreach (var entry in varstruct2)
-                        {
-                            varstruct.Add(entry);
-                        }
-                        varstruct2.Clear();
+                        varstruct.Add(entry);
                     }
+                    varstruct2.Clear();
                 }
                 if (pureData == null)
                 {
@@ -501,7 +498,7 @@ namespace finalmq
                 }
             }
 
-            if (header.type.Length != 0)
+            if (header.type.Length == 0)
             {
                 var entity = remoteEntity;
                 if (entity != null)

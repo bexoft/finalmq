@@ -1,0 +1,205 @@
+<html>                                                                          
+
+
+<head>                                                                          
+
+<script type="text/javascript" src="fmq.js"></script>
+                                                                                
+<script type="text/javascript" >
+
+class MyServiceEntity extends FmqEntity
+{
+    events_personChanged(correlationId, params)
+    {
+		var table = '<table border="1">';
+
+		table += '<tr>';
+		table += '<td align="left"><b>ID</b></td>';
+		table += '<td align="left"><b>Name</b></td>';
+		table += '<td align="left"><b>Surname</b></td>';
+		table += '<td align="left"><b>Year Of Birth</b></td>';
+		table += '<td align="left"><b>Change Type</b></td>';
+		table += '</tr>';
+
+		table += '<tr>';
+		table += '<td align="left">' + params.person.id +'</td>';
+		table += '<td align="left">' + params.person.name +'</td>';
+		table += '<td align="left">' + params.person.surname +'</td>';
+		table += '<td align="left">' + params.person.yearOfBirth +'</td>';
+		table += '<td align="left">' + params.changeType +'</td>';
+		table += '</tr>';
+
+		table += '</table>';
+		
+		var el = document.getElementById('changed');
+		el.innerHTML = table;
+
+		updatePersons();
+    }
+
+	setConnected(status)
+	{
+		var table = '<table border="1">';
+
+		table += '<tr>';
+		table += '<td align="left"><b>Connection Status</b></td>';
+		table += '</tr>';
+
+		table += '<tr>';
+		table += '<td align="left">' + status +'</td>';
+		table += '</tr>';
+
+		table += '</table>';
+		
+		var el = document.getElementById('connectionstate');
+		el.innerHTML = table;
+	}
+
+    sessionDisconnected()
+    {
+		this.setConnected('Session Disconnected');
+    }
+
+    sessionConnected()
+    {
+		document.getElementById('changed').innerHTML = '';
+		updatePersons();
+		this.setConnected('Session Connected');
+    }
+
+    serverDisconnected()
+    {
+		this.setConnected('Server Disconnected');
+    }
+
+    serverConnected()
+    {
+		this.setConnected('Server Connected');
+    }
+}
+
+
+var g_fmqSession = new FmqSession();
+var g_fmqMyService = null;
+
+
+
+function printAllPersons(outparams)
+{
+    var persons = outparams.persons;
+    var title = '<h1>Persons</h1>';
+    var table = '<table border="1">';
+	table += '<tr>';
+	table += '<td align="left"><b>ID</b></td>';
+	table += '<td align="left"><b>Name</b></td>';
+	table += '<td align="left"><b>Surname</b></td>';
+	table += '<td align="left"><b>Year Of Birth</b></td>';
+	table += '</tr>';
+	for (i=0; i<persons.length; i++)
+	{
+		var person = persons[i];
+		table += '<tr>';
+		table += '<td align="left">' + person.id +'</td>';
+		table += '<td align="left"><input type="text" id="'+person.id+'.personName" name="" value="'+person.name+'"></td>';
+		table += '<td align="left"><input type="text" id="'+person.id+'.personSurname" name="" value="'+person.surname+'"></td>';
+		table += '<td align="left"><input type="text" id="'+person.id+'.personYearOfBirth" name="" value="'+person.yearOfBirth+'"></td>';
+		table += '<td align="left"><button onclick="changePerson('+person.id+')" >Change</button></td>';
+		table += '<td align="left"><button onclick="deletePerson('+person.id+')" >Delete</button></td>';
+		table += '</tr>';
+	}
+    table += '</table>';
+    var el = document.getElementById('persons');
+    el.innerHTML = title + '<br>' + table;
+}
+
+
+function updatePersons()
+{
+	var filter = document.getElementById('filter').value;
+	g_fmqMyService.httpRequest('GET', '/persons?filter=' + filter, null, function(outparams) {
+		if (outparams.fmqheader.status == 'STATUS_OK')
+		{
+			printAllPersons(outparams);
+		}
+	});
+}
+
+
+function deletePerson(id)
+{
+	g_fmqMyService.httpRequest('DELETE', '/persons/' + id, null, function(outparams) {});
+}
+
+function addPerson()
+{
+	var person = {};
+	person.name = document.getElementById('personName').value;
+	person.surname = document.getElementById('personSurname').value;
+	person.yearOfBirth = document.getElementById('personYearOfBirth').value;
+	g_fmqMyService.httpRequest('POST', '/persons', person, function(outparams) {});	
+}
+
+
+function changePerson(id)
+{
+	var person = {};
+	person.name = document.getElementById(id + '.personName').value;
+	person.surname = document.getElementById(id + '.personSurname').value;
+	person.yearOfBirth = document.getElementById(id + '.personYearOfBirth').value;
+	g_fmqMyService.httpRequest('PUT', '/persons/' + id, person, function(outparams) {});	
+}
+
+
+function pageLoad()
+{
+    g_fmqSession.createSession(function() {
+		g_fmqMyService = g_fmqSession.createEntity('MyService', MyServiceEntity);
+		updatePersons();
+   });
+}
+
+function pageUnload()
+{
+    g_fmqSession.removeSession();
+}
+
+</script>                                                                       
+
+</head>
+
+<body onload="pageLoad()" onunload="pageUnload()">
+<table border="1" id="add">
+    <table border="1">
+	<tr>
+		<td align="left"><b>Name</b></td>
+		<td align="left"><b>Surname</b></td>
+		<td align="left"><b>Year Of Birth</b></td>
+	</tr>
+	<tr>
+		<td align="left"><input type="text" id="personName" name="" value="Albert"></td>
+		<td align="left"><input type="text" id="personSurname" name="" value="Einstein"></td>
+		<td align="left"><input type="text" id="personYearOfBirth" name="" value="1879"></td>
+		<td align="left"><button onclick="addPerson()" >Add</button></td>
+	</tr>
+</table>
+<br>
+<table border="1">
+    <table border="1">
+	<tr>
+		<td align="left">Filter</td>
+		<td align="left"><input type="text" id="filter" name="" value=""></td>
+		<td align="left"><button onclick="updatePersons()" >Submit</button></td>
+	</tr>
+</table>
+<br>
+<table border="1" id="persons">
+</table>
+<br>
+<table border="1" id="changed">
+</table>
+<br>
+<table border="1" id="connectionstate">
+</table>
+</body>
+
+</html>

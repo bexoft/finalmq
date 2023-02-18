@@ -471,14 +471,7 @@ namespace finalmq
             if (writeChannelIdIntoEchoData)
             {
                 Variant echoData = message.EchoData;
-                if (echoData.VarType == Variant.VARTYPE_NONE)
-                {
-                    echoData = Variant.Create( new VariantStruct{ new NameValue( FMQ_CONNECTION_ID, Variant.Create(connectionId)) } );
-                }
-                else
-                {
-                    echoData.Add(FMQ_CONNECTION_ID, connectionId);
-                }
+                echoData.Add(FMQ_CONNECTION_ID, connectionId);
             }
 
             if (m_executor != null)

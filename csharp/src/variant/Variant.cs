@@ -263,11 +263,11 @@ namespace finalmq
                 {
                     return (dynamic)Array.Empty<byte[]>();
                 }
-                if (typeof(T) == typeof(VariantList))
+                if (typeof(T) == typeof(IList<Variant>))
                 {
                     return (dynamic)Array.Empty<Variant>();
                 }
-                if (typeof(T) == typeof(VariantStruct))
+                if (typeof(T) == typeof(IList<NameValue>))
                 {
                     return (dynamic)Array.Empty<NameValue>();
                 }

@@ -154,7 +154,7 @@ namespace finalmq {
 
     public delegate void FuncReply(PeerId peerId, Status status, StructBase? structBase);
     public delegate void FuncReplyMeta(PeerId peerId, Status status, Metainfo metainfo, StructBase? structBase);
-    public delegate void FuncCommand(RequestContext requestContext, StructBase structBase);
+    public delegate void FuncCommand(RequestContext requestContext, StructBase? structBase);
     public delegate void FuncPeerEvent(PeerId peerId, SessionInfo sessionInfo, EntityId entityId, PeerEvent peerEvent, bool incoming);
     public delegate bool FuncReplyEvent(CorrelationId correlationId, Status status, Metainfo metainfo, StructBase structBase); // return bool reply handled -> skip looking for reply lambda.
     public delegate void FuncReplyConnect(PeerId peerId, Status status);
@@ -163,6 +163,42 @@ namespace finalmq {
     public delegate void FuncReplyMetaR<R>(PeerId peerId, Status status, Metainfo metainfo, R? structBase) where R : StructBase;
     public delegate void FuncCommandR<R>(RequestContext requestContext, R structBase) where R : StructBase;
 
+    class AsyncOneTriggerEvent
+    {
+        private volatile TaskCompletionSource<bool> m_tcs = new TaskCompletionSource<bool>();
+        public Task WaitAsync()
+        {
+            return m_tcs.Task;
+        }
+
+        public void Set()
+        {
+            m_tcs.TrySetResult(true);
+        }
+    }
+
+
+    public class ReplyResult<R>
+    {
+        public ReplyResult(PeerId peerId, Status status, Metainfo? metainfo, R? reply)
+        {
+            m_peerId = peerId;
+            m_status = status;
+            m_metainfo = metainfo;
+            m_reply = reply;
+        }
+        public PeerId PeerId { get => m_peerId; }
+        public Status Status { get => m_status; }
+        public Metainfo? Metainfo { get => m_metainfo; }
+        public R? Reply { get => m_reply; }
+
+        readonly PeerId m_peerId;
+        readonly Status m_status;
+        readonly Metainfo? m_metainfo;
+        readonly R? m_reply;
+    }
+
+
     public abstract class IRemoteEntity
     {
         public static readonly PeerId PEERID_INVALID = 0;
@@ -170,6 +206,8 @@ namespace finalmq {
 
         public static EntityId ENTITYID_DEFAULT = 0;
         public static EntityId ENTITYID_INVALID = 0x7fffffffffffffff;
+
+
 
         /**
          * @brief requestReply sends a request to the peer and the funcReply is triggered when
@@ -206,6 +244,30 @@ namespace finalmq {
                 }
             });
             return correlationId;
+        }
+
+        /**
+         * @brief requestReply sends a request to the peer and returns the reply. 
+         * The template parameter is the message type of the reply (generated code of fmq file).
+         * @param peerId is the id of the peer. You can get it when you connect() to a peer, when you
+         * call getAllPeers(), inside a peer event or by calling requestContext->peerId() inside a
+         * command execution. The peerId belongs to this entity. Because an entity can have multiple
+         * connections to remote entities, a remote entity must be identified be the peerId.
+         * @param path is the path that shall be called at the remote entity
+         * @param structBase is the request message to send (generated code of fmq file).
+         * @return the reply as ReplyResult
+         */
+        public async Task<ReplyResult<R>> RequestReply<R>(PeerId peerId, string path, StructBase structBase) where R : StructBase
+        {
+            AsyncOneTriggerEvent waitHandle = new AsyncOneTriggerEvent();
+            ReplyResult<R>? replyResult = null;
+            RequestReply<R>(peerId, path, structBase, (PeerId peerId, Status status, R? reply) => {
+                replyResult = new ReplyResult<R>(peerId, status, null, reply);
+                waitHandle.Set();
+            });
+            await waitHandle.WaitAsync();
+            Debug.Assert(replyResult != null);
+            return replyResult;
         }
 
         /**
@@ -249,6 +311,33 @@ namespace finalmq {
         }
 
         /**
+         * @brief requestReply sends a request to the peer and and returns the reply. 
+         * The template parameter is the message type of the reply (generated code of fmq file).
+         * This method allows message exchange with metainfo. Metainfo is very similar to HTTP headers. You can use it
+         * to exchange additional data besides the message data.
+         * @param peerId is the id of the peer. You can get it when you connect() to a peer, when you
+         * call getAllPeers(), inside a peer event or by calling requestContext->peerId() inside a
+         * command execution. The peerId belongs to this entity. Because an entity can have multiple
+         * connections to remote entities, a remote entity must be identified be the peerId.
+         * @param path is the path that shall be called at the remote entity
+         * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
+         * @param structBase is the request message to send (generated code of fmq file).
+         * @return the reply as ReplyResult
+         */
+        public async Task<ReplyResult<R>> RequestReply<R>(PeerId peerId, string path, Metainfo metainfo, StructBase structBase) where R : StructBase
+        {
+            AsyncOneTriggerEvent waitHandle = new AsyncOneTriggerEvent();
+            ReplyResult<R>? replyResult = null;
+            RequestReply<R>(peerId, path, metainfo, structBase, (PeerId peerId, Status status, Metainfo metainfo, R? reply) => {
+                replyResult = new ReplyResult<R>(peerId, status, metainfo, reply);
+                waitHandle.Set();
+            });
+            await waitHandle.WaitAsync();
+            Debug.Assert(replyResult != null);
+            return replyResult;
+        }
+
+        /**
          * @brief requestReply sends a request to the peer and the funcReply is triggered when
          * the reply is available. The template parameter is the message type of the reply (generated code of fmq file).
          * @param peerId is the id of the peer. You can get it when you connect() to a peer, when you
@@ -282,6 +371,29 @@ namespace finalmq {
                 }
             });
             return correlationId;
+        }
+
+        /**
+         * @brief requestReply sends a request to the peer and returns the reply
+         * The template parameter is the message type of the reply (generated code of fmq file).
+         * @param peerId is the id of the peer. You can get it when you connect() to a peer, when you
+         * call getAllPeers(), inside a peer event or by calling requestContext->peerId() inside a
+         * command execution. The peerId belongs to this entity. Because an entity can have multiple
+         * connections to remote entities, a remote entity must be identified be the peerId.
+         * @param structBase is the request message to send (generated code of fmq file).
+         * @return the reply as ReplyResult
+         */
+        public async Task<ReplyResult<R>> RequestReply<R>(PeerId peerId, StructBase structBase) where R : StructBase
+        {
+            AsyncOneTriggerEvent waitHandle = new AsyncOneTriggerEvent();
+            ReplyResult<R>? replyResult = null;
+            RequestReply<R>(peerId, structBase, (PeerId peerId, Status status, R? reply) => {
+                replyResult = new ReplyResult<R>(peerId, status, null, reply);
+                waitHandle.Set();
+            });
+            await waitHandle.WaitAsync();
+            Debug.Assert(replyResult != null);
+            return replyResult;
         }
 
         /**
@@ -322,6 +434,33 @@ namespace finalmq {
             });
             return correlationId;
         }
+
+        /**
+         * @brief requestReply sends a request to the peer and returns the reply. 
+         * The template parameter is the message type of the reply (generated code of fmq file).
+         * This method allows message exchange with metainfo. Metainfo is very similar to HTTP headers. You can use it
+         * to exchange additional data besides the message data.
+         * @param peerId is the id of the peer. You can get it when you connect() to a peer, when you
+         * call getAllPeers(), inside a peer event or by calling requestContext->peerId() inside a
+         * command execution. The peerId belongs to this entity. Because an entity can have multiple
+         * connections to remote entities, a remote entity must be identified be the peerId.
+         * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
+         * @param structBase is the request message to send (generated code of fmq file).
+         * @return the reply as ReplyResult
+         */
+        public async Task<ReplyResult<R>> RequestReply<R>(PeerId peerId, Metainfo metainfo, StructBase structBase) where R : StructBase
+        {
+            AsyncOneTriggerEvent waitHandle = new AsyncOneTriggerEvent();
+            ReplyResult<R>? replyResult = null;
+            RequestReply<R>(peerId, metainfo, structBase, (PeerId peerId, Status status, Metainfo metainfo, R? reply) => {
+                replyResult = new ReplyResult<R>(peerId, status, metainfo, reply);
+                waitHandle.Set();
+            });
+            await waitHandle.WaitAsync();
+            Debug.Assert(replyResult != null);
+            return replyResult;
+        }
+
 
         /**
          * @brief sendEvent sends a request to the peer and does not expect a reply.
@@ -416,17 +555,25 @@ namespace finalmq {
          */
         public void RegisterCommand<R>(FuncCommandR<R> funcCommand) where R : StructBase
         {
-            FuncCommand f = new FuncCommand((RequestContext requestContext, StructBase structBase) => {
+            FuncCommand f = new FuncCommand((RequestContext requestContext, StructBase? structBase) => {
                 R? request = structBase as R;
-                try
+                if (request != null)
                 {
-                    funcCommand(requestContext, request!);
+                    try
+                    {
+                        funcCommand(requestContext, request);
+                    }
+                    catch (Exception)
+                    {
+                        requestContext.Reply(Status.STATUS_REQUEST_PROCESSING_ERROR);
+                    }
                 }
-                catch (Exception)
+                else
                 {
+                    requestContext.Reply(Status.STATUS_REQUESTTYPE_NOT_KNOWN);
                 }
             });
-            RegisterCommandFunction(typeof(R).FullName!, typeof(R).FullName!, f!);
+            RegisterCommandFunction(typeof(R).FullName!, typeof(R).FullName!, f);
         }
 
         /**
@@ -443,18 +590,26 @@ namespace finalmq {
          */
         public void RegisterCommand<R>(string path, FuncCommandR<R> funcCommand) where R : StructBase
         {
-            FuncCommand f = new FuncCommand((RequestContext requestContext, StructBase structBase) =>
+            FuncCommand f = new FuncCommand((RequestContext requestContext, StructBase? structBase) =>
             {
                 R? request = structBase as R;
-                try
+                if (request != null)
                 {
-                    funcCommand(requestContext, request!);
+                    try
+                    {
+                        funcCommand(requestContext, request);
+                    }
+                    catch (Exception)
+                    {
+                        requestContext.Reply(Status.STATUS_REQUEST_PROCESSING_ERROR);
+                    }
                 }
-                catch (Exception)
+                else
                 {
+                    requestContext.Reply(Status.STATUS_REQUESTTYPE_NOT_KNOWN);
                 }
             });
-            RegisterCommandFunction(path, typeof(R).FullName!, f!);
+            RegisterCommandFunction(path, typeof(R).FullName!, f);
         }
 
         /**

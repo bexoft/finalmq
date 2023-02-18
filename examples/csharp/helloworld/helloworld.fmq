@@ -1,0 +1,38 @@
+{
+    "namespace":"helloworld",
+
+    "enums": [
+        {"type":"Gender","desc":"The gender of a person","entries":[
+            {"name":"INVALID",  "id":0,"desc":"invalid gender", "alias":"invalid"},
+            {"name":"MALE",     "id":1,"desc":"male", "alias":"male"},
+            {"name":"FEMALE",   "id":2,"desc":"female", "alias":"female"},
+            {"name":"DIVERSE",  "id":3,"desc":"diverse", "alias":"diverse"}
+        ]}
+    ],
+
+    "structs":[
+        {"type":"Address","desc":"An address","fields":[
+            {"tid":"string",                           "name":"street",            "desc":"The first name of a person."},
+            {"tid":"uint32",                           "name":"number",            "desc":"The house number"},
+            {"tid":"uint32",                           "name":"postalcode",        "desc":"The postal code."},
+            {"tid":"string",                           "name":"city",              "desc":"The city name."},
+            {"tid":"string",                           "name":"country",           "desc":"The country name."}
+        ]},
+        {"type":"Person","desc":"Models a person","fields":[
+            {"tid":"string",                           "name":"name",              "desc":"The first name of a person."},
+            {"tid":"string",                           "name":"surname",           "desc":"The last name of a person."},
+            {"tid":"enum",         "type":"Gender",    "name":"gender",            "desc":"The gender of a person."},
+            {"tid":"uint32",                           "name":"yearOfBirth",       "desc":"Year of birth."},
+            {"tid":"struct",       "type":"Address",   "name":"address",           "desc":"The address of a person."}
+        ]},
+
+        {"type":"HelloRequest","desc":"","fields":[
+            {"tid":"struct[]",     "type":"Person",    "name":"persons",           "desc":"Parameter of HelloRequest"}
+        ]},
+        {"type":"HelloReply","desc":"","fields":[
+            {"tid":"string[]",                         "name":"greetings",         "desc":"The greetings for all persons."}
+        ]}
+    ]
+}
+
+

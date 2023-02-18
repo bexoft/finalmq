@@ -189,7 +189,7 @@ namespace finalmq {
         public override string GetTypeOfCommandFunction(ref string path, string? method = null)
         {
             Function? function = GetFunction(path);
-            if (function != null && method != null)
+            if (function == null && method != null)
             {
                 string pathWithMethod = path;
                 pathWithMethod += '/';
@@ -391,7 +391,11 @@ namespace finalmq {
 
             if (func != null)
             {
-                func(requestContext, receiveData.StructBase!);
+                func(requestContext, receiveData.StructBase);
+                if (!requestContext.IsDelayedReply)
+                {
+                    requestContext.Reply(Status.STATUS_NO_REPLY);
+                }
             }
             else
             {

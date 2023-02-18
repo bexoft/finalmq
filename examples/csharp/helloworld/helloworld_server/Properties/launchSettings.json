@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "helloworld_server": {
+      "commandName": "Project"
+    }
+  }
+}

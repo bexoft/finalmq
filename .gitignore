@@ -37,6 +37,8 @@
 html
 latex
 build
+bin
+obj
 
 enc_temp_folder
 

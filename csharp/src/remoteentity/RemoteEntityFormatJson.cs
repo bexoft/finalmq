@@ -120,7 +120,7 @@ namespace finalmq
                     ixCorrelationId = ixEndHeader;
                 }
 
-                string pathWithoutFirstSlash = strHeader.Substring(1, ixCorrelationId);
+                string pathWithoutFirstSlash = strHeader.Substring(1, ixCorrelationId - 1);
                 pathWithoutFirstSlash = pathWithoutFirstSlash.Trim();
                 string? foundEntityName = null;
                 IRemoteEntity? remoteEntity = null;

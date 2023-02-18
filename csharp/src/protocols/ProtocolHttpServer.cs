@@ -437,7 +437,13 @@ namespace finalmq
             if (filename != null)
             {
                 FileInfo fileinfo = new FileInfo(filename);
-                filesize = (int)fileinfo.Length;
+                try
+                {
+                    filesize = (int)fileinfo.Length;
+                }
+                catch (Exception)
+                {
+                }
                 message.DownsizeLastSendPayload(0);
             }
             Variant? http = controlData.GetVariant(FMQ_HTTP);
@@ -641,66 +647,73 @@ namespace finalmq
             m_connection.SendMessage(message);
 
 
-            if (filename != null)
+            if (filename != null && filesize > 0)
             {
                 string file = filename;
                 GlobalExecutorWorker.Instance.AddAction(() => {
-                    
-                    using (var fs = new FileStream(file, FileMode.Open))
+
+                    try
                     {
-                        if (fs != null)
+                        using (var fs = new FileStream(file, FileMode.Open))
                         {
-                            long len = fs.Length;
-                            int err = 0;
-                            int lenReceived = 0;
-                            bool ex = false;
-                            while (!ex)
+                            if (fs != null)
                             {
-                                int size = (int)Math.Min(1024, len);
-                                IMessage messageData = new ProtocolMessage(0);
-                                BufferRef buf = messageData.AddSendPayload(size);
+                                long len = fs.Length;
+                                int err = 0;
+                                int lenReceived = 0;
+                                bool ex = false;
+                                while (!ex)
+                                {
+                                    int size = (int)Math.Min(1024, len);
+                                    IMessage messageData = new ProtocolMessage(0);
+                                    BufferRef buf = messageData.AddSendPayload(size);
 
-                                try
-                                {
-                                    err = fs.Read(buf.Buffer, 0, size);
-                                }
-                                catch (IOException)
-                                {
-                                    err = -1;
-                                }
-
-                                if (err > 0)
-                                {
-                                    Debug.Assert(err <= size);
-                                    if (err < size)
+                                    try
                                     {
-                                        messageData.DownsizeLastSendPayload(err);
+                                        err = fs.Read(buf.Buffer, 0, size);
                                     }
-                                    m_connection.SendMessage(messageData);
-                                    buf.AddOffset(err);
-                                    len -= err;
-                                    lenReceived += err;
-                                    err = 0;
-                                    Debug.Assert(len >= 0);
-                                    if (len == 0)
+                                    catch (IOException)
+                                    {
+                                        err = -1;
+                                    }
+
+                                    if (err > 0)
+                                    {
+                                        Debug.Assert(err <= size);
+                                        if (err < size)
+                                        {
+                                            messageData.DownsizeLastSendPayload(err);
+                                        }
+                                        m_connection.SendMessage(messageData);
+                                        buf.AddOffset(err);
+                                        len -= err;
+                                        lenReceived += err;
+                                        err = 0;
+                                        Debug.Assert(len >= 0);
+                                        if (len == 0)
+                                        {
+                                            ex = true;
+                                        }
+                                    }
+                                    else
                                     {
                                         ex = true;
                                     }
                                 }
-                                else
+                                if (lenReceived < filesize)
                                 {
-                                    ex = true;
+                                    m_connection.Disconnect();
                                 }
                             }
-                            if (lenReceived < filesize)
+                            else
                             {
                                 m_connection.Disconnect();
                             }
                         }
-                        else
-                        {
-                            m_connection.Disconnect();
-                        }
+                    }
+                    catch (Exception)
+                    {
+                        m_connection.Disconnect();
                     }
                 });
             }
@@ -809,10 +822,11 @@ namespace finalmq
                 if (src[i] == '%')
                 {
                     ++i;
-                    uint code = HexToUInt(src[i]) << 8;
+                    uint code = HexToUInt(src[i]) << 4;
                     ++i;
                     code |= HexToUInt(src[i]);
-                    dest.Append(code);
+                    char ch = (char)code;
+                    dest.Append(ch);
                 }
                 else
                 {
