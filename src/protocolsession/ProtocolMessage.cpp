@@ -244,11 +244,19 @@ const Variant& ProtocolMessage::getControlData() const
 // echoData
 Variant& ProtocolMessage::getEchoData()
 {
+    if (m_echoData.getType() != VARTYPE_STRUCT)
+    {
+        m_echoData = VariantStruct();
+    }
     return m_echoData;
 }
 
 const Variant& ProtocolMessage::getEchoData() const
 {
+    if (m_echoData.getType() != VARTYPE_STRUCT)
+    {
+        const_cast<Variant&>(m_echoData) = VariantStruct();
+    }
     return m_echoData;
 }
 

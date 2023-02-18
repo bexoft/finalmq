@@ -33,7 +33,7 @@
             {"name":"STATUS_PEER_DISCONNECTED",         "id":8,     "desc":"The peer is disconnected"},
             {"name":"STATUS_NO_REPLY",                  "id":9,     "desc":"No reply was sent by the request executor (server)"},
             {"name":"STATUS_WRONG_CONTENTTYPE",         "id":10,    "desc":"Wrong content type"},
-            {"name":"STATUS_RESERVED11",                "id":11,    "desc":""},
+            {"name":"STATUS_REQUEST_PROCESSING_ERROR",  "id":11,    "desc":"Error in request processing"},
             {"name":"STATUS_RESERVED12",                "id":12,    "desc":""},
             {"name":"STATUS_RESERVED13",                "id":13,    "desc":""},
             {"name":"STATUS_RESERVED14",                "id":14,    "desc":""},

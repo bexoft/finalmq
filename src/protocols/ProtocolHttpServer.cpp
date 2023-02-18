@@ -829,7 +829,7 @@ void ProtocolHttpServer::sendMessage(IMessagePtr message)
     m_connection->sendMessage(message);
 
 
-    if (filename)
+    if (filename && filesize > 0)
     {
         std::string file = *filename;
         std::weak_ptr<ProtocolHttpServer> pThisWeak = shared_from_this();
