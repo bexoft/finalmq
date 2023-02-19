@@ -152,9 +152,9 @@ int Socket::connect(const sockaddr* addr, int addrlen)
 {
     assert(m_sd);
     int err = OperatingSystem::instance().connect(m_sd->getDescriptor(), addr, addrlen);
-    err = 0;//handleError(err, "connect");
+    err = handleError(err, "connect");
 #ifdef USE_OPENSSL
-    if (m_sslContext && err != -1)
+    if (m_sslContext && err == 0)
     {
         assert(m_sslSocket);
         m_sslSocket->startConnect();

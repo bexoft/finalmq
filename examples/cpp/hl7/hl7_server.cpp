@@ -184,7 +184,75 @@ public:
             // send reply
             requestContext->reply(std::move(reply));
         });
+
+        m_thread = std::thread([this]() {
+            hl7::SSU_U03 msg;
+            msg.msh.countryCode = "de";
+            msg.equ.alertLevel.alternateIdentifier = "Hello this is a test";
+            msg.uac = std::make_shared<hl7::UAC>();
+            msg.uac->userAuthenticationCredential.typeOfData = "hello";
+            msg.sft.resize(2);
+            msg.sft[0].softwareBinaryID = "world";
+            msg.sft[1].softwareProductInformation = "world";
+            msg.sac.resize(2);
+            msg.sac[0].sac.positionInTray = "hey";
+            msg.sac[0].sac.specimenSource = "hh";
+            msg.sac[0].sac.carrierId.entityIdentifier = "uu";
+            msg.sac[0].sac.carrierId.universalId = "bbb";
+            msg.sac[0].obx.resize(2);
+            msg.sac[0].obx[0].effectiveDateOfReferenceRange = "aaaa";
+            msg.sac[0].obx[1].equipmentInstanceIdentifier.namespaceId = "bbbbb";
+            msg.sac[0].nte.resize(1);
+            msg.sac[0].nte[0].commentType.alternateText = "This is text";
+            msg.sac[0].spm.resize(2);
+            msg.sac[0].spm[0].spm.accessionId = "ggg";
+            msg.sac[0].spm[0].spm.containerCondition.alternateText = "tt";
+            msg.sac[0].spm[0].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
+            msg.sac[0].spm[0].obx.resize(1);
+            msg.sac[0].spm[0].obx[0].effectiveDateOfReferenceRange = "aaaa";
+            msg.sac[0].spm[0].obx[0].equipmentInstanceIdentifier.namespaceId = "bbbbb";
+            msg.sac[0].spm[1].spm.accessionId = "ggg";
+            msg.sac[0].spm[1].spm.containerCondition.alternateText = "tt";
+            msg.sac[0].spm[1].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
+            msg.sac[0].spm[1].obx.resize(1);
+            msg.sac[0].spm[1].obx[0].effectiveDateOfReferenceRange = "aaaa";
+            msg.sac[0].spm[1].obx[0].equipmentInstanceIdentifier.namespaceId = "bbbbb";
+            msg.sac[1].sac.positionInTray = "hey";
+            msg.sac[1].sac.specimenSource = "hh";
+            msg.sac[1].sac.carrierId.entityIdentifier = "uu";
+            msg.sac[1].sac.carrierId.universalId = "bbb";
+            msg.sac[1].obx.resize(2);
+            msg.sac[1].obx[0].effectiveDateOfReferenceRange = "aaaa";
+            msg.sac[1].obx[1].equipmentInstanceIdentifier.namespaceId = "bbbbb";
+            msg.sac[1].nte.resize(1);
+            msg.sac[1].nte[0].commentType.alternateText = "This is text";
+            msg.sac[1].spm.resize(2);
+            msg.sac[1].spm[0].spm.accessionId = "ggg";
+            msg.sac[1].spm[0].spm.containerCondition.alternateText = "tt";
+            msg.sac[1].spm[0].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
+            msg.sac[1].spm[0].obx.resize(1);
+            msg.sac[1].spm[0].obx[0].effectiveDateOfReferenceRange = "aaaa";
+            msg.sac[1].spm[0].obx[0].equipmentInstanceIdentifier.namespaceId = "bbbbb";
+            msg.sac[1].spm[1].spm.accessionId = "ggg";
+            msg.sac[1].spm[1].spm.containerCondition.alternateText = "tt";
+            msg.sac[1].spm[1].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
+            msg.sac[1].spm[1].obx.resize(1);
+            msg.sac[1].spm[1].obx[0].effectiveDateOfReferenceRange = "aaaa";
+            msg.sac[1].spm[1].obx[0].equipmentInstanceIdentifier.namespaceId = "bbbbb";
+
+            while (true)
+            {
+                // send event every 1 second
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+                // send timer event to all connected peers. No reply expected.
+                sendEventToAllPeers(msg);
+            }
+        });
     }
+
+    private:
+        std::thread m_thread;
 };
 
 
@@ -203,17 +271,19 @@ int main()
 
     entityContainer.init();
 
+    EntityServer entityServer;
+
     // register lambda for connection events to see when a network node connects or disconnects.
-    entityContainer.registerConnectionEvent([] (const SessionInfo& session, ConnectionEvent connectionEvent) {
+    entityContainer.registerConnectionEvent([&entityServer] (const SessionInfo& session, ConnectionEvent connectionEvent) {
         const ConnectionData connectionData = session.getConnectionData();
         streamInfo << "connection event at " << connectionData.endpoint
                   << " remote: " << connectionData.endpointPeer
                   << " event: " << connectionEvent.toString();
+        entityServer.createPublishPeer(session, "DUMMY");
     });
 
     // Create server entity and register it at the entityContainer with the service name "MyService"
     // note: multiple entities can be registered.
-    EntityServer entityServer;
     entityContainer.registerEntity(&entityServer, "MyService");
 
     // register an entity for file download. The name "*" means that if an entity name, given by a client, is not found by name, 

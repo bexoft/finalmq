@@ -73,112 +73,81 @@ protected:
 };
 
 
-/*
 TEST_F(TestHl7Builder, testTwoEmptySegments)
 {
-    m_builder->enterStruct();
-    m_builder->enterString("MSH");
-    m_builder->enterString("");
-    m_builder->enterString("");
-    m_builder->exitStruct();
-    m_builder->enterStruct();
-    m_builder->enterString("TST");
-    m_builder->exitStruct();
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 0, "MSH");
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 2, "name");
+    m_builder->enterString(std::vector<int>{ 1 }.data(), 1, 0, "TST");
     m_builder->finished();
-    EXPECT_EQ(m_data, "MSH|^~\\&\rTST\r");
+    EXPECT_EQ(m_data, "MSH|^~\\&|name\rTST\r");
 }
+
 
 TEST_F(TestHl7Builder, testSubStructs)
 {
-    m_builder->enterStruct();
-    m_builder->enterString("MSH");
-    m_builder->enterString("");
-    m_builder->enterString("");
-    m_builder->enterString("a1");
-    m_builder->enterString("a2");
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 0, "MSH");
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 2, "a1");
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 3, "a2");
 
-    m_builder->enterStruct();
-    m_builder->enterString("b1");
-    m_builder->enterString("b2");
+    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 0, "b1");
+    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 1, "b2");
 
-    m_builder->enterStruct();
-    m_builder->enterString("c1");
-    m_builder->enterString("c2");
-    m_builder->enterString("c3");
-    m_builder->enterString("c4");
-    m_builder->exitStruct();
+    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 0, "c1");
+    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 1, "c2");
+    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 2, "c3");
+    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 3, "c4");
 
-    m_builder->enterString("b3");
-    m_builder->enterString("b4");
-    m_builder->exitStruct();
+    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 3, "b3");
+    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 4, "b4");
 
-    m_builder->enterString("a3");
-    m_builder->enterString("a4");
-    m_builder->exitStruct();
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 5, "a3");
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 6, "a4");
 
-    m_builder->enterStruct();
-    m_builder->enterString("TST");
-    m_builder->exitStruct();
+    m_builder->enterString(std::vector<int>{ 1 }.data(), 1, 0, "TST");
+
     m_builder->finished();
     EXPECT_EQ(m_data, "MSH|^~\\&|a1|a2|b1^b2^c1&c2&c3&c4^b3^b4|a3|a4\rTST\r");
 }
 
+
 TEST_F(TestHl7Builder, testExit3StructsFromInnerLevel)
 {
-    m_builder->enterStruct();
-    m_builder->enterString("MSH");
-    m_builder->enterString("");
-    m_builder->enterString("");
-    m_builder->enterString("a1");
-    m_builder->enterString("a2");
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 0, "MSH");
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 2, "a1");
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 3, "a2");
 
-    m_builder->enterStruct();
-    m_builder->enterString("b1");
-    m_builder->enterString("b2");
+    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 0, "b1");
+    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 1, "b2");
 
-    m_builder->enterStruct();
-    m_builder->enterString("c1");
-    m_builder->enterString("c2");
-    m_builder->enterString("c3");
-    m_builder->enterString("c4");
-    m_builder->exitStruct();
-    m_builder->exitStruct();
-    m_builder->exitStruct();
+    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 0, "c1");
+    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 1, "c2");
+    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 2, "c3");
+    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 3, "c4");
 
-    m_builder->enterStruct();
-    m_builder->enterString("TST");
-    m_builder->exitStruct();
+    m_builder->enterString(std::vector<int>{ 1 }.data(), 1, 0, "TST");
+
     m_builder->finished();
     EXPECT_EQ(m_data, "MSH|^~\\&|a1|a2|b1^b2^c1&c2&c3&c4\rTST\r");
 }
 
 TEST_F(TestHl7Builder, testExit2StructsFromInnerLevel)
 {
-    m_builder->enterStruct();
-    m_builder->enterString("MSH");
-    m_builder->enterString("");
-    m_builder->enterString("");
-    m_builder->enterString("a1");
-    m_builder->enterString("a2");
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 0, "MSH");
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 2, "a1");
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 3, "a2");
 
-    m_builder->enterStruct();
-    m_builder->enterString("b1");
-    m_builder->enterString("b2");
+    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 0, "b1");
+    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 1, "b2");
 
-    m_builder->enterStruct();
-    m_builder->enterString("c1");
-    m_builder->enterString("c2");
-    m_builder->enterString("c3");
-    m_builder->enterString("c4");
-    m_builder->exitStruct();
-    m_builder->exitStruct();
+    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 0, "c1");
+    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 1, "c2");
+    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 2, "c3");
+    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 3, "c4");
 
-    m_builder->enterString("a3");
-    m_builder->exitStruct();
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 5, "a3");
 
-    m_builder->enterStruct();
-    m_builder->enterString("TST");
-    m_builder->exitStruct();
+    m_builder->enterString(std::vector<int>{ 1 }.data(), 1, 0, "TST");
+
     m_builder->finished();
     EXPECT_EQ(m_data, "MSH|^~\\&|a1|a2|b1^b2^c1&c2&c3&c4|a3\rTST\r");
 }
@@ -186,51 +155,25 @@ TEST_F(TestHl7Builder, testExit2StructsFromInnerLevel)
 
 TEST_F(TestHl7Builder, testSubStructsRemoveEmpty)
 {
-    m_builder->enterStruct();
-    m_builder->enterString("MSH");
-    m_builder->enterString("");
-    m_builder->enterString("");
-    m_builder->enterString("a1");
-    m_builder->enterString("a2");
-    m_builder->enterEmpty();
-    m_builder->enterEmpty();
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 0, "MSH");
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 2, "a1");
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 3, "a2");
 
-    m_builder->enterStruct();
-    m_builder->enterString("b1");
-    m_builder->enterString("b2");
-    m_builder->enterEmpty();
-    m_builder->enterEmpty();
+    m_builder->enterString(std::vector<int>{ 0, 6 }.data(), 2, 0, "b1");
+    m_builder->enterString(std::vector<int>{ 0, 6 }.data(), 2, 1, "b2");
 
-    m_builder->enterStruct();
-    m_builder->enterString("c1");
-    m_builder->enterString("c2");
-    m_builder->enterString("c3");
-    m_builder->enterString("c4");
-    m_builder->enterEmpty();
-    m_builder->enterEmpty();
-    m_builder->exitStruct();
+    m_builder->enterString(std::vector<int>{ 0, 6, 4}.data(), 3, 0, "c1");
+    m_builder->enterString(std::vector<int>{ 0, 6, 4}.data(), 3, 1, "c2");
+    m_builder->enterString(std::vector<int>{ 0, 6, 4}.data(), 3, 2, "c3");
+    m_builder->enterString(std::vector<int>{ 0, 6, 4}.data(), 3, 3, "c4");
 
-    m_builder->enterEmpty();
-    m_builder->enterEmpty();
-    m_builder->enterString("b3");
-    m_builder->enterString("b4");
-    m_builder->enterEmpty();
-    m_builder->enterEmpty();
-    m_builder->exitStruct();
+    m_builder->enterString(std::vector<int>{ 0, 6 }.data(), 2, 7, "b3");
+    m_builder->enterString(std::vector<int>{ 0, 6 }.data(), 2, 8, "b4");
 
-    m_builder->enterEmpty();
-    m_builder->enterEmpty();
-    m_builder->enterString("a3");
-    m_builder->enterString("a4");
-    m_builder->enterEmpty();
-    m_builder->enterEmpty();
-    m_builder->exitStruct();
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 9, "a3");
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1,10, "a4");
 
-    m_builder->enterStruct();
-    m_builder->enterString("TST");
-    m_builder->enterEmpty();
-    m_builder->enterEmpty();
-    m_builder->exitStruct();
+    m_builder->enterString(std::vector<int>{ 1 }.data(), 1, 0, "TST");
 
     m_builder->finished();
     EXPECT_EQ(m_data, "MSH|^~\\&|a1|a2|||b1^b2^^^c1&c2&c3&c4^^^b3^b4|||a3|a4\rTST\r");
@@ -239,53 +182,34 @@ TEST_F(TestHl7Builder, testSubStructsRemoveEmpty)
 
 TEST_F(TestHl7Builder, testArray)
 {
-    m_builder->enterStruct();
-    m_builder->enterString("MSH");
-    m_builder->enterString("");
-    m_builder->enterString("");
-    m_builder->enterString("a1")
-        ;
-    m_builder->enterArray();
-    m_builder->enterString("a2.1");
-    m_builder->enterString("a2.2");
-    m_builder->enterString("a2.3");
-    m_builder->exitArray();
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 0, "MSH");
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 2, "a1");
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 3, "a2.1");
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 3, "a2.2");
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 3, "a2.3");
 
-    m_builder->enterStruct();
-    m_builder->enterString("b1");
+    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 0, "b1");
+    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 1, "b2.1");
+    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 1, "b2.2");
+    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 1, "b2.3");
+    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 1, "");
+    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 1, "");
 
-    m_builder->enterArray();
-    m_builder->enterString("b2.1");
-    m_builder->enterString("b2.2");
-    m_builder->enterString("b2.3");
-    m_builder->enterEmpty();
-    m_builder->enterEmpty();
-    m_builder->exitArray();
+    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 0, "c1");
+    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 1, "c2.1");
+    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 1, "c2.2");
+    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 1, "c2.3");
+    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 2, "c3");
+    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 3, "c4");
 
-    m_builder->enterStruct();
-    m_builder->enterString("c1");
+    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 3, "b3");
+    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 4, "b4");
 
-    m_builder->enterArray();
-    m_builder->enterString("c2.1");
-    m_builder->enterString("c2.2");
-    m_builder->enterString("c2.3");
-    m_builder->exitArray();
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 5, "a3");
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 6, "a4");
 
-    m_builder->enterString("c3");
-    m_builder->enterString("c4");
-    m_builder->exitStruct();
+    m_builder->enterString(std::vector<int>{ 1 }.data(), 1, 0, "TST");
 
-    m_builder->enterString("b3");
-    m_builder->enterString("b4");
-    m_builder->exitStruct();
-
-    m_builder->enterString("a3");
-    m_builder->enterString("a4");
-    m_builder->exitStruct();
-
-    m_builder->enterStruct();
-    m_builder->enterString("TST");
-    m_builder->exitStruct();
     m_builder->finished();
     EXPECT_EQ(m_data, "MSH|^~\\&|a1|a2.1~a2.2~a2.3|b1^b2.1~b2.2~b2.3~~^c1&c2.1~c2.2~c2.3&c3&c4^b3^b4|a3|a4\rTST\r");
 }
@@ -293,56 +217,41 @@ TEST_F(TestHl7Builder, testArray)
 
 TEST_F(TestHl7Builder, testTypes)
 {
-    m_builder->enterStruct();
-    m_builder->enterString("MSH");
-    m_builder->enterString("");
-    m_builder->enterString("");
-    m_builder->enterUInt64(123);
-    m_builder->enterDouble(0.123);
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 0, "MSH");
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 2, "123");
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 3, "0.123");
 
-    m_builder->enterStruct();
-    m_builder->enterInt64(-2);
-    m_builder->enterInt64(12);
+    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 0, "-2");
+    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 1, "12");
 
-    m_builder->enterStruct();
-    m_builder->enterInt64(1);
-    m_builder->enterInt64(2);
-    m_builder->enterInt64(-3);
-    m_builder->enterInt64(-4);
-    m_builder->exitStruct();
+    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 0, "1");
+    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 1, "2");
+    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 2, "-3");
+    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 3, "-4");
 
-    m_builder->enterDouble(1.1);
-    m_builder->enterDouble(2.1);
-    m_builder->exitStruct();
+    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 3, "1.1");
+    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 4, "2.1");
 
-    m_builder->enterUInt64(1);
-    m_builder->enterUInt64(2);
-    m_builder->exitStruct();
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 5, "1");
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 6, "2");
 
-    m_builder->enterStruct();
-    m_builder->enterString("TST");
-    m_builder->exitStruct();
+    m_builder->enterString(std::vector<int>{ 1 }.data(), 1, 0, "TST");
+
     m_builder->finished();
     EXPECT_EQ(m_data, "MSH|^~\\&|123|0.123|-2^12^1&2&-3&-4^1.1^2.1|1|2\rTST\r");
 }
 
+
+
 TEST_F(TestHl7Builder, testEscape)
 {
-    m_builder->enterStruct();
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 0, "MSH");
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 2, "\r\n\t|^&~\\");
+    m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 3, "a");
 
-    m_builder->enterString("MSH");
-    m_builder->enterString("");
-    m_builder->enterString("");
-    m_builder->enterString("\r\n\t|^&~\\");
-    m_builder->enterString("a");
-    m_builder->exitStruct();
-
-    m_builder->enterStruct();
-    m_builder->enterString("TST");
-    m_builder->exitStruct();
+    m_builder->enterString(std::vector<int>{ 1 }.data(), 1, 0, "TST");
 
     m_builder->finished();
 
     EXPECT_EQ(m_data, "MSH|^~\\&|\\X0D\\\\X0A\\\\X09\\\\F\\\\S\\\\T\\\\R\\\\E\\|a\rTST\r");
 }
-*/

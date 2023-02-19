@@ -107,13 +107,12 @@ class Hl7Node
 public:
     void enterString(const int* levelIndex, int sizeLevelIndex, int index, std::string&& value)
     {
-        if (value.size() == 0)
-        {
-            return;
-        }
         if (index == -1 && sizeLevelIndex == 0)
         {
-            m_segmentId = std::move(value);
+            if (!value.empty())
+            {
+                m_segmentId = std::move(value);
+            }
             return;
         }
         int i = index;
