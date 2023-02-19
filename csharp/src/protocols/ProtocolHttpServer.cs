@@ -936,7 +936,7 @@ namespace finalmq
                     Debug.Assert(m_connection != null);
                     callback.SetSessionName(m_sessionName, this, m_connection);
                     m_headerSendNext[FMQ_SET_SESSION] = m_sessionName;
-                    m_headerSendNext[HTTP_SET_COOKIE] = COOKIE_PREFIX + m_sessionName + "; path=/; Partitioned";
+                    m_headerSendNext[HTTP_SET_COOKIE] = COOKIE_PREFIX + m_sessionName + "; path=/"; // ; Partitioned";
                 }
             }
             m_sessionNames.Clear();

@@ -1,0 +1,18 @@
+{
+    "namespace":"timer",
+
+    "enums": [
+    ],
+
+    "structs":[
+        {"type":"StartRequest","desc":"Call StartRequest to start the timer event.","fields":[
+        ]},
+        {"type":"StopRequest","desc":"Call StopRequest to stop the timer event.","fields":[
+        ]},
+        {"type":"TimerEvent","desc":"The server triggers this event to all connected clients.","fields":[
+            {"tid":"string",                           "name":"time",              "desc":"The current time."}
+        ]}
+    ]
+}
+
+
