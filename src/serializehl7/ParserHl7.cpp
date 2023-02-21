@@ -215,7 +215,10 @@ int ParserHl7::parseStruct(int levelStruct, int levelSegment, const MetaStruct& 
             {
                 std::string token;
                 int levelNew = m_parser.parseToken(levelSegment, token);
-                m_visitor.enterString(*field, std::move(token));
+                if (!token.empty())
+                {
+                    m_visitor.enterString(*field, std::move(token));
+                }
                 if (levelNew < levelSegment)
                 {
                     return levelNew;
