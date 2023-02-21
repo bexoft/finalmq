@@ -67,7 +67,7 @@ namespace finalmq
 
             public void EnterStruct(MetaField field)
             {
-                if (field.TypeId != MetaTypeId.TYPE_STRUCT)
+                if (field.TypeId != MetaTypeId.TYPE_STRUCT && field.TypeId != MetaTypeId.TYPE_ARRAY_STRUCT)
                 {
                     return;
                 }
@@ -162,7 +162,7 @@ namespace finalmq
             }
             public void ExitStruct(MetaField field)
             {
-                if (field.TypeId != MetaTypeId.TYPE_STRUCT)
+                if (field.TypeId != MetaTypeId.TYPE_STRUCT && field.TypeId != MetaTypeId.TYPE_ARRAY_STRUCT)
                 {
                     return;
                 }
@@ -204,7 +204,7 @@ namespace finalmq
 
             public void EnterStructNull(MetaField field)
             {
-                if (field.TypeId != MetaTypeId.TYPE_STRUCT)
+                if (field.TypeId != MetaTypeId.TYPE_STRUCT && field.TypeId != MetaTypeId.TYPE_ARRAY_STRUCT)
                 {
                     return;
                 }

@@ -30,7 +30,7 @@
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="node ../../../codegenerator/csharp/csharp.js --input=./test.fmq --outpath=.&#xD;&#xA;node ../../../codegenerator/proto/proto.js --input=./test.fmq --outpath=.&#xD;&#xA;node ../../../codegenerator/proto/proto.js --input=../../src/metadataserialize/variant.fmq --outpath=.&#xD;&#xA;protoc --csharp_out=. test.proto variant.proto" />
+    <Exec Command="node ../../../codegenerator/csharp/csharp.js --input=./test.fmq --outpath=.&#xD;&#xA;node ../../../codegenerator/csharp/csharp.js --input=../../../hl7def/hl7.fmq --outpath=.&#xD;&#xA;node ../../../codegenerator/proto/proto.js --input=./test.fmq --outpath=.&#xD;&#xA;node ../../../codegenerator/proto/proto.js --input=../../src/metadataserialize/variant.fmq --outpath=.&#xD;&#xA;protoc --csharp_out=. test.proto variant.proto&#xD;&#xA;" />
   </Target>
 
 </Project>

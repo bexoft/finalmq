@@ -67,30 +67,30 @@ namespace testfinalmq
             bool res = m_parser.StartParse(hl7, 0);
             Debug.Assert(true == res);
 
-            byte[] token;
+            string token;
             int level;
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "MSH");
+            Debug.Assert(token == "MSH");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "|");
+            Debug.Assert(token == "|");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "^~\\&");
+            Debug.Assert(token == "^~\\&");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "a");
+            Debug.Assert(token == "a");
 
             int pos = m_parser.GetCurrentPosition();
             Debug.Assert(11 == pos);
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(-1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
 
             pos = m_parser.GetCurrentPosition();
             Debug.Assert(11 == pos);
@@ -104,30 +104,30 @@ namespace testfinalmq
             bool res = m_parser.StartParse(hl7, 0);
             Debug.Assert(true == res);
 
-            byte[] token;
+            string token;
             int level;
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "MSH");
+            Debug.Assert(token == "MSH");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "|");
+            Debug.Assert(token == "|");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "^~\\&");
+            Debug.Assert(token == "^~\\&");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "a");
+            Debug.Assert(token == "a");
 
             int pos = m_parser.GetCurrentPosition();
             Debug.Assert(11 == pos);
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(-1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
 
             pos = m_parser.GetCurrentPosition();
             Debug.Assert(11 == pos);
@@ -140,30 +140,30 @@ namespace testfinalmq
             bool res = m_parser.StartParse(hl7, 0);
             Debug.Assert(true == res);
 
-            byte[] token;
+            string token;
             int level;
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "MSH");
+            Debug.Assert(token == "MSH");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "|");
+            Debug.Assert(token == "|");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "^~\\&");
+            Debug.Assert(token == "^~\\&");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "a");
+            Debug.Assert(token == "a");
 
             int pos = m_parser.GetCurrentPosition();
             Debug.Assert(12 == pos);
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(-1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
 
             pos = m_parser.GetCurrentPosition();
             Debug.Assert(12 == pos);
@@ -176,37 +176,37 @@ namespace testfinalmq
             bool res = m_parser.StartParse(hl7, 0);
             Debug.Assert(true == res);
 
-            byte[] token;
+            string token;
             int level;
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "MSH");
+            Debug.Assert(token == "MSH");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "|");
+            Debug.Assert(token == "|");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "^~\\&");
+            Debug.Assert(token == "^~\\&");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "a");
+            Debug.Assert(token == "a");
 
             int pos = m_parser.GetCurrentPosition();
             Debug.Assert(12 == pos);
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "\x1c");
+            Debug.Assert(token == "\x1c");
 
             pos = m_parser.GetCurrentPosition();
             Debug.Assert(14 == pos);
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(-1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
 
             pos = m_parser.GetCurrentPosition();
             Debug.Assert(14 == pos);
@@ -219,39 +219,39 @@ namespace testfinalmq
             bool res = m_parser.StartParse(hl7, 0);
             Debug.Assert(true == res);
 
-            byte[] token;
+            string token;
             int level;
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "MSH");
+            Debug.Assert(token == "MSH");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "|");
+            Debug.Assert(token == "|");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "^~\\&");
+            Debug.Assert(token == "^~\\&");
 
             level = m_parser.ParseToken(2, out token);
             Debug.Assert(2 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "a");
+            Debug.Assert(token == "a");
 
             level = m_parser.ParseToken(2, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "b");
+            Debug.Assert(token == "b");
 
             level = m_parser.ParseToken(2, out token);
             Debug.Assert(2 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "a");
+            Debug.Assert(token == "a");
 
             level = m_parser.ParseToken(2, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "b");
+            Debug.Assert(token == "b");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(-1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
         }
 
         [Fact]
@@ -261,39 +261,39 @@ namespace testfinalmq
             bool res = m_parser.StartParse(hl7, 0);
             Debug.Assert(true == res);
 
-            byte[] token;
+            string token;
             int level;
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "MSH");
+            Debug.Assert(token == "MSH");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "|");
+            Debug.Assert(token == "|");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "^~\\&");
+            Debug.Assert(token == "^~\\&");
 
             level = m_parser.ParseToken(2, out token);
             Debug.Assert(2 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "a");
+            Debug.Assert(token == "a");
 
             level = m_parser.ParseToken(3, out token);
             Debug.Assert(3 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "b1");
+            Debug.Assert(token == "b1");
 
             level = m_parser.ParseToken(3, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "b2");
+            Debug.Assert(token == "b2");
 
             level = m_parser.ParseToken(2, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(-1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
         }
 
         [Fact]
@@ -303,43 +303,43 @@ namespace testfinalmq
             bool res = m_parser.StartParse(hl7, 0);
             Debug.Assert(true == res);
 
-            byte[] token;
+            string token;
             int level;
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "MSH");
+            Debug.Assert(token == "MSH");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "|");
+            Debug.Assert(token == "|");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "^~\\&");
+            Debug.Assert(token == "^~\\&");
 
             level = m_parser.ParseToken(2, out token);
             Debug.Assert(2 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "a");
+            Debug.Assert(token == "a");
 
             level = m_parser.ParseToken(3, out token);
             Debug.Assert(3 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "b1");
+            Debug.Assert(token == "b1");
 
             level = m_parser.ParseToken(3, out token);
             Debug.Assert(2 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "b2");
+            Debug.Assert(token == "b2");
 
             level = m_parser.ParseToken(2, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "c");
+            Debug.Assert(token == "c");
 
             level = m_parser.ParseToken(2, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(-1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
         }
 
         [Fact]
@@ -349,42 +349,42 @@ namespace testfinalmq
             bool res = m_parser.StartParse(hl7, 0);
             Debug.Assert(true == res);
 
-            byte[] token;
+            string token;
             int level;
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "MSH");
+            Debug.Assert(token == "MSH");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "|");
+            Debug.Assert(token == "|");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "^~\\&");
+            Debug.Assert(token == "^~\\&");
 
             level = m_parser.ParseToken(2, out token);
             Debug.Assert(2 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "a");
+            Debug.Assert(token == "a");
 
             level = m_parser.ParseToken(3, out token);
             Debug.Assert(3 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "b1");
+            Debug.Assert(token == "b1");
 
             level = m_parser.ParseTillEndOfStruct(2);
             Debug.Assert(2 == level);
 
             level = m_parser.ParseToken(2, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "c");
+            Debug.Assert(token == "c");
 
             level = m_parser.ParseToken(2, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(-1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
         }
 
         [Fact]
@@ -394,38 +394,38 @@ namespace testfinalmq
             bool res = m_parser.StartParse(hl7, 0);
             Debug.Assert(true == res);
 
-            byte[] token;
+            string token;
             int level;
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "MSH");
+            Debug.Assert(token == "MSH");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "|");
+            Debug.Assert(token == "|");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "^~\\&");
+            Debug.Assert(token == "^~\\&");
 
             level = m_parser.ParseToken(2, out token);
             Debug.Assert(2 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "a");
+            Debug.Assert(token == "a");
 
             level = m_parser.ParseToken(3, out token);
             Debug.Assert(3 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "b1");
+            Debug.Assert(token == "b1");
 
             level = m_parser.ParseTillEndOfStruct(1);
             Debug.Assert(1 == level);
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "d");
+            Debug.Assert(token == "d");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(-1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
         }
 
         [Fact]
@@ -435,34 +435,34 @@ namespace testfinalmq
             bool res = m_parser.StartParse(hl7, 0);
             Debug.Assert(true == res);
 
-            byte[] token;
+            string token;
             int level;
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "MSH");
+            Debug.Assert(token == "MSH");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "|");
+            Debug.Assert(token == "|");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "^~\\&");
+            Debug.Assert(token == "^~\\&");
 
             level = m_parser.ParseToken(2, out token);
             Debug.Assert(2 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "a");
+            Debug.Assert(token == "a");
 
             level = m_parser.ParseToken(3, out token);
             Debug.Assert(3 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "b1");
+            Debug.Assert(token == "b1");
 
             level = m_parser.ParseTillEndOfStruct(1);
             Debug.Assert(0 == level);
 
             level = m_parser.ParseToken(0, out token);
             Debug.Assert(-1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
         }
 
         [Fact]
@@ -472,27 +472,27 @@ namespace testfinalmq
             bool res = m_parser.StartParse(hl7, 0);
             Debug.Assert(true == res);
 
-            byte[] token;
+            string token;
             int level;
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "MSH");
+            Debug.Assert(token == "MSH");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "|");
+            Debug.Assert(token == "|");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "^~\\&");
+            Debug.Assert(token == "^~\\&");
 
             level = m_parser.ParseToken(2, out token);
             Debug.Assert(2 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "a");
+            Debug.Assert(token == "a");
 
             level = m_parser.ParseToken(3, out token);
             Debug.Assert(3 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "b1");
+            Debug.Assert(token == "b1");
 
             level = m_parser.ParseTillEndOfStruct(1);
             Debug.Assert(-1 == level);
@@ -506,40 +506,40 @@ namespace testfinalmq
             bool res = m_parser.StartParse(hl7, 0);
             Debug.Assert(true == res);
 
-            byte[] token;
+            string token;
             int level;
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "MSH");
+            Debug.Assert(token == "MSH");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "|");
+            Debug.Assert(token == "|");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "^~\\&");
+            Debug.Assert(token == "^~\\&");
 
             level = m_parser.ParseToken(2, out token);
             Debug.Assert(2 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "a");
+            Debug.Assert(token == "a");
 
             // wrong level
             level = m_parser.ParseToken(2, out token);
             Debug.Assert(2 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "b1");
+            Debug.Assert(token == "b1");
 
             level = m_parser.ParseToken(2, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "c");
+            Debug.Assert(token == "c");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "d");
+            Debug.Assert(token == "d");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(-1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
         }
 
         [Fact]
@@ -549,44 +549,44 @@ namespace testfinalmq
             bool res = m_parser.StartParse(hl7, 0);
             Debug.Assert(true == res);
 
-            byte[] token;
+            string token;
             int level;
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "MSH");
+            Debug.Assert(token == "MSH");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "|");
+            Debug.Assert(token == "|");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "^~\\&");
+            Debug.Assert(token == "^~\\&");
 
             level = m_parser.ParseToken(2, out token);
             Debug.Assert(2 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "a");
+            Debug.Assert(token == "a");
 
-            IList<byte[]> arr = new List<byte[]>();
+            IList<string> arr = new List<string>();
             level = m_parser.ParseTokenArray(2, arr);
             Debug.Assert(2 == level);
             Debug.Assert(4 == arr.Count);
-            Debug.Assert(Encoding.ASCII.GetString(arr[0]) == "b1");
-            Debug.Assert(Encoding.ASCII.GetString(arr[1]) == "b2");
-            Debug.Assert(Encoding.ASCII.GetString(arr[2]) == "");
-            Debug.Assert(Encoding.ASCII.GetString(arr[3]) == "");
+            Debug.Assert(arr[0] == "b1");
+            Debug.Assert(arr[1] == "b2");
+            Debug.Assert(arr[2] == "");
+            Debug.Assert(arr[3] == "");
 
             level = m_parser.ParseToken(2, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "c");
+            Debug.Assert(token == "c");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "d");
+            Debug.Assert(token == "d");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(-1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
         }
 
         [Fact]
@@ -596,46 +596,46 @@ namespace testfinalmq
             bool res = m_parser.StartParse(hl7, 0);
             Debug.Assert(true == res);
 
-            byte[] token;
+            string token;
             int level;
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "MSH");
+            Debug.Assert(token == "MSH");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "|");
+            Debug.Assert(token == "|");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "^~\\&");
+            Debug.Assert(token == "^~\\&");
 
             level = m_parser.ParseToken(2, out token);
             Debug.Assert(2 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "a");
+            Debug.Assert(token == "a");
 
             // wrong level
-            IList<byte[]> arr = new List<byte[]>();
+            IList<string> arr = new List<string>();
             level = m_parser.ParseTokenArray(2, arr);
             Debug.Assert(2 == level);
             Debug.Assert(2 == level);
             Debug.Assert(4 == arr.Count);
-            Debug.Assert(Encoding.ASCII.GetString(arr[0]) == "b1");
-            Debug.Assert(Encoding.ASCII.GetString(arr[1]) == "b2");
-            Debug.Assert(Encoding.ASCII.GetString(arr[2]) == "");
-            Debug.Assert(Encoding.ASCII.GetString(arr[3]) == "");
+            Debug.Assert(arr[0] == "b1");
+            Debug.Assert(arr[1] == "b2");
+            Debug.Assert(arr[2] == "");
+            Debug.Assert(arr[3] == "");
 
             level = m_parser.ParseToken(2, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "c");
+            Debug.Assert(token == "c");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "d");
+            Debug.Assert(token == "d");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(-1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
         }
 
         [Fact]
@@ -645,39 +645,39 @@ namespace testfinalmq
             bool res = m_parser.StartParse(hl7, 0);
             Debug.Assert(true == res);
 
-            byte[] token;
+            string token;
             int level;
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "MSH");
+            Debug.Assert(token == "MSH");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "|");
+            Debug.Assert(token == "|");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "^~\\&");
+            Debug.Assert(token == "^~\\&");
 
             level = m_parser.ParseToken(2, out token);
             Debug.Assert(2 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "a");
+            Debug.Assert(token == "a");
 
             level = m_parser.ParseToken(2, out token);
             Debug.Assert(2 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "b1");
+            Debug.Assert(token == "b1");
 
             level = m_parser.ParseToken(2, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "c");
+            Debug.Assert(token == "c");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "d");
+            Debug.Assert(token == "d");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(-1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
         }
 
 
@@ -688,35 +688,35 @@ namespace testfinalmq
             bool res = m_parser.StartParse(hl7, 0);
             Debug.Assert(true == res);
 
-            byte[] token;
+            string token;
             int level;
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "MSH");
+            Debug.Assert(token == "MSH");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "|");
+            Debug.Assert(token == "|");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "^~\\&");
+            Debug.Assert(token == "^~\\&");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "\r\n\t|^&~\\");
+            Debug.Assert(token == "\r\n\t|^&~\\");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "a");
+            Debug.Assert(token == "a");
 
             level = m_parser.ParseToken(0, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "TST");
+            Debug.Assert(token == "TST");
 
             level = m_parser.ParseToken(0, out token);
             Debug.Assert(-1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
         }
 
         [Fact]
@@ -726,35 +726,35 @@ namespace testfinalmq
             bool res = m_parser.StartParse(hl7, 0);
             Debug.Assert(true == res);
 
-            byte[] token;
+            string token;
             int level;
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "MSH");
+            Debug.Assert(token == "MSH");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "|");
+            Debug.Assert(token == "|");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "^~\\&");
+            Debug.Assert(token == "^~\\&");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "\r");
+            Debug.Assert(token == "\r");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "a");
+            Debug.Assert(token == "a");
 
             level = m_parser.ParseToken(0, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "TST");
+            Debug.Assert(token == "TST");
 
             level = m_parser.ParseToken(0, out token);
             Debug.Assert(-1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
         }
 
         [Fact]
@@ -764,35 +764,35 @@ namespace testfinalmq
             bool res = m_parser.StartParse(hl7, 0);
             Debug.Assert(true == res);
 
-            byte[] token;
+            string token;
             int level;
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "MSH");
+            Debug.Assert(token == "MSH");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "|");
+            Debug.Assert(token == "|");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "^~\\&");
+            Debug.Assert(token == "^~\\&");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "\r");
+            Debug.Assert(token == "\r");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "a");
+            Debug.Assert(token == "a");
 
             level = m_parser.ParseToken(0, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "TST");
+            Debug.Assert(token == "TST");
 
             level = m_parser.ParseToken(0, out token);
             Debug.Assert(-1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
         }
 
         [Fact]
@@ -802,35 +802,35 @@ namespace testfinalmq
             bool res = m_parser.StartParse(hl7, 0);
             Debug.Assert(true == res);
 
-            byte[] token;
+            string token;
             int level;
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "MSH");
+            Debug.Assert(token == "MSH");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "|");
+            Debug.Assert(token == "|");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "^~\\&");
+            Debug.Assert(token == "^~\\&");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "a");
+            Debug.Assert(token == "a");
 
             level = m_parser.ParseToken(0, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "TST");
+            Debug.Assert(token == "TST");
 
             level = m_parser.ParseToken(0, out token);
             Debug.Assert(-1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
         }
 
         [Fact]
@@ -840,35 +840,35 @@ namespace testfinalmq
             bool res = m_parser.StartParse(hl7, 0);
             Debug.Assert(true == res);
 
-            byte[] token;
+            string token;
             int level;
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "MSH");
+            Debug.Assert(token == "MSH");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "|");
+            Debug.Assert(token == "|");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "^~\\&");
+            Debug.Assert(token == "^~\\&");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "|");
+            Debug.Assert(token == "|");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "a");
+            Debug.Assert(token == "a");
 
             level = m_parser.ParseToken(0, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "TST");
+            Debug.Assert(token == "TST");
 
             level = m_parser.ParseToken(0, out token);
             Debug.Assert(-1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
         }
 
         [Fact]
@@ -878,35 +878,35 @@ namespace testfinalmq
             bool res = m_parser.StartParse(hl7, 0);
             Debug.Assert(true == res);
 
-            byte[] token;
+            string token;
             int level;
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "MSH");
+            Debug.Assert(token == "MSH");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "|");
+            Debug.Assert(token == "|");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "^~\\&");
+            Debug.Assert(token == "^~\\&");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "a");
+            Debug.Assert(token == "a");
 
             level = m_parser.ParseToken(0, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "TST");
+            Debug.Assert(token == "TST");
 
             level = m_parser.ParseToken(0, out token);
             Debug.Assert(-1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
         }
 
         [Fact]
@@ -916,35 +916,35 @@ namespace testfinalmq
             bool res = m_parser.StartParse(hl7, 0);
             Debug.Assert(true == res);
 
-            byte[] token;
+            string token;
             int level;
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "MSH");
+            Debug.Assert(token == "MSH");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "|");
+            Debug.Assert(token == "|");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "^~\\&");
+            Debug.Assert(token == "^~\\&");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "a");
+            Debug.Assert(token == "a");
 
             level = m_parser.ParseToken(0, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "TST");
+            Debug.Assert(token == "TST");
 
             level = m_parser.ParseToken(0, out token);
             Debug.Assert(-1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
         }
 
         [Fact]
@@ -954,35 +954,35 @@ namespace testfinalmq
             bool res = m_parser.StartParse(hl7, 0);
             Debug.Assert(true == res);
 
-            byte[] token;
+            string token;
             int level;
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "MSH");
+            Debug.Assert(token == "MSH");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "|");
+            Debug.Assert(token == "|");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "^~\\&");
+            Debug.Assert(token == "^~\\&");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
 
             level = m_parser.ParseToken(1, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "a");
+            Debug.Assert(token == "a");
 
             level = m_parser.ParseToken(0, out token);
             Debug.Assert(0 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "TST");
+            Debug.Assert(token == "TST");
 
             level = m_parser.ParseToken(0, out token);
             Debug.Assert(-1 == level);
-            Debug.Assert(Encoding.ASCII.GetString(token) == "");
+            Debug.Assert(token == "");
         }
 
     }

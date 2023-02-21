@@ -29,26 +29,26 @@ namespace finalmq
     public interface IHl7Parser
     {
         bool StartParse(byte[] buffer, int offset, int size = -1);
-        int ParseToken(int level, out byte[] token);
-        int ParseTokenArray(int level, IList<byte[]> array);
+        int ParseToken(int level, out string token);
+        int ParseTokenArray(int level, IList<string> array);
         int ParseTillEndOfStruct(int level);
-        byte[] GetSegmentId();
+        string GetSegmentId();
         int GetCurrentPosition();
     }
 
 
     public class Hl7Parser : IHl7Parser
     {
-        static readonly byte SEGMENT_END = 0x0D;   // '\r'
+        static readonly char SEGMENT_END = (char)0x0D;   // '\r'
 
         public Hl7Parser()
         {
         }
 
-        byte GetChar(int offset)
+        char GetChar(int offset)
         {
             Debug.Assert(m_buffer != null);
-            return (offset < m_end) ? m_buffer[offset] : (byte)0;
+            return (offset < m_end) ? (char)m_buffer[offset] : (char)0;
         }
 
         public bool StartParse(byte[] buffer, int offset, int size = -1)
@@ -73,11 +73,11 @@ namespace finalmq
                 if (m_buffer[m_offset + 0] == 'M' && m_buffer[m_offset + 1] == 'S' && m_buffer[m_offset + 2] == 'H')
                 {
                     m_delimiterField[0] = SEGMENT_END;      // segment delimiter '\r', 0x0D
-                    m_delimiterField[1] = m_buffer[m_offset + 3 + 0];    // |
-                    m_delimiterField[2] = m_buffer[m_offset + 3 + 1];    // ^
-                    m_delimiterField[3] = m_buffer[m_offset + 3 + 4];    // &
-                    m_delimiterRepeat = m_buffer[m_offset + 3 + 2];    // ~
-                    m_escape = m_buffer[m_offset + 3 + 3];    // '\\'
+                    m_delimiterField[1] = (char)m_buffer[m_offset + 3 + 0];    // |
+                    m_delimiterField[2] = (char)m_buffer[m_offset + 3 + 1];    // ^
+                    m_delimiterField[3] = (char)m_buffer[m_offset + 3 + 4];    // &
+                    m_delimiterRepeat = (char)m_buffer[m_offset + 3 + 2];    // ~
+                    m_escape = (char)m_buffer[m_offset + 3 + 3];    // '\\'
                 }
                 else
                 {
@@ -87,19 +87,19 @@ namespace finalmq
             return true;
         }
 
-        public int ParseToken(int level, out byte[] token)
+        public int ParseToken(int level, out string token)
         {
-            token = Array.Empty<byte>();
+            token = "";
             int l = level;
             if (m_waitForDeleimiterField == 1)
             {
-                token = new byte[] { m_buffer[m_offset - 1] };
+                token = Encoding.ASCII.GetString(m_buffer, m_offset - 1, 1);
             }
             else if (m_waitForDeleimiterField == 2)
             {
                 if (m_offset + 4 < m_end)
                 {
-                    token = new byte[4] { m_buffer[m_offset], m_buffer[m_offset + 1], m_buffer[m_offset + 2], m_buffer[m_offset + 3] };
+                    token = Encoding.ASCII.GetString(m_buffer, m_offset, 4);
                     m_offset += 4 + 1;
                 }
             }
@@ -108,7 +108,7 @@ namespace finalmq
                 int start = m_offset;
                 while (true)
                 {
-                    byte c = GetChar(m_offset);
+                    char c = GetChar(m_offset);
                     if (c == m_delimiterRepeat)
                     {
                         token = DeEscape(start, m_offset);
@@ -146,14 +146,14 @@ namespace finalmq
             return l;
         }
 
-        public int ParseTokenArray(int level, IList<byte[]> array)
+        public int ParseTokenArray(int level, IList<string> array)
         {
             array.Clear();
             int start = m_offset;
             int l = 0;
             while (true)
             {
-                byte c = GetChar(m_offset);
+                char c = GetChar(m_offset);
                 if (c == m_delimiterRepeat)
                 {
                     array.Add(DeEscape(start, m_offset));
@@ -183,16 +183,16 @@ namespace finalmq
             return l;
         }
 
-        public byte[] GetSegmentId()
+        public string GetSegmentId()
         {
-            ArrayBuilder<byte> token = new ArrayBuilder<byte>();
+            StringBuilder token = new StringBuilder();
             int i = 0;
             while (true)
             {
-                byte c = GetChar(m_offset + i);
+                char c = GetChar(m_offset + i);
                 if (IsDelimiter(c) == LAYER_MAX)
                 {
-                    token.Add(c);
+                    token.Append(c);
                 }
                 else
                 {
@@ -200,7 +200,7 @@ namespace finalmq
                 }
                 ++i;
             }
-            return token.ToArray();
+            return token.ToString();
         }
 
         public int GetCurrentPosition()
@@ -210,8 +210,8 @@ namespace finalmq
 
         public int ParseTillEndOfStruct(int level)
         {
-            byte c;
-            while ((c = GetChar(m_offset)) != 0)
+            char c;
+            while ((c = GetChar(m_offset)) != (char)0)
             {
                 int l = IsDelimiter(c);
                 if (l <= level)
@@ -231,7 +231,7 @@ namespace finalmq
         {
             while (true)
             {
-                byte c = GetChar(m_offset);
+                char c = GetChar(m_offset);
                 if (c < 0x20 && c != 0)
                 {
                     ++m_offset;
@@ -243,7 +243,7 @@ namespace finalmq
             }
         }
 
-        int IsDelimiter(byte c)
+        int IsDelimiter(char c)
         {
             if (c == 0)
             {
@@ -262,68 +262,68 @@ namespace finalmq
         }
 
 
-        static byte Hex2char(byte c)
+        static char Hex2char(char c)
         {
-            byte num = 0;
+            char num = (char)0;
             if ('0' <= c && c <= '9')
             {
-                num = (byte)(c - '0');
+                num = (char)(c - '0');
             }
             else if ('a' <= c && c <= 'f')
             {
-                num = (byte)((c - 'a') + 10);
+                num = (char)((c - 'a') + 10);
             }
             else if ('A' <= c && c <= 'F')
             {
-                num = (byte)((c - 'A') + 10);
+                num = (char)((c - 'A') + 10);
             }
             else
             {
-                num = 0xff;
+                num = (char)0xff;
             }
             return num;
         }
 
 
-        byte[] DeEscape(int start, int end)
+        string DeEscape(int start, int end)
         {
             Debug.Assert(m_buffer != null);
-            ArrayBuilder<byte> dest = new ArrayBuilder<byte>();
+            StringBuilder dest = new StringBuilder();
             int off = start;
             while (off < end)
             {
-                byte c = m_buffer[off];
+                char c = (char)m_buffer[off];
                 if (c == m_escape)
                 {
                     ++off;
                     if (off >= end)
                     {
-                        return dest.ToArray();
+                        return dest.ToString();
                     }
-                    c = m_buffer[off];
+                    c = (char)m_buffer[off];
                     switch (c)
                     {
-                        case (byte)'E':
-                            dest.Add(m_escape);
+                        case 'E':
+                            dest.Append(m_escape);
                             ++off;
                             break;
-                        case (byte)'F':
-                            dest.Add(m_delimiterField[1]);    // |
+                        case 'F':
+                            dest.Append(m_delimiterField[1]);    // |
                             ++off;
                             break;
-                        case (byte)'R':
-                            dest.Add(m_delimiterRepeat);      // ~
+                        case 'R':
+                            dest.Append(m_delimiterRepeat);      // ~
                             ++off;
                             break;
-                        case (byte)'S':
-                            dest.Add(m_delimiterField[2]);    // ^
+                        case 'S':
+                            dest.Append(m_delimiterField[2]);    // ^
                             ++off;
                             break;
-                        case (byte)'T':
-                            dest.Add(m_delimiterField[3]);    // &
+                        case 'T':
+                            dest.Append(m_delimiterField[3]);    // &
                             ++off;
                             break;
-                        case (byte)'X':
+                        case 'X':
                             while (true)
                             {
                                 ++off;
@@ -331,31 +331,31 @@ namespace finalmq
                                 {
                                     break;
                                 }
-                                c = m_buffer[off];
+                                c = (char)m_buffer[off];
                                 if (c == '\\')
                                 {
                                     break;
                                 }
-                                byte num = Hex2char(c);
+                                char num = Hex2char(c);
                                 if (num == 0xff)
                                 {
-                                    return dest.ToArray();
+                                    return dest.ToString();
                                 }
-                                byte d = num;
+                                char d = num;
                                 ++off;
                                 if (off >= end)
                                 {
                                     break;
                                 }
-                                c = m_buffer[off];
+                                c = (char)m_buffer[off];
                                 num = Hex2char(c);
                                 if (num == 0xff)
                                 {
-                                    return dest.ToArray();
+                                    return dest.ToString();
                                 }
                                 d <<= 4;
                                 d |= num;
-                                dest.Add(d);
+                                dest.Append(d);
                             }
                             break;
                         default:
@@ -364,12 +364,12 @@ namespace finalmq
                 }
                 else
                 {
-                    dest.Add(c);
+                    dest.Append(c);
                 }
                 ++off;
             }
 
-            return dest.ToArray();
+            return dest.ToString();
         }
 
         static readonly int LAYER_MAX = 4;
@@ -378,9 +378,9 @@ namespace finalmq
         int m_offset = 0;
         int m_end = 0;
 
-        byte[] m_delimiterField = new byte[4] { 0, 0, 0, 0 };
-        byte m_delimiterRepeat = 0;
-        byte m_escape = 0;
+        char[] m_delimiterField = new char[4] { (char)0, (char)0, (char)0, (char)0 };
+        char m_delimiterRepeat = (char)0;
+        char m_escape = (char)0;
 
         int m_waitForDeleimiterField = 0;
     }

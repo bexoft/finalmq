@@ -328,7 +328,6 @@ namespace finalmq
         readonly byte[] m_delimiterField = new byte[LAYER_MAX];
         readonly byte   m_delimiterRepeat;
         readonly byte   m_escape;
-        readonly byte   m_delimiterCurrent = 0;
 
         readonly Hl7Node m_root;
     };

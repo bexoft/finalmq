@@ -37,7 +37,7 @@ namespace finalmq
         public void EnterStruct(MetaField field)
         {
             Debug.Assert(m_visitor != null);
-            if (field.TypeId == MetaTypeId.TYPE_STRUCT)
+            if (field.TypeId == MetaTypeId.TYPE_STRUCT || field.TypeId == MetaTypeId.TYPE_ARRAY_STRUCT)
             {
                 m_visitor.EnterStruct(field);
             }
@@ -45,7 +45,7 @@ namespace finalmq
         public void ExitStruct(MetaField field)
         {
             Debug.Assert(m_visitor != null);
-            if (field.TypeId == MetaTypeId.TYPE_STRUCT)
+            if (field.TypeId == MetaTypeId.TYPE_STRUCT || field.TypeId == MetaTypeId.TYPE_ARRAY_STRUCT)
             {
                 m_visitor.ExitStruct(field);
             }
@@ -53,7 +53,7 @@ namespace finalmq
         public void EnterStructNull(MetaField field)
         {
             Debug.Assert(m_visitor != null);
-            if (field.TypeId == MetaTypeId.TYPE_STRUCT)
+            if (field.TypeId == MetaTypeId.TYPE_STRUCT || field.TypeId == MetaTypeId.TYPE_ARRAY_STRUCT)
             {
                 m_visitor.EnterStructNull(field);
             }
