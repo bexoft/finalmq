@@ -195,7 +195,10 @@ namespace finalmq
                     {
                         string token;
                         int levelNew = m_parser.ParseToken(levelSegment, out token);
-                        m_visitor.EnterString(field, token);
+                        if (token != "")
+                        {
+                            m_visitor.EnterString(field, token);
+                        }
                         if (levelNew < levelSegment)
                         {
                             return levelNew;
