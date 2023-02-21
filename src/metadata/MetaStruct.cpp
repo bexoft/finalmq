@@ -25,6 +25,12 @@
 
 namespace finalmq {
 
+static std::string removeNamespace(const std::string& typeName)
+{
+    size_t pos = typeName.find_last_of('.') + 1;
+    return typeName.substr(pos, typeName.size() - pos);
+}
+
 
 MetaStruct::MetaStruct()
     : m_flags(0)
@@ -34,6 +40,7 @@ MetaStruct::MetaStruct()
 
 MetaStruct::MetaStruct(const std::string& typeName, const std::string& description, const std::vector<MetaField>& fields, int flags)
     : m_typeName(typeName)
+    , m_typeNameWithoutNamespace(removeNamespace(typeName))
     , m_description(description)
     , m_flags(flags)
 {
@@ -45,6 +52,7 @@ MetaStruct::MetaStruct(const std::string& typeName, const std::string& descripti
 
 MetaStruct::MetaStruct(const std::string& typeName, const std::string& description, std::vector<MetaField>&& fields, int flags)
     : m_typeName(typeName)
+    , m_typeNameWithoutNamespace(removeNamespace(typeName))
     , m_description(description)
     , m_flags(flags)
 {
@@ -55,30 +63,19 @@ MetaStruct::MetaStruct(const std::string& typeName, const std::string& descripti
 }
 
 
-
-void MetaStruct::setTypeName(const std::string& typeName)
-{
-    m_typeName = typeName;
-}
-
 const std::string& MetaStruct::getTypeName() const
 {
     return m_typeName;
 }
 
-void MetaStruct::setDescription(const std::string& description)
+const std::string& MetaStruct::getTypeNameWithoutNamespace() const
 {
-    m_description = description;
+    return m_typeNameWithoutNamespace;
 }
 
 const std::string& MetaStruct::getDescription() const
 {
     return m_description;
-}
-
-void MetaStruct::setFlags(int flags)
-{
-    m_flags = flags;
 }
 
 int MetaStruct::getFlags() const

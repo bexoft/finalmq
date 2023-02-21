@@ -54,20 +54,29 @@ public:
             const std::string& desc, int flgs = 0, int ix = -1)
         : typeId(tId)
         , typeName(tName)
+        , typeNameWithoutNamespace(removeNamespace(tName))
         , name(n)
         , description(desc)
         , flags(flgs)
         , index(ix)
     {
     }
-    MetaTypeId      typeId;                                 ///< type id of the parameter
-    std::string     typeName;                               ///< is needed for struct and enum
-    std::string     name{};                                 ///< parameter name
-    std::string     description{};                          ///< description of the parameter
-    int             flags;                                  ///< flaggs of the parameter
-    int             index;                                  ///< index of field inside struct
+
+    const MetaTypeId        typeId;                         ///< type id of the parameter
+    const std::string       typeName;                       ///< is needed for struct and enum
+    const std::string       typeNameWithoutNamespace;       ///< is the typeName, but without the namespace
+    const std::string       name{};                         ///< parameter name
+    const std::string       description{};                  ///< description of the parameter
+    const int               flags;                          ///< flaggs of the parameter
+    int                     index;                          ///< index of field inside struct
 
 private:
+    static std::string removeNamespace(const std::string& typeName)
+    {
+        size_t pos = typeName.find_last_of('.') + 1;
+        return typeName.substr(pos, typeName.size() - pos);
+    }
+
     mutable const MetaEnum*     metaEnum    = nullptr;      ///< cache to find MetaEnum of typeName faster
     mutable const MetaStruct*   metaStruct  = nullptr;      ///< cache to find MetaStruct of typeName faster
     mutable std::shared_ptr<MetaField> fieldWithoutArray{}; ///< in case of an array, this is the MetaField for its entries

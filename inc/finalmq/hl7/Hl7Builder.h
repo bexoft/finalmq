@@ -29,7 +29,7 @@
 namespace finalmq {
 
 
-    struct IHl7BuilderVisitor
+struct IHl7BuilderVisitor
 {
     virtual ~IHl7BuilderVisitor() {}
     virtual void enterNull(const int* levelIndex, int sizeLevelIndex, int index) = 0;
@@ -78,7 +78,6 @@ private:
     char                    m_delimiterField[LAYER_MAX];
     char                    m_delimiterRepeat;
     char                    m_escape;
-    char                    m_delimiterCurrent = '\0';
 
     std::unique_ptr<Hl7Node> m_root;
 };

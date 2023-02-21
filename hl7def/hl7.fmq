@@ -262,16 +262,16 @@
 
 
 
-        {"type":"SPM_STRUCT","desc":"desc","fields":[
+        {"type":"SPM_GROUP","desc":"desc","fields":[
             {"tid":"struct",    "type":"SPM",           "name":"spm",                               "desc":""},
             {"tid":"struct[]",  "type":"OBX",           "name":"obx",                               "desc":""}
         ]},
 
-        {"type":"SAC_STRUCT","desc":"desc","fields":[
+        {"type":"SAC_GROUP","desc":"desc","fields":[
             {"tid":"struct",    "type":"SAC",           "name":"sac",                               "desc":""},
             {"tid":"struct[]",  "type":"OBX",           "name":"obx",                               "desc":""},
             {"tid":"struct[]",  "type":"NTE",           "name":"nte",                               "desc":""},
-            {"tid":"struct[]",  "type":"SPM_STRUCT",    "name":"spm",                               "desc":""}
+            {"tid":"struct[]",  "type":"SPM_GROUP",     "name":"spm",                               "desc":""}
         ]},
 
 
@@ -295,7 +295,7 @@
             {"tid":"struct[]",  "type":"SFT",           "name":"sft",                               "desc":""},
             {"tid":"struct",    "type":"UAC",           "name":"uac",                               "desc":"",  "flags":["METAFLAG_NULLABLE"]},
             {"tid":"struct",    "type":"EQU",           "name":"equ",                               "desc":""},
-            {"tid":"struct[]",  "type":"SAC_STRUCT",    "name":"sac",                               "desc":""}
+            {"tid":"struct[]",  "type":"SAC_GROUP",     "name":"sac",                               "desc":""}
         ]}
 
     ]

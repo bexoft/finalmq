@@ -65,13 +65,11 @@ private:
     const char* m_end = nullptr;
     const char* m_str = nullptr;
 
-    int m_level = 0;
-
     static const int LAYER_MAX = 4;
 
     char                    m_delimiterField[LAYER_MAX] = {0, 0, 0, 0};
-    char                    m_delimiterRepeat;
-    char                    m_escape;
+    char                    m_delimiterRepeat = 0;
+    char                    m_escape = 0;
 
     int                     m_waitForDeleimiterField = 0;
 };

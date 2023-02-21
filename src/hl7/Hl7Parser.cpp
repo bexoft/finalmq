@@ -143,6 +143,7 @@ void Hl7Parser::getSegmentId(std::string& token) const
 
 int Hl7Parser::parseToken(int level, std::string& token)
 {
+    token.clear();
     int l = level;
     if (m_waitForDeleimiterField == 1)
     {
@@ -158,7 +159,6 @@ int Hl7Parser::parseToken(int level, std::string& token)
     }
     else
     {
-        token.clear();
         const char* start = m_str;
         while (true)
         {
@@ -296,7 +296,7 @@ static char hex2char(char c)
     }
     else
     {
-        num = 0xff;
+        num = static_cast<char>(0xff);
     }
     return num;
 }

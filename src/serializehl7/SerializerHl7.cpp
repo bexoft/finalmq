@@ -50,12 +50,6 @@ SerializerHl7::Internal::Internal(IZeroCopyBuffer& buffer, int maxBlockSize, boo
 }
 
 
-static std::string removeNamespace(const std::string& typeName)
-{
-    return typeName.substr(typeName.find_last_of('.') + 1);
-}
-
-
 // IParserVisitor
 void SerializerHl7::Internal::notifyError(const char* /*str*/, const char* /*message*/)
 {
@@ -64,7 +58,7 @@ void SerializerHl7::Internal::notifyError(const char* /*str*/, const char* /*mes
 void SerializerHl7::Internal::startStruct(const MetaStruct& stru)
 {
     std::vector<std::string> splitString;
-    std::string messageStructure = removeNamespace(stru.getTypeName());
+    std::string messageStructure = stru.getTypeNameWithoutNamespace();
     Utils::split(messageStructure, 0, messageStructure.size(), '_', splitString);
 
     m_indexOfLayer.push_back(-1);
@@ -99,7 +93,8 @@ void SerializerHl7::Internal::enterStruct(const MetaField& field)
         {
             assert(m_indexOfLayer.size() == 1);
             ++m_indexOfLayer.back();
-            m_hl7Builder.enterString(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), -1, removeNamespace(stru->getTypeName()));
+            const std::string& typeNameWithoutNamespace = stru->getTypeNameWithoutNamespace();
+            m_hl7Builder.enterString(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), -1, typeNameWithoutNamespace.c_str(), typeNameWithoutNamespace.size());
             m_inSegment = true;
         }
         else

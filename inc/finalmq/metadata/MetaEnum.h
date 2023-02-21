@@ -50,7 +50,6 @@ public:
     MetaEnum(const std::string& typeName, const std::string& description, const std::vector<MetaEnumEntry>& entries);
     MetaEnum(const std::string& typeName, const std::string& description, std::vector<MetaEnumEntry>&& entries);
 
-    void setTypeName(const std::string& typeName);
     const std::string& getTypeName() const;
     void setDescription(const std::string& description);
     const std::string& getDescription() const;

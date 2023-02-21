@@ -48,11 +48,9 @@ public:
     MetaStruct(const std::string& typeName, const std::string& description, const std::vector<MetaField>& fields, int flags = 0);
     MetaStruct(const std::string& typeName, const std::string& description, std::vector<MetaField>&& fields, int flags = 0);
 
-    void setTypeName(const std::string& typeName);
     const std::string& getTypeName() const;
-    void setDescription(const std::string& description);
+    const std::string& getTypeNameWithoutNamespace() const;
     const std::string& getDescription() const;
-    void setFlags(int flags);
     int getFlags() const;
 
     const MetaField* getFieldByIndex(ssize_t index) const;
@@ -67,10 +65,11 @@ public:
     }
 
 private:
-    std::string                                                         m_typeName;
-    std::string                                                         m_description;
+    const std::string                                                   m_typeName;
+    const std::string                                                   m_typeNameWithoutNamespace;
+    const std::string                                                   m_description;
     std::vector<std::shared_ptr<const MetaField>>                       m_fields;
-    int                                                                 m_flags;
+    const int                                                           m_flags;
     std::unordered_map<std::string, std::shared_ptr<const MetaField>>   m_name2Field;
 };
 
