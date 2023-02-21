@@ -95,6 +95,7 @@ namespace finalmq
         {
             string description = "";
             object[]? attributes = type.GetCustomAttributes(false);
+            MetaStructFlags flagsStruct = MetaStructFlags.METASTRUCTFLAG_NONE;
             if (attributes != null)
             {
                 foreach (var attribute in attributes)
@@ -103,6 +104,7 @@ namespace finalmq
                     if (attr != null)
                     {
                         description = attr.Desc;
+                        flagsStruct = attr.Flags;
                         break;
                     }
                 }
@@ -162,7 +164,7 @@ namespace finalmq
                     }
                 }
             }
-            MetaStruct stru = new MetaStruct(type.FullName!, description, fields);
+            MetaStruct stru = new MetaStruct(type.FullName!, description, fields, (int)flagsStruct);
             return stru;
         }
 

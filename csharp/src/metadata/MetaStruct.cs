@@ -36,6 +36,7 @@ namespace finalmq
         public MetaStruct(string typeName, string description, IList<MetaField> fields, int flags = 0)
         {
             m_typeName = typeName;
+            m_typeNameWithoutNamespace = RemoveNamespace(typeName);
             m_description = description;
             m_flags = flags;
             foreach (var field in fields)
@@ -47,12 +48,14 @@ namespace finalmq
         public string TypeName
         {
             get { return m_typeName; }
-            set { m_typeName = value; }
+        }
+        public string TypeNameWithoutNamespace
+        {
+            get { return m_typeNameWithoutNamespace; }
         }
         public string Description
         {
             get { return m_description; }
-            set { m_description = value; }
         }
         public MetaField? GetFieldByIndex(int index)
         {
@@ -88,10 +91,22 @@ namespace finalmq
             get { return m_fields.Count; }
         }
 
-        string m_typeName;
-        string m_description;
+        public int Flags
+        {
+            get { return m_flags; }
+        }
+
+        static string RemoveNamespace(string typeName)
+        {
+            int pos = typeName.LastIndexOf('.') + 1;
+            return typeName.Substring(pos, typeName.Length - pos);
+        }
+
+        readonly string m_typeName;
+        readonly string m_typeNameWithoutNamespace;
+        readonly string m_description;
         readonly IList<MetaField>                 m_fields = new List<MetaField>();
-        int                                       m_flags;
+        readonly int m_flags;
         readonly IDictionary<string, MetaField>   m_name2Field = new Dictionary<string, MetaField>();
     }
 

@@ -38,6 +38,7 @@ namespace finalmq
         {
             m_typeId = typeId;
             m_typeName = typeName;
+            m_typeNameWithoutNamespace = RemoveNamespace(typeName);
             m_name = name;
             m_description = description;
             m_flags = flags;
@@ -46,6 +47,7 @@ namespace finalmq
 
         public MetaTypeId TypeId { get { return m_typeId; } }
         public string TypeName { get { return m_typeName; } }
+        public string TypeNameWithoutNamespace { get { return m_typeNameWithoutNamespace; } }
         public string Name { get { return m_name; } }
         public string Description { get { return m_description; } }
         public int Flags { get { return m_flags; } }
@@ -69,8 +71,16 @@ namespace finalmq
             set { m_fieldWithoutArray = value; }
         }
 
+        static string RemoveNamespace(string typeName)
+        {
+            int pos = typeName.LastIndexOf('.') + 1;
+            return typeName.Substring(pos, typeName.Length - pos);
+        }
+
+
         readonly MetaTypeId m_typeId;           ///< type id of the parameter
         readonly string m_typeName;             ///< is needed for struct and enum
+        readonly string m_typeNameWithoutNamespace; ///< is the typeName, but without the namespace
         readonly string m_name;                 ///< parameter name
         readonly string m_description;          ///< description of the parameter
         readonly int m_flags;                   ///< flaggs of the parameter
