@@ -9,7 +9,7 @@ namespace timer
     class MainClient
     {
 
-        public static async Task Main(string[] args)
+        public static void Main(string[] args)
         {
             // Create and initialize entity container. Entities can be added with registerEntity().
             // Entities are like remote objects, but they can be at the same time client and server.

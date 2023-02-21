@@ -89,10 +89,10 @@ namespace finalmq
         {
             ReserveSpace(3 + m_delimitersForField.Length);
             Debug.Assert(m_buffer != null);
-            m_buffer[0] = (byte)'M';
-            m_buffer[1] = (byte)'S';
-            m_buffer[2] = (byte)'H';
-            m_offset = 3;
+            m_buffer[m_offset + 0] = (byte)'M';
+            m_buffer[m_offset + 1] = (byte)'S';
+            m_buffer[m_offset + 2] = (byte)'H';
+            m_offset += 3;
             Array.Copy(m_delimitersForField, 0, m_buffer, m_offset, m_delimitersForField.Length);
             m_offset += m_delimitersForField.Length;
 
