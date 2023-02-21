@@ -131,6 +131,10 @@ std::shared_ptr<StructBase> RemoteEntityFormatHl7::parse(const IProtocolSessionP
         {
             type = *hl7Namespace + "." + type;
         }
+        else
+        {
+            type = "hl7." + type;
+        }
         if (hl7DestName != nullptr)
         {
             header.destname = *hl7DestName;
