@@ -76,6 +76,11 @@ void SerializerStruct::finished()
 
 void SerializerStruct::enterStruct(const MetaField& field)
 {
+    if (field.typeId != MetaTypeId::TYPE_STRUCT && field.typeId != MetaTypeId::TYPE_ARRAY_STRUCT)
+    {
+        return;
+    }
+
     if (m_visitor)
     {
         m_visitor->enterStruct(field);
@@ -144,6 +149,11 @@ void SerializerStruct::enterStruct(const MetaField& field)
 
 void SerializerStruct::exitStruct(const MetaField& field)
 {
+    if (field.typeId != MetaTypeId::TYPE_STRUCT && field.typeId != MetaTypeId::TYPE_ARRAY_STRUCT)
+    {
+        return;
+    }
+
     if (m_visitor)
     {
         m_visitor->exitStruct(field);
@@ -170,6 +180,11 @@ void SerializerStruct::exitStruct(const MetaField& field)
 
 void SerializerStruct::enterStructNull(const MetaField& field)
 {
+    if (field.typeId != MetaTypeId::TYPE_STRUCT && field.typeId != MetaTypeId::TYPE_ARRAY_STRUCT)
+    {
+        return;
+    }
+
     if (m_visitor)
     {
         m_visitor->enterStructNull(field);

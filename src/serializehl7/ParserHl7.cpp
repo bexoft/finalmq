@@ -78,11 +78,6 @@ const char* ParserHl7::parseStruct(const std::string& typeName)
     return m_parser.getCurrentPosition();
 }
 
-static std::string removeNamespace(const std::string& typeName)
-{
-    return typeName.substr(typeName.find_last_of('.') + 1, 3);
-}
-
 int ParserHl7::parseStruct(int levelStruct, int levelSegment, const MetaStruct& stru)
 {
     // segment ID
@@ -94,7 +89,7 @@ int ParserHl7::parseStruct(int levelStruct, int levelSegment, const MetaStruct& 
         {
             return levelNew;
         }
-        if (tokenSegId != removeNamespace(stru.getTypeName()))
+        if (tokenSegId != stru.getTypeNameWithoutNamespace())
         {
             return m_parser.parseTillEndOfStruct(0);
         }
@@ -116,7 +111,7 @@ int ParserHl7::parseStruct(int levelStruct, int levelSegment, const MetaStruct& 
             bool processStruct = true;
             if (levelSegment == 0)
             {
-                std::string typeName = removeNamespace(field->typeName);
+                std::string typeName = field->typeNameWithoutNamespace;
                 std::string segId;
                 m_parser.getSegmentId(segId);
                 const MetaField* subField = nullptr;
@@ -124,7 +119,7 @@ int ParserHl7::parseStruct(int levelStruct, int levelSegment, const MetaStruct& 
                 {
                     subField = subStruct->getFieldByIndex(0);
                 }
-                if ((segId == typeName) || (subField != nullptr && segId == removeNamespace(subField->typeName)))
+                if ((segId == typeName) || (subField != nullptr && segId == subField->typeNameWithoutNamespace))
                 {
                     processStruct = true;
                 }
@@ -164,13 +159,13 @@ int ParserHl7::parseStruct(int levelStruct, int levelSegment, const MetaStruct& 
                 {
                     subField = subStruct->getFieldByIndex(0);
                 }
-                std::string typeName = removeNamespace(field->typeName);
+                std::string typeName = field->typeNameWithoutNamespace;
                 bool firstLoop = true;
                 do
                 {
                     std::string segId;
                     m_parser.getSegmentId(segId);
-                    if ((segId == typeName) || (subField != nullptr && segId == removeNamespace(subField->typeName)))
+                    if ((segId == typeName) || (subField != nullptr && segId == subField->typeNameWithoutNamespace))
                     {
                         if (firstLoop)
                         {
@@ -220,7 +215,10 @@ int ParserHl7::parseStruct(int levelStruct, int levelSegment, const MetaStruct& 
             {
                 std::string token;
                 int levelNew = m_parser.parseToken(levelSegment, token);
-                m_visitor.enterString(*field, std::move(token));
+                if (!token.empty())
+                {
+                    m_visitor.enterString(*field, std::move(token));
+                }
                 if (levelNew < levelSegment)
                 {
                     return levelNew;

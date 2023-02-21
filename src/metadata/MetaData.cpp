@@ -112,9 +112,8 @@ const MetaField* MetaData::getArrayField(const MetaField& field) const
     assert((int)field.typeId & (int)MetaTypeId::OFFSET_ARRAY_FLAG);
     if (!field.fieldWithoutArray)
     {
-        field.fieldWithoutArray = std::make_shared<MetaField>(field);
-        field.fieldWithoutArray->typeId = (MetaTypeId)((int)field.typeId & ~(int)MetaTypeId::OFFSET_ARRAY_FLAG);
-        field.fieldWithoutArray->name.clear();
+        MetaTypeId typeId = static_cast<MetaTypeId>(field.typeId & ~MetaTypeId::OFFSET_ARRAY_FLAG);
+        field.fieldWithoutArray = std::make_shared<MetaField>(typeId, field.typeName, "", field.description, field.flags, field.index);
     }
     return field.fieldWithoutArray.get();
 }

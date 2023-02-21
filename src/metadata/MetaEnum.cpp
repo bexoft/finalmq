@@ -53,12 +53,6 @@ MetaEnum::MetaEnum(const std::string& typeName, const std::string& description, 
 
 
 
-
-void MetaEnum::setTypeName(const std::string& typeName)
-{
-    m_typeName = typeName;
-}
-
 const std::string& MetaEnum::getTypeName() const
 {
     return m_typeName;
