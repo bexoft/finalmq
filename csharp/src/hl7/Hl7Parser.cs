@@ -383,6 +383,7 @@ namespace finalmq
         char m_escape = (char)0;
 
         int m_waitForDeleimiterField = 0;
+        string m_currentSegmentId = "";
     }
 
 }   // namespace finalmq

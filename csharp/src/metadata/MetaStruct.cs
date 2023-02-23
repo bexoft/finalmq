@@ -28,6 +28,7 @@ namespace finalmq
     {
         METASTRUCTFLAG_NONE = 0,
         METASTRUCTFLAG_HL7_SEGMENT = 1,
+        METASTRUCTFLAG_CHOICE = 2,          // at most one of the nullable fields is not null
     };
 
 

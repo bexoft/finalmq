@@ -33,6 +33,60 @@ namespace finalmq
             m_visitor = visitor;
         }
 
+        bool Matches(string segId, MetaStruct stru, int ixStart)
+        {
+            if ((stru.Flags & (int)MetaStructFlags.METASTRUCTFLAG_HL7_SEGMENT) != 0)
+            {
+                return false;
+            }
+            for (int i = ixStart; i < stru.FieldsSize; ++i)
+            {
+                MetaField? field = stru.GetFieldByIndex(i);
+                Debug.Assert(field != null);
+                if (field.TypeId == MetaTypeId.TYPE_STRUCT || field.TypeId == MetaTypeId.TYPE_ARRAY_STRUCT)
+                {
+                    if (segId == field.TypeNameWithoutNamespace)
+                    {
+                        return true;
+                    }
+                    if ((field.TypeId == MetaTypeId.TYPE_STRUCT) && 
+                        (field.Flags & (int)MetaFieldFlags.METAFLAG_NULLABLE) == 0)
+                    {
+                        return false;
+                    }
+                    if ((field.TypeId == MetaTypeId.TYPE_ARRAY_STRUCT) && 
+                        (field.Flags & (int)MetaFieldFlags.METAFLAG_ONE_REQUIRED) != 0)
+                    {
+                        return false;
+                    }
+                    MetaStruct? subStruct = MetaDataGlobal.Instance.GetStruct(field);
+                    if (subStruct != null)
+                    {
+                        bool matche = Matches(segId, subStruct, 0);
+                        if (matche)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        bool MatchesUp(string segId)
+        {
+            for (int i = m_stackStruct.Count - 1; i >= 0; --i)
+            {
+                Tuple<MetaStruct, int> entry = m_stackStruct[i];
+                bool match = Matches(segId, entry.Item1, entry.Item2);
+                if (match)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public int ParseStruct(string typeName)
         {
             MetaStruct? stru = MetaDataGlobal.Instance.GetStruct(typeName);
@@ -67,7 +121,7 @@ namespace finalmq
             {
                 string tokenSegId;
                 int levelNew = m_parser.ParseToken(levelSegment, out tokenSegId);
-                if (levelNew<levelSegment)
+                if (levelNew < levelSegment)
                 {
                     return levelNew;
                 }
@@ -95,37 +149,55 @@ namespace finalmq
                     {
                         string typeName = field.TypeNameWithoutNamespace;
                         string segId = m_parser.GetSegmentId();
-                        MetaField? subField = null;
-                        if ((segId != typeName) && ((subStruct.Flags & (int)MetaStructFlags.METASTRUCTFLAG_HL7_SEGMENT) == 0) && (subStruct.FieldsSize > 0))
+                        if (segId == "")
                         {
-                            subField = subStruct.GetFieldByIndex(0);
+                            return levelSegment;
                         }
-                        if ((segId == typeName) || (subField != null && segId == subField.TypeNameWithoutNamespace))
+                        else if (segId == typeName)
                         {
                             processStruct = true;
+                        }
+                        else if (Matches(segId, subStruct, 0))
+                        {
+                            processStruct = true;
+                        }
+                        else if (Matches(segId, stru, i + 1))
+                        {
+                            processStruct = false;
+                        }
+                        else if (MatchesUp(segId))
+                        {
+                            return levelSegment;
                         }
                         else
                         {
                             processStruct = false;
                             m_parser.ParseTillEndOfStruct(0);
+                            --i;
                         }
                     }
                     if (processStruct)
                     {
                         m_visitor.EnterStruct(field);
+                        m_stackStruct.Add(new Tuple<MetaStruct, int>(stru, i + 1));
                         int LevelSegmentNext = levelSegment;
                         if ((LevelSegmentNext > 0) || ((subStruct.Flags & (int)MetaStructFlags.METASTRUCTFLAG_HL7_SEGMENT) != 0))
                         {
                             ++LevelSegmentNext;
                         }
                         int levelNew = ParseStruct(levelStruct + 1, LevelSegmentNext, subStruct);
+                        m_stackStruct.RemoveAt(m_stackStruct.Count - 1);
                         m_visitor.ExitStruct(field);
                         if (levelNew < levelSegment)
                         {
                             return levelNew;
                         }
+                        if ((levelSegment == 0) && ((stru.Flags & (int)MetaStructFlags.METASTRUCTFLAG_CHOICE) != 0))
+                        {
+                            return levelSegment;
+                        }
                     }
-                }
+                } 
                 else if (field.TypeId == MetaTypeId.TYPE_ARRAY_STRUCT)
                 {
                     if (levelSegment == 0)
@@ -135,20 +207,46 @@ namespace finalmq
                         {
                             return PARSER_HL7_ERROR;
                         }
-                        MetaField? subField = null;
-                        if (((subStruct.Flags & (int)MetaStructFlags.METASTRUCTFLAG_HL7_SEGMENT) == 0) && (subStruct.FieldsSize > 0))
-                        {
-                            subField = subStruct.GetFieldByIndex(0);
-                        }
                         string typeName = field.TypeNameWithoutNamespace;
                         bool firstLoop = true;
                         do
                         {
                             string segId = m_parser.GetSegmentId();
-                            if ((segId == typeName) || (subField != null && segId == subField.TypeNameWithoutNamespace))
+                            bool processStructArray = true;
+                            if (segId == "")
                             {
+                                return levelSegment;
+                            }
+                            else if (segId == typeName)
+                            {
+                                processStructArray = true;
+                            }
+                            else if (Matches(segId, subStruct, 0))
+                            {
+                                processStructArray = true;
+                            }
+                            else if (Matches(segId, stru, i + 1))
+                            {
+                                processStructArray = false;
+                            }
+                            else if (MatchesUp(segId))
+                            {
+                                return levelSegment;
+                            }
+                            else
+                            {
+                                processStructArray = false;
+                                m_parser.ParseTillEndOfStruct(0);
+                                --i;
+                            }
+
+                            if (processStructArray)
+                            {
+                                segId = m_parser.GetSegmentId();
+//                                if (segId == typeName)
                                 if (firstLoop)
                                 {
+                                    m_stackStruct.Add(new Tuple<MetaStruct, int>(stru, i));
                                     firstLoop = false;
                                     m_visitor.EnterArrayStruct(field);
                                 }
@@ -170,6 +268,7 @@ namespace finalmq
                                 if (!firstLoop)
                                 {
                                     m_visitor.ExitArrayStruct(field);
+                                    m_stackStruct.RemoveAt(m_stackStruct.Count - 1);
                                 }
                                 break;
                             }
@@ -211,13 +310,14 @@ namespace finalmq
                 return m_parser.ParseTillEndOfStruct(levelSegment - 1);
             }
             return levelSegment;
-            }
+        }
 
         readonly byte[] m_buffer;
         readonly int m_offset;
         readonly int m_size;
         readonly IParserVisitor m_visitor;
         readonly Hl7Parser m_parser;
+        readonly IList<Tuple<MetaStruct, int>> m_stackStruct = new List<Tuple<MetaStruct, int>>();
     }
     
 }

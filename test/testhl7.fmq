@@ -1,0 +1,71 @@
+{
+    "namespace":"testhl7",
+    "enums":[
+    ],
+    "structs":[
+
+
+        {"type":"L31","desc":"Address","fields":[ 
+            {"tid":"string", "type":"", "name":"a"},
+            {"tid":"string", "type":"", "name":"b"},
+            {"tid":"string", "type":"", "name":"c"},
+            {"tid":"string", "type":"", "name":"d"},
+            {"tid":"string", "type":"", "name":"e"}
+        ]},
+
+        {"type":"L21","desc":"Address","fields":[ 
+            {"tid":"string", "type":"", "name":"a"},
+            {"tid":"string", "type":"", "name":"b"},
+            {"tid":"string", "type":"", "name":"c"},
+            {"tid":"string", "type":"", "name":"d"},
+            {"tid":"string", "type":"", "name":"e"}
+        ]},
+
+        {"type":"L11","desc":"Address","fields":[ 
+            {"tid":"string", "type":"", "name":"a"},
+            {"tid":"string", "type":"", "name":"b"},
+            {"tid":"string", "type":"", "name":"c"},
+            {"tid":"string", "type":"", "name":"d"},
+            {"tid":"string", "type":"", "name":"e"}
+        ]},
+
+
+        {"type":"MSG","desc":"Message Type","fields":[ 
+            {"tid":"string", "type":"", "name":"messageCode"},
+            {"tid":"string", "type":"", "name":"triggerEvent"},
+            {"tid":"string", "type":"", "name":"messageStructure"}
+        ]},
+
+        {"type":"MSH","desc":"Message Header","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+            {"tid":"string", "type":"", "name":"fieldSeparator"},
+            {"tid":"string", "type":"", "name":"encodingCharacters"},
+            {"tid":"string", "type":"", "name":"sendingApplication"},
+            {"tid":"string", "type":"", "name":"sendingFacility"},
+            {"tid":"string", "type":"", "name":"receivingApplication"},
+            {"tid":"string", "type":"", "name":"receivingFacility"},
+            {"tid":"string", "type":"", "name":"date_TimeofMessage"},
+            {"tid":"string", "type":"", "name":"security"},
+            {"tid":"struct", "type":"MSG", "name":"messageType"}
+        ]},
+
+
+
+        {"type":"AAA","desc":"Message Header","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+        ]},
+        {"type":"BBB","desc":"Message Header","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+        ]},
+        {"type":"CCC","desc":"Message Header","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+        ]},
+
+
+
+        {"type":"MSG_001","desc":"Address","fields":[ 
+            {"tid":"struct", "type":"MSH", "name":"msh"},
+            {"tid":"struct", "type":"AAA", "name":"a"}
+        ]}
+
+
+    ]
+}
+
+

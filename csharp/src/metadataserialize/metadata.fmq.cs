@@ -90,6 +90,8 @@ public enum SerializeMetaFieldFlags
     METAFLAG_PROTO_ZIGZAG = 2,
 	[finalmq.MetaEnumEntry("desc", "")]
     METAFLAG_NULLABLE = 4,
+	[finalmq.MetaEnumEntry("desc", "")]
+    METAFLAG_ONE_REQUIRED = 8,
 }
 class RegisterSerializeMetaFieldFlags
 {
@@ -100,6 +102,28 @@ class RegisterSerializeMetaFieldFlags
     {
 		finalmq.MetaEnum metaEnum = finalmq.StructBase.CreateMetaEnum(typeof(SerializeMetaFieldFlags));
         finalmq.TypeRegistry.Instance.RegisterEnum(typeof(SerializeMetaFieldFlags), metaEnum);
+    }
+}
+
+[finalmq.MetaEnum("desc")]
+public enum SerializeMetaStructFlags
+{
+	[finalmq.MetaEnumEntry("desc", "")]
+    METASTRUCTFLAG_NONE = 0,
+	[finalmq.MetaEnumEntry("desc", "")]
+    METASTRUCTFLAG_HL7_SEGMENT = 1,
+	[finalmq.MetaEnumEntry("desc", "")]
+    METASTRUCTFLAG_CHOICE = 2,
+}
+class RegisterSerializeMetaStructFlags
+{
+#pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+    [ModuleInitializer]
+#pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+    internal static void RegisterEnum()
+    {
+		finalmq.MetaEnum metaEnum = finalmq.StructBase.CreateMetaEnum(typeof(SerializeMetaStructFlags));
+        finalmq.TypeRegistry.Instance.RegisterEnum(typeof(SerializeMetaStructFlags), metaEnum);
     }
 }
 
