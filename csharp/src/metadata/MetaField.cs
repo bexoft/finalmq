@@ -30,6 +30,7 @@ namespace finalmq
         METAFLAG_PROTO_VARINT = 1,
         METAFLAG_PROTO_ZIGZAG = 2,
         METAFLAG_NULLABLE = 4,
+        METAFLAG_ONE_REQUIRED = 8,
     };
 
     public class MetaField

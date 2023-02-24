@@ -67,16 +67,16 @@ namespace testfinalmq
             m_builder.EnterString(new int[]{ 0 }, 1, 2, "a1");
             m_builder.EnterString(new int[]{ 0 }, 1, 3, "a2");
 
-            m_builder.EnterString(new int[]{ 0, 4 }, 2, 0, "b1");
-            m_builder.EnterString(new int[]{ 0, 4 }, 2, 1, "b2");
+            m_builder.EnterString(new int[]{ 0, 4, 0 }, 3, 0, "b1");
+            m_builder.EnterString(new int[]{ 0, 4, 0 }, 3, 1, "b2");
 
-            m_builder.EnterString(new int[]{ 0, 4, 2}, 3, 0, "c1");
-            m_builder.EnterString(new int[]{ 0, 4, 2}, 3, 1, "c2");
-            m_builder.EnterString(new int[]{ 0, 4, 2}, 3, 2, "c3");
-            m_builder.EnterString(new int[]{ 0, 4, 2}, 3, 3, "c4");
+            m_builder.EnterString(new int[]{ 0, 4, 0, 2}, 4, 0, "c1");
+            m_builder.EnterString(new int[]{ 0, 4, 0, 2}, 4, 1, "c2");
+            m_builder.EnterString(new int[]{ 0, 4, 0, 2}, 4, 2, "c3");
+            m_builder.EnterString(new int[]{ 0, 4, 0, 2}, 4, 3, "c4");
 
-            m_builder.EnterString(new int[]{ 0, 4 }, 2, 3, "b3");
-            m_builder.EnterString(new int[]{ 0, 4 }, 2, 4, "b4");
+            m_builder.EnterString(new int[]{ 0, 4, 0 }, 3, 3, "b3");
+            m_builder.EnterString(new int[]{ 0, 4, 0 }, 3, 4, "b4");
 
             m_builder.EnterString(new int[]{ 0 }, 1, 5, "a3");
             m_builder.EnterString(new int[]{ 0 }, 1, 6, "a4");
@@ -95,13 +95,13 @@ namespace testfinalmq
             m_builder.EnterString(new int[]{ 0 }, 1, 2, "a1");
             m_builder.EnterString(new int[]{ 0 }, 1, 3, "a2");
 
-            m_builder.EnterString(new int[]{ 0, 4 }, 2, 0, "b1");
-            m_builder.EnterString(new int[]{ 0, 4 }, 2, 1, "b2");
+            m_builder.EnterString(new int[]{ 0, 4, 0 }, 3, 0, "b1");
+            m_builder.EnterString(new int[]{ 0, 4, 0 }, 3, 1, "b2");
 
-            m_builder.EnterString(new int[]{ 0, 4, 2}, 3, 0, "c1");
-            m_builder.EnterString(new int[]{ 0, 4, 2}, 3, 1, "c2");
-            m_builder.EnterString(new int[]{ 0, 4, 2}, 3, 2, "c3");
-            m_builder.EnterString(new int[]{ 0, 4, 2}, 3, 3, "c4");
+            m_builder.EnterString(new int[]{ 0, 4, 0, 2}, 4, 0, "c1");
+            m_builder.EnterString(new int[]{ 0, 4, 0, 2}, 4, 1, "c2");
+            m_builder.EnterString(new int[]{ 0, 4, 0, 2}, 4, 2, "c3");
+            m_builder.EnterString(new int[]{ 0, 4, 0, 2}, 4, 3, "c4");
 
             m_builder.EnterString(new int[]{ 1 }, 1, 0, "TST");
 
@@ -117,13 +117,13 @@ namespace testfinalmq
             m_builder.EnterString(new int[]{ 0 }, 1, 2, "a1");
             m_builder.EnterString(new int[]{ 0 }, 1, 3, "a2");
 
-            m_builder.EnterString(new int[]{ 0, 4 }, 2, 0, "b1");
-            m_builder.EnterString(new int[]{ 0, 4 }, 2, 1, "b2");
+            m_builder.EnterString(new int[]{ 0, 4, 0 }, 3, 0, "b1");
+            m_builder.EnterString(new int[]{ 0, 4, 0 }, 3, 1, "b2");
 
-            m_builder.EnterString(new int[]{ 0, 4, 2}, 3, 0, "c1");
-            m_builder.EnterString(new int[]{ 0, 4, 2}, 3, 1, "c2");
-            m_builder.EnterString(new int[]{ 0, 4, 2}, 3, 2, "c3");
-            m_builder.EnterString(new int[]{ 0, 4, 2}, 3, 3, "c4");
+            m_builder.EnterString(new int[]{ 0, 4, 0, 2}, 4, 0, "c1");
+            m_builder.EnterString(new int[]{ 0, 4, 0, 2}, 4, 1, "c2");
+            m_builder.EnterString(new int[]{ 0, 4, 0, 2}, 4, 2, "c3");
+            m_builder.EnterString(new int[]{ 0, 4, 0, 2}, 4, 3, "c4");
 
             m_builder.EnterString(new int[]{ 0 }, 1, 5, "a3");
 
@@ -142,16 +142,16 @@ namespace testfinalmq
             m_builder.EnterString(new int[]{ 0 }, 1, 2, "a1");
             m_builder.EnterString(new int[]{ 0 }, 1, 3, "a2");
 
-            m_builder.EnterString(new int[]{ 0, 6 }, 2, 0, "b1");
-            m_builder.EnterString(new int[]{ 0, 6 }, 2, 1, "b2");
+            m_builder.EnterString(new int[]{ 0, 6, 0 }, 3, 0, "b1");
+            m_builder.EnterString(new int[]{ 0, 6, 0 }, 3, 1, "b2");
 
-            m_builder.EnterString(new int[]{ 0, 6, 4}, 3, 0, "c1");
-            m_builder.EnterString(new int[]{ 0, 6, 4}, 3, 1, "c2");
-            m_builder.EnterString(new int[]{ 0, 6, 4}, 3, 2, "c3");
-            m_builder.EnterString(new int[]{ 0, 6, 4}, 3, 3, "c4");
+            m_builder.EnterString(new int[]{ 0, 6, 0, 4}, 4, 0, "c1");
+            m_builder.EnterString(new int[]{ 0, 6, 0, 4}, 4, 1, "c2");
+            m_builder.EnterString(new int[]{ 0, 6, 0, 4}, 4, 2, "c3");
+            m_builder.EnterString(new int[]{ 0, 6, 0, 4}, 4, 3, "c4");
 
-            m_builder.EnterString(new int[]{ 0, 6 }, 2, 7, "b3");
-            m_builder.EnterString(new int[]{ 0, 6 }, 2, 8, "b4");
+            m_builder.EnterString(new int[]{ 0, 6, 0 }, 3, 7, "b3");
+            m_builder.EnterString(new int[]{ 0, 6, 0 }, 3, 8, "b4");
 
             m_builder.EnterString(new int[]{ 0 }, 1, 9, "a3");
             m_builder.EnterString(new int[]{ 0 }, 1,10, "a4");
@@ -173,22 +173,22 @@ namespace testfinalmq
             m_builder.EnterString(new int[]{ 0 }, 1, 3, "a2.2");
             m_builder.EnterString(new int[]{ 0 }, 1, 3, "a2.3");
 
-            m_builder.EnterString(new int[]{ 0, 4 }, 2, 0, "b1");
-            m_builder.EnterString(new int[]{ 0, 4 }, 2, 1, "b2.1");
-            m_builder.EnterString(new int[]{ 0, 4 }, 2, 1, "b2.2");
-            m_builder.EnterString(new int[]{ 0, 4 }, 2, 1, "b2.3");
-            m_builder.EnterString(new int[]{ 0, 4 }, 2, 1, "");
-            m_builder.EnterString(new int[]{ 0, 4 }, 2, 1, "");
+            m_builder.EnterString(new int[]{ 0, 4, 0 }, 3, 0, "b1");
+            m_builder.EnterString(new int[]{ 0, 4, 0 }, 3, 1, "b2.1");
+            m_builder.EnterString(new int[]{ 0, 4, 0 }, 3, 1, "b2.2");
+            m_builder.EnterString(new int[]{ 0, 4, 0 }, 3, 1, "b2.3");
+            m_builder.EnterString(new int[]{ 0, 4, 0 }, 3, 1, "");
+            m_builder.EnterString(new int[]{ 0, 4, 0 }, 3, 1, "");
 
-            m_builder.EnterString(new int[]{ 0, 4, 2}, 3, 0, "c1");
-            m_builder.EnterString(new int[]{ 0, 4, 2}, 3, 1, "c2.1");
-            m_builder.EnterString(new int[]{ 0, 4, 2}, 3, 1, "c2.2");
-            m_builder.EnterString(new int[]{ 0, 4, 2}, 3, 1, "c2.3");
-            m_builder.EnterString(new int[]{ 0, 4, 2}, 3, 2, "c3");
-            m_builder.EnterString(new int[]{ 0, 4, 2}, 3, 3, "c4");
+            m_builder.EnterString(new int[]{ 0, 4, 0, 2}, 4, 0, "c1");
+            m_builder.EnterString(new int[]{ 0, 4, 0, 2}, 4, 1, "c2.1");
+            m_builder.EnterString(new int[]{ 0, 4, 0, 2}, 4, 1, "c2.2");
+            m_builder.EnterString(new int[]{ 0, 4, 0, 2}, 4, 1, "c2.3");
+            m_builder.EnterString(new int[]{ 0, 4, 0, 2}, 4, 2, "c3");
+            m_builder.EnterString(new int[]{ 0, 4, 0, 2}, 4, 3, "c4");
 
-            m_builder.EnterString(new int[]{ 0, 4 }, 2, 3, "b3");
-            m_builder.EnterString(new int[]{ 0, 4 }, 2, 4, "b4");
+            m_builder.EnterString(new int[]{ 0, 4, 0 }, 3, 3, "b3");
+            m_builder.EnterString(new int[]{ 0, 4, 0 }, 3, 4, "b4");
 
             m_builder.EnterString(new int[]{ 0 }, 1, 5, "a3");
             m_builder.EnterString(new int[]{ 0 }, 1, 6, "a4");
@@ -208,16 +208,16 @@ namespace testfinalmq
             m_builder.EnterString(new int[]{ 0 }, 1, 2, "123");
             m_builder.EnterString(new int[]{ 0 }, 1, 3, "0.123");
 
-            m_builder.EnterString(new int[]{ 0, 4 }, 2, 0, "-2");
-            m_builder.EnterString(new int[]{ 0, 4 }, 2, 1, "12");
+            m_builder.EnterString(new int[]{ 0, 4, 0 }, 3, 0, "-2");
+            m_builder.EnterString(new int[]{ 0, 4, 0 }, 3, 1, "12");
 
-            m_builder.EnterString(new int[]{ 0, 4, 2}, 3, 0, "1");
-            m_builder.EnterString(new int[]{ 0, 4, 2}, 3, 1, "2");
-            m_builder.EnterString(new int[]{ 0, 4, 2}, 3, 2, "-3");
-            m_builder.EnterString(new int[]{ 0, 4, 2}, 3, 3, "-4");
+            m_builder.EnterString(new int[]{ 0, 4, 0, 2}, 4, 0, "1");
+            m_builder.EnterString(new int[]{ 0, 4, 0, 2}, 4, 1, "2");
+            m_builder.EnterString(new int[]{ 0, 4, 0, 2}, 4, 2, "-3");
+            m_builder.EnterString(new int[]{ 0, 4, 0, 2}, 4, 3, "-4");
 
-            m_builder.EnterString(new int[]{ 0, 4 }, 2, 3, "1.1");
-            m_builder.EnterString(new int[]{ 0, 4 }, 2, 4, "2.1");
+            m_builder.EnterString(new int[]{ 0, 4, 0 }, 3, 3, "1.1");
+            m_builder.EnterString(new int[]{ 0, 4, 0 }, 3, 4, "2.1");
 
             m_builder.EnterString(new int[]{ 0 }, 1, 5, "1");
             m_builder.EnterString(new int[]{ 0 }, 1, 6, "2");

@@ -34,16 +34,16 @@ namespace finalmq
                 Debug.Assert(m_ixIndex < m_indexOfLayer.Length);
                 m_indexOfLayer[m_ixIndex] = -1;
 
-                int[] indexMessageType = { 0, 8 };
+                int[] indexMessageType = { 0, 8, 0 };
                 if (splitString.Length >= 1)
                 {
-                    m_hl7Builder.EnterString(indexMessageType, 2, 0, splitString[0]);
+                    m_hl7Builder.EnterString(indexMessageType, 3, 0, splitString[0]);
                 }
                 if (splitString.Length >= 2)
                 {
-                    m_hl7Builder.EnterString(indexMessageType, 2, 1, splitString[1]);
+                    m_hl7Builder.EnterString(indexMessageType, 3, 1, splitString[1]);
                 }
-                m_hl7Builder.EnterString(indexMessageType, 2, 2, messageStructure);
+                m_hl7Builder.EnterString(indexMessageType, 3, 2, messageStructure);
             }
             public void Finished() 
             {
@@ -69,7 +69,19 @@ namespace finalmq
                     {
                         ++m_ixIndex;
                         Debug.Assert(m_ixIndex < m_indexOfLayer.Length);
-                        m_indexOfLayer[m_ixIndex] = field.Index;
+                        if (m_ixIndex != 2) // 2 means array layer of HL7 builder
+                        {
+                            m_indexOfLayer[m_ixIndex] = field.Index;
+                        }
+                        if (m_ixIndex == 1)
+                        {
+                            ++m_ixIndex;
+                            m_indexOfLayer[m_ixIndex] = 0;
+                        }
+                        else if (m_ixIndex == 2)    // 2 means array layer of HL7 builder
+                        {
+                            ++m_indexOfLayer[m_ixIndex];
+                        }
                     }
                 }
             }
@@ -77,6 +89,10 @@ namespace finalmq
             {
                 if (m_ixIndex > 0)
                 {
+                    if (m_ixIndex == 2 && !m_inArrayStruct)
+                    {
+                        --m_ixIndex;
+                    }
                     --m_ixIndex;
                     Debug.Assert(m_ixIndex >= 0);
                 }
@@ -91,9 +107,19 @@ namespace finalmq
 
             public void EnterArrayStruct(MetaField field) 
             {
+                if (m_inSegment)
+                {
+                    m_inArrayStruct = true;
+                }
             }
             public void ExitArrayStruct(MetaField field) 
             {
+                if (m_inSegment)
+                {
+                    m_inArrayStruct = false;
+                    --m_ixIndex;
+                    Debug.Assert(m_ixIndex >= 0);
+                }
             }
 
             public void EnterBool(MetaField field, bool value) 
@@ -150,7 +176,7 @@ namespace finalmq
                 if (m_ixIndex >= 0 && value.Length != 0)
                 {
                     // skip message type
-                    if (!(m_ixIndex == 1 && m_indexOfLayer[0] == 0 && m_indexOfLayer[1] == 8))
+                    if (!(m_ixIndex == 2 && m_indexOfLayer[0] == 0 && m_indexOfLayer[1] == 8))
                     {
                         m_hl7Builder.EnterString(m_indexOfLayer, m_ixIndex + 1, field.Index, value);
                     }
@@ -328,6 +354,7 @@ namespace finalmq
 
             int[] m_indexOfLayer = new int[10];
             int m_ixIndex = -1;
+            bool m_inArrayStruct = false;
         }
 
         readonly Internal m_internal;

@@ -1,0 +1,153 @@
+{
+    "namespace":"testhl7",
+    "enums":[
+    ],
+    "structs":[
+
+
+        {"type":"L31","desc":"Address","fields":[ 
+            {"tid":"string", "type":"", "name":"a"},
+            {"tid":"string", "type":"", "name":"b"},
+            {"tid":"string", "type":"", "name":"c"},
+            {"tid":"string", "type":"", "name":"d"},
+            {"tid":"string", "type":"", "name":"e"}
+        ]},
+
+        {"type":"L21","desc":"Address","fields":[ 
+            {"tid":"string", "type":"", "name":"a"},
+            {"tid":"string", "type":"", "name":"b"},
+            {"tid":"string", "type":"", "name":"c"},
+            {"tid":"string", "type":"", "name":"d"},
+            {"tid":"string", "type":"", "name":"e"}
+        ]},
+
+        {"type":"L11","desc":"Address","fields":[ 
+            {"tid":"string", "type":"", "name":"a"},
+            {"tid":"string", "type":"", "name":"b"},
+            {"tid":"string", "type":"", "name":"c"},
+            {"tid":"string", "type":"", "name":"d"},
+            {"tid":"string", "type":"", "name":"e"}
+        ]},
+
+
+        {"type":"MSG","desc":"Message Type","fields":[ 
+            {"tid":"string", "type":"", "name":"messageCode"},
+            {"tid":"string", "type":"", "name":"triggerEvent"},
+            {"tid":"string", "type":"", "name":"messageStructure"}
+        ]},
+
+        {"type":"MSH","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+            {"tid":"string", "type":"", "name":"fieldSeparator"},
+            {"tid":"string", "type":"", "name":"encodingCharacters"},
+            {"tid":"string", "type":"", "name":"sendingApplication"},
+            {"tid":"string", "type":"", "name":"sendingFacility"},
+            {"tid":"string", "type":"", "name":"receivingApplication"},
+            {"tid":"string", "type":"", "name":"receivingFacility"},
+            {"tid":"string", "type":"", "name":"date_TimeofMessage"},
+            {"tid":"string", "type":"", "name":"security"},
+            {"tid":"struct", "type":"MSG", "name":"messageType"}
+        ]},
+
+
+        {"type":"FAA","desc":"","fields":[ 
+            {"tid":"string", "type":"", "name":"a"},
+            {"tid":"string", "type":"", "name":"b"}
+        ]},
+
+
+        {"type":"AAA","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+            {"tid":"string", "type":"", "name":"a"}
+        ]},
+        {"type":"BBB","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+            {"tid":"string", "type":"", "name":"b"}
+        ]},
+        {"type":"CCC","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+            {"tid":"string", "type":"", "name":"c"}
+        ]},
+        {"type":"DDD","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+            {"tid":"string", "type":"", "name":"d"}
+        ]},
+        {"type":"EEE","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+            {"tid":"struct", "type":"FAA", "name":"e"}
+        ]},
+
+
+
+        {"type":"A01","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+            {"tid":"string[]", "type":"", "name":"a"}
+        ]},
+        {"type":"A02","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+            {"tid":"struct[]", "type":"FAA", "name":"faa"}
+        ]},
+
+
+
+
+        {"type":"GROUP_1","desc":"","fields":[ 
+            {"tid":"struct", "type":"AAA", "name":"a"},
+            {"tid":"struct", "type":"CCC", "name":"c", "flags":["METAFLAG_NULLABLE"]}
+        ]},
+        {"type":"GROUP_2","desc":"","flags":["METASTRUCTFLAG_CHOICE"],"fields":[ 
+            {"tid":"struct", "type":"AAA", "name":"a", "flags":["METAFLAG_NULLABLE"]},
+            {"tid":"struct", "type":"BBB", "name":"b", "flags":["METAFLAG_NULLABLE"]},
+            {"tid":"struct", "type":"CCC", "name":"c", "flags":["METAFLAG_NULLABLE"]}
+        ]},
+
+
+
+
+        {"type":"MSG_001","desc":"Address","fields":[ 
+            {"tid":"struct", "type":"MSH", "name":"msh"},
+            {"tid":"struct", "type":"AAA", "name":"a"}
+        ]},
+
+        {"type":"MSG_002","desc":"Address","fields":[ 
+            {"tid":"struct", "type":"MSH", "name":"msh"},
+            {"tid":"struct", "type":"AAA", "name":"a", "flags":["METAFLAG_NULLABLE"]},
+            {"tid":"struct", "type":"BBB", "name":"b"}
+        ]},
+
+        {"type":"MSG_003","desc":"Address","fields":[ 
+            {"tid":"struct", "type":"MSH", "name":"msh"},
+            {"tid":"struct", "type":"GROUP_1", "name":"c"},
+            {"tid":"struct", "type":"BBB", "name":"b"}
+        ]},
+
+        {"type":"MSG_004","desc":"Address","fields":[ 
+            {"tid":"struct", "type":"MSH", "name":"msh"},
+            {"tid":"struct", "type":"GROUP_1", "name":"c", "flags":["METAFLAG_NULLABLE"]},
+            {"tid":"struct", "type":"BBB", "name":"b"}
+        ]},
+
+        {"type":"MSG_005","desc":"Address","fields":[ 
+            {"tid":"struct", "type":"MSH", "name":"msh"},
+            {"tid":"struct", "type":"GROUP_2", "name":"c", "flags":["METAFLAG_NULLABLE"]},
+            {"tid":"struct", "type":"BBB", "name":"b"}
+        ]},
+
+        {"type":"MSG_006","desc":"Address","fields":[ 
+            {"tid":"struct", "type":"MSH", "name":"msh"},
+            {"tid":"struct[]", "type":"GROUP_2", "name":"c"},
+            {"tid":"struct", "type":"DDD", "name":"d"}
+        ]},
+
+        {"type":"MSG_007","desc":"Address","fields":[ 
+            {"tid":"struct", "type":"MSH", "name":"msh"},
+            {"tid":"struct", "type":"EEE", "name":"e"}
+        ]},
+
+        {"type":"MSG_010","desc":"Address","fields":[ 
+            {"tid":"struct", "type":"MSH", "name":"msh"},
+            {"tid":"struct", "type":"A01", "name":"a01"}
+        ]},
+
+        {"type":"MSG_011","desc":"Address","fields":[ 
+            {"tid":"struct", "type":"MSH", "name":"msh"},
+            {"tid":"struct", "type":"A02", "name":"a02"}
+        ]}
+
+
+    ]
+}
+
+
