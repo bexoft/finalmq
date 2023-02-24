@@ -90,27 +90,28 @@ TEST_F(TestHl7Parser, testParseToken)
     EXPECT_EQ(true, res);
 
     std::string token;
+    bool isarray;
     int level;
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "MSH");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "|");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "^~\\&");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "a");
 
     const char* pos = m_parser->getCurrentPosition();
     EXPECT_EQ(hl7.c_str() + 11, pos);
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(-1, level);
     EXPECT_EQ(token, "");
 
@@ -125,27 +126,28 @@ TEST_F(TestHl7Parser, testParseTokenWithGivenSize)
     EXPECT_EQ(true, res);
 
     std::string token;
+    bool isarray;
     int level;
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "MSH");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "|");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "^~\\&");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "a");
 
     const char* pos = m_parser->getCurrentPosition();
     EXPECT_EQ(hl7.c_str() + 11, pos);
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(-1, level);
     EXPECT_EQ(token, "");
 
@@ -160,27 +162,28 @@ TEST_F(TestHl7Parser, testParseTokenWithStartCharacters)
     EXPECT_EQ(true, res);
 
     std::string token;
+    bool isarray;
     int level;
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "MSH");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "|");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "^~\\&");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "a");
 
     const char* pos = m_parser->getCurrentPosition();
     EXPECT_EQ(hl7.c_str() + 12, pos);
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(-1, level);
     EXPECT_EQ(token, "");
 
@@ -195,34 +198,35 @@ TEST_F(TestHl7Parser, testParseTokenWithStartAndEndCharacters)
     EXPECT_EQ(true, res);
 
     std::string token;
+    bool isarray;
     int level;
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "MSH");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "|");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "^~\\&");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "a");
 
     const char* pos = m_parser->getCurrentPosition();
     EXPECT_EQ(hl7.c_str() + 12, pos);
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "\x1c");
 
     pos = m_parser->getCurrentPosition();
     EXPECT_EQ(hl7.c_str() + 14, pos);
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(-1, level);
     EXPECT_EQ(token, "");
 
@@ -237,36 +241,37 @@ TEST_F(TestHl7Parser, testParseTokenLevel2)
     EXPECT_EQ(true, res);
 
     std::string token;
+    bool isarray;
     int level;
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "MSH");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "|");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "^~\\&");
 
-    level = m_parser->parseToken(2, token);
+    level = m_parser->parseToken(2, token, isarray);
     EXPECT_EQ(2, level);
     EXPECT_EQ(token, "a");
 
-    level = m_parser->parseToken(2, token);
+    level = m_parser->parseToken(2, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "b");
 
-    level = m_parser->parseToken(2, token);
+    level = m_parser->parseToken(2, token, isarray);
     EXPECT_EQ(2, level);
     EXPECT_EQ(token, "a");
 
-    level = m_parser->parseToken(2, token);
+    level = m_parser->parseToken(2, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "b");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(-1, level);
     EXPECT_EQ(token, "");
 }
@@ -278,36 +283,37 @@ TEST_F(TestHl7Parser, testParseTokenLevel3)
     EXPECT_EQ(true, res);
 
     std::string token;
+    bool isarray;
     int level;
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "MSH");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "|");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "^~\\&");
 
-    level = m_parser->parseToken(2, token);
+    level = m_parser->parseToken(2, token, isarray);
     EXPECT_EQ(2, level);
     EXPECT_EQ(token, "a");
 
-    level = m_parser->parseToken(3, token);
+    level = m_parser->parseToken(3, token, isarray);
     EXPECT_EQ(3, level);
     EXPECT_EQ(token, "b1");
 
-    level = m_parser->parseToken(3, token);
+    level = m_parser->parseToken(3, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "b2");
 
-    level = m_parser->parseToken(2, token);
+    level = m_parser->parseToken(2, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(-1, level);
     EXPECT_EQ(token, "");
 }
@@ -319,40 +325,41 @@ TEST_F(TestHl7Parser, testParseTokenLevel3to2)
     EXPECT_EQ(true, res);
 
     std::string token;
+    bool isarray;
     int level;
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "MSH");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "|");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "^~\\&");
 
-    level = m_parser->parseToken(2, token);
+    level = m_parser->parseToken(2, token, isarray);
     EXPECT_EQ(2, level);
     EXPECT_EQ(token, "a");
 
-    level = m_parser->parseToken(3, token);
+    level = m_parser->parseToken(3, token, isarray);
     EXPECT_EQ(3, level);
     EXPECT_EQ(token, "b1");
 
-    level = m_parser->parseToken(3, token);
+    level = m_parser->parseToken(3, token, isarray);
     EXPECT_EQ(2, level);
     EXPECT_EQ(token, "b2");
 
-    level = m_parser->parseToken(2, token);
+    level = m_parser->parseToken(2, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "c");
 
-    level = m_parser->parseToken(2, token);
+    level = m_parser->parseToken(2, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(-1, level);
     EXPECT_EQ(token, "");
 }
@@ -364,39 +371,40 @@ TEST_F(TestHl7Parser, testParseTokenLevelSkipStructLevel3to2)
     EXPECT_EQ(true, res);
 
     std::string token;
+    bool isarray;
     int level;
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "MSH");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "|");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "^~\\&");
 
-    level = m_parser->parseToken(2, token);
+    level = m_parser->parseToken(2, token, isarray);
     EXPECT_EQ(2, level);
     EXPECT_EQ(token, "a");
 
-    level = m_parser->parseToken(3, token);
+    level = m_parser->parseToken(3, token, isarray);
     EXPECT_EQ(3, level);
     EXPECT_EQ(token, "b1");
 
     level = m_parser->parseTillEndOfStruct(2);
     EXPECT_EQ(2, level);
 
-    level = m_parser->parseToken(2, token);
+    level = m_parser->parseToken(2, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "c");
 
-    level = m_parser->parseToken(2, token);
+    level = m_parser->parseToken(2, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(-1, level);
     EXPECT_EQ(token, "");
 }
@@ -408,35 +416,36 @@ TEST_F(TestHl7Parser, testParseTokenLevelSkipStructLevel3to1)
     EXPECT_EQ(true, res);
 
     std::string token;
+    bool isarray;
     int level;
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "MSH");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "|");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "^~\\&");
 
-    level = m_parser->parseToken(2, token);
+    level = m_parser->parseToken(2, token, isarray);
     EXPECT_EQ(2, level);
     EXPECT_EQ(token, "a");
 
-    level = m_parser->parseToken(3, token);
+    level = m_parser->parseToken(3, token, isarray);
     EXPECT_EQ(3, level);
     EXPECT_EQ(token, "b1");
 
     level = m_parser->parseTillEndOfStruct(1);
     EXPECT_EQ(1, level);
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "d");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(-1, level);
     EXPECT_EQ(token, "");
 }
@@ -448,31 +457,32 @@ TEST_F(TestHl7Parser, testParseTokenLevelSkipStructLevel3to1Last)
     EXPECT_EQ(true, res);
 
     std::string token;
+    bool isarray;
     int level;
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "MSH");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "|");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "^~\\&");
 
-    level = m_parser->parseToken(2, token);
+    level = m_parser->parseToken(2, token, isarray);
     EXPECT_EQ(2, level);
     EXPECT_EQ(token, "a");
 
-    level = m_parser->parseToken(3, token);
+    level = m_parser->parseToken(3, token, isarray);
     EXPECT_EQ(3, level);
     EXPECT_EQ(token, "b1");
 
     level = m_parser->parseTillEndOfStruct(1);
     EXPECT_EQ(0, level);
 
-    level = m_parser->parseToken(0, token);
+    level = m_parser->parseToken(0, token, isarray);
     EXPECT_EQ(-1, level);
     EXPECT_EQ(token, "");
 }
@@ -484,24 +494,25 @@ TEST_F(TestHl7Parser, testParseTokenLevelSkipStructLevel3to1LastEnd)
     EXPECT_EQ(true, res);
 
     std::string token;
+    bool isarray;
     int level;
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "MSH");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "|");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "^~\\&");
 
-    level = m_parser->parseToken(2, token);
+    level = m_parser->parseToken(2, token, isarray);
     EXPECT_EQ(2, level);
     EXPECT_EQ(token, "a");
 
-    level = m_parser->parseToken(3, token);
+    level = m_parser->parseToken(3, token, isarray);
     EXPECT_EQ(3, level);
     EXPECT_EQ(token, "b1");
 
@@ -517,37 +528,38 @@ TEST_F(TestHl7Parser, testParseTokenWrongLevel)
     EXPECT_EQ(true, res);
 
     std::string token;
+    bool isarray;
     int level;
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "MSH");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "|");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "^~\\&");
 
-    level = m_parser->parseToken(2, token);
+    level = m_parser->parseToken(2, token, isarray);
     EXPECT_EQ(2, level);
     EXPECT_EQ(token, "a");
 
     // wrong level
-    level = m_parser->parseToken(2, token);
+    level = m_parser->parseToken(2, token, isarray);
     EXPECT_EQ(2, level);
     EXPECT_EQ(token, "b1");
 
-    level = m_parser->parseToken(2, token);
+    level = m_parser->parseToken(2, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "c");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "d");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(-1, level);
     EXPECT_EQ(token, "");
 }
@@ -559,20 +571,21 @@ TEST_F(TestHl7Parser, testParseTokenArray)
     EXPECT_EQ(true, res);
 
     std::string token;
+    bool isarray;
     int level;
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "MSH");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "|");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "^~\\&");
 
-    level = m_parser->parseToken(2, token);
+    level = m_parser->parseToken(2, token, isarray);
     EXPECT_EQ(2, level);
     EXPECT_EQ(token, "a");
 
@@ -585,15 +598,15 @@ TEST_F(TestHl7Parser, testParseTokenArray)
     EXPECT_EQ(arr[2], "");
     EXPECT_EQ(arr[3], "");
 
-    level = m_parser->parseToken(2, token);
+    level = m_parser->parseToken(2, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "c");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "d");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(-1, level);
     EXPECT_EQ(token, "");
 }
@@ -605,20 +618,21 @@ TEST_F(TestHl7Parser, testParseTokenArrayWrongLevel)
     EXPECT_EQ(true, res);
 
     std::string token;
+    bool isarray;
     int level;
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "MSH");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "|");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "^~\\&");
 
-    level = m_parser->parseToken(2, token);
+    level = m_parser->parseToken(2, token, isarray);
     EXPECT_EQ(2, level);
     EXPECT_EQ(token, "a");
 
@@ -633,56 +647,70 @@ TEST_F(TestHl7Parser, testParseTokenArrayWrongLevel)
     EXPECT_EQ(arr[2], "");
     EXPECT_EQ(arr[3], "");
 
-    level = m_parser->parseToken(2, token);
+    level = m_parser->parseToken(2, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "c");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "d");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(-1, level);
     EXPECT_EQ(token, "");
 }
 
-TEST_F(TestHl7Parser, testParseTokenWrongArray)
+TEST_F(TestHl7Parser, TestParseTokenStructArray)
 {
-    std::string hl7 = "MSH|^~\\&|a^b1~b2~~^c|d\x0d";
+    std::string hl7 = "MSH|^~\\&|a1^b1~a2^b2~|d\x0d";
     bool res = m_parser->startParse(hl7.c_str());
     EXPECT_EQ(true, res);
 
     std::string token;
+    bool isarray;
     int level;
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "MSH");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "|");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "^~\\&");
 
-    level = m_parser->parseToken(2, token);
+    level = m_parser->parseToken(2, token, isarray);
+    assert(!isarray);
     EXPECT_EQ(2, level);
-    EXPECT_EQ(token, "a");
+    EXPECT_EQ(token, "a1");
 
-    level = m_parser->parseToken(2, token);
-    EXPECT_EQ(2, level);
+    level = m_parser->parseToken(2, token, isarray);
+    assert(isarray);
+    EXPECT_EQ(1, level);
     EXPECT_EQ(token, "b1");
 
-    level = m_parser->parseToken(2, token);
-    EXPECT_EQ(1, level);
-    EXPECT_EQ(token, "c");
+    level = m_parser->parseToken(2, token, isarray);
+    assert(!isarray);
+    EXPECT_EQ(2, level);
+    EXPECT_EQ(token, "a2");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(2, token, isarray);
+    assert(isarray);
+    EXPECT_EQ(1, level);
+    EXPECT_EQ(token, "b2");
+
+    level = m_parser->parseToken(2, token, isarray);
+    assert(!isarray);
+    EXPECT_EQ(1, level);
+    EXPECT_EQ(token, "");
+
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "d");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(-1, level);
     EXPECT_EQ(token, "");
 }
@@ -695,32 +723,33 @@ TEST_F(TestHl7Parser, testParseTokenEscape)
     EXPECT_EQ(true, res);
 
     std::string token;
+    bool isarray;
     int level;
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "MSH");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "|");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "^~\\&");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "\r\n\t|^&~\\");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "a");
 
-    level = m_parser->parseToken(0, token);
+    level = m_parser->parseToken(0, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "TST");
 
-    level = m_parser->parseToken(0, token);
+    level = m_parser->parseToken(0, token, isarray);
     EXPECT_EQ(-1, level);
     EXPECT_EQ(token, "");
 }
@@ -732,32 +761,33 @@ TEST_F(TestHl7Parser, testParseTokenEscapeSmallHexCode)
     EXPECT_EQ(true, res);
 
     std::string token;
+    bool isarray;
     int level;
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "MSH");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "|");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "^~\\&");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "\r");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "a");
 
-    level = m_parser->parseToken(0, token);
+    level = m_parser->parseToken(0, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "TST");
 
-    level = m_parser->parseToken(0, token);
+    level = m_parser->parseToken(0, token, isarray);
     EXPECT_EQ(-1, level);
     EXPECT_EQ(token, "");
 }
@@ -769,32 +799,33 @@ TEST_F(TestHl7Parser, testParseTokenEscapeWrong1)
     EXPECT_EQ(true, res);
 
     std::string token;
+    bool isarray;
     int level;
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "MSH");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "|");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "^~\\&");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "\r");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "a");
 
-    level = m_parser->parseToken(0, token);
+    level = m_parser->parseToken(0, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "TST");
 
-    level = m_parser->parseToken(0, token);
+    level = m_parser->parseToken(0, token, isarray);
     EXPECT_EQ(-1, level);
     EXPECT_EQ(token, "");
 }
@@ -806,32 +837,33 @@ TEST_F(TestHl7Parser, testParseTokenEscapeWrong2)
     EXPECT_EQ(true, res);
 
     std::string token;
+    bool isarray;
     int level;
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "MSH");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "|");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "^~\\&");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "a");
 
-    level = m_parser->parseToken(0, token);
+    level = m_parser->parseToken(0, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "TST");
 
-    level = m_parser->parseToken(0, token);
+    level = m_parser->parseToken(0, token, isarray);
     EXPECT_EQ(-1, level);
     EXPECT_EQ(token, "");
 }
@@ -843,32 +875,33 @@ TEST_F(TestHl7Parser, testParseTokenEscapeWrong3)
     EXPECT_EQ(true, res);
 
     std::string token;
+    bool isarray;
     int level;
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "MSH");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "|");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "^~\\&");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "|");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "a");
 
-    level = m_parser->parseToken(0, token);
+    level = m_parser->parseToken(0, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "TST");
 
-    level = m_parser->parseToken(0, token);
+    level = m_parser->parseToken(0, token, isarray);
     EXPECT_EQ(-1, level);
     EXPECT_EQ(token, "");
 }
@@ -880,32 +913,33 @@ TEST_F(TestHl7Parser, testParseTokenEscapeWrong4)
     EXPECT_EQ(true, res);
 
     std::string token;
+    bool isarray;
     int level;
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "MSH");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "|");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "^~\\&");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "a");
 
-    level = m_parser->parseToken(0, token);
+    level = m_parser->parseToken(0, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "TST");
 
-    level = m_parser->parseToken(0, token);
+    level = m_parser->parseToken(0, token, isarray);
     EXPECT_EQ(-1, level);
     EXPECT_EQ(token, "");
 }
@@ -917,32 +951,33 @@ TEST_F(TestHl7Parser, testParseTokenEscapeWrong5)
     EXPECT_EQ(true, res);
 
     std::string token;
+    bool isarray;
     int level;
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "MSH");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "|");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "^~\\&");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "a");
 
-    level = m_parser->parseToken(0, token);
+    level = m_parser->parseToken(0, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "TST");
 
-    level = m_parser->parseToken(0, token);
+    level = m_parser->parseToken(0, token, isarray);
     EXPECT_EQ(-1, level);
     EXPECT_EQ(token, "");
 }
@@ -954,32 +989,33 @@ TEST_F(TestHl7Parser, testParseTokenEscapeWrong6)
     EXPECT_EQ(true, res);
 
     std::string token;
+    bool isarray;
     int level;
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "MSH");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "|");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "^~\\&");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(1, level);
     EXPECT_EQ(token, "");
 
-    level = m_parser->parseToken(1, token);
+    level = m_parser->parseToken(1, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "a");
 
-    level = m_parser->parseToken(0, token);
+    level = m_parser->parseToken(0, token, isarray);
     EXPECT_EQ(0, level);
     EXPECT_EQ(token, "TST");
 
-    level = m_parser->parseToken(0, token);
+    level = m_parser->parseToken(0, token, isarray);
     EXPECT_EQ(-1, level);
     EXPECT_EQ(token, "");
 }

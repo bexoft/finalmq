@@ -569,7 +569,7 @@ void ParserJson::enterArray()
         case MetaTypeId::TYPE_ARRAY_STRUCT:
             m_visitor.enterArrayStruct(*m_fieldCurrent);
             m_stack.emplace_back(m_fieldCurrent);
-            m_fieldCurrent = MetaDataGlobal::instance().getArrayField(*m_fieldCurrent);
+            m_fieldCurrent = m_fieldCurrent->fieldWithoutArray;
 //            m_stack.emplace_back(m_fieldCurrent);
             m_structCurrent = nullptr;
             break;
@@ -723,7 +723,7 @@ void ParserJson::exitObject()
         {
             if ((int)m_fieldCurrent->typeId & (int)MetaTypeId::OFFSET_ARRAY_FLAG)
             {
-                m_fieldCurrent = MetaDataGlobal::instance().getArrayField(*m_fieldCurrent);
+                m_fieldCurrent = m_fieldCurrent->fieldWithoutArray;
             }
             else
             {

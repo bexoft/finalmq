@@ -36,7 +36,7 @@ struct IHl7Parser
 {
     virtual ~IHl7Parser() {}
     virtual bool startParse(const char* str, ssize_t size = CHECK_ON_ZEROTERM) = 0;
-    virtual int parseToken(int level, std::string& token) = 0;
+    virtual int parseToken(int level, std::string& token, bool& isarray) = 0;
     virtual int parseTokenArray(int level, std::vector<std::string>& array) = 0;
     virtual int parseTillEndOfStruct(int level) = 0;
     virtual void getSegmentId(std::string& token) const = 0;
@@ -50,7 +50,7 @@ public:
     Hl7Parser();
 
     virtual bool startParse(const char* str, ssize_t size = CHECK_ON_ZEROTERM) override;
-    virtual int parseToken(int level, std::string& token) override;
+    virtual int parseToken(int level, std::string& token, bool& isarray) override;
     virtual int parseTokenArray(int level, std::vector<std::string>& array) override;
     virtual int parseTillEndOfStruct(int level) override;
     virtual void getSegmentId(std::string& token) const override;

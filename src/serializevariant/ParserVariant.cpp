@@ -285,7 +285,7 @@ void ParserVariant::processField(const Variant* sub, const MetaField* field)
             const VariantList* list = *sub;
             if (list)
             {
-                const MetaField* fieldWithoutArray = MetaDataGlobal::instance().getArrayField(*field);
+                const MetaField* fieldWithoutArray = field->fieldWithoutArray;
                 assert(fieldWithoutArray);
                 const MetaStruct* stru = MetaDataGlobal::instance().getStruct(*fieldWithoutArray);
                 if (stru)

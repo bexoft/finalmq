@@ -141,9 +141,10 @@ void Hl7Parser::getSegmentId(std::string& token) const
 
 
 
-int Hl7Parser::parseToken(int level, std::string& token)
+int Hl7Parser::parseToken(int level, std::string& token, bool& isarray)
 {
     token.clear();
+    isarray = false;
     int l = level;
     if (m_waitForDeleimiterField == 1)
     {
@@ -167,7 +168,8 @@ int Hl7Parser::parseToken(int level, std::string& token)
             {
                 token = deEscape(start, m_str);
                 ++m_str;
-                l = parseTillEndOfStruct(level);
+                isarray = true;
+                l = 1;  // array is only on level = 1
                 break;
             }
             else

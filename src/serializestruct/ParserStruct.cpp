@@ -181,7 +181,7 @@ void ParserStruct::processField(const StructBase& structBase, const FieldInfo& f
             IArrayStructAdapter* arrayStructAdapter = fieldInfo.getArrayStructAdapter();
             if (arrayStructAdapter)
             {
-                const MetaField* fieldWithoutArray = MetaDataGlobal::instance().getArrayField(field);
+                const MetaField* fieldWithoutArray = field.fieldWithoutArray;
                 assert(fieldWithoutArray);
                 ssize_t size = arrayStructAdapter->size(array);
                 for (ssize_t i = 0; i < size; ++i)

@@ -72,7 +72,7 @@ private:
     char*                   m_buffer = nullptr;
     char*                   m_bufferEnd = nullptr;
 
-    static const int LAYER_MAX = 4;
+    static const int LAYER_MAX = 5;     // array index is on index = 2
 
     std::string             m_delimitersForField;
     char                    m_delimiterField[LAYER_MAX];

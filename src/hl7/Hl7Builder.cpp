@@ -50,8 +50,9 @@ Hl7Builder::Hl7Builder(IZeroCopyBuffer& buffer, int maxBlockSize, const std::str
     m_delimitersForField += delimiters[0];  // |^~\&|
     m_delimiterField[0] = SEGMENT_END;      // segment delimiter '\r', 0x0D
     m_delimiterField[1] = delimiters[0];    // |
-    m_delimiterField[2] = delimiters[1];    // ^
-    m_delimiterField[3] = delimiters[4];    // &
+    m_delimiterField[2] = delimiters[2];    // ~
+    m_delimiterField[3] = delimiters[1];    // ^
+    m_delimiterField[4] = delimiters[4];    // &
     m_delimiterRepeat   = delimiters[2];    // ~
     m_escape            = delimiters[3];    // '\\'
 }
@@ -276,7 +277,7 @@ void Hl7Builder::escapeString(const char* str, ssize_t size)
                 *m_buffer = m_escape;
                 m_buffer++;
             }
-            else if (c == m_delimiterField[2])   // '^'
+            else if (c == m_delimiterField[3])   // '^'
             {
                 *m_buffer = m_escape;
                 m_buffer++;
@@ -285,7 +286,7 @@ void Hl7Builder::escapeString(const char* str, ssize_t size)
                 *m_buffer = m_escape;
                 m_buffer++;
             }
-            else if (c == m_delimiterField[3])   // '&'
+            else if (c == m_delimiterField[4])   // '&'
             {
                 *m_buffer = m_escape;
                 m_buffer++;

@@ -46,6 +46,64 @@ ParserHl7::ParserHl7(IParserVisitor& visitor, const char* ptr, ssize_t size)
 
 
 
+bool ParserHl7::matches(const std::string& segId, const MetaStruct& stru, ssize_t ixStart)
+{
+    if ((stru.getFlags() & MetaStructFlags::METASTRUCTFLAG_HL7_SEGMENT) != 0)
+    {
+        return false;
+    }
+    for (ssize_t i = ixStart; i < stru.getFieldsSize(); ++i)
+    {
+        const MetaField* field = stru.getFieldByIndex(i);
+        assert(field != nullptr);
+        if (field->typeId == MetaTypeId::TYPE_STRUCT || field->typeId == MetaTypeId::TYPE_ARRAY_STRUCT)
+        {
+            if (segId == field->typeNameWithoutNamespace)
+            {
+                return true;
+            }
+            if ((field->typeId == MetaTypeId::TYPE_STRUCT) &&
+                (field->flags & MetaFieldFlags::METAFLAG_NULLABLE) == 0)
+            {
+                return false;
+            }
+            if ((field->typeId == MetaTypeId::TYPE_ARRAY_STRUCT) &&
+                (field->flags & MetaFieldFlags::METAFLAG_ONE_REQUIRED) != 0)
+            {
+                return false;
+            }
+            const MetaStruct* subStruct = MetaDataGlobal::instance().getStruct(*field);
+            if (subStruct != nullptr)
+            {
+                bool matche = matches(segId, *subStruct, 0);
+                if (matche)
+                {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+bool ParserHl7::matchesUp(const std::string& segId)
+{
+    if (m_stackStruct.empty())
+    {
+        return false;
+    }
+    for (size_t i = m_stackStruct.size() - 1; i >= 0; --i)
+    {
+        const std::pair<MetaStruct, ssize_t>& entry = m_stackStruct[i];
+        bool match = matches(segId, entry.first, entry.second);
+        if (match)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 
 
 const char* ParserHl7::parseStruct(const std::string& typeName)
@@ -68,7 +126,8 @@ const char* ParserHl7::parseStruct(const std::string& typeName)
     }
         
     m_visitor.startStruct(*stru);
-    int level = parseStruct(0, 0, *stru);
+    bool isarrayDummy;
+    int level = parseStruct(0, *stru, isarrayDummy);
     m_visitor.finished();
 
     if (level <= PARSER_HL7_ERROR)
@@ -78,13 +137,16 @@ const char* ParserHl7::parseStruct(const std::string& typeName)
     return m_parser.getCurrentPosition();
 }
 
-int ParserHl7::parseStruct(int levelStruct, int levelSegment, const MetaStruct& stru)
+int ParserHl7::parseStruct(int levelSegment, const MetaStruct& stru, bool& isarray)
 {
+    isarray = false;
     // segment ID
     if (levelSegment == 1)
     {
         std::string tokenSegId;
-        int levelNew = m_parser.parseToken(levelSegment, tokenSegId);
+        bool isarrayDummy;
+        int levelNew = m_parser.parseToken(levelSegment, tokenSegId, isarrayDummy);
+        assert(isarray == false);
         if (levelNew < levelSegment)
         {
             return levelNew;
@@ -111,89 +173,159 @@ int ParserHl7::parseStruct(int levelStruct, int levelSegment, const MetaStruct& 
             bool processStruct = true;
             if (levelSegment == 0)
             {
-                std::string typeName = field->typeNameWithoutNamespace;
+                const std::string& typeName = field->typeNameWithoutNamespace;
                 std::string segId;
                 m_parser.getSegmentId(segId);
-                const MetaField* subField = nullptr;
-                if ((segId != typeName) && !(subStruct->getFlags() & METASTRUCTFLAG_HL7_SEGMENT) && (subStruct->getFieldsSize() > 0))
+                if (segId == "")
                 {
-                    subField = subStruct->getFieldByIndex(0);
+                    return levelSegment;
                 }
-                if ((segId == typeName) || (subField != nullptr && segId == subField->typeNameWithoutNamespace))
+                else if (segId == typeName)
                 {
                     processStruct = true;
+                }
+                else if (matches(segId, *subStruct, 0))
+                {
+                    processStruct = true;
+                }
+                else if (matches(segId, stru, i + 1))
+                {
+                    processStruct = false;
+                }
+                else if (matchesUp(segId))
+                {
+                    return levelSegment;
                 }
                 else
                 {
                     processStruct = false;
                     m_parser.parseTillEndOfStruct(0);
+                    --i;
                 }
             }
             if (processStruct)
             {
                 m_visitor.enterStruct(*field);
+                m_stackStruct.emplace_back(stru, i + 1);
                 int LevelSegmentNext = levelSegment;
                 if ((LevelSegmentNext > 0) || (subStruct->getFlags() & METASTRUCTFLAG_HL7_SEGMENT))
                 {
                     ++LevelSegmentNext;
                 }
-                int levelNew = parseStruct(levelStruct + 1, LevelSegmentNext, *subStruct);
+                int levelNew = parseStruct(LevelSegmentNext, *subStruct, isarray);
+                m_stackStruct.pop_back();
                 m_visitor.exitStruct(*field);
+                if (isarray)
+                {
+                    isarray = false;
+                    m_parser.parseTillEndOfStruct(levelNew);
+                }
                 if (levelNew < levelSegment)
                 {
                     return levelNew;
+                }
+                if ((levelSegment == 0) && ((stru.getFlags() & MetaStructFlags::METASTRUCTFLAG_CHOICE) != 0))
+                {
+                    return levelSegment;
                 }
             }
         }
         else if (field->typeId == TYPE_ARRAY_STRUCT)
         {
+            const MetaStruct* subStruct = MetaDataGlobal::instance().getStruct(*field);
+            if (subStruct == nullptr)
+            {
+                return PARSER_HL7_ERROR;
+            }
+            const MetaField* fieldWithoutArray = field->fieldWithoutArray;
+            assert(fieldWithoutArray);
             if (levelSegment == 0)
             {
-                const MetaStruct* subStruct = MetaDataGlobal::instance().getStruct(*field);
-                if (subStruct == nullptr)
-                {
-                    return PARSER_HL7_ERROR;
-                }
-                const MetaField* subField = nullptr;
-                if (!(subStruct->getFlags() & METASTRUCTFLAG_HL7_SEGMENT) && (subStruct->getFieldsSize() > 0))
-                {
-                    subField = subStruct->getFieldByIndex(0);
-                }
                 std::string typeName = field->typeNameWithoutNamespace;
                 bool firstLoop = true;
-                do
+                while (true)
                 {
                     std::string segId;
                     m_parser.getSegmentId(segId);
-                    if ((segId == typeName) || (subField != nullptr && segId == subField->typeNameWithoutNamespace))
+                    bool processStructArray = true;
+                    if (segId == "")
                     {
+                        return levelSegment;
+                    }
+                    else if (segId == typeName)
+                    {
+                        processStructArray = true;
+                    }
+                    else if (matches(segId, *subStruct, 0))
+                    {
+                        processStructArray = true;
+                    }
+                    else if (matches(segId, stru, i + 1))
+                    {
+                        processStructArray = false;
+                    }
+                    else if (matchesUp(segId))
+                    {
+                        return levelSegment;
+                    }
+                    else
+                    {
+                        processStructArray = false;
+                        m_parser.parseTillEndOfStruct(0);
+                        --i;
+                    }
+
+                    if (processStructArray)
+                    {
+                        m_parser.getSegmentId(segId);
                         if (firstLoop)
                         {
+                            m_stackStruct.emplace_back(stru, i);
                             firstLoop = false;
                             m_visitor.enterArrayStruct(*field);
                         }
-                        m_visitor.enterStruct(*field);
-                        int LevelSegmentNext = levelSegment;
-                        if ((LevelSegmentNext > 0) || (subStruct->getFlags() & METASTRUCTFLAG_HL7_SEGMENT))
+                        m_visitor.enterStruct(*fieldWithoutArray);
+                        int levelSegmentNext = levelSegment;
+                        if ((subStruct->getFlags() & MetaStructFlags::METASTRUCTFLAG_HL7_SEGMENT) != 0)
                         {
-                            ++LevelSegmentNext;
+                            ++levelSegmentNext;
                         }
-                        int levelNew = parseStruct(levelStruct + 1, LevelSegmentNext, *subStruct);
-                        m_visitor.exitStruct(*field);
-                        if (levelNew < levelSegment)
-                        {
-                            return levelNew;
-                        }
+                        int levelNew = parseStruct(levelSegmentNext, *subStruct, isarray);
+                        m_visitor.exitStruct(*fieldWithoutArray);
+                        assert(levelNew == 0);
+                        assert(isarray == false);
                     }
                     else
                     {
                         if (!firstLoop)
                         {
                             m_visitor.exitArrayStruct(*field);
+                            m_stackStruct.pop_back();
                         }
                         break;
                     }
-                } while (true);
+                }
+            }
+            else
+            {
+                int levelNew = levelSegment;
+                m_visitor.enterArrayStruct(*field);
+                while (true)
+                {
+                    m_visitor.enterStruct(*fieldWithoutArray);
+                    levelNew = parseStruct(levelSegment + 1, *subStruct, isarray);
+                    m_visitor.exitStruct(*fieldWithoutArray);
+                    if (levelNew < levelSegment || !isarray)
+                    {
+                        break;
+                    }
+                }
+                m_visitor.exitArrayStruct(*field);
+                isarray = false;
+                if (levelNew < levelSegment)
+                {
+                    return levelNew;
+                }
             }
         }
         else if (field->typeId & OFFSET_ARRAY_FLAG)
@@ -214,7 +346,7 @@ int ParserHl7::parseStruct(int levelStruct, int levelSegment, const MetaStruct& 
             if (levelSegment > 0)
             {
                 std::string token;
-                int levelNew = m_parser.parseToken(levelSegment, token);
+                int levelNew = m_parser.parseToken(levelSegment, token, isarray);
                 if (!token.empty())
                 {
                     m_visitor.enterString(*field, std::move(token));

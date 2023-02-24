@@ -108,14 +108,7 @@ const MetaEnum* MetaData::getEnum(const MetaField& field) const
 
 const MetaField* MetaData::getArrayField(const MetaField& field) const
 {
-
-    assert((int)field.typeId & (int)MetaTypeId::OFFSET_ARRAY_FLAG);
-    if (!field.fieldWithoutArray)
-    {
-        MetaTypeId typeId = static_cast<MetaTypeId>(field.typeId & ~MetaTypeId::OFFSET_ARRAY_FLAG);
-        field.fieldWithoutArray = std::make_shared<MetaField>(typeId, field.typeName, "", field.description, field.flags, field.index);
-    }
-    return field.fieldWithoutArray.get();
+    return field.fieldWithoutArray;
 }
 
 
