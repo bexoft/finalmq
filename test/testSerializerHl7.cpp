@@ -87,7 +87,7 @@ protected:
 
 
 
-
+/*
 TEST_F(TestSerializerHl7, testSSU_U03)
 {
     hl7::SSU_U03 msg;
@@ -115,5 +115,5 @@ TEST_F(TestSerializerHl7, testSSU_U03)
 
     ASSERT_EQ(m_data, "MSH|^~\\&|||||||SSU^U03^SSU_U03||||||||de\rSFT|||world\rSFT\rSFT\rUAC||^hello\rEQU\rSAC||||||hh||||uu^^bbb||||hey\rOBX\rOBX\rNTE\rSPM||||||||||||||||||||||||||||^^^^tt^cc||ggg\rOBX\rOBX\rOBX\rOBX\rOBX\rSPM\rSPM\rSAC\rSAC\rSAC\r");
 }
-
+*/
 

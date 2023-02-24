@@ -92,7 +92,7 @@ bool ParserHl7::matchesUp(const std::string& segId)
     {
         return false;
     }
-    for (size_t i = m_stackStruct.size() - 1; i >= 0; --i)
+    for (ssize_t i = static_cast<ssize_t>(m_stackStruct.size()) - 1; i >= 0; --i)
     {
         const std::pair<MetaStruct, ssize_t>& entry = m_stackStruct[i];
         bool match = matches(segId, entry.first, entry.second);

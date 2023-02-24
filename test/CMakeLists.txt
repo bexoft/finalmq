@@ -68,10 +68,10 @@ add_custom_command(
 )
 
 add_custom_command(
-    COMMAND node ${CODEGENERATOR}/cpp/cpp.js --input=${CMAKE_SOURCE_DIR}/hl7def/hl7.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS ${CMAKE_SOURCE_DIR}/hl7def/hl7.fmq
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/hl7.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/hl7.fmq.h
-    COMMENT "Generating cpp code out of hl7.fmq."
+    COMMAND node ${CODEGENERATOR}/cpp/cpp.js --input=${CMAKE_CURRENT_SOURCE_DIR}/testhl7.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/testhl7.fmq
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/testhl7.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/testhl7.fmq.h
+    COMMENT "Generating cpp code out of testhl7.fmq."
 )
 
 add_custom_command(
@@ -105,7 +105,7 @@ file(GLOB TESTSOURCES "*.cpp")
 if (WIN32)
 SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -D_ALLOW_KEYWORD_MACROS" )
 endif()
-add_executable(testfinalmq ${TESTSOURCES} ${PROTO_SRCS} ${PROTO_HDRS} ${CMAKE_CURRENT_BINARY_DIR}/test.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/hl7.fmq.cpp ../services/fmqreg/registry.cpp)
+add_executable(testfinalmq ${TESTSOURCES} ${PROTO_SRCS} ${PROTO_HDRS} ${CMAKE_CURRENT_BINARY_DIR}/test.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/testhl7.fmq.cpp ../services/fmqreg/registry.cpp)
 
 
 if (FINALMQ_USE_SSL)
