@@ -69,13 +69,16 @@ namespace finalmq
                     {
                         ++m_ixIndex;
                         Debug.Assert(m_ixIndex < m_indexOfLayer.Length);
-                        m_indexOfLayer[m_ixIndex] = field.Index;
+                        if (m_ixIndex != 2) // 2 means array layer of HL7 builder
+                        {
+                            m_indexOfLayer[m_ixIndex] = field.Index;
+                        }
                         if (m_ixIndex == 1)
                         {
                             ++m_ixIndex;
                             m_indexOfLayer[m_ixIndex] = 0;
                         }
-                        else if (m_ixIndex == 2)
+                        else if (m_ixIndex == 2)    // 2 means array layer of HL7 builder
                         {
                             ++m_indexOfLayer[m_ixIndex];
                         }
@@ -173,7 +176,7 @@ namespace finalmq
                 if (m_ixIndex >= 0 && value.Length != 0)
                 {
                     // skip message type
-                    if (!(m_ixIndex == 1 && m_indexOfLayer[0] == 0 && m_indexOfLayer[1] == 8))
+                    if (!(m_ixIndex == 2 && m_indexOfLayer[0] == 0 && m_indexOfLayer[1] == 8))
                     {
                         m_hl7Builder.EnterString(m_indexOfLayer, m_ixIndex + 1, field.Index, value);
                     }
