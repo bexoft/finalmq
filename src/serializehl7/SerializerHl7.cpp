@@ -63,16 +63,16 @@ void SerializerHl7::Internal::startStruct(const MetaStruct& stru)
 
     m_indexOfLayer.push_back(-1);
 
-    int indexMessageType[3] = { 0, 8 };
+    int indexMessageType[3] = { 0, 8, 0 };
     if (splitString.size() >= 1)
     {
-        m_hl7Builder.enterString(indexMessageType, 2, 0, std::move(splitString[0]));
+        m_hl7Builder.enterString(indexMessageType, 3, 0, std::move(splitString[0]));
     }
     if (splitString.size() >= 2)
     {
-        m_hl7Builder.enterString(indexMessageType, 2, 1, std::move(splitString[1]));
+        m_hl7Builder.enterString(indexMessageType, 3, 1, std::move(splitString[1]));
     }
-    m_hl7Builder.enterString(indexMessageType, 2, 2, std::move(messageStructure));
+    m_hl7Builder.enterString(indexMessageType, 3, 2, std::move(messageStructure));
 }
 
 
@@ -100,6 +100,18 @@ void SerializerHl7::Internal::enterStruct(const MetaField& field)
         else
         {
             m_indexOfLayer.push_back(field.index);
+            if (m_indexOfLayer.size() != 3) // 3 means array layer of HL7 builder
+            {
+                m_indexOfLayer.back() = field.index;
+            }
+            if (m_indexOfLayer.size() == 2)
+            {
+                m_indexOfLayer.push_back(0);
+            }
+            else if (m_indexOfLayer.size() == 3)    // 3 means array layer of HL7 builder
+            {
+                ++m_indexOfLayer.back();
+            }
         }
     }
 }
@@ -108,6 +120,10 @@ void SerializerHl7::Internal::exitStruct(const MetaField& /*field*/)
 {
     if (m_indexOfLayer.size() > 1)
     {
+        if (m_indexOfLayer.size() == 3 && !m_inArrayStruct)
+        {
+            m_indexOfLayer.pop_back();
+        }
         m_indexOfLayer.pop_back();
     }
     else
@@ -123,10 +139,18 @@ void SerializerHl7::Internal::enterStructNull(const MetaField& /*field*/)
 
 void SerializerHl7::Internal::enterArrayStruct(const MetaField& /*field*/)
 {
+    if (m_inSegment)
+    {
+        m_inArrayStruct = true;
+    }
 }
 
 void SerializerHl7::Internal::exitArrayStruct(const MetaField& /*field*/)
 {
+    if (m_inSegment)
+    {
+        m_indexOfLayer.pop_back();
+    }
 }
 
 
@@ -192,7 +216,7 @@ void SerializerHl7::Internal::enterString(const MetaField& field, std::string&& 
     if (!m_indexOfLayer.empty() && value.size() > 0)
     {
         // skip message type
-        if (!(m_indexOfLayer.size() == 2 && m_indexOfLayer[0] == 0 && m_indexOfLayer[1] == 8))
+        if (!(m_indexOfLayer.size() == 3 && m_indexOfLayer[0] == 0 && m_indexOfLayer[1] == 8))
         {
             m_hl7Builder.enterString(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, std::move(value));
         }

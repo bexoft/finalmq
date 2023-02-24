@@ -102,6 +102,7 @@ private:
         bool                                m_inSegment = false;
 
         std::vector<int>                    m_indexOfLayer;
+        bool                                m_inArrayStruct = false;
     };
 
     Internal                            m_internal;
