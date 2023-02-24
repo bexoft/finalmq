@@ -44,6 +44,7 @@ enum MetaFieldFlags : std::int32_t
     METAFLAG_PROTO_VARINT   = 1,
     METAFLAG_PROTO_ZIGZAG   = 2,
     METAFLAG_NULLABLE       = 4,    // only for struct
+    METAFLAG_ONE_REQUIRED   = 8,    // only for array of struct
 };
 
 
