@@ -437,7 +437,7 @@ namespace finalmq
                     case MetaTypeId.TYPE_ARRAY_STRUCT:
                         m_visitor.EnterArrayStruct(m_fieldCurrent);
                         m_stack.Add(m_fieldCurrent);
-                        m_fieldCurrent = MetaDataGlobal.Instance.GetArrayField(m_fieldCurrent);
+                        m_fieldCurrent = m_fieldCurrent.FieldWithoutArray;
                         m_structCurrent = null;
                         break;
                     default:
@@ -586,7 +586,7 @@ namespace finalmq
                 {
                     if ((m_fieldCurrent.TypeId & MetaTypeId.OFFSET_ARRAY_FLAG) != 0)
                     {
-                        m_fieldCurrent = MetaDataGlobal.Instance.GetArrayField(m_fieldCurrent);
+                        m_fieldCurrent = m_fieldCurrent.FieldWithoutArray;
                     }
                     else
                     {

@@ -216,6 +216,8 @@ namespace finalmq
                     }
                     if (levelSegment == 0)
                     {
+                        MetaField? fieldWithoutArray = field.FieldWithoutArray;
+                        Debug.Assert(fieldWithoutArray != null);
                         string typeName = field.TypeNameWithoutNamespace;
                         bool firstLoop = true;
                         while (true)
@@ -252,21 +254,20 @@ namespace finalmq
                             if (processStructArray)
                             {
                                 segId = m_parser.GetSegmentId();
-//                                if (segId == typeName)
                                 if (firstLoop)
                                 {
                                     m_stackStruct.Add(new Tuple<MetaStruct, int>(stru, i));
                                     firstLoop = false;
                                     m_visitor.EnterArrayStruct(field);
                                 }
-                                m_visitor.EnterStruct(field);
+                                m_visitor.EnterStruct(fieldWithoutArray);
                                 int LevelSegmentNext = levelSegment;
                                 if ((subStruct.Flags & (int)MetaStructFlags.METASTRUCTFLAG_HL7_SEGMENT) != 0)
                                 {
                                     ++LevelSegmentNext;
                                 }
                                 int levelNew = ParseStruct(LevelSegmentNext, subStruct, out isarray);
-                                m_visitor.ExitStruct(field);
+                                m_visitor.ExitStruct(fieldWithoutArray);
                                 Debug.Assert(levelNew == 0);
                                 Debug.Assert(isarray == false);
                             }

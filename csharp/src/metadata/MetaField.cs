@@ -44,6 +44,8 @@ namespace finalmq
             m_description = description;
             m_flags = flags;
             m_index = index;
+            MetaTypeId tId = typeId & ~MetaTypeId.OFFSET_ARRAY_FLAG;
+            m_fieldWithoutArray = ((typeId & MetaTypeId.OFFSET_ARRAY_FLAG) != 0) ? new MetaField(tId, typeName, "", description, flags, index) : this;
         }
 
         public MetaTypeId TypeId { get { return m_typeId; } }
@@ -54,7 +56,9 @@ namespace finalmq
         public int Flags { get { return m_flags; } }
         public int Index {
             get { return m_index; }
-            set { m_index = value; }
+            set { m_index = value; if (m_fieldWithoutArray != this) { 
+                    m_fieldWithoutArray.Index = value; 
+                } }
         }
         public MetaEnum? MetaEnum 
         {
@@ -87,9 +91,10 @@ namespace finalmq
         readonly int m_flags;                   ///< flaggs of the parameter
         int m_index;                            ///< index of field inside struct
 
+        MetaField m_fieldWithoutArray;   ///< in case of an array, this is the MetaField for its entries
+
         MetaEnum? m_metaEnum = null;              ///< cache to find MetaEnum of typeName faster
         MetaStruct? m_metaStruct = null;          ///< cache to find MetaStruct of typeName faster
-        MetaField? m_fieldWithoutArray = null;    ///< in case of an array, this is the MetaField for its entries
     };
 
 

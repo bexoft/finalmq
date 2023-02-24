@@ -239,7 +239,7 @@ namespace finalmq
                 case MetaTypeId.TYPE_ARRAY_STRUCT:
                     {
                         m_visitor.EnterArrayStruct(field);
-                        MetaField? fieldWithoutArray = MetaDataGlobal.Instance.GetArrayField(field);
+                        MetaField? fieldWithoutArray = field.FieldWithoutArray;
                         System.Collections.IEnumerable? enumerable = value as System.Collections.IEnumerable;
                         if (enumerable != null && fieldWithoutArray != null)
                         {
