@@ -104,7 +104,8 @@ namespace finalmq
             }
 
             m_visitor.StartStruct(stru);
-            int level = ParseStruct(0, 0, stru);
+            bool isarrayDummy;
+            int level = ParseStruct(0, stru, out isarrayDummy);
             m_visitor.Finished();
 
             if (level <= PARSER_HL7_ERROR)
@@ -114,13 +115,16 @@ namespace finalmq
             return m_parser.GetCurrentPosition();
         }
 
-        int ParseStruct(int levelStruct, int levelSegment, MetaStruct stru)
+        int ParseStruct(int levelSegment, MetaStruct stru, out bool isarray)
         {
+            isarray = false;
             // segment ID
             if (levelSegment == 1)
             {
                 string tokenSegId;
-                int levelNew = m_parser.ParseToken(levelSegment, out tokenSegId);
+                bool isarrayDummy;
+                int levelNew = m_parser.ParseToken(levelSegment, out tokenSegId, out isarrayDummy);
+                Debug.Assert(isarray == false);
                 if (levelNew < levelSegment)
                 {
                     return levelNew;
@@ -185,9 +189,14 @@ namespace finalmq
                         {
                             ++LevelSegmentNext;
                         }
-                        int levelNew = ParseStruct(levelStruct + 1, LevelSegmentNext, subStruct);
+                        int levelNew = ParseStruct(LevelSegmentNext, subStruct, out isarray);
                         m_stackStruct.RemoveAt(m_stackStruct.Count - 1);
                         m_visitor.ExitStruct(field);
+                        if (isarray)
+                        {
+                            isarray = false;
+                            m_parser.ParseTillEndOfStruct(levelNew);
+                        }
                         if (levelNew < levelSegment)
                         {
                             return levelNew;
@@ -200,16 +209,16 @@ namespace finalmq
                 } 
                 else if (field.TypeId == MetaTypeId.TYPE_ARRAY_STRUCT)
                 {
+                    MetaStruct? subStruct = MetaDataGlobal.Instance.GetStruct(field);
+                    if (subStruct == null)
+                    {
+                        return PARSER_HL7_ERROR;
+                    }
                     if (levelSegment == 0)
                     {
-                        MetaStruct? subStruct = MetaDataGlobal.Instance.GetStruct(field);
-                        if (subStruct == null)
-                        {
-                            return PARSER_HL7_ERROR;
-                        }
                         string typeName = field.TypeNameWithoutNamespace;
                         bool firstLoop = true;
-                        do
+                        while (true)
                         {
                             string segId = m_parser.GetSegmentId();
                             bool processStructArray = true;
@@ -252,16 +261,14 @@ namespace finalmq
                                 }
                                 m_visitor.EnterStruct(field);
                                 int LevelSegmentNext = levelSegment;
-                                if ((LevelSegmentNext > 0) || ((subStruct.Flags & (int)MetaStructFlags.METASTRUCTFLAG_HL7_SEGMENT) != 0))
+                                if ((subStruct.Flags & (int)MetaStructFlags.METASTRUCTFLAG_HL7_SEGMENT) != 0)
                                 {
                                     ++LevelSegmentNext;
                                 }
-                                int levelNew = ParseStruct(levelStruct + 1, LevelSegmentNext, subStruct);
+                                int levelNew = ParseStruct(LevelSegmentNext, subStruct, out isarray);
                                 m_visitor.ExitStruct(field);
-                                if (levelNew < levelSegment)
-                                {
-                                    return levelNew;
-                                }
+                                Debug.Assert(levelNew == 0);
+                                Debug.Assert(isarray == false);
                             }
                             else
                             {
@@ -272,7 +279,28 @@ namespace finalmq
                                 }
                                 break;
                             }
-                        } while (true);
+                        }
+                    }
+                    else
+                    {
+                        int levelNew = levelSegment;
+                        m_visitor.EnterArrayStruct(field);
+                        while (true)
+                        {
+                            m_visitor.EnterStruct(field);
+                            levelNew = ParseStruct(levelSegment + 1, subStruct, out isarray);
+                            m_visitor.ExitStruct(field);
+                            if (levelNew < levelSegment || !isarray)
+                            {
+                                break;
+                            }
+                        }
+                        m_visitor.ExitArrayStruct(field);
+                        isarray = false;
+                        if (levelNew < levelSegment)
+                        {
+                            return levelNew;
+                        }
                     }
                 }
                 else if ((field.TypeId & MetaTypeId.OFFSET_ARRAY_FLAG) != 0)
@@ -293,7 +321,7 @@ namespace finalmq
                     if (levelSegment > 0)
                     {
                         string token;
-                        int levelNew = m_parser.ParseToken(levelSegment, out token);
+                        int levelNew = m_parser.ParseToken(levelSegment, out token, out isarray);
                         if (token != "")
                         {
                             m_visitor.EnterString(field, token);

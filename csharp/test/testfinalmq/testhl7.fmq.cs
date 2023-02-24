@@ -611,6 +611,83 @@ public class MSH : finalmq.StructBase, IEquatable<MSH>
     }
 }
 
+[finalmq.MetaStruct("")]
+public class FAA : finalmq.StructBase, IEquatable<FAA>
+{
+    public FAA()
+	{
+	}
+	
+
+    public FAA(string a, string b)
+	{
+		m_a = a;
+		m_b = b;
+	}
+
+	[finalmq.MetaField("")]
+    public string a
+	{
+		get { return m_a; }
+		set { m_a = value; }
+	}
+	[finalmq.MetaField("")]
+    public string b
+	{
+		get { return m_b; }
+		set { m_b = value; }
+	}
+
+    string m_a = string.Empty;
+    string m_b = string.Empty;
+
+	public bool Equals(FAA? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+		if (m_a != rhs.m_a)
+		{
+			return false;
+		}
+		if (m_b != rhs.m_b)
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(FAA));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
+#pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+    [ModuleInitializer]
+#pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+    internal static void RegisterStruct()
+    {
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(FAA));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(FAA), m_metaStruct, () => { return new FAA(); } );
+    }
+}
+
 [finalmq.MetaStruct("", finalmq.MetaStructFlags.METASTRUCTFLAG_HL7_SEGMENT)]
 public class AAA : finalmq.StructBase, IEquatable<AAA>
 {
@@ -868,6 +945,201 @@ public class DDD : finalmq.StructBase, IEquatable<DDD>
     {
 		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(DDD));
         finalmq.TypeRegistry.Instance.RegisterStruct(typeof(DDD), m_metaStruct, () => { return new DDD(); } );
+    }
+}
+
+[finalmq.MetaStruct("", finalmq.MetaStructFlags.METASTRUCTFLAG_HL7_SEGMENT)]
+public class EEE : finalmq.StructBase, IEquatable<EEE>
+{
+    public EEE()
+	{
+	}
+	
+
+    public EEE(testhl7.FAA e)
+	{
+		m_e = e;
+	}
+
+	[finalmq.MetaField("")]
+    public testhl7.FAA e
+	{
+		get { return m_e; }
+		set { m_e = value; }
+	}
+
+    testhl7.FAA m_e = new testhl7.FAA();
+
+	public bool Equals(EEE? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+		if (!m_e.Equals(rhs.m_e))
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(EEE));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
+#pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+    [ModuleInitializer]
+#pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+    internal static void RegisterStruct()
+    {
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(EEE));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(EEE), m_metaStruct, () => { return new EEE(); } );
+    }
+}
+
+[finalmq.MetaStruct("", finalmq.MetaStructFlags.METASTRUCTFLAG_HL7_SEGMENT)]
+public class A01 : finalmq.StructBase, IEquatable<A01>
+{
+    public A01()
+	{
+	}
+	
+
+    public A01(IList<string> a)
+	{
+		m_a = a;
+	}
+
+	[finalmq.MetaField("")]
+    public IList<string> a
+	{
+		get { return m_a; }
+		set { m_a = value; }
+	}
+
+    IList<string> m_a = new List<string>();
+
+	public bool Equals(A01? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+		if (!m_a.SequenceEqual(rhs.m_a))
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(A01));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
+#pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+    [ModuleInitializer]
+#pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+    internal static void RegisterStruct()
+    {
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(A01));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(A01), m_metaStruct, () => { return new A01(); } );
+    }
+}
+
+[finalmq.MetaStruct("", finalmq.MetaStructFlags.METASTRUCTFLAG_HL7_SEGMENT)]
+public class A02 : finalmq.StructBase, IEquatable<A02>
+{
+    public A02()
+	{
+	}
+	
+
+    public A02(IList<testhl7.FAA> faa)
+	{
+		m_faa = faa;
+	}
+
+	[finalmq.MetaField("")]
+    public IList<testhl7.FAA> faa
+	{
+		get { return m_faa; }
+		set { m_faa = value; }
+	}
+
+    IList<testhl7.FAA> m_faa = new List<testhl7.FAA>();
+
+	public bool Equals(A02? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+		if (!m_faa.SequenceEqual(rhs.m_faa))
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(A02));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
+#pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+    [ModuleInitializer]
+#pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+    internal static void RegisterStruct()
+    {
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(A02));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(A02), m_metaStruct, () => { return new A02(); } );
     }
 }
 
@@ -1556,6 +1828,237 @@ public class MSG_006 : finalmq.StructBase, IEquatable<MSG_006>
     {
 		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(MSG_006));
         finalmq.TypeRegistry.Instance.RegisterStruct(typeof(MSG_006), m_metaStruct, () => { return new MSG_006(); } );
+    }
+}
+
+[finalmq.MetaStruct("Address")]
+public class MSG_007 : finalmq.StructBase, IEquatable<MSG_007>
+{
+    public MSG_007()
+	{
+	}
+	
+
+    public MSG_007(testhl7.MSH msh, testhl7.EEE e)
+	{
+		m_msh = msh;
+		m_e = e;
+	}
+
+	[finalmq.MetaField("")]
+    public testhl7.MSH msh
+	{
+		get { return m_msh; }
+		set { m_msh = value; }
+	}
+	[finalmq.MetaField("")]
+    public testhl7.EEE e
+	{
+		get { return m_e; }
+		set { m_e = value; }
+	}
+
+    testhl7.MSH m_msh = new testhl7.MSH();
+    testhl7.EEE m_e = new testhl7.EEE();
+
+	public bool Equals(MSG_007? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+		if (!m_msh.Equals(rhs.m_msh))
+		{
+			return false;
+		}
+		if (!m_e.Equals(rhs.m_e))
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(MSG_007));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
+#pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+    [ModuleInitializer]
+#pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+    internal static void RegisterStruct()
+    {
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(MSG_007));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(MSG_007), m_metaStruct, () => { return new MSG_007(); } );
+    }
+}
+
+[finalmq.MetaStruct("Address")]
+public class MSG_010 : finalmq.StructBase, IEquatable<MSG_010>
+{
+    public MSG_010()
+	{
+	}
+	
+
+    public MSG_010(testhl7.MSH msh, testhl7.A01 a01)
+	{
+		m_msh = msh;
+		m_a01 = a01;
+	}
+
+	[finalmq.MetaField("")]
+    public testhl7.MSH msh
+	{
+		get { return m_msh; }
+		set { m_msh = value; }
+	}
+	[finalmq.MetaField("")]
+    public testhl7.A01 a01
+	{
+		get { return m_a01; }
+		set { m_a01 = value; }
+	}
+
+    testhl7.MSH m_msh = new testhl7.MSH();
+    testhl7.A01 m_a01 = new testhl7.A01();
+
+	public bool Equals(MSG_010? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+		if (!m_msh.Equals(rhs.m_msh))
+		{
+			return false;
+		}
+		if (!m_a01.Equals(rhs.m_a01))
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(MSG_010));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
+#pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+    [ModuleInitializer]
+#pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+    internal static void RegisterStruct()
+    {
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(MSG_010));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(MSG_010), m_metaStruct, () => { return new MSG_010(); } );
+    }
+}
+
+[finalmq.MetaStruct("Address")]
+public class MSG_011 : finalmq.StructBase, IEquatable<MSG_011>
+{
+    public MSG_011()
+	{
+	}
+	
+
+    public MSG_011(testhl7.MSH msh, testhl7.A02 a02)
+	{
+		m_msh = msh;
+		m_a02 = a02;
+	}
+
+	[finalmq.MetaField("")]
+    public testhl7.MSH msh
+	{
+		get { return m_msh; }
+		set { m_msh = value; }
+	}
+	[finalmq.MetaField("")]
+    public testhl7.A02 a02
+	{
+		get { return m_a02; }
+		set { m_a02 = value; }
+	}
+
+    testhl7.MSH m_msh = new testhl7.MSH();
+    testhl7.A02 m_a02 = new testhl7.A02();
+
+	public bool Equals(MSG_011? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+		if (!m_msh.Equals(rhs.m_msh))
+		{
+			return false;
+		}
+		if (!m_a02.Equals(rhs.m_a02))
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(MSG_011));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
+#pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+    [ModuleInitializer]
+#pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+    internal static void RegisterStruct()
+    {
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(MSG_011));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(MSG_011), m_metaStruct, () => { return new MSG_011(); } );
     }
 }
 

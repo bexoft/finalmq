@@ -53,8 +53,9 @@ namespace finalmq
             m_delimitersForField[delimiters.Length] = (byte)m_delimitersForField[0];  // |^~\&|
             m_delimiterField[0] = SEGMENT_END;      // segment delimiter '\r', 0x0D
             m_delimiterField[1] = (byte)delimiters[0];    // |
-            m_delimiterField[2] = (byte)delimiters[1];    // ^
-            m_delimiterField[3] = (byte)delimiters[4];    // &
+            m_delimiterField[2] = (byte)delimiters[2];    // ~
+            m_delimiterField[3] = (byte)delimiters[1];    // ^
+            m_delimiterField[4] = (byte)delimiters[4];    // &
             m_delimiterRepeat = (byte)delimiters[2];    // ~
             m_escape = (byte)delimiters[3];    // '\\'
         }
@@ -227,7 +228,7 @@ namespace finalmq
                         m_buffer[m_offset] = m_escape;
                         m_offset++;
                     }
-                    else if (c == m_delimiterField[2])   // '^'
+                    else if (c == m_delimiterField[3])   // '^'
                     {
                         m_buffer[m_offset] = m_escape;
                         m_offset++;
@@ -236,7 +237,7 @@ namespace finalmq
                         m_buffer[m_offset] = m_escape;
                         m_offset++;
                     }
-                    else if (c == m_delimiterField[3])   // '&'
+                    else if (c == m_delimiterField[4])   // '&'
                     {
                         m_buffer[m_offset] = m_escape;
                         m_offset++;
@@ -322,7 +323,7 @@ namespace finalmq
         int m_offset = 0;
         int m_offsetEnd = 0;
 
-        static readonly int LAYER_MAX = 4;
+        static readonly int LAYER_MAX = 5;
 
         readonly byte[] m_delimitersForField;
         readonly byte[] m_delimiterField = new byte[LAYER_MAX];

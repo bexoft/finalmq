@@ -49,6 +49,11 @@
         ]},
 
 
+        {"type":"FAA","desc":"","fields":[ 
+            {"tid":"string", "type":"", "name":"a"},
+            {"tid":"string", "type":"", "name":"b"}
+        ]},
+
 
         {"type":"AAA","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
             {"tid":"string", "type":"", "name":"a"}
@@ -62,6 +67,21 @@
         {"type":"DDD","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
             {"tid":"string", "type":"", "name":"d"}
         ]},
+        {"type":"EEE","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+            {"tid":"struct", "type":"FAA", "name":"e"}
+        ]},
+
+
+
+        {"type":"A01","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+            {"tid":"string[]", "type":"", "name":"a"}
+        ]},
+        {"type":"A02","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+            {"tid":"struct[]", "type":"FAA", "name":"faa"}
+        ]},
+
+
+
 
         {"type":"GROUP_1","desc":"","fields":[ 
             {"tid":"struct", "type":"AAA", "name":"a"},
@@ -72,6 +92,8 @@
             {"tid":"struct", "type":"BBB", "name":"b", "flags":["METAFLAG_NULLABLE"]},
             {"tid":"struct", "type":"CCC", "name":"c", "flags":["METAFLAG_NULLABLE"]}
         ]},
+
+
 
 
         {"type":"MSG_001","desc":"Address","fields":[ 
@@ -107,6 +129,21 @@
             {"tid":"struct", "type":"MSH", "name":"msh"},
             {"tid":"struct[]", "type":"GROUP_2", "name":"c"},
             {"tid":"struct", "type":"DDD", "name":"d"}
+        ]},
+
+        {"type":"MSG_007","desc":"Address","fields":[ 
+            {"tid":"struct", "type":"MSH", "name":"msh"},
+            {"tid":"struct", "type":"EEE", "name":"e"}
+        ]},
+
+        {"type":"MSG_010","desc":"Address","fields":[ 
+            {"tid":"struct", "type":"MSH", "name":"msh"},
+            {"tid":"struct", "type":"A01", "name":"a01"}
+        ]},
+
+        {"type":"MSG_011","desc":"Address","fields":[ 
+            {"tid":"struct", "type":"MSH", "name":"msh"},
+            {"tid":"struct", "type":"A02", "name":"a02"}
         ]}
 
 

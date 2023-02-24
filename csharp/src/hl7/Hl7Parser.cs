@@ -29,7 +29,7 @@ namespace finalmq
     public interface IHl7Parser
     {
         bool StartParse(byte[] buffer, int offset, int size = -1);
-        int ParseToken(int level, out string token);
+        int ParseToken(int level, out string token, out bool isarray);
         int ParseTokenArray(int level, IList<string> array);
         int ParseTillEndOfStruct(int level);
         string GetSegmentId();
@@ -87,9 +87,10 @@ namespace finalmq
             return true;
         }
 
-        public int ParseToken(int level, out string token)
+        public int ParseToken(int level, out string token, out bool isarray)
         {
             token = "";
+            isarray = false;
             int l = level;
             if (m_waitForDeleimiterField == 1)
             {
@@ -113,7 +114,8 @@ namespace finalmq
                     {
                         token = DeEscape(start, m_offset);
                         ++m_offset;
-                        l = ParseTillEndOfStruct(level);
+                        isarray = true;
+                        l = 1;  // array is only on level = 1
                         break;
                     }
                     else
