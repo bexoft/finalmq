@@ -99,18 +99,17 @@ void SerializerHl7::Internal::enterStruct(const MetaField& field)
         }
         else
         {
-            m_indexOfLayer.push_back(field.index);
             if (m_indexOfLayer.size() != 3) // 3 means array layer of HL7 builder
             {
-                m_indexOfLayer.back() = field.index;
+                m_indexOfLayer.push_back(field.index);
+            }
+            else
+            {
+                ++m_indexOfLayer.back();    // array index counter
             }
             if (m_indexOfLayer.size() == 2)
             {
                 m_indexOfLayer.push_back(0);
-            }
-            else if (m_indexOfLayer.size() == 3)    // 3 means array layer of HL7 builder
-            {
-                ++m_indexOfLayer.back();
             }
         }
     }
@@ -120,11 +119,18 @@ void SerializerHl7::Internal::exitStruct(const MetaField& /*field*/)
 {
     if (m_indexOfLayer.size() > 1)
     {
-        if (m_indexOfLayer.size() == 3 && !m_inArrayStruct)
+        if (m_indexOfLayer.size() == 3)
+        {
+            if (!m_inArrayStruct)
+            {
+                m_indexOfLayer.pop_back();
+                m_indexOfLayer.pop_back();
+            }
+        }
+        else
         {
             m_indexOfLayer.pop_back();
         }
-        m_indexOfLayer.pop_back();
     }
     else
     {
@@ -137,11 +143,14 @@ void SerializerHl7::Internal::enterStructNull(const MetaField& /*field*/)
 }
 
 
-void SerializerHl7::Internal::enterArrayStruct(const MetaField& /*field*/)
+void SerializerHl7::Internal::enterArrayStruct(const MetaField& field)
 {
     if (m_inSegment)
     {
         m_inArrayStruct = true;
+        assert(m_indexOfLayer.size() == 1);
+        m_indexOfLayer.push_back(field.index);
+        m_indexOfLayer.push_back(-1);
     }
 }
 
@@ -149,6 +158,9 @@ void SerializerHl7::Internal::exitArrayStruct(const MetaField& /*field*/)
 {
     if (m_inSegment)
     {
+        m_inArrayStruct = false;
+        assert(m_indexOfLayer.size() == 3);
+        m_indexOfLayer.pop_back();
         m_indexOfLayer.pop_back();
     }
 }
@@ -211,27 +223,33 @@ void SerializerHl7::Internal::enterDouble(const MetaField& field, double value)
     }
 }
 
-void SerializerHl7::Internal::enterString(const MetaField& field, std::string&& value)
+
+bool SerializerHl7::Internal::filterEnterString(size_t valueSize) const
 {
-    if (!m_indexOfLayer.empty() && value.size() > 0)
+    if (!m_indexOfLayer.empty() && valueSize > 0)
     {
         // skip message type
         if (!(m_indexOfLayer.size() == 3 && m_indexOfLayer[0] == 0 && m_indexOfLayer[1] == 8))
         {
-            m_hl7Builder.enterString(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, std::move(value));
+            return true;
         }
+    }
+    return false;
+}
+
+void SerializerHl7::Internal::enterString(const MetaField& field, std::string&& value)
+{
+    if (filterEnterString(value.size()))
+    {
+        m_hl7Builder.enterString(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, std::move(value));
     }
 }
 
 void SerializerHl7::Internal::enterString(const MetaField& field, const char* value, ssize_t size)
 {
-    if (!m_indexOfLayer.empty() && size > 0)
+    if (filterEnterString(size))
     {
-        // skip message type
-        if (!(m_indexOfLayer.size() == 2 && m_indexOfLayer[0] == 0 && m_indexOfLayer[1] == 8))
-        {
-            m_hl7Builder.enterString(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value, size);
-        }
+        m_hl7Builder.enterString(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value, size);
     }
 }
 

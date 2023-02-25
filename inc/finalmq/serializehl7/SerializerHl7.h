@@ -91,9 +91,7 @@ private:
         virtual void enterArrayEnumMove(const MetaField& field, std::vector<std::string>&& value) override;
         virtual void enterArrayEnum(const MetaField& field, const std::vector<std::string>& value) override;
 
-        void setKey(const MetaField& field);
-
-        void handleDouble(double value);
+        bool filterEnterString(size_t valueSize) const;
 
         std::unique_ptr<IHl7BuilderVisitor> m_uniqueHl7Builder;
         IHl7BuilderVisitor&                 m_hl7Builder;
