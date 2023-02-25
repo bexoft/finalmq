@@ -29,7 +29,7 @@
 #include "finalmq/serializestruct/ParserStruct.h"
 #include "MockIZeroCopyBuffer.h"
 //#include "test.fmq.h"
-#include "hl7.fmq.h"
+#include "testhl7.fmq.h"
 
 #include <cmath>
 
