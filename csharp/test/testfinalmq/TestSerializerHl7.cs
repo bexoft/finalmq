@@ -151,7 +151,7 @@ namespace testfinalmq
         }
 
         [Fact]
-        public void TestMSG_011()
+        public void TestMSG_011_1()
         {
             testhl7.MSG_011 msg = new testhl7.MSG_011();
             msg.msh.fieldSeparator = "|";
@@ -168,6 +168,29 @@ namespace testfinalmq
 
             string str = Encoding.UTF8.GetString(m_data, 0, m_size);
             Debug.Assert(str == "MSH|^~\\&|||||||MSG^011^MSG_011\rA02|a1^b1~a2^b2~a3^b3\r");
+        }
+
+        [Fact]
+        public void TestMSG_011_2()
+        {
+            testhl7.MSG_011 msg = new testhl7.MSG_011();
+            msg.msh.fieldSeparator = "|";
+            msg.msh.encodingCharacters = "^~\\&";
+            msg.msh.messageType.messageCode = "MSG";
+            msg.msh.messageType.triggerEvent = "011";
+            msg.msh.messageType.messageStructure = "MSG_011";
+            msg.a02.faa.Add(new testhl7.FAA("a1", "b1"));
+            msg.a02.faa.Add(new testhl7.FAA("a2", "b2"));
+            msg.a02.faa.Add(new testhl7.FAA("a3", "b3"));
+            msg.a02.fbb.Add(new testhl7.FBB("c1", "d1"));
+            msg.a02.fbb.Add(new testhl7.FBB("c2", "d2"));
+            msg.a02.fbb.Add(new testhl7.FBB("c3", "d3"));
+
+            ParserStruct parser = new ParserStruct(m_serializer, msg);
+            parser.ParseStruct();
+
+            string str = Encoding.UTF8.GetString(m_data, 0, m_size);
+            Debug.Assert(str == "MSH|^~\\&|||||||MSG^011^MSG_011\rA02|a1^b1~a2^b2~a3^b3|c1^d1~c2^d2~c3^d3\r");
         }
 
     }

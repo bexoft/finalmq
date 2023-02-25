@@ -67,20 +67,20 @@ namespace finalmq
                     }
                     else
                     {
-                        ++m_ixIndex;
                         Debug.Assert(m_ixIndex < m_indexOfLayer.Length);
                         if (m_ixIndex != 2) // 2 means array layer of HL7 builder
                         {
+                            ++m_ixIndex;
                             m_indexOfLayer[m_ixIndex] = field.Index;
+                        }
+                        else
+                        {
+                            ++m_indexOfLayer[m_ixIndex];    // array index counter
                         }
                         if (m_ixIndex == 1)
                         {
                             ++m_ixIndex;
                             m_indexOfLayer[m_ixIndex] = 0;
-                        }
-                        else if (m_ixIndex == 2)    // 2 means array layer of HL7 builder
-                        {
-                            ++m_indexOfLayer[m_ixIndex];
                         }
                     }
                 }
@@ -89,11 +89,18 @@ namespace finalmq
             {
                 if (m_ixIndex > 0)
                 {
-                    if (m_ixIndex == 2 && !m_inArrayStruct)
+                    if (m_ixIndex == 2)
+                    {
+                        if (!m_inArrayStruct)
+                        {
+                            --m_ixIndex;
+                            --m_ixIndex;
+                        }
+                    }
+                    else
                     {
                         --m_ixIndex;
                     }
-                    --m_ixIndex;
                     Debug.Assert(m_ixIndex >= 0);
                 }
                 else
@@ -110,6 +117,11 @@ namespace finalmq
                 if (m_inSegment)
                 {
                     m_inArrayStruct = true;
+                    Debug.Assert(m_ixIndex == 0);
+                    ++m_ixIndex;
+                    m_indexOfLayer[m_ixIndex] = field.Index;
+                    ++m_ixIndex;
+                    m_indexOfLayer[m_ixIndex] = -1;
                 }
             }
             public void ExitArrayStruct(MetaField field) 
@@ -117,8 +129,9 @@ namespace finalmq
                 if (m_inSegment)
                 {
                     m_inArrayStruct = false;
+                    Debug.Assert(m_ixIndex == 2);
                     --m_ixIndex;
-                    Debug.Assert(m_ixIndex >= 0);
+                    --m_ixIndex;
                 }
             }
 

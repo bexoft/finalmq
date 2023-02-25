@@ -54,6 +54,11 @@
             {"tid":"string", "type":"", "name":"b"}
         ]},
 
+        {"type":"FBB","desc":"","fields":[ 
+            {"tid":"string", "type":"", "name":"a"},
+            {"tid":"string", "type":"", "name":"b"}
+        ]},
+
 
         {"type":"AAA","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
             {"tid":"string", "type":"", "name":"a"}
@@ -77,7 +82,8 @@
             {"tid":"string[]", "type":"", "name":"a"}
         ]},
         {"type":"A02","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
-            {"tid":"struct[]", "type":"FAA", "name":"faa"}
+            {"tid":"struct[]", "type":"FAA", "name":"faa"},
+            {"tid":"struct[]", "type":"FBB", "name":"fbb"}
         ]},
 
 
