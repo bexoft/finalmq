@@ -8,6 +8,8 @@ namespace finalmq
     
     public class SerializerHl7 : ParserConverter
     {
+        static readonly int NO_ARRAY_STRUCT = -2;
+
         public SerializerHl7(IZeroCopyBuffer buffer, int maxBlockSize = 512, bool enumAsString = true, bool skipDefaultValues = true)
         {
             m_internal = new Internal(buffer, maxBlockSize, enumAsString);
@@ -68,19 +70,25 @@ namespace finalmq
                     else
                     {
                         Debug.Assert(m_ixIndex < m_indexOfLayer.Length);
-                        if (m_ixIndex != 2) // 2 means array layer of HL7 builder
+                        // at index 2 there is the array index
+                        if (m_ixIndex != 1)
                         {
                             ++m_ixIndex;
                             m_indexOfLayer[m_ixIndex] = field.Index;
                         }
-                        else
-                        {
-                            ++m_indexOfLayer[m_ixIndex];    // array index counter
-                        }
                         if (m_ixIndex == 1)
                         {
-                            ++m_ixIndex;
-                            m_indexOfLayer[m_ixIndex] = 0;
+                            if (m_ixArrayStruct == NO_ARRAY_STRUCT)
+                            {
+                                ++m_ixIndex;
+                                m_indexOfLayer[m_ixIndex] = 0;
+                            }
+                            else
+                            {
+                                ++m_ixArrayStruct;
+                                ++m_ixIndex;
+                                m_indexOfLayer[m_ixIndex] = m_ixArrayStruct;
+                            }
                         }
                     }
                 }
@@ -89,18 +97,11 @@ namespace finalmq
             {
                 if (m_ixIndex > 0)
                 {
-                    if (m_ixIndex == 2)
-                    {
-                        if (!m_inArrayStruct)
-                        {
-                            --m_ixIndex;
-                            --m_ixIndex;
-                        }
-                    }
-                    else
+                    if (m_ixIndex == 2 && m_ixArrayStruct == NO_ARRAY_STRUCT)
                     {
                         --m_ixIndex;
                     }
+                    --m_ixIndex;
                     Debug.Assert(m_ixIndex >= 0);
                 }
                 else
@@ -116,21 +117,18 @@ namespace finalmq
             {
                 if (m_inSegment)
                 {
-                    m_inArrayStruct = true;
+                    m_ixArrayStruct = -1;
                     Debug.Assert(m_ixIndex == 0);
                     ++m_ixIndex;
                     m_indexOfLayer[m_ixIndex] = field.Index;
-                    ++m_ixIndex;
-                    m_indexOfLayer[m_ixIndex] = -1;
                 }
             }
             public void ExitArrayStruct(MetaField field) 
             {
                 if (m_inSegment)
                 {
-                    m_inArrayStruct = false;
-                    Debug.Assert(m_ixIndex == 2);
-                    --m_ixIndex;
+                    m_ixArrayStruct = NO_ARRAY_STRUCT;
+                    Debug.Assert(m_ixIndex == 1);
                     --m_ixIndex;
                 }
             }
@@ -367,7 +365,7 @@ namespace finalmq
 
             int[] m_indexOfLayer = new int[10];
             int m_ixIndex = -1;
-            bool m_inArrayStruct = false;
+            int m_ixArrayStruct = NO_ARRAY_STRUCT;
         }
 
         readonly Internal m_internal;

@@ -696,10 +696,11 @@ public class FBB : finalmq.StructBase, IEquatable<FBB>
 	}
 	
 
-    public FBB(string a, string b)
+    public FBB(string a, string b, testhl7.FAA faa)
 	{
 		m_a = a;
 		m_b = b;
+		m_faa = faa;
 	}
 
 	[finalmq.MetaField("")]
@@ -714,9 +715,16 @@ public class FBB : finalmq.StructBase, IEquatable<FBB>
 		get { return m_b; }
 		set { m_b = value; }
 	}
+	[finalmq.MetaField("")]
+    public testhl7.FAA faa
+	{
+		get { return m_faa; }
+		set { m_faa = value; }
+	}
 
     string m_a = string.Empty;
     string m_b = string.Empty;
+    testhl7.FAA m_faa = new testhl7.FAA();
 
 	public bool Equals(FBB? rhs)
 	{
@@ -735,6 +743,10 @@ public class FBB : finalmq.StructBase, IEquatable<FBB>
 			return false;
 		}
 		if (m_b != rhs.m_b)
+		{
+			return false;
+		}
+		if (!m_faa.Equals(rhs.m_faa))
 		{
 			return false;
 		}
@@ -1163,10 +1175,12 @@ public class A02 : finalmq.StructBase, IEquatable<A02>
 	}
 	
 
-    public A02(IList<testhl7.FAA> faa, IList<testhl7.FBB> fbb)
+    public A02(IList<testhl7.FAA> faa, IList<testhl7.FBB> fbb, testhl7.FAA sfaa, testhl7.FBB sfbb)
 	{
 		m_faa = faa;
 		m_fbb = fbb;
+		m_sfaa = sfaa;
+		m_sfbb = sfbb;
 	}
 
 	[finalmq.MetaField("")]
@@ -1181,9 +1195,23 @@ public class A02 : finalmq.StructBase, IEquatable<A02>
 		get { return m_fbb; }
 		set { m_fbb = value; }
 	}
+	[finalmq.MetaField("")]
+    public testhl7.FAA sfaa
+	{
+		get { return m_sfaa; }
+		set { m_sfaa = value; }
+	}
+	[finalmq.MetaField("")]
+    public testhl7.FBB sfbb
+	{
+		get { return m_sfbb; }
+		set { m_sfbb = value; }
+	}
 
     IList<testhl7.FAA> m_faa = new List<testhl7.FAA>();
     IList<testhl7.FBB> m_fbb = new List<testhl7.FBB>();
+    testhl7.FAA m_sfaa = new testhl7.FAA();
+    testhl7.FBB m_sfbb = new testhl7.FBB();
 
 	public bool Equals(A02? rhs)
 	{
@@ -1202,6 +1230,14 @@ public class A02 : finalmq.StructBase, IEquatable<A02>
 			return false;
 		}
 		if (!m_fbb.SequenceEqual(rhs.m_fbb))
+		{
+			return false;
+		}
+		if (!m_sfaa.Equals(rhs.m_sfaa))
+		{
+			return false;
+		}
+		if (!m_sfbb.Equals(rhs.m_sfbb))
 		{
 			return false;
 		}
