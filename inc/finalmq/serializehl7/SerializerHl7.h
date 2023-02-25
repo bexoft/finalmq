@@ -93,6 +93,8 @@ private:
 
         bool filterEnterString(size_t valueSize) const;
 
+        static const int NO_ARRAY_STRUCT = -2;
+
         std::unique_ptr<IHl7BuilderVisitor> m_uniqueHl7Builder;
         IHl7BuilderVisitor&                 m_hl7Builder;
         bool                                m_enumAsString = true;
@@ -100,7 +102,7 @@ private:
         bool                                m_inSegment = false;
 
         std::vector<int>                    m_indexOfLayer;
-        bool                                m_inArrayStruct = false;
+        int                                 m_ixArrayStruct = NO_ARRAY_STRUCT;
     };
 
     Internal                            m_internal;

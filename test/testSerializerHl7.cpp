@@ -198,12 +198,60 @@ TEST_F(TestSerializerHl7, testMSG_011_2)
     msg.a02.faa.emplace_back("a1", "b1");
     msg.a02.faa.emplace_back("a2", "b2");
     msg.a02.faa.emplace_back("a3", "b3");
-    msg.a02.fbb.emplace_back("c1", "d1");
-    msg.a02.fbb.emplace_back("c2", "d2");
-    msg.a02.fbb.emplace_back("c3", "d3");
+    msg.a02.fbb.emplace_back("c1", "d1", testhl7::FAA{});
+    msg.a02.fbb.emplace_back("c2", "d2", testhl7::FAA{});
+    msg.a02.fbb.emplace_back("c3", "d3", testhl7::FAA{});
 
     ParserStruct parser(*m_serializer, msg);
     parser.parseStruct();
 
     ASSERT_EQ(m_data, "MSH|^~\\&|||||||MSG^011^MSG_011\rA02|a1^b1~a2^b2~a3^b3|c1^d1~c2^d2~c3^d3\r");
+}
+
+TEST_F(TestSerializerHl7, testMSG_011_3)
+{
+    testhl7::MSG_011 msg;
+    msg.msh.fieldSeparator = "|";
+    msg.msh.encodingCharacters = "^~\\&";
+    msg.msh.messageType.messageCode = "MSG";
+    msg.msh.messageType.triggerEvent = "011";
+    msg.msh.messageType.messageStructure = "MSG_011";
+    msg.a02.faa.emplace_back("a1", "b1");
+    msg.a02.faa.emplace_back("a2", "b2");
+    msg.a02.faa.emplace_back("a3", "b3");
+    msg.a02.fbb.emplace_back("c1", "d1", testhl7::FAA{ "a1", "b1" });
+    msg.a02.fbb.emplace_back("c2", "d2", testhl7::FAA{ "a2", "b2" });
+    msg.a02.fbb.emplace_back("c3", "d3", testhl7::FAA{ "a3", "b3" });
+
+    ParserStruct parser(*m_serializer, msg);
+    parser.parseStruct();
+
+    ASSERT_EQ(m_data, "MSH|^~\\&|||||||MSG^011^MSG_011\rA02|a1^b1~a2^b2~a3^b3|c1^d1^a1&b1~c2^d2^a2&b2~c3^d3^a3&b3\r");
+}
+
+TEST_F(TestSerializerHl7, testMSG_011_4)
+{
+    testhl7::MSG_011 msg;
+    msg.msh.fieldSeparator = "|";
+    msg.msh.encodingCharacters = "^~\\&";
+    msg.msh.messageType.messageCode = "MSG";
+    msg.msh.messageType.triggerEvent = "011";
+    msg.msh.messageType.messageStructure = "MSG_011";
+    msg.a02.faa.emplace_back("a1", "b1");
+    msg.a02.faa.emplace_back("a2", "b2");
+    msg.a02.faa.emplace_back("a3", "b3");
+    msg.a02.fbb.emplace_back("c1", "d1", testhl7::FAA{ "a1", "b1" });
+    msg.a02.fbb.emplace_back("c2", "d2", testhl7::FAA{ "a2", "b2" });
+    msg.a02.fbb.emplace_back("c3", "d3", testhl7::FAA{ "a3", "b3" });
+    msg.a02.sfaa.a = "a";
+    msg.a02.sfaa.b = "b";
+    msg.a02.sfbb.a = "c";
+    msg.a02.sfbb.b = "d";
+    msg.a02.sfbb.faa.a = "a";
+    msg.a02.sfbb.faa.b = "b";
+
+    ParserStruct parser(*m_serializer, msg);
+    parser.parseStruct();
+
+    ASSERT_EQ(m_data, "MSH|^~\\&|||||||MSG^011^MSG_011\rA02|a1^b1~a2^b2~a3^b3|c1^d1^a1&b1~c2^d2^a2&b2~c3^d3^a3&b3|a^b|c^d^a&b\r");
 }

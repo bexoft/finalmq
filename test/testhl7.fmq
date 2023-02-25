@@ -56,7 +56,8 @@
 
         {"type":"FBB","desc":"","fields":[ 
             {"tid":"string", "type":"", "name":"a"},
-            {"tid":"string", "type":"", "name":"b"}
+            {"tid":"string", "type":"", "name":"b"},
+            {"tid":"struct", "type":"FAA", "name":"faa"}
         ]},
 
 
@@ -83,7 +84,9 @@
         ]},
         {"type":"A02","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
             {"tid":"struct[]", "type":"FAA", "name":"faa"},
-            {"tid":"struct[]", "type":"FBB", "name":"fbb"}
+            {"tid":"struct[]", "type":"FBB", "name":"fbb"},
+            {"tid":"struct", "type":"FAA", "name":"sfaa"},
+            {"tid":"struct", "type":"FBB", "name":"sfbb"}
         ]},
 
 

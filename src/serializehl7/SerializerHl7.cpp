@@ -33,6 +33,7 @@
 namespace finalmq {
 
 
+
 SerializerHl7::SerializerHl7(IZeroCopyBuffer& buffer, int maxBlockSize, bool enumAsString)
     : ParserProcessDefaultValues(false)
     , m_internal(buffer, maxBlockSize, enumAsString)
@@ -99,17 +100,23 @@ void SerializerHl7::Internal::enterStruct(const MetaField& field)
         }
         else
         {
-            if (m_indexOfLayer.size() != 3) // 3 means array layer of HL7 builder
+            // at index 2 there is the array index
+            if (m_indexOfLayer.size() != 2)
             {
                 m_indexOfLayer.push_back(field.index);
             }
-            else
-            {
-                ++m_indexOfLayer.back();    // array index counter
-            }
+            // at size = 2 add the array index (at index 2)
             if (m_indexOfLayer.size() == 2)
             {
-                m_indexOfLayer.push_back(0);
+                if (m_ixArrayStruct == NO_ARRAY_STRUCT)
+                {
+                    m_indexOfLayer.push_back(0);
+                }
+                else
+                {
+                    ++m_ixArrayStruct;
+                    m_indexOfLayer.push_back(m_ixArrayStruct);
+                }
             }
         }
     }
@@ -119,18 +126,11 @@ void SerializerHl7::Internal::exitStruct(const MetaField& /*field*/)
 {
     if (m_indexOfLayer.size() > 1)
     {
-        if (m_indexOfLayer.size() == 3)
-        {
-            if (!m_inArrayStruct)
-            {
-                m_indexOfLayer.pop_back();
-                m_indexOfLayer.pop_back();
-            }
-        }
-        else
+        if (m_indexOfLayer.size() == 3 && m_ixArrayStruct == NO_ARRAY_STRUCT)
         {
             m_indexOfLayer.pop_back();
         }
+        m_indexOfLayer.pop_back();
     }
     else
     {
@@ -147,10 +147,9 @@ void SerializerHl7::Internal::enterArrayStruct(const MetaField& field)
 {
     if (m_inSegment)
     {
-        m_inArrayStruct = true;
+        m_ixArrayStruct = -1;
         assert(m_indexOfLayer.size() == 1);
         m_indexOfLayer.push_back(field.index);
-        m_indexOfLayer.push_back(-1);
     }
 }
 
@@ -158,9 +157,8 @@ void SerializerHl7::Internal::exitArrayStruct(const MetaField& /*field*/)
 {
     if (m_inSegment)
     {
-        m_inArrayStruct = false;
-        assert(m_indexOfLayer.size() == 3);
-        m_indexOfLayer.pop_back();
+        m_ixArrayStruct = NO_ARRAY_STRUCT;
+        assert(m_indexOfLayer.size() == 2);
         m_indexOfLayer.pop_back();
     }
 }
