@@ -1,3 +1,10 @@
+
+
+var segGroups = {};
+var childToType = [];
+
+
+
 module.exports = {
 
     makeFieldName: function (desc)
@@ -99,6 +106,111 @@ module.exports = {
             return true;
         }
         return false;
+    },
+    
+    buildSegGroups: function (hl7dictionary)
+    {
+        for (var keyMessage in hl7dictionary.messages)
+        {
+            var message = hl7dictionary.messages[keyMessage];
+            for (var keySegment in message.segments.segments)
+            {
+                var child = message.segments.segments[keySegment];
+                if (child.children)
+                {
+                    this.processChildren(child);
+                }
+            }
+        }
+
+        for (var i = 0; i < childToType.length; i++)
+        {
+            var entry = childToType[i];
+            entry.child.type = entry.type;
+        }
+        
+
+        for (var keyMessage in hl7dictionary.messages)
+        {
+            var message = hl7dictionary.messages[keyMessage];
+            for (var keySegment in message.segments.segments)
+            {
+                var child = message.segments.segments[keySegment];
+                if (child.children)
+                {
+                    this.processChildrenType(child);
+                }
+                else
+                {
+                    child.type = child.name;
+                }
+            }
+        }
+
+        hl7dictionary.segGroups = segGroups;
+        
+        
+
+    },
+    
+    processChildren: function (child)
+    {
+        if (!(child.name in segGroups))
+        {
+            var type = child.name + '_' + 1;
+            segGroups[child.name] = [{type:type, child:child}];
+            childToType.push({type:type, child:child});
+        }
+        else
+        {
+            var typeExist = null;
+            var found = false;
+            for (var i = 0; i < segGroups[child.name].length; ++i)
+            {
+                if (JSON.stringify(segGroups[child.name][i].child) == JSON.stringify(child))
+                {
+                    typeExist = segGroups[child.name][i].type;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+            {
+                var type = child.name + '_' + (segGroups[child.name].length + 1);
+                segGroups[child.name].push({type:type, child:child});
+                childToType.push({type:type, child:child});
+            }
+            else
+            {
+                childToType.push({type:typeExist, child:child});
+            }
+        }
+
+        for (var keyChild in child.children)
+        {
+            var subChild = child.children[keyChild];
+            
+            if (subChild.children)
+            {
+                this.processChildren(subChild);
+            }
+        }        
+    },
+    
+    processChildrenType: function (child)
+    {
+        for (var keyChild in child.children)
+        {
+            var subChild = child.children[keyChild];            
+            if (subChild.children)
+            {
+                this.processChildrenType(subChild);
+            }
+            else
+            {
+                subChild.type = subChild.name;
+            }
+        }        
     },
 
 }

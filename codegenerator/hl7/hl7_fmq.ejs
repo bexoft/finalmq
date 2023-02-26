@@ -33,6 +33,23 @@
         ]},
 <% } %>
 
+
+<% for (var key in hl7dictionary.segGroups) { 
+    var segGroup = hl7dictionary.segGroups[key] -%>
+<% for (var i = 0; i < segGroup.length; ++i) { 
+    var g = segGroup[i].child; -%>
+        {"type":"<%- g.type %>","desc":"<%- g.desc.replaceAll('"') -%>","fields":[
+<% for (var n = 0; n < g.children.length; ++n) {
+    var child = g.children[n]; -%>
+            {"tid":"struct<% if (child.max != 1) { %>[]<% } %>", "type":"<%- child.type %>", "name":"<%- child.type.toLowerCase() -%>"}<% -%>
+<% if (n != g.children.length - 1) { %>,<% } -%>
+
+<% } -%>
+        ]},
+
+<% }} %>
+
+
 <% for (var key in hl7dictionary.messages) { 
     var message = hl7dictionary.messages[key] -%>
         {"type":"<%- key %>","desc":"<%- message.desc.replaceAll('"') -%>","fields":[ <% -%>

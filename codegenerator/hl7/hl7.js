@@ -22,6 +22,7 @@ if (pathOutput)
 }
 
 helper.makeFieldNames(hl7dictionary);
+helper.buildSegGroups(hl7dictionary);
 var options = {helper:helper, hl7dictionary:hl7dictionary, fileOutput:fileOutput}
 var str = ejs.render(strTemplate, options)
 
