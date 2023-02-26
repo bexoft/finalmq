@@ -4,25 +4,40 @@ var segGroups = {};
 var childToType = [];
 
 
+firstLower = function(str)
+{
+    return str.charAt(0).toLowerCase() + str.slice(1);
+}
+
+title = function(str)
+{
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+
 
 module.exports = {
 
     makeFieldName: function (desc)
     {
         var name = desc;
-        name = name.replaceAll(' ', '');
         name = name.replaceAll('/', '_');
         name = name.replaceAll('-', '_');
         name = name.replaceAll('"', '');
         name = name.replaceAll(',', '_');
-        name = name.replaceAll(':', '');
-        name = name.replaceAll('.', '');
-        name = name.replaceAll('&', '');
-        name = name.replaceAll('+', '');
-        name = name.replaceAll('*', '');
-        name = name.replaceAll('#', '');
-        name = name.replaceAll("'", '');
-        name = name.charAt(0).toLowerCase() + name.slice(1);
+        name = name.replaceAll(':', ' ');
+        name = name.replaceAll('.', ' ');
+        name = name.replaceAll('&', ' ');
+        name = name.replaceAll('+', ' ');
+        name = name.replaceAll('*', ' ');
+        name = name.replaceAll('#', ' ');
+        name = name.replaceAll("'", ' ');
+        names = name.split(' ')
+        for (var i in names)
+        {
+            names[i] = title(names[i]);
+        }
+        name = names.join('');
+        name = firstLower(name);
         name = name.split('(')[0];
         if (name == 'event')
         {
@@ -48,19 +63,19 @@ module.exports = {
                 subfield.nameNotUnique = this.makeFieldName(subfield.desc);
                 if (namesCollection[subfield.nameNotUnique])
                 {
-                    namesNotUnique[subfield.nameNotUnique] = true;
+                    namesNotUnique[subfield.nameNotUnique] = 1;
                 }
                 namesCollection[subfield.nameNotUnique] = true;
             }
-            var id = 1;
             for (var subfieldKey in field.subfields)
             {
                 var subfield = field.subfields[subfieldKey];
                 subfield.name = subfield.nameNotUnique;
                 if (namesNotUnique[subfield.name])
                 {
+                    var id = namesNotUnique[subfield.name];
+                    ++namesNotUnique[subfield.name];
                     subfield.name += '_' + id;
-                    ++id;
                 }
             }            
         }        
@@ -76,7 +91,7 @@ module.exports = {
                 field.nameNotUnique = this.makeFieldName(field.desc);
                 if (namesCollection[field.nameNotUnique])   
                 {
-                    namesNotUnique[field.nameNotUnique] = true;;
+                    namesNotUnique[field.nameNotUnique] = 1;
                 }
                 namesCollection[field.nameNotUnique] = true;
             }
@@ -87,11 +102,19 @@ module.exports = {
                 field.name = field.nameNotUnique;
                 if (namesNotUnique[field.name])
                 {
+                    var id = namesNotUnique[field.name];
+                    ++namesNotUnique[field.name];
                     field.name += '_' + id;
-                    ++id;
                 }
             }            
         }        
+
+        for (var keyMessage in hl7dictionary.messages)
+        {
+            var message = hl7dictionary.messages[keyMessage];
+            var children = message.segments.segments;
+            this.processChildrenNames(children);
+        }
     },
     
     isStruct: function(fields, typename)
@@ -113,20 +136,16 @@ module.exports = {
         for (var keyMessage in hl7dictionary.messages)
         {
             var message = hl7dictionary.messages[keyMessage];
-            for (var keySegment in message.segments.segments)
-            {
-                var child = message.segments.segments[keySegment];
-                if (child.children)
-                {
-                    this.processChildren(child);
-                }
-            }
+            var children = message.segments.segments;
+            this.processChildren(children);
         }
 
         for (var i = 0; i < childToType.length; i++)
         {
             var entry = childToType[i];
+            entry.type = entry.type.replaceAll(',', '_');
             entry.child.type = entry.type;
+            entry.child.name = entry.child.name.replaceAll(',', '_');
         }
         
 
@@ -135,15 +154,8 @@ module.exports = {
             var message = hl7dictionary.messages[keyMessage];
             for (var keySegment in message.segments.segments)
             {
-                var child = message.segments.segments[keySegment];
-                if (child.children)
-                {
-                    this.processChildrenType(child);
-                }
-                else
-                {
-                    child.type = child.name;
-                }
+                var children = message.segments.segments;
+                this.processChildrenType(children);
             }
         }
 
@@ -153,64 +165,114 @@ module.exports = {
 
     },
     
-    processChildren: function (child)
+    processChildren: function (children)
     {
-        if (!(child.name in segGroups))
+        for (var keyChild in children)
         {
-            var type = child.name + '_' + 1;
-            segGroups[child.name] = [{type:type, child:child}];
-            childToType.push({type:type, child:child});
-        }
-        else
-        {
-            var typeExist = null;
-            var found = false;
-            for (var i = 0; i < segGroups[child.name].length; ++i)
+            var child = children[keyChild];
+            if (child.children || child.compounds)
             {
-                if (JSON.stringify(segGroups[child.name][i].child) == JSON.stringify(child))
+                if (!(child.name in segGroups))
                 {
-                    typeExist = segGroups[child.name][i].type;
-                    found = true;
-                    break;
+                    var type = child.name + '_' + 1;
+                    segGroups[child.name] = [{type:type, child:child}];
+                    childToType.push({type:type, child:child});
                 }
-            }
-            if (!found)
-            {
-                var type = child.name + '_' + (segGroups[child.name].length + 1);
-                segGroups[child.name].push({type:type, child:child});
-                childToType.push({type:type, child:child});
-            }
-            else
-            {
-                childToType.push({type:typeExist, child:child});
-            }
-        }
+                else
+                {
+                    var typeExist = null;
+                    var found = false;
+                    for (var i = 0; i < segGroups[child.name].length; ++i)
+                    {
+                        if (JSON.stringify(segGroups[child.name][i].child) == JSON.stringify(child))
+                        {
+                            typeExist = segGroups[child.name][i].type;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                    {
+                        var type = child.name + '_' + (segGroups[child.name].length + 1);
+                        segGroups[child.name].push({type:type, child:child});
+                        childToType.push({type:type, child:child});
+                    }
+                    else
+                    {
+                        childToType.push({type:typeExist, child:child});
+                    }
+                }
 
-        for (var keyChild in child.children)
-        {
-            var subChild = child.children[keyChild];
-            
-            if (subChild.children)
-            {
-                this.processChildren(subChild);
+                if (child.children)
+                {
+                    this.processChildren(child.children);
+                }
+                else if (child.compounds)
+                {
+                    this.processChildren(child.compounds);
+                }
+                
             }
         }        
     },
     
-    processChildrenType: function (child)
+    processChildrenType: function (children)
     {
-        for (var keyChild in child.children)
+        for (var keyChild in children)
         {
-            var subChild = child.children[keyChild];            
-            if (subChild.children)
+            var child = children[keyChild];            
+            
+            if (child.compounds)
             {
-                this.processChildrenType(subChild);
+                child.children = child.compounds;
+            }
+
+            if (child.children)
+            {
+                this.processChildrenType(child.children);
             }
             else
             {
-                subChild.type = subChild.name;
+                child.name = child.name.replaceAll(',', '_');
+                child.type = child.name;
             }
-        }        
+        }
+    },
+
+    processChildrenNames: function (children)
+    {
+        var namesCollection = {}
+        var namesNotUnique = {}
+        for (var keyChild in children)
+        {
+            var child = children[keyChild];
+            
+            child.name = child.name.toLowerCase();
+            
+            nameNotUnique = child.name;
+            if (namesCollection[nameNotUnique])
+            {
+                namesNotUnique[nameNotUnique] = 1;
+            }
+            namesCollection[nameNotUnique] = true;
+
+            if (child.children)
+            {
+                this.processChildrenNames(child.children);
+            }
+        }
+
+        for (var keyChild in children)
+        {
+            var child = children[keyChild];
+            if (namesNotUnique[child.name])
+            {
+                var id = namesNotUnique[child.name];
+                ++namesNotUnique[child.name];
+                child.name += '_' + id;
+            }
+        }            
     },
 
 }
+

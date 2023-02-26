@@ -41,7 +41,7 @@
         {"type":"<%- g.type %>","desc":"<%- g.desc.replaceAll('"') -%>","fields":[
 <% for (var n = 0; n < g.children.length; ++n) {
     var child = g.children[n]; -%>
-            {"tid":"struct<% if (child.max != 1) { %>[]<% } %>", "type":"<%- child.type %>", "name":"<%- child.type.toLowerCase() -%>"}<% -%>
+            {"tid":"struct<% if (child.max != 1) { %>[]<% } %>", "type":"<%- child.type %>", "name":"<%- child.name -%>"}<% -%>
 <% if (n != g.children.length - 1) { %>,<% } -%>
 
 <% } -%>
@@ -50,20 +50,18 @@
 <% }} %>
 
 
-<% for (var key in hl7dictionary.messages) { 
-    var message = hl7dictionary.messages[key] -%>
+<%  var keysMessages = Object.keys(hl7dictionary.messages);
+    for (var n = 0; n < keysMessages.length; ++n) { 
+        var key = keysMessages[n];
+        var message = hl7dictionary.messages[key] -%>
         {"type":"<%- key %>","desc":"<%- message.desc.replaceAll('"') -%>","fields":[ <% -%>
 <% for (var i = 0; i < message.segments.segments.length; ++i) { 
     var segment = message.segments.segments[i] %>
-<% if ((!segment.children || Object.keys(segment.children).length == 0) &&
-       (!segment.compounds || Object.keys(segment.compounds).length == 0)) { -%>
-            {"tid":"struct<% if (segment.max != 1) { %>[]<% } %>", "type":"<%- segment.name %>", "name":"<%- segment.name.toLowerCase() + i -%>"}<% -%>
-<% } else { -%>
-            {"tid":"string", "type":"", "name":"dummydum"}<% -%>
-<% } -%>
+            {"tid":"struct<% if (segment.max != 1) { %>[]<% } %>", "type":"<%- segment.type %>", "name":"<%- segment.name -%>"}<% -%>
 <% if (i != message.segments.segments.length - 1) { %>,<% } -%>
 <% } %>
-        ]},    
+        ]}<% -%>
+<% if (n != keysMessages.length - 1) { %>,<% } %>
 <% } %>
 
     ]
