@@ -15,6 +15,31 @@ title = function(str)
 }
 
 
+addFlagStruct = function(obj, flag)
+{
+    if (!obj.flagsStruct)
+    {
+        obj.flagsStruct = [flag];
+    }
+    else
+    {
+        obj.flagsStruct.push(flag);
+    }
+}
+
+addFlagField = function(obj, flag)
+{
+    if (!obj.flagsField)
+    {
+        obj.flagsField = [flag];
+    }
+    else
+    {
+        obj.flagsField.push(flag);
+    }
+}
+
+
 module.exports = {
 
     makeFieldName: function (desc)
@@ -144,8 +169,10 @@ module.exports = {
         {
             var entry = childToType[i];
             entry.type = entry.type.replaceAll(',', '_');
+            entry.type = entry.type.replaceAll('/', '_');
             entry.child.type = entry.type;
             entry.child.name = entry.child.name.replaceAll(',', '_');
+            entry.child.name = entry.child.name.replaceAll('/', '_');
         }
         
 
@@ -216,6 +243,44 @@ module.exports = {
         }        
     },
     
+    putFlags: function (hl7dictionary)
+    {
+        for (var keyMessage in hl7dictionary.messages)
+        {
+            var message = hl7dictionary.messages[keyMessage];
+            var children = message.segments.segments;
+            this.processChildrenFlags(children, false);
+        }
+    },
+    
+    processChildrenFlags: function (children, choice)
+    {
+        for (var keyChild in children)
+        {
+            var child = children[keyChild];
+            
+            if (child.children)
+            {
+                var c = (child.compounds) ? true : false;
+                if (c)
+                {
+                    addFlagStruct(child, 'METASTRUCTFLAG_CHOICE');
+                }
+                this.processChildrenFlags(child.children, c);
+            }
+
+            if (choice || (child.min == 0 && child.max == 1))
+            {
+                addFlagField(child, 'METAFLAG_NULLABLE');
+            }
+            if (child.min == 1 && child.max != 1)
+            {
+                addFlagField(child, 'METAFLAG_ONE_REQUIRED');
+            }
+        }
+    },
+
+
     processChildrenType: function (children)
     {
         for (var keyChild in children)
@@ -272,7 +337,112 @@ module.exports = {
                 child.name += '_' + id;
             }
         }            
+        
     },
+    
+    
+    generateData: function (hl7dictionary)
+    {        
+        var data = {namespace: 'hl7',
+                    enums: [],
+                    structs: [] };
+        
+        for (var key in hl7dictionary.fields) { 
+            var field = hl7dictionary.fields[key]
+            var stru = {type: key, desc: field.desc, fields:[]};
+            for (var i = 0; i < field.subfields.length; ++i) { 
+                var subfield = field.subfields[i];
+                if (this.isStruct(hl7dictionary.fields, subfield.datatype))
+                {
+                    stru.fields.push({tid:'struct', type: subfield.datatype, name: subfield.name});
+                } 
+                else 
+                {
+                    stru.fields.push({tid:'string', type: '', name: subfield.name});
+                }
+            }
+            data.structs.push(stru);
+        }
+        
+        for (var key in hl7dictionary.segments) { 
+            var segment = hl7dictionary.segments[key]
+            var stru = {type: key, desc: segment.desc, flags:["METASTRUCTFLAG_HL7_SEGMENT"], fields:[]};
+            for (var i = 0; i < segment.fields.length; ++i) { 
+                var field = segment.fields[i]
+                var strArray = '';
+                if (field.rep != 1)
+                {
+                    strArray = '[]';
+                }
+                if (this.isStruct(hl7dictionary.fields, field.datatype)) 
+                {
+                    stru.fields.push({tid:'struct'+strArray, type: field.datatype, name: field.name});
+                } 
+                else
+                {
+                    stru.fields.push({tid:'string'+strArray, type: '', name: field.name});
+                }
+            }
+            data.structs.push(stru);
+        }
+        
+        for (var key in hl7dictionary.segGroups) { 
+            var segGroup = hl7dictionary.segGroups[key]
+            for (var i = 0; i < segGroup.length; ++i) { 
+                var g = segGroup[i].child;
+                var stru = {type: g.type, desc: g.desc.replaceAll('"', '')};
+                if (g.flagsStruct)
+                {
+                    stru.flags = g.flagsStruct;
+                }
+                stru.fields = [];
+                for (var n = 0; n < g.children.length; ++n) {
+                    var child = g.children[n];
+                    var strArray = '';
+                    if (child.max != 1 && !g.compounds)
+                    {
+                        strArray = '[]';
+                    }
+                    var field = {tid: 'struct'+strArray, type: child.type, name: child.name};
+                    if (child.flagsField)
+                    {
+                        field.flags = child.flagsField;
+                    }
+                    stru.fields.push(field);
+                }
+                data.structs.push(stru);
+            }
+        }
+
+        var keysMessages = Object.keys(hl7dictionary.messages);
+        for (var n = 0; n < keysMessages.length; ++n) { 
+            var key = keysMessages[n];
+            var message = hl7dictionary.messages[key];
+            var stru = {type: key, desc: message.desc.replaceAll('"', '')};
+            if (message.flagsStruct)
+            {
+                stru.flags = message.flagsStruct;
+            }
+            stru.fields = [];
+            for (var i = 0; i < message.segments.segments.length; ++i) { 
+                var segment = message.segments.segments[i]
+                var strArray = '';
+                if (segment.max != 1)
+                {
+                    strArray = '[]';
+                }
+                var field = {tid: 'struct'+strArray, type: segment.type, name: segment.name};
+                if (segment.flagsField)
+                {
+                    field.flags = segment.flagsField;
+                }
+                stru.fields.push(field);
+            }
+            data.structs.push(stru);
+        }
+
+        return data;
+    }
 
 }
 

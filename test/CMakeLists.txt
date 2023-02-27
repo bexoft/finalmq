@@ -88,7 +88,7 @@ add_custom_command(
     COMMENT "Generating proto code out of test.fmq."
 )
 
-PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${CMAKE_CURRENT_BINARY_DIR}/test.proto ${CMAKE_CURRENT_BINARY_DIR}/variant.proto)
+PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${CMAKE_CURRENT_BINARY_DIR}/variant.proto ${CMAKE_CURRENT_BINARY_DIR}/test.proto)
 
 
 message("proto headers: ${PROTO_HDRS}")
