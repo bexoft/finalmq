@@ -40,6 +40,58 @@ addFlagField = function(obj, flag)
 }
 
 
+isTypeAvailabe = function(structsOrdered, type)
+{
+    for (var i = 0; i < structsOrdered.length; ++i)
+    {
+        if (structsOrdered[i].type == type)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+isDependencyOk = function (structsOrdered, stru)
+{
+    for (var i = 0; i < stru.fields.length; ++i)
+    {
+        var field = stru.fields[i];
+        if (field.tid == 'struct' || field.tid == 'struct[]')
+        {
+            if (!isTypeAvailabe(structsOrdered, field.type))
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+
+sortDependency = function (structs)
+{
+    var structsOrdered = [];
+    
+    while (structs.length > 0)
+    {
+        for (var i = 0; i < structs.length; ++i)
+        {
+            var stru = structs[i];
+            if (isDependencyOk(structsOrdered, stru))
+            {
+                structsOrdered.push(stru);
+                structs.splice(i, 1);
+                --i;
+            }
+        }
+    }
+    return structsOrdered;
+}
+
+
+
+
 module.exports = {
 
     makeFieldName: function (desc)
@@ -346,7 +398,8 @@ module.exports = {
         var data = {namespace: 'hl7',
                     enums: [],
                     structs: [] };
-        
+
+        var structsHl7Fields = [];
         for (var key in hl7dictionary.fields) { 
             var field = hl7dictionary.fields[key]
             var stru = {type: key, desc: field.desc, fields:[]};
@@ -440,6 +493,8 @@ module.exports = {
             }
             data.structs.push(stru);
         }
+
+        data.structs = sortDependency(data.structs);
 
         return data;
     }
