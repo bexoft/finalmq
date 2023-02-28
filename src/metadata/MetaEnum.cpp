@@ -146,12 +146,18 @@ const std::string& MetaEnum::getNameByValue(std::int32_t value) const
 
 const std::string& MetaEnum::getAliasByValue(std::int32_t value) const
 {
+    static const std::string aliasEmpty = "$empty";
+    static const std::string empty = "";
     const MetaEnumEntry* entry = MetaEnum::getEntryById(value);
     if (entry)
     {
         if (!entry->alias.empty())
         {
-            return entry->alias;
+            if (entry->alias != aliasEmpty)
+            {
+                return entry->alias;
+            }
+            return empty;
         }
         return entry->name;
     }
@@ -162,7 +168,11 @@ const std::string& MetaEnum::getAliasByValue(std::int32_t value) const
         {
             if (!entry->alias.empty())
             {
-                return entry->alias;
+                if (entry->alias != aliasEmpty)
+                {
+                    return entry->alias;
+                }
+                return empty;
             }
             return entry->name;
         }

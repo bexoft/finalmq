@@ -105,7 +105,7 @@ findStruct = function (structs, type)
 
 
 
-collectFilteredStruct = function (structs, type, filteredTypes)
+collectFilteredStruct = function (structs, type, filteredTypes, filteredEnums)
 {
     var stru = findStruct(structs, type);
     if (stru)
@@ -117,7 +117,11 @@ collectFilteredStruct = function (structs, type, filteredTypes)
             var field = stru.fields[i];
             if ((field.tid == 'struct') || (field.tid == 'struct[]'))
             {
-                collectFilteredStruct(structs, field.type, filteredTypes);
+                collectFilteredStruct(structs, field.type, filteredTypes, filteredEnums);
+            }
+            else if ((field.tid == 'enum') || (field.tid == 'enum[]'))
+            {
+                filteredEnums[field.type] = true;
             }
         }
     }
@@ -127,10 +131,11 @@ collectFilteredStruct = function (structs, type, filteredTypes)
 filterData = function (data, filter)
 {
     var filteredTypes = {};
+    var filteredEnums = {};
     for (var i in filter)
     {
         var type = filter[i];
-        collectFilteredStruct(data.structs, type, filteredTypes);
+        collectFilteredStruct(data.structs, type, filteredTypes, filteredEnums);
     }
     
     for (var i = 0; i < data.structs.length; ++i)
@@ -142,7 +147,14 @@ filterData = function (data, filter)
         }
     }
     
-//    console.log(JSON.stringify(filteredTypes, null, 4));
+    for (var i = 0; i < data.enums.length; ++i)
+    {
+        if (!(data.enums[i].type in filteredEnums))
+        {
+            data.enums.splice(i, 1);
+            --i;
+        }
+    }
     
     return data;
 }
@@ -503,7 +515,8 @@ module.exports = {
                 table.type += '_' + key;
             }
             if ((table.type == 'MessageStructure') ||
-                (table.type == 'EventType'))
+                (table.type == 'EventType') ||
+                (table.type == 'MessageType') )
             {
                 for (var key in table.values)
                 {
@@ -579,7 +592,7 @@ module.exports = {
             var table = hl7Tables[key];
             var enu = {type: table.type, entries:[]};
             var index = 0;
-            enu.entries.push({name: 'Empty', id: 0, alias: ''});
+            enu.entries.push({name: 'Empty', id: 0, alias: '$empty'});
             for (var key in table.values)
             {
                 var value = table.values[key];
@@ -603,7 +616,7 @@ module.exports = {
                 else 
                 {
                     var isEnum = false;
-                    if (subfield.table)
+                    if (subfield.table && hl7Tables && (key != "MSG"))
                     {
                         var table = hl7Tables[subfield.table];
                         if (table)
@@ -638,7 +651,7 @@ module.exports = {
                 else
                 {
                     var isEnum = false;
-                    if (subfield.table)
+                    if (subfield.table && hl7Tables)
                     {
                         var table = hl7Tables[subfield.table];
                         if (table)

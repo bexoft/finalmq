@@ -8,7 +8,12 @@ var fileTables = argv['tables']
 var pathOutput = argv['outpath']
 
 var hl7dictionary = require(fileData);
-var hl7Tables = require(fileTables);
+
+var hl7Tables = null;
+if (fileTables)
+{
+    hl7Tables = require(fileTables);
+}
 
 var fileOutput = fileData + '.fmq'
 
@@ -37,7 +42,11 @@ if (pathOutput)
 helper.buildSegGroups(hl7dictionary);
 helper.makeFieldNames(hl7dictionary);
 helper.putFlags(hl7dictionary);
-helper.processTables(hl7Tables);
+
+if (hl7Tables)
+{
+    helper.processTables(hl7Tables);
+}
 
 var data = helper.generateData(hl7dictionary, hl7Tables, options);
 var str = JSON.stringify(data, null, 4);

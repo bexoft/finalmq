@@ -67,7 +67,7 @@ public:
 protected:
     virtual void SetUp()
     {
-        static const int MAX_BLOCK_SIZE = 5000;
+        static const int MAX_BLOCK_SIZE = 10000;
 
         m_data.resize(MAX_BLOCK_SIZE);
         EXPECT_CALL(m_mockBuffer, addBuffer(MAX_BLOCK_SIZE, _)).Times(1).WillOnce(Return((char*)m_data.data()));
@@ -93,7 +93,7 @@ TEST_F(TestSerializerHl7, testSSU_U03)
     testhl7::SSU_U03 msg;
     msg.msh.countryCode = "de";
     msg.uac = std::make_shared<testhl7::UAC>();
-    msg.uac->userAuthenticationCredential.typeOfData = "hello";
+    msg.uac->userAuthenticationCredential.typeOfData = testhl7::MimeTypes::MimeMultipartPackage;
     msg.sft.resize(3);
     msg.sft[0].softwareBinaryId = "world";
     msg.specimen_container.resize(4);
@@ -106,14 +106,14 @@ TEST_F(TestSerializerHl7, testSSU_U03)
     msg.specimen_container[0].specimen[0].spm.accessionId.resize(1);
     msg.specimen_container[0].specimen[0].spm.accessionId[0].idNumber = "ggg";
     msg.specimen_container[0].specimen[0].spm.containerCondition.alternateText = "tt";
-    msg.specimen_container[0].specimen[0].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
+    msg.specimen_container[0].specimen[0].spm.containerCondition.nameOfAlternateCodingSystem = testhl7::CodingSystem::WhoAdverseReactionTerms;
     msg.specimen_container[0].specimen[0].obx.resize(5);
 
     ParserStruct parser(*m_serializer, msg);
     parser.parseStruct();
 
 
-    ASSERT_EQ(m_data, "MSH|^~\\&|||||||SSU^U03^SSU_U03||||||||de\rSFT||||world\rSFT\rSFT\rUAC||^hello\rEQU\rSAC||||||hh||||uu^^bbb||||hey\rOBX\rOBX\rSPM||||||||||||||||||||||||||||^^^^tt^cc||ggg\rOBX\rOBX\rOBX\rOBX\rOBX\rSPM\rSPM\rSAC\rSAC\rSAC\r");
+    ASSERT_EQ(m_data, "MSH|^~\\&|||||||SSU^U03^SSU_U03||||||||de\rSFT||||world\rSFT\rSFT\rUAC||^multipart\rEQU\rSAC||||||hh||||uu^^bbb||||hey\rOBX\rOBX\rSPM||||||||||||||||||||||||||||^^^^tt^ART||ggg\rOBX\rOBX\rOBX\rOBX\rOBX\rSPM\rSPM\rSAC\rSAC\rSAC\r");
 }
 
 

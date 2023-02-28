@@ -72,7 +72,7 @@ TEST_F(TestParserHl7, testSSU_U03)
     cmp.msh.messageType.messageStructure = "SSU_U03";
     cmp.msh.countryCode = "de";
     cmp.uac = std::make_shared<testhl7::UAC>();
-    cmp.uac->userAuthenticationCredential.typeOfData = "hello";
+    cmp.uac->userAuthenticationCredential.typeOfData = testhl7::MimeTypes::MimeMultipartPackage;
     cmp.sft.resize(3);
     cmp.sft[0].softwareBinaryId = "world";
     cmp.specimen_container.resize(4);
@@ -85,11 +85,11 @@ TEST_F(TestParserHl7, testSSU_U03)
     cmp.specimen_container[0].specimen[0].spm.accessionId.resize(1);
     cmp.specimen_container[0].specimen[0].spm.accessionId[0].idNumber = "ggg";
     cmp.specimen_container[0].specimen[0].spm.containerCondition.alternateText = "tt";
-    cmp.specimen_container[0].specimen[0].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
+    cmp.specimen_container[0].specimen[0].spm.containerCondition.nameOfAlternateCodingSystem = testhl7::CodingSystem::WhoAdverseReactionTerms;
     cmp.specimen_container[0].specimen[0].obx.resize(5);
 
     testhl7::SSU_U03 msg;
-    std::string data = "MSH|^~\\&|||||||SSU^U03^SSU_U03||||||||de\rSFT||||world\rSFT\rSFT\rUAC||^hello\rEQU\rSAC||||||hh||||uu^^bbb||||hey\rOBX\rOBX\rSPM||||||||||||||||||||||||||||^^^^tt^cc||ggg\rOBX\rOBX\rOBX\rOBX\rOBX\rSPM\rSPM\rSAC\rSAC\rSAC\r";
+    std::string data = "MSH|^~\\&|||||||SSU^U03^SSU_U03||||||||de\rSFT||||world\rSFT\rSFT\rUAC||^multipart\rEQU\rSAC||||||hh||||uu^^bbb||||hey\rOBX\rOBX\rSPM||||||||||||||||||||||||||||^^^^tt^ART||ggg\rOBX\rOBX\rOBX\rOBX\rOBX\rSPM\rSPM\rSAC\rSAC\rSAC\r";
 
     SerializerStruct serializer(msg);
     ParserHl7 parser(serializer, data.data());
