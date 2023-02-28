@@ -60,7 +60,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
 
     static const MetaField* fieldStruct = m_structVarValue->getFieldByName("vallist");
     assert(fieldStruct);
-    static const MetaField* fieldStructWithoutArray = MetaDataGlobal::instance().getArrayField(*fieldStruct);
+    static const MetaField* fieldStructWithoutArray = fieldStruct->fieldWithoutArray;
     assert(fieldStructWithoutArray);
 
     if (level > 0)
@@ -258,7 +258,7 @@ void VariantToVarValue::enterStruct(Variant& /*variant*/, int type, ssize_t /*in
 {
     static const MetaField* fieldList = m_structVarValue->getFieldByName("vallist");
     assert(fieldList);
-    static const MetaField* fieldListWithoutArray = MetaDataGlobal::instance().getArrayField(*fieldList);
+    static const MetaField* fieldListWithoutArray = fieldList->fieldWithoutArray;
     assert(fieldListWithoutArray);
 
     if (level > 0)
@@ -285,7 +285,7 @@ void VariantToVarValue::exitStruct(Variant& /*variant*/, int /*type*/, ssize_t /
     static const MetaField* fieldList = m_structVarValue->getFieldByName("vallist");
     assert(fieldList);
     m_visitor.exitArrayStruct(*fieldList);
-    static const MetaField* fieldListWithoutArray = MetaDataGlobal::instance().getArrayField(*fieldList);
+    static const MetaField* fieldListWithoutArray = fieldList->fieldWithoutArray;
     assert(fieldListWithoutArray);
 
     if (level > 0)

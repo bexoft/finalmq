@@ -33,6 +33,7 @@
 namespace finalmq {
 
 
+
 SerializerHl7::SerializerHl7(IZeroCopyBuffer& buffer, int maxBlockSize, bool enumAsString)
     : ParserProcessDefaultValues(false)
     , m_internal(buffer, maxBlockSize, enumAsString)
@@ -63,16 +64,16 @@ void SerializerHl7::Internal::startStruct(const MetaStruct& stru)
 
     m_indexOfLayer.push_back(-1);
 
-    int indexMessageType[3] = { 0, 8 };
+    int indexMessageType[3] = { 0, 8, 0 };
     if (splitString.size() >= 1)
     {
-        m_hl7Builder.enterString(indexMessageType, 2, 0, std::move(splitString[0]));
+        m_hl7Builder.enterString(indexMessageType, 3, 0, std::move(splitString[0]));
     }
     if (splitString.size() >= 2)
     {
-        m_hl7Builder.enterString(indexMessageType, 2, 1, std::move(splitString[1]));
+        m_hl7Builder.enterString(indexMessageType, 3, 1, std::move(splitString[1]));
     }
-    m_hl7Builder.enterString(indexMessageType, 2, 2, std::move(messageStructure));
+    m_hl7Builder.enterString(indexMessageType, 3, 2, std::move(messageStructure));
 }
 
 
@@ -99,7 +100,24 @@ void SerializerHl7::Internal::enterStruct(const MetaField& field)
         }
         else
         {
-            m_indexOfLayer.push_back(field.index);
+            // at index 2 there is the array index
+            if (m_indexOfLayer.size() != 2)
+            {
+                m_indexOfLayer.push_back(field.index);
+            }
+            // at size = 2 add the array index (at index 2)
+            if (m_indexOfLayer.size() == 2)
+            {
+                if (m_ixArrayStruct == NO_ARRAY_STRUCT)
+                {
+                    m_indexOfLayer.push_back(0);
+                }
+                else
+                {
+                    ++m_ixArrayStruct;
+                    m_indexOfLayer.push_back(m_ixArrayStruct);
+                }
+            }
         }
     }
 }
@@ -108,6 +126,10 @@ void SerializerHl7::Internal::exitStruct(const MetaField& /*field*/)
 {
     if (m_indexOfLayer.size() > 1)
     {
+        if (m_indexOfLayer.size() == 3 && m_ixArrayStruct == NO_ARRAY_STRUCT)
+        {
+            m_indexOfLayer.pop_back();
+        }
         m_indexOfLayer.pop_back();
     }
     else
@@ -121,12 +143,24 @@ void SerializerHl7::Internal::enterStructNull(const MetaField& /*field*/)
 }
 
 
-void SerializerHl7::Internal::enterArrayStruct(const MetaField& /*field*/)
+void SerializerHl7::Internal::enterArrayStruct(const MetaField& field)
 {
+    if (m_inSegment)
+    {
+        m_ixArrayStruct = -1;
+        assert(m_indexOfLayer.size() == 1);
+        m_indexOfLayer.push_back(field.index);
+    }
 }
 
 void SerializerHl7::Internal::exitArrayStruct(const MetaField& /*field*/)
 {
+    if (m_inSegment)
+    {
+        m_ixArrayStruct = NO_ARRAY_STRUCT;
+        assert(m_indexOfLayer.size() == 2);
+        m_indexOfLayer.pop_back();
+    }
 }
 
 
@@ -187,27 +221,33 @@ void SerializerHl7::Internal::enterDouble(const MetaField& field, double value)
     }
 }
 
-void SerializerHl7::Internal::enterString(const MetaField& field, std::string&& value)
+
+bool SerializerHl7::Internal::filterEnterString(size_t valueSize) const
 {
-    if (!m_indexOfLayer.empty() && value.size() > 0)
+    if (!m_indexOfLayer.empty() && valueSize > 0)
     {
         // skip message type
-        if (!(m_indexOfLayer.size() == 2 && m_indexOfLayer[0] == 0 && m_indexOfLayer[1] == 8))
+        if (!(m_indexOfLayer.size() == 3 && m_indexOfLayer[0] == 0 && m_indexOfLayer[1] == 8))
         {
-            m_hl7Builder.enterString(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, std::move(value));
+            return true;
         }
+    }
+    return false;
+}
+
+void SerializerHl7::Internal::enterString(const MetaField& field, std::string&& value)
+{
+    if (filterEnterString(value.size()))
+    {
+        m_hl7Builder.enterString(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, std::move(value));
     }
 }
 
 void SerializerHl7::Internal::enterString(const MetaField& field, const char* value, ssize_t size)
 {
-    if (!m_indexOfLayer.empty() && size > 0)
+    if (filterEnterString(size))
     {
-        // skip message type
-        if (!(m_indexOfLayer.size() == 2 && m_indexOfLayer[0] == 0 && m_indexOfLayer[1] == 8))
-        {
-            m_hl7Builder.enterString(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value, size);
-        }
+        m_hl7Builder.enterString(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value, size);
     }
 }
 

@@ -419,7 +419,7 @@ void ParserProto::parseArrayStruct(const MetaField& field)
     if (wireType == WIRETYPE_LENGTH_DELIMITED)
     {
 
-        const MetaField* fieldWithoutArray = MetaDataGlobal::instance().getArrayField(field);
+        const MetaField* fieldWithoutArray = field.fieldWithoutArray;
         assert(fieldWithoutArray);
         m_visitor.enterArrayStruct(field);
         do

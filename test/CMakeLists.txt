@@ -68,10 +68,10 @@ add_custom_command(
 )
 
 add_custom_command(
-    COMMAND node ${CODEGENERATOR}/cpp/cpp.js --input=${CMAKE_SOURCE_DIR}/hl7def/hl7.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS ${CMAKE_SOURCE_DIR}/hl7def/hl7.fmq
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/hl7.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/hl7.fmq.h
-    COMMENT "Generating cpp code out of hl7.fmq."
+    COMMAND node ${CODEGENERATOR}/cpp/cpp.js --input=${CMAKE_CURRENT_SOURCE_DIR}/testhl7.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/testhl7.fmq
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/testhl7.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/testhl7.fmq.h
+    COMMENT "Generating cpp code out of testhl7.fmq."
 )
 
 add_custom_command(
@@ -88,7 +88,7 @@ add_custom_command(
     COMMENT "Generating proto code out of test.fmq."
 )
 
-PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${CMAKE_CURRENT_BINARY_DIR}/test.proto ${CMAKE_CURRENT_BINARY_DIR}/variant.proto)
+PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${CMAKE_CURRENT_BINARY_DIR}/variant.proto ${CMAKE_CURRENT_BINARY_DIR}/test.proto)
 
 
 message("proto headers: ${PROTO_HDRS}")
@@ -103,9 +103,10 @@ file(GLOB TESTSOURCES "*.cpp")
 
 # Now simply link against gtest or gtest_main as needed. Eg
 if (WIN32)
-SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -D_ALLOW_KEYWORD_MACROS" )
+SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -D_ALLOW_KEYWORD_MACROS")
+add_compile_options(/bigobj)
 endif()
-add_executable(testfinalmq ${TESTSOURCES} ${PROTO_SRCS} ${PROTO_HDRS} ${CMAKE_CURRENT_BINARY_DIR}/test.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/hl7.fmq.cpp ../services/fmqreg/registry.cpp)
+add_executable(testfinalmq ${TESTSOURCES} ${PROTO_SRCS} ${PROTO_HDRS} ${CMAKE_CURRENT_BINARY_DIR}/test.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/testhl7.fmq.cpp ../services/fmqreg/registry.cpp)
 
 
 if (FINALMQ_USE_SSL)

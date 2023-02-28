@@ -52,3 +52,5 @@ CMakeSettings.json
 # generated files
 *.fmq.h 
 *.fmq.cpp
+*.fmq.cs 
+*.fmq.proto

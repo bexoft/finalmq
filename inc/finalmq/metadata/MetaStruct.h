@@ -38,6 +38,7 @@ enum MetaStructFlags : std::int32_t
 {
     METASTRUCTFLAG_NONE = 0,
     METASTRUCTFLAG_HL7_SEGMENT = 1,
+    METASTRUCTFLAG_CHOICE = 2,
 };
 
 

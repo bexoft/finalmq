@@ -1,8 +1,866 @@
 {
     "namespace":"testhl7",
-    "enums":[
+    "enums": [
+        { "type": "CheckDigitScheme", "entries": [
+                { "name": "Empty", "id": 0, "alias": "$empty" },
+                { "name": "BankCardValidationNumber", "id": 1, "alias": "BCV" },
+                { "name": "Iso70641983", "id": 2, "alias": "ISO" },
+                { "name": "Mod10Algorithm", "id": 3, "alias": "M10" },
+                { "name": "Mod11Algorithm", "id": 4, "alias": "M11" },
+                { "name": "CheckDigitAlgorithmInTheUsNationalProviderIdentifier", "id": 5, "alias": "NPI" }
+            ]
+        },
+        { "type": "ProcessingId", "entries": [
+                { "name": "Empty", "id": 0, "alias": "$empty" },
+                { "name": "Debugging", "id": 1, "alias": "D" },
+                { "name": "Production", "id": 2, "alias": "P" },
+                { "name": "Training", "id": 3, "alias": "T" }
+            ]
+        },
+        { "type": "VersionId", "entries": [
+                { "name": "Empty", "id": 0, "alias": "$empty" },
+                { "name": "Release2_0", "id": 1, "alias": "2.0" },
+                { "name": "Demo2_0", "id": 2, "alias": "2.0D" },
+                { "name": "Release2", "id": 3, "alias": "2.1" },
+                { "name": "Release2_2", "id": 4, "alias": "2.2" },
+                { "name": "Release2_3", "id": 5, "alias": "2.3" },
+                { "name": "Release2_3_1", "id": 6, "alias": "2.3.1" },
+                { "name": "Release2_4", "id": 7, "alias": "2.4" },
+                { "name": "Release2_5", "id": 8, "alias": "2.5" },
+                { "name": "Release1_5_1", "id": 9, "alias": "2.5.1" },
+                { "name": "Release2_6", "id": 10, "alias": "2.6" }
+            ]
+        },
+        { "type": "Yes_noIndicator", "entries": [
+                { "name": "Empty", "id": 0, "alias": "$empty" },
+                { "name": "No", "id": 1, "alias": "N" },
+                { "name": "Yes", "id": 2, "alias": "Y" }
+            ]
+        },
+        { "type": "AddressType", "entries": [
+                { "name": "Empty", "id": 0, "alias": "$empty" },
+                { "name": "Firm_business", "id": 1, "alias": "B" },
+                { "name": "BadAddress", "id": 2, "alias": "BA" },
+                { "name": "BirthDeliveryLocation", "id": 3, "alias": "BDL" },
+                { "name": "BillingAddress", "id": 4, "alias": "BI" },
+                { "name": "ResidenceAtBirth", "id": 5, "alias": "BR" },
+                { "name": "CurrentOrTemporary", "id": 6, "alias": "C" },
+                { "name": "CountryOfOrigin", "id": 7, "alias": "F" },
+                { "name": "Home", "id": 8, "alias": "H" },
+                { "name": "LegalAddress", "id": 9, "alias": "L" },
+                { "name": "Mailing", "id": 10, "alias": "M" },
+                { "name": "Birth", "id": 11, "alias": "N" },
+                { "name": "Office_business", "id": 12, "alias": "O" },
+                { "name": "Permanent", "id": 13, "alias": "P" },
+                { "name": "RegistryHome", "id": 14, "alias": "RH" },
+                { "name": "ServiceLocation", "id": 15, "alias": "S" },
+                { "name": "ShippingAddress", "id": 16, "alias": "SH" },
+                { "name": "Vacation", "id": 17, "alias": "V" }
+            ]
+        },
+        { "type": "NameType", "entries": [
+                { "name": "Empty", "id": 0, "alias": "$empty" },
+                { "name": "AliasName", "id": 1, "alias": "A" },
+                { "name": "NameAtBirth", "id": 2, "alias": "B" },
+                { "name": "AdoptedName", "id": 3, "alias": "C" },
+                { "name": "DisplayName", "id": 4, "alias": "D" },
+                { "name": "LicensingName", "id": 5, "alias": "I" },
+                { "name": "ArtistName", "id": 6, "alias": "K" },
+                { "name": "LegalName", "id": 7, "alias": "L" },
+                { "name": "MaidenName", "id": 8, "alias": "M" },
+                { "name": "Nickname_callMeName_streetName", "id": 9, "alias": "N" },
+                { "name": "NameOfPartner_spouse", "id": 10, "alias": "P" },
+                { "name": "RegisteredName", "id": 11, "alias": "R" },
+                { "name": "CodedPseudo_nameToEnsureAnonymity", "id": 12, "alias": "S" },
+                { "name": "Indigenous_tribal_communityName", "id": 13, "alias": "T" },
+                { "name": "Unspecified", "id": 14, "alias": "U" }
+            ]
+        },
+        { "type": "TelecommunicationUseCode", "entries": [
+                { "name": "Empty", "id": 0, "alias": "$empty" },
+                { "name": "AnsweringServiceNumber", "id": 1, "alias": "ASN" },
+                { "name": "BeeperNumber", "id": 2, "alias": "BPN" },
+                { "name": "EmergencyNumber", "id": 3, "alias": "EMR" },
+                { "name": "Network", "id": 4, "alias": "NET" },
+                { "name": "OtherResidenceNumber", "id": 5, "alias": "ORN" },
+                { "name": "PrimaryResidenceNumber", "id": 6, "alias": "PRN" },
+                { "name": "Personal", "id": 7, "alias": "PRS" },
+                { "name": "VacationHomeNumber", "id": 8, "alias": "VHN" },
+                { "name": "WorkNumber", "id": 9, "alias": "WPN" }
+            ]
+        },
+        { "type": "TelecommunicationEquipmentType", "entries": [
+                { "name": "Empty", "id": 0, "alias": "$empty" },
+                { "name": "Beeper", "id": 1, "alias": "BP" },
+                { "name": "CellularOrMobilePhone", "id": 2, "alias": "CP" },
+                { "name": "Fax", "id": 3, "alias": "FX" },
+                { "name": "InternetAddress", "id": 4, "alias": "Internet" },
+                { "name": "Modem", "id": 5, "alias": "MD" },
+                { "name": "Telephone", "id": 6, "alias": "PH" },
+                { "name": "SatellitePhone", "id": 7, "alias": "SAT" },
+                { "name": "TelecommunicationsDeviceForTheDeaf", "id": 8, "alias": "TDD" },
+                { "name": "Teletypewriter", "id": 9, "alias": "TTY" },
+                { "name": "X_400EmailAddress", "id": 10, "alias": "X.400" }
+            ]
+        },
+        { "type": "IdentifierType", "entries": [
+                { "name": "Empty", "id": 0, "alias": "$empty" },
+                { "name": "AmericanExpress", "id": 1, "alias": "AM" },
+                { "name": "AmericanMedicalAssociationNumber", "id": 2, "alias": "AMA" },
+                { "name": "AccountNumber", "id": 3, "alias": "AN" },
+                { "name": "AccountNumberCreditor", "id": 4, "alias": "ANC" },
+                { "name": "AccountNumberDebitor", "id": 5, "alias": "AND" },
+                { "name": "AnonymousIdentifier", "id": 6, "alias": "ANON" },
+                { "name": "TemporaryAccountNumber", "id": 7, "alias": "ANT" },
+                { "name": "AdvancedPracticeRegisteredNurseNumber", "id": 8, "alias": "APRN" },
+                { "name": "BankAccountNumber", "id": 9, "alias": "BA" },
+                { "name": "BankCardNumber", "id": 10, "alias": "BC" },
+                { "name": "BirthCertificate", "id": 11, "alias": "BCT" },
+                { "name": "BirthRegistryNumber", "id": 12, "alias": "BR" },
+                { "name": "BreedRegistryNumber", "id": 13, "alias": "BRN" },
+                { "name": "CostCenterNumber", "id": 14, "alias": "CC" },
+                { "name": "ChangeOfNameDocument", "id": 15, "alias": "CONM" },
+                { "name": "CountyNumber", "id": 16, "alias": "CY" },
+                { "name": "CitizenshipCard", "id": 17, "alias": "CZ" },
+                { "name": "DentistLicenseNumber", "id": 18, "alias": "DDS" },
+                { "name": "DrugEnforcementAdministrationRegistrationNumber", "id": 19, "alias": "DEA" },
+                { "name": "DrugFurnishingOrPrescriptiveAuthorityNumber", "id": 20, "alias": "DFN" },
+                { "name": "DinersClubCard", "id": 21, "alias": "DI" },
+                { "name": "DriversLicenseNumber", "id": 22, "alias": "DL" },
+                { "name": "DoctorNumber", "id": 23, "alias": "DN" },
+                { "name": "OsteopathicLicenseNumber", "id": 24, "alias": "DO" },
+                { "name": "DiplomaticPassport", "id": 25, "alias": "DP" },
+                { "name": "PodiatristLicenseNumber", "id": 26, "alias": "DPM" },
+                { "name": "DonorRegistrationNumber", "id": 27, "alias": "DR" },
+                { "name": "DiscoverCard", "id": 28, "alias": "DS" },
+                { "name": "EmployeeNumber", "id": 29, "alias": "EI" },
+                { "name": "EmployerNumber", "id": 30, "alias": "EN" },
+                { "name": "StaffEnterpriseNumber", "id": 31, "alias": "ESN" },
+                { "name": "FacilityId", "id": 32, "alias": "FI" },
+                { "name": "GuarantorInternalIdentifier", "id": 33, "alias": "GI" },
+                { "name": "GeneralLedgerNumber", "id": 34, "alias": "GL" },
+                { "name": "GuarantorExternalIdentifier", "id": 35, "alias": "GN" },
+                { "name": "HealthCardNumber", "id": 36, "alias": "HC" },
+                { "name": "Indigenous_aboriginal", "id": 37, "alias": "IND" },
+                { "name": "JurisdictionalHealthNumber", "id": 38, "alias": "JHN" },
+                { "name": "LaborAndIndustriesNumber", "id": 39, "alias": "LI" },
+                { "name": "LicenseNumber", "id": 40, "alias": "LN" },
+                { "name": "LocalRegistryId", "id": 41, "alias": "LR" },
+                { "name": "PatientMedicaidNumber", "id": 42, "alias": "MA" },
+                { "name": "MemberNumber", "id": 43, "alias": "MB" },
+                { "name": "PatientsMedicareNumber", "id": 44, "alias": "MC" },
+                { "name": "PractitionerMedicaidNumber", "id": 45, "alias": "MCD" },
+                { "name": "MicrochipNumber", "id": 46, "alias": "MCN" },
+                { "name": "PractitionerMedicareNumber", "id": 47, "alias": "MCR" },
+                { "name": "MarriageCertificate", "id": 48, "alias": "MCT" },
+                { "name": "MedicalLicenseNumber", "id": 49, "alias": "MD" },
+                { "name": "MilitaryIdNumber", "id": 50, "alias": "MI" },
+                { "name": "MedicalRecordNumber", "id": 51, "alias": "MR" },
+                { "name": "TemporaryMedicalRecordNumber", "id": 52, "alias": "MRT" },
+                { "name": "Mastercard", "id": 53, "alias": "MS" },
+                { "name": "NaturalizationCertificate", "id": 54, "alias": "NCT" },
+                { "name": "NationalEmployerIdentifier", "id": 55, "alias": "NE" },
+                { "name": "NationalHealthPlanIdentifier", "id": 56, "alias": "NH" },
+                { "name": "NationalUniqueIndividualIdentifier", "id": 57, "alias": "NI" },
+                { "name": "NationalInsuranceOrganizationIdentifier", "id": 58, "alias": "NII" },
+                { "name": "NationalInsurancePayorIdentifier", "id": 59, "alias": "NIIP" },
+                { "name": "NursePractitionerNumber", "id": 60, "alias": "NP" },
+                { "name": "NationalProviderIdentifier", "id": 61, "alias": "NPI" },
+                { "name": "OptometristLicenseNumber", "id": 62, "alias": "OD" },
+                { "name": "PhysicianAssistantNumber", "id": 63, "alias": "PA" },
+                { "name": "ParoleCard", "id": 64, "alias": "PC" },
+                { "name": "Penitentiary_correctionalInstitutionNumber", "id": 65, "alias": "PCN" },
+                { "name": "LivingSubjectEnterpriseNumber", "id": 66, "alias": "PE" },
+                { "name": "PensionNumber", "id": 67, "alias": "PEN" },
+                { "name": "PatientInternalIdentifier", "id": 68, "alias": "PI" },
+                { "name": "PersonNumber", "id": 69, "alias": "PN" },
+                { "name": "TemporaryLivingSubjectNumber", "id": 70, "alias": "PNT" },
+                { "name": "Medicare_cmsPerformingProviderIdentificationNumber", "id": 71, "alias": "PPIN" },
+                { "name": "PassportNumber", "id": 72, "alias": "PPN" },
+                { "name": "PermanentResidentCardNumber", "id": 73, "alias": "PRC" },
+                { "name": "ProviderNumber", "id": 74, "alias": "PRN" },
+                { "name": "PatientExternalIdentifier", "id": 75, "alias": "PT" },
+                { "name": "QaNumber", "id": 76, "alias": "QA" },
+                { "name": "ResourceIdentifier", "id": 77, "alias": "RI" },
+                { "name": "RegisteredNurseNumber", "id": 78, "alias": "RN" },
+                { "name": "PharmacistLicenseNumber", "id": 79, "alias": "RPH" },
+                { "name": "RailroadRetirementNumber", "id": 80, "alias": "RR" },
+                { "name": "RegionalRegistryId", "id": 81, "alias": "RRI" },
+                { "name": "RailroadRetirementProvider", "id": 82, "alias": "RRP" },
+                { "name": "StateLicense", "id": 83, "alias": "SL" },
+                { "name": "SubscriberNumber", "id": 84, "alias": "SN" },
+                { "name": "StudyPermit", "id": 85, "alias": "SP" },
+                { "name": "StateRegistryId", "id": 86, "alias": "SR" },
+                { "name": "SocialSecurityNumber", "id": 87, "alias": "SS" },
+                { "name": "TaxIdNumber", "id": 88, "alias": "TAX" },
+                { "name": "TreatyNumber_", "id": 89, "alias": "TN" },
+                { "name": "TemporaryPermanentResident", "id": 90, "alias": "TPR" },
+                { "name": "UnspecifiedIdentifier", "id": 91, "alias": "U" },
+                { "name": "Medicare_cms", "id": 92, "alias": "UPIN" },
+                { "name": "VisitNumber", "id": 93, "alias": "VN" },
+                { "name": "VisitorPermit", "id": 94, "alias": "VP" },
+                { "name": "Visa", "id": 95, "alias": "VS" },
+                { "name": "WicIdentifier", "id": 96, "alias": "WC" },
+                { "name": "WorkersCompNumber", "id": 97, "alias": "WCN" },
+                { "name": "WorkPermit", "id": 98, "alias": "WP" },
+                { "name": "OrganizationIdentifier", "id": 99, "alias": "XX" }
+            ]
+        },
+        { "type": "ProcessingMode", "entries": [
+                { "name": "Empty", "id": 0, "alias": "$empty" },
+                { "name": "Archive", "id": 1, "alias": "A" },
+                { "name": "InitialLoad", "id": 2, "alias": "I" },
+                { "name": "RestoreFromArchive", "id": 3, "alias": "R" },
+                { "name": "CurrentProcessing_TransmittedAtIntervals", "id": 4, "alias": "T" }
+            ]
+        },
+        { "type": "SubtypeOfReferencedData", "entries": [
+                { "name": "Empty", "id": 0, "alias": "$empty" },
+                { "name": "Hl7ClinicalDocumentArchitectureLevelOneDocument", "id": 1, "alias": "x-hl7-cda-level-one" }
+            ]
+        },
+        { "type": "Encoding", "entries": [
+                { "name": "Empty", "id": 0, "alias": "$empty" },
+                { "name": "NoEncoding_DataAreDisplayableAsciiCharacters_", "id": 1, "alias": "A" },
+                { "name": "EncodingAsDefinedByMime", "id": 2, "alias": "Base64" },
+                { "name": "HexadecimalEncoding_ConsecutivePairsOfHexadecimalDigitsRepresentConsecutiveSingleOctets_", "id": 3, "alias": "Hex" }
+            ]
+        },
+        { "type": "UniversalIdType", "entries": [
+                { "name": "Empty", "id": 0, "alias": "$empty" },
+                { "name": "AnInternetDottedName", "id": 1, "alias": "DNS" },
+                { "name": "SameAsUuid_", "id": 2, "alias": "GUID" },
+                { "name": "TheCenHealthcareCodingSchemeDesignator", "id": 3, "alias": "HCD" },
+                { "name": "ReservedForFutureHl7RegistrationSchemes", "id": 4, "alias": "HL7" },
+                { "name": "AnInternationalStandardsOrganizationObjectIdentifier", "id": 5, "alias": "ISO" },
+                { "name": "ReservedForLocallyDefinedCodingSchemes__L", "id": 6, "alias": "L" },
+                { "name": "ReservedForLocallyDefinedCodingSchemes__M", "id": 7, "alias": "M" },
+                { "name": "ReservedForLocallyDefinedCodingSchemes__N", "id": 8, "alias": "N" },
+                { "name": "UsuallyABase64EncodedStringOfRandomBits", "id": 9, "alias": "Random" },
+                { "name": "UniformResourceIdentifier", "id": 10, "alias": "URI" },
+                { "name": "TheDceUniversalUniqueIdentifier", "id": 11, "alias": "UUID" },
+                { "name": "AnX_400MhsFormatIdentifier", "id": 12, "alias": "x400" },
+                { "name": "AnX_500DirectoryName", "id": 13, "alias": "x500" }
+            ]
+        },
+        { "type": "PersonLocationType", "entries": [
+                { "name": "Empty", "id": 0, "alias": "$empty" },
+                { "name": "Clinic", "id": 1, "alias": "C" },
+                { "name": "Department", "id": 2, "alias": "D" },
+                { "name": "Home", "id": 3, "alias": "H" },
+                { "name": "NursingUnit", "id": 4, "alias": "N" },
+                { "name": "ProvidersOffice", "id": 5, "alias": "O" },
+                { "name": "Phone", "id": 6, "alias": "P" },
+                { "name": "Snf", "id": 7, "alias": "S" }
+            ]
+        },
+        { "type": "CodingSystem", "entries": [
+                { "name": "Empty", "id": 0, "alias": "$empty" },
+                { "name": "AmericanCollegeOfRadiologyFindingCodes", "id": 1, "alias": "ACR" },
+                { "name": "GermanAlpha_idV2006", "id": 2, "alias": "ALPHAID2006" },
+                { "name": "GermanAlpha_idV2007", "id": 3, "alias": "ALPHAID2007" },
+                { "name": "GermanAlpha_idV2008", "id": 4, "alias": "ALPHAID2008" },
+                { "name": "Hl7SetOfUnitsOfMeasure", "id": 5, "alias": "ANS+" },
+                { "name": "WhoAdverseReactionTerms", "id": 6, "alias": "ART" },
+                { "name": "AstmE1238_E1467Universal", "id": 7, "alias": "AS4" },
+                { "name": "As4NeurophysiologyCodes", "id": 8, "alias": "AS4E" },
+                { "name": "AmericanTypeCultureCollection", "id": 9, "alias": "ATC" },
+                { "name": "Cpt_4", "id": 10, "alias": "C4" },
+                { "name": "Cpt_5", "id": 11, "alias": "C5" },
+                { "name": "ChemicalAbstractCodes", "id": 12, "alias": "CAS" },
+                { "name": "ClinicalCareClassificationSystem", "id": 13, "alias": "CCC" },
+                { "name": "Cdt_2Codes", "id": 14, "alias": "CD2" },
+                { "name": "CdcAnalyteCodes", "id": 15, "alias": "CDCA" },
+                { "name": "CdcMethods_instrumentsCodes", "id": 16, "alias": "CDCM" },
+                { "name": "CdcSurveillance", "id": 17, "alias": "CDS" },
+                { "name": "CenEcgDiagnosticCodes", "id": 18, "alias": "CE" },
+                { "name": "Clip", "id": 19, "alias": "CLP" },
+                { "name": "CptModifierCode", "id": 20, "alias": "CPTM" },
+                { "name": "Costart", "id": 21, "alias": "CST" },
+                { "name": "CdcVaccineCodes", "id": 22, "alias": "CVX" },
+                { "name": "DicomControlledTerminology", "id": 23, "alias": "DCM" },
+                { "name": "Euclides", "id": 24, "alias": "E" },
+                { "name": "EuclidesQuantityCodes", "id": 25, "alias": "E5" },
+                { "name": "EuclidesLabMethodCodes", "id": 26, "alias": "E6" },
+                { "name": "EuclidesLabEquipmentCodes", "id": 27, "alias": "E7" },
+                { "name": "EnzymeCodes", "id": 28, "alias": "ENZC" },
+                { "name": "FirstDatabankDrugCodes", "id": 29, "alias": "FDDC" },
+                { "name": "FirstDatabankDiagnosticCodes", "id": 30, "alias": "FDDX" },
+                { "name": "FdaK10", "id": 31, "alias": "FDK" },
+                { "name": "G_drgGermanDrgCodesV2004", "id": 32, "alias": "GDRG2004" },
+                { "name": "G_drgGermanDrgCodesV2005", "id": 33, "alias": "GDRG2005" },
+                { "name": "G_drgGermanDrgCodesV2006", "id": 34, "alias": "GDRG2006" },
+                { "name": "G_drgGermanDrgCodesV2007", "id": 35, "alias": "GDRG2007" },
+                { "name": "G_drgGermanDrgCodesV2008", "id": 36, "alias": "GDRG2008" },
+                { "name": "GermanMajorDiagnosticCodesV2004", "id": 37, "alias": "GMDC2004" },
+                { "name": "GermanMajorDiagnosticCodesV2005", "id": 38, "alias": "GMDC2005" },
+                { "name": "GermanMajorDiagnosticCodesV2006", "id": 39, "alias": "GMDC2006" },
+                { "name": "GermanMajorDiagnosticCodesV2007", "id": 40, "alias": "GMDC2007" },
+                { "name": "GermanMajorDiagnosticCodesV2008", "id": 41, "alias": "GMDC2008" },
+                { "name": "Hibcc", "id": 42, "alias": "HB" },
+                { "name": "Cms_HCPCS", "id": 43, "alias": "HCPCS" },
+                { "name": "HealthCareProviderTaxonomy", "id": 44, "alias": "HCPT" },
+                { "name": "HomeHealthCare", "id": 45, "alias": "HHC" },
+                { "name": "HealthOutcomes", "id": 46, "alias": "HI" },
+                { "name": "JapaneseNationwideMedicineCode", "id": 47, "alias": "HOT" },
+                { "name": "Cms_HPC", "id": 48, "alias": "HPC" },
+                { "name": "Icd_10", "id": 49, "alias": "I10" },
+                { "name": "Icd10GermanyV2004", "id": 50, "alias": "I10G2004" },
+                { "name": "Icd10GermanyV2005", "id": 51, "alias": "I10G2005" },
+                { "name": "Icd10GermanyV2006", "id": 52, "alias": "I10G2006" },
+                { "name": "Icd_10ProcedureCodes", "id": 53, "alias": "I10P" },
+                { "name": "Icd9", "id": 54, "alias": "I9" },
+                { "name": "Icd_9cm", "id": 55, "alias": "I9C" },
+                { "name": "Icd_9cmDiagnosisCodes", "id": 56, "alias": "I9CDX" },
+                { "name": "Icd_9cmProcedureCodes", "id": 57, "alias": "I9CP" },
+                { "name": "Isbt", "id": 58, "alias": "IBT" },
+                { "name": "Isbt128CodesWhereNnnnSpecifiesASpecificTableWithinIsbt128_", "id": 59, "alias": "IBTnnnn" },
+                { "name": "Icd_10AustralianModification", "id": 60, "alias": "ICD10AM" },
+                { "name": "Icd_10Canada", "id": 61, "alias": "ICD10CA" },
+                { "name": "Icd10GermanyV2007", "id": 62, "alias": "ICD10GM2007" },
+                { "name": "Icd10GermanyV2008", "id": 63, "alias": "ICD10GM2008" },
+                { "name": "InternationalClassificationOfDiseasesForOncology", "id": 64, "alias": "ICDO" },
+                { "name": "Iccs", "id": 65, "alias": "ICS" },
+                { "name": "InternationalClassificationOfSleepDisorders", "id": 66, "alias": "ICSD" },
+                { "name": "Iso2955_83", "id": 67, "alias": "ISO+" },
+                { "name": "IntegratedTaxonomicInformationSystem", "id": 68, "alias": "ITIS" },
+                { "name": "Iupac_ifccComponentCodes", "id": 69, "alias": "IUPC" },
+                { "name": "Iupac_ifccPropertyCodes", "id": 70, "alias": "IUPP" },
+                { "name": "Jlac_jslm_NationwideLaboratoryCode", "id": 71, "alias": "JC10" },
+                { "name": "JapaneseChemistry", "id": 72, "alias": "JC8" },
+                { "name": "JapaneseImageExaminationCache", "id": 73, "alias": "JJ1017" },
+                { "name": "LocalBillingCode", "id": 74, "alias": "LB" },
+                { "name": "LogicalObservationIdentifierNamesAndCodes", "id": 75, "alias": "LN" },
+                { "name": "Medicaid", "id": 76, "alias": "MCD" },
+                { "name": "Medicare", "id": 77, "alias": "MCR" },
+                { "name": "MedicalDeviceCommunication", "id": 78, "alias": "MDC" },
+                { "name": "MedispanDiagnosticCodes", "id": 79, "alias": "MDDX" },
+                { "name": "MedicalEconomicsDrugCodes", "id": 80, "alias": "MEDC" },
+                { "name": "MedicalDictionaryForDrugRegulatoryAffairs", "id": 81, "alias": "MEDR" },
+                { "name": "MedicalEconomicsDiagnosticCodes", "id": 82, "alias": "MEDX" },
+                { "name": "MedispanGpi", "id": 83, "alias": "MGPI" },
+                { "name": "CdcVaccineManufacturerCodes", "id": 84, "alias": "MVX" },
+                { "name": "Nanda", "id": 85, "alias": "NDA" },
+                { "name": "NationalDrugCodes", "id": 86, "alias": "NDC" },
+                { "name": "NursingInterventionsClassification", "id": 87, "alias": "NIC" },
+                { "name": "NationalProviderIdentifier", "id": 88, "alias": "NPI" },
+                { "name": "NationalUniformBillingCommitteeCode", "id": 89, "alias": "NUBC" },
+                { "name": "GermanProcedureCodes", "id": 90, "alias": "O301" },
+                { "name": "OpsGermanyV2004", "id": 91, "alias": "O3012004" },
+                { "name": "OpsGermanyV2005", "id": 92, "alias": "O3012005" },
+                { "name": "OpsGermanyV2006", "id": 93, "alias": "O3012006" },
+                { "name": "OmahaSystem", "id": 94, "alias": "OHA" },
+                { "name": "OpsGermanyV2007", "id": 95, "alias": "OPS2007" },
+                { "name": "OpsGermanyV2008", "id": 96, "alias": "OPS2008" },
+                { "name": "PosCodes", "id": 97, "alias": "POS" },
+                { "name": "ReadClassification", "id": 98, "alias": "RC" },
+                { "name": "SnomedClinicalTerms", "id": 99, "alias": "SCT" },
+                { "name": "SnomedClinicalTermsAlphanumericCodes", "id": 100, "alias": "SCT2" },
+                { "name": "Snomed_DicomMicroglossary", "id": 101, "alias": "SDM" },
+                { "name": "SystemizedNomenclatureOfMedicine", "id": 102, "alias": "SNM" },
+                { "name": "SnomedInternational", "id": 103, "alias": "SNM3" },
+                { "name": "SnomedTopologyCodes", "id": 104, "alias": "SNT" },
+                { "name": "Priority", "id": 105, "alias": "UB04FL14" },
+                { "name": "PointOfOrigin", "id": 106, "alias": "UB04FL15" },
+                { "name": "PatientDischargeStatus", "id": 107, "alias": "UB04FL17" },
+                { "name": "Ucds", "id": 108, "alias": "UC" },
+                { "name": "UcumCodeSetForUnitsOfMeasure", "id": 109, "alias": "UCUM" },
+                { "name": "Mdns", "id": 110, "alias": "UMD" },
+                { "name": "UnifiedMedicalLanguage", "id": 111, "alias": "UML" },
+                { "name": "UniversalProductCode", "id": 112, "alias": "UPC" },
+                { "name": "Upin", "id": 113, "alias": "UPIN" },
+                { "name": "UnitedStatesPostalService", "id": 114, "alias": "USPS" },
+                { "name": "WhoRecord_DrugCodes_W1", "id": 115, "alias": "W1" },
+                { "name": "WhoRecord_DrugCodes_W2", "id": 116, "alias": "W2" },
+                { "name": "WhoRecord_CodeWithAstmExtension", "id": 117, "alias": "W4" },
+                { "name": "WhoAtc", "id": 118, "alias": "WC" }
+            ]
+        },
+        { "type": "NameAssemblyOrder", "entries": [
+                { "name": "Empty", "id": 0, "alias": "$empty" },
+                { "name": "PrefixFamilyMiddleGivenSuffix", "id": 1, "alias": "F" },
+                { "name": "PrefixGivenMiddleFamilySuffix", "id": 2, "alias": "G" }
+            ]
+        },
+        { "type": "Name_addressRepresentation", "entries": [
+                { "name": "Empty", "id": 0, "alias": "$empty" },
+                { "name": "Alphabetic", "id": 1, "alias": "A" },
+                { "name": "Ideographic", "id": 2, "alias": "I" },
+                { "name": "Phonetic", "id": 3, "alias": "P" }
+            ]
+        },
+        { "type": "AddressUsage", "entries": [
+                { "name": "Empty", "id": 0, "alias": "$empty" },
+                { "name": "Classification", "id": 1, "alias": "C" },
+                { "name": "Mailing", "id": 2, "alias": "M" },
+                { "name": "Visit", "id": 3, "alias": "V" }
+            ]
+        },
+        { "type": "MimeTypes", "entries": [
+                { "name": "Empty", "id": 0, "alias": "$empty" },
+                { "name": "ApplicationData", "id": 1, "alias": "application" },
+                { "name": "AudioData", "id": 2, "alias": "audio" },
+                { "name": "ImageData", "id": 3, "alias": "image" },
+                { "name": "ModelData", "id": 4, "alias": "model" },
+                { "name": "MimeMultipartPackage", "id": 5, "alias": "multipart" },
+                { "name": "TextData", "id": 6, "alias": "text" },
+                { "name": "VideoData", "id": 7, "alias": "video" }
+            ]
+        }
     ],
     "structs":[
+        { "type": "CNE", "desc": "Coded with No Exceptions", "fields": [
+                { "tid": "string", "type": "", "name": "identifier" },
+                { "tid": "string", "type": "", "name": "text" },
+                { "tid": "enum", "type": "CodingSystem", "name": "nameOfCodingSystem" },
+                { "tid": "string", "type": "", "name": "alternateIdentifier" },
+                { "tid": "string", "type": "", "name": "alternateText" },
+                { "tid": "enum", "type": "CodingSystem", "name": "nameOfAlternateCodingSystem" },
+                { "tid": "string", "type": "", "name": "codingSystemVersionId" },
+                { "tid": "string", "type": "", "name": "alternateCodingSystemVersionId" },
+                { "tid": "string", "type": "", "name": "originalText" },
+                { "tid": "string", "type": "", "name": "secondAlternateIdentifier" },
+                { "tid": "string", "type": "", "name": "secondAlternateText" },
+                { "tid": "enum", "type": "CodingSystem", "name": "nameOfSecondAlternateCodingSystem" },
+                { "tid": "string", "type": "", "name": "secondAlternateCodingSystemVersionId" },
+                { "tid": "string", "type": "", "name": "codingSystemOid" },
+                { "tid": "string", "type": "", "name": "valueSetOid" },
+                { "tid": "string", "type": "", "name": "valueSetVersionId" },
+                { "tid": "string", "type": "", "name": "alternateCodingSystemOid" },
+                { "tid": "string", "type": "", "name": "alternateValueSetOid" },
+                { "tid": "string", "type": "", "name": "alternateValueSetVersionId" },
+                { "tid": "string", "type": "", "name": "secondAlternateCodingSystemOid" },
+                { "tid": "string", "type": "", "name": "secondAlternateValueSetOid" },
+                { "tid": "string", "type": "", "name": "secondAlternateValueSetVersionId" }
+            ]
+        },
+        { "type": "CWE", "desc": "Coded with Exceptions", "fields": [
+                { "tid": "string", "type": "", "name": "identifier" },
+                { "tid": "string", "type": "", "name": "text" },
+                { "tid": "enum", "type": "CodingSystem", "name": "nameOfCodingSystem" },
+                { "tid": "string", "type": "", "name": "alternateIdentifier" },
+                { "tid": "string", "type": "", "name": "alternateText" },
+                { "tid": "enum", "type": "CodingSystem", "name": "nameOfAlternateCodingSystem" },
+                { "tid": "string", "type": "", "name": "codingSystemVersionId" },
+                { "tid": "string", "type": "", "name": "alternateCodingSystemVersionId" },
+                { "tid": "string", "type": "", "name": "originalText" },
+                { "tid": "string", "type": "", "name": "secondAlternateIdentifier" },
+                { "tid": "string", "type": "", "name": "secondAlternateText" },
+                { "tid": "enum", "type": "CodingSystem", "name": "nameOfSecondAlternateCodingSystem" },
+                { "tid": "string", "type": "", "name": "secondAlternateCodingSystemVersionId" },
+                { "tid": "string", "type": "", "name": "codingSystemOid" },
+                { "tid": "string", "type": "", "name": "valueSetOid" },
+                { "tid": "string", "type": "", "name": "valueSetVersionId" },
+                { "tid": "string", "type": "", "name": "alternateCodingSystemOid" },
+                { "tid": "string", "type": "", "name": "alternateValueSetOid" },
+                { "tid": "string", "type": "", "name": "alternateValueSetVersionId" },
+                { "tid": "string", "type": "", "name": "secondAlternateCodingSystemOid" },
+                { "tid": "string", "type": "", "name": "secondAlternateValueSetOid" },
+                { "tid": "string", "type": "", "name": "secondAlternateValueSetVersionId" }
+            ]
+        },
+        { "type": "DR", "desc": "Date/Time Range", "fields": [
+                { "tid": "string", "type": "", "name": "rangeStartDate_time" },
+                { "tid": "string", "type": "", "name": "rangeEndDate_time" }
+            ]
+        },
+        { "type": "EI", "desc": "Entity Identifier", "fields": [
+                { "tid": "string", "type": "", "name": "entityIdentifier" },
+                { "tid": "string", "type": "", "name": "namespaceId" },
+                { "tid": "string", "type": "", "name": "universalId" },
+                { "tid": "enum", "type": "UniversalIdType", "name": "universalIdType" }
+            ]
+        },
+        { "type": "EIP", "desc": "Entity Identifier Pair", "fields": [
+                { "tid": "struct", "type": "EI", "name": "placerAssignedIdentifier" },
+                { "tid": "struct", "type": "EI", "name": "fillerAssignedIdentifier" }
+            ]
+        },
+        { "type": "FN", "desc": "Family Name", "fields": [
+                { "tid": "string", "type": "", "name": "surname" },
+                { "tid": "string", "type": "", "name": "ownSurnamePrefix" },
+                { "tid": "string", "type": "", "name": "ownSurname" },
+                { "tid": "string", "type": "", "name": "surnamePrefixFromPartner_spouse" },
+                { "tid": "string", "type": "", "name": "surnameFromPartner_spouse" }
+            ]
+        },
+        { "type": "HD", "desc": "Hierarchic Designator", "fields": [
+                { "tid": "string", "type": "", "name": "namespaceId" },
+                { "tid": "string", "type": "", "name": "universalId" },
+                { "tid": "enum", "type": "UniversalIdType", "name": "universalIdType" }
+            ]
+        },
+        { "type": "MSG", "desc": "Message Type", "fields": [
+                { "tid": "string", "type": "", "name": "messageCode" },
+                { "tid": "string", "type": "", "name": "triggerEvent" },
+                { "tid": "string", "type": "", "name": "messageStructure" }
+            ]
+        },
+        { "type": "NA", "desc": "Numeric Array", "fields": [
+                { "tid": "string", "type": "", "name": "value1" },
+                { "tid": "string", "type": "", "name": "value2" },
+                { "tid": "string", "type": "", "name": "value3" },
+                { "tid": "string", "type": "", "name": "value4" },
+                { "tid": "string", "type": "", "name": "value5" },
+                { "tid": "string", "type": "", "name": "value6" },
+                { "tid": "string", "type": "", "name": "value7" },
+                { "tid": "string", "type": "", "name": "value8" },
+                { "tid": "string", "type": "", "name": "value9" },
+                { "tid": "string", "type": "", "name": "value10" }
+            ]
+        },
+        { "type": "PL", "desc": "Person Location", "fields": [
+                { "tid": "struct", "type": "HD", "name": "pointOfCare" },
+                { "tid": "struct", "type": "HD", "name": "room" },
+                { "tid": "struct", "type": "HD", "name": "bed" },
+                { "tid": "struct", "type": "HD", "name": "facility" },
+                { "tid": "string", "type": "", "name": "locationStatus" },
+                { "tid": "enum", "type": "PersonLocationType", "name": "personLocationType" },
+                { "tid": "struct", "type": "HD", "name": "building" },
+                { "tid": "struct", "type": "HD", "name": "floor" },
+                { "tid": "string", "type": "", "name": "locationDescription" },
+                { "tid": "struct", "type": "EI", "name": "comprehensiveLocationIdentifier" },
+                { "tid": "struct", "type": "HD", "name": "assigningAuthorityForLocation" }
+            ]
+        },
+        { "type": "PT", "desc": "Processing Type", "fields": [
+                { "tid": "enum", "type": "ProcessingId", "name": "processingId" },
+                { "tid": "enum", "type": "ProcessingMode", "name": "processingMode" }
+            ]
+        },
+        { "type": "SAD", "desc": "Street Address", "fields": [
+                { "tid": "string", "type": "", "name": "streetOrMailingAddress" },
+                { "tid": "string", "type": "", "name": "streetName" },
+                { "tid": "string", "type": "", "name": "dwellingNumber" }
+            ]
+        },
+        { "type": "SN", "desc": "Structured Numeric", "fields": [
+                { "tid": "string", "type": "", "name": "comparator" },
+                { "tid": "string", "type": "", "name": "num1" },
+                { "tid": "string", "type": "", "name": "separator_suffix" },
+                { "tid": "string", "type": "", "name": "num2" }
+            ]
+        },
+        { "type": "VID", "desc": "Version Identifier", "fields": [
+                { "tid": "enum", "type": "VersionId", "name": "versionId" },
+                { "tid": "struct", "type": "CWE", "name": "internationalizationCode" },
+                { "tid": "struct", "type": "CWE", "name": "internationalVersionId" }
+            ]
+        },
+        { "type": "XAD", "desc": "Extended Address", "fields": [
+                { "tid": "struct", "type": "SAD", "name": "streetAddress" },
+                { "tid": "string", "type": "", "name": "otherDesignation" },
+                { "tid": "string", "type": "", "name": "city" },
+                { "tid": "string", "type": "", "name": "stateOrProvince" },
+                { "tid": "string", "type": "", "name": "zipOrPostalCode" },
+                { "tid": "string", "type": "", "name": "country" },
+                { "tid": "enum", "type": "AddressType", "name": "addressType" },
+                { "tid": "string", "type": "", "name": "otherGeographicDesignation" },
+                { "tid": "struct", "type": "CWE", "name": "county_parishCode" },
+                { "tid": "struct", "type": "CWE", "name": "censusTract" },
+                { "tid": "enum", "type": "Name_addressRepresentation", "name": "addressRepresentationCode" },
+                { "tid": "string", "type": "", "name": "addressValidityRange" },
+                { "tid": "string", "type": "", "name": "effectiveDate" },
+                { "tid": "string", "type": "", "name": "expirationDate" },
+                { "tid": "struct", "type": "CWE", "name": "expirationReason" },
+                { "tid": "enum", "type": "Yes_noIndicator", "name": "temporaryIndicator" },
+                { "tid": "enum", "type": "Yes_noIndicator", "name": "badAddressIndicator" },
+                { "tid": "enum", "type": "AddressUsage", "name": "addressUsage" },
+                { "tid": "string", "type": "", "name": "addressee" },
+                { "tid": "string", "type": "", "name": "comment" },
+                { "tid": "string", "type": "", "name": "preferenceOrder" },
+                { "tid": "struct", "type": "CWE", "name": "protectionCode" },
+                { "tid": "struct", "type": "EI", "name": "addressIdentifier" }
+            ]
+        },
+        { "type": "XCN", "desc": "Extended Composite ID Number and Name for Persons", "fields": [
+                { "tid": "string", "type": "", "name": "personIdentifier" },
+                { "tid": "struct", "type": "FN", "name": "familyName" },
+                { "tid": "string", "type": "", "name": "givenName" },
+                { "tid": "string", "type": "", "name": "secondAndFurtherGivenNamesOrInitialsThereof" },
+                { "tid": "string", "type": "", "name": "suffix" },
+                { "tid": "string", "type": "", "name": "prefix" },
+                { "tid": "string", "type": "", "name": "degree" },
+                { "tid": "struct", "type": "CWE", "name": "sourceTable" },
+                { "tid": "struct", "type": "HD", "name": "assigningAuthority" },
+                { "tid": "enum", "type": "NameType", "name": "nameTypeCode" },
+                { "tid": "string", "type": "", "name": "identifierCheckDigit" },
+                { "tid": "enum", "type": "CheckDigitScheme", "name": "checkDigitScheme" },
+                { "tid": "enum", "type": "IdentifierType", "name": "identifierTypeCode" },
+                { "tid": "struct", "type": "HD", "name": "assigningFacility" },
+                { "tid": "enum", "type": "Name_addressRepresentation", "name": "nameRepresentationCode" },
+                { "tid": "struct", "type": "CWE", "name": "nameContext" },
+                { "tid": "string", "type": "", "name": "nameValidityRange" },
+                { "tid": "enum", "type": "NameAssemblyOrder", "name": "nameAssemblyOrder" },
+                { "tid": "string", "type": "", "name": "effectiveDate" },
+                { "tid": "string", "type": "", "name": "expirationDate" },
+                { "tid": "string", "type": "", "name": "professionalSuffix" },
+                { "tid": "struct", "type": "CWE", "name": "assigningJurisdiction" },
+                { "tid": "struct", "type": "CWE", "name": "assigningAgencyOrDepartment" },
+                { "tid": "string", "type": "", "name": "securityCheck" },
+                { "tid": "string", "type": "", "name": "securityCheckScheme" }
+            ]
+        },
+        { "type": "XON", "desc": "Extended Composite Name and Identification Number for Organizations", "fields": [
+                { "tid": "string", "type": "", "name": "organizationName" },
+                { "tid": "struct", "type": "CWE", "name": "organizationNameTypeCode" },
+                { "tid": "string", "type": "", "name": "idNumber" },
+                { "tid": "string", "type": "", "name": "identifierCheckDigit" },
+                { "tid": "enum", "type": "CheckDigitScheme", "name": "checkDigitScheme" },
+                { "tid": "struct", "type": "HD", "name": "assigningAuthority" },
+                { "tid": "enum", "type": "IdentifierType", "name": "identifierTypeCode" },
+                { "tid": "struct", "type": "HD", "name": "assigningFacility" },
+                { "tid": "enum", "type": "Name_addressRepresentation", "name": "nameRepresentationCode" },
+                { "tid": "string", "type": "", "name": "organizationIdentifier" }
+            ]
+        },
+        { "type": "XTN", "desc": "Extended Telecommunication Number", "fields": [
+                { "tid": "string", "type": "", "name": "telephoneNumber" },
+                { "tid": "enum", "type": "TelecommunicationUseCode", "name": "telecommunicationUseCode" },
+                { "tid": "enum", "type": "TelecommunicationEquipmentType", "name": "telecommunicationEquipmentType" },
+                { "tid": "string", "type": "", "name": "communicationAddress" },
+                { "tid": "string", "type": "", "name": "countryCode" },
+                { "tid": "string", "type": "", "name": "area_cityCode" },
+                { "tid": "string", "type": "", "name": "localNumber" },
+                { "tid": "string", "type": "", "name": "extension" },
+                { "tid": "string", "type": "", "name": "anyText" },
+                { "tid": "string", "type": "", "name": "extensionPrefix" },
+                { "tid": "string", "type": "", "name": "speedDialCode" },
+                { "tid": "string", "type": "", "name": "unformattedTelephoneNumber" },
+                { "tid": "string", "type": "", "name": "effectiveStartDate" },
+                { "tid": "string", "type": "", "name": "expirationDate" },
+                { "tid": "struct", "type": "CWE", "name": "expirationReason" },
+                { "tid": "struct", "type": "CWE", "name": "protectionCode" },
+                { "tid": "struct", "type": "EI", "name": "sharedTelecommunicationIdentifier" },
+                { "tid": "string", "type": "", "name": "preferenceOrder" }
+            ]
+        },
+        { "type": "EQU", "desc": "Equipment Detail", "flags": [ "METASTRUCTFLAG_HL7_SEGMENT" ], "fields": [
+                { "tid": "struct", "type": "EI", "name": "equipmentInstanceIdentifier" },
+                { "tid": "string", "type": "", "name": "eventDate_time" },
+                { "tid": "struct", "type": "CWE", "name": "equipmentState" },
+                { "tid": "struct", "type": "CWE", "name": "local_remoteControlState" },
+                { "tid": "struct", "type": "CWE", "name": "alertLevel" }
+            ]
+        },
+        { "type": "MSH", "desc": "Message Header", "flags": [ "METASTRUCTFLAG_HL7_SEGMENT" ], "fields": [
+                { "tid": "string", "type": "", "name": "fieldSeparator" },
+                { "tid": "string", "type": "", "name": "encodingCharacters" },
+                { "tid": "struct", "type": "HD", "name": "sendingApplication" },
+                { "tid": "struct", "type": "HD", "name": "sendingFacility" },
+                { "tid": "struct", "type": "HD", "name": "receivingApplication" },
+                { "tid": "struct", "type": "HD", "name": "receivingFacility" },
+                { "tid": "string", "type": "", "name": "date_timeOfMessage" },
+                { "tid": "string", "type": "", "name": "security" },
+                { "tid": "struct", "type": "MSG", "name": "messageType" },
+                { "tid": "string", "type": "", "name": "messageControlId" },
+                { "tid": "struct", "type": "PT", "name": "processingId" },
+                { "tid": "struct", "type": "VID", "name": "versionId" },
+                { "tid": "string", "type": "", "name": "sequenceNumber" },
+                { "tid": "string", "type": "", "name": "continuationPointer" },
+                { "tid": "string", "type": "", "name": "acceptAcknowledgmentType" },
+                { "tid": "string", "type": "", "name": "applicationAcknowledgmentType" },
+                { "tid": "string", "type": "", "name": "countryCode" },
+                { "tid": "string[]", "type": "", "name": "characterSet" },
+                { "tid": "struct", "type": "CWE", "name": "principalLanguageOfMessage" },
+                { "tid": "string", "type": "", "name": "alternateCharacterSetHandlingScheme" },
+                { "tid": "struct[]", "type": "EI", "name": "messageProfileIdentifier" },
+                { "tid": "struct", "type": "XON", "name": "sendingResponsibleOrganization" },
+                { "tid": "struct", "type": "XON", "name": "receivingResponsibleOrganization" },
+                { "tid": "struct", "type": "HD", "name": "sendingNetworkAddress" },
+                { "tid": "struct", "type": "HD", "name": "receivingNetworkAddress" }
+            ]
+        },
+        { "type": "OBX", "desc": "Observation/Result", "flags": [ "METASTRUCTFLAG_HL7_SEGMENT" ], "fields": [
+                { "tid": "string", "type": "", "name": "setId_Obx" },
+                { "tid": "string", "type": "", "name": "valueType" },
+                { "tid": "struct", "type": "CWE", "name": "observationIdentifier" },
+                { "tid": "string", "type": "", "name": "observationSub_id" },
+                { "tid": "string[]", "type": "", "name": "observationValue" },
+                { "tid": "struct", "type": "CWE", "name": "units" },
+                { "tid": "string", "type": "", "name": "referencesRange" },
+                { "tid": "struct[]", "type": "CWE", "name": "interpretationCodes" },
+                { "tid": "string", "type": "", "name": "probability" },
+                { "tid": "string[]", "type": "", "name": "natureOfAbnormalTest" },
+                { "tid": "string", "type": "", "name": "observationResultStatus" },
+                { "tid": "string", "type": "", "name": "effectiveDateOfReferenceRange" },
+                { "tid": "string", "type": "", "name": "userDefinedAccessChecks" },
+                { "tid": "string", "type": "", "name": "date_timeOfTheObservation" },
+                { "tid": "struct", "type": "CWE", "name": "producerSId" },
+                { "tid": "struct[]", "type": "XCN", "name": "responsibleObserver" },
+                { "tid": "struct[]", "type": "CWE", "name": "observationMethod" },
+                { "tid": "struct[]", "type": "EI", "name": "equipmentInstanceIdentifier" },
+                { "tid": "string", "type": "", "name": "date_timeOfTheAnalysis" },
+                { "tid": "struct[]", "type": "CWE", "name": "observationSite" },
+                { "tid": "struct", "type": "EI", "name": "observationInstanceIdentifier" },
+                { "tid": "struct", "type": "CNE", "name": "moodCode" },
+                { "tid": "struct", "type": "XON", "name": "performingOrganizationName" },
+                { "tid": "struct", "type": "XAD", "name": "performingOrganizationAddress" },
+                { "tid": "struct", "type": "XCN", "name": "performingOrganizationMedicalDirector" },
+                { "tid": "string", "type": "", "name": "patientResultsReleaseCategory" }
+            ]
+        },
+        { "type": "ROL", "desc": "Role", "flags": [ "METASTRUCTFLAG_HL7_SEGMENT" ], "fields": [
+                { "tid": "struct", "type": "EI", "name": "roleInstanceId" },
+                { "tid": "string", "type": "", "name": "actionCode" },
+                { "tid": "struct", "type": "CWE", "name": "role_rol" },
+                { "tid": "struct[]", "type": "XCN", "name": "rolePerson" },
+                { "tid": "string", "type": "", "name": "roleBeginDate_time" },
+                { "tid": "string", "type": "", "name": "roleEndDate_time" },
+                { "tid": "struct", "type": "CWE", "name": "roleDuration" },
+                { "tid": "struct", "type": "CWE", "name": "roleActionReason" },
+                { "tid": "struct[]", "type": "CWE", "name": "providerType" },
+                { "tid": "struct", "type": "CWE", "name": "organizationUnitType" },
+                { "tid": "struct[]", "type": "XAD", "name": "office_homeAddress_birthplace" },
+                { "tid": "struct[]", "type": "XTN", "name": "phone" },
+                { "tid": "struct", "type": "PL", "name": "personSLocation" },
+                { "tid": "struct", "type": "XON", "name": "organization" }
+            ]
+        },
+        { "type": "SAC", "desc": "Specimen Container detail", "flags": [ "METASTRUCTFLAG_HL7_SEGMENT" ], "fields": [
+                { "tid": "struct", "type": "EI", "name": "externalAccessionIdentifier" },
+                { "tid": "struct", "type": "EI", "name": "accessionIdentifier" },
+                { "tid": "struct", "type": "EI", "name": "containerIdentifier" },
+                { "tid": "struct", "type": "EI", "name": "primary" },
+                { "tid": "struct", "type": "EI", "name": "equipmentContainerIdentifier" },
+                { "tid": "string", "type": "", "name": "specimenSource" },
+                { "tid": "string", "type": "", "name": "registrationDate_time" },
+                { "tid": "struct", "type": "CWE", "name": "containerStatus" },
+                { "tid": "struct", "type": "CWE", "name": "carrierType" },
+                { "tid": "struct", "type": "EI", "name": "carrierIdentifier" },
+                { "tid": "struct", "type": "NA", "name": "positionInCarrier" },
+                { "tid": "struct", "type": "CWE", "name": "trayType_Sac" },
+                { "tid": "struct", "type": "EI", "name": "trayIdentifier" },
+                { "tid": "struct", "type": "NA", "name": "positionInTray" },
+                { "tid": "struct[]", "type": "CWE", "name": "location" },
+                { "tid": "string", "type": "", "name": "containerHeight" },
+                { "tid": "string", "type": "", "name": "containerDiameter" },
+                { "tid": "string", "type": "", "name": "barrierDelta" },
+                { "tid": "string", "type": "", "name": "bottomDelta" },
+                { "tid": "struct", "type": "CWE", "name": "containerHeight_diameter_deltaUnits" },
+                { "tid": "string", "type": "", "name": "containerVolume" },
+                { "tid": "string", "type": "", "name": "availableSpecimenVolume" },
+                { "tid": "string", "type": "", "name": "initialSpecimenVolume" },
+                { "tid": "struct", "type": "CWE", "name": "volumeUnits" },
+                { "tid": "struct", "type": "CWE", "name": "separatorType" },
+                { "tid": "struct", "type": "CWE", "name": "capType" },
+                { "tid": "struct[]", "type": "CWE", "name": "additive" },
+                { "tid": "struct", "type": "CWE", "name": "specimenComponent" },
+                { "tid": "struct", "type": "SN", "name": "dilutionFactor" },
+                { "tid": "struct", "type": "CWE", "name": "treatment" },
+                { "tid": "struct", "type": "SN", "name": "temperature" },
+                { "tid": "string", "type": "", "name": "hemolysisIndex" },
+                { "tid": "struct", "type": "CWE", "name": "hemolysisIndexUnits" },
+                { "tid": "string", "type": "", "name": "lipemiaIndex" },
+                { "tid": "struct", "type": "CWE", "name": "lipemiaIndexUnits" },
+                { "tid": "string", "type": "", "name": "icterusIndex" },
+                { "tid": "struct", "type": "CWE", "name": "icterusIndexUnits" },
+                { "tid": "string", "type": "", "name": "fibrinIndex" },
+                { "tid": "struct", "type": "CWE", "name": "fibrinIndexUnits" },
+                { "tid": "struct[]", "type": "CWE", "name": "systemInducedContaminants" },
+                { "tid": "struct[]", "type": "CWE", "name": "drugInterference" },
+                { "tid": "struct", "type": "CWE", "name": "artificialBlood" },
+                { "tid": "struct[]", "type": "CWE", "name": "specialHandlingCode" },
+                { "tid": "struct[]", "type": "CWE", "name": "otherEnvironmentalFactors" }
+            ]
+        },
+        { "type": "SFT", "desc": "Software Segment", "flags": [ "METASTRUCTFLAG_HL7_SEGMENT" ], "fields": [
+                { "tid": "struct", "type": "XON", "name": "softwareVendorOrganization" },
+                { "tid": "string", "type": "", "name": "softwareCertifiedVersionOrReleaseNumber" },
+                { "tid": "string", "type": "", "name": "softwareProductName" },
+                { "tid": "string", "type": "", "name": "softwareBinaryId" },
+                { "tid": "string", "type": "", "name": "softwareProductInformation" },
+                { "tid": "string", "type": "", "name": "softwareInstallDate" }
+            ]
+        },
+        { "type": "CQ", "desc": "Composite Quantity with Units", "fields": [
+                { "tid": "string", "type": "", "name": "quantity" },
+                { "tid": "struct", "type": "CWE", "name": "units" }
+            ]
+        },
+        { "type": "CX", "desc": "Extended Composite ID with Check Digit", "fields": [
+                { "tid": "string", "type": "", "name": "idNumber" },
+                { "tid": "string", "type": "", "name": "identifierCheckDigit" },
+                { "tid": "enum", "type": "CheckDigitScheme", "name": "checkDigitScheme" },
+                { "tid": "struct", "type": "HD", "name": "assigningAuthority" },
+                { "tid": "enum", "type": "IdentifierType", "name": "identifierTypeCode" },
+                { "tid": "struct", "type": "HD", "name": "assigningFacility" },
+                { "tid": "string", "type": "", "name": "effectiveDate" },
+                { "tid": "string", "type": "", "name": "expirationDate" },
+                { "tid": "struct", "type": "CWE", "name": "assigningJurisdiction" },
+                { "tid": "struct", "type": "CWE", "name": "assigningAgencyOrDepartment" },
+                { "tid": "string", "type": "", "name": "securityCheck" },
+                { "tid": "string", "type": "", "name": "securityCheckScheme" }
+            ]
+        },
+        { "type": "ED", "desc": "Encapsulated Data", "fields": [
+                { "tid": "struct", "type": "HD", "name": "sourceApplication" },
+                { "tid": "enum", "type": "MimeTypes", "name": "typeOfData" },
+                { "tid": "enum", "type": "SubtypeOfReferencedData", "name": "dataSubtype" },
+                { "tid": "enum", "type": "Encoding", "name": "encoding" },
+                { "tid": "string", "type": "", "name": "data" }
+            ]
+        },
+        { "type": "SPM", "desc": "Specimen", "flags": [ "METASTRUCTFLAG_HL7_SEGMENT" ], "fields": [
+                { "tid": "string", "type": "", "name": "setId_Spm" },
+                { "tid": "struct", "type": "EIP", "name": "specimenId" },
+                { "tid": "struct[]", "type": "EIP", "name": "specimenParentIds" },
+                { "tid": "struct", "type": "CWE", "name": "specimenType" },
+                { "tid": "struct[]", "type": "CWE", "name": "specimenTypeModifier" },
+                { "tid": "struct[]", "type": "CWE", "name": "specimenAdditives" },
+                { "tid": "struct", "type": "CWE", "name": "specimenCollectionMethod" },
+                { "tid": "struct", "type": "CWE", "name": "specimenSourceSite" },
+                { "tid": "struct[]", "type": "CWE", "name": "specimenSourceSiteModifier" },
+                { "tid": "struct", "type": "CWE", "name": "specimenCollectionSite" },
+                { "tid": "struct[]", "type": "CWE", "name": "specimenRole" },
+                { "tid": "struct", "type": "CQ", "name": "specimenCollectionAmount" },
+                { "tid": "string", "type": "", "name": "groupedSpecimenCount" },
+                { "tid": "string[]", "type": "", "name": "specimenDescription" },
+                { "tid": "struct[]", "type": "CWE", "name": "specimenHandlingCode" },
+                { "tid": "struct[]", "type": "CWE", "name": "specimenRiskCode" },
+                { "tid": "struct", "type": "DR", "name": "specimenCollectionDate_time" },
+                { "tid": "string", "type": "", "name": "specimenReceivedDate_time" },
+                { "tid": "string", "type": "", "name": "specimenExpirationDate_time" },
+                { "tid": "string", "type": "", "name": "specimenAvailability" },
+                { "tid": "struct[]", "type": "CWE", "name": "specimenRejectReason" },
+                { "tid": "struct", "type": "CWE", "name": "specimenQuality" },
+                { "tid": "struct", "type": "CWE", "name": "specimenAppropriateness" },
+                { "tid": "struct[]", "type": "CWE", "name": "specimenCondition" },
+                { "tid": "struct", "type": "CQ", "name": "specimenCurrentQuantity" },
+                { "tid": "string", "type": "", "name": "numberOfSpecimenContainers" },
+                { "tid": "struct", "type": "CWE", "name": "containerType" },
+                { "tid": "struct", "type": "CWE", "name": "containerCondition" },
+                { "tid": "struct", "type": "CWE", "name": "specimenChildRole" },
+                { "tid": "struct[]", "type": "CX", "name": "accessionId" },
+                { "tid": "struct[]", "type": "CX", "name": "otherSpecimenId" },
+                { "tid": "struct", "type": "EI", "name": "shipmentId" }
+            ]
+        },
+        { "type": "UAC", "desc": "User Authentication Credential Segment", "flags": [ "METASTRUCTFLAG_HL7_SEGMENT" ], "fields": [
+                { "tid": "struct", "type": "CWE", "name": "userAuthenticationCredentialTypeCode" },
+                { "tid": "struct", "type": "ED", "name": "userAuthenticationCredential" }
+            ]
+        },
+        { "type": "SPECIMEN_17", "desc": "Specimen", "fields": [
+                { "tid": "struct", "type": "SPM", "name": "spm" },
+                { "tid": "struct[]", "type": "OBX", "name": "obx" }
+            ]
+        },
+        { "type": "SPECIMEN_CONTAINER_5", "desc": "Specimen Container", "fields": [
+                { "tid": "struct", "type": "SAC", "name": "sac" },
+                { "tid": "struct[]", "type": "OBX", "name": "obx" },
+                { "tid": "struct[]", "type": "SPECIMEN_17", "name": "specimen" }
+            ]
+        },
+        { "type": "SSU_U03", "desc": "Specimen Status Message", "fields": [
+                { "tid": "struct", "type": "MSH", "name": "msh" },
+                { "tid": "struct[]", "type": "SFT", "name": "sft" },
+                { "tid": "struct", "type": "UAC", "name": "uac", "flags": [ "METAFLAG_NULLABLE" ] },
+                { "tid": "struct", "type": "EQU", "name": "equ" },
+                { "tid": "struct[]", "type": "SPECIMEN_CONTAINER_5", "name": "specimen_container", "flags": [ "METAFLAG_ONE_REQUIRED" ] },
+                { "tid": "struct", "type": "ROL", "name": "rol", "flags": [ "METAFLAG_NULLABLE" ] }
+            ]
+        },
 
 
         {"type":"L31","desc":"Address","fields":[ 
@@ -30,40 +888,111 @@
         ]},
 
 
-        {"type":"MSG","desc":"Message Type","fields":[ 
-            {"tid":"string", "type":"", "name":"messageCode"},
-            {"tid":"string", "type":"", "name":"triggerEvent"},
-            {"tid":"string", "type":"", "name":"messageStructure"}
+        {"type":"FAA","desc":"","fields":[ 
+            {"tid":"string", "type":"", "name":"a"},
+            {"tid":"string", "type":"", "name":"b"}
         ]},
 
-        {"type":"MSH","desc":"Message Header","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
-            {"tid":"string", "type":"", "name":"fieldSeparator"},
-            {"tid":"string", "type":"", "name":"encodingCharacters"},
-            {"tid":"string", "type":"", "name":"sendingApplication"},
-            {"tid":"string", "type":"", "name":"sendingFacility"},
-            {"tid":"string", "type":"", "name":"receivingApplication"},
-            {"tid":"string", "type":"", "name":"receivingFacility"},
-            {"tid":"string", "type":"", "name":"date_TimeofMessage"},
-            {"tid":"string", "type":"", "name":"security"},
-            {"tid":"struct", "type":"MSG", "name":"messageType"}
+        {"type":"FBB","desc":"","fields":[ 
+            {"tid":"string", "type":"", "name":"a"},
+            {"tid":"string", "type":"", "name":"b"},
+            {"tid":"struct", "type":"FAA", "name":"faa"}
         ]},
 
 
+        {"type":"AAA","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+            {"tid":"string", "type":"", "name":"a"}
+        ]},
+        {"type":"BBB","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+            {"tid":"string", "type":"", "name":"b"}
+        ]},
+        {"type":"CCC","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+            {"tid":"string", "type":"", "name":"c"}
+        ]},
+        {"type":"DDD","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+            {"tid":"string", "type":"", "name":"d"}
+        ]},
+        {"type":"EEE","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+            {"tid":"struct", "type":"FAA", "name":"e"}
+        ]},
 
-        {"type":"AAA","desc":"Message Header","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+
+
+        {"type":"A01","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+            {"tid":"string[]", "type":"", "name":"a"}
         ]},
-        {"type":"BBB","desc":"Message Header","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+        {"type":"A02","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+            {"tid":"struct[]", "type":"FAA", "name":"faa"},
+            {"tid":"struct[]", "type":"FBB", "name":"fbb"},
+            {"tid":"struct", "type":"FAA", "name":"sfaa"},
+            {"tid":"struct", "type":"FBB", "name":"sfbb"}
         ]},
-        {"type":"CCC","desc":"Message Header","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+
+
+
+
+        {"type":"GROUP_1","desc":"","fields":[ 
+            {"tid":"struct", "type":"AAA", "name":"a"},
+            {"tid":"struct", "type":"CCC", "name":"c", "flags":["METAFLAG_NULLABLE"]}
         ]},
+        {"type":"GROUP_2","desc":"","flags":["METASTRUCTFLAG_CHOICE"],"fields":[ 
+            {"tid":"struct", "type":"AAA", "name":"a", "flags":["METAFLAG_NULLABLE"]},
+            {"tid":"struct", "type":"BBB", "name":"b", "flags":["METAFLAG_NULLABLE"]},
+            {"tid":"struct", "type":"CCC", "name":"c", "flags":["METAFLAG_NULLABLE"]}
+        ]},
+
 
 
 
         {"type":"MSG_001","desc":"Address","fields":[ 
             {"tid":"struct", "type":"MSH", "name":"msh"},
             {"tid":"struct", "type":"AAA", "name":"a"}
-        ]}
+        ]},
 
+        {"type":"MSG_002","desc":"Address","fields":[ 
+            {"tid":"struct", "type":"MSH", "name":"msh"},
+            {"tid":"struct", "type":"AAA", "name":"a", "flags":["METAFLAG_NULLABLE"]},
+            {"tid":"struct", "type":"BBB", "name":"b"}
+        ]},
+
+        {"type":"MSG_003","desc":"Address","fields":[ 
+            {"tid":"struct", "type":"MSH", "name":"msh"},
+            {"tid":"struct", "type":"GROUP_1", "name":"c"},
+            {"tid":"struct", "type":"BBB", "name":"b"}
+        ]},
+
+        {"type":"MSG_004","desc":"Address","fields":[ 
+            {"tid":"struct", "type":"MSH", "name":"msh"},
+            {"tid":"struct", "type":"GROUP_1", "name":"c", "flags":["METAFLAG_NULLABLE"]},
+            {"tid":"struct", "type":"BBB", "name":"b"}
+        ]},
+
+        {"type":"MSG_005","desc":"Address","fields":[ 
+            {"tid":"struct", "type":"MSH", "name":"msh"},
+            {"tid":"struct", "type":"GROUP_2", "name":"c", "flags":["METAFLAG_NULLABLE"]},
+            {"tid":"struct", "type":"BBB", "name":"b"}
+        ]},
+
+        {"type":"MSG_006","desc":"Address","fields":[ 
+            {"tid":"struct", "type":"MSH", "name":"msh"},
+            {"tid":"struct[]", "type":"GROUP_2", "name":"c"},
+            {"tid":"struct", "type":"DDD", "name":"d"}
+        ]},
+
+        {"type":"MSG_007","desc":"Address","fields":[ 
+            {"tid":"struct", "type":"MSH", "name":"msh"},
+            {"tid":"struct", "type":"EEE", "name":"e"}
+        ]},
+
+        {"type":"MSG_010","desc":"Address","fields":[ 
+            {"tid":"struct", "type":"MSH", "name":"msh"},
+            {"tid":"struct", "type":"A01", "name":"a01"}
+        ]},
+
+        {"type":"MSG_011","desc":"Address","fields":[ 
+            {"tid":"struct", "type":"MSH", "name":"msh"},
+            {"tid":"struct", "type":"A02", "name":"a02"}
+        ]}
 
     ]
 }

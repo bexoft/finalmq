@@ -1,18 +1,36 @@
-var ejs = require('ejs')
 var fs = require('fs')
 var helper = require(__dirname + '/helper')
 var argv = require('minimist')(process.argv.slice(2));
 
-var fileData = argv['input']
+var fileOptions = argv['options']
+var fileData = argv['def']
+var fileTables = argv['tables']
 var pathOutput = argv['outpath']
 
-var hl7dictionary = require(fileData)
+var hl7dictionary = require(fileData);
 
-var fileTemplate = __dirname + '/hl7_fmq.ejs'
-
-var strTemplate = fs.readFileSync(fileTemplate, 'utf8');
+var hl7Tables = null;
+if (fileTables)
+{
+    hl7Tables = require(fileTables);
+}
 
 var fileOutput = fileData + '.fmq'
+
+if (!fileOptions)
+{
+    fileOptions = './options.json';
+}
+
+var options = null;
+
+try
+{
+    options = require(fileOptions);
+}
+catch (err)
+{
+}
 
 if (pathOutput)
 {
@@ -21,9 +39,47 @@ if (pathOutput)
     fileOutput   = pathOutput + '/' + splitFileOutput[splitFileOutput.length - 1]
 }
 
+helper.buildSegGroups(hl7dictionary);
 helper.makeFieldNames(hl7dictionary);
-var options = {helper:helper, hl7dictionary:hl7dictionary, fileOutput:fileOutput}
-var str = ejs.render(strTemplate, options)
+helper.putFlags(hl7dictionary);
+
+if (hl7Tables)
+{
+    helper.processTables(hl7Tables);
+}
+
+var data = helper.generateData(hl7dictionary, hl7Tables, options);
+var str = JSON.stringify(data, null, 4);
+
+
+str = str.replaceAll('\r\n                }', ' }');
+str = str.replaceAll('\r                }', ' }');
+str = str.replaceAll('\n                }', ' }');
+
+str = str.replaceAll('\r\n            "', ' "');
+str = str.replaceAll('\r            "', ' "');
+str = str.replaceAll('\n            "', ' "');
+
+str = str.replaceAll('\r\n                "', ' "');
+str = str.replaceAll('\r                "', ' "');
+str = str.replaceAll('\n                "', ' "');
+
+str = str.replaceAll('\r\n                    "', ' "');
+str = str.replaceAll('\r                    "', ' "');
+str = str.replaceAll('\n                    "', ' "');
+
+str = str.replaceAll('\r\n                        "', ' "');
+str = str.replaceAll('\r                        "', ' "');
+str = str.replaceAll('\n                        "', ' "');
+
+str = str.replaceAll('\r\n            ],', ' ],');
+str = str.replaceAll('\r            ],', ' ],');
+str = str.replaceAll('\n            ],', ' ],');
+
+str = str.replaceAll('\r\n                    ]', ' ]');
+str = str.replaceAll('\r                    ]', ' ]');
+str = str.replaceAll('\n                    ]', ' ]');
+
 
 fs.writeFileSync(fileOutput, str, 'utf8');
 

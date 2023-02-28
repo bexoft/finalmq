@@ -89,16 +89,16 @@ TEST_F(TestHl7Builder, testSubStructs)
     m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 2, "a1");
     m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 3, "a2");
 
-    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 0, "b1");
-    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 1, "b2");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0 }.data(), 3, 0, "b1");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0 }.data(), 3, 1, "b2");
 
-    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 0, "c1");
-    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 1, "c2");
-    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 2, "c3");
-    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 3, "c4");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0, 2}.data(), 4, 0, "c1");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0, 2}.data(), 4, 1, "c2");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0, 2}.data(), 4, 2, "c3");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0, 2}.data(), 4, 3, "c4");
 
-    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 3, "b3");
-    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 4, "b4");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0 }.data(), 3, 3, "b3");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0 }.data(), 3, 4, "b4");
 
     m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 5, "a3");
     m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 6, "a4");
@@ -116,13 +116,13 @@ TEST_F(TestHl7Builder, testExit3StructsFromInnerLevel)
     m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 2, "a1");
     m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 3, "a2");
 
-    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 0, "b1");
-    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 1, "b2");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0 }.data(), 3, 0, "b1");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0 }.data(), 3, 1, "b2");
 
-    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 0, "c1");
-    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 1, "c2");
-    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 2, "c3");
-    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 3, "c4");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0, 2}.data(), 4, 0, "c1");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0, 2}.data(), 4, 1, "c2");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0, 2}.data(), 4, 2, "c3");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0, 2}.data(), 4, 3, "c4");
 
     m_builder->enterString(std::vector<int>{ 1 }.data(), 1, 0, "TST");
 
@@ -136,13 +136,13 @@ TEST_F(TestHl7Builder, testExit2StructsFromInnerLevel)
     m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 2, "a1");
     m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 3, "a2");
 
-    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 0, "b1");
-    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 1, "b2");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0 }.data(), 3, 0, "b1");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0 }.data(), 3, 1, "b2");
 
-    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 0, "c1");
-    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 1, "c2");
-    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 2, "c3");
-    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 3, "c4");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0, 2}.data(), 4, 0, "c1");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0, 2}.data(), 4, 1, "c2");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0, 2}.data(), 4, 2, "c3");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0, 2}.data(), 4, 3, "c4");
 
     m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 5, "a3");
 
@@ -159,16 +159,16 @@ TEST_F(TestHl7Builder, testSubStructsRemoveEmpty)
     m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 2, "a1");
     m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 3, "a2");
 
-    m_builder->enterString(std::vector<int>{ 0, 6 }.data(), 2, 0, "b1");
-    m_builder->enterString(std::vector<int>{ 0, 6 }.data(), 2, 1, "b2");
+    m_builder->enterString(std::vector<int>{ 0, 6, 0 }.data(), 3, 0, "b1");
+    m_builder->enterString(std::vector<int>{ 0, 6, 0 }.data(), 3, 1, "b2");
 
-    m_builder->enterString(std::vector<int>{ 0, 6, 4}.data(), 3, 0, "c1");
-    m_builder->enterString(std::vector<int>{ 0, 6, 4}.data(), 3, 1, "c2");
-    m_builder->enterString(std::vector<int>{ 0, 6, 4}.data(), 3, 2, "c3");
-    m_builder->enterString(std::vector<int>{ 0, 6, 4}.data(), 3, 3, "c4");
+    m_builder->enterString(std::vector<int>{ 0, 6, 0, 4}.data(), 4, 0, "c1");
+    m_builder->enterString(std::vector<int>{ 0, 6, 0, 4}.data(), 4, 1, "c2");
+    m_builder->enterString(std::vector<int>{ 0, 6, 0, 4}.data(), 4, 2, "c3");
+    m_builder->enterString(std::vector<int>{ 0, 6, 0, 4}.data(), 4, 3, "c4");
 
-    m_builder->enterString(std::vector<int>{ 0, 6 }.data(), 2, 7, "b3");
-    m_builder->enterString(std::vector<int>{ 0, 6 }.data(), 2, 8, "b4");
+    m_builder->enterString(std::vector<int>{ 0, 6, 0 }.data(), 3, 7, "b3");
+    m_builder->enterString(std::vector<int>{ 0, 6, 0 }.data(), 3, 8, "b4");
 
     m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 9, "a3");
     m_builder->enterString(std::vector<int>{ 0 }.data(), 1,10, "a4");
@@ -188,22 +188,22 @@ TEST_F(TestHl7Builder, testArray)
     m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 3, "a2.2");
     m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 3, "a2.3");
 
-    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 0, "b1");
-    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 1, "b2.1");
-    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 1, "b2.2");
-    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 1, "b2.3");
-    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 1, "");
-    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 1, "");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0 }.data(), 3, 0, "b1");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0 }.data(), 3, 1, "b2.1");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0 }.data(), 3, 1, "b2.2");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0 }.data(), 3, 1, "b2.3");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0 }.data(), 3, 1, "");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0 }.data(), 3, 1, "");
 
-    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 0, "c1");
-    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 1, "c2.1");
-    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 1, "c2.2");
-    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 1, "c2.3");
-    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 2, "c3");
-    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 3, "c4");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0, 2}.data(), 4, 0, "c1");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0, 2}.data(), 4, 1, "c2.1");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0, 2}.data(), 4, 1, "c2.2");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0, 2}.data(), 4, 1, "c2.3");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0, 2}.data(), 4, 2, "c3");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0, 2}.data(), 4, 3, "c4");
 
-    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 3, "b3");
-    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 4, "b4");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0 }.data(), 3, 3, "b3");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0 }.data(), 3, 4, "b4");
 
     m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 5, "a3");
     m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 6, "a4");
@@ -221,16 +221,16 @@ TEST_F(TestHl7Builder, testTypes)
     m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 2, "123");
     m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 3, "0.123");
 
-    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 0, "-2");
-    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 1, "12");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0 }.data(), 3, 0, "-2");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0 }.data(), 3, 1, "12");
 
-    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 0, "1");
-    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 1, "2");
-    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 2, "-3");
-    m_builder->enterString(std::vector<int>{ 0, 4, 2}.data(), 3, 3, "-4");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0, 2}.data(), 4, 0, "1");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0, 2}.data(), 4, 1, "2");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0, 2}.data(), 4, 2, "-3");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0, 2}.data(), 4, 3, "-4");
 
-    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 3, "1.1");
-    m_builder->enterString(std::vector<int>{ 0, 4 }.data(), 2, 4, "2.1");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0 }.data(), 3, 3, "1.1");
+    m_builder->enterString(std::vector<int>{ 0, 4, 0 }.data(), 3, 4, "2.1");
 
     m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 5, "1");
     m_builder->enterString(std::vector<int>{ 0 }.data(), 1, 6, "2");

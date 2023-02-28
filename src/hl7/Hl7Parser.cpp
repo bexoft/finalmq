@@ -140,10 +140,45 @@ void Hl7Parser::getSegmentId(std::string& token) const
 }
 
 
+int Hl7Parser::isNextFieldFilled(int level, bool& filled)
+{
+    filled = false;
+    int l = level;
+    char c = this->getChar(m_str);
+    if (c == m_delimiterRepeat)
+    {
+        filled = true;
+    }
+    else
+    {
+        l = isDelimiter(c);
+        if (l == LAYER_MAX)
+        {
+            filled = true;
+            l = level;
+        }
+    }
+    if (l > level)
+    {
+        l = parseTillEndOfStruct(level);
+    }
+    else
+    {
+        if (!filled)
+        {
+            ++m_str;
+        }
+    }
 
-int Hl7Parser::parseToken(int level, std::string& token)
+    assert(l <= level);
+    return l;
+}
+
+
+int Hl7Parser::parseToken(int level, std::string& token, bool& isarray)
 {
     token.clear();
+    isarray = false;
     int l = level;
     if (m_waitForDeleimiterField == 1)
     {
@@ -167,7 +202,8 @@ int Hl7Parser::parseToken(int level, std::string& token)
             {
                 token = deEscape(start, m_str);
                 ++m_str;
-                l = parseTillEndOfStruct(level);
+                isarray = true;
+                l = 1;  // array is only on level = 1
                 break;
             }
             else
@@ -205,6 +241,7 @@ int Hl7Parser::parseTokenArray(int level, std::vector<std::string>& array)
     array.clear();
     const char* start = m_str;
     int l = 0;
+    bool filled = false;
     while (true)
     {
         char c = this->getChar(m_str);
@@ -213,13 +250,17 @@ int Hl7Parser::parseTokenArray(int level, std::vector<std::string>& array)
             array.emplace_back(deEscape(start, m_str));
             ++m_str;
             start = m_str;
+            filled = true;
         }
         else
         {
             l = isDelimiter(c);
             if (l < LAYER_MAX)
             {
-                array.emplace_back(deEscape(start, m_str));
+                if (filled)
+                {
+                    array.emplace_back(deEscape(start, m_str));
+                }
                 if (l != -1)
                 {
                     ++m_str;
@@ -227,6 +268,7 @@ int Hl7Parser::parseTokenArray(int level, std::vector<std::string>& array)
                 break;
             }
             ++m_str;
+            filled = true;
         }
     }
     if (l > level)

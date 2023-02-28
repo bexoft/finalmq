@@ -25,6 +25,7 @@
 
 #include "MetaType.h"
 #include "finalmq/helpers/FmqDefines.h"
+#include "finalmq/helpers/hybrid_ptr.h"
 
 #include <string>
 #include <memory>
@@ -60,7 +61,18 @@ public:
         , description(desc)
         , flags(flgs)
         , index(ix)
+        , sharedFieldWithoutArray((typeId & MetaTypeId::OFFSET_ARRAY_FLAG) ? std::make_shared<MetaField>(static_cast<MetaTypeId>(typeId & ~MetaTypeId::OFFSET_ARRAY_FLAG), typeName, "", description, flags, index) : nullptr)
+        , fieldWithoutArray((sharedFieldWithoutArray != nullptr) ? sharedFieldWithoutArray.get() : this)
     {
+    }
+
+    void setIndex(int ix)
+    {
+        *const_cast<int*>(&index) = ix;
+        if (fieldWithoutArray != this)
+        {
+            *const_cast<int*>(&fieldWithoutArray->index) = ix;
+        }
     }
 
     const MetaTypeId        typeId;                         ///< type id of the parameter
@@ -69,7 +81,10 @@ public:
     const std::string       name{};                         ///< parameter name
     const std::string       description{};                  ///< description of the parameter
     const int               flags;                          ///< flaggs of the parameter
-    int                     index;                          ///< index of field inside struct
+    const int               index;                          ///< index of field inside struct
+
+    const std::shared_ptr<MetaField> sharedFieldWithoutArray;     ///< in case of an array, this is the MetaField for its entries
+    MetaField* const fieldWithoutArray;     ///< in case of an array, this is the MetaField for its entries
 
 private:
     static std::string removeNamespace(const std::string& typeName)
@@ -80,7 +95,6 @@ private:
 
     mutable const MetaEnum*     metaEnum    = nullptr;      ///< cache to find MetaEnum of typeName faster
     mutable const MetaStruct*   metaStruct  = nullptr;      ///< cache to find MetaStruct of typeName faster
-    mutable std::shared_ptr<MetaField> fieldWithoutArray{}; ///< in case of an array, this is the MetaField for its entries
 
     friend class MetaData;
 };

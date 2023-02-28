@@ -26,7 +26,7 @@ SET(CODEGENERATOR ${CMAKE_SOURCE_DIR}/codegenerator)
 
 
 set(CODEGENERATOR_CPP ${CODEGENERATOR}/cpp/cpp.js)
-set(HL7_FMQ ${CMAKE_SOURCE_DIR}/hl7def/hl7.fmq)
+set(HL7_FMQ ${CMAKE_CURRENT_SOURCE_DIR}/hl7.fmq)
 set(HL7_FMQ_CPP ${CMAKE_CURRENT_BINARY_DIR}/hl7.fmq.cpp)
 set(HL7_FMQ_H ${CMAKE_CURRENT_BINARY_DIR}/hl7.fmq.h)
 add_custom_command(

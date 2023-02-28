@@ -40,13 +40,16 @@ public:
     const char* parseStruct(const std::string& typeName);
 
 private:
-    int parseStruct(int levelStruct, int levelSegment, const MetaStruct& stru);
+    int parseStruct(int levelSegment, const MetaStruct& stru, bool& isarray);
+    bool matches(const std::string& segId, const MetaStruct& stru, ssize_t ixStart);
+    bool matchesUp(const std::string& segId);
 
 
     const char*         m_ptr = nullptr;
     ssize_t             m_size = 0;
     IParserVisitor&     m_visitor;
     Hl7Parser           m_parser;
+    std::vector<std::pair<MetaStruct, ssize_t>> m_stackStruct;
 };
 
 }   // namespace finalmq
