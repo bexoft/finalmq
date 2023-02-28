@@ -103,7 +103,8 @@ file(GLOB TESTSOURCES "*.cpp")
 
 # Now simply link against gtest or gtest_main as needed. Eg
 if (WIN32)
-SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -D_ALLOW_KEYWORD_MACROS" )
+SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -D_ALLOW_KEYWORD_MACROS")
+add_compile_options(/bigobj)
 endif()
 add_executable(testfinalmq ${TESTSOURCES} ${PROTO_SRCS} ${PROTO_HDRS} ${CMAKE_CURRENT_BINARY_DIR}/test.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/testhl7.fmq.cpp ../services/fmqreg/registry.cpp)
 

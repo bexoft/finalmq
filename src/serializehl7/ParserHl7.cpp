@@ -62,6 +62,15 @@ bool ParserHl7::matches(const std::string& segId, const MetaStruct& stru, ssize_
             {
                 return true;
             }
+            const MetaStruct* subStruct = MetaDataGlobal::instance().getStruct(*field);
+            if (subStruct != nullptr)
+            {
+                bool match = matches(segId, *subStruct, 0);
+                if (match)
+                {
+                    return true;
+                }
+            }
             if ((field->typeId == MetaTypeId::TYPE_STRUCT) &&
                 (field->flags & MetaFieldFlags::METAFLAG_NULLABLE) == 0)
             {
@@ -71,15 +80,6 @@ bool ParserHl7::matches(const std::string& segId, const MetaStruct& stru, ssize_
                 (field->flags & MetaFieldFlags::METAFLAG_ONE_REQUIRED) != 0)
             {
                 return false;
-            }
-            const MetaStruct* subStruct = MetaDataGlobal::instance().getStruct(*field);
-            if (subStruct != nullptr)
-            {
-                bool matche = matches(segId, *subStruct, 0);
-                if (matche)
-                {
-                    return true;
-                }
             }
         }
     }
@@ -309,23 +309,33 @@ int ParserHl7::parseStruct(int levelSegment, const MetaStruct& stru, bool& isarr
             }
             else
             {
-                int levelNew = levelSegment;
-                m_visitor.enterArrayStruct(*field);
-                while (true)
-                {
-                    m_visitor.enterStruct(*fieldWithoutArray);
-                    levelNew = parseStruct(levelSegment + 1, *subStruct, isarray);
-                    m_visitor.exitStruct(*fieldWithoutArray);
-                    if (levelNew < levelSegment || !isarray)
-                    {
-                        break;
-                    }
-                }
-                m_visitor.exitArrayStruct(*field);
-                isarray = false;
+                bool filled = false;
+                int levelNew = m_parser.isNextFieldFilled(levelSegment, filled);
                 if (levelNew < levelSegment)
                 {
                     return levelNew;
+                }
+
+                if (filled)
+                {
+                    levelNew = levelSegment;
+                    m_visitor.enterArrayStruct(*field);
+                    while (true)
+                    {
+                        m_visitor.enterStruct(*fieldWithoutArray);
+                        levelNew = parseStruct(levelSegment + 1, *subStruct, isarray);
+                        m_visitor.exitStruct(*fieldWithoutArray);
+                        if (levelNew < levelSegment || !isarray)
+                        {
+                            break;
+                        }
+                    }
+                    m_visitor.exitArrayStruct(*field);
+                    isarray = false;
+                    if (levelNew < levelSegment)
+                    {
+                        return levelNew;
+                    }
                 }
             }
         }

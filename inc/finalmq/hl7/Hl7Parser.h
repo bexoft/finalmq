@@ -40,6 +40,7 @@ struct IHl7Parser
     virtual int parseTokenArray(int level, std::vector<std::string>& array) = 0;
     virtual int parseTillEndOfStruct(int level) = 0;
     virtual void getSegmentId(std::string& token) const = 0;
+    virtual int isNextFieldFilled(int level, bool& filled) = 0;
     virtual const char* getCurrentPosition() const = 0;
 };
 
@@ -54,6 +55,7 @@ public:
     virtual int parseTokenArray(int level, std::vector<std::string>& array) override;
     virtual int parseTillEndOfStruct(int level) override;
     virtual void getSegmentId(std::string& token) const override;
+    virtual int isNextFieldFilled(int level, bool& filled) override;
     virtual const char* getCurrentPosition() const override;
 
 private:
