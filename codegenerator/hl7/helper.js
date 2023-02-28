@@ -89,7 +89,63 @@ sortDependency = function (structs)
     return structsOrdered;
 }
 
+findStruct = function (structs, type)
+{
+    for (var i in structs)
+    {
+        var stru = structs[i];
+        if (type == stru.type)
+        {
+            return stru;
+        }
+    }
+    console.log('Type not found: ' + type);
+    return null;
+}
 
+
+
+collectFilteredStruct = function (structs, type, filteredTypes)
+{
+    var stru = findStruct(structs, type);
+    if (stru)
+    {
+        filteredTypes[type] = true;
+    
+        for (var i in stru.fields)
+        {
+            var field = stru.fields[i];
+            if ((field.tid == 'struct') || (field.tid == 'struct[]'))
+            {
+                collectFilteredStruct(structs, field.type, filteredTypes);
+            }
+        }
+    }
+}
+
+
+filterData = function (data, filter)
+{
+    var filteredTypes = {};
+    for (var i in filter)
+    {
+        var type = filter[i];
+        collectFilteredStruct(data.structs, type, filteredTypes);
+    }
+    
+    for (var i = 0; i < data.structs.length; ++i)
+    {
+        if (!(data.structs[i].type in filteredTypes))
+        {
+            data.structs.splice(i, 1);
+            --i;
+        }
+    }
+    
+//    console.log(JSON.stringify(filteredTypes, null, 4));
+    
+    return data;
+}
 
 
 module.exports = {
@@ -393,7 +449,7 @@ module.exports = {
     },
     
     
-    generateData: function (hl7dictionary)
+    generateData: function (hl7dictionary, options)
     {        
         var data = {namespace: 'hl7',
                     enums: [],
@@ -494,6 +550,17 @@ module.exports = {
             data.structs.push(stru);
         }
 
+        
+        var filter = null;
+        if  (options)
+        {
+            filter = options.filter;
+        }
+        if (filter)
+        {
+            data = filterData(data, filter);
+        }
+        
         data.structs = sortDependency(data.structs);
 
         return data;

@@ -61,43 +61,43 @@ protected:
 
 
 
-/*
+
 TEST_F(TestParserHl7, testSSU_U03)
 {
-    hl7::SSU_U03 cmp;
+    testhl7::SSU_U03 cmp;
     cmp.msh.fieldSeparator = "|";
     cmp.msh.encodingCharacters = "^~\\&";
     cmp.msh.messageType.messageCode = "SSU";
     cmp.msh.messageType.triggerEvent = "U03";
     cmp.msh.messageType.messageStructure = "SSU_U03";
     cmp.msh.countryCode = "de";
-    cmp.uac = std::make_shared<hl7::UAC>();
+    cmp.uac = std::make_shared<testhl7::UAC>();
     cmp.uac->userAuthenticationCredential.typeOfData = "hello";
     cmp.sft.resize(3);
-    cmp.sft[0].softwareBinaryID = "world";
-    cmp.sac.resize(4);
-    cmp.sac[0].sac.positionInTray = "hey";
-    cmp.sac[0].sac.specimenSource = "hh";
-    cmp.sac[0].sac.carrierId.entityIdentifier = "uu";
-    cmp.sac[0].sac.carrierId.universalId = "bbb";
-    cmp.sac[0].obx.resize(2);
-    cmp.sac[0].nte.resize(1);
-    cmp.sac[0].spm.resize(3);
-    cmp.sac[0].spm[0].spm.accessionId = "ggg";
-    cmp.sac[0].spm[0].spm.containerCondition.alternateText = "tt";
-    cmp.sac[0].spm[0].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
-    cmp.sac[0].spm[0].obx.resize(5);
+    cmp.sft[0].softwareBinaryId = "world";
+    cmp.specimen_container.resize(4);
+    cmp.specimen_container[0].sac.positionInTray.value1 = "hey";
+    cmp.specimen_container[0].sac.specimenSource = "hh";
+    cmp.specimen_container[0].sac.carrierIdentifier.entityIdentifier = "uu";
+    cmp.specimen_container[0].sac.carrierIdentifier.universalId = "bbb";
+    cmp.specimen_container[0].obx.resize(2);
+    cmp.specimen_container[0].specimen.resize(3);
+    cmp.specimen_container[0].specimen[0].spm.accessionId.resize(1);
+    cmp.specimen_container[0].specimen[0].spm.accessionId[0].idNumber = "ggg";
+    cmp.specimen_container[0].specimen[0].spm.containerCondition.alternateText = "tt";
+    cmp.specimen_container[0].specimen[0].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
+    cmp.specimen_container[0].specimen[0].obx.resize(5);
 
-    hl7::SSU_U03 msg;
-    std::std::string data = "MSH|^~\\&|||||||SSU^U03^SSU_U03||||||||de\rSFT|||world\rSFT\rSFT\rUAC||^hello\rEQU\rSAC||||||hh||||uu^^bbb||||hey\rOBX\rOBX\rNTE\rSPM||||||||||||||||||||||||||||^^^^tt^cc||ggg\rOBX\rOBX\rOBX\rOBX\rOBX\rSPM\rSPM\rSAC\rSAC\rSAC\r";
+    testhl7::SSU_U03 msg;
+    std::string data = "MSH|^~\\&|||||||SSU^U03^SSU_U03||||||||de\rSFT||||world\rSFT\rSFT\rUAC||^hello\rEQU\rSAC||||||hh||||uu^^bbb||||hey\rOBX\rOBX\rSPM||||||||||||||||||||||||||||^^^^tt^cc||ggg\rOBX\rOBX\rOBX\rOBX\rOBX\rSPM\rSPM\rSAC\rSAC\rSAC\r";
 
     SerializerStruct serializer(msg);
     ParserHl7 parser(serializer, data.data());
-    parser.parseStruct("hl7.SSU_U03");
+    parser.parseStruct("testhl7.SSU_U03");
 
     ASSERT_EQ(cmp, msg);
 }
-*/
+
 
 TEST_F(TestParserHl7, testMSG_001)
 {

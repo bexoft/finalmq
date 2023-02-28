@@ -2,12 +2,28 @@ var fs = require('fs')
 var helper = require(__dirname + '/helper')
 var argv = require('minimist')(process.argv.slice(2));
 
-var fileData = argv['input']
+var fileOptions = argv['options']
+var fileData = argv['def']
 var pathOutput = argv['outpath']
 
 var hl7dictionary = require(fileData)
 
 var fileOutput = fileData + '.fmq'
+
+if (!fileOptions)
+{
+    fileOptions = './options.json';
+}
+
+var options = null;
+
+try
+{
+    options = require(fileOptions);
+}
+catch (err)
+{
+}
 
 if (pathOutput)
 {
@@ -20,7 +36,7 @@ helper.buildSegGroups(hl7dictionary);
 helper.makeFieldNames(hl7dictionary);
 helper.putFlags(hl7dictionary);
 
-var data = helper.generateData(hl7dictionary);
+var data = helper.generateData(hl7dictionary, options);
 var str = JSON.stringify(data, null, 4);
 
 

@@ -87,35 +87,35 @@ protected:
 
 
 
-/*
+
 TEST_F(TestSerializerHl7, testSSU_U03)
 {
-    hl7::SSU_U03 msg;
+    testhl7::SSU_U03 msg;
     msg.msh.countryCode = "de";
-    msg.uac = std::make_shared<hl7::UAC>();
+    msg.uac = std::make_shared<testhl7::UAC>();
     msg.uac->userAuthenticationCredential.typeOfData = "hello";
     msg.sft.resize(3);
-    msg.sft[0].softwareBinaryID = "world";
-    msg.sac.resize(4);
-    msg.sac[0].sac.positionInTray = "hey";
-    msg.sac[0].sac.specimenSource = "hh";
-    msg.sac[0].sac.carrierId.entityIdentifier = "uu";
-    msg.sac[0].sac.carrierId.universalId = "bbb";
-    msg.sac[0].obx.resize(2);
-    msg.sac[0].nte.resize(1);
-    msg.sac[0].spm.resize(3);
-    msg.sac[0].spm[0].spm.accessionId = "ggg";
-    msg.sac[0].spm[0].spm.containerCondition.alternateText = "tt";
-    msg.sac[0].spm[0].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
-    msg.sac[0].spm[0].obx.resize(5);
+    msg.sft[0].softwareBinaryId = "world";
+    msg.specimen_container.resize(4);
+    msg.specimen_container[0].sac.positionInTray.value1 = "hey";
+    msg.specimen_container[0].sac.specimenSource = "hh";
+    msg.specimen_container[0].sac.carrierIdentifier.entityIdentifier = "uu";
+    msg.specimen_container[0].sac.carrierIdentifier.universalId = "bbb";
+    msg.specimen_container[0].obx.resize(2);
+    msg.specimen_container[0].specimen.resize(3);
+    msg.specimen_container[0].specimen[0].spm.accessionId.resize(1);
+    msg.specimen_container[0].specimen[0].spm.accessionId[0].idNumber = "ggg";
+    msg.specimen_container[0].specimen[0].spm.containerCondition.alternateText = "tt";
+    msg.specimen_container[0].specimen[0].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
+    msg.specimen_container[0].specimen[0].obx.resize(5);
 
     ParserStruct parser(*m_serializer, msg);
     parser.parseStruct();
 
 
-    ASSERT_EQ(m_data, "MSH|^~\\&|||||||SSU^U03^SSU_U03||||||||de\rSFT|||world\rSFT\rSFT\rUAC||^hello\rEQU\rSAC||||||hh||||uu^^bbb||||hey\rOBX\rOBX\rNTE\rSPM||||||||||||||||||||||||||||^^^^tt^cc||ggg\rOBX\rOBX\rOBX\rOBX\rOBX\rSPM\rSPM\rSAC\rSAC\rSAC\r");
+    ASSERT_EQ(m_data, "MSH|^~\\&|||||||SSU^U03^SSU_U03||||||||de\rSFT||||world\rSFT\rSFT\rUAC||^hello\rEQU\rSAC||||||hh||||uu^^bbb||||hey\rOBX\rOBX\rSPM||||||||||||||||||||||||||||^^^^tt^cc||ggg\rOBX\rOBX\rOBX\rOBX\rOBX\rSPM\rSPM\rSAC\rSAC\rSAC\r");
 }
-*/
+
 
 
 TEST_F(TestSerializerHl7, testMSG_001)
