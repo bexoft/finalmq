@@ -49,6 +49,15 @@ namespace finalmq
                     {
                         return true;
                     }
+                    MetaStruct? subStruct = MetaDataGlobal.Instance.GetStruct(field);
+                    if (subStruct != null)
+                    {
+                        bool matche = Matches(segId, subStruct, 0);
+                        if (matche)
+                        {
+                            return true;
+                        }
+                    }
                     if ((field.TypeId == MetaTypeId.TYPE_STRUCT) && 
                         (field.Flags & (int)MetaFieldFlags.METAFLAG_NULLABLE) == 0)
                     {
@@ -58,15 +67,6 @@ namespace finalmq
                         (field.Flags & (int)MetaFieldFlags.METAFLAG_ONE_REQUIRED) != 0)
                     {
                         return false;
-                    }
-                    MetaStruct? subStruct = MetaDataGlobal.Instance.GetStruct(field);
-                    if (subStruct != null)
-                    {
-                        bool matche = Matches(segId, subStruct, 0);
-                        if (matche)
-                        {
-                            return true;
-                        }
                     }
                 }
             }
@@ -284,23 +284,33 @@ namespace finalmq
                     }
                     else
                     {
-                        int levelNew = levelSegment;
-                        m_visitor.EnterArrayStruct(field);
-                        while (true)
-                        {
-                            m_visitor.EnterStruct(field);
-                            levelNew = ParseStruct(levelSegment + 1, subStruct, out isarray);
-                            m_visitor.ExitStruct(field);
-                            if (levelNew < levelSegment || !isarray)
-                            {
-                                break;
-                            }
-                        }
-                        m_visitor.ExitArrayStruct(field);
-                        isarray = false;
+                        bool filled = false;
+                        int levelNew = m_parser.IsNextFieldFilled(levelSegment, out filled);
                         if (levelNew < levelSegment)
                         {
                             return levelNew;
+                        }
+
+                        if (filled)
+                        {
+                            levelNew = levelSegment;
+                            m_visitor.EnterArrayStruct(field);
+                            while (true)
+                            {
+                                m_visitor.EnterStruct(field);
+                                levelNew = ParseStruct(levelSegment + 1, subStruct, out isarray);
+                                m_visitor.ExitStruct(field);
+                                if (levelNew < levelSegment || !isarray)
+                                {
+                                    break;
+                                }
+                            }
+                            m_visitor.ExitArrayStruct(field);
+                            isarray = false;
+                            if (levelNew < levelSegment)
+                            {
+                                return levelNew;
+                            }
                         }
                     }
                 }

@@ -76,6 +76,7 @@ namespace finalmq
                             ++m_ixIndex;
                             m_indexOfLayer[m_ixIndex] = field.Index;
                         }
+                        // at index = 1 add the array index (at index 2)
                         if (m_ixIndex == 1)
                         {
                             if (m_ixArrayStruct == NO_ARRAY_STRUCT)
