@@ -444,7 +444,7 @@ namespace finalmq
             if (wireType == WireType.WIRETYPE_LENGTH_DELIMITED)
             {
 
-                MetaField? fieldWithoutArray = MetaDataGlobal.Instance.GetArrayField(field);
+                MetaField? fieldWithoutArray = field.FieldWithoutArray;
                 Debug.Assert(fieldWithoutArray != null);
                 m_visitor.EnterArrayStruct(field);
                 do

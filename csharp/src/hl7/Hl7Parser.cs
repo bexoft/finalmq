@@ -33,6 +33,7 @@ namespace finalmq
         int ParseTokenArray(int level, IList<string> array);
         int ParseTillEndOfStruct(int level);
         string GetSegmentId();
+        int IsNextFieldFilled(int level, out bool filled);
         int GetCurrentPosition();
     }
 
@@ -153,6 +154,7 @@ namespace finalmq
             array.Clear();
             int start = m_offset;
             int l = 0;
+            bool filled = false;
             while (true)
             {
                 char c = GetChar(m_offset);
@@ -161,13 +163,17 @@ namespace finalmq
                     array.Add(DeEscape(start, m_offset));
                     ++m_offset;
                     start = m_offset;
+                    filled = true;
                 }
                 else
                 {
                     l = IsDelimiter(c);
                     if (l < LAYER_MAX)
                     {
-                        array.Add(DeEscape(start, m_offset));
+                        if (filled)
+                        {
+                            array.Add(DeEscape(start, m_offset));
+                        }
                         if (l != -1)
                         {
                             ++m_offset;
@@ -175,6 +181,7 @@ namespace finalmq
                         break;
                     }
                     ++m_offset;
+                    filled = true;
                 }
             }
             if (l > level)
@@ -203,6 +210,39 @@ namespace finalmq
                 ++i;
             }
             return token.ToString();
+        }
+
+        public int IsNextFieldFilled(int level, out bool filled)
+        {
+            filled = false;
+            int l = level;
+            char c = GetChar(m_offset);
+            if (c == m_delimiterRepeat)
+            {
+                filled = true;
+            }
+            else
+            {
+                l = IsDelimiter(c);
+                if (l == LAYER_MAX)
+                {
+                    filled = true;
+                    l = level;
+                }
+            }
+            if (l > level)
+            {
+                l = ParseTillEndOfStruct(level);
+            }
+            else
+            {
+                if (!filled)
+                {
+                    ++m_offset;
+                }
+            }
+            Debug.Assert(l <= level);
+            return l;
         }
 
         public int GetCurrentPosition()
@@ -385,7 +425,6 @@ namespace finalmq
         char m_escape = (char)0;
 
         int m_waitForDeleimiterField = 0;
-        string m_currentSegmentId = "";
     }
 
 }   // namespace finalmq

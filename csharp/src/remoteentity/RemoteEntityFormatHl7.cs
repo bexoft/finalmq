@@ -37,8 +37,6 @@ namespace finalmq
         static readonly string PROPERTY_ENTITY = "entity";
         static readonly string PROPERTY_SERIALIZE_ENUM_AS_STRING = "enumAsSt";
 
-        static readonly int JSONBLOCKSIZE = 512;
-
 
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
         [ModuleInitializer]

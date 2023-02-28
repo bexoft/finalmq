@@ -38,7 +38,7 @@ namespace finalmq
 
             if (m_fieldStructWithoutArray == null)
             {
-                m_fieldStructWithoutArray = MetaDataGlobal.Instance.GetArrayField(fieldStruct);
+                m_fieldStructWithoutArray = fieldStruct.FieldWithoutArray;
             }
             MetaField? fieldStructWithoutArray = m_fieldStructWithoutArray;
             Debug.Assert(fieldStructWithoutArray != null);
@@ -307,7 +307,7 @@ namespace finalmq
 
             if (m_fieldListWithoutArray == null)
             {
-                m_fieldListWithoutArray = MetaDataGlobal.Instance.GetArrayField(fieldList);
+                m_fieldListWithoutArray = fieldList.FieldWithoutArray;
             }
             MetaField? fieldListWithoutArray = m_fieldListWithoutArray;
             Debug.Assert(fieldListWithoutArray != null);
@@ -354,7 +354,7 @@ namespace finalmq
 
             if (m_fieldListWithoutArray == null)
             {
-                m_fieldListWithoutArray = MetaDataGlobal.Instance.GetArrayField(fieldList);
+                m_fieldListWithoutArray = fieldList.FieldWithoutArray;
             }
             MetaField? fieldListWithoutArray = m_fieldListWithoutArray;
             Debug.Assert(fieldListWithoutArray != null);

@@ -688,6 +688,95 @@ public class FAA : finalmq.StructBase, IEquatable<FAA>
     }
 }
 
+[finalmq.MetaStruct("")]
+public class FBB : finalmq.StructBase, IEquatable<FBB>
+{
+    public FBB()
+	{
+	}
+	
+
+    public FBB(string a, string b, testhl7.FAA faa)
+	{
+		m_a = a;
+		m_b = b;
+		m_faa = faa;
+	}
+
+	[finalmq.MetaField("")]
+    public string a
+	{
+		get { return m_a; }
+		set { m_a = value; }
+	}
+	[finalmq.MetaField("")]
+    public string b
+	{
+		get { return m_b; }
+		set { m_b = value; }
+	}
+	[finalmq.MetaField("")]
+    public testhl7.FAA faa
+	{
+		get { return m_faa; }
+		set { m_faa = value; }
+	}
+
+    string m_a = string.Empty;
+    string m_b = string.Empty;
+    testhl7.FAA m_faa = new testhl7.FAA();
+
+	public bool Equals(FBB? rhs)
+	{
+		if (rhs == null)
+		{
+			return false;
+		}
+
+		if (this == rhs)
+		{
+			return true;
+		}
+
+		if (m_a != rhs.m_a)
+		{
+			return false;
+		}
+		if (m_b != rhs.m_b)
+		{
+			return false;
+		}
+		if (!m_faa.Equals(rhs.m_faa))
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	public override finalmq.MetaStruct MetaStruct
+	{
+		get
+		{
+			if (m_metaStruct == null)
+			{
+				m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(FBB));
+			}
+			return m_metaStruct;
+		}
+	}
+	static finalmq.MetaStruct? m_metaStruct = null;
+
+#pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+    [ModuleInitializer]
+#pragma warning restore CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
+    internal static void RegisterStruct()
+    {
+		m_metaStruct = finalmq.StructBase.CreateMetaStruct(typeof(FBB));
+        finalmq.TypeRegistry.Instance.RegisterStruct(typeof(FBB), m_metaStruct, () => { return new FBB(); } );
+    }
+}
+
 [finalmq.MetaStruct("", finalmq.MetaStructFlags.METASTRUCTFLAG_HL7_SEGMENT)]
 public class AAA : finalmq.StructBase, IEquatable<AAA>
 {
@@ -1086,9 +1175,12 @@ public class A02 : finalmq.StructBase, IEquatable<A02>
 	}
 	
 
-    public A02(IList<testhl7.FAA> faa)
+    public A02(IList<testhl7.FAA> faa, IList<testhl7.FBB> fbb, testhl7.FAA sfaa, testhl7.FBB sfbb)
 	{
 		m_faa = faa;
+		m_fbb = fbb;
+		m_sfaa = sfaa;
+		m_sfbb = sfbb;
 	}
 
 	[finalmq.MetaField("")]
@@ -1097,8 +1189,29 @@ public class A02 : finalmq.StructBase, IEquatable<A02>
 		get { return m_faa; }
 		set { m_faa = value; }
 	}
+	[finalmq.MetaField("")]
+    public IList<testhl7.FBB> fbb
+	{
+		get { return m_fbb; }
+		set { m_fbb = value; }
+	}
+	[finalmq.MetaField("")]
+    public testhl7.FAA sfaa
+	{
+		get { return m_sfaa; }
+		set { m_sfaa = value; }
+	}
+	[finalmq.MetaField("")]
+    public testhl7.FBB sfbb
+	{
+		get { return m_sfbb; }
+		set { m_sfbb = value; }
+	}
 
     IList<testhl7.FAA> m_faa = new List<testhl7.FAA>();
+    IList<testhl7.FBB> m_fbb = new List<testhl7.FBB>();
+    testhl7.FAA m_sfaa = new testhl7.FAA();
+    testhl7.FBB m_sfbb = new testhl7.FBB();
 
 	public bool Equals(A02? rhs)
 	{
@@ -1113,6 +1226,18 @@ public class A02 : finalmq.StructBase, IEquatable<A02>
 		}
 
 		if (!m_faa.SequenceEqual(rhs.m_faa))
+		{
+			return false;
+		}
+		if (!m_fbb.SequenceEqual(rhs.m_fbb))
+		{
+			return false;
+		}
+		if (!m_sfaa.Equals(rhs.m_sfaa))
+		{
+			return false;
+		}
+		if (!m_sfbb.Equals(rhs.m_sfbb))
 		{
 			return false;
 		}

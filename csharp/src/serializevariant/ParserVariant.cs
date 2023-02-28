@@ -174,7 +174,7 @@ namespace finalmq
                     {
                         m_visitor.EnterArrayStruct(field);
                         VariantList list = sub.GetData<VariantList>();
-                        MetaField? fieldWithoutArray = MetaDataGlobal.Instance.GetArrayField(field);
+                        MetaField? fieldWithoutArray = field.FieldWithoutArray;
                         Debug.Assert(fieldWithoutArray != null);
                         MetaStruct? stru = MetaDataGlobal.Instance.GetStruct(fieldWithoutArray);
                         if (stru != null)

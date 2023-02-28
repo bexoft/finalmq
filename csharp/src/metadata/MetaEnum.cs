@@ -123,6 +123,9 @@ namespace finalmq
             }
             return "";
         }
+
+        static readonly string aliasEmpty = "$empty";
+
         public string GetAliasByValue(int value)
         {
             MetaEnumEntry? entry = GetEntryById(value);
@@ -132,7 +135,11 @@ namespace finalmq
                 if (alias?.Length != 0)
                 {
                     Debug.Assert(alias != null);
-                    return alias;
+                    if (alias != aliasEmpty)
+                    {
+                        return alias;
+                    }
+                    return "";
                 }
                 return entry.Name;
             }
@@ -145,7 +152,11 @@ namespace finalmq
                     if (alias?.Length != 0)
                     {
                         Debug.Assert(alias != null);
-                        return alias;
+                        if (alias != aliasEmpty)
+                        {
+                            return alias;
+                        }
+                        return "";
                     }
                     return entry.Name;
                 }
