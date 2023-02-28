@@ -148,6 +148,46 @@ filterData = function (data, filter)
 }
 
 
+makeTableName = function (desc)
+{
+    var name = desc;
+    name = desc.split('(')[0];
+    if (name == '')
+    {
+        name = desc.split(')')[1];
+    }
+    name = name.split('. ')[0];
+    name = name.split('.<p>')[0];
+    name = name.replaceAll('-', '_');
+    name = name.replaceAll('/', '_');
+    name = name.replaceAll('"', '');
+    name = name.replaceAll("'", '');
+    name = name.replaceAll('&', ' ');
+    name = name.replaceAll(',', '_');
+    name = name.replaceAll('.', '_');
+    name = name.replaceAll(':', ' ');
+    name = name.replaceAll(';', ' ');
+    name = name.replaceAll('=', ' ');
+    name = name.replaceAll('*', '_');
+    name = name.replaceAll('%', '');
+    name = name.replaceAll('?', 'x');
+    name = name.replaceAll('#', '_');
+    names = name.split(' ')
+    for (var i in names)
+    {
+        names[i] = title(names[i]);
+    }
+    name = names.join('');
+    if (name[0] >= '0' && name[0] <= '9')
+    {
+        name = '_' + name;
+    }
+    return name;
+}
+    
+
+
+
 module.exports = {
 
     makeFieldName: function (desc)
@@ -157,6 +197,7 @@ module.exports = {
         name = name.replaceAll('-', '_');
         name = name.replaceAll('"', '');
         name = name.replaceAll(',', '_');
+        name = name.replaceAll('^', '_');
         name = name.replaceAll(':', ' ');
         name = name.replaceAll('.', ' ');
         name = name.replaceAll('&', ' ');
@@ -447,13 +488,107 @@ module.exports = {
         }            
         
     },
+
+    
+    processTables: function (hl7Tables)
+    {
+        var typesCollection = {};
+        var typesNotUnique = {};
+        for (var key in hl7Tables)
+        {
+            var table = hl7Tables[key];
+            table.type = makeTableName(table.desc);
+            if (key == 450)
+            {
+                table.type += '_' + key;
+            }
+            if ((table.type == 'MessageStructure') ||
+                (table.type == 'EventType'))
+            {
+                for (var key in table.values)
+                {
+                    key = key.replace('-', '_');
+                    key = key.replace('/', '_');
+                    table.values[key] = key;
+                }
+            }
+            else
+            {
+                if (typesCollection[table.type])   
+                {
+                    typesNotUnique[table.type] = 1;
+                }
+                typesCollection[table.type] = true;
+
+                var namesCollection = {};
+                var namesNotUnique = {};
+                for (var key in table.values)
+                {
+                    var value = table.values[key];
+                    var name = makeTableName(value);
+                    
+                    if (namesCollection[name])   
+                    {
+                        namesNotUnique[name] = true;
+                    }
+                    namesCollection[name] = true;
+                    
+                    table.values[key] = name;
+                }
+                
+                for (var key in table.values)
+                {
+                    var value = table.values[key];
+                    var name = value;
+                    if (name in namesNotUnique)
+                    {
+                        var suffix = key;
+                        suffix = suffix.replaceAll('-', '_');
+                        suffix = suffix.replaceAll('/', '_');
+                        suffix = suffix.replaceAll(' ', '_');
+                        suffix = suffix.replaceAll('.', '_');
+                        suffix = suffix.replaceAll('&', '_');
+                        var uniqueValue = value + '_' + suffix;
+                        table.values[key] = uniqueValue;
+                    }
+                }
+            }
+        }
+
+        for (var key in hl7Tables)
+        {
+            var table = hl7Tables[key];
+            if (table.type in typesNotUnique)
+            {
+                var id = typesNotUnique[table.type];
+                ++typesNotUnique[table.type];
+                table.type += '_' + id;
+            }
+        }
+    },
     
     
-    generateData: function (hl7dictionary, options)
+    generateData: function (hl7dictionary, hl7Tables, options)
     {        
         var data = {namespace: 'hl7',
                     enums: [],
                     structs: [] };
+                    
+        for (var key in hl7Tables)
+        {
+            var table = hl7Tables[key];
+            var enu = {type: table.type, entries:[]};
+            var index = 0;
+            enu.entries.push({name: 'Empty', id: 0, alias: ''});
+            for (var key in table.values)
+            {
+                var value = table.values[key];
+                ++index;
+                var name = value;
+                enu.entries.push({name: name, id: index, alias: key});
+            }
+            data.enums.push(enu);            
+        }
 
         var structsHl7Fields = [];
         for (var key in hl7dictionary.fields) { 
@@ -467,7 +602,20 @@ module.exports = {
                 } 
                 else 
                 {
-                    stru.fields.push({tid:'string', type: '', name: subfield.name});
+                    var isEnum = false;
+                    if (subfield.table)
+                    {
+                        var table = hl7Tables[subfield.table];
+                        if (table)
+                        {
+                            isEnum = true;
+                            stru.fields.push({tid:'enum', type: table.type, name: subfield.name});
+                        }
+                    }
+                    if (!isEnum)
+                    {
+                        stru.fields.push({tid:'string', type: '', name: subfield.name});
+                    }
                 }
             }
             data.structs.push(stru);
@@ -489,7 +637,20 @@ module.exports = {
                 } 
                 else
                 {
-                    stru.fields.push({tid:'string'+strArray, type: '', name: field.name});
+                    var isEnum = false;
+                    if (subfield.table)
+                    {
+                        var table = hl7Tables[subfield.table];
+                        if (table)
+                        {
+                            isEnum = true;
+                            stru.fields.push({tid:'enum', type: table.type, name: subfield.name});
+                        }
+                    }
+                    if (!isEnum)
+                    {
+                        stru.fields.push({tid:'string'+strArray, type: '', name: field.name});
+                    }
                 }
             }
             data.structs.push(stru);

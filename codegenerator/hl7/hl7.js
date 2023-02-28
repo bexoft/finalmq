@@ -4,9 +4,11 @@ var argv = require('minimist')(process.argv.slice(2));
 
 var fileOptions = argv['options']
 var fileData = argv['def']
+var fileTables = argv['tables']
 var pathOutput = argv['outpath']
 
-var hl7dictionary = require(fileData)
+var hl7dictionary = require(fileData);
+var hl7Tables = require(fileTables);
 
 var fileOutput = fileData + '.fmq'
 
@@ -35,8 +37,9 @@ if (pathOutput)
 helper.buildSegGroups(hl7dictionary);
 helper.makeFieldNames(hl7dictionary);
 helper.putFlags(hl7dictionary);
+helper.processTables(hl7Tables);
 
-var data = helper.generateData(hl7dictionary, options);
+var data = helper.generateData(hl7dictionary, hl7Tables, options);
 var str = JSON.stringify(data, null, 4);
 
 
