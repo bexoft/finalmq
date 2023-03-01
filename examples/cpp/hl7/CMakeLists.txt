@@ -41,7 +41,7 @@ add_custom_command(
     COMMAND node ${CODEGENERATOR_HL7DEF} --input=${HL7DEF_DICTIONARY} --tables=${HL7DEF_TABLES} --options=${HL7DEF_OPTIONS} --outpath=${CMAKE_CURRENT_BINARY_DIR}
     DEPENDS ${HL7DEF_DICTIONARY} ${HL7DEF_TABLES} ${HL7DEF_OPTIONS}
     OUTPUT ${HL7DEF_FMQ}
-    COMMENT "Generating HL7 definition code from ${HL7_DICTIONARY}"
+    COMMENT "Generating HL7 definition code from ${HL7DEF_DICTIONARY}"
 )
 
 set(HL7DEF_FMQ_CPP ${HL7DEF_FMQ}.cpp)

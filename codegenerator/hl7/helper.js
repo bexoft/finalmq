@@ -4,6 +4,12 @@ var segGroups = {};
 var childToType = [];
 
 
+if(typeof String.prototype.replaceAll === "undefined") {
+    String.prototype.replaceAll = function(search, replace) {
+       return this.split(search).join(replace);
+    }
+}
+
 firstLower = function(str)
 {
     return str.charAt(0).toLowerCase() + str.slice(1);
