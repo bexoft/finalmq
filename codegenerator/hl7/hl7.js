@@ -3,7 +3,7 @@ var helper = require(__dirname + '/helper')
 var argv = require('minimist')(process.argv.slice(2));
 
 var fileOptions = argv['options']
-var fileData = argv['def']
+var fileData = argv['input']
 var fileTables = argv['tables']
 var pathOutput = argv['outpath']
 
@@ -19,7 +19,7 @@ var fileOutput = fileData + '.fmq'
 
 if (!fileOptions)
 {
-    fileOptions = './options.json';
+    fileOptions = './hl7options.json';
 }
 
 var options = null;

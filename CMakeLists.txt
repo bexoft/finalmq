@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.11)
 
 
 project(finalmq)
@@ -16,6 +16,25 @@ else()
     option(FINALMQ_USE_SSL "Build with openssl" ON)
 endif()
 
+
+include(FetchContent)
+
+function(CloneRepository repositoryURL branchName projectName sourceDir)
+  #Commands are left empty so that we only checkout the source and no not perform any kind of build
+  message("Starting to clone ${projectName} into ${sourceDir}")
+  FetchContent_Declare(
+    "${projectName}"
+    GIT_REPOSITORY "${repositoryURL}"
+    SOURCE_DIR "${sourceDir}"
+    GIT_TAG "origin/${branchName}"
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+  )
+  FetchContent_MakeAvailable(${projectName})
+endfunction(CloneRepository)
+
+CloneRepository("https://github.com/beckdave/hl7-dictionary.git" "beckdave-fix-compounds" "hl7-dictionary" "${CMAKE_BINARY_DIR}/hl7-dictionary")
 
 # Add compile flags to determine coverage   
 if (FINALMQ_BUILD_COVERAGE)

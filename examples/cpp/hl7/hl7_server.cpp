@@ -31,8 +31,8 @@
 #include "finalmq/variant/VariantValues.h"
 #include "finalmq/protocols/ProtocolMqtt5Client.h"
 
-// the definition of the messages are in the file hl7.fmq
-#include "hl7.fmq.h"
+// the definition of the messages is in the file hl7dictionary.2.7.1.js.fmq
+#include "hl7dictionary.2.7.1.js.fmq.h"
 
 #include <iostream>
 
@@ -61,7 +61,7 @@ public:
             reply.msh.countryCode = "de";
             reply.equ.alertLevel.alternateIdentifier = "Hello this is a test";
             reply.uac = std::make_shared<hl7::UAC>();
-            reply.uac->userAuthenticationCredential.typeOfData = "hello";
+            reply.uac->userAuthenticationCredential.typeOfData = hl7::MimeTypes::AudioData;
             reply.sft.resize(2);
             reply.sft[0].softwareBinaryId = "world";
             reply.sft[1].softwareProductInformation = "world";
@@ -78,7 +78,7 @@ public:
             reply.specimen_container[0].specimen[0].spm.accessionId.resize(1);
             reply.specimen_container[0].specimen[0].spm.accessionId[0].identifierCheckDigit = "ggg";
             reply.specimen_container[0].specimen[0].spm.containerCondition.alternateText = "tt";
-            reply.specimen_container[0].specimen[0].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
+            reply.specimen_container[0].specimen[0].spm.containerCondition.nameOfAlternateCodingSystem = hl7::CodingSystem::AstmE1238_E1467Universal;
             reply.specimen_container[0].specimen[0].obx.resize(1);
             reply.specimen_container[0].specimen[0].obx[0].effectiveDateOfReferenceRange = "aaaa";
             reply.specimen_container[0].specimen[0].obx[0].equipmentInstanceIdentifier.resize(1);
@@ -86,7 +86,7 @@ public:
             reply.specimen_container[0].specimen[1].spm.accessionId.resize(1);
             reply.specimen_container[0].specimen[1].spm.accessionId[0].securityCheck = "ggg";
             reply.specimen_container[0].specimen[1].spm.containerCondition.alternateText = "tt";
-            reply.specimen_container[0].specimen[1].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
+            reply.specimen_container[0].specimen[1].spm.containerCondition.nameOfAlternateCodingSystem = hl7::CodingSystem::CdcAnalyteCodes;
             reply.specimen_container[0].specimen[1].obx.resize(1);
             reply.specimen_container[0].specimen[1].obx[0].effectiveDateOfReferenceRange = "aaaa";
             reply.specimen_container[0].specimen[1].obx[0].equipmentInstanceIdentifier.resize(1);
@@ -101,17 +101,17 @@ public:
             reply.specimen_container[1].obx[1].equipmentInstanceIdentifier[0].namespaceId = "bbbbb";
             reply.specimen_container[1].specimen.resize(2);
             reply.specimen_container[1].specimen[0].spm.accessionId.resize(1);
-            reply.specimen_container[1].specimen[0].spm.accessionId[0].checkDigitScheme = "ggg";
+            reply.specimen_container[1].specimen[0].spm.accessionId[0].checkDigitScheme = hl7::CheckDigitScheme::Mod10Algorithm;
             reply.specimen_container[1].specimen[0].spm.containerCondition.alternateText = "tt";
-            reply.specimen_container[1].specimen[0].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
+            reply.specimen_container[1].specimen[0].spm.containerCondition.nameOfAlternateCodingSystem = hl7::CodingSystem::AstmE1238_E1467Universal;
             reply.specimen_container[1].specimen[0].obx.resize(1);
             reply.specimen_container[1].specimen[0].obx[0].effectiveDateOfReferenceRange = "aaaa";
             reply.specimen_container[1].specimen[0].obx[0].equipmentInstanceIdentifier.resize(1);
             reply.specimen_container[1].specimen[0].obx[0].equipmentInstanceIdentifier[0].namespaceId = "bbbbb";
             reply.specimen_container[1].specimen[1].spm.accessionId.resize(1);
-            reply.specimen_container[1].specimen[1].spm.accessionId[0].checkDigitScheme = "ggg";
+            reply.specimen_container[1].specimen[0].spm.accessionId[0].checkDigitScheme = hl7::CheckDigitScheme::Mod11Algorithm;
             reply.specimen_container[1].specimen[1].spm.containerCondition.alternateText = "tt";
-            reply.specimen_container[1].specimen[1].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
+            reply.specimen_container[1].specimen[1].spm.containerCondition.nameOfAlternateCodingSystem = hl7::CodingSystem::AstmE1238_E1467Universal;
             reply.specimen_container[1].specimen[1].obx.resize(1);
             reply.specimen_container[1].specimen[1].obx[0].effectiveDateOfReferenceRange = "aaaa";
             reply.specimen_container[1].specimen[1].obx[0].equipmentInstanceIdentifier.resize(1);
@@ -135,7 +135,7 @@ public:
             reply.msh.countryCode = "de";
             reply.equ.alertLevel.alternateIdentifier = "Hello this is a test";
             reply.uac = std::make_shared<hl7::UAC>();
-            reply.uac->userAuthenticationCredential.typeOfData = "hello";
+            reply.uac->userAuthenticationCredential.typeOfData = hl7::MimeTypes::AudioData;
             reply.sft.resize(2);
             reply.sft[0].softwareBinaryId = "world";
             reply.sft[1].softwareProductInformation = "world";
@@ -152,7 +152,7 @@ public:
             reply.specimen_container[0].specimen[0].spm.accessionId.resize(1);
             reply.specimen_container[0].specimen[0].spm.accessionId[0].identifierCheckDigit = "ggg";
             reply.specimen_container[0].specimen[0].spm.containerCondition.alternateText = "tt";
-            reply.specimen_container[0].specimen[0].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
+            reply.specimen_container[0].specimen[0].spm.containerCondition.nameOfAlternateCodingSystem = hl7::CodingSystem::AstmE1238_E1467Universal;
             reply.specimen_container[0].specimen[0].obx.resize(1);
             reply.specimen_container[0].specimen[0].obx[0].effectiveDateOfReferenceRange = "aaaa";
             reply.specimen_container[0].specimen[0].obx[0].equipmentInstanceIdentifier.resize(1);
@@ -160,7 +160,7 @@ public:
             reply.specimen_container[0].specimen[1].spm.accessionId.resize(1);
             reply.specimen_container[0].specimen[1].spm.accessionId[0].securityCheck = "ggg";
             reply.specimen_container[0].specimen[1].spm.containerCondition.alternateText = "tt";
-            reply.specimen_container[0].specimen[1].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
+            reply.specimen_container[0].specimen[1].spm.containerCondition.nameOfAlternateCodingSystem = hl7::CodingSystem::CdcAnalyteCodes;
             reply.specimen_container[0].specimen[1].obx.resize(1);
             reply.specimen_container[0].specimen[1].obx[0].effectiveDateOfReferenceRange = "aaaa";
             reply.specimen_container[0].specimen[1].obx[0].equipmentInstanceIdentifier.resize(1);
@@ -175,17 +175,17 @@ public:
             reply.specimen_container[1].obx[1].equipmentInstanceIdentifier[0].namespaceId = "bbbbb";
             reply.specimen_container[1].specimen.resize(2);
             reply.specimen_container[1].specimen[0].spm.accessionId.resize(1);
-            reply.specimen_container[1].specimen[0].spm.accessionId[0].checkDigitScheme = "ggg";
+            reply.specimen_container[1].specimen[0].spm.accessionId[0].checkDigitScheme = hl7::CheckDigitScheme::Mod10Algorithm;
             reply.specimen_container[1].specimen[0].spm.containerCondition.alternateText = "tt";
-            reply.specimen_container[1].specimen[0].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
+            reply.specimen_container[1].specimen[0].spm.containerCondition.nameOfAlternateCodingSystem = hl7::CodingSystem::AstmE1238_E1467Universal;
             reply.specimen_container[1].specimen[0].obx.resize(1);
             reply.specimen_container[1].specimen[0].obx[0].effectiveDateOfReferenceRange = "aaaa";
             reply.specimen_container[1].specimen[0].obx[0].equipmentInstanceIdentifier.resize(1);
             reply.specimen_container[1].specimen[0].obx[0].equipmentInstanceIdentifier[0].namespaceId = "bbbbb";
             reply.specimen_container[1].specimen[1].spm.accessionId.resize(1);
-            reply.specimen_container[1].specimen[1].spm.accessionId[0].checkDigitScheme = "ggg";
+            reply.specimen_container[1].specimen[0].spm.accessionId[0].checkDigitScheme = hl7::CheckDigitScheme::Mod11Algorithm;
             reply.specimen_container[1].specimen[1].spm.containerCondition.alternateText = "tt";
-            reply.specimen_container[1].specimen[1].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
+            reply.specimen_container[1].specimen[1].spm.containerCondition.nameOfAlternateCodingSystem = hl7::CodingSystem::AstmE1238_E1467Universal;
             reply.specimen_container[1].specimen[1].obx.resize(1);
             reply.specimen_container[1].specimen[1].obx[0].effectiveDateOfReferenceRange = "aaaa";
             reply.specimen_container[1].specimen[1].obx[0].equipmentInstanceIdentifier.resize(1);
@@ -200,7 +200,7 @@ public:
             msg.msh.countryCode = "de";
             msg.equ.alertLevel.alternateIdentifier = "Hello this is a test";
             msg.uac = std::make_shared<hl7::UAC>();
-            msg.uac->userAuthenticationCredential.typeOfData = "hello";
+            msg.uac->userAuthenticationCredential.typeOfData = hl7::MimeTypes::AudioData;
             msg.sft.resize(2);
             msg.sft[0].softwareBinaryId = "world";
             msg.sft[1].softwareProductInformation = "world";
@@ -217,7 +217,7 @@ public:
             msg.specimen_container[0].specimen[0].spm.accessionId.resize(1);
             msg.specimen_container[0].specimen[0].spm.accessionId[0].identifierCheckDigit = "ggg";
             msg.specimen_container[0].specimen[0].spm.containerCondition.alternateText = "tt";
-            msg.specimen_container[0].specimen[0].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
+            msg.specimen_container[0].specimen[0].spm.containerCondition.nameOfAlternateCodingSystem = hl7::CodingSystem::AstmE1238_E1467Universal;
             msg.specimen_container[0].specimen[0].obx.resize(1);
             msg.specimen_container[0].specimen[0].obx[0].effectiveDateOfReferenceRange = "aaaa";
             msg.specimen_container[0].specimen[0].obx[0].equipmentInstanceIdentifier.resize(1);
@@ -225,7 +225,7 @@ public:
             msg.specimen_container[0].specimen[1].spm.accessionId.resize(1);
             msg.specimen_container[0].specimen[1].spm.accessionId[0].securityCheck = "ggg";
             msg.specimen_container[0].specimen[1].spm.containerCondition.alternateText = "tt";
-            msg.specimen_container[0].specimen[1].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
+            msg.specimen_container[0].specimen[1].spm.containerCondition.nameOfAlternateCodingSystem = hl7::CodingSystem::CdcAnalyteCodes;
             msg.specimen_container[0].specimen[1].obx.resize(1);
             msg.specimen_container[0].specimen[1].obx[0].effectiveDateOfReferenceRange = "aaaa";
             msg.specimen_container[0].specimen[1].obx[0].equipmentInstanceIdentifier.resize(1);
@@ -240,17 +240,17 @@ public:
             msg.specimen_container[1].obx[1].equipmentInstanceIdentifier[0].namespaceId = "bbbbb";
             msg.specimen_container[1].specimen.resize(2);
             msg.specimen_container[1].specimen[0].spm.accessionId.resize(1);
-            msg.specimen_container[1].specimen[0].spm.accessionId[0].checkDigitScheme = "ggg";
+            msg.specimen_container[1].specimen[0].spm.accessionId[0].checkDigitScheme = hl7::CheckDigitScheme::Mod10Algorithm;
             msg.specimen_container[1].specimen[0].spm.containerCondition.alternateText = "tt";
-            msg.specimen_container[1].specimen[0].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
+            msg.specimen_container[1].specimen[0].spm.containerCondition.nameOfAlternateCodingSystem = hl7::CodingSystem::AstmE1238_E1467Universal;
             msg.specimen_container[1].specimen[0].obx.resize(1);
             msg.specimen_container[1].specimen[0].obx[0].effectiveDateOfReferenceRange = "aaaa";
             msg.specimen_container[1].specimen[0].obx[0].equipmentInstanceIdentifier.resize(1);
             msg.specimen_container[1].specimen[0].obx[0].equipmentInstanceIdentifier[0].namespaceId = "bbbbb";
             msg.specimen_container[1].specimen[1].spm.accessionId.resize(1);
-            msg.specimen_container[1].specimen[1].spm.accessionId[0].checkDigitScheme = "ggg";
+            msg.specimen_container[1].specimen[0].spm.accessionId[0].checkDigitScheme = hl7::CheckDigitScheme::Mod11Algorithm;
             msg.specimen_container[1].specimen[1].spm.containerCondition.alternateText = "tt";
-            msg.specimen_container[1].specimen[1].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
+            msg.specimen_container[1].specimen[1].spm.containerCondition.nameOfAlternateCodingSystem = hl7::CodingSystem::AstmE1238_E1467Universal;
             msg.specimen_container[1].specimen[1].obx.resize(1);
             msg.specimen_container[1].specimen[1].obx[0].effectiveDateOfReferenceRange = "aaaa";
             msg.specimen_container[1].specimen[1].obx[0].equipmentInstanceIdentifier.resize(1);
@@ -330,8 +330,6 @@ int main()
 
     entityContainer.bind("tcp://*:8081:httpserver:hl7");
 
-    entityContainer.bind("tcp://*:8082:httpserver:json");
-
 #ifndef WIN32
     entityContainer.bind("ipc://my_uds:headersize:protobuf");
 #endif
@@ -342,7 +340,10 @@ int main()
 
     // Open listener port 8080 with http.
     // content type in payload: JSON
-    entityContainer.bind("tcp://*:8080:httpserver:json");
+    entityContainer.bind("tcp://*:8080:httpserver:json", { {}, {},
+        VariantStruct{ {RemoteEntityFormatJson::PROPERTY_SERIALIZE_ENUM_AS_STRING, true},
+                       {RemoteEntityFormatJson::PROPERTY_SERIALIZE_SKIP_DEFAULT_VALUES, false} }
+        });
 
     //// if you want to use mqtt5 -> connect to broker
     //entityContainer.connect("tcp://localhost:1883:mqtt5client:json", { {},{},
