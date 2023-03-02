@@ -32,8 +32,8 @@
 #include "finalmq/helpers/Executor.h"
 #include "finalmq/helpers/ProtothreadRequestReply.h"
 
-// the definition of the messages are in the file helloworld.fmq
-#include "hl7.fmq.h"
+// the definition of the messages is in the file hl7dictionary.2.7.1.js.fmq
+#include "hl7dictionary.2.7.1.js.fmq.h"
 
 #include <iostream>
 #include <thread>
@@ -150,7 +150,7 @@ int main()
     hl7::SSU_U03 msg;
     msg.msh.countryCode = "de";
     msg.uac = std::make_shared<hl7::UAC>();
-    msg.uac->userAuthenticationCredential.typeOfData = "hello";
+    msg.uac->userAuthenticationCredential.typeOfData = hl7::MimeTypes::AudioData;
     msg.sft.resize(3);
     msg.sft[0].softwareBinaryId = "world";
     msg.specimen_container.resize(4);
@@ -163,7 +163,7 @@ int main()
     msg.specimen_container[0].specimen[0].spm.accessionId.resize(1);
     msg.specimen_container[0].specimen[0].spm.accessionId[0].idNumber = "ggg";
     msg.specimen_container[0].specimen[0].spm.containerCondition.alternateText = "tt";
-    msg.specimen_container[0].specimen[0].spm.containerCondition.nameOfAlternateCodingSystem = "cc";
+    msg.specimen_container[0].specimen[0].spm.containerCondition.nameOfAlternateCodingSystem = hl7::CodingSystem::AstmE1238_E1467Universal;
     msg.specimen_container[0].specimen[0].obx.resize(5);
 
     for (int i = 0; i < 10000; i++)

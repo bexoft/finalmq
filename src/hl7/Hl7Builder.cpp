@@ -108,6 +108,12 @@ class Hl7Node
 public:
     void enterString(const int* levelIndex, int sizeLevelIndex, int index, std::string&& value)
     {
+        if (sizeLevelIndex >= 1 && levelIndex[0] == -1)
+        {
+            // this is not a HL7 message
+            return;
+        }
+
         if (index == -1 && sizeLevelIndex == 0)
         {
             if (!value.empty())
@@ -174,6 +180,12 @@ void Hl7Builder::enterString(const int* levelIndex, int sizeLevelIndex, int inde
 {
     m_root->enterString(levelIndex, sizeLevelIndex, index, std::move(value));
 }
+
+void Hl7Builder::addArrayStruct(const int* levelIndex, int sizeLevelIndex, int index)
+{
+    m_root->enterString(levelIndex, sizeLevelIndex, index, "");
+}
+
 
 void Hl7Builder::finished()
 {

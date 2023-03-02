@@ -115,6 +115,7 @@ void SerializerHl7::Internal::enterStruct(const MetaField& field)
                 else
                 {
                     ++m_ixArrayStruct;
+                    m_hl7Builder.addArrayStruct(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), m_ixArrayStruct);
                     m_indexOfLayer.push_back(m_ixArrayStruct);
                 }
             }

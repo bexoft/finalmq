@@ -1,0 +1,64 @@
+<html>                                                                          
+
+<head>                                                                          
+<script type="text/javascript" src="fmq.js"></script>
+
+<script type="text/javascript" >
+
+var g_fmqSession = new FmqSession();
+
+
+function sendRequest()
+{
+    var requestText = document.getElementById('RequestText').value;
+    requestText = requestText.replaceAll('\n', '\r');
+    document.getElementById('ResponseText').innerHTML = '';
+    g_fmqSession.httpRequestText('POST', 'MyService/tubes/123', requestText, null, function (xmlhttp) {
+        document.getElementById('ResponseText').innerHTML = xmlhttp.responseText;
+    });
+
+}
+
+function pageLoad()
+{
+}
+
+function pageUnload()
+{
+}
+
+</script>                                                                       
+
+</head>
+
+<body onload="pageLoad()" onunload="pageUnload()">
+<textarea style="width: 600px; height: 400px;" id="RequestText" name="text" >MSH|^~\&|||||||SSU^U03^SSU_U03||||||||de
+SFT||||world
+SFT|||||world
+UAC||^audio
+EQU|||||^^^Hello this is a test
+SAC||||||hh||||uu^^bbb||||hey
+OBX||||||||||||aaaa
+OBX||||||||||||||||||^bbbbb
+SPM||||||||||||||||||||||||||||^^^^tt^AS4||^ggg
+OBX||||||||||||aaaa||||||^bbbbb
+SPM||||||||||||||||||||||||||||^^^^tt^CDCA||^^^^^^^^^^ggg
+OBX||||||||||||aaaa||||||^bbbbb
+SAC||||||hh||||uu^^bbb||||hey
+OBX||||||||||||aaaa
+OBX||||||||||||||||||^bbbbb
+SPM||||||||||||||||||||||||||||^^^^tt^AS4||^^M11
+OBX||||||||||||aaaa||||||^bbbbb
+SPM||||||||||||||||||||||||||||^^^^tt^AS4
+OBX||||||||||||aaaa||||||^bbbbb
+</textarea>
+
+<button type="button" id="SendRequest" onclick="sendRequest()" >SendRequest</button>
+
+<textarea style="width: 600px; height: 400px;" id="ResponseText" ></textarea>
+
+
+</body>
+
+</html>
+       

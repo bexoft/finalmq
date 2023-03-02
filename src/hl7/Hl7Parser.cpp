@@ -152,22 +152,15 @@ int Hl7Parser::isNextFieldFilled(int level, bool& filled)
     else
     {
         l = isDelimiter(c);
-        if (l == LAYER_MAX)
+        if (l > level)
         {
             filled = true;
             l = level;
         }
     }
-    if (l > level)
+    if (!filled)
     {
-        l = parseTillEndOfStruct(level);
-    }
-    else
-    {
-        if (!filled)
-        {
-            ++m_str;
-        }
+        ++m_str;
     }
 
     assert(l <= level);

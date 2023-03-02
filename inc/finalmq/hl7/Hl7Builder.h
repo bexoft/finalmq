@@ -38,6 +38,7 @@ struct IHl7BuilderVisitor
     virtual void enterDouble(const int* levelIndex, int sizeLevelIndex, int index, double value) = 0;
     virtual void enterString(const int* levelIndex, int sizeLevelIndex, int index, const char* value, ssize_t size) = 0;
     virtual void enterString(const int* levelIndex, int sizeLevelIndex, int index, std::string&& value) = 0;
+    virtual void addArrayStruct(const int* levelIndex, int sizeLevelIndex, int index) = 0;
     virtual void finished() = 0;
 };
 
@@ -59,6 +60,7 @@ private:
     virtual void enterDouble(const int* levelIndex, int sizeLevelIndex, int index, double value) override;
     virtual void enterString(const int* levelIndex, int sizeLevelIndex, int index, const char* value, ssize_t size) override;
     virtual void enterString(const int* levelIndex, int sizeLevelIndex, int index, std::string&& value) override;
+    virtual void addArrayStruct(const int* levelIndex, int sizeLevelIndex, int index) override;
     virtual void finished() override;
 
     void reserveSpace(ssize_t space);

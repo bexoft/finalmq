@@ -927,6 +927,11 @@
             {"tid":"struct", "type":"FAA", "name":"sfaa"},
             {"tid":"struct", "type":"FBB", "name":"sfbb"}
         ]},
+        {"type":"A03","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+            {"tid":"struct[]", "type":"FAA", "name":"faa_arr"},
+            {"tid":"struct", "type":"FAA", "name":"faa"},
+            {"tid":"string[]", "type":"", "name":"sarr"}
+        ]},
 
 
 
@@ -940,6 +945,11 @@
             {"tid":"struct", "type":"BBB", "name":"b", "flags":["METAFLAG_NULLABLE"]},
             {"tid":"struct", "type":"CCC", "name":"c", "flags":["METAFLAG_NULLABLE"]}
         ]},
+        {"type":"GROUP_FAR","desc":"","fields":[ 
+            {"tid":"struct[]", "type":"A03", "name":"a03_arr"},
+            {"tid":"struct", "type":"A03", "name":"a03"}
+        ]},
+
 
 
 
@@ -992,8 +1002,13 @@
         {"type":"MSG_011","desc":"Address","fields":[ 
             {"tid":"struct", "type":"MSH", "name":"msh"},
             {"tid":"struct", "type":"A02", "name":"a02"}
-        ]}
+        ]},
 
+        {"type":"MSG_012","desc":"Address","fields":[ 
+            {"tid":"struct", "type":"MSH", "name":"msh"},
+            {"tid":"struct", "type":"A03", "name":"a03"}
+        ]}
+    
     ]
 }
 
