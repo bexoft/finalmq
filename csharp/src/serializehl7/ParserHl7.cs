@@ -268,8 +268,11 @@ namespace finalmq
                                 }
                                 int levelNew = ParseStruct(LevelSegmentNext, subStruct, out isarray);
                                 m_visitor.ExitStruct(fieldWithoutArray);
-                                Debug.Assert(levelNew == 0);
                                 Debug.Assert(isarray == false);
+                                if (levelNew < levelSegment)
+                                {
+                                    return levelNew;
+                                }
                             }
                             else
                             {
