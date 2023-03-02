@@ -87,6 +87,7 @@ namespace finalmq
                             else
                             {
                                 ++m_ixArrayStruct;
+                                m_hl7Builder.AddArrayStruct(m_indexOfLayer, m_ixIndex + 1, m_ixArrayStruct);
                                 ++m_ixIndex;
                                 m_indexOfLayer[m_ixIndex] = m_ixArrayStruct;
                             }

@@ -26,56 +26,55 @@ namespace testfinalmq
         public void Dispose()
         {
         }
-        /*
-                [Fact]
-                public void TestSSU_U03()
-                {
-                    hl7.SSU_U03 cmp = new hl7.SSU_U03();
-                    cmp.msh.fieldSeparator = "|";
-                    cmp.msh.encodingCharacters = "^~\\&";
-                    cmp.msh.messageType.messageCode = "SSU";
-                    cmp.msh.messageType.triggerEvent = "U03";
-                    cmp.msh.messageType.messageStructure = "SSU_U03";
-                    cmp.msh.countryCode = "de";
-                    cmp.uac = new hl7.UAC();
-                    cmp.uac.userAuthenticationCredential.typeofData = "hello";
-                    cmp.sft.Add(new hl7.SFT());
-                    cmp.sft.Add(new hl7.SFT());
-                    cmp.sft.Add(new hl7.SFT());
-                    cmp.sft[0].softwareBinaryID = "world";
-                    cmp.sac.Add(new hl7.SAC_GROUP());
-                    cmp.sac.Add(new hl7.SAC_GROUP());
-                    cmp.sac.Add(new hl7.SAC_GROUP());
-                    cmp.sac.Add(new hl7.SAC_GROUP());
-                    cmp.sac[0].sac.positioninTray.value1 = "hey";
-                    cmp.sac[0].sac.specimenSource = "hh";
-                    cmp.sac[0].sac.carrierIdentifier.entityIdentifier = "uu";
-                    cmp.sac[0].sac.carrierIdentifier.universalID = "bbb";
-                    cmp.sac[0].obx.Add(new hl7.OBX());
-                    cmp.sac[0].obx.Add(new hl7.OBX());
-                    cmp.sac[0].nte.Add(new hl7.NTE());
-                    cmp.sac[0].spm.Add(new hl7.SPM_GROUP());
-                    cmp.sac[0].spm.Add(new hl7.SPM_GROUP());
-                    cmp.sac[0].spm.Add(new hl7.SPM_GROUP());
-                    cmp.sac[0].spm[0].spm.accessionID.iDNumber = "ggg";
-                    cmp.sac[0].spm[0].spm.containerCondition.alternateText = "tt";
-                    cmp.sac[0].spm[0].spm.containerCondition.nameofAlternateCodingSystem = "cc";
-                    cmp.sac[0].spm[0].obx.Add(new hl7.OBX());
-                    cmp.sac[0].spm[0].obx.Add(new hl7.OBX());
-                    cmp.sac[0].spm[0].obx.Add(new hl7.OBX());
-                    cmp.sac[0].spm[0].obx.Add(new hl7.OBX());
-                    cmp.sac[0].spm[0].obx.Add(new hl7.OBX());
 
-                    hl7.SSU_U03 msg = new hl7.SSU_U03();
-                    string data = "MSH|^~\\&|||||||SSU^U03^SSU_U03||||||||de\rSFT|||world\rSFT\rSFT\rUAC||^hello\rEQU\rSAC||||||hh||||uu^^bbb||||hey\rOBX\rOBX\rNTE\rSPM||||||||||||||||||||||||||||^^^^tt^cc||ggg\rOBX\rOBX\rOBX\rOBX\rOBX\rSPM\rSPM\rSAC\rSAC\rSAC\r";
+        [Fact]
+        public void TestSSU_U03()
+        {
+            testhl7.SSU_U03 cmp = new testhl7.SSU_U03();
+            cmp.msh.fieldSeparator = "|";
+            cmp.msh.encodingCharacters = "^~\\&";
+            cmp.msh.messageType.messageCode = "SSU";
+            cmp.msh.messageType.triggerEvent = "U03";
+            cmp.msh.messageType.messageStructure = "SSU_U03";
+            cmp.msh.countryCode = "de";
+            cmp.uac = new testhl7.UAC();
+            cmp.uac.userAuthenticationCredential.typeOfData = testhl7.MimeTypes.MimeMultipartPackage;
+            cmp.sft.Add(new testhl7.SFT());
+            cmp.sft.Add(new testhl7.SFT());
+            cmp.sft.Add(new testhl7.SFT());
+            cmp.sft[0].softwareBinaryId = "world";
+            cmp.specimen_container.Add(new testhl7.SPECIMEN_CONTAINER_5());
+            cmp.specimen_container.Add(new testhl7.SPECIMEN_CONTAINER_5());
+            cmp.specimen_container.Add(new testhl7.SPECIMEN_CONTAINER_5());
+            cmp.specimen_container.Add(new testhl7.SPECIMEN_CONTAINER_5());
+            cmp.specimen_container[0].sac.positionInTray.value1 = "hey";
+            cmp.specimen_container[0].sac.specimenSource = "hh";
+            cmp.specimen_container[0].sac.carrierIdentifier.entityIdentifier = "uu";
+            cmp.specimen_container[0].sac.carrierIdentifier.universalId = "bbb";
+            cmp.specimen_container[0].obx.Add(new testhl7.OBX());
+            cmp.specimen_container[0].obx.Add(new testhl7.OBX());
+            cmp.specimen_container[0].specimen.Add(new testhl7.SPECIMEN_17());
+            cmp.specimen_container[0].specimen.Add(new testhl7.SPECIMEN_17());
+            cmp.specimen_container[0].specimen.Add(new testhl7.SPECIMEN_17());
+            cmp.specimen_container[0].specimen[0].spm.accessionId.Add(new testhl7.CX());
+            cmp.specimen_container[0].specimen[0].spm.accessionId[0].idNumber = "ggg";
+            cmp.specimen_container[0].specimen[0].spm.containerCondition.alternateText = "tt";
+            cmp.specimen_container[0].specimen[0].spm.containerCondition.nameOfAlternateCodingSystem = testhl7.CodingSystem.WhoAdverseReactionTerms;
+            cmp.specimen_container[0].specimen[0].obx.Add(new testhl7.OBX());
+            cmp.specimen_container[0].specimen[0].obx.Add(new testhl7.OBX());
+            cmp.specimen_container[0].specimen[0].obx.Add(new testhl7.OBX());
+            cmp.specimen_container[0].specimen[0].obx.Add(new testhl7.OBX());
+            cmp.specimen_container[0].specimen[0].obx.Add(new testhl7.OBX());
 
-                    SerializerStruct serializer = new SerializerStruct(msg);
-                    ParserHl7 parser = new ParserHl7(serializer, data);
-                    parser.ParseStruct("hl7.SSU_U03");
+            testhl7.SSU_U03 msg = new testhl7.SSU_U03();
+            string data = "MSH|^~\\&|||||||SSU^U03^SSU_U03||||||||de\rSFT||||world\rSFT\rSFT\rUAC||^multipart\rEQU\rSAC||||||hh||||uu^^bbb||||hey\rOBX\rOBX\rSPM||||||||||||||||||||||||||||^^^^tt^ART||ggg\rOBX\rOBX\rOBX\rOBX\rOBX\rSPM\rSPM\rSAC\rSAC\rSAC\r";
 
-                    Debug.Assert(cmp.Equals(msg));
-                }
-        */
+            SerializerStruct serializer = new SerializerStruct(msg);
+            ParserHl7 parser = new ParserHl7(serializer, data);
+            parser.ParseStruct("testhl7.SSU_U03");
+
+            Debug.Assert(cmp.Equals(msg));
+        }
 
         [Fact]
         public void TestMSG_001()
@@ -364,6 +363,120 @@ namespace testfinalmq
             SerializerStruct serializer = new SerializerStruct(msg);
             ParserHl7 parser = new ParserHl7(serializer, data);
             parser.ParseStruct("testhl7.MSG_006");
+
+            Debug.Assert(cmp.Equals(msg));
+        }
+
+        [Fact]
+        public void TestArrayStruct_MSG_012_1()
+        {
+            testhl7.MSG_012 cmp = new testhl7.MSG_012();
+            cmp.msh.fieldSeparator = "|";
+            cmp.msh.encodingCharacters = "^~\\&";
+            cmp.msh.messageType.messageCode = "MSG";
+            cmp.msh.messageType.triggerEvent = "012";
+            cmp.msh.messageType.messageStructure = "MSG_012";
+
+            cmp.a03.faa_arr.Add(new testhl7.FAA());
+            cmp.a03.faa_arr[0].b = "b";
+
+            testhl7.MSG_012 msg = new testhl7.MSG_012();
+            string data = "MSH|^~\\&|||||||MSG^012^MSG_012\rA03|^b\r";
+
+            SerializerStruct serializer = new SerializerStruct(msg);
+            ParserHl7 parser = new ParserHl7(serializer, data);
+            parser.ParseStruct("testhl7.MSG_012");
+
+            Debug.Assert(cmp.Equals(msg));
+        }
+
+        [Fact]
+        public void TestArrayStruct_MSG_012_2()
+        {
+            testhl7.MSG_012 cmp = new testhl7.MSG_012();
+            cmp.msh.fieldSeparator = "|";
+            cmp.msh.encodingCharacters = "^~\\&";
+            cmp.msh.messageType.messageCode = "MSG";
+            cmp.msh.messageType.triggerEvent = "012";
+            cmp.msh.messageType.messageStructure = "MSG_012";
+
+            cmp.a03.faa_arr.Add(new testhl7.FAA());
+
+            testhl7.MSG_012 msg = new testhl7.MSG_012();
+            string data = "MSH|^~\\&|||||||MSG^012^MSG_012\rA03|^\r";
+
+            SerializerStruct serializer = new SerializerStruct(msg);
+            ParserHl7 parser = new ParserHl7(serializer, data);
+            parser.ParseStruct("testhl7.MSG_012");
+
+            Debug.Assert(cmp.Equals(msg));
+        }
+
+        [Fact]
+        public void TestArrayStruct_MSG_012_3()
+        {
+            testhl7.MSG_012 cmp = new testhl7.MSG_012();
+            cmp.msh.fieldSeparator = "|";
+            cmp.msh.encodingCharacters = "^~\\&";
+            cmp.msh.messageType.messageCode = "MSG";
+            cmp.msh.messageType.triggerEvent = "012";
+            cmp.msh.messageType.messageStructure = "MSG_012";
+
+            cmp.a03.faa_arr.Add(new testhl7.FAA());
+            cmp.a03.faa_arr.Add(new testhl7.FAA());
+
+            testhl7.MSG_012 msg = new testhl7.MSG_012();
+            string data = "MSH|^~\\&|||||||MSG^012^MSG_012\rA03|~\r";
+
+            SerializerStruct serializer = new SerializerStruct(msg);
+            ParserHl7 parser = new ParserHl7(serializer, data);
+            parser.ParseStruct("testhl7.MSG_012");
+
+            Debug.Assert(cmp.Equals(msg));
+        }
+
+        [Fact]
+        public void TestArrayString_MSG_012_1()
+        {
+            testhl7.MSG_012 cmp = new testhl7.MSG_012();
+            cmp.msh.fieldSeparator = "|";
+            cmp.msh.encodingCharacters = "^~\\&";
+            cmp.msh.messageType.messageCode = "MSG";
+            cmp.msh.messageType.triggerEvent = "012";
+            cmp.msh.messageType.messageStructure = "MSG_012";
+
+            cmp.a03.sarr.Add("");
+            cmp.a03.sarr.Add("");
+
+            testhl7.MSG_012 msg = new testhl7.MSG_012();
+            string data = "MSH|^~\\&|||||||MSG^012^MSG_012\rA03|||~\r";
+
+            SerializerStruct serializer = new SerializerStruct(msg);
+            ParserHl7 parser = new ParserHl7(serializer, data);
+            parser.ParseStruct("testhl7.MSG_012");
+
+            Debug.Assert(cmp.Equals(msg));
+        }
+
+        [Fact]
+        public void TestArrayString_MSG_012_2()
+        {
+            testhl7.MSG_012 cmp = new testhl7.MSG_012();
+            cmp.msh.fieldSeparator = "|";
+            cmp.msh.encodingCharacters = "^~\\&";
+            cmp.msh.messageType.messageCode = "MSG";
+            cmp.msh.messageType.triggerEvent = "012";
+            cmp.msh.messageType.messageStructure = "MSG_012";
+
+            cmp.a03.sarr.Add("");
+            cmp.a03.sarr.Add("b");
+
+            testhl7.MSG_012 msg = new testhl7.MSG_012();
+            string data = "MSH|^~\\&|||||||MSG^012^MSG_012\rA03|||~b\r";
+
+            SerializerStruct serializer = new SerializerStruct(msg);
+            ParserHl7 parser = new ParserHl7(serializer, data);
+            parser.ParseStruct("testhl7.MSG_012");
 
             Debug.Assert(cmp.Equals(msg));
         }

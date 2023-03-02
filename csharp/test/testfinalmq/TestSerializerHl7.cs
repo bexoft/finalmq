@@ -50,48 +50,47 @@ namespace testfinalmq
                 m_mockBuffer.Verify(x => x.RemainingSize, Times.Once);
             }
         }
-        /*
-                [Fact]
-                public void TestSSU_U03()
-                {
-                    hl7.SSU_U03 msg = new hl7.SSU_U03();
-                    msg.msh.countryCode = "de";
-                    msg.uac = new hl7.UAC();
-                    msg.uac.userAuthenticationCredential.typeofData = "hello";
-                    msg.sft.Add(new hl7.SFT());
-                    msg.sft.Add(new hl7.SFT());
-                    msg.sft.Add(new hl7.SFT());
-                    msg.sft[0].softwareBinaryID = "world";
-                    msg.sac.Add(new hl7.SAC_GROUP());
-                    msg.sac.Add(new hl7.SAC_GROUP());
-                    msg.sac.Add(new hl7.SAC_GROUP());
-                    msg.sac.Add(new hl7.SAC_GROUP());
-                    msg.sac[0].sac.positioninTray.value1 = "hey";
-                    msg.sac[0].sac.specimenSource = "hh";
-                    msg.sac[0].sac.carrierIdentifier.entityIdentifier = "uu";
-                    msg.sac[0].sac.carrierIdentifier.universalID = "bbb";
-                    msg.sac[0].obx.Add(new hl7.OBX());
-                    msg.sac[0].obx.Add(new hl7.OBX());
-                    msg.sac[0].nte.Add(new hl7.NTE());
-                    msg.sac[0].spm.Add(new hl7.SPM_GROUP());
-                    msg.sac[0].spm.Add(new hl7.SPM_GROUP());
-                    msg.sac[0].spm.Add(new hl7.SPM_GROUP());
-                    msg.sac[0].spm[0].spm.accessionID.iDNumber = "ggg";
-                    msg.sac[0].spm[0].spm.containerCondition.alternateText = "tt";
-                    msg.sac[0].spm[0].spm.containerCondition.nameofAlternateCodingSystem = "cc";
-                    msg.sac[0].spm[0].obx.Add(new hl7.OBX());
-                    msg.sac[0].spm[0].obx.Add(new hl7.OBX());
-                    msg.sac[0].spm[0].obx.Add(new hl7.OBX());
-                    msg.sac[0].spm[0].obx.Add(new hl7.OBX());
-                    msg.sac[0].spm[0].obx.Add(new hl7.OBX());
+        
+        [Fact]
+        public void TestSSU_U03()
+        {
+            testhl7.SSU_U03 msg = new testhl7.SSU_U03();
+            msg.msh.countryCode = "de";
+            msg.uac = new testhl7.UAC();
+            msg.uac.userAuthenticationCredential.typeOfData = testhl7.MimeTypes.MimeMultipartPackage;
+            msg.sft.Add(new testhl7.SFT());
+            msg.sft.Add(new testhl7.SFT());
+            msg.sft.Add(new testhl7.SFT());
+            msg.sft[0].softwareBinaryId = "world";
+            msg.specimen_container.Add(new testhl7.SPECIMEN_CONTAINER_5());
+            msg.specimen_container.Add(new testhl7.SPECIMEN_CONTAINER_5());
+            msg.specimen_container.Add(new testhl7.SPECIMEN_CONTAINER_5());
+            msg.specimen_container.Add(new testhl7.SPECIMEN_CONTAINER_5());
+            msg.specimen_container[0].sac.positionInTray.value1 = "hey";
+            msg.specimen_container[0].sac.specimenSource = "hh";
+            msg.specimen_container[0].sac.carrierIdentifier.entityIdentifier = "uu";
+            msg.specimen_container[0].sac.carrierIdentifier.universalId = "bbb";
+            msg.specimen_container[0].obx.Add(new testhl7.OBX());
+            msg.specimen_container[0].obx.Add(new testhl7.OBX());
+            msg.specimen_container[0].specimen.Add(new testhl7.SPECIMEN_17());
+            msg.specimen_container[0].specimen.Add(new testhl7.SPECIMEN_17());
+            msg.specimen_container[0].specimen.Add(new testhl7.SPECIMEN_17());
+            msg.specimen_container[0].specimen[0].spm.accessionId.Add(new testhl7.CX());
+            msg.specimen_container[0].specimen[0].spm.accessionId[0].idNumber = "ggg";
+            msg.specimen_container[0].specimen[0].spm.containerCondition.alternateText = "tt";
+            msg.specimen_container[0].specimen[0].spm.containerCondition.nameOfAlternateCodingSystem = testhl7.CodingSystem.WhoAdverseReactionTerms;
+            msg.specimen_container[0].specimen[0].obx.Add(new testhl7.OBX());
+            msg.specimen_container[0].specimen[0].obx.Add(new testhl7.OBX());
+            msg.specimen_container[0].specimen[0].obx.Add(new testhl7.OBX());
+            msg.specimen_container[0].specimen[0].obx.Add(new testhl7.OBX());
+            msg.specimen_container[0].specimen[0].obx.Add(new testhl7.OBX());
 
-                    ParserStruct parser = new ParserStruct(m_serializer, msg);
-                    parser.ParseStruct();
+            ParserStruct parser = new ParserStruct(m_serializer, msg);
+            parser.ParseStruct();
 
-                    string str = Encoding.UTF8.GetString(m_data, 0, m_size);
-                    Debug.Assert(str == "MSH|^~\\&|||||||SSU^U03^SSU_U03||||||||de\rSFT|||world\rSFT\rSFT\rUAC||^hello\rEQU\rSAC||||||hh||||uu^^bbb||||hey\rOBX\rOBX\rNTE\rSPM||||||||||||||||||||||||||||^^^^tt^cc||ggg\rOBX\rOBX\rOBX\rOBX\rOBX\rSPM\rSPM\rSAC\rSAC\rSAC\r");
-                }
-        */
+            string str = Encoding.UTF8.GetString(m_data, 0, m_size);
+            Debug.Assert(str == "MSH|^~\\&|||||||SSU^U03^SSU_U03||||||||de\rSFT||||world\rSFT\rSFT\rUAC||^multipart\rEQU\rSAC||||||hh||||uu^^bbb||||hey\rOBX\rOBX\rSPM||||||||||||||||||||||||||||^^^^tt^ART||ggg\rOBX\rOBX\rOBX\rOBX\rOBX\rSPM\rSPM\rSAC\rSAC\rSAC\r");
+        }
 
         [Fact]
         public void TestMSG_001()
@@ -243,6 +242,106 @@ namespace testfinalmq
 
             string str = Encoding.UTF8.GetString(m_data, 0, m_size);
             Debug.Assert(str == "MSH|^~\\&|||||||MSG^011^MSG_011\rA02|a1^b1~a2^b2~a3^b3|c1^d1^a1&b1~c2^d2^a2&b2~c3^d3^a3&b3|a^b|c^d^a&b\r");
+        }
+
+        [Fact]
+        public void TestArrayStruct_MSG_012_1()
+        {
+            testhl7.MSG_012 msg = new testhl7.MSG_012();
+            msg.msh.fieldSeparator = "|";
+            msg.msh.encodingCharacters = "^~\\&";
+            msg.msh.messageType.messageCode = "MSG";
+            msg.msh.messageType.triggerEvent = "012";
+            msg.msh.messageType.messageStructure = "MSG_012";
+
+            msg.a03.faa_arr.Add(new testhl7.FAA());
+            msg.a03.faa_arr[0].b = "b";
+
+            ParserStruct parser = new ParserStruct(m_serializer, msg);
+            parser.ParseStruct();
+
+            string str = Encoding.UTF8.GetString(m_data, 0, m_size);
+            Debug.Assert(str == "MSH|^~\\&|||||||MSG^012^MSG_012\rA03|^b\r");
+        }
+
+        [Fact]
+        public void TestArrayStruct_MSG_012_2()
+        {
+            testhl7.MSG_012 msg = new testhl7.MSG_012();
+            msg.msh.fieldSeparator = "|";
+            msg.msh.encodingCharacters = "^~\\&";
+            msg.msh.messageType.messageCode = "MSG";
+            msg.msh.messageType.triggerEvent = "012";
+            msg.msh.messageType.messageStructure = "MSG_012";
+
+            msg.a03.faa_arr.Add(new testhl7.FAA());
+
+            ParserStruct parser = new ParserStruct(m_serializer, msg);
+            parser.ParseStruct();
+
+            string str = Encoding.UTF8.GetString(m_data, 0, m_size);
+            Debug.Assert(str == "MSH|^~\\&|||||||MSG^012^MSG_012\rA03|\r");
+        }
+
+        [Fact]
+        public void TestArrayStruct_MSG_012_3()
+        {
+            testhl7.MSG_012 msg = new testhl7.MSG_012();
+            msg.msh.fieldSeparator = "|";
+            msg.msh.encodingCharacters = "^~\\&";
+            msg.msh.messageType.messageCode = "MSG";
+            msg.msh.messageType.triggerEvent = "012";
+            msg.msh.messageType.messageStructure = "MSG_012";
+
+            msg.a03.faa_arr.Add(new testhl7.FAA());
+            msg.a03.faa_arr.Add(new testhl7.FAA());
+
+            ParserStruct parser = new ParserStruct(m_serializer, msg);
+            parser.ParseStruct();
+
+            string str = Encoding.UTF8.GetString(m_data, 0, m_size);
+            Debug.Assert(str == "MSH|^~\\&|||||||MSG^012^MSG_012\rA03|~\r");
+        }
+
+        [Fact]
+        public void TestArrayString_MSG_012_1()
+        {
+            testhl7.MSG_012 msg = new testhl7.MSG_012();
+            msg.msh.fieldSeparator = "|";
+            msg.msh.encodingCharacters = "^~\\&";
+            msg.msh.messageType.messageCode = "MSG";
+            msg.msh.messageType.triggerEvent = "012";
+            msg.msh.messageType.messageStructure = "MSG_012";
+
+            msg.a03.sarr.Add("");
+            msg.a03.sarr.Add("");
+
+            ParserStruct parser = new ParserStruct(m_serializer, msg);
+            parser.ParseStruct();
+
+            string str = Encoding.UTF8.GetString(m_data, 0, m_size);
+            Debug.Assert(str == "MSH|^~\\&|||||||MSG^012^MSG_012\rA03|||~\r");
+        }
+
+        [Fact]
+        public void TestArrayString_MSG_012_2()
+        {
+            testhl7.MSG_012 msg = new testhl7.MSG_012();
+            msg.msh.fieldSeparator = "|";
+            msg.msh.encodingCharacters = "^~\\&";
+            msg.msh.messageType.messageCode = "MSG";
+            msg.msh.messageType.triggerEvent = "012";
+            msg.msh.messageType.messageStructure = "MSG_012";
+
+            msg.a03.sarr.Add("");
+            msg.a03.sarr.Add("");
+            msg.a03.sarr[1] = "b";
+
+            ParserStruct parser = new ParserStruct(m_serializer, msg);
+            parser.ParseStruct();
+
+            string str = Encoding.UTF8.GetString(m_data, 0, m_size);
+            Debug.Assert(str == "MSH|^~\\&|||||||MSG^012^MSG_012\rA03|||~b\r");
         }
 
     }

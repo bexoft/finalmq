@@ -224,22 +224,15 @@ namespace finalmq
             else
             {
                 l = IsDelimiter(c);
-                if (l == LAYER_MAX)
+                if (l > level)
                 {
                     filled = true;
                     l = level;
                 }
             }
-            if (l > level)
+            if (!filled)
             {
-                l = ParseTillEndOfStruct(level);
-            }
-            else
-            {
-                if (!filled)
-                {
-                    ++m_offset;
-                }
+                ++m_offset;
             }
             Debug.Assert(l <= level);
             return l;

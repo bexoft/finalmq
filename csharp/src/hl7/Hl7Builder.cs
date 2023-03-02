@@ -33,6 +33,7 @@ namespace finalmq
         void EnterUInt64(int[] levelIndex, int sizeLevelIndex, int index, ulong value);
         void EnterDouble(int[] levelIndex, int sizeLevelIndex, int index, double value);
         void EnterString(int[] levelIndex, int sizeLevelIndex, int index, string value);
+        void AddArrayStruct(int[] levelIndex, int sizeLevelIndex, int index);
         void Finished();
     };
 
@@ -84,6 +85,11 @@ namespace finalmq
         public void EnterString(int[] levelIndex, int sizeLevelIndex, int index, string value)
         {
             m_root.EnterString(levelIndex, sizeLevelIndex, index, value);
+        }
+
+        public void AddArrayStruct(int[] levelIndex, int sizeLevelIndex, int index)
+        {
+            m_root.EnterString(levelIndex, sizeLevelIndex, index, "");
         }
 
         public void Finished()
@@ -277,6 +283,12 @@ namespace finalmq
         {
             public void EnterString(int[] levelIndex, int sizeLevelIndex, int index, string value, int offsetLevelIndex = 0)
             {
+                if (sizeLevelIndex >= 1 && levelIndex[0] == -1)
+                {
+                    // this is not a HL7 message
+                    return;
+                }
+
                 if (index == -1 && sizeLevelIndex == 0)
                 {
                     if (value.Length != 0)
