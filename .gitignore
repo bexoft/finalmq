@@ -53,4 +53,3 @@ CMakeSettings.json
 *.fmq.h 
 *.fmq.cpp
 *.fmq.cs 
-*.fmq.proto

@@ -139,19 +139,23 @@ const char* ParserHl7::parseStruct(const std::string& typeName)
 
 int ParserHl7::parseStruct(int levelSegment, const MetaStruct& stru, bool& isarray)
 {
+    static const std::string STR_MSH = "MSH";
+
     isarray = false;
     // segment ID
     if (levelSegment == 1)
     {
-        std::string tokenSegId;
+        std::string segId;
         bool isarrayDummy;
-        int levelNew = m_parser.parseToken(levelSegment, tokenSegId, isarrayDummy);
+        int levelNew = m_parser.parseToken(levelSegment, segId, isarrayDummy);
         assert(isarray == false);
         if (levelNew < levelSegment)
         {
             return levelNew;
         }
-        if (tokenSegId != stru.getTypeNameWithoutNamespace())
+        
+        const std::string& typeName = stru.getTypeNameWithoutNamespace();
+        if ((segId != typeName) && ((segId != STR_MSH) || (typeName.compare(0, STR_MSH.size(), STR_MSH) != 0)))  // for MSH -> startsWith("MSH") to allow also different types to read only the header (see MSH_RE)
         {
             return m_parser.parseTillEndOfStruct(0);
         }
@@ -180,7 +184,7 @@ int ParserHl7::parseStruct(int levelSegment, const MetaStruct& stru, bool& isarr
                 {
                     return levelSegment;
                 }
-                else if (segId == typeName)
+                else if ((segId == typeName) || ((segId == STR_MSH) && (typeName.compare(0, STR_MSH.size(), STR_MSH) == 0)))  // for MSH -> startsWith("MSH") to allow also different types to read only the header (see MSH_RE)
                 {
                     processStruct = true;
                 }
