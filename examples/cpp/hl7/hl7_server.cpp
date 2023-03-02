@@ -133,6 +133,7 @@ public:
 
             hl7::SSU_U03 reply = *request;
             reply.equ.alertLevel.alternateText = std::to_string(time(nullptr));
+            reply.equ.alertLevel.alternateCodingSystemOid = *id;
 
             // send reply
             requestContext->reply(std::move(reply));
