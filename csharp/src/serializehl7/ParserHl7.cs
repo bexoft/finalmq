@@ -115,21 +115,24 @@ namespace finalmq
             return m_parser.GetCurrentPosition();
         }
 
+        static readonly string STR_MSH = "MSH";
+
         int ParseStruct(int levelSegment, MetaStruct stru, out bool isarray)
         {
             isarray = false;
             // segment ID
             if (levelSegment == 1)
             {
-                string tokenSegId;
+                string segId;
                 bool isarrayDummy;
-                int levelNew = m_parser.ParseToken(levelSegment, out tokenSegId, out isarrayDummy);
+                int levelNew = m_parser.ParseToken(levelSegment, out segId, out isarrayDummy);
                 Debug.Assert(isarray == false);
                 if (levelNew < levelSegment)
                 {
                     return levelNew;
                 }
-                if (tokenSegId != stru.TypeNameWithoutNamespace)
+                string typeName = stru.TypeNameWithoutNamespace;
+                if ((segId != typeName) && (segId != STR_MSH || !typeName.StartsWith(STR_MSH))) // for MSH -> startsWith("MSH") to allow also different types to read only the header (see MSH_RE)
                 {
                     return m_parser.ParseTillEndOfStruct(0);
                 }
@@ -157,7 +160,7 @@ namespace finalmq
                         {
                             return levelSegment;
                         }
-                        else if (segId == typeName)
+                        else if ((segId == typeName) || (segId == STR_MSH && typeName.StartsWith(STR_MSH))) // for MSH -> startsWith("MSH") to allow also different types to read only the header (see MSH_RE)
                         {
                             processStruct = true;
                         }
