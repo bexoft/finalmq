@@ -255,3 +255,91 @@ TEST_F(TestSerializerHl7, testMSG_011_4)
 
     ASSERT_EQ(m_data, "MSH|^~\\&|||||||MSG^011^MSG_011\rA02|a1^b1~a2^b2~a3^b3|c1^d1^a1&b1~c2^d2^a2&b2~c3^d3^a3&b3|a^b|c^d^a&b\r");
 }
+
+TEST_F(TestSerializerHl7, testArrayStruct_MSG_012_1)
+{
+    testhl7::MSG_012 msg;
+    msg.msh.fieldSeparator = "|";
+    msg.msh.encodingCharacters = "^~\\&";
+    msg.msh.messageType.messageCode = "MSG";
+    msg.msh.messageType.triggerEvent = "012";
+    msg.msh.messageType.messageStructure = "MSG_012";
+
+    msg.a03.faa_arr.resize(1);
+    msg.a03.faa_arr[0].b = "b";
+
+    ParserStruct parser(*m_serializer, msg);
+    parser.parseStruct();
+
+    ASSERT_EQ(m_data, "MSH|^~\\&|||||||MSG^012^MSG_012\rA03|^b\r");
+}
+
+TEST_F(TestSerializerHl7, testArrayStruct_MSG_012_2)
+{
+    testhl7::MSG_012 msg;
+    msg.msh.fieldSeparator = "|";
+    msg.msh.encodingCharacters = "^~\\&";
+    msg.msh.messageType.messageCode = "MSG";
+    msg.msh.messageType.triggerEvent = "012";
+    msg.msh.messageType.messageStructure = "MSG_012";
+
+    msg.a03.faa_arr.resize(1);
+
+    ParserStruct parser(*m_serializer, msg);
+    parser.parseStruct();
+
+    ASSERT_EQ(m_data, "MSH|^~\\&|||||||MSG^012^MSG_012\rA03|\r");
+}
+
+TEST_F(TestSerializerHl7, testArrayStruct_MSG_012_3)
+{
+    testhl7::MSG_012 msg;
+    msg.msh.fieldSeparator = "|";
+    msg.msh.encodingCharacters = "^~\\&";
+    msg.msh.messageType.messageCode = "MSG";
+    msg.msh.messageType.triggerEvent = "012";
+    msg.msh.messageType.messageStructure = "MSG_012";
+
+    msg.a03.faa_arr.resize(2);
+
+    ParserStruct parser(*m_serializer, msg);
+    parser.parseStruct();
+
+    ASSERT_EQ(m_data, "MSH|^~\\&|||||||MSG^012^MSG_012\rA03|~\r");
+}
+
+TEST_F(TestSerializerHl7, testArrayString_MSG_012_1)
+{
+    testhl7::MSG_012 msg;
+    msg.msh.fieldSeparator = "|";
+    msg.msh.encodingCharacters = "^~\\&";
+    msg.msh.messageType.messageCode = "MSG";
+    msg.msh.messageType.triggerEvent = "012";
+    msg.msh.messageType.messageStructure = "MSG_012";
+
+    msg.a03.sarr.resize(2);
+
+    ParserStruct parser(*m_serializer, msg);
+    parser.parseStruct();
+
+    ASSERT_EQ(m_data, "MSH|^~\\&|||||||MSG^012^MSG_012\rA03|||~\r");
+}
+
+TEST_F(TestSerializerHl7, testArrayString_MSG_012_2)
+{
+    testhl7::MSG_012 msg;
+    msg.msh.fieldSeparator = "|";
+    msg.msh.encodingCharacters = "^~\\&";
+    msg.msh.messageType.messageCode = "MSG";
+    msg.msh.messageType.triggerEvent = "012";
+    msg.msh.messageType.messageStructure = "MSG_012";
+
+    msg.a03.sarr.resize(2);
+    msg.a03.sarr[1] = "b";
+
+    ParserStruct parser(*m_serializer, msg);
+    parser.parseStruct();
+
+    ASSERT_EQ(m_data, "MSH|^~\\&|||||||MSG^012^MSG_012\rA03|||~b\r");
+}
+

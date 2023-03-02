@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.10)
 project(hl7)
 
 file(COPY ${CMAKE_SOURCE_DIR}/htdocs DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+#file(COPY ${CMAKE_SOURCE_DIR}/htdocs DESTINATION ${CMAKE_BINARY_DIR})
 
 
 if (FINALMQ_USE_SSL)

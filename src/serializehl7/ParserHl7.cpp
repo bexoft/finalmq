@@ -292,9 +292,11 @@ int ParserHl7::parseStruct(int levelSegment, const MetaStruct& stru, bool& isarr
                         }
                         int levelNew = parseStruct(levelSegmentNext, *subStruct, isarray);
                         m_visitor.exitStruct(*fieldWithoutArray);
-                        (void) levelNew;
-                        assert(levelNew == 0);
                         assert(isarray == false);
+                        if (levelNew < levelSegment)
+                        {
+                            return levelNew;
+                        }
                     }
                     else
                     {

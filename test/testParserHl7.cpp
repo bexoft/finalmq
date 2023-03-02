@@ -378,3 +378,110 @@ TEST_F(TestParserHl7, testMSG_006_3)
     ASSERT_EQ(cmp, msg);
 }
 
+TEST_F(TestParserHl7, testArrayStruct_MSG_012_1)
+{
+    testhl7::MSG_012 cmp;
+    cmp.msh.fieldSeparator = "|";
+    cmp.msh.encodingCharacters = "^~\\&";
+    cmp.msh.messageType.messageCode = "MSG";
+    cmp.msh.messageType.triggerEvent = "012";
+    cmp.msh.messageType.messageStructure = "MSG_012";
+
+    cmp.a03.faa_arr.resize(1);
+    cmp.a03.faa_arr[0].b = "b";
+
+    testhl7::MSG_012 msg;
+    std::string data = "MSH|^~\\&|||||||MSG^012^MSG_012\rA03|^b\r";
+
+    SerializerStruct serializer(msg);
+    ParserHl7 parser(serializer, data.c_str());
+    parser.parseStruct("testhl7.MSG_012");
+
+    ASSERT_EQ(cmp, msg);
+}
+
+TEST_F(TestParserHl7, testArrayStruct_MSG_012_2)
+{
+    testhl7::MSG_012 cmp;
+    cmp.msh.fieldSeparator = "|";
+    cmp.msh.encodingCharacters = "^~\\&";
+    cmp.msh.messageType.messageCode = "MSG";
+    cmp.msh.messageType.triggerEvent = "012";
+    cmp.msh.messageType.messageStructure = "MSG_012";
+
+    cmp.a03.faa_arr.resize(1);
+
+    testhl7::MSG_012 msg;
+    std::string data = "MSH|^~\\&|||||||MSG^012^MSG_012\rA03|^\r";
+
+    SerializerStruct serializer(msg);
+    ParserHl7 parser(serializer, data.c_str());
+    parser.parseStruct("testhl7.MSG_012");
+
+    ASSERT_EQ(cmp, msg);
+}
+
+TEST_F(TestParserHl7, testArrayStruct_MSG_012_3)
+{
+    testhl7::MSG_012 cmp;
+    cmp.msh.fieldSeparator = "|";
+    cmp.msh.encodingCharacters = "^~\\&";
+    cmp.msh.messageType.messageCode = "MSG";
+    cmp.msh.messageType.triggerEvent = "012";
+    cmp.msh.messageType.messageStructure = "MSG_012";
+
+    cmp.a03.faa_arr.resize(2);
+
+    testhl7::MSG_012 msg;
+    std::string data = "MSH|^~\\&|||||||MSG^012^MSG_012\rA03|~\r";
+
+    SerializerStruct serializer(msg);
+    ParserHl7 parser(serializer, data.c_str());
+    parser.parseStruct("testhl7.MSG_012");
+
+    ASSERT_EQ(cmp, msg);
+}
+
+TEST_F(TestParserHl7, testArrayString_MSG_012_1)
+{
+    testhl7::MSG_012 cmp;
+    cmp.msh.fieldSeparator = "|";
+    cmp.msh.encodingCharacters = "^~\\&";
+    cmp.msh.messageType.messageCode = "MSG";
+    cmp.msh.messageType.triggerEvent = "012";
+    cmp.msh.messageType.messageStructure = "MSG_012";
+
+    cmp.a03.sarr.resize(2);
+
+    testhl7::MSG_012 msg;
+    std::string data = "MSH|^~\\&|||||||MSG^012^MSG_012\rA03|||~\r";
+
+    SerializerStruct serializer(msg);
+    ParserHl7 parser(serializer, data.c_str());
+    parser.parseStruct("testhl7.MSG_012");
+
+    ASSERT_EQ(cmp, msg);
+}
+
+TEST_F(TestParserHl7, testArrayString_MSG_012_2)
+{
+    testhl7::MSG_012 cmp;
+    cmp.msh.fieldSeparator = "|";
+    cmp.msh.encodingCharacters = "^~\\&";
+    cmp.msh.messageType.messageCode = "MSG";
+    cmp.msh.messageType.triggerEvent = "012";
+    cmp.msh.messageType.messageStructure = "MSG_012";
+
+    cmp.a03.sarr.resize(2);
+    cmp.a03.sarr[1] = "b";
+
+    testhl7::MSG_012 msg;
+    std::string data = "MSH|^~\\&|||||||MSG^012^MSG_012\rA03|||~b\r";
+
+    SerializerStruct serializer(msg);
+    ParserHl7 parser(serializer, data.c_str());
+    parser.parseStruct("testhl7.MSG_012");
+
+    ASSERT_EQ(cmp, msg);
+}
+

@@ -122,7 +122,7 @@ public:
         });
 
         
-        registerCommand<NoData>("tubes/{id}/GET", [this](const RequestContextPtr& requestContext, const std::shared_ptr<NoData>& request) {
+        registerCommand<hl7::SSU_U03>("tubes/{id}/POST", [this](const RequestContextPtr& requestContext, const std::shared_ptr<hl7::SSU_U03>& request) {
             assert(request);
 
             std::string* filter = requestContext->getMetainfo("QUERY_filter");
@@ -131,65 +131,8 @@ public:
             std::string* id = requestContext->getMetainfo("PATH_id");
             assert(id);
 
-            hl7::SSU_U03 reply;
-            reply.msh.countryCode = "de";
-            reply.equ.alertLevel.alternateIdentifier = "Hello this is a test";
-            reply.uac = std::make_shared<hl7::UAC>();
-            reply.uac->userAuthenticationCredential.typeOfData = hl7::MimeTypes::AudioData;
-            reply.sft.resize(2);
-            reply.sft[0].softwareBinaryId = "world";
-            reply.sft[1].softwareProductInformation = "world";
-            reply.specimen_container.resize(2);
-            reply.specimen_container[0].sac.positionInTray.value1 = "hey";
-            reply.specimen_container[0].sac.specimenSource = "hh";
-            reply.specimen_container[0].sac.carrierIdentifier.entityIdentifier = "uu";
-            reply.specimen_container[0].sac.carrierIdentifier.universalId = "bbb";
-            reply.specimen_container[0].obx.resize(2);
-            reply.specimen_container[0].obx[0].effectiveDateOfReferenceRange = "aaaa";
-            reply.specimen_container[0].obx[1].equipmentInstanceIdentifier.resize(1);
-            reply.specimen_container[0].obx[1].equipmentInstanceIdentifier[0].namespaceId = "bbbbb";
-            reply.specimen_container[0].specimen.resize(2);
-            reply.specimen_container[0].specimen[0].spm.accessionId.resize(1);
-            reply.specimen_container[0].specimen[0].spm.accessionId[0].identifierCheckDigit = "ggg";
-            reply.specimen_container[0].specimen[0].spm.containerCondition.alternateText = "tt";
-            reply.specimen_container[0].specimen[0].spm.containerCondition.nameOfAlternateCodingSystem = hl7::CodingSystem::AstmE1238_E1467Universal;
-            reply.specimen_container[0].specimen[0].obx.resize(1);
-            reply.specimen_container[0].specimen[0].obx[0].effectiveDateOfReferenceRange = "aaaa";
-            reply.specimen_container[0].specimen[0].obx[0].equipmentInstanceIdentifier.resize(1);
-            reply.specimen_container[0].specimen[0].obx[0].equipmentInstanceIdentifier[0].namespaceId = "bbbbb";
-            reply.specimen_container[0].specimen[1].spm.accessionId.resize(1);
-            reply.specimen_container[0].specimen[1].spm.accessionId[0].securityCheck = "ggg";
-            reply.specimen_container[0].specimen[1].spm.containerCondition.alternateText = "tt";
-            reply.specimen_container[0].specimen[1].spm.containerCondition.nameOfAlternateCodingSystem = hl7::CodingSystem::CdcAnalyteCodes;
-            reply.specimen_container[0].specimen[1].obx.resize(1);
-            reply.specimen_container[0].specimen[1].obx[0].effectiveDateOfReferenceRange = "aaaa";
-            reply.specimen_container[0].specimen[1].obx[0].equipmentInstanceIdentifier.resize(1);
-            reply.specimen_container[0].specimen[1].obx[0].equipmentInstanceIdentifier[0].namespaceId = "bbbbb";
-            reply.specimen_container[1].sac.positionInTray.value1 = "hey";
-            reply.specimen_container[1].sac.specimenSource = "hh";
-            reply.specimen_container[1].sac.carrierIdentifier.entityIdentifier = "uu";
-            reply.specimen_container[1].sac.carrierIdentifier.universalId = "bbb";
-            reply.specimen_container[1].obx.resize(2);
-            reply.specimen_container[1].obx[0].effectiveDateOfReferenceRange = "aaaa";
-            reply.specimen_container[1].obx[1].equipmentInstanceIdentifier.resize(1);
-            reply.specimen_container[1].obx[1].equipmentInstanceIdentifier[0].namespaceId = "bbbbb";
-            reply.specimen_container[1].specimen.resize(2);
-            reply.specimen_container[1].specimen[0].spm.accessionId.resize(1);
-            reply.specimen_container[1].specimen[0].spm.accessionId[0].checkDigitScheme = hl7::CheckDigitScheme::Mod10Algorithm;
-            reply.specimen_container[1].specimen[0].spm.containerCondition.alternateText = "tt";
-            reply.specimen_container[1].specimen[0].spm.containerCondition.nameOfAlternateCodingSystem = hl7::CodingSystem::AstmE1238_E1467Universal;
-            reply.specimen_container[1].specimen[0].obx.resize(1);
-            reply.specimen_container[1].specimen[0].obx[0].effectiveDateOfReferenceRange = "aaaa";
-            reply.specimen_container[1].specimen[0].obx[0].equipmentInstanceIdentifier.resize(1);
-            reply.specimen_container[1].specimen[0].obx[0].equipmentInstanceIdentifier[0].namespaceId = "bbbbb";
-            reply.specimen_container[1].specimen[1].spm.accessionId.resize(1);
-            reply.specimen_container[1].specimen[0].spm.accessionId[0].checkDigitScheme = hl7::CheckDigitScheme::Mod11Algorithm;
-            reply.specimen_container[1].specimen[1].spm.containerCondition.alternateText = "tt";
-            reply.specimen_container[1].specimen[1].spm.containerCondition.nameOfAlternateCodingSystem = hl7::CodingSystem::AstmE1238_E1467Universal;
-            reply.specimen_container[1].specimen[1].obx.resize(1);
-            reply.specimen_container[1].specimen[1].obx[0].effectiveDateOfReferenceRange = "aaaa";
-            reply.specimen_container[1].specimen[1].obx[0].equipmentInstanceIdentifier.resize(1);
-            reply.specimen_container[1].specimen[1].obx[0].equipmentInstanceIdentifier[0].namespaceId = "bbbbb";
+            hl7::SSU_U03 reply = *request;
+            reply.equ.alertLevel.alternateText = std::to_string(time(nullptr));
 
             // send reply
             requestContext->reply(std::move(reply));
@@ -259,7 +202,7 @@ public:
             while (true)
             {
                 // send event every 1 second
-                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 
                 // send timer event to all connected peers. No reply expected.
                 sendEventToAllPeers(msg);

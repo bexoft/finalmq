@@ -171,6 +171,32 @@ class FmqSession
         }
     }
 
+    httpRequestText(method, url, requestText, httpHeader, funcresult, context) {
+        var xmlhttp = this._createRequest();
+        xmlhttp.funcresult = funcresult;
+        for (var key in httpHeader)
+        {
+            xmlhttp.setRequestHeader(key, httpHeader[key]);
+        }
+        if (funcresult != null) {
+            xmlhttp._context = context;
+            xmlhttp.onreadystatechange = function () {
+                if (xmlhttp.readyState == 4) {
+                    xmlhttp._this._updateSessionId(xmlhttp);
+                    xmlhttp.funcresult(xmlhttp, xmlhttp._context);
+                }
+            }
+        }
+        xmlhttp.open(method, this._hostname + url, (funcresult == null) ? false : true);
+        xmlhttp.setRequestHeader('fmq_sessionid', this._sessionId);
+        var payload = requestText;
+        xmlhttp.send(payload);
+        if (funcresult == null) {
+            this._updateSessionId(xmlhttp);
+            return xmlhttp;
+        }
+    }
+
     sendEvent(objectname, funcname, inparams) {
         this.httpEvent('POST', '/' + objectname + '/' + funcname, inparams);
     }
