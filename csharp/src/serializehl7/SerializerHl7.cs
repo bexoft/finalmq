@@ -62,6 +62,7 @@ namespace finalmq
                     if (isSegment)
                     {
                         Debug.Assert(m_ixIndex == 0);
+                        Debug.Assert(stru != null);
                         ++m_indexOfLayer[m_ixIndex];
                         string typeNameWithoutNamespace = stru.TypeNameWithoutNamespace;
                         m_hl7Builder.EnterString(m_indexOfLayer, m_ixIndex + 1, -1, typeNameWithoutNamespace);

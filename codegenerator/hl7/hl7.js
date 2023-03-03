@@ -39,6 +39,8 @@ if (pathOutput)
     fileOutput   = pathOutput + '/' + splitFileOutput[splitFileOutput.length - 1]
 }
 
+fs.mkdirSync(pathOutput, { recursive: true })
+
 helper.buildSegGroups(hl7dictionary);
 helper.makeFieldNames(hl7dictionary);
 helper.putFlags(hl7dictionary);
