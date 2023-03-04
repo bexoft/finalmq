@@ -219,10 +219,10 @@ int ParserHl7::parseStruct(int levelSegment, const MetaStruct& stru, bool& isarr
                 int levelNew = parseStruct(LevelSegmentNext, *subStruct, isarray);
                 m_stackStruct.pop_back();
                 m_visitor.exitStruct(*field);
-                if (isarray)
+                if (isarray && levelSegment == 1)
                 {
                     isarray = false;
-                    m_parser.parseTillEndOfStruct(levelNew);
+                    levelNew = m_parser.parseTillEndOfStruct(levelSegment);
                 }
                 if (levelNew < levelSegment)
                 {
@@ -367,6 +367,11 @@ int ParserHl7::parseStruct(int levelSegment, const MetaStruct& stru, bool& isarr
                 if (!token.empty())
                 {
                     m_visitor.enterString(*field, std::move(token));
+                }
+                if (isarray && levelSegment == 1)
+                {
+                    isarray = false;
+                    levelNew = m_parser.parseTillEndOfStruct(levelSegment);
                 }
                 if (levelNew < levelSegment)
                 {
