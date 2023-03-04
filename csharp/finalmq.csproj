@@ -20,7 +20,13 @@
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="node ../codegenerator/csharp/csharp.js --input=./src/metadataserialize/metadata.fmq --outpath=./src/metadataserialize&#xD;&#xA;node ../codegenerator/csharp/csharp.js --input=./src/metadataserialize/variant.fmq --outpath=./src/metadataserialize&#xD;&#xA;node ../codegenerator/csharp/csharp.js --input=./src/remoteentity/entitydata.fmq --outpath=./src/remoteentity" />
+    <Exec Command="echo === RUN PREBUILD from build events =============&#xD;&#xA;set VSINSTALLDIR=$(DevEnvDir)..\..\&#xD;&#xA;set TARGETDIR=$(TargetDir)&#xD;&#xA;set TARGETFILEWITHPATH=$(TargetPath)&#xD;&#xA;call &quot;$(ProjectDir)\cs_prebuild\prebuild.bat&quot;" />
   </Target>
+
+  <Target Name="AddGeneratedClasses" AfterTargets="PreBuildEvent" BeforeTargets="BeforeCompile;CoreCompile">
+    <ItemGroup>
+	  <Compile Include="$(TargetDir)generated/*.cs" />
+    </ItemGroup>
+  </Target>	
 
 </Project>

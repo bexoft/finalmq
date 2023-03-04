@@ -33,9 +33,9 @@ namespace finalmq
         static readonly int CONTENT_TYPE = 3;
         static readonly string CONTENT_TYPE_NAME = "hl7";
 
-        static readonly string PROPERTY_NAMESPACE = "namespace";
-        static readonly string PROPERTY_ENTITY = "entity";
-        static readonly string PROPERTY_SERIALIZE_ENUM_AS_STRING = "enumAsSt";
+        public static readonly string PROPERTY_NAMESPACE = "namespace";
+        public static readonly string PROPERTY_ENTITY = "entity";
+        public static readonly string PROPERTY_SERIALIZE_ENUM_AS_STRING = "enumAsSt";
 
 
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -8,11 +8,17 @@
   </PropertyGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="node ../../../../codegenerator/csharp/csharp.js --input=../helloworld.fmq --outpath=.&#xD;&#xA;" />
+    <Exec Command="echo === RUN PREBUILD from build events =============&#xD;&#xA;set VSINSTALLDIR=$(DevEnvDir)..\..\&#xD;&#xA;set TARGETDIR=$(TargetDir)&#xD;&#xA;set TARGETFILEWITHPATH=$(TargetPath)&#xD;&#xA;call &quot;$(ProjectDir)\cs_prebuild\prebuild.bat&quot;&#xD;&#xA;rem node ../../../../codegenerator/csharp/csharp.js --input=../helloworld.fmq --outpath=." />
   </Target>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\csharp\finalmq.csproj" />
   </ItemGroup>
+
+  <Target Name="AddGeneratedClasses" AfterTargets="PreBuildEvent" BeforeTargets="BeforeCompile;CoreCompile">
+	<ItemGroup>
+		<Compile Include="$(TargetDir)generated/*.cs" />
+	</ItemGroup>
+  </Target>
 
 </Project>

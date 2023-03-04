@@ -158,9 +158,9 @@ namespace testfinalmq
             msg.msh.messageType.messageCode = "MSG";
             msg.msh.messageType.triggerEvent = "011";
             msg.msh.messageType.messageStructure = "MSG_011";
-            msg.a02.faa.Add(new testhl7.FAA("a1", "b1"));
-            msg.a02.faa.Add(new testhl7.FAA("a2", "b2"));
-            msg.a02.faa.Add(new testhl7.FAA("a3", "b3"));
+            msg.a02.faa.Add(new testhl7.FAA("a1", "b1", ""));
+            msg.a02.faa.Add(new testhl7.FAA("a2", "b2", ""));
+            msg.a02.faa.Add(new testhl7.FAA("a3", "b3", ""));
 
             ParserStruct parser = new ParserStruct(m_serializer, msg);
             parser.ParseStruct();
@@ -178,9 +178,9 @@ namespace testfinalmq
             msg.msh.messageType.messageCode = "MSG";
             msg.msh.messageType.triggerEvent = "011";
             msg.msh.messageType.messageStructure = "MSG_011";
-            msg.a02.faa.Add(new testhl7.FAA("a1", "b1"));
-            msg.a02.faa.Add(new testhl7.FAA("a2", "b2"));
-            msg.a02.faa.Add(new testhl7.FAA("a3", "b3"));
+            msg.a02.faa.Add(new testhl7.FAA("a1", "b1", ""));
+            msg.a02.faa.Add(new testhl7.FAA("a2", "b2", ""));
+            msg.a02.faa.Add(new testhl7.FAA("a3", "b3", ""));
             msg.a02.fbb.Add(new testhl7.FBB("c1", "d1", new testhl7.FAA()));
             msg.a02.fbb.Add(new testhl7.FBB("c2", "d2", new testhl7.FAA()));
             msg.a02.fbb.Add(new testhl7.FBB("c3", "d3", new testhl7.FAA()));
@@ -201,12 +201,12 @@ namespace testfinalmq
             msg.msh.messageType.messageCode = "MSG";
             msg.msh.messageType.triggerEvent = "011";
             msg.msh.messageType.messageStructure = "MSG_011";
-            msg.a02.faa.Add(new testhl7.FAA("a1", "b1"));
-            msg.a02.faa.Add(new testhl7.FAA("a2", "b2"));
-            msg.a02.faa.Add(new testhl7.FAA("a3", "b3"));
-            msg.a02.fbb.Add(new testhl7.FBB("c1", "d1", new testhl7.FAA("a1", "b1")));
-            msg.a02.fbb.Add(new testhl7.FBB("c2", "d2", new testhl7.FAA("a2", "b2")));
-            msg.a02.fbb.Add(new testhl7.FBB("c3", "d3", new testhl7.FAA("a3", "b3")));
+            msg.a02.faa.Add(new testhl7.FAA("a1", "b1", ""));
+            msg.a02.faa.Add(new testhl7.FAA("a2", "b2", ""));
+            msg.a02.faa.Add(new testhl7.FAA("a3", "b3", ""));
+            msg.a02.fbb.Add(new testhl7.FBB("c1", "d1", new testhl7.FAA("a1", "b1", "")));
+            msg.a02.fbb.Add(new testhl7.FBB("c2", "d2", new testhl7.FAA("a2", "b2", "")));
+            msg.a02.fbb.Add(new testhl7.FBB("c3", "d3", new testhl7.FAA("a3", "b3", "")));
 
             ParserStruct parser = new ParserStruct(m_serializer, msg);
             parser.ParseStruct();
@@ -224,12 +224,12 @@ namespace testfinalmq
             msg.msh.messageType.messageCode = "MSG";
             msg.msh.messageType.triggerEvent = "011";
             msg.msh.messageType.messageStructure = "MSG_011";
-            msg.a02.faa.Add(new testhl7.FAA("a1", "b1"));
-            msg.a02.faa.Add(new testhl7.FAA("a2", "b2"));
-            msg.a02.faa.Add(new testhl7.FAA("a3", "b3"));
-            msg.a02.fbb.Add(new testhl7.FBB("c1", "d1", new testhl7.FAA("a1", "b1")));
-            msg.a02.fbb.Add(new testhl7.FBB("c2", "d2", new testhl7.FAA("a2", "b2")));
-            msg.a02.fbb.Add(new testhl7.FBB("c3", "d3", new testhl7.FAA("a3", "b3")));
+            msg.a02.faa.Add(new testhl7.FAA("a1", "b1", ""));
+            msg.a02.faa.Add(new testhl7.FAA("a2", "b2", ""));
+            msg.a02.faa.Add(new testhl7.FAA("a3", "b3", ""));
+            msg.a02.fbb.Add(new testhl7.FBB("c1", "d1", new testhl7.FAA("a1", "b1", "")));
+            msg.a02.fbb.Add(new testhl7.FBB("c2", "d2", new testhl7.FAA("a2", "b2", "")));
+            msg.a02.fbb.Add(new testhl7.FBB("c3", "d3", new testhl7.FAA("a3", "b3", "")));
             msg.a02.sfaa.a = "a";
             msg.a02.sfaa.b = "b";
             msg.a02.sfbb.a = "c";
