@@ -192,7 +192,7 @@ public:
             msg.specimen_container[1].specimen[0].obx[0].equipmentInstanceIdentifier.resize(1);
             msg.specimen_container[1].specimen[0].obx[0].equipmentInstanceIdentifier[0].namespaceId = "bbbbb";
             msg.specimen_container[1].specimen[1].spm.accessionId.resize(1);
-            msg.specimen_container[1].specimen[0].spm.accessionId[0].checkDigitScheme = hl7::CheckDigitScheme::Mod11Algorithm;
+            msg.specimen_container[1].specimen[1].spm.accessionId[0].checkDigitScheme = hl7::CheckDigitScheme::Mod11Algorithm;
             msg.specimen_container[1].specimen[1].spm.containerCondition.alternateText = "tt";
             msg.specimen_container[1].specimen[1].spm.containerCondition.nameOfAlternateCodingSystem = hl7::CodingSystem::AstmE1238_E1467Universal;
             msg.specimen_container[1].specimen[1].obx.resize(1);
