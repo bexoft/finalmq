@@ -481,6 +481,134 @@ namespace testfinalmq
             Debug.Assert(cmp.Equals(msg));
         }
 
+        [Fact]
+        public void Test_MSG_013_1()
+        {
+            testhl7.MSG_013 cmp = new testhl7.MSG_013();
+            cmp.msh.fieldSeparator = "|";
+            cmp.msh.encodingCharacters = "^~\\&";
+            cmp.msh.messageType.messageCode = "MSG";
+            cmp.msh.messageType.triggerEvent = "013";
+            cmp.msh.messageType.messageStructure = "MSG_013";
+
+            cmp.a04.a = "a";
+            cmp.a04.b = "b";
+
+            testhl7.MSG_013 msg = new testhl7.MSG_013();
+            string data = "MSH|^~\\&|||||||MSG^013^MSG_013\rA04||a~c|b\r";
+
+            SerializerStruct serializer = new SerializerStruct(msg);
+            ParserHl7 parser = new ParserHl7(serializer, data);
+            parser.ParseStruct("testhl7.MSG_013");
+
+            Debug.Assert(cmp.Equals(msg));
+        }
+
+        [Fact]
+        public void Test_MSG_013_2()
+        {
+            testhl7.MSG_013 cmp = new testhl7.MSG_013();
+            cmp.msh.fieldSeparator = "|";
+            cmp.msh.encodingCharacters = "^~\\&";
+            cmp.msh.messageType.messageCode = "MSG";
+            cmp.msh.messageType.triggerEvent = "013";
+            cmp.msh.messageType.messageStructure = "MSG_013";
+
+            cmp.a04.fff.a = "a";
+            cmp.a04.fff.b = "";
+
+            testhl7.MSG_013 msg = new testhl7.MSG_013();
+            string data = "MSH|^~\\&|||||||MSG^013^MSG_013\rA04|a~c^d\r";
+
+            SerializerStruct serializer = new SerializerStruct(msg);
+            ParserHl7 parser = new ParserHl7(serializer, data);
+            parser.ParseStruct("testhl7.MSG_013");
+
+            Debug.Assert(cmp.Equals(msg));
+        }
+
+        [Fact]
+        public void Test_MSG_013_3()
+        {
+            testhl7.MSG_013 cmp = new testhl7.MSG_013();
+            cmp.msh.fieldSeparator = "|";
+            cmp.msh.encodingCharacters = "^~\\&";
+            cmp.msh.messageType.messageCode = "MSG";
+            cmp.msh.messageType.triggerEvent = "013";
+            cmp.msh.messageType.messageStructure = "MSG_013";
+
+            cmp.a04.fff.a = "a";
+            cmp.a04.fff.b = "b";
+            cmp.a04.fff.faa.a = "a";
+            cmp.a04.fff.faa.b = "";
+
+            testhl7.MSG_013 msg = new testhl7.MSG_013();
+            string data = "MSH|^~\\&|||||||MSG^013^MSG_013\rA04|a^b^a~c\r";
+
+            SerializerStruct serializer = new SerializerStruct(msg);
+            ParserHl7 parser = new ParserHl7(serializer, data);
+            parser.ParseStruct("testhl7.MSG_013");
+
+            Debug.Assert(cmp.Equals(msg));
+        }
+
+        [Fact]
+        public void Test_MSG_013_4()
+        {
+            testhl7.MSG_013 cmp = new testhl7.MSG_013();
+            cmp.msh.fieldSeparator = "|";
+            cmp.msh.encodingCharacters = "^~\\&";
+            cmp.msh.messageType.messageCode = "MSG";
+            cmp.msh.messageType.triggerEvent = "013";
+            cmp.msh.messageType.messageStructure = "MSG_013";
+
+            cmp.a04.fff.a = "a";
+            cmp.a04.fff.b = "b";
+            cmp.a04.fff.faa.a = "a";
+            cmp.a04.fff.faa.b = "";
+
+            testhl7.MSG_013 msg = new testhl7.MSG_013();
+            string data = "MSH|^~\\&|||||||MSG^013^MSG_013\rA04|a^b^a~\rTST";
+
+            SerializerStruct serializer = new SerializerStruct(msg);
+            ParserHl7 parser = new ParserHl7(serializer, data);
+            parser.ParseStruct("testhl7.MSG_013");
+
+            Debug.Assert(cmp.Equals(msg));
+        }
+
+        [Fact]
+        public void Test_MSG_014_1()
+        {
+            testhl7.MSG_014 cmp = new testhl7.MSG_014();
+            cmp.msh.fieldSeparator = "|";
+            cmp.msh.encodingCharacters = "^~\\&";
+            cmp.msh.messageType.messageCode = "MSG";
+            cmp.msh.messageType.triggerEvent = "014";
+            cmp.msh.messageType.messageStructure = "MSG_014";
+
+            cmp.a05.fff.Add(new testhl7.FFF());
+            cmp.a05.fff[0].a = "a";
+            cmp.a05.fff[0].b = "b";
+            cmp.a05.fff[0].faa.a = "fa";
+            cmp.a05.fff[0].faa.b = "fb";
+
+            cmp.a05.fff.Add(new testhl7.FFF());
+            cmp.a05.fff[1].a = "c";
+            cmp.a05.fff[1].b = "d";
+            cmp.a05.fff[1].faa.a = "fc";
+            cmp.a05.fff[1].faa.b = "fd";
+
+            testhl7.MSG_014 msg = new testhl7.MSG_014();
+            string data = "MSH|^~\\&|||||||MSG^014^MSG_014\rA05|a^b^fa&fb~c^d^fc&fd\r";
+
+            SerializerStruct serializer = new SerializerStruct(msg);
+            ParserHl7 parser = new ParserHl7(serializer, data);
+            parser.ParseStruct("testhl7.MSG_014");
+
+            Debug.Assert(cmp.Equals(msg));
+        }
+
     }
 
 

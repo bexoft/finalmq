@@ -34,14 +34,14 @@ add_custom_command(
     COMMAND node ${CODEGENERATOR_CSHARP} --input=${PROJECT_SOURCE_DIR}/test.fmq --outpath=${GENERATOR_OUTPUT_DIR}
     DEPENDS ${PROJECT_SOURCE_DIR}/test.fmq
     OUTPUT ${GENERATOR_OUTPUT_DIR}/test.fmq.cs
-    COMMENT "Generating cpp code out of test.fmq."
+    COMMENT "Generating cs code out of test.fmq."
 )
 
 add_custom_command(
     COMMAND node ${CODEGENERATOR_CSHARP} --input=${PROJECT_SOURCE_DIR}/testhl7.fmq --outpath=${GENERATOR_OUTPUT_DIR}
     DEPENDS ${PROJECT_SOURCE_DIR}/testhl7.fmq
     OUTPUT ${GENERATOR_OUTPUT_DIR}/testhl7.fmq.cs
-    COMMENT "Generating cpp code out of testhl7.fmq."
+    COMMENT "Generating cs code out of testhl7.fmq."
 )
 
 add_custom_command(

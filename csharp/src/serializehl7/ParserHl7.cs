@@ -195,10 +195,10 @@ namespace finalmq
                         int levelNew = ParseStruct(LevelSegmentNext, subStruct, out isarray);
                         m_stackStruct.RemoveAt(m_stackStruct.Count - 1);
                         m_visitor.ExitStruct(field);
-                        if (isarray)
+                        if (isarray && levelSegment == 1)
                         {
                             isarray = false;
-                            m_parser.ParseTillEndOfStruct(levelNew);
+                            levelNew = m_parser.ParseTillEndOfStruct(levelSegment);
                         }
                         if (levelNew < levelSegment)
                         {
@@ -342,6 +342,11 @@ namespace finalmq
                         if (token != "")
                         {
                             m_visitor.EnterString(field, token);
+                        }
+                        if (isarray && levelSegment == 1)
+                        {
+                            isarray = false;
+                            levelNew = m_parser.ParseTillEndOfStruct(levelSegment);
                         }
                         if (levelNew < levelSegment)
                         {

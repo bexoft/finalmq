@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="echo === RUN PREBUILD from build events =============&#xD;&#xA;set VSINSTALLDIR=$(DevEnvDir)..\..\&#xD;&#xA;set TARGETDIR=$(TargetDir)&#xD;&#xA;set TARGETFILEWITHPATH=$(TargetPath)&#xD;&#xA;call &quot;$(ProjectDir)\cs_prebuild\prebuild.bat&quot;&#xD;&#xA;rem node ../../../../codegenerator/csharp/csharp.js --input=../helloworld.fmq --outpath=.&#xD;&#xA;rem node ../../../../codegenerator/csharp/csharp.js --input=../helloworld.fmq --outpath=." />
+    <Exec Command="echo === RUN PREBUILD from build events =============&#xD;&#xA;set VSINSTALLDIR=$(DevEnvDir)..\..\&#xD;&#xA;set TARGETDIR=$(TargetDir)&#xD;&#xA;set TARGETFILEWITHPATH=$(TargetPath)&#xD;&#xA;call &quot;$(ProjectDir)\cs_prebuild\prebuild.bat&quot;" />
   </Target>
 
 	<Target Name="AddGeneratedClasses" AfterTargets="PreBuildEvent" BeforeTargets="BeforeCompile;CoreCompile">
