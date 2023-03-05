@@ -216,7 +216,7 @@ int Hl7Parser::parseToken(int level, std::string& token, bool& isarray)
         }
         if (l > level)
         {
-            l = parseTillEndOfStruct(level);
+            l = parseTillEndOfStructIntern(level, true, isarray);
         }
     }
 
@@ -258,15 +258,27 @@ int Hl7Parser::parseTokenArray(int level, std::vector<std::string>& array)
                 {
                     ++m_str;
                 }
-                break;
+                if (l <= level)
+                {
+                    break;
+                }
             }
-            ++m_str;
+            if (l > level && l < LAYER_MAX)
+            {
+                bool isarrayDummy;
+                l = parseTillEndOfStructIntern(level, true, isarrayDummy);
+                if (l <= level && !isarrayDummy)
+                {
+                    break;
+                }
+                start = m_str;
+            }
+            else
+            {
+                ++m_str;
+            }
             filled = true;
         }
-    }
-    if (l > level)
-    {
-        l = parseTillEndOfStruct(level);
     }
     assert(l <= level);
     return l;
@@ -274,6 +286,14 @@ int Hl7Parser::parseTokenArray(int level, std::vector<std::string>& array)
 
 int Hl7Parser::parseTillEndOfStruct(int level)
 {
+    bool isarrayDummy;
+    return parseTillEndOfStructIntern(level, false, isarrayDummy);
+}
+
+
+int Hl7Parser::parseTillEndOfStructIntern(int level, bool stopOnArray, bool& isarray)
+{
+    isarray = false;
     char c;
     while ((c = this->getChar(m_str)) != 0)
     {
@@ -285,6 +305,12 @@ int Hl7Parser::parseTillEndOfStruct(int level)
                 ++m_str;
             }
             return l;
+        }
+        else if (stopOnArray && c == m_delimiterRepeat)
+        {
+            isarray = true;
+            ++m_str;
+            return 1;
         }
         ++m_str;
     }
