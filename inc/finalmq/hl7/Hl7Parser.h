@@ -62,6 +62,7 @@ private:
     inline char getChar(const char* str) const;
     void skipControlCharacters();
     int isDelimiter(char c) const;
+    int parseTillEndOfStructIntern(int level, bool stopOnArray, bool& isarray);
     std::string deEscape(const char* start, const char* end) const;
 
     const char* m_end = nullptr;

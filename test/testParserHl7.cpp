@@ -378,6 +378,29 @@ TEST_F(TestParserHl7, testMSG_006_3)
     ASSERT_EQ(cmp, msg);
 }
 
+TEST_F(TestParserHl7, testArrayStruct_MSG_011_1)
+{
+    testhl7::MSG_011 cmp;
+    cmp.msh.fieldSeparator = "|";
+    cmp.msh.encodingCharacters = "^~\\&";
+    cmp.msh.messageType.messageCode = "MSG";
+    cmp.msh.messageType.triggerEvent = "011";
+    cmp.msh.messageType.messageStructure = "MSG_011";
+
+    cmp.a02.faa.resize(2);
+    cmp.a02.faa[0].a = "a";
+    cmp.a02.faa[1].a = "b";
+
+    testhl7::MSG_011 msg;
+    std::string data = "MSH|^~\\&|||||||MSG^011^MSG_011\rA02|a&~b\r";
+
+    SerializerStruct serializer(msg);
+    ParserHl7 parser(serializer, data.c_str());
+    parser.parseStruct("testhl7.MSG_011");
+
+    ASSERT_EQ(cmp, msg);
+}
+
 TEST_F(TestParserHl7, testArrayStruct_MSG_012_1)
 {
     testhl7::MSG_012 cmp;
@@ -420,6 +443,7 @@ TEST_F(TestParserHl7, testArrayStruct_MSG_012_2)
 
     ASSERT_EQ(cmp, msg);
 }
+
 
 TEST_F(TestParserHl7, testArrayStruct_MSG_012_3)
 {
@@ -484,6 +508,53 @@ TEST_F(TestParserHl7, testArrayString_MSG_012_2)
 
     ASSERT_EQ(cmp, msg);
 }
+
+
+TEST_F(TestParserHl7, testArrayString_MSG_012_3)
+{
+    testhl7::MSG_012 cmp;
+    cmp.msh.fieldSeparator = "|";
+    cmp.msh.encodingCharacters = "^~\\&";
+    cmp.msh.messageType.messageCode = "MSG";
+    cmp.msh.messageType.triggerEvent = "012";
+    cmp.msh.messageType.messageStructure = "MSG_012";
+
+    cmp.a03.sarr.push_back("a");
+    cmp.a03.sarr.push_back("b");
+
+    testhl7::MSG_012 msg;
+    std::string data = "MSH|^~\\&|||||||MSG^012^MSG_012\rA03|||a^c~b\r";
+
+
+    SerializerStruct serializer(msg);
+    ParserHl7 parser(serializer, data.c_str());
+    parser.parseStruct("testhl7.MSG_012");
+
+    ASSERT_EQ(cmp, msg);
+}
+
+TEST_F(TestParserHl7, testArrayString_MSG_012_4)
+{
+    testhl7::MSG_012 cmp;
+    cmp.msh.fieldSeparator = "|";
+    cmp.msh.encodingCharacters = "^~\\&";
+    cmp.msh.messageType.messageCode = "MSG";
+    cmp.msh.messageType.triggerEvent = "012";
+    cmp.msh.messageType.messageStructure = "MSG_012";
+
+    cmp.a03.faa.a = "a";
+    cmp.a03.faa.b = "b";
+
+    testhl7::MSG_012 msg;
+    std::string data = "MSH|^~\\&|||||||MSG^012^MSG_012\rA03||a^b~c^d~e^f\r";
+
+    SerializerStruct serializer(msg);
+    ParserHl7 parser(serializer, data.c_str());
+    parser.parseStruct("testhl7.MSG_012");
+
+    ASSERT_EQ(cmp, msg);
+}
+
 
 TEST_F(TestParserHl7, testArrayString_MSG_013_1)
 {
