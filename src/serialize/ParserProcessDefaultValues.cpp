@@ -105,7 +105,7 @@ void ParserProcessDefaultValues::executeEnterStruct()
         if (entry1.enterStructCalled())
         {
             ++i;
-            for (; i < m_stackSkipDefault.size(); ++i)
+            for (; i < static_cast<ssize_t>(m_stackSkipDefault.size()); ++i)
             {
                 EntrySkipDefault& entry2 = m_stackSkipDefault[i];
                 m_visitor->enterStruct(*entry2.field());
@@ -377,7 +377,7 @@ void ParserProcessDefaultValues::exitArrayStruct(const MetaField& field)
         if (!m_stackSkipDefault.empty())
         {
             auto& entry = m_stackSkipDefault.back();
-            if (entry.enterArrayStructCalled() > 0)
+            if (entry.enterArrayStructCalled())
             {
                 m_visitor->exitArrayStruct(field);
             }
