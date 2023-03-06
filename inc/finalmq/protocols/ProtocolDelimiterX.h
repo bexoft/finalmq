@@ -22,31 +22,35 @@
 
 #pragma once
 
-#include "RemoteEntityFormatRegistry.h"
+#include "finalmq/protocols/protocolhelpers/ProtocolDelimiter.h"
 
 
 namespace finalmq {
 
 
-class SYMBOLEXP RemoteEntityFormatHl7 : public IRemoteEntityFormat
+class SYMBOLEXP ProtocolDelimiterX : public ProtocolDelimiter
 {
 public:
-    static const int CONTENT_TYPE;                  // 3
-    static const std::string CONTENT_TYPE_NAME;     // hl7
+    static const std::uint32_t PROTOCOL_ID;         // 6
+    static const std::string PROTOCOL_NAME;         // delimiter_x
 
-    static const std::string PROPERTY_NAMESPACE;    // namespace
-    static const std::string PROPERTY_ENTITY;       // entity
-    static const std::string PROPERTY_LINEEND;      // lineend
-    static const std::string PROPERTY_MESSAGEEND;   // messageend
+    static const std::string KEY_DELIMITER;         // delimiter
 
+    ProtocolDelimiterX(const Variant& data);
 
 private:
-    virtual std::shared_ptr<StructBase> parse(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus) override;
-    virtual std::shared_ptr<StructBase> parseData(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, std::string& type, int& formatStatus) override;
-    virtual void serialize(const IProtocolSessionPtr& session, IMessage& message, const Header& header, const StructBase* structBase = nullptr) override;
-    virtual void serializeData(const IProtocolSessionPtr& session, IMessage& message, const StructBase* structBase = nullptr) override;
+    // IProtocol
+    virtual std::uint32_t getProtocolId() const override;
 };
 
 
+class SYMBOLEXP ProtocolDelimiterXFactory : public IProtocolFactory
+{
+public:
+
+private:
+    // IProtocolFactory
+    virtual IProtocolPtr createProtocol(const Variant& data) override;
+};
 
 }   // namespace finalmq

@@ -44,7 +44,7 @@ ProtocolMessage::ProtocolMessage(std::uint32_t protocolId, ssize_t sizeHeader, s
 char* ProtocolMessage::addBuffer(ssize_t size, ssize_t reserve)
 {
     assert(!m_preparedToSend);
-    if (size <= 0)
+    if (size < 0)
     {
         return nullptr;
     }
