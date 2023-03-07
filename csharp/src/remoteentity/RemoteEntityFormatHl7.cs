@@ -35,7 +35,9 @@ namespace finalmq
 
         public static readonly string PROPERTY_NAMESPACE = "namespace";
         public static readonly string PROPERTY_ENTITY = "entity";
-        public static readonly string PROPERTY_SERIALIZE_ENUM_AS_STRING = "enumAsSt";
+
+        public static readonly string PROPERTY_LINEEND = "lineend";
+        public static readonly string PROPERTY_MESSAGEEND = "messageend";
 
 
 #pragma warning disable CA2255 // Attribut "ModuleInitializer" nicht in Bibliotheken verwenden
@@ -46,12 +48,174 @@ namespace finalmq
             RemoteEntityFormatRegistry.Instance.RegisterFormat(CONTENT_TYPE_NAME, CONTENT_TYPE, new RemoteEntityFormatHl7());
         }
 
+
+        static int FindSequence(byte[] haystack, int offset, byte[] needle, int len)
+        {
+            int end = Math.Min(haystack.Length, len + offset);
+
+            if (needle.Length == 0)
+            {
+                return offset;
+            }
+
+            int j = offset;
+            while (j < end)
+            {
+                int i = 0;
+                while ((j < end) && (i < needle.Length) && needle[i] == haystack[j])
+                {
+                    ++i;
+                    ++j;
+                }
+                if (i == needle.Length)
+                {
+                    return j - i;
+                }
+                j = j - i + 1;
+            }
+            return -1;
+        }
+
+
+
+
+        static readonly byte[] BYTES_LINEEND = { (byte)'\r' };
+        static readonly byte[] BYTES_MSH = Encoding.ASCII.GetBytes("MSH");
+
+        static void ReplaceSerialize(IMessage source, string lineend, string messageend, IMessage destination)
+        {
+            int sizeSource = source.GetTotalSendPayloadSize();
+            // just to reserve enough memory
+            destination.AddSendPayload(0, 2 * sizeSource);
+
+            byte[] lineendBytes = Encoding.ASCII.GetBytes(lineend);
+
+            IList<BufferRef> payloads = source.GetAllSendPayloads();
+            foreach (var payload in payloads)
+            {
+                byte[] buffer = payload.Buffer;
+                int current = payload.Offset;
+                int found = -1;
+                int sizeRest = payload.Length;
+
+                while ((sizeRest > 0) && (-1 != (found = FindSequence(buffer, current, BYTES_LINEEND, sizeRest))))
+                {
+                    int sizeData = found - current;
+                    int sizeTotal = sizeData + lineend.Length;
+                    BufferRef dest = destination.AddSendPayload(sizeTotal, 512);
+                    Array.Copy(buffer, current, dest.Buffer, dest.Offset, sizeData);
+                    Array.Copy(lineendBytes, 0, dest.Buffer, dest.Offset + sizeData, lineendBytes.Length);
+                    current = found + 1;  // 1: size of character '\r'
+                    sizeRest -= sizeData + 1;
+                }
+
+                if (sizeRest > 0)
+                {
+                    destination.AddSendPayload(new BufferRef(buffer, current, sizeRest), 512);
+                }
+            }
+            if (messageend.Length != 0)
+            {
+                byte[] messageendBytes = Encoding.ASCII.GetBytes(messageend);
+                destination.AddSendPayload(messageendBytes);
+            }
+        }
+
+        static byte[] ReplaceParser(byte[] source, int offsetSource, int sizeSource, string lineend, string messageend)
+        {
+            if (messageend.Length != 0)
+            {
+                if (sizeSource >= messageend.Length)
+                {
+                    int posEnd = offsetSource + sizeSource - messageend.Length;
+                    byte[] messageendBytes = Encoding.ASCII.GetBytes(messageend);
+                    if (FindSequence(source, posEnd, messageendBytes, messageendBytes.Length) != -1)
+                    {
+                        sizeSource -= messageend.Length;
+                    }
+                }
+            }
+
+            byte[] buffer = source;
+            
+            int found = -1;
+            int sizeRest = sizeSource;
+
+            int current = FindSequence(source, offsetSource, BYTES_MSH, sizeRest);
+            if (current == -1)
+            {
+                return Array.Empty<byte>();
+            }
+
+            sizeRest -= current - offsetSource;
+
+            ArrayBuilder<byte> destination = new ArrayBuilder<byte>();
+            byte[] lineendBytes = Encoding.ASCII.GetBytes(lineend);
+
+            while ((sizeRest > 0) && (-1 != (found = FindSequence(buffer, current, lineendBytes, sizeRest))))
+            {
+                int sizeData = found - current;
+                destination.Add(buffer, current, sizeData);
+                destination.Add(BYTES_LINEEND[0]);
+                current = found + lineendBytes.Length;
+                sizeRest -= sizeData + lineendBytes.Length;
+            }
+
+            if (sizeRest > 0)
+            {
+                destination.Add(buffer, current, sizeRest);
+            }
+
+            return destination.ToArray();
+        }
+
+        static bool IsReplaceNeeded(IProtocolSession session, out string lineend, out string messageend)
+        {
+            lineend = "";
+            messageend = "";
+            string? hl7lineend = null;
+            string? hl7messageend = null;
+            Variant? formatData = session.FormatData;
+            bool replaceNeeded = false;
+            if (formatData != null && formatData.VarType != Variant.VARTYPE_NONE)
+            {
+                hl7lineend = formatData.GetData<string>(RemoteEntityFormatHl7.PROPERTY_LINEEND);
+                hl7messageend = formatData.GetData<string>(RemoteEntityFormatHl7.PROPERTY_MESSAGEEND);
+
+                replaceNeeded = ((hl7lineend != null && hl7lineend != "\r") ||
+                                 (hl7messageend != null && hl7messageend.Length != 0));
+
+                if (hl7lineend != null)
+                {
+                    lineend = hl7lineend;
+                }
+                if (hl7messageend != null)
+                {
+                    messageend = hl7messageend;
+                }
+            }
+            return replaceNeeded;
+        }
+
+
         public StructBase? Parse(IProtocolSession session, BufferRef bufferRef, bool storeRawData, IDictionary<string, IRemoteEntity> name2Entity, Header header, out int formatStatus)
         {
             formatStatus = 0;
             byte[] buffer = bufferRef.Buffer;
             int offset = bufferRef.Offset;
             int sizeBuffer = bufferRef.Length;
+
+            byte[] bufferReplaced;
+            string lineend;
+            string messageend;
+            bool replaceNeeded = IsReplaceNeeded(session, out lineend, out messageend);
+            if (replaceNeeded)
+            {
+                bufferReplaced = ReplaceParser(bufferRef.Buffer, bufferRef.Offset, bufferRef.Length, lineend, messageend);
+                buffer = bufferReplaced;
+                offset = 0;
+                sizeBuffer = bufferReplaced.Length;
+            }
 
             if (sizeBuffer == 0)
             {
@@ -102,16 +266,15 @@ namespace finalmq
                 header.corrid = 1;
 
                 BufferRef bufferRefData = new BufferRef(buffer, 0, sizeBuffer);
-                data = ParseData(session, bufferRefData, storeRawData, header.type, out formatStatus);
+                data = ParseData(session, bufferRefData, storeRawData, header.type, ref formatStatus);
 
                 formatStatus |= (int)FormatStatus.FORMATSTATUS_AUTOMATIC_CONNECT;
             }
 
             return data;
         }
-        public StructBase? ParseData(IProtocolSession session, BufferRef bufferRef, bool storeRawData, string type, out int formatStatus)
+        public StructBase? ParseData(IProtocolSession session, BufferRef bufferRef, bool storeRawData, string type, ref int formatStatus)
         {
-            formatStatus = 0;
             byte[] buffer = bufferRef.Buffer;
             int offset = bufferRef.Offset;
             int sizeBuffer = bufferRef.Length;
@@ -124,6 +287,21 @@ namespace finalmq
             if (sizeBuffer > 0 && buffer[offset + sizeBuffer - 1] == '}')
             {
                 --sizeBuffer;
+            }
+
+            byte[] bufferReplaced;
+            if ((formatStatus & (int)FormatStatus.FORMATSTATUS_HEADER_PARSED_BY_FORMAT) == 0)
+            {
+                string lineend;
+                string messageend;
+                bool replaceNeeded = IsReplaceNeeded(session, out lineend, out messageend);
+                if (replaceNeeded)
+                {
+                    bufferReplaced = ReplaceParser(bufferRef.Buffer, bufferRef.Offset, bufferRef.Length, lineend, messageend);
+                    buffer = bufferReplaced;
+                    offset = 0;
+                    sizeBuffer = bufferReplaced.Length;
+                }
             }
 
             StructBase? data = null;
@@ -154,7 +332,7 @@ namespace finalmq
                     {
                         data = new RawDataMessage();
                     }
-                    data.SetRawData(type, CONTENT_TYPE, bufferRef);
+                    data.SetRawData(type, CONTENT_TYPE, new BufferRef(buffer, offset, sizeBuffer));
                 }
             }
 
@@ -168,29 +346,30 @@ namespace finalmq
         {
             if (structBase != null)
             {
+                string lineend;
+                string messageend;
+                bool replaceNeeded = IsReplaceNeeded(session, out lineend, out messageend);
+
+                IMessage? messageHelper = replaceNeeded ? new ProtocolMessage(0) : null;
+                IMessage messageToSerialize = (messageHelper != null) ? messageHelper : message;
+
                 // payload
                 if (structBase.GetRawContentType() == CONTENT_TYPE)
                 {
                     BufferRef? rawData = structBase.GetRawData();
                     Debug.Assert(rawData != null);
-                    message.AddSendPayload(rawData);
+                    messageToSerialize.AddSendPayload(rawData);
                 }
                 else
                 {
-                    bool enumAsString = true;
-                    Variant? formatData = session.FormatData;
-                    if (formatData != null && formatData.VarType != Variant.VARTYPE_NONE)
-                    {
-                        Variant? propEnumAsString = formatData.GetVariant(PROPERTY_SERIALIZE_ENUM_AS_STRING);
-                        if (propEnumAsString != null)
-                        {
-                            enumAsString = propEnumAsString;
-                        }
-                    }
-
-                    SerializerHl7 serializerData = new SerializerHl7(message, 512, enumAsString);
+                    SerializerHl7 serializerData = new SerializerHl7(messageToSerialize, 512);
                     ParserStruct parserData = new ParserStruct(serializerData, structBase);
                     parserData.ParseStruct();
+                }
+
+                if (replaceNeeded)
+                {
+                    ReplaceSerialize(messageToSerialize, lineend, messageend, message);
                 }
             }
         }

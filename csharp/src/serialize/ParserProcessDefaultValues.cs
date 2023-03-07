@@ -6,7 +6,7 @@ using System.Diagnostics;
 namespace finalmq
 {
 
-    class ParserProcessDefaultValues : IParserVisitor
+    public class ParserProcessDefaultValues : IParserVisitor
     {
         private readonly string STR_VARVALUE = "finalmq.variant.VarValue";
         public ParserProcessDefaultValues(bool skipDefaultValues, IParserVisitor? visitor = null)
@@ -33,7 +33,14 @@ namespace finalmq
         {
             Debug.Assert(m_visitor != null);
             m_struct = stru;
-            m_stackFieldsDone.Add(new bool[stru.FieldsSize]);
+            if (!m_skipDefaultValues)
+            {
+                m_stackFieldsDone.Add(new bool[stru.FieldsSize]);
+            }
+            else
+            {
+                m_stackSkipDefault.Add(new EntrySkipDefault(null, true));
+            }
             m_visitor.StartStruct(stru);
         }
         public void Finished()
@@ -46,7 +53,35 @@ namespace finalmq
                 ProcessDefaultValues(m_struct, fieldsDone);
                 m_stackFieldsDone.RemoveAt(m_stackFieldsDone.Count - 1);
             }
+
+            if (m_stackSkipDefault.Count != 0)
+            {
+                m_stackSkipDefault.RemoveAt(m_stackSkipDefault.Count - 1);
+            }
+
             m_visitor.Finished();
+        }
+
+        void ExecuteEnterStruct()
+        {
+            Debug.Assert(m_visitor != null);
+
+            for (int i = m_stackSkipDefault.Count - 1; i >= 0; --i)
+            {
+                EntrySkipDefault entry1 = m_stackSkipDefault[i];
+                if (entry1.EnterStructCalled)
+                {
+                    ++i;
+                    for (; i < m_stackSkipDefault.Count; ++i)
+                    {
+                        EntrySkipDefault entry2 = m_stackSkipDefault[i];
+                        Debug.Assert(entry2.Field != null);
+                        m_visitor.EnterStruct(entry2.Field);
+                        entry2.EnterStructCalled = true;
+                    }
+                    break;
+                }
+            }
         }
 
         public void EnterStruct(MetaField field)
@@ -72,9 +107,30 @@ namespace finalmq
                 {
                     m_varValueActive++;
                 }
+                m_visitor.EnterStruct(field);
             }
-
-            m_visitor.EnterStruct(field);
+            else
+            {
+                if (m_stackSkipDefault.Count != 0)
+                {
+                    var entry = m_stackSkipDefault.Last();
+                    if (entry.FieldArrayStruct != null)
+                    {
+                        if (!entry.EnterArrayStructCalled)
+                        {
+                            ExecuteEnterStruct();
+                            m_visitor.EnterArrayStruct(entry.FieldArrayStruct);
+                            entry.EnterArrayStructCalled = true;
+                        }
+                        m_visitor.EnterStruct(field);
+                        m_stackSkipDefault.Add(new EntrySkipDefault(field, true));
+                    }
+                    else
+                    {
+                        m_stackSkipDefault.Add(new EntrySkipDefault(field, false));
+                    }
+                }
+            }
         }
         
         public void ExitStruct(MetaField field)
@@ -98,7 +154,22 @@ namespace finalmq
                 m_varValueActive--;
             }
 
-            m_visitor.ExitStruct(field);
+            if (!m_skipDefaultValues)
+            {
+                m_visitor.ExitStruct(field);
+            }
+            else
+            {
+                if (m_stackSkipDefault.Count != 0)
+                {
+                    var entry = m_stackSkipDefault.Last();
+                    if (entry.EnterStructCalled)
+                    {
+                        m_visitor.ExitStruct(field);
+                    }
+                    m_stackSkipDefault.RemoveAt(m_stackSkipDefault.Count - 1);
+                }
+            }
         }
 
         public void EnterStructNull(MetaField field)
@@ -238,12 +309,41 @@ namespace finalmq
         {
             Debug.Assert(m_visitor != null);
             MarkAsDone(field);
-            m_visitor.EnterArrayStruct(field);
+            if (!m_skipDefaultValues)
+            {
+                m_visitor.EnterArrayStruct(field);
+            }
+            else
+            {
+                if (m_stackSkipDefault.Count != 0)
+                {
+                    // call enterArrayStruct before the first element at enterStruct
+                    var entry = m_stackSkipDefault.Last();
+                    entry.FieldArrayStruct = field;
+                    entry.EnterArrayStructCalled = false;
+                }
+            }
         }
         public void ExitArrayStruct(MetaField field)
         {
             Debug.Assert(m_visitor != null);
-            m_visitor.ExitArrayStruct(field);
+            if (!m_skipDefaultValues)
+            {
+                m_visitor.ExitArrayStruct(field);
+            }
+            else
+            {
+                if (m_stackSkipDefault.Count != 0)
+                {
+                    var entry = m_stackSkipDefault.Last();
+                    if (entry.EnterArrayStructCalled)
+                    {
+                        m_visitor.ExitArrayStruct(field);
+                    }
+                    entry.FieldArrayStruct = null;
+                    entry.EnterArrayStructCalled = false;
+                }
+            }
         }
 
         public void EnterBool(MetaField field, bool value)
@@ -252,6 +352,10 @@ namespace finalmq
             MarkAsDone(field);
             if (value != false || !m_skipDefaultValues)
             {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
                 m_visitor.EnterBool(field, value);
             }
         }
@@ -261,6 +365,10 @@ namespace finalmq
             MarkAsDone(field);
             if (value != 0 || !m_skipDefaultValues)
             {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
                 m_visitor.EnterInt32(field, value);
             }
         }
@@ -270,6 +378,10 @@ namespace finalmq
             MarkAsDone(field);
             if (value != 0 || !m_skipDefaultValues)
             {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
                 m_visitor.EnterUInt32(field, value);
             }
         }
@@ -279,6 +391,10 @@ namespace finalmq
             MarkAsDone(field);
             if (value != 0 || !m_skipDefaultValues)
             {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
                 m_visitor.EnterInt64(field, value);
             }
         }
@@ -288,6 +404,10 @@ namespace finalmq
             MarkAsDone(field);
             if (value != 0 || !m_skipDefaultValues)
             {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
                 m_visitor.EnterUInt64(field, value);
             }
         }
@@ -297,6 +417,10 @@ namespace finalmq
             MarkAsDone(field);
             if (value != 0.0f || !m_skipDefaultValues)
             {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
                 m_visitor.EnterFloat(field, value);
             }
         }
@@ -306,6 +430,10 @@ namespace finalmq
             MarkAsDone(field);
             if (value != 0.0 || !m_skipDefaultValues)
             {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
                 m_visitor.EnterDouble(field, value);
             }
         }
@@ -315,6 +443,10 @@ namespace finalmq
             MarkAsDone(field);
             if (value.Length != 0 || !m_skipDefaultValues)
             {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
                 m_visitor.EnterString(field, value);
             }
         }
@@ -324,6 +456,10 @@ namespace finalmq
             MarkAsDone(field);
             if (size != 0 || !m_skipDefaultValues)
             {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
                 m_visitor.EnterString(field, buffer, offset, size);
             }
         }
@@ -333,6 +469,10 @@ namespace finalmq
             MarkAsDone(field);
             if (size != 0 || !m_skipDefaultValues)
             {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
                 m_visitor.EnterBytes(field, value, offset, size);
             }
         }
@@ -342,6 +482,10 @@ namespace finalmq
             MarkAsDone(field);
             if (value != 0 || !m_skipDefaultValues)
             {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
                 m_visitor.EnterEnum(field, value);
             }
         }
@@ -352,6 +496,10 @@ namespace finalmq
             int v = MetaDataGlobal.Instance.GetEnumValueByName(field, value);
             if (v != 0 || !m_skipDefaultValues)
             {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
                 m_visitor.EnterEnum(field, value);
             }
         }
@@ -362,6 +510,10 @@ namespace finalmq
             MarkAsDone(field);
             if (value.Length != 0 || !m_skipDefaultValues)
             {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
                 m_visitor.EnterArrayBool(field, value);
             }
         }
@@ -371,6 +523,10 @@ namespace finalmq
             MarkAsDone(field);
             if (value.Length != 0 || !m_skipDefaultValues)
             {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
                 m_visitor.EnterArrayInt32(field, value);
             }
         }
@@ -380,6 +536,10 @@ namespace finalmq
             MarkAsDone(field);
             if (value.Length != 0 || !m_skipDefaultValues)
             {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
                 m_visitor.EnterArrayUInt32(field, value);
             }
         }
@@ -389,6 +549,10 @@ namespace finalmq
             MarkAsDone(field);
             if (value.Length != 0 || !m_skipDefaultValues)
             {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
                 m_visitor.EnterArrayInt64(field, value);
             }
         }
@@ -398,6 +562,10 @@ namespace finalmq
             MarkAsDone(field);
             if (value.Length != 0 || !m_skipDefaultValues)
             {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
                 m_visitor.EnterArrayUInt64(field, value);
             }
         }
@@ -407,6 +575,10 @@ namespace finalmq
             MarkAsDone(field);
             if (value.Length != 0 || !m_skipDefaultValues)
             {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
                 m_visitor.EnterArrayFloat(field, value);
             }
         }
@@ -416,6 +588,10 @@ namespace finalmq
             MarkAsDone(field);
             if (value.Length != 0 || !m_skipDefaultValues)
             {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
                 m_visitor.EnterArrayDouble(field, value);
             }
         }
@@ -425,6 +601,10 @@ namespace finalmq
             MarkAsDone(field);
             if (value.Count != 0 || !m_skipDefaultValues)
             {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
                 m_visitor.EnterArrayString(field, value);
             }
         }
@@ -434,6 +614,10 @@ namespace finalmq
             MarkAsDone(field);
             if (value.Count != 0 || !m_skipDefaultValues)
             {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
                 m_visitor.EnterArrayBytes(field, value);
             }
         }
@@ -443,6 +627,10 @@ namespace finalmq
             MarkAsDone(field);
             if (value.Length != 0 || !m_skipDefaultValues)
             {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
                 m_visitor.EnterArrayEnum(field, value);
             }
         }
@@ -452,15 +640,68 @@ namespace finalmq
             MarkAsDone(field);
             if (value.Count != 0 || !m_skipDefaultValues)
             {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
                 m_visitor.EnterArrayEnum(field, value);
             }
         }
 
+        class EntrySkipDefault
+        {
+            public EntrySkipDefault(MetaField? field, bool enterStructCalled)
+            {
+                m_field = field;
+                m_fieldArrayStruct = null;
+                m_enterArrayStructCalled = false;
+                m_countMember = 0;
+                m_enterStructCalled = enterStructCalled;
+            }
+
+            public MetaField? Field
+            {
+                get { return m_field; }
+                set { m_field = value; }
+            }
+
+            public MetaField? FieldArrayStruct
+            {
+                get { return m_fieldArrayStruct; }
+                set { m_fieldArrayStruct = value; }
+            }
+
+            public bool EnterArrayStructCalled
+            {
+                get { return m_enterArrayStructCalled; }
+                set { m_enterArrayStructCalled = value; }
+            }
+
+            public int CountMember
+            {
+                get { return m_countMember; }
+                set { m_countMember = value; }
+            }
+
+            public bool EnterStructCalled
+            {
+                get { return m_enterStructCalled; }
+                set { m_enterStructCalled = value; }
+            }
+
+            MetaField? m_field;
+            MetaField? m_fieldArrayStruct;
+            bool m_enterArrayStructCalled;
+            int m_countMember;
+            bool m_enterStructCalled;
+        }
+        
         IParserVisitor? m_visitor = null;
         bool m_skipDefaultValues = true;
         MetaStruct? m_struct = null;
         readonly IList<bool[]> m_stackFieldsDone = new List<bool[]>();
         int m_varValueActive = 0;
+        readonly IList<EntrySkipDefault> m_stackSkipDefault = new List<EntrySkipDefault>();
     }
 
 }

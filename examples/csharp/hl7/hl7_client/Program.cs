@@ -8,8 +8,8 @@ namespace hl7example
 
     class MainClient
     {
-        static readonly int LOOP_PARALLEL = 10000;
-        static readonly int LOOP_SEQUENTIAL = 10000;
+//        static readonly int LOOP_PARALLEL = 10000;
+//        static readonly int LOOP_SEQUENTIAL = 10000;
 
         public static /*async Task*/void Main(string[] args)
         {

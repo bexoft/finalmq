@@ -167,6 +167,7 @@ namespace finalmq
                 }
                 else
                 {
+                    int offsetOld = m_offset;
                     l = IsDelimiter(c);
                     if (l < LAYER_MAX)
                     {
@@ -186,11 +187,15 @@ namespace finalmq
 
                     if (l > level && l < LAYER_MAX)
                     {
-                        bool isarrayDummy;
-                        l = ParseTillEndOfStructIntern(level, true, out isarrayDummy);
-                        if (l <= level && !isarrayDummy)
+                        bool isarray;
+                        l = ParseTillEndOfStructIntern(level, true, out isarray);
+                        if (l <= level && !isarray)
                         {
                             break;
+                        }
+                        if (isarray && !filled)
+                        {
+                            array.Add(DeEscape(start, offsetOld));
                         }
                         start = m_offset;
                     }
