@@ -34,19 +34,18 @@ namespace finalmq {
 
 
 
-SerializerHl7::SerializerHl7(IZeroCopyBuffer& buffer, int maxBlockSize, bool enumAsString)
+SerializerHl7::SerializerHl7(IZeroCopyBuffer& buffer, int maxBlockSize)
     : ParserProcessDefaultValues(false)
-    , m_internal(buffer, maxBlockSize, enumAsString)
+    , m_internal(buffer, maxBlockSize)
 {
     setVisitor(m_internal);
 }
 
 
 
-SerializerHl7::Internal::Internal(IZeroCopyBuffer& buffer, int maxBlockSize, bool enumAsString)
+SerializerHl7::Internal::Internal(IZeroCopyBuffer& buffer, int maxBlockSize)
     : m_uniqueHl7Builder(std::make_unique<Hl7Builder>(buffer, maxBlockSize, "|^~\\&"))
     , m_hl7Builder(*m_uniqueHl7Builder.get())
-    , m_enumAsString(enumAsString)
 {
 }
 
@@ -267,42 +266,19 @@ void SerializerHl7::Internal::enterBytes(const MetaField& field, const BytesElem
 
 void SerializerHl7::Internal::enterEnum(const MetaField& field, std::int32_t value)
 {
-    if (m_enumAsString)
-    {
-        const std::string& name = MetaDataGlobal::instance().getEnumAliasByValue(field, value);
-        enterString(field, std::string(name));
-    }
-    else
-    {
-        enterInt32(field, value);
-    }
+    const std::string& name = MetaDataGlobal::instance().getEnumAliasByValue(field, value);
+    enterString(field, std::string(name));
 }
 
 
 void SerializerHl7::Internal::enterEnum(const MetaField& field, std::string&& value)
 {
-    if (m_enumAsString)
-    {
-        enterString(field, std::move(value));
-    }
-    else
-    {
-        std::int32_t v = MetaDataGlobal::instance().getEnumValueByName(field, value);
-        enterInt32(field, v);
-    }
+    enterString(field, std::move(value));
 }
 
 void SerializerHl7::Internal::enterEnum(const MetaField& field, const char* value, ssize_t size)
 {
-    if (m_enumAsString)
-    {
-        enterString(field, value, size);
-    }
-    else
-    {
-        std::int32_t v = MetaDataGlobal::instance().getEnumValueByName(field, std::string(value, size));
-        enterInt32(field, v);
-    }
+    enterString(field, value, size);
 }
 
 void SerializerHl7::Internal::enterArrayBoolMove(const MetaField& field, std::vector<bool>&& value)
@@ -467,20 +443,10 @@ void SerializerHl7::Internal::enterArrayEnum(const MetaField& field, const std::
 {
     if (!m_indexOfLayer.empty())
     {
-        if (m_enumAsString)
+        for (ssize_t i = 0; i < size; ++i)
         {
-            for (ssize_t i = 0; i < size; ++i)
-            {
-                const std::string& name = MetaDataGlobal::instance().getEnumAliasByValue(field, value[i]);
-                m_hl7Builder.enterString(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, name.c_str(), name.size());
-            }
-        }
-        else
-        {
-            for (ssize_t i = 0; i < size; ++i)
-            {
-                m_hl7Builder.enterInt64(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value[i]);
-            }
+            const std::string& name = MetaDataGlobal::instance().getEnumAliasByValue(field, value[i]);
+            m_hl7Builder.enterString(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, name.c_str(), name.size());
         }
     }
 }
@@ -489,20 +455,9 @@ void SerializerHl7::Internal::enterArrayEnumMove(const MetaField& field, std::ve
 {
     if (!m_indexOfLayer.empty())
     {
-        if (m_enumAsString)
+        for (size_t i = 0; i < value.size(); ++i)
         {
-            for (size_t i = 0; i < value.size(); ++i)
-            {
-                m_hl7Builder.enterString(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, std::move(value[i]));
-            }
-        }
-        else
-        {
-            for (size_t i = 0; i < value.size(); ++i)
-            {
-                std::int32_t v = MetaDataGlobal::instance().getEnumValueByName(field, value[i]);
-                m_hl7Builder.enterInt64(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, v);
-            }
+            m_hl7Builder.enterString(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, std::move(value[i]));
         }
     }
 }
@@ -511,20 +466,9 @@ void SerializerHl7::Internal::enterArrayEnum(const MetaField& field, const std::
 {
     if (!m_indexOfLayer.empty())
     {
-        if (m_enumAsString)
+        for (size_t i = 0; i < value.size(); ++i)
         {
-            for (size_t i = 0; i < value.size(); ++i)
-            {
-                m_hl7Builder.enterString(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value[i].c_str(), value[i].size());
-            }
-        }
-        else
-        {
-            for (size_t i = 0; i < value.size(); ++i)
-            {
-                std::int32_t v = MetaDataGlobal::instance().getEnumValueByName(field, value[i]);
-                m_hl7Builder.enterInt64(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, v);
-            }
+            m_hl7Builder.enterString(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value[i].c_str(), value[i].size());
         }
     }
 }

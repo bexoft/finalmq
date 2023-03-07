@@ -228,7 +228,7 @@ void RemoteEntityFormatHl7::serializeData(const IProtocolSessionPtr& session, IM
         }
         else
         {
-            SerializerHl7 serializerData(messageToSerialize, 512, true);
+            SerializerHl7 serializerData(messageToSerialize, 512);
             ParserStruct parserData(serializerData, *structBase);
             parserData.parseStruct();
         }

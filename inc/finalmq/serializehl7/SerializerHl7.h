@@ -33,13 +33,13 @@ namespace finalmq {
 class SYMBOLEXP SerializerHl7 : public ParserProcessDefaultValues
 {
 public:
-    SerializerHl7(IZeroCopyBuffer& buffer, int maxBlockSize = 512, bool enumAsString = true);
+    SerializerHl7(IZeroCopyBuffer& buffer, int maxBlockSize = 512);
 
 private:
     class Internal : public IParserVisitor
     {
     public:
-        Internal(IZeroCopyBuffer& buffer, int maxBlockSize, bool enumAsString);
+        Internal(IZeroCopyBuffer& buffer, int maxBlockSize);
     private:
         // IParserVisitor
         virtual void notifyError(const char* str, const char* message) override;
@@ -97,7 +97,6 @@ private:
 
         std::unique_ptr<IHl7BuilderVisitor> m_uniqueHl7Builder;
         IHl7BuilderVisitor&                 m_hl7Builder;
-        bool                                m_enumAsString = true;
 
         bool                                m_inSegment = false;
 
