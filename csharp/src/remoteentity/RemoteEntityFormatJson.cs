@@ -33,8 +33,8 @@ namespace finalmq
         static readonly int CONTENT_TYPE = 2;
         static readonly string CONTENT_TYPE_NAME = "json";
 
-        static readonly string PROPERTY_SERIALIZE_ENUM_AS_STRING = "enumAsSt";
-        static readonly string PROPERTY_SERIALIZE_SKIP_DEFAULT_VALUES = "skipDefVal";
+        public static readonly string PROPERTY_SERIALIZE_ENUM_AS_STRING = "enumAsSt";
+        public static readonly string PROPERTY_SERIALIZE_SKIP_DEFAULT_VALUES = "skipDefVal";
 
         static readonly int JSONBLOCKSIZE = 512;
         static readonly byte[] ARRAY_BEGIN = { (byte)'[' };
@@ -209,14 +209,13 @@ namespace finalmq
                 Debug.Assert(sizeData >= 0);
 
                 BufferRef bufferRefData = new BufferRef( buffer, offset, sizeData );
-                data = ParseData(session, bufferRefData, storeRawData, header.type, out formatStatus);
+                data = ParseData(session, bufferRefData, storeRawData, header.type, ref formatStatus);
             }
 
             return data;
         }
-        public StructBase? ParseData(IProtocolSession session, BufferRef bufferRef, bool storeRawData, string type, out int formatStatus)
+        public StructBase? ParseData(IProtocolSession session, BufferRef bufferRef, bool storeRawData, string type, ref int formatStatus)
         {
-            formatStatus = 0;
             byte[] buffer = bufferRef.Buffer;
             int offset = bufferRef.Offset;
             int sizeBuffer = bufferRef.Length;

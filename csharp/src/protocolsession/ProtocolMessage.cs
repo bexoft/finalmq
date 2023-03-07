@@ -39,7 +39,7 @@ namespace finalmq {
         public BufferRef AddBuffer(int size, int reserve = 0)
         {
             Debug.Assert(!m_preparedToSend);
-            if (size <= 0)
+            if (size < 0)
             {
                 throw new System.ApplicationException();
             }

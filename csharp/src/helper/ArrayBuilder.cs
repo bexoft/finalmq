@@ -37,6 +37,38 @@ namespace finalmq
             ++m_totalElements;
         }
 
+        public void Add(T[] buffer, int offset, int size)
+        {
+            if (size <= 0)
+            {
+                return;
+            }
+            Debug.Assert(m_indexBlocks < m_blocks.Count);
+            if (m_indexBlocks == -1)
+            {
+                int blocksize = Math.Max(size, m_blocksize);
+                m_blocks.Add(new T[blocksize]);
+                m_indexBlocks = 0;
+                m_indexElement = 0;
+            }
+            Debug.Assert(m_indexElement <= m_blocksize);
+            if (m_indexElement + size >= m_blocksize)
+            {
+                Debug.Assert(m_indexBlocks < m_blocks.Count);
+                if (m_indexBlocks == m_blocks.Count - 1)
+                {
+                    int blocksize = Math.Max(size, m_blocksize);
+                    m_blocks.Add(new T[blocksize]);
+                }
+                ++m_indexBlocks;
+                m_indexElement = 0;
+            }
+            T[] array = m_blocks[m_indexBlocks];
+            Array.Copy(buffer, offset, array, m_indexElement, size);
+            m_indexElement += size;
+            m_totalElements += size;
+        }
+
         public void Clear()
         {
             m_totalElements = 0;

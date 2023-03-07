@@ -18,6 +18,13 @@ namespace hl7example
                 System.Console.WriteLine("peer event " + peerEvent.ToString());
             });
 
+            static void Resize<T>(IList<T> list, int num)
+            {
+                while (list.Count < 2)
+                {
+                    list.Add(Activator.CreateInstance<T>());
+                }
+            }
 
             RegisterCommand<hl7.SSU_U03>((RequestContext requestContext, hl7.SSU_U03 request) => {
                 // prepare the reply
@@ -26,65 +33,59 @@ namespace hl7example
                 reply.equ.alertLevel.alternateIdentifier = "Hello this is a test";
                 reply.uac = new hl7.UAC();
                 reply.uac.userAuthenticationCredential.typeOfData = hl7.MimeTypes.AudioData;
-                reply.sft.Add(new hl7.SFT());
-                reply.sft.Add(new hl7.SFT());
+                Resize(reply.sft, 2);
                 reply.sft[0].softwareBinaryId = "world";
                 reply.sft[1].softwareProductInformation = "world";
-                reply.specimen_container.Add(new hl7.SPECIMEN_CONTAINER_5());
-                reply.specimen_container.Add(new hl7.SPECIMEN_CONTAINER_5());
+                Resize(reply.specimen_container, 2);
                 reply.specimen_container[0].sac.positionInTray.value1 = "hey";
                 reply.specimen_container[0].sac.specimenSource = "hh";
                 reply.specimen_container[0].sac.carrierIdentifier.entityIdentifier = "uu";
                 reply.specimen_container[0].sac.carrierIdentifier.universalId = "bbb";
-                reply.specimen_container[0].obx.Add(new hl7.OBX());
-                reply.specimen_container[0].obx.Add(new hl7.OBX());
+                Resize(reply.specimen_container[0].obx, 2);
                 reply.specimen_container[0].obx[0].effectiveDateOfReferenceRange = "aaaa";
-                reply.specimen_container[0].obx[1].equipmentInstanceIdentifier.Add(new EI());
+                Resize(reply.specimen_container[0].obx[1].equipmentInstanceIdentifier, 1);
                 reply.specimen_container[0].obx[1].equipmentInstanceIdentifier[0].namespaceId = "bbbbb";
-                reply.specimen_container[0].specimen.Add(new hl7.SPECIMEN_17());
-                reply.specimen_container[0].specimen.Add(new hl7.SPECIMEN_17());
-                reply.specimen_container[0].specimen[0].spm.accessionId.Add(new CX());
+                Resize(reply.specimen_container[0].specimen, 2);
+                Resize(reply.specimen_container[0].specimen[0].spm.accessionId, 1);
                 reply.specimen_container[0].specimen[0].spm.accessionId[0].identifierCheckDigit = "ggg";
                 reply.specimen_container[0].specimen[0].spm.containerCondition.alternateText = "tt";
                 reply.specimen_container[0].specimen[0].spm.containerCondition.nameOfAlternateCodingSystem = hl7.CodingSystem.AstmE1238_E1467Universal;
-                reply.specimen_container[0].specimen[0].obx.Add(new hl7.OBX());
+                Resize(reply.specimen_container[0].specimen[0].obx, 1);
                 reply.specimen_container[0].specimen[0].obx[0].effectiveDateOfReferenceRange = "aaaa";
-                reply.specimen_container[0].specimen[0].obx[0].equipmentInstanceIdentifier.Add(new EI());
+                Resize(reply.specimen_container[0].specimen[0].obx[0].equipmentInstanceIdentifier, 1);
                 reply.specimen_container[0].specimen[0].obx[0].equipmentInstanceIdentifier[0].namespaceId = "bbbbb";
-                reply.specimen_container[0].specimen[1].spm.accessionId.Add(new CX());
+                Resize(reply.specimen_container[0].specimen[1].spm.accessionId, 1);
                 reply.specimen_container[0].specimen[1].spm.accessionId[0].securityCheck = "ggg";
                 reply.specimen_container[0].specimen[1].spm.containerCondition.alternateText = "tt";
                 reply.specimen_container[0].specimen[1].spm.containerCondition.nameOfAlternateCodingSystem = hl7.CodingSystem.CdcAnalyteCodes;
-                reply.specimen_container[0].specimen[1].obx.Add(new OBX());
+                Resize(reply.specimen_container[0].specimen[1].obx, 1);
                 reply.specimen_container[0].specimen[1].obx[0].effectiveDateOfReferenceRange = "aaaa";
-                reply.specimen_container[0].specimen[1].obx[0].equipmentInstanceIdentifier.Add(new EI());
+                Resize(reply.specimen_container[0].specimen[1].obx[0].equipmentInstanceIdentifier, 1);
                 reply.specimen_container[0].specimen[1].obx[0].equipmentInstanceIdentifier[0].namespaceId = "bbbbb";
                 reply.specimen_container[1].sac.positionInTray.value1 = "hey";
                 reply.specimen_container[1].sac.specimenSource = "hh";
                 reply.specimen_container[1].sac.carrierIdentifier.entityIdentifier = "uu";
                 reply.specimen_container[1].sac.carrierIdentifier.universalId = "bbb";
-                reply.specimen_container[1].obx.Add(new OBX());
-                reply.specimen_container[1].obx.Add(new OBX());
+                Resize(reply.specimen_container[1].obx, 2);
                 reply.specimen_container[1].obx[0].effectiveDateOfReferenceRange = "aaaa";
-                reply.specimen_container[1].obx[1].equipmentInstanceIdentifier.Add(new EI());
+                Resize(reply.specimen_container[1].obx[1].equipmentInstanceIdentifier, 1);
                 reply.specimen_container[1].obx[1].equipmentInstanceIdentifier[0].namespaceId = "bbbbb";
-                reply.specimen_container[1].specimen.Add(new SPECIMEN_17());
-                reply.specimen_container[1].specimen.Add(new SPECIMEN_17());
-                reply.specimen_container[1].specimen[0].spm.accessionId.Add(new CX());
+                Resize(reply.specimen_container[1].specimen, 2);
+                Resize(reply.specimen_container[1].specimen[0].spm.accessionId, 1);
                 reply.specimen_container[1].specimen[0].spm.accessionId[0].checkDigitScheme = hl7.CheckDigitScheme.Mod10Algorithm;
                 reply.specimen_container[1].specimen[0].spm.containerCondition.alternateText = "tt";
                 reply.specimen_container[1].specimen[0].spm.containerCondition.nameOfAlternateCodingSystem = hl7.CodingSystem.AstmE1238_E1467Universal;
-                reply.specimen_container[1].specimen[0].obx.Add(new OBX());
+                Resize(reply.specimen_container[1].specimen[0].obx, 1);
                 reply.specimen_container[1].specimen[0].obx[0].effectiveDateOfReferenceRange = "aaaa";
-                reply.specimen_container[1].specimen[0].obx[0].equipmentInstanceIdentifier.Add(new EI());
+                Resize(reply.specimen_container[1].specimen[0].obx[0].equipmentInstanceIdentifier, 1);
                 reply.specimen_container[1].specimen[0].obx[0].equipmentInstanceIdentifier[0].namespaceId = "bbbbb";
-                reply.specimen_container[1].specimen[1].spm.accessionId.Add(new CX());
+                Resize(reply.specimen_container[1].specimen[1].spm.accessionId, 1);
                 reply.specimen_container[1].specimen[1].spm.accessionId[0].checkDigitScheme = hl7.CheckDigitScheme.Mod11Algorithm;
                 reply.specimen_container[1].specimen[1].spm.containerCondition.alternateText = "tt";
                 reply.specimen_container[1].specimen[1].spm.containerCondition.nameOfAlternateCodingSystem = hl7.CodingSystem.AstmE1238_E1467Universal;
-                reply.specimen_container[1].specimen[1].obx.Add(new OBX());
+                Resize(reply.specimen_container[1].specimen[1].obx, 1);
                 reply.specimen_container[1].specimen[1].obx[0].effectiveDateOfReferenceRange = "aaaa";
-                reply.specimen_container[1].specimen[1].obx[0].equipmentInstanceIdentifier.Add(new EI());
+                Resize(reply.specimen_container[1].specimen[1].obx[0].equipmentInstanceIdentifier, 1);
                 reply.specimen_container[1].specimen[1].obx[0].equipmentInstanceIdentifier[0].namespaceId = "bbbbb";
 
                 // send reply
@@ -109,36 +110,6 @@ namespace hl7example
                 requestContext.Reply(reply);
             });
 
-            /*
-                        // just to demonstrate REST API. You can access the service with either an HTTP PUT with path: "mypath/1234".
-                        // Or with "maypath/1234/PUT" and the HTTP method (like: GET, POST, PUT, ...) does not matter.
-                        // try to access the server with the json interface at port 8888:
-                        // telnet localhost 8888  (or: netcat localhost 8888) and type:
-                        //   /MyService/mypath/1234/PUT!4711{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
-                        // or open a browser and type:
-                        //   localhost:8080/MyService/mypath/1234/PUT{"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
-                        // or use a HTTP client and do an HTTP PUT request to localhost:8080 with:
-                        //   /MyService/mypath/1234
-                        //   and payload: {"persons":[{"name":"Bonnie"},{"name":"Clyde"}]}
-                        RegisterCommand<HelloRequest>("mypath/{id}/PUT", (RequestContext requestContext, HelloRequest request) => {
-                            string? id = requestContext.GetMetainfo("PATH_id"); // when a field is defined as {keyname}, then you can get the value with the key prefix "PATH_" ("PATH_keyname"}
-                            if (id != null)
-                            {
-                            }
-
-                            // prepare the reply
-                            string prefix = "Hello ";
-                            HelloReply reply = new HelloReply();
-                            // go through all persons and make a greeting
-                            foreach (var person in request.persons)
-                            {
-                                reply.greetings.Add(prefix + person.name);
-                            }
-
-                            // send reply
-                            requestContext.Reply(reply);
-                        });
-            */
         }
     }
 
@@ -177,15 +148,41 @@ namespace hl7example
             // content type in payload: JSON
             entityContainer.Bind("tcp://*:8888:delimiter_lf:json");
 
-            // Open listener port 8080 with http.
-            // content type in payload: JSON
-            entityContainer.Bind("tcp://*:8080:httpserver:json");
-
             entityContainer.Bind("tcp://*:7000:delimiter_lf:hl7", new BindProperties(
                 null, null,
                 Variant.Create(new VariantStruct {
                     new NameValue( RemoteEntityFormatHl7.PROPERTY_NAMESPACE, Variant.Create("hl7") ),
                     new NameValue( RemoteEntityFormatHl7.PROPERTY_ENTITY, Variant.Create("MyService") )
+                })
+            ));
+
+            entityContainer.Bind("tcp://*:7001:delimiter_x:hl7", new BindProperties(
+                null,
+                Variant.Create(new VariantStruct {
+                    new NameValue( ProtocolDelimiterX.KEY_DELIMITER, Variant.Create("\r\n\r\n") ),
+                }),
+                Variant.Create(new VariantStruct {
+                    new NameValue( RemoteEntityFormatHl7.PROPERTY_NAMESPACE, Variant.Create("hl7") ),
+                    new NameValue( RemoteEntityFormatHl7.PROPERTY_ENTITY, Variant.Create("MyService") ),
+                    new NameValue( RemoteEntityFormatHl7.PROPERTY_LINEEND, Variant.Create("\r\n") ),
+                    new NameValue( RemoteEntityFormatHl7.PROPERTY_MESSAGEEND, Variant.Create("") )
+                })
+            ));
+
+            // Open listener port 8080 with http.
+            // content type in payload: JSON
+            entityContainer.Bind("tcp://*:8080:httpserver:json", new BindProperties(
+                null, null,
+                Variant.Create(new VariantStruct {
+                    new NameValue( RemoteEntityFormatJson.PROPERTY_SERIALIZE_ENUM_AS_STRING, Variant.Create(true) ),
+                    new NameValue( RemoteEntityFormatJson.PROPERTY_SERIALIZE_SKIP_DEFAULT_VALUES, Variant.Create(true) ),
+                })
+            ));
+            entityContainer.Bind("tcp://*:8082:httpserver:json", new BindProperties(
+                null, null,
+                Variant.Create(new VariantStruct {
+                    new NameValue( RemoteEntityFormatJson.PROPERTY_SERIALIZE_ENUM_AS_STRING, Variant.Create(true) ),
+                    new NameValue( RemoteEntityFormatJson.PROPERTY_SERIALIZE_SKIP_DEFAULT_VALUES, Variant.Create(false) ),
                 })
             ));
 

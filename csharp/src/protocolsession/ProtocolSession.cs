@@ -533,27 +533,31 @@ namespace finalmq
             IProtocolSessionPrivate? session = m_protocolSessionList.FindSessionByName(sessionName);
             if (session != null)
             {
-                if (session != this)
+                if ((session.ContentType == ContentType) && 
+                    (((session.FormatData == null && FormatData == null)) || (session.FormatData != null && FormatData != null && session.FormatData.Equals(FormatData))))
                 {
-                    if (m_verified)
+                    if (session != this)
                     {
-                        session.SetProtocol(protocol);
-                    }
-                    else
-                    {
-                        Disconnected(); // we are in the poller loop thread
-                        IProtocol? prot = null;
-                        lock (m_mutex)
+                        if (m_verified)
                         {
-                            prot = m_protocol;
-                            m_protocol = null;
-                            m_connectionId = 0;
+                            session.SetProtocol(protocol);
                         }
-                        Debug.Assert(prot != null);
-                        session.SetProtocol(prot);
+                        else
+                        {
+                            Disconnected(); // we are in the poller loop thread
+                            IProtocol? prot = null;
+                            lock (m_mutex)
+                            {
+                                prot = m_protocol;
+                                m_protocol = null;
+                                m_connectionId = 0;
+                            }
+                            Debug.Assert(prot != null);
+                            session.SetProtocol(prot);
+                        }
                     }
+                    return true;
                 }
-                return true;
             }
             return false;
         }

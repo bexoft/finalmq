@@ -32,13 +32,14 @@ namespace finalmq
         FORMATSTATUS_NONE = 0,
         FORMATSTATUS_SYNTAX_ERROR = 1,
         FORMATSTATUS_AUTOMATIC_CONNECT = 2,
+        FORMATSTATUS_HEADER_PARSED_BY_FORMAT = 4,
     };
 
 
     public interface IRemoteEntityFormat
     {
         StructBase? Parse(IProtocolSession session, BufferRef bufferRef, bool storeRawData, IDictionary<string, IRemoteEntity> name2Entity, Header header, out int formatStatus);
-        StructBase? ParseData(IProtocolSession session, BufferRef bufferRef, bool storeRawData, string type, out int formatStatus);
+        StructBase? ParseData(IProtocolSession session, BufferRef bufferRef, bool storeRawData, string type, ref int formatStatus);
         void Serialize(IProtocolSession session, IMessage message, Header header, StructBase? structBase = null);
         void SerializeData(IProtocolSession session, IMessage message, StructBase? structBase = null);
     };
@@ -115,7 +116,7 @@ namespace finalmq
                 m_contentTypeToFormat.TryGetValue(contentType, out format);
                 if (format != null)
                 {
-                    structBase = format.ParseData(session, bufferRef, storeRawData, header.type, out formatStatus);
+                    structBase = format.ParseData(session, bufferRef, storeRawData, header.type, ref formatStatus);
                 }
             }
             else
