@@ -29,6 +29,7 @@
 #include "finalmq/helpers/Executor.h"
 #include "finalmq/variant/VariantValueStruct.h"
 #include "finalmq/variant/VariantValues.h"
+#include "finalmq/protocols/ProtocolDelimiterX.h"
 #include "finalmq/protocols/ProtocolMqtt5Client.h"
 
 // the definition of the messages is in the file hl7dictionary.2.7.1.js.fmq
@@ -58,6 +59,7 @@ public:
 
             // prepare the reply
             hl7::SSU_U03 reply = *request;
+            
             reply.msh.countryCode = "de";
             reply.equ.alertLevel.alternateIdentifier = "Hello this is a test";
             reply.uac = std::make_shared<hl7::UAC>();
@@ -116,7 +118,7 @@ public:
             reply.specimen_container[1].specimen[1].obx[0].effectiveDateOfReferenceRange = "aaaa";
             reply.specimen_container[1].specimen[1].obx[0].equipmentInstanceIdentifier.resize(1);
             reply.specimen_container[1].specimen[1].obx[0].equipmentInstanceIdentifier[0].namespaceId = "bbbbb";
-
+            
             // send reply
             requestContext->reply(std::move(reply));
         });
@@ -203,7 +205,7 @@ public:
             while (true)
             {
                 // send event every 1 second
-                std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+                std::this_thread::sleep_for(std::chrono::milliseconds(10000));
 
                 // send timer event to all connected peers. No reply expected.
                 sendEventToAllPeers(msg);
@@ -239,7 +241,6 @@ int main()
         streamInfo << "connection event at " << connectionData.endpoint
                   << " remote: " << connectionData.endpointPeer
                   << " event: " << connectionEvent.toString();
-        entityServer.createPublishPeer(session, "DUMMY");
     });
 
     // Create server entity and register it at the entityContainer with the service name "MyService"
@@ -259,18 +260,27 @@ int main()
         VariantStruct{  {RemoteEntityFormatHl7::PROPERTY_NAMESPACE, std::string{"hl7"}},
                         {RemoteEntityFormatHl7::PROPERTY_ENTITY, std::string{"MyService"}} } });
 
+    entityContainer.bind("tcp://*:7001:delimiter_x:hl7", { {},
+        VariantStruct{ {ProtocolDelimiterX::KEY_DELIMITER, std::string{"\r\n\r\n"}} },
+        VariantStruct{ {RemoteEntityFormatHl7::PROPERTY_NAMESPACE, std::string{"hl7"}},
+                       {RemoteEntityFormatHl7::PROPERTY_ENTITY, std::string{"MyService"}},
+                       {RemoteEntityFormatHl7::PROPERTY_LINEEND, std::string{"\r\n"}},
+                       {RemoteEntityFormatHl7::PROPERTY_MESSAGEEND, std::string{""}}
+        }
+    });
+
 #ifndef WIN32
     entityContainer.bind("ipc://udp_hl7:delimiter_lf:hl7", { {}, {},
         VariantStruct{  {"hl7namespace", std::string{"hl7"}},
                         {"hl7entity", std::string{"MyService"}} } });
 #endif
 
-    entityContainer.bind("tcp://*:7001:delimiter_lf:json", { {}, {},
+    entityContainer.bind("tcp://*:7002:delimiter_lf:json", { {}, {},
         VariantStruct{ {RemoteEntityFormatJson::PROPERTY_SERIALIZE_ENUM_AS_STRING, true},
                        {RemoteEntityFormatJson::PROPERTY_SERIALIZE_SKIP_DEFAULT_VALUES, true} }
-    });
+        });
 
-    entityContainer.bind("tcp://*:7002:headersize:protobuf"),
+    entityContainer.bind("tcp://*:7003:headersize:protobuf"),
 
     entityContainer.bind("tcp://*:8081:httpserver:hl7");
 
@@ -285,6 +295,11 @@ int main()
     // Open listener port 8080 with http.
     // content type in payload: JSON
     entityContainer.bind("tcp://*:8080:httpserver:json", { {}, {},
+        VariantStruct{ {RemoteEntityFormatJson::PROPERTY_SERIALIZE_ENUM_AS_STRING, true},
+                       {RemoteEntityFormatJson::PROPERTY_SERIALIZE_SKIP_DEFAULT_VALUES, true} }
+        });
+
+    entityContainer.bind("tcp://*:8082:httpserver:json", { {}, {},
         VariantStruct{ {RemoteEntityFormatJson::PROPERTY_SERIALIZE_ENUM_AS_STRING, true},
                        {RemoteEntityFormatJson::PROPERTY_SERIALIZE_SKIP_DEFAULT_VALUES, false} }
         });

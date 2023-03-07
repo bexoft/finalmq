@@ -805,27 +805,30 @@ bool ProtocolSession::findSessionByName(const std::string& sessionName, const IP
         IProtocolSessionPrivatePtr session = list->findSessionByName(sessionName);
         if (session)
         {
-            if (session.get() != this)
+            if (session->getContentType() == getContentType() && session->getFormatData() == getFormatData())
             {
-                if (m_verified)
+                if (session.get() != this)
                 {
-                    session->setProtocol(protocol);
-                }
-                else
-                {
-                    disconnected(); // we are in the poller loop thread
+                    if (m_verified)
+                    {
+                        session->setProtocol(protocol);
+                    }
+                    else
+                    {
+                        disconnected(); // we are in the poller loop thread
 
-                    lock.lock();
-                    IProtocolPtr prot = m_protocol;
-                    m_protocol = nullptr;
-                    m_connectionId = 0;
-                    lock.unlock();
+                        lock.lock();
+                        IProtocolPtr prot = m_protocol;
+                        m_protocol = nullptr;
+                        m_connectionId = 0;
+                        lock.unlock();
 
-                    assert(prot);
-                    session->setProtocol(prot);
+                        assert(prot);
+                        session->setProtocol(prot);
+                    }
                 }
+                return true;
             }
-            return true;
         }
     }
     return false;

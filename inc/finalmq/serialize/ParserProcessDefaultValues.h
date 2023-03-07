@@ -91,13 +91,59 @@ private:
 
     void processDefaultValues(const MetaStruct& stru, const std::vector<bool>& fieldsDone);
     inline void markAsDone(const MetaField& field);
+    void executeEnterStruct();
 
+    class EntrySkipDefault
+    {
+    public:
+        EntrySkipDefault(const MetaField* field, bool enterStructCalled)
+            : m_field(field)
+            , m_fieldArrayStruct(nullptr)
+            , m_enterArrayStructCalled(false)
+            , m_countMember(0)
+            , m_enterStructCalled(enterStructCalled)
+        {
+        }
+
+        const MetaField*& field()
+        {
+            return m_field;
+        }
+
+        const MetaField*& fieldArrayStruct()
+        {
+            return m_fieldArrayStruct;
+        }
+
+        bool& enterArrayStructCalled()
+        {
+            return m_enterArrayStructCalled;
+        }
+
+        int& countMember()
+        {
+            return m_countMember;
+        }
+
+        bool& enterStructCalled()
+        {
+            return m_enterStructCalled;
+        }
+
+    private:
+        const MetaField* m_field;
+        const MetaField* m_fieldArrayStruct;
+        bool m_enterArrayStructCalled;
+        int m_countMember;
+        bool m_enterStructCalled;
+    };
 
     IParserVisitor*                 m_visitor = nullptr;
     bool                            m_skipDefaultValues = true;
     const MetaStruct*               m_struct = nullptr;
     std::deque<std::vector<bool>>   m_stackFieldsDone;
     int                             m_varValueActive = 0;
+    std::deque<EntrySkipDefault>    m_stackSkipDefault;
 };
 
 }   // namespace finalmq

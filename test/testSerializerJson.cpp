@@ -307,16 +307,22 @@ TEST_F(TestSerializerJson, testStruct)
     static const std::string VALUE_STRING = "Hello World";
     static const std::uint32_t VALUE_UINT32 = 123;
 
+    const MetaStruct* structTestStruct = MetaDataGlobal::instance().getStruct("test.TestStruct");
+    const MetaStruct* structTestInt32 = MetaDataGlobal::instance().getStruct("test.TestInt32");
+    const MetaStruct* structTestString = MetaDataGlobal::instance().getStruct("test.TestString");
+    ASSERT_NE(structTestStruct, nullptr);
+    ASSERT_NE(structTestInt32, nullptr);
+    ASSERT_NE(structTestString, nullptr);
+    
 
-    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestStruct"));
-    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0});
-    m_serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "desc", 0}, VALUE_INT32);
-    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0});
-    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "desc", 1});
-    m_serializer->enterString({MetaTypeId::TYPE_STRING, "", "value", "desc", 0}, VALUE_STRING.data(), VALUE_STRING.size());
-    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "desc", 1});
-    m_serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "desc", 2}, VALUE_UINT32);
-
+    m_serializer->startStruct(*structTestStruct);
+    m_serializer->enterStruct(*structTestStruct->getFieldByName("struct_int32"));
+    m_serializer->enterInt32(*structTestInt32->getFieldByName("value"), VALUE_INT32);
+    m_serializer->exitStruct(*structTestStruct->getFieldByName("struct_int32"));
+    m_serializer->enterStruct(*structTestStruct->getFieldByName("struct_string"));
+    m_serializer->enterString(*structTestString->getFieldByName("value"), VALUE_STRING.data(), VALUE_STRING.size());
+    m_serializer->exitStruct(*structTestStruct->getFieldByName("struct_string"));
+    m_serializer->enterUInt32(*structTestStruct->getFieldByName("last_value"), VALUE_UINT32);
     m_serializer->finished();
 
     ASSERT_EQ(m_data, "{\"struct_int32\":{\"value\":-2},\"struct_string\":{\"value\":\"Hello World\"},\"last_value\":123}");
@@ -638,35 +644,41 @@ TEST_F(TestSerializerJson, testArrayStruct)
     static const std::string VALUE2_STRING = "foo";
     static const std::uint32_t VALUE2_UINT32 = 12345678;
 
+    const MetaStruct* structTestArrayStruct = MetaDataGlobal::instance().getStruct("test.TestArrayStruct");
+    const MetaStruct* structTestStruct = MetaDataGlobal::instance().getStruct("test.TestStruct");
+    const MetaStruct* structTestInt32 = MetaDataGlobal::instance().getStruct("test.TestInt32");
+    const MetaStruct* structTestString = MetaDataGlobal::instance().getStruct("test.TestString");
+    ASSERT_NE(structTestStruct, nullptr);
+    ASSERT_NE(structTestInt32, nullptr);
+    ASSERT_NE(structTestString, nullptr);
 
     m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestArrayStruct"));
-    m_serializer->enterArrayStruct({MetaTypeId::TYPE_ARRAY_STRUCT, "test.TestStruct", "value", "desc"});
+    m_serializer->enterArrayStruct(*structTestArrayStruct->getFieldByName("value"));
 
-    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0});
-    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0});
-    m_serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "desc", 0}, VALUE1_INT32);
-    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0});
-    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "desc", 1});
-    m_serializer->enterString({MetaTypeId::TYPE_STRING, "", "value", "desc", 0}, VALUE1_STRING.data(), VALUE1_STRING.size());
-    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "desc", 1});
-    m_serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "desc", 2}, VALUE1_UINT32);
-    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0});
+    m_serializer->enterStruct(*structTestArrayStruct->getFieldByName("value")->fieldWithoutArray);
+    m_serializer->enterStruct(*structTestStruct->getFieldByName("struct_int32"));
+    m_serializer->enterInt32(*structTestInt32->getFieldByName("value"), VALUE1_INT32);
+    m_serializer->exitStruct(*structTestStruct->getFieldByName("struct_int32"));
+    m_serializer->enterStruct(*structTestStruct->getFieldByName("struct_string"));
+    m_serializer->enterString(*structTestString->getFieldByName("value"), VALUE1_STRING.data(), VALUE1_STRING.size());
+    m_serializer->exitStruct(*structTestStruct->getFieldByName("struct_string"));
+    m_serializer->enterUInt32(*structTestStruct->getFieldByName("last_value"), VALUE1_UINT32);
+    m_serializer->exitStruct(*structTestArrayStruct->getFieldByName("value")->fieldWithoutArray);
 
-    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0});
-    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0});
-    m_serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "desc", 0}, VALUE2_INT32);
-    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0});
-    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "desc", 1});
-    m_serializer->enterString({MetaTypeId::TYPE_STRING, "", "value", "desc", 0}, VALUE2_STRING.data(), VALUE2_STRING.size());
-    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "desc", 1});
-    m_serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "desc", 2}, VALUE2_UINT32);
-    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0});
+    m_serializer->enterStruct(*structTestArrayStruct->getFieldByName("value")->fieldWithoutArray);
+    m_serializer->enterStruct(*structTestStruct->getFieldByName("struct_int32"));
+    m_serializer->enterInt32(*structTestInt32->getFieldByName("value"), VALUE2_INT32);
+    m_serializer->exitStruct(*structTestStruct->getFieldByName("struct_int32"));
+    m_serializer->enterStruct(*structTestStruct->getFieldByName("struct_string"));
+    m_serializer->enterString(*structTestString->getFieldByName("value"), VALUE2_STRING.data(), VALUE2_STRING.size());
+    m_serializer->exitStruct(*structTestStruct->getFieldByName("struct_string"));
+    m_serializer->enterUInt32(*structTestStruct->getFieldByName("last_value"), VALUE2_UINT32);
+    m_serializer->exitStruct(*structTestArrayStruct->getFieldByName("value")->fieldWithoutArray);
 
-    m_serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0});
-    m_serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestStruct", "", "desc", 0});
+    m_serializer->enterStruct(*structTestArrayStruct->getFieldByName("value")->fieldWithoutArray);
+    m_serializer->exitStruct(*structTestArrayStruct->getFieldByName("value")->fieldWithoutArray);
 
-    m_serializer->exitArrayStruct({MetaTypeId::TYPE_ARRAY_STRUCT, "test.TestStruct", "value", "desc"});
-
+    m_serializer->exitArrayStruct(*structTestArrayStruct->getFieldByName("value"));
     m_serializer->finished();
 
     ASSERT_EQ(m_data, "{\"value\":[{\"struct_int32\":{\"value\":-2},\"struct_string\":{\"value\":\"Hello World\"},\"last_value\":123},{\"struct_int32\":{\"value\":345},\"struct_string\":{\"value\":\"foo\"},\"last_value\":12345678},{}]}");
