@@ -205,10 +205,10 @@ public:
             while (true)
             {
                 // send event every 1 second
-                std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+                std::this_thread::sleep_for(std::chrono::milliseconds(10000));
 
                 // send timer event to all connected peers. No reply expected.
-//                sendEventToAllPeers(msg);
+                sendEventToAllPeers(msg);
             }
         });
     }
@@ -241,7 +241,6 @@ int main()
         streamInfo << "connection event at " << connectionData.endpoint
                   << " remote: " << connectionData.endpointPeer
                   << " event: " << connectionEvent.toString();
-        entityServer.createPublishPeer(session, "DUMMY");
     });
 
     // Create server entity and register it at the entityContainer with the service name "MyService"

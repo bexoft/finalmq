@@ -58,37 +58,63 @@ struct RegisterFormatHl7
 } g_registerFormatHl7;
 
 
+static char* fmq_strnstr(const char* haystack, const char* needle, ssize_t len)
+{
+    ssize_t  i;
+    ssize_t  j;
+
+    if (needle[0] == '\0')
+        return ((char*)haystack);
+    j = 0;
+    while (j < len && haystack[j])
+    {
+        i = 0;
+        while (j < len && needle[i] && haystack[j] && needle[i] == haystack[j])
+        {
+            ++i;
+            ++j;
+        }
+        if (needle[i] == '\0')
+            return ((char*)&haystack[j - i]);
+        j = j - i + 1;
+    }
+    return nullptr;
+}
+
+
+
 static void replaceSerialize(IMessage& source, const std::string& lineend, const std::string& messageend, IMessage& destination)
 {
-    static const char SOURCE_LINEEND = '\r';
+    static const char* SOURCE_LINEEND = "\r";
 
     ssize_t sizeSource = source.getTotalSendPayloadSize();
     // just to reserve enough memory
     destination.addSendPayload(static_cast<ssize_t>(0), 2 * sizeSource);
 
-    const std::list<std::string>& payloads = source.getSendPayloadBuffers();
+    const std::list<BufferRef>& payloads = source.getAllSendPayloads();
     for (auto it = payloads.begin(); it != payloads.end(); ++it)
     {
-        const std::string& payload = *it;
+        const BufferRef& payload = *it;
 
-        std::string::size_type lastPos = 0;
-        std::string::size_type findPos;
+        const char* current = payload.first;
+        const char* found = nullptr;
+        ssize_t sizeRest = payload.second;
 
-        while (std::string::npos != (findPos = payload.find(SOURCE_LINEEND, lastPos)))
+        while ((sizeRest > 0) && (nullptr != (found = fmq_strnstr(current, SOURCE_LINEEND, sizeRest))))
         {
-            ssize_t sizeData = findPos - lastPos;
-            ssize_t sizeTotal = findPos - lastPos + lineend.size();
+            ssize_t sizeData = found - current;
+            ssize_t sizeTotal = sizeData + lineend.size();
             char* buffer = destination.addSendPayload(sizeTotal, 512);
-            memcpy(buffer, payload.c_str() + lastPos, sizeData);
+            memcpy(buffer, current, sizeData);
             memcpy(buffer + sizeData, lineend.c_str(), lineend.size());
-            lastPos = findPos + 1;  // 1: size of character '\r'
+            current = found + 1;  // 1: size of character '\r'
+            sizeRest -= sizeData + 1;
         }
 
-        ssize_t sizeRest = payload.size() - lastPos;
         if (sizeRest > 0)
         {
             char* buffer = destination.addSendPayload(sizeRest, 512);
-            memcpy(buffer, payload.c_str() + lastPos, sizeRest);
+            memcpy(buffer, current, sizeRest);
         }
     }
     if (!messageend.empty())
@@ -114,30 +140,32 @@ static void replaceParser(const char* source, ssize_t sizeSource, const std::str
         }
     }
 
-    std::string sourceString(source, sizeSource);
+    const char* found = nullptr;
+    ssize_t sizeRest = sizeSource;
 
-    // just to reserve enough memory
-    destination.reserve(sizeSource);
-    
-    std::string::size_type lastPos = sourceString.find("MSH");
-    if (lastPos == std::string::npos)
+    const char* current = fmq_strnstr(source, "MSH", sizeRest);
+    if (!current)
     {
         return;
     }
 
-    std::string::size_type findPos;
+    sizeRest -= current - source;
 
-    while (std::string::npos != (findPos = sourceString.find(lineend, lastPos)))
+    // just to reserve enough memory
+    destination.reserve(sizeSource);
+
+    while ((sizeRest > 0) && (nullptr != (found = fmq_strnstr(current, lineend.c_str(), sizeRest))))
     {
-        destination.append(sourceString, lastPos, findPos - lastPos);
+        ssize_t sizeData = found - current;
+        destination.append(current, sizeData);
         destination += DESTINATION_LINEEND;
-        lastPos = findPos + lineend.length();
+        current = found + lineend.size();
+        sizeRest -= sizeData + lineend.size();
     }
 
-    ssize_t sizeRest = sourceString.size() - lastPos;
     if (sizeRest > 0)
     {
-        destination.append(sourceString, lastPos, sizeRest);
+        destination.append(current, sizeRest);
     }
 }
 
@@ -315,10 +343,10 @@ std::shared_ptr<StructBase> RemoteEntityFormatHl7::parseData(const IProtocolSess
     }
 
     std::string bufferReplaced;
-    std::string lineend;
-    std::string messageend;
     if ((formatStatus & static_cast<int>(FORMATSTATUS_HEADER_PARSED_BY_FORMAT)) == 0)
     {
+        std::string lineend;
+        std::string messageend;
         bool replaceNeeded = isReplaceNeeded(session, lineend, messageend);
         if (replaceNeeded)
         {

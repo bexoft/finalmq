@@ -199,10 +199,6 @@ void ParserProcessDefaultValues::exitStruct(const MetaField& field)
             {
                 m_visitor->exitStruct(field);
             }
-            else
-            {
-                int t = 0;
-            }
             m_stackSkipDefault.pop_back();
         }
     }
