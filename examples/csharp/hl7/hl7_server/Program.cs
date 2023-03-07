@@ -20,7 +20,7 @@ namespace hl7example
 
             static void Resize<T>(IList<T> list, int num)
             {
-                while (list.Count < 2)
+                while (list.Count < num)
                 {
                     list.Add(Activator.CreateInstance<T>());
                 }

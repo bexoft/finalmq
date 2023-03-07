@@ -35,7 +35,6 @@ namespace finalmq
 
         public static readonly string PROPERTY_NAMESPACE = "namespace";
         public static readonly string PROPERTY_ENTITY = "entity";
-        public static readonly string PROPERTY_SERIALIZE_ENUM_AS_STRING = "enumAsSt";
 
         public static readonly string PROPERTY_LINEEND = "lineend";
         public static readonly string PROPERTY_MESSAGEEND = "messageend";
@@ -363,18 +362,7 @@ namespace finalmq
                 }
                 else
                 {
-                    bool enumAsString = true;
-                    Variant? formatData = session.FormatData;
-                    if (formatData != null && formatData.VarType != Variant.VARTYPE_NONE)
-                    {
-                        Variant? propEnumAsString = formatData.GetVariant(PROPERTY_SERIALIZE_ENUM_AS_STRING);
-                        if (propEnumAsString != null)
-                        {
-                            enumAsString = propEnumAsString;
-                        }
-                    }
-
-                    SerializerHl7 serializerData = new SerializerHl7(messageToSerialize, 512, enumAsString);
+                    SerializerHl7 serializerData = new SerializerHl7(messageToSerialize, 512);
                     ParserStruct parserData = new ParserStruct(serializerData, structBase);
                     parserData.ParseStruct();
                 }

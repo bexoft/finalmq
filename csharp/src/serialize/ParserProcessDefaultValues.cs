@@ -6,7 +6,7 @@ using System.Diagnostics;
 namespace finalmq
 {
 
-    class ParserProcessDefaultValues : IParserVisitor
+    public class ParserProcessDefaultValues : IParserVisitor
     {
         private readonly string STR_VARVALUE = "finalmq.variant.VarValue";
         public ParserProcessDefaultValues(bool skipDefaultValues, IParserVisitor? visitor = null)
