@@ -204,7 +204,7 @@ namespace finalmq
             }
         }
 
-        Variant Clone()
+        public Variant Clone()
         {
             if (m_value == null)
             {
@@ -212,6 +212,78 @@ namespace finalmq
             }
 
             return new Variant(m_value.Clone());
+        }
+
+        public Variant GetOrCreate(string name)
+        {
+            if (name.Length == 0)
+            {
+                return this;
+            }
+
+            string partname = "";
+            string restname;
+
+            //sperate first key ansd second key
+            int cntp = name.IndexOf('.');
+            if (cntp != -1)
+            {
+                partname = name.Substring(0, cntp);
+                cntp++;
+                restname = name.Substring(cntp);
+            }
+            else
+            {
+                partname = name;
+                restname = "";
+            }
+
+            // check if number
+            if (partname.Length != 0 && partname[0] >= '0' && partname[0] <= '9')
+            {
+                int index = 0;
+                try
+                {
+                    index = Int32.Parse(partname);
+                }
+                catch (Exception)
+                {
+                }
+                Debug.Assert(index >= 0);
+                int sizeNew = index + 1;
+                Debug.Assert(sizeNew > 0);
+                if (m_value == null || m_value.VarType != VariantValueList.VARTYPE_LIST)
+                {
+                    m_value = new VariantValueList();
+                }
+                while (m_value.Length < sizeNew)
+                {
+                    m_value.Add(new Variant());
+                }
+                Variant? varSub = m_value.GetVariant(partname);
+                Debug.Assert(varSub != null);
+                return varSub.GetOrCreate(restname);
+            }
+            else
+            {
+                // remove "", if available in partname
+                if ((partname.Length >= 2) && (partname[0] == '\"') && (partname.Last() == '\"'))
+                {
+                    partname = partname.Substring(1, partname.Length - 2);
+                }
+                if (m_value == null|| m_value.VarType != VariantValueStruct.VARTYPE_STRUCT)
+                {
+                    m_value = new VariantValueStruct();
+                }
+                Variant? varSub = m_value.GetVariant(partname);
+                if (varSub == null)
+                {
+                    m_value.Add(partname, new Variant());
+                    varSub = m_value.GetVariant(partname);
+                }
+                Debug.Assert(varSub != null);
+                return varSub.GetOrCreate(restname);
+            }
         }
 
         private T Default<T>()

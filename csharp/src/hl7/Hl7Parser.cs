@@ -167,11 +167,10 @@ namespace finalmq
                 }
                 else
                 {
-                    int offsetOld = m_offset;
                     l = IsDelimiter(c);
                     if (l < LAYER_MAX)
                     {
-                        if (filled)
+                        if (filled || (l > 1))   // array/repeated (~) is on layer 1 possible
                         {
                             array.Add(DeEscape(start, m_offset));
                         }
@@ -192,10 +191,6 @@ namespace finalmq
                         if (l <= level && !isarray)
                         {
                             break;
-                        }
-                        if (isarray && !filled)
-                        {
-                            array.Add(DeEscape(start, offsetOld));
                         }
                         start = m_offset;
                     }

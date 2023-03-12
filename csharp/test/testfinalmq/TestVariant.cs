@@ -430,5 +430,13 @@ namespace testfinalmq
             Debug.Assert(var == null);
         }
 
+        [Fact]
+        public void TestGetOrCreate()
+        {
+            Variant variant = new Variant();
+            variant.GetOrCreate("aaa.3.bbb").SetData("Hello");
+            Debug.Assert(variant.GetData<string>("aaa.3.bbb") == "Hello");
+        }
+
     }
 }

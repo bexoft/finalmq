@@ -400,6 +400,28 @@ namespace testfinalmq
             cmp.msh.messageType.triggerEvent = "010";
             cmp.msh.messageType.messageStructure = "MSG_010";
 
+            cmp.a01.a.Add("");
+
+            testhl7.MSG_010 msg = new testhl7.MSG_010();
+            string data = "MSH|^~\\&|||||||MSG^010^MSG_010\rA01|^\r";
+
+            SerializerStruct serializer = new SerializerStruct(msg);
+            ParserHl7 parser = new ParserHl7(serializer, data);
+            parser.ParseStruct("testhl7.MSG_010");
+
+            Debug.Assert(cmp.Equals(msg));
+        }
+
+        [Fact]
+        public void TestArrayStruct_MSG_010_3()
+        {
+            testhl7.MSG_010 cmp = new testhl7.MSG_010();
+            cmp.msh.fieldSeparator = "|";
+            cmp.msh.encodingCharacters = "^~\\&";
+            cmp.msh.messageType.messageCode = "MSG";
+            cmp.msh.messageType.triggerEvent = "010";
+            cmp.msh.messageType.messageStructure = "MSG_010";
+
             testhl7.MSG_010 msg = new testhl7.MSG_010();
             string data = "MSH|^~\\&|||||||MSG^010^MSG_010\rA01||\r";
 
