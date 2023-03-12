@@ -219,6 +219,7 @@ namespace finalmq
                     }
                     if (levelSegment == 0)
                     {
+                        int returnWithLevel = -2;
                         MetaField? fieldWithoutArray = field.FieldWithoutArray;
                         Debug.Assert(fieldWithoutArray != null);
                         string typeName = field.TypeNameWithoutNamespace;
@@ -226,10 +227,10 @@ namespace finalmq
                         while (true)
                         {
                             string segId = m_parser.GetSegmentId();
-                            bool processStructArray = true;
+                            bool processStructArray = false;
                             if (segId == "")
                             {
-                                return levelSegment;
+                                returnWithLevel = levelSegment;
                             }
                             else if (segId == typeName)
                             {
@@ -245,7 +246,7 @@ namespace finalmq
                             }
                             else if (MatchesUp(segId))
                             {
-                                return levelSegment;
+                                returnWithLevel = levelSegment;
                             }
                             else
                             {
@@ -285,6 +286,10 @@ namespace finalmq
                                     m_stackStruct.RemoveAt(m_stackStruct.Count - 1);
                                 }
                                 break;
+                            }
+                            if (returnWithLevel != -2)
+                            {
+                                return returnWithLevel;
                             }
                         }
                     }
