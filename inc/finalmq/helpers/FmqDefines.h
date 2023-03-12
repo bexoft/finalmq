@@ -50,8 +50,6 @@
 #endif
 
 
-
-
 #if defined(WIN32) || defined(__MINGW32__)
 #include <winsock2.h>
 using ssize_t = std::int64_t;
@@ -71,6 +69,7 @@ namespace finalmq {
 #define strtof64 strtold
 #endif
 
+constexpr ssize_t CHECK_ON_ZEROTERM = -1;
 
 
 #define TOKENPASTE(x, y) x ## y

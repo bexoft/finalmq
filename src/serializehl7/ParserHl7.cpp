@@ -249,12 +249,13 @@ int ParserHl7::parseStruct(int levelSegment, const MetaStruct& stru, bool& isarr
                 bool firstLoop = true;
                 while (true)
                 {
+                    int returnWithLevel = -2;
                     std::string segId;
                     m_parser.getSegmentId(segId);
-                    bool processStructArray = true;
+                    bool processStructArray = false;
                     if (segId == "")
                     {
-                        return levelSegment;
+                        returnWithLevel = levelSegment;
                     }
                     else if (segId == typeName)
                     {
@@ -270,7 +271,7 @@ int ParserHl7::parseStruct(int levelSegment, const MetaStruct& stru, bool& isarr
                     }
                     else if (matchesUp(segId))
                     {
-                        return levelSegment;
+                        returnWithLevel = levelSegment;
                     }
                     else
                     {
@@ -310,6 +311,10 @@ int ParserHl7::parseStruct(int levelSegment, const MetaStruct& stru, bool& isarr
                             m_stackStruct.pop_back();
                         }
                         break;
+                    }
+                    if (returnWithLevel != -2)
+                    {
+                        return returnWithLevel;
                     }
                 }
             }

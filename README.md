@@ -25,11 +25,11 @@ To build finalmq from source, the following tools and dependencies are needed:
 
 On Ubuntu/Debian, you can install them with:
 
-    $ sudo apt-get install -y git make cmake g++ uuid-dev libssl1.0-dev node-ejs node-minimist
+    sudo apt-get install -y git make cmake g++ uuid-dev libssl1.0-dev node-ejs node-minimist
 
 To get the source, clone the repository of finalmq:
 
-    $ git clone https://github.com/bexoft/finalmq.git
+    git clone https://github.com/bexoft/finalmq.git
 
 To build and install the C++ finalmq execute the following:
 
@@ -113,7 +113,7 @@ To build the full project of finalmq from source, the additional tools and depen
 
 On Ubuntu/Debian, you can install them with:
 
-    $ sudo apt-get install -y protobuf-compiler libprotobuf-dev gcovr doxygen graphviz
+    sudo apt-get install -y protobuf-compiler libprotobuf-dev gcovr doxygen graphviz
 
 The gtest/gmock dependency will be automatically resolved by cmake download.
 
@@ -142,9 +142,11 @@ Afterwards, you can ...
 
 # Quick Start
 
-If you want a quick start for finalmq, then look at the examples, "helloworld", "timer" and "restapi". You can find the examples in the directory:
+If you want a quick start for finalmq, then look at the examples, "helloworld", "timer", "hl7" and "restapi". You can find the examples in the directory:
 
 examples/cpp
+
+For C#, you can find the examples in examples/csharp
 
 The "helloworld" example demonstrates the asynchronous request/reply calls between client and server.
 The "timer" example demonstrates events from server to clients.
@@ -159,7 +161,8 @@ In the example servers you will find some comments how to access the server comm
 
 There are also **html pages with JavaScript** available to demonstrate **JSON over HTTP** in a script. Just start a server, open a browser and type...
 ... for helloworld example: localhost:8080/helloworld.html
-... for timer example: localhost:8080/timer.html
+... for timer example: localhost:8080/timer.htm
+... for hl7 example: localhost:8081/hl7.html
 ... for restapi example: localhost:8080/restapi.html
 
 The according **cpp clients** can be used to access the servers with **Protobuf over TCP**.
@@ -230,10 +233,11 @@ Example:
 
 
 
-At this time, the framework implements 5 protocols:
+At this time, the framework implements 6 protocols:
 
 - stream
 - delimiter_lf
+- delimiter_x
 - headersize
 - httpserver
 - mqtt5client
@@ -253,6 +257,24 @@ This protocol separates messages with the line feed character (LF, \n, 0x0A). Wh
 Message example of two messages "Hello" and "Tom":
 
 'H', 'e', 'l', 'l', 'o', **'\n'**, 'T', 'o', 'm', **'\n'**
+
+
+
+**"delimiter_x"		class ProtocolDelimiterX**		
+
+This protocol separates messages with a user defined string sequence. The delimiter sequence will be defined inside the BindProperties/ConnectProperties.  Example:
+
+```c++
+BindProperties bindProperties;
+bindProperties.protocolData =
+    VariantStruct{ {ProtocolDelimiterX::KEY_DELIMITER, std::string{"\r\n"}} };
+```
+
+When the socket disconnects also the session will disconnect.
+
+Message example of two messages "Hello" and "Tom" with the delimiter '\r\n':
+
+'H', 'e', 'l', 'l', 'o', **'\r'**, **'\n'**, 'T', 'o', 'm', **'\r'**, **'\n'**
 
 
 
@@ -418,8 +440,8 @@ The following type IDs are possible:
 | double   | double                             | number                                                       |
 | string   | std::string                        | string                                                       |
 | bytes    | std::vector\<char\>                | base64 string                                                |
-| struct   |                                    | object                                                       |
-| enum     |                                    | string                                                       |
+| struct   | class                              | object                                                       |
+| enum     | enum                               | string                                                       |
 | variant  | finalmq::Variant                   | finalmq.variant.VarValue <br />(see inc/finalmq/metadataserialize/variant.fmq) |
 | bool[]   | std::vector\<bool\>                | list of bool                                                 |
 | int32[]  | std::vector\<std::int32_t\>        | list of number                                               |
@@ -430,8 +452,8 @@ The following type IDs are possible:
 | double[] | std::vector\<double\>              | list of number                                               |
 | string[] | std::vector\<std::string\>         | list of strings                                              |
 | bytes[]  | std::vector\<std::vector\<char\>\> | list of base64 strings                                       |
-| struct[] |                                    | list of objects                                              |
-| enum[]   |                                    | list of strings                                              |
+| struct[] | std::vector\<class\>               | list of objects                                              |
+| enum[]   | std::vector\<enum\>                | list of strings                                              |
 
 
 

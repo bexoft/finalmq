@@ -20,8 +20,8 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#include "finalmq/variant/VariantValueStruct.h"
 #include "finalmq/variant/Variant.h"
+#include "finalmq/variant/VariantValueStruct.h"
 #include <utility>
 #include <assert.h>
 
@@ -31,6 +31,7 @@ namespace finalmq {
 
 
 VariantValueStruct::VariantValueStruct()
+    : m_value(std::make_unique<VariantStruct>())
 {
 }
 
@@ -86,11 +87,6 @@ VariantStruct::iterator VariantValueStruct::find(const std::string& name)
 
 Variant* VariantValueStruct::getVariant(const std::string& name)
 {
-    if (name.empty())
-    {
-        return nullptr;
-    }
-
     std::string partname;
     std::string restname;
 
@@ -105,6 +101,12 @@ Variant* VariantValueStruct::getVariant(const std::string& name)
     else
     {
         partname = name;
+    }
+
+    // remove "", if available in partname
+    if ((partname.size() >= 2) && (partname[0] == '\"') && (partname.back() == '\"'))
+    {
+        partname = partname.substr(1, partname.size() - 2);
     }
 
     // check if next key is in map (if not -> nullptr)

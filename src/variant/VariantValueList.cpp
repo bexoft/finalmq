@@ -20,8 +20,8 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#include "finalmq/variant/VariantValueList.h"
 #include "finalmq/variant/Variant.h"
+#include "finalmq/variant/VariantValueList.h"
 #include <utility>
 #include <assert.h>
 
@@ -30,6 +30,7 @@ namespace finalmq {
 
 
 VariantValueList::VariantValueList()
+    : m_value(std::make_unique<VariantList>())
 {
 }
 

@@ -21,6 +21,9 @@
 //SOFTWARE.
 
 #include "finalmq/variant/Variant.h"
+#include "finalmq/variant/VariantValues.h"
+#include "finalmq/variant/VariantValueStruct.h"
+#include "finalmq/variant/VariantValueList.h"
 
 
 namespace finalmq {
@@ -177,5 +180,73 @@ ssize_t Variant::size() const
     }
     return 0;
 }
+
+
+Variant& Variant::getOrCreate(const std::string& name)
+{
+    if (name.empty())
+    {
+        return *this;
+    }
+
+    std::string partname;
+    std::string restname;
+
+    //sperate first key ansd second key
+    size_t cntp = name.find('.');
+    if (cntp != std::string::npos)
+    {
+        partname = name.substr(0, cntp);
+        cntp++;
+        restname = name.substr(cntp);
+    }
+    else
+    {
+        partname = name;
+    }
+
+    // check if number
+    if (!partname.empty() && partname[0] >= '0' && partname[0] <= '9')
+    {
+        ssize_t index = atoll(partname.c_str());
+        assert(index >= 0);
+        ssize_t sizeNew = index + 1;
+        assert(sizeNew > 0);
+        if (!m_value || m_value->getType() != VARTYPE_LIST)
+        {
+            m_value = std::make_shared<VariantValueList>();
+        }
+        while (m_value->size() < sizeNew)
+        {
+            m_value->add(Variant());
+        }
+        Variant* varSub = m_value->getVariant(partname);
+        assert(varSub != nullptr);
+        return varSub->getOrCreate(restname);
+    }
+    else
+    {
+        // remove "", if available in partname
+        if ((partname.size() >= 2) && (partname[0] == '\"') && (partname.back() == '\"'))
+        {
+            partname = partname.substr(1, partname.size() - 2);
+        }
+        if (!m_value || m_value->getType() != VARTYPE_STRUCT)
+        {
+            m_value = std::make_shared<VariantValueStruct>();
+        }
+        Variant* varSub = m_value->getVariant(partname);
+        if (varSub == nullptr)
+        {
+            m_value->add(partname, Variant());
+            varSub = m_value->getVariant(partname);
+        }
+        assert(varSub != nullptr);
+        return varSub->getOrCreate(restname);
+    }
+}
+
+
+
 
 }   // namespace finalmq

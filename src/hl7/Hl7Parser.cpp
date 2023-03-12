@@ -247,11 +247,10 @@ int Hl7Parser::parseTokenArray(int level, std::vector<std::string>& array)
         }
         else
         {
-            const char* strOld = m_str;
             l = isDelimiter(c);
             if (l < LAYER_MAX)
             {
-                if (filled)
+                if (filled || (l > 1))   // array/repeated (~) is on layer 1 possible
                 {
                     array.emplace_back(deEscape(start, m_str));
                 }
@@ -271,10 +270,6 @@ int Hl7Parser::parseTokenArray(int level, std::vector<std::string>& array)
                 if (l <= level && !isarray)
                 {
                     break;
-                }
-                if (isarray && !filled)
-                {
-                    array.emplace_back(deEscape(start, strOld));
                 }
                 start = m_str;
             }
