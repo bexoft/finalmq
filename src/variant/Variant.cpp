@@ -244,7 +244,6 @@ Variant& Variant::getOrCreate(const std::string& name)
         assert(varSub != nullptr);
         return varSub->getOrCreate(restname);
     }
-    return *this;
 }
 
 

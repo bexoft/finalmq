@@ -551,7 +551,7 @@ TEST_F(TestVariant, testListSub)
     sub->add("a", 100);
     sub->add("b", 200);
 
-    VariantList l = {-123,"200.5",VariantStruct({{"a", 100}, {"b", 200}})};
+    VariantList l = { -123,"200.5",VariantStruct({{"a", 100}, {"b", 200}}) };
     ASSERT_EQ(variant == l, true);
 
     const Variant* var = variant.getVariant("2.b");
@@ -563,5 +563,12 @@ TEST_F(TestVariant, testListSub)
 
     var = variant.getVariant("0.b");
     ASSERT_EQ(var, nullptr);
+}
+
+TEST_F(TestVariant, testGetOrCreate)
+{
+    Variant variant;
+    variant.getOrCreate("aaa.3.bbb") = "Hello";
+    ASSERT_EQ(std::string("Hello"), variant.getDataValue<std::string>("aaa.3.bbb"));
 }
 
