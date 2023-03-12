@@ -10,8 +10,12 @@ namespace finalmq
 
     public class VariantValueList : IVariantValue
     {
-        private readonly int VARTYPE_LIST = (int)MetaTypeId.TYPE_ARRAY_STRUCT;
+        public static readonly int VARTYPE_LIST = (int)MetaTypeId.TYPE_ARRAY_STRUCT;
 
+        public VariantValueList()
+        {
+            m_value = new List<Variant>();
+        }
         public VariantValueList(VariantList value)
         {
             m_value = value;
