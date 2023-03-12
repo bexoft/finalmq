@@ -117,6 +117,15 @@ public:
     const static int VARTYPE = MetaTypeInfo<T>::TypeId;
     typedef Convert<T> ConvertType;
 };
+template<>
+class VariantValueTypeInfo<const char*>
+{
+public:
+    typedef std::string T;
+    typedef VariantValueString VariantValueType;
+    const static int VARTYPE = MetaTypeInfo<T>::TypeId;
+    typedef Convert<T> ConvertType;
+};
 /////////////////////////////////////////
 typedef VariantValueTemplate<TYPE_BYTES>  VariantValueBytes;
 template<>

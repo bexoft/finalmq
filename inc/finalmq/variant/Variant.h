@@ -160,6 +160,8 @@ public:
     bool add(Variant&& variant);
     ssize_t size() const;
 
+    Variant& getOrCreate(const std::string& name);
+
 private:
 
     std::shared_ptr<IVariantValue> m_value;
@@ -167,3 +169,10 @@ private:
 
 
 }   // namespace finalmq
+
+
+// includes, so that the application does not have to include these header files
+#include "VariantValues.h"
+#include "VariantValueStruct.h"
+#include "VariantValueList.h"
+

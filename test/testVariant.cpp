@@ -24,10 +24,10 @@
 #include "gmock/gmock.h"
 
 
+#include "finalmq/variant/Variant.h"
 #include "finalmq/variant/VariantValueStruct.h"
 #include "finalmq/variant/VariantValueList.h"
 #include "finalmq/variant/VariantValues.h"
-#include "finalmq/variant/Variant.h"
 #include "finalmq/conversions/Conversions.h"
 
 
@@ -468,7 +468,7 @@ TEST_F(TestVariant, testStruct)
 
     VariantStruct* pval = variant;
     ASSERT_NE(pval, nullptr);
-    VariantStruct s = {{"hello", -123},{"world", std::string("200.5")}};
+    VariantStruct s = {{"hello", -123},{"world", "200.5"}};
     ASSERT_EQ(*pval == s, true);
 
     const Variant* var = variant.getVariant("hello");
@@ -487,7 +487,7 @@ TEST_F(TestVariant, testStructSub)
 {
     Variant variant = VariantStruct();
     variant.add("hello", -123);
-    variant.add("world", std::string("200.5"));
+    variant.add("world", "200.5");
     variant.add("sub", VariantStruct());
 
     Variant* sub = variant.getVariant("sub");
@@ -496,7 +496,7 @@ TEST_F(TestVariant, testStructSub)
     sub->add("a", 100);
     sub->add("b", 200);
 
-    VariantStruct s = {{"hello", -123},{"world", std::string("200.5")},{"sub", VariantStruct({{"a", 100}, {"b", 200}})}};
+    VariantStruct s = {{"hello", -123},{"world", "200.5"},{"sub", VariantStruct({{"a", 100}, {"b", 200}})}};
     ASSERT_EQ(variant == s, true);
 
     const Variant* var = variant.getVariant("sub.b");
@@ -516,11 +516,11 @@ TEST_F(TestVariant, testList)
 {
     Variant variant = VariantList();
     variant.add(-123);
-    variant.add(std::string("200.5"));
+    variant.add("200.5");
 
     VariantList* pval = variant;
     ASSERT_NE(pval, nullptr);
-    VariantList l = {-123, std::string("200.5")};
+    VariantList l = {-123, "200.5"};
     ASSERT_EQ(*pval == l, true);
 
     const Variant* var = variant.getVariant("0");
@@ -542,7 +542,7 @@ TEST_F(TestVariant, testListSub)
 {
     Variant variant = VariantList();
     variant.add(-123);
-    variant.add(std::string("200.5"));
+    variant.add("200.5");
     variant.add(VariantStruct());
 
     Variant* sub = variant.getVariant("2");
@@ -551,7 +551,7 @@ TEST_F(TestVariant, testListSub)
     sub->add("a", 100);
     sub->add("b", 200);
 
-    VariantList l = {-123,std::string("200.5"),VariantStruct({{"a", 100}, {"b", 200}})};
+    VariantList l = {-123,"200.5",VariantStruct({{"a", 100}, {"b", 200}})};
     ASSERT_EQ(variant == l, true);
 
     const Variant* var = variant.getVariant("2.b");
