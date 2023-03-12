@@ -30,8 +30,7 @@
 
 namespace finalmq {
 
-static const ssize_t CHECK_ON_ZEROTERM = -1;
-    
+
 struct IHl7Parser
 {
     virtual ~IHl7Parser() {}

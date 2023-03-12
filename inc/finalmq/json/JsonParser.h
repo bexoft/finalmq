@@ -52,8 +52,6 @@ struct IJsonParserVisitor
 };
 
 
-static const ssize_t CHECK_ON_ZEROTERM = -1;
-
 
 class SYMBOLEXP JsonParser
 {
