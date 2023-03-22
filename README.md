@@ -584,7 +584,7 @@ public:
     EntityServer()
     {
         // register peer events to see when a remote entity connects or disconnects.
-        registerPeerEvent([] (PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, 
+        registerPeerEvent([] (PeerId peerId, const SessionInfo& session, EntityId entityId, 
                               PeerEvent peerEvent, bool incoming) {
             streamInfo << "peer event " << peerEvent.toString();
         });
@@ -643,15 +643,16 @@ int main()
     entityContainer.init();
 
     // register lambda for connection events to see when a network node connects or disconnects.
-    entityContainer.registerConnectionEvent([] (const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) {
-        const ConnectionData connectionData = session->getConnectionData();
+    entityContainer.registerConnectionEvent([] (const SessionInfo& session, ConnectionEvent connectionEvent) {
+        const ConnectionData connectionData = session.getConnectionData();
         streamInfo << "connection event at " << connectionData.endpoint
                   << " remote: " << connectionData.endpointPeer
                   << " event: " << connectionEvent.toString();
     });
 
     // Create server entity and register it at the entityContainer with the service name "MyService"
-    // note: multiple entities can be registered.
+    // note: multiple entities can be registered at a EntityContainer. 
+    // Also an entity can be registered to multiple EntityContainers.
     EntityServer entityServer;
     entityContainer.registerEntity(&entityServer, "MyService");
 
@@ -871,22 +872,20 @@ int main()
     });
 
     // register lambda for connection events to see when a network node connects or disconnects.
-    entityContainer.registerConnectionEvent([] (const IProtocolSessionPtr& session, ConnectionEvent connectionEvent) {
-        const ConnectionData connectionData = session->getConnectionData();
+    entityContainer.registerConnectionEvent([] (const SessionInfo& session, ConnectionEvent connectionEvent) {
+        const ConnectionData connectionData = session.getConnectionData();
         streamInfo << "connection event at " << connectionData.endpoint
                   << " remote: " << connectionData.endpointPeer
                   << " event: " << connectionEvent.toString();
     });
 
-    // Create client entity and register it at the entityContainer
-    // note: multiple entities can be registered.
+    // Create client entity
     RemoteEntity entityClient;
-    entityContainer.registerEntity(&entityClient);
 
     // register peer events to see when a remote entity connects or disconnects.
-    entityClient.registerPeerEvent([] (PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, 
+    entityClient.registerPeerEvent([] (PeerId peerId, const SessionInfo& session, EntityId entityId, 
                                        PeerEvent peerEvent, bool incoming) {
-        streamInfo << "peer event " << .toString();
+        streamInfo << "peer event " << peerEvent.toString();
     });
 
     // connect to port 7777 with simple framing protocol ProtocolHeaderBinarySize (4 byte header with the size of payload).
@@ -896,7 +895,7 @@ int main()
     // A client can be started before the server is started. The connect is been retried in the background till the server
     // becomes available. Use the ConnectProperties to change the reconnect properties
     // (default is: try to connect every 5s forever till the server becomes available).
-    IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:7777:headersize:protobuf");
+    SessionInfo sessionClient = entityContainer.connect("tcp://localhost:7777:headersize:protobuf");
 
     // connect entityClient to remote server entity "MyService" with the created TCP session.
     // The returned peerId identifies the peer entity.
@@ -954,9 +953,8 @@ In this example, we do not derive from RemoteEntity, but we use RemoteEntity dir
 
 ```c++
 RemoteEntity entityClient;
-entityContainer.registerEntity(&entityClient);
 
-entityClient.registerPeerEvent([] (PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, 
+entityClient.registerPeerEvent([] (PeerId peerId, const SessionInfo& session, EntityId entityId, 
                                    PeerEvent peerEvent, bool incoming) {
 	streamInfo << "peer event " << peerEvent.toString();
 });
@@ -973,7 +971,7 @@ Now, the connection to the server happens in two steps:
 
 ```c++
 // 1. step
-IProtocolSessionPtr sessionClient = entityContainer.connect("tcp://localhost:7777:headersize:protobuf");
+SessionInfo sessionClient = entityContainer.connect("tcp://localhost:7777:headersize:protobuf");
 // 2. step
 PeerId peerId = entityClient.connect(sessionClient, "MyService", [] (PeerId peerId, Status status) {
     streamInfo << "connect reply: " << status.toString();
@@ -981,10 +979,10 @@ PeerId peerId = entityClient.connect(sessionClient, "MyService", [] (PeerId peer
 
 ```
 
-So, first you create a session. Then you can connect your client remote entity through this session to the server remote entity. You connect your client remote entity with the service name of the server remote entity. Afterwards, you will get a peerId. The peerId represents the server remote entity you have connected to. With the peerId you can now send requests to the server. The message transfer is done via the session you have connected your entity. For connecting the client remote entity, you can pass a lambda that will be triggered when the connection is done.
+So, first you create a session. Then you can connect your client remote entity through this session to the server remote entity. You connect your client remote entity with the service name of the server remote entity. Afterwards, you will get a peerId. The peerId represents the server remote entity you have connected to. With the peerId you can now send requests to the server. The message transfer is done via the session you have connected your entity. For connecting the client remote entity, you can pass a lambda that will be triggered when the connection is established (or failed).
 
 If you connect your entity again through another session, then you will get another peerId.
-You can connect multiple remote entities through one session, and you can also connect one remote entity to multiple remote entities. 
+You can connect multiple remote entities through one session, and you can also connect one remote entity to multiple remote entities via one or multiple sessions. 
 
 With RemoteEntity::getAllPeers() you can always get a list of all connected peers (remote entities).
 
@@ -1049,7 +1047,7 @@ struct ConnectProperties
 struct ConnectConfig
 {
     int reconnectInterval = 5000;       // if the server is not available, you can pass a reconnection intervall in [ms]
-    int totalReconnectDuration = -1;    // if the server is not available, you can pass a duration in [ms] how long the reconnect shall happen. -1 means: try for ever.
+    int totalReconnectDuration = -1;    // if the server is not available, you can pass a duration in [ms] how long the 												// reconnect shall happen. -1 means: try for ever.
 };
 
 ```
@@ -1061,7 +1059,7 @@ In case you want to connect with SSL/TLS just fill the CertificationData.
 struct CertificateData
 {
 	bool ssl = false;
-	int verifyMode = 0;                 // SSL_CTX_set_verify: SSL_VERIFY_NONE, SSL_VERIFY_PEER, SSL_VERIFY_FAIL_IF_NO_PEER_CERT, SSL_VERIFY_CLIENT_ONCE
+	int verifyMode = 0;                 // SSL_CTX_set_verify: SSL_VERIFY_NONE, SSL_VERIFY_PEER, 																		// SSL_VERIFY_FAIL_IF_NO_PEER_CERT, SSL_VERIFY_CLIENT_ONCE
 	std::string certificateFile;        // SSL_CTX_use_certificate_file, pem
 	std::string privateKeyFile;         // SSL_CTX_use_PrivateKey_file, pem
 	std::string caFile;                 // SSL_CTX_load_verify_location, pem
@@ -1153,7 +1151,7 @@ public:
 	EntityServer()
 	{
 		// register peer events to see when a remote entity connects or disconnects.
-		registerPeerEvent([] (PeerId peerId, const IProtocolSessionPtr& session, EntityId entityId, 
+		registerPeerEvent([] (PeerId peerId, const SessionInfo& session, EntityId entityId, 
                               PeerEvent peerEvent, bool incoming) {
 			std::cout << "peer event " << peerEvent.toString() << std::endl;
 		});
@@ -1228,7 +1226,7 @@ With getAllPeers() the entity implementation gets all its connected remote entit
 
 After compiling the example server you can start it.
 
-**Make sure that you not running the helloworld_server and the timer_server at the same time, because they open the same listening ports.**
+**Make sure that you are not running the helloworld_server and the timer_server at the same time, because they open the same listening ports.**
 
 
 
@@ -1280,7 +1278,7 @@ The browser will display:
 
 Here, you can correlate the entityName to the entityId. The entityId of the server-remote-entity which triggered a request/notification will be inside each request/notification header. 
 
-Now, the TimerEvent is triggered every 1s, but you cannot see them at the browser. The requests/notifications are still stored in the HTTP protocol of the timer_server. 
+Now, the TimerEvent is triggered every 1s, but you cannot see them at the browser. The requests/notifications are still stored in the HTTP session of the timer_server. 
 
 
 
@@ -1312,8 +1310,7 @@ All server requests/notifications also from other server-remote-entities that ar
 Notes:
 
 - The tabs are shown as \\t. These tabs can help to separate the requests/notifications. There is no LF (\\n) between the requests. The separator between header and message is ',\\t' and the separator between requests/notifications is ']\\t'. Or when you start counting with 0, every even tab is a separator between header and message and every odd tab is a separator between requests/notifications.
-
-- In this example, the server is sending a notification/event. This means, no reply is expected by the peer (browser). But when the server sends a request and expects a reply, then there will be a "corrid" in the request's header. In this case the peer has to send a reply. But this behavior is not very common.
+- In this example, the server is sending a notification/event. This means, no reply is expected by the peer (browser). But when the server sends a request and expects a reply, then there will be a "corrid" in the request's header. In this case the client peer has to send a reply. But it is not common that a server sends a request to a client. Usually a server sends notifications/events to all connected clients.
 
 
 
@@ -1379,7 +1376,7 @@ The mechanism is similar as the pure chunked transfer, but with the multipart me
 
 **Advantage of fmq/poll**
 
-With fmq/poll you can get all server requests/notifications with one poll mechanism. The poll request will even stay opened for a configurable time or chunk count. This makes the server requests/notifications very effective and responsive. After a fmq/poll is done, just open it again. Server requests/notifications cannot be lost, because they will be stored on server side. 
+With fmq/poll you can get all server requests/notifications with one poll mechanism. The poll request will even stay opened for a configurable time or chunk count. This makes the server requests/notifications very effective and responsive. After a fmq/poll is finished, just open it again. 
 
 
 
