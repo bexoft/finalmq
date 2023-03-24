@@ -28,6 +28,14 @@ if (pathOutput)
     fileOutputH   = pathOutput + '/' + splitFileOutputH[splitFileOutputH.length - 1]
 }
 
+try
+{
+    fs.mkdirSync(pathOutput, { recursive: true })
+}
+catch (err)
+{
+}
+
 helper.convertTypeId(data)
 var options = {data:data, exportMacro:exportMacro, helper:helper, fileOutputH:fileOutputH}
 var strCpp = ejs.render(strTemplateCpp, options)
