@@ -147,8 +147,7 @@ int main()
                   << " event: " << connectionEvent.toString();
     });
 
-    // Create client entity and register it at the entityContainer
-    // note: multiple entities can be registered.
+    // Create client entity
     IRemoteEntityPtr entityClientPtr = std::make_shared<RemoteEntity>();
     IRemoteEntity& entityClient = *entityClientPtr;
 
@@ -185,7 +184,7 @@ int main()
     // The peerId will be used for sending commands to the peer (requestReply(), sendEvent())
     PeerId peerId = entityClient.connect(sessionClient, "MyService", [](PeerId peerId, Status status) {
         streamInfo << "connect reply: " << status.toString();
-        });
+    });
 
 #ifdef TWOCONNECTIONS
     PeerId peerId2 = entityClient.connect(sessionClient2, "MyService", [](PeerId peerId, Status status) {

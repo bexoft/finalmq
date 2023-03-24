@@ -28,7 +28,13 @@ if (pathOutput)
     fileOutputH   = pathOutput + '/' + splitFileOutputH[splitFileOutputH.length - 1]
 }
 
-fs.mkdirSync(pathOutput, { recursive: true })
+try
+{
+    fs.mkdirSync(pathOutput, { recursive: true })
+}
+catch (err)
+{
+}
 
 helper.convertTypeId(data)
 var options = {data:data, exportMacro:exportMacro, helper:helper, fileOutputH:fileOutputH}
