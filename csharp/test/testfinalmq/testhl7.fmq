@@ -890,7 +890,8 @@
 
         {"type":"FAA","desc":"","fields":[ 
             {"tid":"string", "type":"", "name":"a"},
-            {"tid":"string", "type":"", "name":"b"}
+            {"tid":"string", "type":"", "name":"b"},
+            {"tid":"string", "type":"", "name":"c"}
         ]},
 
         {"type":"FBB","desc":"","fields":[ 
@@ -915,8 +916,14 @@
         {"type":"EEE","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
             {"tid":"struct", "type":"FAA", "name":"e"}
         ]},
+        {"type":"FFF","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+            {"tid":"string", "type":"", "name":"a"},
+            {"tid":"string", "type":"", "name":"b"},
+            {"tid":"struct", "type":"FAA", "name":"faa"},
+            {"tid":"string", "type":"", "name":"c"}
+        ]},
 
-
+        
 
         {"type":"A01","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
             {"tid":"string[]", "type":"", "name":"a"}
@@ -932,7 +939,16 @@
             {"tid":"struct", "type":"FAA", "name":"faa"},
             {"tid":"string[]", "type":"", "name":"sarr"}
         ]},
-
+        {"type":"A04","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+            {"tid":"struct", "type":"FFF", "name":"fff"},
+            {"tid":"string", "type":"", "name":"a"},
+            {"tid":"string", "type":"", "name":"b"},
+            {"tid":"string", "type":"", "name":"c"}
+        ]},
+        {"type":"A05","desc":"","flags":["METASTRUCTFLAG_HL7_SEGMENT"],"fields":[ 
+            {"tid":"struct[]", "type":"FFF", "name":"fff"},
+            {"tid":"string", "type":"", "name":"a"}
+        ]},
 
 
 
@@ -1007,6 +1023,16 @@
         {"type":"MSG_012","desc":"Address","fields":[ 
             {"tid":"struct", "type":"MSH", "name":"msh"},
             {"tid":"struct", "type":"A03", "name":"a03"}
+        ]},
+    
+        {"type":"MSG_013","desc":"Address","fields":[ 
+            {"tid":"struct", "type":"MSH", "name":"msh"},
+            {"tid":"struct", "type":"A04", "name":"a04"}
+        ]},
+    
+        {"type":"MSG_014","desc":"Address","fields":[ 
+            {"tid":"struct", "type":"MSH", "name":"msh"},
+            {"tid":"struct", "type":"A05", "name":"a05"}
         ]}
     
     ]

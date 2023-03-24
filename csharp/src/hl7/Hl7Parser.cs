@@ -136,7 +136,7 @@ namespace finalmq
                 }
                 if (l > level)
                 {
-                    l = ParseTillEndOfStruct(level);
+                    l = ParseTillEndOfStructIntern(level, true, out isarray);
                 }
             }
 
@@ -170,7 +170,7 @@ namespace finalmq
                     l = IsDelimiter(c);
                     if (l < LAYER_MAX)
                     {
-                        if (filled)
+                        if (filled || (l > 1))   // array/repeated (~) is on layer 1 possible
                         {
                             array.Add(DeEscape(start, m_offset));
                         }
@@ -178,15 +178,28 @@ namespace finalmq
                         {
                             ++m_offset;
                         }
-                        break;
+                        if (l <= level)
+                        {
+                            break;
+                        }
                     }
-                    ++m_offset;
+
+                    if (l > level && l < LAYER_MAX)
+                    {
+                        bool isarray;
+                        l = ParseTillEndOfStructIntern(level, true, out isarray);
+                        if (l <= level && !isarray)
+                        {
+                            break;
+                        }
+                        start = m_offset;
+                    }
+                    else
+                    {
+                        ++m_offset;
+                    }
                     filled = true;
                 }
-            }
-            if (l > level)
-            {
-                l = ParseTillEndOfStruct(level);
             }
             Debug.Assert(l <= level);
             return l;
@@ -245,6 +258,13 @@ namespace finalmq
 
         public int ParseTillEndOfStruct(int level)
         {
+            bool isarrayDummy;
+            return ParseTillEndOfStructIntern(level, false, out isarrayDummy);
+        }
+
+        public int ParseTillEndOfStructIntern(int level, bool stopOnArray, out bool isarray)
+        {
+            isarray = false;
             char c;
             while ((c = GetChar(m_offset)) != (char)0)
             {
@@ -256,6 +276,12 @@ namespace finalmq
                         ++m_offset;
                     }
                     return l;
+                }
+                else if (stopOnArray && c == m_delimiterRepeat)
+                {
+                    isarray = true;
+                    ++m_offset;
+                    return 1;
                 }
                 ++m_offset;
             }

@@ -111,14 +111,13 @@ namespace finalmq
                 Debug.Assert(sizeData >= 0);
 
                 BufferRef bufferRefData = new BufferRef( buffer, offset, sizeData );
-                data = ParseData(session, bufferRefData, storeRawData, header.type, out formatStatus);
+                data = ParseData(session, bufferRefData, storeRawData, header.type, ref formatStatus);
             }
 
             return data;
         }
-        public StructBase? ParseData(IProtocolSession session, BufferRef bufferRef, bool storeRawData, string type, out int formatStatus)
+        public StructBase? ParseData(IProtocolSession session, BufferRef bufferRef, bool storeRawData, string type, ref int formatStatus)
         {
-            formatStatus = 0;
             byte[] buffer = bufferRef.Buffer;
             int offset = bufferRef.Offset;
             int sizeBuffer = bufferRef.Length;

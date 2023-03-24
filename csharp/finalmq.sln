@@ -11,9 +11,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "helloworld_server", "..\exa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "helloworld_client", "..\examples\csharp\helloworld\helloworld_client\helloworld_client.csproj", "{8BA0357D-D241-4FF4-9721-7297CE4F867E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "timer_server", "..\examples\csharp\timer\timer_server\timer_server.csproj", "{281E20BD-6DED-4915-92B7-8D31AA32798B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "timer_server", "..\examples\csharp\timer\timer_server\timer_server.csproj", "{281E20BD-6DED-4915-92B7-8D31AA32798B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "timer_client", "..\examples\csharp\timer\timer_client\timer_client.csproj", "{DBD4C26F-DBE8-4046-8DDB-D4172079ED41}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "timer_client", "..\examples\csharp\timer\timer_client\timer_client.csproj", "{DBD4C26F-DBE8-4046-8DDB-D4172079ED41}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "hl7_server", "..\examples\csharp\hl7\hl7_server\hl7_server.csproj", "{848B2C9D-6AFF-43DE-877B-28000D0F56F0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "hl7_client", "..\examples\csharp\hl7\hl7_client\hl7_client.csproj", "{2B5864A8-E263-419C-873F-D028828FBF04}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -71,6 +75,22 @@ Global
 		{DBD4C26F-DBE8-4046-8DDB-D4172079ED41}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DBD4C26F-DBE8-4046-8DDB-D4172079ED41}.Release|x64.ActiveCfg = Release|Any CPU
 		{DBD4C26F-DBE8-4046-8DDB-D4172079ED41}.Release|x64.Build.0 = Release|Any CPU
+		{848B2C9D-6AFF-43DE-877B-28000D0F56F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{848B2C9D-6AFF-43DE-877B-28000D0F56F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{848B2C9D-6AFF-43DE-877B-28000D0F56F0}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{848B2C9D-6AFF-43DE-877B-28000D0F56F0}.Debug|x64.Build.0 = Debug|Any CPU
+		{848B2C9D-6AFF-43DE-877B-28000D0F56F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{848B2C9D-6AFF-43DE-877B-28000D0F56F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{848B2C9D-6AFF-43DE-877B-28000D0F56F0}.Release|x64.ActiveCfg = Release|Any CPU
+		{848B2C9D-6AFF-43DE-877B-28000D0F56F0}.Release|x64.Build.0 = Release|Any CPU
+		{2B5864A8-E263-419C-873F-D028828FBF04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B5864A8-E263-419C-873F-D028828FBF04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B5864A8-E263-419C-873F-D028828FBF04}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{2B5864A8-E263-419C-873F-D028828FBF04}.Debug|x64.Build.0 = Debug|Any CPU
+		{2B5864A8-E263-419C-873F-D028828FBF04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B5864A8-E263-419C-873F-D028828FBF04}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B5864A8-E263-419C-873F-D028828FBF04}.Release|x64.ActiveCfg = Release|Any CPU
+		{2B5864A8-E263-419C-873F-D028828FBF04}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

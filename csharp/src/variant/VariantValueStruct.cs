@@ -51,8 +51,12 @@ namespace finalmq
 
     public class VariantValueStruct : IVariantValue
     {
-        private readonly int VARTYPE_STRUCT = (int)MetaTypeId.TYPE_STRUCT;
+        public static readonly int VARTYPE_STRUCT = (int)MetaTypeId.TYPE_STRUCT;
 
+        public VariantValueStruct()
+        {
+            m_value = new List<NameValue>();
+        }
         public VariantValueStruct(VariantStruct value)
         {
             m_value = value;
@@ -88,11 +92,6 @@ namespace finalmq
 
         public Variant? GetVariant(string name)
         {
-            if (name.Length == 0)
-            {
-                return null;
-            }
-
             string partname = "";
             string restname;
 
@@ -108,6 +107,12 @@ namespace finalmq
             {
                 partname = name;
                 restname = "";
+            }
+
+            // remove "", if available in partname
+            if ((partname.Length >= 2) && (partname[0] == '\"') && (partname.Last() == '\"'))
+            {
+                partname = partname.Substring(1, partname.Length - 2);
             }
 
             Debug.Assert(partname != null);

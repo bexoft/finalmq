@@ -6,23 +6,22 @@ using System.Text;
 namespace finalmq
 {
     
-    public class SerializerHl7 : ParserConverter
+    public class SerializerHl7 : ParserProcessDefaultValues
     {
         static readonly int NO_ARRAY_STRUCT = -2;
 
-        public SerializerHl7(IZeroCopyBuffer buffer, int maxBlockSize = 512, bool enumAsString = true, bool skipDefaultValues = true)
+        public SerializerHl7(IZeroCopyBuffer buffer, int maxBlockSize = 512)
+            : base(false)
         {
-            m_internal = new Internal(buffer, maxBlockSize, enumAsString);
-            m_parserProcessDefaultValues = new ParserProcessDefaultValues(skipDefaultValues, m_internal);
-            SetVisitor(m_parserProcessDefaultValues);
+            m_internal = new Internal(buffer, maxBlockSize);
+            SetVisitor(m_internal);
         }
 
         class Internal : IParserVisitor
         {
-            public Internal(IZeroCopyBuffer buffer, int maxBlockSize, bool enumAsString)
+            public Internal(IZeroCopyBuffer buffer, int maxBlockSize)
             {
                 m_hl7Builder = new Hl7Builder(buffer, maxBlockSize);
-                m_enumAsString = enumAsString;
             }
             // IParserVisitor
 
@@ -62,6 +61,7 @@ namespace finalmq
                     if (isSegment)
                     {
                         Debug.Assert(m_ixIndex == 0);
+                        Debug.Assert(stru != null);
                         ++m_indexOfLayer[m_ixIndex];
                         string typeNameWithoutNamespace = stru.TypeNameWithoutNamespace;
                         m_hl7Builder.EnterString(m_indexOfLayer, m_ixIndex + 1, -1, typeNameWithoutNamespace);
@@ -208,27 +208,12 @@ namespace finalmq
             }
             public void EnterEnum(MetaField field, int value) 
             {
-                if (m_enumAsString)
-                {
-                    string name = MetaDataGlobal.Instance.GetEnumAliasByValue(field, value);
-                    EnterString(field, name);
-                }
-                else
-                {
-                    EnterInt32(field, value);
-                }
+                string name = MetaDataGlobal.Instance.GetEnumAliasByValue(field, value);
+                EnterString(field, name);
             }
             public void EnterEnum(MetaField field, string value) 
             {
-                if (m_enumAsString)
-                {
-                    EnterString(field, value);
-                }
-                else
-                {
-                    int v = MetaDataGlobal.Instance.GetEnumValueByName(field, value);
-                    EnterInt32(field, v);
-                }
+                EnterString(field, value);
             }
 
             public void EnterArrayBool(MetaField field, bool[] value) 
@@ -325,43 +310,21 @@ namespace finalmq
             }
             public void EnterArrayEnum(MetaField field, int[] value)
             {
-                if (m_enumAsString)
+                foreach (var v in value)
                 {
-                    foreach (var v in value)
-                    {
-                        string name = MetaDataGlobal.Instance.GetEnumAliasByValue(field, v);
-                        EnterString(field, name);
-                    }
-                }
-                else
-                {
-                    foreach (var v in value)
-                    {
-                        EnterInt32(field, v);
-                    }
+                    string name = MetaDataGlobal.Instance.GetEnumAliasByValue(field, v);
+                    EnterString(field, name);
                 }
             }
             public void EnterArrayEnum(MetaField field, IList<string> value)
             {
-                if (m_enumAsString)
+                foreach (var v in value)
                 {
-                    foreach (var v in value)
-                    {
-                        EnterString(field, v);
-                    }
-                }
-                else
-                {
-                    foreach (var v in value)
-                    {
-                        int n = MetaDataGlobal.Instance.GetEnumValueByName(field, v);
-                        EnterInt32(field, n);
-                    }
+                    EnterString(field, v);
                 }
             }
 
             readonly Hl7Builder m_hl7Builder;
-            readonly bool m_enumAsString;
 
             bool m_inSegment = false;
 
@@ -371,7 +334,6 @@ namespace finalmq
         }
 
         readonly Internal m_internal;
-        readonly IParserVisitor m_parserProcessDefaultValues;
     }
 
 }
