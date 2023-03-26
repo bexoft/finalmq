@@ -153,6 +153,7 @@ namespace finalmq
         static bool IsReplaceNeeded(IProtocolSession session, out string lineend, out string messagestart, out string messageend)
         {
             lineend = "";
+            messagestart = "";
             messageend = "";
             string? hl7lineend = null;
             string? hl7messagestart = null;
@@ -389,8 +390,9 @@ namespace finalmq
             if (structBase != null)
             {
                 string lineend;
+                string messagestart;
                 string messageend;
-                bool replaceNeeded = IsReplaceNeeded(session, out lineend, out messageend);
+                bool replaceNeeded = IsReplaceNeeded(session, out lineend, out messagestart, out messageend);
 
                 IMessage? messageHelper = replaceNeeded ? new ProtocolMessage(0) : null;
                 IMessage messageToSerialize = (messageHelper != null) ? messageHelper : message;
