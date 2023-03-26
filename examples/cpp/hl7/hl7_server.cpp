@@ -256,16 +256,17 @@ int main()
     // content type in payload: protobuf
     entityContainer.bind("tcp://*:7777:headersize:protobuf");
 
-    entityContainer.bind("tcp://*:7000:delimiter_lf:hl7", { {}, {},
-        VariantStruct{  {RemoteEntityFormatHl7::PROPERTY_NAMESPACE, std::string{"hl7"}},
-                        {RemoteEntityFormatHl7::PROPERTY_ENTITY, std::string{"MyService"}} } });
+    entityContainer.bind("tcp://*:7000:delimiter_x:hl7", { {}, 
+        VariantStruct{ {ProtocolDelimiterX::KEY_DELIMITER, "\x1C\x0D"} },
+        VariantStruct{  {RemoteEntityFormatHl7::PROPERTY_NAMESPACE, "hl7"},
+                        {RemoteEntityFormatHl7::PROPERTY_ENTITY, "MyService"},
+                        {RemoteEntityFormatHl7::PROPERTY_MESSAGESTART, "\x0B"} } });
 
     entityContainer.bind("tcp://*:7001:delimiter_x:hl7", { {},
-        VariantStruct{ {ProtocolDelimiterX::KEY_DELIMITER, std::string{"\r\n\r\n"}} },
-        VariantStruct{ {RemoteEntityFormatHl7::PROPERTY_NAMESPACE, std::string{"hl7"}},
-                       {RemoteEntityFormatHl7::PROPERTY_ENTITY, std::string{"MyService"}},
-                       {RemoteEntityFormatHl7::PROPERTY_LINEEND, std::string{"\r\n"}},
-                       {RemoteEntityFormatHl7::PROPERTY_MESSAGEEND, std::string{""}}
+        VariantStruct{ {ProtocolDelimiterX::KEY_DELIMITER, "\r\n\r\n"} },
+        VariantStruct{ {RemoteEntityFormatHl7::PROPERTY_NAMESPACE, "hl7"},
+                       {RemoteEntityFormatHl7::PROPERTY_ENTITY, "MyService"},
+                       {RemoteEntityFormatHl7::PROPERTY_LINEEND, "\r\n"}
         }
     });
 

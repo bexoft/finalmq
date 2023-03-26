@@ -30,6 +30,7 @@
 #include "finalmq/variant/VariantValues.h"
 #include "finalmq/protocols/ProtocolMqtt5Client.h"
 #include "finalmq/helpers/Executor.h"
+#include "finalmq/protocols/ProtocolDelimiterX.h"
 #include "finalmq/helpers/ProtothreadRequestReply.h"
 
 // the definition of the messages is in the file hl7dictionary.2.7.1.js.fmq
@@ -119,9 +120,11 @@ int main()
     //SessionInfo sessionClient = entityContainer.connect("tcp://localhost:7777:headersize:protobuf");
     //SessionInfo sessionClient = entityContainer.connect("ipc://my_uds:headersize:protobuf");
 
-    SessionInfo sessionClient = entityContainer.connect("tcp://localhost:7000:delimiter_lf:hl7", { {}, {}, {},
-        VariantStruct{  {RemoteEntityFormatHl7::PROPERTY_NAMESPACE, std::string{"hl7"}},
-                        {RemoteEntityFormatHl7::PROPERTY_ENTITY, std::string{"Hl7Entity"}} } });
+    SessionInfo sessionClient = entityContainer.connect("tcp://localhost:7000:delimiter_x:hl7", { {}, {}, 
+        VariantStruct{ {ProtocolDelimiterX::KEY_DELIMITER, "\x1C\x0D"} },
+        VariantStruct{  {RemoteEntityFormatHl7::PROPERTY_NAMESPACE, "hl7"},
+                        {RemoteEntityFormatHl7::PROPERTY_ENTITY, "Hl7Entity"},
+                        {RemoteEntityFormatHl7::PROPERTY_MESSAGESTART, "\x0B"} } });
 
 
     //SessionInfo sessionClient = entityContainer.connect("tcp://localhost:7001:delimiter_lf:json", { {}, {}, {},

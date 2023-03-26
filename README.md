@@ -2024,3 +2024,152 @@ const Metainfo& metainfo = requestContext->getAllMetainfo();
 
 The Metainfo is a std::unordered_map<std::string, std::string>, so you can iterate through all entries.
 
+
+
+### HL7
+
+
+
+#### General
+
+HL7 is a serialization format which mainly is used at healthcare applications. It consists of two parts. First, it defines the syntax how the data is serialized. Second, it also defines the meaning (semantics) of the data. FinalMQ supports the syntax version 2, so far. This version is also called the pipe-syntax of HL7, because the default separation between data fields is done by he pipe | character. You can also find the name HL7v2 for this syntax.
+
+There exists different versions of the HL7v2 standard. These versions have always the same syntax in common. But they have different definitions of their message definitions, so called Trigger Events. The Trigger Events consists of segments. The segments consists of fields, sub-fields and sub-sub-fields. With growing version number also the number of Trigger Events, segments and fields grow.
+
+
+
+#### HL7 definition
+
+So, the composition of Trigger Events, segments and fields are defined in the according version of the HL7 standard. You can compare the definition of the Trigger Events as the schema of XML or JSON. Or like the google protobuf's protofile. Or like the finalMQ's data definition file (*.fmq). All of these examples define a data structure of messages.
+
+You can find the standard of HL7v2 for example at the following Web-Site:
+
+https://hl7-definition.caristix.com/v2/
+
+Here the definitions are available as text.
+
+But there are also definitions available that code the definitions as XML or JSON. finalMQ makes use of a JSON/JavaScript definition which is available on github:
+
+https://github.com/beckdave/hl7-dictionary this is a fork from https://github.com/fernandojsg/hl7-dictionary
+
+The fork contains a little bugfix.
+
+finalMQ automatically downloads the hl7-dictionary repository into the cmake build folder. See CMakeLists.txt:
+
+`CloneRepository("https://github.com/beckdave/hl7-dictionary.git" "beckdave-fix-compounds" "hl7-dictionary" "${CMAKE_BINARY_DIR}/hl7-dictionary")`
+
+The hl7-dictionary contains multiple versions of HL7v2. It is your choice which version you want to use.
+
+
+
+#### HL7 definition converter
+
+finalMQ provides a converter, which converts the hl7-dictionary format to the finalMQ's *.fmq format. The command to convert the definition looks like this:
+
+`node ${CMAKE_SOURCE_DIR}/codegenerator/hl7/hl7.js --input=${CMAKE_BINARY_DIR}/hl7-dictionary/dist/hl7dictionary.2.7.1.js --tables=${CMAKE_BINARY_DIR}/hl7-dictionary/lib/tables.js --options=hl7options.json --outpath=.`
+
+passed parameters:
+
+| Parameter | Description                                                  |
+| --------- | ------------------------------------------------------------ |
+| hl7.js    | The JavaScript of the converter                              |
+| --input   | The hl7-dictionary definition of an HL7 standard. Here you can choose the version of the standard you want to use |
+| --tables  | This parameter is optional. In the tables the enumerations of HL7 are defined. When you skip this parameter, then the enumerations will be defined as plain strings. When you use this parameter, then the enumerations will be defined as enumerations. |
+| --options | The options parameter is optional. When you use it, you can define a filter for the definitions (Trigger Events) which shall be converted. If you skip this parameter, then all definitions will be converted. An options-file looks for example like this:<br /><br />`{ "filter": ["ACK", "SSU_U03"] }` |
+| --outpath | defines the folder where the converter will place the .fmq file. |
+
+
+
+Now that you have generated the .fmq file, you can now generate C++ code (or if you want even a .proto file).
+
+
+
+If you use cmake, you can use the following lines in your CMakeLists.txt to generate C++ code for the HL7 data structures:
+
+
+
+```cmake
+set(FINALMQ_PREFIX /usr/local)
+set(CODEGENERATOR ${FINALMQ_PREFIX}/lib/finalmq/codegenerator)
+set(CODEGENERATOR_HL7DEF ${CODEGENERATOR}/hl7/hl7.js)
+set(CODEGENERATOR_CPP ${CODEGENERATOR}/cpp/cpp.js)
+
+# convert from hl7-dictionary to .fmq file
+# The HL7 defines a very big amount of messages (trigger events), segments and types. 
+# In hl7options.json there is a filter to use only the messages (trigger events) you need in
+# your project.
+set(HL7DEF_DICTIONARY ${CMAKE_BINARY_DIR}/hl7-dictionary/dist/hl7dictionary.2.7.1.js)
+set(HL7DEF_TABLES ${CMAKE_BINARY_DIR}/hl7-dictionary/lib/tables.js)
+set(HL7DEF_FMQ ${CMAKE_CURRENT_BINARY_DIR}/hl7dictionary.2.7.1.js.fmq)
+set(HL7DEF_OPTIONS ${CMAKE_CURRENT_SOURCE_DIR}/hl7options.json)
+add_custom_command(
+    COMMAND node ${CODEGENERATOR_HL7DEF} --input=${HL7DEF_DICTIONARY} --tables=${HL7DEF_TABLES} --options=${HL7DEF_OPTIONS} --outpath=${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${HL7DEF_DICTIONARY} ${HL7DEF_TABLES} ${HL7DEF_OPTIONS}
+    OUTPUT ${HL7DEF_FMQ}
+    COMMENT "Generating HL7 definition code from ${HL7DEF_DICTIONARY}"
+)
+
+# convert from .fmq file to .hmq.cpp
+set(HL7DEF_FMQ_CPP ${HL7DEF_FMQ}.cpp)
+set(HL7DEF_FMQ_H ${HL7DEF_FMQ}.h)
+add_custom_command(
+    COMMAND node ${CODEGENERATOR_CPP} --input=${HL7DEF_FMQ} --outpath=${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${HL7DEF_FMQ}
+    OUTPUT ${HL7DEF_FMQ_CPP} ${HL7DEF_FMQ_H}
+    COMMENT "Generating cpp code out of ${HL7DEF_FMQ}"
+)
+
+# compile .fmq.cpp
+add_executable(hl7_server ${HL7DEF_FMQ_CPP} hl7_server.cpp)
+
+```
+
+
+
+Now, you can include the .fmq.h file into your application, so that you can use the Trigger Events to send and receive them as messages. It is also possible to send and receive the Trigger Events in JSON syntax or even in protobuf format, depending on the serialization format you choose when you connect or bind your endpoints. Also different protocols are possible like HTTP or MQTT5. See the hl7 example.
+
+
+
+#### HL7 connection
+
+Even that it is possible to send and receive Trigger Events with different protocols or different serialization formats, the usual connection for HL7 is a plain TCP connection with a message start and a message end sequence.
+Message start: **0x0B**
+Message end: **0x1C, 0x0D**
+The message type is coded inside the HL7 message header. But the used namespace for the generated code must be defined for the connection (usually just "**hl7**").
+Also the multiplexing of entities does not work for the plain HL7 connection, so only one entity can be used to send and receive HL7 messages for each connect or bind. The name of the entity/service that shall be used inside the application for a connect or a bind must be defined.
+
+So, a connect of a plain HL7 connection will look like this:
+
+```C++
+    SessionInfo sessionClient = entityContainer.connect("tcp://localhost:7000:delimiter_x:hl7", { {}, {}, 
+        VariantStruct{ {ProtocolDelimiterX::KEY_DELIMITER, "\x1C\x0D"} },
+        VariantStruct{  {RemoteEntityFormatHl7::PROPERTY_MESSAGESTART, "\x0B"},
+                        {RemoteEntityFormatHl7::PROPERTY_NAMESPACE, "hl7"},
+                        {RemoteEntityFormatHl7::PROPERTY_ENTITY, "Hl7Entity"} } });
+```
+
+
+
+Or in case of a bind:
+
+```C++
+entityContainer.bind("tcp://*:7000:delimiter_x:hl7", { {}, 
+    VariantStruct{ {ProtocolDelimiterX::KEY_DELIMITER, "\x1C\x0D"} },
+    VariantStruct{  {RemoteEntityFormatHl7::PROPERTY_MESSAGESTART, "\x0B"},
+                    {RemoteEntityFormatHl7::PROPERTY_NAMESPACE, "hl7"},
+                    {RemoteEntityFormatHl7::PROPERTY_ENTITY, "MyService"} } });
+```
+
+
+
+See also the hl7 example.
+
+
+
+If you want to use SSL/TLS just fill the CertificateData inside the BindProperties/ConnectProperties.
+
+
+
+
+
+### 

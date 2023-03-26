@@ -177,7 +177,7 @@ int main()
     });
 
     // Create server entity and register it at the entityContainer with the service name "MyService"
-    // note: multiple entities can be registered.
+    // note: multiple entities can be registered at a EntityContainer. Also an entity can be registered to multiple EntityContainers.
     EntityServer entityServer;
     entityContainer.registerEntity(&entityServer, "MyService");
 
