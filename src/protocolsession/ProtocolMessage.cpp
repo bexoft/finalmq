@@ -263,11 +263,11 @@ const Variant& ProtocolMessage::getEchoData() const
 
 
 // for send
-void ProtocolMessage::addSendPayload(const std::string& payload)
+void ProtocolMessage::addSendPayload(const std::string& payload, ssize_t reserve)
 {
-    addSendPayload(payload.data(), payload.size(), 0);
+    addSendPayload(payload.data(), payload.size(), reserve);
 }
-void ProtocolMessage::addSendPayload(const char* payload, ssize_t size, int reserve)
+void ProtocolMessage::addSendPayload(const char* payload, ssize_t size, ssize_t reserve)
 {
     char* payloadDest = addSendPayload(size, reserve);
     memcpy(payloadDest, payload, size);

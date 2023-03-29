@@ -65,8 +65,8 @@ private:
     virtual const Variant& getEchoData() const override;
 
     // for send
-    virtual void addSendPayload(const std::string& payload) override;
-    virtual void addSendPayload(const char* payload, ssize_t size, int reserve = 0) override;
+    virtual void addSendPayload(const std::string& payload, ssize_t reserve = 0) override;
+    virtual void addSendPayload(const char* payload, ssize_t size, ssize_t reserve = 0) override;
     virtual char* addSendPayload(ssize_t size, ssize_t reserve = 0) override;
     virtual void downsizeLastSendPayload(ssize_t newSize) override;
 

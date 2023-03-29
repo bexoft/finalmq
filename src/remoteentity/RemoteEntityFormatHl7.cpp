@@ -45,6 +45,7 @@ const std::string RemoteEntityFormatHl7::CONTENT_TYPE_NAME = "hl7";
 const std::string RemoteEntityFormatHl7::PROPERTY_NAMESPACE = "namespace";
 const std::string RemoteEntityFormatHl7::PROPERTY_ENTITY = "entity";
 const std::string RemoteEntityFormatHl7::PROPERTY_LINEEND = "lineend";
+const std::string RemoteEntityFormatHl7::PROPERTY_MESSAGESTART = "messagestart";
 const std::string RemoteEntityFormatHl7::PROPERTY_MESSAGEEND = "messageend";
 
 
@@ -83,7 +84,7 @@ static char* fmq_strnstr(const char* haystack, const char* needle, ssize_t len)
 
 
 
-static void replaceSerialize(IMessage& source, const std::string& lineend, const std::string& messageend, IMessage& destination)
+static void replaceSerialize(IMessage& source, const std::string& lineend, IMessage& destination)
 {
     static const char* SOURCE_LINEEND = "\r";
 
@@ -117,28 +118,12 @@ static void replaceSerialize(IMessage& source, const std::string& lineend, const
             memcpy(buffer, current, sizeRest);
         }
     }
-    if (!messageend.empty())
-    {
-        destination.addSendPayload(messageend);
-    }
 }
 
 
-static void replaceParser(const char* source, ssize_t sizeSource, const std::string& lineend, const std::string& messageend, std::string& destination)
+static void replaceParser(const char* source, ssize_t sizeSource, const std::string& lineend, std::string& destination)
 {
     static const char DESTINATION_LINEEND = '\r';
-
-    if (!messageend.empty())
-    {
-        if (sizeSource >= static_cast<ssize_t>(messageend.size()))
-        {
-            ssize_t posEnd = sizeSource - messageend.size();
-            if (memcmp(source + posEnd, messageend.c_str(), messageend.size()) == 0)
-            {
-                sizeSource -= messageend.size();
-            }
-        }
-    }
 
     const char* found = nullptr;
     ssize_t sizeRest = sizeSource;
@@ -171,25 +156,31 @@ static void replaceParser(const char* source, ssize_t sizeSource, const std::str
 
 
 
-static bool isReplaceNeeded(const IProtocolSessionPtr& session, std::string& lineend, std::string& messageend)
+static bool isReplaceNeeded(const IProtocolSessionPtr& session, std::string& lineend, std::string& messagestart, std::string& messageend)
 {
     lineend.clear();
+    messagestart.clear();
     messageend.clear();
     const std::string* hl7lineend = nullptr;
+    const std::string* hl7messagestart = nullptr;
     const std::string* hl7messageend = nullptr;
     const Variant& formatData = session->getFormatData();
     bool replaceNeeded = false;
     if (formatData.getType() != VARTYPE_NONE)
     {
         hl7lineend = formatData.getData<std::string>(RemoteEntityFormatHl7::PROPERTY_LINEEND);
+        hl7messagestart = formatData.getData<std::string>(RemoteEntityFormatHl7::PROPERTY_MESSAGESTART);
         hl7messageend = formatData.getData<std::string>(RemoteEntityFormatHl7::PROPERTY_MESSAGEEND);
 
-        replaceNeeded = ((hl7lineend != nullptr && *hl7lineend != "\r") ||
-            (hl7messageend != nullptr && !hl7messageend->empty()));
+        replaceNeeded = ( (hl7lineend != nullptr && *hl7lineend != "\r") );
 
         if (hl7lineend)
         {
             lineend = *hl7lineend;
+        }
+        if (hl7messagestart)
+        {
+            messagestart = *hl7messagestart;
         }
         if (hl7messageend)
         {
@@ -212,11 +203,17 @@ void RemoteEntityFormatHl7::serializeData(const IProtocolSessionPtr& session, IM
     if (structBase)
     {
         std::string lineend;
+        std::string messagestart;
         std::string messageend;
-        bool replaceNeeded = isReplaceNeeded(session, lineend, messageend);
+        bool replaceNeeded = isReplaceNeeded(session, lineend, messagestart, messageend);
 
         IMessagePtr messageHelper = replaceNeeded ? std::make_shared<ProtocolMessage>(0) : nullptr;
         IMessage& messageToSerialize = replaceNeeded ? *messageHelper : message;
+
+        if (!messagestart.empty())
+        {
+            messageToSerialize.addSendPayload(messagestart, 512);
+        }
 
         // payload
         if (structBase->getRawContentType() == CONTENT_TYPE)
@@ -233,9 +230,14 @@ void RemoteEntityFormatHl7::serializeData(const IProtocolSessionPtr& session, IM
             parserData.parseStruct();
         }
 
+        if (!messageend.empty())
+        {
+            messageToSerialize.addSendPayload(messageend);
+        }
+
         if (replaceNeeded)
         {
-            replaceSerialize(messageToSerialize, lineend, messageend, message);
+            replaceSerialize(messageToSerialize, lineend, message);
         }
     }
 }
@@ -253,11 +255,39 @@ std::shared_ptr<StructBase> RemoteEntityFormatHl7::parse(const IProtocolSessionP
 
     std::string bufferReplaced;
     std::string lineend;
+    std::string messagestart;
     std::string messageend;
-    bool replaceNeeded = isReplaceNeeded(session, lineend, messageend);
+    bool replaceNeeded = isReplaceNeeded(session, lineend, messagestart, messageend);
+
+    // skip messagestart
+    if (!messagestart.empty())
+    {
+        if (sizeBuffer >= static_cast<ssize_t>(messagestart.size()))
+        {
+            if (memcmp(buffer, messagestart.c_str(), messagestart.size()) == 0)
+            {
+                buffer += messagestart.size();
+                sizeBuffer -= messagestart.size();
+            }
+        }
+    }
+
+    // skip messageend
+    if (!messageend.empty())
+    {
+        if (sizeBuffer >= static_cast<ssize_t>(messageend.size()))
+        {
+            ssize_t posEnd = sizeBuffer - messageend.size();
+            if (memcmp(buffer + posEnd, messageend.c_str(), messageend.size()) == 0)
+            {
+                sizeBuffer -= messageend.size();
+            }
+        }
+    }
+
     if (replaceNeeded)
     {
-        replaceParser(bufferRef.first, bufferRef.second, lineend, messageend, bufferReplaced);
+        replaceParser(buffer, sizeBuffer, lineend, bufferReplaced);
         buffer = const_cast<char*>(bufferReplaced.data());
         sizeBuffer = bufferReplaced.size();
     }
@@ -346,11 +376,39 @@ std::shared_ptr<StructBase> RemoteEntityFormatHl7::parseData(const IProtocolSess
     if ((formatStatus & static_cast<int>(FORMATSTATUS_HEADER_PARSED_BY_FORMAT)) == 0)
     {
         std::string lineend;
+        std::string messagestart;
         std::string messageend;
-        bool replaceNeeded = isReplaceNeeded(session, lineend, messageend);
+        bool replaceNeeded = isReplaceNeeded(session, lineend, messagestart, messageend);
+
+        // skip messagestart
+        if (!messagestart.empty())
+        {
+            if (sizeBuffer >= static_cast<ssize_t>(messagestart.size()))
+            {
+                if (memcmp(buffer, messagestart.c_str(), messagestart.size()) == 0)
+                {
+                    buffer += messagestart.size();
+                    sizeBuffer -= messagestart.size();
+                }
+            }
+        }
+
+        // skip messageend
+        if (!messageend.empty())
+        {
+            if (sizeBuffer >= static_cast<ssize_t>(messageend.size()))
+            {
+                ssize_t posEnd = sizeBuffer - messageend.size();
+                if (memcmp(buffer + posEnd, messageend.c_str(), messageend.size()) == 0)
+                {
+                    sizeBuffer -= messageend.size();
+                }
+            }
+        }
+
         if (replaceNeeded)
         {
-            replaceParser(buffer, sizeBuffer, lineend, messageend, bufferReplaced);
+            replaceParser(buffer, sizeBuffer, lineend, bufferReplaced);
             buffer = const_cast<char*>(bufferReplaced.data());
             sizeBuffer = bufferReplaced.size();
         }

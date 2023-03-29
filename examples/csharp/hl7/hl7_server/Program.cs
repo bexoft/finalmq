@@ -148,11 +148,15 @@ namespace hl7example
             // content type in payload: JSON
             entityContainer.Bind("tcp://*:8888:delimiter_lf:json");
 
-            entityContainer.Bind("tcp://*:7000:delimiter_lf:hl7", new BindProperties(
-                null, null,
+            entityContainer.Bind("tcp://*:7000:delimiter_x:hl7", new BindProperties(
+                null,
+                Variant.Create(new VariantStruct {
+                    new NameValue( ProtocolDelimiterX.KEY_DELIMITER, Variant.Create("\x1C\x0D") ),
+                }),
                 Variant.Create(new VariantStruct {
                     new NameValue( RemoteEntityFormatHl7.PROPERTY_NAMESPACE, Variant.Create("hl7") ),
-                    new NameValue( RemoteEntityFormatHl7.PROPERTY_ENTITY, Variant.Create("MyService") )
+                    new NameValue( RemoteEntityFormatHl7.PROPERTY_ENTITY, Variant.Create("MyService") ),
+                    new NameValue( RemoteEntityFormatHl7.PROPERTY_MESSAGESTART, Variant.Create("\x0B") )
                 })
             ));
 
@@ -164,8 +168,7 @@ namespace hl7example
                 Variant.Create(new VariantStruct {
                     new NameValue( RemoteEntityFormatHl7.PROPERTY_NAMESPACE, Variant.Create("hl7") ),
                     new NameValue( RemoteEntityFormatHl7.PROPERTY_ENTITY, Variant.Create("MyService") ),
-                    new NameValue( RemoteEntityFormatHl7.PROPERTY_LINEEND, Variant.Create("\r\n") ),
-                    new NameValue( RemoteEntityFormatHl7.PROPERTY_MESSAGEEND, Variant.Create("") )
+                    new NameValue( RemoteEntityFormatHl7.PROPERTY_LINEEND, Variant.Create("\r\n") )
                 })
             ));
 

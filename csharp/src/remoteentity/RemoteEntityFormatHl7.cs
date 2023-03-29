@@ -37,6 +37,7 @@ namespace finalmq
         public static readonly string PROPERTY_ENTITY = "entity";
 
         public static readonly string PROPERTY_LINEEND = "lineend";
+        public static readonly string PROPERTY_MESSAGESTART = "messagestart";
         public static readonly string PROPERTY_MESSAGEEND = "messageend";
 
 
@@ -77,12 +78,10 @@ namespace finalmq
         }
 
 
-
-
         static readonly byte[] BYTES_LINEEND = { (byte)'\r' };
         static readonly byte[] BYTES_MSH = Encoding.ASCII.GetBytes("MSH");
 
-        static void ReplaceSerialize(IMessage source, string lineend, string messageend, IMessage destination)
+        static void ReplaceSerialize(IMessage source, string lineend, IMessage destination)
         {
             int sizeSource = source.GetTotalSendPayloadSize();
             // just to reserve enough memory
@@ -114,28 +113,10 @@ namespace finalmq
                     destination.AddSendPayload(new BufferRef(buffer, current, sizeRest), 512);
                 }
             }
-            if (messageend.Length != 0)
-            {
-                byte[] messageendBytes = Encoding.ASCII.GetBytes(messageend);
-                destination.AddSendPayload(messageendBytes);
-            }
         }
 
-        static byte[] ReplaceParser(byte[] source, int offsetSource, int sizeSource, string lineend, string messageend)
+        static byte[] ReplaceParser(byte[] source, int offsetSource, int sizeSource, string lineend)
         {
-            if (messageend.Length != 0)
-            {
-                if (sizeSource >= messageend.Length)
-                {
-                    int posEnd = offsetSource + sizeSource - messageend.Length;
-                    byte[] messageendBytes = Encoding.ASCII.GetBytes(messageend);
-                    if (FindSequence(source, posEnd, messageendBytes, messageendBytes.Length) != -1)
-                    {
-                        sizeSource -= messageend.Length;
-                    }
-                }
-            }
-
             byte[] buffer = source;
             
             int found = -1;
@@ -169,25 +150,31 @@ namespace finalmq
             return destination.ToArray();
         }
 
-        static bool IsReplaceNeeded(IProtocolSession session, out string lineend, out string messageend)
+        static bool IsReplaceNeeded(IProtocolSession session, out string lineend, out string messagestart, out string messageend)
         {
             lineend = "";
+            messagestart = "";
             messageend = "";
             string? hl7lineend = null;
+            string? hl7messagestart = null;
             string? hl7messageend = null;
             Variant? formatData = session.FormatData;
             bool replaceNeeded = false;
             if (formatData != null && formatData.VarType != Variant.VARTYPE_NONE)
             {
                 hl7lineend = formatData.GetData<string>(RemoteEntityFormatHl7.PROPERTY_LINEEND);
+                hl7messagestart = formatData.GetData<string>(RemoteEntityFormatHl7.PROPERTY_MESSAGESTART);
                 hl7messageend = formatData.GetData<string>(RemoteEntityFormatHl7.PROPERTY_MESSAGEEND);
 
-                replaceNeeded = ((hl7lineend != null && hl7lineend != "\r") ||
-                                 (hl7messageend != null && hl7messageend.Length != 0));
+                replaceNeeded = ( (hl7lineend != null && hl7lineend != "\r") );
 
                 if (hl7lineend != null)
                 {
                     lineend = hl7lineend;
+                }
+                if (hl7messagestart != null)
+                {
+                    messagestart = hl7messagestart;
                 }
                 if (hl7messageend != null)
                 {
@@ -208,10 +195,38 @@ namespace finalmq
             byte[] bufferReplaced;
             string lineend;
             string messageend;
-            bool replaceNeeded = IsReplaceNeeded(session, out lineend, out messageend);
+            string messagestart;
+            bool replaceNeeded = IsReplaceNeeded(session, out lineend, out messagestart, out messageend);
+
+            if (messagestart.Length != 0)
+            {
+                if (sizeBuffer >= messagestart.Length)
+                {
+                    byte[] messagestartBytes = Encoding.ASCII.GetBytes(messagestart);
+                    if (FindSequence(buffer, offset, messagestartBytes, messagestartBytes.Length) != -1)
+                    {
+                        offset += messagestart.Length;
+                        sizeBuffer -= messagestart.Length;
+                    }
+                }
+            }
+
+            if (messageend.Length != 0)
+            {
+                if (sizeBuffer >= messageend.Length)
+                {
+                    int posEnd = offset + sizeBuffer - messageend.Length;
+                    byte[] messageendBytes = Encoding.ASCII.GetBytes(messageend);
+                    if (FindSequence(buffer, posEnd, messageendBytes, messageendBytes.Length) != -1)
+                    {
+                        sizeBuffer -= messageend.Length;
+                    }
+                }
+            }
+
             if (replaceNeeded)
             {
-                bufferReplaced = ReplaceParser(bufferRef.Buffer, bufferRef.Offset, bufferRef.Length, lineend, messageend);
+                bufferReplaced = ReplaceParser(buffer, offset, sizeBuffer, lineend);
                 buffer = bufferReplaced;
                 offset = 0;
                 sizeBuffer = bufferReplaced.Length;
@@ -293,11 +308,39 @@ namespace finalmq
             if ((formatStatus & (int)FormatStatus.FORMATSTATUS_HEADER_PARSED_BY_FORMAT) == 0)
             {
                 string lineend;
+                string messagestart;
                 string messageend;
-                bool replaceNeeded = IsReplaceNeeded(session, out lineend, out messageend);
+                bool replaceNeeded = IsReplaceNeeded(session, out lineend, out messagestart, out messageend);
+
+                if (messagestart.Length != 0)
+                {
+                    if (sizeBuffer >= messagestart.Length)
+                    {
+                        byte[] messagestartBytes = Encoding.ASCII.GetBytes(messagestart);
+                        if (FindSequence(buffer, offset, messagestartBytes, messagestartBytes.Length) != -1)
+                        {
+                            offset += messagestart.Length;
+                            sizeBuffer -= messagestart.Length;
+                        }
+                    }
+                }
+
+                if (messageend.Length != 0)
+                {
+                    if (sizeBuffer >= messageend.Length)
+                    {
+                        int posEnd = offset + sizeBuffer - messageend.Length;
+                        byte[] messageendBytes = Encoding.ASCII.GetBytes(messageend);
+                        if (FindSequence(buffer, posEnd, messageendBytes, messageendBytes.Length) != -1)
+                        {
+                            sizeBuffer -= messageend.Length;
+                        }
+                    }
+                }
+
                 if (replaceNeeded)
                 {
-                    bufferReplaced = ReplaceParser(bufferRef.Buffer, bufferRef.Offset, bufferRef.Length, lineend, messageend);
+                    bufferReplaced = ReplaceParser(buffer, offset, sizeBuffer, lineend);
                     buffer = bufferReplaced;
                     offset = 0;
                     sizeBuffer = bufferReplaced.Length;
@@ -347,11 +390,17 @@ namespace finalmq
             if (structBase != null)
             {
                 string lineend;
+                string messagestart;
                 string messageend;
-                bool replaceNeeded = IsReplaceNeeded(session, out lineend, out messageend);
+                bool replaceNeeded = IsReplaceNeeded(session, out lineend, out messagestart, out messageend);
 
                 IMessage? messageHelper = replaceNeeded ? new ProtocolMessage(0) : null;
                 IMessage messageToSerialize = (messageHelper != null) ? messageHelper : message;
+
+                if (messagestart.Length > 0)
+                {
+                    messageToSerialize.AddSendPayload(Encoding.ASCII.GetBytes(messagestart), 512);
+                }
 
                 // payload
                 if (structBase.GetRawContentType() == CONTENT_TYPE)
@@ -367,9 +416,14 @@ namespace finalmq
                     parserData.ParseStruct();
                 }
 
+                if (messageend.Length > 0)
+                {
+                    messageToSerialize.AddSendPayload(Encoding.ASCII.GetBytes(messageend));
+                }
+
                 if (replaceNeeded)
                 {
-                    ReplaceSerialize(messageToSerialize, lineend, messageend, message);
+                    ReplaceSerialize(messageToSerialize, lineend, message);
                 }
             }
         }

@@ -37,6 +37,7 @@ public:
     static const std::string PROPERTY_NAMESPACE;    // namespace
     static const std::string PROPERTY_ENTITY;       // entity
     static const std::string PROPERTY_LINEEND;      // lineend
+    static const std::string PROPERTY_MESSAGESTART; // messagestart
     static const std::string PROPERTY_MESSAGEEND;   // messageend
 
 
