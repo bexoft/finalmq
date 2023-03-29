@@ -159,6 +159,7 @@ static void replaceParser(const char* source, ssize_t sizeSource, const std::str
 static bool isReplaceNeeded(const IProtocolSessionPtr& session, std::string& lineend, std::string& messagestart, std::string& messageend)
 {
     lineend.clear();
+    messagestart.clear();
     messageend.clear();
     const std::string* hl7lineend = nullptr;
     const std::string* hl7messagestart = nullptr;
