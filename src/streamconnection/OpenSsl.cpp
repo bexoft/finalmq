@@ -38,7 +38,6 @@ OpenSslImpl::OpenSslImpl()
     std::unique_lock<std::mutex> lock(m_sslMutex);
     SSL_load_error_strings();
     ERR_load_crypto_strings();
-    ERR_load_BIO_strings();
     OpenSSL_add_all_algorithms();
     SSL_library_init();
 }
