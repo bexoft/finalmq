@@ -199,6 +199,8 @@ namespace finalmq {
     class SYMBOLEXP StructBase
     {
     public:
+        virtual ~StructBase() = default;
+
         StructBase* add(ssize_t index);
 
         virtual void clear() = 0;
