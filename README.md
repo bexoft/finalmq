@@ -20,12 +20,11 @@ To build finalmq from source, the following tools and dependencies are needed:
   * g++
   * uuid
   * openssl
-  * node-ejs
-  * node-minimist
+  * nodejs
 
 On Ubuntu/Debian, you can install them with:
 
-    sudo apt-get install -y git make cmake g++ uuid-dev libssl1.0-dev node-ejs node-minimist
+    sudo apt-get install -y git make cmake g++ uuid-dev libssl-dev nodejs
 
 To get the source, clone the repository of finalmq:
 
@@ -61,33 +60,7 @@ C++ Installation - Windows
 To build from source using VC++, follow this instructions:
 * Install dependend tools and dependencies listed above
   * Install node.js from https://nodejs.org/en/download/current/
-  
-  * Install ejs and minimist
-  
-    command:
-  
-    ```
-    npm install -g ejs minimist
-    ```
-  
-    Get the directory, where the packages were installed
-  
-    	npm config get prefix
-  
-    The output could be:
-  
-    	C:\Users\<UserName>\AppData\Roaming\npm
-  
-    Use this path, add the directory "node_modules" and set the NODE_PATH environment variable with this path.
-  
-    	NODE_PATH=C:\Users\<UserName>\AppData\Roaming\npm\node_modules
-  
-    If you need help for setting the environment variable, then you can get help from here:
-  
-    https://docs.oracle.com/en/database/oracle/machine-learning/oml4r/1.5.1/oread/creating-and-modifying-environment-variables-on-windows.html
-  
-    After setting the environment variable you have to restart your Visual Studio, in case it is opened, otherwise it will not see the new value. 
-    
+      
   * Install openSSL
     You will find a Windows installer at [Win32/Win64 OpenSSL Installer for Windows - Shining Light Productions (slproweb.com)](https://slproweb.com/products/Win32OpenSSL.html)
     Make sure, the environment variable OPENSSL_ROOT_DIR is set to the openssl install directory.
