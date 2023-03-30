@@ -53,7 +53,7 @@ public:
 #if !defined(WIN32) && !defined(__MINGW32__)
     MOCK_METHOD(int, epoll_create1, (int flags), (override));
     MOCK_METHOD(int, epoll_ctl, (int epfd, int op, int fd, struct epoll_event* event), (override));
-    MOCK_METHOD(int, epoll_pwait, (int epfd, struct epoll_event *events, int maxevents, int timeout, const sigset_t* sigmask), (override));
+    MOCK_METHOD(int, epoll_pwait, (int epfd, struct epoll_event *events, int maxevents, int timeout, const sigset_t* mask), (override));
 #endif
     MOCK_METHOD(int, makeSocketPair, (SocketDescriptorPtr& socket1, SocketDescriptorPtr& socket2), (override));
     MOCK_METHOD(int, ioctlInt, (SOCKET fd, unsigned long int request, int* value), (override));
