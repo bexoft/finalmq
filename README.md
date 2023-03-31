@@ -2145,13 +2145,15 @@ If you want to use SSL/TLS just fill the CertificateData inside the BindProperti
 
 If you want to use HL7 with telnet then you will have problems with message start and end, and also with the line endings of HL7. For HL7 over telnet use the following example. It skips the common message start and end, it replaces the HL7 line ending with "\r\n". The message end is an additional empty line after the last segment ("\r\n\r\n").
 
-    entityContainer.bind("tcp://*:7001:delimiter_x:hl7", { {},
-        VariantStruct{ {ProtocolDelimiterX::KEY_DELIMITER, "\r\n\r\n"} },
-        VariantStruct{ {RemoteEntityFormatHl7::PROPERTY_NAMESPACE, "hl7"},
-                       {RemoteEntityFormatHl7::PROPERTY_ENTITY, "MyService"},
-                       {RemoteEntityFormatHl7::PROPERTY_LINEEND, "\r\n"}
-        }
-    });
+```c++
+entityContainer.bind("tcp://*:7001:delimiter_x:hl7", { {},
+    VariantStruct{ {ProtocolDelimiterX::KEY_DELIMITER, "\r\n\r\n"} },
+    VariantStruct{ {RemoteEntityFormatHl7::PROPERTY_NAMESPACE, "hl7"},
+                   {RemoteEntityFormatHl7::PROPERTY_ENTITY, "MyService"},
+                   {RemoteEntityFormatHl7::PROPERTY_LINEEND, "\r\n"}
+    }
+});
+```
 
 
 
@@ -2200,65 +2202,75 @@ The serializers will serialize the data in multiple chunks of the buffer. When y
 
 **From HL7 to data structs (generated code):**
 
-    hl7::SSU_U03 msg; // destination
-    std::string hl7 = "MSH|^~\\&|||||||SSU^U03^SSU_U03|||...";	// source
-    SerializerStruct serializer(msg);
-    ParserHl7 parser(serializer, hl7.data());
-    parser.parseStruct("hl7.SSU_U03");
-    
-    // now the msg is filled with HL7 data
+```c++
+hl7::SSU_U03 msg; // destination
+std::string hl7 = "MSH|^~\\&|||||||SSU^U03^SSU_U03|||...";	// source
+SerializerStruct serializer(msg);
+ParserHl7 parser(serializer, hl7.data());
+parser.parseStruct("hl7.SSU_U03");
+
+// now the msg is filled with HL7 data
+```
 
 
 
 **From data structs (generated code) to HL7:**
 
-    const int MAX_CHUNK_SIZE = 512;
-    hl7::SSU_U03 msg; // source
-    ZeroCopyBuffer buffer; // destination
-    SerializerHl7 serializer(buffer, MAX_BLOCK_SIZE);
-    ParserStruct parser(serializer, msg);
-    parser.parseStruct();
-    
-    std::string hl7 = buffer.getData();
+```c++
+const int MAX_CHUNK_SIZE = 512;
+hl7::SSU_U03 msg; // source
+ZeroCopyBuffer buffer; // destination
+SerializerHl7 serializer(buffer, MAX_BLOCK_SIZE);
+ParserStruct parser(serializer, msg);
+parser.parseStruct();
+
+std::string hl7 = buffer.getData();
+```
 
 
 
 **From HL7 to protobuf:**
 
-    const int MAX_CHUNK_SIZE = 512;
-    std::string hl7 = "MSH|^~\\&|||||||SSU^U03^SSU_U03|||...";	// source
-    ZeroCopyBuffer buffer; // destination
-    SerializerProto serializer(buffer, MAX_BLOCK_SIZE);
-    ParserHl7 parser(serializer, hl7.data());
-    parser.parseStruct();
-    
-    std::string protobuf = buffer.getData();
+```c++
+const int MAX_CHUNK_SIZE = 512;
+std::string hl7 = "MSH|^~\\&|||||||SSU^U03^SSU_U03|||...";	// source
+ZeroCopyBuffer buffer; // destination
+SerializerProto serializer(buffer, MAX_BLOCK_SIZE);
+ParserHl7 parser(serializer, hl7.data());
+parser.parseStruct();
+
+std::string protobuf = buffer.getData();
+```
 
 
 
 **From HL7 to variant:**
 
-    const int MAX_CHUNK_SIZE = 512;
-    std::string hl7 = "MSH|^~\\&|||||||SSU^U03^SSU_U03|||...";	// source
-    Variant variant; // destination
-    SerializerVariant serializer(variant);
-    ParserHl7 parser(serializer, hl7.data());
-    parser.parseStruct();
-    
-    std::string messageStructure = variant.getData("msh.messageType.messageStructure");	// get "SSU_U03"
+```c++
+const int MAX_CHUNK_SIZE = 512;
+std::string hl7 = "MSH|^~\\&|||||||SSU^U03^SSU_U03|||...";	// source
+Variant variant; // destination
+SerializerVariant serializer(variant);
+ParserHl7 parser(serializer, hl7.data());
+parser.parseStruct();
+
+std::string messageStructure = variant.getData("msh.messageType.messageStructure");	// get "SSU_U03"
+```
 
 
 
 **From data structs (generated code) to JSON:**
 
-    const int MAX_CHUNK_SIZE = 512;
-    hl7::SSU_U03 msg; // source
-    ZeroCopyBuffer buffer; // destination
-    SerializerJson serializer(buffer, MAX_BLOCK_SIZE);
-    ParserStruct parser(serializer, msg);
-    parser.parseStruct();
-    
-    std::string json = buffer.getData();
+```c++
+const int MAX_CHUNK_SIZE = 512;
+hl7::SSU_U03 msg; // source
+ZeroCopyBuffer buffer; // destination
+SerializerJson serializer(buffer, MAX_BLOCK_SIZE);
+ParserStruct parser(serializer, msg);
+parser.parseStruct();
+
+std::string json = buffer.getData();
+```
 
 
 
