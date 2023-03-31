@@ -2247,7 +2247,6 @@ std::string protobuf = buffer.getData();
 **From HL7 to variant:**
 
 ```c++
-const int MAX_CHUNK_SIZE = 512;
 std::string hl7 = "MSH|^~\\&|||||||SSU^U03^SSU_U03|||...";	// source
 Variant variant; // destination
 SerializerVariant serializer(variant);
