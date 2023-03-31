@@ -2007,19 +2007,19 @@ The Metainfo is a std::unordered_map<std::string, std::string>, so you can itera
 
 HL7 is a serialization format which mainly is used at healthcare applications. It consists of two parts. First, it defines the syntax how the data is serialized. Second, it also defines the meaning (semantics) of the data. FinalMQ supports the syntax version 2, so far. This version is also called the pipe-syntax of HL7, because the default separation between data fields is done by he pipe | character. You can also find the name HL7v2 for this syntax.
 
-There exists different versions of the HL7v2 standard. These versions have always the same syntax in common. But they have different definitions of their message definitions, so called Trigger Events. The Trigger Events consists of segments. The segments consists of fields, sub-fields and sub-sub-fields. With growing version number also the number of Trigger Events, segments and fields grow.
+There exists different versions of the HL7v2 standard. These versions have always the same syntax in common. But they have different definitions of their messages. An HL7 message is called "Trigger Event". The Trigger Events consists of segments. The segments consists of fields, sub-fields and sub-sub-fields. With growing version number also the number of Trigger Events, segments and fields grow.
 
 
 
 #### HL7 definition
 
-So, the composition of Trigger Events, segments and fields are defined in the according version of the HL7 standard. You can compare the definition of the Trigger Events as the schema of XML or JSON. Or like the google protobuf's protofile. Or like the finalMQ's data definition file (*.fmq). All of these examples define a data structure of messages.
+The composition of Trigger Events, segments and fields are defined in the according version of the HL7 standard. The definition of the Trigger Events is similar to the schema of XML or JSON. Or like the google protobuf's protofile, or like the finalMQ's data definition file (*.fmq). All of these examples define a data structure of messages.
 
-You can find the standard of HL7v2 for example at the following Web-Site:
+You can find the standards of HL7v2 for example at the following Web-Site:
 
 https://hl7-definition.caristix.com/v2/
 
-Here the definitions are available as text.
+Here, the definitions are available as text.
 
 But there are also definitions available that code the definitions as XML or JSON. finalMQ makes use of a JSON/JavaScript definition which is available on github:
 
@@ -2027,7 +2027,7 @@ https://github.com/beckdave/hl7-dictionary this is a fork from https://github.co
 
 The fork contains a little bugfix.
 
-finalMQ automatically downloads the hl7-dictionary repository into the cmake build folder. See CMakeLists.txt:
+finalMQ automatically downloads the hl7-dictionary repository into the cmake-build-folder. See CMakeLists.txt:
 
 `CloneRepository("https://github.com/beckdave/hl7-dictionary.git" "beckdave-fix-compounds" "hl7-dictionary" "${CMAKE_BINARY_DIR}/hl7-dictionary")`
 
@@ -2108,17 +2108,20 @@ Now, you can include the .fmq.h file into your application, so that you can use 
 Even that it is possible to send and receive Trigger Events with different protocols or different serialization formats, the usual connection for HL7 is a plain TCP connection with a message start and a message end sequence.
 Message start: **0x0B**
 Message end: **0x1C, 0x0D**
+
+note:
 The message type is coded inside the HL7 message header. But the namespace of the generated code is is not found in the message header. Therefore, the namespace must be given to the HL7 parser, so that it can match a message type to a generated Trigger Event. You can pass the namespace of the generated code with the property: PROPERTY_NAMESPACE. Usually it is "hl7". This is also the default namespace of the generated code for HL7. Therefore, you can just skip this property.
-Also the multiplexing of entities does not work for the plain HL7 connection, so only one entity can be used to send and receive HL7 messages for each connect or bind. The name of the entity/service that shall be used inside the application for a connect or a bind must be defined with the property: PROPERTY_ENTITY.
+
+The multiplexing of entities does not work for the plain HL7 connection, so only one entity can be used to send and receive HL7 messages for each connect or bind. The name of the entity/service that shall be used inside the application for a connect or a bind must be defined with the property: PROPERTY_ENTITY.
 
 So, a connect of a plain HL7 connection can look like this:
 
 ```C++
     SessionInfo sessionClient = entityContainer.connect("tcp://localhost:7000:delimiter_x:hl7", { {}, {}, 
-        VariantStruct{ {ProtocolDelimiterX::KEY_DELIMITER, "\x1C\x0D"} },
-        VariantStruct{  {RemoteEntityFormatHl7::PROPERTY_MESSAGESTART, "\x0B"},
-                        {RemoteEntityFormatHl7::PROPERTY_NAMESPACE, "hl7"},
-                        {RemoteEntityFormatHl7::PROPERTY_ENTITY, "Hl7Entity"} } });
+        VariantStruct{ {ProtocolDelimiterX::KEY_DELIMITER, "\x1C\x0D"} },			// message end
+        VariantStruct{  {RemoteEntityFormatHl7::PROPERTY_MESSAGESTART, "\x0B"},		// message start
+                        {RemoteEntityFormatHl7::PROPERTY_NAMESPACE, "hl7"},			// can be skipped
+                        {RemoteEntityFormatHl7::PROPERTY_ENTITY, "Hl7Entity"} } });	// the entity name on client side
 ```
 
 
@@ -2127,10 +2130,10 @@ Or in case of a bind:
 
 ```C++
 entityContainer.bind("tcp://*:7000:delimiter_x:hl7", { {}, 
-    VariantStruct{ {ProtocolDelimiterX::KEY_DELIMITER, "\x1C\x0D"} },
-    VariantStruct{  {RemoteEntityFormatHl7::PROPERTY_MESSAGESTART, "\x0B"},
-                    {RemoteEntityFormatHl7::PROPERTY_NAMESPACE, "hl7"},
-                    {RemoteEntityFormatHl7::PROPERTY_ENTITY, "MyService"} } });
+    VariantStruct{ {ProtocolDelimiterX::KEY_DELIMITER, "\x1C\x0D"} },			// message end
+    VariantStruct{  {RemoteEntityFormatHl7::PROPERTY_MESSAGESTART, "\x0B"},		// message start
+                    {RemoteEntityFormatHl7::PROPERTY_NAMESPACE, "hl7"},			// can be skipped
+                    {RemoteEntityFormatHl7::PROPERTY_ENTITY, "MyService"} } });	// the entity name on server side
 ```
 
 
@@ -2165,7 +2168,7 @@ finalMQ is not only a communication framework, it also brings some powerful pars
 
 memory containers:
 
-- Data Structs (Generated Code)
+- Data Struct (Generated Code)
 - Variant
 
 Data formats:
@@ -2176,7 +2179,7 @@ Data formats:
 
 
 
-You can convert each presentation directly to another. Each representation has a Parser and a Serializer. When you convert from one data representation to another then you have a source representation and a destination representation. For the source you need a parser and for the destination you need a serializer. When you bring a source parser together with a destination serializer, then you will convert from one data representation to another. The Parsers and Serializers for each data representation you will find in the code folders that start with "serialize" and ends with the according data representation. Here are the names of the folders:
+You can convert each presentation directly to another. Each representation has a Parser and a Serializer. When you convert from one data representation to another then you have a source representation and a destination representation. For the source you need a parser and for the destination you need a serializer. When you bring a source parser together with a destination serializer, then you can convert from one data representation to another. You will find the Parsers and Serializers for each data representation in the code folders that start with "serialize" and ends with the according data representation. Here are the names of the folders:
 
 memory containers:
 
@@ -2196,11 +2199,11 @@ In each of these folders there is a Parser and a Serializer available. The seria
 1. **protocolsession/ProtocolMessage.h**
 2. **helpers/ZeroCopyBuffer.h**
 
-The serializers will serialize the data in multiple chunks of the buffer. When you use the **ZeroCopyBuffer** then you can get a buffer in one big buffer by calling the **getData()** method of ZeroCopyBuffer. But keep in mind that the getData() will copy all data chunks to one big buffer, even that it is called zero-copy. The size of the chunks can be passed to the serializers. Here are some examples:
+The serializers will serialize the data in multiple data chunks of the buffer. When you use the **ZeroCopyBuffer** then you can get these data chunks with the method **chunks()**, but in case you want to have the data in one big buffer you can call the **getData()** method. But keep in mind that the getData() will copy all data chunks into one big buffer, even that the buffer class is called **ZeroCopyBuffer**. The maximum size of a data chunks can be passed to the serializers. Here are some examples of conversions:
 
 
 
-**From HL7 to data structs (generated code):**
+**From HL7 to data struct (generated code):**
 
 ```c++
 hl7::SSU_U03 msg; // destination
@@ -2214,7 +2217,7 @@ parser.parseStruct("hl7.SSU_U03");
 
 
 
-**From data structs (generated code) to HL7:**
+**From data struct (generated code) to HL7:**
 
 ```c++
 const int MAX_CHUNK_SIZE = 512;
@@ -2258,7 +2261,22 @@ std::string messageStructure = variant.getData("msh.messageType.messageStructure
 
 
 
-**From data structs (generated code) to JSON:**
+**From data struct (generated code) to protobuf:**
+
+```c++
+const int MAX_CHUNK_SIZE = 512;
+hl7::SSU_U03 msg; // source
+ZeroCopyBuffer buffer; // destination
+SerializerProto serializer(buffer, MAX_BLOCK_SIZE);
+ParserStruct parser(serializer, msg);
+parser.parseStruct();
+
+std::string protobuf = buffer.getData();
+```
+
+
+
+ **From data struct (generated code) to JSON:**
 
 ```c++
 const int MAX_CHUNK_SIZE = 512;
