@@ -2165,8 +2165,8 @@ finalMQ is not only a communication framework, it also brings some powerful pars
 
 memory containers:
 
-	- Generated code
-	- Variant
+- Data Structs (Generated Code)
+- Variant
 
 Data formats:
 
@@ -2180,7 +2180,7 @@ You can convert each presentation directly to another. Each representation has a
 
 memory containers:
 
- - Generated code 	-> **serializestruct**
+ - Data Structs (Generated code) -> **serializestruct**
  - Variant -> **serializevariant**
 
 Data formats:
