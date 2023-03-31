@@ -60,7 +60,7 @@ C++ Installation - Windows
 To build from source using VC++, follow this instructions:
 * Install dependend tools and dependencies listed above
   * Install node.js from https://nodejs.org/en/download/current/
-      
+    
   * Install openSSL
     You will find a Windows installer at [Win32/Win64 OpenSSL Installer for Windows - Shining Light Productions (slproweb.com)](https://slproweb.com/products/Win32OpenSSL.html)
     Make sure, the environment variable OPENSSL_ROOT_DIR is set to the openssl install directory.
@@ -2108,10 +2108,10 @@ Now, you can include the .fmq.h file into your application, so that you can use 
 Even that it is possible to send and receive Trigger Events with different protocols or different serialization formats, the usual connection for HL7 is a plain TCP connection with a message start and a message end sequence.
 Message start: **0x0B**
 Message end: **0x1C, 0x0D**
-The message type is coded inside the HL7 message header. But the used namespace for the generated code must be defined for the connection (usually just "**hl7**").
-Also the multiplexing of entities does not work for the plain HL7 connection, so only one entity can be used to send and receive HL7 messages for each connect or bind. The name of the entity/service that shall be used inside the application for a connect or a bind must be defined.
+The message type is coded inside the HL7 message header. But the namespace of the generated code is is not found in the message header. Therefore, the namespace must be given to the HL7 parser, so that it can match a message type to a generated Trigger Event. You can pass the namespace of the generated code with the property: PROPERTY_NAMESPACE. Usually it is "hl7". This is also the default namespace of the generated code for HL7. Therefore, you can just skip this property.
+Also the multiplexing of entities does not work for the plain HL7 connection, so only one entity can be used to send and receive HL7 messages for each connect or bind. The name of the entity/service that shall be used inside the application for a connect or a bind must be defined with the property: PROPERTY_ENTITY.
 
-So, a connect of a plain HL7 connection will look like this:
+So, a connect of a plain HL7 connection can look like this:
 
 ```C++
     SessionInfo sessionClient = entityContainer.connect("tcp://localhost:7000:delimiter_x:hl7", { {}, {}, 
@@ -2143,6 +2143,123 @@ If you want to use SSL/TLS just fill the CertificateData inside the BindProperti
 
 
 
+If you want to use HL7 with telnet then you will have problems with message start and end, and also with the line endings of HL7. For HL7 over telnet use the following example. It skips the common message start and end, it replaces the HL7 line ending with "\r\n". The message end is an additional empty line after the last segment ("\r\n\r\n").
+
+    entityContainer.bind("tcp://*:7001:delimiter_x:hl7", { {},
+        VariantStruct{ {ProtocolDelimiterX::KEY_DELIMITER, "\r\n\r\n"} },
+        VariantStruct{ {RemoteEntityFormatHl7::PROPERTY_NAMESPACE, "hl7"},
+                       {RemoteEntityFormatHl7::PROPERTY_ENTITY, "MyService"},
+                       {RemoteEntityFormatHl7::PROPERTY_LINEEND, "\r\n"}
+        }
+    });
 
 
-### 
+
+
+
+### Parsers
+
+finalMQ is not only a communication framework, it also brings some powerful parser capabilities. Data can be presented in different memory containers or different data formats. The framework supports conversions between these different representations. Right now, finalMQ supports the following representations:
+
+memory containers:
+
+	- Generated code
+	- Variant
+
+Data formats:
+
+- JSON
+- Google Protobuf
+- HL7
+
+
+
+You can convert each presentation directly to another. Each representation has a Parser and a Serializer. When you convert from one data representation to another then you have a source representation and a destination representation. For the source you need a parser and for the destination you need a serializer. When you bring a source parser together with a destination serializer, then you will convert from one data representation to another. The Parsers and Serializers for each data representation you will find in the code folders that start with "serialize" and ends with the according data representation. Here are the names of the folders:
+
+memory containers:
+
+ - Generated code 	-> **serializestruct**
+ - Variant -> **serializevariant**
+
+Data formats:
+
+- JSON -> **serializejson**
+- Google Protobuf -> **serializeproto**
+- HL7 -> **serializehl7**
+
+
+
+In each of these folders there is a Parser and a Serializer available. The serializers of the data formats need a buffer where to serialize the data stream. You can use two available buffers of the framework:
+
+1. **protocolsession/ProtocolMessage.h**
+2. **helpers/ZeroCopyBuffer.h**
+
+The serializers will serialize the data in multiple chunks of the buffer. When you use the **ZeroCopyBuffer** then you can get a buffer in one big buffer by calling the **getData()** method of ZeroCopyBuffer. But keep in mind that the getData() will copy all data chunks to one big buffer, even that it is called zero-copy. The size of the chunks can be passed to the serializers. Here are some examples:
+
+
+
+**From HL7 to data structs (generated code):**
+
+    hl7::SSU_U03 msg; // destination
+    std::string hl7 = "MSH|^~\\&|||||||SSU^U03^SSU_U03|||...";	// source
+    SerializerStruct serializer(msg);
+    ParserHl7 parser(serializer, hl7.data());
+    parser.parseStruct("hl7.SSU_U03");
+    
+    // now the msg is filled with HL7 data
+
+
+
+**From data structs (generated code) to HL7:**
+
+    const int MAX_CHUNK_SIZE = 512;
+    hl7::SSU_U03 msg; // source
+    ZeroCopyBuffer buffer; // destination
+    SerializerHl7 serializer(buffer, MAX_BLOCK_SIZE);
+    ParserStruct parser(serializer, msg);
+    parser.parseStruct();
+    
+    std::string hl7 = buffer.getData();
+
+
+
+**From HL7 to protobuf:**
+
+    const int MAX_CHUNK_SIZE = 512;
+    std::string hl7 = "MSH|^~\\&|||||||SSU^U03^SSU_U03|||...";	// source
+    ZeroCopyBuffer buffer; // destination
+    SerializerProto serializer(buffer, MAX_BLOCK_SIZE);
+    ParserHl7 parser(serializer, hl7.data());
+    parser.parseStruct();
+    
+    std::string protobuf = buffer.getData();
+
+
+
+**From HL7 to variant:**
+
+    const int MAX_CHUNK_SIZE = 512;
+    std::string hl7 = "MSH|^~\\&|||||||SSU^U03^SSU_U03|||...";	// source
+    Variant variant; // destination
+    SerializerVariant serializer(variant);
+    ParserHl7 parser(serializer, hl7.data());
+    parser.parseStruct();
+    
+    std::string messageStructure = variant.getData("msh.messageType.messageStructure");	// get "SSU_U03"
+
+
+
+**From data structs (generated code) to JSON:**
+
+    const int MAX_CHUNK_SIZE = 512;
+    hl7::SSU_U03 msg; // source
+    ZeroCopyBuffer buffer; // destination
+    SerializerJson serializer(buffer, MAX_BLOCK_SIZE);
+    ParserStruct parser(serializer, msg);
+    parser.parseStruct();
+    
+    std::string json = buffer.getData();
+
+
+
+ 
