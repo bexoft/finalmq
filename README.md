@@ -2118,10 +2118,10 @@ So, a connect of a plain HL7 connection can look like this:
 
 ```C++
     SessionInfo sessionClient = entityContainer.connect("tcp://localhost:7000:delimiter_x:hl7", { {}, {}, 
-        VariantStruct{ {ProtocolDelimiterX::KEY_DELIMITER, "\x1C\x0D"} },			// message end
-        VariantStruct{  {RemoteEntityFormatHl7::PROPERTY_MESSAGESTART, "\x0B"},		// message start
-                        {RemoteEntityFormatHl7::PROPERTY_NAMESPACE, "hl7"},			// can be skipped
-                        {RemoteEntityFormatHl7::PROPERTY_ENTITY, "Hl7Entity"} } });	// the entity name on client side
+        VariantStruct{ {ProtocolDelimiterX::KEY_DELIMITER, "\x1C\x0D"} },           // message end
+        VariantStruct{  {RemoteEntityFormatHl7::PROPERTY_MESSAGESTART, "\x0B"},     // message start
+                        {RemoteEntityFormatHl7::PROPERTY_NAMESPACE, "hl7"},         // can be skipped
+                        {RemoteEntityFormatHl7::PROPERTY_ENTITY, "Hl7Entity"} } }); // the entity name on client side
 ```
 
 
@@ -2130,10 +2130,10 @@ Or in case of a bind:
 
 ```C++
 entityContainer.bind("tcp://*:7000:delimiter_x:hl7", { {}, 
-    VariantStruct{ {ProtocolDelimiterX::KEY_DELIMITER, "\x1C\x0D"} },			// message end
-    VariantStruct{  {RemoteEntityFormatHl7::PROPERTY_MESSAGESTART, "\x0B"},		// message start
-                    {RemoteEntityFormatHl7::PROPERTY_NAMESPACE, "hl7"},			// can be skipped
-                    {RemoteEntityFormatHl7::PROPERTY_ENTITY, "MyService"} } });	// the entity name on server side
+    VariantStruct{ {ProtocolDelimiterX::KEY_DELIMITER, "\x1C\x0D"} },           // message end
+    VariantStruct{  {RemoteEntityFormatHl7::PROPERTY_MESSAGESTART, "\x0B"},     // message start
+                    {RemoteEntityFormatHl7::PROPERTY_NAMESPACE, "hl7"},         // can be skipped
+                    {RemoteEntityFormatHl7::PROPERTY_ENTITY, "MyService"} } }); // the entity name on server side
 ```
 
 
@@ -2236,7 +2236,7 @@ std::string hl7 = buffer.getData();
 
 ```c++
 const int MAX_CHUNK_SIZE = 512;
-std::string hl7 = "MSH|^~\\&|||||||SSU^U03^SSU_U03|||...";	// source
+std::string hl7 = "MSH|^~\\&|||||||SSU^U03^SSU_U03|||..."; // source
 ZeroCopyBuffer buffer; // destination
 SerializerProto serializer(buffer, MAX_BLOCK_SIZE);
 ParserHl7 parser(serializer, hl7.data());
@@ -2250,7 +2250,7 @@ std::string protobuf = buffer.getData();
 **From HL7 to variant:**
 
 ```c++
-std::string hl7 = "MSH|^~\\&|||||||SSU^U03^SSU_U03|||...";	// source
+std::string hl7 = "MSH|^~\\&|||||||SSU^U03^SSU_U03|||..."; // source
 Variant variant; // destination
 SerializerVariant serializer(variant);
 ParserHl7 parser(serializer, hl7.data());
