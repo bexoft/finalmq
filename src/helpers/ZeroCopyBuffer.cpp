@@ -36,18 +36,24 @@ std::string ZeroCopyBuffer::getData() const
 {
     std::string data;
     ssize_t size = 0;
-    std::for_each(m_strings.begin(), m_strings.end(), [&size] (const std::string& entry) {
-        size += entry.size();
-    });
+    for (const auto& chunk : m_chunks)
+    {
+        size += chunk.size();
+    }
     data.reserve(size);
-    std::for_each(m_strings.begin(), m_strings.end(), [&data] (const std::string& entry) {
-        data +=entry;
-    });
+    for (const auto& chunk : m_chunks)
+    {
+        data += chunk;
+    }
 
     return data;
 }
 
 
+const std::list<std::string>& ZeroCopyBuffer::chunks() const
+{
+    return m_chunks;
+}
 
 
 char* ZeroCopyBuffer::addBuffer(ssize_t size, ssize_t /*reserve*/)
@@ -55,26 +61,26 @@ char* ZeroCopyBuffer::addBuffer(ssize_t size, ssize_t /*reserve*/)
     assert(size > 0);
     std::string str;
     str.resize(size);
-    m_strings.push_back(std::move(str));
-    return const_cast<char*>(m_strings.back().data());
+    m_chunks.push_back(std::move(str));
+    return const_cast<char*>(m_chunks.back().data());
 }
 
 void ZeroCopyBuffer::downsizeLastBuffer(ssize_t newSize)
 {
-    if (m_strings.empty() && newSize == 0)
+    if (m_chunks.empty() && newSize == 0)
     {
         return;
     }
 
-    assert(!m_strings.empty());
+    assert(!m_chunks.empty());
 
     if (newSize == 0)
     {
-        m_strings.pop_back();
+        m_chunks.pop_back();
     }
     else
     {
-        std::string& str = m_strings.back();
+        std::string& str = m_chunks.back();
         str.resize(newSize);
     }
 }
