@@ -123,6 +123,11 @@ bool ProtocolStream::doesSupportFileTransfer() const
     return false;
 }
 
+bool ProtocolStream::isSynchronousRequestReply() const
+{
+    return false;
+}
+
 IProtocol::FuncCreateMessage ProtocolStream::getMessageFactory() const
 {
     return []() {

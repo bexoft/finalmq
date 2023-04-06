@@ -22,33 +22,39 @@
 
 #pragma once
 
+#include "finalmq/streamconnection/IMessage.h"
 #include "finalmq/protocolsession/IProtocol.h"
 #include "finalmq/helpers/FmqDefines.h"
-#include "finalmq/protocols/mqtt5/Mqtt5Client.h"
+#include "finalmq/helpers/Executor.h"
 
-#include <deque>
-#include <functional>
+#include <random>
+
 
 namespace finalmq {
 
 
-class SYMBOLEXP ProtocolMqtt5Client : public IProtocol
-                                    , public IMqtt5ClientCallback
+class SYMBOLEXP ProtocolHttpClient : public IProtocol
+                                   , public std::enable_shared_from_this<ProtocolHttpClient>
 {
 public:
-    static const std::string KEY_USERNAME;                  ///< the username for the broker
-    static const std::string KEY_PASSWORD;                  ///< the password for the broker
-    static const std::string KEY_SESSIONEXPIRYINTERVAL;     ///< the mqtt session expiry interval in seconds
-    static const std::string KEY_KEEPALIVE;                 ///< the mqtt keep alive interval in seconds
-    
-    static const std::uint32_t PROTOCOL_ID;           // 5
-    static const std::string PROTOCOL_NAME; // mqtt5client
+    static const std::uint32_t PROTOCOL_ID;           // 7
+    static const std::string PROTOCOL_NAME; // httpclient
 
+    static const std::string FMQ_HTTP;
+    static const std::string FMQ_METHOD;
+    static const std::string FMQ_PROTOCOL;
+    static const std::string FMQ_PATH;
+    static const std::string FMQ_QUERY_PREFIX;
+    static const std::string FMQ_HTTP_STATUS;
+    static const std::string FMQ_HTTP_STATUSTEXT;
+    static const std::string HTTP_REQUEST;
+    static const std::string HTTP_RESPONSE;
 
-    ProtocolMqtt5Client(const Variant& data);
-    ~ProtocolMqtt5Client();
+    ProtocolHttpClient();
+    virtual ~ProtocolHttpClient();
 
 private:
+
     // IProtocol
     virtual void setCallback(const std::weak_ptr<IProtocolCallback>& callback) override;
     virtual void setConnection(const IStreamConnectionPtr& connection) override;
@@ -73,49 +79,59 @@ private:
     virtual void subscribe(const std::vector<std::string>& subscribtions) override;
     virtual void cycleTime() override;
 
-    // IMqtt5ClientCallback
-    virtual void receivedConnAck(const ConnAckData& data) override;
-    virtual void receivedPublish(const PublishData& data, const IMessagePtr& message) override;
-    virtual void receivedSubAck(const std::vector<std::uint8_t>& reasoncodes) override;
-    virtual void receivedUnsubAck(const std::vector<std::uint8_t>& reasoncodes) override;
-    virtual void receivedPingResp() override;
-    virtual void receivedDisconnect(const DisconnectData& data) override;
-    virtual void receivedAuth(const AuthData& data) override;
-    virtual void closeConnection() override;
+
+    bool receiveHeaders(ssize_t bytesReceived);
+    void reset();
+    std::string createSessionName();
+    void cookiesToSessionIds(const std::string& cookies);
+//    bool handleInternalCommands(const std::shared_ptr<IProtocolCallback>& callback, bool& ok);
 
     enum class State
     {
-        WAITFORHEADER,
-        WAITFORLENGTH,
-        WAITFORPAYLOAD,
-        MESSAGECOMPLETE,
+        STATE_FIND_FIRST_LINE,
+        STATE_FIND_HEADERS,
+        STATE_CONTENT,
+        STATE_CONTENT_DONE
     };
 
-    bool receiveHeader(const SocketPtr& socket, int& bytesToRead);
-    bool receiveRemainingSize(const SocketPtr& socket, int& bytesToRead);
-    void setPayloadSize();
-    bool receivePayload(const SocketPtr& socket, int& bytesToRead); 
-    bool processPayload();
-    void clearState();
+    enum class StateSessionId
+    {
+        SESSIONID_NONE = 0,
+        SESSIONID_COOKIE = 1,
+        SESSIONID_FMQ = 2
+    };
 
-    std::string                         m_username;
-    std::string                         m_password;
-    std::uint32_t                       m_sessionExpiryInterval = 5*60;     // default 5 minutes
-    std::uint32_t                       m_keepAlive = 20;                   // default 20 seconds
-    std::string                         m_clientId;
-    std::string                         m_virtualSessionId;
+    std::random_device                              m_randomDevice;
+    std::mt19937                                    m_randomGenerator;
+    std::uniform_int_distribution<std::uint64_t>    m_randomVariable;
+    IMessage::Metainfo                              m_headerSendNext;
+    StateSessionId                                  m_stateSessionId = StateSessionId::SESSIONID_NONE;
+    std::vector<std::string>                        m_sessionNames;
 
-    bool                                m_firstConnection = true;
-    PollingTimer                        m_timerReconnect;
-
+    State                               m_state = State::STATE_FIND_FIRST_LINE;
+    std::string                         m_receiveBuffer;
+    ssize_t                             m_offsetRemaining = 0;
+    ssize_t                             m_sizeRemaining = 0;
+    IMessagePtr                         m_message;
+    ssize_t                             m_contentLength = 0;
+    ssize_t                             m_indexFilled = 0;
+    std::string                         m_headerHost;
+    std::int64_t                        m_connectionId = 0;
+    bool                                m_createSession = false;
+    std::string                         m_sessionName;
     std::weak_ptr<IProtocolCallback>    m_callback;
     IStreamConnectionPtr                m_connection;
-    std::unique_ptr<IMqtt5Client>       m_client;
+    bool                                m_multipart = false;
+
+    // path
+    std::string*                        m_path = nullptr;
+
     mutable std::mutex                  m_mutex;
+    static std::atomic_int64_t          m_nextSessionNameCounter;
 };
 
 
-class SYMBOLEXP ProtocolMqtt5ClientFactory : public IProtocolFactory
+class SYMBOLEXP ProtocolHttpClientFactory : public IProtocolFactory
 {
 public:
 
@@ -123,6 +139,5 @@ private:
     // IProtocolFactory
     virtual IProtocolPtr createProtocol(const Variant& data) override;
 };
-
 
 }   // namespace finalmq

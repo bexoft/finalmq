@@ -30,10 +30,9 @@
 #include "ProtocolSessionList.h"
 #include "IProtocolSession.h"
 
+#include <unordered_set>
 
 namespace finalmq {
-
-
 
 
 struct IProtocolSessionPrivate : public IProtocolSession
@@ -60,7 +59,7 @@ class ProtocolSession : public IProtocolSessionPrivate
 {
 public:
     ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const IProtocolPtr& protocol, const std::shared_ptr<IProtocolSessionList>& protocolSessionList, const BindProperties& bindProperties, int contentType);
-    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const IProtocolPtr& protocol, const std::shared_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, const std::string& endpointStreamConnection, const ConnectProperties& connectProperties, int contentType);
+    ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const IProtocolFactoryPtr& protocolFactory, const std::shared_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, const std::string& endpointStreamConnection, const ConnectProperties& connectProperties, int contentType);
     ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const std::shared_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer);
 
     virtual ~ProtocolSession();
@@ -77,6 +76,7 @@ private:
     virtual bool isMultiConnectionSession() const override;
     virtual bool isSendRequestByPoll() const override;
     virtual bool doesSupportFileTransfer() const override;
+    virtual bool isSynchronousRequestReply() const override;
     virtual void disconnect() override;
 //    virtual bool connect(const std::string& endpoint, const ConnectProperties& connectionProperties = {}) override;
     virtual bool connect(const std::string& endpoint, const ConnectProperties& connectionProperties = {}, int contentType = 0) override;
@@ -122,12 +122,19 @@ private:
     void cleanupMultiConnection();
     void pollRelease();
 
+    bool hasPendingRequests() const;
+    IProtocolPtr allocateRequestConnection();
+    IProtocolPtr createRequestConnection();
+    void sendNextRequests();
+
+
     const hybrid_ptr<IProtocolSessionCallback>              m_callback;
     const IExecutorPtr                                      m_executor;
     const IExecutorPtr                                      m_executorPollerThread;
     IProtocolPtr                                            m_protocol;
     std::atomic<std::int64_t>                               m_connectionId{0};
     std::unordered_map<std::int64_t, IProtocolPtr>          m_multiProtocols;
+    std::unordered_set<std::int64_t>                        m_unallocatedConnections;
 
     const std::weak_ptr<IProtocolSessionList>       m_protocolSessionList;
     const int64_t                                   m_sessionId = 0;
@@ -140,21 +147,27 @@ private:
     std::atomic<bool>                               m_protocolFlagNeedsReply{false};
     std::atomic<bool>                               m_protocolFlagIsMultiConnectionSession{false};
     std::atomic<bool>                               m_protocolFlagIsSendRequestByPoll{false};
-    std::atomic<bool>                               m_protocolFlagSupportFileTransfer{false};
+    std::atomic<bool>                               m_protocolFlagSupportFileTransfer{ false };
+    std::atomic<bool>                               m_protocolFlagSynchronousRequestReply{ false };
 
+    IProtocolFactoryPtr                             m_protocolFactory;
     IProtocol::FuncCreateMessage                    m_messageFactory;
     std::atomic_bool                                m_protocolSet{false};
-    bool                                            m_triggerConnected = false;
-    bool                                            m_triggerDisconnected = false;
+    bool                                            m_triggeredConnected = false;
+    bool                                            m_callConnect = false;
+    bool                                            m_triggeredDisconnected = false;
 
     const std::shared_ptr<IStreamConnectionContainer>   m_streamConnectionContainer;
     std::string                                         m_endpointStreamConnection;
 
     const BindProperties                            m_bindProperties;
     ConnectProperties                               m_connectionProperties;
+    Variant                                         m_protocolData;
     Variant                                         m_formatData;
+    int                                             m_maxSynchReqRepConnections = -1;
 
     std::deque<IMessagePtr>                         m_messagesBuffered;
+    std::unordered_map<std::int64_t, Variant>       m_runningRequests;
 
     std::deque<IMessagePtr>                         m_pollMessages;
     int                                             m_pollMaxRequests = 10000;
