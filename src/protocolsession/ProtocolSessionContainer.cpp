@@ -193,12 +193,9 @@ IProtocolSessionPtr ProtocolSessionContainer::connect(const std::string& endpoin
         return nullptr;
     }
 
-    IProtocolPtr protocol = protocolFactory->createProtocol(connectProperties.protocolData);
-    assert(protocol);
-
     std::string endpointStreamConnection = endpoint.substr(0, ixEndpoint);
 
-    IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(callback, m_executor, m_executorPollerThread, protocol, m_protocolSessionList, m_streamConnectionContainer, endpointStreamConnection, connectProperties, contentType);
+    IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(callback, m_executor, m_executorPollerThread, protocolFactory, m_protocolSessionList, m_streamConnectionContainer, endpointStreamConnection, connectProperties, contentType);
     protocolSession->connect();
     return protocolSession;
 }

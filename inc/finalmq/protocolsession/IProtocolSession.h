@@ -40,6 +40,7 @@ struct IProtocolSession
     virtual bool isMultiConnectionSession() const = 0;
     virtual bool isSendRequestByPoll() const = 0;
     virtual bool doesSupportFileTransfer() const = 0;
+    virtual bool isSynchronousRequestReply() const = 0;
     virtual void disconnect() = 0;
 //    virtual bool connect(const std::string& endpoint, const ConnectProperties& connectionProperties = {}) = 0;
     virtual bool connect(const std::string& endpoint, const ConnectProperties& connectionProperties = {}, int contentType = 0) = 0;

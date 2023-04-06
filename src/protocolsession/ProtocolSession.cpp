@@ -30,7 +30,10 @@
 
 namespace finalmq {
 
-static int64_t INSTANCEID_PREFIX = 0x0100000000000000ll;
+constexpr int64_t INSTANCEID_PREFIX = 0x0100000000000000ll;
+constexpr int DEFAULT_MAX_SYNC_REQREP_CONNECTIONS = 6;
+static const std::string PROPERTY_MAX_SYNC_REQREP_CONNECTIONS = "max_sync_reqrep_connections";
+
 
 const static std::string FMQ_CONNECTION_ID = "fmq_echo_connid";
 
@@ -46,24 +49,28 @@ ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, 
     , m_instanceId(m_sessionId | INSTANCEID_PREFIX)
     , m_contentType(contentType)
     , m_bindProperties(bindProperties)
+    , m_protocolData(m_bindProperties.protocolData)
     , m_formatData(m_bindProperties.formatData)
 {
 }
 
-ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const IProtocolPtr& protocol, const std::shared_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, const std::string& endpointStreamConnection, const ConnectProperties& connectProperties, int contentType)
+ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const IProtocolFactoryPtr& protocolFactory, const std::shared_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, const std::string& endpointStreamConnection, const ConnectProperties& connectProperties, int contentType)
     : m_callback(callback)
     , m_executor(executor)
     , m_executorPollerThread(executorPollerThread)
-    , m_protocol(protocol)
     , m_protocolSessionList(protocolSessionList)
     , m_sessionId(protocolSessionList->getNextSessionId())
     , m_instanceId(m_sessionId | INSTANCEID_PREFIX)
     , m_contentType(contentType)
+    , m_protocolFactory(protocolFactory)
     , m_streamConnectionContainer(streamConnectionContainer)
     , m_endpointStreamConnection(endpointStreamConnection)
     , m_connectionProperties(connectProperties)
+    , m_protocolData(m_connectionProperties.protocolData)
     , m_formatData(m_connectionProperties.formatData)
 {
+    m_protocol = protocolFactory->createProtocol(m_connectionProperties.protocolData);
+    assert(m_protocol);
 }
 
 ProtocolSession::ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const std::shared_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer)
@@ -97,7 +104,17 @@ void ProtocolSession::initProtocolValues()
     m_protocolFlagIsMultiConnectionSession = protocol->isMultiConnectionSession();
     m_protocolFlagIsSendRequestByPoll = protocol->isSendRequestByPoll();
     m_protocolFlagSupportFileTransfer = protocol->doesSupportFileTransfer();
+    m_protocolFlagSynchronousRequestReply = protocol->isSynchronousRequestReply();
     m_messageFactory = protocol->getMessageFactory();
+
+    if (m_protocolFlagSynchronousRequestReply)
+    {
+        m_maxSynchReqRepConnections = m_protocolData.getDataValue<int>(PROPERTY_MAX_SYNC_REQREP_CONNECTIONS);
+        if (m_maxSynchReqRepConnections == 0)
+        {
+            m_maxSynchReqRepConnections = DEFAULT_MAX_SYNC_REQREP_CONNECTIONS;   // default connections
+        }
+    }
 
     m_protocolSet.store(true, std::memory_order_release);
 }
@@ -109,11 +126,27 @@ void ProtocolSession::initProtocolValues()
 
 bool ProtocolSession::connect()
 {
-    assert(m_streamConnectionContainer);
     assert(m_protocol);
-    IStreamConnectionPtr connection = m_streamConnectionContainer->createConnection(std::weak_ptr<IStreamConnectionCallback>(m_protocol));
-    setConnection(connection, true);
-    bool res = m_streamConnectionContainer->connect(m_endpointStreamConnection, connection, m_connectionProperties);
+    bool res = false;
+    if (m_protocol->isSynchronousRequestReply())
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        initProtocolValues();
+        m_protocol = nullptr;
+        IProtocolPtr protocol = createRequestConnection();
+        m_unallocatedConnections.insert(protocol->getConnection()->getConnectionId());
+        lock.unlock();
+        addSessionToList(true);
+        res = true;
+    }
+    else
+    {
+        assert(m_streamConnectionContainer);
+        IStreamConnectionPtr connection = m_streamConnectionContainer->createConnection(std::weak_ptr<IStreamConnectionCallback>(m_protocol));
+        setConnection(connection, true);
+        m_callConnect = true;
+        res = m_streamConnectionContainer->connect(m_endpointStreamConnection, connection, m_connectionProperties);
+    }
     return res;
 }
 
@@ -217,8 +250,7 @@ IMessagePtr ProtocolSession::convertMessageToProtocol(const IMessagePtr& msg)
 void ProtocolSession::getProtocolFromConnectionId(IProtocolPtr& protocol, std::int64_t connectionId)
 {
     // mutext is already locked
-    assert(protocol->getConnection());
-    if (connectionId != 0 && connectionId != protocol->getConnection()->getConnectionId())
+    if (protocol == nullptr || (connectionId != 0 && connectionId != protocol->getConnection()->getConnectionId()))
     {
         protocol = nullptr;
         auto it = m_multiProtocols.find(connectionId);
@@ -235,49 +267,146 @@ void ProtocolSession::sendMessage(const IMessagePtr& msg, bool isReply)
     // lock whole function, because the protocol can be changed by setProtocol (lock also over sendMessage, because the protocol could increment a sequential message counter and the order of the counter shall be like the messages that are sent.)
     std::unique_lock<std::mutex> lock(m_mutex);
 
-    if (!isReply && m_protocolFlagIsSendRequestByPoll)
+    if (!m_protocolFlagSynchronousRequestReply)
     {
-        if (m_pollProtocol)
+        if (!isReply && m_protocolFlagIsSendRequestByPoll)
         {
-            m_pollCounter++;
-            IMessagePtr pollReply = m_pollProtocol->pollReply({ msg });
-            sendMessage(pollReply, m_pollProtocol);
-            if (m_pollCountMax >= 0 && m_pollCounter >= m_pollCountMax)
+            if (m_pollProtocol)
             {
-                pollRelease();
+                m_pollCounter++;
+                IMessagePtr pollReply = m_pollProtocol->pollReply({ msg });
+                sendMessage(pollReply, m_pollProtocol);
+                if (m_pollCountMax >= 0 && m_pollCounter >= m_pollCountMax)
+                {
+                    pollRelease();
+                }
+            }
+            else
+            {
+                m_pollMessages.push_back(msg);
+            }
+            if (m_pollMaxRequests != -1 && static_cast<ssize_t>(m_pollMessages.size()) >= m_pollMaxRequests)
+            {
+                lock.unlock();
+                disconnect();
             }
         }
         else
         {
-            m_pollMessages.push_back(msg);
-        }
-        if (m_pollMaxRequests != -1 && static_cast<ssize_t>(m_pollMessages.size()) >= m_pollMaxRequests)
-        {
-            lock.unlock();
-            disconnect();
+            if (!m_protocolSet.load(std::memory_order_relaxed))  // relaxed, because already locked
+            {
+                m_messagesBuffered.push_back(msg);
+                return;
+            }
+
+            IProtocolPtr protocol = m_protocol;
+            if (m_protocolFlagIsMultiConnectionSession)
+            {
+                Variant& echoData = msg->getEchoData();
+                std::int64_t connectionId = echoData.getDataValue<std::int64_t>(FMQ_CONNECTION_ID);
+                getProtocolFromConnectionId(protocol, connectionId);
+            }
+
+            sendMessage(msg, protocol);
         }
     }
     else
     {
-        if (!m_protocolSet.load(std::memory_order_relaxed))  // relaxed, because already locked
-        {
-            m_messagesBuffered.push_back(msg);
-            return;
-        }
-
-        IProtocolPtr protocol = m_protocol;
-        if (m_protocolFlagIsMultiConnectionSession)
-        {
-            Variant& echoData = msg->getEchoData();
-            std::int64_t connectionId = echoData.getDataValue<std::int64_t>(FMQ_CONNECTION_ID);
-            getProtocolFromConnectionId(protocol, connectionId);
-        }
-
-        sendMessage(msg, protocol);
+        m_messagesBuffered.push_back(msg);
+        sendNextRequests();
     }
 }
 
 
+bool ProtocolSession::hasPendingRequests() const
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    if (!m_messagesBuffered.empty())
+    {
+        return true;
+    }
+    return false;
+}
+
+IProtocolPtr ProtocolSession::allocateRequestConnection()
+{
+    // m_mutex is already locked
+    if (!m_unallocatedConnections.empty())
+    {
+        auto itUnallocated = m_unallocatedConnections.begin();
+        assert(itUnallocated != m_unallocatedConnections.end());
+        std::int64_t connectionId = *itUnallocated;
+        m_unallocatedConnections.erase(itUnallocated);
+        auto itConnection = m_multiProtocols.find(connectionId);
+        if (itConnection != m_multiProtocols.end())
+        {
+            return itConnection->second;
+        }
+    }
+    return createRequestConnection();
+}
+
+IProtocolPtr ProtocolSession::createRequestConnection()
+{
+    // m_mutex is already locked
+    if (static_cast<int>(m_multiProtocols.size()) < m_maxSynchReqRepConnections)
+    {
+        assert(m_streamConnectionContainer);
+
+        assert(m_protocolFactory);
+        IProtocolPtr protocol = m_protocolFactory->createProtocol(m_protocolData);
+        assert(protocol);
+
+        IStreamConnectionPtr connection = m_streamConnectionContainer->createConnection(std::weak_ptr<IStreamConnectionCallback>(protocol));
+
+        assert(m_protocol == nullptr);
+        m_connectionId = connection->getConnectionId();
+        m_multiProtocols[m_connectionId] = protocol;
+        protocol->setCallback(shared_from_this());
+        protocol->setConnection(connection);
+
+        m_connectionProperties.config.totalReconnectDuration = 0;   // only try once, do not make retries to connect (in case of SyncReqRep)
+
+        bool res = m_streamConnectionContainer->connect(m_endpointStreamConnection, connection, m_connectionProperties);
+        if (res)
+        {
+            return protocol;
+        }
+    }
+
+    return nullptr;
+}
+
+void ProtocolSession::sendNextRequests()
+{
+    // m_mutex is already locked
+    while (true)
+    {
+        if (m_messagesBuffered.empty())
+        {
+            return;
+        }
+
+        IProtocolPtr protocol = allocateRequestConnection();
+        if (protocol == nullptr)
+        {
+            return;
+        }
+
+        IStreamConnectionPtr connection = protocol->getConnection();
+        if (connection == nullptr)
+        {
+            return;
+        }
+
+        std::int64_t connectionId = connection->getConnectionId();
+        IMessagePtr message = m_messagesBuffered.front();
+        m_messagesBuffered.pop_front();
+        assert(message);
+        m_runningRequests[connectionId] = std::move(message->getEchoData());
+        sendMessage(message, protocol);
+    }
+}
 
 
 
@@ -352,6 +481,11 @@ bool ProtocolSession::isSendRequestByPoll() const
 bool ProtocolSession::doesSupportFileTransfer() const
 {
     return m_protocolFlagSupportFileTransfer;
+}
+
+bool ProtocolSession::isSynchronousRequestReply() const
+{
+    return m_protocolFlagSynchronousRequestReply;
 }
 
 void ProtocolSession::disconnect()
@@ -437,27 +571,52 @@ bool ProtocolSession::connect(const std::string& endpoint, const ConnectProperti
         return false;
     }
 
+    m_protocolFactory = protocolFactory;
+
     IProtocolPtr protocol = protocolFactory->createProtocol(connectionProperties.protocolData);
     assert(protocol);
 
-    assert(m_streamConnectionContainer);
-    IStreamConnectionPtr connection = m_streamConnectionContainer->createConnection(std::weak_ptr<IStreamConnectionCallback>(protocol));
+    bool res = false;
+    if (protocol->isSynchronousRequestReply())
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        assert(m_protocol == nullptr);
+        m_endpointStreamConnection = endpoint.substr(0, ixEndpoint);
+        m_connectionProperties = connectionProperties;
+        m_protocolData = m_connectionProperties.protocolData;
+        m_formatData = m_connectionProperties.formatData;
+        m_contentType = contentType;
+        initProtocolValues();
+        IProtocolPtr connection = createRequestConnection();
+        m_unallocatedConnections.insert(connection->getProtocolId());
+        sendNextRequests();
+        lock.unlock();
+        res = true;
+    }
+    else
+    {
+        assert(m_streamConnectionContainer);
+        IStreamConnectionPtr connection = m_streamConnectionContainer->createConnection(std::weak_ptr<IStreamConnectionCallback>(protocol));
 
-    std::unique_lock<std::mutex> lock(m_mutex);
-    assert(m_protocol == nullptr);
-    m_endpointStreamConnection = endpoint.substr(0, ixEndpoint);
-    m_connectionProperties = connectionProperties;
-    m_formatData = m_connectionProperties.formatData;
-    m_contentType = contentType;
-    m_protocol = protocol;
-    m_connectionId = connection->getConnectionId();
-    initProtocolValues();
-    m_protocol->setCallback(shared_from_this());
-    m_protocol->setConnection(connection);
-    sendBufferedMessages();
-    lock.unlock();
+        std::unique_lock<std::mutex> lock(m_mutex);
+        assert(m_protocol == nullptr);
+        m_endpointStreamConnection = endpoint.substr(0, ixEndpoint);
+        m_connectionProperties = connectionProperties;
+        m_protocolData = m_connectionProperties.protocolData;
+        m_formatData = m_connectionProperties.formatData;
+        m_contentType = contentType;
+        m_protocol = protocol;
+        m_connectionId = connection->getConnectionId();
+        initProtocolValues();
+        m_callConnect = true;
+        m_protocol->setCallback(shared_from_this());
+        m_protocol->setConnection(connection);
+        sendBufferedMessages();
+        lock.unlock();
 
-    bool res = m_streamConnectionContainer->connect(m_endpointStreamConnection, connection, m_connectionProperties);
+        res = m_streamConnectionContainer->connect(m_endpointStreamConnection, connection, m_connectionProperties);
+    }
+
     return res;
 }
 
@@ -491,9 +650,9 @@ const Variant& ProtocolSession::getFormatData() const
 void ProtocolSession::connected()
 {
     std::unique_lock<std::mutex> lock(m_mutex);
-    if (!m_triggerConnected)
+    if (!m_triggeredConnected)
     {
-        m_triggerConnected = true;
+        m_triggeredConnected = true;
         lock.unlock();
 
         if (m_executor)
@@ -529,8 +688,8 @@ void ProtocolSession::disconnected()
     m_messagesBuffered.clear();
     m_pollMessages.clear();
     IProtocolSessionListPtr protocolSessionList = m_protocolSessionList.lock();
-    bool doDisconnected = (!m_triggerDisconnected) && (m_triggerConnected || m_protocolSet.load(std::memory_order_relaxed));   // relaxed, because already locked
-    m_triggerDisconnected = true;
+    bool doDisconnected = (!m_triggeredDisconnected) && (m_triggeredConnected || m_callConnect);
+    m_triggeredDisconnected = true;
     lock.unlock();
 
     if (doDisconnected)
@@ -593,13 +752,42 @@ void ProtocolSession::disconnectedVirtualSession(const std::string& virtualSessi
     }
 }
 
+const std::string FMQ_DISCONNECTED = "fmq_disconnected";
 
 
 void ProtocolSession::received(const IMessagePtr& message, std::int64_t connectionId)
 {
+    if (m_protocolFlagSynchronousRequestReply)
+    {
+        bool foundRunningRequest = false;
+        std::unique_lock<std::mutex> lock(m_mutex);
+        auto it = m_runningRequests.find(connectionId);
+        if (it != m_runningRequests.end())
+        {
+            message->getEchoData() = std::move(it->second);
+            m_runningRequests.erase(it);
+            foundRunningRequest = true;
+        }
+        const bool disconnected = (message->getControlData().getVariant(FMQ_DISCONNECTED) != nullptr);
+
+        // in case of disconnected -> keep connection allocated, so that no one will use it till the disconnectedMultiConnection is called
+        if (!disconnected)
+        {
+            // if not disconnected -> mark connection as unallocated
+            m_unallocatedConnections.insert(connectionId);
+            sendNextRequests();
+        }
+
+        if (!foundRunningRequest)
+        {
+            return;
+        }
+    }
+
     activity();
+
     bool writeChannelIdIntoEchoData = false;
-    if (m_protocolFlagIsMultiConnectionSession && connectionId)
+    if (!m_protocolFlagSynchronousRequestReply && m_protocolFlagIsMultiConnectionSession && connectionId)
     {
         writeChannelIdIntoEchoData = (connectionId != m_connectionId);
     }
@@ -809,6 +997,7 @@ bool ProtocolSession::findSessionByName(const std::string& sessionName, const IP
             {
                 if (session.get() != this)
                 {
+                    assert(protocol);
                     if (m_verified)
                     {
                         session->setProtocol(protocol);
@@ -818,13 +1007,12 @@ bool ProtocolSession::findSessionByName(const std::string& sessionName, const IP
                         disconnected(); // we are in the poller loop thread
 
                         lock.lock();
-                        IProtocolPtr prot = m_protocol;
+                        assert(m_protocol == protocol);
                         m_protocol = nullptr;
                         m_connectionId = 0;
                         lock.unlock();
 
-                        assert(prot);
-                        session->setProtocol(prot);
+                        session->setProtocol(protocol);
                     }
                 }
                 return true;
@@ -951,20 +1139,35 @@ void ProtocolSession::setPollMaxRequests(int maxRequests)
 }
 
 
+
+
 void ProtocolSession::disconnectedMultiConnection(const IProtocolPtr& protocol)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
-    if (m_pollProtocol == protocol)
+    if (!m_protocolFlagSynchronousRequestReply)
     {
-        m_pollProtocol = nullptr;
-        m_pollTimer.stop();
+        if (m_pollProtocol == protocol)
+        {
+            m_pollProtocol = nullptr;
+            m_pollTimer.stop();
+        }
     }
-    lock.unlock();
 
-    if (!m_verified)
+    assert(protocol);
+    IStreamConnectionPtr connection = protocol->getConnection();
+    if (connection)
     {
-        disconnected();
+        std::int64_t connectionId = connection->getConnectionId();
+        m_unallocatedConnections.erase(connectionId);
+        m_multiProtocols.erase(connectionId);
+        if (m_connectionId == connectionId)
+        {
+            m_protocol = nullptr;
+            m_connectionId = 0;
+        }
     }
+
+    lock.unlock();
 }
 
 

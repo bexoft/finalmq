@@ -51,6 +51,7 @@ private:
     virtual bool isMultiConnectionSession() const override;
     virtual bool isSendRequestByPoll() const override;
     virtual bool doesSupportFileTransfer() const override;
+    virtual bool isSynchronousRequestReply() const override;
     virtual FuncCreateMessage getMessageFactory() const override;
     virtual void sendMessage(IMessagePtr message) override;
     virtual void moveOldProtocolState(IProtocol& protocolOld) override;

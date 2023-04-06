@@ -298,6 +298,11 @@ bool ProtocolMqtt5Client::doesSupportFileTransfer() const
     return false;
 }
 
+bool ProtocolMqtt5Client::isSynchronousRequestReply() const
+{
+    return false;
+}
+
 IProtocol::FuncCreateMessage ProtocolMqtt5Client::getMessageFactory() const
 {
     return []() {

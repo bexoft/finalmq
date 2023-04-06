@@ -35,7 +35,7 @@ namespace finalmq {
 
 bool waitTillDone(testing::internal::ExpectationBase& expectation, int waittime)
 {
-    for (int i = 0; i < waittime; ++i)
+    for (int i = 0; i < (waittime / 10); ++i)
     {
         testing::internal::g_gmock_mutex.Lock();
         bool ok = expectation.IsSaturated();
@@ -45,7 +45,7 @@ bool waitTillDone(testing::internal::ExpectationBase& expectation, int waittime)
             std::this_thread::sleep_for(std::chrono::milliseconds(5));
             return true;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     return false;
 }

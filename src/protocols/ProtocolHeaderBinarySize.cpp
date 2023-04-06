@@ -132,6 +132,11 @@ bool ProtocolHeaderBinarySize::doesSupportFileTransfer() const
     return false;
 }
 
+bool ProtocolHeaderBinarySize::isSynchronousRequestReply() const
+{
+    return false;
+}
+
 IProtocol::FuncCreateMessage ProtocolHeaderBinarySize::getMessageFactory() const
 {
     return []() {

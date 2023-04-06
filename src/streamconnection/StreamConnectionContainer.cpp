@@ -338,6 +338,7 @@ bool StreamConnectionContainer::connect(const std::string& endpoint, const IStre
     if (doAsyncGetHostByName)
     {
         ret = true;
+        connection->updateConnectionData(connectionData);
         std::string hostname = connectionData.hostname;
         m_executorWorker->addAction([this, connectionData, connection, connectionProperties]() mutable {
             bool ok = false;

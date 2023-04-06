@@ -76,6 +76,7 @@ struct IProtocol : public IStreamConnectionCallback
     virtual bool isMultiConnectionSession() const = 0;
     virtual bool isSendRequestByPoll() const = 0;
     virtual bool doesSupportFileTransfer() const = 0;
+    virtual bool isSynchronousRequestReply() const = 0;
     virtual FuncCreateMessage getMessageFactory() const = 0;
     virtual void sendMessage(IMessagePtr message) = 0;
     virtual void moveOldProtocolState(IProtocol& protocolOld) = 0;
