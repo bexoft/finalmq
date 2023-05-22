@@ -21,11 +21,11 @@ set(CMAKE_CXX_STANDARD 14)
 
 
 #include_directories(${CMAKE_CURRENT_BINARY_DIR})
-include_directories(${CMAKE_SOURCE_DIR}/inc)
+include_directories(${FINALMQ_SOURCE_DIR}/inc)
 
 
 if (WIN32)
-link_directories(${OPENSSL_DIR}/lib ${CMAKE_BINARY_DIR})
+link_directories(${OPENSSL_DIR}/lib ${FINALMQ_BINARY_DIR})
 endif()
 
 
