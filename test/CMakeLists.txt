@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.10)
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/ssltest.cert.pem DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/ssltest.key.pem DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/ssltest.cert.pem DESTINATION ${CMAKE_BINARY_DIR})
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/ssltest.key.pem DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/ssltest.cert.pem DESTINATION ${FINALMQ_BINARY_DIR})
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/ssltest.key.pem DESTINATION ${FINALMQ_BINARY_DIR})
 
 # Prevent overriding the parent project's compiler/linker
 # settings on Windows
@@ -75,8 +75,8 @@ add_custom_command(
 )
 
 add_custom_command(
-    COMMAND node ${CODEGENERATOR_PROTO} --input=${CMAKE_SOURCE_DIR}/inc/finalmq/metadataserialize/variant.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS ${CMAKE_SOURCE_DIR}/inc/finalmq/metadataserialize/variant.fmq
+    COMMAND node ${CODEGENERATOR_PROTO} --input=${FINALMQ_SOURCE_DIR}/inc/finalmq/metadataserialize/variant.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${FINALMQ_SOURCE_DIR}/inc/finalmq/metadataserialize/variant.fmq
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/variant.proto
     COMMENT "Generating proto code out of variant.fmq."
 )
@@ -94,9 +94,9 @@ PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${CMAKE_CURRENT_BINARY_DIR}/variant.
 message("proto headers: ${PROTO_HDRS}")
 
 include_directories("${gmock_SOURCE_DIR}/include")
-include_directories("${CMAKE_BINARY_DIR}/test")
+include_directories("${FINALMQ_BINARY_DIR}/test")
 
-include_directories("${CMAKE_SOURCE_DIR}/mock")
+include_directories("${FINALMQ_SOURCE_DIR}/mock")
 
 file(GLOB TESTSOURCES "*.cpp")
 #file(GLOB GENCODE ${CMAKE_CURRENT_BINARY_DIR}/test.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/hl7.fmq.cpp)

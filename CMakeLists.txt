@@ -17,6 +17,10 @@ else()
 endif()
 
 
+SET(FINALMQ_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+SET(FINALMQ_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
+
+
 include(FetchContent)
 
 function(CloneRepository repositoryURL branchName projectName sourceDir)
@@ -34,7 +38,7 @@ function(CloneRepository repositoryURL branchName projectName sourceDir)
   FetchContent_MakeAvailable(${projectName})
 endfunction(CloneRepository)
 
-CloneRepository("https://github.com/beckdave/hl7-dictionary.git" "beckdave-fix-compounds" "hl7-dictionary" "${CMAKE_BINARY_DIR}/hl7-dictionary")
+CloneRepository("https://github.com/beckdave/hl7-dictionary.git" "beckdave-fix-compounds" "hl7-dictionary" "${FINALMQ_BINARY_DIR}/hl7-dictionary")
 
 # Add compile flags to determine coverage   
 if (FINALMQ_BUILD_COVERAGE)
@@ -91,7 +95,7 @@ else(  IS_ABSOLUTE ${GCOVR}  )
 endif(  IS_ABSOLUTE ${GCOVR}  )
 endif(FINALMQ_BUILD_COVERAGE)
 
-SET(CODEGENERATOR ${CMAKE_SOURCE_DIR}/codegenerator)
+SET(CODEGENERATOR ${FINALMQ_SOURCE_DIR}/codegenerator)
 
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/inc)
@@ -140,7 +144,7 @@ add_custom_command(
 
 
 #Bring the headers into the project
-include_directories(inc)
+#include_directories(inc)
 
 #However, the file(GLOB...) allows for wildcard additions:
 file(GLOB SOURCES "src/*.cpp" "inc/finalmq/*.h"
@@ -168,16 +172,20 @@ file(GLOB SOURCES "src/*.cpp" "inc/finalmq/*.h"
                   "inc/finalmq/conversions/*.h"
                   "mock/*.h")
 
-#Generate the shared library from the sources
-add_library(finalmq SHARED ${SOURCES}
+#Generate the library from the sources
+
+SET(FINALMQ_LIBRARY_SOURCES ${SOURCES}
     ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/metadataserialize/metadata.fmq.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/metadataserialize/variant.fmq.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/remoteentity/entitydata.fmq.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/interfaces/fmqreg.fmq.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/Qt/qtdata.fmq.cpp
-    )
+    ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/Qt/qtdata.fmq.cpp)
 
+add_library(finalmq SHARED ${FINALMQ_LIBRARY_SOURCES})
+add_library(finalmqStatic STATIC ${FINALMQ_LIBRARY_SOURCES})
 
+target_include_directories(finalmq PUBLIC ${FINALMQ_SOURCE_DIR}/inc)
+target_include_directories(finalmqStatic PUBLIC ${FINALMQ_SOURCE_DIR}/inc)
 
 if (WIN32)
     message("== WIN32 ==")
@@ -189,9 +197,11 @@ if (WIN32)
         set(LINKLIBS ${LINKLIBS} wsock32 ws2_32 Rpcrt4 "${OPENSSL_DIR}/lib/libssl.lib" "${OPENSSL_DIR}/lib/libcrypto.lib")
     endif()
     target_compile_options(finalmq PRIVATE -DEXPORT_finalmq)
+    target_compile_options(finalmqStatic PRIVATE -DEXPORT_finalmq)
 elseif(UNIX)
     message("== UNIX ==")
     target_compile_options(finalmq PRIVATE -Werror -Wall -Wextra)
+    target_compile_options(finalmqStatic PRIVATE -Werror -Wall -Wextra)
     if (${CMAKE_SYSTEM_NAME} MATCHES "QNX")
         message("== QNX ==")
     else()
