@@ -134,7 +134,11 @@ bool ProtocolSession::connect()
         initProtocolValues();
         m_protocol = nullptr;
         IProtocolPtr protocol = createRequestConnection();
-        m_unallocatedConnections.insert(protocol->getConnection()->getConnectionId());
+        IStreamConnectionPtr connection = protocol->getConnection();
+        if (connection)
+        {
+            m_unallocatedConnections.insert(connection->getConnectionId());
+        }
         lock.unlock();
         addSessionToList(true);
         res = true;
@@ -250,7 +254,9 @@ IMessagePtr ProtocolSession::convertMessageToProtocol(const IMessagePtr& msg)
 void ProtocolSession::getProtocolFromConnectionId(IProtocolPtr& protocol, std::int64_t connectionId)
 {
     // mutext is already locked
-    if (protocol == nullptr || (connectionId != 0 && connectionId != protocol->getConnection()->getConnectionId()))
+
+    IStreamConnectionPtr connection = protocol->getConnection();
+    if (protocol == nullptr || (connectionId != 0 && (connection == nullptr || connectionId != connection->getConnectionId())))
     {
         protocol = nullptr;
         auto it = m_multiProtocols.find(connectionId);
@@ -559,6 +565,11 @@ void ProtocolSession::addSessionToList(bool verified)
 
 bool ProtocolSession::connect(const std::string& endpoint, const ConnectProperties& connectionProperties, int contentType)
 {
+    if (m_protocolSet.load(std::memory_order_acquire))
+    {
+        return false;
+    }
+
     size_t ixEndpoint = endpoint.find_last_of(':');
     if (ixEndpoint == std::string::npos)
     {
@@ -588,8 +599,11 @@ bool ProtocolSession::connect(const std::string& endpoint, const ConnectProperti
         m_contentType = contentType;
         initProtocolValues();
         IProtocolPtr connection = createRequestConnection();
-        m_unallocatedConnections.insert(connection->getProtocolId());
-        sendNextRequests();
+        if (connection)
+        {
+            m_unallocatedConnections.insert(connection->getProtocolId());
+            sendNextRequests();
+        }
         lock.unlock();
         res = true;
     }

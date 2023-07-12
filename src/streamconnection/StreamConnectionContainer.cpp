@@ -332,13 +332,13 @@ bool StreamConnectionContainer::connect(const std::string& endpoint, const IStre
     connectionData.startTime = std::chrono::steady_clock::now();
     connectionData.ssl = connectionProperties.certificateData.ssl;
     connectionData.connectionState = ConnectionState::CONNECTIONSTATE_CREATED;
+    connection->updateConnectionData(connectionData);
     bool doAsyncGetHostByName = false;
     std::string addr = AddressHelpers::makeSocketAddress(connectionData.hostname, connectionData.port, connectionData.af, true, doAsyncGetHostByName);
     bool ret = false;
     if (doAsyncGetHostByName)
     {
         ret = true;
-        connection->updateConnectionData(connectionData);
         std::string hostname = connectionData.hostname;
         m_executorWorker->addAction([this, connectionData, connection, connectionProperties]() mutable {
             bool ok = false;
