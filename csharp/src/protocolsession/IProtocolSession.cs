@@ -36,6 +36,7 @@ namespace finalmq
         bool IsMultiConnectionSession();
         bool IsSendRequestByPoll();
         bool DoesSupportFileTransfer();
+        bool IsSynchronousRequestReply();
         void Disconnect();
         void Connect(string endpoint, ConnectProperties? connectionProperties = null, int contentType = 0);
         IExecutor? Executor { get; }

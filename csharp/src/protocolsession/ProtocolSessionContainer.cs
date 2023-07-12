@@ -196,12 +196,9 @@ namespace finalmq
             string protocolName = endpoint.Substring(ixEndpoint + 1, endpoint.Length - (ixEndpoint + 1));
             FuncCreateProtocol protocolFactory = ProtocolRegistry.Instance.GetProtocolFactory(protocolName);
 
-            Variant? protocolData = connectProperties?.ProtocolData;
-            IProtocol protocol = protocolFactory(protocolData);
-
             string endpointStreamConnection = endpoint.Substring(0, ixEndpoint);
 
-            IProtocolSessionPrivate protocolSession = new ProtocolSession(callback, m_executor, protocol, m_protocolSessionList, m_streamConnectionContainer, endpointStreamConnection, connectProperties, contentType);
+            IProtocolSessionPrivate protocolSession = new ProtocolSession(callback, m_executor, protocolFactory, m_protocolSessionList, m_streamConnectionContainer, endpointStreamConnection, connectProperties, contentType);
             protocolSession.Connect();
             return protocolSession;
         }

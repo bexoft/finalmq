@@ -57,6 +57,7 @@ namespace finalmq
         bool IsMultiConnectionSession { get; }
         bool IsSendRequestByPoll { get; }
         bool DoesSupportFileTransfer { get; }
+        bool IsSynchronousRequestReply { get; }
         FuncCreateMessage MessageFactory { get; }
         void SendMessage(IMessage message);
         void MoveOldProtocolState(IProtocol protocolOld);

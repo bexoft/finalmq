@@ -410,6 +410,13 @@ namespace finalmq
                 return true;
             }
         }
+        public bool IsSynchronousRequestReply
+        {
+            get
+            {
+                return false;
+            }
+        }
         public FuncCreateMessage MessageFactory
         {
             get
