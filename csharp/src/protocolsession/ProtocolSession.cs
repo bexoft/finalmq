@@ -51,21 +51,26 @@ namespace finalmq
             m_instanceId = m_sessionId | INSTANCEID_PREFIX;
             m_contentType = contentType;
             m_bindProperties = bindProperties;
+            m_protocolData = m_bindProperties?.ProtocolData;
             m_formatData = bindProperties?.FormatData;
         }
-        public ProtocolSession(IProtocolSessionCallback callback, IExecutor? executor, IProtocol protocol, IProtocolSessionList protocolSessionList, IStreamConnectionContainer streamConnectionContainer, string endpointStreamConnection, ConnectProperties? connectProperties, int contentType)
+        public ProtocolSession(IProtocolSessionCallback callback, IExecutor? executor, FuncCreateProtocol protocolFactory, IProtocolSessionList protocolSessionList, IStreamConnectionContainer streamConnectionContainer, string endpointStreamConnection, ConnectProperties? connectProperties, int contentType)
         {
             m_callback = callback;
             m_executor = executor;
-            m_protocol = protocol;
             m_protocolSessionList = protocolSessionList;
             m_sessionId = protocolSessionList.GetNextSessionId();
             m_instanceId = m_sessionId | INSTANCEID_PREFIX;
             m_contentType = contentType;
+            m_protocolFactory = protocolFactory;
             m_streamConnectionContainer = streamConnectionContainer;
             m_endpointStreamConnection = endpointStreamConnection;
             m_connectionProperties = connectProperties;
+            m_protocolData = m_connectionProperties?.ProtocolData;
             m_formatData = connectProperties?.FormatData;
+
+            m_protocol = protocolFactory(m_connectionProperties?.ProtocolData);
+            Debug.Assert(m_protocol != null);
         }
         public ProtocolSession(IProtocolSessionCallback callback, IExecutor? executor, IProtocolSessionList protocolSessionList, IStreamConnectionContainer streamConnectionContainer)
         {
@@ -92,47 +97,55 @@ namespace finalmq
             // lock whole function, because the protocol can be changed by setProtocol (lock also over sendMessage, because the protocol could increment a sequential message counter and the order of the counter shall be like the messages that are sent.)
             lock (m_mutex)
             {
-                if (!isReply && m_protocolFlagIsSendRequestByPoll)
+                if (!m_protocolFlagSynchronousRequestReply)
                 {
-                    if (m_pollProtocol != null)
+                    if (!isReply && m_protocolFlagIsSendRequestByPoll)
                     {
-                        ++m_pollCounter;
-                        IList<IMessage> messages = new List<IMessage>();
-                        messages.Add(msg);
-                        IMessage? pollReply = m_pollProtocol.PollReply(messages);
-                        Debug.Assert(pollReply != null);    // wrong implementation of the protocol
-                        SendMessage(pollReply, m_pollProtocol);
-                        if (m_pollCountMax >= 0 && m_pollCounter >= m_pollCountMax)
+                        if (m_pollProtocol != null)
                         {
-                            PollRelease();
+                            ++m_pollCounter;
+                            IList<IMessage> messages = new List<IMessage>();
+                            messages.Add(msg);
+                            IMessage? pollReply = m_pollProtocol.PollReply(messages);
+                            Debug.Assert(pollReply != null);    // wrong implementation of the protocol
+                            SendMessage(pollReply, m_pollProtocol);
+                            if (m_pollCountMax >= 0 && m_pollCounter >= m_pollCountMax)
+                            {
+                                PollRelease();
+                            }
+                        }
+                        else
+                        {
+                            m_pollMessages.Add(msg);
+                        }
+                        if (m_pollMaxRequests != -1 && m_pollMessages.Count >= m_pollMaxRequests)
+                        {
+                            doDisconnect = true;
                         }
                     }
                     else
                     {
-                        m_pollMessages.Add(msg);
-                    }
-                    if (m_pollMaxRequests != -1 && m_pollMessages.Count >= m_pollMaxRequests)
-                    {
-                        doDisconnect = true;
+                        if (Interlocked.Read(ref m_protocolSet) == 0)
+                        {
+                            m_messagesBuffered.Add(msg);
+                            return;
+                        }
+
+                        IProtocol? protocol = m_protocol;
+                        if (m_protocolFlagIsMultiConnectionSession)
+                        {
+                            Variant echoData = msg.EchoData;
+                            long connectionId = echoData.GetData<long>(FMQ_CONNECTION_ID);
+                            GetProtocolFromConnectionId(ref protocol, connectionId);
+                        }
+
+                        SendMessage(msg, protocol);
                     }
                 }
                 else
                 {
-                    if (Interlocked.Read(ref m_protocolSet) == 0)
-                    {
-                        m_messagesBuffered.Add(msg);
-                        return;
-                    }
-
-                    IProtocol? protocol = m_protocol;
-                    if (m_protocolFlagIsMultiConnectionSession)
-                    {
-                        Variant echoData = msg.EchoData;
-                        long connectionId = echoData.GetData<long>(FMQ_CONNECTION_ID);
-                        GetProtocolFromConnectionId(ref protocol, connectionId);
-                    }
-
-                    SendMessage(msg, protocol);
+                    m_messagesBuffered.Add(msg);
+                    SendNextRequests();
                 }
             }
             if (doDisconnect)
@@ -140,6 +153,97 @@ namespace finalmq
                 Disconnect();
             }
         }
+
+        private bool HasPendingRequests()
+        {
+            lock (m_mutex)
+            {
+                if (m_messagesBuffered.Count != 0)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private IProtocol? AllocateRequestConnection()
+        {
+            // m_mutex is already locked
+            if (m_unallocatedConnections.Count != 0)
+            {
+                long connectionId = m_unallocatedConnections.ElementAt<long>(0);
+                m_unallocatedConnections.Remove(connectionId);
+                m_multiProtocols.TryGetValue(connectionId, out IProtocol? protocol);
+                if (protocol != null)
+                {
+                    return protocol;
+                }
+            }
+            return CreateRequestConnection();
+        }
+
+        private IProtocol? CreateRequestConnection()
+        {
+            // m_mutex is already locked
+            if (m_multiProtocols.Count < m_maxSynchReqRepConnections && m_endpointStreamConnection != null)
+            {
+                Debug.Assert(m_streamConnectionContainer != null);
+
+                Debug.Assert(m_protocolFactory != null);
+                IProtocol protocol = m_protocolFactory(m_protocolData);
+
+                IStreamConnection connection = m_streamConnectionContainer.CreateConnection(protocol);
+
+                Debug.Assert(m_protocol == null);
+                m_connectionId = connection.ConnectionId;
+                m_multiProtocols[m_connectionId] = protocol;
+                protocol.SetCallback(this);
+                protocol.Connection = connection;
+
+                if (m_connectionProperties == null)
+                {
+                    m_connectionProperties = new ConnectProperties();
+                }
+                m_connectionProperties.ConnectConfig.TotalReconnectDuration = 0;   // only try once, do not make retries to connect (in case of SyncReqRep)
+
+                m_streamConnectionContainer.Connect(m_endpointStreamConnection, connection, m_connectionProperties);
+                return protocol;
+            }
+
+            return null;
+        }
+
+        private void SendNextRequests()
+        {
+            // m_mutex is already locked
+            while (true)
+            {
+                if (m_messagesBuffered.Count == 0)
+                {
+                    return;
+                }
+
+                IProtocol? protocol = AllocateRequestConnection();
+                if (protocol == null)
+                {
+                    return;
+                }
+
+                IStreamConnection? connection = protocol.Connection;
+                if (connection == null)
+                {
+                    return;
+                }
+
+                long connectionId = connection.ConnectionId;
+                IMessage message = m_messagesBuffered.ElementAt<IMessage>(0);
+                m_messagesBuffered.RemoveAt(0);
+                m_runningRequests[connectionId] = message.EchoData;
+                SendMessage(message, protocol);
+            }
+        }
+
+
         public long SessionId
         {
             get
@@ -213,6 +317,10 @@ namespace finalmq
         {
             return m_protocolFlagSupportFileTransfer;
         }
+        public bool IsSynchronousRequestReply()
+        {
+            return m_protocolFlagSynchronousRequestReply;
+        }
         public void Disconnect()
         {
             IList<IProtocol>? protocols = null;
@@ -243,6 +351,11 @@ namespace finalmq
         }
         public void Connect(string endpoint, ConnectProperties? connectionProperties = null, int contentType = 0)
         {
+            if (Interlocked.Read(ref m_protocolSet) != 0)
+            {
+                throw new System.ArgumentException("Already connected");
+            }
+
             int ixEndpoint = endpoint.LastIndexOf(':');
             if (ixEndpoint == -1)
             {
@@ -251,31 +364,53 @@ namespace finalmq
             string protocolName = endpoint.Substring(ixEndpoint + 1, endpoint.Length - (ixEndpoint + 1));
             FuncCreateProtocol protocolFactory = ProtocolRegistry.Instance.GetProtocolFactory(protocolName);
 
+            m_protocolFactory = protocolFactory;
+
             Variant? protocolData = connectionProperties?.ProtocolData;
             IProtocol? protocol = protocolFactory(protocolData);
             Debug.Assert(protocol != null);
 
-
-            Debug.Assert(m_protocol == null);
-            Debug.Assert(m_streamConnectionContainer != null);
-
-            IStreamConnection connection = m_streamConnectionContainer.CreateConnection(protocol);
-
-            lock (m_mutex)
+            if (protocol.IsSynchronousRequestReply)
             {
-                m_endpointStreamConnection = endpoint.Substring(0, ixEndpoint);
-                m_connectionProperties = connectionProperties;
-                m_formatData = connectionProperties?.FormatData;
-                m_contentType = contentType;
-                m_protocol = protocol;
-                m_connectionId = connection.ConnectionId;
-                InitProtocolValues();
-                m_protocol.SetCallback(this);
-                m_protocol.Connection = connection;
-                SendBufferedMessages();
+                lock (m_mutex)
+                {
+                    Debug.Assert(m_protocol == null);
+                    m_endpointStreamConnection = endpoint.Substring(0, ixEndpoint);
+                    m_connectionProperties = connectionProperties;
+                    m_protocolData = m_connectionProperties?.ProtocolData;
+                    m_formatData = m_connectionProperties?.FormatData;
+                    m_contentType = contentType;
+                    InitProtocolValues();
+                    IProtocol? connection = CreateRequestConnection();
+                    if (connection != null)
+                    {
+                        m_unallocatedConnections.Add(connection.ProtocolId);
+                        SendNextRequests();
+                    }
+                }
             }
+            else
+            {
+                Debug.Assert(m_streamConnectionContainer != null);
+                IStreamConnection connection = m_streamConnectionContainer.CreateConnection(protocol);
 
-            m_streamConnectionContainer.Connect(m_endpointStreamConnection, connection, m_connectionProperties);
+                lock (m_mutex)
+                {
+                    Debug.Assert(m_protocol == null);
+                    m_endpointStreamConnection = endpoint.Substring(0, ixEndpoint);
+                    m_connectionProperties = connectionProperties;
+                    m_formatData = connectionProperties?.FormatData;
+                    m_contentType = contentType;
+                    m_protocol = protocol;
+                    m_connectionId = connection.ConnectionId;
+                    InitProtocolValues();
+                    m_protocol.SetCallback(this);
+                    m_protocol.Connection = connection;
+                    SendBufferedMessages();
+                }
+
+                m_streamConnectionContainer.Connect(m_endpointStreamConnection, connection, m_connectionProperties);
+            }
         }
         public IExecutor? Executor
         {
@@ -312,12 +447,32 @@ namespace finalmq
         // IProtocolSessionPrivate
         public void Connect()
         {
-            Debug.Assert(m_streamConnectionContainer != null);
             Debug.Assert(m_protocol != null);
-            Debug.Assert(m_endpointStreamConnection != null);
-            IStreamConnection connection = m_streamConnectionContainer.CreateConnection(m_protocol);
-            SetConnection(connection, true);
-            m_streamConnectionContainer.Connect(m_endpointStreamConnection, connection, m_connectionProperties);
+            if (m_protocol.IsSynchronousRequestReply)
+            {
+                lock (m_mutex)
+                {
+                    InitProtocolValues();
+                    m_protocol = null;
+                    IProtocol protocol = CreateRequestConnection();
+                    IStreamConnection? connection = protocol.Connection;
+                    if (connection != null)
+                    {
+                        m_unallocatedConnections.Add(connection.ConnectionId);
+                    }
+                }
+                AddSessionToList(true);
+            }
+            else
+            {
+                Debug.Assert(m_streamConnectionContainer != null);
+                Debug.Assert(m_protocol != null);
+                Debug.Assert(m_endpointStreamConnection != null);
+                IStreamConnection connection = m_streamConnectionContainer.CreateConnection(m_protocol);
+                SetConnection(connection, true);
+                m_callConnect = true;
+                m_streamConnectionContainer.Connect(m_endpointStreamConnection, connection, m_connectionProperties);
+            }
         }
 
         private void RetriggerActivityTimer()
@@ -398,10 +553,10 @@ namespace finalmq
             bool trigger = false;
             lock (m_mutex)
             {
-                if (!m_triggerConnected)
+                if (!m_triggeredConnected)
                 {
                     trigger = true;
-                    m_triggerConnected = true;
+                    m_triggeredConnected = true;
                 }
             }
 
@@ -426,8 +581,8 @@ namespace finalmq
             {
                 PollRelease();
 
-                doDisconnected = (!m_triggerDisconnected) && (m_triggerConnected || (Interlocked.Read(ref m_protocolSet) != 0));
-                m_triggerDisconnected = true;
+                doDisconnected = (!m_triggeredDisconnected) && (m_triggeredConnected || (Interlocked.Read(ref m_protocolSet) != 0));
+                m_triggeredDisconnected = true;
             }
 
             if (doDisconnected)
@@ -459,11 +614,44 @@ namespace finalmq
                 m_callback.DisconnectedVirtualSession(this, virtualSessionId);
             }
         }
+
+        private static readonly string FMQ_DISCONNECTED = "fmq_disconnected";
+
         public void Received(IMessage message, long connectionId)
         {
+            if (m_protocolFlagSynchronousRequestReply)
+            {
+                bool foundRunningRequest = false;
+                lock (m_mutex)
+                {
+                    m_runningRequests.TryGetValue(connectionId, out Variant? echoData);
+                    if (echoData != null)
+                    {
+                        message.EchoData = echoData;
+                        m_runningRequests.Remove(connectionId);
+                        foundRunningRequest = true;
+                    }
+                    bool disconnected = (message.ControlData.GetVariant(FMQ_DISCONNECTED) != null);
+
+                    // in case of disconnected -> keep connection allocated, so that no one will use it till the disconnectedMultiConnection is called
+                    if (!disconnected)
+                    {
+                        // if not disconnected -> mark connection as unallocated
+                        m_unallocatedConnections.Add(connectionId);
+                        SendNextRequests();
+                    }
+
+                    if (!foundRunningRequest)
+                    {
+                        return;
+                    }
+                }
+            }
+
             Activity();
+
             bool writeChannelIdIntoEchoData = false;
-            if (m_protocolFlagIsMultiConnectionSession && connectionId != 0)
+            if (!m_protocolFlagSynchronousRequestReply && m_protocolFlagIsMultiConnectionSession && connectionId != 0)
             {
                 writeChannelIdIntoEchoData = (connectionId != m_connectionId);
             }
@@ -548,12 +736,12 @@ namespace finalmq
                             IProtocol? prot = null;
                             lock (m_mutex)
                             {
-                                prot = m_protocol;
+                                Debug.Assert(m_protocol == protocol);
                                 m_protocol = null;
                                 m_connectionId = 0;
                             }
                             Debug.Assert(prot != null);
-                            session.SetProtocol(prot);
+                            session.SetProtocol(protocol);
                         }
                     }
                     return true;
@@ -632,17 +820,29 @@ namespace finalmq
         {
             lock (m_mutex)
             {
-                if (m_pollProtocol == protocol)
+                if (!m_protocolFlagSynchronousRequestReply)
                 {
-                    m_pollProtocol = null;
-                    m_pollTimer.Stop();
+                    if (m_pollProtocol == protocol)
+                    {
+                        m_pollProtocol = null;
+                        m_pollTimer.Stop();
+                    }
                 }
-            }
 
-            if (!m_verified)
-            {
-                Disconnected();
-            }
+                Debug.Assert(protocol != null);
+                IStreamConnection? connection = protocol.Connection;
+                if (connection != null)
+                {
+                    long connectionId = connection.ConnectionId;
+                    m_unallocatedConnections.Remove(connectionId);
+                    m_multiProtocols.Remove(connectionId);
+                    if (m_connectionId == connectionId)
+                    {
+                        m_protocol = null;
+                        m_connectionId = 0;
+                    }
+                }
+            };
         }
 
         private void InitProtocolValues()
@@ -656,7 +856,21 @@ namespace finalmq
             m_protocolFlagIsMultiConnectionSession = protocol.IsMultiConnectionSession;
             m_protocolFlagIsSendRequestByPoll = protocol.IsSendRequestByPoll;
             m_protocolFlagSupportFileTransfer = protocol.DoesSupportFileTransfer;
+            m_protocolFlagSynchronousRequestReply = protocol.IsSynchronousRequestReply;
             m_messageFactory = protocol.MessageFactory;
+
+            if (m_protocolFlagSynchronousRequestReply)
+            {
+                m_maxSynchReqRepConnections = 0;
+                if (m_protocolData != null)
+                {
+                    m_maxSynchReqRepConnections = m_protocolData.GetData<int>(PROPERTY_MAX_SYNC_REQREP_CONNECTIONS);
+                }                
+                if (m_maxSynchReqRepConnections == 0)
+                {
+                    m_maxSynchReqRepConnections = DEFAULT_MAX_SYNC_REQREP_CONNECTIONS;   // default connections
+                }
+            }
 
             Interlocked.Increment(ref m_protocolSet);
         }
@@ -727,9 +941,8 @@ namespace finalmq
         private void GetProtocolFromConnectionId(ref IProtocol? protocol, long connectionId)
         {
             // mutext is already locked
-            Debug.Assert(protocol != null);
-            Debug.Assert(protocol.Connection != null);
-            if (connectionId != 0 && connectionId != protocol.Connection.ConnectionId)
+            IStreamConnection? connection = protocol?.Connection;
+            if (protocol == null || (connectionId != 0 && (connection == null || connectionId != connection.ConnectionId)))
             {
                 protocol = null;
                 m_multiProtocols.TryGetValue(connectionId, out protocol);
@@ -782,6 +995,9 @@ namespace finalmq
         }
 
         static readonly long INSTANCEID_PREFIX = 0x0100000000000000;
+        static readonly int DEFAULT_MAX_SYNC_REQREP_CONNECTIONS = 6;
+        static readonly string PROPERTY_MAX_SYNC_REQREP_CONNECTIONS = "max_sync_reqrep_connections";
+
         static readonly string FMQ_CONNECTION_ID = "fmq_echo_connid";
 
 
@@ -790,6 +1006,7 @@ namespace finalmq
         IProtocol?                                      m_protocol = null;
         long                                            m_connectionId;
         readonly IDictionary<long, IProtocol>           m_multiProtocols = new Dictionary<long, IProtocol>();
+        ISet<long>                                      m_unallocatedConnections = new HashSet<long>();
 
         readonly long                                   m_sessionId;
         readonly long                                   m_instanceId;
@@ -802,19 +1019,26 @@ namespace finalmq
         bool                                            m_protocolFlagIsMultiConnectionSession = false;
         bool                                            m_protocolFlagIsSendRequestByPoll = false;
         bool                                            m_protocolFlagSupportFileTransfer = false;
+        bool                                            m_protocolFlagSynchronousRequestReply = false;
+
+        FuncCreateProtocol?                             m_protocolFactory = null;
         FuncCreateMessage?                              m_messageFactory = null;
         ulong                                           m_protocolSet = 0;   // atomic
-        bool                                            m_triggerConnected = false;
-        bool                                            m_triggerDisconnected = false;
+        bool                                            m_triggeredConnected = false;
+        bool                                            m_callConnect = false;
+        bool                                            m_triggeredDisconnected = false;
 
         readonly IStreamConnectionContainer?            m_streamConnectionContainer = null;
         string?                                         m_endpointStreamConnection = null;
 
         BindProperties?                                 m_bindProperties = null;
         ConnectProperties?                              m_connectionProperties = null;
+        Variant?                                        m_protocolData = null;
         Variant?                                        m_formatData = null;
+        int                                             m_maxSynchReqRepConnections = -1;
 
         IList<IMessage>                                 m_messagesBuffered = new List<IMessage>();
+        IDictionary<long, Variant>                      m_runningRequests = new Dictionary<long, Variant>();
 
         IList<IMessage>                                 m_pollMessages = new List<IMessage>();
         int                                             m_pollMaxRequests = 10000;
