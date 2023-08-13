@@ -27,7 +27,7 @@ env:
 jobs:
   analyze:
     name: Analyze
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     permissions:
       actions: read
       contents: read
@@ -41,19 +41,18 @@ jobs:
         # Learn more about CodeQL language support at https://git.io/codeql-language-support
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
-
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: '16'
     - name: install pre-requisites 
       run: |
-        sudo add-apt-repository ppa:maarten-fonville/protobuf
         sudo apt update
-        sudo apt install -y doxygen graphviz protobuf-compiler gcovr uuid-dev libprotobuf-dev libssl1.0-dev node-ejs npm
-        sudo npm install ejs minimist
+        sudo apt install -y doxygen graphviz protobuf-compiler gcovr uuid-dev libprotobuf-dev libssl-dev nodejs
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v1
+      uses: github/codeql-action/init@v2
       with:
         languages: ${{ matrix.language }}
         # If you wish to specify custom queries, you can do so here or in a config file.
@@ -64,7 +63,7 @@ jobs:
     # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
     # If this step fails, then you should remove it and run the build manually (see below)
     - name: Autobuild
-      uses: github/codeql-action/autobuild@v1
+      uses: github/codeql-action/autobuild@v2
 
     # ℹ️ Command-line programs to run using the OS shell.
     # 📚 https://git.io/JvXDl
@@ -78,4 +77,4 @@ jobs:
     #   make release
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v1
+      uses: github/codeql-action/analyze@v2
