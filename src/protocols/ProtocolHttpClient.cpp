@@ -38,6 +38,731 @@
 
 namespace finalmq {
 
+static const char tabDecToHex[] = {
+    '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
+};
+
+static void encode(std::string& dest, const std::string& src)
+{
+    dest.reserve(src.size() * 3);
+    char c;
+    unsigned char uc;
+
+    for (size_t i = 0; i < src.size(); ++i)
+    {
+        c = src[i];
+        if (isalnum(c) || c == '/' || c == '-' || c == '_' || c == '.' || c == '~')
+        {
+            dest += c;
+        }
+        else
+        {
+            uc = c;
+            int first = (uc >> 4) & 0x0f;
+            int second = uc & 0x0f;
+            assert(0 <= first && first < 16);
+            assert(0 <= second && second < 16);
+            dest += '%';
+            dest += tabDecToHex[first];
+            dest += tabDecToHex[second];
+        }
+    }
+}
+
+
+static void decode(std::string& dest, const std::string& src)
+{
+    dest.reserve(src.size());
+    char code[3] = { 0 };
+    unsigned long c = 0;
+
+    for (size_t i = 0; i < src.size(); ++i)
+    {
+        if (src[i] == '%')
+        {
+            ++i;
+            memcpy(code, &src[i], 2);
+            c = strtoul(code, NULL, 16);
+            dest += (char)c;
+            ++i;
+        }
+        else
+        {
+            dest += src[i];
+        }
+    }
+}
+
+//---------------------------------------
+// Cookie
+//---------------------------------------
+class Cookie
+{
+public:
+    inline Cookie() 
+        : m_expirationDate(-1)
+        , m_secure(false)
+        , m_httpOnly(false)
+    { 
+    }
+
+    static bool checkStaticArray(int& val, const std::string& dateString, int at, const char* array, int size)
+    {
+        if (dateString[at] < 'a' || dateString[at] > 'z')
+            return false;
+        if (val == -1 && dateString.length() >= at + 3) {
+            int j = 0;
+            int i = 0;
+            while (i <= size) {
+                const char* str = array + i;
+                if (str[0] == dateString[at]
+                    && str[1] == dateString[at + 1]
+                    && str[2] == dateString[at + 2]) {
+                    val = j;
+                    return true;
+                }
+                i += static_cast<int>(strlen(str)) + 1;
+                ++j;
+            }
+        }
+        return false;
+    }
+
+    static inline bool isNumber(char s)
+    {
+        return s >= '0' && s <= '9';
+    }
+
+    static inline bool isWhitespace(char c)
+    {
+        return c == ' ' || c == '\t';
+    }
+
+#define ADAY   1
+#define AMONTH 2
+#define AYEAR  4
+
+    static time_t parseDateString(const std::string& dateString)
+    {
+        static const char zones[] =
+            "pst\0" // -8
+            "pdt\0"
+            "mst\0" // -7
+            "mdt\0"
+            "cst\0" // -6
+            "cdt\0"
+            "est\0" // -5
+            "edt\0"
+            "ast\0" // -4
+            "nst\0" // -3
+            "gmt\0" // 0
+            "utc\0"
+            "bst\0"
+            "met\0" // 1
+            "eet\0" // 2
+            "jst\0" // 9
+            "\0";
+        static int zoneOffsets[] = { -8, -8, -7, -7, -6, -6, -5, -5, -4, -3, 0, 0, 0, 1, 2, 9 };
+
+        static const char months[] =
+            "jan\0"
+            "feb\0"
+            "mar\0"
+            "apr\0"
+            "may\0"
+            "jun\0"
+            "jul\0"
+            "aug\0"
+            "sep\0"
+            "oct\0"
+            "nov\0"
+            "dec\0"
+            "\0";
+
+        struct tm tm;
+        tm.tm_sec = 0;
+        tm.tm_min = 0;
+        tm.tm_hour = 0;
+        tm.tm_mday = 0;
+        tm.tm_mon = 0;
+        tm.tm_year = 0;
+        tm.tm_wday = 0;
+        tm.tm_yday = 0;
+        tm.tm_isdst = 0;
+
+        time_t time = -1;
+        // placeholders for values when we are not sure it is a year, month or day
+        int unknown[3] = { -1, -1, -1 };
+        int month = -1;
+        int day = -1;
+        int year = -1;
+        int zoneOffset = -1;
+
+        // hour:minute:second.ms pm
+        //QRegExp timeRx(QLatin1String("(\\d{1,2}):(\\d{1,2})(:(\\d{1,2})|)(\\.(\\d{1,3})|)((\\s{0,}(am|pm))|)"));
+
+        int at = 0;
+        while (at < dateString.length()) {
+            bool isNum = isNumber(dateString[at]);
+
+            // Month
+            if (!isNum
+                && checkStaticArray(month, dateString, at, months, sizeof(months) - 1)) {
+                ++month;
+                at += 3;
+                continue;
+            }
+            // Zone
+            if (!isNum
+                && zoneOffset == -1
+                && checkStaticArray(zoneOffset, dateString, at, zones, sizeof(zones) - 1)) {
+                int sign = (at >= 0 && dateString[at - 1] == '-') ? -1 : 1;
+                zoneOffset = sign * zoneOffsets[zoneOffset] * 60 * 60;
+                at += 3;
+                continue;
+            }
+            // Zone offset
+            if (!isNum
+                && (zoneOffset == -1 || zoneOffset == 0) // Can only go after gmt
+                && (dateString[at] == '+' || dateString[at] == '-')
+                && (at == 0
+                    || isWhitespace(dateString[at - 1])
+                    || dateString[at - 1] == ','
+                    || (at >= 3
+                        && (dateString[at - 3] == 'g')
+                        && (dateString[at - 2] == 'm')
+                        && (dateString[at - 1] == 't')))) {
+
+                int end = 1;
+                while (end < 5 && dateString.length() > at + end
+                    && dateString[at + end] >= '0' && dateString[at + end] <= '9')
+                    ++end;
+                int minutes = 0;
+                int hours = 0;
+                switch (end - 1) {
+                case 4:
+                    minutes = atoi(dateString.substr(at + 3, 2).c_str());
+                    // fall through
+                case 2:
+                    hours = atoi(dateString.substr(at + 1, 2).c_str());
+                    break;
+                case 1:
+                    hours = atoi(dateString.substr(at + 1, 1).c_str());
+                    break;
+                default:
+                    at += end;
+                    continue;
+                }
+                if (end != 1) {
+                    int sign = dateString[at] == '-' ? -1 : 1;
+                    zoneOffset = sign * ((minutes * 60) + (hours * 60 * 60));
+                    at += end;
+                    continue;
+                }
+            }
+
+            // Time hh:mm:ss.ms pm
+            if (isNum && time == -1)
+            {
+                std::vector<std::string> timeSplit;
+                Utils::split(dateString, 0, dateString.length(), ':', timeSplit);
+
+                int h = 0;
+                int m = 0;
+                int s = 0;
+                int ms = 0;
+
+                if (timeSplit.size() >= 1)
+                {
+                    h = atoi(timeSplit[0].c_str());
+                    at += static_cast<int>(timeSplit[0].length());
+                }
+                if (timeSplit.size() >= 2)
+                {
+                    m = atoi(timeSplit[1].c_str());
+                    at += 1;    // for ':'
+                    at += static_cast<int>(timeSplit[1].length());
+                }
+                if (timeSplit.size() >= 3)
+                {
+                    at += 1;    // for ':'
+                    std::vector<std::string> secSplit;
+                    Utils::split(timeSplit[2], 0, timeSplit[2].length(), '.', secSplit);
+                    if (secSplit.size() >= 1)
+                    {
+                        s = atoi(secSplit[0].c_str());
+                        at += static_cast<int>(secSplit[0].length());
+                    }
+                    if (secSplit.size() >= 2)
+                    {
+                        at += 1;    // for '.'
+                        std::vector<std::string> msSplit;
+                        Utils::split(secSplit[1], 0, secSplit[1].length(), ' ', msSplit);
+                        if (msSplit.size() >= 1)
+                        {
+                            ms = atoi(msSplit[0].c_str());
+                            at += static_cast<int>(msSplit[0].length());
+                        }
+                        if (msSplit.size() >= 2)
+                        {
+                            at += 1;    // for ' '
+                            if (h < 12 && msSplit[1] == "pm")
+                            {
+                                h += 12;
+                            }
+                            at += static_cast<int>(msSplit[1].length());
+                        }
+                    }
+                }
+                tm.tm_hour = h;
+                tm.tm_min = m;
+                tm.tm_sec = s;
+                continue;
+            }
+
+            // 4 digit Year
+            if (isNum
+                && year == -1
+                && dateString.length() > at + 3) {
+                if (isNumber(dateString[at + 1])
+                    && isNumber(dateString[at + 2])
+                    && isNumber(dateString[at + 3])) {
+                    year = atoi(dateString.substr(at, 4).c_str());
+                    at += 4;
+                    continue;
+                }
+            }
+
+            // a one or two digit number
+            // Could be month, day or year
+            if (isNum) {
+                int length = 1;
+                if (dateString.length() > at + 1
+                    && isNumber(dateString[at + 1]))
+                    ++length;
+                int x = atoi(dateString.substr(at, length).c_str());
+                if (year == -1 && (x > 31 || x == 0)) {
+                    year = x;
+                }
+                else {
+                    if (unknown[0] == -1) unknown[0] = x;
+                    else if (unknown[1] == -1) unknown[1] = x;
+                    else if (unknown[2] == -1) unknown[2] = x;
+                }
+                at += length;
+                continue;
+            }
+
+            // Unknown character, typically a weekday such as 'Mon'
+            ++at;
+        }
+
+        // Once we are done parsing the string take the digits in unknown
+        // and determine which is the unknown year/month/day
+
+        int couldBe[3] = { 0, 0, 0 };
+        int unknownCount = 3;
+        for (int i = 0; i < unknownCount; ++i) {
+            if (unknown[i] == -1) {
+                couldBe[i] = ADAY | AYEAR | AMONTH;
+                unknownCount = i;
+                continue;
+            }
+
+            if (unknown[i] >= 1)
+                couldBe[i] = ADAY;
+
+            if (month == -1 && unknown[i] >= 1 && unknown[i] <= 12)
+                couldBe[i] |= AMONTH;
+
+            if (year == -1)
+                couldBe[i] |= AYEAR;
+        }
+
+        // For any possible day make sure one of the values that could be a month
+        // can contain that day.
+        // For any possible month make sure one of the values that can be a
+        // day that month can have.
+        // Example: 31 11 06
+        // 31 can't be a day because 11 and 6 don't have 31 days
+        for (int i = 0; i < unknownCount; ++i) {
+            int currentValue = unknown[i];
+            bool findMatchingMonth = couldBe[i] & ADAY && currentValue >= 29;
+            bool findMatchingDay = couldBe[i] & AMONTH;
+            if (!findMatchingMonth || !findMatchingDay)
+                continue;
+            for (int j = 0; j < 3; ++j) {
+                if (j == i)
+                    continue;
+                for (int k = 0; k < 2; ++k) {
+                    if (k == 0 && !(findMatchingMonth && (couldBe[j] & AMONTH)))
+                        continue;
+                    else if (k == 1 && !(findMatchingDay && (couldBe[j] & ADAY)))
+                        continue;
+                    int m = currentValue;
+                    int d = unknown[j];
+                    if (k == 0)
+                        std::swap(m, d);
+                    if (m == -1) m = month;
+                    bool found = true;
+                    switch (m) {
+                    case 2:
+                        // When we get 29 and the year ends up having only 28
+                        // See date.isValid below
+                        // Example: 29 23 Feb
+                        if (d <= 29)
+                            found = false;
+                        break;
+                    case 4: case 6: case 9: case 11:
+                        if (d <= 30)
+                            found = false;
+                        break;
+                    default:
+                        if (d > 0 && d <= 31)
+                            found = false;
+                    }
+                    if (k == 0) findMatchingMonth = found;
+                    else if (k == 1) findMatchingDay = found;
+                }
+            }
+            if (findMatchingMonth)
+                couldBe[i] &= ~ADAY;
+            if (findMatchingDay)
+                couldBe[i] &= ~AMONTH;
+        }
+
+        // First set the year/month/day that have been deduced
+        // and reduce the set as we go along to deduce more
+        for (int i = 0; i < unknownCount; ++i) {
+            int unset = 0;
+            for (int j = 0; j < 3; ++j) {
+                if (couldBe[j] == ADAY && day == -1) {
+                    day = unknown[j];
+                    unset |= ADAY;
+                }
+                else if (couldBe[j] == AMONTH && month == -1) {
+                    month = unknown[j];
+                    unset |= AMONTH;
+                }
+                else if (couldBe[j] == AYEAR && year == -1) {
+                    year = unknown[j];
+                    unset |= AYEAR;
+                }
+                else {
+                    // common case
+                    break;
+                }
+                couldBe[j] &= ~unset;
+            }
+        }
+
+        // Now fallback to a standardized order to fill in the rest with
+        for (int i = 0; i < unknownCount; ++i) {
+            if (couldBe[i] & AMONTH && month == -1) month = unknown[i];
+            else if (couldBe[i] & ADAY && day == -1) day = unknown[i];
+            else if (couldBe[i] & AYEAR && year == -1) year = unknown[i];
+        }
+
+        if (year == -1 || month == -1 || day == -1) 
+        {
+            return -1;
+        }
+
+        // Y2k behavior
+        int y2k = 0;
+        if (year < 70)
+            y2k = 2000;
+        else if (year < 100)
+            y2k = 1900;
+
+        tm.tm_year = year + y2k - 1900;
+        tm.tm_mon = month;
+        tm.tm_mday = day;
+
+        time = _mkgmtime(&tm);
+
+        if (zoneOffset != -1) {
+            time += zoneOffset;
+        }
+        return time;
+    }
+
+    static std::vector<Cookie> parseSetCookieHeaderLine(const std::string& cookieString)
+    {
+        // According to http://wp.netscape.com/newsref/std/cookie_spec.html,<
+        // the Set-Cookie response header is of the format:
+        //
+        //   Set-Cookie: NAME=VALUE; expires=DATE; path=PATH; domain=DOMAIN_NAME; secure
+        //
+        // where only the NAME=VALUE part is mandatory
+        //
+        // We do not support RFC 2965 Set-Cookie2-style cookies
+
+        std::vector<Cookie> result;
+        const time_t now = time(nullptr);
+
+        int position = 0;
+        const int length = static_cast<int>(cookieString.length());
+        while (position < length) 
+        {
+            Cookie cookie;
+
+            // The first part is always the "NAME=VALUE" part
+            std::pair<std::string, std::string> field = nextField(cookieString, position, true);
+            if (field.first.empty())
+                // parsing error
+                break;
+            cookie.m_name = field.first;
+            cookie.m_value = field.second;
+
+            position = nextNonWhitespace(cookieString, position);
+            while (position < length) {
+                switch (cookieString.at(position++)) {
+                case ';':
+                    // new field in the cookie
+                    field = nextField(cookieString, position, false);
+                    std::transform(field.first.begin(), field.first.end(), field.first.begin(),
+                        [](unsigned char c) { return std::tolower(c); });   // everything but the NAME=VALUE is case-insensitive
+
+                    if (field.first == "expires") {
+                        position -= static_cast<int>(field.second.length());
+                        int end;
+                        for (end = position; end < length; ++end)
+                            if (isValueSeparator(cookieString.at(end)))
+                                break;
+
+                        // remove last spaces
+                        int endDateStringWithoutSpace = nextNonWhitespaceReverse(cookieString, end, position);
+                        std::string dateString = cookieString.substr(position, endDateStringWithoutSpace - position);
+                        position = end;
+                        std::transform(dateString.begin(), dateString.end(), dateString.begin(),
+                            [](unsigned char c) { return std::tolower(c); });
+                        //QDateTime dt = parseDateString(dateString);
+                        time_t date;
+                        if (date == -1) {
+                            return result;
+                        }
+                        cookie.m_expirationDate = date;
+                    }
+                    else if (field.first == "domain") {
+                        std::string rawDomain = field.second;
+                        std::string maybeLeadingDot;
+                        if (!rawDomain.empty() && rawDomain[0] == '.') {
+                            maybeLeadingDot = '.';
+                            rawDomain = rawDomain.substr(1);
+                        }
+
+                        std::string normalizedDomain = rawDomain;// QUrl::fromAce(QUrl::toAce(rawDomain));
+                        if (normalizedDomain.empty() && !rawDomain.empty())
+                        {
+                            return result;
+                        }
+                        cookie.m_domain = maybeLeadingDot + normalizedDomain;
+                    }
+                    else if (field.first == "max-age") {
+                        if (field.second.empty())
+                        {
+                            return result;
+                        }
+                        char* res = nullptr;
+                        long long secs = strtoll(field.second.c_str(), &res, 10);
+                        if (res != &field.second[field.second.size()])
+                        {
+                            return result;
+                        }
+                        cookie.m_expirationDate = now + secs;
+                    }
+                    else if (field.first == "path") {
+                        decode(cookie.m_path, field.second);
+                    }
+                    else if (field.first == "secure") {
+                        cookie.m_secure = true;
+                    }
+                    else if (field.first == "httponly") {
+                        cookie.m_httpOnly = true;
+                    }
+                    else if (field.first == "comment") {
+                        cookie.m_comment = field.second;
+                    }
+                    else if (field.first == "version") {
+                        if (field.second != "1") {
+                            // oops, we don't know how to handle this cookie
+                            return result;
+                        }
+                    }
+                    else {
+                        // got an unknown field in the cookie
+                        // what do we do?
+                    }
+
+                    position = nextNonWhitespace(cookieString, position);
+                }                
+            }
+
+            if (!cookie.m_name.empty())
+            {
+                result.push_back(cookie);
+            }
+        }
+    }
+
+private:
+    static std::pair<std::string, std::string> nextField(const std::string & text, int& position, bool isNameValue)
+    {
+        // format is one of:
+        //    (1)  token
+        //    (2)  token = token
+        //    (3)  token = quoted-string
+        int i;
+        const int length = static_cast<int>(text.length());
+        position = nextNonWhitespace(text, position);
+
+        // parse the first part, before the equal sign
+        for (i = position; i < length; ++i) {
+            char c = text.at(i);
+            if (c == ';' || c == '=')
+                break;
+        }
+
+        // remove last spaces
+        int endFirstWithoutSpace = nextNonWhitespaceReverse(text, i, position);
+
+        std::string first = text.substr(position, endFirstWithoutSpace - position);
+        position = i;
+
+        if (first.empty())
+            return std::make_pair(std::string(), std::string());
+        if (i == length || text.at(i) != '=')
+            // no equal sign, we found format (1)
+            return std::make_pair(first, std::string());
+
+        std::string second;
+        second.reserve(32);         // arbitrary but works for most cases
+
+        i = nextNonWhitespace(text, position + 1);
+        if (i < length && text.at(i) == '"') {
+            // a quote, we found format (3), where:
+            // quoted-string  = ( <"> *(qdtext | quoted-pair ) <"> )
+            // qdtext         = <any TEXT except <">>
+            // quoted-pair    = "\" CHAR
+
+            // If it is NAME=VALUE, retain the value as is
+            // refer to http://bugreports.qt-project.org/browse/QTBUG-17746
+            if (isNameValue)
+                second += '"';
+            ++i;
+            while (i < length) {
+                register char c = text.at(i);
+                if (c == '"') {
+                    // end of quoted text
+                    if (isNameValue)
+                        second += '"';
+                    break;
+                }
+                else if (c == '\\') {
+                    if (isNameValue)
+                        second += '\\';
+                    ++i;
+                    if (i >= length)
+                        // broken line
+                        return std::make_pair(std::string(), std::string());
+                    c = text.at(i);
+                }
+
+                second += c;
+                ++i;
+            }
+
+            for (; i < length; ++i) {
+                register char c = text.at(i);
+                if (c == ';')
+                    break;
+            }
+            position = i;
+        }
+        else {
+            // no quote, we found format (2)
+            position = i;
+            for (; i < length; ++i) {
+                register char c = text.at(i);
+                // for name value pairs, we want to parse until reaching the next ';'
+                // and not break when reaching a space char
+                if (c == ';' || ((isNameValue && (c == '\n' || c == '\r')) || (!isNameValue && isLWS(c))))
+                    break;
+            }
+
+            int endSecondWithoutSpace = nextNonWhitespaceReverse(text, i, position);
+
+            second = text.substr(position, endFirstWithoutSpace - position);
+
+            position = i;
+        }
+
+        return std::make_pair(first, second);
+    }
+
+    static inline bool isTerminator(char c)
+    {
+        return c == '\n' || c == '\r';
+    }
+
+    static inline bool isValueSeparator(char c)
+    {
+        return isTerminator(c) || c == ';';
+    }
+
+    static inline bool isLWS(char c)
+    {
+        return c == ' ' || c == '\t' || c == '\r' || c == '\n';
+    }
+
+    static int nextNonWhitespace(const std::string& text, int from)
+    {
+        // RFC 2616 defines linear whitespace as:
+        //  LWS = [CRLF] 1*( SP | HT )
+        // We ignore the fact that CRLF must come as a pair at this point
+        // It's an invalid HTTP header if that happens.
+        while (from < text.length()) {
+            if (isLWS(text.at(from)))
+                ++from;
+            else
+                return from;        // non-whitespace
+        }
+
+        // reached the end
+        return static_cast<int>(text.length());
+    }
+
+    static int nextNonWhitespaceReverse(const std::string& text, int from, int till)
+    {
+        --from;
+        while (from > till) {
+            if (isLWS(text.at(from)))
+                --from;
+            else
+                return from + 1;        // non-whitespace + 1
+        }
+
+        // reached the end
+        return till;
+    }
+
+    time_t m_expirationDate;
+    std::string m_domain;
+    std::string m_path;
+    std::string m_comment;
+    std::string m_name;
+    std::string m_value;
+    bool m_secure;
+    bool m_httpOnly;
+};
+
+
+//---------------------------------------
+// ProtocolHttpClient
+//---------------------------------------
+
+    
 const std::uint32_t ProtocolHttpClient::PROTOCOL_ID = 7;
 const std::string ProtocolHttpClient::PROTOCOL_NAME = "httpclient";
 
@@ -69,18 +794,15 @@ static const std::string FMQ_PATH_REMOVESESSION = "/fmq/removesession";
 static const std::string FMQ_MULTIPART_BOUNDARY = "B9BMAhxAhY.mQw1IDRBA";
 
 
-enum ChunkedState
-{
-    STATE_STOP = 0,
-    STATE_START_CHUNK_STREAM = 1,
-    STATE_FIRST_CHUNK = 2,
-    STATE_BEGIN_MULTIPART = 3,
-    STATE_CONTINUE = 4,
-};
+//enum ChunkedState
+//{
+//    STATE_STOP = 0,
+//    STATE_START_CHUNK_STREAM = 1,
+//    STATE_FIRST_CHUNK = 2,
+//    STATE_BEGIN_MULTIPART = 3,
+//    STATE_CONTINUE = 4,
+//};
 
-//---------------------------------------
-// ProtocolHttpClient
-//---------------------------------------
 
 
 std::atomic_int64_t ProtocolHttpClient::m_nextSessionNameCounter{ 1 };
@@ -212,60 +934,6 @@ static void splitOnce(const std::string& src, ssize_t indexBegin, ssize_t indexE
 }
 
 
-static const char tabDecToHex[] = {
-    '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
-};
-
-static void encode(std::string& dest, const std::string& src)
-{
-    dest.reserve(src.size() * 3);
-    char c;
-    unsigned char uc;
-
-    for (size_t i = 0; i < src.size(); ++i) 
-    {
-        c = src[i];
-        if (isalnum(c) || c == '/' || c == '-' || c == '_' || c == '.' || c == '~')
-        {
-            dest += c;
-        }
-        else 
-        {
-            uc = c;
-            int first = (uc >> 4) & 0x0f;
-            int second = uc & 0x0f;
-            assert(0 <= first && first < 16);
-            assert(0 <= second && second < 16);
-            dest += '%';
-            dest += tabDecToHex[first];
-            dest += tabDecToHex[second];
-        }
-    }
-}
-
-
-static void decode(std::string& dest, const std::string& src)
-{
-    dest.reserve(src.size());
-    char code[3] = { 0 };
-    unsigned long c = 0;
-
-    for (size_t i = 0; i < src.size(); ++i)
-    {
-        if (src[i] == '%')
-        {
-            ++i;
-            memcpy(code, &src[i], 2);
-            c = strtoul(code, NULL, 16);
-            dest += (char)c;
-            ++i;
-        }
-        else
-        {
-            dest += src[i];
-        }
-    }
-}
 
 
 
