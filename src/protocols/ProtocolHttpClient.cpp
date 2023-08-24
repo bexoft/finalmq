@@ -35,6 +35,7 @@
 #include <fcntl.h>
 #include <cstdlib>
 
+#include <time.h>
 
 namespace finalmq {
 
@@ -110,7 +111,7 @@ public:
     {
         if (dateString[at] < 'a' || dateString[at] > 'z')
             return false;
-        if (val == -1 && dateString.length() >= at + 3) {
+        if (val == -1 && dateString.length() >= static_cast<size_t>(at + 3)) {
             int j = 0;
             int i = 0;
             while (i <= size) {
@@ -137,6 +138,54 @@ public:
     {
         return c == ' ' || c == '\t';
     }
+
+#ifndef WIN32
+    static constexpr int SecondsPerMinute = 60;
+    static constexpr int SecondsPerHour = 3600;
+    static constexpr int SecondsPerDay = 86400;
+    static constexpr int DaysOfMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+
+    static bool IsLeapYear(short year)
+    {
+        if (year % 4 != 0) return false;
+        if (year % 100 != 0) return true;
+        return (year % 400) == 0;
+    }
+
+    static time_t my_mkgmtime(const struct tm *ptm) {
+        time_t secs = 0;
+        // tm_year is years since 1900
+        int year = ptm->tm_year + 1900;
+        for (int y = 1970; y < year; ++y) {
+            secs += (IsLeapYear(y)? 366: 365) * SecondsPerDay;
+        }
+        // tm_mon is month from 0..11
+        for (int m = 0; m < ptm->tm_mon; ++m) {
+            secs += DaysOfMonth[m] * SecondsPerDay;
+            if (m == 1 && IsLeapYear(year)) secs += SecondsPerDay;
+        }
+        secs += (ptm->tm_mday - 1) * SecondsPerDay;
+        secs += ptm->tm_hour       * SecondsPerHour;
+        secs += ptm->tm_min        * SecondsPerMinute;
+        secs += ptm->tm_sec;
+        return secs;
+    }
+
+//    time_t my_mkgmtime(struct tm * pt) {
+//        time_t ret = mktime(pt);
+//        /* GMT and local time */
+//        struct tm pgt = *gmtime(&ret);
+//        struct tm plt = *localtime(&ret);
+//        plt.tm_year -= pgt.tm_year - plt.tm_year;
+//        plt.tm_mon -= pgt.tm_mon - plt.tm_mon;
+//        plt.tm_mday -= pgt.tm_mday - plt.tm_mday;
+//        plt.tm_hour -= pgt.tm_hour - plt.tm_hour;
+//        plt.tm_min -= pgt.tm_min - plt.tm_min;
+//        plt.tm_sec -= pgt.tm_sec - plt.tm_sec;
+//        ret = mktime(&plt);
+//        return ret;
+//    }
+#endif
 
 #define ADAY   1
 #define AMONTH 2
@@ -202,7 +251,7 @@ public:
         //QRegExp timeRx(QLatin1String("(\\d{1,2}):(\\d{1,2})(:(\\d{1,2})|)(\\.(\\d{1,3})|)((\\s{0,}(am|pm))|)"));
 
         int at = 0;
-        while (at < dateString.length()) {
+        while (static_cast<size_t>(at) < dateString.length()) {
             bool isNum = isNumber(dateString[at]);
 
             // Month
@@ -234,7 +283,7 @@ public:
                         && (dateString[at - 1] == 't')))) {
 
                 int end = 1;
-                while (end < 5 && dateString.length() > at + end
+                while (end < 5 && dateString.length() > static_cast<size_t>(at + end)
                     && dateString[at + end] >= '0' && dateString[at + end] <= '9')
                     ++end;
                 int minutes = 0;
@@ -270,7 +319,7 @@ public:
                 int h = 0;
                 int m = 0;
                 int s = 0;
-                int ms = 0;
+//                int ms = 0;
 
                 if (timeSplit.size() >= 1)
                 {
@@ -300,7 +349,7 @@ public:
                         Utils::split(secSplit[1], 0, secSplit[1].length(), ' ', msSplit);
                         if (msSplit.size() >= 1)
                         {
-                            ms = atoi(msSplit[0].c_str());
+//                            ms = atoi(msSplit[0].c_str());
                             at += static_cast<int>(msSplit[0].length());
                         }
                         if (msSplit.size() >= 2)
@@ -323,7 +372,7 @@ public:
             // 4 digit Year
             if (isNum
                 && year == -1
-                && dateString.length() > at + 3) {
+                && dateString.length() > static_cast<size_t>(at + 3)) {
                 if (isNumber(dateString[at + 1])
                     && isNumber(dateString[at + 2])
                     && isNumber(dateString[at + 3])) {
@@ -337,7 +386,7 @@ public:
             // Could be month, day or year
             if (isNum) {
                 int length = 1;
-                if (dateString.length() > at + 1
+                if (dateString.length() > static_cast<size_t>(at + 1)
                     && isNumber(dateString[at + 1]))
                     ++length;
                 int x = atoi(dateString.substr(at, length).c_str());
@@ -479,7 +528,11 @@ public:
         tm.tm_mon = month;
         tm.tm_mday = day;
 
+#ifdef WIN32
         time = _mkgmtime(&tm);
+#else
+        time = my_mkgmtime(&tm);
+#endif
 
         if (zoneOffset != -1) {
             time += zoneOffset;
@@ -537,8 +590,7 @@ public:
                         position = end;
                         std::transform(dateString.begin(), dateString.end(), dateString.begin(),
                             [](unsigned char c) { return std::tolower(c); });
-                        //QDateTime dt = parseDateString(dateString);
-                        time_t date;
+                        time_t date = parseDateString(dateString);
                         if (date == -1) {
                             return result;
                         }
@@ -604,6 +656,8 @@ public:
                 result.push_back(cookie);
             }
         }
+
+        return result;
     }
 
 private:
@@ -652,7 +706,7 @@ private:
                 second += '"';
             ++i;
             while (i < length) {
-                register char c = text.at(i);
+                char c = text.at(i);
                 if (c == '"') {
                     // end of quoted text
                     if (isNameValue)
@@ -674,7 +728,7 @@ private:
             }
 
             for (; i < length; ++i) {
-                register char c = text.at(i);
+                char c = text.at(i);
                 if (c == ';')
                     break;
             }
@@ -684,7 +738,7 @@ private:
             // no quote, we found format (2)
             position = i;
             for (; i < length; ++i) {
-                register char c = text.at(i);
+                char c = text.at(i);
                 // for name value pairs, we want to parse until reaching the next ';'
                 // and not break when reaching a space char
                 if (c == ';' || ((isNameValue && (c == '\n' || c == '\r')) || (!isNameValue && isLWS(c))))
@@ -693,7 +747,7 @@ private:
 
             int endSecondWithoutSpace = nextNonWhitespaceReverse(text, i, position);
 
-            second = text.substr(position, endFirstWithoutSpace - position);
+            second = text.substr(position, endSecondWithoutSpace - position);
 
             position = i;
         }
@@ -722,7 +776,7 @@ private:
         //  LWS = [CRLF] 1*( SP | HT )
         // We ignore the fact that CRLF must come as a pair at this point
         // It's an invalid HTTP header if that happens.
-        while (from < text.length()) {
+        while (static_cast<size_t>(from) < text.length()) {
             if (isLWS(text.at(from)))
                 ++from;
             else
