@@ -284,3 +284,13 @@ TEST_F(TestIntegrationProtocolHttp, testSendMultipleMessages)
     waitTillDone(expectReceive, 10000);
     waitTillDone(expectReceivedClient, 5000);
 }
+
+TEST_F(TestIntegrationProtocolHttp, testCookie)
+{
+    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://www.ibm.com:80:httpclient", m_mockClientCallback);
+    IMessagePtr message = connection->createMessage();
+
+    connection->sendMessage(message);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+}
