@@ -107,6 +107,171 @@ public:
     { 
     }
 
+    static std::vector<Cookie> parseSetCookieHeaderLine(const std::string& cookieString)
+    {
+        // According to http://wp.netscape.com/newsref/std/cookie_spec.html,<
+        // the Set-Cookie response header is of the format:
+        //
+        //   Set-Cookie: NAME=VALUE; expires=DATE; path=PATH; domain=DOMAIN_NAME; secure
+        //
+        // where only the NAME=VALUE part is mandatory
+        //
+        // We do not support RFC 2965 Set-Cookie2-style cookies
+
+        std::vector<Cookie> result;
+
+        int position = 0;
+        const int length = static_cast<int>(cookieString.length());
+        while (position < length) 
+        {
+            Cookie cookie;
+
+            // The first part is always the "NAME=VALUE" part
+            std::pair<std::string, std::string> field = nextField(cookieString, position, true);
+            if (field.first.empty())
+                // parsing error
+                break;
+            cookie.m_name = field.first;
+            cookie.m_value = field.second;
+
+            position = nextNonWhitespace(cookieString, position);
+            while (position < length) {
+                switch (cookieString.at(position++)) {
+                case ';':
+                    // new field in the cookie
+                    field = nextField(cookieString, position, false);
+                    std::transform(field.first.begin(), field.first.end(), field.first.begin(),
+                        [](unsigned char c) { return std::tolower(c); });   // everything but the NAME=VALUE is case-insensitive
+
+                    if (field.first == "expires") {
+                        position -= static_cast<int>(field.second.length());
+                        int end;
+                        for (end = position; end < length; ++end)
+                            if (isValueSeparator(cookieString.at(end)))
+                                break;
+
+                        // remove last spaces
+                        int endDateStringWithoutSpace = nextNonWhitespaceReverse(cookieString, end, position);
+                        std::string dateString = cookieString.substr(position, endDateStringWithoutSpace - position);
+                        position = end;
+                        std::transform(dateString.begin(), dateString.end(), dateString.begin(),
+                            [](unsigned char c) { return std::tolower(c); });
+                        time_t date = parseDateString(dateString);
+                        if (date == -1) {
+                            return result;
+                        }
+                        cookie.m_expirationDate = date;
+                    }
+                    else if (field.first == "domain") {
+                        std::string rawDomain = field.second;
+                        bool maybeLeadingDot = false;
+                        if (!rawDomain.empty() && rawDomain[0] == '.') {
+                            maybeLeadingDot = true;
+                            rawDomain = rawDomain.substr(1);
+                        }
+
+                        std::string normalizedDomain = rawDomain;// QUrl::fromAce(QUrl::toAce(rawDomain));
+                        if (normalizedDomain.empty() && !rawDomain.empty())
+                        {
+                            return result;
+                        }
+                        cookie.m_domain = normalizedDomain;
+                        cookie.m_domainDot = maybeLeadingDot;
+                    }
+                    else if (field.first == "max-age") {
+                        if (field.second.empty())
+                        {
+                            return result;
+                        }
+                        char* res = nullptr;
+                        long long secs = strtoll(field.second.c_str(), &res, 10);
+                        if (res != &field.second[field.second.size()])
+                        {
+                            return result;
+                        }
+                        const time_t now = time(nullptr);
+                        cookie.m_expirationDate = now + secs;
+                    }
+                    else if (field.first == "path") {
+                        decode(cookie.m_path, field.second);
+                    }
+                    else if (field.first == "secure") {
+                        cookie.m_secure = true;
+                    }
+                    else if (field.first == "httponly") {
+                        cookie.m_httpOnly = true;
+                    }
+                    else if (field.first == "comment") {
+                        cookie.m_comment = field.second;
+                    }
+                    else if (field.first == "version") {
+                        if (field.second != "1") {
+                            // oops, we don't know how to handle this cookie
+                            return result;
+                        }
+                    }
+                    else {
+                        // got an unknown field in the cookie
+                        // what do we do?
+                    }
+
+                    position = nextNonWhitespace(cookieString, position);
+                }                
+            }
+
+            if (!cookie.m_name.empty())
+            {
+                result.push_back(cookie);
+            }
+        }
+
+        return result;
+    }
+
+    time_t getExpirationDate() const
+    {
+        return m_expirationDate;
+    }
+
+    const std::string& getDomain() const
+    {
+        return m_domain;
+    }
+    bool getDomainDot() const
+    {
+        return m_domainDot;
+    }
+    const std::string& getPath() const
+    {
+        return m_path;
+    }
+    const std::string& getComment() const
+    {
+        return m_comment;
+    }
+    const std::string& getName() const
+    {
+        return m_name;
+    }
+    const std::string& getValue() const
+    {
+        return m_value;
+    }
+    bool getSecure() const
+    {
+        return m_secure;
+    }
+    bool getHttpOnly() const
+    {
+        return m_httpOnly;
+    }
+
+    bool match(const std::string& domain, const std::string& path) const
+    {
+        
+    }
+
+private:
     static bool checkStaticArray(int& val, const std::string& dateString, int at, const char* array, int size)
     {
         if (dateString[at] < 'a' || dateString[at] > 'z')
@@ -143,7 +308,7 @@ public:
     static constexpr int SecondsPerMinute = 60;
     static constexpr int SecondsPerHour = 3600;
     static constexpr int SecondsPerDay = 86400;
-    static constexpr int DaysOfMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    static constexpr int DaysOfMonth[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
     static bool IsLeapYear(short year)
     {
@@ -152,12 +317,12 @@ public:
         return (year % 400) == 0;
     }
 
-    static time_t my_mkgmtime(const struct tm *ptm) {
+    static time_t my_mkgmtime(const struct tm* ptm) {
         time_t secs = 0;
         // tm_year is years since 1900
         int year = ptm->tm_year + 1900;
         for (int y = 1970; y < year; ++y) {
-            secs += (IsLeapYear(y)? 366: 365) * SecondsPerDay;
+            secs += (IsLeapYear(y) ? 366 : 365) * SecondsPerDay;
         }
         // tm_mon is month from 0..11
         for (int m = 0; m < ptm->tm_mon; ++m) {
@@ -165,26 +330,26 @@ public:
             if (m == 1 && IsLeapYear(year)) secs += SecondsPerDay;
         }
         secs += (ptm->tm_mday - 1) * SecondsPerDay;
-        secs += ptm->tm_hour       * SecondsPerHour;
-        secs += ptm->tm_min        * SecondsPerMinute;
+        secs += ptm->tm_hour * SecondsPerHour;
+        secs += ptm->tm_min * SecondsPerMinute;
         secs += ptm->tm_sec;
         return secs;
     }
 
-//    time_t my_mkgmtime(struct tm * pt) {
-//        time_t ret = mktime(pt);
-//        /* GMT and local time */
-//        struct tm pgt = *gmtime(&ret);
-//        struct tm plt = *localtime(&ret);
-//        plt.tm_year -= pgt.tm_year - plt.tm_year;
-//        plt.tm_mon -= pgt.tm_mon - plt.tm_mon;
-//        plt.tm_mday -= pgt.tm_mday - plt.tm_mday;
-//        plt.tm_hour -= pgt.tm_hour - plt.tm_hour;
-//        plt.tm_min -= pgt.tm_min - plt.tm_min;
-//        plt.tm_sec -= pgt.tm_sec - plt.tm_sec;
-//        ret = mktime(&plt);
-//        return ret;
-//    }
+    //    time_t my_mkgmtime(struct tm * pt) {
+    //        time_t ret = mktime(pt);
+    //        /* GMT and local time */
+    //        struct tm pgt = *gmtime(&ret);
+    //        struct tm plt = *localtime(&ret);
+    //        plt.tm_year -= pgt.tm_year - plt.tm_year;
+    //        plt.tm_mon -= pgt.tm_mon - plt.tm_mon;
+    //        plt.tm_mday -= pgt.tm_mday - plt.tm_mday;
+    //        plt.tm_hour -= pgt.tm_hour - plt.tm_hour;
+    //        plt.tm_min -= pgt.tm_min - plt.tm_min;
+    //        plt.tm_sec -= pgt.tm_sec - plt.tm_sec;
+    //        ret = mktime(&plt);
+    //        return ret;
+    //    }
 #endif
 
 #define ADAY   1
@@ -314,59 +479,62 @@ public:
             if (isNum && time == -1)
             {
                 std::vector<std::string> timeSplit;
-                Utils::split(dateString, 0, dateString.length(), ':', timeSplit);
+                Utils::split(dateString, at, dateString.length(), ':', timeSplit);
 
-                int h = 0;
-                int m = 0;
-                int s = 0;
-//                int ms = 0;
+                if (timeSplit.size() >= 2 && (timeSplit[0].size() == 1 || timeSplit[0].size() == 2))
+                {
+                    int h = 0;
+                    int m = 0;
+                    int s = 0;
+                    //                int ms = 0;
 
-                if (timeSplit.size() >= 1)
-                {
-                    h = atoi(timeSplit[0].c_str());
-                    at += static_cast<int>(timeSplit[0].length());
-                }
-                if (timeSplit.size() >= 2)
-                {
-                    m = atoi(timeSplit[1].c_str());
-                    at += 1;    // for ':'
-                    at += static_cast<int>(timeSplit[1].length());
-                }
-                if (timeSplit.size() >= 3)
-                {
-                    at += 1;    // for ':'
-                    std::vector<std::string> secSplit;
-                    Utils::split(timeSplit[2], 0, timeSplit[2].length(), '.', secSplit);
-                    if (secSplit.size() >= 1)
+                    if (timeSplit.size() >= 1)
                     {
-                        s = atoi(secSplit[0].c_str());
-                        at += static_cast<int>(secSplit[0].length());
+                        h = atoi(timeSplit[0].c_str());
+                        at += static_cast<int>(timeSplit[0].length());
                     }
-                    if (secSplit.size() >= 2)
+                    if (timeSplit.size() >= 2)
                     {
-                        at += 1;    // for '.'
-                        std::vector<std::string> msSplit;
-                        Utils::split(secSplit[1], 0, secSplit[1].length(), ' ', msSplit);
-                        if (msSplit.size() >= 1)
+                        m = atoi(timeSplit[1].c_str());
+                        at += 1;    // for ':'
+                        at += static_cast<int>(timeSplit[1].length());
+                    }
+                    if (timeSplit.size() >= 3)
+                    {
+                        at += 1;    // for ':'
+                        std::vector<std::string> secSplit;
+                        Utils::split(timeSplit[2], 0, timeSplit[2].length(), '.', secSplit);
+                        if (secSplit.size() >= 1)
                         {
-//                            ms = atoi(msSplit[0].c_str());
-                            at += static_cast<int>(msSplit[0].length());
+                            s = atoi(secSplit[0].c_str());
+                            at += static_cast<int>(secSplit[0].length());
                         }
-                        if (msSplit.size() >= 2)
+                        if (secSplit.size() >= 2)
                         {
-                            at += 1;    // for ' '
-                            if (h < 12 && msSplit[1] == "pm")
+                            at += 1;    // for '.'
+                            std::vector<std::string> msSplit;
+                            Utils::split(secSplit[1], 0, secSplit[1].length(), ' ', msSplit);
+                            if (msSplit.size() >= 1)
                             {
-                                h += 12;
+                                //                            ms = atoi(msSplit[0].c_str());
+                                at += static_cast<int>(msSplit[0].length());
                             }
-                            at += static_cast<int>(msSplit[1].length());
+                            if (msSplit.size() >= 2)
+                            {
+                                at += 1;    // for ' '
+                                if (h < 12 && msSplit[1] == "pm")
+                                {
+                                    h += 12;
+                                }
+                                at += static_cast<int>(msSplit[1].length());
+                            }
                         }
                     }
+                    tm.tm_hour = h;
+                    tm.tm_min = m;
+                    tm.tm_sec = s;
+                    continue;
                 }
-                tm.tm_hour = h;
-                tm.tm_min = m;
-                tm.tm_sec = s;
-                continue;
             }
 
             // 4 digit Year
@@ -512,7 +680,7 @@ public:
             else if (couldBe[i] & AYEAR && year == -1) year = unknown[i];
         }
 
-        if (year == -1 || month == -1 || day == -1) 
+        if (year == -1 || month == -1 || day == -1)
         {
             return -1;
         }
@@ -540,218 +708,40 @@ public:
         return time;
     }
 
-    static std::vector<Cookie> parseSetCookieHeaderLine(const std::string& cookieString)
-    {
-        // According to http://wp.netscape.com/newsref/std/cookie_spec.html,<
-        // the Set-Cookie response header is of the format:
-        //
-        //   Set-Cookie: NAME=VALUE; expires=DATE; path=PATH; domain=DOMAIN_NAME; secure
-        //
-        // where only the NAME=VALUE part is mandatory
-        //
-        // We do not support RFC 2965 Set-Cookie2-style cookies
-
-        std::vector<Cookie> result;
-        const time_t now = time(nullptr);
-
-        int position = 0;
-        const int length = static_cast<int>(cookieString.length());
-        while (position < length) 
-        {
-            Cookie cookie;
-
-            // The first part is always the "NAME=VALUE" part
-            std::pair<std::string, std::string> field = nextField(cookieString, position, true);
-            if (field.first.empty())
-                // parsing error
-                break;
-            cookie.m_name = field.first;
-            cookie.m_value = field.second;
-
-            position = nextNonWhitespace(cookieString, position);
-            while (position < length) {
-                switch (cookieString.at(position++)) {
-                case ';':
-                    // new field in the cookie
-                    field = nextField(cookieString, position, false);
-                    std::transform(field.first.begin(), field.first.end(), field.first.begin(),
-                        [](unsigned char c) { return std::tolower(c); });   // everything but the NAME=VALUE is case-insensitive
-
-                    if (field.first == "expires") {
-                        position -= static_cast<int>(field.second.length());
-                        int end;
-                        for (end = position; end < length; ++end)
-                            if (isValueSeparator(cookieString.at(end)))
-                                break;
-
-                        // remove last spaces
-                        int endDateStringWithoutSpace = nextNonWhitespaceReverse(cookieString, end, position);
-                        std::string dateString = cookieString.substr(position, endDateStringWithoutSpace - position);
-                        position = end;
-                        std::transform(dateString.begin(), dateString.end(), dateString.begin(),
-                            [](unsigned char c) { return std::tolower(c); });
-                        time_t date = parseDateString(dateString);
-                        if (date == -1) {
-                            return result;
-                        }
-                        cookie.m_expirationDate = date;
-                    }
-                    else if (field.first == "domain") {
-                        std::string rawDomain = field.second;
-                        std::string maybeLeadingDot;
-                        if (!rawDomain.empty() && rawDomain[0] == '.') {
-                            maybeLeadingDot = '.';
-                            rawDomain = rawDomain.substr(1);
-                        }
-
-                        std::string normalizedDomain = rawDomain;// QUrl::fromAce(QUrl::toAce(rawDomain));
-                        if (normalizedDomain.empty() && !rawDomain.empty())
-                        {
-                            return result;
-                        }
-                        cookie.m_domain = maybeLeadingDot + normalizedDomain;
-                    }
-                    else if (field.first == "max-age") {
-                        if (field.second.empty())
-                        {
-                            return result;
-                        }
-                        char* res = nullptr;
-                        long long secs = strtoll(field.second.c_str(), &res, 10);
-                        if (res != &field.second[field.second.size()])
-                        {
-                            return result;
-                        }
-                        cookie.m_expirationDate = now + secs;
-                    }
-                    else if (field.first == "path") {
-                        decode(cookie.m_path, field.second);
-                    }
-                    else if (field.first == "secure") {
-                        cookie.m_secure = true;
-                    }
-                    else if (field.first == "httponly") {
-                        cookie.m_httpOnly = true;
-                    }
-                    else if (field.first == "comment") {
-                        cookie.m_comment = field.second;
-                    }
-                    else if (field.first == "version") {
-                        if (field.second != "1") {
-                            // oops, we don't know how to handle this cookie
-                            return result;
-                        }
-                    }
-                    else {
-                        // got an unknown field in the cookie
-                        // what do we do?
-                    }
-
-                    position = nextNonWhitespace(cookieString, position);
-                }                
-            }
-
-            if (!cookie.m_name.empty())
-            {
-                result.push_back(cookie);
-            }
-        }
-
-        return result;
-    }
-
-private:
     static std::pair<std::string, std::string> nextField(const std::string & text, int& position, bool isNameValue)
     {
         // format is one of:
         //    (1)  token
         //    (2)  token = token
         //    (3)  token = quoted-string
-        int i;
-        const int length = static_cast<int>(text.length());
+        const int length = static_cast<int>(text.size());
         position = nextNonWhitespace(text, position);
 
-        // parse the first part, before the equal sign
-        for (i = position; i < length; ++i) {
-            char c = text.at(i);
-            if (c == ';' || c == '=')
-                break;
+        int semiColonPosition = static_cast<int>(text.find_first_of(';', position));
+        if (semiColonPosition < 0)
+            semiColonPosition = length; //no ';' means take everything to end of string
+
+        int equalsPosition = static_cast<int>(text.find_first_of('=', position));
+        if (equalsPosition < 0 || equalsPosition > semiColonPosition) {
+            if (isNameValue)
+                return {}; //'=' is required for name-value-pair (RFC6265 section 5.2, rule 2)
+            equalsPosition = semiColonPosition; //no '=' means there is an attribute-name but no attribute-value
         }
 
         // remove last spaces
-        int endFirstWithoutSpace = nextNonWhitespaceReverse(text, i, position);
+        int endFirstWithoutSpace = nextNonWhitespaceReverse(text, equalsPosition, position);
 
         std::string first = text.substr(position, endFirstWithoutSpace - position);
-        position = i;
-
-        if (first.empty())
-            return std::make_pair(std::string(), std::string());
-        if (i == length || text.at(i) != '=')
-            // no equal sign, we found format (1)
-            return std::make_pair(first, std::string());
-
         std::string second;
-        second.reserve(32);         // arbitrary but works for most cases
+        if (semiColonPosition > equalsPosition + 1)
+        {
+            // remove last spaces
+            int endSecondWithoutSpace = nextNonWhitespaceReverse(text, semiColonPosition, equalsPosition + 1);
 
-        i = nextNonWhitespace(text, position + 1);
-        if (i < length && text.at(i) == '"') {
-            // a quote, we found format (3), where:
-            // quoted-string  = ( <"> *(qdtext | quoted-pair ) <"> )
-            // qdtext         = <any TEXT except <">>
-            // quoted-pair    = "\" CHAR
-
-            // If it is NAME=VALUE, retain the value as is
-            // refer to http://bugreports.qt-project.org/browse/QTBUG-17746
-            if (isNameValue)
-                second += '"';
-            ++i;
-            while (i < length) {
-                char c = text.at(i);
-                if (c == '"') {
-                    // end of quoted text
-                    if (isNameValue)
-                        second += '"';
-                    break;
-                }
-                else if (c == '\\') {
-                    if (isNameValue)
-                        second += '\\';
-                    ++i;
-                    if (i >= length)
-                        // broken line
-                        return std::make_pair(std::string(), std::string());
-                    c = text.at(i);
-                }
-
-                second += c;
-                ++i;
-            }
-
-            for (; i < length; ++i) {
-                char c = text.at(i);
-                if (c == ';')
-                    break;
-            }
-            position = i;
-        }
-        else {
-            // no quote, we found format (2)
-            position = i;
-            for (; i < length; ++i) {
-                char c = text.at(i);
-                // for name value pairs, we want to parse until reaching the next ';'
-                // and not break when reaching a space char
-                if (c == ';' || ((isNameValue && (c == '\n' || c == '\r')) || (!isNameValue && isLWS(c))))
-                    break;
-            }
-
-            int endSecondWithoutSpace = nextNonWhitespaceReverse(text, i, position);
-
-            second = text.substr(position, endSecondWithoutSpace - position);
-
-            position = i;
+            second = text.substr(equalsPosition + 1, endSecondWithoutSpace - (equalsPosition + 1));
         }
 
+        position = semiColonPosition;
         return std::make_pair(first, second);
     }
 
@@ -790,7 +780,7 @@ private:
     static int nextNonWhitespaceReverse(const std::string& text, int from, int till)
     {
         --from;
-        while (from > till) {
+        while (from >= till) {
             if (isLWS(text.at(from)))
                 --from;
             else
@@ -803,6 +793,7 @@ private:
 
     time_t m_expirationDate;
     std::string m_domain;
+    bool m_domainDot;
     std::string m_path;
     std::string m_comment;
     std::string m_name;
@@ -810,6 +801,46 @@ private:
     bool m_secure;
     bool m_httpOnly;
 };
+
+
+//---------------------------------------
+// CookieStore
+//---------------------------------------
+
+void CookieStore::add(const Cookie& cookie)
+{
+    std::unique_ptr<Cookie>* cookieExists = getCookieIntern(cookie.getDomain(), cookie.getPath());
+    if (cookieExists)
+    {
+        *cookieExists = std::make_unique<Cookie>(cookie);
+    }
+    else
+    {
+        m_cookies.push_back(std::make_unique<Cookie>(cookie));
+    }
+}
+
+const Cookie* CookieStore::getCookie(const std::string& host, const std::string& path) const
+{
+    std::unique_ptr<Cookie>* cookie = const_cast<CookieStore*>(this)->getCookieIntern(host, path);
+    if (cookie != nullptr)
+    {
+        return cookie->get();
+    }
+    return nullptr;
+}
+
+std::unique_ptr<Cookie>* CookieStore::getCookieIntern(const std::string& host, const std::string& path)
+{
+    for (auto& cookie : m_cookies)
+    {
+        if (cookie.match(host, path))
+        {
+            return &cookie;
+        }
+    }
+    return nullptr;
+}
 
 
 //---------------------------------------
@@ -832,7 +863,7 @@ const std::string ProtocolHttpClient::HTTP_REQUEST = "request";
 const std::string ProtocolHttpClient::HTTP_RESPONSE = "response";
     
 static const std::string CONTENT_LENGTH = "Content-Length";
-static const std::string FMQ_SESSIONID = "fmq_sessionid";
+//static const std::string FMQ_SESSIONID = "fmq_sessionid";
 static const std::string HTTP_COOKIE = "Cookie";
 
 static const std::string FMQ_CREATESESSION = "fmq_createsession";
@@ -989,59 +1020,6 @@ static void splitOnce(const std::string& src, ssize_t indexBegin, ssize_t indexE
 
 
 
-
-
-
-std::string ProtocolHttpClient::createSessionName()
-{
-    std::uint64_t sessionCounter = m_nextSessionNameCounter.fetch_add(1);
-    std::uint64_t v1 = m_randomVariable(m_randomGenerator);
-    std::uint64_t v2 = m_randomVariable(m_randomGenerator);
-
-    std::ostringstream oss;
-    oss << std::hex << v2 << v1 << '.' << std::dec <<sessionCounter;
-    std::string sessionName = oss.str();
-    return sessionName;
-}
-
-
-
-
-void ProtocolHttpClient::cookiesToSessionIds(const std::string& cookies)
-{
-    m_sessionNames.clear();
-    size_t posStart = 0;
-    while (posStart != std::string::npos)
-    {
-        size_t posEnd = cookies.find_first_of(';', posStart);
-        std::string cookie;
-        if (posEnd != std::string::npos)
-        {
-            cookie = std::string(cookies, posStart, posEnd - posStart);
-            posStart = posEnd + 1;
-        }
-        else
-        {
-            cookie = std::string(cookies, posStart);
-            posStart = posEnd;
-        }
-
-        size_t pos = cookie.find("fmq=");
-        if (pos != std::string::npos)
-        {
-            pos += 4;
-            std::string sessionId = { cookie, pos };
-            if (!sessionId.empty())
-            {
-                m_sessionNames.emplace_back(std::move(sessionId));
-            }
-        }
-    }
-}
-
-
-
-
 bool ProtocolHttpClient::receiveHeaders(ssize_t bytesReceived)
 {
     bool ok = true;
@@ -1075,14 +1053,23 @@ bool ProtocolHttpClient::receiveHeaders(ssize_t bytesReceived)
                         {
                             std::vector<std::string> lineSplit;
                             Utils::split(m_receiveBuffer, m_offsetRemaining, indexEndLine, ' ', lineSplit);
-                            if (lineSplit.size() == 3)
+                            if (lineSplit.size() >= 2)
                             {
                                 m_message = std::make_shared<ProtocolMessage>(0);
                                 Variant& controlData = m_message->getControlData();
                                 controlData.add(FMQ_HTTP, std::string(HTTP_RESPONSE));
                                 controlData.add(FMQ_PROTOCOL, std::move(lineSplit[0]));
                                 controlData.add(FMQ_HTTP_STATUS, std::move(lineSplit[1]));
-                                controlData.add(FMQ_HTTP_STATUSTEXT, std::move(lineSplit[2]));
+                                std::string statusText;
+                                for (size_t i = 2; i < lineSplit.size(); ++i)
+                                {
+                                    statusText += lineSplit[i];
+                                    if (i < lineSplit.size() - 1)
+                                    {
+                                        statusText += ' ';
+                                    }
+                                }
+                                controlData.add(FMQ_HTTP_STATUSTEXT, std::move(statusText));
                                 m_state = State::STATE_FIND_HEADERS;
                             }
                             else
@@ -1128,30 +1115,9 @@ bool ProtocolHttpClient::receiveHeaders(ssize_t bytesReceived)
                             {
                                 m_contentLength = std::atoll(value.c_str());
                             }
-                            else if (lineSplit[0] == FMQ_CREATESESSION)
+                            else if (lineSplit[0] == HTTP_SET_COOKIE)
                             {
-                                m_createSession = true;
-                            }
-                            else if (lineSplit[0] == FMQ_SESSIONID)
-                            {
-                                m_sessionNames.clear();
-                                if (!value.empty())
-                                {
-                                    m_sessionNames.push_back(value);
-                                }
-                                m_stateSessionId = StateSessionId::SESSIONID_FMQ;
-                            }
-                            else if (lineSplit[0] == HTTP_COOKIE)
-                            {
-                                if (m_stateSessionId == StateSessionId::SESSIONID_NONE)
-                                {
-                                    cookiesToSessionIds(value);
-//                                    if (!m_sessionNames.empty())
-//                                    {
-//                                        streamInfo << this << " input cookie: " << m_sessionNames[0];
-//                                    }
-                                    m_stateSessionId = StateSessionId::SESSIONID_COOKIE;
-                                }
+                                const std::vector<Cookie> cookies = Cookie::parseSetCookieHeaderLine(value);
                             }
                             m_message->addMetainfo(std::move(lineSplit[0]), std::move(value));
                         }
@@ -1188,10 +1154,6 @@ void ProtocolHttpClient::reset()
     m_indexFilled = 0;
     m_message = nullptr;
     m_state = State::STATE_FIND_FIRST_LINE;
-    m_stateSessionId = StateSessionId::SESSIONID_NONE;
-    m_createSession = false;
-    m_sessionNames.clear();
-    m_path = nullptr;
 }
 
 
@@ -1297,7 +1259,7 @@ void ProtocolHttpClient::sendMessage(IMessagePtr message)
     sumHeaderSize += m_headerHost.size();   // Host: hostname\r\n
 
     ProtocolMessage::Metainfo& metainfo = message->getAllMetainfo();
-    metainfo[CONTENT_LENGTH] = std::to_string(sizeBody);
+    //metainfo[CONTENT_LENGTH] = std::to_string(sizeBody);
     if (!m_headerSendNext.empty())
     {
         metainfo.insert(m_headerSendNext.begin(), m_headerSendNext.end());
@@ -1662,7 +1624,7 @@ const std::string FMQ_HTTP_STATUS = "fmq_http_status";
 const std::string FMQ_HTTP_STATUSTEXT = "fmq_http_statustext";
 const std::string FMQ_DISCONNECTED = "fmq_disconnected";
 
-void ProtocolHttpClient::disconnected(const IStreamConnectionPtr& /*connection*/)
+void ProtocolHttpClient::disconnected(const IStreamConnectionPtr& connection)
 {
     auto callback = m_callback.lock();
     if (callback)
@@ -1674,7 +1636,7 @@ void ProtocolHttpClient::disconnected(const IStreamConnectionPtr& /*connection*/
         controlData.add(FMQ_HTTP_STATUS, "404");
         controlData.add(FMQ_HTTP_STATUSTEXT, "Not Found");
         controlData.add(FMQ_DISCONNECTED, "true");
-        callback->received(message, m_connectionId);
+        callback->received(message, connection->getConnectionId());
 
         callback->disconnectedMultiConnection(shared_from_this());
     }

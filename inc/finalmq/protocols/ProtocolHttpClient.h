@@ -32,6 +32,20 @@
 
 namespace finalmq {
 
+class Cookie;
+
+class CookieStore
+{
+public:
+    void add(const Cookie& cookie);
+    const Cookie* getCookie(const std::string& host, const std::string& path) const;
+
+private:
+    std::unique_ptr<Cookie>* CookieStore::getCookieIntern(const std::string& host, const std::string& path);
+
+    std::list<std::unique_ptr<Cookie>> m_cookies;
+};
+
 
 class SYMBOLEXP ProtocolHttpClient : public IProtocol
                                    , public std::enable_shared_from_this<ProtocolHttpClient>
@@ -82,8 +96,6 @@ private:
 
     bool receiveHeaders(ssize_t bytesReceived);
     void reset();
-    std::string createSessionName();
-    void cookiesToSessionIds(const std::string& cookies);
 //    bool handleInternalCommands(const std::shared_ptr<IProtocolCallback>& callback, bool& ok);
 
     enum class State
@@ -105,8 +117,6 @@ private:
     std::mt19937                                    m_randomGenerator;
     std::uniform_int_distribution<std::uint64_t>    m_randomVariable;
     IMessage::Metainfo                              m_headerSendNext;
-    StateSessionId                                  m_stateSessionId = StateSessionId::SESSIONID_NONE;
-    std::vector<std::string>                        m_sessionNames;
 
     State                               m_state = State::STATE_FIND_FIRST_LINE;
     std::string                         m_receiveBuffer;
@@ -117,14 +127,11 @@ private:
     ssize_t                             m_indexFilled = 0;
     std::string                         m_headerHost;
     std::int64_t                        m_connectionId = 0;
-    bool                                m_createSession = false;
-    std::string                         m_sessionName;
     std::weak_ptr<IProtocolCallback>    m_callback;
     IStreamConnectionPtr                m_connection;
     bool                                m_multipart = false;
 
-    // path
-    std::string*                        m_path = nullptr;
+    CookieStore                         m_cookieStore;
 
     mutable std::mutex                  m_mutex;
     static std::atomic_int64_t          m_nextSessionNameCounter;
