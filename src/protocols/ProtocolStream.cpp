@@ -211,6 +211,15 @@ void ProtocolStream::cycleTime()
 }
 
 
+IProtocolSessionDataPtr ProtocolStream::createProtocolSessionData()
+{
+    return nullptr;
+}
+
+void ProtocolStream::setProtocolSessionData(const IProtocolSessionDataPtr& /*protocolSessionData*/)
+{
+}
+
 
 //---------------------------------------
 // ProtocolStreamFactory

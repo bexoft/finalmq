@@ -107,7 +107,7 @@ public:
     { 
     }
 
-    static std::vector<Cookie> parseSetCookieHeaderLine(const std::string& cookieString)
+    static std::vector<Cookie> parseSetCookieHeaderLine(const std::string& cookieString, const std::string& hostname)
     {
         // According to http://wp.netscape.com/newsref/std/cookie_spec.html,<
         // the Set-Cookie response header is of the format:
@@ -133,6 +133,8 @@ public:
                 break;
             cookie.m_name = field.first;
             cookie.m_value = field.second;
+            cookie.m_domain = hostname;
+            cookie.m_domainDot = false;
 
             position = nextNonWhitespace(cookieString, position);
             while (position < length) {
@@ -268,10 +270,157 @@ public:
 
     bool match(const std::string& domain, const std::string& path) const
     {
-        
+        const bool domainFits = matchDomain(domain);
+
+        if (domainFits)
+        {
+            if (path == m_path)
+            {
+                return true;
+            }
+            else
+            {
+                if (path.size() > m_path.size())
+                {
+                    if (!m_path.empty() && m_path[m_path.size() - 1] == '/')
+                    {
+                        if (path[m_path.size() - 1] == '/')
+                        {
+                            if (memcmp(&path[0], m_path.c_str(), m_path.size()) == 0)
+                            {
+                                // m_path = "/hallo/"
+                                //   path = "/hello/..."
+                                return true;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (!m_path.empty())
+                        {
+                            if (path[m_path.size()] == '/')
+                            {
+                                if (memcmp(&path[0], m_path.c_str(), m_path.size()) == 0)
+                                {
+                                    // m_path = "/hallo"
+                                    //   path = "/hello/..."
+                                    return true;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (path[0] == '/')
+                            {
+                                // m_path = ""
+                                //   path = "/..."
+                                return true;
+                            }
+                        }
+                    }
+                }
+                else if (path.size() == 0 && m_path.size() == 1 && m_path[0] == '/')
+                {
+                    // m_path = "/"
+                    //   path = ""
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    bool matchExactPath(const std::string& domain, const std::string& path) const
+    {
+        const bool domainFits = matchDomain(domain);
+
+        if (domainFits)
+        {
+            if (path == m_path)
+            {
+                return true;
+            }
+            else
+            {
+                if (path.size() == m_path.size() + 1)
+                {
+                    if (m_path.empty() || m_path[m_path.size() - 1] != '/')
+                    {
+                        if (!m_path.empty())
+                        {
+                            if (path[m_path.size()] == '/')
+                            {
+                                if (memcmp(&path[0], m_path.c_str(), path.size()) == 0)
+                                {
+                                    // m_path = "/hallo"
+                                    //   path = "/hello/"
+                                    return true;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (path[0] == '/')
+                            {
+                                // m_path = ""
+                                //   path = "/"
+                                return true;
+                            }
+                        }
+                    }
+                }
+                else if (path.size() == 0 && m_path.size() == 1 && m_path[0] == '/')
+                {
+                    // m_path = "/"
+                    //   path = ""
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    bool isExpired() const
+    {
+        const time_t now = time(nullptr);
+        if (m_expirationDate != -1 && now > m_expirationDate)
+        {
+            return true;
+        }
+        return false;
     }
 
 private:
+
+    bool matchDomain(const std::string& domain) const
+    {
+        bool domainFits = false;
+        if (m_domain == domain)
+        {
+            domainFits = true;
+        }
+        else
+        {
+            if (m_domainDot)
+            {
+                if (domain.size() > m_domain.size())
+                {
+                    const size_t index = domain.size() - m_domain.size() - 1;
+                    if (domain[index] == '.')
+                    {
+                        if (memcmp(&domain[index + 1], m_domain.c_str(), m_domain.size()) == 0)
+                        {
+                            domainFits = true;
+                        }
+                    }
+                }
+            }
+        }
+        return domainFits;
+    }
+
     static bool checkStaticArray(int& val, const std::string& dateString, int at, const char* array, int size)
     {
         if (dateString[at] < 'a' || dateString[at] > 'z')
@@ -809,37 +958,83 @@ private:
 
 void CookieStore::add(const Cookie& cookie)
 {
-    std::unique_ptr<Cookie>* cookieExists = getCookieIntern(cookie.getDomain(), cookie.getPath());
+    std::unique_lock<std::mutex> lock(m_mutex);
+    std::shared_ptr<Cookie>& cookieExists = getCookieInternExactPath(cookie.getDomain(), cookie.getPath());
     if (cookieExists)
     {
-        *cookieExists = std::make_unique<Cookie>(cookie);
+        cookieExists = std::make_shared<Cookie>(cookie);
     }
     else
     {
-        m_cookies.push_back(std::make_unique<Cookie>(cookie));
+        m_cookies.push_back(std::make_shared<Cookie>(cookie));
     }
 }
 
-const Cookie* CookieStore::getCookie(const std::string& host, const std::string& path) const
+void CookieStore::add(const std::vector<Cookie>& cookies)
 {
-    std::unique_ptr<Cookie>* cookie = const_cast<CookieStore*>(this)->getCookieIntern(host, path);
-    if (cookie != nullptr)
+    for (const auto& cookie : cookies)
     {
-        return cookie->get();
+        add(cookie);
     }
-    return nullptr;
 }
 
-std::unique_ptr<Cookie>* CookieStore::getCookieIntern(const std::string& host, const std::string& path)
+
+const std::vector<std::shared_ptr<Cookie>> CookieStore::getCookies(const std::string& host, const std::string& path) const
 {
-    for (auto& cookie : m_cookies)
+    std::unique_lock<std::mutex> lock(m_mutex);
+    std::vector<std::shared_ptr<Cookie>> cookies = const_cast<CookieStore*>(this)->getCookiesIntern(host, path);
+    return cookies;
+}
+
+std::vector<std::shared_ptr<Cookie>> CookieStore::getCookiesIntern(const std::string& host, const std::string& path)
+{
+    std::vector<std::shared_ptr<Cookie>> cookies;
+    for (auto it = m_cookies.begin(); it != m_cookies.end(); )
     {
-        if (cookie.match(host, path))
+        std::shared_ptr<Cookie>& cookie = *it;
+        if (cookie->match(host, path))
         {
-            return &cookie;
+            if (cookie->isExpired())
+            {
+                it = m_cookies.erase(it);
+            }
+            else
+            {
+                cookies.push_back(cookie);
+                ++it;
+            }
+        }
+        else
+        {
+            ++it;
         }
     }
-    return nullptr;
+    return cookies;
+}
+
+std::shared_ptr<Cookie>& CookieStore::getCookieInternExactPath(const std::string& host, const std::string& path)
+{
+    for (auto it = m_cookies.begin(); it != m_cookies.end(); )
+    {
+        std::shared_ptr<Cookie>& cookie = *it;
+        if (cookie->matchExactPath(host, path))
+        {
+            if (cookie->isExpired())
+            {
+                it = m_cookies.erase(it);
+            }
+            else
+            {
+                return cookie;
+            }
+        }
+        else
+        {
+            ++it;
+        }
+    }
+    static std::shared_ptr<Cookie> nullPointer;
+    return nullPointer;
 }
 
 
@@ -889,8 +1084,6 @@ static const std::string FMQ_MULTIPART_BOUNDARY = "B9BMAhxAhY.mQw1IDRBA";
 //};
 
 
-
-std::atomic_int64_t ProtocolHttpClient::m_nextSessionNameCounter{ 1 };
 
 ProtocolHttpClient::ProtocolHttpClient()
     : m_randomDevice()
@@ -1117,7 +1310,8 @@ bool ProtocolHttpClient::receiveHeaders(ssize_t bytesReceived)
                             }
                             else if (lineSplit[0] == HTTP_SET_COOKIE)
                             {
-                                const std::vector<Cookie> cookies = Cookie::parseSetCookieHeaderLine(value);
+                                const std::vector<Cookie> cookies = Cookie::parseSetCookieHeaderLine(value, m_hostname);
+                                m_cookieStore->add(cookies);
                             }
                             m_message->addMetainfo(std::move(lineSplit[0]), std::move(value));
                         }
@@ -1162,6 +1356,11 @@ static std::string HEADER_KEEP_ALIVE = "Connection: keep-alive\r\n";
 
 void ProtocolHttpClient::sendMessage(IMessagePtr message)
 {
+    IStreamConnectionPtr connection = getConnection();
+    if (connection == nullptr)
+    {
+        return;
+    }
     if (message == nullptr)
     {
         return;
@@ -1214,6 +1413,7 @@ void ProtocolHttpClient::sendMessage(IMessagePtr message)
     {
         path = &PATH_ROOT;
     }
+
     std::string pathEncode;
     encode(pathEncode, *path);
     firstLine = *method;
@@ -1248,7 +1448,8 @@ void ProtocolHttpClient::sendMessage(IMessagePtr message)
 
     if (m_headerHost.empty())
     {
-        const ConnectionData& connectionData = m_connection->getConnectionData();
+        const ConnectionData& connectionData = connection->getConnectionData();
+        m_hostname = connectionData.hostname;
         m_headerHost = "Host: " + connectionData.hostname + ":" + std::to_string(connectionData.port) + "\r\n";
     }
 
@@ -1259,7 +1460,20 @@ void ProtocolHttpClient::sendMessage(IMessagePtr message)
     sumHeaderSize += m_headerHost.size();   // Host: hostname\r\n
 
     ProtocolMessage::Metainfo& metainfo = message->getAllMetainfo();
-    //metainfo[CONTENT_LENGTH] = std::to_string(sizeBody);
+
+    assert(m_cookieStore);
+    const std::vector<std::shared_ptr<Cookie>> cookies = m_cookieStore->getCookies(m_hostname, *path);
+    std::string cookieString;
+    for (const auto& cookie : cookies)
+    {
+        cookieString += cookie->getName() + '=' + cookie->getValue() + "; ";
+    }
+    if (!cookieString.empty())
+    {
+        metainfo[HTTP_COOKIE] = cookieString;
+    }
+
+    metainfo[CONTENT_LENGTH] = std::to_string(sizeBody);
     if (!m_headerSendNext.empty())
     {
         metainfo.insert(m_headerSendNext.begin(), m_headerSendNext.end());
@@ -1317,8 +1531,7 @@ void ProtocolHttpClient::sendMessage(IMessagePtr message)
 
     message->prepareMessageToSend();
 
-    assert(m_connection);
-    m_connection->sendMessage(message);
+    connection->sendMessage(message);
 
     if (filename && filesize > 0)
     {
@@ -1601,8 +1814,6 @@ bool ProtocolHttpClient::received(const IStreamConnectionPtr& /*connection*/, co
 }
 
 
-
-
 hybrid_ptr<IStreamConnectionCallback> ProtocolHttpClient::connected(const IStreamConnectionPtr& connection)
 {
     ConnectionData connectionData = connection->getConnectionData();
@@ -1630,12 +1841,12 @@ void ProtocolHttpClient::disconnected(const IStreamConnectionPtr& connection)
     if (callback)
     {
         IMessagePtr message = std::make_shared<ProtocolMessage>(0);
-        Variant& controlData = message->getControlData();
-        controlData.add(FMQ_HTTP, std::string(HTTP_RESPONSE));
-        controlData.add(FMQ_PROTOCOL, "HTTP/1.1");
-        controlData.add(FMQ_HTTP_STATUS, "404");
-        controlData.add(FMQ_HTTP_STATUSTEXT, "Not Found");
-        controlData.add(FMQ_DISCONNECTED, "true");
+        IMessage::Metainfo& metainfo = message->getAllMetainfo();
+        metainfo[FMQ_HTTP] = HTTP_RESPONSE;
+        metainfo[FMQ_PROTOCOL] = "HTTP/1.1";
+        metainfo[FMQ_HTTP_STATUS] = "404";
+        metainfo[FMQ_HTTP_STATUSTEXT] = "Not Found";
+        metainfo[FMQ_DISCONNECTED] = true;
         callback->received(message, connection->getConnectionId());
 
         callback->disconnectedMultiConnection(shared_from_this());
@@ -1661,6 +1872,15 @@ void ProtocolHttpClient::cycleTime()
 
 }
 
+IProtocolSessionDataPtr ProtocolHttpClient::createProtocolSessionData()
+{
+    return std::make_shared<CookieStore>();
+}
+
+void ProtocolHttpClient::setProtocolSessionData(const IProtocolSessionDataPtr& protocolSessionData)
+{
+    m_cookieStore = std::static_pointer_cast<CookieStore>(protocolSessionData);
+}
 
 
 //---------------------------------------

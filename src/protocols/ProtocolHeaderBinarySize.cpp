@@ -223,6 +223,16 @@ void ProtocolHeaderBinarySize::cycleTime()
 
 }
 
+IProtocolSessionDataPtr ProtocolHeaderBinarySize::createProtocolSessionData()
+{
+    return nullptr;
+}
+
+void ProtocolHeaderBinarySize::setProtocolSessionData(const IProtocolSessionDataPtr& /*protocolSessionData*/)
+{
+}
+
+
 
 //---------------------------------------
 // ProtocolHeaderBinarySizeFactory

@@ -107,6 +107,12 @@ void ProtocolSession::initProtocolValues()
     m_protocolFlagSynchronousRequestReply = protocol->isSynchronousRequestReply();
     m_messageFactory = protocol->getMessageFactory();
 
+    if (m_protocolSessionData == nullptr)
+    {
+        m_protocolSessionData = protocol->createProtocolSessionData();
+    }
+    protocol->setProtocolSessionData(m_protocolSessionData);
+
     if (m_protocolFlagSynchronousRequestReply)
     {
         m_maxSynchReqRepConnections = m_protocolData.getDataValue<int>(PROPERTY_MAX_SYNC_REQREP_CONNECTIONS);
@@ -363,6 +369,8 @@ IProtocolPtr ProtocolSession::createRequestConnection()
         IProtocolPtr protocol = m_protocolFactory->createProtocol(m_protocolData);
         assert(protocol);
 
+        protocol->setProtocolSessionData(m_protocolSessionData);
+
         IStreamConnectionPtr connection = m_streamConnectionContainer->createConnection(std::weak_ptr<IStreamConnectionCallback>(protocol));
 
         assert(m_protocol == nullptr);
@@ -597,7 +605,9 @@ bool ProtocolSession::connect(const std::string& endpoint, const ConnectProperti
         m_protocolData = m_connectionProperties.protocolData;
         m_formatData = m_connectionProperties.formatData;
         m_contentType = contentType;
+        m_protocol = protocol;
         initProtocolValues();
+        m_protocol = nullptr;
         IProtocolPtr connection = createRequestConnection();
         if (connection)
         {
@@ -782,7 +792,7 @@ void ProtocolSession::received(const IMessagePtr& message, std::int64_t connecti
             m_runningRequests.erase(it);
             foundRunningRequest = true;
         }
-        const bool disconnected = (message->getControlData().getVariant(FMQ_DISCONNECTED) != nullptr);
+        const bool disconnected = (message->getMetainfo(FMQ_DISCONNECTED) != nullptr);
 
         // in case of disconnected -> keep connection allocated, so that no one will use it till the disconnectedMultiConnection is called
         if (!disconnected)
@@ -965,6 +975,7 @@ void ProtocolSession::cleanupMultiConnection()
 void ProtocolSession::setProtocol(const IProtocolPtr& protocol)
 {
     assert(protocol);
+    protocol->setProtocolSessionData(m_protocolSessionData);
 
     std::int64_t connectionId = 0;
     IStreamConnectionPtr connection = protocol->getConnection();

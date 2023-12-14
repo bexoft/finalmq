@@ -167,6 +167,9 @@ TEST_F(TestIntegrationProtocolHttp, testReconnectExpires)
     EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(0);
     EXPECT_CALL(*m_mockClientCallback, disconnected(_)).Times(0);
 
+    // the disconnect response could come
+    EXPECT_CALL(*m_mockClientCallback, received(_, ReceivedMessage(""))).Times(Between(0, 1));
+
     IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3335:httpclient", m_mockClientCallback, { {}, {1, 1} });
     IMessagePtr message = connection->createMessage();
     message->addSendPayload(MESSAGE1_BUFFER);
@@ -287,10 +290,40 @@ TEST_F(TestIntegrationProtocolHttp, testSendMultipleMessages)
 
 TEST_F(TestIntegrationProtocolHttp, testCookie)
 {
-    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://www.ibm.com:80:httpclient", m_mockClientCallback);
-    IMessagePtr message = connection->createMessage();
+    int res = m_sessionContainer->bind("tcp://*:3335:httpserver", m_mockServerCallback);
+    EXPECT_EQ(res, 0);
 
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+
+    IProtocolSessionPtr sessionClient;
+    EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(1)
+        .WillOnce(testing::SaveArg<0>(&sessionClient));
+    IProtocolSessionPtr sessionServer;
+    EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1)
+        .WillOnce(testing::SaveArg<0>(&sessionServer));
+    auto& expectReceive1 = EXPECT_CALL(*m_mockServerCallback, received(_, ReceivedMessage(MESSAGE1_BUFFER))).Times(1);
+
+    // the disconnect response could come
+    EXPECT_CALL(*m_mockClientCallback, received(_, ReceivedMessage(""))).Times(Between(0, 1));
+
+    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3335:httpclient", m_mockClientCallback);
+    IMessagePtr message = connection->createMessage();
+    message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    waitTillDone(expectReceive1, 5000);
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+    EXPECT_EQ(sessionClient, connection);
+    ASSERT_NE(sessionServer, nullptr);
+
+    auto& expectReceive2 = EXPECT_CALL(*m_mockClientCallback, received(_, ReceivedMessage(MESSAGE1_BUFFER))).Times(1);
+    sessionServer->sendMessage(message, true);
+    waitTillDone(expectReceive2, 5000);
+
+    EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(0);
+    EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(0);
+    auto& expectReceive3 = EXPECT_CALL(*m_mockServerCallback, received(_, ReceivedMessage(MESSAGE1_BUFFER))).Times(1);
+    connection->sendMessage(message);
+    waitTillDone(expectReceive3, 5000);
 }

@@ -61,6 +61,8 @@ private:
     virtual IMessagePtr pollReply(std::deque<IMessagePtr>&& messages) override;
     virtual void subscribe(const std::vector<std::string>& subscribtions) override;
     virtual void cycleTime() override;
+    virtual IProtocolSessionDataPtr createProtocolSessionData() override;
+    virtual void setProtocolSessionData(const IProtocolSessionDataPtr& protocolSessionData) override;
 
     std::vector<ssize_t> findEndOfMessage(const char* buffer, ssize_t size);
 
