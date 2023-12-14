@@ -428,11 +428,11 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
                             if (lineSplit.size() == 3)
                             {
                                 m_message = std::make_shared<ProtocolMessage>(0);
-                                Variant& controlData = m_message->getControlData();
-                                controlData.add(FMQ_HTTP, std::string(HTTP_RESPONSE));
-                                controlData.add(FMQ_PROTOCOL, std::move(lineSplit[0]));
-                                controlData.add(FMQ_HTTP_STATUS, std::move(lineSplit[1]));
-                                controlData.add(FMQ_HTTP_STATUSTEXT, std::move(lineSplit[2]));
+                                IMessage::Metainfo& metainfo = m_message->getAllMetainfo();
+                                metainfo[FMQ_HTTP] = HTTP_RESPONSE;
+                                metainfo[FMQ_PROTOCOL] = std::move(lineSplit[0]);
+                                metainfo[FMQ_HTTP_STATUS] = std::move(lineSplit[1]);
+                                metainfo[FMQ_HTTP_STATUSTEXT] = std::move(lineSplit[2]);
                                 m_state = State::STATE_FIND_HEADERS;
                             }
                             else
@@ -1213,6 +1213,14 @@ void ProtocolHttpServer::cycleTime()
 
 }
 
+IProtocolSessionDataPtr ProtocolHttpServer::createProtocolSessionData()
+{
+    return nullptr;
+}
+
+void ProtocolHttpServer::setProtocolSessionData(const IProtocolSessionDataPtr& /*protocolSessionData*/)
+{
+}
 
 
 //---------------------------------------

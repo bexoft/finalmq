@@ -303,5 +303,13 @@ void ProtocolDelimiter::cycleTime()
 
 }
 
+IProtocolSessionDataPtr ProtocolDelimiter::createProtocolSessionData()
+{
+    return nullptr;
+}
+
+void ProtocolDelimiter::setProtocolSessionData(const IProtocolSessionDataPtr& /*protocolSessionData*/)
+{
+}
 
 }   // namespace finalmq

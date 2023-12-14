@@ -34,17 +34,21 @@ namespace finalmq {
 
 class Cookie;
 
-class CookieStore
+class CookieStore : public IProtocolSessionData
 {
 public:
     void add(const Cookie& cookie);
-    const Cookie* getCookie(const std::string& host, const std::string& path) const;
+    void add(const std::vector<Cookie>& cookies);
+    const std::vector<std::shared_ptr<Cookie>> getCookies(const std::string& host, const std::string& path) const;
 
 private:
-    std::unique_ptr<Cookie>* CookieStore::getCookieIntern(const std::string& host, const std::string& path);
+    std::vector<std::shared_ptr<Cookie>> getCookiesIntern(const std::string& host, const std::string& path);
+    std::shared_ptr<Cookie>& getCookieInternExactPath(const std::string& host, const std::string& path);
 
-    std::list<std::unique_ptr<Cookie>> m_cookies;
+    std::list<std::shared_ptr<Cookie>> m_cookies;
+    mutable std::mutex                 m_mutex;
 };
+typedef std::shared_ptr<CookieStore> CookieStorePtr;
 
 
 class SYMBOLEXP ProtocolHttpClient : public IProtocol
@@ -92,6 +96,8 @@ private:
     virtual IMessagePtr pollReply(std::deque<IMessagePtr>&& messages) override;
     virtual void subscribe(const std::vector<std::string>& subscribtions) override;
     virtual void cycleTime() override;
+    virtual IProtocolSessionDataPtr createProtocolSessionData() override;
+    virtual void setProtocolSessionData(const IProtocolSessionDataPtr& protocolSessionData) override;
 
 
     bool receiveHeaders(ssize_t bytesReceived);
@@ -126,15 +132,15 @@ private:
     ssize_t                             m_contentLength = 0;
     ssize_t                             m_indexFilled = 0;
     std::string                         m_headerHost;
+    std::string                         m_hostname;
     std::int64_t                        m_connectionId = 0;
     std::weak_ptr<IProtocolCallback>    m_callback;
     IStreamConnectionPtr                m_connection;
     bool                                m_multipart = false;
 
-    CookieStore                         m_cookieStore;
+    CookieStorePtr                      m_cookieStore;
 
     mutable std::mutex                  m_mutex;
-    static std::atomic_int64_t          m_nextSessionNameCounter;
 };
 
 

@@ -565,6 +565,14 @@ void ProtocolMqtt5Client::closeConnection()
     disconnect();
 }
 
+IProtocolSessionDataPtr ProtocolMqtt5Client::createProtocolSessionData()
+{
+    return nullptr;
+}
+
+void ProtocolMqtt5Client::setProtocolSessionData(const IProtocolSessionDataPtr& /*protocolSessionData*/)
+{
+}
 
 
 

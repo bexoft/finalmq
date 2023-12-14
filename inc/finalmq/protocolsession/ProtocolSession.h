@@ -163,6 +163,7 @@ private:
     const BindProperties                            m_bindProperties;
     ConnectProperties                               m_connectionProperties;
     Variant                                         m_protocolData;
+    IProtocolSessionDataPtr                         m_protocolSessionData;
     Variant                                         m_formatData;
     int                                             m_maxSynchReqRepConnections = -1;
 

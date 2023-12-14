@@ -59,6 +59,12 @@ struct IProtocolCallback
 struct IProtocolSession;
 typedef std::shared_ptr<IProtocolSession> IProtocolSessionPtr;
 
+struct IProtocolSessionData
+{
+    virtual ~IProtocolSessionData() {}
+};
+typedef std::shared_ptr<IProtocolSessionData> IProtocolSessionDataPtr;
+
 
 struct IProtocol : public IStreamConnectionCallback
 {
@@ -83,6 +89,8 @@ struct IProtocol : public IStreamConnectionCallback
     virtual IMessagePtr pollReply(std::deque<IMessagePtr>&& messages) = 0;
     virtual void subscribe(const std::vector<std::string>& subscribtions) = 0;
     virtual void cycleTime() = 0;
+    virtual IProtocolSessionDataPtr createProtocolSessionData() = 0;
+    virtual void setProtocolSessionData(const IProtocolSessionDataPtr& protocolSessionData) = 0;
 };
 
 
