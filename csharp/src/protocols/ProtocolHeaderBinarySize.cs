@@ -222,6 +222,14 @@ namespace finalmq
         {
 
         }
+        public IProtocolSessionData? CreateProtocolSessionData()
+        {
+            return null;
+        }
+        public void SetProtocolSessionData(IProtocolSessionData? protocolSessionData)
+        {
+        }
+
 
         IProtocolCallback? m_callback = null;
         IStreamConnection? m_connection = null;

@@ -154,7 +154,6 @@ bool ProtocolSession::connect()
         assert(m_streamConnectionContainer);
         IStreamConnectionPtr connection = m_streamConnectionContainer->createConnection(std::weak_ptr<IStreamConnectionCallback>(m_protocol));
         setConnection(connection, true);
-        m_callConnect = true;
         res = m_streamConnectionContainer->connect(m_endpointStreamConnection, connection, m_connectionProperties);
     }
     return res;
@@ -632,7 +631,6 @@ bool ProtocolSession::connect(const std::string& endpoint, const ConnectProperti
         m_protocol = protocol;
         m_connectionId = connection->getConnectionId();
         initProtocolValues();
-        m_callConnect = true;
         m_protocol->setCallback(shared_from_this());
         m_protocol->setConnection(connection);
         sendBufferedMessages();
@@ -712,7 +710,7 @@ void ProtocolSession::disconnected()
     m_messagesBuffered.clear();
     m_pollMessages.clear();
     IProtocolSessionListPtr protocolSessionList = m_protocolSessionList.lock();
-    bool doDisconnected = (!m_triggeredDisconnected) && (m_triggeredConnected || m_callConnect);
+    bool doDisconnected = (!m_triggeredDisconnected) && (m_triggeredConnected || m_protocolSet.load(std::memory_order_acquire));
     m_triggeredDisconnected = true;
     lock.unlock();
 

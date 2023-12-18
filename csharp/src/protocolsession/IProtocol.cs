@@ -24,6 +24,10 @@
 namespace finalmq 
 {
 
+    public interface IProtocolSessionData
+    {
+    }
+
     public interface IProtocolCallback
     {
         void Connected();
@@ -63,6 +67,8 @@ namespace finalmq
         void MoveOldProtocolState(IProtocol protocolOld);
         IMessage? PollReply(IList<IMessage> messages);
         void Subscribe(IList<string> subscribtions);
+        IProtocolSessionData? CreateProtocolSessionData();
+        void SetProtocolSessionData(IProtocolSessionData? protocolSessionData);    
     }
 
     public delegate IProtocol FuncCreateProtocol(Variant? data);
