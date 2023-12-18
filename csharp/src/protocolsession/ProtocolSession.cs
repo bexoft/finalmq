@@ -192,6 +192,8 @@ namespace finalmq
                 Debug.Assert(m_protocolFactory != null);
                 IProtocol protocol = m_protocolFactory(m_protocolData);
 
+                protocol.SetProtocolSessionData(m_protocolSessionData);
+
                 IStreamConnection connection = m_streamConnectionContainer.CreateConnection(protocol);
 
                 Debug.Assert(m_protocol == null);
@@ -380,7 +382,9 @@ namespace finalmq
                     m_protocolData = m_connectionProperties?.ProtocolData;
                     m_formatData = m_connectionProperties?.FormatData;
                     m_contentType = contentType;
+                    m_protocol = protocol;
                     InitProtocolValues();
+                    m_protocol = null;
                     IProtocol? connection = CreateRequestConnection();
                     if (connection != null)
                     {
@@ -454,7 +458,7 @@ namespace finalmq
                 {
                     InitProtocolValues();
                     m_protocol = null;
-                    IProtocol protocol = CreateRequestConnection();
+                    IProtocol protocol = CreateRequestConnection()!;
                     IStreamConnection? connection = protocol.Connection;
                     if (connection != null)
                     {
@@ -470,7 +474,6 @@ namespace finalmq
                 Debug.Assert(m_endpointStreamConnection != null);
                 IStreamConnection connection = m_streamConnectionContainer.CreateConnection(m_protocol);
                 SetConnection(connection, true);
-                m_callConnect = true;
                 m_streamConnectionContainer.Connect(m_endpointStreamConnection, connection, m_connectionProperties);
             }
         }
@@ -503,6 +506,8 @@ namespace finalmq
         }
         public void SetProtocol(IProtocol protocol)
         {
+            protocol.SetProtocolSessionData(m_protocolSessionData);
+            
             long connectionId = 0;
             IStreamConnection? connection = protocol.Connection;
             if (connection != null)
@@ -631,7 +636,7 @@ namespace finalmq
                         m_runningRequests.Remove(connectionId);
                         foundRunningRequest = true;
                     }
-                    bool disconnected = (message.ControlData.GetVariant(FMQ_DISCONNECTED) != null);
+                    bool disconnected = (message.GetMetainfo(FMQ_DISCONNECTED) != null);
 
                     // in case of disconnected -> keep connection allocated, so that no one will use it till the disconnectedMultiConnection is called
                     if (!disconnected)
@@ -859,6 +864,12 @@ namespace finalmq
             m_protocolFlagSynchronousRequestReply = protocol.IsSynchronousRequestReply;
             m_messageFactory = protocol.MessageFactory;
 
+            if (m_protocolSessionData == null)
+            {
+                m_protocolSessionData = protocol.CreateProtocolSessionData();
+            }
+            protocol.SetProtocolSessionData(m_protocolSessionData);
+
             if (m_protocolFlagSynchronousRequestReply)
             {
                 m_maxSynchReqRepConnections = 0;
@@ -1025,7 +1036,6 @@ namespace finalmq
         FuncCreateMessage?                              m_messageFactory = null;
         ulong                                           m_protocolSet = 0;   // atomic
         bool                                            m_triggeredConnected = false;
-        bool                                            m_callConnect = false;
         bool                                            m_triggeredDisconnected = false;
 
         readonly IStreamConnectionContainer?            m_streamConnectionContainer = null;
@@ -1034,6 +1044,7 @@ namespace finalmq
         BindProperties?                                 m_bindProperties = null;
         ConnectProperties?                              m_connectionProperties = null;
         Variant?                                        m_protocolData = null;
+        IProtocolSessionData?                           m_protocolSessionData = null;
         Variant?                                        m_formatData = null;
         int                                             m_maxSynchReqRepConnections = -1;
 

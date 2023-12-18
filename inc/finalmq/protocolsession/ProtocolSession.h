@@ -154,7 +154,6 @@ private:
     IProtocol::FuncCreateMessage                    m_messageFactory;
     std::atomic_bool                                m_protocolSet{false};
     bool                                            m_triggeredConnected = false;
-    bool                                            m_callConnect = false;
     bool                                            m_triggeredDisconnected = false;
 
     const std::shared_ptr<IStreamConnectionContainer>   m_streamConnectionContainer;

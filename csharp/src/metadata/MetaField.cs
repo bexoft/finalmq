@@ -91,7 +91,7 @@ namespace finalmq
         readonly int m_flags;                   ///< flaggs of the parameter
         int m_index;                            ///< index of field inside struct
 
-        MetaField m_fieldWithoutArray;   ///< in case of an array, this is the MetaField for its entries
+        MetaField? m_fieldWithoutArray = null;   ///< in case of an array, this is the MetaField for its entries
 
         MetaEnum? m_metaEnum = null;              ///< cache to find MetaEnum of typeName faster
         MetaStruct? m_metaStruct = null;          ///< cache to find MetaStruct of typeName faster

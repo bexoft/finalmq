@@ -782,6 +782,13 @@ namespace finalmq
         {
 
         }
+        public IProtocolSessionData? CreateProtocolSessionData()
+        {
+            return null;
+        }
+        public void SetProtocolSessionData(IProtocolSessionData? protocolSessionData)
+        {
+        }
 
         static char[] tabDecToHex = {
             '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
@@ -1020,11 +1027,11 @@ namespace finalmq
                                     if (lineSplit.Length == 3)
                                     {
                                         m_message = new ProtocolMessage(0);
-                                        Variant controlData = m_message.ControlData;
-                                        controlData.Add(FMQ_HTTP, HTTP_RESPONSE);
-                                        controlData.Add(FMQ_PROTOCOL, lineSplit[0]);
-                                        controlData.Add(FMQ_HTTP_STATUS, lineSplit[1]);
-                                        controlData.Add(FMQ_HTTP_STATUSTEXT, lineSplit[2]);
+                                        Metainfo metainfo = m_message.AllMetainfo;
+                                        metainfo.Add(FMQ_HTTP, HTTP_RESPONSE);
+                                        metainfo.Add(FMQ_PROTOCOL, lineSplit[0]);
+                                        metainfo.Add(FMQ_HTTP_STATUS, lineSplit[1]);
+                                        metainfo.Add(FMQ_HTTP_STATUSTEXT, lineSplit[2]);
                                         m_state = State.STATE_FIND_HEADERS;
                                     }
                                     else
