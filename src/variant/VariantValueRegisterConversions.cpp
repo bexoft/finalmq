@@ -93,6 +93,10 @@ template<class TO>
 void VariantValueRegisterConversions::registerConversionsTo()
 {
     Convert<TO>::registerConversion(MetaTypeId::TYPE_BOOL, FunctionConvert<bool, TO>());
+    Convert<TO>::registerConversion(MetaTypeId::TYPE_INT8, FunctionConvert<std::int8_t, TO>());
+    Convert<TO>::registerConversion(MetaTypeId::TYPE_UINT8, FunctionConvert<std::uint8_t, TO>());
+    Convert<TO>::registerConversion(MetaTypeId::TYPE_INT16, FunctionConvert<std::int16_t, TO>());
+    Convert<TO>::registerConversion(MetaTypeId::TYPE_UINT16, FunctionConvert<std::uint16_t, TO>());
     Convert<TO>::registerConversion(MetaTypeId::TYPE_INT32, FunctionConvert<std::int32_t, TO>());
     Convert<TO>::registerConversion(MetaTypeId::TYPE_UINT32, FunctionConvert<std::uint32_t, TO>());
     Convert<TO>::registerConversion(MetaTypeId::TYPE_INT64, FunctionConvert<std::int64_t, TO>());
@@ -106,6 +110,10 @@ void VariantValueRegisterConversions::registerConversionsTo()
 VariantValueRegisterConversions::VariantValueRegisterConversions()
 {
     registerConversionsTo<bool>();
+    registerConversionsTo<std::int8_t>();
+    registerConversionsTo<std::uint8_t>();
+    registerConversionsTo<std::int16_t>();
+    registerConversionsTo<std::uint16_t>();
     registerConversionsTo<std::int32_t>();
     registerConversionsTo<std::uint32_t>();
     registerConversionsTo<std::int64_t>();
@@ -114,6 +122,10 @@ VariantValueRegisterConversions::VariantValueRegisterConversions()
     registerConversionsTo<double>();
 
     Convert<std::string>::registerConversion(MetaTypeId::TYPE_BOOL,     FunctionConvertNumberToString<bool>());
+    Convert<std::string>::registerConversion(MetaTypeId::TYPE_INT8,     FunctionConvertNumberToString<std::int8_t>());
+    Convert<std::string>::registerConversion(MetaTypeId::TYPE_UINT8,    FunctionConvertNumberToString<std::uint8_t>());
+    Convert<std::string>::registerConversion(MetaTypeId::TYPE_INT16,    FunctionConvertNumberToString<std::int16_t>());
+    Convert<std::string>::registerConversion(MetaTypeId::TYPE_UINT16,   FunctionConvertNumberToString<std::uint16_t>());
     Convert<std::string>::registerConversion(MetaTypeId::TYPE_INT32,    FunctionConvertNumberToString<std::int32_t>());
     Convert<std::string>::registerConversion(MetaTypeId::TYPE_UINT32,   FunctionConvertNumberToString<std::uint32_t>());
     Convert<std::string>::registerConversion(MetaTypeId::TYPE_INT64,    FunctionConvertNumberToString<std::int64_t>());
@@ -122,7 +134,11 @@ VariantValueRegisterConversions::VariantValueRegisterConversions()
     Convert<std::string>::registerConversion(MetaTypeId::TYPE_DOUBLE,   FunctionConvertNumberToString<double>());
 
     Convert<bool>::registerConversion(MetaTypeId::TYPE_STRING,          FunctionConvertStringToNumber<bool>());
-    Convert<std::int32_t>::registerConversion(MetaTypeId::TYPE_STRING,  FunctionConvertStringToNumber<std::int32_t>());
+    Convert<std::int8_t>::registerConversion(MetaTypeId::TYPE_STRING, FunctionConvertStringToNumber<std::int8_t>());
+    Convert<std::uint8_t>::registerConversion(MetaTypeId::TYPE_STRING, FunctionConvertStringToNumber<std::uint8_t>());
+    Convert<std::int16_t>::registerConversion(MetaTypeId::TYPE_STRING, FunctionConvertStringToNumber<std::int16_t>());
+    Convert<std::uint16_t>::registerConversion(MetaTypeId::TYPE_STRING, FunctionConvertStringToNumber<std::uint16_t>());
+    Convert<std::int32_t>::registerConversion(MetaTypeId::TYPE_STRING, FunctionConvertStringToNumber<std::int32_t>());
     Convert<std::uint32_t>::registerConversion(MetaTypeId::TYPE_STRING, FunctionConvertStringToNumber<std::uint32_t>());
     Convert<std::int64_t>::registerConversion(MetaTypeId::TYPE_STRING,  FunctionConvertStringToNumber<std::int64_t>());
     Convert<std::uint64_t>::registerConversion(MetaTypeId::TYPE_STRING, FunctionConvertStringToNumber<std::uint64_t>());

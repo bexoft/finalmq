@@ -122,6 +122,70 @@ TEST_F(TestSerializerStruct, testBool)
 }
 
 
+TEST_F(TestSerializerStruct, testInt8)
+{
+    static const std::int8_t VALUE = -2;
+
+    test::TestInt8 root;
+    std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
+
+    serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestInt8"));
+    serializer->enterInt8({MetaTypeId::TYPE_INT8, "", "value", "", 0, 0}, VALUE);
+    serializer->finished();
+
+    test::TestInt8 cmp;
+    cmp.value = VALUE;
+    ASSERT_EQ(root, cmp);
+}
+
+TEST_F(TestSerializerStruct, testUInt8)
+{
+    static const std::uint8_t VALUE = 0xFE;
+
+    test::TestUInt8 root;
+    std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
+
+    serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestUInt8"));
+    serializer->enterUInt8({MetaTypeId::TYPE_UINT8, "", "value", "", 0, 0}, VALUE);
+    serializer->finished();
+
+    test::TestUInt8 cmp;
+    cmp.value = VALUE;
+    ASSERT_EQ(root, cmp);
+}
+
+TEST_F(TestSerializerStruct, testInt16)
+{
+    static const std::int16_t VALUE = -2;
+
+    test::TestInt16 root;
+    std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
+
+    serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestInt16"));
+    serializer->enterInt16({ MetaTypeId::TYPE_INT16, "", "value", "", 0, 0 }, VALUE);
+    serializer->finished();
+
+    test::TestInt16 cmp;
+    cmp.value = VALUE;
+    ASSERT_EQ(root, cmp);
+}
+
+TEST_F(TestSerializerStruct, testUInt16)
+{
+    static const std::uint16_t VALUE = 0xFFFE;
+
+    test::TestUInt16 root;
+    std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
+
+    serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestUInt16"));
+    serializer->enterUInt16({ MetaTypeId::TYPE_UINT16, "", "value", "", 0, 0 }, VALUE);
+    serializer->finished();
+
+    test::TestUInt16 cmp;
+    cmp.value = VALUE;
+    ASSERT_EQ(root, cmp);
+}
+
 TEST_F(TestSerializerStruct, testInt32)
 {
     static const std::int32_t VALUE = -2;
@@ -130,7 +194,7 @@ TEST_F(TestSerializerStruct, testInt32)
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestInt32"));
-    serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "", 0, 0}, VALUE);
+    serializer->enterInt32({ MetaTypeId::TYPE_INT32, "", "value", "", 0, 0 }, VALUE);
     serializer->finished();
 
     test::TestInt32 cmp;
@@ -146,7 +210,7 @@ TEST_F(TestSerializerStruct, testUInt32)
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestUInt32"));
-    serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "value", "", 0, 0}, VALUE);
+    serializer->enterUInt32({ MetaTypeId::TYPE_UINT32, "", "value", "", 0, 0 }, VALUE);
     serializer->finished();
 
     test::TestUInt32 cmp;
@@ -632,19 +696,94 @@ TEST_F(TestSerializerStruct, testArrayBool)
 
 
 
+TEST_F(TestSerializerStruct, testArrayInt8)
+{
+    static const std::int8_t VALUE1 = -1;
+    static const std::int8_t VALUE2 = 0;
+    static const std::int8_t VALUE3 = 1;
+    static const std::vector<std::int8_t> VALUE = {VALUE1, VALUE2, VALUE3};
+
+    test::TestArrayInt8 root;
+    std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
+
+    serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestArrayInt8"));
+    serializer->enterArrayInt8({MetaTypeId::TYPE_ARRAY_INT8, "", "value", "", 0, 0}, VALUE.data(), VALUE.size());
+    serializer->finished();
+
+    test::TestArrayInt8 cmp;
+    cmp.value = VALUE;
+    ASSERT_EQ(root, cmp);
+}
+
+TEST_F(TestSerializerStruct, testArrayUInt8)
+{
+    static const std::uint8_t VALUE1 = 0xfe;
+    static const std::uint8_t VALUE2 = 0;
+    static const std::uint8_t VALUE3 = 1;
+    static const std::vector<std::uint8_t> VALUE = {VALUE1, VALUE2, VALUE3};
+
+    test::TestArrayUInt8 root;
+    std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
+
+    serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestArrayUInt8"));
+    serializer->enterArrayUInt8({MetaTypeId::TYPE_ARRAY_UINT8, "", "value", "", 0, 0}, VALUE.data(), VALUE.size());
+    serializer->finished();
+
+    test::TestArrayUInt8 cmp;
+    cmp.value = VALUE;
+    ASSERT_EQ(root, cmp);
+}
+
+TEST_F(TestSerializerStruct, testArrayInt16)
+{
+    static const std::int16_t VALUE1 = -1;
+    static const std::int16_t VALUE2 = 0;
+    static const std::int16_t VALUE3 = 1;
+    static const std::vector<std::int16_t> VALUE = { VALUE1, VALUE2, VALUE3 };
+
+    test::TestArrayInt16 root;
+    std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
+
+    serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestArrayInt16"));
+    serializer->enterArrayInt16({ MetaTypeId::TYPE_ARRAY_INT16, "", "value", "", 0, 0 }, VALUE.data(), VALUE.size());
+    serializer->finished();
+
+    test::TestArrayInt16 cmp;
+    cmp.value = VALUE;
+    ASSERT_EQ(root, cmp);
+}
+
+TEST_F(TestSerializerStruct, testArrayUInt16)
+{
+    static const std::uint16_t VALUE1 = 0xfffe;
+    static const std::uint16_t VALUE2 = 0;
+    static const std::uint16_t VALUE3 = 1;
+    static const std::vector<std::uint16_t> VALUE = { VALUE1, VALUE2, VALUE3 };
+
+    test::TestArrayUInt16 root;
+    std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
+
+    serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestArrayUInt16"));
+    serializer->enterArrayUInt16({ MetaTypeId::TYPE_ARRAY_UINT16, "", "value", "", 0, 0 }, VALUE.data(), VALUE.size());
+    serializer->finished();
+
+    test::TestArrayUInt16 cmp;
+    cmp.value = VALUE;
+    ASSERT_EQ(root, cmp);
+}
 
 TEST_F(TestSerializerStruct, testArrayInt32)
 {
     static const std::int32_t VALUE1 = -1;
     static const std::int32_t VALUE2 = 0;
     static const std::int32_t VALUE3 = 1;
-    static const std::vector<std::int32_t> VALUE = {VALUE1, VALUE2, VALUE3};
+    static const std::vector<std::int32_t> VALUE = { VALUE1, VALUE2, VALUE3 };
 
     test::TestArrayInt32 root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestArrayInt32"));
-    serializer->enterArrayInt32({MetaTypeId::TYPE_ARRAY_INT32, "", "value", "", 0, 0}, VALUE.data(), VALUE.size());
+    serializer->enterArrayInt32({ MetaTypeId::TYPE_ARRAY_INT32, "", "value", "", 0, 0 }, VALUE.data(), VALUE.size());
     serializer->finished();
 
     test::TestArrayInt32 cmp;
@@ -657,13 +796,13 @@ TEST_F(TestSerializerStruct, testArrayUInt32)
     static const std::uint32_t VALUE1 = 0xfffffffe;
     static const std::uint32_t VALUE2 = 0;
     static const std::uint32_t VALUE3 = 1;
-    static const std::vector<std::uint32_t> VALUE = {VALUE1, VALUE2, VALUE3};
+    static const std::vector<std::uint32_t> VALUE = { VALUE1, VALUE2, VALUE3 };
 
     test::TestArrayUInt32 root;
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
 
     serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestArrayUInt32"));
-    serializer->enterArrayUInt32({MetaTypeId::TYPE_ARRAY_UINT32, "", "value", "", 0, 0}, VALUE.data(), VALUE.size());
+    serializer->enterArrayUInt32({ MetaTypeId::TYPE_ARRAY_UINT32, "", "value", "", 0, 0 }, VALUE.data(), VALUE.size());
     serializer->finished();
 
     test::TestArrayUInt32 cmp;

@@ -235,6 +235,26 @@ void SerializerVariant::Internal::enterBool(const MetaField& field, bool value)
     add(field, value);
 }
 
+void SerializerVariant::Internal::enterInt8(const MetaField& field, std::int8_t value)
+{
+    add(field, value);
+}
+
+void SerializerVariant::Internal::enterUInt8(const MetaField& field, std::uint8_t value)
+{
+    add(field, value);
+}
+
+void SerializerVariant::Internal::enterInt16(const MetaField& field, std::int16_t value)
+{
+    add(field, value);
+}
+
+void SerializerVariant::Internal::enterUInt16(const MetaField& field, std::uint16_t value)
+{
+    add(field, value);
+}
+
 void SerializerVariant::Internal::enterInt32(const MetaField& field, std::int32_t value)
 {
     add(field, value);
@@ -333,6 +353,46 @@ void SerializerVariant::Internal::enterArrayBoolMove(const MetaField& field, std
 void SerializerVariant::Internal::enterArrayBool(const MetaField& field, const std::vector<bool>& value)
 {
     add(field, value);
+}
+
+void SerializerVariant::Internal::enterArrayInt8(const MetaField& field, std::vector<std::int8_t>&& value)
+{
+    add(field, std::move(value));
+}
+
+void SerializerVariant::Internal::enterArrayInt8(const MetaField& field, const std::int8_t* value, ssize_t size)
+{
+    add(field, std::vector<std::int8_t>(value, value + size));
+}
+
+void SerializerVariant::Internal::enterArrayUInt8(const MetaField& field, std::vector<std::uint8_t>&& value)
+{
+    add(field, std::move(value));
+}
+
+void SerializerVariant::Internal::enterArrayUInt8(const MetaField& field, const std::uint8_t* value, ssize_t size)
+{
+    add(field, std::vector<std::uint8_t>(value, value + size));
+}
+
+void SerializerVariant::Internal::enterArrayInt16(const MetaField& field, std::vector<std::int16_t>&& value)
+{
+    add(field, std::move(value));
+}
+
+void SerializerVariant::Internal::enterArrayInt16(const MetaField& field, const std::int16_t* value, ssize_t size)
+{
+    add(field, std::vector<std::int16_t>(value, value + size));
+}
+
+void SerializerVariant::Internal::enterArrayUInt16(const MetaField& field, std::vector<std::uint16_t>&& value)
+{
+    add(field, std::move(value));
+}
+
+void SerializerVariant::Internal::enterArrayUInt16(const MetaField& field, const std::uint16_t* value, ssize_t size)
+{
+    add(field, std::vector<std::uint16_t>(value, value + size));
 }
 
 void SerializerVariant::Internal::enterArrayInt32(const MetaField& field, std::vector<std::int32_t>&& value)

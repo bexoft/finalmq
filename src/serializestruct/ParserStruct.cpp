@@ -62,6 +62,18 @@ void ParserStruct::processField(const StructBase& structBase, const FieldInfo& f
     case TYPE_BOOL:
         m_visitor.enterBool(field, structBase.getValue<bool>(fieldInfo));
         break;
+    case TYPE_INT8:
+        m_visitor.enterInt8(field, structBase.getValue<std::int8_t>(fieldInfo));
+        break;
+    case TYPE_UINT8:
+        m_visitor.enterUInt8(field, structBase.getValue<std::uint8_t>(fieldInfo));
+        break;
+    case TYPE_INT16:
+        m_visitor.enterInt16(field, structBase.getValue<std::int16_t>(fieldInfo));
+        break;
+    case TYPE_UINT16:
+        m_visitor.enterUInt16(field, structBase.getValue<std::uint16_t>(fieldInfo));
+        break;
     case TYPE_INT32:
         m_visitor.enterInt32(field, structBase.getValue<std::int32_t>(fieldInfo));
         break;
@@ -131,6 +143,30 @@ void ParserStruct::processField(const StructBase& structBase, const FieldInfo& f
         break;
     case TYPE_ARRAY_BOOL:
         m_visitor.enterArrayBool(field, structBase.getValue<std::vector<bool>>(fieldInfo));
+        break;
+    case TYPE_ARRAY_INT8:
+        {
+            const std::vector<std::int8_t>& value = structBase.getValue<std::vector<std::int8_t>>(fieldInfo);
+            m_visitor.enterArrayInt8(field, value.data(), value.size());
+        }
+        break;
+    case TYPE_ARRAY_UINT8:
+        {
+            const std::vector<std::uint8_t>& value = structBase.getValue<std::vector<std::uint8_t>>(fieldInfo);
+            m_visitor.enterArrayUInt8(field, value.data(), value.size());
+        }
+        break;
+    case TYPE_ARRAY_INT16:
+        {
+            const std::vector<std::int16_t>& value = structBase.getValue<std::vector<std::int16_t>>(fieldInfo);
+            m_visitor.enterArrayInt16(field, value.data(), value.size());
+        }
+        break;
+    case TYPE_ARRAY_UINT16:
+        {
+            const std::vector<std::uint16_t>& value = structBase.getValue<std::vector<std::uint16_t>>(fieldInfo);
+            m_visitor.enterArrayUInt16(field, value.data(), value.size());
+        }
         break;
     case TYPE_ARRAY_INT32:
         {

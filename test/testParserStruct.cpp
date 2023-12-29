@@ -133,6 +133,98 @@ TEST_F(TestParserStruct, testBool)
 }
 
 
+TEST_F(TestParserStruct, testInt8)
+{
+    static const std::int8_t VALUE = -2;
+
+    const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestInt8", "value");
+    ASSERT_NE(fieldValue, nullptr);
+
+    MockIParserVisitor mockVisitor;
+
+    {
+        testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
+        EXPECT_CALL(mockVisitor, enterInt8(MatcherMetaField(*fieldValue), VALUE)).Times(1);
+        EXPECT_CALL(mockVisitor, finished()).Times(1);
+    }
+
+    test::TestInt8 root = {VALUE};
+    ParserStruct parser(mockVisitor, root);
+    bool res = parser.parseStruct();
+    ASSERT_EQ(res, true);
+}
+
+
+TEST_F(TestParserStruct, testUInt8)
+{
+    static const std::uint8_t VALUE = 130;
+
+    const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestUInt8", "value");
+    ASSERT_NE(fieldValue, nullptr);
+
+    MockIParserVisitor mockVisitor;
+
+    {
+        testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
+        EXPECT_CALL(mockVisitor, enterUInt8(MatcherMetaField(*fieldValue), VALUE)).Times(1);
+        EXPECT_CALL(mockVisitor, finished()).Times(1);
+    }
+
+    test::TestUInt8 root = {VALUE};
+    ParserStruct parser(mockVisitor, root);
+    bool res = parser.parseStruct();
+    ASSERT_EQ(res, true);
+}
+
+
+TEST_F(TestParserStruct, testInt16)
+{
+    static const std::int16_t VALUE = -2;
+
+    const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestInt16", "value");
+    ASSERT_NE(fieldValue, nullptr);
+
+    MockIParserVisitor mockVisitor;
+
+    {
+        testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
+        EXPECT_CALL(mockVisitor, enterInt16(MatcherMetaField(*fieldValue), VALUE)).Times(1);
+        EXPECT_CALL(mockVisitor, finished()).Times(1);
+    }
+
+    test::TestInt16 root = { VALUE };
+    ParserStruct parser(mockVisitor, root);
+    bool res = parser.parseStruct();
+    ASSERT_EQ(res, true);
+}
+
+
+TEST_F(TestParserStruct, testUInt16)
+{
+    static const std::uint16_t VALUE = 130;
+
+    const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestUInt16", "value");
+    ASSERT_NE(fieldValue, nullptr);
+
+    MockIParserVisitor mockVisitor;
+
+    {
+        testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
+        EXPECT_CALL(mockVisitor, enterUInt16(MatcherMetaField(*fieldValue), VALUE)).Times(1);
+        EXPECT_CALL(mockVisitor, finished()).Times(1);
+    }
+
+    test::TestUInt16 root = { VALUE };
+    ParserStruct parser(mockVisitor, root);
+    bool res = parser.parseStruct();
+    ASSERT_EQ(res, true);
+}
+
+
 TEST_F(TestParserStruct, testInt32)
 {
     static const std::int32_t VALUE = -2;
@@ -149,7 +241,7 @@ TEST_F(TestParserStruct, testInt32)
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
 
-    test::TestInt32 root = {VALUE};
+    test::TestInt32 root = { VALUE };
     ParserStruct parser(mockVisitor, root);
     bool res = parser.parseStruct();
     ASSERT_EQ(res, true);
@@ -172,7 +264,7 @@ TEST_F(TestParserStruct, testUInt32)
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
 
-    test::TestUInt32 root = {VALUE};
+    test::TestUInt32 root = { VALUE };
     ParserStruct parser(mockVisitor, root);
     bool res = parser.parseStruct();
     ASSERT_EQ(res, true);
@@ -660,13 +752,123 @@ TEST_F(TestParserStruct, testArrayBool)
 
 
 
+TEST_F(TestParserStruct, testArrayInt8)
+{
+    static const std::int8_t VALUE1 = -2;
+    static const std::int8_t VALUE2 = 0;
+    static const std::int8_t VALUE3 = 2;
+    static const std::int8_t VALUE4 = 22;
+    std::vector<std::int8_t> VALUE = {VALUE1, VALUE2, VALUE3, VALUE4};
+
+    const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestArrayInt8", "value");
+    ASSERT_NE(fieldValue, nullptr);
+
+    MockIParserVisitor mockVisitor;
+
+    {
+        testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
+        EXPECT_CALL(mockVisitor, enterArrayInt8(MatcherMetaField(*fieldValue), ArrayEq(VALUE.data(), VALUE.size()), VALUE.size())).Times(1);
+        EXPECT_CALL(mockVisitor, finished()).Times(1);
+    }
+
+    test::TestArrayInt8 root = {VALUE};
+    ParserStruct parser(mockVisitor, root);
+    bool res = parser.parseStruct();
+    ASSERT_EQ(res, true);
+}
+
+
+TEST_F(TestParserStruct, testArrayUInt8)
+{
+    static const std::uint8_t VALUE1 = 0xFE;
+    static const std::uint8_t VALUE2 = 0;
+    static const std::uint8_t VALUE3 = 2;
+    static const std::uint8_t VALUE4 = 222;
+    std::vector<std::uint8_t> VALUE = {VALUE1, VALUE2, VALUE3, VALUE4};
+
+    const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestArrayUInt8", "value");
+    ASSERT_NE(fieldValue, nullptr);
+
+    MockIParserVisitor mockVisitor;
+
+    {
+        testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
+        EXPECT_CALL(mockVisitor, enterArrayUInt8(MatcherMetaField(*fieldValue), ArrayEq(VALUE.data(), VALUE.size()), VALUE.size())).Times(1);
+        EXPECT_CALL(mockVisitor, finished()).Times(1);
+    }
+
+    test::TestArrayUInt8 root = {VALUE};
+    ParserStruct parser(mockVisitor, root);
+    bool res = parser.parseStruct();
+    ASSERT_EQ(res, true);
+}
+
+
+
+TEST_F(TestParserStruct, testArrayInt16)
+{
+    static const std::int16_t VALUE1 = -2;
+    static const std::int16_t VALUE2 = 0;
+    static const std::int16_t VALUE3 = 2;
+    static const std::int16_t VALUE4 = 222;
+    std::vector<std::int16_t> VALUE = { VALUE1, VALUE2, VALUE3, VALUE4 };
+
+    const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestArrayInt16", "value");
+    ASSERT_NE(fieldValue, nullptr);
+
+    MockIParserVisitor mockVisitor;
+
+    {
+        testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
+        EXPECT_CALL(mockVisitor, enterArrayInt16(MatcherMetaField(*fieldValue), ArrayEq(VALUE.data(), VALUE.size()), VALUE.size())).Times(1);
+        EXPECT_CALL(mockVisitor, finished()).Times(1);
+    }
+
+    test::TestArrayInt16 root = { VALUE };
+    ParserStruct parser(mockVisitor, root);
+    bool res = parser.parseStruct();
+    ASSERT_EQ(res, true);
+}
+
+
+TEST_F(TestParserStruct, testArrayUInt16)
+{
+    static const std::uint16_t VALUE1 = 0xFFFE;
+    static const std::uint16_t VALUE2 = 0;
+    static const std::uint16_t VALUE3 = 2;
+    static const std::uint16_t VALUE4 = 222;
+    std::vector<std::uint16_t> VALUE = { VALUE1, VALUE2, VALUE3, VALUE4 };
+
+    const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestArrayUInt16", "value");
+    ASSERT_NE(fieldValue, nullptr);
+
+    MockIParserVisitor mockVisitor;
+
+    {
+        testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
+        EXPECT_CALL(mockVisitor, enterArrayUInt16(MatcherMetaField(*fieldValue), ArrayEq(VALUE.data(), VALUE.size()), VALUE.size())).Times(1);
+        EXPECT_CALL(mockVisitor, finished()).Times(1);
+    }
+
+    test::TestArrayUInt16 root = { VALUE };
+    ParserStruct parser(mockVisitor, root);
+    bool res = parser.parseStruct();
+    ASSERT_EQ(res, true);
+}
+
+
+
 TEST_F(TestParserStruct, testArrayInt32)
 {
     static const std::int32_t VALUE1 = -2;
     static const std::int32_t VALUE2 = 0;
     static const std::int32_t VALUE3 = 2;
     static const std::int32_t VALUE4 = 222;
-    std::vector<std::int32_t> VALUE = {VALUE1, VALUE2, VALUE3, VALUE4};
+    std::vector<std::int32_t> VALUE = { VALUE1, VALUE2, VALUE3, VALUE4 };
 
     const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestArrayInt32", "value");
     ASSERT_NE(fieldValue, nullptr);
@@ -680,7 +882,7 @@ TEST_F(TestParserStruct, testArrayInt32)
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
 
-    test::TestArrayInt32 root = {VALUE};
+    test::TestArrayInt32 root = { VALUE };
     ParserStruct parser(mockVisitor, root);
     bool res = parser.parseStruct();
     ASSERT_EQ(res, true);
@@ -693,7 +895,7 @@ TEST_F(TestParserStruct, testArrayUInt32)
     static const std::uint32_t VALUE2 = 0;
     static const std::uint32_t VALUE3 = 2;
     static const std::uint32_t VALUE4 = 222;
-    std::vector<std::uint32_t> VALUE = {VALUE1, VALUE2, VALUE3, VALUE4};
+    std::vector<std::uint32_t> VALUE = { VALUE1, VALUE2, VALUE3, VALUE4 };
 
     const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestArrayUInt32", "value");
     ASSERT_NE(fieldValue, nullptr);
@@ -707,7 +909,7 @@ TEST_F(TestParserStruct, testArrayUInt32)
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
 
-    test::TestArrayUInt32 root = {VALUE};
+    test::TestArrayUInt32 root = { VALUE };
     ParserStruct parser(mockVisitor, root);
     bool res = parser.parseStruct();
     ASSERT_EQ(res, true);

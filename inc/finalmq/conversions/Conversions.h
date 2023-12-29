@@ -27,6 +27,30 @@ void string2Number(const std::string& str, bool& number)
 }
 
 template <>
+void string2Number(const std::string& str, std::int8_t& number)
+{
+    number = static_cast<std::int8_t>(strtol(str.c_str(), nullptr, 10));
+}
+
+template <>
+void string2Number(const std::string& str, std::uint8_t& number)
+{
+    number = static_cast<std::uint8_t>(strtoul(str.c_str(), nullptr, 10));
+}
+
+template <>
+void string2Number(const std::string& str, std::int16_t& number)
+{
+    number = static_cast<std::int16_t>(strtol(str.c_str(), nullptr, 10));
+}
+
+template <>
+void string2Number(const std::string& str, std::uint16_t& number)
+{
+    number = static_cast<std::uint16_t>(strtoul(str.c_str(), nullptr, 10));
+}
+
+template <>
 void string2Number(const std::string& str, std::int32_t& number)
 {
     number = strtol(str.c_str(), nullptr, 10);

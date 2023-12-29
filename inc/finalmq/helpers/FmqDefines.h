@@ -104,7 +104,7 @@ namespace finalmq {
     struct EndianHelper<1>
     {
         template<class T>
-        static void read(const char* p, T& value) { value = *static_cast<const T*>(p); }
+        static void read(const char* p, T& value) { value = *reinterpret_cast<const T*>(p); }
 
         template<class T>
         static void write(char* p, T value) { *static_cast<T*>(p) = value; }

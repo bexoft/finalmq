@@ -284,6 +284,18 @@ void SerializerStruct::convertNumber(StructBase& structBase, const FieldInfo& fi
     case MetaTypeId::TYPE_BOOL:
         setValue<bool>(structBase, fieldInfoDest, static_cast<bool>(value));
         break;
+    case MetaTypeId::TYPE_INT8:
+        setValue<std::int8_t>(structBase, fieldInfoDest, static_cast<std::int8_t>(value));
+        break;
+    case MetaTypeId::TYPE_UINT8:
+        setValue<std::uint8_t>(structBase, fieldInfoDest, static_cast<std::uint8_t>(value));
+        break;
+    case MetaTypeId::TYPE_INT16:
+        setValue<std::int16_t>(structBase, fieldInfoDest, static_cast<std::int16_t>(value));
+        break;
+    case MetaTypeId::TYPE_UINT16:
+        setValue<std::uint16_t>(structBase, fieldInfoDest, static_cast<std::uint16_t>(value));
+        break;
     case MetaTypeId::TYPE_INT32:
         setValue<std::int32_t>(structBase, fieldInfoDest, static_cast<std::int32_t>(value));
         break;
@@ -322,6 +334,30 @@ void SerializerStruct::convertNumber(StructBase& structBase, const FieldInfo& fi
     {
         bool v = static_cast<bool>(value);
         setValue<std::vector<bool>>(structBase, fieldInfoDest, { v });
+    }
+    break;
+    case MetaTypeId::TYPE_ARRAY_INT8:
+    {
+        std::int8_t v = static_cast<std::int8_t>(value);
+        setValue<std::vector<std::int8_t>>(structBase, fieldInfoDest, { v });
+    }
+    break;
+    case MetaTypeId::TYPE_ARRAY_UINT8:
+    {
+        std::uint8_t v = static_cast<std::uint8_t>(value);
+        setValue<std::vector<std::uint8_t>>(structBase, fieldInfoDest, { v });
+    }
+    break;
+    case MetaTypeId::TYPE_ARRAY_INT16:
+    {
+        std::int16_t v = static_cast<std::int16_t>(value);
+        setValue<std::vector<std::int16_t>>(structBase, fieldInfoDest, { v });
+    }
+    break;
+    case MetaTypeId::TYPE_ARRAY_UINT16:
+    {
+        std::uint16_t v = static_cast<std::uint16_t>(value);
+        setValue<std::vector<std::uint16_t>>(structBase, fieldInfoDest, { v });
     }
     break;
     case MetaTypeId::TYPE_ARRAY_INT32:
@@ -400,6 +436,30 @@ void SerializerStruct::convertString(StructBase& structBase, const FieldInfo& fi
         setValue<bool>(structBase, fieldInfoDest, v);
     }
     break;
+    case MetaTypeId::TYPE_INT8:
+    {
+        std::int8_t v = static_cast<std::int8_t>(strtol(value, nullptr, 10));
+        setValue<std::int8_t>(structBase, fieldInfoDest, v);
+    }
+    break;
+    case MetaTypeId::TYPE_UINT8:
+    {
+        std::uint8_t v = static_cast<std::uint8_t>(strtoul(value, nullptr, 10));
+        setValue<std::uint8_t>(structBase, fieldInfoDest, v);
+    }
+    break;
+    case MetaTypeId::TYPE_INT16:
+    {
+        std::int16_t v = static_cast<std::int16_t>(strtol(value, nullptr, 10));
+        setValue<std::int16_t>(structBase, fieldInfoDest, v);
+    }
+    break;
+    case MetaTypeId::TYPE_UINT16:
+    {
+        std::uint16_t v = static_cast<std::uint16_t>(strtoul(value, nullptr, 10));
+        setValue<std::uint16_t>(structBase, fieldInfoDest, v);
+    }
+    break;
     case MetaTypeId::TYPE_INT32:
     {
         std::int32_t v = strtol(value, nullptr, 10);
@@ -455,6 +515,30 @@ void SerializerStruct::convertString(StructBase& structBase, const FieldInfo& fi
     {
         bool v = (size == 4 && (memcmp(value, "true", 4) == 0));
         setValue<std::vector<bool>>(structBase, fieldInfoDest, { v });
+    }
+    break;
+    case MetaTypeId::TYPE_ARRAY_INT8:
+    {
+        std::int8_t v = static_cast<std::int8_t>(strtol(value, nullptr, 10));
+        setValue< std::vector<std::int8_t>>(structBase, fieldInfoDest, { v });
+    }
+    break;
+    case MetaTypeId::TYPE_ARRAY_UINT8:
+    {
+        std::uint8_t v = static_cast<std::uint8_t>(strtoul(value, nullptr, 10));
+        setValue< std::vector<std::uint8_t>>(structBase, fieldInfoDest, { v });
+    }
+    break;
+    case MetaTypeId::TYPE_ARRAY_INT16:
+    {
+        std::int16_t v = static_cast<std::int16_t>(strtol(value, nullptr, 10));
+        setValue< std::vector<std::int16_t>>(structBase, fieldInfoDest, { v });
+    }
+    break;
+    case MetaTypeId::TYPE_ARRAY_UINT16:
+    {
+        std::uint16_t v = static_cast<std::uint16_t>(strtoul(value, nullptr, 10));
+        setValue< std::vector<std::uint16_t>>(structBase, fieldInfoDest, { v });
     }
     break;
     case MetaTypeId::TYPE_ARRAY_INT32:
@@ -532,6 +616,30 @@ void SerializerStruct::convertArrayNumber(StructBase& structBase, const FieldInf
             setValue<bool>(structBase, fieldInfoDest, static_cast<bool>(value[0]));
         }
         break;
+    case MetaTypeId::TYPE_INT8:
+        if (size >= 1)
+        {
+            setValue<std::int8_t>(structBase, fieldInfoDest, static_cast<std::int8_t>(value[0]));
+        }
+        break;
+    case MetaTypeId::TYPE_UINT8:
+        if (size >= 1)
+        {
+            setValue<std::uint8_t>(structBase, fieldInfoDest, static_cast<std::uint8_t>(value[0]));
+        }
+        break;
+    case MetaTypeId::TYPE_INT16:
+        if (size >= 1)
+        {
+            setValue<std::int16_t>(structBase, fieldInfoDest, static_cast<std::int16_t>(value[0]));
+        }
+        break;
+    case MetaTypeId::TYPE_UINT16:
+        if (size >= 1)
+        {
+            setValue<std::uint16_t>(structBase, fieldInfoDest, static_cast<std::uint16_t>(value[0]));
+        }
+        break;
     case MetaTypeId::TYPE_INT32:
         if (size >= 1)
         {
@@ -601,6 +709,46 @@ void SerializerStruct::convertArrayNumber(StructBase& structBase, const FieldInf
             v.push_back(entry);
             });
         setValue<std::vector<bool>>(structBase, fieldInfoDest, std::move(v));
+    }
+    break;
+    case MetaTypeId::TYPE_ARRAY_INT8:
+    {
+        std::vector<std::int8_t> v;
+        v.reserve(size);
+        std::for_each(value, value + size, [&v](const T& entry) {
+            v.push_back(static_cast<std::int8_t>(entry));
+            });
+        setValue<std::vector<std::int8_t>>(structBase, fieldInfoDest, std::move(v));
+    }
+    break;
+    case MetaTypeId::TYPE_ARRAY_UINT8:
+    {
+        std::vector<std::uint8_t> v;
+        v.reserve(size);
+        std::for_each(value, value + size, [&v](const T& entry) {
+            v.push_back(static_cast<std::uint8_t>(entry));
+            });
+        setValue<std::vector<std::uint8_t>>(structBase, fieldInfoDest, std::move(v));
+    }
+    break;
+    case MetaTypeId::TYPE_ARRAY_INT16:
+    {
+        std::vector<std::int16_t> v;
+        v.reserve(size);
+        std::for_each(value, value + size, [&v](const T& entry) {
+            v.push_back(static_cast<std::int16_t>(entry));
+            });
+        setValue<std::vector<std::int16_t>>(structBase, fieldInfoDest, std::move(v));
+    }
+    break;
+    case MetaTypeId::TYPE_ARRAY_UINT16:
+    {
+        std::vector<std::uint16_t> v;
+        v.reserve(size);
+        std::for_each(value, value + size, [&v](const T& entry) {
+            v.push_back(static_cast<std::uint16_t>(entry));
+            });
+        setValue<std::vector<std::uint16_t>>(structBase, fieldInfoDest, std::move(v));
     }
     break;
     case MetaTypeId::TYPE_ARRAY_INT32:
@@ -719,6 +867,30 @@ void SerializerStruct::convertArrayString(StructBase& structBase, const FieldInf
             setValue<std::vector<bool>>(structBase, fieldInfoDest, { val });
         }
         break;
+    case MetaTypeId::TYPE_INT8:
+        if (size >= 1)
+        {
+            setValue<std::int8_t>(structBase, fieldInfoDest, static_cast<std::int8_t>(strtol(value[0].c_str(), nullptr, 10)));
+        }
+        break;
+    case MetaTypeId::TYPE_UINT8:
+        if (size >= 1)
+        {
+            setValue<std::uint8_t>(structBase, fieldInfoDest, static_cast<std::uint8_t>(strtoul(value[0].c_str(), nullptr, 10)));
+        }
+        break;
+    case MetaTypeId::TYPE_INT16:
+        if (size >= 1)
+        {
+            setValue<std::int16_t>(structBase, fieldInfoDest, static_cast<std::int16_t>(strtol(value[0].c_str(), nullptr, 10)));
+        }
+        break;
+    case MetaTypeId::TYPE_UINT16:
+        if (size >= 1)
+        {
+            setValue<std::uint16_t>(structBase, fieldInfoDest, static_cast<std::uint16_t>(strtoul(value[0].c_str(), nullptr, 10)));
+        }
+        break;
     case MetaTypeId::TYPE_INT32:
         if (size >= 1)
         {
@@ -788,6 +960,46 @@ void SerializerStruct::convertArrayString(StructBase& structBase, const FieldInf
             v.push_back(val);
             });
         setValue<std::vector<bool>>(structBase, fieldInfoDest, std::move(v));
+    }
+    break;
+    case MetaTypeId::TYPE_ARRAY_INT8:
+    {
+        std::vector<std::int8_t> v;
+        v.reserve(size);
+        std::for_each(value.begin(), value.end(), [&v](const std::string& entry) {
+            v.push_back(static_cast<std::int8_t>(strtol(entry.c_str(), nullptr, 10)));
+            });
+        setValue<std::vector<std::int8_t>>(structBase, fieldInfoDest, std::move(v));
+    }
+    break;
+    case MetaTypeId::TYPE_ARRAY_UINT8:
+    {
+        std::vector<std::uint8_t> v;
+        v.reserve(size);
+        std::for_each(value.begin(), value.end(), [&v](const std::string& entry) {
+            v.push_back(static_cast<std::uint8_t>(strtoul(entry.c_str(), nullptr, 10)));
+            });
+        setValue<std::vector<std::uint8_t>>(structBase, fieldInfoDest, std::move(v));
+    }
+    break;
+    case MetaTypeId::TYPE_ARRAY_INT16:
+    {
+        std::vector<std::int16_t> v;
+        v.reserve(size);
+        std::for_each(value.begin(), value.end(), [&v](const std::string& entry) {
+            v.push_back(static_cast<std::int16_t>(strtol(entry.c_str(), nullptr, 10)));
+            });
+        setValue<std::vector<std::int16_t>>(structBase, fieldInfoDest, std::move(v));
+    }
+    break;
+    case MetaTypeId::TYPE_ARRAY_UINT16:
+    {
+        std::vector<std::uint16_t> v;
+        v.reserve(size);
+        std::for_each(value.begin(), value.end(), [&v](const std::string& entry) {
+            v.push_back(static_cast<std::uint16_t>(strtoul(entry.c_str(), nullptr, 10)));
+            });
+        setValue<std::vector<std::uint16_t>>(structBase, fieldInfoDest, std::move(v));
     }
     break;
     case MetaTypeId::TYPE_ARRAY_INT32:
@@ -1066,6 +1278,50 @@ void SerializerStruct::enterBool(const MetaField& field, bool value)
     }
 
     setValueNumber<bool>(field, value);
+}
+
+void SerializerStruct::enterInt8(const MetaField& field, std::int8_t value)
+{
+    if (m_visitor)
+    {
+        m_visitor->enterInt8(field, value);
+        return;
+    }
+
+    setValueNumber<std::int8_t>(field, value);
+}
+
+void SerializerStruct::enterUInt8(const MetaField& field, std::uint8_t value)
+{
+    if (m_visitor)
+    {
+        m_visitor->enterUInt8(field, value);
+        return;
+    }
+
+    setValueNumber<std::uint8_t>(field, value);
+}
+
+void SerializerStruct::enterInt16(const MetaField& field, std::int16_t value)
+{
+    if (m_visitor)
+    {
+        m_visitor->enterInt16(field, value);
+        return;
+    }
+
+    setValueNumber<std::int16_t>(field, value);
+}
+
+void SerializerStruct::enterUInt16(const MetaField& field, std::uint16_t value)
+{
+    if (m_visitor)
+    {
+        m_visitor->enterUInt16(field, value);
+        return;
+    }
+
+    setValueNumber<std::uint16_t>(field, value);
 }
 
 void SerializerStruct::enterInt32(const MetaField& field, std::int32_t value)
@@ -1431,6 +1687,94 @@ void SerializerStruct::enterArrayBool(const MetaField& field, const std::vector<
         }
         convertArrayNumber(*structBase, *fieldInfoDest, v.data(), v.size());
     }
+}
+
+void SerializerStruct::enterArrayInt8(const MetaField& field, std::vector<std::int8_t>&& value)
+{
+    if (m_visitor)
+    {
+        m_visitor->enterArrayInt8(field, std::move(value));
+        return;
+    }
+
+    setValueArrayNumber<std::int8_t>(field, std::move(value));
+}
+
+void SerializerStruct::enterArrayInt8(const MetaField& field, const std::int8_t* value, ssize_t size)
+{
+    if (m_visitor)
+    {
+        m_visitor->enterArrayInt8(field, value, size);
+        return;
+    }
+
+    setValueArrayNumber<std::int8_t>(field, value, size);
+}
+
+void SerializerStruct::enterArrayUInt8(const MetaField& field, std::vector<std::uint8_t>&& value)
+{
+    if (m_visitor)
+    {
+        m_visitor->enterArrayUInt8(field, std::move(value));
+        return;
+    }
+
+    setValueArrayNumber<std::uint8_t>(field, std::move(value));
+}
+
+void SerializerStruct::enterArrayUInt8(const MetaField& field, const std::uint8_t* value, ssize_t size)
+{
+    if (m_visitor)
+    {
+        m_visitor->enterArrayUInt8(field, value, size);
+        return;
+    }
+
+    setValueArrayNumber<std::uint8_t>(field, value, size);
+}
+
+void SerializerStruct::enterArrayInt16(const MetaField& field, std::vector<std::int16_t>&& value)
+{
+    if (m_visitor)
+    {
+        m_visitor->enterArrayInt16(field, std::move(value));
+        return;
+    }
+
+    setValueArrayNumber<std::int16_t>(field, std::move(value));
+}
+
+void SerializerStruct::enterArrayInt16(const MetaField& field, const std::int16_t* value, ssize_t size)
+{
+    if (m_visitor)
+    {
+        m_visitor->enterArrayInt16(field, value, size);
+        return;
+    }
+
+    setValueArrayNumber<std::int16_t>(field, value, size);
+}
+
+void SerializerStruct::enterArrayUInt16(const MetaField& field, std::vector<std::uint16_t>&& value)
+{
+    if (m_visitor)
+    {
+        m_visitor->enterArrayUInt16(field, std::move(value));
+        return;
+    }
+
+    setValueArrayNumber<std::uint16_t>(field, std::move(value));
+}
+
+void SerializerStruct::enterArrayUInt16(const MetaField& field, const std::uint16_t* value, ssize_t size)
+{
+    if (m_visitor)
+    {
+        m_visitor->enterArrayUInt16(field, value, size);
+        return;
+    }
+
+    setValueArrayNumber<std::uint16_t>(field, value, size);
 }
 
 void SerializerStruct::enterArrayInt32(const MetaField& field, std::vector<std::int32_t>&& value)

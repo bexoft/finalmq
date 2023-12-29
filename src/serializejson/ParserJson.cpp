@@ -110,6 +110,18 @@ void ParserJson::enterNumber(T value)
     case MetaTypeId::TYPE_BOOL:
         m_visitor.enterBool(*m_fieldCurrent, value);
         break;
+    case MetaTypeId::TYPE_INT8:
+        m_visitor.enterInt8(*m_fieldCurrent, static_cast<std::int8_t>(value));
+        break;
+    case MetaTypeId::TYPE_UINT8:
+        m_visitor.enterUInt8(*m_fieldCurrent, static_cast<std::uint8_t>(value));
+        break;
+    case MetaTypeId::TYPE_INT16:
+        m_visitor.enterInt16(*m_fieldCurrent, static_cast<std::int16_t>(value));
+        break;
+    case MetaTypeId::TYPE_UINT16:
+        m_visitor.enterUInt16(*m_fieldCurrent, static_cast<std::uint16_t>(value));
+        break;
     case MetaTypeId::TYPE_INT32:
         m_visitor.enterInt32(*m_fieldCurrent, static_cast<std::int32_t>(value));
         break;
@@ -136,6 +148,18 @@ void ParserJson::enterNumber(T value)
         break;
     case MetaTypeId::TYPE_ARRAY_BOOL:
         m_arrayBool.push_back(value);
+        break;
+    case MetaTypeId::TYPE_ARRAY_INT8:
+        m_arrayInt8.push_back(static_cast<std::int8_t>(value));
+        break;
+    case MetaTypeId::TYPE_ARRAY_UINT8:
+        m_arrayUInt8.push_back(static_cast<std::uint8_t>(value));
+        break;
+    case MetaTypeId::TYPE_ARRAY_INT16:
+        m_arrayInt16.push_back(static_cast<std::int16_t>(value));
+        break;
+    case MetaTypeId::TYPE_ARRAY_UINT16:
+        m_arrayUInt16.push_back(static_cast<std::uint16_t>(value));
         break;
     case MetaTypeId::TYPE_ARRAY_INT32:
         m_arrayInt32.push_back(static_cast<std::int32_t>(value));
@@ -273,6 +297,30 @@ void ParserJson::enterString(const char* value, ssize_t size)
             m_visitor.enterBool(*m_fieldCurrent, v);
         }
         break;
+    case MetaTypeId::TYPE_INT8:
+        {
+            std::int8_t v = static_cast<std::int8_t>(strtol(value, nullptr, 10));
+            m_visitor.enterInt8(*m_fieldCurrent, v);
+        }
+        break;
+    case MetaTypeId::TYPE_UINT8:
+        {
+            std::uint8_t v = static_cast<std::uint8_t>(strtoul(value, nullptr, 10));
+            m_visitor.enterUInt8(*m_fieldCurrent, v);
+        }
+        break;
+    case MetaTypeId::TYPE_INT16:
+        {
+            std::int16_t v = static_cast<std::int16_t>(strtol(value, nullptr, 10));
+            m_visitor.enterInt16(*m_fieldCurrent, v);
+        }
+        break;
+    case MetaTypeId::TYPE_UINT16:
+        {
+            std::uint16_t v = static_cast<std::uint16_t>(strtoul(value, nullptr, 10));
+            m_visitor.enterUInt16(*m_fieldCurrent, v);
+        }
+        break;
     case MetaTypeId::TYPE_INT32:
         {
             std::int32_t v = strtol(value, nullptr, 10);
@@ -327,6 +375,30 @@ void ParserJson::enterString(const char* value, ssize_t size)
         {
             bool v = (size == 4 && (memcmp(value, "true", 4) == 0));
             m_arrayBool.push_back(v);
+        }
+        break;
+    case MetaTypeId::TYPE_ARRAY_INT8:
+        {
+            std::int8_t v = static_cast<std::int8_t>(strtol(value, nullptr, 10));
+            m_arrayInt8.push_back(v);
+        }
+        break;
+    case MetaTypeId::TYPE_ARRAY_UINT8:
+        {
+            std::uint8_t v = static_cast<std::uint8_t>(strtoul(value, nullptr, 10));
+            m_arrayUInt8.push_back(v);
+        }
+        break;
+    case MetaTypeId::TYPE_ARRAY_INT16:
+        {
+            std::int16_t v = static_cast<std::int16_t>(strtol(value, nullptr, 10));
+            m_arrayInt16.push_back(v);
+        }
+        break;
+    case MetaTypeId::TYPE_ARRAY_UINT16:
+        {
+            std::uint16_t v = static_cast<std::uint16_t>(strtoul(value, nullptr, 10));
+            m_arrayUInt16.push_back(v);
         }
         break;
     case MetaTypeId::TYPE_ARRAY_INT32:
@@ -407,6 +479,30 @@ void ParserJson::enterString(std::string&& value)
         {
             bool v = (value.size() == 4 && (memcmp(value.c_str(), "true", 4) == 0));
             m_visitor.enterBool(*m_fieldCurrent, v);
+        }
+        break;
+    case MetaTypeId::TYPE_INT8:
+        {
+            std::int8_t v = static_cast<std::int8_t>(strtol(value.c_str(), nullptr, 10));
+            m_visitor.enterInt8(*m_fieldCurrent, v);
+        }
+        break;
+    case MetaTypeId::TYPE_UINT8:
+        {
+            std::uint8_t v = static_cast<std::uint8_t>(strtoul(value.c_str(), nullptr, 10));
+            m_visitor.enterUInt8(*m_fieldCurrent, v);
+        }
+        break;
+    case MetaTypeId::TYPE_INT16:
+        {
+            std::int16_t v = static_cast<std::int16_t>(strtol(value.c_str(), nullptr, 10));
+            m_visitor.enterInt16(*m_fieldCurrent, v);
+        }
+        break;
+    case MetaTypeId::TYPE_UINT16:
+        {
+            std::uint16_t v = static_cast<std::uint16_t>(strtoul(value.c_str(), nullptr, 10));
+            m_visitor.enterUInt16(*m_fieldCurrent, v);
         }
         break;
     case MetaTypeId::TYPE_INT32:
@@ -538,6 +634,18 @@ void ParserJson::enterArray()
         case MetaTypeId::TYPE_ARRAY_BOOL:
             m_arrayBool.clear();
             break;
+        case MetaTypeId::TYPE_ARRAY_INT8:
+            m_arrayInt8.clear();
+            break;
+        case MetaTypeId::TYPE_ARRAY_UINT8:
+            m_arrayUInt8.clear();
+            break;
+        case MetaTypeId::TYPE_ARRAY_INT16:
+            m_arrayInt16.clear();
+            break;
+        case MetaTypeId::TYPE_ARRAY_UINT16:
+            m_arrayUInt16.clear();
+            break;
         case MetaTypeId::TYPE_ARRAY_INT32:
             m_arrayInt32.clear();
             break;
@@ -595,6 +703,22 @@ void ParserJson::exitArray()
         case MetaTypeId::TYPE_ARRAY_BOOL:
             m_visitor.enterArrayBoolMove(*m_fieldCurrent, std::move(m_arrayBool));
             m_arrayBool.clear();
+            break;
+        case MetaTypeId::TYPE_ARRAY_INT8:
+            m_visitor.enterArrayInt8(*m_fieldCurrent, std::move(m_arrayInt8));
+            m_arrayInt8.clear();
+            break;
+        case MetaTypeId::TYPE_ARRAY_UINT8:
+            m_visitor.enterArrayUInt8(*m_fieldCurrent, std::move(m_arrayUInt8));
+            m_arrayUInt8.clear();
+            break;
+        case MetaTypeId::TYPE_ARRAY_INT16:
+            m_visitor.enterArrayInt16(*m_fieldCurrent, std::move(m_arrayInt16));
+            m_arrayInt16.clear();
+            break;
+        case MetaTypeId::TYPE_ARRAY_UINT16:
+            m_visitor.enterArrayUInt16(*m_fieldCurrent, std::move(m_arrayUInt16));
+            m_arrayUInt16.clear();
             break;
         case MetaTypeId::TYPE_ARRAY_INT32:
             m_visitor.enterArrayInt32(*m_fieldCurrent, std::move(m_arrayInt32));

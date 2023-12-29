@@ -44,6 +44,10 @@ public:
     MOCK_METHOD(void, exitArrayStruct, (const MetaField& field), (override));
 
     MOCK_METHOD(void, enterBool, (const MetaField& field, bool value), (override));
+    MOCK_METHOD(void, enterInt8, (const MetaField& field, std::int8_t value), (override));
+    MOCK_METHOD(void, enterUInt8, (const MetaField& field, std::uint8_t value), (override));
+    MOCK_METHOD(void, enterInt16, (const MetaField& field, std::int16_t value), (override));
+    MOCK_METHOD(void, enterUInt16, (const MetaField& field, std::uint16_t value), (override));
     MOCK_METHOD(void, enterInt32, (const MetaField& field, std::int32_t value), (override));
     MOCK_METHOD(void, enterUInt32, (const MetaField& field, std::uint32_t value), (override));
     MOCK_METHOD(void, enterInt64, (const MetaField& field, std::int64_t value), (override));
@@ -60,6 +64,14 @@ public:
 
     MOCK_METHOD(void, enterArrayBoolMove, (const MetaField& field, std::vector<bool>&& value), (override));
     MOCK_METHOD(void, enterArrayBool, (const MetaField& field, const std::vector<bool>& value), (override));
+    MOCK_METHOD(void, enterArrayInt8, (const MetaField& field, std::vector<std::int8_t>&& value), (override));
+    MOCK_METHOD(void, enterArrayInt8, (const MetaField& field, const std::int8_t* value, ssize_t size), (override));
+    MOCK_METHOD(void, enterArrayUInt8, (const MetaField& field, std::vector<std::uint8_t>&& value), (override));
+    MOCK_METHOD(void, enterArrayUInt8, (const MetaField& field, const std::uint8_t* value, ssize_t size), (override));
+    MOCK_METHOD(void, enterArrayInt16, (const MetaField& field, std::vector<std::int16_t>&& value), (override));
+    MOCK_METHOD(void, enterArrayInt16, (const MetaField& field, const std::int16_t* value, ssize_t size), (override));
+    MOCK_METHOD(void, enterArrayUInt16, (const MetaField& field, std::vector<std::uint16_t>&& value), (override));
+    MOCK_METHOD(void, enterArrayUInt16, (const MetaField& field, const std::uint16_t* value, ssize_t size), (override));
     MOCK_METHOD(void, enterArrayInt32, (const MetaField& field, std::vector<std::int32_t>&& value), (override));
     MOCK_METHOD(void, enterArrayInt32, (const MetaField& field, const std::int32_t* value, ssize_t size), (override));
     MOCK_METHOD(void, enterArrayUInt32, (const MetaField& field, std::vector<std::uint32_t>&& value), (override));

@@ -66,6 +66,10 @@ protected:
         m_fieldType = structVarVariant->getFieldByName("type");
 
         m_fieldBool = structVarVariant->getFieldByName("valbool");
+        m_fieldInt8 = structVarVariant->getFieldByName("valint8");
+        m_fieldUInt8 = structVarVariant->getFieldByName("valuint8");
+        m_fieldInt16 = structVarVariant->getFieldByName("valint16");
+        m_fieldUInt16 = structVarVariant->getFieldByName("valuint16");
         m_fieldInt32 = structVarVariant->getFieldByName("valint32");
         m_fieldUInt32 = structVarVariant->getFieldByName("valuint32");
         m_fieldInt64 = structVarVariant->getFieldByName("valint64");
@@ -77,6 +81,10 @@ protected:
         m_fieldList = structVarVariant->getFieldByName("vallist");
 
         m_fieldArrBool = structVarVariant->getFieldByName("valarrbool");
+        m_fieldArrInt8 = structVarVariant->getFieldByName("valarrint8");
+        m_fieldArrUInt8 = structVarVariant->getFieldByName("valarruint8");
+        m_fieldArrInt16 = structVarVariant->getFieldByName("valarrint16");
+        m_fieldArrUInt16 = structVarVariant->getFieldByName("valarruint16");
         m_fieldArrInt32 = structVarVariant->getFieldByName("valarrint32");
         m_fieldArrUInt32 = structVarVariant->getFieldByName("valarruint32");
         m_fieldArrInt64 = structVarVariant->getFieldByName("valarrint64");
@@ -101,6 +109,10 @@ protected:
         ASSERT_NE(m_fieldList, nullptr);
 
         ASSERT_NE(m_fieldArrBool, nullptr);
+        ASSERT_NE(m_fieldArrInt8, nullptr);
+        ASSERT_NE(m_fieldArrUInt8, nullptr);
+        ASSERT_NE(m_fieldArrInt16, nullptr);
+        ASSERT_NE(m_fieldArrUInt16, nullptr);
         ASSERT_NE(m_fieldArrInt32, nullptr);
         ASSERT_NE(m_fieldArrUInt32, nullptr);
         ASSERT_NE(m_fieldArrInt64, nullptr);
@@ -123,6 +135,10 @@ protected:
     const MetaField*        m_fieldType = nullptr;
 
     const MetaField*        m_fieldBool = nullptr;
+    const MetaField*        m_fieldInt8 = nullptr;
+    const MetaField*        m_fieldUInt8 = nullptr;
+    const MetaField*        m_fieldInt16 = nullptr;
+    const MetaField*        m_fieldUInt16 = nullptr;
     const MetaField*        m_fieldInt32 = nullptr;
     const MetaField*        m_fieldUInt32 = nullptr;
     const MetaField*        m_fieldInt64 = nullptr;
@@ -134,6 +150,10 @@ protected:
     const MetaField*        m_fieldList = nullptr;
 
     const MetaField*        m_fieldArrBool = nullptr;
+    const MetaField*        m_fieldArrInt8 = nullptr;
+    const MetaField*        m_fieldArrUInt8 = nullptr;
+    const MetaField*        m_fieldArrInt16 = nullptr;
+    const MetaField*        m_fieldArrUInt16 = nullptr;
     const MetaField*        m_fieldArrInt32 = nullptr;
     const MetaField*        m_fieldArrUInt32 = nullptr;
     const MetaField*        m_fieldArrInt64 = nullptr;
@@ -158,6 +178,66 @@ TEST_F(TestVarValueToVariant, testBool)
     m_varValueToVariant.convert();
 
     bool* val = m_root;
+    ASSERT_NE(val, nullptr);
+    ASSERT_EQ(*val, VALUE);
+}
+
+TEST_F(TestVarValueToVariant, testInt8)
+{
+    static const std::int8_t VALUE = -123;
+
+    m_visitor.enterInt8(*m_fieldInt8, VALUE);
+    m_visitor.enterString(*m_fieldName, "");
+    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_INT8);
+
+    m_varValueToVariant.convert();
+
+    std::int8_t* val = m_root;
+    ASSERT_NE(val, nullptr);
+    ASSERT_EQ(*val, VALUE);
+}
+
+TEST_F(TestVarValueToVariant, testUInt8)
+{
+    static const std::uint8_t VALUE = 123;
+
+    m_visitor.enterUInt8(*m_fieldUInt8, VALUE);
+    m_visitor.enterString(*m_fieldName, "");
+    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_UINT8);
+
+    m_varValueToVariant.convert();
+
+    std::uint8_t* val = m_root;
+    ASSERT_NE(val, nullptr);
+    ASSERT_EQ(*val, VALUE);
+}
+
+TEST_F(TestVarValueToVariant, testInt16)
+{
+    static const std::int16_t VALUE = -123;
+
+    m_visitor.enterInt16(*m_fieldInt16, VALUE);
+    m_visitor.enterString(*m_fieldName, "");
+    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_INT16);
+
+    m_varValueToVariant.convert();
+
+    std::int16_t* val = m_root;
+    ASSERT_NE(val, nullptr);
+    ASSERT_EQ(*val, VALUE);
+}
+
+TEST_F(TestVarValueToVariant, testUInt16)
+{
+    static const std::uint16_t VALUE = 123;
+
+    m_visitor.enterUInt16(*m_fieldUInt16, VALUE);
+    m_visitor.enterString(*m_fieldName, "");
+    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_UINT16);
+
+    m_varValueToVariant.convert();
+
+    std::uint16_t* val = m_root;
     ASSERT_NE(val, nullptr);
     ASSERT_EQ(*val, VALUE);
 }
@@ -327,6 +407,66 @@ TEST_F(TestVarValueToVariant, testArrayBool)
     m_varValueToVariant.convert();
 
     std::vector<bool>* val = m_root;
+    ASSERT_NE(val, nullptr);
+    ASSERT_EQ(*val, VALUE);
+}
+
+TEST_F(TestVarValueToVariant, testArrayInt8)
+{
+    static const std::vector<std::int8_t> VALUE = { -123, 0, 123, 12, -12 };
+
+    m_visitor.enterArrayInt8(*m_fieldArrInt8, VALUE.data(), VALUE.size());
+    m_visitor.enterString(*m_fieldName, "");
+    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_ARRAY_INT8);
+
+    m_varValueToVariant.convert();
+
+    std::vector<std::int8_t>* val = m_root;
+    ASSERT_NE(val, nullptr);
+    ASSERT_EQ(*val, VALUE);
+}
+
+TEST_F(TestVarValueToVariant, testArrayUInt8)
+{
+    static const std::vector<std::uint8_t> VALUE = { 123, 0, 12, 200, 255 };
+
+    m_visitor.enterArrayUInt8(*m_fieldArrUInt8, VALUE.data(), VALUE.size());
+    m_visitor.enterString(*m_fieldName, "");
+    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_ARRAY_UINT8);
+
+    m_varValueToVariant.convert();
+
+    std::vector<std::uint8_t>* val = m_root;
+    ASSERT_NE(val, nullptr);
+    ASSERT_EQ(*val, VALUE);
+}
+
+TEST_F(TestVarValueToVariant, testArrayInt16)
+{
+    static const std::vector<std::int16_t> VALUE = { -123, 0, 123, 12345, -12345 };
+
+    m_visitor.enterArrayInt16(*m_fieldArrInt16, VALUE.data(), VALUE.size());
+    m_visitor.enterString(*m_fieldName, "");
+    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_ARRAY_INT16);
+
+    m_varValueToVariant.convert();
+
+    std::vector<std::int16_t>* val = m_root;
+    ASSERT_NE(val, nullptr);
+    ASSERT_EQ(*val, VALUE);
+}
+
+TEST_F(TestVarValueToVariant, testArrayUInt16)
+{
+    static const std::vector<std::uint16_t> VALUE = { 123, 0, 12345, 8000, 55374 };
+
+    m_visitor.enterArrayUInt16(*m_fieldArrUInt16, VALUE.data(), VALUE.size());
+    m_visitor.enterString(*m_fieldName, "");
+    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_ARRAY_UINT16);
+
+    m_varValueToVariant.convert();
+
+    std::vector<std::uint16_t>* val = m_root;
     ASSERT_NE(val, nullptr);
     ASSERT_EQ(*val, VALUE);
 }

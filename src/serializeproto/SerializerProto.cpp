@@ -543,6 +543,22 @@ void SerializerProto::Internal::enterBool(const MetaField& field, bool value)
 
 
 
+void SerializerProto::Internal::enterInt8(const MetaField& field, std::int8_t value)
+{
+    enterInt32(field, value);
+}
+void SerializerProto::Internal::enterUInt8(const MetaField& field, std::uint8_t value)
+{
+    enterUInt32(field, value);
+}
+void SerializerProto::Internal::enterInt16(const MetaField& field, std::int16_t value)
+{
+    enterInt32(field, value);
+}
+void SerializerProto::Internal::enterUInt16(const MetaField& field, std::uint16_t value)
+{
+    enterUInt32(field, value);
+}
 void SerializerProto::Internal::enterInt32(const MetaField& field, std::int32_t value)
 {
     int id = field.index + INDEX2ID;
@@ -657,6 +673,102 @@ void SerializerProto::Internal::enterArrayBool(const MetaField& field, const std
 {
     int id = field.index + INDEX2ID;
     serializeArrayBool(id, value);
+}
+void SerializerProto::Internal::enterArrayInt8(const MetaField& field, std::vector<std::int8_t>&& value)
+{
+    enterArrayInt8(field, value.data(), value.size());
+}
+void SerializerProto::Internal::enterArrayInt8(const MetaField& field, const std::int8_t* value, ssize_t size)
+{
+    std::vector<std::int32_t> array;
+    array.resize(size);
+    for (ssize_t i = 0; i < size; ++i)
+    {
+        array[i] = static_cast<std::int32_t>(value[i]);
+    }
+    int id = field.index + INDEX2ID;
+    if (field.flags & METAFLAG_PROTO_VARINT)
+    {
+        serializeArrayVarint(id, array.data(), array.size());
+    }
+    else if (field.flags & METAFLAG_PROTO_ZIGZAG)
+    {
+        serializeArrayZigZag(id, array.data(), array.size());
+    }
+    else
+    {
+        serializeArrayFixed(id, array.data(), array.size());
+    }
+}
+void SerializerProto::Internal::enterArrayUInt8(const MetaField& field, std::vector<std::uint8_t>&& value)
+{
+    enterArrayUInt8(field, value.data(), value.size());
+}
+void SerializerProto::Internal::enterArrayUInt8(const MetaField& field, const std::uint8_t* value, ssize_t size)
+{
+    std::vector<std::uint32_t> array;
+    array.resize(size);
+    for (ssize_t i = 0; i < size; ++i)
+    {
+        array[i] = static_cast<std::uint32_t>(value[i]);
+    }
+    int id = field.index + INDEX2ID;
+    if (field.flags & METAFLAG_PROTO_VARINT)
+    {
+        serializeArrayVarint(id, array.data(), array.size());
+    }
+    else
+    {
+        serializeArrayFixed(id, array.data(), array.size());
+    }
+}
+void SerializerProto::Internal::enterArrayInt16(const MetaField& field, std::vector<std::int16_t>&& value)
+{
+    enterArrayInt16(field, value.data(), value.size());
+}
+void SerializerProto::Internal::enterArrayInt16(const MetaField& field, const std::int16_t* value, ssize_t size)
+{
+    std::vector<std::int32_t> array;
+    array.resize(size);
+    for (ssize_t i = 0; i < size; ++i)
+    {
+        array[i] = static_cast<std::int32_t>(value[i]);
+    }
+    int id = field.index + INDEX2ID;
+    if (field.flags & METAFLAG_PROTO_VARINT)
+    {
+        serializeArrayVarint(id, array.data(), array.size());
+    }
+    else if (field.flags & METAFLAG_PROTO_ZIGZAG)
+    {
+        serializeArrayZigZag(id, array.data(), array.size());
+    }
+    else
+    {
+        serializeArrayFixed(id, array.data(), array.size());
+    }
+}
+void SerializerProto::Internal::enterArrayUInt16(const MetaField& field, std::vector<std::uint16_t>&& value)
+{
+    enterArrayUInt16(field, value.data(), value.size());
+}
+void SerializerProto::Internal::enterArrayUInt16(const MetaField& field, const std::uint16_t* value, ssize_t size)
+{
+    std::vector<std::uint32_t> array;
+    array.resize(size);
+    for (ssize_t i = 0; i < size; ++i)
+    {
+        array[i] = static_cast<std::uint32_t>(value[i]);
+    }
+    int id = field.index + INDEX2ID;
+    if (field.flags & METAFLAG_PROTO_VARINT)
+    {
+        serializeArrayVarint(id, array.data(), array.size());
+    }
+    else
+    {
+        serializeArrayFixed(id, array.data(), array.size());
+    }
 }
 void SerializerProto::Internal::enterArrayInt32(const MetaField& field, std::vector<std::int32_t>&& value)
 {

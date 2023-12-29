@@ -527,6 +527,48 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
+                case MetaTypeId::TYPE_INT8:
+                    {
+                        std::int32_t value = 0;
+                        bool zz = (field->flags & METAFLAG_PROTO_ZIGZAG);
+                        bool ok = parseValue(value, zz);
+                        if (ok)
+                        {
+                            m_visitor.enterInt8(*field, static_cast<std::int8_t>(value));
+                        }
+                    }
+                    break;
+                case MetaTypeId::TYPE_UINT8:
+                    {
+                        std::uint32_t value = 0;
+                        bool ok = parseValue(value, false);
+                        if (ok)
+                        {
+                            m_visitor.enterUInt8(*field, static_cast<std::uint8_t>(value));
+                        }
+                    }
+                    break;
+                case MetaTypeId::TYPE_INT16:
+                    {
+                        std::int32_t value = 0;
+                        bool zz = (field->flags & METAFLAG_PROTO_ZIGZAG);
+                        bool ok = parseValue(value, zz);
+                        if (ok)
+                        {
+                            m_visitor.enterInt16(*field, static_cast<std::int16_t>(value));
+                        }
+                    }
+                break;
+                case MetaTypeId::TYPE_UINT16:
+                    {
+                        std::uint32_t value = 0;
+                        bool ok = parseValue(value, false);
+                        if (ok)
+                        {
+                            m_visitor.enterUInt16(*field, static_cast<std::uint16_t>(value));
+                        }
+                    }
+                    break;
                 case MetaTypeId::TYPE_INT32:
                     {
                         std::int32_t value = 0;
@@ -631,6 +673,110 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         if (ok)
                         {
                             m_visitor.enterArrayBool(*field, std::move(array));
+                        }
+                    }
+                    break;
+                case MetaTypeId::TYPE_ARRAY_INT8:
+                    {
+                        std::vector<std::int32_t> array;
+                        bool ok = false;
+                        if (field->flags & METAFLAG_PROTO_VARINT)
+                        {
+                            ok = parseArrayVarint(array);
+                        }
+                        else if (field->flags & METAFLAG_PROTO_ZIGZAG)
+                        {
+                            ok = parseArrayVarint<std::int32_t, true>(array);
+                        }
+                        else
+                        {
+                            ok = parseArrayFixed<std::int32_t, WIRETYPE_FIXED32>(array);
+                        }
+                        if (ok)
+                        {
+                            std::vector<std::int8_t> arrayInt8;
+                            arrayInt8.resize(array.size());
+                            for (size_t i = 0; i < array.size(); ++i)
+                            {
+                                arrayInt8[i] = static_cast<std::int8_t>(array[i]);
+                            }
+                            m_visitor.enterArrayInt8(*field, std::move(arrayInt8));
+                        }
+                    }
+                    break;
+                case MetaTypeId::TYPE_ARRAY_UINT8:
+                    {
+                        std::vector<std::uint32_t> array;
+                        bool ok = false;
+                        if (field->flags & METAFLAG_PROTO_VARINT)
+                        {
+                            ok = parseArrayVarint(array);
+                        }
+                        else
+                        {
+                            ok = parseArrayFixed<std::uint32_t, WIRETYPE_FIXED32>(array);
+                        }
+                        if (ok)
+                        {
+                            std::vector<std::uint8_t> arrayUInt8;
+                            arrayUInt8.resize(array.size());
+                            for (size_t i = 0; i < array.size(); ++i)
+                            {
+                                arrayUInt8[i] = static_cast<std::uint8_t>(array[i]);
+                            }
+                            m_visitor.enterArrayUInt8(*field, std::move(arrayUInt8));
+                        }
+                    }
+                    break;
+                case MetaTypeId::TYPE_ARRAY_INT16:
+                    {
+                        std::vector<std::int32_t> array;
+                        bool ok = false;
+                        if (field->flags & METAFLAG_PROTO_VARINT)
+                        {
+                            ok = parseArrayVarint(array);
+                        }
+                        else if (field->flags & METAFLAG_PROTO_ZIGZAG)
+                        {
+                            ok = parseArrayVarint<std::int32_t, true>(array);
+                        }
+                        else
+                        {
+                            ok = parseArrayFixed<std::int32_t, WIRETYPE_FIXED32>(array);
+                        }
+                        if (ok)
+                        {
+                            std::vector<std::int16_t> arrayInt16;
+                            arrayInt16.resize(array.size());
+                            for (size_t i = 0; i < array.size(); ++i)
+                            {
+                                arrayInt16[i] = static_cast<std::int16_t>(array[i]);
+                            }
+                            m_visitor.enterArrayInt16(*field, std::move(arrayInt16));
+                        }
+                    }
+                    break;
+                case MetaTypeId::TYPE_ARRAY_UINT16:
+                    {
+                        std::vector<std::uint32_t> array;
+                        bool ok = false;
+                        if (field->flags & METAFLAG_PROTO_VARINT)
+                        {
+                            ok = parseArrayVarint(array);
+                        }
+                        else
+                        {
+                            ok = parseArrayFixed<std::uint32_t, WIRETYPE_FIXED32>(array);
+                        }
+                        if (ok)
+                        {
+                            std::vector<std::uint16_t> arrayUInt16;
+                            arrayUInt16.resize(array.size());
+                            for (size_t i = 0; i < array.size(); ++i)
+                            {
+                                arrayUInt16[i] = static_cast<std::uint16_t>(array[i]);
+                            }
+                            m_visitor.enterArrayUInt16(*field, std::move(arrayUInt16));
                         }
                     }
                     break;

@@ -141,12 +141,56 @@ TEST_F(TestSerializerJson, testBool)
 }
 
 
+TEST_F(TestSerializerJson, testInt8)
+{
+    static const std::int8_t VALUE = -2;
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestInt8"));
+    m_serializer->enterInt8({MetaTypeId::TYPE_INT8, "", "value", "", 0}, VALUE);
+    m_serializer->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":-2}");
+}
+
+TEST_F(TestSerializerJson, testUInt8)
+{
+    static const std::uint8_t VALUE = 0xFE;
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestUInt8"));
+    m_serializer->enterUInt8({MetaTypeId::TYPE_UINT8, "", "value", "", 0}, VALUE);
+    m_serializer->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":254}");
+}
+
+TEST_F(TestSerializerJson, testInt16)
+{
+    static const std::int16_t VALUE = -2;
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestInt16"));
+    m_serializer->enterInt16({ MetaTypeId::TYPE_INT16, "", "value", "", 0 }, VALUE);
+    m_serializer->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":-2}");
+}
+
+TEST_F(TestSerializerJson, testUInt16)
+{
+    static const std::uint16_t VALUE = 0xFFFE;
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestUInt16"));
+    m_serializer->enterUInt16({ MetaTypeId::TYPE_UINT16, "", "value", "", 0 }, VALUE);
+    m_serializer->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":65534}");
+}
+
 TEST_F(TestSerializerJson, testInt32)
 {
     static const std::int32_t VALUE = -2;
 
     m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestInt32"));
-    m_serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "", 0}, VALUE);
+    m_serializer->enterInt32({ MetaTypeId::TYPE_INT32, "", "value", "", 0 }, VALUE);
     m_serializer->finished();
 
     ASSERT_EQ(m_data, "{\"value\":-2}");
@@ -157,7 +201,7 @@ TEST_F(TestSerializerJson, testUInt32)
     static const std::uint32_t VALUE = 0xFFFFFFFE;
 
     m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestUInt32"));
-    m_serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "value", "", 0}, VALUE);
+    m_serializer->enterUInt32({ MetaTypeId::TYPE_UINT32, "", "value", "", 0 }, VALUE);
     m_serializer->finished();
 
     ASSERT_EQ(m_data, "{\"value\":4294967294}");
@@ -492,17 +536,71 @@ TEST_F(TestSerializerJson, testArrayBool)
 }
 
 
+TEST_F(TestSerializerJson, testArrayInt8)
+{
+    static const std::int8_t VALUE1 = -1;
+    static const std::int8_t VALUE2 = 0;
+    static const std::int8_t VALUE3 = 1;
+    static const std::vector<std::int8_t> VALUE = {VALUE1, VALUE2, VALUE3};
 
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestArrayInt32"));
+    m_serializer->enterArrayInt8({MetaTypeId::TYPE_ARRAY_INT8, "", "value", "", 0}, VALUE.data(), VALUE.size());
+    m_serializer->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":[-1,0,1]}");
+}
+
+TEST_F(TestSerializerJson, testArrayUInt8)
+{
+    static const std::uint8_t VALUE1 = 0xfe;
+    static const std::uint8_t VALUE2 = 0;
+    static const std::uint8_t VALUE3 = 1;
+    static const std::vector<std::uint8_t> VALUE = {VALUE1, VALUE2, VALUE3};
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestArrayUInt32"));
+    m_serializer->enterArrayUInt8({MetaTypeId::TYPE_ARRAY_UINT8, "", "value", "", 0}, VALUE.data(), VALUE.size());
+    m_serializer->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":[254,0,1]}");
+}
+
+TEST_F(TestSerializerJson, testArrayInt16)
+{
+    static const std::int16_t VALUE1 = -1;
+    static const std::int16_t VALUE2 = 0;
+    static const std::int16_t VALUE3 = 1;
+    static const std::vector<std::int16_t> VALUE = { VALUE1, VALUE2, VALUE3 };
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestArrayInt16"));
+    m_serializer->enterArrayInt16({ MetaTypeId::TYPE_ARRAY_INT16, "", "value", "", 0 }, VALUE.data(), VALUE.size());
+    m_serializer->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":[-1,0,1]}");
+}
+
+TEST_F(TestSerializerJson, testArrayUInt16)
+{
+    static const std::uint16_t VALUE1 = 0xfffe;
+    static const std::uint16_t VALUE2 = 0;
+    static const std::uint16_t VALUE3 = 1;
+    static const std::vector<std::uint16_t> VALUE = { VALUE1, VALUE2, VALUE3 };
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestArrayUInt32"));
+    m_serializer->enterArrayUInt16({ MetaTypeId::TYPE_ARRAY_UINT16, "", "value", "", 0 }, VALUE.data(), VALUE.size());
+    m_serializer->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":[65534,0,1]}");
+}
 
 TEST_F(TestSerializerJson, testArrayInt32)
 {
     static const std::int32_t VALUE1 = -1;
     static const std::int32_t VALUE2 = 0;
     static const std::int32_t VALUE3 = 1;
-    static const std::vector<std::int32_t> VALUE = {VALUE1, VALUE2, VALUE3};
+    static const std::vector<std::int32_t> VALUE = { VALUE1, VALUE2, VALUE3 };
 
     m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestArrayInt32"));
-    m_serializer->enterArrayInt32({MetaTypeId::TYPE_ARRAY_INT32, "", "value", "", 0}, VALUE.data(), VALUE.size());
+    m_serializer->enterArrayInt32({ MetaTypeId::TYPE_ARRAY_INT32, "", "value", "", 0 }, VALUE.data(), VALUE.size());
     m_serializer->finished();
 
     ASSERT_EQ(m_data, "{\"value\":[-1,0,1]}");
@@ -513,10 +611,10 @@ TEST_F(TestSerializerJson, testArrayUInt32)
     static const std::uint32_t VALUE1 = 0xfffffffe;
     static const std::uint32_t VALUE2 = 0;
     static const std::uint32_t VALUE3 = 1;
-    static const std::vector<std::uint32_t> VALUE = {VALUE1, VALUE2, VALUE3};
+    static const std::vector<std::uint32_t> VALUE = { VALUE1, VALUE2, VALUE3 };
 
     m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestArrayUInt32"));
-    m_serializer->enterArrayUInt32({MetaTypeId::TYPE_ARRAY_UINT32, "", "value", "", 0}, VALUE.data(), VALUE.size());
+    m_serializer->enterArrayUInt32({ MetaTypeId::TYPE_ARRAY_UINT32, "", "value", "", 0 }, VALUE.data(), VALUE.size());
     m_serializer->finished();
 
     ASSERT_EQ(m_data, "{\"value\":[4294967294,0,1]}");

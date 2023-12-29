@@ -119,6 +119,34 @@ void SerializerJson::Internal::enterBool(const MetaField& field, bool value)
     m_jsonBuilder.enterBool(value);
 }
 
+void SerializerJson::Internal::enterInt8(const MetaField& field, std::int8_t value)
+{
+    assert(field.typeId == MetaTypeId::TYPE_INT8);
+    setKey(field);
+    m_jsonBuilder.enterInt32(value);
+}
+
+void SerializerJson::Internal::enterUInt8(const MetaField& field, std::uint8_t value)
+{
+    assert(field.typeId == MetaTypeId::TYPE_UINT8);
+    setKey(field);
+    m_jsonBuilder.enterUInt32(value);
+}
+
+void SerializerJson::Internal::enterInt16(const MetaField& field, std::int16_t value)
+{
+    assert(field.typeId == MetaTypeId::TYPE_INT16);
+    setKey(field);
+    m_jsonBuilder.enterInt32(value);
+}
+
+void SerializerJson::Internal::enterUInt16(const MetaField& field, std::uint16_t value)
+{
+    assert(field.typeId == MetaTypeId::TYPE_UINT16);
+    setKey(field);
+    m_jsonBuilder.enterUInt32(value);
+}
+
 void SerializerJson::Internal::enterInt32(const MetaField& field, std::int32_t value)
 {
     assert(field.typeId == MetaTypeId::TYPE_INT32);
@@ -283,6 +311,70 @@ void SerializerJson::Internal::enterArrayBool(const MetaField& field, const std:
     m_jsonBuilder.exitArray();
 }
 
+void SerializerJson::Internal::enterArrayInt8(const MetaField& field, std::vector<std::int8_t>&& value)
+{
+    enterArrayInt8(field, value.data(), value.size());
+}
+
+void SerializerJson::Internal::enterArrayInt8(const MetaField& field, const std::int8_t* value, ssize_t size)
+{
+    assert(field.typeId == MetaTypeId::TYPE_ARRAY_INT8);
+    setKey(field);
+    m_jsonBuilder.enterArray();
+    std::for_each(value, value + size, [this] (std::int8_t entry) {
+        m_jsonBuilder.enterInt32(entry);
+    });
+    m_jsonBuilder.exitArray();
+}
+
+void SerializerJson::Internal::enterArrayUInt8(const MetaField& field, std::vector<std::uint8_t>&& value)
+{
+    enterArrayUInt8(field, value.data(), value.size());
+}
+
+void SerializerJson::Internal::enterArrayUInt8(const MetaField& field, const std::uint8_t* value, ssize_t size)
+{
+    assert(field.typeId == MetaTypeId::TYPE_ARRAY_UINT8);
+    setKey(field);
+    m_jsonBuilder.enterArray();
+    std::for_each(value, value + size, [this] (std::uint8_t entry) {
+        m_jsonBuilder.enterUInt32(entry);
+    });
+    m_jsonBuilder.exitArray();
+}
+
+void SerializerJson::Internal::enterArrayInt16(const MetaField& field, std::vector<std::int16_t>&& value)
+{
+    enterArrayInt16(field, value.data(), value.size());
+}
+
+void SerializerJson::Internal::enterArrayInt16(const MetaField& field, const std::int16_t* value, ssize_t size)
+{
+    assert(field.typeId == MetaTypeId::TYPE_ARRAY_INT16);
+    setKey(field);
+    m_jsonBuilder.enterArray();
+    std::for_each(value, value + size, [this](std::int16_t entry) {
+        m_jsonBuilder.enterInt32(entry);
+        });
+    m_jsonBuilder.exitArray();
+}
+
+void SerializerJson::Internal::enterArrayUInt16(const MetaField& field, std::vector<std::uint16_t>&& value)
+{
+    enterArrayUInt16(field, value.data(), value.size());
+}
+
+void SerializerJson::Internal::enterArrayUInt16(const MetaField& field, const std::uint16_t* value, ssize_t size)
+{
+    assert(field.typeId == MetaTypeId::TYPE_ARRAY_UINT16);
+    setKey(field);
+    m_jsonBuilder.enterArray();
+    std::for_each(value, value + size, [this](std::uint16_t entry) {
+        m_jsonBuilder.enterUInt32(entry);
+        });
+    m_jsonBuilder.exitArray();
+}
+
 void SerializerJson::Internal::enterArrayInt32(const MetaField& field, std::vector<std::int32_t>&& value)
 {
     enterArrayInt32(field, value.data(), value.size());
@@ -293,9 +385,9 @@ void SerializerJson::Internal::enterArrayInt32(const MetaField& field, const std
     assert(field.typeId == MetaTypeId::TYPE_ARRAY_INT32);
     setKey(field);
     m_jsonBuilder.enterArray();
-    std::for_each(value, value + size, [this] (std::int32_t entry) {
+    std::for_each(value, value + size, [this](std::int32_t entry) {
         m_jsonBuilder.enterInt32(entry);
-    });
+        });
     m_jsonBuilder.exitArray();
 }
 
@@ -309,9 +401,9 @@ void SerializerJson::Internal::enterArrayUInt32(const MetaField& field, const st
     assert(field.typeId == MetaTypeId::TYPE_ARRAY_UINT32);
     setKey(field);
     m_jsonBuilder.enterArray();
-    std::for_each(value, value + size, [this] (std::uint32_t entry) {
+    std::for_each(value, value + size, [this](std::uint32_t entry) {
         m_jsonBuilder.enterUInt32(entry);
-    });
+        });
     m_jsonBuilder.exitArray();
 }
 
