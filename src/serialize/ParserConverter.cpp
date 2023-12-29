@@ -122,6 +122,50 @@ void ParserConverter::enterBool(const MetaField& field, bool value)
         convertNumber(field, value);
     }
 }
+void ParserConverter::enterInt8(const MetaField& field, std::int8_t value)
+{
+    if (field.typeId == MetaTypeId::TYPE_INT8)
+    {
+        m_visitor->enterInt8(field, value);
+    }
+    else
+    {
+        convertNumber(field, value);
+    }
+}
+void ParserConverter::enterUInt8(const MetaField& field, std::uint8_t value)
+{
+    if (field.typeId == MetaTypeId::TYPE_UINT8)
+    {
+        m_visitor->enterUInt8(field, value);
+    }
+    else
+    {
+        convertNumber(field, value);
+    }
+}
+void ParserConverter::enterInt16(const MetaField& field, std::int16_t value)
+{
+    if (field.typeId == MetaTypeId::TYPE_INT16)
+    {
+        m_visitor->enterInt16(field, value);
+    }
+    else
+    {
+        convertNumber(field, value);
+    }
+}
+void ParserConverter::enterUInt16(const MetaField& field, std::uint16_t value)
+{
+    if (field.typeId == MetaTypeId::TYPE_UINT16)
+    {
+        m_visitor->enterUInt16(field, value);
+    }
+    else
+    {
+        convertNumber(field, value);
+    }
+}
 void ParserConverter::enterInt32(const MetaField& field, std::int32_t value)
 {
     if (field.typeId == MetaTypeId::TYPE_INT32)
@@ -286,6 +330,94 @@ void ParserConverter::enterArrayBool(const MetaField& field, const std::vector<b
     else
     {
         convertArraytNumber(field, value);
+    }
+}
+void ParserConverter::enterArrayInt8(const MetaField& field, std::vector<std::int8_t>&& value)
+{
+    if (field.typeId == MetaTypeId::TYPE_ARRAY_INT8)
+    {
+        m_visitor->enterArrayInt8(field, std::move(value));
+    }
+    else
+    {
+        convertArraytNumber(field, value);
+    }
+}
+void ParserConverter::enterArrayInt8(const MetaField& field, const std::int8_t* value, ssize_t size)
+{
+    if (field.typeId == MetaTypeId::TYPE_ARRAY_INT8)
+    {
+        m_visitor->enterArrayInt8(field, value, size);
+    }
+    else
+    {
+        convertArraytNumber(field, value, size);
+    }
+}
+void ParserConverter::enterArrayUInt8(const MetaField& field, std::vector<std::uint8_t>&& value)
+{
+    if (field.typeId == MetaTypeId::TYPE_ARRAY_UINT8)
+    {
+        m_visitor->enterArrayUInt8(field, std::move(value));
+    }
+    else
+    {
+        convertArraytNumber(field, value);
+    }
+}
+void ParserConverter::enterArrayUInt8(const MetaField& field, const std::uint8_t* value, ssize_t size)
+{
+    if (field.typeId == MetaTypeId::TYPE_ARRAY_UINT8)
+    {
+        m_visitor->enterArrayUInt8(field, value, size);
+    }
+    else
+    {
+        convertArraytNumber(field, value, size);
+    }
+}
+void ParserConverter::enterArrayInt16(const MetaField& field, std::vector<std::int16_t>&& value)
+{
+    if (field.typeId == MetaTypeId::TYPE_ARRAY_INT16)
+    {
+        m_visitor->enterArrayInt16(field, std::move(value));
+    }
+    else
+    {
+        convertArraytNumber(field, value);
+    }
+}
+void ParserConverter::enterArrayInt16(const MetaField& field, const std::int16_t* value, ssize_t size)
+{
+    if (field.typeId == MetaTypeId::TYPE_ARRAY_INT16)
+    {
+        m_visitor->enterArrayInt16(field, value, size);
+    }
+    else
+    {
+        convertArraytNumber(field, value, size);
+    }
+}
+void ParserConverter::enterArrayUInt16(const MetaField& field, std::vector<std::uint16_t>&& value)
+{
+    if (field.typeId == MetaTypeId::TYPE_ARRAY_UINT16)
+    {
+        m_visitor->enterArrayUInt16(field, std::move(value));
+    }
+    else
+    {
+        convertArraytNumber(field, value);
+    }
+}
+void ParserConverter::enterArrayUInt16(const MetaField& field, const std::uint16_t* value, ssize_t size)
+{
+    if (field.typeId == MetaTypeId::TYPE_ARRAY_UINT16)
+    {
+        m_visitor->enterArrayUInt16(field, value, size);
+    }
+    else
+    {
+        convertArraytNumber(field, value, size);
     }
 }
 void ParserConverter::enterArrayInt32(const MetaField& field, std::vector<std::int32_t>&& value)
@@ -535,6 +667,18 @@ void ParserConverter::convertNumber(const MetaField& field, T value)
     case MetaTypeId::TYPE_BOOL:
         m_visitor->enterBool(field, value);
         break;
+    case MetaTypeId::TYPE_INT8:
+        m_visitor->enterInt8(field, static_cast<std::int8_t>(value));
+        break;
+    case MetaTypeId::TYPE_UINT8:
+        m_visitor->enterUInt8(field, static_cast<std::uint8_t>(value));
+        break;
+    case MetaTypeId::TYPE_INT16:
+        m_visitor->enterInt16(field, static_cast<std::int16_t>(value));
+        break;
+    case MetaTypeId::TYPE_UINT16:
+        m_visitor->enterUInt16(field, static_cast<std::uint16_t>(value));
+        break;
     case MetaTypeId::TYPE_INT32:
         m_visitor->enterInt32(field, static_cast<std::int32_t>(value));
         break;
@@ -563,6 +707,30 @@ void ParserConverter::convertNumber(const MetaField& field, T value)
         {
             bool v = value;
             m_visitor->enterArrayBool(field, std::vector<bool>(&v, &v + 1));
+        }
+        break;
+    case MetaTypeId::TYPE_ARRAY_INT8:
+        {
+            std::int8_t v = static_cast<std::int8_t>(value);
+            m_visitor->enterArrayInt8(field, &v, 1);
+        }
+        break;
+    case MetaTypeId::TYPE_ARRAY_UINT8:
+        {
+            std::uint8_t v = static_cast<std::uint8_t>(value);
+            m_visitor->enterArrayUInt8(field, &v, 1);
+        }
+        break;
+    case MetaTypeId::TYPE_ARRAY_INT16:
+        {
+            std::int16_t v = static_cast<std::int16_t>(value);
+            m_visitor->enterArrayInt16(field, &v, 1);
+        }
+        break;
+    case MetaTypeId::TYPE_ARRAY_UINT16:
+        {
+            std::uint16_t v = static_cast<std::uint16_t>(value);
+            m_visitor->enterArrayUInt16(field, &v, 1);
         }
         break;
     case MetaTypeId::TYPE_ARRAY_INT32:
@@ -636,6 +804,30 @@ void ParserConverter::convertString(const MetaField& field, const char* value, s
             m_visitor->enterBool(field, v);
         }
         break;
+    case MetaTypeId::TYPE_INT8:
+        {
+            std::int8_t v = static_cast<std::int8_t>(strtol(value, nullptr, 10));
+            m_visitor->enterInt8(field, v);
+        }
+        break;
+    case MetaTypeId::TYPE_UINT8:
+        {
+            std::uint8_t v = static_cast<std::uint8_t>(strtoul(value, nullptr, 10));
+            m_visitor->enterUInt8(field, v);
+        }
+        break;
+    case MetaTypeId::TYPE_INT16:
+        {
+            std::int16_t v = static_cast<std::int16_t>(strtol(value, nullptr, 10));
+            m_visitor->enterInt16(field, v);
+        }
+        break;
+    case MetaTypeId::TYPE_UINT16:
+        {
+            std::uint16_t v = static_cast<std::uint16_t>(strtoul(value, nullptr, 10));
+            m_visitor->enterUInt16(field, v);
+        }
+        break;
     case MetaTypeId::TYPE_INT32:
         {
             std::int32_t v = strtol(value, nullptr, 10);
@@ -682,6 +874,30 @@ void ParserConverter::convertString(const MetaField& field, const char* value, s
         {
             bool v = (size == 4 && (memcmp(value, "true", 4) == 0));
             m_visitor->enterArrayBool(field, std::vector<bool>(&v, &v + 1));
+        }
+        break;
+    case MetaTypeId::TYPE_ARRAY_INT8:
+        {
+            std::int8_t v = static_cast<std::int8_t>(strtol(value, nullptr, 10));
+            m_visitor->enterArrayInt8(field, &v, 1);
+        }
+        break;
+    case MetaTypeId::TYPE_ARRAY_UINT8:
+        {
+            std::uint8_t v = static_cast<std::uint8_t>(strtoul(value, nullptr, 10));
+            m_visitor->enterArrayUInt8(field, &v, 1);
+        }
+        break;
+    case MetaTypeId::TYPE_ARRAY_INT16:
+        {
+            std::int16_t v = static_cast<std::int16_t>(strtol(value, nullptr, 10));
+            m_visitor->enterArrayInt16(field, &v, 1);
+        }
+        break;
+    case MetaTypeId::TYPE_ARRAY_UINT16:
+        {
+            std::uint16_t v = static_cast<std::uint16_t>(strtoul(value, nullptr, 10));
+            m_visitor->enterArrayUInt16(field, &v, 1);
         }
         break;
     case MetaTypeId::TYPE_ARRAY_INT32:
@@ -748,6 +964,30 @@ void ParserConverter::convertArraytNumber(const MetaField& field, const T* value
             m_visitor->enterBool(field, value[0]);
         }
         break;
+    case MetaTypeId::TYPE_INT8:
+        if (value && size > 0)
+        {
+            m_visitor->enterInt8(field, static_cast<std::int8_t>(value[0]));
+        }
+        break;
+    case MetaTypeId::TYPE_UINT8:
+        if (value && size > 0)
+        {
+            m_visitor->enterUInt8(field, static_cast<std::uint8_t>(value[0]));
+        }
+        break;
+    case MetaTypeId::TYPE_INT16:
+        if (value && size > 0)
+        {
+            m_visitor->enterInt16(field, static_cast<std::int16_t>(value[0]));
+        }
+        break;
+    case MetaTypeId::TYPE_UINT16:
+        if (value && size > 0)
+        {
+            m_visitor->enterUInt16(field, static_cast<std::uint16_t>(value[0]));
+        }
+        break;
     case MetaTypeId::TYPE_INT32:
         if (value && size > 0)
         {
@@ -806,13 +1046,53 @@ void ParserConverter::convertArraytNumber(const MetaField& field, const T* value
             m_visitor->enterArrayBool(field, std::move(v));
         }
         break;
+    case MetaTypeId::TYPE_ARRAY_INT8:
+        {
+            std::vector<std::int8_t> v;
+            v.reserve(size);
+            std::for_each(value, value + size, [&v] (const T& entry) {
+                v.push_back(static_cast<std::int8_t>(entry));
+            });
+            m_visitor->enterArrayInt8(field, std::move(v));
+        }
+        break;
+    case MetaTypeId::TYPE_ARRAY_UINT8:
+        {
+            std::vector<std::uint8_t> v;
+            v.reserve(size);
+            std::for_each(value, value + size, [&v] (const T& entry) {
+                v.push_back(static_cast<std::uint8_t>(entry));
+            });
+            m_visitor->enterArrayUInt8(field, std::move(v));
+        }
+        break;
+    case MetaTypeId::TYPE_ARRAY_INT16:
+        {
+            std::vector<std::int16_t> v;
+            v.reserve(size);
+            std::for_each(value, value + size, [&v](const T& entry) {
+                v.push_back(static_cast<std::int16_t>(entry));
+                });
+            m_visitor->enterArrayInt16(field, std::move(v));
+        }
+        break;
+    case MetaTypeId::TYPE_ARRAY_UINT16:
+        {
+            std::vector<std::uint16_t> v;
+            v.reserve(size);
+            std::for_each(value, value + size, [&v](const T& entry) {
+                v.push_back(static_cast<std::uint16_t>(entry));
+                });
+            m_visitor->enterArrayUInt16(field, std::move(v));
+        }
+        break;
     case MetaTypeId::TYPE_ARRAY_INT32:
         {
             std::vector<std::int32_t> v;
             v.reserve(size);
-            std::for_each(value, value + size, [&v] (const T& entry) {
+            std::for_each(value, value + size, [&v](const T& entry) {
                 v.push_back(static_cast<std::int32_t>(entry));
-            });
+                });
             m_visitor->enterArrayInt32(field, std::move(v));
         }
         break;
@@ -820,9 +1100,9 @@ void ParserConverter::convertArraytNumber(const MetaField& field, const T* value
         {
             std::vector<std::uint32_t> v;
             v.reserve(size);
-            std::for_each(value, value + size, [&v] (const T& entry) {
+            std::for_each(value, value + size, [&v](const T& entry) {
                 v.push_back(static_cast<std::uint32_t>(entry));
-            });
+                });
             m_visitor->enterArrayUInt32(field, std::move(v));
         }
         break;
@@ -904,6 +1184,30 @@ void ParserConverter::convertArraytNumber(const MetaField& field, const std::vec
             m_visitor->enterBool(field, value[0]);
         }
         break;
+    case MetaTypeId::TYPE_INT8:
+        if (value.size() > 0)
+        {
+            m_visitor->enterInt8(field, static_cast<std::int8_t>(value[0]));
+        }
+        break;
+    case MetaTypeId::TYPE_UINT8:
+        if (value.size() > 0)
+        {
+            m_visitor->enterUInt8(field, static_cast<std::uint8_t>(value[0]));
+        }
+        break;
+    case MetaTypeId::TYPE_INT16:
+        if (value.size() > 0)
+        {
+            m_visitor->enterInt16(field, static_cast<std::int16_t>(value[0]));
+        }
+        break;
+    case MetaTypeId::TYPE_UINT16:
+        if (value.size() > 0)
+        {
+            m_visitor->enterUInt16(field, static_cast<std::uint16_t>(value[0]));
+        }
+        break;
     case MetaTypeId::TYPE_INT32:
         if (value.size() > 0)
         {
@@ -960,6 +1264,46 @@ void ParserConverter::convertArraytNumber(const MetaField& field, const std::vec
                 v.push_back(entry);
             });
             m_visitor->enterArrayBool(field, std::move(v));
+        }
+        break;
+    case MetaTypeId::TYPE_ARRAY_INT8:
+        {
+            std::vector<std::int8_t> v;
+            v.reserve(size);
+            std::for_each(value.begin(), value.end(), [&v] (const T& entry) {
+                v.push_back(static_cast<std::int8_t>(entry));
+            });
+            m_visitor->enterArrayInt8(field, std::move(v));
+        }
+        break;
+    case MetaTypeId::TYPE_ARRAY_UINT8:
+        {
+            std::vector<std::uint8_t> v;
+            v.reserve(size);
+            std::for_each(value.begin(), value.end(), [&v] (const T& entry) {
+                v.push_back(static_cast<std::uint8_t>(entry));
+            });
+            m_visitor->enterArrayUInt8(field, std::move(v));
+        }
+        break;
+    case MetaTypeId::TYPE_ARRAY_INT16:
+        {
+            std::vector<std::int16_t> v;
+            v.reserve(size);
+            std::for_each(value.begin(), value.end(), [&v] (const T& entry) {
+                v.push_back(static_cast<std::int16_t>(entry));
+            });
+            m_visitor->enterArrayInt16(field, std::move(v));
+        }
+        break;
+    case MetaTypeId::TYPE_ARRAY_UINT16:
+        {
+            std::vector<std::uint16_t> v;
+            v.reserve(size);
+            std::for_each(value.begin(), value.end(), [&v] (const T& entry) {
+                v.push_back(static_cast<std::uint16_t>(entry));
+            });
+            m_visitor->enterArrayUInt16(field, std::move(v));
         }
         break;
     case MetaTypeId::TYPE_ARRAY_INT32:
@@ -1060,6 +1404,34 @@ void ParserConverter::convertArraytString(const MetaField& field, const std::vec
             m_visitor->enterBool(field, v);
         }
         break;
+    case MetaTypeId::TYPE_INT8:
+        if (!value.empty())
+        {
+            std::int8_t v = static_cast<std::int8_t>(strtol(value[0].c_str(), nullptr, 10));
+            m_visitor->enterInt8(field, v);
+        }
+        break;
+    case MetaTypeId::TYPE_UINT8:
+        if (!value.empty())
+        {
+            std::uint8_t v = static_cast<std::uint8_t>(strtoul(value[0].c_str(), nullptr, 10));
+            m_visitor->enterUInt8(field, v);
+        }
+        break;
+    case MetaTypeId::TYPE_INT16:
+        if (!value.empty())
+        {
+            std::int16_t v = static_cast<std::int16_t>(strtol(value[0].c_str(), nullptr, 10));
+            m_visitor->enterInt16(field, v);
+        }
+        break;
+    case MetaTypeId::TYPE_UINT16:
+        if (!value.empty())
+        {
+            std::uint16_t v = static_cast<std::uint16_t>(strtoul(value[0].c_str(), nullptr, 10));
+            m_visitor->enterUInt16(field, v);
+        }
+        break;
     case MetaTypeId::TYPE_INT32:
         if (!value.empty())
         {
@@ -1125,13 +1497,53 @@ void ParserConverter::convertArraytString(const MetaField& field, const std::vec
             m_visitor->enterArrayBool(field, std::move(v));
         }
         break;
+    case MetaTypeId::TYPE_ARRAY_INT8:
+        {
+            std::vector<std::int8_t> v;
+            v.reserve(size);
+            std::for_each(value.begin(), value.end(), [&v] (const std::string& entry) {
+                v.push_back(static_cast<std::int8_t>(strtol(entry.c_str(), nullptr, 10)));
+            });
+            m_visitor->enterArrayInt8(field, std::move(v));
+        }
+        break;
+    case MetaTypeId::TYPE_ARRAY_UINT8:
+        {
+            std::vector<std::uint8_t> v;
+            v.reserve(size);
+            std::for_each(value.begin(), value.end(), [&v] (const std::string& entry) {
+                v.push_back(static_cast<std::uint8_t>(strtoul(entry.c_str(), nullptr, 10)));
+            });
+            m_visitor->enterArrayUInt8(field, std::move(v));
+        }
+        break;
+    case MetaTypeId::TYPE_ARRAY_INT16:
+        {
+            std::vector<std::int16_t> v;
+            v.reserve(size);
+            std::for_each(value.begin(), value.end(), [&v](const std::string& entry) {
+                v.push_back(static_cast<std::int16_t>(strtol(entry.c_str(), nullptr, 10)));
+                });
+            m_visitor->enterArrayInt16(field, std::move(v));
+        }
+        break;
+    case MetaTypeId::TYPE_ARRAY_UINT16:
+        {
+            std::vector<std::uint16_t> v;
+            v.reserve(size);
+            std::for_each(value.begin(), value.end(), [&v](const std::string& entry) {
+                v.push_back(static_cast<std::uint16_t>(strtoul(entry.c_str(), nullptr, 10)));
+                });
+            m_visitor->enterArrayUInt16(field, std::move(v));
+        }
+        break;
     case MetaTypeId::TYPE_ARRAY_INT32:
         {
             std::vector<std::int32_t> v;
             v.reserve(size);
-            std::for_each(value.begin(), value.end(), [&v] (const std::string& entry) {
+            std::for_each(value.begin(), value.end(), [&v](const std::string& entry) {
                 v.push_back(strtol(entry.c_str(), nullptr, 10));
-            });
+                });
             m_visitor->enterArrayInt32(field, std::move(v));
         }
         break;
@@ -1139,9 +1551,9 @@ void ParserConverter::convertArraytString(const MetaField& field, const std::vec
         {
             std::vector<std::uint32_t> v;
             v.reserve(size);
-            std::for_each(value.begin(), value.end(), [&v] (const std::string& entry) {
+            std::for_each(value.begin(), value.end(), [&v](const std::string& entry) {
                 v.push_back(strtoul(entry.c_str(), nullptr, 10));
-            });
+                });
             m_visitor->enterArrayUInt32(field, std::move(v));
         }
         break;

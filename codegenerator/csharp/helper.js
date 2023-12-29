@@ -12,6 +12,10 @@ module.exports = {
                 switch (field.tid)
                 {
                     case 'bool': field.tid = 'TYPE_BOOL'; break;
+                    case 'int8': field.tid = 'TYPE_INT8'; break;
+                    case 'uint8': field.tid = 'TYPE_UINT8'; break;
+                    case 'int16': field.tid = 'TYPE_INT16'; break;
+                    case 'uint16': field.tid = 'TYPE_UINT16'; break;
                     case 'int32': field.tid = 'TYPE_INT32'; break;
                     case 'uint32': field.tid = 'TYPE_UINT32'; break;
                     case 'int64': field.tid = 'TYPE_INT64'; break;
@@ -106,6 +110,14 @@ module.exports = {
         {
             case 'bool':
             case 'TYPE_BOOL': return 'bool'
+            case 'int8':
+            case 'TYPE_INT8': return 'sbyte'
+            case 'uint8':
+            case 'TYPE_UINT8': return 'byte'
+            case 'int16':
+            case 'TYPE_INT16': return 'short'
+            case 'uint16':
+            case 'TYPE_UINT16': return 'ushort'
             case 'int32':
             case 'TYPE_INT32': return 'int'
             case 'uint32':
@@ -136,6 +148,14 @@ module.exports = {
             case 'TYPE_VARIANT': return 'finalmq.Variant'
             case 'bool[]':
             case 'TYPE_ARRAY_BOOL': return 'bool[]'
+            case 'int8[]':
+            case 'TYPE_ARRAY_INT8': return 'sbyte[]'
+            case 'uint8[]':
+            case 'TYPE_ARRAY_UINT8': return 'byte[]'
+            case 'int16[]':
+            case 'TYPE_ARRAY_INT16': return 'short[]'
+            case 'uint16[]':
+            case 'TYPE_ARRAY_UINT16': return 'ushort[]'
             case 'int32[]':
             case 'TYPE_ARRAY_INT32': return 'int[]'
             case 'uint32[]':
@@ -174,6 +194,14 @@ module.exports = {
         {
             case 'bool':
             case 'TYPE_BOOL': return 0;
+            case 'int8':
+            case 'TYPE_INT8': return 0;
+            case 'uint8':
+            case 'TYPE_UINT8': return 0;
+            case 'int16':
+            case 'TYPE_INT16': return 0;
+            case 'uint16':
+            case 'TYPE_UINT16': return 0;
             case 'int32':
             case 'TYPE_INT32': return 0;
             case 'uint32':
@@ -204,6 +232,14 @@ module.exports = {
             case 'TYPE_VARIANT': return 1;
             case 'bool[]':
             case 'TYPE_ARRAY_BOOL': return 2;
+            case 'int8[]':
+            case 'TYPE_ARRAY_INT8': return 2;
+            case 'uint8[]':
+            case 'TYPE_ARRAY_UINT8': return 2;
+            case 'int16[]':
+            case 'TYPE_ARRAY_INT16': return 2;
+            case 'uint16[]':
+            case 'TYPE_ARRAY_UINT16': return 2;
             case 'int32[]':
             case 'TYPE_ARRAY_INT32': return 2;
             case 'uint32[]':
@@ -237,6 +273,14 @@ module.exports = {
         {
             case 'bool':
             case 'TYPE_BOOL': return 'false'
+            case 'int8':
+            case 'TYPE_INT8': return '0'
+            case 'uint8':
+            case 'TYPE_UINT8': return '0'
+            case 'int16':
+            case 'TYPE_INT16': return '0'
+            case 'uint16':
+            case 'TYPE_UINT16': return '0'
             case 'int32':
             case 'TYPE_INT32': return '0'
             case 'uint32':
@@ -267,6 +311,14 @@ module.exports = {
             case 'TYPE_VARIANT': return 'new finalmq.Variant()'
             case 'bool[]':
             case 'TYPE_ARRAY_BOOL': return 'Array.Empty<bool>()'
+            case 'int8[]':
+            case 'TYPE_ARRAY_INT8': return 'Array.Empty<sbyte>()'
+            case 'uint8[]':
+            case 'TYPE_ARRAY_UINT8': return 'Array.Empty<byte>()'
+            case 'int16[]':
+            case 'TYPE_ARRAY_INT16': return 'Array.Empty<short>()'
+            case 'uint16[]':
+            case 'TYPE_ARRAY_UINT16': return 'Array.Empty<ushort>()'
             case 'int32[]':
             case 'TYPE_ARRAY_INT32': return 'Array.Empty<int>()'
             case 'uint32[]':

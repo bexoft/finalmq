@@ -12,6 +12,10 @@ module.exports = {
                 switch (field.tid)
                 {
                     case 'bool': field.tid = 'TYPE_BOOL'; break;
+                    case 'int8': field.tid = 'TYPE_INT8'; break;
+                    case 'uint8': field.tid = 'TYPE_UINT8'; break;
+                    case 'int16': field.tid = 'TYPE_INT16'; break;
+                    case 'uint16': field.tid = 'TYPE_UINT16'; break;
                     case 'int32': field.tid = 'TYPE_INT32'; break;
                     case 'uint32': field.tid = 'TYPE_UINT32'; break;
                     case 'int64': field.tid = 'TYPE_INT64'; break;
@@ -24,6 +28,10 @@ module.exports = {
                     case 'enum': field.tid = 'TYPE_ENUM'; break;
                     case 'variant': field.tid = 'TYPE_VARIANT'; break;
                     case 'bool[]': field.tid = 'TYPE_ARRAY_BOOL'; break;
+                    case 'int8[]': field.tid = 'TYPE_ARRAY_INT8'; break;
+                    case 'uint8[]': field.tid = 'TYPE_ARRAY_UINT8'; break;
+                    case 'int16[]': field.tid = 'TYPE_ARRAY_INT16'; break;
+                    case 'uint16[]': field.tid = 'TYPE_ARRAY_UINT16'; break;
                     case 'int32[]': field.tid = 'TYPE_ARRAY_INT32'; break;
                     case 'uint32[]': field.tid = 'TYPE_ARRAY_UINT32'; break;
                     case 'int64[]': field.tid = 'TYPE_ARRAY_INT64'; break;
@@ -109,6 +117,14 @@ module.exports = {
         {
             case 'bool':
             case 'TYPE_BOOL': return 'bool'
+            case 'int8':
+            case 'TYPE_INT8': return 'std::int8_t'
+            case 'uint8':
+            case 'TYPE_UINT8': return 'std::uint8_t'
+            case 'int16':
+            case 'TYPE_INT16': return 'std::int16_t'
+            case 'uint15':
+            case 'TYPE_UINT16': return 'std::uint16_t'
             case 'int32':
             case 'TYPE_INT32': return 'std::int32_t'
             case 'uint32':
@@ -141,6 +157,14 @@ module.exports = {
             case 'TYPE_VARIANT': return 'finalmq::Variant'
             case 'bool[]':
             case 'TYPE_ARRAY_BOOL': return 'std::vector<bool>'
+            case 'int8[]':
+            case 'TYPE_ARRAY_INT8': return 'std::vector<std::int8_t>'
+            case 'uint8[]':
+            case 'TYPE_ARRAY_UINT8': return 'std::vector<std::uint8_t>'
+            case 'int16[]':
+            case 'TYPE_ARRAY_INT16': return 'std::vector<std::int16_t>'
+            case 'uint16[]':
+            case 'TYPE_ARRAY_UINT16': return 'std::vector<std::uint16_t>'
             case 'int32[]':
             case 'TYPE_ARRAY_INT32': return 'std::vector<std::int32_t>'
             case 'uint32[]':
@@ -170,6 +194,14 @@ module.exports = {
         {
             case 'bool':
             case 'TYPE_BOOL':           return 'false'
+            case 'int8':
+            case 'TYPE_INT8': return '0'
+            case 'uint8':
+            case 'TYPE_UINT8': return '0'
+            case 'int16':
+            case 'TYPE_INT16': return '0'
+            case 'uint16':
+            case 'TYPE_UINT16': return '0'
             case 'int32':
             case 'TYPE_INT32': return '0'
             case 'uint32':
@@ -194,6 +226,14 @@ module.exports = {
             case 'TYPE_VARIANT': return null
             case 'bool[]':
             case 'TYPE_ARRAY_BOOL': return null
+            case 'int8[]':
+            case 'TYPE_ARRAY_INT8': return null
+            case 'uint8[]':
+            case 'TYPE_ARRAY_UINT8': return null
+            case 'int16[]':
+            case 'TYPE_ARRAY_INT16': return null
+            case 'uint16[]':
+            case 'TYPE_ARRAY_UINT16': return null
             case 'int32[]':
             case 'TYPE_ARRAY_INT32': return null
             case 'uint32[]':

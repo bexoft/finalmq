@@ -11,6 +11,24 @@
         {"type":"TestBool","desc":"desc","fields":[
             {"tid":"TYPE_BOOL","type":"","name":"value","desc":"desc","flags":[]}
         ]},
+        {"type":"TestInt8","desc":"desc","fields":[
+            {"tid":"TYPE_INT8","type":"","name":"value","desc":"desc","flags":[]}
+        ]},
+        {"type":"TestInt8ZigZag","desc":"desc","fields":[
+            {"tid":"TYPE_INT8","type":"","name":"value","desc":"desc","flags":["METAFLAG_PROTO_ZIGZAG"]}
+        ]},
+        {"type":"TestUInt8","desc":"desc","fields":[
+            {"tid":"TYPE_UINT8","type":"","name":"value","desc":"desc","flags":[]}
+        ]},
+        {"type":"TestInt16","desc":"desc","fields":[
+            {"tid":"TYPE_INT16","type":"","name":"value","desc":"desc","flags":[]}
+        ]},
+        {"type":"TestInt16ZigZag","desc":"desc","fields":[
+            {"tid":"TYPE_INT16","type":"","name":"value","desc":"desc","flags":["METAFLAG_PROTO_ZIGZAG"]}
+        ]},
+        {"type":"TestUInt16","desc":"desc","fields":[
+            {"tid":"TYPE_UINT16","type":"","name":"value","desc":"desc","flags":[]}
+        ]},
         {"type":"TestInt32","desc":"desc","fields":[
             {"tid":"TYPE_INT32","type":"","name":"value","desc":"desc","flags":[]}
         ]},
@@ -63,6 +81,18 @@
         ]},
         {"type":"TestArrayBool","desc":"desc","fields":[
             {"tid":"TYPE_ARRAY_BOOL","type":"","name":"value","desc":"desc","flags":[]}
+        ]},
+        {"type":"TestArrayInt8","desc":"desc","fields":[
+            {"tid":"TYPE_ARRAY_INT8","type":"","name":"value","desc":"desc","flags":[]}
+        ]},
+        {"type":"TestArrayUInt8","desc":"desc","fields":[
+            {"tid":"TYPE_ARRAY_UINT8","type":"","name":"value","desc":"desc","flags":[]}
+        ]},
+        {"type":"TestArrayInt16","desc":"desc","fields":[
+            {"tid":"TYPE_ARRAY_INT16","type":"","name":"value","desc":"desc","flags":[]}
+        ]},
+        {"type":"TestArrayUInt16","desc":"desc","fields":[
+            {"tid":"TYPE_ARRAY_UINT16","type":"","name":"value","desc":"desc","flags":[]}
         ]},
         {"type":"TestArrayInt32","desc":"desc","fields":[
             {"tid":"TYPE_ARRAY_INT32","type":"","name":"value","desc":"desc","flags":[]}

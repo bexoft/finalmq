@@ -12,6 +12,10 @@ module.exports = {
                 switch (field.tid)
                 {
                     case 'bool': field.tid = 'TYPE_BOOL'; break;
+                    case 'int8': field.tid = 'TYPE_INT8'; break;
+                    case 'uint8': field.tid = 'TYPE_UINT8'; break;
+                    case 'int16': field.tid = 'TYPE_INT16'; break;
+                    case 'uint16': field.tid = 'TYPE_UINT16'; break;
                     case 'int32': field.tid = 'TYPE_INT32'; break;
                     case 'uint32': field.tid = 'TYPE_UINT32'; break;
                     case 'int64': field.tid = 'TYPE_INT64'; break;
@@ -107,7 +111,11 @@ module.exports = {
         switch (tid)
         {
             case 'TYPE_BOOL':           return 'bool'
-            case 'TYPE_INT32':          return (this.isVarint(flags)) ? 'int32'  : (this.isZigZag(flags)) ? 'sint32' : 'sfixed32';
+            case 'TYPE_INT8':           return (this.isVarint(flags)) ? 'int32' : (this.isZigZag(flags)) ? 'sint32' : 'sfixed32';
+            case 'TYPE_UINT8':          return (this.isVarint(flags)) ? 'uint32' : 'fixed32';
+            case 'TYPE_INT16':          return (this.isVarint(flags)) ? 'int32' : (this.isZigZag(flags)) ? 'sint32' : 'sfixed32';
+            case 'TYPE_UINT16':         return (this.isVarint(flags)) ? 'uint32' : 'fixed32';
+            case 'TYPE_INT32':          return (this.isVarint(flags)) ? 'int32' : (this.isZigZag(flags)) ? 'sint32' : 'sfixed32';
             case 'TYPE_UINT32':         return (this.isVarint(flags)) ? 'uint32' : 'fixed32';
             case 'TYPE_INT64':          return (this.isVarint(flags)) ? 'int64'  : (this.isZigZag(flags)) ? 'sint64' : 'sfixed64';
             case 'TYPE_UINT64':         return (this.isVarint(flags)) ? 'uint64' : 'fixed64';
@@ -119,7 +127,11 @@ module.exports = {
             case 'TYPE_ENUM':           return this.typeWithNamespace(data, type, '.')
             case 'TYPE_VARIANT':        return 'finalmq.variant.VarValue'
             case 'TYPE_ARRAY_BOOL':     return 'repeated bool'
-            case 'TYPE_ARRAY_INT32':    return 'repeated ' + ((this.isVarint(flags)) ? 'int32'  : (this.isZigZag(flags)) ? 'sint32' : 'sfixed32')
+            case 'TYPE_ARRAY_INT8':     return 'repeated ' + ((this.isVarint(flags)) ? 'int32' : (this.isZigZag(flags)) ? 'sint32' : 'sfixed32')
+            case 'TYPE_ARRAY_UINT8':    return 'repeated ' + ((this.isVarint(flags)) ? 'uint32' : 'fixed32')
+            case 'TYPE_ARRAY_INT16':    return 'repeated ' + ((this.isVarint(flags)) ? 'int32' : (this.isZigZag(flags)) ? 'sint32' : 'sfixed32')
+            case 'TYPE_ARRAY_UINT16':   return 'repeated ' + ((this.isVarint(flags)) ? 'uint32' : 'fixed32')
+            case 'TYPE_ARRAY_INT32':    return 'repeated ' + ((this.isVarint(flags)) ? 'int32' : (this.isZigZag(flags)) ? 'sint32' : 'sfixed32')
             case 'TYPE_ARRAY_UINT32':   return 'repeated ' + ((this.isVarint(flags)) ? 'uint32' : 'fixed32')
             case 'TYPE_ARRAY_INT64':    return 'repeated ' + ((this.isVarint(flags)) ? 'int64'  : (this.isZigZag(flags)) ? 'sint64' : 'sfixed64')
             case 'TYPE_ARRAY_UINT64':   return 'repeated ' + ((this.isVarint(flags)) ? 'uint64' : 'fixed64')

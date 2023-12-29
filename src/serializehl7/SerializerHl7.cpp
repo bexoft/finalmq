@@ -172,6 +172,38 @@ void SerializerHl7::Internal::enterBool(const MetaField& field, bool value)
     }
 }
 
+void SerializerHl7::Internal::enterInt8(const MetaField& field, std::int8_t value)
+{
+    if (!m_indexOfLayer.empty())
+    {
+        m_hl7Builder.enterInt64(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value);
+    }
+}
+
+void SerializerHl7::Internal::enterUInt8(const MetaField& field, std::uint8_t value)
+{
+    if (!m_indexOfLayer.empty())
+    {
+        m_hl7Builder.enterUInt64(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value);
+    }
+}
+
+void SerializerHl7::Internal::enterInt16(const MetaField& field, std::int16_t value)
+{
+    if (!m_indexOfLayer.empty())
+    {
+        m_hl7Builder.enterInt64(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value);
+    }
+}
+
+void SerializerHl7::Internal::enterUInt16(const MetaField& field, std::uint16_t value)
+{
+    if (!m_indexOfLayer.empty())
+    {
+        m_hl7Builder.enterUInt64(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value);
+    }
+}
+
 void SerializerHl7::Internal::enterInt32(const MetaField& field, std::int32_t value)
 {
     if (!m_indexOfLayer.empty())
@@ -293,6 +325,70 @@ void SerializerHl7::Internal::enterArrayBool(const MetaField& field, const std::
         for (size_t i = 0; i < value.size(); ++i)
         {
             m_hl7Builder.enterInt64(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value[i] ? 1 : 0);
+        }
+    }
+}
+
+void SerializerHl7::Internal::enterArrayInt8(const MetaField& field, std::vector<std::int8_t>&& value)
+{
+    enterArrayInt8(field, value.data(), value.size());
+}
+
+void SerializerHl7::Internal::enterArrayInt8(const MetaField& field, const std::int8_t* value, ssize_t size)
+{
+    if (!m_indexOfLayer.empty())
+    {
+        for (ssize_t i = 0; i < size; ++i)
+        {
+            m_hl7Builder.enterInt64(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value[i]);
+        }
+    }
+}
+
+void SerializerHl7::Internal::enterArrayUInt8(const MetaField& field, std::vector<std::uint8_t>&& value)
+{
+    enterArrayUInt8(field, value.data(), value.size());
+}
+
+void SerializerHl7::Internal::enterArrayUInt8(const MetaField& field, const std::uint8_t* value, ssize_t size)
+{
+    if (!m_indexOfLayer.empty())
+    {
+        for (ssize_t i = 0; i < size; ++i)
+        {
+            m_hl7Builder.enterUInt64(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value[i]);
+        }
+    }
+}
+
+void SerializerHl7::Internal::enterArrayInt16(const MetaField& field, std::vector<std::int16_t>&& value)
+{
+    enterArrayInt16(field, value.data(), value.size());
+}
+
+void SerializerHl7::Internal::enterArrayInt16(const MetaField& field, const std::int16_t* value, ssize_t size)
+{
+    if (!m_indexOfLayer.empty())
+    {
+        for (ssize_t i = 0; i < size; ++i)
+        {
+            m_hl7Builder.enterInt64(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value[i]);
+        }
+    }
+}
+
+void SerializerHl7::Internal::enterArrayUInt16(const MetaField& field, std::vector<std::uint16_t>&& value)
+{
+    enterArrayUInt16(field, value.data(), value.size());
+}
+
+void SerializerHl7::Internal::enterArrayUInt16(const MetaField& field, const std::uint16_t* value, ssize_t size)
+{
+    if (!m_indexOfLayer.empty())
+    {
+        for (ssize_t i = 0; i < size; ++i)
+        {
+            m_hl7Builder.enterUInt64(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value[i]);
         }
     }
 }

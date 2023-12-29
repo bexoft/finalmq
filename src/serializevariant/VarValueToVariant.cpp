@@ -71,6 +71,18 @@ void VarValueToVariant::processVarValue(const variant::VarValue& varValue, Varia
     case variant::VarTypeId::T_BOOL:
         variant = varValue.valbool;
         break;
+    case variant::VarTypeId::T_INT8:
+        variant = varValue.valint8;
+        break;
+    case variant::VarTypeId::T_UINT8:
+        variant = varValue.valuint8;
+        break;
+    case variant::VarTypeId::T_INT16:
+        variant = varValue.valint16;
+        break;
+    case variant::VarTypeId::T_UINT16:
+        variant = varValue.valuint16;
+        break;
     case variant::VarTypeId::T_INT32:
         variant = varValue.valint32;
         break;
@@ -111,6 +123,18 @@ void VarValueToVariant::processVarValue(const variant::VarValue& varValue, Varia
 
     case variant::VarTypeId::T_ARRAY_BOOL:
         variant = std::move(varValue.valarrbool);
+        break;
+    case variant::VarTypeId::T_ARRAY_INT8:
+        variant = std::move(varValue.valarrint8);
+        break;
+    case variant::VarTypeId::T_ARRAY_UINT8:
+        variant = std::move(varValue.valarruint8);
+        break;
+    case variant::VarTypeId::T_ARRAY_INT16:
+        variant = std::move(varValue.valarrint16);
+        break;
+    case variant::VarTypeId::T_ARRAY_UINT16:
+        variant = std::move(varValue.valarruint16);
         break;
     case variant::VarTypeId::T_ARRAY_INT32:
         variant = std::move(varValue.valarrint32);

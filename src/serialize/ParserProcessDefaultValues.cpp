@@ -232,6 +232,18 @@ void ParserProcessDefaultValues::processDefaultValues(const MetaStruct& stru, co
                 case MetaTypeId::TYPE_BOOL:
                     m_visitor->enterBool(*field, false);
                     break;
+                case MetaTypeId::TYPE_INT8:
+                    m_visitor->enterInt8(*field, 0);
+                    break;
+                case MetaTypeId::TYPE_UINT8:
+                    m_visitor->enterUInt8(*field, 0);
+                    break;
+                case MetaTypeId::TYPE_INT16:
+                    m_visitor->enterInt16(*field, 0);
+                    break;
+                case MetaTypeId::TYPE_UINT16:
+                    m_visitor->enterUInt16(*field, 0);
+                    break;
                 case MetaTypeId::TYPE_INT32:
                     m_visitor->enterInt32(*field, 0);
                     break;
@@ -281,6 +293,18 @@ void ParserProcessDefaultValues::processDefaultValues(const MetaStruct& stru, co
                     break;
                 case MetaTypeId::TYPE_ARRAY_BOOL:
                     m_visitor->enterArrayBoolMove(*field, {});
+                    break;
+                case MetaTypeId::TYPE_ARRAY_INT8:
+                    m_visitor->enterArrayInt8(*field, {});
+                    break;
+                case MetaTypeId::TYPE_ARRAY_UINT8:
+                    m_visitor->enterArrayUInt8(*field, {});
+                    break;
+                case MetaTypeId::TYPE_ARRAY_INT16:
+                    m_visitor->enterArrayInt16(*field, {});
+                    break;
+                case MetaTypeId::TYPE_ARRAY_UINT16:
+                    m_visitor->enterArrayUInt16(*field, {});
                     break;
                 case MetaTypeId::TYPE_ARRAY_INT32:
                     m_visitor->enterArrayInt32(*field, {});
@@ -393,6 +417,54 @@ void ParserProcessDefaultValues::enterBool(const MetaField& field, bool value)
             executeEnterStruct();
         }
         m_visitor->enterBool(field, value);
+    }
+}
+void ParserProcessDefaultValues::enterInt8(const MetaField& field, std::int8_t value)
+{
+    markAsDone(field);
+    if (value != 0 || !m_skipDefaultValues)
+    {
+        if (m_skipDefaultValues)
+        {
+            executeEnterStruct();
+        }
+        m_visitor->enterInt8(field, value);
+    }
+}
+void ParserProcessDefaultValues::enterUInt8(const MetaField& field, std::uint8_t value)
+{
+    markAsDone(field);
+    if (value != 0 || !m_skipDefaultValues)
+    {
+        if (m_skipDefaultValues)
+        {
+            executeEnterStruct();
+        }
+        m_visitor->enterUInt8(field, value);
+    }
+}
+void ParserProcessDefaultValues::enterInt16(const MetaField& field, std::int16_t value)
+{
+    markAsDone(field);
+    if (value != 0 || !m_skipDefaultValues)
+    {
+        if (m_skipDefaultValues)
+        {
+            executeEnterStruct();
+        }
+        m_visitor->enterInt16(field, value);
+    }
+}
+void ParserProcessDefaultValues::enterUInt16(const MetaField& field, std::uint16_t value)
+{
+    markAsDone(field);
+    if (value != 0 || !m_skipDefaultValues)
+    {
+        if (m_skipDefaultValues)
+        {
+            executeEnterStruct();
+        }
+        m_visitor->enterUInt16(field, value);
     }
 }
 void ParserProcessDefaultValues::enterInt32(const MetaField& field, std::int32_t value)
@@ -567,6 +639,102 @@ void ParserProcessDefaultValues::enterArrayBool(const MetaField& field, const st
             executeEnterStruct();
         }
         m_visitor->enterArrayBool(field, value);
+    }
+}
+void ParserProcessDefaultValues::enterArrayInt8(const MetaField& field, std::vector<std::int8_t>&& value)
+{
+    markAsDone(field);
+    if (!value.empty() || !m_skipDefaultValues)
+    {
+        if (m_skipDefaultValues)
+        {
+            executeEnterStruct();
+        }
+        m_visitor->enterArrayInt8(field, std::move(value));
+    }
+}
+void ParserProcessDefaultValues::enterArrayInt8(const MetaField& field, const std::int8_t* value, ssize_t size)
+{
+    markAsDone(field);
+    if (size > 0 || !m_skipDefaultValues)
+    {
+        if (m_skipDefaultValues)
+        {
+            executeEnterStruct();
+        }
+        m_visitor->enterArrayInt8(field, value, size);
+    }
+}
+void ParserProcessDefaultValues::enterArrayUInt8(const MetaField& field, std::vector<std::uint8_t>&& value)
+{
+    markAsDone(field);
+    if (!value.empty() || !m_skipDefaultValues)
+    {
+        if (m_skipDefaultValues)
+        {
+            executeEnterStruct();
+        }
+        m_visitor->enterArrayUInt8(field, std::move(value));
+    }
+}
+void ParserProcessDefaultValues::enterArrayUInt8(const MetaField& field, const std::uint8_t* value, ssize_t size)
+{
+    markAsDone(field);
+    if (size > 0 || !m_skipDefaultValues)
+    {
+        if (m_skipDefaultValues)
+        {
+            executeEnterStruct();
+        }
+        m_visitor->enterArrayUInt8(field, value, size);
+    }
+}
+void ParserProcessDefaultValues::enterArrayInt16(const MetaField& field, std::vector<std::int16_t>&& value)
+{
+    markAsDone(field);
+    if (!value.empty() || !m_skipDefaultValues)
+    {
+        if (m_skipDefaultValues)
+        {
+            executeEnterStruct();
+        }
+        m_visitor->enterArrayInt16(field, std::move(value));
+    }
+}
+void ParserProcessDefaultValues::enterArrayInt16(const MetaField& field, const std::int16_t* value, ssize_t size)
+{
+    markAsDone(field);
+    if (size > 0 || !m_skipDefaultValues)
+    {
+        if (m_skipDefaultValues)
+        {
+            executeEnterStruct();
+        }
+        m_visitor->enterArrayInt16(field, value, size);
+    }
+}
+void ParserProcessDefaultValues::enterArrayUInt16(const MetaField& field, std::vector<std::uint16_t>&& value)
+{
+    markAsDone(field);
+    if (!value.empty() || !m_skipDefaultValues)
+    {
+        if (m_skipDefaultValues)
+        {
+            executeEnterStruct();
+        }
+        m_visitor->enterArrayUInt16(field, std::move(value));
+    }
+}
+void ParserProcessDefaultValues::enterArrayUInt16(const MetaField& field, const std::uint16_t* value, ssize_t size)
+{
+    markAsDone(field);
+    if (size > 0 || !m_skipDefaultValues)
+    {
+        if (m_skipDefaultValues)
+        {
+            executeEnterStruct();
+        }
+        m_visitor->enterArrayUInt16(field, value, size);
     }
 }
 void ParserProcessDefaultValues::enterArrayInt32(const MetaField& field, std::vector<std::int32_t>&& value)

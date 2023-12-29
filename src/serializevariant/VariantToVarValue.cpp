@@ -92,6 +92,42 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
             m_visitor.enterBool(*fieldBool, *data);
         }
         break;
+    case TYPE_INT8:
+        {
+            static const MetaField* fieldInt8 = m_structVarValue->getFieldByName("valint8");
+            assert(fieldInt8);
+            const std::int8_t* data = variant;
+            assert(data);
+            m_visitor.enterInt8(*fieldInt8, *data);
+        }
+        break;
+    case TYPE_UINT8:
+        {
+            static const MetaField* fieldUInt8 = m_structVarValue->getFieldByName("valuint8");
+            assert(fieldUInt8);
+            const std::uint8_t* data = variant;
+            assert(data);
+            m_visitor.enterUInt8(*fieldUInt8, *data);
+        }
+        break;
+    case TYPE_INT16:
+        {
+            static const MetaField* fieldInt16 = m_structVarValue->getFieldByName("valint16");
+            assert(fieldInt16);
+            const std::int16_t* data = variant;
+            assert(data);
+            m_visitor.enterInt16(*fieldInt16, *data);
+        }
+        break;
+    case TYPE_UINT16:
+        {
+            static const MetaField* fieldUInt16 = m_structVarValue->getFieldByName("valuint16");
+            assert(fieldUInt16);
+            const std::uint16_t* data = variant;
+            assert(data);
+            m_visitor.enterUInt16(*fieldUInt16, *data);
+        }
+        break;
     case TYPE_INT32:
         {
             static const MetaField* fieldInt32 = m_structVarValue->getFieldByName("valint32");
@@ -172,6 +208,42 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
             const std::vector<bool>* data = variant;
             assert(data);
             m_visitor.enterArrayBool(*fieldArrBool, *data);
+        }
+        break;
+    case TYPE_ARRAY_INT8:
+        {
+            static const MetaField* fieldArrInt8 = m_structVarValue->getFieldByName("valarrint8");
+            assert(fieldArrInt8);
+            const std::vector<std::int8_t>* data = variant;
+            assert(data);
+            m_visitor.enterArrayInt8(*fieldArrInt8, data->data(), data->size());
+        }
+        break;
+    case TYPE_ARRAY_UINT8:
+        {
+            static const MetaField* fieldArrUInt8 = m_structVarValue->getFieldByName("valarruint8");
+            assert(fieldArrUInt8);
+            const std::vector<std::uint8_t>* data = variant;
+            assert(data);
+            m_visitor.enterArrayUInt8(*fieldArrUInt8, data->data(), data->size());
+        }
+        break;
+    case TYPE_ARRAY_INT16:
+        {
+            static const MetaField* fieldArrInt16 = m_structVarValue->getFieldByName("valarrint16");
+            assert(fieldArrInt16);
+            const std::vector<std::int16_t>* data = variant;
+            assert(data);
+            m_visitor.enterArrayInt16(*fieldArrInt16, data->data(), data->size());
+        }
+        break;
+    case TYPE_ARRAY_UINT16:
+        {
+            static const MetaField* fieldArrUInt16 = m_structVarValue->getFieldByName("valarruint16");
+            assert(fieldArrUInt16);
+            const std::vector<std::uint16_t>* data = variant;
+            assert(data);
+            m_visitor.enterArrayUInt16(*fieldArrUInt16, data->data(), data->size());
         }
         break;
     case TYPE_ARRAY_INT32:

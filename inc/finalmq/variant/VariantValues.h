@@ -41,6 +41,50 @@ public:
     typedef Convert<T> ConvertType;
 };
 /////////////////////////////////////////
+typedef VariantValueTemplate<TYPE_INT8>   VariantValueInt8;
+template<>
+class VariantValueTypeInfo<std::int8_t>
+{
+public:
+    typedef std::int8_t T;
+    typedef VariantValueInt8 VariantValueType;
+    const static int VARTYPE = MetaTypeInfo<T>::TypeId;
+    typedef Convert<T> ConvertType;
+};
+/////////////////////////////////////////
+typedef VariantValueTemplate<TYPE_UINT8>  VariantValueUInt8;
+template<>
+class VariantValueTypeInfo<std::uint8_t>
+{
+public:
+    typedef std::uint8_t T;
+    typedef VariantValueUInt8 VariantValueType;
+    const static int VARTYPE = MetaTypeInfo<T>::TypeId;
+    typedef Convert<T> ConvertType;
+};
+/////////////////////////////////////////
+typedef VariantValueTemplate<TYPE_INT16>   VariantValueInt16;
+template<>
+class VariantValueTypeInfo<std::int16_t>
+{
+public:
+    typedef std::int16_t T;
+    typedef VariantValueInt16 VariantValueType;
+    const static int VARTYPE = MetaTypeInfo<T>::TypeId;
+    typedef Convert<T> ConvertType;
+};
+/////////////////////////////////////////
+typedef VariantValueTemplate<TYPE_UINT16>  VariantValueUInt16;
+template<>
+class VariantValueTypeInfo<std::uint16_t>
+{
+public:
+    typedef std::uint16_t T;
+    typedef VariantValueUInt16 VariantValueType;
+    const static int VARTYPE = MetaTypeInfo<T>::TypeId;
+    typedef Convert<T> ConvertType;
+};
+/////////////////////////////////////////
 typedef VariantValueTemplate<TYPE_INT32>   VariantValueInt32;
 template<>
 class VariantValueTypeInfo<std::int32_t>
@@ -146,6 +190,50 @@ class VariantValueTypeInfo<std::vector<bool>>
 public:
     typedef std::vector<bool> T;
     typedef VariantValueArrayBool VariantValueType;
+    const static int VARTYPE = MetaTypeInfo<T>::TypeId;
+    typedef Convert<T> ConvertType;
+};
+/////////////////////////////////////////
+typedef VariantValueTemplate<TYPE_ARRAY_INT8>   VariantValueArrayInt8;
+template<>
+class VariantValueTypeInfo<std::vector<std::int8_t>>
+{
+public:
+    typedef std::vector<std::int8_t> T;
+    typedef VariantValueArrayInt8 VariantValueType;
+    const static int VARTYPE = MetaTypeInfo<T>::TypeId;
+    typedef Convert<T> ConvertType;
+};
+/////////////////////////////////////////
+typedef VariantValueTemplate<TYPE_ARRAY_UINT8>  VariantValueArrayUInt8;
+template<>
+class VariantValueTypeInfo<std::vector<std::uint8_t>>
+{
+public:
+    typedef std::vector<std::uint8_t> T;
+    typedef VariantValueArrayUInt8 VariantValueType;
+    const static int VARTYPE = MetaTypeInfo<T>::TypeId;
+    typedef Convert<T> ConvertType;
+};
+/////////////////////////////////////////
+typedef VariantValueTemplate<TYPE_ARRAY_INT16>   VariantValueArrayInt16;
+template<>
+class VariantValueTypeInfo<std::vector<std::int16_t>>
+{
+public:
+    typedef std::vector<std::int16_t> T;
+    typedef VariantValueArrayInt16 VariantValueType;
+    const static int VARTYPE = MetaTypeInfo<T>::TypeId;
+    typedef Convert<T> ConvertType;
+};
+/////////////////////////////////////////
+typedef VariantValueTemplate<TYPE_ARRAY_UINT16>  VariantValueArrayUInt16;
+template<>
+class VariantValueTypeInfo<std::vector<std::uint16_t>>
+{
+public:
+    typedef std::vector<std::uint16_t> T;
+    typedef VariantValueArrayUInt16 VariantValueType;
     const static int VARTYPE = MetaTypeInfo<T>::TypeId;
     typedef Convert<T> ConvertType;
 };

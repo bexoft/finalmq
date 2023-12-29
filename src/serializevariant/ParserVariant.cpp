@@ -76,6 +76,18 @@ void ParserVariant::processField(const Variant* sub, const MetaField* field)
     case TYPE_BOOL:
         m_visitor.enterBool(*field, *sub);
         break;
+    case TYPE_INT8:
+        m_visitor.enterInt8(*field, *sub);
+        break;
+    case TYPE_UINT8:
+        m_visitor.enterUInt8(*field, *sub);
+        break;
+    case TYPE_INT16:
+        m_visitor.enterInt16(*field, *sub);
+        break;
+    case TYPE_UINT16:
+        m_visitor.enterUInt16(*field, *sub);
+        break;
     case TYPE_INT32:
         m_visitor.enterInt32(*field, *sub);
         break;
@@ -172,6 +184,58 @@ void ParserVariant::processField(const Variant* sub, const MetaField* field)
             else
             {
                 m_visitor.enterArrayBool(*field, *sub);
+            }
+        }
+        break;
+    case TYPE_ARRAY_INT8:
+        {
+            const std::vector<std::int8_t>* value = *sub;
+            if (value)
+            {
+                m_visitor.enterArrayInt8(*field, value->data(), value->size());
+            }
+            else
+            {
+                m_visitor.enterArrayInt8(*field, *sub);
+            }
+        }
+        break;
+    case TYPE_ARRAY_UINT8:
+        {
+            const std::vector<std::uint8_t>* value = *sub;
+            if (value)
+            {
+                m_visitor.enterArrayUInt8(*field, value->data(), value->size());
+            }
+            else
+            {
+                m_visitor.enterArrayUInt8(*field, *sub);
+            }
+        }
+        break;
+    case TYPE_ARRAY_INT16:
+        {
+            const std::vector<std::int16_t>* value = *sub;
+            if (value)
+            {
+                m_visitor.enterArrayInt16(*field, value->data(), value->size());
+            }
+            else
+            {
+                m_visitor.enterArrayInt16(*field, *sub);
+            }
+        }
+        break;
+    case TYPE_ARRAY_UINT16:
+        {
+            const std::vector<std::uint16_t>* value = *sub;
+            if (value)
+            {
+                m_visitor.enterArrayUInt16(*field, value->data(), value->size());
+            }
+            else
+            {
+                m_visitor.enterArrayUInt16(*field, *sub);
             }
         }
         break;
@@ -344,6 +408,18 @@ void ParserVariant::processEmptyField(const MetaField* field)
     case TYPE_BOOL:
         m_visitor.enterBool(*field, bool());
         break;
+    case TYPE_INT8:
+        m_visitor.enterInt8(*field, std::int8_t());
+        break;
+    case TYPE_UINT8:
+        m_visitor.enterUInt8(*field, std::uint8_t());
+        break;
+    case TYPE_INT16:
+        m_visitor.enterInt16(*field, std::int16_t());
+        break;
+    case TYPE_UINT16:
+        m_visitor.enterUInt16(*field, std::uint16_t());
+        break;
     case TYPE_INT32:
         m_visitor.enterInt32(*field, std::int32_t());
         break;
@@ -401,6 +477,18 @@ void ParserVariant::processEmptyField(const MetaField* field)
         break;
     case TYPE_ARRAY_BOOL:
         m_visitor.enterArrayBool(*field, std::vector<bool>());
+        break;
+    case TYPE_ARRAY_INT8:
+        m_visitor.enterArrayInt8(*field, std::vector<std::int8_t>());
+        break;
+    case TYPE_ARRAY_UINT8:
+        m_visitor.enterArrayUInt8(*field, std::vector<std::uint8_t>());
+        break;
+    case TYPE_ARRAY_INT16:
+        m_visitor.enterArrayInt16(*field, std::vector<std::int16_t>());
+        break;
+    case TYPE_ARRAY_UINT16:
+        m_visitor.enterArrayUInt16(*field, std::vector<std::uint16_t>());
         break;
     case TYPE_ARRAY_INT32:
         m_visitor.enterArrayInt32(*field, std::vector<std::int32_t>());

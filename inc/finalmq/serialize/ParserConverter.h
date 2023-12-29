@@ -49,6 +49,10 @@ private:
     virtual void exitArrayStruct(const MetaField& field) override;
 
     virtual void enterBool(const MetaField& field, bool value) override;
+    virtual void enterInt8(const MetaField& field, std::int8_t value) override;
+    virtual void enterUInt8(const MetaField& field, std::uint8_t value) override;
+    virtual void enterInt16(const MetaField& field, std::int16_t value) override;
+    virtual void enterUInt16(const MetaField& field, std::uint16_t value) override;
     virtual void enterInt32(const MetaField& field, std::int32_t value) override;
     virtual void enterUInt32(const MetaField& field, std::uint32_t value) override;
     virtual void enterInt64(const MetaField& field, std::int64_t value) override;
@@ -65,6 +69,14 @@ private:
 
     virtual void enterArrayBoolMove(const MetaField& field, std::vector<bool>&& value) override;
     virtual void enterArrayBool(const MetaField& field, const std::vector<bool>& value) override;
+    virtual void enterArrayInt8(const MetaField& field, std::vector<std::int8_t>&& value) override;
+    virtual void enterArrayInt8(const MetaField& field, const std::int8_t* value, ssize_t size) override;
+    virtual void enterArrayUInt8(const MetaField& field, std::vector<std::uint8_t>&& value) override;
+    virtual void enterArrayUInt8(const MetaField& field, const std::uint8_t* value, ssize_t size) override;
+    virtual void enterArrayInt16(const MetaField& field, std::vector<std::int16_t>&& value) override;
+    virtual void enterArrayInt16(const MetaField& field, const std::int16_t* value, ssize_t size) override;
+    virtual void enterArrayUInt16(const MetaField& field, std::vector<std::uint16_t>&& value) override;
+    virtual void enterArrayUInt16(const MetaField& field, const std::uint16_t* value, ssize_t size) override;
     virtual void enterArrayInt32(const MetaField& field, std::vector<std::int32_t>&& value) override;
     virtual void enterArrayInt32(const MetaField& field, const std::int32_t* value, ssize_t size) override;
     virtual void enterArrayUInt32(const MetaField& field, std::vector<std::uint32_t>&& value) override;
