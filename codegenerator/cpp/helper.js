@@ -29,7 +29,6 @@ module.exports = {
                     case 'variant': field.tid = 'TYPE_VARIANT'; break;
                     case 'bool[]': field.tid = 'TYPE_ARRAY_BOOL'; break;
                     case 'int8[]': field.tid = 'TYPE_ARRAY_INT8'; break;
-                    case 'uint8[]': field.tid = 'TYPE_ARRAY_UINT8'; break;
                     case 'int16[]': field.tid = 'TYPE_ARRAY_INT16'; break;
                     case 'uint16[]': field.tid = 'TYPE_ARRAY_UINT16'; break;
                     case 'int32[]': field.tid = 'TYPE_ARRAY_INT32'; break;
@@ -159,8 +158,6 @@ module.exports = {
             case 'TYPE_ARRAY_BOOL': return 'std::vector<bool>'
             case 'int8[]':
             case 'TYPE_ARRAY_INT8': return 'std::vector<std::int8_t>'
-            case 'uint8[]':
-            case 'TYPE_ARRAY_UINT8': return 'std::vector<std::uint8_t>'
             case 'int16[]':
             case 'TYPE_ARRAY_INT16': return 'std::vector<std::int16_t>'
             case 'uint16[]':
@@ -228,8 +225,6 @@ module.exports = {
             case 'TYPE_ARRAY_BOOL': return null
             case 'int8[]':
             case 'TYPE_ARRAY_INT8': return null
-            case 'uint8[]':
-            case 'TYPE_ARRAY_UINT8': return null
             case 'int16[]':
             case 'TYPE_ARRAY_INT16': return null
             case 'uint16[]':

@@ -307,10 +307,6 @@ namespace finalmq
                 {
                     return (dynamic)Array.Empty<sbyte>();
                 }
-                if (typeof(T) == typeof(byte[]))
-                {
-                    return (dynamic)Array.Empty<byte>();
-                }
                 if (typeof(T) == typeof(short[]))
                 {
                     return (dynamic)Array.Empty<short>();
@@ -379,7 +375,6 @@ namespace finalmq
         public static implicit operator byte[](Variant v) { return v.GetData<byte[]>(); }
         public static implicit operator bool[](Variant v) { return v.GetData<bool[]>(); }
         public static implicit operator sbyte[](Variant v) { return v.GetData<sbyte[]>(); }
-//        public static implicit operator byte[](Variant v) { return v.GetData<byte[]>(); }
         public static implicit operator short[](Variant v) { return v.GetData<short[]>(); }
         public static implicit operator ushort[](Variant v) { return v.GetData<ushort[]>(); }
         public static implicit operator int[](Variant v) { return v.GetData<int[]>(); }

@@ -550,20 +550,6 @@ TEST_F(TestSerializerJson, testArrayInt8)
     ASSERT_EQ(m_data, "{\"value\":[-1,0,1]}");
 }
 
-TEST_F(TestSerializerJson, testArrayUInt8)
-{
-    static const std::uint8_t VALUE1 = 0xfe;
-    static const std::uint8_t VALUE2 = 0;
-    static const std::uint8_t VALUE3 = 1;
-    static const std::vector<std::uint8_t> VALUE = {VALUE1, VALUE2, VALUE3};
-
-    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestArrayUInt32"));
-    m_serializer->enterArrayUInt8({MetaTypeId::TYPE_ARRAY_UINT8, "", "value", "", 0}, VALUE.data(), VALUE.size());
-    m_serializer->finished();
-
-    ASSERT_EQ(m_data, "{\"value\":[254,0,1]}");
-}
-
 TEST_F(TestSerializerJson, testArrayInt16)
 {
     static const std::int16_t VALUE1 = -1;

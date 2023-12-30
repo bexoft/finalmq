@@ -688,20 +688,6 @@ void SerializerProto::Internal::enterArrayInt8(const MetaField& field, const std
     }
     enterArrayInt32(field, array.data(), array.size());
 }
-void SerializerProto::Internal::enterArrayUInt8(const MetaField& field, std::vector<std::uint8_t>&& value)
-{
-    enterArrayUInt8(field, value.data(), value.size());
-}
-void SerializerProto::Internal::enterArrayUInt8(const MetaField& field, const std::uint8_t* value, ssize_t size)
-{
-    std::vector<std::uint32_t> array;
-    array.resize(size);
-    for (ssize_t i = 0; i < size; ++i)
-    {
-        array[i] = static_cast<std::uint32_t>(value[i]);
-    }
-    enterArrayUInt32(field, array.data(), array.size());
-}
 void SerializerProto::Internal::enterArrayInt16(const MetaField& field, std::vector<std::int16_t>&& value)
 {
     enterArrayInt16(field, value.data(), value.size());

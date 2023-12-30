@@ -67,8 +67,6 @@ struct IParserVisitor
     virtual void enterArrayBool(const MetaField& field, const std::vector<bool>& value) = 0;
     virtual void enterArrayInt8(const MetaField& field, std::vector<std::int8_t>&& value) = 0;
     virtual void enterArrayInt8(const MetaField& field, const std::int8_t* value, ssize_t size) = 0;
-    virtual void enterArrayUInt8(const MetaField& field, std::vector<std::uint8_t>&& value) = 0;
-    virtual void enterArrayUInt8(const MetaField& field, const std::uint8_t* value, ssize_t size) = 0;
     virtual void enterArrayInt16(const MetaField& field, std::vector<std::int16_t>&& value) = 0;
     virtual void enterArrayInt16(const MetaField& field, const std::int16_t* value, ssize_t size) = 0;
     virtual void enterArrayUInt16(const MetaField& field, std::vector<std::uint16_t>&& value) = 0;

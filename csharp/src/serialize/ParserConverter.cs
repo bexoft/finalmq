@@ -308,18 +308,6 @@ namespace finalmq
                 ConvertArraytNumber(field, value);
             }
         }
-        public void EnterArrayUInt8(MetaField field, byte[] value)
-        {
-            Debug.Assert(m_visitor != null);
-            if (field.TypeId == MetaTypeId.TYPE_ARRAY_UINT8)
-            {
-                m_visitor.EnterArrayUInt8(field, value);
-            }
-            else
-            {
-                ConvertArraytNumber(field, value);
-            }
-        }
         public void EnterArrayInt16(MetaField field, short[] value)
         {
             Debug.Assert(m_visitor != null);
@@ -536,9 +524,6 @@ namespace finalmq
             case MetaTypeId.TYPE_ARRAY_INT8:
                 m_visitor.EnterArrayInt8(field, new sbyte[] { (sbyte)value });
                 break;
-            case MetaTypeId.TYPE_ARRAY_UINT8:
-                m_visitor.EnterArrayUInt8(field, new byte[] { (byte)value });
-                break;
             case MetaTypeId.TYPE_ARRAY_INT16:
                 m_visitor.EnterArrayInt16(field, new short[] { (short)value });
                 break;
@@ -628,9 +613,6 @@ namespace finalmq
                 break;
             case MetaTypeId.TYPE_ARRAY_INT8:
                 m_visitor.EnterArrayInt8(field, new sbyte[] { Convertion.Convert<sbyte>(value) });
-                break;
-            case MetaTypeId.TYPE_ARRAY_UINT8:
-                m_visitor.EnterArrayUInt8(field, new byte[] { Convertion.Convert<byte>(value) });
                 break;
             case MetaTypeId.TYPE_ARRAY_INT16:
                 m_visitor.EnterArrayInt16(field, new short[] { Convertion.Convert<short>(value) });
@@ -807,67 +789,55 @@ namespace finalmq
                     m_visitor.EnterArrayInt8(field, v);
                 }
                 break;
-            case MetaTypeId.TYPE_ARRAY_UINT8:
+            case MetaTypeId.TYPE_ARRAY_INT16:
                 {
-                    byte[] v = new byte[value.Length];
+                    short[] v = new short[value.Length];
                     for (int i = 0; i < value.Length; ++i)
                     {
 #pragma warning disable CS8600 // Das NULL-Literal oder ein möglicher NULL-Wert wird in einen Non-Nullable-Typ konvertiert.
-                            v[i] = (byte)(dynamic)value[i];
+                        v[i] = (short)(dynamic)value[i];
 #pragma warning restore CS8600 // Das NULL-Literal oder ein möglicher NULL-Wert wird in einen Non-Nullable-Typ konvertiert.
-                        }
-                        m_visitor.EnterArrayUInt8(field, v);
+                    }
+                    m_visitor.EnterArrayInt16(field, v);
                 }
                 break;
-                case MetaTypeId.TYPE_ARRAY_INT16:
+            case MetaTypeId.TYPE_ARRAY_UINT16:
+                {
+                    ushort[] v = new ushort[value.Length];
+                    for (int i = 0; i < value.Length; ++i)
                     {
-                        short[] v = new short[value.Length];
-                        for (int i = 0; i < value.Length; ++i)
-                        {
 #pragma warning disable CS8600 // Das NULL-Literal oder ein möglicher NULL-Wert wird in einen Non-Nullable-Typ konvertiert.
-                            v[i] = (short)(dynamic)value[i];
+                        v[i] = (ushort)(dynamic)value[i];
 #pragma warning restore CS8600 // Das NULL-Literal oder ein möglicher NULL-Wert wird in einen Non-Nullable-Typ konvertiert.
-                        }
-                        m_visitor.EnterArrayInt16(field, v);
                     }
-                    break;
-                case MetaTypeId.TYPE_ARRAY_UINT16:
+                    m_visitor.EnterArrayUInt16(field, v);
+                }
+                break;
+            case MetaTypeId.TYPE_ARRAY_INT32:
+                {
+                    int[] v = new int[value.Length];
+                    for (int i = 0; i < value.Length; ++i)
                     {
-                        ushort[] v = new ushort[value.Length];
-                        for (int i = 0; i < value.Length; ++i)
-                        {
 #pragma warning disable CS8600 // Das NULL-Literal oder ein möglicher NULL-Wert wird in einen Non-Nullable-Typ konvertiert.
-                            v[i] = (ushort)(dynamic)value[i];
+                        v[i] = (int)(dynamic)value[i];
 #pragma warning restore CS8600 // Das NULL-Literal oder ein möglicher NULL-Wert wird in einen Non-Nullable-Typ konvertiert.
-                        }
-                        m_visitor.EnterArrayUInt16(field, v);
                     }
-                    break;
-                case MetaTypeId.TYPE_ARRAY_INT32:
+                    m_visitor.EnterArrayInt32(field, v);
+                }
+                break;
+            case MetaTypeId.TYPE_ARRAY_UINT32:
+                {
+                    uint[] v = new uint[value.Length];
+                    for (int i = 0; i < value.Length; ++i)
                     {
-                        int[] v = new int[value.Length];
-                        for (int i = 0; i < value.Length; ++i)
-                        {
 #pragma warning disable CS8600 // Das NULL-Literal oder ein möglicher NULL-Wert wird in einen Non-Nullable-Typ konvertiert.
-                            v[i] = (int)(dynamic)value[i];
+                        v[i] = (uint)(dynamic)value[i];
 #pragma warning restore CS8600 // Das NULL-Literal oder ein möglicher NULL-Wert wird in einen Non-Nullable-Typ konvertiert.
-                        }
-                        m_visitor.EnterArrayInt32(field, v);
                     }
-                    break;
-                case MetaTypeId.TYPE_ARRAY_UINT32:
-                    {
-                        uint[] v = new uint[value.Length];
-                        for (int i = 0; i < value.Length; ++i)
-                        {
-#pragma warning disable CS8600 // Das NULL-Literal oder ein möglicher NULL-Wert wird in einen Non-Nullable-Typ konvertiert.
-                            v[i] = (uint)(dynamic)value[i];
-#pragma warning restore CS8600 // Das NULL-Literal oder ein möglicher NULL-Wert wird in einen Non-Nullable-Typ konvertiert.
-                        }
-                        m_visitor.EnterArrayUInt32(field, v);
-                    }
-                    break;
-                case MetaTypeId.TYPE_ARRAY_INT64:
+                    m_visitor.EnterArrayUInt32(field, v);
+                }
+                break;
+            case MetaTypeId.TYPE_ARRAY_INT64:
                 {
                     long[] v = new long[value.Length];
                     for (int i = 0; i < value.Length; ++i)
@@ -1053,16 +1023,6 @@ namespace finalmq
                         v[i] = Convertion.Convert((dynamic)value[i]);
                     }
                     m_visitor.EnterArrayInt8(field, v);
-                }
-                break;
-            case MetaTypeId.TYPE_ARRAY_UINT8:
-                {
-                    byte[] v = new byte[value.Count];
-                    for (int i = 0; i < value.Count; ++i)
-                    {
-                        v[i] = Convertion.Convert((dynamic)value[i]);
-                    }
-                    m_visitor.EnterArrayUInt8(field, v);
                 }
                 break;
             case MetaTypeId.TYPE_ARRAY_INT16:

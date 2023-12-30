@@ -82,7 +82,6 @@ protected:
 
         m_fieldArrBool = structVarVariant->getFieldByName("valarrbool");
         m_fieldArrInt8 = structVarVariant->getFieldByName("valarrint8");
-        m_fieldArrUInt8 = structVarVariant->getFieldByName("valarruint8");
         m_fieldArrInt16 = structVarVariant->getFieldByName("valarrint16");
         m_fieldArrUInt16 = structVarVariant->getFieldByName("valarruint16");
         m_fieldArrInt32 = structVarVariant->getFieldByName("valarrint32");
@@ -110,7 +109,6 @@ protected:
 
         ASSERT_NE(m_fieldArrBool, nullptr);
         ASSERT_NE(m_fieldArrInt8, nullptr);
-        ASSERT_NE(m_fieldArrUInt8, nullptr);
         ASSERT_NE(m_fieldArrInt16, nullptr);
         ASSERT_NE(m_fieldArrUInt16, nullptr);
         ASSERT_NE(m_fieldArrInt32, nullptr);
@@ -151,7 +149,6 @@ protected:
 
     const MetaField*        m_fieldArrBool = nullptr;
     const MetaField*        m_fieldArrInt8 = nullptr;
-    const MetaField*        m_fieldArrUInt8 = nullptr;
     const MetaField*        m_fieldArrInt16 = nullptr;
     const MetaField*        m_fieldArrUInt16 = nullptr;
     const MetaField*        m_fieldArrInt32 = nullptr;
@@ -422,21 +419,6 @@ TEST_F(TestVarValueToVariant, testArrayInt8)
     m_varValueToVariant.convert();
 
     std::vector<std::int8_t>* val = m_root;
-    ASSERT_NE(val, nullptr);
-    ASSERT_EQ(*val, VALUE);
-}
-
-TEST_F(TestVarValueToVariant, testArrayUInt8)
-{
-    static const std::vector<std::uint8_t> VALUE = { 123, 0, 12, 200, 255 };
-
-    m_visitor.enterArrayUInt8(*m_fieldArrUInt8, VALUE.data(), VALUE.size());
-    m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_ARRAY_UINT8);
-
-    m_varValueToVariant.convert();
-
-    std::vector<std::uint8_t>* val = m_root;
     ASSERT_NE(val, nullptr);
     ASSERT_EQ(*val, VALUE);
 }

@@ -167,11 +167,6 @@ namespace finalmq
             Debug.Assert(m_visitor != null);
             m_visitor.EnterArrayInt8(field, value);
         }
-        public void EnterArrayUInt8(MetaField field, byte[] value)
-        {
-            Debug.Assert(m_visitor != null);
-            m_visitor.EnterArrayUInt8(field, value);
-        }
         public void EnterArrayInt16(MetaField field, short[] value)
         {
             Debug.Assert(m_visitor != null);

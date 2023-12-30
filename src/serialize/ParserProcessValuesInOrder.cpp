@@ -358,20 +358,6 @@ void ParserProcessValuesInOrder::Internal::enterArrayInt8(const MetaField& field
         m_currentCalls->calls[(field.index + 1)] = [this, &field, v=std::vector<std::int8_t>(value, value + size)] () mutable {m_visitor->enterArrayInt8(field, std::move(v)); };
     }
 }
-void ParserProcessValuesInOrder::Internal::enterArrayUInt8(const MetaField& field, std::vector<std::uint8_t>&& value)
-{
-    if ((m_currentCalls != nullptr) && ((field.index + 1) < static_cast<int>(m_currentCalls->calls.size())))
-    {
-        m_currentCalls->calls[(field.index + 1)] = [this, &field, value{ std::move(value)}]() mutable {m_visitor->enterArrayUInt8(field, std::move(value)); };
-    }
-}
-void ParserProcessValuesInOrder::Internal::enterArrayUInt8(const MetaField& field, const std::uint8_t* value, ssize_t size)
-{
-    if ((m_currentCalls != nullptr) && ((field.index + 1) < static_cast<int>(m_currentCalls->calls.size())))
-    {
-        m_currentCalls->calls[(field.index + 1)] = [this, &field, v=std::vector<std::uint8_t>(value, value + size)]() mutable {m_visitor->enterArrayUInt8(field, std::move(v)); };
-    }
-}
 void ParserProcessValuesInOrder::Internal::enterArrayInt16(const MetaField& field, std::vector<std::int16_t>&& value)
 {
     if ((m_currentCalls != nullptr) && ((field.index + 1) < static_cast<int>(m_currentCalls->calls.size())))

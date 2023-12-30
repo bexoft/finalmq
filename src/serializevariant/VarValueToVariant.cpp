@@ -127,9 +127,6 @@ void VarValueToVariant::processVarValue(const variant::VarValue& varValue, Varia
     case variant::VarTypeId::T_ARRAY_INT8:
         variant = std::move(varValue.valarrint8);
         break;
-    case variant::VarTypeId::T_ARRAY_UINT8:
-        variant = std::move(varValue.valarruint8);
-        break;
     case variant::VarTypeId::T_ARRAY_INT16:
         variant = std::move(varValue.valarrint16);
         break;

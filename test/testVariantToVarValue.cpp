@@ -100,7 +100,6 @@ protected:
 
         m_fieldArrBool = structVarVariant->getFieldByName("valarrbool");
         m_fieldArrInt8 = structVarVariant->getFieldByName("valarrint8");
-        m_fieldArrUInt8 = structVarVariant->getFieldByName("valarruint8");
         m_fieldArrInt16 = structVarVariant->getFieldByName("valarrint16");
         m_fieldArrUInt16 = structVarVariant->getFieldByName("valarruint16");
         m_fieldArrInt32 = structVarVariant->getFieldByName("valarrint32");
@@ -134,7 +133,6 @@ protected:
 
         ASSERT_NE(m_fieldArrBool, nullptr);
         ASSERT_NE(m_fieldArrInt8, nullptr);
-        ASSERT_NE(m_fieldArrUInt8, nullptr);
         ASSERT_NE(m_fieldArrInt16, nullptr);
         ASSERT_NE(m_fieldArrUInt16, nullptr);
         ASSERT_NE(m_fieldArrInt32, nullptr);
@@ -177,7 +175,6 @@ protected:
 
     const MetaField* m_fieldArrBool = nullptr;
     const MetaField* m_fieldArrInt8 = nullptr;
-    const MetaField* m_fieldArrUInt8 = nullptr;
     const MetaField* m_fieldArrInt16 = nullptr;
     const MetaField* m_fieldArrUInt16 = nullptr;
     const MetaField* m_fieldArrInt32 = nullptr;
@@ -473,21 +470,6 @@ TEST_F(TestVariantToVarValue, testArrayInt8)
 
         EXPECT_CALL(*m_mockIParserVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_ARRAY_INT8)).Times(1);
         EXPECT_CALL(*m_mockIParserVisitor, enterArrayInt8(MatcherMetaField(*m_fieldArrInt8), ArrayEq(VALUE.data(), VALUE.size()), VALUE.size())).Times(1);
-    }
-
-    m_VariantToVarValue.convert();
-}
-
-TEST_F(TestVariantToVarValue, testArrayUInt8)
-{
-    std::vector<std::uint8_t> VALUE = { 123, 0, 200, 250, 255 };
-    m_root = VALUE;
-
-    {
-        InSequence seq;
-
-        EXPECT_CALL(*m_mockIParserVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_ARRAY_UINT8)).Times(1);
-        EXPECT_CALL(*m_mockIParserVisitor, enterArrayUInt8(MatcherMetaField(*m_fieldArrUInt8), ArrayEq(VALUE.data(), VALUE.size()), VALUE.size())).Times(1);
     }
 
     m_VariantToVarValue.convert();

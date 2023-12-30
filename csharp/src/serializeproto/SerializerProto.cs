@@ -258,25 +258,28 @@ namespace finalmq
             public void EnterArrayInt8(MetaField field, sbyte[] value)
             {
                 int[] array = new int[value.Length];
-                Array.Copy(value, 0, array, 0, value.Length);
+                for (int i = 0; i < value.Length; ++i)
+                {
+                    array[i] = (int)value[i];
+                }
                 EnterArrayInt32(field, array);
-            }
-            public void EnterArrayUInt8(MetaField field, byte[] value)
-            {
-                uint[] array = new uint[value.Length];
-                Array.Copy(value, 0, array, 0, value.Length);
-                EnterArrayUInt32(field, array);
             }
             public void EnterArrayInt16(MetaField field, short[] value)
             {
                 int[] array = new int[value.Length];
-                Array.Copy(value, 0, array, 0, value.Length);
+                for (int i = 0; i < value.Length; ++i)
+                {
+                    array[i] = (int)value[i];
+                }
                 EnterArrayInt32(field, array);
             }
             public void EnterArrayUInt16(MetaField field, ushort[] value)
             {
                 uint[] array = new uint[value.Length];
-                Array.Copy(value, 0, array, 0, value.Length);
+                for (int i = 0; i < value.Length; ++i)
+                {
+                    array[i] = (uint)value[i];
+                }
                 EnterArrayUInt32(field, array);
             }
             public void EnterArrayInt32(MetaField field, int[] value)

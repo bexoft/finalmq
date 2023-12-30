@@ -85,9 +85,6 @@
         {"type":"TestArrayInt8","desc":"desc","fields":[
             {"tid":"TYPE_ARRAY_INT8","type":"","name":"value","desc":"desc","flags":[]}
         ]},
-        {"type":"TestArrayUInt8","desc":"desc","fields":[
-            {"tid":"TYPE_ARRAY_UINT8","type":"","name":"value","desc":"desc","flags":[]}
-        ]},
         {"type":"TestArrayInt16","desc":"desc","fields":[
             {"tid":"TYPE_ARRAY_INT16","type":"","name":"value","desc":"desc","flags":[]}
         ]},

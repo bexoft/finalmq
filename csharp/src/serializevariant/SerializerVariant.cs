@@ -270,10 +270,6 @@ namespace finalmq
             {
                 Add(field, value);
             }
-            public void EnterArrayUInt8(MetaField field, byte[] value)
-            {
-                Add(field, value);
-            }
             public void EnterArrayInt16(MetaField field, short[] value)
             {
                 Add(field, value);

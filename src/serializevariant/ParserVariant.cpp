@@ -200,19 +200,6 @@ void ParserVariant::processField(const Variant* sub, const MetaField* field)
             }
         }
         break;
-    case TYPE_ARRAY_UINT8:
-        {
-            const std::vector<std::uint8_t>* value = *sub;
-            if (value)
-            {
-                m_visitor.enterArrayUInt8(*field, value->data(), value->size());
-            }
-            else
-            {
-                m_visitor.enterArrayUInt8(*field, *sub);
-            }
-        }
-        break;
     case TYPE_ARRAY_INT16:
         {
             const std::vector<std::int16_t>* value = *sub;
@@ -480,9 +467,6 @@ void ParserVariant::processEmptyField(const MetaField* field)
         break;
     case TYPE_ARRAY_INT8:
         m_visitor.enterArrayInt8(*field, std::vector<std::int8_t>());
-        break;
-    case TYPE_ARRAY_UINT8:
-        m_visitor.enterArrayUInt8(*field, std::vector<std::uint8_t>());
         break;
     case TYPE_ARRAY_INT16:
         m_visitor.enterArrayInt16(*field, std::vector<std::int16_t>());

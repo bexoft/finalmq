@@ -22,7 +22,6 @@
             {"name":"OFFSET_ARRAY_FLAG",        "id":1024,  "desc":"desc"},
             {"name":"TYPE_ARRAY_BOOL",          "id":1025,  "desc":"desc", "alias":"bool[]"},
             {"name":"TYPE_ARRAY_INT8",          "id":1026,  "desc":"desc", "alias":"int8[]"},
-            {"name":"TYPE_ARRAY_UINT8",         "id":1027,  "desc":"desc", "alias":"uint8[]"},
             {"name":"TYPE_ARRAY_INT16",         "id":1028,  "desc":"desc", "alias":"int16[]"},
             {"name":"TYPE_ARRAY_UINT16",        "id":1029,  "desc":"desc", "alias":"uint16[]"},
             {"name":"TYPE_ARRAY_INT32",         "id":1030,  "desc":"desc", "alias":"int32[]"},

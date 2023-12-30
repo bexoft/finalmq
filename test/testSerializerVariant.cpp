@@ -583,21 +583,6 @@ TEST_F(TestSerializerVariant, testArrayInt8)
     ASSERT_EQ(m_root == cmp, true);
 }
 
-TEST_F(TestSerializerVariant, testArrayUInt8)
-{
-    static const std::uint8_t VALUE1 = 0xfe;
-    static const std::uint8_t VALUE2 = 0;
-    static const std::uint8_t VALUE3 = 1;
-    static const std::vector<std::uint8_t> VALUE = {VALUE1, VALUE2, VALUE3};
-
-    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestArrayUInt8"));
-    m_serializer->enterArrayUInt8({MetaTypeId::TYPE_ARRAY_UINT8, "", "value", "", 0, 0}, VALUE.data(), VALUE.size());
-    m_serializer->finished();
-
-    Variant cmp = VariantStruct({{"value", VALUE}});
-    ASSERT_EQ(m_root == cmp, true);
-}
-
 TEST_F(TestSerializerVariant, testArrayInt16)
 {
     static const std::int16_t VALUE1 = -1;

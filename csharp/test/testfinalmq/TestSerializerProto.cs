@@ -102,6 +102,74 @@ namespace testfinalmq
         }
 
         [Fact]
+        public void TestInt8()
+        {
+            sbyte VALUE = -2;
+
+            MetaStruct? stru = MetaDataGlobal.Instance.GetStruct("test.TestInt8");
+            Debug.Assert(stru != null);
+            m_serializer.StartStruct(stru);
+            m_serializer.EnterInt8(new MetaField(MetaTypeId.TYPE_INT8, "", "value", "", 0, 0), VALUE);
+            m_serializer.Finished();
+
+            var root = Fmq.Test.TestInt8.Parser.ParseFrom(m_data, 0, m_size);
+            var cmp = new Fmq.Test.TestInt8 { Value = VALUE };
+
+            Debug.Assert(root.Equals(cmp));
+        }
+
+        [Fact]
+        public void TestUInt8()
+        {
+            byte VALUE = 0xFE;
+
+            MetaStruct? stru = MetaDataGlobal.Instance.GetStruct("test.TestUInt8");
+            Debug.Assert(stru != null);
+            m_serializer.StartStruct(stru);
+            m_serializer.EnterUInt8(new MetaField(MetaTypeId.TYPE_UINT8, "", "value", "", 0, 0), VALUE);
+            m_serializer.Finished();
+
+            var root = Fmq.Test.TestUInt8.Parser.ParseFrom(m_data, 0, m_size);
+            var cmp = new Fmq.Test.TestUInt8 { Value = VALUE };
+
+            Debug.Assert(root.Equals(cmp));
+        }
+
+        [Fact]
+        public void TestInt16()
+        {
+            short VALUE = -2;
+
+            MetaStruct? stru = MetaDataGlobal.Instance.GetStruct("test.TestInt16");
+            Debug.Assert(stru != null);
+            m_serializer.StartStruct(stru);
+            m_serializer.EnterInt16(new MetaField(MetaTypeId.TYPE_INT16, "", "value", "", 0, 0), VALUE);
+            m_serializer.Finished();
+
+            var root = Fmq.Test.TestInt16.Parser.ParseFrom(m_data, 0, m_size);
+            var cmp = new Fmq.Test.TestInt16 { Value = VALUE };
+
+            Debug.Assert(root.Equals(cmp));
+        }
+
+        [Fact]
+        public void TestUInt16()
+        {
+            ushort VALUE = 0xFFFE;
+
+            MetaStruct? stru = MetaDataGlobal.Instance.GetStruct("test.TestUInt16");
+            Debug.Assert(stru != null);
+            m_serializer.StartStruct(stru);
+            m_serializer.EnterUInt16(new MetaField(MetaTypeId.TYPE_UINT16, "", "value", "", 0, 0), VALUE);
+            m_serializer.Finished();
+
+            var root = Fmq.Test.TestUInt16.Parser.ParseFrom(m_data, 0, m_size);
+            var cmp = new Fmq.Test.TestUInt16 { Value = VALUE };
+
+            Debug.Assert(root.Equals(cmp));
+        }
+
+        [Fact]
         public void TestInt32()
         {
             int VALUE = -2;
@@ -419,6 +487,57 @@ namespace testfinalmq
             var root = Fmq.Test.TestArrayBool.Parser.ParseFrom(m_data, 0, m_size);
             var cmp = new Fmq.Test.TestArrayBool();
             cmp.Value.AddRange(VALUE);
+
+            Debug.Assert(root.Equals(cmp));
+        }
+
+        [Fact]
+        public void TestArrayInt8()
+        {
+            sbyte[] VALUE = { -2, 0, 2, 22 };
+            int[] VALUE32 = { -2, 0, 2, 22 };
+
+            m_serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayInt8")!);
+            m_serializer.EnterArrayInt8(new MetaField(MetaTypeId.TYPE_ARRAY_INT8, "", "value", "", 0, 0), VALUE);
+            m_serializer.Finished();
+
+            var root = Fmq.Test.TestArrayInt8.Parser.ParseFrom(m_data, 0, m_size);
+            var cmp = new Fmq.Test.TestArrayInt8();
+            cmp.Value.AddRange(VALUE32);
+
+            Debug.Assert(root.Equals(cmp));
+        }
+
+        [Fact]
+        public void TestArrayInt16()
+        {
+            short[] VALUE = { -2, 0, 2, 222 };
+            int[] VALUE32 = { -2, 0, 2, 222 };
+
+            m_serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayInt32")!);
+            m_serializer.EnterArrayInt16(new MetaField(MetaTypeId.TYPE_ARRAY_INT16, "", "value", "", 0, 0), VALUE);
+            m_serializer.Finished();
+
+            var root = Fmq.Test.TestArrayInt16.Parser.ParseFrom(m_data, 0, m_size);
+            var cmp = new Fmq.Test.TestArrayInt16();
+            cmp.Value.AddRange(VALUE32);
+
+            Debug.Assert(root.Equals(cmp));
+        }
+
+        [Fact]
+        public void TestArrayUInt16()
+        {
+            ushort[] VALUE = { 0xFFFE, 0, 2, 222 };
+            uint[] VALUE32 = { 0xFFFE, 0, 2, 222 };
+
+            m_serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayInt16")!);
+            m_serializer.EnterArrayUInt16(new MetaField(MetaTypeId.TYPE_ARRAY_UINT16, "", "value", "", 0, 0), VALUE);
+            m_serializer.Finished();
+
+            var root = Fmq.Test.TestArrayUInt16.Parser.ParseFrom(m_data, 0, m_size);
+            var cmp = new Fmq.Test.TestArrayUInt16();
+            cmp.Value.AddRange(VALUE32);
 
             Debug.Assert(root.Equals(cmp));
         }

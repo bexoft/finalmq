@@ -66,8 +66,6 @@ public:
     MOCK_METHOD(void, enterArrayBool, (const MetaField& field, const std::vector<bool>& value), (override));
     MOCK_METHOD(void, enterArrayInt8, (const MetaField& field, std::vector<std::int8_t>&& value), (override));
     MOCK_METHOD(void, enterArrayInt8, (const MetaField& field, const std::int8_t* value, ssize_t size), (override));
-    MOCK_METHOD(void, enterArrayUInt8, (const MetaField& field, std::vector<std::uint8_t>&& value), (override));
-    MOCK_METHOD(void, enterArrayUInt8, (const MetaField& field, const std::uint8_t* value, ssize_t size), (override));
     MOCK_METHOD(void, enterArrayInt16, (const MetaField& field, std::vector<std::int16_t>&& value), (override));
     MOCK_METHOD(void, enterArrayInt16, (const MetaField& field, const std::int16_t* value, ssize_t size), (override));
     MOCK_METHOD(void, enterArrayUInt16, (const MetaField& field, std::vector<std::uint16_t>&& value), (override));

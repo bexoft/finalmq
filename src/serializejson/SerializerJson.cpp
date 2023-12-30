@@ -327,22 +327,6 @@ void SerializerJson::Internal::enterArrayInt8(const MetaField& field, const std:
     m_jsonBuilder.exitArray();
 }
 
-void SerializerJson::Internal::enterArrayUInt8(const MetaField& field, std::vector<std::uint8_t>&& value)
-{
-    enterArrayUInt8(field, value.data(), value.size());
-}
-
-void SerializerJson::Internal::enterArrayUInt8(const MetaField& field, const std::uint8_t* value, ssize_t size)
-{
-    assert(field.typeId == MetaTypeId::TYPE_ARRAY_UINT8);
-    setKey(field);
-    m_jsonBuilder.enterArray();
-    std::for_each(value, value + size, [this] (std::uint8_t entry) {
-        m_jsonBuilder.enterUInt32(entry);
-    });
-    m_jsonBuilder.exitArray();
-}
-
 void SerializerJson::Internal::enterArrayInt16(const MetaField& field, std::vector<std::int16_t>&& value)
 {
     enterArrayInt16(field, value.data(), value.size());

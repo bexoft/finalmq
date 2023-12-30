@@ -87,6 +87,86 @@ namespace testfinalmq
         }
 
         [Fact]
+        public void TestInt8()
+        {
+            sbyte VALUE = -2;
+
+            MetaField? fieldValue = MetaDataGlobal.Instance.GetField("test.TestInt8", "value");
+            Debug.Assert(fieldValue != null);
+
+            Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
+
+            var root = new test.TestInt8(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
+
+            mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
+            mockVisitor.Verify(x => x.EnterInt8(fieldValue, VALUE), Times.Once);
+            mockVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestUInt8()
+        {
+            byte VALUE = 130;
+
+            MetaField? fieldValue = MetaDataGlobal.Instance.GetField("test.TestUInt8", "value");
+            Debug.Assert(fieldValue != null);
+
+            Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
+
+            var root = new test.TestUInt8(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
+
+            mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
+            mockVisitor.Verify(x => x.EnterUInt8(fieldValue, VALUE), Times.Once);
+            mockVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestInt16()
+        {
+            short VALUE = -2;
+
+            MetaField? fieldValue = MetaDataGlobal.Instance.GetField("test.TestInt16", "value");
+            Debug.Assert(fieldValue != null);
+
+            Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
+
+            var root = new test.TestInt16(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
+
+            mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
+            mockVisitor.Verify(x => x.EnterInt16(fieldValue, VALUE), Times.Once);
+            mockVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestUInt16()
+        {
+            ushort VALUE = 130;
+
+            MetaField? fieldValue = MetaDataGlobal.Instance.GetField("test.TestUInt16", "value");
+            Debug.Assert(fieldValue != null);
+
+            Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
+
+            var root = new test.TestUInt16(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
+
+            mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
+            mockVisitor.Verify(x => x.EnterUInt16(fieldValue, VALUE), Times.Once);
+            mockVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
         public void TestInt32()
         {
             int VALUE = -2;
@@ -678,6 +758,66 @@ namespace testfinalmq
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterArrayBool(fieldValue, VALUE), Times.Once);
+            mockVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestArrayInt8()
+        {
+            sbyte[] VALUE = { -2, 0, 2, 22 };
+
+            MetaField? fieldValue = MetaDataGlobal.Instance.GetField("test.TestArrayInt8", "value");
+            Debug.Assert(fieldValue != null);
+
+            Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
+
+            var root = new test.TestArrayInt8(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
+
+            mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
+            mockVisitor.Verify(x => x.EnterArrayInt8(fieldValue, VALUE), Times.Once);
+            mockVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestArrayInt16()
+        {
+            short[] VALUE = { -2, 0, 2, 222 };
+
+            MetaField? fieldValue = MetaDataGlobal.Instance.GetField("test.TestArrayInt16", "value");
+            Debug.Assert(fieldValue != null);
+
+            Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
+
+            var root = new test.TestArrayInt16(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
+
+            mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
+            mockVisitor.Verify(x => x.EnterArrayInt16(fieldValue, VALUE), Times.Once);
+            mockVisitor.Verify(x => x.Finished(), Times.Once);
+        }
+
+        [Fact]
+        public void TestArrayUInt16()
+        {
+            ushort[] VALUE = { 0xFFFE, 0, 2, 222 };
+
+            MetaField? fieldValue = MetaDataGlobal.Instance.GetField("test.TestArrayUInt16", "value");
+            Debug.Assert(fieldValue != null);
+
+            Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
+
+            var root = new test.TestArrayUInt16(VALUE);
+            ParserStruct parser = new ParserStruct(mockVisitor.Object, root);
+            bool res = parser.ParseStruct();
+            Debug.Assert(res);
+
+            mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
+            mockVisitor.Verify(x => x.EnterArrayUInt16(fieldValue, VALUE), Times.Once);
             mockVisitor.Verify(x => x.Finished(), Times.Once);
         }
 

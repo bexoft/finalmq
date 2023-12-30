@@ -353,23 +353,6 @@ TEST_F(TestSerializerProto, testArrayInt8)
     EXPECT_EQ(std::vector<std::int8_t>(message.value().begin(), message.value().end()), VALUE);
 }
 
-TEST_F(TestSerializerProto, testArrayUInt8)
-{
-    static const std::uint8_t VALUE1 = 0xfe;
-    static const std::uint8_t VALUE2 = 0;
-    static const std::uint8_t VALUE3 = 1;
-    static const std::vector<std::uint8_t> VALUE = {VALUE1, VALUE2, VALUE3};
-
-    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestArrayUInt8"));
-    m_serializer->enterArrayUInt8({MetaTypeId::TYPE_ARRAY_UINT8, "", "value", "", 0, 0}, VALUE.data(), VALUE.size());
-    m_serializer->finished();
-
-    fmq::test::TestArrayUInt8 message;
-    bool res = message.ParseFromString(m_data);
-    EXPECT_EQ(res, true);
-    EXPECT_EQ(std::vector<std::uint8_t>(message.value().begin(), message.value().end()), VALUE);
-}
-
 TEST_F(TestSerializerProto, testArrayInt16)
 {
     static const std::int16_t VALUE1 = -1;

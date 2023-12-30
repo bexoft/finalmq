@@ -70,6 +70,62 @@ namespace testfinalmq
         }
 
         [Fact]
+        public void TestInt8()
+        {
+            sbyte VALUE = -2;
+
+            MetaStruct? stru = MetaDataGlobal.Instance.GetStruct("test.TestInt8");
+            Debug.Assert(stru != null);
+            m_serializer.StartStruct(stru);
+            m_serializer.EnterInt8(new MetaField(MetaTypeId.TYPE_INT8, "", "value", ""), VALUE);
+            m_serializer.Finished();
+
+            Debug.Assert(Encoding.UTF8.GetString(m_data, 0, m_size) == "{\"value\":-2}");
+        }
+
+        [Fact]
+        public void TestUInt8()
+        {
+            byte VALUE = 0xFE;
+
+            MetaStruct? stru = MetaDataGlobal.Instance.GetStruct("test.TestUInt8");
+            Debug.Assert(stru != null);
+            m_serializer.StartStruct(stru);
+            m_serializer.EnterUInt8(new MetaField(MetaTypeId.TYPE_UINT8, "", "value", ""), VALUE);
+            m_serializer.Finished();
+
+            Debug.Assert(Encoding.UTF8.GetString(m_data, 0, m_size) == "{\"value\":254}");
+        }
+
+        [Fact]
+        public void TestInt16()
+        {
+            short VALUE = -2;
+
+            MetaStruct? stru = MetaDataGlobal.Instance.GetStruct("test.TestInt16");
+            Debug.Assert(stru != null);
+            m_serializer.StartStruct(stru);
+            m_serializer.EnterInt16(new MetaField(MetaTypeId.TYPE_INT16, "", "value", ""), VALUE);
+            m_serializer.Finished();
+
+            Debug.Assert(Encoding.UTF8.GetString(m_data, 0, m_size) == "{\"value\":-2}");
+        }
+
+        [Fact]
+        public void TestUInt16()
+        {
+            ushort VALUE = 0xFFFE;
+
+            MetaStruct? stru = MetaDataGlobal.Instance.GetStruct("test.TestUInt16");
+            Debug.Assert(stru != null);
+            m_serializer.StartStruct(stru);
+            m_serializer.EnterUInt16(new MetaField(MetaTypeId.TYPE_UINT16, "", "value", ""), VALUE);
+            m_serializer.Finished();
+
+            Debug.Assert(Encoding.UTF8.GetString(m_data, 0, m_size) == "{\"value\":65534}");
+        }
+
+        [Fact]
         public void TestInt32()
         {
             int VALUE = -2;
@@ -484,6 +540,51 @@ namespace testfinalmq
 
             string s = Encoding.UTF8.GetString(m_data, 0, m_size);
             Debug.Assert(s == "{\"value\":[true,false,true]}");
+        }
+
+        [Fact]
+        public void TestArrayInt8()
+        {
+            sbyte[] VALUE = { -1, 0, 1 };
+
+            MetaStruct? stru = MetaDataGlobal.Instance.GetStruct("test.TestArrayInt8");
+            Debug.Assert(stru != null);
+            m_serializer.StartStruct(stru);
+            m_serializer.EnterArrayInt8(new MetaField(MetaTypeId.TYPE_ARRAY_INT8, "", "value", ""), VALUE);
+            m_serializer.Finished();
+
+            string s = Encoding.UTF8.GetString(m_data, 0, m_size);
+            Debug.Assert(s == "{\"value\":[-1,0,1]}");
+        }
+
+        [Fact]
+        public void TestArrayInt16()
+        {
+            short[] VALUE = { -1, 0, 1 };
+
+            MetaStruct? stru = MetaDataGlobal.Instance.GetStruct("test.TestArrayInt16");
+            Debug.Assert(stru != null);
+            m_serializer.StartStruct(stru);
+            m_serializer.EnterArrayInt16(new MetaField(MetaTypeId.TYPE_ARRAY_INT16, "", "value", ""), VALUE);
+            m_serializer.Finished();
+
+            string s = Encoding.UTF8.GetString(m_data, 0, m_size);
+            Debug.Assert(s == "{\"value\":[-1,0,1]}");
+        }
+
+        [Fact]
+        public void TestArrayUInt16()
+        {
+            ushort[] VALUE = { 0xfffe, 0, 1 };
+
+            MetaStruct? stru = MetaDataGlobal.Instance.GetStruct("test.TestArrayUInt16");
+            Debug.Assert(stru != null);
+            m_serializer.StartStruct(stru);
+            m_serializer.EnterArrayUInt16(new MetaField(MetaTypeId.TYPE_ARRAY_UINT16, "", "value", ""), VALUE);
+            m_serializer.Finished();
+
+            string s = Encoding.UTF8.GetString(m_data, 0, m_size);
+            Debug.Assert(s == "{\"value\":[65534,0,1]}");
         }
 
         [Fact]

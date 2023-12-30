@@ -55,7 +55,7 @@ enum MetaTypeId : std::int32_t
 
     TYPE_ARRAY_BOOL       = OFFSET_ARRAY_FLAG + TYPE_BOOL,
     TYPE_ARRAY_INT8       = OFFSET_ARRAY_FLAG + TYPE_INT8,
-    TYPE_ARRAY_UINT8      = OFFSET_ARRAY_FLAG + TYPE_UINT8,
+// use Bytes    TYPE_ARRAY_UINT8      = OFFSET_ARRAY_FLAG + TYPE_UINT8,
     TYPE_ARRAY_INT16      = OFFSET_ARRAY_FLAG + TYPE_INT16,
     TYPE_ARRAY_UINT16     = OFFSET_ARRAY_FLAG + TYPE_UINT16,
     TYPE_ARRAY_INT32      = OFFSET_ARRAY_FLAG + TYPE_INT32,
@@ -171,12 +171,6 @@ class MetaTypeIdInfo<MetaTypeId::TYPE_ARRAY_INT8>
 {
 public:
     typedef std::vector<std::int8_t> Type;
-};
-template <>
-class MetaTypeIdInfo<MetaTypeId::TYPE_ARRAY_UINT8>
-{
-public:
-    typedef std::vector<std::uint8_t> Type;
 };
 template <>
 class MetaTypeIdInfo<MetaTypeId::TYPE_ARRAY_INT16>
@@ -336,12 +330,6 @@ class MetaTypeInfo<std::vector<std::int8_t>>
 {
 public:
     static const int TypeId = MetaTypeId::TYPE_ARRAY_INT8;
-};
-template <>
-class MetaTypeInfo<std::vector<std::uint8_t>>
-{
-public:
-    static const int TypeId = MetaTypeId::TYPE_ARRAY_UINT8;
 };
 template <>
 class MetaTypeInfo<std::vector<std::int16_t>>
