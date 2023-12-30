@@ -165,6 +165,52 @@ namespace finalmq
                                     }
                                 }
                                 break;
+                            case MetaTypeId.TYPE_INT8:
+                                {
+                                    int value = 0;
+                                    bool zz = ((field.Flags & (int)MetaFieldFlags.METAFLAG_PROTO_ZIGZAG) != 0);
+                                    bool ok = false;
+                                    value = (int)ParseValueUInt32(out ok, zz);
+                                    if (ok)
+                                    {
+                                        m_visitor.EnterInt8(field, (sbyte)value);
+                                    }
+                                }
+                                break;
+                            case MetaTypeId.TYPE_UINT8:
+                                {
+                                    uint value = 0;
+                                    bool ok = false;
+                                    value = ParseValueUInt32(out ok, false);
+                                    if (ok)
+                                    {
+                                        m_visitor.EnterUInt8(field, (byte)value);
+                                    }
+                                }
+                                break;
+                            case MetaTypeId.TYPE_INT16:
+                                {
+                                    int value = 0;
+                                    bool zz = ((field.Flags & (int)MetaFieldFlags.METAFLAG_PROTO_ZIGZAG) != 0);
+                                    bool ok = false;
+                                    value = (int)ParseValueUInt32(out ok, zz);
+                                    if (ok)
+                                    {
+                                        m_visitor.EnterInt16(field, (short)value);
+                                    }
+                                }
+                                break;
+                            case MetaTypeId.TYPE_UINT16:
+                                {
+                                    uint value = 0;
+                                    bool ok = false;
+                                    value = ParseValueUInt32(out ok, false);
+                                    if (ok)
+                                    {
+                                        m_visitor.EnterUInt16(field, (ushort)value);
+                                    }
+                                }
+                                break;
                             case MetaTypeId.TYPE_INT32:
                                 {
                                     int value = 0;
@@ -274,6 +320,90 @@ namespace finalmq
                                     if (array != null)
                                     {
                                         m_visitor.EnterArrayBool(field, array);
+                                    }
+                                }
+                                break;
+                            case MetaTypeId.TYPE_ARRAY_INT8:
+                                {
+                                    int[]? array = null;
+                                    if ((field.Flags & (int)MetaFieldFlags.METAFLAG_PROTO_VARINT) != 0)
+                                    {
+                                        array = ParseArrayVarint<int>();
+                                    }
+                                    else if ((field.Flags & (int)MetaFieldFlags.METAFLAG_PROTO_ZIGZAG) != 0)
+                                    {
+                                        array = ParseArrayVarint<int>(true);
+                                    }
+                                    else
+                                    {
+                                        array = ParseArrayFixedUInt32<int>();
+                                    }
+                                    if (array != null)
+                                    {
+                                        sbyte[] arrayInt8 = new sbyte[array.Length];
+                                        Array.Copy(array, 0, arrayInt8, 0, array.Length);
+                                        m_visitor.EnterArrayInt8(field, arrayInt8);
+                                    }
+                                }
+                                break;
+                            case MetaTypeId.TYPE_ARRAY_UINT8:
+                                {
+                                    uint[]? array = null;
+                                    if ((field.Flags & (int)MetaFieldFlags.METAFLAG_PROTO_VARINT) != 0)
+                                    {
+                                        array = ParseArrayVarint<uint>();
+                                    }
+                                    else
+                                    {
+                                        array = ParseArrayFixedUInt32<uint>();
+                                    }
+                                    if (array != null)
+                                    {
+                                        byte[] arrayUInt8 = new byte[array.Length];
+                                        Array.Copy(array, 0, arrayUInt8, 0, array.Length);
+                                        m_visitor.EnterArrayUInt8(field, arrayUInt8);
+                                    }
+                                }
+                                break;
+                            case MetaTypeId.TYPE_ARRAY_INT16:
+                                {
+                                    int[]? array = null;
+                                    if ((field.Flags & (int)MetaFieldFlags.METAFLAG_PROTO_VARINT) != 0)
+                                    {
+                                        array = ParseArrayVarint<int>();
+                                    }
+                                    else if ((field.Flags & (int)MetaFieldFlags.METAFLAG_PROTO_ZIGZAG) != 0)
+                                    {
+                                        array = ParseArrayVarint<int>(true);
+                                    }
+                                    else
+                                    {
+                                        array = ParseArrayFixedUInt32<int>();
+                                    }
+                                    if (array != null)
+                                    {
+                                        short[] arrayInt16 = new short[array.Length];
+                                        Array.Copy(array, 0, arrayInt16, 0, array.Length);
+                                        m_visitor.EnterArrayInt16(field, arrayInt16);
+                                    }
+                                }
+                                break;
+                            case MetaTypeId.TYPE_ARRAY_UINT16:
+                                {
+                                    uint[]? array = null;
+                                    if ((field.Flags & (int)MetaFieldFlags.METAFLAG_PROTO_VARINT) != 0)
+                                    {
+                                        array = ParseArrayVarint<uint>();
+                                    }
+                                    else
+                                    {
+                                        array = ParseArrayFixedUInt32<uint>();
+                                    }
+                                    if (array != null)
+                                    {
+                                        ushort[] arrayUInt16 = new ushort[array.Length];
+                                        Array.Copy(array, 0, arrayUInt16, 0, array.Length);
+                                        m_visitor.EnterArrayUInt16(field, arrayUInt16);
                                     }
                                 }
                                 break;

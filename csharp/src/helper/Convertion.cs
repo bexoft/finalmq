@@ -53,6 +53,50 @@ namespace finalmq
                         }
                         return (dynamic)true;
                     }
+                    else if (typeof(T) == typeof(sbyte))
+                    {
+                        int value;
+                        if (Int32.TryParse(from, out value))
+                        {
+                            return (dynamic)value;
+                        }
+                        double d = 0;
+                        Double.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
+                        return (dynamic)(sbyte)d;
+                    }
+                    else if (typeof(T) == typeof(byte))
+                    {
+                        uint value;
+                        if (UInt32.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
+                        {
+                            return (dynamic)value;
+                        }
+                        double d = 0;
+                        Double.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
+                        return (dynamic)(byte)d;
+                    }
+                    else if (typeof(T) == typeof(short))
+                    {
+                        int value;
+                        if (Int32.TryParse(from, out value))
+                        {
+                            return (dynamic)value;
+                        }
+                        double d = 0;
+                        Double.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
+                        return (dynamic)(short)d;
+                    }
+                    else if (typeof(T) == typeof(ushort))
+                    {
+                        uint value;
+                        if (UInt32.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
+                        {
+                            return (dynamic)value;
+                        }
+                        double d = 0;
+                        Double.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
+                        return (dynamic)(ushort)d;
+                    }
                     else if (typeof(T) == typeof(int))
                     {
                         int value;
@@ -185,6 +229,50 @@ namespace finalmq
                         }
                     }
                     return (dynamic)true;
+                }
+                else if (typeTo == typeof(sbyte))
+                {
+                    int value;
+                    if (Int32.TryParse(from, out value))
+                    {
+                        return (sbyte)value;
+                    }
+                    double d = 0;
+                    Double.TryParse((string)from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
+                    return (sbyte)d;
+                }
+                else if (typeTo == typeof(byte))
+                {
+                    uint value;
+                    if (UInt32.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
+                    {
+                        return (byte)value;
+                    }
+                    double d = 0;
+                    Double.TryParse((string)from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
+                    return (byte)d;
+                }
+                else if (typeTo == typeof(short))
+                {
+                    int value;
+                    if (Int32.TryParse(from, out value))
+                    {
+                        return (short)value;
+                    }
+                    double d = 0;
+                    Double.TryParse((string)from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
+                    return (short)d;
+                }
+                else if (typeTo == typeof(ushort))
+                {
+                    uint value;
+                    if (UInt32.TryParse(from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value))
+                    {
+                        return (ushort)value;
+                    }
+                    double d = 0;
+                    Double.TryParse((string)from, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out d);
+                    return (ushort)d;
                 }
                 else if (typeTo == typeof(int))
                 {

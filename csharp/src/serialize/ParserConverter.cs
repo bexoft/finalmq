@@ -89,6 +89,54 @@ namespace finalmq
                 ConvertNumber(field, value);
             }
         }
+        public void EnterInt8(MetaField field, sbyte value)
+        {
+            Debug.Assert(m_visitor != null);
+            if (field.TypeId == MetaTypeId.TYPE_INT8)
+            {
+                m_visitor.EnterInt8(field, value);
+            }
+            else
+            {
+                ConvertNumber(field, value);
+            }
+        }
+        public void EnterUInt8(MetaField field, byte value)
+        {
+            Debug.Assert(m_visitor != null);
+            if (field.TypeId == MetaTypeId.TYPE_UINT8)
+            {
+                m_visitor.EnterUInt8(field, value);
+            }
+            else
+            {
+                ConvertNumber(field, value);
+            }
+        }
+        public void EnterInt16(MetaField field, short value)
+        {
+            Debug.Assert(m_visitor != null);
+            if (field.TypeId == MetaTypeId.TYPE_INT16)
+            {
+                m_visitor.EnterInt16(field, value);
+            }
+            else
+            {
+                ConvertNumber(field, value);
+            }
+        }
+        public void EnterUInt16(MetaField field, ushort value)
+        {
+            Debug.Assert(m_visitor != null);
+            if (field.TypeId == MetaTypeId.TYPE_UINT16)
+            {
+                m_visitor.EnterUInt16(field, value);
+            }
+            else
+            {
+                ConvertNumber(field, value);
+            }
+        }
         public void EnterInt32(MetaField field, int value)
         {
             Debug.Assert(m_visitor != null);
@@ -248,6 +296,54 @@ namespace finalmq
                 ConvertArraytNumber(field, value);
             }
         }
+        public void EnterArrayInt8(MetaField field, sbyte[] value)
+        {
+            Debug.Assert(m_visitor != null);
+            if (field.TypeId == MetaTypeId.TYPE_ARRAY_INT8)
+            {
+                m_visitor.EnterArrayInt8(field, value);
+            }
+            else
+            {
+                ConvertArraytNumber(field, value);
+            }
+        }
+        public void EnterArrayUInt8(MetaField field, byte[] value)
+        {
+            Debug.Assert(m_visitor != null);
+            if (field.TypeId == MetaTypeId.TYPE_ARRAY_UINT8)
+            {
+                m_visitor.EnterArrayUInt8(field, value);
+            }
+            else
+            {
+                ConvertArraytNumber(field, value);
+            }
+        }
+        public void EnterArrayInt16(MetaField field, short[] value)
+        {
+            Debug.Assert(m_visitor != null);
+            if (field.TypeId == MetaTypeId.TYPE_ARRAY_INT16)
+            {
+                m_visitor.EnterArrayInt16(field, value);
+            }
+            else
+            {
+                ConvertArraytNumber(field, value);
+            }
+        }
+        public void EnterArrayUInt16(MetaField field, ushort[] value)
+        {
+            Debug.Assert(m_visitor != null);
+            if (field.TypeId == MetaTypeId.TYPE_ARRAY_UINT16)
+            {
+                m_visitor.EnterArrayUInt16(field, value);
+            }
+            else
+            {
+                ConvertArraytNumber(field, value);
+            }
+        }
         public void EnterArrayInt32(MetaField field, int[] value)
         {
             Debug.Assert(m_visitor != null);
@@ -398,6 +494,18 @@ namespace finalmq
             case MetaTypeId.TYPE_BOOL:
                 m_visitor.EnterBool(field, (bool)value);
                 break;
+            case MetaTypeId.TYPE_INT8:
+                m_visitor.EnterInt8(field, (sbyte)value);
+                break;
+            case MetaTypeId.TYPE_UINT8:
+                m_visitor.EnterUInt8(field, (byte)value);
+                break;
+            case MetaTypeId.TYPE_INT16:
+                m_visitor.EnterInt16(field, (short)value);
+                break;
+            case MetaTypeId.TYPE_UINT16:
+                m_visitor.EnterUInt16(field, (ushort)value);
+                break;
             case MetaTypeId.TYPE_INT32:
                 m_visitor.EnterInt32(field, (int)value);
                 break;
@@ -424,6 +532,18 @@ namespace finalmq
                 break;
             case MetaTypeId.TYPE_ARRAY_BOOL:
                 m_visitor.EnterArrayBool(field, new bool[] { (bool)value });
+                break;
+            case MetaTypeId.TYPE_ARRAY_INT8:
+                m_visitor.EnterArrayInt8(field, new sbyte[] { (sbyte)value });
+                break;
+            case MetaTypeId.TYPE_ARRAY_UINT8:
+                m_visitor.EnterArrayUInt8(field, new byte[] { (byte)value });
+                break;
+            case MetaTypeId.TYPE_ARRAY_INT16:
+                m_visitor.EnterArrayInt16(field, new short[] { (short)value });
+                break;
+            case MetaTypeId.TYPE_ARRAY_UINT16:
+                m_visitor.EnterArrayUInt16(field, new ushort[] { (ushort)value });
                 break;
             case MetaTypeId.TYPE_ARRAY_INT32:
                 m_visitor.EnterArrayInt32(field, new int[] { (int)value });
@@ -467,6 +587,18 @@ namespace finalmq
             case MetaTypeId.TYPE_BOOL:
                 m_visitor.EnterBool(field, Convertion.Convert<bool>(value));
                 break;
+            case MetaTypeId.TYPE_INT8:
+                m_visitor.EnterInt8(field, Convertion.Convert<sbyte>(value));
+                break;
+            case MetaTypeId.TYPE_UINT8:
+                m_visitor.EnterUInt8(field, Convertion.Convert<byte>(value));
+                break;
+            case MetaTypeId.TYPE_INT16:
+                m_visitor.EnterInt16(field, Convertion.Convert<short>(value));
+                break;
+            case MetaTypeId.TYPE_UINT16:
+                m_visitor.EnterUInt16(field, Convertion.Convert<ushort>(value));
+                break;
             case MetaTypeId.TYPE_INT32:
                 m_visitor.EnterInt32(field, Convertion.Convert<int>(value));
                 break;
@@ -493,6 +625,18 @@ namespace finalmq
                 break;
             case MetaTypeId.TYPE_ARRAY_BOOL:
                 m_visitor.EnterArrayBool(field, new bool[] { Convertion.Convert<bool>(value) });
+                break;
+            case MetaTypeId.TYPE_ARRAY_INT8:
+                m_visitor.EnterArrayInt8(field, new sbyte[] { Convertion.Convert<sbyte>(value) });
+                break;
+            case MetaTypeId.TYPE_ARRAY_UINT8:
+                m_visitor.EnterArrayUInt8(field, new byte[] { Convertion.Convert<byte>(value) });
+                break;
+            case MetaTypeId.TYPE_ARRAY_INT16:
+                m_visitor.EnterArrayInt16(field, new short[] { Convertion.Convert<short>(value) });
+                break;
+            case MetaTypeId.TYPE_ARRAY_UINT16:
+                m_visitor.EnterArrayUInt16(field, new ushort[] { Convertion.Convert<ushort>(value) });
                 break;
             case MetaTypeId.TYPE_ARRAY_INT32:
                 m_visitor.EnterArrayInt32(field, new int[] { Convertion.Convert<int>(value) });
@@ -536,6 +680,38 @@ namespace finalmq
                     T v = value[0];
                     Debug.Assert(v != null);
                     m_visitor.EnterBool(field, (bool)(dynamic)v);
+                }
+                break;
+            case MetaTypeId.TYPE_INT8:
+                if (value.Length > 0)
+                {
+                    T v = value[0];
+                    Debug.Assert(v != null);
+                    m_visitor.EnterInt8(field, (sbyte)(dynamic)v);
+                }
+                break;
+            case MetaTypeId.TYPE_UINT8:
+                if (value.Length > 0)
+                {
+                    T v = value[0];
+                    Debug.Assert(v != null);
+                    m_visitor.EnterUInt8(field, (byte)(dynamic)v);
+                }
+                break;
+            case MetaTypeId.TYPE_INT16:
+                if (value.Length > 0)
+                {
+                    T v = value[0];
+                    Debug.Assert(v != null);
+                    m_visitor.EnterInt16(field, (short)(dynamic)v);
+                }
+                break;
+            case MetaTypeId.TYPE_UINT16:
+                if (value.Length > 0)
+                {
+                    T v = value[0];
+                    Debug.Assert(v != null);
+                    m_visitor.EnterUInt16(field, (ushort)(dynamic)v);
                 }
                 break;
             case MetaTypeId.TYPE_INT32:
@@ -619,31 +795,79 @@ namespace finalmq
                     m_visitor.EnterArrayBool(field, v);
                 }
                 break;
-            case MetaTypeId.TYPE_ARRAY_INT32:
+            case MetaTypeId.TYPE_ARRAY_INT8:
                 {
-                    int[] v = new int[value.Length];
+                    sbyte[] v = new sbyte[value.Length];
                     for (int i = 0; i < value.Length; ++i)
                     {
 #pragma warning disable CS8600 // Das NULL-Literal oder ein möglicher NULL-Wert wird in einen Non-Nullable-Typ konvertiert.
-                            v[i] = (int)(dynamic)value[i];
+                            v[i] = (sbyte)(dynamic)value[i];
 #pragma warning restore CS8600 // Das NULL-Literal oder ein möglicher NULL-Wert wird in einen Non-Nullable-Typ konvertiert.
                     }
-                    m_visitor.EnterArrayInt32(field, v);
+                    m_visitor.EnterArrayInt8(field, v);
                 }
                 break;
-            case MetaTypeId.TYPE_ARRAY_UINT32:
+            case MetaTypeId.TYPE_ARRAY_UINT8:
                 {
-                    uint[] v = new uint[value.Length];
+                    byte[] v = new byte[value.Length];
                     for (int i = 0; i < value.Length; ++i)
                     {
+#pragma warning disable CS8600 // Das NULL-Literal oder ein möglicher NULL-Wert wird in einen Non-Nullable-Typ konvertiert.
+                            v[i] = (byte)(dynamic)value[i];
+#pragma warning restore CS8600 // Das NULL-Literal oder ein möglicher NULL-Wert wird in einen Non-Nullable-Typ konvertiert.
+                        }
+                        m_visitor.EnterArrayUInt8(field, v);
+                }
+                break;
+                case MetaTypeId.TYPE_ARRAY_INT16:
+                    {
+                        short[] v = new short[value.Length];
+                        for (int i = 0; i < value.Length; ++i)
+                        {
+#pragma warning disable CS8600 // Das NULL-Literal oder ein möglicher NULL-Wert wird in einen Non-Nullable-Typ konvertiert.
+                            v[i] = (short)(dynamic)value[i];
+#pragma warning restore CS8600 // Das NULL-Literal oder ein möglicher NULL-Wert wird in einen Non-Nullable-Typ konvertiert.
+                        }
+                        m_visitor.EnterArrayInt16(field, v);
+                    }
+                    break;
+                case MetaTypeId.TYPE_ARRAY_UINT16:
+                    {
+                        ushort[] v = new ushort[value.Length];
+                        for (int i = 0; i < value.Length; ++i)
+                        {
+#pragma warning disable CS8600 // Das NULL-Literal oder ein möglicher NULL-Wert wird in einen Non-Nullable-Typ konvertiert.
+                            v[i] = (ushort)(dynamic)value[i];
+#pragma warning restore CS8600 // Das NULL-Literal oder ein möglicher NULL-Wert wird in einen Non-Nullable-Typ konvertiert.
+                        }
+                        m_visitor.EnterArrayUInt16(field, v);
+                    }
+                    break;
+                case MetaTypeId.TYPE_ARRAY_INT32:
+                    {
+                        int[] v = new int[value.Length];
+                        for (int i = 0; i < value.Length; ++i)
+                        {
+#pragma warning disable CS8600 // Das NULL-Literal oder ein möglicher NULL-Wert wird in einen Non-Nullable-Typ konvertiert.
+                            v[i] = (int)(dynamic)value[i];
+#pragma warning restore CS8600 // Das NULL-Literal oder ein möglicher NULL-Wert wird in einen Non-Nullable-Typ konvertiert.
+                        }
+                        m_visitor.EnterArrayInt32(field, v);
+                    }
+                    break;
+                case MetaTypeId.TYPE_ARRAY_UINT32:
+                    {
+                        uint[] v = new uint[value.Length];
+                        for (int i = 0; i < value.Length; ++i)
+                        {
 #pragma warning disable CS8600 // Das NULL-Literal oder ein möglicher NULL-Wert wird in einen Non-Nullable-Typ konvertiert.
                             v[i] = (uint)(dynamic)value[i];
 #pragma warning restore CS8600 // Das NULL-Literal oder ein möglicher NULL-Wert wird in einen Non-Nullable-Typ konvertiert.
                         }
                         m_visitor.EnterArrayUInt32(field, v);
-                }
-                break;
-            case MetaTypeId.TYPE_ARRAY_INT64:
+                    }
+                    break;
+                case MetaTypeId.TYPE_ARRAY_INT64:
                 {
                     long[] v = new long[value.Length];
                     for (int i = 0; i < value.Length; ++i)
@@ -739,6 +963,30 @@ namespace finalmq
                     m_visitor.EnterBool(field, Convertion.Convert<bool>(value[0]));
                 }
                 break;
+            case MetaTypeId.TYPE_INT8:
+                if (value.Count > 0)
+                {
+                    m_visitor.EnterInt8(field, Convertion.Convert<sbyte>(value[0]));
+                }
+                break;
+            case MetaTypeId.TYPE_UINT8:
+                if (value.Count > 0)
+                {
+                    m_visitor.EnterUInt8(field, Convertion.Convert<byte>(value[0]));
+                }
+                break;
+            case MetaTypeId.TYPE_INT16:
+                if (value.Count > 0)
+                {
+                    m_visitor.EnterInt16(field, Convertion.Convert<short>(value[0]));
+                }
+                break;
+            case MetaTypeId.TYPE_UINT16:
+                if (value.Count > 0)
+                {
+                    m_visitor.EnterUInt16(field, Convertion.Convert<ushort>(value[0]));
+                }
+                break;
             case MetaTypeId.TYPE_INT32:
                 if (value.Count > 0)
                 {
@@ -795,6 +1043,46 @@ namespace finalmq
                         v[i] = Convertion.Convert((dynamic)value[i]);
                     }
                     m_visitor.EnterArrayBool(field, v);
+                }
+                break;
+            case MetaTypeId.TYPE_ARRAY_INT8:
+                {
+                    sbyte[] v = new sbyte[value.Count];
+                    for (int i = 0; i < value.Count; ++i)
+                    {
+                        v[i] = Convertion.Convert((dynamic)value[i]);
+                    }
+                    m_visitor.EnterArrayInt8(field, v);
+                }
+                break;
+            case MetaTypeId.TYPE_ARRAY_UINT8:
+                {
+                    byte[] v = new byte[value.Count];
+                    for (int i = 0; i < value.Count; ++i)
+                    {
+                        v[i] = Convertion.Convert((dynamic)value[i]);
+                    }
+                    m_visitor.EnterArrayUInt8(field, v);
+                }
+                break;
+            case MetaTypeId.TYPE_ARRAY_INT16:
+                {
+                    short[] v = new short[value.Count];
+                    for (int i = 0; i < value.Count; ++i)
+                    {
+                        v[i] = Convertion.Convert((dynamic)value[i]);
+                    }
+                    m_visitor.EnterArrayInt16(field, v);
+                }
+                break;
+            case MetaTypeId.TYPE_ARRAY_UINT16:
+                {
+                    ushort[] v = new ushort[value.Count];
+                    for (int i = 0; i < value.Count; ++i)
+                    {
+                        v[i] = Convertion.Convert((dynamic)value[i]);
+                    }
+                    m_visitor.EnterArrayUInt16(field, v);
                 }
                 break;
             case MetaTypeId.TYPE_ARRAY_INT32:

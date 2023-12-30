@@ -142,14 +142,30 @@ namespace finalmq
                     m_hl7Builder.EnterInt64(m_indexOfLayer, m_ixIndex + 1, field.Index, value ? 1 : 0);
                 }
             }
-            public void EnterInt32(MetaField field, int value) 
+            public void EnterInt8(MetaField field, sbyte value) 
+            {
+                EnterInt32(field, (int)value);
+            }
+            public void EnterUInt8(MetaField field, byte value) 
+            {
+                EnterUInt32(field, (uint)value);
+            }
+            public void EnterInt16(MetaField field, short value)
+            {
+                EnterInt32(field, (int)value);
+            }
+            public void EnterUInt16(MetaField field, ushort value)
+            {
+                EnterUInt32(field, (uint)value);
+            }
+            public void EnterInt32(MetaField field, int value)
             {
                 if (m_ixIndex >= 0)
                 {
                     m_hl7Builder.EnterInt64(m_indexOfLayer, m_ixIndex + 1, field.Index, value);
                 }
             }
-            public void EnterUInt32(MetaField field, uint value) 
+            public void EnterUInt32(MetaField field, uint value)
             {
                 if (m_ixIndex >= 0)
                 {
@@ -223,6 +239,46 @@ namespace finalmq
                     foreach (var v in value)
                     {
                         m_hl7Builder.EnterInt64(m_indexOfLayer, m_ixIndex + 1, field.Index, v ? 1 : 0);
+                    }
+                }
+            }
+            public void EnterArrayInt8(MetaField field, sbyte[] value)
+            {
+                if (m_ixIndex >= 0)
+                {
+                    foreach (var v in value)
+                    {
+                        m_hl7Builder.EnterInt64(m_indexOfLayer, m_ixIndex + 1, field.Index, v);
+                    }
+                }
+            }
+            public void EnterArrayUInt8(MetaField field, byte[] value)
+            {
+                if (m_ixIndex >= 0)
+                {
+                    foreach (var v in value)
+                    {
+                        m_hl7Builder.EnterUInt64(m_indexOfLayer, m_ixIndex + 1, field.Index, v);
+                    }
+                }
+            }
+            public void EnterArrayInt16(MetaField field, short[] value)
+            {
+                if (m_ixIndex >= 0)
+                {
+                    foreach (var v in value)
+                    {
+                        m_hl7Builder.EnterInt64(m_indexOfLayer, m_ixIndex + 1, field.Index, v);
+                    }
+                }
+            }
+            public void EnterArrayUInt16(MetaField field, ushort[] value)
+            {
+                if (m_ixIndex >= 0)
+                {
+                    foreach (var v in value)
+                    {
+                        m_hl7Builder.EnterUInt64(m_indexOfLayer, m_ixIndex + 1, field.Index, v);
                     }
                 }
             }

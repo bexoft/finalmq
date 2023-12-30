@@ -203,6 +203,14 @@ namespace finalmq
             {
                 case "System.Boolean":
                     return MetaTypeId.TYPE_BOOL;
+                case "System.Int8":
+                    return MetaTypeId.TYPE_INT8;
+                case "System.UInt8":
+                    return MetaTypeId.TYPE_UINT8;
+                case "System.Int16":
+                    return MetaTypeId.TYPE_INT16;
+                case "System.UInt16":
+                    return MetaTypeId.TYPE_UINT16;
                 case "System.Int32":
                     return MetaTypeId.TYPE_INT32;
                 case "System.UInt32":
@@ -224,6 +232,14 @@ namespace finalmq
                     return MetaTypeId.TYPE_STRUCT;
                 case "System.Boolean[]":
                     return MetaTypeId.TYPE_ARRAY_BOOL;
+                case "System.Int8[]":
+                    return MetaTypeId.TYPE_ARRAY_INT8;
+                case "System.UInt8[]":
+                    return MetaTypeId.TYPE_ARRAY_UINT8;
+                case "System.Int16[]":
+                    return MetaTypeId.TYPE_ARRAY_INT16;
+                case "System.UInt16[]":
+                    return MetaTypeId.TYPE_ARRAY_UINT16;
                 case "System.Int32[]":
                     return MetaTypeId.TYPE_ARRAY_INT32;
                 case "System.UInt32[]":

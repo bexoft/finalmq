@@ -73,6 +73,18 @@ namespace finalmq
                 case MetaTypeId.TYPE_BOOL:
                     m_visitor.EnterBool(field, sub);
                     break;
+                case MetaTypeId.TYPE_INT8:
+                    m_visitor.EnterInt8(field, sub);
+                    break;
+                case MetaTypeId.TYPE_UINT8:
+                    m_visitor.EnterUInt8(field, sub);
+                    break;
+                case MetaTypeId.TYPE_INT16:
+                    m_visitor.EnterInt16(field, sub);
+                    break;
+                case MetaTypeId.TYPE_UINT16:
+                    m_visitor.EnterUInt16(field, sub);
+                    break;
                 case MetaTypeId.TYPE_INT32:
                     m_visitor.EnterInt32(field, sub);
                     break;
@@ -146,6 +158,18 @@ namespace finalmq
                 case MetaTypeId.TYPE_ARRAY_BOOL:
                     m_visitor.EnterArrayBool(field, sub);
                     break;
+                case MetaTypeId.TYPE_ARRAY_INT8:
+                    m_visitor.EnterArrayInt8(field, sub);
+                    break;
+                case MetaTypeId.TYPE_ARRAY_UINT8:
+                    m_visitor.EnterArrayUInt8(field, sub);
+                    break;
+                case MetaTypeId.TYPE_ARRAY_INT16:
+                    m_visitor.EnterArrayInt16(field, sub);
+                    break;
+                case MetaTypeId.TYPE_ARRAY_UINT16:
+                    m_visitor.EnterArrayUInt16(field, sub);
+                    break;
                 case MetaTypeId.TYPE_ARRAY_INT32:
                     m_visitor.EnterArrayInt32(field, sub);
                     break;
@@ -217,6 +241,18 @@ namespace finalmq
                 case MetaTypeId.TYPE_BOOL:
                     m_visitor.EnterBool(field, false);
                     break;
+                case MetaTypeId.TYPE_INT8:
+                    m_visitor.EnterInt8(field, 0);
+                    break;
+                case MetaTypeId.TYPE_UINT8:
+                    m_visitor.EnterUInt8(field, 0);
+                    break;
+                case MetaTypeId.TYPE_INT16:
+                    m_visitor.EnterInt16(field, 0);
+                    break;
+                case MetaTypeId.TYPE_UINT16:
+                    m_visitor.EnterUInt16(field, 0);
+                    break;
                 case MetaTypeId.TYPE_INT32:
                     m_visitor.EnterInt32(field, 0);
                     break;
@@ -274,6 +310,18 @@ namespace finalmq
                     break;
                 case MetaTypeId.TYPE_ARRAY_BOOL:
                     m_visitor.EnterArrayBool(field, Array.Empty<bool>());
+                    break;
+                case MetaTypeId.TYPE_ARRAY_INT8:
+                    m_visitor.EnterArrayInt8(field, Array.Empty<sbyte>());
+                    break;
+                case MetaTypeId.TYPE_ARRAY_UINT8:
+                    m_visitor.EnterArrayUInt8(field, Array.Empty<byte>());
+                    break;
+                case MetaTypeId.TYPE_ARRAY_INT16:
+                    m_visitor.EnterArrayInt16(field, Array.Empty<short>());
+                    break;
+                case MetaTypeId.TYPE_ARRAY_UINT16:
+                    m_visitor.EnterArrayUInt16(field, Array.Empty<ushort>());
                     break;
                 case MetaTypeId.TYPE_ARRAY_INT32:
                     m_visitor.EnterArrayInt32(field, Array.Empty<int>());
