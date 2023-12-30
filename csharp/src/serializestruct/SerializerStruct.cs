@@ -282,6 +282,22 @@ namespace finalmq
                     {
                         return (bool)value;
                     }
+                    else if (propertyType == typeof(sbyte))
+                    {
+                        return (sbyte)value;
+                    }
+                    else if (propertyType == typeof(byte))
+                    {
+                        return (byte)value;
+                    }
+                    else if (propertyType == typeof(short))
+                    {
+                        return (short)value;
+                    }
+                    else if (propertyType == typeof(ushort))
+                    {
+                        return (ushort)value;
+                    }
                     else if (propertyType == typeof(int))
                     {
                         return (int)value;
@@ -318,6 +334,22 @@ namespace finalmq
                     else if (IsTypeOf(propertyType, typeof(bool[])))
                     {
                         return new bool[] { (bool)value };
+                    }
+                    else if (IsTypeOf(propertyType, typeof(sbyte[])))
+                    {
+                        return new sbyte[] { (sbyte)value };
+                    }
+                    else if (IsTypeOf(propertyType, typeof(byte[])))
+                    {
+                        return new byte[] { (byte)value };
+                    }
+                    else if (IsTypeOf(propertyType, typeof(short[])))
+                    {
+                        return new short[] { (short)value };
+                    }
+                    else if (IsTypeOf(propertyType, typeof(ushort[])))
+                    {
+                        return new ushort[] { (ushort)value };
                     }
                     else if (IsTypeOf(propertyType, typeof(int[])))
                     {
@@ -430,6 +462,34 @@ namespace finalmq
                             return (bool)valueOne;
                         }
                     }
+                    else if (propertyType == typeof(sbyte))
+                    {
+                        if (valueOne != null)
+                        {
+                            return (sbyte)valueOne;
+                        }
+                    }
+                    else if (propertyType == typeof(byte))
+                    {
+                        if (valueOne != null)
+                        {
+                            return (byte)valueOne;
+                        }
+                    }
+                    else if (propertyType == typeof(short))
+                    {
+                        if (valueOne != null)
+                        {
+                            return (short)valueOne;
+                        }
+                    }
+                    else if (propertyType == typeof(ushort))
+                    {
+                        if (valueOne != null)
+                        {
+                            return (ushort)valueOne;
+                        }
+                    }
                     else if (propertyType == typeof(int))
                     {
                         if (valueOne != null)
@@ -490,6 +550,22 @@ namespace finalmq
                     else if (IsTypeOf(propertyType, typeof(bool[])))
                     {
                         return ConvertArrayToType<bool, T>(value);
+                    }
+                    else if (IsTypeOf(propertyType, typeof(sbyte[])))
+                    {
+                        return ConvertArrayToType<sbyte, T>(value);
+                    }
+                    else if (IsTypeOf(propertyType, typeof(byte[])))
+                    {
+                        return ConvertArrayToType<byte, T>(value);
+                    }
+                    else if (IsTypeOf(propertyType, typeof(short[])))
+                    {
+                        return ConvertArrayToType<short, T>(value);
+                    }
+                    else if (IsTypeOf(propertyType, typeof(ushort[])))
+                    {
+                        return ConvertArrayToType<ushort, T>(value);
                     }
                     else if (IsTypeOf(propertyType, typeof(int[])))
                     {
@@ -567,6 +643,22 @@ namespace finalmq
                     {
                         return Convertion.Convert<bool>(value);
                     }
+                    else if (propertyType == typeof(sbyte))
+                    {
+                        return Convertion.Convert<sbyte>(value);
+                    }
+                    else if (propertyType == typeof(byte))
+                    {
+                        return Convertion.Convert<byte>(value);
+                    }
+                    else if (propertyType == typeof(short))
+                    {
+                        return Convertion.Convert<short>(value);
+                    }
+                    else if (propertyType == typeof(ushort))
+                    {
+                        return Convertion.Convert<ushort>(value);
+                    }
                     else if (propertyType == typeof(int))
                     {
                         return Convertion.Convert<int>(value);
@@ -602,6 +694,22 @@ namespace finalmq
                     else if (IsTypeOf(propertyType, typeof(bool[])))
                     {
                         return new bool[] { Convertion.Convert<bool>(value) };
+                    }
+                    else if (IsTypeOf(propertyType, typeof(sbyte[])))
+                    {
+                        return new sbyte[] { Convertion.Convert<sbyte>(value) };
+                    }
+                    else if (IsTypeOf(propertyType, typeof(byte[])))
+                    {
+                        return new byte[] { Convertion.Convert<byte>(value) };
+                    }
+                    else if (IsTypeOf(propertyType, typeof(short[])))
+                    {
+                        return new short[] { Convertion.Convert<short>(value) };
+                    }
+                    else if (IsTypeOf(propertyType, typeof(ushort[])))
+                    {
+                        return new ushort[] { Convertion.Convert<ushort>(value) };
                     }
                     else if (IsTypeOf(propertyType, typeof(int[])))
                     {
@@ -675,6 +783,34 @@ namespace finalmq
                             return Convertion.Convert<bool>(valueOne);
                         }
                     }
+                    else if (propertyType == typeof(sbyte))
+                    {
+                        if (valueOne != null)
+                        {
+                            return Convertion.Convert<sbyte>(valueOne);
+                        }
+                    }
+                    else if (propertyType == typeof(byte))
+                    {
+                        if (valueOne != null)
+                        {
+                            return Convertion.Convert<byte>(valueOne);
+                        }
+                    }
+                    else if (propertyType == typeof(short))
+                    {
+                        if (valueOne != null)
+                        {
+                            return Convertion.Convert<short>(valueOne);
+                        }
+                    }
+                    else if (propertyType == typeof(ushort))
+                    {
+                        if (valueOne != null)
+                        {
+                            return Convertion.Convert<ushort>(valueOne);
+                        }
+                    }
                     else if (propertyType == typeof(int))
                     {
                         if (valueOne != null)
@@ -734,6 +870,22 @@ namespace finalmq
                     else if (IsTypeOf(propertyType, typeof(bool[])))
                     {
                         return ConvertArrayToType<bool>(value);
+                    }
+                    else if (IsTypeOf(propertyType, typeof(sbyte[])))
+                    {
+                        return ConvertArrayToType<sbyte>(value);
+                    }
+                    else if (IsTypeOf(propertyType, typeof(byte[])))
+                    {
+                        return ConvertArrayToType<byte>(value);
+                    }
+                    else if (IsTypeOf(propertyType, typeof(short[])))
+                    {
+                        return ConvertArrayToType<short>(value);
+                    }
+                    else if (IsTypeOf(propertyType, typeof(ushort[])))
+                    {
+                        return ConvertArrayToType<ushort>(value);
                     }
                     else if (IsTypeOf(propertyType, typeof(int[])))
                     {
@@ -893,6 +1045,22 @@ namespace finalmq
             {
                 SetValueNumber(field.Name, value);
             }
+            public void EnterInt8(MetaField field, sbyte value)
+            {
+                SetValueNumber(field.Name, value);
+            }
+            public void EnterUInt8(MetaField field, byte value)
+            {
+                SetValueNumber(field.Name, value);
+            }
+            public void EnterInt16(MetaField field, short value)
+            {
+                SetValueNumber(field.Name, value);
+            }
+            public void EnterUInt16(MetaField field, ushort value)
+            {
+                SetValueNumber(field.Name, value);
+            }
             public void EnterInt32(MetaField field, int value)
             {
                 SetValueNumber(field.Name, value);
@@ -975,6 +1143,22 @@ namespace finalmq
             }
 
             public void EnterArrayBool(MetaField field, bool[] value)
+            {
+                SetValueArrayNumber(field.Name, value);
+            }
+            public void EnterArrayInt8(MetaField field, sbyte[] value)
+            {
+                SetValueArrayNumber(field.Name, value);
+            }
+            public void EnterArrayUInt8(MetaField field, byte[] value)
+            {
+                SetValueArrayNumber(field.Name, value);
+            }
+            public void EnterArrayInt16(MetaField field, short[] value)
+            {
+                SetValueArrayNumber(field.Name, value);
+            }
+            public void EnterArrayUInt16(MetaField field, ushort[] value)
             {
                 SetValueArrayNumber(field.Name, value);
             }

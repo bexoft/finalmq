@@ -81,6 +81,22 @@ namespace finalmq
         {
             EnterNumber(value);
         }
+        public void EnterInt8(sbyte value)
+        {
+            EnterNumber(value);
+        }
+        public void EnterUInt8(byte value)
+        {
+            EnterNumber(value);
+        }
+        public void EnterInt16(short value)
+        {
+            EnterNumber(value);
+        }
+        public void EnterUInt16(ushort value)
+        {
+            EnterNumber(value);
+        }
         public void EnterInt32(int value)
         {
             EnterNumber(value);
@@ -114,6 +130,30 @@ namespace finalmq
                     {
                         bool v = (value == "true");
                         m_visitor.EnterBool(m_fieldCurrent, v);
+                    }
+                    break;
+                case MetaTypeId.TYPE_INT8:
+                    {
+                        sbyte v = Convertion.Convert<sbyte>(value);
+                        m_visitor.EnterInt8(m_fieldCurrent, v);
+                    }
+                    break;
+                case MetaTypeId.TYPE_UINT8:
+                    {
+                        byte v = Convertion.Convert<byte>(value);
+                        m_visitor.EnterUInt8(m_fieldCurrent, v);
+                    }
+                    break;
+                case MetaTypeId.TYPE_INT16:
+                    {
+                        short v = Convertion.Convert<short>(value);
+                        m_visitor.EnterInt16(m_fieldCurrent, v);
+                    }
+                    break;
+                case MetaTypeId.TYPE_UINT16:
+                    {
+                        ushort v = Convertion.Convert<ushort>(value);
+                        m_visitor.EnterUInt16(m_fieldCurrent, v);
                     }
                     break;
                 case MetaTypeId.TYPE_INT32:
@@ -173,6 +213,30 @@ namespace finalmq
                     {
                         bool v = (value == "true");
                         m_arrayBool.Add(v);
+                    }
+                    break;
+                case MetaTypeId.TYPE_ARRAY_INT8:
+                    {
+                        sbyte v = Convertion.Convert<sbyte>(value);
+                        m_arrayInt8.Add(v);
+                    }
+                    break;
+                case MetaTypeId.TYPE_ARRAY_UINT8:
+                    {
+                        byte v = Convertion.Convert<byte>(value);
+                        m_arrayUInt8.Add(v);
+                    }
+                    break;
+                case MetaTypeId.TYPE_ARRAY_INT16:
+                    {
+                        short v = Convertion.Convert<short>(value);
+                        m_arrayInt16.Add(v);
+                    }
+                    break;
+                case MetaTypeId.TYPE_ARRAY_UINT16:
+                    {
+                        ushort v = Convertion.Convert<ushort>(value);
+                        m_arrayUInt16.Add(v);
                     }
                     break;
                 case MetaTypeId.TYPE_ARRAY_INT32:
@@ -255,6 +319,34 @@ namespace finalmq
                         m_visitor.EnterBool(m_fieldCurrent, v);
                     }
                     break;
+                case MetaTypeId.TYPE_INT8:
+                    {
+                        bool ok;
+                        int v = Convertion.ConvertByteStringToInt32(buffer, offset, size, out ok);
+                        m_visitor.EnterInt8(m_fieldCurrent, (sbyte)v);
+                    }
+                    break;
+                case MetaTypeId.TYPE_UINT8:
+                    {
+                        bool ok;
+                        uint v = Convertion.ConvertByteStringToUInt32(buffer, offset, size, out ok);
+                        m_visitor.EnterUInt8(m_fieldCurrent, (byte)v);
+                    }
+                    break;
+                case MetaTypeId.TYPE_INT16:
+                    {
+                        bool ok;
+                        int v = Convertion.ConvertByteStringToInt32(buffer, offset, size, out ok);
+                        m_visitor.EnterInt16(m_fieldCurrent, (short)v);
+                    }
+                    break;
+                case MetaTypeId.TYPE_UINT16:
+                    {
+                        bool ok;
+                        uint v = Convertion.ConvertByteStringToUInt32(buffer, offset, size, out ok);
+                        m_visitor.EnterUInt16(m_fieldCurrent, (ushort)v);
+                    }
+                    break;
                 case MetaTypeId.TYPE_INT32:
                     {
                         bool ok;
@@ -320,6 +412,34 @@ namespace finalmq
                     {
                         bool v = IsTrue(buffer, offset, size);
                         m_arrayBool.Add(v);
+                    }
+                    break;
+                case MetaTypeId.TYPE_ARRAY_INT8:
+                    {
+                        bool ok;
+                        int v = Convertion.ConvertByteStringToInt32(buffer, offset, size, out ok);
+                        m_arrayInt8.Add((sbyte)v);
+                    }
+                    break;
+                case MetaTypeId.TYPE_ARRAY_UINT8:
+                    {
+                        bool ok;
+                        uint v = Convertion.ConvertByteStringToUInt32(buffer, offset, size, out ok);
+                        m_arrayUInt8.Add((byte)v);
+                    }
+                    break;
+                case MetaTypeId.TYPE_ARRAY_INT16:
+                    {
+                        bool ok;
+                        int v = Convertion.ConvertByteStringToInt32(buffer, offset, size, out ok);
+                        m_arrayInt16.Add((short)v);
+                    }
+                    break;
+                case MetaTypeId.TYPE_ARRAY_UINT16:
+                    {
+                        bool ok;
+                        uint v = Convertion.ConvertByteStringToUInt32(buffer, offset, size, out ok);
+                        m_arrayUInt16.Add((ushort)v);
                     }
                     break;
                 case MetaTypeId.TYPE_ARRAY_INT32:
@@ -406,6 +526,18 @@ namespace finalmq
                     case MetaTypeId.TYPE_ARRAY_BOOL:
                         m_arrayBool.Clear();
                         break;
+                    case MetaTypeId.TYPE_ARRAY_INT8:
+                        m_arrayInt8.Clear();
+                        break;
+                    case MetaTypeId.TYPE_ARRAY_UINT8:
+                        m_arrayUInt8.Clear();
+                        break;
+                    case MetaTypeId.TYPE_ARRAY_INT16:
+                        m_arrayInt16.Clear();
+                        break;
+                    case MetaTypeId.TYPE_ARRAY_UINT16:
+                        m_arrayUInt16.Clear();
+                        break;
                     case MetaTypeId.TYPE_ARRAY_INT32:
                         m_arrayInt32.Clear();
                         break;
@@ -461,6 +593,22 @@ namespace finalmq
                     case MetaTypeId.TYPE_ARRAY_BOOL:
                         m_visitor.EnterArrayBool(m_fieldCurrent, m_arrayBool.ToArray());
                         m_arrayBool.Clear();
+                        break;
+                    case MetaTypeId.TYPE_ARRAY_INT8:
+                        m_visitor.EnterArrayInt8(m_fieldCurrent, m_arrayInt8.ToArray());
+                        m_arrayInt8.Clear();
+                        break;
+                    case MetaTypeId.TYPE_ARRAY_UINT8:
+                        m_visitor.EnterArrayUInt8(m_fieldCurrent, m_arrayUInt8.ToArray());
+                        m_arrayUInt8.Clear();
+                        break;
+                    case MetaTypeId.TYPE_ARRAY_INT16:
+                        m_visitor.EnterArrayInt16(m_fieldCurrent, m_arrayInt16.ToArray());
+                        m_arrayInt16.Clear();
+                        break;
+                    case MetaTypeId.TYPE_ARRAY_UINT16:
+                        m_visitor.EnterArrayUInt16(m_fieldCurrent, m_arrayUInt16.ToArray());
+                        m_arrayUInt16.Clear();
                         break;
                     case MetaTypeId.TYPE_ARRAY_INT32:
                         m_visitor.EnterArrayInt32(m_fieldCurrent, m_arrayInt32.ToArray());
@@ -626,6 +774,18 @@ namespace finalmq
                 case MetaTypeId.TYPE_BOOL:
                     m_visitor.EnterBool(m_fieldCurrent, (bool)v);
                     break;
+                case MetaTypeId.TYPE_INT8:
+                    m_visitor.EnterInt8(m_fieldCurrent, (sbyte)v);
+                    break;
+                case MetaTypeId.TYPE_UINT8:
+                    m_visitor.EnterUInt8(m_fieldCurrent, (byte)v);
+                    break;
+                case MetaTypeId.TYPE_INT16:
+                    m_visitor.EnterInt16(m_fieldCurrent, (short)v);
+                    break;
+                case MetaTypeId.TYPE_UINT16:
+                    m_visitor.EnterUInt16(m_fieldCurrent, (ushort)v);
+                    break;
                 case MetaTypeId.TYPE_INT32:
                     m_visitor.EnterInt32(m_fieldCurrent, (int)v);
                     break;
@@ -652,6 +812,18 @@ namespace finalmq
                     break;
                 case MetaTypeId.TYPE_ARRAY_BOOL:
                     m_arrayBool.Add((bool)v);
+                    break;
+                case MetaTypeId.TYPE_ARRAY_INT8:
+                    m_arrayInt8.Add((sbyte)v);
+                    break;
+                case MetaTypeId.TYPE_ARRAY_UINT8:
+                    m_arrayUInt8.Add((byte)v);
+                    break;
+                case MetaTypeId.TYPE_ARRAY_INT16:
+                    m_arrayInt16.Add((short)v);
+                    break;
+                case MetaTypeId.TYPE_ARRAY_UINT16:
+                    m_arrayUInt16.Add((ushort)v);
                     break;
                 case MetaTypeId.TYPE_ARRAY_INT32:
                     m_arrayInt32.Add((int)v);
@@ -820,6 +992,10 @@ namespace finalmq
         MetaField? m_fieldCurrent = null;
 
         readonly ArrayBuilder<bool> m_arrayBool = new ArrayBuilder<bool>();
+        readonly ArrayBuilder<sbyte> m_arrayInt8 = new ArrayBuilder<sbyte>();
+        readonly ArrayBuilder<byte> m_arrayUInt8 = new ArrayBuilder<byte>();
+        readonly ArrayBuilder<short> m_arrayInt16 = new ArrayBuilder<short>();
+        readonly ArrayBuilder<ushort> m_arrayUInt16 = new ArrayBuilder<ushort>();
         readonly ArrayBuilder<int> m_arrayInt32 = new ArrayBuilder<int>();
         readonly ArrayBuilder<uint> m_arrayUInt32 = new ArrayBuilder<uint>();
         readonly ArrayBuilder<long> m_arrayInt64 = new ArrayBuilder<long>();

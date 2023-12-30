@@ -178,6 +178,22 @@ namespace finalmq
             }
 
 
+            public void EnterInt8(MetaField field, sbyte value)
+            {
+                Add(field, value);
+            }
+            public void EnterUInt8(MetaField field, byte value)
+            {
+                Add(field, value);
+            }
+            public void EnterInt16(MetaField field, short value)
+            {
+                Add(field, value);
+            }
+            public void EnterUInt16(MetaField field, ushort value)
+            {
+                Add(field, value);
+            }
             public void EnterInt32(MetaField field, int value)
             {
                 Add(field, value);
@@ -247,6 +263,22 @@ namespace finalmq
                 }
             }
             public void EnterArrayBool(MetaField field, bool[] value)
+            {
+                Add(field, value);
+            }
+            public void EnterArrayInt8(MetaField field, sbyte[] value)
+            {
+                Add(field, value);
+            }
+            public void EnterArrayUInt8(MetaField field, byte[] value)
+            {
+                Add(field, value);
+            }
+            public void EnterArrayInt16(MetaField field, short[] value)
+            {
+                Add(field, value);
+            }
+            public void EnterArrayUInt16(MetaField field, ushort[] value)
             {
                 Add(field, value);
             }

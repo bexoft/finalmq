@@ -83,6 +83,54 @@ namespace finalmq
                         m_visitor.EnterBool(fieldBool, data);
                     }
                     break;
+                case (int)MetaTypeId.TYPE_INT8:
+                    {
+                        if (m_fieldInt8 == null)
+                        {
+                            m_fieldInt8 = m_structVarValue.GetFieldByName("valint8");
+                        }
+                        MetaField? fieldInt8 = m_fieldInt8;
+                        Debug.Assert(fieldInt8 != null);
+                        sbyte data = variant;
+                        m_visitor.EnterInt8(fieldInt8, data);
+                    }
+                    break;
+                case (int)MetaTypeId.TYPE_UINT8:
+                    {
+                        if (m_fieldUInt8 == null)
+                        {
+                            m_fieldUInt8 = m_structVarValue.GetFieldByName("valuint8");
+                        }
+                        MetaField? fieldUInt8 = m_fieldUInt8;
+                        Debug.Assert(fieldUInt8 != null);
+                        byte data = variant;
+                        m_visitor.EnterUInt8(fieldUInt8, data);
+                    }
+                    break;
+                case (int)MetaTypeId.TYPE_INT16:
+                    {
+                        if (m_fieldInt16 == null)
+                        {
+                            m_fieldInt16 = m_structVarValue.GetFieldByName("valint16");
+                        }
+                        MetaField? fieldInt16 = m_fieldInt16;
+                        Debug.Assert(fieldInt16 != null);
+                        short data = variant;
+                        m_visitor.EnterInt16(fieldInt16, data);
+                    }
+                    break;
+                case (int)MetaTypeId.TYPE_UINT16:
+                    {
+                        if (m_fieldUInt16 == null)
+                        {
+                            m_fieldUInt16 = m_structVarValue.GetFieldByName("valuint16");
+                        }
+                        MetaField? fieldUInt16 = m_fieldUInt16;
+                        Debug.Assert(fieldUInt16 != null);
+                        ushort data = variant;
+                        m_visitor.EnterUInt16(fieldUInt16, data);
+                    }
+                    break;
                 case (int)MetaTypeId.TYPE_INT32:
                     {
                         if (m_fieldInt32 == null)
@@ -190,6 +238,54 @@ namespace finalmq
                         Debug.Assert(fieldArrayBool != null);
                         bool[] data = variant;
                         m_visitor.EnterArrayBool(fieldArrayBool, data);
+                    }
+                    break;
+                case (int)MetaTypeId.TYPE_ARRAY_INT8:
+                    {
+                        if (m_fieldArrayInt8 == null)
+                        {
+                            m_fieldArrayInt8 = m_structVarValue.GetFieldByName("valarrint8");
+                        }
+                        MetaField? fieldArrayInt8 = m_fieldArrayInt8;
+                        Debug.Assert(fieldArrayInt8 != null);
+                        sbyte[] data = variant;
+                        m_visitor.EnterArrayInt8(fieldArrayInt8, data);
+                    }
+                    break;
+                case (int)MetaTypeId.TYPE_ARRAY_UINT8:
+                    {
+                        if (m_fieldArrayUInt8 == null)
+                        {
+                            m_fieldArrayUInt8 = m_structVarValue.GetFieldByName("valarruint8");
+                        }
+                        MetaField? fieldArrayUInt8 = m_fieldArrayUInt8;
+                        Debug.Assert(fieldArrayUInt8 != null);
+                        byte[] data = variant;
+                        m_visitor.EnterArrayUInt8(fieldArrayUInt8, data);
+                    }
+                    break;
+                case (int)MetaTypeId.TYPE_ARRAY_INT16:
+                    {
+                        if (m_fieldArrayInt16 == null)
+                        {
+                            m_fieldArrayInt16 = m_structVarValue.GetFieldByName("valarrint16");
+                        }
+                        MetaField? fieldArrayInt16 = m_fieldArrayInt16;
+                        Debug.Assert(fieldArrayInt16 != null);
+                        short[] data = variant;
+                        m_visitor.EnterArrayInt16(fieldArrayInt16, data);
+                    }
+                    break;
+                case (int)MetaTypeId.TYPE_ARRAY_UINT16:
+                    {
+                        if (m_fieldArrayUInt16 == null)
+                        {
+                            m_fieldArrayUInt16 = m_structVarValue.GetFieldByName("valarruint16");
+                        }
+                        MetaField? fieldArrayUInt16 = m_fieldArrayUInt16;
+                        Debug.Assert(fieldArrayUInt16 != null);
+                        ushort[] data = variant;
+                        m_visitor.EnterArrayUInt16(fieldArrayUInt16, data);
                     }
                     break;
                 case (int)MetaTypeId.TYPE_ARRAY_INT32:
@@ -382,6 +478,10 @@ namespace finalmq
         static MetaField? m_fieldName = null;
         static MetaField? m_fieldType = null;
         static MetaField? m_fieldBool = null;
+        static MetaField? m_fieldInt8 = null;
+        static MetaField? m_fieldUInt8 = null;
+        static MetaField? m_fieldInt16 = null;
+        static MetaField? m_fieldUInt16 = null;
         static MetaField? m_fieldInt32 = null;
         static MetaField? m_fieldUInt32 = null;
         static MetaField? m_fieldInt64 = null;
@@ -391,6 +491,10 @@ namespace finalmq
         static MetaField? m_fieldString = null;
         static MetaField? m_fieldBytes = null;
         static MetaField? m_fieldArrayBool = null;
+        static MetaField? m_fieldArrayInt8 = null;
+        static MetaField? m_fieldArrayUInt8 = null;
+        static MetaField? m_fieldArrayInt16 = null;
+        static MetaField? m_fieldArrayUInt16 = null;
         static MetaField? m_fieldArrayInt32 = null;
         static MetaField? m_fieldArrayUInt32 = null;
         static MetaField? m_fieldArrayInt64 = null;

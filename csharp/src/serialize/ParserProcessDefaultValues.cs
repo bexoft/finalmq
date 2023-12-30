@@ -200,6 +200,18 @@ namespace finalmq
                         case MetaTypeId.TYPE_BOOL:
                             m_visitor.EnterBool(field, false);
                             break;
+                        case MetaTypeId.TYPE_INT8:
+                            m_visitor.EnterInt8(field, 0);
+                            break;
+                        case MetaTypeId.TYPE_UINT8:
+                            m_visitor.EnterUInt8(field, 0);
+                            break;
+                        case MetaTypeId.TYPE_INT16:
+                            m_visitor.EnterInt16(field, 0);
+                            break;
+                        case MetaTypeId.TYPE_UINT16:
+                            m_visitor.EnterUInt16(field, 0);
+                            break;
                         case MetaTypeId.TYPE_INT32:
                             m_visitor.EnterInt32(field, 0);
                             break;
@@ -246,6 +258,18 @@ namespace finalmq
                             break;
                         case MetaTypeId.TYPE_ARRAY_BOOL:
                             m_visitor.EnterArrayBool(field, Array.Empty<bool>());
+                            break;
+                        case MetaTypeId.TYPE_ARRAY_INT8:
+                            m_visitor.EnterArrayInt8(field, Array.Empty<sbyte>());
+                            break;
+                        case MetaTypeId.TYPE_ARRAY_UINT8:
+                            m_visitor.EnterArrayUInt8(field, Array.Empty<byte>());
+                            break;
+                        case MetaTypeId.TYPE_ARRAY_INT16:
+                            m_visitor.EnterArrayInt16(field, Array.Empty<short>());
+                            break;
+                        case MetaTypeId.TYPE_ARRAY_UINT16:
+                            m_visitor.EnterArrayUInt16(field, Array.Empty<ushort>());
                             break;
                         case MetaTypeId.TYPE_ARRAY_INT32:
                             m_visitor.EnterArrayInt32(field, Array.Empty<int>());
@@ -357,6 +381,58 @@ namespace finalmq
                     ExecuteEnterStruct();
                 }
                 m_visitor.EnterBool(field, value);
+            }
+        }
+        public void EnterInt8(MetaField field, sbyte value)
+        {
+            Debug.Assert(m_visitor != null);
+            MarkAsDone(field);
+            if (value != 0 || !m_skipDefaultValues)
+            {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
+                m_visitor.EnterInt8(field, value);
+            }
+        }
+        public void EnterUInt8(MetaField field, byte value)
+        {
+            Debug.Assert(m_visitor != null);
+            MarkAsDone(field);
+            if (value != 0 || !m_skipDefaultValues)
+            {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
+                m_visitor.EnterUInt8(field, value);
+            }
+        }
+        public void EnterInt16(MetaField field, short value)
+        {
+            Debug.Assert(m_visitor != null);
+            MarkAsDone(field);
+            if (value != 0 || !m_skipDefaultValues)
+            {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
+                m_visitor.EnterInt16(field, value);
+            }
+        }
+        public void EnterUInt16(MetaField field, ushort value)
+        {
+            Debug.Assert(m_visitor != null);
+            MarkAsDone(field);
+            if (value != 0 || !m_skipDefaultValues)
+            {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
+                m_visitor.EnterUInt16(field, value);
             }
         }
         public void EnterInt32(MetaField field, int value)
@@ -515,6 +591,58 @@ namespace finalmq
                     ExecuteEnterStruct();
                 }
                 m_visitor.EnterArrayBool(field, value);
+            }
+        }
+        public void EnterArrayInt8(MetaField field, sbyte[] value)
+        {
+            Debug.Assert(m_visitor != null);
+            MarkAsDone(field);
+            if (value.Length != 0 || !m_skipDefaultValues)
+            {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
+                m_visitor.EnterArrayInt8(field, value);
+            }
+        }
+        public void EnterArrayUInt8(MetaField field, byte[] value)
+        {
+            Debug.Assert(m_visitor != null);
+            MarkAsDone(field);
+            if (value.Length != 0 || !m_skipDefaultValues)
+            {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
+                m_visitor.EnterArrayUInt8(field, value);
+            }
+        }
+        public void EnterArrayInt16(MetaField field, short[] value)
+        {
+            Debug.Assert(m_visitor != null);
+            MarkAsDone(field);
+            if (value.Length != 0 || !m_skipDefaultValues)
+            {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
+                m_visitor.EnterArrayInt16(field, value);
+            }
+        }
+        public void EnterArrayUInt16(MetaField field, ushort[] value)
+        {
+            Debug.Assert(m_visitor != null);
+            MarkAsDone(field);
+            if (value.Length != 0 || !m_skipDefaultValues)
+            {
+                if (m_skipDefaultValues)
+                {
+                    ExecuteEnterStruct();
+                }
+                m_visitor.EnterArrayUInt16(field, value);
             }
         }
         public void EnterArrayInt32(MetaField field, int[] value)

@@ -68,13 +68,37 @@ namespace finalmq
                 SetKey(field);
                 m_jsonBuilder.EnterBool(value);
             }
-            public void EnterInt32(MetaField field, int value) 
+            public void EnterInt8(MetaField field, sbyte value)
+            {
+                Debug.Assert(field.TypeId == MetaTypeId.TYPE_INT8);
+                SetKey(field);
+                m_jsonBuilder.EnterInt32(value);
+            }
+            public void EnterUInt8(MetaField field, byte value)
+            {
+                Debug.Assert(field.TypeId == MetaTypeId.TYPE_UINT8);
+                SetKey(field);
+                m_jsonBuilder.EnterUInt32(value);
+            }
+            public void EnterInt16(MetaField field, short value)
+            {
+                Debug.Assert(field.TypeId == MetaTypeId.TYPE_INT16);
+                SetKey(field);
+                m_jsonBuilder.EnterInt32(value);
+            }
+            public void EnterUInt16(MetaField field, ushort value)
+            {
+                Debug.Assert(field.TypeId == MetaTypeId.TYPE_UINT16);
+                SetKey(field);
+                m_jsonBuilder.EnterUInt32(value);
+            }
+            public void EnterInt32(MetaField field, int value)
             {
                 Debug.Assert(field.TypeId == MetaTypeId.TYPE_INT32);
                 SetKey(field);
                 m_jsonBuilder.EnterInt32(value);
             }
-            public void EnterUInt32(MetaField field, uint value) 
+            public void EnterUInt32(MetaField field, uint value)
             {
                 Debug.Assert(field.TypeId == MetaTypeId.TYPE_UINT32);
                 SetKey(field);
@@ -161,6 +185,50 @@ namespace finalmq
                 foreach (var entry in value)
                 {
                     m_jsonBuilder.EnterBool(entry);
+                }
+                m_jsonBuilder.ExitArray();
+            }
+            public void EnterArrayInt8(MetaField field, sbyte[] value)
+            {
+                Debug.Assert(field.TypeId == MetaTypeId.TYPE_ARRAY_INT8);
+                SetKey(field);
+                m_jsonBuilder.EnterArray();
+                foreach (var entry in value)
+                {
+                    m_jsonBuilder.EnterInt32(entry);
+                }
+                m_jsonBuilder.ExitArray();
+            }
+            public void EnterArrayUInt8(MetaField field, byte[] value)
+            {
+                Debug.Assert(field.TypeId == MetaTypeId.TYPE_ARRAY_UINT8);
+                SetKey(field);
+                m_jsonBuilder.EnterArray();
+                foreach (var entry in value)
+                {
+                    m_jsonBuilder.EnterUInt32(entry);
+                }
+                m_jsonBuilder.ExitArray();
+            }
+            public void EnterArrayInt16(MetaField field, short[] value)
+            {
+                Debug.Assert(field.TypeId == MetaTypeId.TYPE_ARRAY_INT16);
+                SetKey(field);
+                m_jsonBuilder.EnterArray();
+                foreach (var entry in value)
+                {
+                    m_jsonBuilder.EnterInt32(entry);
+                }
+                m_jsonBuilder.ExitArray();
+            }
+            public void EnterArrayUInt16(MetaField field, ushort[] value)
+            {
+                Debug.Assert(field.TypeId == MetaTypeId.TYPE_ARRAY_UINT16);
+                SetKey(field);
+                m_jsonBuilder.EnterArray();
+                foreach (var entry in value)
+                {
+                    m_jsonBuilder.EnterUInt32(entry);
                 }
                 m_jsonBuilder.ExitArray();
             }

@@ -18,6 +18,10 @@ namespace finalmq
         void ExitArrayStruct(MetaField field);
 
         void EnterBool(MetaField field, bool value);
+        void EnterInt8(MetaField field, sbyte value);
+        void EnterUInt8(MetaField field, byte value);
+        void EnterInt16(MetaField field, short value);
+        void EnterUInt16(MetaField field, ushort value);
         void EnterInt32(MetaField field, int value);
         void EnterUInt32(MetaField field, uint value);
         void EnterInt64(MetaField field, long value);
@@ -31,6 +35,10 @@ namespace finalmq
         void EnterEnum(MetaField field, string value);
 
         void EnterArrayBool(MetaField field, bool[] value);
+        void EnterArrayInt8(MetaField field, sbyte[] value);
+        void EnterArrayUInt8(MetaField field, byte[] value);
+        void EnterArrayInt16(MetaField field, short[] value);
+        void EnterArrayUInt16(MetaField field, ushort[] value);
         void EnterArrayInt32(MetaField field, int[] value);
         void EnterArrayUInt32(MetaField field, uint[] value);
         void EnterArrayInt64(MetaField field, long[] value);

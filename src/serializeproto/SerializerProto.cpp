@@ -686,19 +686,7 @@ void SerializerProto::Internal::enterArrayInt8(const MetaField& field, const std
     {
         array[i] = static_cast<std::int32_t>(value[i]);
     }
-    int id = field.index + INDEX2ID;
-    if (field.flags & METAFLAG_PROTO_VARINT)
-    {
-        serializeArrayVarint(id, array.data(), array.size());
-    }
-    else if (field.flags & METAFLAG_PROTO_ZIGZAG)
-    {
-        serializeArrayZigZag(id, array.data(), array.size());
-    }
-    else
-    {
-        serializeArrayFixed(id, array.data(), array.size());
-    }
+    enterArrayInt32(field, array.data(), array.size());
 }
 void SerializerProto::Internal::enterArrayUInt8(const MetaField& field, std::vector<std::uint8_t>&& value)
 {
@@ -712,15 +700,7 @@ void SerializerProto::Internal::enterArrayUInt8(const MetaField& field, const st
     {
         array[i] = static_cast<std::uint32_t>(value[i]);
     }
-    int id = field.index + INDEX2ID;
-    if (field.flags & METAFLAG_PROTO_VARINT)
-    {
-        serializeArrayVarint(id, array.data(), array.size());
-    }
-    else
-    {
-        serializeArrayFixed(id, array.data(), array.size());
-    }
+    enterArrayUInt32(field, array.data(), array.size());
 }
 void SerializerProto::Internal::enterArrayInt16(const MetaField& field, std::vector<std::int16_t>&& value)
 {
@@ -734,19 +714,7 @@ void SerializerProto::Internal::enterArrayInt16(const MetaField& field, const st
     {
         array[i] = static_cast<std::int32_t>(value[i]);
     }
-    int id = field.index + INDEX2ID;
-    if (field.flags & METAFLAG_PROTO_VARINT)
-    {
-        serializeArrayVarint(id, array.data(), array.size());
-    }
-    else if (field.flags & METAFLAG_PROTO_ZIGZAG)
-    {
-        serializeArrayZigZag(id, array.data(), array.size());
-    }
-    else
-    {
-        serializeArrayFixed(id, array.data(), array.size());
-    }
+    enterArrayInt32(field, array.data(), array.size());
 }
 void SerializerProto::Internal::enterArrayUInt16(const MetaField& field, std::vector<std::uint16_t>&& value)
 {
@@ -760,15 +728,7 @@ void SerializerProto::Internal::enterArrayUInt16(const MetaField& field, const s
     {
         array[i] = static_cast<std::uint32_t>(value[i]);
     }
-    int id = field.index + INDEX2ID;
-    if (field.flags & METAFLAG_PROTO_VARINT)
-    {
-        serializeArrayVarint(id, array.data(), array.size());
-    }
-    else
-    {
-        serializeArrayFixed(id, array.data(), array.size());
-    }
+    enterArrayUInt32(field, array.data(), array.size());
 }
 void SerializerProto::Internal::enterArrayInt32(const MetaField& field, std::vector<std::int32_t>&& value)
 {

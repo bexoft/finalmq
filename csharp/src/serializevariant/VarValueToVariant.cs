@@ -41,6 +41,18 @@ namespace finalmq
                 case variant.VarTypeId.T_BOOL:
                     var.SetData(varValue.valbool);
                     break;
+                case variant.VarTypeId.T_INT8:
+                    var.SetData(varValue.valint8);
+                    break;
+                case variant.VarTypeId.T_UINT8:
+                    var.SetData(varValue.valuint8);
+                    break;
+                case variant.VarTypeId.T_INT16:
+                    var.SetData(varValue.valint16);
+                    break;
+                case variant.VarTypeId.T_UINT16:
+                    var.SetData(varValue.valuint16);
+                    break;
                 case variant.VarTypeId.T_INT32:
                     var.SetData(varValue.valint32);
                     break;
@@ -79,6 +91,18 @@ namespace finalmq
 
                 case variant.VarTypeId.T_ARRAY_BOOL:
                     var.SetData(varValue.valarrbool);
+                    break;
+                case variant.VarTypeId.T_ARRAY_INT8:
+                    var.SetData(varValue.valarrint8);
+                    break;
+                case variant.VarTypeId.T_ARRAY_UINT8:
+                    var.SetData(varValue.valarruint8);
+                    break;
+                case variant.VarTypeId.T_ARRAY_INT16:
+                    var.SetData(varValue.valarrint16);
+                    break;
+                case variant.VarTypeId.T_ARRAY_UINT16:
+                    var.SetData(varValue.valarruint16);
                     break;
                 case variant.VarTypeId.T_ARRAY_INT32:
                     var.SetData(varValue.valarrint32);

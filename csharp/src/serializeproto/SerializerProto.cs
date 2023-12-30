@@ -140,6 +140,22 @@ namespace finalmq
                 int id = field.Index + INDEX2ID;
                 SerializeVarintValue(id, value ? 1UL : 0UL);
             }
+            public void EnterInt8(MetaField field, sbyte value)
+            {
+                EnterInt32(field, value);
+            }
+            public void EnterUInt8(MetaField field, byte value)
+            {
+                EnterUInt32(field, value);
+            }
+            public void EnterInt16(MetaField field, short value)
+            {
+                EnterInt32(field, value);
+            }
+            public void EnterUInt16(MetaField field, ushort value)
+            {
+                EnterUInt32(field, value);
+            }
             public void EnterInt32(MetaField field, int value)
             {
                 int id = field.Index + INDEX2ID;
@@ -238,6 +254,30 @@ namespace finalmq
             {
                 int id = field.Index + INDEX2ID;
                 SerializeArrayBool(id, value);
+            }
+            public void EnterArrayInt8(MetaField field, sbyte[] value)
+            {
+                int[] array = new int[value.Length];
+                Array.Copy(value, 0, array, 0, value.Length);
+                EnterArrayInt32(field, array);
+            }
+            public void EnterArrayUInt8(MetaField field, byte[] value)
+            {
+                uint[] array = new uint[value.Length];
+                Array.Copy(value, 0, array, 0, value.Length);
+                EnterArrayUInt32(field, array);
+            }
+            public void EnterArrayInt16(MetaField field, short[] value)
+            {
+                int[] array = new int[value.Length];
+                Array.Copy(value, 0, array, 0, value.Length);
+                EnterArrayInt32(field, array);
+            }
+            public void EnterArrayUInt16(MetaField field, ushort[] value)
+            {
+                uint[] array = new uint[value.Length];
+                Array.Copy(value, 0, array, 0, value.Length);
+                EnterArrayUInt32(field, array);
             }
             public void EnterArrayInt32(MetaField field, int[] value)
             {

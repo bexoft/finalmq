@@ -69,6 +69,30 @@ namespace finalmq
                         m_visitor.EnterBool(field, (bool)value);
                     }
                     break;
+                case MetaTypeId.TYPE_INT8:
+                    if (value != null && value.GetType() == typeof(sbyte))
+                    {
+                        m_visitor.EnterInt8(field, (sbyte)value);
+                    }
+                    break;
+                case MetaTypeId.TYPE_UINT8:
+                    if (value != null && value.GetType() == typeof(byte))
+                    {
+                        m_visitor.EnterUInt8(field, (byte)value);
+                    }
+                    break;
+                case MetaTypeId.TYPE_INT16:
+                    if (value != null && value.GetType() == typeof(short))
+                    {
+                        m_visitor.EnterInt32(field, (short)value);
+                    }
+                    break;
+                case MetaTypeId.TYPE_UINT16:
+                    if (value != null && value.GetType() == typeof(ushort))
+                    {
+                        m_visitor.EnterUInt32(field, (ushort)value);
+                    }
+                    break;
                 case MetaTypeId.TYPE_INT32:
                     if (value != null && value.GetType() == typeof(int))
                     {
@@ -178,6 +202,34 @@ namespace finalmq
                     if (vArrayBool != null)
                     {
                         m_visitor.EnterArrayBool(field, vArrayBool);
+                    }
+                    break;
+                case MetaTypeId.TYPE_ARRAY_INT8:
+                    var vArrayInt8 = value as sbyte[];
+                    if (vArrayInt8 != null)
+                    {
+                        m_visitor.EnterArrayInt8(field, vArrayInt8);
+                    }
+                    break;
+                case MetaTypeId.TYPE_ARRAY_UINT8:
+                    var vArrayUInt8 = value as byte[];
+                    if (vArrayUInt8 != null)
+                    {
+                        m_visitor.EnterArrayUInt8(field, vArrayUInt8);
+                    }
+                    break;
+                case MetaTypeId.TYPE_ARRAY_INT16:
+                    var vArrayInt16 = value as short[];
+                    if (vArrayInt16 != null)
+                    {
+                        m_visitor.EnterArrayInt16(field, vArrayInt16);
+                    }
+                    break;
+                case MetaTypeId.TYPE_ARRAY_UINT16:
+                    var vArrayUInt16 = value as ushort[];
+                    if (vArrayUInt16 != null)
+                    {
+                        m_visitor.EnterArrayUInt16(field, vArrayUInt16);
                     }
                     break;
                 case MetaTypeId.TYPE_ARRAY_INT32:
