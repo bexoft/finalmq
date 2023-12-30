@@ -199,17 +199,6 @@ namespace finalmq
                 }
                 m_jsonBuilder.ExitArray();
             }
-            public void EnterArrayUInt8(MetaField field, byte[] value)
-            {
-                Debug.Assert(field.TypeId == MetaTypeId.TYPE_ARRAY_UINT8);
-                SetKey(field);
-                m_jsonBuilder.EnterArray();
-                foreach (var entry in value)
-                {
-                    m_jsonBuilder.EnterUInt32(entry);
-                }
-                m_jsonBuilder.ExitArray();
-            }
             public void EnterArrayInt16(MetaField field, short[] value)
             {
                 Debug.Assert(field.TypeId == MetaTypeId.TYPE_ARRAY_INT16);

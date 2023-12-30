@@ -77,7 +77,6 @@ private:
 
     std::vector<bool>           m_arrayBool;
     std::vector<std::int8_t>    m_arrayInt8;
-    std::vector<std::uint8_t>   m_arrayUInt8;
     std::vector<std::int16_t>   m_arrayInt16;
     std::vector<std::uint16_t>  m_arrayUInt16;
     std::vector<std::int32_t>   m_arrayInt32;

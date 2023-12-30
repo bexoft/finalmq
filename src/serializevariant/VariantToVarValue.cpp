@@ -219,15 +219,6 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
             m_visitor.enterArrayInt8(*fieldArrInt8, data->data(), data->size());
         }
         break;
-    case TYPE_ARRAY_UINT8:
-        {
-            static const MetaField* fieldArrUInt8 = m_structVarValue->getFieldByName("valarruint8");
-            assert(fieldArrUInt8);
-            const std::vector<std::uint8_t>* data = variant;
-            assert(data);
-            m_visitor.enterArrayUInt8(*fieldArrUInt8, data->data(), data->size());
-        }
-        break;
     case TYPE_ARRAY_INT16:
         {
             static const MetaField* fieldArrInt16 = m_structVarValue->getFieldByName("valarrint16");

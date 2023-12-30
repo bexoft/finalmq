@@ -341,27 +341,11 @@ namespace finalmq
                                     if (array != null)
                                     {
                                         sbyte[] arrayInt8 = new sbyte[array.Length];
-                                        Array.Copy(array, 0, arrayInt8, 0, array.Length);
+                                        for (int i = 0; i < array.Length; ++i)
+                                        {
+                                            arrayInt8[i] = (sbyte)array[i]; 
+                                        }
                                         m_visitor.EnterArrayInt8(field, arrayInt8);
-                                    }
-                                }
-                                break;
-                            case MetaTypeId.TYPE_ARRAY_UINT8:
-                                {
-                                    uint[]? array = null;
-                                    if ((field.Flags & (int)MetaFieldFlags.METAFLAG_PROTO_VARINT) != 0)
-                                    {
-                                        array = ParseArrayVarint<uint>();
-                                    }
-                                    else
-                                    {
-                                        array = ParseArrayFixedUInt32<uint>();
-                                    }
-                                    if (array != null)
-                                    {
-                                        byte[] arrayUInt8 = new byte[array.Length];
-                                        Array.Copy(array, 0, arrayUInt8, 0, array.Length);
-                                        m_visitor.EnterArrayUInt8(field, arrayUInt8);
                                     }
                                 }
                                 break;
@@ -383,7 +367,10 @@ namespace finalmq
                                     if (array != null)
                                     {
                                         short[] arrayInt16 = new short[array.Length];
-                                        Array.Copy(array, 0, arrayInt16, 0, array.Length);
+                                        for (int i = 0; i < array.Length; ++i)
+                                        {
+                                            arrayInt16[i] = (short)array[i];
+                                        }
                                         m_visitor.EnterArrayInt16(field, arrayInt16);
                                     }
                                 }
@@ -402,7 +389,10 @@ namespace finalmq
                                     if (array != null)
                                     {
                                         ushort[] arrayUInt16 = new ushort[array.Length];
-                                        Array.Copy(array, 0, arrayUInt16, 0, array.Length);
+                                        for (int i = 0; i < array.Length; ++i)
+                                        {
+                                            arrayUInt16[i] = (ushort)array[i];
+                                        }
                                         m_visitor.EnterArrayUInt16(field, arrayUInt16);
                                     }
                                 }

@@ -262,9 +262,6 @@ namespace finalmq
                         case MetaTypeId.TYPE_ARRAY_INT8:
                             m_visitor.EnterArrayInt8(field, Array.Empty<sbyte>());
                             break;
-                        case MetaTypeId.TYPE_ARRAY_UINT8:
-                            m_visitor.EnterArrayUInt8(field, Array.Empty<byte>());
-                            break;
                         case MetaTypeId.TYPE_ARRAY_INT16:
                             m_visitor.EnterArrayInt16(field, Array.Empty<short>());
                             break;
@@ -604,19 +601,6 @@ namespace finalmq
                     ExecuteEnterStruct();
                 }
                 m_visitor.EnterArrayInt8(field, value);
-            }
-        }
-        public void EnterArrayUInt8(MetaField field, byte[] value)
-        {
-            Debug.Assert(m_visitor != null);
-            MarkAsDone(field);
-            if (value.Length != 0 || !m_skipDefaultValues)
-            {
-                if (m_skipDefaultValues)
-                {
-                    ExecuteEnterStruct();
-                }
-                m_visitor.EnterArrayUInt8(field, value);
             }
         }
         public void EnterArrayInt16(MetaField field, short[] value)

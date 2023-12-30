@@ -84,13 +84,13 @@ namespace finalmq
                 case MetaTypeId.TYPE_INT16:
                     if (value != null && value.GetType() == typeof(short))
                     {
-                        m_visitor.EnterInt32(field, (short)value);
+                        m_visitor.EnterInt16(field, (short)value);
                     }
                     break;
                 case MetaTypeId.TYPE_UINT16:
                     if (value != null && value.GetType() == typeof(ushort))
                     {
-                        m_visitor.EnterUInt32(field, (ushort)value);
+                        m_visitor.EnterUInt16(field, (ushort)value);
                     }
                     break;
                 case MetaTypeId.TYPE_INT32:
@@ -209,13 +209,6 @@ namespace finalmq
                     if (vArrayInt8 != null)
                     {
                         m_visitor.EnterArrayInt8(field, vArrayInt8);
-                    }
-                    break;
-                case MetaTypeId.TYPE_ARRAY_UINT8:
-                    var vArrayUInt8 = value as byte[];
-                    if (vArrayUInt8 != null)
-                    {
-                        m_visitor.EnterArrayUInt8(field, vArrayUInt8);
                     }
                     break;
                 case MetaTypeId.TYPE_ARRAY_INT16:

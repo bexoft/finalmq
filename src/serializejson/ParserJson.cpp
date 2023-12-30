@@ -152,9 +152,6 @@ void ParserJson::enterNumber(T value)
     case MetaTypeId::TYPE_ARRAY_INT8:
         m_arrayInt8.push_back(static_cast<std::int8_t>(value));
         break;
-    case MetaTypeId::TYPE_ARRAY_UINT8:
-        m_arrayUInt8.push_back(static_cast<std::uint8_t>(value));
-        break;
     case MetaTypeId::TYPE_ARRAY_INT16:
         m_arrayInt16.push_back(static_cast<std::int16_t>(value));
         break;
@@ -381,12 +378,6 @@ void ParserJson::enterString(const char* value, ssize_t size)
         {
             std::int8_t v = static_cast<std::int8_t>(strtol(value, nullptr, 10));
             m_arrayInt8.push_back(v);
-        }
-        break;
-    case MetaTypeId::TYPE_ARRAY_UINT8:
-        {
-            std::uint8_t v = static_cast<std::uint8_t>(strtoul(value, nullptr, 10));
-            m_arrayUInt8.push_back(v);
         }
         break;
     case MetaTypeId::TYPE_ARRAY_INT16:
@@ -637,9 +628,6 @@ void ParserJson::enterArray()
         case MetaTypeId::TYPE_ARRAY_INT8:
             m_arrayInt8.clear();
             break;
-        case MetaTypeId::TYPE_ARRAY_UINT8:
-            m_arrayUInt8.clear();
-            break;
         case MetaTypeId::TYPE_ARRAY_INT16:
             m_arrayInt16.clear();
             break;
@@ -707,10 +695,6 @@ void ParserJson::exitArray()
         case MetaTypeId::TYPE_ARRAY_INT8:
             m_visitor.enterArrayInt8(*m_fieldCurrent, std::move(m_arrayInt8));
             m_arrayInt8.clear();
-            break;
-        case MetaTypeId::TYPE_ARRAY_UINT8:
-            m_visitor.enterArrayUInt8(*m_fieldCurrent, std::move(m_arrayUInt8));
-            m_arrayUInt8.clear();
             break;
         case MetaTypeId::TYPE_ARRAY_INT16:
             m_visitor.enterArrayInt16(*m_fieldCurrent, std::move(m_arrayInt16));

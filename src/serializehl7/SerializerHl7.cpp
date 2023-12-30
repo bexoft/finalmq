@@ -345,22 +345,6 @@ void SerializerHl7::Internal::enterArrayInt8(const MetaField& field, const std::
     }
 }
 
-void SerializerHl7::Internal::enterArrayUInt8(const MetaField& field, std::vector<std::uint8_t>&& value)
-{
-    enterArrayUInt8(field, value.data(), value.size());
-}
-
-void SerializerHl7::Internal::enterArrayUInt8(const MetaField& field, const std::uint8_t* value, ssize_t size)
-{
-    if (!m_indexOfLayer.empty())
-    {
-        for (ssize_t i = 0; i < size; ++i)
-        {
-            m_hl7Builder.enterUInt64(m_indexOfLayer.data(), static_cast<int>(m_indexOfLayer.size()), field.index, value[i]);
-        }
-    }
-}
-
 void SerializerHl7::Internal::enterArrayInt16(const MetaField& field, std::vector<std::int16_t>&& value)
 {
     enterArrayInt16(field, value.data(), value.size());

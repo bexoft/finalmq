@@ -205,17 +205,6 @@ public:
     typedef Convert<T> ConvertType;
 };
 /////////////////////////////////////////
-typedef VariantValueTemplate<TYPE_ARRAY_UINT8>  VariantValueArrayUInt8;
-template<>
-class VariantValueTypeInfo<std::vector<std::uint8_t>>
-{
-public:
-    typedef std::vector<std::uint8_t> T;
-    typedef VariantValueArrayUInt8 VariantValueType;
-    const static int VARTYPE = MetaTypeInfo<T>::TypeId;
-    typedef Convert<T> ConvertType;
-};
-/////////////////////////////////////////
 typedef VariantValueTemplate<TYPE_ARRAY_INT16>   VariantValueArrayInt16;
 template<>
 class VariantValueTypeInfo<std::vector<std::int16_t>>

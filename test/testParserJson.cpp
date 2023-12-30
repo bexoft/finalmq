@@ -885,33 +885,6 @@ TEST_F(TestParserJson, testArrayInt8)
 }
 
 
-TEST_F(TestParserJson, testArrayUInt8)
-{
-    static const std::uint8_t VALUE1 = 0xFE;
-    static const std::uint8_t VALUE2 = 0;
-    static const std::uint8_t VALUE3 = 2;
-    static const std::uint8_t VALUE4 = 222;
-
-    const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestArrayUInt8", "value");
-    ASSERT_NE(fieldValue, nullptr);
-
-    MockIParserVisitor mockVisitor;
-
-    {
-        testing::InSequence seq;
-        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
-        EXPECT_CALL(mockVisitor, enterArrayUInt8(MatcherMetaField(*fieldValue), std::vector<std::uint8_t>({VALUE1, VALUE2, VALUE3, VALUE4}))).Times(1);
-        EXPECT_CALL(mockVisitor, finished()).Times(1);
-    }
-
-    std::string data = "{\"value\":[254,0,2,222]}";
-    ParserJson parser(mockVisitor, data.data(), data.size());
-    bool res = parser.parseStruct("test.TestArrayUInt8");
-    EXPECT_EQ(res, true);
-}
-
-
-
 TEST_F(TestParserJson, testArrayInt16)
 {
     static const std::int16_t VALUE1 = -2;

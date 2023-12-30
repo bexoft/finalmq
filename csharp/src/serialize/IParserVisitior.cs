@@ -36,7 +36,6 @@ namespace finalmq
 
         void EnterArrayBool(MetaField field, bool[] value);
         void EnterArrayInt8(MetaField field, sbyte[] value);
-        void EnterArrayUInt8(MetaField field, byte[] value);
         void EnterArrayInt16(MetaField field, short[] value);
         void EnterArrayUInt16(MetaField field, ushort[] value);
         void EnterArrayInt32(MetaField field, int[] value);

@@ -334,6 +334,30 @@ namespace finalmq
         public override int VarType { get { return (int)MetaTypeId.TYPE_BOOL; } }
         public override IVariantValue Clone() { return new VariantValueBool(Data); }
     }
+    public class VariantValueInt8 : VariantValueBase<sbyte>
+    {
+        public VariantValueInt8(sbyte data) : base(data) { }
+        public override int VarType { get { return (int)MetaTypeId.TYPE_INT8; } }
+        public override IVariantValue Clone() { return new VariantValueInt8(Data); }
+    }
+    public class VariantValueUInt8 : VariantValueBase<byte>
+    {
+        public VariantValueUInt8(byte data) : base(data) { }
+        public override int VarType { get { return (int)MetaTypeId.TYPE_UINT8; } }
+        public override IVariantValue Clone() { return new VariantValueUInt8(Data); }
+    }
+    public class VariantValueInt16 : VariantValueBase<short>
+    {
+        public VariantValueInt16(short data) : base(data) { }
+        public override int VarType { get { return (int)MetaTypeId.TYPE_INT16; } }
+        public override IVariantValue Clone() { return new VariantValueInt16(Data); }
+    }
+    public class VariantValueUInt16 : VariantValueBase<ushort>
+    {
+        public VariantValueUInt16(ushort data) : base(data) { }
+        public override int VarType { get { return (int)MetaTypeId.TYPE_UINT16; } }
+        public override IVariantValue Clone() { return new VariantValueUInt16(Data); }
+    }
     public class VariantValueInt32 : VariantValueBase<int>
     {
         public VariantValueInt32(int data) : base(data) { }
@@ -387,6 +411,24 @@ namespace finalmq
         public VariantValueArrayBool(bool[] data) : base(data) { }
         public override int VarType { get { return (int)MetaTypeId.TYPE_ARRAY_BOOL; } }
         public override IVariantValue Clone() { return new VariantValueArrayBool(Data.Clone()); }
+    }
+    public class VariantValueArrayInt8 : VariantValueArrayBase<sbyte>
+    {
+        public VariantValueArrayInt8(sbyte[] data) : base(data) { }
+        public override int VarType { get { return (int)MetaTypeId.TYPE_ARRAY_INT8; } }
+        public override IVariantValue Clone() { return new VariantValueArrayInt8(Data.Clone()); }
+    }
+    public class VariantValueArrayInt16 : VariantValueArrayBase<short>
+    {
+        public VariantValueArrayInt16(short[] data) : base(data) { }
+        public override int VarType { get { return (int)MetaTypeId.TYPE_ARRAY_INT16; } }
+        public override IVariantValue Clone() { return new VariantValueArrayInt16(Data.Clone()); }
+    }
+    public class VariantValueArrayUInt16 : VariantValueArrayBase<ushort>
+    {
+        public VariantValueArrayUInt16(ushort[] data) : base(data) { }
+        public override int VarType { get { return (int)MetaTypeId.TYPE_ARRAY_UINT16; } }
+        public override IVariantValue Clone() { return new VariantValueArrayUInt16(Data.Clone()); }
     }
     public class VariantValueArrayInt32 : VariantValueArrayBase<int>
     {
@@ -445,6 +487,10 @@ namespace finalmq
         internal static void Register()
         {
             VariantValueFactory.Instance.Register<bool>((dynamic data) => { return new VariantValueBool(data); });
+            VariantValueFactory.Instance.Register<sbyte>((dynamic data) => { return new VariantValueInt8(data); });
+            VariantValueFactory.Instance.Register<byte>((dynamic data) => { return new VariantValueUInt8(data); });
+            VariantValueFactory.Instance.Register<short>((dynamic data) => { return new VariantValueInt16(data); });
+            VariantValueFactory.Instance.Register<ushort>((dynamic data) => { return new VariantValueUInt16(data); });
             VariantValueFactory.Instance.Register<int>((dynamic data) => { return new VariantValueInt32(data); });
             VariantValueFactory.Instance.Register<uint>((dynamic data) => { return new VariantValueUInt32(data); });
             VariantValueFactory.Instance.Register<long>((dynamic data) => { return new VariantValueInt64(data); });
@@ -454,6 +500,9 @@ namespace finalmq
             VariantValueFactory.Instance.Register<string>((dynamic data) => { return new VariantValueString(data); });
             VariantValueFactory.Instance.Register<byte[]>((dynamic data) => { return new VariantValueBytes(data); });
             VariantValueFactory.Instance.Register<bool[]>((dynamic data) => { return new VariantValueArrayBool(data); });
+            VariantValueFactory.Instance.Register<sbyte[]>((dynamic data) => { return new VariantValueArrayInt8(data); });
+            VariantValueFactory.Instance.Register<short[]>((dynamic data) => { return new VariantValueArrayInt16(data); });
+            VariantValueFactory.Instance.Register<ushort[]>((dynamic data) => { return new VariantValueArrayUInt16(data); });
             VariantValueFactory.Instance.Register<int[]>((dynamic data) => { return new VariantValueArrayInt32(data); });
             VariantValueFactory.Instance.Register<uint[]>((dynamic data) => { return new VariantValueArrayUInt32(data); });
             VariantValueFactory.Instance.Register<long[]>((dynamic data) => { return new VariantValueArrayInt64(data); });

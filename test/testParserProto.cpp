@@ -713,41 +713,6 @@ TEST_F(TestParserProto, testArrayInt8)
 }
 
 
-TEST_F(TestParserProto, testArrayUInt8)
-{
-    static const std::uint32_t VALUE1 = 0xFE;
-    static const std::uint32_t VALUE2 = 0;
-    static const std::uint32_t VALUE3 = 2;
-    static const std::uint32_t VALUE4 = 222;
-
-    const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestArrayUInt8", "value");
-    ASSERT_NE(fieldValue, nullptr);
-
-    std::string data;
-
-    fmq::test::TestArrayUInt8 message;
-    auto* value = message.mutable_value();
-    value->Add(VALUE1);
-    value->Add(VALUE2);
-    value->Add(VALUE3);
-    value->Add(VALUE4);
-    message.SerializeToString(&data);
-
-    MockIParserVisitor mockVisitor;
-
-    {
-        testing::InSequence seq;
-        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
-        EXPECT_CALL(mockVisitor, enterArrayUInt8(MatcherMetaField(*fieldValue), std::vector<std::uint8_t>({VALUE1, VALUE2, VALUE3, VALUE4}))).Times(1);
-        EXPECT_CALL(mockVisitor, finished()).Times(1);
-    }
-
-    ParserProto parser(mockVisitor, data.data(), data.size());
-    bool res = parser.parseStruct("test.TestArrayUInt8");
-    EXPECT_EQ(res, true);
-}
-
-
 
 TEST_F(TestParserProto, testArrayInt16)
 {

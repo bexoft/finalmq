@@ -95,9 +95,6 @@ namespace finalmq
                 case variant.VarTypeId.T_ARRAY_INT8:
                     var.SetData(varValue.valarrint8);
                     break;
-                case variant.VarTypeId.T_ARRAY_UINT8:
-                    var.SetData(varValue.valarruint8);
-                    break;
                 case variant.VarTypeId.T_ARRAY_INT16:
                     var.SetData(varValue.valarrint16);
                     break;

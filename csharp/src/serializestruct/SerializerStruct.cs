@@ -1150,10 +1150,6 @@ namespace finalmq
             {
                 SetValueArrayNumber(field.Name, value);
             }
-            public void EnterArrayUInt8(MetaField field, byte[] value)
-            {
-                SetValueArrayNumber(field.Name, value);
-            }
             public void EnterArrayInt16(MetaField field, short[] value)
             {
                 SetValueArrayNumber(field.Name, value);

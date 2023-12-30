@@ -76,6 +76,70 @@ namespace testfinalmq
         }
 
         [Fact]
+        public void TestInt8()
+        {
+            sbyte VALUE = -2;
+
+            var root = new test.TestInt8();
+            IParserVisitor serializer = new SerializerStruct(root);
+
+            serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestInt8")!);
+            serializer.EnterInt8(new MetaField(MetaTypeId.TYPE_INT8, "", "value", "", 0, 0), VALUE);
+            serializer.Finished();
+
+            var cmp = new test.TestInt8(VALUE);
+            Debug.Assert(root.Equals(cmp));
+        }
+
+        [Fact]
+        public void TestUInt8()
+        {
+            byte VALUE = 0xFE;
+
+            var root = new test.TestUInt8();
+            IParserVisitor serializer = new SerializerStruct(root);
+
+            serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestUInt8")!);
+            serializer.EnterUInt8(new MetaField(MetaTypeId.TYPE_UINT8, "", "value", "", 0, 0), VALUE);
+            serializer.Finished();
+
+            var cmp = new test.TestUInt8(VALUE);
+            Debug.Assert(root.Equals(cmp));
+        }
+
+        [Fact]
+        public void TestInt16()
+        {
+            short VALUE = -2;
+
+            var root = new test.TestInt16();
+            IParserVisitor serializer = new SerializerStruct(root);
+
+            serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestInt16")!);
+            serializer.EnterInt16(new MetaField(MetaTypeId.TYPE_INT16, "", "value", "", 0, 0), VALUE);
+            serializer.Finished();
+
+            var cmp = new test.TestInt16(VALUE);
+            Debug.Assert(root.Equals(cmp));
+        }
+
+        [Fact]
+        public void TestUInt16()
+        {
+            ushort VALUE = 0xFFFE;
+
+            var root = new test.TestUInt16();
+            IParserVisitor serializer = new SerializerStruct(root);
+
+            serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestUInt16")!);
+            serializer.EnterUInt16(new MetaField(MetaTypeId.TYPE_UINT16, "", "value", "", 0, 0), VALUE);
+            serializer.Finished();
+
+            var cmp = new test.TestUInt16(VALUE);
+            Debug.Assert(root.Equals(cmp));
+        }
+
+        [Fact]
         public void TestInt32()
         {
             int VALUE = -2;
@@ -553,6 +617,54 @@ namespace testfinalmq
             serializer.Finished();
 
             var cmp = new test.TestArrayBool(VALUE);
+            Debug.Assert(root.Equals(cmp));
+        }
+
+        [Fact]
+        public void TestArrayInt8()
+        {
+            sbyte[] VALUE = { -1, 0, 1 };
+
+            var root = new test.TestArrayInt8();
+            IParserVisitor serializer = new SerializerStruct(root);
+
+            serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayInt8")!);
+            serializer.EnterArrayInt8(new MetaField(MetaTypeId.TYPE_ARRAY_INT8, "", "value", "", 0), VALUE);
+            serializer.Finished();
+
+            var cmp = new test.TestArrayInt8(VALUE);
+            Debug.Assert(root.Equals(cmp));
+        }
+
+        [Fact]
+        public void TestArrayInt16()
+        {
+            short[] VALUE = { -1, 0, 1 };
+
+            var root = new test.TestArrayInt16();
+            IParserVisitor serializer = new SerializerStruct(root);
+
+            serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayInt16")!);
+            serializer.EnterArrayInt16(new MetaField(MetaTypeId.TYPE_ARRAY_INT16, "", "value", "", 0), VALUE);
+            serializer.Finished();
+
+            var cmp = new test.TestArrayInt16(VALUE);
+            Debug.Assert(root.Equals(cmp));
+        }
+
+        [Fact]
+        public void TestArrayUInt16()
+        {
+            ushort[] VALUE = { 0xfffe, 0, 1 };
+
+            var root = new test.TestArrayUInt16();
+            IParserVisitor serializer = new SerializerStruct(root);
+
+            serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayUInt16")!);
+            serializer.EnterArrayUInt16(new MetaField(MetaTypeId.TYPE_ARRAY_UINT16, "", "value", "", 0), VALUE);
+            serializer.Finished();
+
+            var cmp = new test.TestArrayUInt16(VALUE);
             Debug.Assert(root.Equals(cmp));
         }
 

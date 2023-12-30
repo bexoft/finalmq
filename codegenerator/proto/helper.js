@@ -28,6 +28,9 @@ module.exports = {
                     case 'enum': field.tid = 'TYPE_ENUM'; break;
                     case 'variant': field.tid = 'TYPE_VARIANT'; break;
                     case 'bool[]': field.tid = 'TYPE_ARRAY_BOOL'; break;
+                    case 'int8[]': field.tid = 'TYPE_ARRAY_INT8'; break;
+                    case 'int16[]': field.tid = 'TYPE_ARRAY_INT16'; break;
+                    case 'uint16[]': field.tid = 'TYPE_ARRAY_UINT16'; break;
                     case 'int32[]': field.tid = 'TYPE_ARRAY_INT32'; break;
                     case 'uint32[]': field.tid = 'TYPE_ARRAY_UINT32'; break;
                     case 'int64[]': field.tid = 'TYPE_ARRAY_INT64'; break;
@@ -128,7 +131,6 @@ module.exports = {
             case 'TYPE_VARIANT':        return 'finalmq.variant.VarValue'
             case 'TYPE_ARRAY_BOOL':     return 'repeated bool'
             case 'TYPE_ARRAY_INT8':     return 'repeated ' + ((this.isVarint(flags)) ? 'int32' : (this.isZigZag(flags)) ? 'sint32' : 'sfixed32')
-            case 'TYPE_ARRAY_UINT8':    return 'repeated ' + ((this.isVarint(flags)) ? 'uint32' : 'fixed32')
             case 'TYPE_ARRAY_INT16':    return 'repeated ' + ((this.isVarint(flags)) ? 'int32' : (this.isZigZag(flags)) ? 'sint32' : 'sfixed32')
             case 'TYPE_ARRAY_UINT16':   return 'repeated ' + ((this.isVarint(flags)) ? 'uint32' : 'fixed32')
             case 'TYPE_ARRAY_INT32':    return 'repeated ' + ((this.isVarint(flags)) ? 'int32' : (this.isZigZag(flags)) ? 'sint32' : 'sfixed32')

@@ -28,6 +28,9 @@ module.exports = {
                     case 'enum': field.tid = 'TYPE_ENUM'; break;
                     case 'variant': field.tid = 'TYPE_VARIANT'; break;
                     case 'bool[]': field.tid = 'TYPE_ARRAY_BOOL'; break;
+                    case 'int8[]': field.tid = 'TYPE_ARRAY_INT8'; break;
+                    case 'int16[]': field.tid = 'TYPE_ARRAY_INT16'; break;
+                    case 'uint16[]': field.tid = 'TYPE_ARRAY_UINT16'; break;
                     case 'int32[]': field.tid = 'TYPE_ARRAY_INT32'; break;
                     case 'uint32[]': field.tid = 'TYPE_ARRAY_UINT32'; break;
                     case 'int64[]': field.tid = 'TYPE_ARRAY_INT64'; break;
@@ -150,8 +153,6 @@ module.exports = {
             case 'TYPE_ARRAY_BOOL': return 'bool[]'
             case 'int8[]':
             case 'TYPE_ARRAY_INT8': return 'sbyte[]'
-            case 'uint8[]':
-            case 'TYPE_ARRAY_UINT8': return 'byte[]'
             case 'int16[]':
             case 'TYPE_ARRAY_INT16': return 'short[]'
             case 'uint16[]':
@@ -234,8 +235,6 @@ module.exports = {
             case 'TYPE_ARRAY_BOOL': return 2;
             case 'int8[]':
             case 'TYPE_ARRAY_INT8': return 2;
-            case 'uint8[]':
-            case 'TYPE_ARRAY_UINT8': return 2;
             case 'int16[]':
             case 'TYPE_ARRAY_INT16': return 2;
             case 'uint16[]':
@@ -313,8 +312,6 @@ module.exports = {
             case 'TYPE_ARRAY_BOOL': return 'Array.Empty<bool>()'
             case 'int8[]':
             case 'TYPE_ARRAY_INT8': return 'Array.Empty<sbyte>()'
-            case 'uint8[]':
-            case 'TYPE_ARRAY_UINT8': return 'Array.Empty<byte>()'
             case 'int16[]':
             case 'TYPE_ARRAY_INT16': return 'Array.Empty<short>()'
             case 'uint16[]':

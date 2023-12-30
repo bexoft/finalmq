@@ -715,25 +715,6 @@ TEST_F(TestSerializerStruct, testArrayInt8)
     ASSERT_EQ(root, cmp);
 }
 
-TEST_F(TestSerializerStruct, testArrayUInt8)
-{
-    static const std::uint8_t VALUE1 = 0xfe;
-    static const std::uint8_t VALUE2 = 0;
-    static const std::uint8_t VALUE3 = 1;
-    static const std::vector<std::uint8_t> VALUE = {VALUE1, VALUE2, VALUE3};
-
-    test::TestArrayUInt8 root;
-    std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
-
-    serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestArrayUInt8"));
-    serializer->enterArrayUInt8({MetaTypeId::TYPE_ARRAY_UINT8, "", "value", "", 0, 0}, VALUE.data(), VALUE.size());
-    serializer->finished();
-
-    test::TestArrayUInt8 cmp;
-    cmp.value = VALUE;
-    ASSERT_EQ(root, cmp);
-}
-
 TEST_F(TestSerializerStruct, testArrayInt16)
 {
     static const std::int16_t VALUE1 = -1;

@@ -252,18 +252,6 @@ namespace finalmq
                         m_visitor.EnterArrayInt8(fieldArrayInt8, data);
                     }
                     break;
-                case (int)MetaTypeId.TYPE_ARRAY_UINT8:
-                    {
-                        if (m_fieldArrayUInt8 == null)
-                        {
-                            m_fieldArrayUInt8 = m_structVarValue.GetFieldByName("valarruint8");
-                        }
-                        MetaField? fieldArrayUInt8 = m_fieldArrayUInt8;
-                        Debug.Assert(fieldArrayUInt8 != null);
-                        byte[] data = variant;
-                        m_visitor.EnterArrayUInt8(fieldArrayUInt8, data);
-                    }
-                    break;
                 case (int)MetaTypeId.TYPE_ARRAY_INT16:
                     {
                         if (m_fieldArrayInt16 == null)

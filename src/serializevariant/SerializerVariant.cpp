@@ -365,16 +365,6 @@ void SerializerVariant::Internal::enterArrayInt8(const MetaField& field, const s
     add(field, std::vector<std::int8_t>(value, value + size));
 }
 
-void SerializerVariant::Internal::enterArrayUInt8(const MetaField& field, std::vector<std::uint8_t>&& value)
-{
-    add(field, std::move(value));
-}
-
-void SerializerVariant::Internal::enterArrayUInt8(const MetaField& field, const std::uint8_t* value, ssize_t size)
-{
-    add(field, std::vector<std::uint8_t>(value, value + size));
-}
-
 void SerializerVariant::Internal::enterArrayInt16(const MetaField& field, std::vector<std::int16_t>&& value)
 {
     add(field, std::move(value));

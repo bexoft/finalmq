@@ -252,16 +252,6 @@ namespace finalmq
                     }
                 }
             }
-            public void EnterArrayUInt8(MetaField field, byte[] value)
-            {
-                if (m_ixIndex >= 0)
-                {
-                    foreach (var v in value)
-                    {
-                        m_hl7Builder.EnterUInt64(m_indexOfLayer, m_ixIndex + 1, field.Index, v);
-                    }
-                }
-            }
             public void EnterArrayInt16(MetaField field, short[] value)
             {
                 if (m_ixIndex >= 0)

@@ -879,33 +879,6 @@ TEST_F(TestParserVariant, testArrayInt8)
 }
 
 
-TEST_F(TestParserVariant, testArrayUInt8)
-{
-    static const std::uint8_t VALUE1 = 0xFE;
-    static const std::uint8_t VALUE2 = 0;
-    static const std::uint8_t VALUE3 = 2;
-    static const std::uint8_t VALUE4 = 222;
-    std::vector<std::uint8_t> VALUE = {VALUE1, VALUE2, VALUE3, VALUE4};
-
-    const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestArrayUInt8", "value");
-    ASSERT_NE(fieldValue, nullptr);
-
-    MockIParserVisitor mockVisitor;
-
-    {
-        testing::InSequence seq;
-        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
-        EXPECT_CALL(mockVisitor, enterArrayUInt8(MatcherMetaField(*fieldValue), ArrayEq(VALUE.data(), VALUE.size()), VALUE.size())).Times(1);
-        EXPECT_CALL(mockVisitor, finished()).Times(1);
-    }
-
-    Variant root = VariantStruct({{"value", VALUE}});
-    ParserVariant parser(mockVisitor, root);
-    bool res = parser.parseStruct("test.TestArrayUInt8");
-    EXPECT_EQ(res, true);
-}
-
-
 
 TEST_F(TestParserVariant, testArrayInt16)
 {

@@ -704,30 +704,6 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::TYPE_ARRAY_UINT8:
-                    {
-                        std::vector<std::uint32_t> array;
-                        bool ok = false;
-                        if (field->flags & METAFLAG_PROTO_VARINT)
-                        {
-                            ok = parseArrayVarint(array);
-                        }
-                        else
-                        {
-                            ok = parseArrayFixed<std::uint32_t, WIRETYPE_FIXED32>(array);
-                        }
-                        if (ok)
-                        {
-                            std::vector<std::uint8_t> arrayUInt8;
-                            arrayUInt8.resize(array.size());
-                            for (size_t i = 0; i < array.size(); ++i)
-                            {
-                                arrayUInt8[i] = static_cast<std::uint8_t>(array[i]);
-                            }
-                            m_visitor.enterArrayUInt8(*field, std::move(arrayUInt8));
-                        }
-                    }
-                    break;
                 case MetaTypeId::TYPE_ARRAY_INT16:
                     {
                         std::vector<std::int32_t> array;

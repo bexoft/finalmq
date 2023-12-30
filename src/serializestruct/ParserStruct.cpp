@@ -150,12 +150,6 @@ void ParserStruct::processField(const StructBase& structBase, const FieldInfo& f
             m_visitor.enterArrayInt8(field, value.data(), value.size());
         }
         break;
-    case TYPE_ARRAY_UINT8:
-        {
-            const std::vector<std::uint8_t>& value = structBase.getValue<std::vector<std::uint8_t>>(fieldInfo);
-            m_visitor.enterArrayUInt8(field, value.data(), value.size());
-        }
-        break;
     case TYPE_ARRAY_INT16:
         {
             const std::vector<std::int16_t>& value = structBase.getValue<std::vector<std::int16_t>>(fieldInfo);
