@@ -422,163 +422,168 @@ void SerializerStruct::convertString(StructBase& structBase, const FieldInfo& fi
     {
         return;
     }
+    std::string str;
+    if (size > 0)
+    {
+        str = std::string(value, value + size);
+    }
     switch (fieldDest->typeId)
     {
     case MetaTypeId::TYPE_BOOL:
     {
-        bool v = (size == 4 && (memcmp(value, "true", 4) == 0));
+        bool v = (str.size() == 4 && (memcmp(str.c_str(), "true", 4) == 0));
         setValue<bool>(structBase, fieldInfoDest, v);
     }
     break;
     case MetaTypeId::TYPE_INT8:
     {
-        std::int8_t v = static_cast<std::int8_t>(strtol(value, nullptr, 10));
+        std::int8_t v = static_cast<std::int8_t>(strtol(str.c_str(), nullptr, 10));
         setValue<std::int8_t>(structBase, fieldInfoDest, v);
     }
     break;
     case MetaTypeId::TYPE_UINT8:
     {
-        std::uint8_t v = static_cast<std::uint8_t>(strtoul(value, nullptr, 10));
+        std::uint8_t v = static_cast<std::uint8_t>(strtoul(str.c_str(), nullptr, 10));
         setValue<std::uint8_t>(structBase, fieldInfoDest, v);
     }
     break;
     case MetaTypeId::TYPE_INT16:
     {
-        std::int16_t v = static_cast<std::int16_t>(strtol(value, nullptr, 10));
+        std::int16_t v = static_cast<std::int16_t>(strtol(str.c_str(), nullptr, 10));
         setValue<std::int16_t>(structBase, fieldInfoDest, v);
     }
     break;
     case MetaTypeId::TYPE_UINT16:
     {
-        std::uint16_t v = static_cast<std::uint16_t>(strtoul(value, nullptr, 10));
+        std::uint16_t v = static_cast<std::uint16_t>(strtoul(str.c_str(), nullptr, 10));
         setValue<std::uint16_t>(structBase, fieldInfoDest, v);
     }
     break;
     case MetaTypeId::TYPE_INT32:
     {
-        std::int32_t v = strtol(value, nullptr, 10);
+        std::int32_t v = strtol(str.c_str(), nullptr, 10);
         setValue<std::int32_t>(structBase, fieldInfoDest, v);
     }
     break;
     case MetaTypeId::TYPE_UINT32:
     {
-        std::uint32_t v = strtoul(value, nullptr, 10);
+        std::uint32_t v = strtoul(str.c_str(), nullptr, 10);
         setValue<std::uint32_t>(structBase, fieldInfoDest, v);
     }
     break;
     case MetaTypeId::TYPE_INT64:
     {
-        std::int64_t v = strtoll(value, nullptr, 10);
+        std::int64_t v = strtoll(str.c_str(), nullptr, 10);
         setValue<std::int64_t>(structBase, fieldInfoDest, v);
     }
     break;
     case MetaTypeId::TYPE_UINT64:
     {
-        std::uint64_t v = strtoull(value, nullptr, 10);
+        std::uint64_t v = strtoull(str.c_str(), nullptr, 10);
         setValue<std::uint64_t>(structBase, fieldInfoDest, v);
     }
     break;
     case MetaTypeId::TYPE_FLOAT:
     {
-        float v = strtof32(value, nullptr);
+        float v = strtof32(str.c_str(), nullptr);
         setValue<float>(structBase, fieldInfoDest, v);
     }
     break;
     case MetaTypeId::TYPE_DOUBLE:
     {
-        double v = strtof64(value, nullptr);
+        double v = strtof64(str.c_str(), nullptr);
         setValue<double>(structBase, fieldInfoDest, v);
     }
     break;
     case MetaTypeId::TYPE_STRING:
-        setValue<std::string>(structBase, fieldInfoDest, std::string(value, size));
+        setValue<std::string>(structBase, fieldInfoDest, str);
         break;
     case MetaTypeId::TYPE_BYTES:
     {
-        Bytes bytes(value, value + size);
+        Bytes bytes(str.c_str(), str.c_str() + str.size());
         setValue<Bytes>(structBase, fieldInfoDest, std::move(bytes));
     }
     break;
     case MetaTypeId::TYPE_ENUM:
     {
-        std::int32_t v = MetaDataGlobal::instance().getEnumValueByName(*fieldDest, std::string(value, size));
+        std::int32_t v = MetaDataGlobal::instance().getEnumValueByName(*fieldDest, str);
         setValue<std::int32_t>(structBase, fieldInfoDest, v);
     }
     break;
     case MetaTypeId::TYPE_ARRAY_BOOL:
     {
-        bool v = (size == 4 && (memcmp(value, "true", 4) == 0));
+        bool v = (str.size() == 4 && (memcmp(str.c_str(), "true", 4) == 0));
         setValue<std::vector<bool>>(structBase, fieldInfoDest, { v });
     }
     break;
     case MetaTypeId::TYPE_ARRAY_INT8:
     {
-        std::int8_t v = static_cast<std::int8_t>(strtol(value, nullptr, 10));
+        std::int8_t v = static_cast<std::int8_t>(strtol(str.c_str(), nullptr, 10));
         setValue< std::vector<std::int8_t>>(structBase, fieldInfoDest, { v });
     }
     break;
     case MetaTypeId::TYPE_ARRAY_INT16:
     {
-        std::int16_t v = static_cast<std::int16_t>(strtol(value, nullptr, 10));
+        std::int16_t v = static_cast<std::int16_t>(strtol(str.c_str(), nullptr, 10));
         setValue< std::vector<std::int16_t>>(structBase, fieldInfoDest, { v });
     }
     break;
     case MetaTypeId::TYPE_ARRAY_UINT16:
     {
-        std::uint16_t v = static_cast<std::uint16_t>(strtoul(value, nullptr, 10));
+        std::uint16_t v = static_cast<std::uint16_t>(strtoul(str.c_str(), nullptr, 10));
         setValue< std::vector<std::uint16_t>>(structBase, fieldInfoDest, { v });
     }
     break;
     case MetaTypeId::TYPE_ARRAY_INT32:
     {
-        std::int32_t v = strtol(value, nullptr, 10);
+        std::int32_t v = strtol(str.c_str(), nullptr, 10);
         setValue< std::vector<std::int32_t>>(structBase, fieldInfoDest, { v });
     }
     break;
     case MetaTypeId::TYPE_ARRAY_UINT32:
     {
-        std::uint32_t v = strtoul(value, nullptr, 10);
+        std::uint32_t v = strtoul(str.c_str(), nullptr, 10);
         setValue< std::vector<std::uint32_t>>(structBase, fieldInfoDest, { v });
     }
     break;
     case MetaTypeId::TYPE_ARRAY_INT64:
     {
-        std::int64_t v = strtoll(value, nullptr, 10);
+        std::int64_t v = strtoll(str.c_str(), nullptr, 10);
         setValue< std::vector<std::int64_t>>(structBase, fieldInfoDest, { v });
     }
     break;
     case MetaTypeId::TYPE_ARRAY_UINT64:
     {
-        std::uint64_t v = strtoull(value, nullptr, 10);
+        std::uint64_t v = strtoull(str.c_str(), nullptr, 10);
         setValue< std::vector<std::uint64_t>>(structBase, fieldInfoDest, { v });
     }
     break;
     case MetaTypeId::TYPE_ARRAY_FLOAT:
     {
-        float v = strtof32(value, nullptr);
+        float v = strtof32(str.c_str(), nullptr);
         setValue<std::vector<float>>(structBase, fieldInfoDest, { v });
     }
     break;
     case MetaTypeId::TYPE_ARRAY_DOUBLE:
     {
-        double v = strtof64(value, nullptr);
+        double v = strtof64(str.c_str(), nullptr);
         setValue<std::vector<double>>(structBase, fieldInfoDest, { v });
     }
     break;
     case MetaTypeId::TYPE_ARRAY_STRING:
     {
-        setValue<std::vector<std::string>>(structBase, fieldInfoDest, { std::string(value, size) });
+        setValue<std::vector<std::string>>(structBase, fieldInfoDest, { str });
     }
     break;
     case MetaTypeId::TYPE_ARRAY_BYTES:
     {
-        Bytes bytes(value, value + size);
+        Bytes bytes(str.c_str(), str.c_str() + str.size());
         setValue<std::vector<Bytes>>(structBase, fieldInfoDest, { std::move(bytes) });
     }
     break;
     case MetaTypeId::TYPE_ARRAY_ENUM:
     {
-        std::int32_t v = MetaDataGlobal::instance().getEnumValueByName(*fieldDest, std::string(value, size));
+        std::int32_t v = MetaDataGlobal::instance().getEnumValueByName(*fieldDest, str);
         setValue<std::vector<std::int32_t>>(structBase, fieldInfoDest, { v });
     }
     break;
@@ -1463,7 +1468,14 @@ void SerializerStruct::enterBytes(const MetaField& field, const BytesElement* va
 
     if (fieldDest->typeId == MetaTypeId::TYPE_BYTES)
     {
-        setValue<Bytes>(*structBase, *fieldInfoDest, Bytes(value, value + size));
+        if (size > 0)
+        {
+            setValue<Bytes>(*structBase, *fieldInfoDest, Bytes(value, value + size));
+        }
+        else
+        {
+            setValue<Bytes>(*structBase, *fieldInfoDest, Bytes());
+        }
     }
     else
     {
