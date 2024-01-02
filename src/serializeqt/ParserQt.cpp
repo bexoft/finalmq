@@ -663,21 +663,19 @@ namespace finalmq {
 
         value.resize(size);
 
-        ssize_t sizeBytes = (size + 7) / 8;
+        const ssize_t sizeBytes = (size + 7) / 8;
 
         if (m_size >= sizeBytes)
         {
             assert(m_ptr);
-            for (ssize_t i = 0; i < sizeBytes; ++i)
+            for (std::uint32_t i = 0; i < size; ++i)
             {
-                std::uint8_t c = *m_ptr;
-                for (int n = 0; n < 8; ++n)
-                {
-                    bool v = c & (1 << n);
-                    value[i * 8 + n] = v;
-                }
-                ++m_ptr;
+                const std::uint32_t indexBytes = i / 8;
+                const std::uint32_t indexBits = i % 8;
+                bool v = (m_ptr[indexBytes] & (1 << indexBits)) ? true : false;
+                value[i] = v;
             }
+            m_ptr += sizeBytes;
             m_size -= sizeBytes;
             return true;
         }
