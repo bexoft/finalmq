@@ -44,8 +44,8 @@ namespace finalmq {
     }
 
 
-    StructInfo::StructInfo(const std::string& typeName, const std::string& description, int flags, FuncStructBaseFactory factory, std::vector<MetaField>&& fields, std::vector<FieldInfo>&& fieldInfos)
-        : m_metaStruct(MetaDataGlobal::instance().addStruct({ typeName, description, std::move(fields), flags }))
+    StructInfo::StructInfo(const std::string& typeName, const std::string& description, int flags, const std::vector<std::string>& attrs, FuncStructBaseFactory factory, std::vector<MetaField>&& fields, std::vector<FieldInfo>&& fieldInfos)
+        : m_metaStruct(MetaDataGlobal::instance().addStruct({ typeName, description, std::move(fields), flags, attrs }))
         , m_fieldInfos(std::move(fieldInfos))
     {
         StructFactoryRegistry::instance().registerFactory(typeName, factory);
@@ -57,8 +57,8 @@ namespace finalmq {
     }
 
 
-    EnumInfo::EnumInfo(const std::string& typeName, const std::string& description, std::vector<MetaEnumEntry>&& entries)
-        : m_metaEnum(MetaDataGlobal::instance().addEnum({ typeName, description, std::move(entries) }))
+    EnumInfo::EnumInfo(const std::string& typeName, const std::string& description, const std::vector<std::string>& attrs, std::vector<MetaEnumEntry>&& entries)
+        : m_metaEnum(MetaDataGlobal::instance().addEnum({ typeName, description, attrs, std::move(entries) }))
     {
     }
 

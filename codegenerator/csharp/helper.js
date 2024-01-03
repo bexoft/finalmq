@@ -374,6 +374,20 @@ module.exports = {
             }
         }
         return entries[0]
+    },
+
+    convertAttrs: function (attrArray) {
+        var attrs = 'new string[] {'
+        if (attrArray) {
+            for (var i = 0; i < attrArray.length; i++) {
+                attrs += '"' + attrArray[i] + '"'
+                if (i < attrArray.length - 1) {
+                    attrs += ', '
+                }
+            }
+        }
+        attrs += '}'
+        return attrs
     }
      
 }

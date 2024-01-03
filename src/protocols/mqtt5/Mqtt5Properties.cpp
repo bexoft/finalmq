@@ -64,7 +64,7 @@ void Mqtt5PropertyId::fromString(const std::string& name)
     m_value = static_cast<Enum>(_enumInfo.getMetaEnum().getValueByName(name));
 }
 const finalmq::EnumInfo Mqtt5PropertyId::_enumInfo = {
-    "private.Mqtt5PropertyId", "", {
+    "private.Mqtt5PropertyId", "", {}, {
         {"Invalid", 0, "", ""},
         {"PayloadFormatIndicator", 1, "", ""},
         {"ContentType", 3, "", ""},

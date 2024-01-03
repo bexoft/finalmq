@@ -22,21 +22,23 @@
 
 
 #include "finalmq/serializeqt/SerializerQt.h"
+#include "finalmq/serializeqt/Qt.h"
 #include "finalmq/serialize/ParserProcessValuesInOrder.h"
+#include "finalmq/helpers/Utils.h"
 #include "finalmq/metadata/MetaData.h"
 
-//#include <assert.h>
-//#include <algorithm>
-//#include <cmath>
+#include <assert.h>
+#include <codecvt>
 #include <codecvt>
 #include <locale>
+#include <algorithm>
 
 namespace finalmq {
 
 
-    SerializerQt::SerializerQt(IZeroCopyBuffer& buffer, int maxBlockSize, bool wrappedByQVariant)
+    SerializerQt::SerializerQt(IZeroCopyBuffer& buffer, int maxBlockSize)
         : ParserConverter()
-        , m_internal(buffer, maxBlockSize, wrappedByQVariant)
+        , m_internal(buffer, maxBlockSize)
         , m_parserProcessValuesInOrder()
     {
         m_parserProcessValuesInOrder = std::make_unique<ParserProcessValuesInOrder>(false, &m_internal);
@@ -45,9 +47,8 @@ namespace finalmq {
 
 
 
-    SerializerQt::Internal::Internal(IZeroCopyBuffer& buffer, int maxBlockSize, bool wrappedByQVariant)
-        : m_wrappedByQVariant(wrappedByQVariant)
-        , m_zeroCopybuffer(buffer)
+    SerializerQt::Internal::Internal(IZeroCopyBuffer& buffer, int maxBlockSize)
+        : m_zeroCopybuffer(buffer)
         , m_maxBlockSize(maxBlockSize)
     {
     }
@@ -75,12 +76,10 @@ namespace finalmq {
         {
             ++m_arrayStructCounter;
         }
-        ++m_levelStruct;
     }
 
     void SerializerQt::Internal::exitStruct(const MetaField& /*field*/)
     {
-        --m_levelStruct;
     }
 
     void SerializerQt::Internal::enterStructNull(const MetaField& /*field*/)
@@ -114,7 +113,7 @@ namespace finalmq {
     void SerializerQt::Internal::enterBool(const MetaField& field, bool value)
     {
         assert(field.typeId == MetaTypeId::TYPE_BOOL);
-        if (isWrappedByQVariant())
+        if (isWrappedByQVariant(field))
         {
             serializeQVariantHeader(field);
         }
@@ -125,7 +124,7 @@ namespace finalmq {
     void SerializerQt::Internal::enterInt8(const MetaField& field, std::int8_t value)
     {
         assert(field.typeId == MetaTypeId::TYPE_INT8);
-        if (isWrappedByQVariant())
+        if (isWrappedByQVariant(field))
         {
             serializeQVariantHeader(field);
         }
@@ -136,7 +135,7 @@ namespace finalmq {
     void SerializerQt::Internal::enterUInt8(const MetaField& field, std::uint8_t value)
     {
         assert(field.typeId == MetaTypeId::TYPE_UINT8);
-        if (isWrappedByQVariant())
+        if (isWrappedByQVariant(field))
         {
             serializeQVariantHeader(field);
         }
@@ -147,7 +146,7 @@ namespace finalmq {
     void SerializerQt::Internal::enterInt16(const MetaField& field, std::int16_t value)
     {
         assert(field.typeId == MetaTypeId::TYPE_INT16);
-        if (isWrappedByQVariant())
+        if (isWrappedByQVariant(field))
         {
             serializeQVariantHeader(field);
         }
@@ -158,7 +157,7 @@ namespace finalmq {
     void SerializerQt::Internal::enterUInt16(const MetaField& field, std::uint16_t value)
     {
         assert(field.typeId == MetaTypeId::TYPE_UINT16);
-        if (isWrappedByQVariant())
+        if (isWrappedByQVariant(field))
         {
             serializeQVariantHeader(field);
         }
@@ -169,7 +168,7 @@ namespace finalmq {
     void SerializerQt::Internal::enterInt32(const MetaField& field, std::int32_t value)
     {
         assert(field.typeId == MetaTypeId::TYPE_INT32);
-        if (isWrappedByQVariant())
+        if (isWrappedByQVariant(field))
         {
             serializeQVariantHeader(field);
         }
@@ -180,7 +179,7 @@ namespace finalmq {
     void SerializerQt::Internal::enterUInt32(const MetaField& field, std::uint32_t value)
     {
         assert(field.typeId == MetaTypeId::TYPE_UINT32);
-        if (isWrappedByQVariant())
+        if (isWrappedByQVariant(field))
         {
             serializeQVariantHeader(field);
         }
@@ -191,7 +190,7 @@ namespace finalmq {
     void SerializerQt::Internal::enterInt64(const MetaField& field, std::int64_t value)
     {
         assert(field.typeId == MetaTypeId::TYPE_INT64);
-        if (isWrappedByQVariant())
+        if (isWrappedByQVariant(field))
         {
             serializeQVariantHeader(field);
         }
@@ -202,7 +201,7 @@ namespace finalmq {
     void SerializerQt::Internal::enterUInt64(const MetaField& field, std::uint64_t value)
     {
         assert(field.typeId == MetaTypeId::TYPE_UINT64);
-        if (isWrappedByQVariant())
+        if (isWrappedByQVariant(field))
         {
             serializeQVariantHeader(field);
         }
@@ -213,7 +212,7 @@ namespace finalmq {
     void SerializerQt::Internal::enterFloat(const MetaField& field, float value)
     {
         assert(field.typeId == MetaTypeId::TYPE_FLOAT);
-        if (isWrappedByQVariant())
+        if (isWrappedByQVariant(field))
         {
             serializeQVariantHeader(field);
         }
@@ -224,7 +223,7 @@ namespace finalmq {
     void SerializerQt::Internal::enterDouble(const MetaField& field, double value)
     {
         assert(field.typeId == MetaTypeId::TYPE_DOUBLE);
-        if (isWrappedByQVariant())
+        if (isWrappedByQVariant(field))
         {
             serializeQVariantHeader(field);
         }
@@ -235,7 +234,7 @@ namespace finalmq {
     void SerializerQt::Internal::enterString(const MetaField& field, std::string&& value)
     {
         assert(field.typeId == MetaTypeId::TYPE_STRING);
-        if (isWrappedByQVariant())
+        if (isWrappedByQVariant(field))
         {
             serializeQVariantHeader(field);
         }
@@ -246,7 +245,7 @@ namespace finalmq {
     void SerializerQt::Internal::enterString(const MetaField& field, const char* value, ssize_t size)
     {
         assert(field.typeId == MetaTypeId::TYPE_STRING);
-        if (isWrappedByQVariant())
+        if (isWrappedByQVariant(field))
         {
             serializeQVariantHeader(field);
         }
@@ -263,7 +262,7 @@ namespace finalmq {
     void SerializerQt::Internal::enterBytes(const MetaField& field, const BytesElement* value, ssize_t size)
     {
         assert(field.typeId == MetaTypeId::TYPE_BYTES);
-        if (isWrappedByQVariant())
+        if (isWrappedByQVariant(field))
         {
             serializeQVariantHeader(field);
         }
@@ -274,7 +273,7 @@ namespace finalmq {
     void SerializerQt::Internal::enterEnum(const MetaField& field, std::int32_t value)
     {
         assert(field.typeId == MetaTypeId::TYPE_ENUM);
-        if (isWrappedByQVariant())
+        if (isWrappedByQVariant(field))
         {
             serializeQVariantHeader(field);
         }
@@ -301,7 +300,7 @@ namespace finalmq {
     void SerializerQt::Internal::enterArrayBool(const MetaField& field, const std::vector<bool>& value)
     {
         assert(field.typeId == MetaTypeId::TYPE_ARRAY_BOOL);
-        if (isWrappedByQVariant())
+        if (isWrappedByQVariant(field))
         {
             serializeQVariantHeader(field);
         }
@@ -318,7 +317,7 @@ namespace finalmq {
     void SerializerQt::Internal::enterArrayInt8(const MetaField& field, const std::int8_t* value, ssize_t size)
     {
         assert(field.typeId == MetaTypeId::TYPE_ARRAY_INT8);
-        if (isWrappedByQVariant())
+        if (isWrappedByQVariant(field))
         {
             serializeQVariantHeader(field);
         }
@@ -334,7 +333,7 @@ namespace finalmq {
     void SerializerQt::Internal::enterArrayInt16(const MetaField& field, const std::int16_t* value, ssize_t size)
     {
         assert(field.typeId == MetaTypeId::TYPE_ARRAY_INT16);
-        if (isWrappedByQVariant())
+        if (isWrappedByQVariant(field))
         {
             serializeQVariantHeader(field);
         }
@@ -350,7 +349,7 @@ namespace finalmq {
     void SerializerQt::Internal::enterArrayUInt16(const MetaField& field, const std::uint16_t* value, ssize_t size)
     {
         assert(field.typeId == MetaTypeId::TYPE_ARRAY_UINT16);
-        if (isWrappedByQVariant())
+        if (isWrappedByQVariant(field))
         {
             serializeQVariantHeader(field);
         }
@@ -366,7 +365,7 @@ namespace finalmq {
     void SerializerQt::Internal::enterArrayInt32(const MetaField& field, const std::int32_t* value, ssize_t size)
     {
         assert(field.typeId == MetaTypeId::TYPE_ARRAY_INT32);
-        if (isWrappedByQVariant())
+        if (isWrappedByQVariant(field))
         {
             serializeQVariantHeader(field);
         }
@@ -382,7 +381,7 @@ namespace finalmq {
     void SerializerQt::Internal::enterArrayUInt32(const MetaField& field, const std::uint32_t* value, ssize_t size)
     {
         assert(field.typeId == MetaTypeId::TYPE_ARRAY_UINT32);
-        if (isWrappedByQVariant())
+        if (isWrappedByQVariant(field))
         {
             serializeQVariantHeader(field);
         }
@@ -398,7 +397,7 @@ namespace finalmq {
     void SerializerQt::Internal::enterArrayInt64(const MetaField& field, const std::int64_t* value, ssize_t size)
     {
         assert(field.typeId == MetaTypeId::TYPE_ARRAY_INT64);
-        if (isWrappedByQVariant())
+        if (isWrappedByQVariant(field))
         {
             serializeQVariantHeader(field);
         }
@@ -414,7 +413,7 @@ namespace finalmq {
     void SerializerQt::Internal::enterArrayUInt64(const MetaField& field, const std::uint64_t* value, ssize_t size)
     {
         assert(field.typeId == MetaTypeId::TYPE_ARRAY_UINT64);
-        if (isWrappedByQVariant())
+        if (isWrappedByQVariant(field))
         {
             serializeQVariantHeader(field);
         }
@@ -430,7 +429,7 @@ namespace finalmq {
     void SerializerQt::Internal::enterArrayFloat(const MetaField& field, const float* value, ssize_t size)
     {
         assert(field.typeId == MetaTypeId::TYPE_ARRAY_FLOAT);
-        if (isWrappedByQVariant())
+        if (isWrappedByQVariant(field))
         {
             serializeQVariantHeader(field);
         }
@@ -446,7 +445,7 @@ namespace finalmq {
     void SerializerQt::Internal::enterArrayDouble(const MetaField& field, const double* value, ssize_t size)
     {
         assert(field.typeId == MetaTypeId::TYPE_ARRAY_DOUBLE);
-        if (isWrappedByQVariant())
+        if (isWrappedByQVariant(field))
         {
             serializeQVariantHeader(field);
         }
@@ -462,7 +461,7 @@ namespace finalmq {
     void SerializerQt::Internal::enterArrayString(const MetaField& field, const std::vector<std::string>& value)
     {
         assert(field.typeId == MetaTypeId::TYPE_ARRAY_STRING);
-        if (isWrappedByQVariant())
+        if (isWrappedByQVariant(field))
         {
             serializeQVariantHeader(field);
         }
@@ -483,7 +482,7 @@ namespace finalmq {
     void SerializerQt::Internal::enterArrayBytes(const MetaField& field, const std::vector<Bytes>& value)
     {
         assert(field.typeId == MetaTypeId::TYPE_ARRAY_BYTES);
-        if (isWrappedByQVariant())
+        if (isWrappedByQVariant(field))
         {
             serializeQVariantHeader(field);
         }
@@ -504,7 +503,7 @@ namespace finalmq {
     void SerializerQt::Internal::enterArrayEnum(const MetaField& field, const std::int32_t* value, ssize_t size)
     {
         assert(field.typeId == MetaTypeId::TYPE_ARRAY_ENUM);
-        if (isWrappedByQVariant())
+        if (isWrappedByQVariant(field))
         {
             serializeQVariantHeader(field);
         }
@@ -686,13 +685,285 @@ namespace finalmq {
 
     void SerializerQt::Internal::serializeQVariantHeader(const MetaField& field)
     {
-        reserveSpace(sizeof(std::int32_t) + sizeof(std::int8_t) + field.typeName.size());
-        //todo
+        std::uint32_t typeId;
+        std::string typeName;
+        getQVariantType(field, typeId, typeName);
+
+        reserveSpace(sizeof(std::int32_t) + sizeof(std::int8_t) + (typeId == static_cast<std::uint32_t>(QtType::User)) ? typeName.size() : 0);
+        
+        serialize(typeId);
+        serialize(static_cast<std::uint8_t>(0));
+
+        if (typeId == static_cast<std::uint32_t>(QtType::User))
+        {
+            serialize(typeName.data(), typeName.size() + 1);
+        }
     }
 
-    bool SerializerQt::Internal::isWrappedByQVariant() const
+    bool SerializerQt::Internal::isWrappedByQVariant(const MetaField& field)
     {
-        return (m_wrappedByQVariant && (m_levelStruct == 1));
+        static const std::string KEY_QVARIANT = "qvariant";
+        const auto it = field.properties.find(KEY_QVARIANT);
+        if (it != field.properties.end())
+        {
+            return true;
+        }
+        return false;
+    }
+
+    bool SerializerQt::Internal::getQVariantTypeFromMetaTypeId(const MetaField& field, std::uint32_t& typeId, std::string& typeName)
+    {
+        typeId = static_cast<std::uint32_t>(QtType::UnknownType);
+        typeName.clear();
+
+        switch (field.typeId)
+        {
+            case MetaTypeId::TYPE_BOOL:
+                typeId = static_cast<std::uint32_t>(QtType::Bool);
+                break;
+            case MetaTypeId::TYPE_INT8:
+                typeId = static_cast<std::uint32_t>(QtType::Char);
+                break;
+            case MetaTypeId::TYPE_UINT8:
+                typeId = static_cast<std::uint32_t>(QtType::UChar);
+                break;
+            case MetaTypeId::TYPE_INT16:
+                typeId = static_cast<std::uint32_t>(QtType::Short);
+                break;
+            case MetaTypeId::TYPE_UINT16:
+                typeId = static_cast<std::uint32_t>(QtType::UShort);
+                break;
+            case MetaTypeId::TYPE_INT32:
+                typeId = static_cast<std::uint32_t>(QtType::Int);
+                break;
+            case MetaTypeId::TYPE_UINT32:
+                typeId = static_cast<std::uint32_t>(QtType::UInt);
+                break;
+            case MetaTypeId::TYPE_INT64:
+                typeId = static_cast<std::uint32_t>(QtType::LongLong);
+                break;
+            case MetaTypeId::TYPE_UINT64:
+                typeId = static_cast<std::uint32_t>(QtType::ULongLong);
+                break;
+            case MetaTypeId::TYPE_FLOAT:
+                typeId = static_cast<std::uint32_t>(QtType::Float);
+                break;
+            case MetaTypeId::TYPE_DOUBLE:
+                typeId = static_cast<std::uint32_t>(QtType::Double);
+                break;
+            case MetaTypeId::TYPE_STRING:
+                typeId = static_cast<std::uint32_t>(QtType::QString);
+                break;
+            case MetaTypeId::TYPE_BYTES:
+                typeId = static_cast<std::uint32_t>(QtType::QByteArray);
+                break;
+            case MetaTypeId::TYPE_STRUCT:
+                typeId = static_cast<std::uint32_t>(QtType::User);
+                typeName = Utils::replaceAll(field.typeName, ".", "::");
+                break;
+            case MetaTypeId::TYPE_ENUM:
+                typeId = static_cast<std::uint32_t>(QtType::User);
+                typeName = Utils::replaceAll(field.typeName, ".", "::");
+                break;
+            case MetaTypeId::TYPE_ARRAY_BOOL:
+                typeId = static_cast<std::uint32_t>(QtType::QBitArray);
+                break;
+            case MetaTypeId::TYPE_ARRAY_INT8:
+                typeId = static_cast<std::uint32_t>(QtType::User);
+                typeName = "char[]";
+                break;
+            case MetaTypeId::TYPE_ARRAY_INT16:
+                typeId = static_cast<std::uint32_t>(QtType::User);
+                typeName = "short[]";
+                break;
+            case MetaTypeId::TYPE_ARRAY_UINT16:
+                typeId = static_cast<std::uint32_t>(QtType::User);
+                typeName = "ushort[]";
+                break;
+            case MetaTypeId::TYPE_ARRAY_INT32:
+                typeId = static_cast<std::uint32_t>(QtType::User);
+                typeName = "int[]";
+                break;
+            case MetaTypeId::TYPE_ARRAY_UINT32:
+                typeId = static_cast<std::uint32_t>(QtType::User);
+                typeName = "uint[]";
+                break;
+            case MetaTypeId::TYPE_ARRAY_INT64:
+                typeId = static_cast<std::uint32_t>(QtType::User);
+                typeName = "qlonglong[]";
+                break;
+            case MetaTypeId::TYPE_ARRAY_UINT64:
+                typeId = static_cast<std::uint32_t>(QtType::User);
+                typeName = "uqlonglong[]";
+                break;
+            case MetaTypeId::TYPE_ARRAY_FLOAT:
+                typeId = static_cast<std::uint32_t>(QtType::User);
+                typeName = "float[]";
+                break;
+            case MetaTypeId::TYPE_ARRAY_DOUBLE:
+                typeId = static_cast<std::uint32_t>(QtType::User);
+                typeName = "double[]";
+                break;
+            case MetaTypeId::TYPE_ARRAY_STRING:
+                typeId = static_cast<std::uint32_t>(QtType::QStringList);
+                break;
+            case MetaTypeId::TYPE_ARRAY_BYTES:
+                typeId = static_cast<std::uint32_t>(QtType::QByteArrayList);
+                break;
+            case MetaTypeId::TYPE_ARRAY_STRUCT:
+                typeId = static_cast<std::uint32_t>(QtType::User);
+                typeName = "QList<" + Utils::replaceAll(field.typeName, ".", "::") + ">";
+                break;
+            case MetaTypeId::TYPE_ARRAY_ENUM:
+                typeId = static_cast<std::uint32_t>(QtType::User);
+                typeName = "QList<" + Utils::replaceAll(field.typeName, ".", "::") + ">";
+                break;
+            default:
+                break;
+        }
+
+        return (typeId != static_cast<std::uint32_t>(QtType::UnknownType));
+    }
+
+    std::uint32_t SerializerQt::Internal::getTypeIdByName(const std::string& typeName)
+    {
+        std::unordered_map<std::string, std::uint32_t> table{ 
+            { "bool", static_cast<std::uint32_t>(QtType::Bool) },
+            { "int", static_cast<std::uint32_t>(QtType::Int) },
+            { "uint", static_cast<std::uint32_t>(QtType::UInt) },
+            { "qlonglong", static_cast<std::uint32_t>(QtType::LongLong) },
+            { "qulonglong", static_cast<std::uint32_t>(QtType::ULongLong) },
+            { "double", static_cast<std::uint32_t>(QtType::Double) },
+            { "long", static_cast<std::uint32_t>(QtType::Long) },
+            { "short", static_cast<std::uint32_t>(QtType::Short) },
+            { "char", static_cast<std::uint32_t>(QtType::Char) },
+            { "ulong", static_cast<std::uint32_t>(QtType::ULong) },
+            { "ushort", static_cast<std::uint32_t>(QtType::UShort) },
+            { "uchar", static_cast<std::uint32_t>(QtType::UChar) },
+            { "float", static_cast<std::uint32_t>(QtType::Float) },
+            { "QChar", static_cast<std::uint32_t>(QtType::QChar) },
+            { "QString", static_cast<std::uint32_t>(QtType::QString) },
+            { "QStringList", static_cast<std::uint32_t>(QtType::QStringList) },
+            { "QByteArray", static_cast<std::uint32_t>(QtType::QByteArray) },
+            { "QBitArray", static_cast<std::uint32_t>(QtType::QBitArray) },
+            { "QDate", static_cast<std::uint32_t>(QtType::QDate) },
+            { "QTime", static_cast<std::uint32_t>(QtType::QTime) },
+            { "QDateTime", static_cast<std::uint32_t>(QtType::QDateTime) },
+            { "QUrl", static_cast<std::uint32_t>(QtType::QUrl) },
+            { "QLocale", static_cast<std::uint32_t>(QtType::QLocale) },
+            { "QRect", static_cast<std::uint32_t>(QtType::QRect) },
+            { "QRectF", static_cast<std::uint32_t>(QtType::QRectF) },
+            { "QSize", static_cast<std::uint32_t>(QtType::QSize) },
+            { "QSizeF", static_cast<std::uint32_t>(QtType::QSizeF) },
+            { "QLine", static_cast<std::uint32_t>(QtType::QLine) },
+            { "QLineF", static_cast<std::uint32_t>(QtType::QLineF) },
+            { "QPoint", static_cast<std::uint32_t>(QtType::QPoint) },
+            { "QPointF", static_cast<std::uint32_t>(QtType::QPointF) },
+            { "QRegExp", static_cast<std::uint32_t>(QtType::QRegExp) },
+            { "QEasingCurve", static_cast<std::uint32_t>(QtType::QEasingCurve) },
+            { "QUuid", static_cast<std::uint32_t>(QtType::QUuid) },
+            { "QVariant", static_cast<std::uint32_t>(QtType::QVariant) },
+            { "QModelIndex", static_cast<std::uint32_t>(QtType::QModelIndex) },
+            { "QPersistentModelIndex", static_cast<std::uint32_t>(QtType::QPersistentModelIndex) },
+            { "QRegularExpression", static_cast<std::uint32_t>(QtType::QRegularExpression) },
+            { "QJsonValue", static_cast<std::uint32_t>(QtType::QJsonValue) },
+            { "QJsonObject", static_cast<std::uint32_t>(QtType::QJsonObject) },
+            { "QJsonArray", static_cast<std::uint32_t>(QtType::QJsonArray) },
+            { "QJsonDocument", static_cast<std::uint32_t>(QtType::QJsonDocument) },
+            { "QByteArrayList", static_cast<std::uint32_t>(QtType::QByteArrayList) },
+            { "QObjectStar", static_cast<std::uint32_t>(QtType::QObjectStar) },
+            { "SChar", static_cast<std::uint32_t>(QtType::SChar) },
+            { "Void", static_cast<std::uint32_t>(QtType::Void) },
+            { "Nullptr", static_cast<std::uint32_t>(QtType::Nullptr) },
+            { "QVariantMap", static_cast<std::uint32_t>(QtType::QVariantMap) },
+            { "QVariantList", static_cast<std::uint32_t>(QtType::QVariantList) },
+            { "QVariantHash", static_cast<std::uint32_t>(QtType::QVariantHash) },
+            { "QCborSimpleType", static_cast<std::uint32_t>(QtType::QCborSimpleType) },
+            { "QCborValue", static_cast<std::uint32_t>(QtType::QCborValue) },
+            { "QCborArray", static_cast<std::uint32_t>(QtType::QCborArray) },
+            { "QCborMap", static_cast<std::uint32_t>(QtType::QCborMap) },
+            { "QFont", static_cast<std::uint32_t>(QtType::QFont) },
+            { "QPixmap", static_cast<std::uint32_t>(QtType::QPixmap) },
+            { "QBrush", static_cast<std::uint32_t>(QtType::QBrush) },
+            { "QColor", static_cast<std::uint32_t>(QtType::QColor) },
+            { "QPalette", static_cast<std::uint32_t>(QtType::QPalette) },
+            { "QIcon", static_cast<std::uint32_t>(QtType::QIcon) },
+            { "QImage", static_cast<std::uint32_t>(QtType::QImage) },
+            { "QPolygon", static_cast<std::uint32_t>(QtType::QPolygon) },
+            { "QRegion", static_cast<std::uint32_t>(QtType::QRegion) },
+            { "QBitmap", static_cast<std::uint32_t>(QtType::QBitmap) },
+            { "QCursor", static_cast<std::uint32_t>(QtType::QCursor) },
+            { "QKeySequence", static_cast<std::uint32_t>(QtType::QKeySequence) },
+            { "QPen", static_cast<std::uint32_t>(QtType::QPen) },
+            { "QTextLength", static_cast<std::uint32_t>(QtType::QTextLength) },
+            { "QTextFormat", static_cast<std::uint32_t>(QtType::QTextFormat) },
+            { "QMatrix", static_cast<std::uint32_t>(QtType::QMatrix) },
+            { "QTransform", static_cast<std::uint32_t>(QtType::QTransform) },
+            { "QMatrix4x4", static_cast<std::uint32_t>(QtType::QMatrix4x4) },
+            { "QVector2D", static_cast<std::uint32_t>(QtType::QVector2D) },
+            { "QVector3D", static_cast<std::uint32_t>(QtType::QVector3D) },
+            { "QVector4D", static_cast<std::uint32_t>(QtType::QVector4D) },
+            { "QQuaternion", static_cast<std::uint32_t>(QtType::QQuaternion) },
+            { "QPolygonF", static_cast<std::uint32_t>(QtType::QPolygonF) },
+            { "QColorSpace", static_cast<std::uint32_t>(QtType::QColorSpace) },
+            { "QSizePolicy", static_cast<std::uint32_t>(QtType::QSizePolicy) },
+        };
+
+        const auto it = table.find(typeName);
+        if (it != table.end())
+        {
+            return it->second;
+        }
+        return static_cast<std::uint32_t>(QtType::User);
+    }
+
+    void SerializerQt::Internal::getQVariantType(const MetaField& field, std::uint32_t& typeId, std::string& typeName)
+    {
+        typeName.clear();
+
+        static const std::string KEY_QTTYPE = "qttype";
+        const auto it = field.properties.find(KEY_QTTYPE);
+        if (it != field.properties.end())
+        {
+            typeName = it->second;
+        }
+
+        if (typeName.empty())
+        {
+            if (field.typeId == MetaTypeId::TYPE_STRUCT)
+            {
+                const MetaStruct* stru = MetaDataGlobal::instance().getStruct(field);
+                if (stru)
+                {
+                    const auto it = stru->getProperties().find(KEY_QTTYPE);
+                    if (it != stru->getProperties().end())
+                    {
+                        typeName = it->second;
+                    }
+                }
+            }
+            else if (field.typeId == MetaTypeId::TYPE_ENUM)
+            {
+                const MetaEnum* enu = MetaDataGlobal::instance().getEnum(field);
+                if (enu)
+                {
+                    const auto it = enu->getProperties().find(KEY_QTTYPE);
+                    if (it != enu->getProperties().end())
+                    {
+                        typeName = it->second;
+                    }
+                }
+            }
+        }
+
+        if (!typeName.empty())
+        {
+            typeId = getTypeIdByName(typeName);
+        }
+        else
+        {
+            getQVariantTypeFromMetaTypeId(field, typeId, typeName);
+        }
     }
 
     void SerializerQt::Internal::reserveSpace(ssize_t space)

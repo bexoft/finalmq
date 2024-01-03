@@ -37,12 +37,10 @@
 namespace finalmq {
 
 
-    ParserQt::ParserQt(IParserVisitor& visitor, const char* ptr, ssize_t size, bool wrappedByQVariant)
+    ParserQt::ParserQt(IParserVisitor& visitor, const char* ptr, ssize_t size)
         : m_ptr(ptr)
         , m_size(size)
         , m_visitor(visitor)
-        , m_wrappedByQVariant(wrappedByQVariant)
-        , m_levelStruct(0)
     {
     }
 
@@ -79,7 +77,6 @@ namespace finalmq {
             return false;
         }
 
-        ++m_levelStruct;
         bool ok = true;
 
         const ssize_t numberOfFields = stru.getFieldsSize();
@@ -93,7 +90,7 @@ namespace finalmq {
             case MetaTypeId::TYPE_NONE:
                 break;
             case MetaTypeId::TYPE_BOOL:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -108,7 +105,7 @@ namespace finalmq {
                 }
                 break;
             case MetaTypeId::TYPE_INT8:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -123,7 +120,7 @@ namespace finalmq {
                 }
                 break;
             case MetaTypeId::TYPE_UINT8:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -138,7 +135,7 @@ namespace finalmq {
                 }
                 break;
             case MetaTypeId::TYPE_INT16:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -153,7 +150,7 @@ namespace finalmq {
                 }
                 break;
             case MetaTypeId::TYPE_UINT16:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -168,7 +165,7 @@ namespace finalmq {
                 }
                 break;
             case MetaTypeId::TYPE_INT32:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -183,7 +180,7 @@ namespace finalmq {
                 }
                 break;
             case MetaTypeId::TYPE_UINT32:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -198,7 +195,7 @@ namespace finalmq {
                 }
                 break;
             case MetaTypeId::TYPE_INT64:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -213,7 +210,7 @@ namespace finalmq {
                 }
                 break;
             case MetaTypeId::TYPE_UINT64:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -228,7 +225,7 @@ namespace finalmq {
                 }
                 break;
             case MetaTypeId::TYPE_FLOAT:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -243,7 +240,7 @@ namespace finalmq {
                 }
                 break;
             case MetaTypeId::TYPE_DOUBLE:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -258,7 +255,7 @@ namespace finalmq {
                 }
                 break;
             case MetaTypeId::TYPE_STRING:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -273,7 +270,7 @@ namespace finalmq {
                 }
                 break;
             case MetaTypeId::TYPE_BYTES:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -289,7 +286,7 @@ namespace finalmq {
                 }
                 break;
             case MetaTypeId::TYPE_STRUCT:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -311,7 +308,7 @@ namespace finalmq {
                 }
                 break;
             case MetaTypeId::TYPE_ENUM:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -326,7 +323,7 @@ namespace finalmq {
                 }
                 break;
             case MetaTypeId::TYPE_ARRAY_BOOL:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -341,7 +338,7 @@ namespace finalmq {
                 }
                 break;
             case MetaTypeId::TYPE_ARRAY_INT8:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -356,7 +353,7 @@ namespace finalmq {
                 }
                 break;
             case MetaTypeId::TYPE_ARRAY_INT16:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -371,7 +368,7 @@ namespace finalmq {
                 }
                 break;
             case MetaTypeId::TYPE_ARRAY_UINT16:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -386,7 +383,7 @@ namespace finalmq {
                 }
                 break;
             case MetaTypeId::TYPE_ARRAY_INT32:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -401,7 +398,7 @@ namespace finalmq {
                 }
                 break;
             case MetaTypeId::TYPE_ARRAY_UINT32:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -416,7 +413,7 @@ namespace finalmq {
                 }
                 break;
             case MetaTypeId::TYPE_ARRAY_INT64:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -431,7 +428,7 @@ namespace finalmq {
                 }
                 break;
             case MetaTypeId::TYPE_ARRAY_UINT64:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -446,7 +443,7 @@ namespace finalmq {
                 }
                 break;
             case MetaTypeId::TYPE_ARRAY_FLOAT:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -461,7 +458,7 @@ namespace finalmq {
                 }
                 break;
             case MetaTypeId::TYPE_ARRAY_DOUBLE:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -476,7 +473,7 @@ namespace finalmq {
                 }
                 break;
             case MetaTypeId::TYPE_ARRAY_STRING:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -491,7 +488,7 @@ namespace finalmq {
                 }
                 break;
             case MetaTypeId::TYPE_ARRAY_BYTES:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -506,7 +503,7 @@ namespace finalmq {
                 }
                 break;
             case MetaTypeId::TYPE_ARRAY_STRUCT:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -516,7 +513,7 @@ namespace finalmq {
                 }
                 break;
             case MetaTypeId::TYPE_ARRAY_ENUM:
-                if (isWrappedByQVariant())
+                if (isWrappedByQVariant(*field))
                 {
                     ok = parseQVariantHeader(*field);
                 }
@@ -538,8 +535,6 @@ namespace finalmq {
                 break;
             }
         }
-
-        --m_levelStruct;
 
         return ok;
     }
@@ -920,9 +915,15 @@ namespace finalmq {
         return ok;
     }
 
-    bool ParserQt::isWrappedByQVariant() const
+    bool ParserQt::isWrappedByQVariant(const MetaField& field) const
     {
-        return (m_wrappedByQVariant && (m_levelStruct == 1));
+        static const std::string KEY_QVARIANT = "qvariant";
+        const auto it = field.properties.find(KEY_QVARIANT);
+        if (it != field.properties.end())
+        {
+            return true;
+        }
+        return false;
     }
 
 }   // namespace finalmq

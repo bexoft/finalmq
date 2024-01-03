@@ -69,7 +69,7 @@ void ConnectionEvent::fromString(const std::string& name)
     m_value = static_cast<Enum>(_enumInfo.getMetaEnum().getValueByName(name));
 }
 const EnumInfo ConnectionEvent::_enumInfo = {
-    "ConnectionEvent", "", {
+    "ConnectionEvent", "", {},  {
         {"CONNECTIONEVENT_CONNECTED", 0, "", "connected"},
         {"CONNECTIONEVENT_DISCONNECTED", 1, "", "disconnected"},
         {"CONNECTIONEVENT_SOCKET_CONNECTED", 2, "", "socket connected"},

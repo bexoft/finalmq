@@ -34,7 +34,7 @@ class SYMBOLEXP Utils
 {
 public:
     static void split(const std::string& src, ssize_t indexBegin, ssize_t indexEnd, char delimiter, std::vector<std::string>& dest);
-
+    static std::string replaceAll(std::string str, const std::string& from, const std::string& to);
 };
 
 } // namespace finalmq

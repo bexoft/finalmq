@@ -59,7 +59,7 @@ void <%- plaintype %>::fromString(const std::string& name)
     m_value = static_cast<Enum>(_enumInfo.getMetaEnum().getValueByName(name));
 }
 const finalmq::EnumInfo <%- plaintype %>::_enumInfo = {
-    "<%- helper.typeWithNamespace(data, en.type, '.') %>", "<%- en.desc %>", {<% -%>
+    "<%- helper.typeWithNamespace(data, en.type, '.') %>", "<%- en.desc %>", <%- helper.convertAttrs(en.attrs) %>, {<% -%>
         <% for (var n = 0; n < en.entries.length; n++) { 
             var entry = en.entries[n] %>
         {"<%- entry.name %>", <%- entry.id %>, "<%- entry.desc %>", "<%- entry.alias %>"},<% -%>
@@ -129,7 +129,7 @@ bool <%- plaintype %>::operator !=(const <%- plaintype %>& rhs) const
     return !(*this == rhs);
 }
 const finalmq::StructInfo <%- plaintype %>::_structInfo = {
-    "<%- helper.typeWithNamespace(data, stru.type, '.') %>", "<%- stru.desc %>", <%- helper.convertStructFlags(stru.flags) %>, [] () { return std::make_shared<<%- plaintype %>>(); }, {<% -%>
+    "<%- helper.typeWithNamespace(data, stru.type, '.') %>", "<%- stru.desc %>", <%- helper.convertStructFlags(stru.flags) %>, <%- helper.convertAttrs(field.attrs) %>, [] () { return std::make_shared<<%- plaintype %>>(); }, {<% -%>
     <% for (var n = 0; n < stru.fields.length; n++) { 
         field = stru.fields[n] 
 		if (field.tid == 'TYPE_VARIANT')
