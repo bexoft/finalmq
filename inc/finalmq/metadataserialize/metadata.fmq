@@ -59,6 +59,7 @@
         {"type":"SerializeMetaEnum","desc":"desc","fields":[
             {"tid":"TYPE_STRING",       "type":"",                          "name":"type",      "desc":"desc","flags":[]},
             {"tid":"TYPE_STRING",       "type":"",                          "name":"desc",      "desc":"desc","flags":[]},
+            {"tid":"TYPE_ARRAY_STRING", "type":"",                          "name":"attrs",     "desc":"desc","flags":[]},
             {"tid":"TYPE_ARRAY_STRUCT", "type":"SerializeMetaEnumEntry",    "name":"entries",   "desc":"desc","flags":[]}
         ]},
         {"type":"SerializeMetaField","desc":"desc","fields":[

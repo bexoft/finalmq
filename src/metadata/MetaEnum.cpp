@@ -22,6 +22,7 @@
 
 
 #include "finalmq/metadata/MetaEnum.h"
+#include "finalmq/helpers/Utils.h"
 
 namespace finalmq {
 
@@ -31,9 +32,11 @@ MetaEnum::MetaEnum()
 
 }
 
-MetaEnum::MetaEnum(const std::string& typeName, const std::string& description, const std::vector<MetaEnumEntry>& entries)
+MetaEnum::MetaEnum(const std::string& typeName, const std::string& description, const std::vector<std::string>& attrs, const std::vector<MetaEnumEntry>& entries)
     : m_typeName(typeName)
     , m_description(description)
+    , m_attrs(attrs)
+    , m_properties(generateProperties(attrs))
 {
     for (size_t i = 0 ; i < entries.size(); ++i)
     {
@@ -41,9 +44,11 @@ MetaEnum::MetaEnum(const std::string& typeName, const std::string& description, 
     }
 }
 
-MetaEnum::MetaEnum(const std::string& typeName, const std::string& description, std::vector<MetaEnumEntry>&& entries)
+MetaEnum::MetaEnum(const std::string& typeName, const std::string& description, const std::vector<std::string>& attrs, std::vector<MetaEnumEntry>&& entries)
     : m_typeName(typeName)
     , m_description(description)
+    , m_attrs(attrs)
+    , m_properties(generateProperties(attrs))
 {
     for (size_t i = 0 ; i < entries.size(); ++i)
     {
@@ -65,6 +70,16 @@ void MetaEnum::setDescription(const std::string& description)
 const std::string& MetaEnum::getDescription() const
 {
     return m_description;
+}
+
+const std::vector<std::string>& MetaEnum::getAttributes() const
+{
+    return m_attrs;
+}
+
+const std::unordered_map<std::string, std::string>& MetaEnum::getProperties() const
+{
+    return m_properties;
 }
 
 const MetaEnumEntry* MetaEnum::getEntryById(int id) const
@@ -202,6 +217,35 @@ void MetaEnum::addEntry(MetaEnumEntry&& entry)
     m_id2Entry.emplace(e->id, e);
     m_name2Entry.emplace(e->name, e);
     m_alias2Entry.emplace(e->alias, e);
+}
+
+std::unordered_map<std::string, std::string> MetaEnum::generateProperties(const std::vector<std::string>& attrs)
+{
+    std::unordered_map<std::string, std::string> properties;
+
+    for (size_t i = 0; i < attrs.size(); ++i)
+    {
+        const std::string& attr = attrs[i];
+        std::vector<std::string> props;
+        Utils::split(attr, 0, attr.size(), ',', props);
+        for (size_t n = 0; n < props.size(); ++n)
+        {
+            const std::string& prop = props[n];
+            size_t ix = prop.find_first_of(':');
+            if (ix != std::string::npos)
+            {
+                std::string key = prop.substr(0, ix);
+                std::string value = prop.substr(ix + 1, prop.size() - ix - 1);
+                properties[key] = std::move(value);
+            }
+            else
+            {
+                properties[prop] = std::string();
+            }
+        }
+    }
+
+    return properties;
 }
 
 }   // namespace finalmq

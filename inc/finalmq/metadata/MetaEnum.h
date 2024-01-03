@@ -47,12 +47,14 @@ class SYMBOLEXP MetaEnum
 {
 public:
     MetaEnum();
-    MetaEnum(const std::string& typeName, const std::string& description, const std::vector<MetaEnumEntry>& entries);
-    MetaEnum(const std::string& typeName, const std::string& description, std::vector<MetaEnumEntry>&& entries);
+    MetaEnum(const std::string& typeName, const std::string& description, const std::vector<std::string>& attrs, const std::vector<MetaEnumEntry>& entries);
+    MetaEnum(const std::string& typeName, const std::string& description, const std::vector<std::string>& attrs, std::vector<MetaEnumEntry>&& entries);
 
     const std::string& getTypeName() const;
     void setDescription(const std::string& description);
     const std::string& getDescription() const;
+    const std::vector<std::string>& getAttributes() const;
+    const std::unordered_map<std::string, std::string>& getProperties() const;
 
     const MetaEnumEntry* getEntryById(int id) const;
     const MetaEnumEntry* getEntryByName(const std::string& name) const;
@@ -71,9 +73,13 @@ public:
     }
 
 private:
+    static std::unordered_map<std::string, std::string> generateProperties(const std::vector<std::string>& attrs);
+        
     std::string                                                             m_typeName;
     std::string                                                             m_description;
     std::vector<std::shared_ptr<const MetaEnumEntry>>                       m_entries;
+    const std::vector<std::string>                                          m_attrs;
+    const std::unordered_map<std::string, std::string>                      m_properties;
     std::unordered_map<int, std::shared_ptr<const MetaEnumEntry>>           m_id2Entry;
     std::unordered_map<std::string, std::shared_ptr<const MetaEnumEntry>>   m_name2Entry;
     std::unordered_map<std::string, std::shared_ptr<const MetaEnumEntry>>   m_alias2Entry;

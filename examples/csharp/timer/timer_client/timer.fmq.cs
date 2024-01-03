@@ -22,7 +22,7 @@ namespace timer {
 
 
 
-[finalmq.MetaStruct("Call StartRequest to start the timer event.", finalmq.MetaStructFlags.METASTRUCTFLAG_NONE)]
+[finalmq.MetaStruct("Call StartRequest to start the timer event.", finalmq.MetaStructFlags.METASTRUCTFLAG_NONE, new string[] {})]
 public class StartRequest : finalmq.StructBase, IEquatable<StartRequest>
 {
     public StartRequest()
@@ -71,7 +71,7 @@ public class StartRequest : finalmq.StructBase, IEquatable<StartRequest>
     }
 }
 
-[finalmq.MetaStruct("Call StopRequest to stop the timer event.", finalmq.MetaStructFlags.METASTRUCTFLAG_NONE)]
+[finalmq.MetaStruct("Call StopRequest to stop the timer event.", finalmq.MetaStructFlags.METASTRUCTFLAG_NONE, new string[] {})]
 public class StopRequest : finalmq.StructBase, IEquatable<StopRequest>
 {
     public StopRequest()
@@ -120,7 +120,7 @@ public class StopRequest : finalmq.StructBase, IEquatable<StopRequest>
     }
 }
 
-[finalmq.MetaStruct("The server triggers this event to all connected clients.", finalmq.MetaStructFlags.METASTRUCTFLAG_NONE)]
+[finalmq.MetaStruct("The server triggers this event to all connected clients.", finalmq.MetaStructFlags.METASTRUCTFLAG_NONE, new string[] {})]
 public class TimerEvent : finalmq.StructBase, IEquatable<TimerEvent>
 {
     public TimerEvent()
@@ -133,7 +133,7 @@ public class TimerEvent : finalmq.StructBase, IEquatable<TimerEvent>
 		m_time = time;
 	}
 
-	[finalmq.MetaField("The current time.", finalmq.MetaFieldFlags.METAFLAG_NONE)]
+	[finalmq.MetaField("The current time.", finalmq.MetaFieldFlags.METAFLAG_NONE, new string[] {})]
     public string time
 	{
 		get { return m_time; }

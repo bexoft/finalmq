@@ -110,7 +110,7 @@ namespace testfinalmq
         [Fact]
         public void Test120Data()
         {
-            HelperTestStructSize(128 - 7 -1);
+            HelperTestStructSize(128 - 7 - 1);
         }
 
         [Fact]

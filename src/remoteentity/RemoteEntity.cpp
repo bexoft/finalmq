@@ -76,7 +76,7 @@ void PeerEvent::fromString(const std::string& name)
     m_value = static_cast<Enum>(_enumInfo.getMetaEnum().getValueByName(name));
 }
 const EnumInfo PeerEvent::_enumInfo = {
-    "PeerEvent", "", {
+    "PeerEvent", "", {}, {
         {"PEER_CONNECTED", 0, "", "connected"},
         {"PEER_DISCONNECTED", 1, "", "disconnected"},
      }
