@@ -68,7 +68,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestBool")!);
-            serializer.EnterBool(new MetaField(MetaTypeId.TYPE_BOOL, "", "value", "", 0, 0), VALUE);
+            serializer.EnterBool(new MetaField(MetaTypeId.TYPE_BOOL, "", "value", "", 0, null, 0), VALUE);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE)) });
@@ -84,7 +84,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestInt8")!);
-            serializer.EnterInt8(new MetaField(MetaTypeId.TYPE_INT8, "", "value", "", 0, 0), VALUE);
+            serializer.EnterInt8(new MetaField(MetaTypeId.TYPE_INT8, "", "value", "", 0, null, 0), VALUE);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE)) });
@@ -100,7 +100,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestUInt8")!);
-            serializer.EnterUInt8(new MetaField(MetaTypeId.TYPE_UINT8, "", "value", "", 0, 0), VALUE);
+            serializer.EnterUInt8(new MetaField(MetaTypeId.TYPE_UINT8, "", "value", "", 0, null, 0), VALUE);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE)) });
@@ -116,7 +116,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestInt16")!);
-            serializer.EnterInt16(new MetaField(MetaTypeId.TYPE_INT16, "", "value", "", 0, 0), VALUE);
+            serializer.EnterInt16(new MetaField(MetaTypeId.TYPE_INT16, "", "value", "", 0, null, 0), VALUE);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE)) });
@@ -132,7 +132,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestUInt16")!);
-            serializer.EnterUInt16(new MetaField(MetaTypeId.TYPE_UINT16, "", "value", "", 0, 0), VALUE);
+            serializer.EnterUInt16(new MetaField(MetaTypeId.TYPE_UINT16, "", "value", "", 0, null, 0), VALUE);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE)) });
@@ -148,7 +148,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestInt32")!);
-            serializer.EnterInt32(new MetaField(MetaTypeId.TYPE_INT32, "", "value", "", 0, 0), VALUE);
+            serializer.EnterInt32(new MetaField(MetaTypeId.TYPE_INT32, "", "value", "", 0, null, 0), VALUE);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE)) });
@@ -164,7 +164,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestUInt32")!);
-            serializer.EnterUInt32(new MetaField(MetaTypeId.TYPE_UINT32, "", "value", "", 0, 0), VALUE);
+            serializer.EnterUInt32(new MetaField(MetaTypeId.TYPE_UINT32, "", "value", "", 0, null, 0), VALUE);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE)) });
@@ -180,7 +180,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestInt64")!);
-            serializer.EnterInt64(new MetaField(MetaTypeId.TYPE_INT64, "", "value", "", 0, 0), VALUE);
+            serializer.EnterInt64(new MetaField(MetaTypeId.TYPE_INT64, "", "value", "", 0, null, 0), VALUE);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE)) });
@@ -196,7 +196,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestUInt64")!);
-            serializer.EnterUInt64(new MetaField(MetaTypeId.TYPE_UINT64, "", "value", "", 0, 0), VALUE);
+            serializer.EnterUInt64(new MetaField(MetaTypeId.TYPE_UINT64, "", "value", "", 0, null, 0), VALUE);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE)) });
@@ -212,7 +212,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestFloat")!);
-            serializer.EnterFloat(new MetaField(MetaTypeId.TYPE_FLOAT, "", "value", "", 0, 0), VALUE);
+            serializer.EnterFloat(new MetaField(MetaTypeId.TYPE_FLOAT, "", "value", "", 0, null, 0), VALUE);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE)) });
@@ -228,7 +228,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestDouble")!);
-            serializer.EnterDouble(new MetaField(MetaTypeId.TYPE_DOUBLE, "", "value", "", 0, 0), VALUE);
+            serializer.EnterDouble(new MetaField(MetaTypeId.TYPE_DOUBLE, "", "value", "", 0, null, 0), VALUE);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE)) });
@@ -244,7 +244,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestString")!);
-            serializer.EnterString(new MetaField(MetaTypeId.TYPE_STRING, "", "value", "", 0, 0), VALUE);
+            serializer.EnterString(new MetaField(MetaTypeId.TYPE_STRING, "", "value", "", 0, null, 0), VALUE);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE)) });
@@ -260,7 +260,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestString")!);
-            serializer.EnterBytes(new MetaField(MetaTypeId.TYPE_BYTES, "", "value", "", 0, 0), VALUE, 0, VALUE.Length);
+            serializer.EnterBytes(new MetaField(MetaTypeId.TYPE_BYTES, "", "value", "", 0, null, 0), VALUE, 0, VALUE.Length);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE)) });
@@ -278,13 +278,13 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestStruct")!);
-            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0));
-            serializer.EnterInt32(new MetaField(MetaTypeId.TYPE_INT32, "", "value", "", 0, 0), VALUE_INT32);
-            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0));
-            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "", 0, 1));
-            serializer.EnterString(new MetaField(MetaTypeId.TYPE_STRING, "", "value", "", 0, 0), VALUE_STRING);
-            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "", 0, 1));
-            serializer.EnterUInt32(new MetaField(MetaTypeId.TYPE_UINT32, "", "last_value", "", 0, 1), VALUE_UINT32);
+            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, null, 0));
+            serializer.EnterInt32(new MetaField(MetaTypeId.TYPE_INT32, "", "value", "", 0, null, 0), VALUE_INT32);
+            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, null, 0));
+            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "", 0, null, 1));
+            serializer.EnterString(new MetaField(MetaTypeId.TYPE_STRING, "", "value", "", 0, null, 0), VALUE_STRING);
+            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "", 0, null, 1));
+            serializer.EnterUInt32(new MetaField(MetaTypeId.TYPE_UINT32, "", "last_value", "", 0, null, 1), VALUE_UINT32);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("struct_int32",  Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE_INT32))  })),
@@ -304,7 +304,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestEnum")!);
-            serializer.EnterEnum(new MetaField(MetaTypeId.TYPE_ENUM, "test.Foo", "value", "", 0, 0), (int)VALUE);
+            serializer.EnterEnum(new MetaField(MetaTypeId.TYPE_ENUM, "test.Foo", "value", "", 0, null, 0), (int)VALUE);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE.ToString())) });
@@ -318,7 +318,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestEnum")!);
-            serializer.EnterEnum(new MetaField(MetaTypeId.TYPE_ENUM, "test.Foo", "value", "", 0, 0), "world2");
+            serializer.EnterEnum(new MetaField(MetaTypeId.TYPE_ENUM, "test.Foo", "value", "", 0, null, 0), "world2");
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create("world2")) });
@@ -577,7 +577,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayBool")!);
-            serializer.EnterArrayBool(new MetaField(MetaTypeId.TYPE_ARRAY_BOOL, "", "value", "", 0), VALUE);
+            serializer.EnterArrayBool(new MetaField(MetaTypeId.TYPE_ARRAY_BOOL, "", "value", "", 0, null), VALUE);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE_CMP)) });
@@ -594,7 +594,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayInt8")!);
-            serializer.EnterArrayInt8(new MetaField(MetaTypeId.TYPE_ARRAY_INT8, "", "value", "", 0), VALUE);
+            serializer.EnterArrayInt8(new MetaField(MetaTypeId.TYPE_ARRAY_INT8, "", "value", "", 0, null), VALUE);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE_CMP)) });
@@ -611,7 +611,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayInt16")!);
-            serializer.EnterArrayInt16(new MetaField(MetaTypeId.TYPE_ARRAY_INT16, "", "value", "", 0), VALUE);
+            serializer.EnterArrayInt16(new MetaField(MetaTypeId.TYPE_ARRAY_INT16, "", "value", "", 0, null), VALUE);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE_CMP)) });
@@ -628,7 +628,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayUInt16")!);
-            serializer.EnterArrayUInt16(new MetaField(MetaTypeId.TYPE_ARRAY_UINT16, "", "value", "", 0), VALUE);
+            serializer.EnterArrayUInt16(new MetaField(MetaTypeId.TYPE_ARRAY_UINT16, "", "value", "", 0, null), VALUE);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE_CMP)) });
@@ -645,7 +645,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayInt32")!);
-            serializer.EnterArrayInt32(new MetaField(MetaTypeId.TYPE_ARRAY_INT32, "", "value", "", 0), VALUE);
+            serializer.EnterArrayInt32(new MetaField(MetaTypeId.TYPE_ARRAY_INT32, "", "value", "", 0, null), VALUE);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE_CMP)) });
@@ -662,7 +662,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayUInt32")!);
-            serializer.EnterArrayUInt32(new MetaField(MetaTypeId.TYPE_ARRAY_UINT32, "", "value", "", 0), VALUE);
+            serializer.EnterArrayUInt32(new MetaField(MetaTypeId.TYPE_ARRAY_UINT32, "", "value", "", 0, null), VALUE);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE_CMP)) });
@@ -679,7 +679,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayInt64")!);
-            serializer.EnterArrayInt64(new MetaField(MetaTypeId.TYPE_ARRAY_INT64, "", "value", "", 0), VALUE);
+            serializer.EnterArrayInt64(new MetaField(MetaTypeId.TYPE_ARRAY_INT64, "", "value", "", 0, null), VALUE);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE_CMP)) });
@@ -696,7 +696,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayUInt64")!);
-            serializer.EnterArrayUInt64(new MetaField(MetaTypeId.TYPE_ARRAY_UINT64, "", "value", "", 0), VALUE);
+            serializer.EnterArrayUInt64(new MetaField(MetaTypeId.TYPE_ARRAY_UINT64, "", "value", "", 0, null), VALUE);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE_CMP)) });
@@ -713,7 +713,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayFloat")!);
-            serializer.EnterArrayFloat(new MetaField(MetaTypeId.TYPE_ARRAY_FLOAT, "", "value", "", 0), VALUE);
+            serializer.EnterArrayFloat(new MetaField(MetaTypeId.TYPE_ARRAY_FLOAT, "", "value", "", 0, null), VALUE);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE_CMP)) });
@@ -730,7 +730,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayDouble")!);
-            serializer.EnterArrayDouble(new MetaField(MetaTypeId.TYPE_ARRAY_DOUBLE, "", "value", "", 0), VALUE);
+            serializer.EnterArrayDouble(new MetaField(MetaTypeId.TYPE_ARRAY_DOUBLE, "", "value", "", 0, null), VALUE);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE_CMP)) });
@@ -747,7 +747,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayString")!);
-            serializer.EnterArrayString(new MetaField(MetaTypeId.TYPE_ARRAY_STRING, "", "value", "", 0), VALUE);
+            serializer.EnterArrayString(new MetaField(MetaTypeId.TYPE_ARRAY_STRING, "", "value", "", 0, null), VALUE);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE_CMP)) });
@@ -764,7 +764,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayBytes")!);
-            serializer.EnterArrayBytes(new MetaField(MetaTypeId.TYPE_ARRAY_BYTES, "", "value", "", 0), VALUE);
+            serializer.EnterArrayBytes(new MetaField(MetaTypeId.TYPE_ARRAY_BYTES, "", "value", "", 0, null), VALUE);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE_CPM)) });
@@ -788,28 +788,28 @@ namespace testfinalmq
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayStruct")!);
             serializer.EnterArrayStruct(new MetaField(MetaTypeId.TYPE_ARRAY_STRUCT, "test.TestStruct", "value", "desc"));
 
-            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0));
-            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0));
-            serializer.EnterInt32(new MetaField(MetaTypeId.TYPE_INT32, "", "value", "desc", 0), VALUE1_INT32);
-            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0));
+            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0, null));
+            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0, null));
+            serializer.EnterInt32(new MetaField(MetaTypeId.TYPE_INT32, "", "value", "desc", 0, null), VALUE1_INT32);
+            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0, null));
             serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "desc", 1));
-            serializer.EnterString(new MetaField(MetaTypeId.TYPE_STRING, "", "value", "desc", 0), VALUE1_STRING);
+            serializer.EnterString(new MetaField(MetaTypeId.TYPE_STRING, "", "value", "desc", 0, null), VALUE1_STRING);
             serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "desc", 1));
             serializer.EnterUInt32(new MetaField(MetaTypeId.TYPE_UINT32, "", "last_value", "desc", 2), VALUE1_UINT32);
-            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0));
+            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0, null));
 
-            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0));
-            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0));
-            serializer.EnterInt32(new MetaField(MetaTypeId.TYPE_INT32, "", "value", "desc", 0), VALUE2_INT32);
-            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0));
+            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0, null));
+            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0, null));
+            serializer.EnterInt32(new MetaField(MetaTypeId.TYPE_INT32, "", "value", "desc", 0, null), VALUE2_INT32);
+            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0, null));
             serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "desc", 1));
-            serializer.EnterString(new MetaField(MetaTypeId.TYPE_STRING, "", "value", "desc", 0), VALUE2_STRING);
+            serializer.EnterString(new MetaField(MetaTypeId.TYPE_STRING, "", "value", "desc", 0, null), VALUE2_STRING);
             serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "desc", 1));
             serializer.EnterUInt32(new MetaField(MetaTypeId.TYPE_UINT32, "", "last_value", "desc", 2), VALUE2_UINT32);
-            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0));
+            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0, null));
 
-            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0));
-            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0));
+            serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0, null));
+            serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0, null));
 
             serializer.ExitArrayStruct(new MetaField(MetaTypeId.TYPE_ARRAY_STRUCT, "test.TestStruct", "value", "desc"));
 
@@ -843,7 +843,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayEnum")!);
-            serializer.EnterArrayEnum(new MetaField(MetaTypeId.TYPE_ARRAY_ENUM, "test.Foo", "value", "", 0), VALUE);
+            serializer.EnterArrayEnum(new MetaField(MetaTypeId.TYPE_ARRAY_ENUM, "test.Foo", "value", "", 0, null), VALUE);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE_CMP)) });
@@ -860,7 +860,7 @@ namespace testfinalmq
             IParserVisitor serializer = new SerializerVariant(root);
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayEnum")!);
-            serializer.EnterArrayEnum(new MetaField(MetaTypeId.TYPE_ARRAY_ENUM, "test.Foo", "value", "", 0), VALUE);
+            serializer.EnterArrayEnum(new MetaField(MetaTypeId.TYPE_ARRAY_ENUM, "test.Foo", "value", "", 0, null), VALUE);
             serializer.Finished();
 
             Variant cmp = Variant.Create(new VariantStruct { new NameValue("value", Variant.Create(VALUE_CMP)) });

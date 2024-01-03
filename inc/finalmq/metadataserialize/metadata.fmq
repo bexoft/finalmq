@@ -66,13 +66,15 @@
             {"tid":"TYPE_STRING",       "type":"",                          "name":"type",      "desc":"desc","flags":[]},
             {"tid":"TYPE_STRING",       "type":"",                          "name":"name",      "desc":"desc","flags":[]},
             {"tid":"TYPE_STRING",       "type":"",                          "name":"desc",      "desc":"desc","flags":[]},
-            {"tid":"TYPE_ARRAY_ENUM",   "type":"SerializeMetaFieldFlags",   "name":"flags",     "desc":"desc","flags":[]}
+            {"tid":"TYPE_ARRAY_ENUM",   "type":"SerializeMetaFieldFlags",   "name":"flags",     "desc":"desc","flags":[]},
+            {"tid":"TYPE_ARRAY_STRING", "type":"",                          "name":"attrs",     "desc":"desc","flags":[]}
         ]},
         {"type":"SerializeMetaStruct","desc":"desc","fields":[
             {"tid":"TYPE_STRING",       "type":"",                          "name":"type",      "desc":"desc","flags":[]},
             {"tid":"TYPE_STRING",       "type":"",                          "name":"desc",      "desc":"desc","flags":[]},
             {"tid":"TYPE_ARRAY_STRUCT", "type":"SerializeMetaField",        "name":"fields",    "desc":"desc","flags":[]},
-            {"tid":"TYPE_ARRAY_ENUM",   "type":"SerializeMetaStructFlags",  "name":"flags",     "desc":"desc","flags":[]}
+            {"tid":"TYPE_ARRAY_ENUM",   "type":"SerializeMetaStructFlags",  "name":"flags",     "desc":"desc","flags":[]},
+            {"tid":"TYPE_ARRAY_STRING", "type":"",                          "name":"attrs",     "desc":"desc","flags":[]}
         ]},
         {"type":"SerializeMetaData","desc":"desc","fields":[
             {"tid":"TYPE_ARRAY_STRUCT", "type":"SerializeMetaEnum",         "name":"enums",     "desc":"desc","flags":[]},

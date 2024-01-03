@@ -78,13 +78,13 @@ TEST(TestSerializerProtoStruct, test0Data)
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerProto>(mockBuffer, MAX_BLOCK_SIZE);
 
     serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestStruct"));
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0});
-    serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "", 0, 0}, VALUE1);
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0});
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "", 0, 1});
-    serializer->enterString({MetaTypeId::TYPE_STRING, "", "value", "", 0, 0}, VALUE2.data(), VALUE2.size());
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "", 0, 1});
-    serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "value", "", 0, 2}, VALUE3);
+    serializer->enterStruct(MetaField{MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, {}, 0});
+    serializer->enterInt32(MetaField{MetaTypeId::TYPE_INT32, "", "value", "", 0, {}, 0}, VALUE1);
+    serializer->exitStruct(MetaField{MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, {}, 0});
+    serializer->enterStruct(MetaField{MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "", 0, {}, 1});
+    serializer->enterString(MetaField{MetaTypeId::TYPE_STRING, "", "value", "", 0, {}, 0}, VALUE2.data(), VALUE2.size());
+    serializer->exitStruct(MetaField{MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "", 0, {}, 1});
+    serializer->enterUInt32(MetaField{MetaTypeId::TYPE_UINT32, "", "value", "", 0, {}, 2}, VALUE3);
     serializer->finished();
 
     fmq::test::TestStruct message;
@@ -115,13 +115,13 @@ void helperTestStructSize(int size)
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerProto>(mockBuffer, MAX_BLOCK_SIZE);
 
     serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestStruct"));
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0});
-    serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "", 0, 0}, VALUE1);
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0});
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "", 0, 1});
-    serializer->enterString({MetaTypeId::TYPE_STRING, "", "value", "", 0, 0}, VALUE2.data(), VALUE2.size());
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "", 0, 1});
-    serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "value", "", 0, 2}, VALUE3);
+    serializer->enterStruct(MetaField{MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, {}, 0});
+    serializer->enterInt32(MetaField{MetaTypeId::TYPE_INT32, "", "value", "", 0, {}, 0}, VALUE1);
+    serializer->exitStruct(MetaField{MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, {}, 0});
+    serializer->enterStruct(MetaField{MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "", 0, {}, 1});
+    serializer->enterString(MetaField{MetaTypeId::TYPE_STRING, "", "value", "", 0, {}, 0}, VALUE2.data(), VALUE2.size());
+    serializer->exitStruct(MetaField{MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "", 0, {}, 1});
+    serializer->enterUInt32(MetaField{MetaTypeId::TYPE_UINT32, "", "value", "", 0, {}, 2}, VALUE3);
     serializer->finished();
 
     fmq::test::TestStruct message;
@@ -235,13 +235,13 @@ TEST(TestSerializerProtoStruct, test0DataBlockSize1)
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerProto>(mockBuffer, MAX_BLOCK_SIZE);
 
     serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestStruct"));
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0});
-    serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "", 0, 0}, VALUE1);
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0});
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "", 0, 1});
-    serializer->enterString({MetaTypeId::TYPE_STRING, "", "value", "", 0, 0}, VALUE2.data(), VALUE2.size());
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "", 0, 1});
-    serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "", METAFLAG_PROTO_VARINT, 2}, VALUE3);
+    serializer->enterStruct(MetaField{MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, {}, 0});
+    serializer->enterInt32(MetaField{MetaTypeId::TYPE_INT32, "", "value", "", 0, {}, 0}, VALUE1);
+    serializer->exitStruct(MetaField{MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, {}, 0});
+    serializer->enterStruct(MetaField{MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "", 0, {}, 1});
+    serializer->enterString(MetaField{MetaTypeId::TYPE_STRING, "", "value", "", 0, {}, 0}, VALUE2.data(), VALUE2.size());
+    serializer->exitStruct(MetaField{MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "", 0, {}, 1});
+    serializer->enterUInt32(MetaField{ MetaTypeId::TYPE_UINT32, "", "last_value", "", METAFLAG_PROTO_VARINT, {}, 2 }, VALUE3);
     serializer->finished();
 
     fmq::test::TestStructBlockSize message;
@@ -283,13 +283,13 @@ TEST(TestSerializerProtoStruct, test32DataBlockSize1)
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerProto>(mockBuffer, MAX_BLOCK_SIZE);
 
     serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestStruct"));
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0});
-    serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "", 0, 0}, VALUE1);
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0});
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "", 0, 1});
-    serializer->enterString({MetaTypeId::TYPE_STRING, "", "value", "", 0, 0}, VALUE2.data(), VALUE2.size());
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "", 0, 1});
-    serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "", METAFLAG_PROTO_VARINT, 2}, VALUE3);
+    serializer->enterStruct(MetaField{MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, {}, 0});
+    serializer->enterInt32(MetaField{MetaTypeId::TYPE_INT32, "", "value", "", 0, {}, 0}, VALUE1);
+    serializer->exitStruct(MetaField{MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, {}, 0});
+    serializer->enterStruct(MetaField{MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "", 0, {}, 1});
+    serializer->enterString(MetaField{MetaTypeId::TYPE_STRING, "", "value", "", 0, {}, 0}, VALUE2.data(), VALUE2.size());
+    serializer->exitStruct(MetaField{MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "", 0, {}, 1});
+    serializer->enterUInt32(MetaField{MetaTypeId::TYPE_UINT32, "", "last_value", "", METAFLAG_PROTO_VARINT, {},  2}, VALUE3);
     serializer->finished();
 
     fmq::test::TestStructBlockSize message;
@@ -329,13 +329,13 @@ TEST(TestSerializerProtoStruct, test33DataBlockSize1)
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerProto>(mockBuffer, MAX_BLOCK_SIZE);
 
     serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestStruct"));
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0});
-    serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "", 0, 0}, VALUE1);
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0});
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "", 0, 1});
-    serializer->enterString({MetaTypeId::TYPE_STRING, "", "value", "", 0, 0}, VALUE2.data(), VALUE2.size());
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "", 0, 1});
-    serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "", METAFLAG_PROTO_VARINT, 2}, VALUE3);
+    serializer->enterStruct(MetaField{MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, {}, 0});
+    serializer->enterInt32(MetaField{MetaTypeId::TYPE_INT32, "", "value", "", 0, {}, 0}, VALUE1);
+    serializer->exitStruct(MetaField{MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, {}, 0});
+    serializer->enterStruct(MetaField{MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "", 0, {}, 1});
+    serializer->enterString(MetaField{MetaTypeId::TYPE_STRING, "", "value", "", 0, {}, 0}, VALUE2.data(), VALUE2.size());
+    serializer->exitStruct(MetaField{MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "", 0, {}, 1});
+    serializer->enterUInt32(MetaField{MetaTypeId::TYPE_UINT32, "", "last_value", "", METAFLAG_PROTO_VARINT, {},  2}, VALUE3);
     serializer->finished();
 
     fmq::test::TestStructBlockSize message;
@@ -376,13 +376,13 @@ TEST(TestSerializerProtoStruct, test121DataBlockSize1)
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerProto>(mockBuffer, MAX_BLOCK_SIZE);
 
     serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestStruct"));
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0});
-    serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "", 0, 0}, VALUE1);
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0});
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "", 0, 1});
-    serializer->enterString({MetaTypeId::TYPE_STRING, "", "value", "", 0, 0}, VALUE2.data(), VALUE2.size());
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "", 0, 1});
-    serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "", METAFLAG_PROTO_VARINT, 2}, VALUE3);
+    serializer->enterStruct(MetaField{MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, {}, 0});
+    serializer->enterInt32(MetaField{MetaTypeId::TYPE_INT32, "", "value", "", 0, {}, 0}, VALUE1);
+    serializer->exitStruct(MetaField{MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, {}, 0});
+    serializer->enterStruct(MetaField{MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "", 0, {}, 1});
+    serializer->enterString(MetaField{MetaTypeId::TYPE_STRING, "", "value", "", 0, {}, 0}, VALUE2.data(), VALUE2.size());
+    serializer->exitStruct(MetaField{MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "", 0, {}, 1});
+    serializer->enterUInt32(MetaField{MetaTypeId::TYPE_UINT32, "", "last_value", "", METAFLAG_PROTO_VARINT, {},  2}, VALUE3);
     serializer->finished();
 
     fmq::test::TestStructBlockSize message;
@@ -423,13 +423,13 @@ TEST(TestSerializerProtoStruct, test122DataBlockSize1)
     std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerProto>(mockBuffer, MAX_BLOCK_SIZE);
 
     serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestStruct"));
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0});
-    serializer->enterInt32({MetaTypeId::TYPE_INT32, "", "value", "", 0, 0}, VALUE1);
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0});
-    serializer->enterStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "", 0, 1});
-    serializer->enterString({MetaTypeId::TYPE_STRING, "", "value", "", 0, 0}, VALUE2.data(), VALUE2.size());
-    serializer->exitStruct({MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "", 0, 1});
-    serializer->enterUInt32({MetaTypeId::TYPE_UINT32, "", "last_value", "", METAFLAG_PROTO_VARINT, 2}, VALUE3);
+    serializer->enterStruct(MetaField{MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, {}, 0});
+    serializer->enterInt32(MetaField{MetaTypeId::TYPE_INT32, "", "value", "", 0, {}, 0}, VALUE1);
+    serializer->exitStruct(MetaField{MetaTypeId::TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, {}, 0});
+    serializer->enterStruct(MetaField{MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "", 0, {}, 1});
+    serializer->enterString(MetaField{MetaTypeId::TYPE_STRING, "", "value", "", 0, {}, 0}, VALUE2.data(), VALUE2.size());
+    serializer->exitStruct(MetaField{MetaTypeId::TYPE_STRUCT, "test.TestString", "struct_string", "", 0, {}, 1});
+    serializer->enterUInt32(MetaField{MetaTypeId::TYPE_UINT32, "", "last_value", "", METAFLAG_PROTO_VARINT, {},  2}, VALUE3);
     serializer->finished();
 
     fmq::test::TestStructBlockSize message;

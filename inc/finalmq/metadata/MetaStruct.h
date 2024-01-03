@@ -46,13 +46,15 @@ class SYMBOLEXP MetaStruct
 {
 public:
     MetaStruct();
-    MetaStruct(const std::string& typeName, const std::string& description, const std::vector<MetaField>& fields, int flags = 0);
-    MetaStruct(const std::string& typeName, const std::string& description, std::vector<MetaField>&& fields, int flags = 0);
+    MetaStruct(const std::string& typeName, const std::string& description, const std::vector<MetaField>& fields, int flags = 0, const std::vector<std::string>& attrs = {});
+    MetaStruct(const std::string& typeName, const std::string& description, std::vector<MetaField>&& fields, int flags = 0, const std::vector<std::string>& attrs = {});
 
     const std::string& getTypeName() const;
     const std::string& getTypeNameWithoutNamespace() const;
     const std::string& getDescription() const;
     int getFlags() const;
+    const std::vector<std::string>& getAttributes() const;
+    const std::unordered_map<std::string, std::string>& getProperties() const;
 
     const MetaField* getFieldByIndex(ssize_t index) const;
     const MetaField* getFieldByName(const std::string& name) const;
@@ -66,11 +68,15 @@ public:
     }
 
 private:
+    static std::unordered_map<std::string, std::string> generateProperties(const std::vector<std::string>& attrs);
+        
     const std::string                                                   m_typeName;
     const std::string                                                   m_typeNameWithoutNamespace;
     const std::string                                                   m_description;
     std::vector<std::shared_ptr<const MetaField>>                       m_fields;
     const int                                                           m_flags;
+    const std::vector<std::string>                                      m_attrs;
+    const std::unordered_map<std::string, std::string>                  m_properties;
     std::unordered_map<std::string, std::shared_ptr<const MetaField>>   m_name2Field;
 };
 

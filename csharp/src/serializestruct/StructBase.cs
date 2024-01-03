@@ -96,6 +96,7 @@ namespace finalmq
             string description = "";
             object[]? attributes = type.GetCustomAttributes(false);
             MetaStructFlags flagsStruct = MetaStructFlags.METASTRUCTFLAG_NONE;
+            string[] attrsStruct = new string[0];
             if (attributes != null)
             {
                 foreach (var attribute in attributes)
@@ -105,6 +106,7 @@ namespace finalmq
                     {
                         description = attr.Desc;
                         flagsStruct = attr.Flags;
+                        attrsStruct = attr.Attributes;
                         break;
                     }
                 }
@@ -140,6 +142,7 @@ namespace finalmq
                     object[]? attributesProperty = propertyInfo.GetCustomAttributes(false);
                     string descriptionProperty = "";
                     MetaFieldFlags flags = MetaFieldFlags.METAFLAG_NONE;
+                    string[] attrs = new string[0];
                     if (attributesProperty != null)
                     {
                         foreach (var attribute in attributesProperty)
@@ -149,6 +152,7 @@ namespace finalmq
                             {
                                 descriptionProperty = attr.Desc;
                                 flags = attr.Flags;
+                                attrs = attr.Attributes;
                                 break;
                             }
                         }
@@ -159,12 +163,12 @@ namespace finalmq
                     {
                         string typeName;
                         MetaTypeId typeId = TypeName2Id(fullNameProperty, isClass, isEnum, isIList, genericFullName, isGenericClass, isGenericEnum, out typeName);
-                        MetaField field = new MetaField(typeId, typeName, name, description, (int)flags);
+                        MetaField field = new MetaField(typeId, typeName, name, description, (int)flags, attrs);
                         fields.Add(field);
                     }
                 }
             }
-            MetaStruct stru = new MetaStruct(type.FullName!, description, fields, (int)flagsStruct);
+            MetaStruct stru = new MetaStruct(type.FullName!, description, fields, (int)flagsStruct, attrsStruct);
             return stru;
         }
 

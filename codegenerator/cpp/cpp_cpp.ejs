@@ -134,17 +134,17 @@ const finalmq::StructInfo <%- plaintype %>::_structInfo = {
         field = stru.fields[n] 
 		if (field.tid == 'TYPE_VARIANT')
 		{
-			field = {tid:'TYPE_STRUCT', type:'finalmq.variant.VarValue', name:field.name, desc:field.desc, flags:field.flags};
+			field = {tid:'TYPE_STRUCT', type:'finalmq.variant.VarValue', name:field.name, desc:field.desc, flags:field.flags, attrs:field.attrs};
 		}
 		%>
-        {finalmq::<%- field.tid %>, "<%- helper.typeWithNamespace(data, field.type, '.') %>", "<%- field.name %>", "<%- field.desc %>", <%- helper.convertFlags(field.flags) %>, <%- n %>},<% -%>
+        {finalmq::<%- field.tid %>, "<%- helper.typeWithNamespace(data, field.type, '.') %>", "<%- field.name %>", "<%- field.desc %>", <%- helper.convertFlags(field.flags) %>, <%- helper.convertAttrs(field.attrs) %>, <%- n %>},<% -%>
     <% } %>
      },{<% -%>
     <% for (var n = 0; n < stru.fields.length; n++) { 
         field = stru.fields[n] 
 		if (field.tid == 'TYPE_VARIANT')
 		{
-			field = {tid:'TYPE_STRUCT', type:'finalmq.variant.VarValue', name:field.name, desc:field.desc, flags:field.flags};
+			field = {tid:'TYPE_STRUCT', type:'finalmq.variant.VarValue', name:field.name, desc:field.desc, flags:field.flags, attrs:field.attrs};
 		}
 		%>
         {<%- helper.getOffset(field.tid) %>(<%- plaintype %>, <%- field.name %>)<% if (field.tid == 'TYPE_ARRAY_STRUCT') {%>, new finalmq::ArrayStructAdapter<<%- helper.typeWithNamespace(data, field.type, '::') %>><% } %><% if (field.tid == 'TYPE_STRUCT' && helper.isNullable(field)) {%>, nullptr, new finalmq::StructPtrAdapter<<%- helper.typeWithNamespace(data, field.type, '::') %>><% } %>},<% -%>

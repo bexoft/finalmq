@@ -34,12 +34,24 @@ namespace finalmq
 
     public class MetaStruct
     {
-        public MetaStruct(string typeName, string description, IList<MetaField> fields, int flags = 0)
+        public MetaStruct(string typeName, string description, IList<MetaField> fields, int flags = 0, string[]? attrs = null)
         {
             m_typeName = typeName;
             m_typeNameWithoutNamespace = RemoveNamespace(typeName);
             m_description = description;
             m_flags = flags;
+
+            if (attrs != null)
+            {
+                m_attrs = attrs;
+            }
+            else
+            {
+                m_attrs = new string[0];
+            }
+
+            m_properties = generateProperties(m_attrs);
+
             foreach (var field in fields)
             {
                 AddField(field);
@@ -97,18 +109,47 @@ namespace finalmq
             get { return m_flags; }
         }
 
+        public string[] Attributes { get { return m_attrs; } }
+        public IDictionary<string, string> Properties { get { return m_properties; } }
+
         static string RemoveNamespace(string typeName)
         {
             int pos = typeName.LastIndexOf('.') + 1;
             return typeName.Substring(pos, typeName.Length - pos);
         }
 
+        private static IDictionary<string, string> generateProperties(string[] attrs)
+        {
+            IDictionary<string, string> properties = new Dictionary<string, string>();
+            foreach (string attr in attrs)
+            {
+                string[] props = attr.Split(',');
+                foreach (string prop in props)
+                {
+                    int ix = prop.IndexOf(':');
+                    if (ix != -1)
+                    {
+                        string key = prop.Substring(0, ix);
+                        string value = prop.Substring(ix + 1);
+                        properties[key] = value;
+                    }
+                    else
+                    {
+                        properties[prop] = "";
+                    }
+                }
+            }
+            return properties;
+        }
+
         readonly string m_typeName;
         readonly string m_typeNameWithoutNamespace;
         readonly string m_description;
-        readonly IList<MetaField>                 m_fields = new List<MetaField>();
+        readonly IList<MetaField> m_fields = new List<MetaField>();
         readonly int m_flags;
-        readonly IDictionary<string, MetaField>   m_name2Field = new Dictionary<string, MetaField>();
+        readonly string[] m_attrs;
+        readonly IDictionary<string, string> m_properties;
+        readonly IDictionary<string, MetaField> m_name2Field = new Dictionary<string, MetaField>();
     }
 
 }   // namespace finalmq

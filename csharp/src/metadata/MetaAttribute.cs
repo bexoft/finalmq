@@ -26,10 +26,19 @@ namespace finalmq
 
     public class MetaFieldAttribute : Attribute
     {
-        public MetaFieldAttribute(string desc, MetaFieldFlags flags = MetaFieldFlags.METAFLAG_NONE)
+        public MetaFieldAttribute(string desc, MetaFieldFlags flags = MetaFieldFlags.METAFLAG_NONE, string[]? attrs = null)
         {
             m_desc = desc;
             m_flags = flags;
+            if (attrs != null)
+            {
+                m_attrs = attrs;
+            }
+            else
+            {
+                m_attrs = new string[0];
+            }
+            m_properties = generateProperties(m_attrs);
         }
 
         public string Desc
@@ -42,16 +51,61 @@ namespace finalmq
             get { return m_flags; }
         }
 
+        public string[] Attributes
+        {
+            get { return m_attrs; }
+        }
+
+        public IDictionary<string, string> Properties
+        {
+            get { return m_properties; }
+        }
+
+        private static IDictionary<string, string> generateProperties(string[] attrs)
+        {
+            IDictionary<string, string> properties = new Dictionary<string, string>();
+            foreach (string attr in attrs)
+            {
+                string[] props = attr.Split(',');
+                foreach (string prop in props)
+                {
+                    int ix = prop.IndexOf(':');
+                    if (ix != -1)
+                    {
+                        string key = prop.Substring(0, ix);
+                        string value = prop.Substring(ix + 1);
+                        properties[key] = value;
+                    }
+                    else
+                    {
+                        properties[prop] = "";
+                    }
+                }
+            }
+            return properties;
+        }
+
         readonly string m_desc;
         readonly MetaFieldFlags m_flags;
+        readonly string[] m_attrs;
+        readonly IDictionary<string, string> m_properties;
     }
 
     public class MetaStructAttribute : Attribute
     {
-        public MetaStructAttribute(string desc, MetaStructFlags flags = MetaStructFlags.METASTRUCTFLAG_NONE)
+        public MetaStructAttribute(string desc, MetaStructFlags flags = MetaStructFlags.METASTRUCTFLAG_NONE, string[]? attrs = null)
         {
             m_desc = desc;
             m_flags = flags;
+            if (attrs != null)
+            {
+                m_attrs = attrs;
+            }
+            else
+            {
+                m_attrs = new string[0];
+            }
+            m_properties = generateProperties(m_attrs);
         }
 
         public string Desc
@@ -64,8 +118,44 @@ namespace finalmq
             get { return m_flags; }
         }
 
+        public string[] Attributes
+        {
+            get { return m_attrs; }
+        }
+
+        public IDictionary<string, string> Properties
+        {
+            get { return m_properties; }
+        }
+
+        private static IDictionary<string, string> generateProperties(string[] attrs)
+        {
+            IDictionary<string, string> properties = new Dictionary<string, string>();
+            foreach (string attr in attrs)
+            {
+                string[] props = attr.Split(',');
+                foreach (string prop in props)
+                {
+                    int ix = prop.IndexOf(':');
+                    if (ix != -1)
+                    {
+                        string key = prop.Substring(0, ix);
+                        string value = prop.Substring(ix + 1);
+                        properties[key] = value;
+                    }
+                    else
+                    {
+                        properties[prop] = "";
+                    }
+                }
+            }
+            return properties;
+        }
+
         readonly string m_desc;
         readonly MetaStructFlags m_flags;
+        readonly string[] m_attrs;
+        readonly IDictionary<string, string> m_properties;
     }
 
     public class MetaEnumAttribute : Attribute

@@ -35,7 +35,7 @@ namespace finalmq
 
     public class MetaField
     {
-        public MetaField(MetaTypeId typeId, string typeName, string name, string description, int flags = 0, int index = -1)
+        public MetaField(MetaTypeId typeId, string typeName, string name, string description, int flags = 0, string[]? attrs = null, int index = -1)
         {
             m_typeId = typeId;
             m_typeName = typeName;
@@ -43,9 +43,21 @@ namespace finalmq
             m_name = name;
             m_description = description;
             m_flags = flags;
+            
+            if (attrs != null)
+            {
+                m_attrs = attrs;
+            }
+            else
+            {
+                m_attrs = new string[0];
+            }
+
+            m_properties = generateProperties(m_attrs);
+
             m_index = index;
             MetaTypeId tId = typeId & ~MetaTypeId.OFFSET_ARRAY_FLAG;
-            m_fieldWithoutArray = ((typeId & MetaTypeId.OFFSET_ARRAY_FLAG) != 0) ? new MetaField(tId, typeName, "", description, flags, index) : this;
+            m_fieldWithoutArray = ((typeId & MetaTypeId.OFFSET_ARRAY_FLAG) != 0) ? new MetaField(tId, typeName, "", description, flags, m_attrs, index) : this;
         }
 
         public MetaTypeId TypeId { get { return m_typeId; } }
@@ -54,6 +66,8 @@ namespace finalmq
         public string Name { get { return m_name; } }
         public string Description { get { return m_description; } }
         public int Flags { get { return m_flags; } }
+        public string[] Attributes { get { return m_attrs; } }
+        public IDictionary<string, string> Properties { get { return m_properties; } }
         public int Index {
             get { return m_index; }
             set { m_index = value; if (m_fieldWithoutArray != this) { 
@@ -82,6 +96,29 @@ namespace finalmq
             return typeName.Substring(pos, typeName.Length - pos);
         }
 
+        private static IDictionary<string, string> generateProperties(string[] attrs)
+        {
+            IDictionary<string, string> properties = new Dictionary<string, string>();
+            foreach (string attr in attrs)
+            {
+                string[] props = attr.Split(',');
+                foreach (string prop in props)
+                {
+                    int ix = prop.IndexOf(':');
+                    if (ix != -1)
+                    {
+                        string key = prop.Substring(0, ix);
+                        string value = prop.Substring(ix + 1);
+                        properties[key] = value;
+                    }
+                    else
+                    {
+                        properties[prop] = "";
+                    }
+                }
+            }
+            return properties;
+        }
 
         readonly MetaTypeId m_typeId;           ///< type id of the parameter
         readonly string m_typeName;             ///< is needed for struct and enum
@@ -89,6 +126,8 @@ namespace finalmq
         readonly string m_name;                 ///< parameter name
         readonly string m_description;          ///< description of the parameter
         readonly int m_flags;                   ///< flaggs of the parameter
+        readonly string[] m_attrs;              ///< attributes of the parameter
+        readonly IDictionary<string, string> m_properties; ///< properties of the parameter
         int m_index;                            ///< index of field inside struct
 
         MetaField? m_fieldWithoutArray = null;   ///< in case of an array, this is the MetaField for its entries

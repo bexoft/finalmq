@@ -284,6 +284,20 @@ module.exports = {
         return flags
     },
 
+    convertAttrs: function (attrArray) {
+        var attrs = '{'
+        if (attrArray) {
+            for (var i = 0; i < attrArray.length; i++) {
+                attrs += '"' + attrArray[i] + '"'
+                if (i < attrArray.length - 1) {
+                    attrs += ', '
+                }
+            }
+        }
+        attrs += '}'
+        return attrs
+    },
+
     getOffset : function(tid)
     {
         if (tid == 'TYPE_STRUCT')
