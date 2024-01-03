@@ -22,6 +22,7 @@
 
 
 #include "finalmq/serializeqt/ParserQt.h"
+#include "finalmq/serializeqt/Qt.h"
 #include "finalmq/metadata/MetaData.h"
 #include "finalmq/helpers/FmqDefines.h"
 
@@ -36,10 +37,12 @@
 namespace finalmq {
 
 
-    ParserQt::ParserQt(IParserVisitor& visitor, const char* ptr, ssize_t size)
+    ParserQt::ParserQt(IParserVisitor& visitor, const char* ptr, ssize_t size, bool wrappedByQVariant)
         : m_ptr(ptr)
         , m_size(size)
         , m_visitor(visitor)
+        , m_wrappedByQVariant(wrappedByQVariant)
+        , m_levelStruct(0)
     {
     }
 
@@ -76,309 +79,457 @@ namespace finalmq {
             return false;
         }
 
+        ++m_levelStruct;
+        bool ok = true;
+
         const ssize_t numberOfFields = stru.getFieldsSize();
-        for (ssize_t i = 0; i < numberOfFields; ++i)
+        for (ssize_t i = 0; i < numberOfFields && ok; ++i)
         {
             const MetaField* field = stru.getFieldByIndex(i);
             assert(field);
-
-            bool ok = true;
 
             switch (field->typeId)
             {
             case MetaTypeId::TYPE_NONE:
                 break;
             case MetaTypeId::TYPE_BOOL:
-            {
-                std::uint8_t value = 0;
-                ok = parse(value);
+                if (isWrappedByQVariant())
+                {
+                    ok = parseQVariantHeader(*field);
+                }
                 if (ok)
                 {
-                    m_visitor.enterBool(*field, static_cast<bool>(value));
+                    std::uint8_t value = 0;
+                    ok = parse(value);
+                    if (ok)
+                    {
+                        m_visitor.enterBool(*field, static_cast<bool>(value));
+                    }
                 }
-            }
-            break;
+                break;
             case MetaTypeId::TYPE_INT8:
-            {
-                std::int8_t value = 0;
-                ok = parse(value);
+                if (isWrappedByQVariant())
+                {
+                    ok = parseQVariantHeader(*field);
+                }
                 if (ok)
                 {
-                    m_visitor.enterInt8(*field, value);
+                    std::int8_t value = 0;
+                    ok = parse(value);
+                    if (ok)
+                    {
+                        m_visitor.enterInt8(*field, value);
+                    }
                 }
-            }
-            break;
+                break;
             case MetaTypeId::TYPE_UINT8:
-            {
-                std::uint8_t value = 0;
-                ok = parse(value);
+                if (isWrappedByQVariant())
+                {
+                    ok = parseQVariantHeader(*field);
+                }
                 if (ok)
                 {
-                    m_visitor.enterUInt8(*field, value);
+                    std::uint8_t value = 0;
+                    ok = parse(value);
+                    if (ok)
+                    {
+                        m_visitor.enterUInt8(*field, value);
+                    }
                 }
-            }
-            break;
+                break;
             case MetaTypeId::TYPE_INT16:
-            {
-                std::int16_t value = 0;
-                ok = parse(value);
+                if (isWrappedByQVariant())
+                {
+                    ok = parseQVariantHeader(*field);
+                }
                 if (ok)
                 {
-                    m_visitor.enterInt16(*field, value);
+                    std::int16_t value = 0;
+                    ok = parse(value);
+                    if (ok)
+                    {
+                        m_visitor.enterInt16(*field, value);
+                    }
                 }
-            }
-            break;
+                break;
             case MetaTypeId::TYPE_UINT16:
-            {
-                std::uint16_t value = 0;
-                ok = parse(value);
+                if (isWrappedByQVariant())
+                {
+                    ok = parseQVariantHeader(*field);
+                }
                 if (ok)
                 {
-                    m_visitor.enterUInt16(*field, value);
+                    std::uint16_t value = 0;
+                    ok = parse(value);
+                    if (ok)
+                    {
+                        m_visitor.enterUInt16(*field, value);
+                    }
                 }
-            }
-            break;
+                break;
             case MetaTypeId::TYPE_INT32:
-            {
-                std::int32_t value = 0;
-                ok = parse(value);
+                if (isWrappedByQVariant())
+                {
+                    ok = parseQVariantHeader(*field);
+                }
                 if (ok)
                 {
-                    m_visitor.enterInt32(*field, value);
+                    std::int32_t value = 0;
+                    ok = parse(value);
+                    if (ok)
+                    {
+                        m_visitor.enterInt32(*field, value);
+                    }
                 }
-            }
-            break;
+                break;
             case MetaTypeId::TYPE_UINT32:
-            {
-                std::uint32_t value = 0;
-                ok = parse(value);
+                if (isWrappedByQVariant())
+                {
+                    ok = parseQVariantHeader(*field);
+                }
                 if (ok)
                 {
-                    m_visitor.enterUInt32(*field, value);
+                    std::uint32_t value = 0;
+                    ok = parse(value);
+                    if (ok)
+                    {
+                        m_visitor.enterUInt32(*field, value);
+                    }
                 }
-            }
-            break;
+                break;
             case MetaTypeId::TYPE_INT64:
-            {
-                std::int64_t value = 0;
-                ok = parse(value);
+                if (isWrappedByQVariant())
+                {
+                    ok = parseQVariantHeader(*field);
+                }
                 if (ok)
                 {
-                    m_visitor.enterInt64(*field, value);
+                    std::int64_t value = 0;
+                    ok = parse(value);
+                    if (ok)
+                    {
+                        m_visitor.enterInt64(*field, value);
+                    }
                 }
-            }
-            break;
+                break;
             case MetaTypeId::TYPE_UINT64:
-            {
-                std::uint64_t value = 0;
-                ok = parse(value);
+                if (isWrappedByQVariant())
+                {
+                    ok = parseQVariantHeader(*field);
+                }
                 if (ok)
                 {
-                    m_visitor.enterUInt64(*field, value);
+                    std::uint64_t value = 0;
+                    ok = parse(value);
+                    if (ok)
+                    {
+                        m_visitor.enterUInt64(*field, value);
+                    }
                 }
-            }
-            break;
+                break;
             case MetaTypeId::TYPE_FLOAT:
-            {
-                float value = 0.0f;
-                ok = parse(value);
+                if (isWrappedByQVariant())
+                {
+                    ok = parseQVariantHeader(*field);
+                }
                 if (ok)
                 {
-                    m_visitor.enterFloat(*field, value);
+                    float value = 0.0f;
+                    ok = parse(value);
+                    if (ok)
+                    {
+                        m_visitor.enterFloat(*field, value);
+                    }
                 }
-            }
-            break;
+                break;
             case MetaTypeId::TYPE_DOUBLE:
-            {
-                double value = 0.0;
-                ok = parse(value);
+                if (isWrappedByQVariant())
+                {
+                    ok = parseQVariantHeader(*field);
+                }
                 if (ok)
                 {
-                    m_visitor.enterDouble(*field, value);
+                    double value = 0.0;
+                    ok = parse(value);
+                    if (ok)
+                    {
+                        m_visitor.enterDouble(*field, value);
+                    }
                 }
-            }
-            break;
+                break;
             case MetaTypeId::TYPE_STRING:
-            {
-                std::string value;
-                ok = parse(value);
+                if (isWrappedByQVariant())
+                {
+                    ok = parseQVariantHeader(*field);
+                }
                 if (ok)
                 {
-                    m_visitor.enterString(*field, std::move(value));
+                    std::string value;
+                    ok = parse(value);
+                    if (ok)
+                    {
+                        m_visitor.enterString(*field, std::move(value));
+                    }
                 }
-            }
-            break;
+                break;
             case MetaTypeId::TYPE_BYTES:
-            {
-                const char* buffer = nullptr;
-                ssize_t size = 0;
-                ok = parseArrayByte(buffer, size);
+                if (isWrappedByQVariant())
+                {
+                    ok = parseQVariantHeader(*field);
+                }
                 if (ok)
                 {
-                    m_visitor.enterBytes(*field, buffer, size);
+                    const char* buffer = nullptr;
+                    ssize_t size = 0;
+                    ok = parseArrayByte(buffer, size);
+                    if (ok)
+                    {
+                        m_visitor.enterBytes(*field, buffer, size);
+                    }
                 }
-            }
-            break;
+                break;
             case MetaTypeId::TYPE_STRUCT:
-            {
-                const MetaStruct* stru = MetaDataGlobal::instance().getStruct(field->typeName);
-                if (!stru)
+                if (isWrappedByQVariant())
                 {
-                    m_visitor.notifyError(m_ptr, "typename not found");
-                    m_visitor.finished();
-                    ok = false;
+                    ok = parseQVariantHeader(*field);
                 }
-                else
+                if (ok)
                 {
-                    m_visitor.enterStruct(*field);
-                    ok = parseStructIntern(*stru);
-                    m_visitor.exitStruct(*field);
+                    const MetaStruct* stru = MetaDataGlobal::instance().getStruct(field->typeName);
+                    if (!stru)
+                    {
+                        m_visitor.notifyError(m_ptr, "typename not found");
+                        m_visitor.finished();
+                        ok = false;
+                    }
+                    else
+                    {
+                        m_visitor.enterStruct(*field);
+                        ok = parseStructIntern(*stru);
+                        m_visitor.exitStruct(*field);
+                    }
                 }
-            }
-            break;
+                break;
             case MetaTypeId::TYPE_ENUM:
-            {
-                std::int32_t value = 0;
-                ok = parse(value);
+                if (isWrappedByQVariant())
+                {
+                    ok = parseQVariantHeader(*field);
+                }
                 if (ok)
                 {
-                    m_visitor.enterEnum(*field, value);
+                    std::int32_t value = 0;
+                    ok = parse(value);
+                    if (ok)
+                    {
+                        m_visitor.enterEnum(*field, value);
+                    }
                 }
-            }
-            break;
+                break;
             case MetaTypeId::TYPE_ARRAY_BOOL:
-            {
-                std::vector<bool> array;
-                ok = parseArrayBool(array);
+                if (isWrappedByQVariant())
+                {
+                    ok = parseQVariantHeader(*field);
+                }
                 if (ok)
                 {
-                    m_visitor.enterArrayBool(*field, std::move(array));
+                    std::vector<bool> array;
+                    ok = parseArrayBool(array);
+                    if (ok)
+                    {
+                        m_visitor.enterArrayBool(*field, std::move(array));
+                    }
                 }
-            }
-            break;
+                break;
             case MetaTypeId::TYPE_ARRAY_INT8:
-            {
-                std::vector<std::int8_t> array;
-                ok = parse(array);
+                if (isWrappedByQVariant())
+                {
+                    ok = parseQVariantHeader(*field);
+                }
                 if (ok)
                 {
-                    m_visitor.enterArrayInt8(*field, std::move(array));
+                    std::vector<std::int8_t> array;
+                    ok = parse(array);
+                    if (ok)
+                    {
+                        m_visitor.enterArrayInt8(*field, std::move(array));
+                    }
                 }
-            }
-            break;
+                break;
             case MetaTypeId::TYPE_ARRAY_INT16:
-            {
-                std::vector<std::int16_t> array;
-                ok = parse(array);
+                if (isWrappedByQVariant())
+                {
+                    ok = parseQVariantHeader(*field);
+                }
                 if (ok)
                 {
-                    m_visitor.enterArrayInt16(*field, std::move(array));
+                    std::vector<std::int16_t> array;
+                    ok = parse(array);
+                    if (ok)
+                    {
+                        m_visitor.enterArrayInt16(*field, std::move(array));
+                    }
                 }
-            }
-            break;
+                break;
             case MetaTypeId::TYPE_ARRAY_UINT16:
-            {
-                std::vector<std::uint16_t> array;
-                ok = parse(array);
+                if (isWrappedByQVariant())
+                {
+                    ok = parseQVariantHeader(*field);
+                }
                 if (ok)
                 {
-                    m_visitor.enterArrayUInt16(*field, std::move(array));
+                    std::vector<std::uint16_t> array;
+                    ok = parse(array);
+                    if (ok)
+                    {
+                        m_visitor.enterArrayUInt16(*field, std::move(array));
+                    }
                 }
-            }
-            break;
+                break;
             case MetaTypeId::TYPE_ARRAY_INT32:
-            {
-                std::vector<std::int32_t> array;
-                ok = parse(array);
+                if (isWrappedByQVariant())
+                {
+                    ok = parseQVariantHeader(*field);
+                }
                 if (ok)
                 {
-                    m_visitor.enterArrayInt32(*field, std::move(array));
+                    std::vector<std::int32_t> array;
+                    ok = parse(array);
+                    if (ok)
+                    {
+                        m_visitor.enterArrayInt32(*field, std::move(array));
+                    }
                 }
-            }
-            break;
+                break;
             case MetaTypeId::TYPE_ARRAY_UINT32:
-            {
-                std::vector<std::uint32_t> array;
-                ok = parse(array);
+                if (isWrappedByQVariant())
+                {
+                    ok = parseQVariantHeader(*field);
+                }
                 if (ok)
                 {
-                    m_visitor.enterArrayUInt32(*field, std::move(array));
+                    std::vector<std::uint32_t> array;
+                    ok = parse(array);
+                    if (ok)
+                    {
+                        m_visitor.enterArrayUInt32(*field, std::move(array));
+                    }
                 }
-            }
-            break;
+                break;
             case MetaTypeId::TYPE_ARRAY_INT64:
-            {
-                std::vector<std::int64_t> array;
-                ok = parse(array);
+                if (isWrappedByQVariant())
+                {
+                    ok = parseQVariantHeader(*field);
+                }
                 if (ok)
                 {
-                    m_visitor.enterArrayInt64(*field, std::move(array));
+                    std::vector<std::int64_t> array;
+                    ok = parse(array);
+                    if (ok)
+                    {
+                        m_visitor.enterArrayInt64(*field, std::move(array));
+                    }
                 }
-            }
-            break;
+                break;
             case MetaTypeId::TYPE_ARRAY_UINT64:
-            {
-                std::vector<std::uint64_t> array;
-                ok = parse(array);
+                if (isWrappedByQVariant())
+                {
+                    ok = parseQVariantHeader(*field);
+                }
                 if (ok)
                 {
-                    m_visitor.enterArrayUInt64(*field, std::move(array));
+                    std::vector<std::uint64_t> array;
+                    ok = parse(array);
+                    if (ok)
+                    {
+                        m_visitor.enterArrayUInt64(*field, std::move(array));
+                    }
                 }
-            }
-            break;
+                break;
             case MetaTypeId::TYPE_ARRAY_FLOAT:
-            {
-                std::vector<float> array;
-                ok = parse(array);
+                if (isWrappedByQVariant())
+                {
+                    ok = parseQVariantHeader(*field);
+                }
                 if (ok)
                 {
-                    m_visitor.enterArrayFloat(*field, std::move(array));
+                    std::vector<float> array;
+                    ok = parse(array);
+                    if (ok)
+                    {
+                        m_visitor.enterArrayFloat(*field, std::move(array));
+                    }
                 }
-            }
-            break;
+                break;
             case MetaTypeId::TYPE_ARRAY_DOUBLE:
-            {
-                std::vector<double> array;
-                ok = parse(array);
+                if (isWrappedByQVariant())
+                {
+                    ok = parseQVariantHeader(*field);
+                }
                 if (ok)
                 {
-                    m_visitor.enterArrayDouble(*field, std::move(array));
+                    std::vector<double> array;
+                    ok = parse(array);
+                    if (ok)
+                    {
+                        m_visitor.enterArrayDouble(*field, std::move(array));
+                    }
                 }
-            }
-            break;
+                break;
             case MetaTypeId::TYPE_ARRAY_STRING:
-            {
-                std::vector<std::string> array;
-                ok = parse(array);
+                if (isWrappedByQVariant())
+                {
+                    ok = parseQVariantHeader(*field);
+                }
                 if (ok)
                 {
-                    m_visitor.enterArrayString(*field, std::move(array));
+                    std::vector<std::string> array;
+                    ok = parse(array);
+                    if (ok)
+                    {
+                        m_visitor.enterArrayString(*field, std::move(array));
+                    }
                 }
-            }
-            break;
+                break;
             case MetaTypeId::TYPE_ARRAY_BYTES:
-            {
-                std::vector<Bytes> array;
-                ok = parse(array);
+                if (isWrappedByQVariant())
+                {
+                    ok = parseQVariantHeader(*field);
+                }
                 if (ok)
                 {
-                    m_visitor.enterArrayBytes(*field, std::move(array));
+                    std::vector<Bytes> array;
+                    ok = parse(array);
+                    if (ok)
+                    {
+                        m_visitor.enterArrayBytes(*field, std::move(array));
+                    }
                 }
-            }
-            break;
+                break;
             case MetaTypeId::TYPE_ARRAY_STRUCT:
-                ok = parseArrayStruct(*field);
+                if (isWrappedByQVariant())
+                {
+                    ok = parseQVariantHeader(*field);
+                }
+                if (ok)
+                {
+                    ok = parseArrayStruct(*field);
+                }
                 break;
             case MetaTypeId::TYPE_ARRAY_ENUM:
-            {
-                std::vector<std::int32_t> value;
-                ok = parse(value);
+                if (isWrappedByQVariant())
+                {
+                    ok = parseQVariantHeader(*field);
+                }
                 if (ok)
                 {
-                    m_visitor.enterArrayEnum(*field, std::move(value));
+                    std::vector<std::int32_t> value;
+                    ok = parse(value);
+                    if (ok)
+                    {
+                        m_visitor.enterArrayEnum(*field, std::move(value));
+                    }
                 }
-            }
-            break;
+                break;
             case MetaTypeId::OFFSET_ARRAY_FLAG:
                 assert(false);
                 break;
@@ -386,14 +537,11 @@ namespace finalmq {
                 assert(false);
                 break;
             }
-
-            if (!ok)
-            {
-                return false;
-            }
         }
 
-        return (m_ptr != nullptr);
+        --m_levelStruct;
+
+        return ok;
     }
 
 
@@ -752,5 +900,29 @@ namespace finalmq {
         return (m_ptr != nullptr);
     }
 
+    bool ParserQt::parseQVariantHeader(const MetaField& /*field*/)
+    {
+        std::uint32_t typeId;
+        bool ok = parse(typeId);
+        if (ok)
+        {
+            std::uint8_t isNull;
+            ok = parse(isNull);
+        }
+        if (ok)
+        {
+            if (typeId == static_cast<std::uint32_t>(QtType::User))
+            {
+                Bytes typeName;
+                ok = parse(typeName);
+            }
+        }
+        return ok;
+    }
+
+    bool ParserQt::isWrappedByQVariant() const
+    {
+        return (m_wrappedByQVariant && (m_levelStruct == 1));
+    }
 
 }   // namespace finalmq
