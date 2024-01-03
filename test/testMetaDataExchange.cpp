@@ -66,11 +66,13 @@ const std::string ENUM_ENTRY_DESCRIPTION = "enum description 1";
 const std::string ENUM_ENTRY_ALIAS = "enum alias 1";
 
 const std::string STRUCT_DESCRIPTION = "struct description";
+const std::vector<std::string> STRUCT_ATTRS = { "struHello", "struWorld" };
 const SerializeMetaTypeId STRUCT_ENTRY_TYPEID = SerializeMetaTypeId::TYPE_STRING;
 const std::string STRUCT_ENTRY_TYPENAME = "JustATypeName";
 const std::string STRUCT_ENTRY_NAME = "value";
 const std::string STRUCT_ENTRY_DESCRIPTION = "value description";
-const std::vector<SerializeMetaFieldFlags> STRUCT_ENTRY_FLAGS = {SerializeMetaFieldFlags::METAFLAG_PROTO_VARINT, SerializeMetaFieldFlags::METAFLAG_PROTO_ZIGZAG};
+const std::vector<SerializeMetaFieldFlags> STRUCT_ENTRY_FLAGS = { SerializeMetaFieldFlags::METAFLAG_PROTO_VARINT, SerializeMetaFieldFlags::METAFLAG_PROTO_ZIGZAG };
+const std::vector<std::string> STRUCT_ENTRY_ATTRS = { "Hello", "World" };
 
 
 static SerializeMetaStruct importTestStruct(const std::string& typeName)
@@ -78,7 +80,8 @@ static SerializeMetaStruct importTestStruct(const std::string& typeName)
     SerializeMetaStruct stru;
     stru.type = typeName;
     stru.desc = STRUCT_DESCRIPTION;
-    stru.fields.push_back({STRUCT_ENTRY_TYPEID, STRUCT_ENTRY_TYPENAME, STRUCT_ENTRY_NAME, STRUCT_ENTRY_DESCRIPTION, STRUCT_ENTRY_FLAGS});
+    stru.attrs = STRUCT_ATTRS;
+    stru.fields.push_back({ STRUCT_ENTRY_TYPEID, STRUCT_ENTRY_TYPENAME, STRUCT_ENTRY_NAME, STRUCT_ENTRY_DESCRIPTION, STRUCT_ENTRY_FLAGS, STRUCT_ENTRY_ATTRS });
     SerializeMetaData serializeMetaData;
     serializeMetaData.structs.push_back(stru);
     MetaDataExchange::importMetaData(serializeMetaData);
@@ -130,6 +133,9 @@ TEST_F(TestMetaDataExchange, testImportStruct)
     ASSERT_EQ(metaStruct->getTypeName(), STRUCT_TYPE);
     ASSERT_EQ(metaStruct->getDescription(), STRUCT_DESCRIPTION);
     ASSERT_EQ(metaStruct->getFieldsSize(), 1);
+    ASSERT_EQ(metaStruct->getAttributes().size(), 2);
+    ASSERT_EQ(metaStruct->getAttributes()[0], "struHello");
+    ASSERT_EQ(metaStruct->getAttributes()[1], "struWorld");
     const MetaField* field = metaStruct->getFieldByIndex(0);
     ASSERT_NE(field, nullptr);
     ASSERT_EQ(field->typeId, STRUCT_ENTRY_TYPEID);
@@ -137,6 +143,9 @@ TEST_F(TestMetaDataExchange, testImportStruct)
     ASSERT_EQ(field->name, STRUCT_ENTRY_NAME);
     ASSERT_EQ(field->description, STRUCT_ENTRY_DESCRIPTION);
     ASSERT_EQ(field->flags, METAFLAG_PROTO_VARINT | METAFLAG_PROTO_ZIGZAG);
+    ASSERT_EQ(field->attrs.size(), 2);
+    ASSERT_EQ(field->attrs[0], "Hello");
+    ASSERT_EQ(field->attrs[1], "World");
 }
 
 
@@ -199,7 +208,8 @@ TEST_F(TestMetaDataExchange, testImportProto)
     SerializeMetaStruct stru;
     stru.type = STRUCT_TYPE;
     stru.desc = STRUCT_DESCRIPTION;
-    stru.fields.push_back({STRUCT_ENTRY_TYPEID, STRUCT_ENTRY_TYPENAME, STRUCT_ENTRY_NAME, STRUCT_ENTRY_DESCRIPTION, STRUCT_ENTRY_FLAGS});
+    stru.attrs = STRUCT_ATTRS;
+    stru.fields.push_back({ STRUCT_ENTRY_TYPEID, STRUCT_ENTRY_TYPENAME, STRUCT_ENTRY_NAME, STRUCT_ENTRY_DESCRIPTION, STRUCT_ENTRY_FLAGS, STRUCT_ENTRY_ATTRS });
     SerializeMetaData serializeMetaData;
     serializeMetaData.structs.push_back(stru);
 
@@ -220,6 +230,9 @@ TEST_F(TestMetaDataExchange, testImportProto)
     ASSERT_EQ(metaStruct->getTypeName(), STRUCT_TYPE);
     ASSERT_EQ(metaStruct->getDescription(), STRUCT_DESCRIPTION);
     ASSERT_EQ(metaStruct->getFieldsSize(), 1);
+    ASSERT_EQ(metaStruct->getAttributes().size(), 2);
+    ASSERT_EQ(metaStruct->getAttributes()[0], "struHello");
+    ASSERT_EQ(metaStruct->getAttributes()[1], "struWorld");
     const MetaField* field = metaStruct->getFieldByIndex(0);
     ASSERT_NE(field, nullptr);
     ASSERT_EQ(field->typeId, STRUCT_ENTRY_TYPEID);
@@ -227,6 +240,9 @@ TEST_F(TestMetaDataExchange, testImportProto)
     ASSERT_EQ(field->name, STRUCT_ENTRY_NAME);
     ASSERT_EQ(field->description, STRUCT_ENTRY_DESCRIPTION);
     ASSERT_EQ(field->flags, METAFLAG_PROTO_VARINT | METAFLAG_PROTO_ZIGZAG);
+    ASSERT_EQ(field->attrs.size(), 2);
+    ASSERT_EQ(field->attrs[0], "Hello");
+    ASSERT_EQ(field->attrs[1], "World");
 }
 
 

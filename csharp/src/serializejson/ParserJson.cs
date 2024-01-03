@@ -48,7 +48,7 @@ namespace finalmq
                 return -1;
             }
 
-            MetaField field = new MetaField(MetaTypeId.TYPE_STRUCT, typeName, "", "", 0, -1);
+            MetaField field = new MetaField(MetaTypeId.TYPE_STRUCT, typeName, "", "", 0, null, -1);
             field.MetaStruct = stru;
             m_fieldCurrent = field;
 

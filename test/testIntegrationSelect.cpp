@@ -71,7 +71,7 @@ TEST(TestIntegrationSelect, testAddSocketReadableBeforeWait)
 
     poller->addSocket(controlSocketInside);
     poller->enableRead(controlSocketInside);
-    OperatingSystem::instance().send(controlSocketOutside->getDescriptor(), BUFFER.c_str(), BUFFER.size(), 0);
+    OperatingSystem::instance().send(controlSocketOutside->getDescriptor(), BUFFER.c_str(), static_cast<int>(BUFFER.size()), 0);
 
     const PollerResult& result = poller->wait(10);
     EXPECT_EQ(result.error, false);
@@ -101,7 +101,7 @@ TEST(TestIntegrationSelect, testAddSocketReadableInsideWait)
         std::this_thread::sleep_for(10ms);
         poller->addSocket(controlSocketInside);
         poller->enableRead(controlSocketInside);
-        OperatingSystem::instance().send(controlSocketOutside->getDescriptor(), BUFFER.c_str(), BUFFER.size(), 0);
+        OperatingSystem::instance().send(controlSocketOutside->getDescriptor(), BUFFER.c_str(), static_cast<int>(BUFFER.size()), 0);
     });
 
     const PollerResult& result = poller->wait(1000000);
@@ -211,7 +211,7 @@ TEST(TestIntegrationSelect, testEnableWriteSocketNotWritable)
     res = 0;
     while (res >= 0)
     {
-        res = OperatingSystem::instance().send(controlSocketInside->getDescriptor(), LARGE_BUFFER.c_str(), LARGE_BUFFER.size(), 0);
+        res = OperatingSystem::instance().send(controlSocketInside->getDescriptor(), LARGE_BUFFER.c_str(), static_cast<int>(LARGE_BUFFER.size()), 0);
     }
     poller->enableWrite(controlSocketInside);
     const PollerResult& result2 = poller->wait(0);
@@ -245,7 +245,7 @@ TEST(TestIntegrationSelect, testEnableWriteSocketNotWritableToWritable)
     res = 0;
     while (res >= 0)
     {
-        res = OperatingSystem::instance().send(controlSocketInside->getDescriptor(), LARGE_BUFFER.c_str(), LARGE_BUFFER.size(), 0);
+        res = OperatingSystem::instance().send(controlSocketInside->getDescriptor(), LARGE_BUFFER.c_str(), static_cast<int>(LARGE_BUFFER.size()), 0);
     }
     poller->enableWrite(controlSocketInside);
 
@@ -296,7 +296,7 @@ TEST(TestIntegrationSelect, testDisableWriteSocket)
     res = 0;
     while (res >= 0)
     {
-        res = OperatingSystem::instance().send(controlSocketInside->getDescriptor(), LARGE_BUFFER.c_str(), LARGE_BUFFER.size(), 0);
+        res = OperatingSystem::instance().send(controlSocketInside->getDescriptor(), LARGE_BUFFER.c_str(), static_cast<int>(LARGE_BUFFER.size()), 0);
     }
     poller->enableWrite(controlSocketInside);
 
@@ -341,7 +341,7 @@ TEST(TestIntegrationSelect, testRemoveSocketInsideWait)
         std::this_thread::sleep_for(10ms);
         poller->removeSocket(controlSocketInside);
         std::this_thread::sleep_for(10ms);
-        OperatingSystem::instance().send(controlSocketOutside->getDescriptor(), BUFFER.c_str(), BUFFER.size(), 0);
+        OperatingSystem::instance().send(controlSocketOutside->getDescriptor(), BUFFER.c_str(), static_cast<int>(BUFFER.size()), 0);
     });
 
 

@@ -342,7 +342,7 @@ TEST_F(TestParserJson, testUInt64)
 
 TEST_F(TestParserJson, testFloat)
 {
-    static const float VALUE = -1.1;
+    static const float VALUE = -1.1f;
 
     const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestFloat", "value");
     ASSERT_NE(fieldValue, nullptr);
@@ -1046,10 +1046,10 @@ TEST_F(TestParserJson, testArrayUInt64)
 
 TEST_F(TestParserJson, testArrayFloat)
 {
-    static const float VALUE1 = -2.1;
-    static const float VALUE2 = 0.0;
-    static const float VALUE3 = 2.1;
-    static const float VALUE4 = 222.1;
+    static const float VALUE1 = -2.1f;
+    static const float VALUE2 = 0.0f;
+    static const float VALUE3 = 2.1f;
+    static const float VALUE4 = 222.1f;
 
     const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestArrayFloat", "value");
     ASSERT_NE(fieldValue, nullptr);

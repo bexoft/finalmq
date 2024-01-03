@@ -23,6 +23,9 @@
 
 #include "finalmq/metadata/MetaStruct.h"
 
+#include <unordered_map>
+
+
 namespace finalmq {
 
 static std::string removeNamespace(const std::string& typeName)
@@ -38,11 +41,13 @@ MetaStruct::MetaStruct()
 
 }
 
-MetaStruct::MetaStruct(const std::string& typeName, const std::string& description, const std::vector<MetaField>& fields, int flags)
+MetaStruct::MetaStruct(const std::string& typeName, const std::string& description, const std::vector<MetaField>& fields, int flags, const std::vector<std::string>& attrs)
     : m_typeName(typeName)
     , m_typeNameWithoutNamespace(removeNamespace(typeName))
     , m_description(description)
     , m_flags(flags)
+    , m_attrs(attrs)
+    , m_properties(generateProperties(attrs))
 {
     for (size_t i = 0 ; i < fields.size(); ++i)
     {
@@ -50,11 +55,13 @@ MetaStruct::MetaStruct(const std::string& typeName, const std::string& descripti
     }
 }
 
-MetaStruct::MetaStruct(const std::string& typeName, const std::string& description, std::vector<MetaField>&& fields, int flags)
+MetaStruct::MetaStruct(const std::string& typeName, const std::string& description, std::vector<MetaField>&& fields, int flags, const std::vector<std::string>& attrs)
     : m_typeName(typeName)
     , m_typeNameWithoutNamespace(removeNamespace(typeName))
     , m_description(description)
     , m_flags(flags)
+    , m_attrs(attrs)
+    , m_properties(generateProperties(attrs))
 {
     for (size_t i = 0 ; i < fields.size(); ++i)
     {
@@ -81,6 +88,16 @@ const std::string& MetaStruct::getDescription() const
 int MetaStruct::getFlags() const
 {
     return m_flags;
+}
+
+const std::vector<std::string>& MetaStruct::getAttributes() const
+{
+    return m_attrs;
+}
+
+const std::unordered_map<std::string, std::string>& MetaStruct::getProperties() const
+{
+    return m_properties;
 }
 
 
@@ -124,6 +141,35 @@ void MetaStruct::addField(MetaField&& field)
     std::shared_ptr<MetaField> f = std::make_shared<MetaField>(std::move(field));
     m_fields.emplace_back(f);
     m_name2Field.emplace(f->name, f);
+}
+
+std::unordered_map<std::string, std::string> MetaStruct::generateProperties(const std::vector<std::string>& attrs)
+{
+    std::unordered_map<std::string, std::string> properties;
+
+    for (size_t i = 0; i < attrs.size(); ++i)
+    {
+        const std::string& attr = attrs[i];
+        std::vector<std::string> props;
+        Utils::split(attr, 0, attr.size(), ',', props);
+        for (size_t n = 0; n < props.size(); ++n)
+        {
+            const std::string& prop = props[n];
+            size_t ix = prop.find_first_of(':');
+            if (ix != std::string::npos)
+            {
+                std::string key = prop.substr(0, ix);
+                std::string value = prop.substr(ix + 1, prop.size() - ix - 1);
+                properties[key] = std::move(value);
+            }
+            else
+            {
+                properties[prop] = std::string();
+            }
+        }
+    }
+
+    return properties;
 }
 
 }   // namespace finalmq

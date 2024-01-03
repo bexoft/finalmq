@@ -92,7 +92,7 @@ namespace testfinalmq
             MetaStruct? stru = MetaDataGlobal.Instance.GetStruct("test.TestBool");
             Debug.Assert(stru != null);
             m_serializer.StartStruct(stru);
-            m_serializer.EnterBool(new MetaField(MetaTypeId.TYPE_BOOL, "", "value", "", 0, 0), VALUE);
+            m_serializer.EnterBool(new MetaField(MetaTypeId.TYPE_BOOL, "", "value", "", 0, null, 0), VALUE);
             m_serializer.Finished();
 
             var root = Fmq.Test.TestBool.Parser.ParseFrom(m_data, 0, m_size);
@@ -109,7 +109,7 @@ namespace testfinalmq
             MetaStruct? stru = MetaDataGlobal.Instance.GetStruct("test.TestInt8");
             Debug.Assert(stru != null);
             m_serializer.StartStruct(stru);
-            m_serializer.EnterInt8(new MetaField(MetaTypeId.TYPE_INT8, "", "value", "", 0, 0), VALUE);
+            m_serializer.EnterInt8(new MetaField(MetaTypeId.TYPE_INT8, "", "value", "", 0, null, 0), VALUE);
             m_serializer.Finished();
 
             var root = Fmq.Test.TestInt8.Parser.ParseFrom(m_data, 0, m_size);
@@ -126,7 +126,7 @@ namespace testfinalmq
             MetaStruct? stru = MetaDataGlobal.Instance.GetStruct("test.TestUInt8");
             Debug.Assert(stru != null);
             m_serializer.StartStruct(stru);
-            m_serializer.EnterUInt8(new MetaField(MetaTypeId.TYPE_UINT8, "", "value", "", 0, 0), VALUE);
+            m_serializer.EnterUInt8(new MetaField(MetaTypeId.TYPE_UINT8, "", "value", "", 0, null, 0), VALUE);
             m_serializer.Finished();
 
             var root = Fmq.Test.TestUInt8.Parser.ParseFrom(m_data, 0, m_size);
@@ -143,7 +143,7 @@ namespace testfinalmq
             MetaStruct? stru = MetaDataGlobal.Instance.GetStruct("test.TestInt16");
             Debug.Assert(stru != null);
             m_serializer.StartStruct(stru);
-            m_serializer.EnterInt16(new MetaField(MetaTypeId.TYPE_INT16, "", "value", "", 0, 0), VALUE);
+            m_serializer.EnterInt16(new MetaField(MetaTypeId.TYPE_INT16, "", "value", "", 0, null, 0), VALUE);
             m_serializer.Finished();
 
             var root = Fmq.Test.TestInt16.Parser.ParseFrom(m_data, 0, m_size);
@@ -160,7 +160,7 @@ namespace testfinalmq
             MetaStruct? stru = MetaDataGlobal.Instance.GetStruct("test.TestUInt16");
             Debug.Assert(stru != null);
             m_serializer.StartStruct(stru);
-            m_serializer.EnterUInt16(new MetaField(MetaTypeId.TYPE_UINT16, "", "value", "", 0, 0), VALUE);
+            m_serializer.EnterUInt16(new MetaField(MetaTypeId.TYPE_UINT16, "", "value", "", 0, null, 0), VALUE);
             m_serializer.Finished();
 
             var root = Fmq.Test.TestUInt16.Parser.ParseFrom(m_data, 0, m_size);
@@ -177,7 +177,7 @@ namespace testfinalmq
             MetaStruct? stru = MetaDataGlobal.Instance.GetStruct("test.TestInt32");
             Debug.Assert(stru != null);
             m_serializer.StartStruct(stru);
-            m_serializer.EnterInt32(new MetaField(MetaTypeId.TYPE_INT32, "", "value", "", 0, 0), VALUE);
+            m_serializer.EnterInt32(new MetaField(MetaTypeId.TYPE_INT32, "", "value", "", 0, null, 0), VALUE);
             m_serializer.Finished();
 
             var root = Fmq.Test.TestInt32.Parser.ParseFrom(m_data, 0, m_size);
@@ -194,7 +194,7 @@ namespace testfinalmq
             MetaStruct? stru = MetaDataGlobal.Instance.GetStruct("test.TestUInt32");
             Debug.Assert(stru != null);
             m_serializer.StartStruct(stru);
-            m_serializer.EnterUInt32(new MetaField(MetaTypeId.TYPE_UINT32, "", "value", "", 0, 0), VALUE);
+            m_serializer.EnterUInt32(new MetaField(MetaTypeId.TYPE_UINT32, "", "value", "", 0, null, 0), VALUE);
             m_serializer.Finished();
 
             var root = Fmq.Test.TestUInt32.Parser.ParseFrom(m_data, 0, m_size);
@@ -209,7 +209,7 @@ namespace testfinalmq
             long VALUE = -2;
 
             m_serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestInt64")!);
-            m_serializer.EnterInt64(new MetaField(MetaTypeId.TYPE_INT64, "", "value", "", 0, 0), VALUE);
+            m_serializer.EnterInt64(new MetaField(MetaTypeId.TYPE_INT64, "", "value", "", 0, null, 0), VALUE);
             m_serializer.Finished();
 
             var root = Fmq.Test.TestInt64.Parser.ParseFrom(m_data, 0, m_size);
@@ -224,7 +224,7 @@ namespace testfinalmq
             ulong VALUE = 0xFFFFFFFFFFFFFFFE;
 
             m_serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestUInt64")!);
-            m_serializer.EnterUInt64(new MetaField(MetaTypeId.TYPE_UINT64, "", "value", "", 0, 0), VALUE);
+            m_serializer.EnterUInt64(new MetaField(MetaTypeId.TYPE_UINT64, "", "value", "", 0, null, 0), VALUE);
             m_serializer.Finished();
 
             var root = Fmq.Test.TestUInt64.Parser.ParseFrom(m_data, 0, m_size);
@@ -239,7 +239,7 @@ namespace testfinalmq
             float VALUE = -2.1f;
 
             m_serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestFloat")!);
-            m_serializer.EnterFloat(new MetaField(MetaTypeId.TYPE_FLOAT, "", "value", "", 0, 0), VALUE);
+            m_serializer.EnterFloat(new MetaField(MetaTypeId.TYPE_FLOAT, "", "value", "", 0, null, 0), VALUE);
             m_serializer.Finished();
 
             var root = Fmq.Test.TestFloat.Parser.ParseFrom(m_data, 0, m_size);
@@ -254,7 +254,7 @@ namespace testfinalmq
             double VALUE = -2.1;
 
             m_serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestDouble")!);
-            m_serializer.EnterDouble(new MetaField(MetaTypeId.TYPE_DOUBLE, "", "value", "", 0, 0), VALUE);
+            m_serializer.EnterDouble(new MetaField(MetaTypeId.TYPE_DOUBLE, "", "value", "", 0, null, 0), VALUE);
             m_serializer.Finished();
 
             var root = Fmq.Test.TestDouble.Parser.ParseFrom(m_data, 0, m_size);
@@ -269,7 +269,7 @@ namespace testfinalmq
             string VALUE = "Hello World";
 
             m_serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestString")!);
-            m_serializer.EnterString(new MetaField(MetaTypeId.TYPE_STRING, "", "value", "", 0, 0), VALUE);
+            m_serializer.EnterString(new MetaField(MetaTypeId.TYPE_STRING, "", "value", "", 0, null, 0), VALUE);
             m_serializer.Finished();
 
             var root = Fmq.Test.TestString.Parser.ParseFrom(m_data, 0, m_size);
@@ -284,7 +284,7 @@ namespace testfinalmq
             byte[] VALUE = { (byte)'H', (byte)'e', (byte)'l', 0, 13, (byte)'l', (byte)'o' };
 
             m_serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestString")!);
-            m_serializer.EnterBytes(new MetaField(MetaTypeId.TYPE_BYTES, "", "value", "", 0, 0), VALUE, 0, VALUE.Length);
+            m_serializer.EnterBytes(new MetaField(MetaTypeId.TYPE_BYTES, "", "value", "", 0, null, 0), VALUE, 0, VALUE.Length);
             m_serializer.Finished();
 
             var root = Fmq.Test.TestBytes.Parser.ParseFrom(m_data, 0, m_size);
@@ -301,13 +301,13 @@ namespace testfinalmq
             uint VALUE_UINT32 = 123;
 
             m_serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestStruct")!);
-            m_serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0));
-            m_serializer.EnterInt32(new MetaField(MetaTypeId.TYPE_INT32, "", "value", "", 0, 0), VALUE_INT32);
-            m_serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, 0));
-            m_serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "", 0, 1));
-            m_serializer.EnterString(new MetaField(MetaTypeId.TYPE_STRING, "", "value", "", 0, 0), VALUE_STRING);
-            m_serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "", 0, 1));
-            m_serializer.EnterUInt32(new MetaField(MetaTypeId.TYPE_UINT32, "", "last_value", "", 0, 2), VALUE_UINT32);
+            m_serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, null, 0));
+            m_serializer.EnterInt32(new MetaField(MetaTypeId.TYPE_INT32, "", "value", "", 0, null, 0), VALUE_INT32);
+            m_serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "", 0, null, 0));
+            m_serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "", 0, null, 1));
+            m_serializer.EnterString(new MetaField(MetaTypeId.TYPE_STRING, "", "value", "", 0, null, 0), VALUE_STRING);
+            m_serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "", 0, null, 1));
+            m_serializer.EnterUInt32(new MetaField(MetaTypeId.TYPE_UINT32, "", "last_value", "", 0, null, 2), VALUE_UINT32);
             m_serializer.Finished();
 
             var root = Fmq.Test.TestStruct.Parser.ParseFrom(m_data, 0, m_size);
@@ -327,7 +327,7 @@ namespace testfinalmq
             test.Foo VALUE = test.Foo.FOO_HELLO;
 
             m_serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestEnum")!);
-            m_serializer.EnterEnum(new MetaField(MetaTypeId.TYPE_ENUM, "test.Foo", "value", "", 0, 0), (int)VALUE);
+            m_serializer.EnterEnum(new MetaField(MetaTypeId.TYPE_ENUM, "test.Foo", "value", "", 0, null, 0), (int)VALUE);
             m_serializer.Finished();
 
             var root = Fmq.Test.TestEnum.Parser.ParseFrom(m_data, 0, m_size);
@@ -481,7 +481,7 @@ namespace testfinalmq
             bool[] VALUE = { true, false, true };
 
             m_serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayBool")!);
-            m_serializer.EnterArrayBool(new MetaField(MetaTypeId.TYPE_ARRAY_BOOL, "", "value", "", 0, 0), VALUE);
+            m_serializer.EnterArrayBool(new MetaField(MetaTypeId.TYPE_ARRAY_BOOL, "", "value", "", 0, null, 0), VALUE);
             m_serializer.Finished();
 
             var root = Fmq.Test.TestArrayBool.Parser.ParseFrom(m_data, 0, m_size);
@@ -498,7 +498,7 @@ namespace testfinalmq
             int[] VALUE32 = { -2, 0, 2, 22 };
 
             m_serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayInt8")!);
-            m_serializer.EnterArrayInt8(new MetaField(MetaTypeId.TYPE_ARRAY_INT8, "", "value", "", 0, 0), VALUE);
+            m_serializer.EnterArrayInt8(new MetaField(MetaTypeId.TYPE_ARRAY_INT8, "", "value", "", 0, null, 0), VALUE);
             m_serializer.Finished();
 
             var root = Fmq.Test.TestArrayInt8.Parser.ParseFrom(m_data, 0, m_size);
@@ -515,7 +515,7 @@ namespace testfinalmq
             int[] VALUE32 = { -2, 0, 2, 222 };
 
             m_serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayInt32")!);
-            m_serializer.EnterArrayInt16(new MetaField(MetaTypeId.TYPE_ARRAY_INT16, "", "value", "", 0, 0), VALUE);
+            m_serializer.EnterArrayInt16(new MetaField(MetaTypeId.TYPE_ARRAY_INT16, "", "value", "", 0, null, 0), VALUE);
             m_serializer.Finished();
 
             var root = Fmq.Test.TestArrayInt16.Parser.ParseFrom(m_data, 0, m_size);
@@ -532,7 +532,7 @@ namespace testfinalmq
             uint[] VALUE32 = { 0xFFFE, 0, 2, 222 };
 
             m_serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayInt16")!);
-            m_serializer.EnterArrayUInt16(new MetaField(MetaTypeId.TYPE_ARRAY_UINT16, "", "value", "", 0, 0), VALUE);
+            m_serializer.EnterArrayUInt16(new MetaField(MetaTypeId.TYPE_ARRAY_UINT16, "", "value", "", 0, null, 0), VALUE);
             m_serializer.Finished();
 
             var root = Fmq.Test.TestArrayUInt16.Parser.ParseFrom(m_data, 0, m_size);
@@ -548,7 +548,7 @@ namespace testfinalmq
             int[] VALUE = { -2, 0, 2, 222 };
 
             m_serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayInt32")!);
-            m_serializer.EnterArrayInt32(new MetaField(MetaTypeId.TYPE_ARRAY_INT32, "", "value", "", 0, 0), VALUE);
+            m_serializer.EnterArrayInt32(new MetaField(MetaTypeId.TYPE_ARRAY_INT32, "", "value", "", 0, null, 0), VALUE);
             m_serializer.Finished();
 
             var root = Fmq.Test.TestArrayInt32.Parser.ParseFrom(m_data, 0, m_size);
@@ -564,7 +564,7 @@ namespace testfinalmq
             uint[] VALUE = { 0xFFFFFFFE, 0, 2, 222 };
 
             m_serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayInt32")!);
-            m_serializer.EnterArrayUInt32(new MetaField(MetaTypeId.TYPE_ARRAY_UINT32, "", "value", "", 0, 0), VALUE);
+            m_serializer.EnterArrayUInt32(new MetaField(MetaTypeId.TYPE_ARRAY_UINT32, "", "value", "", 0, null, 0), VALUE);
             m_serializer.Finished();
 
             var root = Fmq.Test.TestArrayUInt32.Parser.ParseFrom(m_data, 0, m_size);
@@ -580,7 +580,7 @@ namespace testfinalmq
             long[] VALUE = { -2, 0, 2, 222 };
 
             m_serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayInt64")!);
-            m_serializer.EnterArrayInt64(new MetaField(MetaTypeId.TYPE_ARRAY_INT64, "", "value", "", 0, 0), VALUE);
+            m_serializer.EnterArrayInt64(new MetaField(MetaTypeId.TYPE_ARRAY_INT64, "", "value", "", 0, null, 0), VALUE);
             m_serializer.Finished();
 
             var root = Fmq.Test.TestArrayInt64.Parser.ParseFrom(m_data, 0, m_size);
@@ -596,7 +596,7 @@ namespace testfinalmq
             ulong[] VALUE = { 0xFFFFFFFFFFFFFFF, 0, 2, 222 };
 
             m_serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayInt32")!);
-            m_serializer.EnterArrayUInt64(new MetaField(MetaTypeId.TYPE_ARRAY_UINT64, "", "value", "", 0, 0), VALUE);
+            m_serializer.EnterArrayUInt64(new MetaField(MetaTypeId.TYPE_ARRAY_UINT64, "", "value", "", 0, null, 0), VALUE);
             m_serializer.Finished();
 
             var root = Fmq.Test.TestArrayUInt64.Parser.ParseFrom(m_data, 0, m_size);
@@ -612,7 +612,7 @@ namespace testfinalmq
             float[] VALUE = { -2.1f, 0f, 2.1f, 222.1f, Single.NaN, Single.PositiveInfinity, Single.NegativeInfinity };
 
             m_serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayFloat")!);
-            m_serializer.EnterArrayFloat(new MetaField(MetaTypeId.TYPE_ARRAY_FLOAT, "", "value", "", 0, 0), VALUE);
+            m_serializer.EnterArrayFloat(new MetaField(MetaTypeId.TYPE_ARRAY_FLOAT, "", "value", "", 0, null, 0), VALUE);
             m_serializer.Finished();
 
             var root = Fmq.Test.TestArrayFloat.Parser.ParseFrom(m_data, 0, m_size);
@@ -628,7 +628,7 @@ namespace testfinalmq
             double[] VALUE = { -2.1, 0, 2.1, 222.1, Double.NaN, Double.PositiveInfinity, Double.NegativeInfinity };
 
             m_serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayDouble")!);
-            m_serializer.EnterArrayDouble(new MetaField(MetaTypeId.TYPE_ARRAY_DOUBLE, "", "value", "", 0, 0), VALUE);
+            m_serializer.EnterArrayDouble(new MetaField(MetaTypeId.TYPE_ARRAY_DOUBLE, "", "value", "", 0, null, 0), VALUE);
             m_serializer.Finished();
 
             var root = Fmq.Test.TestArrayDouble.Parser.ParseFrom(m_data, 0, m_size);
@@ -644,7 +644,7 @@ namespace testfinalmq
             IList<string> VALUE = new List<string> { "Hello", "", "World" };
 
             m_serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayString")!);
-            m_serializer.EnterArrayString(new MetaField(MetaTypeId.TYPE_ARRAY_STRING, "", "value", "", 0, 0), VALUE);
+            m_serializer.EnterArrayString(new MetaField(MetaTypeId.TYPE_ARRAY_STRING, "", "value", "", 0, null, 0), VALUE);
             m_serializer.Finished();
 
             var root = Fmq.Test.TestArrayString.Parser.ParseFrom(m_data, 0, m_size);
@@ -670,7 +670,7 @@ namespace testfinalmq
             }
 
             m_serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayBytes")!);
-            m_serializer.EnterArrayBytes(new MetaField(MetaTypeId.TYPE_ARRAY_BYTES, "", "value", "", 0, 0), VALUE);
+            m_serializer.EnterArrayBytes(new MetaField(MetaTypeId.TYPE_ARRAY_BYTES, "", "value", "", 0, null, 0), VALUE);
             m_serializer.Finished();
 
             var root = Fmq.Test.TestArrayBytes.Parser.ParseFrom(m_data, 0, m_size);
@@ -694,32 +694,32 @@ namespace testfinalmq
             m_serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayStruct")!);
             m_serializer.EnterArrayStruct(new MetaField(MetaTypeId.TYPE_ARRAY_STRUCT, "test.TestStruct", "value", "desc"));
 
-            m_serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0, 0));
-            m_serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0, 0));
-            m_serializer.EnterInt32(new MetaField(MetaTypeId.TYPE_INT32, "", "value", "desc", 0, 0), VALUE1_INT32);
-            m_serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0, 0));
-            m_serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "desc", 0, 1));
-            m_serializer.EnterString(new MetaField(MetaTypeId.TYPE_STRING, "", "value", "desc", 0, 0), VALUE1_STRING);
-            m_serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "desc", 0, 1));
-            m_serializer.EnterUInt32(new MetaField(MetaTypeId.TYPE_UINT32, "", "last_value", "desc", 0, 2), VALUE1_UINT32);
-            m_serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0, 0));
+            m_serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0, null, 0));
+            m_serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0, null, 0));
+            m_serializer.EnterInt32(new MetaField(MetaTypeId.TYPE_INT32, "", "value", "desc", 0, null, 0), VALUE1_INT32);
+            m_serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0, null, 0));
+            m_serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "desc", 0, null, 1));
+            m_serializer.EnterString(new MetaField(MetaTypeId.TYPE_STRING, "", "value", "desc", 0, null, 0), VALUE1_STRING);
+            m_serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "desc", 0, null, 1));
+            m_serializer.EnterUInt32(new MetaField(MetaTypeId.TYPE_UINT32, "", "last_value", "desc", 0, null, 2), VALUE1_UINT32);
+            m_serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0, null, 0));
 
-            m_serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0, 0));
-            m_serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0, 0));
-            m_serializer.EnterInt32(new MetaField(MetaTypeId.TYPE_INT32, "", "value", "desc", 0, 0), VALUE2_INT32);
-            m_serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0, 0));
-            m_serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "desc", 0, 1));
-            m_serializer.EnterString(new MetaField(MetaTypeId.TYPE_STRING, "", "value", "desc", 0, 0), VALUE2_STRING);
-            m_serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "desc", 0, 1));
-            m_serializer.EnterUInt32(new MetaField(MetaTypeId.TYPE_UINT32, "", "last_value", "desc", 0, 2), VALUE2_UINT32);
-            m_serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0, 0));
+            m_serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0, null, 0));
+            m_serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0, null, 0));
+            m_serializer.EnterInt32(new MetaField(MetaTypeId.TYPE_INT32, "", "value", "desc", 0, null, 0), VALUE2_INT32);
+            m_serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestInt32", "struct_int32", "desc", 0, null, 0));
+            m_serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "desc", 0, null, 1));
+            m_serializer.EnterString(new MetaField(MetaTypeId.TYPE_STRING, "", "value", "desc", 0, null, 0), VALUE2_STRING);
+            m_serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestString", "struct_string", "desc", 0, null, 1));
+            m_serializer.EnterUInt32(new MetaField(MetaTypeId.TYPE_UINT32, "", "last_value", "desc", 0, null, 2), VALUE2_UINT32);
+            m_serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0, null, 0));
 
-            m_serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0, 0));
-            m_serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0, 0));
+            m_serializer.EnterStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0, null, 0));
+            m_serializer.ExitStruct(new MetaField(MetaTypeId.TYPE_STRUCT, "test.TestStruct", "", "desc", 0, null, 0));
 
-            m_serializer.ExitArrayStruct(new MetaField(MetaTypeId.TYPE_ARRAY_STRUCT, "test.TestStruct", "value", "desc", 0, 0));
+            m_serializer.ExitArrayStruct(new MetaField(MetaTypeId.TYPE_ARRAY_STRUCT, "test.TestStruct", "value", "desc", 0, null, 0));
 
-            m_serializer.EnterUInt32(new MetaField(MetaTypeId.TYPE_UINT32, "", "last_value", "desc", 0, 1), LAST_VALUE);
+            m_serializer.EnterUInt32(new MetaField(MetaTypeId.TYPE_UINT32, "", "last_value", "desc", 0, null, 1), LAST_VALUE);
 
             m_serializer.Finished();
 
@@ -739,7 +739,7 @@ namespace testfinalmq
             IList<Fmq.Test.Foo> VALUE_CMP = new List<Fmq.Test.Foo> { Fmq.Test.Foo.Hello, Fmq.Test.Foo.World, Fmq.Test.Foo.World2, (Fmq.Test.Foo)123 };
 
             m_serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestArrayEnum")!);
-            m_serializer.EnterArrayEnum(new MetaField(MetaTypeId.TYPE_ARRAY_ENUM, "test.Foo", "value", "", 0, 0), VALUE);
+            m_serializer.EnterArrayEnum(new MetaField(MetaTypeId.TYPE_ARRAY_ENUM, "test.Foo", "value", "", 0, null, 0), VALUE);
             m_serializer.Finished();
 
             var root = Fmq.Test.TestArrayEnum.Parser.ParseFrom(m_data, 0, m_size);

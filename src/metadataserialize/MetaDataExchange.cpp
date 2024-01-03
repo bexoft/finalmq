@@ -72,13 +72,13 @@ void MetaDataExchange::importMetaData(const SerializeMetaData& metadata)
             std::for_each(fieldSource.flags.begin(), fieldSource.flags.end(), [&flags] (const SerializeMetaFieldFlags& flag) {
                 flags |= flag;
             });
-            fields.push_back({convert(fieldSource.tid), fieldSource.type, fieldSource.name, fieldSource.desc, flags});
+            fields.push_back({convert(fieldSource.tid), fieldSource.type, fieldSource.name, fieldSource.desc, flags, fieldSource.attrs, -1});
         }
         int flagsStruct = 0;
         std::for_each(structSource.flags.begin(), structSource.flags.end(), [&flagsStruct](const SerializeMetaStructFlags& flag) {
             flagsStruct |= flag;
         });
-        MetaDataGlobal::instance().addStruct({structSource.type, structSource.desc, std::move(fields), flagsStruct});
+        MetaDataGlobal::instance().addStruct({structSource.type, structSource.desc, std::move(fields), flagsStruct, structSource.attrs});
     }
 }
 
@@ -112,6 +112,7 @@ void MetaDataExchange::exportMetaData(SerializeMetaData& metadata)
         SerializeMetaStruct structDestination;
         structDestination.type = structSource.getTypeName();
         structDestination.desc = structSource.getDescription();
+        structDestination.attrs = structSource.getAttributes();
         for (int n = 0; n < structSource.getFieldsSize(); ++n)
         {
             const MetaField* fieldSource = structSource.getFieldByIndex(n);
@@ -125,7 +126,7 @@ void MetaDataExchange::exportMetaData(SerializeMetaData& metadata)
                     flags.push_back(static_cast<SerializeMetaFieldFlags::Enum>(flag));
                 }
             }
-            structDestination.fields.push_back({convert(fieldSource->typeId), fieldSource->typeName, fieldSource->name, fieldSource->description, flags});
+            structDestination.fields.push_back({convert(fieldSource->typeId), fieldSource->typeName, fieldSource->name, fieldSource->description, flags, fieldSource->attrs});
         }
         metadata.structs.push_back(std::move(structDestination));
     }

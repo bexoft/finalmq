@@ -26,9 +26,11 @@
 #include "MetaType.h"
 #include "finalmq/helpers/FmqDefines.h"
 #include "finalmq/helpers/hybrid_ptr.h"
+#include "finalmq/helpers/Utils.h"
 
 #include <string>
 #include <memory>
+#include <unordered_map>
 
 
 namespace finalmq {
@@ -53,15 +55,17 @@ class MetaField
 {
 public:
     MetaField(MetaTypeId tId, const std::string& tName, const std::string& n,
-            const std::string& desc, int flgs = 0, int ix = -1)
+        const std::string& desc, int flgs = 0, const std::vector<std::string>& atrs = {}, int ix = -1)
         : typeId(tId)
         , typeName(tName)
         , typeNameWithoutNamespace(removeNamespace(tName))
         , name(n)
         , description(desc)
         , flags(flgs)
+        , attrs(atrs)
+        , properties(generateProperties(atrs))
         , index(ix)
-        , sharedFieldWithoutArray((typeId & MetaTypeId::OFFSET_ARRAY_FLAG) ? std::make_shared<MetaField>(static_cast<MetaTypeId>(typeId & ~MetaTypeId::OFFSET_ARRAY_FLAG), typeName, "", description, flags, index) : nullptr)
+        , sharedFieldWithoutArray((typeId & MetaTypeId::OFFSET_ARRAY_FLAG) ? std::make_shared<MetaField>(static_cast<MetaTypeId>(typeId & ~MetaTypeId::OFFSET_ARRAY_FLAG), typeName, "", description, flags, attrs, index) : nullptr)
         , fieldWithoutArray((sharedFieldWithoutArray != nullptr) ? sharedFieldWithoutArray.get() : this)
     {
     }
@@ -81,6 +85,8 @@ public:
     const std::string       name{};                         ///< parameter name
     const std::string       description{};                  ///< description of the parameter
     const int               flags;                          ///< flaggs of the parameter
+    const std::vector<std::string> attrs;                   ///< attributes of the parameter
+    const std::unordered_map<std::string, std::string> properties; ///< properties of the parameter
     const int               index;                          ///< index of field inside struct
 
     const std::shared_ptr<MetaField> sharedFieldWithoutArray;     ///< in case of an array, this is the MetaField for its entries
@@ -91,6 +97,35 @@ private:
     {
         size_t pos = typeName.find_last_of('.') + 1;
         return typeName.substr(pos, typeName.size() - pos);
+    }
+
+    static std::unordered_map<std::string, std::string> generateProperties(const std::vector<std::string>& attrs)
+    {
+        std::unordered_map<std::string, std::string> properties;
+
+        for (size_t i = 0; i < attrs.size(); ++i)
+        {
+            const std::string& attr = attrs[i];
+            std::vector<std::string> props;
+            Utils::split(attr, 0, attr.size(), ',', props);
+            for (size_t n = 0; n < props.size(); ++n)
+            {
+                const std::string& prop = props[n];
+                size_t ix = prop.find_first_of(':');
+                if (ix != std::string::npos)
+                {
+                    std::string key = prop.substr(0, ix);
+                    std::string value = prop.substr(ix + 1, prop.size() - ix - 1);
+                    properties[key] = std::move(value);
+                }
+                else
+                {
+                    properties[prop] = std::string();
+                }
+            }
+        }
+
+        return properties;
     }
 
     mutable const MetaEnum*     metaEnum    = nullptr;      ///< cache to find MetaEnum of typeName faster
