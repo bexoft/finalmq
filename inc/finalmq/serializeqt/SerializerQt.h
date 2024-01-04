@@ -27,18 +27,20 @@
 #include "finalmq/serialize/IParserVisitor.h"
 #include "finalmq/serialize/ParserConverter.h"
 
+#include <stack>
+
 namespace finalmq {
 
     class SYMBOLEXP SerializerQt : public ParserConverter
     {
     public:
-        SerializerQt(IZeroCopyBuffer& buffer, int maxBlockSize = 512);
+        SerializerQt(IZeroCopyBuffer& buffer, bool wrappedByQVariantList = false, int maxBlockSize = 512);
 
     private:
         class Internal : public IParserVisitor
         {
         public:
-            Internal(IZeroCopyBuffer& buffer, int maxBlockSize);
+            Internal(IZeroCopyBuffer& buffer, int maxBlockSize, bool wrappedByQVariantList);
         private:
             // IParserVisitor
             virtual void notifyError(const char* str, const char* message) override;
@@ -122,7 +124,7 @@ namespace finalmq {
             void serializeArrayBytes(const std::vector<Bytes>& value);
 
             void serializeQVariantHeader(const MetaField& field);
-            static bool isWrappedByQVariant(const MetaField& field);
+            bool isWrappedByQVariant() const;
             static bool getQVariantTypeFromMetaTypeId(const MetaField& field, std::uint32_t& typeId, std::string& typeName);
             static std::uint32_t getTypeIdByName(const std::string& typeName);
             static void getQVariantType(const MetaField& field, std::uint32_t& typeId, std::string& typeName);
@@ -138,6 +140,9 @@ namespace finalmq {
 
             char* m_arrayStructCounterBuffer = nullptr;
             std::int32_t m_arrayStructCounter = -1;
+
+            int m_levelStruct = 0;
+            const bool m_wrappedByQVariantList = false;
         };
 
         Internal                            m_internal;
