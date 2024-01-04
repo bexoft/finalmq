@@ -35,12 +35,12 @@ namespace finalmq {
     class SYMBOLEXP ParserQt
     {
     public:
-        ParserQt(IParserVisitor& visitor, const char* ptr, ssize_t size);
+        ParserQt(IParserVisitor& visitor, const char* ptr, ssize_t size, bool wrappedByQVariantList = false);
 
         bool parseStruct(const std::string& typeName);
 
     private:
-        bool parseStructIntern(const MetaStruct& stru);
+        bool parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant);
 
         bool parse(std::int8_t& value);
         bool parse(std::uint8_t& value);
@@ -63,11 +63,11 @@ namespace finalmq {
         bool parseArrayStruct(const MetaField& field);
 
         bool parseQVariantHeader(const MetaField& field);
-        bool isWrappedByQVariant(const MetaField& field) const;
 
         const char* m_ptr = nullptr;
         ssize_t m_size = 0;
         IParserVisitor& m_visitor;
+        const bool m_wrappedByQVariantList;
     };
 
 }   // namespace finalmq
