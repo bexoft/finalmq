@@ -72,6 +72,16 @@ public:
         return m_entries.size();
     }
 
+    const std::string& getProperty(const std::string& key, const std::string& defaultValue = {}) const
+    {
+        const auto it = m_properties.find(key);
+        if (it != m_properties.end())
+        {
+            return it->second;
+        }
+        return defaultValue;
+    }
+
 private:
     static std::unordered_map<std::string, std::string> generateProperties(const std::vector<std::string>& attrs);
         

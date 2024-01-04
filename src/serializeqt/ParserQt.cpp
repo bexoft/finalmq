@@ -82,6 +82,10 @@ namespace finalmq {
         return res;
     }
 
+    static const std::string QT_ENUM_BITS = "qtenumbits";
+    static const std::string BITS_8 = "8";
+    static const std::string BITS_16 = "16";
+    static const std::string BITS_32 = "32";
 
     bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
     {
@@ -328,11 +332,39 @@ namespace finalmq {
                 }
                 if (ok)
                 {
-                    std::int32_t value = 0;
-                    ok = parse(value);
-                    if (ok)
+                    const MetaEnum* en = MetaDataGlobal::instance().getEnum(*field);
+                    if (en)
                     {
-                        m_visitor.enterEnum(*field, value);
+                        const std::string& bits = en->getProperty(QT_ENUM_BITS, BITS_32);
+                        std::int32_t value = 0;
+                        if (bits == BITS_32)
+                        {
+                            ok = parse(value);
+                        }
+                        else if (bits == BITS_8)
+                        {
+                            std::int8_t value8;
+                            ok = parse(value8);
+                            value = static_cast<std::int32_t>(value8);
+                        }
+                        else if (bits == BITS_16)
+                        {
+                            std::int16_t value16;
+                            ok = parse(value16);
+                            value = static_cast<std::int32_t>(value16);
+                        }
+                        else
+                        {
+                            ok = false;
+                        }
+                        if (ok)
+                        {
+                            m_visitor.enterEnum(*field, value);
+                        }
+                    }
+                    else
+                    {
+                        ok = false;
                     }
                 }
                 break;
@@ -533,11 +565,43 @@ namespace finalmq {
                 }
                 if (ok)
                 {
-                    std::vector<std::int32_t> value;
-                    ok = parse(value);
-                    if (ok)
+                    const MetaEnum* en = MetaDataGlobal::instance().getEnum(*field);
+                    if (en)
                     {
-                        m_visitor.enterArrayEnum(*field, std::move(value));
+                        const std::string& bits = en->getProperty(QT_ENUM_BITS, BITS_32);
+                        std::vector<std::int32_t> value;
+                        if (bits == BITS_32)
+                        {
+                            ok = parse(value);
+                        }
+                        else if (bits == BITS_8)
+                        {
+                            std::vector<std::int8_t> value8;
+                            ok = parse(value);
+                            value.resize(value8.size());
+                            for (size_t i = 0; i < value8.size(); ++i)
+                            {
+                                value[i] = static_cast<std::int32_t>(value8[i]);
+                            }
+                        }
+                        else if (bits == BITS_16)
+                        {
+                            std::vector<std::int16_t> value16;
+                            ok = parse(value);
+                            value.resize(value16.size());
+                            for (size_t i = 0; i < value16.size(); ++i)
+                            {
+                                value[i] = static_cast<std::int32_t>(value16[i]);
+                            }
+                        }
+                        if (ok)
+                        {
+                            m_visitor.enterArrayEnum(*field, std::move(value));
+                        }
+                    }
+                    else
+                    {
+                        ok = false;
                     }
                 }
                 break;
