@@ -279,6 +279,11 @@ namespace finalmq {
         serialize(value, size);
     }
 
+    static const std::string QT_ENUM_BITS = "qtenumbits";
+    static const std::string BITS_8 = "8";
+    static const std::string BITS_16 = "16";
+    static const std::string BITS_32 = "32";
+
     void SerializerQt::Internal::enterEnum(const MetaField& field, std::int32_t value)
     {
         assert(field.typeId == MetaTypeId::TYPE_ENUM);
@@ -287,7 +292,19 @@ namespace finalmq {
             serializeQVariantHeader(field);
         }
         reserveSpace(sizeof(std::int32_t));
-        serialize(value);
+        const std::string& bits = field.getProperty(QT_ENUM_BITS, BITS_32);
+        if (bits == BITS_8)
+        {
+            serialize(static_cast<std::int8_t>(value));
+        }
+        else if (bits == BITS_16)
+        {
+            serialize(static_cast<std::int16_t>(value));
+        }
+        else
+        {
+            serialize(value);
+        }
     }
 
     void SerializerQt::Internal::enterEnum(const MetaField& field, std::string&& value)
@@ -517,7 +534,32 @@ namespace finalmq {
             serializeQVariantHeader(field);
         }
         reserveSpace(sizeof(std::int32_t) + size * sizeof(std::int32_t));
-        serialize(value, size);
+
+        const std::string& bits = field.getProperty(QT_ENUM_BITS, BITS_32);
+        if (bits == BITS_8)
+        {
+            std::vector<std::int8_t> value8;
+            value8.resize(size);
+            for (ssize_t i = 0; i < size; ++i)
+            {
+                value8[i] = static_cast<std::int8_t>(value[i]);
+            }
+            serialize(value8.data(), size);
+        }
+        else if (bits == BITS_16)
+        {
+            std::vector<std::int16_t> value16;
+            value16.resize(size);
+            for (ssize_t i = 0; i < size; ++i)
+            {
+                value16[i] = static_cast<std::int16_t>(value[i]);
+            }
+            serialize(value16.data(), size);
+        }
+        else
+        {
+            serialize(value, size);
+        }
     }
 
     void SerializerQt::Internal::enterArrayEnumMove(const MetaField& field, std::vector<std::string>&& value)
@@ -925,11 +967,7 @@ namespace finalmq {
         typeName.clear();
 
         static const std::string KEY_QTTYPE = "qttype";
-        const auto it = field.properties.find(KEY_QTTYPE);
-        if (it != field.properties.end())
-        {
-            typeName = it->second;
-        }
+        typeName = field.getProperty(KEY_QTTYPE);
 
         if (typeName.empty())
         {
@@ -938,11 +976,7 @@ namespace finalmq {
                 const MetaStruct* stru = MetaDataGlobal::instance().getStruct(field);
                 if (stru)
                 {
-                    const auto it = stru->getProperties().find(KEY_QTTYPE);
-                    if (it != stru->getProperties().end())
-                    {
-                        typeName = it->second;
-                    }
+                    typeName = stru->getProperty(KEY_QTTYPE);
                 }
             }
             else if (field.typeId == MetaTypeId::TYPE_ENUM)
@@ -950,11 +984,7 @@ namespace finalmq {
                 const MetaEnum* enu = MetaDataGlobal::instance().getEnum(field);
                 if (enu)
                 {
-                    const auto it = enu->getProperties().find(KEY_QTTYPE);
-                    if (it != enu->getProperties().end())
-                    {
-                        typeName = it->second;
-                    }
+                    typeName = enu->getProperty(KEY_QTTYPE);
                 }
             }
         }

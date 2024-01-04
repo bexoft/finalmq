@@ -79,6 +79,16 @@ public:
         }
     }
 
+    const std::string& getProperty(const std::string& key, const std::string& defaultValue = {}) const
+    {
+        const auto it = properties.find(key);
+        if (it != properties.end())
+        {
+            return it->second;
+        }
+        return defaultValue;
+    }
+
     const MetaTypeId        typeId;                         ///< type id of the parameter
     const std::string       typeName;                       ///< is needed for struct and enum
     const std::string       typeNameWithoutNamespace;       ///< is the typeName, but without the namespace
