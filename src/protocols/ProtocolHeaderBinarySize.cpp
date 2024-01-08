@@ -152,7 +152,7 @@ void ProtocolHeaderBinarySize::sendMessage(IMessagePtr message)
     }
     if (!message->wasSent())
     {
-        ssize_t sizePayload = message->getTotalSendPayloadSize();
+        size_t sizePayload = static_cast<size_t>(message->getTotalSendPayloadSize());
         const std::list<BufferRef>& buffers = message->getAllSendBuffers();
         assert(!buffers.empty());
         assert(buffers.begin()->second >= HEADERSIZE);

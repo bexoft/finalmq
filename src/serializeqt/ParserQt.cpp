@@ -37,11 +37,11 @@
 namespace finalmq {
 
 
-    ParserQt::ParserQt(IParserVisitor& visitor, const char* ptr, ssize_t size, bool wrappedByQVariantList)
+    ParserQt::ParserQt(IParserVisitor& visitor, const char* ptr, ssize_t size, Mode mode)
         : m_ptr(ptr)
         , m_size(size)
         , m_visitor(visitor)
-        , m_wrappedByQVariantList(wrappedByQVariantList)
+        , m_mode(mode)
     {
     }
 
@@ -63,7 +63,7 @@ namespace finalmq {
             return false;
         }
 
-        if (m_wrappedByQVariantList)
+        if (m_mode == Mode::WRAPPED_BY_QVARIANTLIST)
         {
             const ssize_t numberOfFields = stru->getFieldsSize();
             std::uint32_t count;
@@ -77,7 +77,7 @@ namespace finalmq {
         }
 
         m_visitor.startStruct(*stru);
-        bool res = parseStructIntern(*stru, m_wrappedByQVariantList);
+        bool res = parseStructIntern(*stru, m_mode != Mode::NONE);
         m_visitor.finished();
         return res;
     }

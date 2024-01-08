@@ -36,9 +36,9 @@
 namespace finalmq {
 
 
-    SerializerQt::SerializerQt(IZeroCopyBuffer& buffer, bool wrappedByQVariantList, int maxBlockSize)
+    SerializerQt::SerializerQt(IZeroCopyBuffer& buffer, Mode mode, int maxBlockSize)
         : ParserConverter()
-        , m_internal(buffer, maxBlockSize, wrappedByQVariantList)
+        , m_internal(buffer, maxBlockSize, mode)
         , m_parserProcessValuesInOrder()
     {
         m_parserProcessValuesInOrder = std::make_unique<ParserProcessValuesInOrder>(false, &m_internal);
@@ -47,10 +47,10 @@ namespace finalmq {
 
 
 
-    SerializerQt::Internal::Internal(IZeroCopyBuffer& buffer, int maxBlockSize, bool wrappedByQVariantList)
+    SerializerQt::Internal::Internal(IZeroCopyBuffer& buffer, int maxBlockSize, Mode mode)
         : m_zeroCopybuffer(buffer)
         , m_maxBlockSize(maxBlockSize)
-        , m_wrappedByQVariantList(wrappedByQVariantList)
+        , m_mode(mode)
     {
     }
 
@@ -62,7 +62,7 @@ namespace finalmq {
 
     void SerializerQt::Internal::startStruct(const MetaStruct& stru)
     {
-        if (m_wrappedByQVariantList)
+        if (m_mode == Mode::WRAPPED_BY_QVARIANTLIST)
         {
             const std::uint32_t count = static_cast<std::uint32_t>(stru.getFieldsSize());
             serialize(count);
@@ -76,8 +76,14 @@ namespace finalmq {
     }
 
 
-    void SerializerQt::Internal::enterStruct(const MetaField& /*field*/)
+    void SerializerQt::Internal::enterStruct(const MetaField& field)
     {
+        assert(field.typeId == MetaTypeId::TYPE_STRUCT);
+        if (isWrappedByQVariant())
+        {
+            serializeQVariantHeader(field);
+        }
+
         if (m_arrayStructCounter >= 0)
         {
             ++m_arrayStructCounter;
@@ -96,14 +102,22 @@ namespace finalmq {
     }
 
 
-    void SerializerQt::Internal::enterArrayStruct(const MetaField& /*field*/)
+    void SerializerQt::Internal::enterArrayStruct(const MetaField& field)
     {
+        assert(field.typeId == MetaTypeId::TYPE_ARRAY_STRUCT);
+        if (isWrappedByQVariant())
+        {
+            serializeQVariantHeader(field);
+        }
+
         reserveSpace(sizeof(std::uint32_t));
         m_arrayStructCounterBuffer = m_buffer;
         m_arrayStructCounter = 0;
         serialize(m_arrayStructCounter);
         m_buffer += sizeof(std::uint32_t);
         m_arrayStructCounter = 0;
+
+        ++m_levelStruct;
     }
 
     void SerializerQt::Internal::exitArrayStruct(const MetaField& /*field*/)
@@ -116,6 +130,8 @@ namespace finalmq {
             m_buffer = buffer;
             m_arrayStructCounter = -1;
         }
+
+        --m_levelStruct;
     }
 
 
@@ -753,7 +769,7 @@ namespace finalmq {
 
     bool SerializerQt::Internal::isWrappedByQVariant() const
     {
-        return (m_levelStruct == 0 && m_wrappedByQVariantList);
+        return (m_levelStruct == 0 && (m_mode != Mode::NONE));
     }
 
     bool SerializerQt::Internal::getQVariantTypeFromMetaTypeId(const MetaField& field, std::uint32_t& typeId, std::string& typeName)
@@ -815,39 +831,39 @@ namespace finalmq {
                 break;
             case MetaTypeId::TYPE_ARRAY_INT8:
                 typeId = static_cast<std::uint32_t>(QtType::User);
-                typeName = "char[]";
+                typeName = "QVector<char>";
                 break;
             case MetaTypeId::TYPE_ARRAY_INT16:
                 typeId = static_cast<std::uint32_t>(QtType::User);
-                typeName = "short[]";
+                typeName = "QVector<short>";
                 break;
             case MetaTypeId::TYPE_ARRAY_UINT16:
                 typeId = static_cast<std::uint32_t>(QtType::User);
-                typeName = "ushort[]";
+                typeName = "QVector<ushort>";
                 break;
             case MetaTypeId::TYPE_ARRAY_INT32:
                 typeId = static_cast<std::uint32_t>(QtType::User);
-                typeName = "int[]";
+                typeName = "QVector<int>";
                 break;
             case MetaTypeId::TYPE_ARRAY_UINT32:
                 typeId = static_cast<std::uint32_t>(QtType::User);
-                typeName = "uint[]";
+                typeName = "QVector<uint>";
                 break;
             case MetaTypeId::TYPE_ARRAY_INT64:
                 typeId = static_cast<std::uint32_t>(QtType::User);
-                typeName = "qlonglong[]";
+                typeName = "QVector<qlonglong>";
                 break;
             case MetaTypeId::TYPE_ARRAY_UINT64:
                 typeId = static_cast<std::uint32_t>(QtType::User);
-                typeName = "uqlonglong[]";
+                typeName = "QVector<uqlonglong>";
                 break;
             case MetaTypeId::TYPE_ARRAY_FLOAT:
                 typeId = static_cast<std::uint32_t>(QtType::User);
-                typeName = "float[]";
+                typeName = "QVector<float>";
                 break;
             case MetaTypeId::TYPE_ARRAY_DOUBLE:
                 typeId = static_cast<std::uint32_t>(QtType::User);
-                typeName = "double[]";
+                typeName = "QVector<double>";
                 break;
             case MetaTypeId::TYPE_ARRAY_STRING:
                 typeId = static_cast<std::uint32_t>(QtType::QStringList);

@@ -35,7 +35,14 @@ namespace finalmq {
     class SYMBOLEXP ParserQt
     {
     public:
-        ParserQt(IParserVisitor& visitor, const char* ptr, ssize_t size, bool wrappedByQVariantList = false);
+        enum class Mode
+        {
+            NONE,
+            WRAPPED_BY_QVARIANTLIST,
+            WRAPPED_BY_QVARIANT,
+        };
+
+        ParserQt(IParserVisitor& visitor, const char* ptr, ssize_t size, Mode mode = Mode::NONE);
 
         bool parseStruct(const std::string& typeName);
 
@@ -67,7 +74,7 @@ namespace finalmq {
         const char* m_ptr = nullptr;
         ssize_t m_size = 0;
         IParserVisitor& m_visitor;
-        const bool m_wrappedByQVariantList;
+        const Mode m_mode = Mode::NONE;
     };
 
 }   // namespace finalmq
