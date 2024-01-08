@@ -34,13 +34,20 @@ namespace finalmq {
     class SYMBOLEXP SerializerQt : public ParserConverter
     {
     public:
-        SerializerQt(IZeroCopyBuffer& buffer, bool wrappedByQVariantList = false, int maxBlockSize = 512);
+        enum class Mode
+        {
+            NONE,
+            WRAPPED_BY_QVARIANTLIST,
+            WRAPPED_BY_QVARIANT,
+        };
+
+        SerializerQt(IZeroCopyBuffer& buffer, Mode mode = Mode::NONE, int maxBlockSize = 512);
 
     private:
         class Internal : public IParserVisitor
         {
         public:
-            Internal(IZeroCopyBuffer& buffer, int maxBlockSize, bool wrappedByQVariantList);
+            Internal(IZeroCopyBuffer& buffer, int maxBlockSize, Mode mode);
         private:
             // IParserVisitor
             virtual void notifyError(const char* str, const char* message) override;
@@ -142,7 +149,7 @@ namespace finalmq {
             std::int32_t m_arrayStructCounter = -1;
 
             int m_levelStruct = 0;
-            const bool m_wrappedByQVariantList = false;
+            const Mode m_mode = Mode::NONE;
         };
 
         Internal                            m_internal;
