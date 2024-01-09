@@ -21,7 +21,10 @@
 //SOFTWARE.
 
 #include "finalmq/helpers/Utils.h"
+#include "finalmq/helpers/OperatingSystem.h"
 #include <assert.h>
+
+#include <fcntl.h>
 
 
 namespace finalmq {
@@ -52,6 +55,53 @@ std::string Utils::replaceAll(std::string str, const std::string& from, const st
     }
     return str;
 }
+
+int Utils::readAll(const std::string& filename, std::string& buffer)
+{
+    struct stat s;
+    int res = OperatingSystem::instance().stat(filename.c_str(), &s);
+    if (res == 0)
+    {
+        int fd = OperatingSystem::instance().open(filename.c_str(), O_RDONLY
+#if defined(WIN32) || defined(__MINGW32__)
+            | O_BINARY
+#endif
+        );
+        if (fd >= 0)
+        {
+            int size = s.st_size;
+
+            buffer.resize(size);
+            char* buf = const_cast<char*>(buffer.data());
+
+            int readnum = 0;
+            do
+            {
+                res = OperatingSystem::instance().read(fd, buf, size);
+                if (res > 0)
+                {
+                    buf += res;
+                    size -= res;
+                    readnum += res;
+                }
+                else if (res == 0)
+                {
+                    // read less than size
+                    buffer.resize(readnum);
+                }
+            } while (size > 0 && res > 0);
+
+
+            OperatingSystem::instance().close(fd);
+        }
+        else
+        {
+            res = fd;
+        }
+    }
+    return res;
+}
+
 
 
 } // namespace finalmq

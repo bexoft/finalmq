@@ -160,16 +160,29 @@ namespace finalmq
 
     public class MetaEnumAttribute : Attribute
     {
-        public MetaEnumAttribute(string desc)
+        public MetaEnumAttribute(string desc, string[]? attrs = null)
         {
             m_desc = desc;
+            if (attrs != null)
+            {
+                m_attrs = attrs;
+            }
+            else
+            {
+                m_attrs = new string[0];
+            }
         }
         public string Desc
         {
             get { return m_desc; }
         }
+        public string[] Attributes
+        {
+            get { return m_attrs; }
+        }
 
         readonly string m_desc;
+        readonly string[] m_attrs;
     }
 
     public class MetaEnumEntryAttribute : Attribute

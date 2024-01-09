@@ -33,6 +33,10 @@ namespace finalmq
             {
                 MetaField field = stru.GetFieldByIndex(i)!;
                 PropertyInfo? property = type.GetProperty(field.Name);
+                if (property == null)
+                {
+                    property = type.GetProperty(field.Name + '_');  // if c# keyword try with '_'
+                }
                 if (property != null)
                 {
                     ProcessField(structBase, field, property);

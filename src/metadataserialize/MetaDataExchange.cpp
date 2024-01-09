@@ -57,7 +57,13 @@ void MetaDataExchange::importMetaData(const SerializeMetaData& metadata)
             const SerializeMetaEnumEntry& entrySource = enumSource.entries[i];
             entries.push_back({entrySource.name, entrySource.id, entrySource.desc, entrySource.alias});
         }
-        MetaDataGlobal::instance().addEnum({enumSource.type, enumSource.desc, enumSource.attrs, std::move(entries)});
+        std::string type;
+        if (!metadata.namespace_.empty())
+        {
+            type = metadata.namespace_ + '.';
+        }
+        type += enumSource.type;
+        MetaDataGlobal::instance().addEnum({type, enumSource.desc, enumSource.attrs, std::move(entries)});
     }
 
     // structs
@@ -78,7 +84,13 @@ void MetaDataExchange::importMetaData(const SerializeMetaData& metadata)
         std::for_each(structSource.flags.begin(), structSource.flags.end(), [&flagsStruct](const SerializeMetaStructFlags& flag) {
             flagsStruct |= flag;
         });
-        MetaDataGlobal::instance().addStruct({structSource.type, structSource.desc, std::move(fields), flagsStruct, structSource.attrs});
+        std::string type;
+        if (!metadata.namespace_.empty())
+        {
+            type = metadata.namespace_ + '.';
+        }
+        type += structSource.type;
+        MetaDataGlobal::instance().addStruct({type, structSource.desc, std::move(fields), flagsStruct, structSource.attrs});
     }
 }
 

@@ -255,15 +255,15 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parseData(const IProtocolSe
                     data = nullptr;
                 }
             }
+        }
 
-            if (storeRawData)
+        if (storeRawData)
+        {
+            if (data == nullptr)
             {
-                if (data == nullptr)
-                {
-                    data = std::make_shared<RawDataMessage>();
-                }
-                data->setRawData(type, CONTENT_TYPE, buffer, sizeDataInStream);
+                data = std::make_shared<RawDataMessage>();
             }
+            data->setRawData(type, CONTENT_TYPE, buffer, sizeDataInStream);
         }
     }
 

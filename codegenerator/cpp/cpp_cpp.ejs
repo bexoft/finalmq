@@ -87,11 +87,11 @@ for (var i = 0; i < data.structs.length; i++)
 <%- plaintype %>::<%- plaintype %>(<% -%>
 <% for (var n = 0; n < stru.fields.length; n++) {
         field = stru.fields[n] %><% -%>
-const <%- helper.tid2type(data, field) %>& <%- field.name %>_<% if (n < stru.fields.length-1){ %>, <% } %><% -%>
+const <%- helper.tid2type(data, field) %>& <%- helper.avoidCppKeyWords(field.name) %>_<% if (n < stru.fields.length-1){ %>, <% } %><% -%>
 <% } %>)
 <% for (var n = 0; n < stru.fields.length; n++) {
     field = stru.fields[n] %><% -%>
-    <% if (n == 0){ %>:<% } else { %>,<% } %> <%- field.name %>(<%- field.name %>_)
+    <% if (n == 0){ %>:<% } else { %>,<% } %> <%- helper.avoidCppKeyWords(field.name) %>(<%- helper.avoidCppKeyWords(field.name) %>_)
 <% } %><% -%>
 {
 }
@@ -115,9 +115,9 @@ bool <%- plaintype %>::operator ==(const <%- plaintype %>& <% if (stru.fields.le
     return (<% for (var n = 0; n < stru.fields.length; n++) {
     field = stru.fields[n] %>
 <% if (field.tid == 'TYPE_STRUCT' && helper.isNullable(field)) {%>
-            ((<%- field.name %> == rhs.<%- field.name %>) || ((<%- field.name %> != nullptr) && (<%- field.name %> != nullptr) && (*<%- field.name %> == *rhs.<%- field.name %>)))<% if (n < stru.fields.length-1){ %> &&<% } %><% -%>
+            ((<%- helper.avoidCppKeyWords(field.name) %> == rhs.<%- helper.avoidCppKeyWords(field.name) %>) || ((<%- helper.avoidCppKeyWords(field.name) %> != nullptr) && (<%- helper.avoidCppKeyWords(field.name) %> != nullptr) && (*<%- helper.avoidCppKeyWords(field.name) %> == *rhs.<%- helper.avoidCppKeyWords(field.name) %>)))<% if (n < stru.fields.length-1){ %> &&<% } %><% -%>
 <% } else { -%>
-            <%- field.name %> == rhs.<%- field.name %><% if (n < stru.fields.length-1){ %> &&<% } %><% -%>
+            <%- helper.avoidCppKeyWords(field.name) %> == rhs.<%- helper.avoidCppKeyWords(field.name) %><% if (n < stru.fields.length-1){ %> &&<% } %><% -%>
 <% } %>
 <% } -%>);
 <% } else { -%>
@@ -134,7 +134,7 @@ const finalmq::StructInfo <%- plaintype %>::_structInfo = {
         field = stru.fields[n] 
 		if (field.tid == 'TYPE_VARIANT')
 		{
-			field = {tid:'TYPE_STRUCT', type:'finalmq.variant.VarValue', name:field.name, desc:field.desc, flags:field.flags, attrs:field.attrs};
+			field = {tid:'TYPE_STRUCT', type:'finalmq.variant.VarValue', name:helper.avoidCppKeyWords(field.name), desc:field.desc, flags:field.flags, attrs:field.attrs};
 		}
 		%>
         {finalmq::<%- field.tid %>, "<%- helper.typeWithNamespace(data, field.type, '.') %>", "<%- field.name %>", "<%- field.desc %>", <%- helper.convertFlags(field.flags) %>, <%- helper.convertAttrs(field.attrs) %>, <%- n %>},<% -%>
@@ -144,10 +144,10 @@ const finalmq::StructInfo <%- plaintype %>::_structInfo = {
         field = stru.fields[n] 
 		if (field.tid == 'TYPE_VARIANT')
 		{
-			field = {tid:'TYPE_STRUCT', type:'finalmq.variant.VarValue', name:field.name, desc:field.desc, flags:field.flags, attrs:field.attrs};
+			field = {tid:'TYPE_STRUCT', type:'finalmq.variant.VarValue', name:helper.avoidCppKeyWords(field.name), desc:field.desc, flags:field.flags, attrs:field.attrs};
 		}
 		%>
-        {<%- helper.getOffset(field.tid) %>(<%- plaintype %>, <%- field.name %>)<% if (field.tid == 'TYPE_ARRAY_STRUCT') {%>, new finalmq::ArrayStructAdapter<<%- helper.typeWithNamespace(data, field.type, '::') %>><% } %><% if (field.tid == 'TYPE_STRUCT' && helper.isNullable(field)) {%>, nullptr, new finalmq::StructPtrAdapter<<%- helper.typeWithNamespace(data, field.type, '::') %>><% } %>},<% -%>
+        {<%- helper.getOffset(field.tid) %>(<%- plaintype %>, <%- helper.avoidCppKeyWords(field.name) %>)<% if (field.tid == 'TYPE_ARRAY_STRUCT') {%>, new finalmq::ArrayStructAdapter<<%- helper.typeWithNamespace(data, field.type, '::') %>><% } %><% if (field.tid == 'TYPE_STRUCT' && helper.isNullable(field)) {%>, nullptr, new finalmq::StructPtrAdapter<<%- helper.typeWithNamespace(data, field.type, '::') %>><% } %>},<% -%>
     <% } %>
      }
 };

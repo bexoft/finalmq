@@ -81,7 +81,7 @@ namespace finalmq
                     StructBase? structBase = m_current.StructBase;
                     if (structBase != null)
                     {
-                        PropertyInfo? property = structBase.GetType().GetProperty(field.Name);
+                        PropertyInfo? property = GetProperty(structBase, field.Name);
                         if (property != null && property.PropertyType == typeof(Variant))
                         {
                             variant = (Variant?)property.GetValue(structBase);
@@ -111,7 +111,7 @@ namespace finalmq
                     {
                         if (m_current.StructArrayName == null)
                         {
-                            PropertyInfo? property = structBase.GetType().GetProperty(field.Name);
+                            PropertyInfo? property = GetProperty(structBase, field.Name);
                             if (property != null)
                             {
                                 sub = property.GetValue(structBase) as StructBase;
@@ -130,7 +130,7 @@ namespace finalmq
                         }
                         else
                         {
-                            PropertyInfo? property = structBase.GetType().GetProperty(m_current.StructArrayName);
+                            PropertyInfo? property = GetProperty(structBase, m_current.StructArrayName);
                             if (property != null)
                             {
                                 System.Collections.IList? list = property.GetValue(structBase) as System.Collections.IList;
@@ -214,7 +214,7 @@ namespace finalmq
                 StructBase? structBase = m_current.StructBase;
                 if (structBase != null)
                 {
-                    PropertyInfo? property = structBase.GetType().GetProperty(field.Name);
+                    PropertyInfo? property = GetProperty(structBase, field.Name);
                     if (property != null && IsNullable(property))
                     {
                         property.SetValue(structBase, null);
@@ -266,9 +266,20 @@ namespace finalmq
             {
                 Debug.Assert(m_current != null);
                 StructBase? structBase = m_current.StructBase;
+                return GetProperty(structBase, fieldName);
+            }
+
+            PropertyInfo? GetProperty(StructBase? structBase, string fieldName)
+            {
                 if (structBase != null)
                 {
-                    return structBase.GetType().GetProperty(fieldName);
+                    Type type = structBase.GetType();
+                    PropertyInfo? property = type.GetProperty(fieldName);
+                    if (property != null)
+                    {
+                        return property;
+                    }
+                    return type.GetProperty(fieldName + '_');   // if c# keyword try with '_'
                 }
                 return null;
             }
