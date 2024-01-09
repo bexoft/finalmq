@@ -388,6 +388,14 @@ module.exports = {
         }
         attrs += '}'
         return attrs
+    },
+
+    avoidCppKeyWords: function (name) {
+        if (name == 'namespace') {
+            return name + '_';
+        }
+        return name;
     }
+
      
 }

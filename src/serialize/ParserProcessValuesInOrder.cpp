@@ -75,12 +75,11 @@ void ParserProcessValuesInOrder::Internal::startStruct(const MetaStruct& stru)
 
 void ParserProcessValuesInOrder::Internal::finished()
 {
-    assert(m_stackCalls.size() == 1);
-    assert(m_currentCalls);
-    assert(!m_currentCalls->arr);
-
     if (m_currentCalls)
     {
+        assert(m_stackCalls.size() == 1);
+        assert(!m_currentCalls->arr);
+
         auto& calls = m_currentCalls->calls;
         for (size_t i = 0; i < calls.size(); ++i)
         {

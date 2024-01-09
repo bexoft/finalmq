@@ -64,6 +64,7 @@ namespace finalmq {
     {
         if (m_mode == Mode::WRAPPED_BY_QVARIANTLIST)
         {
+            reserveSpace(sizeof(std::uint32_t));
             const std::uint32_t count = static_cast<std::uint32_t>(stru.getFieldsSize());
             serialize(count);
         }
@@ -114,7 +115,6 @@ namespace finalmq {
         m_arrayStructCounterBuffer = m_buffer;
         m_arrayStructCounter = 0;
         serialize(m_arrayStructCounter);
-        m_buffer += sizeof(std::uint32_t);
         m_arrayStructCounter = 0;
 
         ++m_levelStruct;
@@ -308,12 +308,20 @@ namespace finalmq {
             serializeQVariantHeader(field);
         }
         reserveSpace(sizeof(std::int32_t));
-        const std::string& bits = field.getProperty(QT_ENUM_BITS, BITS_32);
-        if (bits == BITS_8)
+        const std::string* bits = &field.getProperty(QT_ENUM_BITS);
+        if (bits->empty())
+        {
+            const MetaEnum* en = MetaDataGlobal::instance().getEnum(field.typeName);
+            if (en)
+            {
+                bits = &en->getProperty(QT_ENUM_BITS);
+            }
+        }
+        if (*bits == BITS_8)
         {
             serialize(static_cast<std::int8_t>(value));
         }
-        else if (bits == BITS_16)
+        else if (*bits == BITS_16)
         {
             serialize(static_cast<std::int16_t>(value));
         }
@@ -551,8 +559,16 @@ namespace finalmq {
         }
         reserveSpace(sizeof(std::int32_t) + size * sizeof(std::int32_t));
 
-        const std::string& bits = field.getProperty(QT_ENUM_BITS, BITS_32);
-        if (bits == BITS_8)
+        const std::string* bits = &field.getProperty(QT_ENUM_BITS);
+        if (bits->empty())
+        {
+            const MetaEnum* en = MetaDataGlobal::instance().getEnum(field.typeName);
+            if (en)
+            {
+                bits = &en->getProperty(QT_ENUM_BITS);
+            }
+        }
+        if (*bits == BITS_8)
         {
             std::vector<std::int8_t> value8;
             value8.resize(size);
@@ -562,7 +578,7 @@ namespace finalmq {
             }
             serialize(value8.data(), size);
         }
-        else if (bits == BITS_16)
+        else if (*bits == BITS_16)
         {
             std::vector<std::int16_t> value16;
             value16.resize(size);
@@ -688,7 +704,7 @@ namespace finalmq {
     {
         std::u16string u16 = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(value);
         assert(u16.size() <= value.size());
-        serialize(u16.data(), u16.size() * 2);
+        serialize((std::int16_t*)(u16.data()), u16.size(), true);
     }
         
     void SerializerQt::Internal::serializeString(const char* value, ssize_t size)
@@ -697,10 +713,18 @@ namespace finalmq {
     }
 
     template<class T>
-    void SerializerQt::Internal::serialize(const T* value, ssize_t size)
+    void SerializerQt::Internal::serialize(const T* value, ssize_t size, bool sizeTimesTwo)
     {
         std::uint32_t s = static_cast<std::uint32_t>(size);
-        serialize(s);
+        if (sizeTimesTwo)
+        {
+            serialize(s * 2);
+        }
+        else
+        {
+            serialize(s);
+        }
+
         for (std::uint32_t i = 0; i < s; ++i)
         {
             serialize(value[i]);
@@ -756,7 +780,7 @@ namespace finalmq {
         std::string typeName;
         getQVariantType(field, typeId, typeName);
 
-        reserveSpace(sizeof(std::int32_t) + sizeof(std::int8_t) + (typeId == static_cast<std::uint32_t>(QtType::User)) ? typeName.size() : 0);
+        reserveSpace(sizeof(std::int32_t) + sizeof(std::int8_t) + ((typeId == static_cast<std::uint32_t>(QtType::User)) ? typeName.size() : 0));
         
         serialize(typeId);
         serialize(static_cast<std::uint8_t>(0));

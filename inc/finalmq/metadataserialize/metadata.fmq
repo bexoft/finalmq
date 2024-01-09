@@ -78,6 +78,7 @@
             {"tid":"TYPE_ARRAY_STRING", "type":"",                          "name":"attrs",     "desc":"desc","flags":[]}
         ]},
         {"type":"SerializeMetaData","desc":"desc","fields":[
+            {"tid":"TYPE_STRING",       "type":"",                          "name":"namespace", "desc":"desc","flags":[]},
             {"tid":"TYPE_ARRAY_STRUCT", "type":"SerializeMetaEnum",         "name":"enums",     "desc":"desc","flags":[]},
             {"tid":"TYPE_ARRAY_STRUCT", "type":"SerializeMetaStruct",       "name":"structs",   "desc":"desc","flags":[]}
         ]}

@@ -317,6 +317,14 @@ module.exports = {
             }
         }
         return entries[0]
+    },
+
+    avoidCppKeyWords: function (name)
+    {
+        if (name == 'namespace') {
+            return name + '_';
+        }
+        return name;
     }
-     
+
 }

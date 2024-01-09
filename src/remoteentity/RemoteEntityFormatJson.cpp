@@ -328,11 +328,11 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parseData(const IProtocolSes
 
     std::shared_ptr<StructBase> data;
 
+    ssize_t sizeData = sizeBuffer;
+    assert(sizeData >= 0);
     if (!type.empty())
     {
         data = StructFactoryRegistry::instance().createStruct(type);
-        ssize_t sizeData = sizeBuffer;
-        assert(sizeData >= 0);
 
         if (data)
         {
@@ -348,15 +348,15 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parseData(const IProtocolSes
                 }
             }
         }
+    }
 
-        if (storeRawData)
+    if (storeRawData)
+    {
+        if (data == nullptr)
         {
-            if (data == nullptr)
-            {
-                data = std::make_shared<RawDataMessage>();
-            }
-            data->setRawData(type, CONTENT_TYPE, buffer, sizeData);
+            data = std::make_shared<RawDataMessage>();
         }
+        data->setRawData(type, CONTENT_TYPE, buffer, sizeData);
     }
 
     return data;

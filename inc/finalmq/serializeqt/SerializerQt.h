@@ -124,7 +124,7 @@ namespace finalmq {
             void serializeString(const char* value, ssize_t size);
 
             template<class T>
-            void serialize(const T* value, ssize_t size);
+            void serialize(const T* value, ssize_t size, bool sizeTimesTwo = false);
                 
             void serializeArrayBool(const std::vector<bool>& value);
             void serializeArrayString(const std::vector<std::string>& value);
