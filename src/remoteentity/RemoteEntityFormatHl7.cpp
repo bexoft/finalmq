@@ -223,7 +223,7 @@ void RemoteEntityFormatHl7::serializeData(const IProtocolSessionPtr& session, IM
             char* payload = messageToSerialize.addSendPayload(rawData->size());
             memcpy(payload, rawData->data(), rawData->size());
         }
-        else
+        else if (structBase->getStructInfo().getTypeName() != finalmq::RawDataMessage::structInfo().getTypeName())
         {
             SerializerHl7 serializerData(messageToSerialize, 512);
             ParserStruct parserData(serializerData, *structBase);

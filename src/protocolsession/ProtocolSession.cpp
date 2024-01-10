@@ -260,7 +260,11 @@ void ProtocolSession::getProtocolFromConnectionId(IProtocolPtr& protocol, std::i
 {
     // mutext is already locked
 
-    IStreamConnectionPtr connection = protocol->getConnection();
+    IStreamConnectionPtr connection;
+    if (protocol != nullptr)
+    {
+        connection = protocol->getConnection();
+    }
     if (protocol == nullptr || (connectionId != 0 && (connection == nullptr || connectionId != connection->getConnectionId())))
     {
         protocol = nullptr;

@@ -99,7 +99,7 @@ void RemoteEntityFormatJson::serializeData(const IProtocolSessionPtr& session, I
             char* payload = message.addSendPayload(rawData->size());
             memcpy(payload, rawData->data(), rawData->size());
         }
-        else
+        else if (structBase->getStructInfo().getTypeName() != finalmq::RawDataMessage::structInfo().getTypeName())
         {
             bool enumAsString = true;
             bool skipDefaultValues = false;
