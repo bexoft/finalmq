@@ -612,6 +612,11 @@ namespace finalmq {
     }
 
 
+    void SerializerQt::Internal::serialize(char value)
+    {
+        serialize(static_cast<std::uint8_t>(value));
+    }
+
     void SerializerQt::Internal::serialize(std::int8_t value)
     {
         serialize(static_cast<std::uint8_t>(value));

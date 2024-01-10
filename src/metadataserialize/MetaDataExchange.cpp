@@ -112,7 +112,7 @@ void MetaDataExchange::importMetaData(const SerializeMetaData& metadata)
                 typeWithNamespace = metadata.namespace_ + "." + fieldSource.type;
             }
 
-            fields.push_back({convert(fieldSource.tid), typeWithNamespace, fieldSource.name, fieldSource.desc, flags, fieldSource.attrs, -1});
+            fields.emplace_back(convert(fieldSource.tid), typeWithNamespace, fieldSource.name, fieldSource.desc, flags, fieldSource.attrs, -1);
         }
         int flagsStruct = 0;
         std::for_each(structSource.flags.begin(), structSource.flags.end(), [&flagsStruct](const SerializeMetaStructFlags& flag) {

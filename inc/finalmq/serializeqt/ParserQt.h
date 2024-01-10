@@ -71,7 +71,7 @@ namespace finalmq {
 
         bool parseQVariantHeader(const MetaField& field);
 
-        const char* m_ptr = nullptr;
+        const std::uint8_t* m_ptr = nullptr;
         ssize_t m_size = 0;
         IParserVisitor& m_visitor;
         const Mode m_mode = Mode::NONE;

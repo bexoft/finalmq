@@ -38,7 +38,7 @@ namespace finalmq {
 
 
     ParserQt::ParserQt(IParserVisitor& visitor, const char* ptr, ssize_t size, Mode mode)
-        : m_ptr(ptr)
+        : m_ptr(reinterpret_cast<const std::uint8_t*>(ptr))
         , m_size(size)
         , m_visitor(visitor)
         , m_mode(mode)
@@ -58,7 +58,7 @@ namespace finalmq {
         const MetaStruct* stru = MetaDataGlobal::instance().getStruct(typeName);
         if (!stru)
         {
-            m_visitor.notifyError(m_ptr, "typename not found");
+            m_visitor.notifyError(reinterpret_cast<const char*>(m_ptr), "typename not found");
             m_visitor.finished();
             return false;
         }
@@ -70,7 +70,7 @@ namespace finalmq {
             bool ok = parse(count);
             if (ok && count != numberOfFields)
             {
-                m_visitor.notifyError(m_ptr, "number of fields does not match");
+                m_visitor.notifyError(reinterpret_cast<const char*>(m_ptr), "number of fields does not match");
                 m_visitor.finished();
                 return false;
             }
@@ -313,7 +313,7 @@ namespace finalmq {
                     const MetaStruct* stru = MetaDataGlobal::instance().getStruct(field->typeName);
                     if (!stru)
                     {
-                        m_visitor.notifyError(m_ptr, "typename not found");
+                        m_visitor.notifyError(reinterpret_cast<const char*>(m_ptr), "typename not found");
                         m_visitor.finished();
                         ok = false;
                     }
@@ -853,7 +853,7 @@ namespace finalmq {
         if (m_size >= size)
         {
             assert(m_ptr);
-            buffer = m_ptr;
+            buffer = reinterpret_cast<const char*>(m_ptr);
             m_ptr += size;
             m_size -= size;
             return true;
@@ -955,7 +955,7 @@ namespace finalmq {
         const MetaStruct* stru = MetaDataGlobal::instance().getStruct(field);
         if (!stru)
         {
-            m_visitor.notifyError(m_ptr, "typename not found");
+            m_visitor.notifyError(reinterpret_cast<const char*>(m_ptr), "typename not found");
             return false;
         }
 
@@ -969,7 +969,7 @@ namespace finalmq {
             m_visitor.exitStruct(*fieldWithoutArray);
         }
         m_visitor.exitArrayStruct(field);
-
+        
         return (m_ptr != nullptr);
     }
 
