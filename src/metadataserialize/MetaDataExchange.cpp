@@ -45,6 +45,29 @@ static SerializeMetaTypeId convert(MetaTypeId value)
     return static_cast<SerializeMetaTypeId::Enum>(static_cast<MetaTypeId>(value));
 }
 
+static bool isInData(const SerializeMetaData& metadata, const std::string& type)
+{
+    // enums
+    for (size_t i = 0; i < metadata.enums.size(); ++i)
+    {
+        const SerializeMetaEnum& enumSource = metadata.enums[i];
+        if (enumSource.type == type)
+        {
+            return true;
+        }
+    }
+    // structs
+    for (size_t i = 0; i < metadata.structs.size(); ++i)
+    {
+        const SerializeMetaStruct& structSource = metadata.structs[i];
+        if (structSource.type == type)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 void MetaDataExchange::importMetaData(const SerializeMetaData& metadata)
 {
     // enums
@@ -54,7 +77,7 @@ void MetaDataExchange::importMetaData(const SerializeMetaData& metadata)
         std::vector<MetaEnumEntry> entries;
         for (size_t n = 0; n < enumSource.entries.size(); ++n)
         {
-            const SerializeMetaEnumEntry& entrySource = enumSource.entries[i];
+            const SerializeMetaEnumEntry& entrySource = enumSource.entries[n];
             entries.push_back({entrySource.name, entrySource.id, entrySource.desc, entrySource.alias});
         }
         std::string type;
@@ -73,12 +96,23 @@ void MetaDataExchange::importMetaData(const SerializeMetaData& metadata)
         std::vector<MetaField> fields;
         for (size_t n = 0; n < structSource.fields.size(); ++n)
         {
-            const SerializeMetaField& fieldSource = structSource.fields[i];
+            const SerializeMetaField& fieldSource = structSource.fields[n];
             int flags = 0;
             std::for_each(fieldSource.flags.begin(), fieldSource.flags.end(), [&flags] (const SerializeMetaFieldFlags& flag) {
                 flags |= flag;
             });
-            fields.push_back({convert(fieldSource.tid), fieldSource.type, fieldSource.name, fieldSource.desc, flags, fieldSource.attrs, -1});
+
+            std::string typeWithNamespace;
+            if (fieldSource.type.find_first_of('.') != std::string::npos || metadata.namespace_.empty() || !isInData(metadata, fieldSource.type))
+            {
+                typeWithNamespace = fieldSource.type;
+            }
+            else
+            {
+                typeWithNamespace = metadata.namespace_ + "." + fieldSource.type;
+            }
+
+            fields.push_back({convert(fieldSource.tid), typeWithNamespace, fieldSource.name, fieldSource.desc, flags, fieldSource.attrs, -1});
         }
         int flagsStruct = 0;
         std::for_each(structSource.flags.begin(), structSource.flags.end(), [&flagsStruct](const SerializeMetaStructFlags& flag) {

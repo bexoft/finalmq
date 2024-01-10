@@ -97,7 +97,7 @@ void RemoteEntityFormatProto::serializeData(const IProtocolSessionPtr& /*session
             char* payload = message.addSendPayload(rawData->size());
             memcpy(payload, rawData->data(), rawData->size());
         }
-        else
+        else if (structBase->getStructInfo().getTypeName() != finalmq::RawDataMessage::structInfo().getTypeName())
         {
             SerializerProto serializerData(message);
             ParserStruct parserData(serializerData, *structBase);

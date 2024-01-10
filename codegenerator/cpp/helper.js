@@ -69,16 +69,16 @@ module.exports = {
     {
         if (type)
         { 
-            var type = type;
+            var typeWithNamespace = type;
             if (type.split('.').length > 1 || data.namespace == null || data.namespace.length == 0 || !this.isTypeInData(data, type))
             {
-                type = type;
+                typeWithNamespace = type;
             }
             else
             {
-                type = data.namespace + '.' + type
+                typeWithNamespace = data.namespace + '.' + type
             }
-            return type.split('.').join(delimiter)
+            return typeWithNamespace.split('.').join(delimiter)
         }
         else
         {

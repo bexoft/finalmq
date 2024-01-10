@@ -366,28 +366,40 @@ class FmqSession
 							response = response.substring(ixStart);
 							if (response.length > 0)
 							{
+                                var jsonHeaderParams = response.substring(1).split(',\t');
 								response += ']';
 								var command = xmlhttp._this._getParams(response);
 								var header = command[0];
 								var params = command[1];
 								params.fmqheader = header;
+                                params.fmqheaderjson = jsonHeaderParams[0];
+                                params.fmqparamsjson = '';
+                                if (jsonHeaderParams.length >= 2)
+                                {
+                                    params.fmqparamsjson = jsonHeaderParams[1];
+                                }
                                 params.httpstatus = xmlhttp.status;
                                 var path = header.path;
                                 if (!path || path == '')
                                 {
-                                    path = header.type.replace(/\./g, '_');  // replace all '.' by '_'
+                                    path = header.type;
                                 }
                                 else
                                 {
                                     path = path.replace(/\//g, '_');  // replace all '/' by '_'
                                 }
+                                path = path.replace(/\./g, '_');  // replace all '.' by '_'
 
 								var entity = xmlhttp._this._getEntity(header.srcid);
 								if (entity && entity[path])
 								{
 									entity[path](header.corrid, params);
 								}
-								else
+								else if (entity && entity['allRequests'])
+                                {
+									entity['allRequests'](header.corrid, path, params);
+                                }
+                                else
 								{
 									xmlhttp._this.replyStatus(header.srcid, header.corrid, 'STATUS_REQUEST_NOT_FOUND');
 								}
