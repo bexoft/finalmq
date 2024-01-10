@@ -109,6 +109,7 @@ namespace finalmq {
             virtual void enterArrayEnumMove(const MetaField& field, std::vector<std::string>&& value) override;
             virtual void enterArrayEnum(const MetaField& field, const std::vector<std::string>& value) override;
 
+            void serialize(char value);
             void serialize(std::int8_t value);
             void serialize(std::uint8_t value);
             void serialize(std::int16_t value);
