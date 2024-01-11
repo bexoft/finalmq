@@ -26,6 +26,9 @@
 #include "finalmq/serialize/ParserProcessValuesInOrder.h"
 #include "finalmq/helpers/Utils.h"
 #include "finalmq/metadata/MetaData.h"
+#include "finalmq/helpers/ModulenameFinalmq.h"
+#include "finalmq/logger/LogStream.h"
+
 
 #include <assert.h>
 #include <codecvt>
@@ -62,6 +65,7 @@ namespace finalmq {
 
     void SerializerQt::Internal::startStruct(const MetaStruct& stru)
     {
+        m_abortStruct = -1;
         if (m_mode == Mode::WRAPPED_BY_QVARIANTLIST)
         {
             reserveSpace(sizeof(std::uint32_t));
@@ -79,15 +83,18 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterStruct(const MetaField& field)
     {
-        assert(field.typeId == MetaTypeId::TYPE_STRUCT);
-        if (isWrappedByQVariant())
+        if (m_abortStruct == -1)
         {
-            serializeQVariantHeader(field);
-        }
+            assert(field.typeId == MetaTypeId::TYPE_STRUCT);
+            if (isWrappedByQVariant())
+            {
+                serializeQVariantHeader(field);
+            }
 
-        if (m_arrayStructCounter >= 0)
-        {
-            ++m_arrayStructCounter;
+            if (m_arrayStructCounter >= 0)
+            {
+                ++m_arrayStructCounter;
+            }
         }
 
         ++m_levelStruct;
@@ -95,48 +102,70 @@ namespace finalmq {
 
     void SerializerQt::Internal::exitStruct(const MetaField& /*field*/)
     {
+        if (m_abortStruct == m_levelStruct)
+        {
+            m_abortStruct = -1;
+        }
         --m_levelStruct;
     }
 
     void SerializerQt::Internal::enterStructNull(const MetaField& /*field*/)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
     }
 
 
     void SerializerQt::Internal::enterArrayStruct(const MetaField& field)
     {
-        assert(field.typeId == MetaTypeId::TYPE_ARRAY_STRUCT);
-        if (isWrappedByQVariant())
+        if (m_abortStruct == -1)
         {
-            serializeQVariantHeader(field);
-        }
+            assert(field.typeId == MetaTypeId::TYPE_ARRAY_STRUCT);
+            if (isWrappedByQVariant())
+            {
+                serializeQVariantHeader(field);
+            }
 
-        reserveSpace(sizeof(std::uint32_t));
-        m_arrayStructCounterBuffer = m_buffer;
-        m_arrayStructCounter = 0;
-        serialize(m_arrayStructCounter);
-        m_arrayStructCounter = 0;
+            reserveSpace(sizeof(std::uint32_t));
+            m_arrayStructCounterBuffer = m_buffer;
+            m_arrayStructCounter = 0;
+            serialize(m_arrayStructCounter);
+            m_arrayStructCounter = 0;
+        }
 
         ++m_levelStruct;
     }
 
     void SerializerQt::Internal::exitArrayStruct(const MetaField& /*field*/)
     {
-        if (m_arrayStructCounterBuffer)
+        if (m_abortStruct == -1)
         {
-            char* buffer = m_buffer;
-            m_buffer = m_arrayStructCounterBuffer;
-            serialize(m_arrayStructCounter);
-            m_buffer = buffer;
-            m_arrayStructCounter = -1;
+            if (m_arrayStructCounterBuffer)
+            {
+                char* buffer = m_buffer;
+                m_buffer = m_arrayStructCounterBuffer;
+                serialize(m_arrayStructCounter);
+                m_buffer = buffer;
+                m_arrayStructCounter = -1;
+            }
         }
 
         --m_levelStruct;
     }
 
+    static const std::string QT_ABORTSTRUCT = "qtabortstruct";
+    static const std::string QT_FALSE = "false";
+    static const std::string QT_TRUE = "true";
 
     void SerializerQt::Internal::enterBool(const MetaField& field, bool value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_BOOL);
         if (isWrappedByQVariant())
         {
@@ -144,10 +173,26 @@ namespace finalmq {
         }
         reserveSpace(sizeof(std::uint8_t));
         serialize(static_cast<std::uint8_t>(value ? 1 : 0));
+
+        // check abort
+        const std::string& valueAbort = field.getProperty(QT_ABORTSTRUCT);
+        if (!valueAbort.empty())
+        {
+            if (((valueAbort == QT_TRUE) && value) ||
+                ((valueAbort == QT_FALSE) && !value))
+            {
+                m_abortStruct = m_abortStruct;
+            }
+        }
     }
 
     void SerializerQt::Internal::enterInt8(const MetaField& field, std::int8_t value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_INT8);
         if (isWrappedByQVariant())
         {
@@ -159,6 +204,11 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterUInt8(const MetaField& field, std::uint8_t value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_UINT8);
         if (isWrappedByQVariant())
         {
@@ -170,6 +220,11 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterInt16(const MetaField& field, std::int16_t value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_INT16);
         if (isWrappedByQVariant())
         {
@@ -181,6 +236,11 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterUInt16(const MetaField& field, std::uint16_t value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_UINT16);
         if (isWrappedByQVariant())
         {
@@ -192,6 +252,11 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterInt32(const MetaField& field, std::int32_t value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_INT32);
         if (isWrappedByQVariant())
         {
@@ -203,6 +268,11 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterUInt32(const MetaField& field, std::uint32_t value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_UINT32);
         if (isWrappedByQVariant())
         {
@@ -214,6 +284,11 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterInt64(const MetaField& field, std::int64_t value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_INT64);
         if (isWrappedByQVariant())
         {
@@ -225,6 +300,11 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterUInt64(const MetaField& field, std::uint64_t value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_UINT64);
         if (isWrappedByQVariant())
         {
@@ -236,6 +316,11 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterFloat(const MetaField& field, float value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_FLOAT);
         if (isWrappedByQVariant())
         {
@@ -247,6 +332,11 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterDouble(const MetaField& field, double value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_DOUBLE);
         if (isWrappedByQVariant())
         {
@@ -258,6 +348,11 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterString(const MetaField& field, std::string&& value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_STRING);
         if (isWrappedByQVariant())
         {
@@ -269,6 +364,11 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterString(const MetaField& field, const char* value, ssize_t size)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_STRING);
         if (isWrappedByQVariant())
         {
@@ -280,12 +380,22 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterBytes(const MetaField& field, Bytes&& value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_BYTES);
         enterBytes(field, value.data(), value.size());
     }
 
     void SerializerQt::Internal::enterBytes(const MetaField& field, const BytesElement* value, ssize_t size)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_BYTES);
         if (isWrappedByQVariant())
         {
@@ -302,6 +412,11 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterEnum(const MetaField& field, std::int32_t value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_ENUM);
         if (isWrappedByQVariant())
         {
@@ -309,9 +424,13 @@ namespace finalmq {
         }
         reserveSpace(sizeof(std::int32_t));
         const std::string* bits = &field.getProperty(QT_ENUM_BITS);
+        const MetaEnum* en = MetaDataGlobal::instance().getEnum(field.typeName);
+        if (en == nullptr)
+        {
+            streamError << "enum not found " << field.typeName;
+        }
         if (bits->empty())
         {
-            const MetaEnum* en = MetaDataGlobal::instance().getEnum(field.typeName);
             if (en)
             {
                 bits = &en->getProperty(QT_ENUM_BITS);
@@ -329,26 +448,67 @@ namespace finalmq {
         {
             serialize(value);
         }
+
+        // check abort
+        const std::string& valueAbort = field.getProperty(QT_ABORTSTRUCT);
+        if (!valueAbort.empty() && en)
+        {
+            std::string strValue = en->getNameByValue(value);
+            std::vector<std::string> valuesAbort;
+            Utils::split(valueAbort, 0, valueAbort.size(), '|', valuesAbort);
+            if (std::find(valuesAbort.begin(), valuesAbort.end(), strValue) != valuesAbort.end())
+            {
+                m_abortStruct = m_levelStruct;
+            }
+            else
+            {
+                std::string aliasValue = en->getAliasByValue(value);
+                if (std::find(valuesAbort.begin(), valuesAbort.end(), aliasValue) != valuesAbort.end())
+                {
+                    m_abortStruct = m_levelStruct;
+                }
+            }
+        }
     }
 
     void SerializerQt::Internal::enterEnum(const MetaField& field, std::string&& value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         std::int32_t enumValue = MetaDataGlobal::instance().getEnumValueByName(field, value);
         enterEnum(field, enumValue);
     }
 
     void SerializerQt::Internal::enterEnum(const MetaField& field, const char* value, ssize_t size)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         enterEnum(field, std::string(value, size));
     }
 
     void SerializerQt::Internal::enterArrayBoolMove(const MetaField& field, std::vector<bool>&& value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         enterArrayBool(field, value);
     }
 
     void SerializerQt::Internal::enterArrayBool(const MetaField& field, const std::vector<bool>& value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_ARRAY_BOOL);
         if (isWrappedByQVariant())
         {
@@ -361,11 +521,21 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterArrayInt8(const MetaField& field, std::vector<std::int8_t>&& value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         enterArrayInt8(field, value.data(), value.size());
     }
 
     void SerializerQt::Internal::enterArrayInt8(const MetaField& field, const std::int8_t* value, ssize_t size)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_ARRAY_INT8);
         if (isWrappedByQVariant())
         {
@@ -377,11 +547,21 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterArrayInt16(const MetaField& field, std::vector<std::int16_t>&& value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         enterArrayInt16(field, value.data(), value.size());
     }
 
     void SerializerQt::Internal::enterArrayInt16(const MetaField& field, const std::int16_t* value, ssize_t size)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_ARRAY_INT16);
         if (isWrappedByQVariant())
         {
@@ -393,11 +573,21 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterArrayUInt16(const MetaField& field, std::vector<std::uint16_t>&& value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         enterArrayUInt16(field, value.data(), value.size());
     }
 
     void SerializerQt::Internal::enterArrayUInt16(const MetaField& field, const std::uint16_t* value, ssize_t size)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_ARRAY_UINT16);
         if (isWrappedByQVariant())
         {
@@ -409,11 +599,21 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterArrayInt32(const MetaField& field, std::vector<std::int32_t>&& value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         enterArrayInt32(field, value.data(), value.size());
     }
 
     void SerializerQt::Internal::enterArrayInt32(const MetaField& field, const std::int32_t* value, ssize_t size)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_ARRAY_INT32);
         if (isWrappedByQVariant())
         {
@@ -425,11 +625,21 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterArrayUInt32(const MetaField& field, std::vector<std::uint32_t>&& value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         enterArrayUInt32(field, value.data(), value.size());
     }
 
     void SerializerQt::Internal::enterArrayUInt32(const MetaField& field, const std::uint32_t* value, ssize_t size)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_ARRAY_UINT32);
         if (isWrappedByQVariant())
         {
@@ -441,11 +651,21 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterArrayInt64(const MetaField& field, std::vector<std::int64_t>&& value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         enterArrayInt64(field, value.data(), value.size());
     }
 
     void SerializerQt::Internal::enterArrayInt64(const MetaField& field, const std::int64_t* value, ssize_t size)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_ARRAY_INT64);
         if (isWrappedByQVariant())
         {
@@ -457,11 +677,21 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterArrayUInt64(const MetaField& field, std::vector<std::uint64_t>&& value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         enterArrayUInt64(field, value.data(), value.size());
     }
 
     void SerializerQt::Internal::enterArrayUInt64(const MetaField& field, const std::uint64_t* value, ssize_t size)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_ARRAY_UINT64);
         if (isWrappedByQVariant())
         {
@@ -473,11 +703,21 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterArrayFloat(const MetaField& field, std::vector<float>&& value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         enterArrayFloat(field, value.data(), value.size());
     }
 
     void SerializerQt::Internal::enterArrayFloat(const MetaField& field, const float* value, ssize_t size)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_ARRAY_FLOAT);
         if (isWrappedByQVariant())
         {
@@ -489,11 +729,21 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterArrayDouble(const MetaField& field, std::vector<double>&& value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         enterArrayDouble(field, value.data(), value.size());
     }
 
     void SerializerQt::Internal::enterArrayDouble(const MetaField& field, const double* value, ssize_t size)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_ARRAY_DOUBLE);
         if (isWrappedByQVariant())
         {
@@ -505,11 +755,21 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterArrayStringMove(const MetaField& field, std::vector<std::string>&& value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         enterArrayString(field, value);
     }
 
     void SerializerQt::Internal::enterArrayString(const MetaField& field, const std::vector<std::string>& value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_ARRAY_STRING);
         if (isWrappedByQVariant())
         {
@@ -526,11 +786,21 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterArrayBytesMove(const MetaField& field, std::vector<Bytes>&& value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         enterArrayBytes(field, value);
     }
 
     void SerializerQt::Internal::enterArrayBytes(const MetaField& field, const std::vector<Bytes>& value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_ARRAY_BYTES);
         if (isWrappedByQVariant())
         {
@@ -547,11 +817,21 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterArrayEnum(const MetaField& field, std::vector<std::int32_t>&& value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         enterArrayEnum(field, value.data(), value.size());
     }
 
     void SerializerQt::Internal::enterArrayEnum(const MetaField& field, const std::int32_t* value, ssize_t size)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         assert(field.typeId == MetaTypeId::TYPE_ARRAY_ENUM);
         if (isWrappedByQVariant())
         {
@@ -596,11 +876,21 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterArrayEnumMove(const MetaField& field, std::vector<std::string>&& value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         enterArrayEnum(field, value);
     }
 
     void SerializerQt::Internal::enterArrayEnum(const MetaField& field, const std::vector<std::string>& value)
     {
+        if (m_abortStruct != -1)
+        {
+            return;
+        }
+
         std::vector<std::int32_t> enums;
         enums.resize(value.size());
         for (size_t i = 0; i < value.size(); ++i)
