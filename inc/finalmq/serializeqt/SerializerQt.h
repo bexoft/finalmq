@@ -151,6 +151,8 @@ namespace finalmq {
 
             int m_levelStruct = 0;
             const Mode m_mode = Mode::NONE;
+
+            int m_abortStruct = -1;
         };
 
         Internal                            m_internal;

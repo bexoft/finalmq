@@ -32,6 +32,7 @@
 #include <iostream>
 #include <codecvt>
 #include <locale>
+#include <algorithm>
 
 
 namespace finalmq {
@@ -87,6 +88,10 @@ namespace finalmq {
     static const std::string BITS_16 = "16";
     static const std::string BITS_32 = "32";
 
+    static const std::string QT_ABORTSTRUCT = "qtabortstruct";
+    static const std::string QT_FALSE = "false";
+    static const std::string QT_TRUE = "true";
+
     bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
     {
         if (!m_ptr || m_size < 0)
@@ -96,9 +101,10 @@ namespace finalmq {
         }
 
         bool ok = true;
+        bool abortStruct = false;
 
         const ssize_t numberOfFields = stru.getFieldsSize();
-        for (ssize_t i = 0; i < numberOfFields && ok; ++i)
+        for (ssize_t i = 0; i < numberOfFields && ok && !abortStruct; ++i)
         {
             const MetaField* field = stru.getFieldByIndex(i);
             assert(field);
@@ -119,6 +125,17 @@ namespace finalmq {
                     if (ok)
                     {
                         m_visitor.enterBool(*field, static_cast<bool>(value));
+
+                        // check abort
+                        const std::string& valueAbort = field->getProperty(QT_ABORTSTRUCT);
+                        if (!valueAbort.empty())
+                        {
+                            if (((valueAbort == QT_TRUE) && value) ||
+                                ((valueAbort == QT_FALSE) && !value))
+                            {
+                                abortStruct = true;
+                            }
+                        }
                     }
                 }
                 break;
@@ -360,6 +377,21 @@ namespace finalmq {
                         if (ok)
                         {
                             m_visitor.enterEnum(*field, value);
+
+                            // check abort
+                            const std::string& valueAbort = field->getProperty(QT_ABORTSTRUCT);
+                            if (!valueAbort.empty())
+                            {
+                                std::string strValue = en->getNameByValue(value);
+                                std::vector<std::string> valuesAbort;
+                                Utils::split(valueAbort, 0, valueAbort.size(), '|', valuesAbort);
+                                abortStruct = (std::find(valuesAbort.begin(), valuesAbort.end(), strValue) != valuesAbort.end());
+                                if (!abortStruct)
+                                {
+                                    std::string aliasValue = en->getAliasByValue(value);
+                                    abortStruct = (std::find(valuesAbort.begin(), valuesAbort.end(), aliasValue) != valuesAbort.end());
+                                }
+                            }
                         }
                     }
                     else
