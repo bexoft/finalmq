@@ -25,6 +25,7 @@
 #include "finalmq/helpers/FmqDefines.h"
 #include "finalmq/variant/Variant.h"
 #include "finalmq/serialize/IParserVisitor.h"
+#include "finalmq/serializevariant/VarValueToVariant.h"
 
 
 namespace finalmq {

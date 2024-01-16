@@ -25,6 +25,7 @@
 
 
 #include "finalmq/serializevariant/ParserVariant.h"
+#include "finalmq/serializevariant/VarValueToVariant.h"
 #include "finalmq/variant/VariantValueStruct.h"
 #include "finalmq/variant/VariantValueList.h"
 #include "finalmq/variant/VariantValues.h"
@@ -80,16 +81,20 @@ protected:
         ASSERT_NE(structVarVariant, nullptr);
 
         m_fieldName = structVarVariant->getFieldByName("name");
-        m_fieldType = structVarVariant->getFieldByName("type");
+        m_fieldIndex = structVarVariant->getFieldByName("index");
         m_fieldInt32 = structVarVariant->getFieldByName("valint32");
         m_fieldString = structVarVariant->getFieldByName("valstring");
+        m_fieldStruct = structVarVariant->getFieldByName("valstruct");
+        m_fieldStructWithoutArray = MetaDataGlobal::instance().getArrayField(*m_fieldStruct);
         m_fieldList = structVarVariant->getFieldByName("vallist");
         m_fieldListWithoutArray = MetaDataGlobal::instance().getArrayField(*m_fieldList);
 
         ASSERT_NE(m_fieldName, nullptr);
-        ASSERT_NE(m_fieldType, nullptr);
+        ASSERT_NE(m_fieldIndex, nullptr);
         ASSERT_NE(m_fieldInt32, nullptr);
         ASSERT_NE(m_fieldString, nullptr);
+        ASSERT_NE(m_fieldStruct, nullptr);
+        ASSERT_NE(m_fieldStructWithoutArray, nullptr);
         ASSERT_NE(m_fieldList, nullptr);
         ASSERT_NE(m_fieldListWithoutArray, nullptr);
     }
@@ -102,9 +107,11 @@ protected:
     const MetaField* m_fieldValue2 = nullptr;
     const MetaField* m_fieldValueInt32 = nullptr;
     const MetaField* m_fieldName = nullptr;
-    const MetaField* m_fieldType = nullptr;
+    const MetaField* m_fieldIndex = nullptr;
     const MetaField* m_fieldInt32 = nullptr;
     const MetaField* m_fieldString = nullptr;
+    const MetaField* m_fieldStruct = nullptr;
+    const MetaField* m_fieldStructWithoutArray = nullptr;
     const MetaField* m_fieldList = nullptr;
     const MetaField* m_fieldListWithoutArray = nullptr;
 };
@@ -654,13 +661,13 @@ TEST_F(TestParserVariant, testVariantEmpty)
         testing::InSequence seq;
         EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*m_fieldValue))).Times(1);
-        EXPECT_CALL(mockVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_NONE)).Times(1);
+        EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*m_fieldIndex), VarValueType2Index::VARVALUETYPE_NONE)).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*m_fieldValue))).Times(1);
 
         EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*m_fieldValueInt32), 0)).Times(1);
 
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*m_fieldValue2))).Times(1);
-        EXPECT_CALL(mockVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_NONE)).Times(1);
+        EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*m_fieldIndex), VarValueType2Index::VARVALUETYPE_NONE)).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*m_fieldValue2))).Times(1);
 
         EXPECT_CALL(mockVisitor, finished()).Times(1);
@@ -683,14 +690,14 @@ TEST_F(TestParserVariant, testVariantString)
         testing::InSequence seq;
         EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*m_fieldValue))).Times(1);
-        EXPECT_CALL(mockVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_STRING)).Times(1);
+        EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*m_fieldIndex), VarValueType2Index::VARVALUETYPE_STRING)).Times(1);
         EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*m_fieldString), StrEq(VALUE_STRING.data()), VALUE_STRING.size())).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*m_fieldValue))).Times(1);
 
         EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*m_fieldValueInt32), 0)).Times(1);
 
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*m_fieldValue2))).Times(1);
-        EXPECT_CALL(mockVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_NONE)).Times(1);
+        EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*m_fieldIndex), VarValueType2Index::VARVALUETYPE_NONE)).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*m_fieldValue2))).Times(1);
 
         EXPECT_CALL(mockVisitor, finished()).Times(1);
@@ -713,21 +720,21 @@ TEST_F(TestParserVariant, testVariantStruct)
         EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
         // VariantStruct{ {"value", VariantStruct{
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*m_fieldValue))).Times(1);
-        EXPECT_CALL(mockVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_STRUCT)).Times(1); 
-        EXPECT_CALL(mockVisitor, enterArrayStruct(MatcherMetaField(*m_fieldList))).Times(1);
+        EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*m_fieldIndex), VarValueType2Index::VARVALUETYPE_VARIANTSTRUCT)).Times(1);
+        EXPECT_CALL(mockVisitor, enterArrayStruct(MatcherMetaField(*m_fieldStruct))).Times(1);
             // {"key1", VariantList{
             EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*m_fieldListWithoutArray))).Times(1);
             EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*m_fieldName), StrEq("key1"), 4)).Times(1);
-            EXPECT_CALL(mockVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_LIST)).Times(1);
+            EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*m_fieldIndex), VarValueType2Index::VARVALUETYPE_VARIANTLIST)).Times(1);
             EXPECT_CALL(mockVisitor, enterArrayStruct(MatcherMetaField(*m_fieldList))).Times(1);
                 // 2
                 EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*m_fieldListWithoutArray))).Times(1);
-                EXPECT_CALL(mockVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_INT32)).Times(1);
+                EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*m_fieldIndex), VarValueType2Index::VARVALUETYPE_INT32)).Times(1);
                 EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*m_fieldInt32), 2)).Times(1);
                 EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*m_fieldListWithoutArray))).Times(1);
                 // , std::string("Hello")
                 EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*m_fieldListWithoutArray))).Times(1);
-                EXPECT_CALL(mockVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_STRING)).Times(1);
+                EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*m_fieldIndex), VarValueType2Index::VARVALUETYPE_STRING)).Times(1);
                 EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*m_fieldString), StrEq("Hello"), 5)).Times(1);
                 EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*m_fieldListWithoutArray))).Times(1);
             // }
@@ -737,37 +744,37 @@ TEST_F(TestParserVariant, testVariantStruct)
             // {"key2", VariantStruct{
             EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*m_fieldListWithoutArray))).Times(1);
             EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*m_fieldName), StrEq("key2"), 4)).Times(1);
-            EXPECT_CALL(mockVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_STRUCT)).Times(1);
-            EXPECT_CALL(mockVisitor, enterArrayStruct(MatcherMetaField(*m_fieldList))).Times(1);
+            EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*m_fieldIndex), VarValueType2Index::VARVALUETYPE_VARIANTSTRUCT)).Times(1);
+            EXPECT_CALL(mockVisitor, enterArrayStruct(MatcherMetaField(*m_fieldStruct))).Times(1);
                 // {"a", 3},
                 EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*m_fieldListWithoutArray))).Times(1);
                 EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*m_fieldName), StrEq("a"), 1)).Times(1);
-                EXPECT_CALL(mockVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_INT32)).Times(1);
+                EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*m_fieldIndex), VarValueType2Index::VARVALUETYPE_INT32)).Times(1);
                 EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*m_fieldInt32), 3)).Times(1);
                 EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*m_fieldListWithoutArray))).Times(1);
                 // {"b", std::string("Hi")}
                 EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*m_fieldListWithoutArray))).Times(1);
                 EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*m_fieldName), StrEq("b"), 1)).Times(1);
-                EXPECT_CALL(mockVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_STRING)).Times(1);
+                EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*m_fieldIndex), VarValueType2Index::VARVALUETYPE_STRING)).Times(1);
                 EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*m_fieldString), StrEq("Hi"), 2)).Times(1);
                 EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*m_fieldListWithoutArray))).Times(1);
             // }
-            EXPECT_CALL(mockVisitor, exitArrayStruct(MatcherMetaField(*m_fieldList))).Times(1);
-            EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*m_fieldListWithoutArray))).Times(1);
+            EXPECT_CALL(mockVisitor, exitArrayStruct(MatcherMetaField(*m_fieldStruct))).Times(1);
+            EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*m_fieldStructWithoutArray))).Times(1);
 
             // {
             EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*m_fieldListWithoutArray))).Times(1);
             EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*m_fieldName), StrEq("key3"), 4)).Times(1);
-            EXPECT_CALL(mockVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_NONE)).Times(1);
+            EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*m_fieldIndex), VarValueType2Index::VARVALUETYPE_NONE)).Times(1);
             EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*m_fieldListWithoutArray))).Times(1);
             // }}
-        EXPECT_CALL(mockVisitor, exitArrayStruct(MatcherMetaField(*m_fieldList))).Times(1);
+        EXPECT_CALL(mockVisitor, exitArrayStruct(MatcherMetaField(*m_fieldStruct))).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*m_fieldValue))).Times(1);
 
         EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*m_fieldValueInt32), 0)).Times(1);
 
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*m_fieldValue2))).Times(1);
-        EXPECT_CALL(mockVisitor, enterEnum(MatcherMetaField(*m_fieldType), variant::VarTypeId::T_NONE)).Times(1);
+        EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*m_fieldIndex), VarValueType2Index::VARVALUETYPE_NONE)).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*m_fieldValue2))).Times(1);
 
         EXPECT_CALL(mockVisitor, finished()).Times(1);

@@ -31,6 +31,7 @@
 namespace finalmq {
 
 
+
 const MetaStruct* VariantToVarValue::m_structVarValue = nullptr;
 
 
@@ -58,14 +59,17 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
 {
     const Variant& variant = var;
 
-    static const MetaField* fieldStruct = m_structVarValue->getFieldByName("vallist");
+    static const MetaField* fieldStruct = m_structVarValue->getFieldByName("valstruct");
+    static const MetaField* fieldList = m_structVarValue->getFieldByName("vallist");
     assert(fieldStruct);
-    static const MetaField* fieldStructWithoutArray = fieldStruct->fieldWithoutArray;
-    assert(fieldStructWithoutArray);
+    assert(fieldList);
+    const MetaField* field = (type == VARTYPE_STRUCT) ? fieldStruct : fieldList;
+    assert(field);
+    const MetaField* fieldWithoutArray = field->fieldWithoutArray;
 
     if (level > 0)
     {
-        m_visitor.enterStruct(*fieldStructWithoutArray);
+        m_visitor.enterStruct(*fieldWithoutArray);
     }
 
     if (!name.empty())
@@ -75,13 +79,13 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
         m_visitor.enterString(*fieldName, name.data(), name.size());
     }
 
-    static const MetaField* fieldType = m_structVarValue->getFieldByName("type");
-    assert(fieldType);
-    m_visitor.enterEnum(*fieldType, type);
+    static const MetaField* fieldIndex = m_structVarValue->getFieldByName("index");
+    assert(fieldIndex);
 
     switch (type)
     {
     case TYPE_NONE:
+        m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_NONE);
         break;
     case TYPE_BOOL:
         {
@@ -89,6 +93,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
             assert(fieldBool);
             const bool* data = variant;
             assert(data);
+            m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_BOOL);
             m_visitor.enterBool(*fieldBool, *data);
         }
         break;
@@ -98,6 +103,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
             assert(fieldInt8);
             const std::int8_t* data = variant;
             assert(data);
+            m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_INT8);
             m_visitor.enterInt8(*fieldInt8, *data);
         }
         break;
@@ -107,6 +113,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
             assert(fieldUInt8);
             const std::uint8_t* data = variant;
             assert(data);
+            m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_UINT8);
             m_visitor.enterUInt8(*fieldUInt8, *data);
         }
         break;
@@ -116,6 +123,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
             assert(fieldInt16);
             const std::int16_t* data = variant;
             assert(data);
+            m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_INT16);
             m_visitor.enterInt16(*fieldInt16, *data);
         }
         break;
@@ -125,6 +133,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
             assert(fieldUInt16);
             const std::uint16_t* data = variant;
             assert(data);
+            m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_UINT16);
             m_visitor.enterUInt16(*fieldUInt16, *data);
         }
         break;
@@ -134,6 +143,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
             assert(fieldInt32);
             const std::int32_t* data = variant;
             assert(data);
+            m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_INT32);
             m_visitor.enterInt32(*fieldInt32, *data);
         }
         break;
@@ -143,6 +153,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
             assert(fieldUInt32);
             const std::uint32_t* data = variant;
             assert(data);
+            m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_UINT32);
             m_visitor.enterUInt32(*fieldUInt32, *data);
         }
         break;
@@ -152,6 +163,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
             assert(fieldInt64);
             const std::int64_t* data = variant;
             assert(data);
+            m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_INT64);
             m_visitor.enterInt64(*fieldInt64, *data);
         }
         break;
@@ -161,6 +173,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
             assert(fieldUInt64);
             const std::uint64_t* data = variant;
             assert(data);
+            m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_UINT64);
             m_visitor.enterUInt64(*fieldUInt64, *data);
         }
         break;
@@ -170,6 +183,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
             assert(fieldFloat);
             const float* data = variant;
             assert(data);
+            m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_FLOAT);
             m_visitor.enterFloat(*fieldFloat, *data);
         }
         break;
@@ -179,6 +193,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
             assert(fieldDouble);
             const double* data = variant;
             assert(data);
+            m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_DOUBLE);
             m_visitor.enterDouble(*fieldDouble, *data);
         }
         break;
@@ -188,6 +203,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
             assert(fieldString);
             const std::string* data = variant;
             assert(data);
+            m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_STRING);
             m_visitor.enterString(*fieldString, data->data(), data->size());
         }
         break;
@@ -197,6 +213,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
             assert(fieldBytes);
             const Bytes* data = variant;
             assert(data);
+            m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_BYTES);
             m_visitor.enterBytes(*fieldBytes, data->data(), data->size());
         }
         break;
@@ -207,6 +224,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
             assert(fieldArrBool);
             const std::vector<bool>* data = variant;
             assert(data);
+            m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_ARRAY_BOOL);
             m_visitor.enterArrayBool(*fieldArrBool, *data);
         }
         break;
@@ -216,6 +234,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
             assert(fieldArrInt8);
             const std::vector<std::int8_t>* data = variant;
             assert(data);
+            m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_ARRAY_INT8);
             m_visitor.enterArrayInt8(*fieldArrInt8, data->data(), data->size());
         }
         break;
@@ -225,6 +244,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
             assert(fieldArrInt16);
             const std::vector<std::int16_t>* data = variant;
             assert(data);
+            m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_ARRAY_INT16);
             m_visitor.enterArrayInt16(*fieldArrInt16, data->data(), data->size());
         }
         break;
@@ -234,6 +254,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
             assert(fieldArrUInt16);
             const std::vector<std::uint16_t>* data = variant;
             assert(data);
+            m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_ARRAY_UINT16);
             m_visitor.enterArrayUInt16(*fieldArrUInt16, data->data(), data->size());
         }
         break;
@@ -243,6 +264,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
             assert(fieldArrInt32);
             const std::vector<std::int32_t>* data = variant;
             assert(data);
+            m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_ARRAY_INT32);
             m_visitor.enterArrayInt32(*fieldArrInt32, data->data(), data->size());
         }
         break;
@@ -252,6 +274,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
             assert(fieldArrUInt32);
             const std::vector<std::uint32_t>* data = variant;
             assert(data);
+            m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_ARRAY_UINT32);
             m_visitor.enterArrayUInt32(*fieldArrUInt32, data->data(), data->size());
         }
         break;
@@ -261,6 +284,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
             assert(fieldArrInt64);
             const std::vector<std::int64_t>* data = variant;
             assert(data);
+            m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_ARRAY_INT64);
             m_visitor.enterArrayInt64(*fieldArrInt64, data->data(), data->size());
         }
         break;
@@ -270,6 +294,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
             assert(fieldArrUInt64);
             const std::vector<std::uint64_t>* data = variant;
             assert(data);
+            m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_ARRAY_UINT64);
             m_visitor.enterArrayUInt64(*fieldArrUInt64, data->data(), data->size());
         }
         break;
@@ -279,6 +304,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
             assert(fieldArrFloat);
             const std::vector<float>* data = variant;
             assert(data);
+            m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_ARRAY_FLOAT);
             m_visitor.enterArrayFloat(*fieldArrFloat, data->data(), data->size());
         }
         break;
@@ -288,6 +314,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
             assert(fieldArrDouble);
             const std::vector<double>* data = variant;
             assert(data);
+            m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_ARRAY_DOUBLE);
             m_visitor.enterArrayDouble(*fieldArrDouble, data->data(), data->size());
         }
         break;
@@ -297,6 +324,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
             assert(fieldArrString);
             const std::vector<std::string>* data = variant;
             assert(data);
+            m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_ARRAY_STRING);
             m_visitor.enterArrayString(*fieldArrString, *data);
         }
         break;
@@ -306,6 +334,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
             assert(fieldArrBytes);
             const std::vector<Bytes>* data = variant;
             assert(data);
+            m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_ARRAY_BYTES);
             m_visitor.enterArrayBytes(*fieldArrBytes, *data);
         }
         break;
@@ -313,20 +342,23 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
 
     if (level > 0)
     {
-        m_visitor.exitStruct(*fieldStructWithoutArray);
+        m_visitor.exitStruct(*fieldWithoutArray);
     }
 }
 
 void VariantToVarValue::enterStruct(Variant& /*variant*/, int type, ssize_t /*index*/, int level, ssize_t /*size*/, const std::string& name)
 {
+    static const MetaField* fieldStruct = m_structVarValue->getFieldByName("valstruct");
     static const MetaField* fieldList = m_structVarValue->getFieldByName("vallist");
+    assert(fieldStruct);
     assert(fieldList);
-    static const MetaField* fieldListWithoutArray = fieldList->fieldWithoutArray;
-    assert(fieldListWithoutArray);
+    const MetaField* field = (type == VARTYPE_STRUCT) ? fieldStruct : fieldList;
+    assert(field);
+    const MetaField* fieldWithoutArray = field->fieldWithoutArray;
 
     if (level > 0)
     {
-        m_visitor.enterStruct(*fieldListWithoutArray);
+        m_visitor.enterStruct(*fieldWithoutArray);
     }
 
     if (!name.empty())
@@ -336,24 +368,35 @@ void VariantToVarValue::enterStruct(Variant& /*variant*/, int type, ssize_t /*in
         m_visitor.enterString(*fieldName, name.data(), name.size());
     }
 
-    static const MetaField* fieldType = m_structVarValue->getFieldByName("type");
-    assert(fieldType);
-    m_visitor.enterEnum(*fieldType, type);
+    static const MetaField* fieldIndex = m_structVarValue->getFieldByName("index");
+    assert(fieldIndex);
 
-    m_visitor.enterArrayStruct(*fieldList);
+    if (type == VARTYPE_STRUCT)
+    {
+        m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_VARIANTSTRUCT);
+    }
+    else
+    {
+        m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_VARIANTLIST);
+    }
+    m_visitor.enterArrayStruct(*field);
 }
 
-void VariantToVarValue::exitStruct(Variant& /*variant*/, int /*type*/, ssize_t /*index*/, int level, ssize_t /*size*/, const std::string& /*name*/)
+void VariantToVarValue::exitStruct(Variant& /*variant*/, int type, ssize_t /*index*/, int level, ssize_t /*size*/, const std::string& /*name*/)
 {
+    static const MetaField* fieldStruct = m_structVarValue->getFieldByName("valstruct");
     static const MetaField* fieldList = m_structVarValue->getFieldByName("vallist");
+    assert(fieldStruct);
     assert(fieldList);
-    m_visitor.exitArrayStruct(*fieldList);
-    static const MetaField* fieldListWithoutArray = fieldList->fieldWithoutArray;
-    assert(fieldListWithoutArray);
+    const MetaField* field = (type == VARTYPE_STRUCT) ? fieldStruct : fieldList;
+    assert(field);
+    const MetaField* fieldWithoutArray = field->fieldWithoutArray;
+    
+    m_visitor.exitArrayStruct(*field);
 
     if (level > 0)
     {
-        m_visitor.exitStruct(*fieldListWithoutArray);
+        m_visitor.exitStruct(*fieldWithoutArray);
     }
 }
 
