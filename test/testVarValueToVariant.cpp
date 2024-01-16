@@ -63,7 +63,7 @@ protected:
         ASSERT_NE(structVarVariant, nullptr);
 
         m_fieldName = structVarVariant->getFieldByName("name");
-        m_fieldType = structVarVariant->getFieldByName("type");
+        m_fieldIndex = structVarVariant->getFieldByName("index");
 
         m_fieldBool = structVarVariant->getFieldByName("valbool");
         m_fieldInt8 = structVarVariant->getFieldByName("valint8");
@@ -78,7 +78,7 @@ protected:
         m_fieldDouble = structVarVariant->getFieldByName("valdouble");
         m_fieldString = structVarVariant->getFieldByName("valstring");
         m_fieldBytes = structVarVariant->getFieldByName("valbytes");
-        m_fieldList = structVarVariant->getFieldByName("vallist");
+        m_fieldStruct = structVarVariant->getFieldByName("valstruct");
 
         m_fieldArrBool = structVarVariant->getFieldByName("valarrbool");
         m_fieldArrInt8 = structVarVariant->getFieldByName("valarrint8");
@@ -92,11 +92,19 @@ protected:
         m_fieldArrDouble = structVarVariant->getFieldByName("valarrdouble");
         m_fieldArrString = structVarVariant->getFieldByName("valarrstring");
         m_fieldArrBytes = structVarVariant->getFieldByName("valarrbytes");
+        m_fieldList = structVarVariant->getFieldByName("vallist");
+
+        m_fieldStructWithoutArray = MetaDataGlobal::instance().getArrayField(*m_fieldStruct);
+        m_fieldListWithoutArray = MetaDataGlobal::instance().getArrayField(*m_fieldList);
 
         ASSERT_NE(m_fieldName, nullptr);
-        ASSERT_NE(m_fieldType, nullptr);
+        ASSERT_NE(m_fieldIndex, nullptr);
 
         ASSERT_NE(m_fieldBool, nullptr);
+        ASSERT_NE(m_fieldInt8, nullptr);
+        ASSERT_NE(m_fieldUInt8, nullptr);
+        ASSERT_NE(m_fieldInt16, nullptr);
+        ASSERT_NE(m_fieldUInt16, nullptr);
         ASSERT_NE(m_fieldInt32, nullptr);
         ASSERT_NE(m_fieldUInt32, nullptr);
         ASSERT_NE(m_fieldInt64, nullptr);
@@ -105,7 +113,7 @@ protected:
         ASSERT_NE(m_fieldDouble, nullptr);
         ASSERT_NE(m_fieldString, nullptr);
         ASSERT_NE(m_fieldBytes, nullptr);
-        ASSERT_NE(m_fieldList, nullptr);
+        ASSERT_NE(m_fieldStruct, nullptr);
 
         ASSERT_NE(m_fieldArrBool, nullptr);
         ASSERT_NE(m_fieldArrInt8, nullptr);
@@ -119,6 +127,10 @@ protected:
         ASSERT_NE(m_fieldArrDouble, nullptr);
         ASSERT_NE(m_fieldArrString, nullptr);
         ASSERT_NE(m_fieldArrBytes, nullptr);
+        ASSERT_NE(m_fieldList, nullptr);
+
+        ASSERT_NE(m_fieldStructWithoutArray, nullptr);
+        ASSERT_NE(m_fieldListWithoutArray, nullptr);
     }
 
     virtual void TearDown()
@@ -129,36 +141,41 @@ protected:
     VarValueToVariant       m_varValueToVariant;
     IParserVisitor&         m_visitor;
 
-    const MetaField*        m_fieldName = nullptr;
-    const MetaField*        m_fieldType = nullptr;
+    const MetaField* m_fieldValue = nullptr;
+    const MetaField* m_fieldName = nullptr;
+    const MetaField* m_fieldIndex = nullptr;
 
-    const MetaField*        m_fieldBool = nullptr;
-    const MetaField*        m_fieldInt8 = nullptr;
-    const MetaField*        m_fieldUInt8 = nullptr;
-    const MetaField*        m_fieldInt16 = nullptr;
-    const MetaField*        m_fieldUInt16 = nullptr;
-    const MetaField*        m_fieldInt32 = nullptr;
-    const MetaField*        m_fieldUInt32 = nullptr;
-    const MetaField*        m_fieldInt64 = nullptr;
-    const MetaField*        m_fieldUInt64 = nullptr;
-    const MetaField*        m_fieldDouble = nullptr;
-    const MetaField*        m_fieldFloat = nullptr;
-    const MetaField*        m_fieldString = nullptr;
-    const MetaField*        m_fieldBytes = nullptr;
-    const MetaField*        m_fieldList = nullptr;
+    const MetaField* m_fieldBool = nullptr;
+    const MetaField* m_fieldInt8 = nullptr;
+    const MetaField* m_fieldUInt8 = nullptr;
+    const MetaField* m_fieldInt16 = nullptr;
+    const MetaField* m_fieldUInt16 = nullptr;
+    const MetaField* m_fieldInt32 = nullptr;
+    const MetaField* m_fieldUInt32 = nullptr;
+    const MetaField* m_fieldInt64 = nullptr;
+    const MetaField* m_fieldUInt64 = nullptr;
+    const MetaField* m_fieldDouble = nullptr;
+    const MetaField* m_fieldFloat = nullptr;
+    const MetaField* m_fieldString = nullptr;
+    const MetaField* m_fieldBytes = nullptr;
+    const MetaField* m_fieldStruct = nullptr;
 
-    const MetaField*        m_fieldArrBool = nullptr;
-    const MetaField*        m_fieldArrInt8 = nullptr;
-    const MetaField*        m_fieldArrInt16 = nullptr;
-    const MetaField*        m_fieldArrUInt16 = nullptr;
-    const MetaField*        m_fieldArrInt32 = nullptr;
-    const MetaField*        m_fieldArrUInt32 = nullptr;
-    const MetaField*        m_fieldArrInt64 = nullptr;
-    const MetaField*        m_fieldArrUInt64 = nullptr;
-    const MetaField*        m_fieldArrDouble = nullptr;
-    const MetaField*        m_fieldArrFloat = nullptr;
-    const MetaField*        m_fieldArrString = nullptr;
-    const MetaField*        m_fieldArrBytes = nullptr;
+    const MetaField* m_fieldArrBool = nullptr;
+    const MetaField* m_fieldArrInt8 = nullptr;
+    const MetaField* m_fieldArrInt16 = nullptr;
+    const MetaField* m_fieldArrUInt16 = nullptr;
+    const MetaField* m_fieldArrInt32 = nullptr;
+    const MetaField* m_fieldArrUInt32 = nullptr;
+    const MetaField* m_fieldArrInt64 = nullptr;
+    const MetaField* m_fieldArrUInt64 = nullptr;
+    const MetaField* m_fieldArrDouble = nullptr;
+    const MetaField* m_fieldArrFloat = nullptr;
+    const MetaField* m_fieldArrString = nullptr;
+    const MetaField* m_fieldArrBytes = nullptr;
+    const MetaField* m_fieldList = nullptr;
+
+    const MetaField* m_fieldStructWithoutArray = nullptr;
+    const MetaField* m_fieldListWithoutArray = nullptr;
 };
 
 
@@ -170,7 +187,7 @@ TEST_F(TestVarValueToVariant, testBool)
 
     m_visitor.enterBool(*m_fieldBool, VALUE);
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_BOOL);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_BOOL);
 
     m_varValueToVariant.convert();
 
@@ -185,7 +202,7 @@ TEST_F(TestVarValueToVariant, testInt8)
 
     m_visitor.enterInt8(*m_fieldInt8, VALUE);
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_INT8);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_INT8);
 
     m_varValueToVariant.convert();
 
@@ -200,7 +217,7 @@ TEST_F(TestVarValueToVariant, testUInt8)
 
     m_visitor.enterUInt8(*m_fieldUInt8, VALUE);
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_UINT8);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_UINT8);
 
     m_varValueToVariant.convert();
 
@@ -215,7 +232,7 @@ TEST_F(TestVarValueToVariant, testInt16)
 
     m_visitor.enterInt16(*m_fieldInt16, VALUE);
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_INT16);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_INT16);
 
     m_varValueToVariant.convert();
 
@@ -230,7 +247,7 @@ TEST_F(TestVarValueToVariant, testUInt16)
 
     m_visitor.enterUInt16(*m_fieldUInt16, VALUE);
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_UINT16);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_UINT16);
 
     m_varValueToVariant.convert();
 
@@ -245,7 +262,7 @@ TEST_F(TestVarValueToVariant, testInt32)
 
     m_visitor.enterInt32(*m_fieldInt32, VALUE);
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_INT32);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_INT32);
 
     m_varValueToVariant.convert();
 
@@ -260,7 +277,7 @@ TEST_F(TestVarValueToVariant, testUInt32)
 
     m_visitor.enterUInt32(*m_fieldUInt32, VALUE);
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_UINT32);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_UINT32);
 
     m_varValueToVariant.convert();
 
@@ -275,7 +292,7 @@ TEST_F(TestVarValueToVariant, testInt64)
 
     m_visitor.enterInt64(*m_fieldInt64, VALUE);
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_INT64);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_INT64);
 
     m_varValueToVariant.convert();
 
@@ -290,7 +307,7 @@ TEST_F(TestVarValueToVariant, testUInt64)
 
     m_visitor.enterUInt64(*m_fieldUInt64, VALUE);
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_UINT64);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_UINT64);
 
     m_varValueToVariant.convert();
 
@@ -305,7 +322,7 @@ TEST_F(TestVarValueToVariant, testFloat)
 
     m_visitor.enterFloat(*m_fieldFloat, VALUE);
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_FLOAT);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_FLOAT);
 
     m_varValueToVariant.convert();
 
@@ -320,7 +337,7 @@ TEST_F(TestVarValueToVariant, testDouble)
 
     m_visitor.enterDouble(*m_fieldDouble, VALUE);
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_DOUBLE);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_DOUBLE);
 
     m_varValueToVariant.convert();
 
@@ -335,7 +352,7 @@ TEST_F(TestVarValueToVariant, testString)
 
     m_visitor.enterString(*m_fieldString, VALUE.data(), VALUE.size());
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_STRING);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_STRING);
 
     m_varValueToVariant.convert();
 
@@ -350,7 +367,7 @@ TEST_F(TestVarValueToVariant, testBytes)
 
     m_visitor.enterBytes(*m_fieldBytes, VALUE.data(), VALUE.size());
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_BYTES);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_BYTES);
 
     m_varValueToVariant.convert();
 
@@ -364,26 +381,26 @@ TEST_F(TestVarValueToVariant, testStruct)
     static const std::int32_t VALUE_INT32 = 123;
     static const std::string VALUE_STRING = "Hello World";
 
-    const MetaField* fieldEntry = MetaDataGlobal::instance().getArrayField(*m_fieldList);
+    const MetaField* fieldEntry = MetaDataGlobal::instance().getArrayField(*m_fieldStruct);
     ASSERT_NE(fieldEntry, nullptr);
 
-    m_visitor.enterArrayStruct(*m_fieldList);
+    m_visitor.enterArrayStruct(*m_fieldStruct);
 
     m_visitor.enterStruct(*fieldEntry);
     m_visitor.enterInt32(*m_fieldInt32, 123);
     m_visitor.enterString(*m_fieldName, "key1");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_INT32);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_INT32);
     m_visitor.exitStruct(*fieldEntry);
 
     m_visitor.enterStruct(*fieldEntry);
     m_visitor.enterString(*m_fieldString, VALUE_STRING.data(), VALUE_STRING.size());
     m_visitor.enterString(*m_fieldName, "key2");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_STRING);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_STRING);
     m_visitor.exitStruct(*fieldEntry);
 
-    m_visitor.exitArrayStruct(*m_fieldList);
+    m_visitor.exitArrayStruct(*m_fieldStruct);
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_STRUCT);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_VARIANTSTRUCT);
 
     m_varValueToVariant.convert();
 
@@ -399,7 +416,7 @@ TEST_F(TestVarValueToVariant, testArrayBool)
 
     m_visitor.enterArrayBool(*m_fieldArrBool, VALUE);
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_ARRAY_BOOL);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_ARRAY_BOOL);
 
     m_varValueToVariant.convert();
 
@@ -414,7 +431,7 @@ TEST_F(TestVarValueToVariant, testArrayInt8)
 
     m_visitor.enterArrayInt8(*m_fieldArrInt8, VALUE.data(), VALUE.size());
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_ARRAY_INT8);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_ARRAY_INT8);
 
     m_varValueToVariant.convert();
 
@@ -429,7 +446,7 @@ TEST_F(TestVarValueToVariant, testArrayInt16)
 
     m_visitor.enterArrayInt16(*m_fieldArrInt16, VALUE.data(), VALUE.size());
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_ARRAY_INT16);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_ARRAY_INT16);
 
     m_varValueToVariant.convert();
 
@@ -444,7 +461,7 @@ TEST_F(TestVarValueToVariant, testArrayUInt16)
 
     m_visitor.enterArrayUInt16(*m_fieldArrUInt16, VALUE.data(), VALUE.size());
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_ARRAY_UINT16);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_ARRAY_UINT16);
 
     m_varValueToVariant.convert();
 
@@ -459,7 +476,7 @@ TEST_F(TestVarValueToVariant, testArrayInt32)
 
     m_visitor.enterArrayInt32(*m_fieldArrInt32, VALUE.data(), VALUE.size());
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_ARRAY_INT32);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_ARRAY_INT32);
 
     m_varValueToVariant.convert();
 
@@ -474,7 +491,7 @@ TEST_F(TestVarValueToVariant, testArrayUInt32)
 
     m_visitor.enterArrayUInt32(*m_fieldArrUInt32, VALUE.data(), VALUE.size());
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_ARRAY_UINT32);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_ARRAY_UINT32);
 
     m_varValueToVariant.convert();
 
@@ -489,7 +506,7 @@ TEST_F(TestVarValueToVariant, testArrayInt64)
 
     m_visitor.enterArrayInt64(*m_fieldArrInt64, VALUE.data(), VALUE.size());
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_ARRAY_INT64);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_ARRAY_INT64);
 
     m_varValueToVariant.convert();
 
@@ -504,7 +521,7 @@ TEST_F(TestVarValueToVariant, testArrayUInt64)
 
     m_visitor.enterArrayUInt64(*m_fieldArrUInt64, VALUE.data(), VALUE.size());
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_ARRAY_UINT64);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_ARRAY_UINT64);
 
     m_varValueToVariant.convert();
 
@@ -519,7 +536,7 @@ TEST_F(TestVarValueToVariant, testArrayFloat)
 
     m_visitor.enterArrayFloat(*m_fieldArrFloat, VALUE.data(), VALUE.size());
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_ARRAY_FLOAT);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_ARRAY_FLOAT);
 
     m_varValueToVariant.convert();
 
@@ -534,7 +551,7 @@ TEST_F(TestVarValueToVariant, testArrayDouble)
 
     m_visitor.enterArrayDouble(*m_fieldArrDouble, VALUE.data(), VALUE.size());
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_ARRAY_DOUBLE);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_ARRAY_DOUBLE);
 
     m_varValueToVariant.convert();
 
@@ -549,7 +566,7 @@ TEST_F(TestVarValueToVariant, testArrayString)
 
     m_visitor.enterArrayString(*m_fieldArrString, VALUE);
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_ARRAY_STRING);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_ARRAY_STRING);
 
     m_varValueToVariant.convert();
 
@@ -564,7 +581,7 @@ TEST_F(TestVarValueToVariant, testArrayBytes)
 
     m_visitor.enterArrayBytes(*m_fieldArrBytes, VALUE);
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_ARRAY_BYTES);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_ARRAY_BYTES);
 
     m_varValueToVariant.convert();
 
@@ -586,18 +603,18 @@ TEST_F(TestVarValueToVariant, testList)
     m_visitor.enterStruct(*fieldEntry);
     m_visitor.enterInt32(*m_fieldInt32, 123);
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_INT32);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_INT32);
     m_visitor.exitStruct(*fieldEntry);
 
     m_visitor.enterStruct(*fieldEntry);
     m_visitor.enterString(*m_fieldString, VALUE_STRING.data(), VALUE_STRING.size());
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_STRING);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_STRING);
     m_visitor.exitStruct(*fieldEntry);
 
     m_visitor.exitArrayStruct(*m_fieldList);
     m_visitor.enterString(*m_fieldName, "");
-    m_visitor.enterEnum(*m_fieldType, variant::VarTypeId::T_LIST);
+    m_visitor.enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_VARIANTLIST);
 
     m_varValueToVariant.convert();
 

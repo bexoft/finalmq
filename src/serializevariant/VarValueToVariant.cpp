@@ -64,100 +64,100 @@ void VarValueToVariant::convert()
 
 void VarValueToVariant::processVarValue(const variant::VarValue& varValue, Variant& variant)
 {
-    switch (varValue.type)
+    switch (varValue.index)
     {
-    case variant::VarTypeId::T_NONE:
+    case VarValueType2Index::VARVALUETYPE_NONE:
         break;
-    case variant::VarTypeId::T_BOOL:
+    case VarValueType2Index::VARVALUETYPE_BOOL:
         variant = varValue.valbool;
         break;
-    case variant::VarTypeId::T_INT8:
+    case VarValueType2Index::VARVALUETYPE_INT8:
         variant = varValue.valint8;
         break;
-    case variant::VarTypeId::T_UINT8:
+    case VarValueType2Index::VARVALUETYPE_UINT8:
         variant = varValue.valuint8;
         break;
-    case variant::VarTypeId::T_INT16:
+    case VarValueType2Index::VARVALUETYPE_INT16:
         variant = varValue.valint16;
         break;
-    case variant::VarTypeId::T_UINT16:
+    case VarValueType2Index::VARVALUETYPE_UINT16:
         variant = varValue.valuint16;
         break;
-    case variant::VarTypeId::T_INT32:
+    case VarValueType2Index::VARVALUETYPE_INT32:
         variant = varValue.valint32;
         break;
-    case variant::VarTypeId::T_UINT32:
+    case VarValueType2Index::VARVALUETYPE_UINT32:
         variant = varValue.valuint32;
         break;
-    case variant::VarTypeId::T_INT64:
+    case VarValueType2Index::VARVALUETYPE_INT64:
         variant = varValue.valint64;
         break;
-    case variant::VarTypeId::T_UINT64:
+    case VarValueType2Index::VARVALUETYPE_UINT64:
         variant = varValue.valuint64;
         break;
-    case variant::VarTypeId::T_FLOAT:
+    case VarValueType2Index::VARVALUETYPE_FLOAT:
         variant = varValue.valfloat;
         break;
-    case variant::VarTypeId::T_DOUBLE:
+    case VarValueType2Index::VARVALUETYPE_DOUBLE:
         variant = varValue.valdouble;
         break;
-    case variant::VarTypeId::T_STRING:
+    case VarValueType2Index::VARVALUETYPE_STRING:
         variant = std::move(varValue.valstring);
         break;
-    case variant::VarTypeId::T_BYTES:
+    case VarValueType2Index::VARVALUETYPE_BYTES:
         variant = std::move(varValue.valbytes);
         break;
-    case variant::VarTypeId::T_STRUCT:
+    case VarValueType2Index::VARVALUETYPE_VARIANTSTRUCT:
         {
             variant = VariantStruct();
             VariantStruct* variantStruct = variant;
             assert(variantStruct);
-            for (size_t i = 0; i < varValue.vallist.size(); ++i)
+            for (size_t i = 0; i < varValue.valstruct.size(); ++i)
             {
-                const variant::VarValue& varValueElement = varValue.vallist[i];
+                const variant::VarValue& varValueElement = varValue.valstruct[i];
                 variantStruct->emplace_back(varValueElement.name, Variant());
                 processVarValue(varValueElement, variantStruct->back().second);
             }
         }
         break;
 
-    case variant::VarTypeId::T_ARRAY_BOOL:
+    case VarValueType2Index::VARVALUETYPE_ARRAY_BOOL:
         variant = std::move(varValue.valarrbool);
         break;
-    case variant::VarTypeId::T_ARRAY_INT8:
+    case VarValueType2Index::VARVALUETYPE_ARRAY_INT8:
         variant = std::move(varValue.valarrint8);
         break;
-    case variant::VarTypeId::T_ARRAY_INT16:
+    case VarValueType2Index::VARVALUETYPE_ARRAY_INT16:
         variant = std::move(varValue.valarrint16);
         break;
-    case variant::VarTypeId::T_ARRAY_UINT16:
+    case VarValueType2Index::VARVALUETYPE_ARRAY_UINT16:
         variant = std::move(varValue.valarruint16);
         break;
-    case variant::VarTypeId::T_ARRAY_INT32:
+    case VarValueType2Index::VARVALUETYPE_ARRAY_INT32:
         variant = std::move(varValue.valarrint32);
         break;
-    case variant::VarTypeId::T_ARRAY_UINT32:
+    case VarValueType2Index::VARVALUETYPE_ARRAY_UINT32:
         variant = std::move(varValue.valarruint32);
         break;
-    case variant::VarTypeId::T_ARRAY_INT64:
+    case VarValueType2Index::VARVALUETYPE_ARRAY_INT64:
         variant = std::move(varValue.valarrint64);
         break;
-    case variant::VarTypeId::T_ARRAY_UINT64:
+    case VarValueType2Index::VARVALUETYPE_ARRAY_UINT64:
         variant = std::move(varValue.valarruint64);
         break;
-    case variant::VarTypeId::T_ARRAY_FLOAT:
+    case VarValueType2Index::VARVALUETYPE_ARRAY_FLOAT:
         variant = std::move(varValue.valarrfloat);
         break;
-    case variant::VarTypeId::T_ARRAY_DOUBLE:
+    case VarValueType2Index::VARVALUETYPE_ARRAY_DOUBLE:
         variant = std::move(varValue.valarrdouble);
         break;
-    case variant::VarTypeId::T_ARRAY_STRING:
+    case VarValueType2Index::VARVALUETYPE_ARRAY_STRING:
         variant = std::move(varValue.valarrstring);
         break;
-    case variant::VarTypeId::T_ARRAY_BYTES:
+    case VarValueType2Index::VARVALUETYPE_ARRAY_BYTES:
         variant = std::move(varValue.valarrbytes);
         break;
-    case variant::VarTypeId::T_LIST:
+    case VarValueType2Index::VARVALUETYPE_VARIANTLIST:
         {
             variant = VariantList();
             VariantList* variantList = variant;
