@@ -48,8 +48,7 @@ enum MetaFieldFlags : std::int32_t
     METAFLAG_PROTO_ZIGZAG   = 2,
     METAFLAG_NULLABLE       = 4,    // only for struct
     METAFLAG_ONE_REQUIRED   = 8,    // only for array of struct
-    METAFLAG_TYPE           = 16,   // 
-    METAFLAG_INDEX          = 32,
+    METAFLAG_INDEX          = 16,
 };
 
 
@@ -72,14 +71,38 @@ public:
     {
     }
 
-    void setIndex(int ix)
+    MetaField(const MetaField& rhs)
+        : typeId(rhs.typeId)
+        , typeName(rhs.typeName)
+        , typeNameWithoutNamespace(rhs.typeNameWithoutNamespace)
+        , name(rhs.name)
+        , description(rhs.description)
+        , flags(rhs.flags)
+        , attrs(rhs.attrs)
+        , properties(rhs.properties)
+        , index(rhs.index)
+        , sharedFieldWithoutArray((typeId& MetaTypeId::OFFSET_ARRAY_FLAG) ? std::make_shared<MetaField>(static_cast<MetaTypeId>(typeId & ~MetaTypeId::OFFSET_ARRAY_FLAG), typeName, "", description, flags, attrs, index) : nullptr)
+        , fieldWithoutArray((sharedFieldWithoutArray != nullptr) ? sharedFieldWithoutArray.get() : this)
     {
-        *const_cast<int*>(&index) = ix;
-        if (fieldWithoutArray != this)
-        {
-            *const_cast<int*>(&fieldWithoutArray->index) = ix;
-        }
     }
+
+    MetaField(MetaField&& rhs)
+        : typeId(rhs.typeId)
+        , typeName(rhs.typeName)
+        , typeNameWithoutNamespace(rhs.typeNameWithoutNamespace)
+        , name(rhs.name)
+        , description(rhs.description)
+        , flags(rhs.flags)
+        , attrs(rhs.attrs)
+        , properties(rhs.properties)
+        , index(rhs.index)
+        , sharedFieldWithoutArray((typeId& MetaTypeId::OFFSET_ARRAY_FLAG) ? std::make_shared<MetaField>(static_cast<MetaTypeId>(typeId & ~MetaTypeId::OFFSET_ARRAY_FLAG), typeName, "", description, flags, attrs, index) : nullptr)
+        , fieldWithoutArray((sharedFieldWithoutArray != nullptr) ? sharedFieldWithoutArray.get() : this)
+    {
+    }
+
+    const MetaField& operator =(MetaField& rhs) = delete;
+    const MetaField& operator =(MetaField&& rhs) = delete;
 
     const std::string& getProperty(const std::string& key, const std::string& defaultValue = {}) const
     {
@@ -102,7 +125,7 @@ public:
     const int               index;                          ///< index of field inside struct
 
     const std::shared_ptr<MetaField> sharedFieldWithoutArray;     ///< in case of an array, this is the MetaField for its entries
-    MetaField* const fieldWithoutArray;     ///< in case of an array, this is the MetaField for its entries
+    const MetaField* const fieldWithoutArray;     ///< in case of an array, this is the MetaField for its entries
 
 private:
     static std::string removeNamespace(const std::string& typeName)
