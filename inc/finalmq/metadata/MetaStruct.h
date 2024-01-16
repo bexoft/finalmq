@@ -47,7 +47,6 @@ class SYMBOLEXP MetaStruct
 public:
     MetaStruct();
     MetaStruct(const std::string& typeName, const std::string& description, const std::vector<MetaField>& fields, int flags = 0, const std::vector<std::string>& attrs = {});
-    MetaStruct(const std::string& typeName, const std::string& description, std::vector<MetaField>&& fields, int flags = 0, const std::vector<std::string>& attrs = {});
 
     const std::string& getTypeName() const;
     const std::string& getTypeNameWithoutNamespace() const;
@@ -60,7 +59,6 @@ public:
     const MetaField* getFieldByName(const std::string& name) const;
 
     void addField(const MetaField& field);
-    void addField(MetaField&& field);
 
     ssize_t getFieldsSize() const
     {

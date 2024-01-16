@@ -55,20 +55,6 @@ MetaStruct::MetaStruct(const std::string& typeName, const std::string& descripti
     }
 }
 
-MetaStruct::MetaStruct(const std::string& typeName, const std::string& description, std::vector<MetaField>&& fields, int flags, const std::vector<std::string>& attrs)
-    : m_typeName(typeName)
-    , m_typeNameWithoutNamespace(removeNamespace(typeName))
-    , m_description(description)
-    , m_flags(flags)
-    , m_attrs(attrs)
-    , m_properties(generateProperties(attrs))
-{
-    for (size_t i = 0 ; i < fields.size(); ++i)
-    {
-        addField(std::move(fields[i]));
-    }
-}
-
 
 const std::string& MetaStruct::getTypeName() const
 {
@@ -124,24 +110,19 @@ const MetaField* MetaStruct::getFieldByName(const std::string& name) const
 
 void MetaStruct::addField(const MetaField& field)
 {
-    addField(MetaField(field));
-}
-
-
-void MetaStruct::addField(MetaField&& field)
-{
     if (m_name2Field.find(field.name) != m_name2Field.end())
     {
         // field already added
         return;
     }
 
-    field.setIndex(static_cast<int>(m_fields.size()));
+    std::shared_ptr<MetaField> f = std::make_shared<MetaField>(MetaField(field.typeId, field.typeName, field.name, 
+        field.description, field.flags, field.attrs, static_cast<int>(m_fields.size())));
 
-    std::shared_ptr<MetaField> f = std::make_shared<MetaField>(std::move(field));
     m_fields.emplace_back(f);
     m_name2Field.emplace(f->name, f);
 }
+
 
 std::unordered_map<std::string, std::string> MetaStruct::generateProperties(const std::vector<std::string>& attrs)
 {
