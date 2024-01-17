@@ -137,8 +137,6 @@ namespace finalmq {
             static std::uint32_t getTypeIdByName(const std::string& typeName);
             static void getQVariantType(const MetaField& field, std::uint32_t& typeId, std::string& typeName);
 
-            void checkIndex(const MetaField& field, std::int64_t value);
-
             void reserveSpace(ssize_t space);
             void resizeBuffer();
 
@@ -150,15 +148,8 @@ namespace finalmq {
 
             const Mode m_mode = Mode::NONE;
 
-            enum IndexStatus
-            {
-                INDEX_NOT_AVAILABLE = -1,
-            };
-
             struct LevelState
             {
-                bool abortStruct = false;
-                std::int64_t index = INDEX_NOT_AVAILABLE;
                 char* arrayStructCounterBuffer = nullptr;
                 std::int32_t arrayStructCounter = -1;
             };
