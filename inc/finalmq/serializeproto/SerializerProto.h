@@ -172,6 +172,8 @@ private:
     };
 
     Internal    m_internal;
+
+    std::unique_ptr<IParserVisitor>     m_parserAbortAndIndex;
 };
 
 }   // namespace finalmq
