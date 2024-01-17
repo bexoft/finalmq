@@ -79,6 +79,8 @@ namespace finalmq {
     void SerializerQt::Internal::finished()
     {
         resizeBuffer();
+
+        assert(!m_levelState.empty());
         m_levelState.pop_back();
     }
 
@@ -86,17 +88,15 @@ namespace finalmq {
     void SerializerQt::Internal::enterStruct(const MetaField& field)
     {
         assert(!m_levelState.empty());
-        bool abortStruct = m_levelState.back().abortStruct;
-        std::int64_t index = m_levelState.back().index;
-        m_levelState.push_back(LevelState());
-        m_levelState.back().abortStruct = abortStruct;
+        LevelState& levelState = m_levelState.back();
 
-        if (abortStruct || (index != INDEX_NOT_AVAILABLE && index != field.index))
+        if (levelState.abortStruct || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
+            m_levelState.push_back(LevelState());
+            m_levelState.back().abortStruct = levelState.abortStruct;
             return;
         }
 
-        LevelState& levelState = m_levelState.back();
 
         assert(field.typeId == MetaTypeId::TYPE_STRUCT);
         if (isWrappedByQVariant())
@@ -108,6 +108,8 @@ namespace finalmq {
         {
             ++levelState.arrayStructCounter;
         }
+
+        m_levelState.push_back(LevelState());
     }
 
     void SerializerQt::Internal::exitStruct(const MetaField& /*field*/)
@@ -123,17 +125,14 @@ namespace finalmq {
     void SerializerQt::Internal::enterArrayStruct(const MetaField& field)
     {
         assert(!m_levelState.empty());
-        bool abortStruct = m_levelState.back().abortStruct;
-        std::int64_t index = m_levelState.back().index;
-        m_levelState.push_back(LevelState());
-        m_levelState.back().abortStruct = abortStruct;
+        LevelState& levelState = m_levelState.back();
 
-        if (abortStruct || (index != INDEX_NOT_AVAILABLE && index != field.index))
+        if (levelState.abortStruct || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
+            m_levelState.push_back(LevelState());
+            m_levelState.back().abortStruct = levelState.abortStruct;
             return;
         }
-
-        LevelState& levelState = m_levelState.back();
 
         assert(field.typeId == MetaTypeId::TYPE_ARRAY_STRUCT);
         if (isWrappedByQVariant())
@@ -146,6 +145,9 @@ namespace finalmq {
         levelState.arrayStructCounter = 0;
         serialize(levelState.arrayStructCounter);
         levelState.arrayStructCounter = 0;
+
+        m_levelState.push_back(LevelState());
+
     }
 
     void SerializerQt::Internal::exitArrayStruct(const MetaField& /*field*/)
