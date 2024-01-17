@@ -70,11 +70,20 @@ namespace finalmq {
         bool parseArrayStruct(const MetaField& field);
 
         bool parseQVariantHeader(const MetaField& field);
+        std::int64_t checkIndex(const MetaField& field, std::int64_t value);
 
         const std::uint8_t* m_ptr = nullptr;
         ssize_t m_size = 0;
         IParserVisitor& m_visitor;
         const Mode m_mode = Mode::NONE;
+
+        enum IndexStatus
+        {
+            INDEX_NOT_AVAILABLE = -1,
+            INDEX_ABORTSTRUCT = -2
+        };
+
+        std::int64_t m_index = INDEX_NOT_AVAILABLE;
     };
 
 }   // namespace finalmq

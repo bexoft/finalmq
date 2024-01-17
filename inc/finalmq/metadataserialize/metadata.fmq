@@ -40,7 +40,8 @@
             {"name":"METAFLAG_PROTO_VARINT",    "id":1,     "desc":"desc"},
             {"name":"METAFLAG_PROTO_ZIGZAG",    "id":2,     "desc":"desc"},
             {"name":"METAFLAG_NULLABLE",        "id":4,     "desc":"desc"},
-            {"name":"METAFLAG_ONE_REQUIRED",    "id":8,     "desc":"desc"}
+            {"name":"METAFLAG_ONE_REQUIRED",    "id":8,     "desc":"desc"},
+            {"name":"METAFLAG_INDEX",           "id":16,    "desc":"desc"}
         ]},
         {"type":"SerializeMetaStructFlags","desc":"desc","entries":[
             {"name":"METASTRUCTFLAG_NONE",        "id":0,   "desc":"desc"},

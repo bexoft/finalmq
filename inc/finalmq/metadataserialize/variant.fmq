@@ -6,7 +6,7 @@
     "structs":[
         {"type":"VarValue","desc":"desc","fields":[
             {"tid":"TYPE_STRING",       "type":"",                          "name":"name",          "desc":"name is only used for elements in valstruct","flags":[]},
-            {"tid":"TYPE_INT32",                                            "name":"index",         "desc":"","flags":[]},
+            {"tid":"TYPE_INT32",                                            "name":"index",         "desc":"","flags":["METAFLAG_INDEX"]},
 
             {"tid":"TYPE_BOOL",         "type":"",                          "name":"none",          "desc":"","flags":[]},
             {"tid":"TYPE_BOOL",         "type":"",                          "name":"valbool",       "desc":"","flags":[]},

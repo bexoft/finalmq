@@ -83,14 +83,14 @@ namespace finalmq {
         return res;
     }
 
-    static const std::string QT_ENUM_BITS = "qtenumbits";
+    static const std::string ENUM_BITS = "enumbits";
     static const std::string BITS_8 = "8";
     static const std::string BITS_16 = "16";
     static const std::string BITS_32 = "32";
 
-    static const std::string QT_ABORTSTRUCT = "qtabortstruct";
-    static const std::string QT_FALSE = "false";
-    static const std::string QT_TRUE = "true";
+    static const std::string ABORTSTRUCT = "abortstruct";
+    static const std::string ABORT_FALSE = "false";
+    static const std::string ABORT_TRUE = "true";
 
     bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
     {
@@ -102,10 +102,16 @@ namespace finalmq {
 
         bool ok = true;
         bool abortStruct = false;
+        std::int64_t index = INDEX_NOT_AVAILABLE;
 
         const ssize_t numberOfFields = stru.getFieldsSize();
         for (ssize_t i = 0; i < numberOfFields && ok && !abortStruct; ++i)
         {
+            if (index >= 0)
+            {
+                i = index;
+                index = INDEX_ABORTSTRUCT;
+            }
             const MetaField* field = stru.getFieldByIndex(i);
             assert(field);
 
@@ -127,11 +133,11 @@ namespace finalmq {
                         m_visitor.enterBool(*field, static_cast<bool>(value));
 
                         // check abort
-                        const std::string& valueAbort = field->getProperty(QT_ABORTSTRUCT);
+                        const std::string& valueAbort = field->getProperty(ABORTSTRUCT);
                         if (!valueAbort.empty())
                         {
-                            if (((valueAbort == QT_TRUE) && value) ||
-                                ((valueAbort == QT_FALSE) && !value))
+                            if (((valueAbort == ABORT_TRUE) && value) ||
+                                ((valueAbort == ABORT_FALSE) && !value))
                             {
                                 abortStruct = true;
                             }
@@ -151,6 +157,7 @@ namespace finalmq {
                     if (ok)
                     {
                         m_visitor.enterInt8(*field, value);
+                        index = checkIndex(*field, value);
                     }
                 }
                 break;
@@ -166,6 +173,7 @@ namespace finalmq {
                     if (ok)
                     {
                         m_visitor.enterUInt8(*field, value);
+                        index = checkIndex(*field, value);
                     }
                 }
                 break;
@@ -181,6 +189,7 @@ namespace finalmq {
                     if (ok)
                     {
                         m_visitor.enterInt16(*field, value);
+                        index = checkIndex(*field, value);
                     }
                 }
                 break;
@@ -196,6 +205,7 @@ namespace finalmq {
                     if (ok)
                     {
                         m_visitor.enterUInt16(*field, value);
+                        index = checkIndex(*field, value);
                     }
                 }
                 break;
@@ -211,6 +221,7 @@ namespace finalmq {
                     if (ok)
                     {
                         m_visitor.enterInt32(*field, value);
+                        index = checkIndex(*field, value);
                     }
                 }
                 break;
@@ -226,6 +237,7 @@ namespace finalmq {
                     if (ok)
                     {
                         m_visitor.enterUInt32(*field, value);
+                        index = checkIndex(*field, value);
                     }
                 }
                 break;
@@ -241,6 +253,7 @@ namespace finalmq {
                     if (ok)
                     {
                         m_visitor.enterInt64(*field, value);
+                        index = checkIndex(*field, value);
                     }
                 }
                 break;
@@ -256,6 +269,7 @@ namespace finalmq {
                     if (ok)
                     {
                         m_visitor.enterUInt64(*field, value);
+                        index = checkIndex(*field, value);
                     }
                 }
                 break;
@@ -352,7 +366,7 @@ namespace finalmq {
                     const MetaEnum* en = MetaDataGlobal::instance().getEnum(*field);
                     if (en)
                     {
-                        const std::string& bits = en->getProperty(QT_ENUM_BITS, BITS_32);
+                        const std::string& bits = en->getProperty(ENUM_BITS, BITS_32);
                         std::int32_t value = 0;
                         if (bits == BITS_32)
                         {
@@ -379,7 +393,7 @@ namespace finalmq {
                             m_visitor.enterEnum(*field, value);
 
                             // check abort
-                            const std::string& valueAbort = field->getProperty(QT_ABORTSTRUCT);
+                            const std::string& valueAbort = field->getProperty(ABORTSTRUCT);
                             if (!valueAbort.empty())
                             {
                                 std::string strValue = en->getNameByValue(value);
@@ -600,7 +614,7 @@ namespace finalmq {
                     const MetaEnum* en = MetaDataGlobal::instance().getEnum(*field);
                     if (en)
                     {
-                        const std::string& bits = en->getProperty(QT_ENUM_BITS, BITS_32);
+                        const std::string& bits = en->getProperty(ENUM_BITS, BITS_32);
                         std::vector<std::int32_t> value;
                         if (bits == BITS_32)
                         {
@@ -643,6 +657,11 @@ namespace finalmq {
             default:
                 assert(false);
                 break;
+            }
+
+            if ((index == INDEX_ABORTSTRUCT) || (index >= numberOfFields))
+            {
+                abortStruct = true;
             }
         }
 
@@ -1024,5 +1043,23 @@ namespace finalmq {
         }
         return ok;
     }
+
+    std::int64_t ParserQt::checkIndex(const MetaField& field, std::int64_t value)
+    {
+        std::int64_t index = INDEX_NOT_AVAILABLE;
+        if ((field.flags & MetaFieldFlags::METAFLAG_INDEX) != 0)
+        {
+            if (value < 0)
+            {
+                index = INDEX_ABORTSTRUCT;
+            }
+            else
+            {
+                index = field.index + 1 + value;
+            }
+        }
+        return index;
+    }
+
 
 }   // namespace finalmq
