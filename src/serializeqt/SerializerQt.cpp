@@ -65,103 +65,121 @@ namespace finalmq {
 
     void SerializerQt::Internal::startStruct(const MetaStruct& stru)
     {
-        m_abortStruct = -1;
         if (m_mode == Mode::WRAPPED_BY_QVARIANTLIST)
         {
             reserveSpace(sizeof(std::uint32_t));
             const std::uint32_t count = static_cast<std::uint32_t>(stru.getFieldsSize());
             serialize(count);
         }
+
+        m_levelState.push_back(LevelState());
     }
 
 
     void SerializerQt::Internal::finished()
     {
         resizeBuffer();
+        m_levelState.pop_back();
     }
 
 
     void SerializerQt::Internal::enterStruct(const MetaField& field)
     {
-        if (m_abortStruct == -1)
-        {
-            assert(field.typeId == MetaTypeId::TYPE_STRUCT);
-            if (isWrappedByQVariant())
-            {
-                serializeQVariantHeader(field);
-            }
+        assert(!m_levelState.empty());
+        bool abortStruct = m_levelState.back().abortStruct;
+        std::int64_t index = m_levelState.back().index;
+        m_levelState.push_back(LevelState());
+        m_levelState.back().abortStruct = abortStruct;
 
-            if (m_arrayStructCounter >= 0)
-            {
-                ++m_arrayStructCounter;
-            }
+        if (abortStruct || (index != INDEX_NOT_AVAILABLE && index != field.index))
+        {
+            return;
         }
 
-        ++m_levelStruct;
+        LevelState& levelState = m_levelState.back();
+
+        assert(field.typeId == MetaTypeId::TYPE_STRUCT);
+        if (isWrappedByQVariant())
+        {
+            serializeQVariantHeader(field);
+        }
+
+        if (levelState.arrayStructCounter >= 0)
+        {
+            ++levelState.arrayStructCounter;
+        }
     }
 
     void SerializerQt::Internal::exitStruct(const MetaField& /*field*/)
     {
-        if (m_abortStruct == m_levelStruct)
-        {
-            m_abortStruct = -1;
-        }
-        --m_levelStruct;
+        m_levelState.pop_back();
     }
 
     void SerializerQt::Internal::enterStructNull(const MetaField& /*field*/)
     {
-        if (m_abortStruct != -1)
-        {
-            return;
-        }
     }
 
 
     void SerializerQt::Internal::enterArrayStruct(const MetaField& field)
     {
-        if (m_abortStruct == -1)
-        {
-            assert(field.typeId == MetaTypeId::TYPE_ARRAY_STRUCT);
-            if (isWrappedByQVariant())
-            {
-                serializeQVariantHeader(field);
-            }
+        assert(!m_levelState.empty());
+        bool abortStruct = m_levelState.back().abortStruct;
+        std::int64_t index = m_levelState.back().index;
+        m_levelState.push_back(LevelState());
+        m_levelState.back().abortStruct = abortStruct;
 
-            reserveSpace(sizeof(std::uint32_t));
-            m_arrayStructCounterBuffer = m_buffer;
-            m_arrayStructCounter = 0;
-            serialize(m_arrayStructCounter);
-            m_arrayStructCounter = 0;
+        if (abortStruct || (index != INDEX_NOT_AVAILABLE && index != field.index))
+        {
+            return;
         }
 
-        ++m_levelStruct;
+        LevelState& levelState = m_levelState.back();
+
+        assert(field.typeId == MetaTypeId::TYPE_ARRAY_STRUCT);
+        if (isWrappedByQVariant())
+        {
+            serializeQVariantHeader(field);
+        }
+
+        reserveSpace(sizeof(std::uint32_t));
+        levelState.arrayStructCounterBuffer = m_buffer;
+        levelState.arrayStructCounter = 0;
+        serialize(levelState.arrayStructCounter);
+        levelState.arrayStructCounter = 0;
     }
 
     void SerializerQt::Internal::exitArrayStruct(const MetaField& /*field*/)
     {
-        if (m_abortStruct == -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+
+        if (levelState.abortStruct)
         {
-            if (m_arrayStructCounterBuffer)
-            {
-                char* buffer = m_buffer;
-                m_buffer = m_arrayStructCounterBuffer;
-                serialize(m_arrayStructCounter);
-                m_buffer = buffer;
-                m_arrayStructCounter = -1;
-            }
+            m_levelState.pop_back();
+            return;
         }
 
-        --m_levelStruct;
+        if (levelState.arrayStructCounterBuffer)
+        {
+            char* buffer = m_buffer;
+            m_buffer = levelState.arrayStructCounterBuffer;
+            serialize(levelState.arrayStructCounter);
+            m_buffer = buffer;
+            levelState.arrayStructCounter = -1;
+        }
+
+        m_levelState.pop_back();
     }
 
-    static const std::string QT_ABORTSTRUCT = "qtabortstruct";
-    static const std::string QT_FALSE = "false";
-    static const std::string QT_TRUE = "true";
+    static const std::string ABORTSTRUCT = "abortstruct";
+    static const std::string ABORT_FALSE = "false";
+    static const std::string ABORT_TRUE = "true";
 
     void SerializerQt::Internal::enterBool(const MetaField& field, bool value)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -175,20 +193,22 @@ namespace finalmq {
         serialize(static_cast<std::uint8_t>(value ? 1 : 0));
 
         // check abort
-        const std::string& valueAbort = field.getProperty(QT_ABORTSTRUCT);
+        const std::string& valueAbort = field.getProperty(ABORTSTRUCT);
         if (!valueAbort.empty())
         {
-            if (((valueAbort == QT_TRUE) && value) ||
-                ((valueAbort == QT_FALSE) && !value))
+            if (((valueAbort == ABORT_TRUE) && value) ||
+                ((valueAbort == ABORT_FALSE) && !value))
             {
-                m_abortStruct = m_abortStruct;
+                levelState.abortStruct = true;
             }
         }
     }
 
     void SerializerQt::Internal::enterInt8(const MetaField& field, std::int8_t value)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -200,11 +220,14 @@ namespace finalmq {
         }
         reserveSpace(sizeof(std::int8_t));
         serialize(value);
+        checkIndex(field, value);
     }
 
     void SerializerQt::Internal::enterUInt8(const MetaField& field, std::uint8_t value)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -216,11 +239,14 @@ namespace finalmq {
         }
         reserveSpace(sizeof(std::uint8_t));
         serialize(value);
+        checkIndex(field, value);
     }
 
     void SerializerQt::Internal::enterInt16(const MetaField& field, std::int16_t value)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -232,11 +258,14 @@ namespace finalmq {
         }
         reserveSpace(sizeof(std::int16_t));
         serialize(value);
+        checkIndex(field, value);
     }
 
     void SerializerQt::Internal::enterUInt16(const MetaField& field, std::uint16_t value)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -248,11 +277,14 @@ namespace finalmq {
         }
         reserveSpace(sizeof(std::uint16_t));
         serialize(value);
+        checkIndex(field, value);
     }
 
     void SerializerQt::Internal::enterInt32(const MetaField& field, std::int32_t value)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -264,11 +296,14 @@ namespace finalmq {
         }
         reserveSpace(sizeof(std::int32_t));
         serialize(value);
+        checkIndex(field, value);
     }
 
     void SerializerQt::Internal::enterUInt32(const MetaField& field, std::uint32_t value)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -280,11 +315,14 @@ namespace finalmq {
         }
         reserveSpace(sizeof(std::uint32_t));
         serialize(value);
+        checkIndex(field, value);
     }
 
     void SerializerQt::Internal::enterInt64(const MetaField& field, std::int64_t value)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -296,11 +334,14 @@ namespace finalmq {
         }
         reserveSpace(sizeof(std::int64_t));
         serialize(value);
+        checkIndex(field, value);
     }
 
     void SerializerQt::Internal::enterUInt64(const MetaField& field, std::uint64_t value)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -312,11 +353,14 @@ namespace finalmq {
         }
         reserveSpace(sizeof(std::uint64_t));
         serialize(value);
+        checkIndex(field, value);
     }
 
     void SerializerQt::Internal::enterFloat(const MetaField& field, float value)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -332,7 +376,9 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterDouble(const MetaField& field, double value)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -348,7 +394,9 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterString(const MetaField& field, std::string&& value)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -364,7 +412,9 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterString(const MetaField& field, const char* value, ssize_t size)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -380,18 +430,15 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterBytes(const MetaField& field, Bytes&& value)
     {
-        if (m_abortStruct != -1)
-        {
-            return;
-        }
-
         assert(field.typeId == MetaTypeId::TYPE_BYTES);
         enterBytes(field, value.data(), value.size());
     }
 
     void SerializerQt::Internal::enterBytes(const MetaField& field, const BytesElement* value, ssize_t size)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -405,14 +452,16 @@ namespace finalmq {
         serialize(value, size);
     }
 
-    static const std::string QT_ENUM_BITS = "qtenumbits";
+    static const std::string QT_ENUM_BITS = "enumbits";
     static const std::string BITS_8 = "8";
     static const std::string BITS_16 = "16";
     static const std::string BITS_32 = "32";
 
     void SerializerQt::Internal::enterEnum(const MetaField& field, std::int32_t value)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -450,7 +499,7 @@ namespace finalmq {
         }
 
         // check abort
-        const std::string& valueAbort = field.getProperty(QT_ABORTSTRUCT);
+        const std::string& valueAbort = field.getProperty(ABORTSTRUCT);
         if (!valueAbort.empty() && en)
         {
             std::string strValue = en->getNameByValue(value);
@@ -458,14 +507,14 @@ namespace finalmq {
             Utils::split(valueAbort, 0, valueAbort.size(), '|', valuesAbort);
             if (std::find(valuesAbort.begin(), valuesAbort.end(), strValue) != valuesAbort.end())
             {
-                m_abortStruct = m_levelStruct;
+                levelState.abortStruct = true;
             }
             else
             {
                 std::string aliasValue = en->getAliasByValue(value);
                 if (std::find(valuesAbort.begin(), valuesAbort.end(), aliasValue) != valuesAbort.end())
                 {
-                    m_abortStruct = m_levelStruct;
+                    levelState.abortStruct = true;
                 }
             }
         }
@@ -473,38 +522,25 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterEnum(const MetaField& field, std::string&& value)
     {
-        if (m_abortStruct != -1)
-        {
-            return;
-        }
-
         std::int32_t enumValue = MetaDataGlobal::instance().getEnumValueByName(field, value);
         enterEnum(field, enumValue);
     }
 
     void SerializerQt::Internal::enterEnum(const MetaField& field, const char* value, ssize_t size)
     {
-        if (m_abortStruct != -1)
-        {
-            return;
-        }
-
         enterEnum(field, std::string(value, size));
     }
 
     void SerializerQt::Internal::enterArrayBoolMove(const MetaField& field, std::vector<bool>&& value)
     {
-        if (m_abortStruct != -1)
-        {
-            return;
-        }
-
         enterArrayBool(field, value);
     }
 
     void SerializerQt::Internal::enterArrayBool(const MetaField& field, const std::vector<bool>& value)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -521,17 +557,14 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterArrayInt8(const MetaField& field, std::vector<std::int8_t>&& value)
     {
-        if (m_abortStruct != -1)
-        {
-            return;
-        }
-
         enterArrayInt8(field, value.data(), value.size());
     }
 
     void SerializerQt::Internal::enterArrayInt8(const MetaField& field, const std::int8_t* value, ssize_t size)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -547,17 +580,14 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterArrayInt16(const MetaField& field, std::vector<std::int16_t>&& value)
     {
-        if (m_abortStruct != -1)
-        {
-            return;
-        }
-
         enterArrayInt16(field, value.data(), value.size());
     }
 
     void SerializerQt::Internal::enterArrayInt16(const MetaField& field, const std::int16_t* value, ssize_t size)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -573,17 +603,14 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterArrayUInt16(const MetaField& field, std::vector<std::uint16_t>&& value)
     {
-        if (m_abortStruct != -1)
-        {
-            return;
-        }
-
         enterArrayUInt16(field, value.data(), value.size());
     }
 
     void SerializerQt::Internal::enterArrayUInt16(const MetaField& field, const std::uint16_t* value, ssize_t size)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -599,17 +626,14 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterArrayInt32(const MetaField& field, std::vector<std::int32_t>&& value)
     {
-        if (m_abortStruct != -1)
-        {
-            return;
-        }
-
         enterArrayInt32(field, value.data(), value.size());
     }
 
     void SerializerQt::Internal::enterArrayInt32(const MetaField& field, const std::int32_t* value, ssize_t size)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -625,17 +649,14 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterArrayUInt32(const MetaField& field, std::vector<std::uint32_t>&& value)
     {
-        if (m_abortStruct != -1)
-        {
-            return;
-        }
-
         enterArrayUInt32(field, value.data(), value.size());
     }
 
     void SerializerQt::Internal::enterArrayUInt32(const MetaField& field, const std::uint32_t* value, ssize_t size)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -651,17 +672,14 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterArrayInt64(const MetaField& field, std::vector<std::int64_t>&& value)
     {
-        if (m_abortStruct != -1)
-        {
-            return;
-        }
-
         enterArrayInt64(field, value.data(), value.size());
     }
 
     void SerializerQt::Internal::enterArrayInt64(const MetaField& field, const std::int64_t* value, ssize_t size)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -677,17 +695,14 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterArrayUInt64(const MetaField& field, std::vector<std::uint64_t>&& value)
     {
-        if (m_abortStruct != -1)
-        {
-            return;
-        }
-
         enterArrayUInt64(field, value.data(), value.size());
     }
 
     void SerializerQt::Internal::enterArrayUInt64(const MetaField& field, const std::uint64_t* value, ssize_t size)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -703,17 +718,14 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterArrayFloat(const MetaField& field, std::vector<float>&& value)
     {
-        if (m_abortStruct != -1)
-        {
-            return;
-        }
-
         enterArrayFloat(field, value.data(), value.size());
     }
 
     void SerializerQt::Internal::enterArrayFloat(const MetaField& field, const float* value, ssize_t size)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -729,17 +741,14 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterArrayDouble(const MetaField& field, std::vector<double>&& value)
     {
-        if (m_abortStruct != -1)
-        {
-            return;
-        }
-
         enterArrayDouble(field, value.data(), value.size());
     }
 
     void SerializerQt::Internal::enterArrayDouble(const MetaField& field, const double* value, ssize_t size)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -755,17 +764,14 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterArrayStringMove(const MetaField& field, std::vector<std::string>&& value)
     {
-        if (m_abortStruct != -1)
-        {
-            return;
-        }
-
         enterArrayString(field, value);
     }
 
     void SerializerQt::Internal::enterArrayString(const MetaField& field, const std::vector<std::string>& value)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -786,17 +792,14 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterArrayBytesMove(const MetaField& field, std::vector<Bytes>&& value)
     {
-        if (m_abortStruct != -1)
-        {
-            return;
-        }
-
         enterArrayBytes(field, value);
     }
 
     void SerializerQt::Internal::enterArrayBytes(const MetaField& field, const std::vector<Bytes>& value)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -817,17 +820,14 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterArrayEnum(const MetaField& field, std::vector<std::int32_t>&& value)
     {
-        if (m_abortStruct != -1)
-        {
-            return;
-        }
-
         enterArrayEnum(field, value.data(), value.size());
     }
 
     void SerializerQt::Internal::enterArrayEnum(const MetaField& field, const std::int32_t* value, ssize_t size)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -876,17 +876,14 @@ namespace finalmq {
 
     void SerializerQt::Internal::enterArrayEnumMove(const MetaField& field, std::vector<std::string>&& value)
     {
-        if (m_abortStruct != -1)
-        {
-            return;
-        }
-
         enterArrayEnum(field, value);
     }
 
     void SerializerQt::Internal::enterArrayEnum(const MetaField& field, const std::vector<std::string>& value)
     {
-        if (m_abortStruct != -1)
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+        if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
         {
             return;
         }
@@ -1088,7 +1085,7 @@ namespace finalmq {
 
     bool SerializerQt::Internal::isWrappedByQVariant() const
     {
-        return (m_levelStruct == 0 && (m_mode != Mode::NONE));
+        return (m_levelState.size() == 1 && (m_mode != Mode::NONE));
     }
 
     bool SerializerQt::Internal::getQVariantTypeFromMetaTypeId(const MetaField& field, std::uint32_t& typeId, std::string& typeName)
@@ -1374,5 +1371,21 @@ namespace finalmq {
         }
     }
 
+    void SerializerQt::Internal::checkIndex(const MetaField& field, std::int64_t value)
+    {
+        if ((field.flags & MetaFieldFlags::METAFLAG_INDEX) != 0)
+        {
+            assert(!m_levelState.empty());
+            LevelState& levelState = m_levelState.back();
+            if (value < 0)
+            {
+                levelState.abortStruct = true;
+            }
+            else
+            {
+                levelState.index = field.index + 1 + value;
+            }
+        }
+    }
 
 }   // namespace finalmq
