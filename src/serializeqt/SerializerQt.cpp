@@ -23,6 +23,8 @@
 
 #include "finalmq/serializeqt/SerializerQt.h"
 #include "finalmq/serializeqt/Qt.h"
+#include "finalmq/serialize/ParserProcessDefaultValues.h"
+#include "finalmq/serialize/ParserAbortAndIndex.h"
 #include "finalmq/serialize/ParserProcessValuesInOrder.h"
 #include "finalmq/helpers/Utils.h"
 #include "finalmq/metadata/MetaData.h"
@@ -42,10 +44,14 @@ namespace finalmq {
     SerializerQt::SerializerQt(IZeroCopyBuffer& buffer, Mode mode, int maxBlockSize)
         : ParserConverter()
         , m_internal(buffer, maxBlockSize, mode)
+        , m_parserProcessDefaultValues()
+        , m_parserAbortAndIndex()
         , m_parserProcessValuesInOrder()
     {
-        m_parserProcessValuesInOrder = std::make_unique<ParserProcessValuesInOrder>(false, &m_internal);
-        setVisitor(*m_parserProcessValuesInOrder);
+        m_parserProcessValuesInOrder = std::make_unique<ParserProcessValuesInOrder>(&m_internal);
+        m_parserAbortAndIndex = std::make_unique<ParserAbortAndIndex>(m_parserProcessValuesInOrder.get());
+        m_parserProcessDefaultValues = std::make_unique<ParserProcessDefaultValues>(false, m_parserAbortAndIndex.get());
+        ParserConverter::setVisitor(*m_parserProcessDefaultValues);
     }
 
 
@@ -80,8 +86,10 @@ namespace finalmq {
     {
         resizeBuffer();
 
-        assert(!m_levelState.empty());
-        m_levelState.pop_back();
+        if (!m_levelState.empty())
+        {
+            m_levelState.pop_back();
+        }
     }
 
 
@@ -96,7 +104,6 @@ namespace finalmq {
             m_levelState.back().abortStruct = levelState.abortStruct;
             return;
         }
-
 
         assert(field.typeId == MetaTypeId::TYPE_STRUCT);
         if (isWrappedByQVariant())
@@ -147,7 +154,6 @@ namespace finalmq {
         levelState.arrayStructCounter = 0;
 
         m_levelState.push_back(LevelState());
-
     }
 
     void SerializerQt::Internal::exitArrayStruct(const MetaField& /*field*/)

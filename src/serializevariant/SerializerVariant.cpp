@@ -23,6 +23,7 @@
 
 #include "finalmq/serializevariant/SerializerVariant.h"
 #include "finalmq/serializevariant/VarValueToVariant.h"
+#include "finalmq/serialize/ParserAbortAndIndex.h"
 #include "finalmq/serialize/ParserProcessDefaultValues.h"
 #include "finalmq/metadata/MetaData.h"
 #include "finalmq/variant/VariantValueStruct.h"
@@ -45,7 +46,8 @@ SerializerVariant::SerializerVariant(Variant& root, bool enumAsString, bool skip
     , m_internal(*this, root, enumAsString)
     , m_parserProcessDefaultValues()
 {
-    m_parserProcessDefaultValues = std::make_shared<ParserProcessDefaultValues>(skipDefaultValues, &m_internal);
+    m_parserAbortAndIndex = std::make_unique<ParserAbortAndIndex>(&m_internal);
+    m_parserProcessDefaultValues = std::make_unique<ParserProcessDefaultValues>(skipDefaultValues, m_parserAbortAndIndex.get());
     ParserConverter::setVisitor(*m_parserProcessDefaultValues);
 }
 

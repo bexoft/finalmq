@@ -22,6 +22,7 @@
 
 
 #include "finalmq/serializeproto/SerializerProto.h"
+#include "finalmq/serialize/ParserAbortAndIndex.h"
 #include "finalmq/metadata/MetaData.h"
 #include "finalmq/helpers/FmqDefines.h"
 #include "finalmq/helpers/ModulenameFinalmq.h"
@@ -42,9 +43,12 @@ static constexpr int STRUCT_SIZE_COPY = 128;
 
 
 SerializerProto::SerializerProto(IZeroCopyBuffer& buffer, int maxBlockSize)
-    : ParserConverter(&m_internal)
+    : ParserConverter()
     , m_internal(buffer, maxBlockSize)
+    , m_parserAbortAndIndex()
 {
+    m_parserAbortAndIndex = std::make_unique<ParserAbortAndIndex>(&m_internal);
+    ParserConverter::setVisitor(*m_parserAbortAndIndex);
 }
 
 

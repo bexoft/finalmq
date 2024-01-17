@@ -26,17 +26,15 @@
 #include "finalmq/serialize/IParserVisitor.h"
 
 #include <deque>
-#include <vector>
-#include <functional>
 
 
 namespace finalmq {
 
 
-class SYMBOLEXP ParserProcessValuesInOrder : public IParserVisitor
+class SYMBOLEXP ParserAbortAndIndex : public IParserVisitor
 {
 public:
-    ParserProcessValuesInOrder(IParserVisitor* visitor = nullptr);
+    ParserAbortAndIndex(IParserVisitor* visitor = nullptr);
     void setVisitor(IParserVisitor &visitor);
 
 private:
@@ -100,17 +98,31 @@ private:
     virtual void enterArrayEnumMove(const MetaField& field, std::vector<std::string>&& value) override;
     virtual void enterArrayEnum(const MetaField& field, const std::vector<std::string>& value) override;
 
-
-    struct CallNode
-    {
-        std::vector<std::function<void()>> calls;
-        bool arr = false;
-    };
+    void checkIndex(const MetaField& field, std::int64_t value);
 
     IParserVisitor* m_visitor;
 
-    CallNode* m_currentCalls = nullptr;
-    std::deque<CallNode>  m_stackCalls;
+    enum IndexStatus
+    {
+        INDEX_NOT_AVAILABLE = -1,
+    };
+
+    enum AbortStatus
+    {
+        ABORT_NONE = 0,
+        ABORT_FIELD = 1,
+        ABORT_STRUCT = 2,
+    };
+
+    struct LevelState
+    {
+        AbortStatus abortStruct = ABORT_NONE;
+        std::int64_t index = INDEX_NOT_AVAILABLE;
+        char* arrayStructCounterBuffer = nullptr;
+        std::int32_t arrayStructCounter = -1;
+    };
+
+    std::deque<LevelState> m_levelState;
 };
 
 }   // namespace finalmq

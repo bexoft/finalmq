@@ -167,6 +167,8 @@ namespace finalmq {
         };
 
         Internal                            m_internal;
+        std::unique_ptr<IParserVisitor>     m_parserProcessDefaultValues;
+        std::unique_ptr<IParserVisitor>     m_parserAbortAndIndex;
         std::unique_ptr<IParserVisitor>     m_parserProcessValuesInOrder;
     };
 
