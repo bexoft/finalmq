@@ -70,7 +70,7 @@ namespace finalmq {
         bool parseArrayStruct(const MetaField& field);
 
         bool parseQVariantHeader(const MetaField& field);
-        std::int64_t checkIndex(const MetaField& field, std::int64_t value);
+        void checkIndex(const MetaField& field, std::int64_t value, std::int64_t& index);
 
         const std::uint8_t* m_ptr = nullptr;
         ssize_t m_size = 0;
