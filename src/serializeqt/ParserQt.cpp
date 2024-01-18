@@ -157,7 +157,7 @@ namespace finalmq {
                     if (ok)
                     {
                         m_visitor.enterInt8(*field, value);
-                        index = checkIndex(*field, value);
+                        checkIndex(*field, value, index);
                     }
                 }
                 break;
@@ -173,7 +173,7 @@ namespace finalmq {
                     if (ok)
                     {
                         m_visitor.enterUInt8(*field, value);
-                        index = checkIndex(*field, value);
+                        checkIndex(*field, value, index);
                     }
                 }
                 break;
@@ -189,7 +189,7 @@ namespace finalmq {
                     if (ok)
                     {
                         m_visitor.enterInt16(*field, value);
-                        index = checkIndex(*field, value);
+                        checkIndex(*field, value, index);
                     }
                 }
                 break;
@@ -205,7 +205,7 @@ namespace finalmq {
                     if (ok)
                     {
                         m_visitor.enterUInt16(*field, value);
-                        index = checkIndex(*field, value);
+                        checkIndex(*field, value, index);
                     }
                 }
                 break;
@@ -221,7 +221,7 @@ namespace finalmq {
                     if (ok)
                     {
                         m_visitor.enterInt32(*field, value);
-                        index = checkIndex(*field, value);
+                        checkIndex(*field, value, index);
                     }
                 }
                 break;
@@ -237,7 +237,7 @@ namespace finalmq {
                     if (ok)
                     {
                         m_visitor.enterUInt32(*field, value);
-                        index = checkIndex(*field, value);
+                        checkIndex(*field, value, index);
                     }
                 }
                 break;
@@ -253,7 +253,7 @@ namespace finalmq {
                     if (ok)
                     {
                         m_visitor.enterInt64(*field, value);
-                        index = checkIndex(*field, value);
+                        checkIndex(*field, value, index);
                     }
                 }
                 break;
@@ -269,7 +269,7 @@ namespace finalmq {
                     if (ok)
                     {
                         m_visitor.enterUInt64(*field, value);
-                        index = checkIndex(*field, value);
+                        checkIndex(*field, value, index);
                     }
                 }
                 break;
@@ -1044,9 +1044,8 @@ namespace finalmq {
         return ok;
     }
 
-    std::int64_t ParserQt::checkIndex(const MetaField& field, std::int64_t value)
+    void ParserQt::checkIndex(const MetaField& field, std::int64_t value, std::int64_t& index)
     {
-        std::int64_t index = INDEX_NOT_AVAILABLE;
         if ((field.flags & MetaFieldFlags::METAFLAG_INDEX) != 0)
         {
             if (value < 0)
@@ -1058,7 +1057,6 @@ namespace finalmq {
                 index = field.index + 1 + value;
             }
         }
-        return index;
     }
 
 
