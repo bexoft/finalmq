@@ -85,7 +85,7 @@ private:
     char m_delimiterRepeat{};
     char m_escape{};
 
-    std::unique_ptr<Hl7Node> m_root{};
+    std::shared_ptr<Hl7Node> m_root{};
 };
 
 } // namespace finalmq

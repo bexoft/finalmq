@@ -183,7 +183,8 @@ SessionInfo RemoteEntityContainer::connect(const std::string& endpoint, const Co
 SessionInfo RemoteEntityContainer::createSessionInfo(const IProtocolSessionPtr& session)
 {
 #ifdef FINALMQ_HAS_NOT_WEAK_FROM_THIS
-    std::weak_ptr<IRemoteEntityContainer> thisEntityContainer = *reinterpret_cast<std::weak_ptr<IRemoteEntityContainer>*>(static_cast<std::enable_shared_from_this<RemoteEntityContainer>*>(this));
+    auto* p = static_cast<std::enable_shared_from_this<RemoteEntityContainer>*>(this);
+    std::weak_ptr<IRemoteEntityContainer> thisEntityContainer = *reinterpret_cast<std::weak_ptr<IRemoteEntityContainer>*>(p);
 #else
     std::weak_ptr<IRemoteEntityContainer> thisEntityContainer = weak_from_this();
 #endif
