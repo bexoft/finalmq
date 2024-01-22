@@ -23,13 +23,12 @@
 #pragma once
 
 #include <memory>
-#include <assert.h>
 
+#include <assert.h>
 
 namespace finalmq
 {
-
-template <class T>
+template<class T>
 class transient_ptr
 {
 public:
@@ -44,25 +43,25 @@ public:
         m_shared = nullptr;
     }
 
-    T* operator ->()
+    T* operator->()
     {
         assert(m_raw);
         return m_raw;
     }
 
-    const T* operator ->() const
+    const T* operator->() const
     {
         assert(m_raw);
         return m_raw;
     }
 
-    T& operator *()
+    T& operator*()
     {
         assert(m_raw);
         return *m_raw;
     }
 
-    const T& operator *() const
+    const T& operator*() const
     {
         assert(m_raw);
         return *m_raw;
@@ -73,10 +72,44 @@ public:
         return (m_raw != nullptr);
     }
 
+    transient_ptr(const transient_ptr& rhs)
+        : m_shared(rhs.m_shared), m_raw(rhs.shared ? rhs.shared.get() : rhs.m_raw)
+    {
+    }
+    transient_ptr(transient_ptr&& rhs)
+        : m_shared(rhs.m_shared), m_raw(m_shared ? m_shared.get() : rhs.m_raw)
+    {
+    }
+    const transient_ptr& operator=(const transient_ptr& rhs)
+    {
+        m_shared = rhs.m_shared;
+        if (m_shared)
+        {
+            m_raw = m_shared.get();
+        }
+        else
+        {
+            m_raw = rhs.m_raw;
+        }
+        return *this;
+    }
+    const transient_ptr& operator=(transient_ptr&& rhs)
+    {
+        m_shared = rhs.m_shared;
+        if (m_shared)
+        {
+            m_raw = m_shared.get();
+        }
+        else
+        {
+            m_raw = rhs.m_raw;
+        }
+        return *this;
+    }
+
 private:
     explicit transient_ptr(const std::shared_ptr<T>& shared)
-        : m_shared(shared)
-        , m_raw(shared.get())
+        : m_shared(shared), m_raw(shared.get())
     {
     }
 
@@ -85,15 +118,14 @@ private:
     {
     }
 
-    std::shared_ptr<T>  m_shared;
-    T*                  m_raw = nullptr;
+    std::shared_ptr<T> m_shared{};
+    T* m_raw = nullptr;
 
-    template <class D> friend class hybrid_ptr;
+    template<class D>
+    friend class hybrid_ptr;
 };
 
-
-
-template <class T>
+template<class T>
 class hybrid_ptr
 {
 private:
@@ -111,35 +143,58 @@ public:
     {
     }
 
+    hybrid_ptr(const hybrid_ptr& rhs)
+        : m_mode(rhs.m_mode), m_shared(rhs.m_shared), m_weak(rhs.m_weak), m_raw(rhs.m_raw)
+    {
+    }
+
+    hybrid_ptr(hybrid_ptr&& rhs)
+        : m_mode(rhs.m_mode), m_shared(rhs.m_shared), m_weak(rhs.m_weak), m_raw(rhs.m_raw)
+    {
+    }
+
+    const hybrid_ptr& operator=(const hybrid_ptr& rhs)
+    {
+        m_mode = rhs.m_mode;
+        m_shared = rhs.m_shared;
+        m_weak = rhs.m_weak;
+        m_raw = rhs.m_raw;
+        return *this;
+    }
+
+    const hybrid_ptr& operator=(hybrid_ptr&& rhs)
+    {
+        m_mode = rhs.m_mode;
+        m_shared = rhs.m_shared;
+        m_weak = rhs.m_weak;
+        m_raw = rhs.m_raw;
+        return *this;
+    }
+
     hybrid_ptr(const std::shared_ptr<T>& shared)
-        : m_mode(Mode::MODE_SHARED)
-        , m_shared(shared)
+        : m_mode(Mode::MODE_SHARED), m_shared(shared)
     {
     }
 
     hybrid_ptr(const std::weak_ptr<T>& weak)
-        : m_mode(Mode::MODE_WEAK)
-        , m_weak(weak)
+        : m_mode(Mode::MODE_WEAK), m_weak(weak)
     {
     }
 
     hybrid_ptr(T* raw)
-        : m_mode(Mode::MODE_RAW)
-        , m_raw(raw)
+        : m_mode(Mode::MODE_RAW), m_raw(raw)
     {
     }
 
-    template <class D>
+    template<class D>
     hybrid_ptr(const std::shared_ptr<D>& shared)
-        : m_mode(Mode::MODE_SHARED)
-        , m_shared(shared)
+        : m_mode(Mode::MODE_SHARED), m_shared(shared)
     {
     }
 
-    template <class D>
+    template<class D>
     hybrid_ptr(const std::weak_ptr<D>& weak)
-        : m_mode(Mode::MODE_WEAK)
-        , m_weak(weak)
+        : m_mode(Mode::MODE_WEAK), m_weak(weak)
     {
     }
 
@@ -153,30 +208,29 @@ public:
 
     transient_ptr<T> lock() const
     {
-        switch (m_mode)
+        switch(m_mode)
         {
-        case Mode::MODE_SHARED:
-            return transient_ptr<T>(m_shared);
-            break;
-        case Mode::MODE_WEAK:
-            return transient_ptr<T>(m_weak.lock());
-            break;
-        case Mode::MODE_RAW:
-            return transient_ptr<T>(m_raw);
-            break;
-        default:
-            return transient_ptr<T>(nullptr);
-            break;
+            case Mode::MODE_SHARED:
+                return transient_ptr<T>(m_shared);
+                break;
+            case Mode::MODE_WEAK:
+                return transient_ptr<T>(m_weak.lock());
+                break;
+            case Mode::MODE_RAW:
+                return transient_ptr<T>(m_raw);
+                break;
+            default:
+                return transient_ptr<T>(nullptr);
+                break;
         }
         return transient_ptr<T>(nullptr);
     }
 
 private:
-    Mode                m_mode;
-	std::shared_ptr<T>  m_shared;
-	std::weak_ptr<T>    m_weak;
-    T*                  m_raw = nullptr;
+    Mode m_mode{};
+    std::shared_ptr<T> m_shared{};
+    std::weak_ptr<T> m_weak{};
+    T* m_raw{nullptr};
 };
 
-
-} // namespace bex
+} // namespace finalmq

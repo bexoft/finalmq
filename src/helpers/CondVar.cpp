@@ -22,11 +22,8 @@
 
 #include "finalmq/helpers/CondVar.h"
 
-
-
-namespace finalmq {
-
-
+namespace finalmq
+{
 CondVar::CondVar(CondVar::CondVarMode mode)
     : m_mode(mode)
 {
@@ -35,7 +32,6 @@ CondVar::CondVar(CondVar::CondVarMode mode)
 CondVar::~CondVar(void)
 {
 }
-
 
 void CondVar::setValue()
 {
@@ -52,14 +48,12 @@ void CondVar::setValue()
     }
 }
 
-
 void CondVar::resetValue()
 {
     std::unique_lock<std::mutex> locker(m_mutex);
     m_value = false;
     locker.unlock();
 }
-
 
 bool CondVar::wait(int timeout) const
 {
@@ -75,11 +69,11 @@ bool CondVar::wait(int timeout) const
         {
             if (timeout < 0)
             {
-                m_condvar.wait(locker, [this] () { return m_value; });
+                m_condvar.wait(locker, [this]() { return m_value; });
             }
             else
             {
-                m_condvar.wait_for(locker, std::chrono::milliseconds(timeout), [this] () { return m_value; });
+                m_condvar.wait_for(locker, std::chrono::milliseconds(timeout), [this]() { return m_value; });
             }
         }
         ret = m_value;
@@ -92,8 +86,7 @@ bool CondVar::wait(int timeout) const
     return ret;
 }
 
-
-void CondVar::operator =(bool val)
+const CondVar& CondVar::operator=(bool val)
 {
     if (val)
     {
@@ -103,14 +96,13 @@ void CondVar::operator =(bool val)
     {
         resetValue();
     }
+    return *this;
 }
-
 
 CondVar::operator bool() const
 {
     return wait(0);
 }
-
 
 bool CondVar::getValue() const
 {

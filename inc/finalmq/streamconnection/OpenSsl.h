@@ -22,11 +22,11 @@
 
 #pragma once
 
-#include "finalmq/logger/LogStream.h"
-
-#include <string>
-#include <mutex>
 #include <atomic>
+#include <mutex>
+#include <string>
+
+#include "finalmq/logger/LogStream.h"
 
 #ifdef USE_OPENSSL
 #include "openssl/ossl_typ.h"
@@ -35,51 +35,47 @@
 struct x509_store_ctx_st;
 typedef struct x509_store_ctx_st X509_STORE_CTX;
 
-
-namespace finalmq {
-
-
+namespace finalmq
+{
 struct CertificateData
 {
     bool ssl = false;
-    int verifyMode = 0;                 // SSL_CTX_set_verify: SSL_VERIFY_NONE, SSL_VERIFY_PEER, SSL_VERIFY_FAIL_IF_NO_PEER_CERT, SSL_VERIFY_CLIENT_ONCE
-    std::string certificateFile;        // SSL_CTX_use_certificate_file, pem
-    std::string privateKeyFile;         // SSL_CTX_use_PrivateKey_file, pem
-    std::string caFile;                 // SSL_CTX_load_verify_location, pem
-    std::string caPath;                 // SSL_CTX_load_verify_location, pem
-    std::string certificateChainFile;   // SSL_CTX_use_certificate_chain_file, pem
-    std::string clientCaFile;           // SSL_load_client_CA_file, pem, SSL_CTX_set_client_CA_list
-    std::function<int(int, X509_STORE_CTX*)> verifyCallback;    // SSL_CTX_set_verify
+    int verifyMode = 0;                                      // SSL_CTX_set_verify: SSL_VERIFY_NONE, SSL_VERIFY_PEER, SSL_VERIFY_FAIL_IF_NO_PEER_CERT, SSL_VERIFY_CLIENT_ONCE
+    std::string certificateFile;                             // SSL_CTX_use_certificate_file, pem
+    std::string privateKeyFile;                              // SSL_CTX_use_PrivateKey_file, pem
+    std::string caFile;                                      // SSL_CTX_load_verify_location, pem
+    std::string caPath;                                      // SSL_CTX_load_verify_location, pem
+    std::string certificateChainFile;                        // SSL_CTX_use_certificate_chain_file, pem
+    std::string clientCaFile;                                // SSL_load_client_CA_file, pem, SSL_CTX_set_client_CA_list
+    std::function<int(int, X509_STORE_CTX*)> verifyCallback; // SSL_CTX_set_verify
 };
 
-}   // namespace finalmq
+} // namespace finalmq
 
 #ifdef USE_OPENSSL
 
-#define MODULENAME  "FinalMQ"
+#define MODULENAME "FinalMQ"
 
-#include <assert.h>
 #include <memory>
 #include <mutex>
 
+#include <assert.h>
+
 #include <openssl/ssl.h>
 
-
-namespace finalmq {
-
+namespace finalmq
+{
 class SslContext;
 class SslSocket;
 
-
 struct IOpenSsl
 {
-    virtual ~IOpenSsl() {}
+    virtual ~IOpenSsl()
+    {}
     virtual std::shared_ptr<SslContext> createServerContext(const CertificateData& certificateData) = 0;
     virtual std::shared_ptr<SslContext> createClientContext(const CertificateData& certificateData) = 0;
     virtual std::mutex& getMutex() = 0;
 };
-
-
 
 class SYMBOLEXP OpenSslImpl : public IOpenSsl
 {
@@ -96,11 +92,10 @@ private:
     std::shared_ptr<SslContext> configContext(SSL_CTX* ctx, const CertificateData& certificateData);
 
     OpenSslImpl(const OpenSslImpl&) = delete;
-    const OpenSslImpl& operator =(const OpenSslImpl&) = delete;
+    const OpenSslImpl& operator=(const OpenSslImpl&) = delete;
 
-    std::mutex m_sslMutex;
+    std::mutex m_sslMutex{};
 };
-
 
 class SYMBOLEXP OpenSsl
 {
@@ -132,13 +127,9 @@ private:
     static std::unique_ptr<IOpenSsl>& getStaticUniquePtrRef();
 };
 
-
-
-
 class SslSocket
 {
 public:
-
     enum class IoState
     {
         SUCCESS,
@@ -148,8 +139,7 @@ public:
     };
 
     SslSocket(SSL* ssl)
-        : m_ssl(ssl)
-        , m_sslMutex(OpenSsl::instance().getMutex())
+        : m_ssl(ssl), m_sslMutex(OpenSsl::instance().getMutex())
     {
     }
     ~SslSocket()
@@ -324,7 +314,7 @@ public:
 
 private:
     SslSocket(const SslSocket&) = delete;
-    const SslSocket& operator =(const SslSocket&) = delete;
+    const SslSocket& operator=(const SslSocket&) = delete;
 
     SSL* m_ssl = nullptr;
     bool m_readWhenWritable = false;
@@ -332,14 +322,11 @@ private:
     std::mutex& m_sslMutex;
 };
 
-
-
 class SslContext
 {
 public:
     SslContext(SSL_CTX* ctx)
-        : m_ctx(ctx)
-        , m_sslMutex(OpenSsl::instance().getMutex())
+        : m_ctx(ctx), m_sslMutex(OpenSsl::instance().getMutex())
     {
     }
     ~SslContext()
@@ -364,7 +351,11 @@ public:
         SSL* ssl = SSL_new(m_ctx);
         if (ssl)
         {
-            SSL_set_fd(ssl, static_cast<int>(sd));  // the cast is not nice for win64 sockets, but it works!
+#ifdef WIN32
+            SSL_set_fd(ssl, static_cast<int>(sd)); // the cast is not nice for win64 sockets, but it works!
+#else
+            SSL_set_fd(ssl, sd);
+#endif
             return std::make_shared<SslSocket>(ssl);
         }
         return nullptr;
@@ -382,18 +373,15 @@ public:
 
 private:
     SslContext(const SslContext&) = delete;
-    const SslContext& operator =(const SslContext&) = delete;
+    const SslContext& operator=(const SslContext&) = delete;
 
-    SSL_CTX* m_ctx = nullptr;
-    std::function<int(int, X509_STORE_CTX*)> m_verifyCallback;
+    SSL_CTX* m_ctx{nullptr};
+    std::function<int(int, X509_STORE_CTX*)> m_verifyCallback{};
     std::mutex& m_sslMutex;
 };
 
-
-}   // namespace finalmq
+} // namespace finalmq
 
 #undef MODULENAME
 
-#endif  // USE_OPENSSL
-
-
+#endif // USE_OPENSSL

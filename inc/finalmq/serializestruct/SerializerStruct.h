@@ -22,14 +22,14 @@
 
 #pragma once
 
-#include "finalmq/metadata/MetaStruct.h"
-#include "finalmq/serialize/ParserConverter.h"
-#include "StructBase.h"
-
 #include <deque>
 
-namespace finalmq {
+#include "StructBase.h"
+#include "finalmq/metadata/MetaStruct.h"
+#include "finalmq/serialize/ParserConverter.h"
 
+namespace finalmq
+{
 class VarValueToVariant;
 
 class SYMBOLEXP SerializerStruct : public IParserVisitor
@@ -39,6 +39,11 @@ public:
     void setExitNotification(std::function<void()> funcExit);
 
 private:
+    SerializerStruct(const SerializerStruct&) = delete;
+    SerializerStruct(SerializerStruct&&) = delete;
+    const SerializerStruct& operator=(const SerializerStruct&) = delete;
+    const SerializerStruct& operator=(SerializerStruct&&) = delete;
+
     // IParserVisitor
     virtual void notifyError(const char* str, const char* message) override;
     virtual void startStruct(const MetaStruct& stru) override;
@@ -99,27 +104,27 @@ private:
     virtual void enterArrayEnumMove(const MetaField& field, std::vector<std::string>&& value) override;
     virtual void enterArrayEnum(const MetaField& field, const std::vector<std::string>& value) override;
 
-    template <class T>
+    template<class T>
     void setValue(StructBase& structBase, const FieldInfo& fieldInfoDest, const T& value);
 
-    template <class T>
+    template<class T>
     void setValue(StructBase& structBase, const FieldInfo& fieldInfoDest, T&& value);
 
     template<class T>
     void convertNumber(StructBase& structBase, const FieldInfo& fieldInfoDest, T value);
-            
+
     void convertString(StructBase& structBase, const FieldInfo& fieldInfoDest, const char* value, ssize_t size);
-            
+
     template<class T>
     void convertArrayNumber(StructBase& structBase, const FieldInfo& fieldInfoDest, const T* value, ssize_t size);
-            
+
     void convertArrayString(StructBase& structBase, const FieldInfo& fieldInfoDest, const std::vector<std::string>& value);
-            
+
     template<class T>
     void setValueNumber(const MetaField& field, T value);
 
     void setValueString(const MetaField& field, const char* value, ssize_t size);
-            
+
     template<class T>
     void setValueArrayNumber(const MetaField& field, const T* value, ssize_t size);
     template<class T>
@@ -127,23 +132,23 @@ private:
 
     void setValueArrayString(const MetaField& field, const std::vector<std::string>& value);
     void setValueArrayString(const MetaField& field, std::vector<std::string>&& value);
-        
+
     const FieldInfo* getFieldInfoDest(const MetaField& field);
 
     struct StackEntry
     {
         StructBase* structBase = nullptr;
-        ssize_t     structArrayIndex = -1;
+        ssize_t structArrayIndex = -1;
     };
 
-    StructBase&                     m_root;
-    StackEntry*                     m_current = nullptr;
-    std::deque<StackEntry>          m_stack;
-    std::function<void()>           m_funcExit;
-    std::shared_ptr<VarValueToVariant> m_varValueToVariant;
-    bool                            m_wasStartStructCalled = false;
-    Variant                         m_variantDummy;
-    IParserVisitor*                 m_visitor = nullptr;
+    StructBase& m_root;
+    StackEntry* m_current = nullptr;
+    std::deque<StackEntry> m_stack{};
+    std::function<void()> m_funcExit{};
+    std::shared_ptr<VarValueToVariant> m_varValueToVariant{};
+    bool m_wasStartStructCalled = false;
+    Variant m_variantDummy{};
+    IParserVisitor* m_visitor = nullptr;
 };
 
-}   // namespace finalmq
+} // namespace finalmq

@@ -20,103 +20,96 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-
 #include "finalmq/serializeqt/ParserQt.h"
-#include "finalmq/serializeqt/Qt.h"
-#include "finalmq/metadata/MetaData.h"
-#include "finalmq/helpers/FmqDefines.h"
 
+#include <algorithm>
+#include <codecvt>
+#include <iostream>
+#include <locale>
 
 #include <assert.h>
 #include <memory.h>
-#include <iostream>
-#include <codecvt>
-#include <locale>
-#include <algorithm>
 
+#include "finalmq/helpers/FmqDefines.h"
+#include "finalmq/metadata/MetaData.h"
+#include "finalmq/serializeqt/Qt.h"
 
-namespace finalmq {
+namespace finalmq
+{
+ParserQt::ParserQt(IParserVisitor& visitor, const char* ptr, ssize_t size, Mode mode)
+    : m_ptr(reinterpret_cast<const std::uint8_t*>(ptr)), m_size(size), m_visitor(visitor), m_mode(mode)
+{
+}
 
-
-    ParserQt::ParserQt(IParserVisitor& visitor, const char* ptr, ssize_t size, Mode mode)
-        : m_ptr(reinterpret_cast<const std::uint8_t*>(ptr))
-        , m_size(size)
-        , m_visitor(visitor)
-        , m_mode(mode)
+bool ParserQt::parseStruct(const std::string& typeName)
+{
+    if (!m_ptr || m_size < 0)
     {
+        // end of data
+        return false;
     }
 
-
-
-    bool ParserQt::parseStruct(const std::string& typeName)
+    const MetaStruct* stru = MetaDataGlobal::instance().getStruct(typeName);
+    if (!stru)
     {
-        if (!m_ptr || m_size < 0)
-        {
-            // end of data
-            return false;
-        }
+        m_visitor.notifyError(reinterpret_cast<const char*>(m_ptr), "typename not found");
+        m_visitor.finished();
+        return false;
+    }
 
-        const MetaStruct* stru = MetaDataGlobal::instance().getStruct(typeName);
-        if (!stru)
+    if (m_mode == Mode::WRAPPED_BY_QVARIANTLIST)
+    {
+        const ssize_t numberOfFields = stru->getFieldsSize();
+        std::uint32_t count;
+        bool ok = parse(count);
+        if (ok && count != numberOfFields)
         {
-            m_visitor.notifyError(reinterpret_cast<const char*>(m_ptr), "typename not found");
+            m_visitor.notifyError(reinterpret_cast<const char*>(m_ptr), "number of fields does not match");
             m_visitor.finished();
             return false;
         }
-
-        if (m_mode == Mode::WRAPPED_BY_QVARIANTLIST)
-        {
-            const ssize_t numberOfFields = stru->getFieldsSize();
-            std::uint32_t count;
-            bool ok = parse(count);
-            if (ok && count != numberOfFields)
-            {
-                m_visitor.notifyError(reinterpret_cast<const char*>(m_ptr), "number of fields does not match");
-                m_visitor.finished();
-                return false;
-            }
-        }
-
-        m_visitor.startStruct(*stru);
-        bool res = parseStructIntern(*stru, m_mode != Mode::NONE);
-        m_visitor.finished();
-        return res;
     }
 
-    static const std::string ENUM_BITS = "enumbits";
-    static const std::string BITS_8 = "8";
-    static const std::string BITS_16 = "16";
-    static const std::string BITS_32 = "32";
+    m_visitor.startStruct(*stru);
+    bool res = parseStructIntern(*stru, m_mode != Mode::NONE);
+    m_visitor.finished();
+    return res;
+}
 
-    static const std::string ABORTSTRUCT = "abortstruct";
-    static const std::string ABORT_FALSE = "false";
-    static const std::string ABORT_TRUE = "true";
+static const std::string ENUM_BITS = "enumbits";
+static const std::string BITS_8 = "8";
+static const std::string BITS_16 = "16";
+static const std::string BITS_32 = "32";
 
-    bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
+static const std::string ABORTSTRUCT = "abortstruct";
+static const std::string ABORT_FALSE = "false";
+static const std::string ABORT_TRUE = "true";
+
+bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
+{
+    if (!m_ptr || m_size < 0)
     {
-        if (!m_ptr || m_size < 0)
+        // end of data
+        return false;
+    }
+
+    bool ok = true;
+    bool abortStruct = false;
+    std::int64_t index = INDEX_NOT_AVAILABLE;
+
+    const ssize_t numberOfFields = stru.getFieldsSize();
+    for (ssize_t i = 0; i < numberOfFields && ok && !abortStruct; ++i)
+    {
+        if (index >= 0)
         {
-            // end of data
-            return false;
+            i = index;
+            index = INDEX_ABORTSTRUCT;
         }
+        const MetaField* field = stru.getFieldByIndex(i);
+        assert(field);
 
-        bool ok = true;
-        bool abortStruct = false;
-        std::int64_t index = INDEX_NOT_AVAILABLE;
-
-        const ssize_t numberOfFields = stru.getFieldsSize();
-        for (ssize_t i = 0; i < numberOfFields && ok && !abortStruct; ++i)
+        switch(field->typeId)
         {
-            if (index >= 0)
-            {
-                i = index;
-                index = INDEX_ABORTSTRUCT;
-            }
-            const MetaField* field = stru.getFieldByIndex(i);
-            assert(field);
-
-            switch (field->typeId)
-            {
             case MetaTypeId::TYPE_NONE:
                 break;
             case MetaTypeId::TYPE_BOOL:
@@ -136,8 +129,7 @@ namespace finalmq {
                         const std::string& valueAbort = field->getProperty(ABORTSTRUCT);
                         if (!valueAbort.empty())
                         {
-                            if (((valueAbort == ABORT_TRUE) && value) ||
-                                ((valueAbort == ABORT_FALSE) && !value))
+                            if (((valueAbort == ABORT_TRUE) && value) || ((valueAbort == ABORT_FALSE) && !value))
                             {
                                 abortStruct = true;
                             }
@@ -341,8 +333,8 @@ namespace finalmq {
                 }
                 if (ok)
                 {
-                    const MetaStruct* stru = MetaDataGlobal::instance().getStruct(field->typeName);
-                    if (!stru)
+                    const MetaStruct* stru1 = MetaDataGlobal::instance().getStruct(field->typeName);
+                    if (!stru1)
                     {
                         m_visitor.notifyError(reinterpret_cast<const char*>(m_ptr), "typename not found");
                         m_visitor.finished();
@@ -351,7 +343,7 @@ namespace finalmq {
                     else
                     {
                         m_visitor.enterStruct(*field);
-                        ok = parseStructIntern(*stru, false);
+                        ok = parseStructIntern(*stru1, false);
                         m_visitor.exitStruct(*field);
                     }
                 }
@@ -625,9 +617,9 @@ namespace finalmq {
                             std::vector<std::int8_t> value8;
                             ok = parse(value);
                             value.resize(value8.size());
-                            for (size_t i = 0; i < value8.size(); ++i)
+                            for (size_t n = 0; n < value8.size(); ++n)
                             {
-                                value[i] = static_cast<std::int32_t>(value8[i]);
+                                value[n] = static_cast<std::int32_t>(value8[n]);
                             }
                         }
                         else if (bits == BITS_16)
@@ -635,9 +627,9 @@ namespace finalmq {
                             std::vector<std::int16_t> value16;
                             ok = parse(value);
                             value.resize(value16.size());
-                            for (size_t i = 0; i < value16.size(); ++i)
+                            for (size_t n = 0; n < value16.size(); ++n)
                             {
-                                value[i] = static_cast<std::int32_t>(value16[i]);
+                                value[n] = static_cast<std::int32_t>(value16[n]);
                             }
                         }
                         if (ok)
@@ -657,407 +649,401 @@ namespace finalmq {
             default:
                 assert(false);
                 break;
-            }
-
-            if ((index == INDEX_ABORTSTRUCT) || (index >= numberOfFields))
-            {
-                abortStruct = true;
-            }
         }
 
-        return ok;
-    }
-
-
-    bool ParserQt::parse(std::int8_t& value)
-    {
-        return parse(*reinterpret_cast<std::uint8_t*>(&value));
-    }
-
-    bool ParserQt::parse(std::uint8_t& value)
-    {
-        if (m_size >= static_cast<ssize_t>(sizeof(std::uint8_t)))
+        if ((index == INDEX_ABORTSTRUCT) || (index >= numberOfFields))
         {
-            assert(m_ptr);
-            value = *m_ptr;
-            ++m_ptr;
-            --m_size;
-            return true;
-        }
-        else
-        {
-            m_ptr = nullptr;
-            m_size = 0;
-            return false;
+            abortStruct = true;
         }
     }
 
-    bool ParserQt::parse(std::int16_t& value)
+    return ok;
+}
+
+bool ParserQt::parse(std::int8_t& value)
+{
+    return parse(*reinterpret_cast<std::uint8_t*>(&value));
+}
+
+bool ParserQt::parse(std::uint8_t& value)
+{
+    if (m_size >= static_cast<ssize_t>(sizeof(std::uint8_t)))
     {
-        return parse(*reinterpret_cast<std::uint16_t*>(&value));
+        assert(m_ptr);
+        value = *m_ptr;
+        ++m_ptr;
+        --m_size;
+        return true;
     }
-
-    bool ParserQt::parse(std::uint16_t& value)
+    else
     {
-        if (m_size >= static_cast<ssize_t>(sizeof(std::uint16_t)))
-        {
-            assert(m_ptr);
-            value = static_cast<std::uint16_t>(*m_ptr) << 8;
-            ++m_ptr;
-            value |= static_cast<std::uint16_t>(*m_ptr);
-            ++m_ptr;
-            m_size -= sizeof(std::uint16_t);
-            return true;
-        }
-        else
-        {
-            m_ptr = nullptr;
-            m_size = 0;
-            return false;
-        }
+        m_ptr = nullptr;
+        m_size = 0;
+        return false;
     }
+}
 
-    bool ParserQt::parse(std::int32_t& value)
+bool ParserQt::parse(std::int16_t& value)
+{
+    return parse(*reinterpret_cast<std::uint16_t*>(&value));
+}
+
+bool ParserQt::parse(std::uint16_t& value)
+{
+    if (m_size >= static_cast<ssize_t>(sizeof(std::uint16_t)))
     {
-        return parse(*reinterpret_cast<std::uint32_t*>(&value));
+        assert(m_ptr);
+        value = static_cast<std::uint16_t>(static_cast<std::uint16_t>(*m_ptr) << 8);
+        ++m_ptr;
+        value = static_cast<std::uint16_t>(value | static_cast<std::uint16_t>(*m_ptr));
+        ++m_ptr;
+        m_size -= sizeof(std::uint16_t);
+        return true;
     }
-
-    bool ParserQt::parse(std::uint32_t& value)
+    else
     {
-        if (m_size >= static_cast<ssize_t>(sizeof(std::uint32_t)))
-        {
-            assert(m_ptr);
-            value = static_cast<std::uint32_t>(*m_ptr) << 24;
-            ++m_ptr;
-            value |= static_cast<std::uint32_t>(*m_ptr) << 16;
-            ++m_ptr;
-            value |= static_cast<std::uint32_t>(*m_ptr) << 8;
-            ++m_ptr;
-            value |= static_cast<std::uint32_t>(*m_ptr);
-            ++m_ptr;
-            m_size -= sizeof(std::uint32_t);
-            return true;
-        }
-        else
-        {
-            m_ptr = nullptr;
-            m_size = 0;
-            return false;
-        }
+        m_ptr = nullptr;
+        m_size = 0;
+        return false;
     }
+}
 
-    bool ParserQt::parse(std::int64_t& value)
+bool ParserQt::parse(std::int32_t& value)
+{
+    return parse(*reinterpret_cast<std::uint32_t*>(&value));
+}
+
+bool ParserQt::parse(std::uint32_t& value)
+{
+    if (m_size >= static_cast<ssize_t>(sizeof(std::uint32_t)))
     {
-        return parse(*reinterpret_cast<std::uint64_t*>(&value));
+        assert(m_ptr);
+        value = static_cast<std::uint32_t>(*m_ptr) << 24;
+        ++m_ptr;
+        value |= static_cast<std::uint32_t>(*m_ptr) << 16;
+        ++m_ptr;
+        value |= static_cast<std::uint32_t>(*m_ptr) << 8;
+        ++m_ptr;
+        value |= static_cast<std::uint32_t>(*m_ptr);
+        ++m_ptr;
+        m_size -= sizeof(std::uint32_t);
+        return true;
     }
-
-    bool ParserQt::parse(std::uint64_t& value)
+    else
     {
-        if (m_size >= static_cast<ssize_t>(sizeof(std::uint64_t)))
-        {
-            assert(m_ptr);
-            value = static_cast<std::uint64_t>(*m_ptr) << 56;
-            ++m_ptr;
-            value |= static_cast<std::uint64_t>(*m_ptr) << 48;
-            ++m_ptr;
-            value |= static_cast<std::uint64_t>(*m_ptr) << 40;
-            ++m_ptr;
-            value |= static_cast<std::uint64_t>(*m_ptr) << 32;
-            ++m_ptr;
-            value |= static_cast<std::uint64_t>(*m_ptr) << 24;
-            ++m_ptr;
-            value |= static_cast<std::uint64_t>(*m_ptr) << 16;
-            ++m_ptr;
-            value |= static_cast<std::uint64_t>(*m_ptr) << 8;
-            ++m_ptr;
-            value |= static_cast<std::uint64_t>(*m_ptr);
-            ++m_ptr;
-            m_size -= sizeof(std::uint64_t);
-            return true;
-        }
-        else
-        {
-            m_ptr = nullptr;
-            m_size = 0;
-            return false;
-        }
+        m_ptr = nullptr;
+        m_size = 0;
+        return false;
     }
+}
 
+bool ParserQt::parse(std::int64_t& value)
+{
+    return parse(*reinterpret_cast<std::uint64_t*>(&value));
+}
 
-    bool ParserQt::parse(float& value)
+bool ParserQt::parse(std::uint64_t& value)
+{
+    if (m_size >= static_cast<ssize_t>(sizeof(std::uint64_t)))
     {
-        union
-        {
-            std::uint64_t v;
-            double d;
-        } u;
-        const bool ok = parse(u.v);
-        value = static_cast<float>(u.d);
-        return ok;
+        assert(m_ptr);
+        value = static_cast<std::uint64_t>(*m_ptr) << 56;
+        ++m_ptr;
+        value |= static_cast<std::uint64_t>(*m_ptr) << 48;
+        ++m_ptr;
+        value |= static_cast<std::uint64_t>(*m_ptr) << 40;
+        ++m_ptr;
+        value |= static_cast<std::uint64_t>(*m_ptr) << 32;
+        ++m_ptr;
+        value |= static_cast<std::uint64_t>(*m_ptr) << 24;
+        ++m_ptr;
+        value |= static_cast<std::uint64_t>(*m_ptr) << 16;
+        ++m_ptr;
+        value |= static_cast<std::uint64_t>(*m_ptr) << 8;
+        ++m_ptr;
+        value |= static_cast<std::uint64_t>(*m_ptr);
+        ++m_ptr;
+        m_size -= sizeof(std::uint64_t);
+        return true;
     }
-
-    bool ParserQt::parse(double& value)
+    else
     {
-        union
-        {
-            std::uint64_t v;
-            double d;
-        } u;
-        const bool ok = parse(u.v);
-        value = u.d;
-        return ok;
+        m_ptr = nullptr;
+        m_size = 0;
+        return false;
     }
+}
 
-
-    bool ParserQt::parse(std::string& str)
+bool ParserQt::parse(float& value)
+{
+    union
     {
-        str.clear();
+        std::uint64_t v;
+        double d;
+    } u;
+    const bool ok = parse(u.v);
+    value = static_cast<float>(u.d);
+    return ok;
+}
 
-        std::u16string utf16;
+bool ParserQt::parse(double& value)
+{
+    union
+    {
+        std::uint64_t v;
+        double d;
+    } u;
+    const bool ok = parse(u.v);
+    value = u.d;
+    return ok;
+}
 
-        std::uint32_t sizeBytes;
-        bool ok = parse(sizeBytes);
-        if (!ok)
-        {
-            return false;
-        }
-        if (sizeBytes == 0xFFFFFFFF || sizeBytes == 0)
-        {
-            return true;
-        }
+bool ParserQt::parse(std::string& str)
+{
+    str.clear();
 
-        if (m_size >= static_cast<ssize_t>(sizeBytes))
-        {
-            std::uint32_t sizeChar = sizeBytes / 2;
-            utf16.resize(sizeChar);
-            for (std::uint32_t i = 0; i < sizeChar; ++i)
-            {
-                char16_t c = static_cast<char16_t>(*m_ptr) << 8;
-                ++m_ptr;
-                c |= static_cast<char16_t>(*m_ptr);
-                ++m_ptr;
-                utf16[i] = c;
-            }
-            str = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(utf16);
-            m_size -= sizeBytes;
-            return true;
-        }
-        else
-        {
-            m_ptr = nullptr;
-            m_size = 0;
-            return false;
-        }
+    std::u16string utf16;
+
+    std::uint32_t sizeBytes;
+    bool ok = parse(sizeBytes);
+    if (!ok)
+    {
+        return false;
     }
-
-
-    bool ParserQt::parse(Bytes& value)
+    if (sizeBytes == 0xFFFFFFFF || sizeBytes == 0)
     {
-        value.clear();
-
-        std::uint32_t size;
-        bool ok = parse(size);
-        if (!ok)
-        {
-            return false;
-        }
-        if (size == 0xFFFFFFFF || size == 0)
-        {
-            return true;
-        }
-
-        if (m_size >= static_cast<ssize_t>(size))
-        {
-            assert(m_ptr);
-            value = Bytes(m_ptr, m_ptr + size);
-            m_ptr += size;
-            m_size -= size;
-            return true;
-        }
-        else
-        {
-            m_ptr = nullptr;
-            m_size = 0;
-            return false;
-        }
-    }
-
-
-    bool ParserQt::parseArrayByte(const char*& buffer, ssize_t& size)
-    {
-        buffer = nullptr;
-        size = 0;
-
-        std::uint32_t s;
-        bool ok = parse(s);
-        if (!ok)
-        {
-            return false;
-        }
-        if (s == 0xFFFFFFFF || s == 0)
-        {
-            return true;
-        }
-
-        size = static_cast<ssize_t>(s);
-
-        if (m_size >= size)
-        {
-            assert(m_ptr);
-            buffer = reinterpret_cast<const char*>(m_ptr);
-            m_ptr += size;
-            m_size -= size;
-            return true;
-        }
-        else
-        {
-            m_ptr = nullptr;
-            m_size = 0;
-            return false;
-        }
-    }
-
-    bool ParserQt::parseArrayBool(std::vector<bool>& value)
-    {
-        value.clear();
-
-        std::uint32_t size;
-        bool ok = parse(size);
-        if (!ok)
-        {
-            return false;
-        }
-
-        if (size == 0xFFFFFFFF || size == 0)
-        {
-            return true;
-        }
-
-        value.resize(size);
-
-        const ssize_t sizeBytes = (size + 7) / 8;
-
-        if (m_size >= sizeBytes)
-        {
-            assert(m_ptr);
-            for (std::uint32_t i = 0; i < size; ++i)
-            {
-                const std::uint32_t indexBytes = i / 8;
-                const std::uint32_t indexBits = i % 8;
-                bool v = (m_ptr[indexBytes] & (1 << indexBits)) ? true : false;
-                value[i] = v;
-            }
-            m_ptr += sizeBytes;
-            m_size -= sizeBytes;
-            return true;
-        }
-        else
-        {
-            m_ptr = nullptr;
-            m_size = 0;
-            return false;
-        }
-    }
-
-    template<class T>
-    bool ParserQt::parse(std::vector<T>& value)
-    {
-        value.clear();
-
-        std::uint32_t size;
-        bool ok = parse(size);
-        if (!ok)
-        {
-            return false;
-        }
-
-        if (size == 0)
-        {
-            return true;
-        }
-
-        value.resize(size);
-
-        for (std::uint32_t i = 0; i < size; ++i)
-        {
-            bool ok = parse(value[i]);
-            if (!ok)
-            {
-                return false;
-            }
-        }
         return true;
     }
 
-    bool ParserQt::parseArrayStruct(const MetaField& field)
+    if (m_size >= static_cast<ssize_t>(sizeBytes))
     {
-        if (m_ptr == nullptr)
+        std::uint32_t sizeChar = sizeBytes / 2;
+        utf16.resize(sizeChar);
+        for (std::uint32_t i = 0; i < sizeChar; ++i)
         {
-            return false;
+            char16_t c = static_cast<char16_t>(static_cast<char16_t>(*m_ptr) << 8);
+            ++m_ptr;
+            c = static_cast<char16_t>(c | static_cast<char16_t>(*m_ptr));
+            ++m_ptr;
+            utf16[i] = c;
         }
+        str = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(utf16);
+        m_size -= sizeBytes;
+        return true;
+    }
+    else
+    {
+        m_ptr = nullptr;
+        m_size = 0;
+        return false;
+    }
+}
 
-        std::uint32_t size;
-        bool ok = parse(size);
+bool ParserQt::parse(Bytes& value)
+{
+    value.clear();
+
+    std::uint32_t size;
+    bool ok = parse(size);
+    if (!ok)
+    {
+        return false;
+    }
+    if (size == 0xFFFFFFFF || size == 0)
+    {
+        return true;
+    }
+
+    if (m_size >= static_cast<ssize_t>(size))
+    {
+        assert(m_ptr);
+        value = Bytes(m_ptr, m_ptr + size);
+        m_ptr += size;
+        m_size -= size;
+        return true;
+    }
+    else
+    {
+        m_ptr = nullptr;
+        m_size = 0;
+        return false;
+    }
+}
+
+bool ParserQt::parseArrayByte(const char*& buffer, ssize_t& size)
+{
+    buffer = nullptr;
+    size = 0;
+
+    std::uint32_t s;
+    bool ok = parse(s);
+    if (!ok)
+    {
+        return false;
+    }
+    if (s == 0xFFFFFFFF || s == 0)
+    {
+        return true;
+    }
+
+    size = static_cast<ssize_t>(s);
+
+    if (m_size >= size)
+    {
+        assert(m_ptr);
+        buffer = reinterpret_cast<const char*>(m_ptr);
+        m_ptr += size;
+        m_size -= size;
+        return true;
+    }
+    else
+    {
+        m_ptr = nullptr;
+        m_size = 0;
+        return false;
+    }
+}
+
+bool ParserQt::parseArrayBool(std::vector<bool>& value)
+{
+    value.clear();
+
+    std::uint32_t size;
+    bool ok = parse(size);
+    if (!ok)
+    {
+        return false;
+    }
+
+    if (size == 0xFFFFFFFF || size == 0)
+    {
+        return true;
+    }
+
+    value.resize(size);
+
+    const ssize_t sizeBytes = (size + 7) / 8;
+
+    if (m_size >= sizeBytes)
+    {
+        assert(m_ptr);
+        for (std::uint32_t i = 0; i < size; ++i)
+        {
+            const std::uint32_t indexBytes = i / 8;
+            const std::uint32_t indexBits = i % 8;
+            bool v = (m_ptr[indexBytes] & (1 << indexBits)) ? true : false;
+            value[i] = v;
+        }
+        m_ptr += sizeBytes;
+        m_size -= sizeBytes;
+        return true;
+    }
+    else
+    {
+        m_ptr = nullptr;
+        m_size = 0;
+        return false;
+    }
+}
+
+template<class T>
+bool ParserQt::parse(std::vector<T>& value)
+{
+    value.clear();
+
+    std::uint32_t size;
+    bool ok = parse(size);
+    if (!ok)
+    {
+        return false;
+    }
+
+    if (size == 0)
+    {
+        return true;
+    }
+
+    value.resize(size);
+
+    for (std::uint32_t i = 0; i < size; ++i)
+    {
+        ok = parse(value[i]);
         if (!ok)
         {
             return false;
         }
-
-        const MetaStruct* stru = MetaDataGlobal::instance().getStruct(field);
-        if (!stru)
-        {
-            m_visitor.notifyError(reinterpret_cast<const char*>(m_ptr), "typename not found");
-            return false;
-        }
-
-        const MetaField* fieldWithoutArray = field.fieldWithoutArray;
-        assert(fieldWithoutArray);
-        m_visitor.enterArrayStruct(field);
-        for (std::uint32_t i = 0; i < size && ok; ++i)
-        {
-            m_visitor.enterStruct(*fieldWithoutArray);
-            ok = parseStructIntern(*stru, false);
-            m_visitor.exitStruct(*fieldWithoutArray);
-        }
-        m_visitor.exitArrayStruct(field);
-        
-        return (m_ptr != nullptr);
     }
+    return true;
+}
 
-    bool ParserQt::parseQVariantHeader(const MetaField& /*field*/)
+bool ParserQt::parseArrayStruct(const MetaField& field)
+{
+    if (m_ptr == nullptr)
     {
-        std::uint32_t typeId;
-        bool ok = parse(typeId);
-        if (ok)
-        {
-            std::uint8_t isNull;
-            ok = parse(isNull);
-        }
-        if (ok)
-        {
-            if (typeId == static_cast<std::uint32_t>(QtType::User))
-            {
-                Bytes typeName;
-                ok = parse(typeName);
-            }
-        }
-        return ok;
+        return false;
     }
 
-    void ParserQt::checkIndex(const MetaField& field, std::int64_t value, std::int64_t& index)
+    std::uint32_t size;
+    bool ok = parse(size);
+    if (!ok)
     {
-        if ((field.flags & MetaFieldFlags::METAFLAG_INDEX) != 0)
-        {
-            if (value < 0)
-            {
-                index = INDEX_ABORTSTRUCT;
-            }
-            else
-            {
-                index = field.index + 1 + value;
-            }
-        }
+        return false;
     }
 
+    const MetaStruct* stru = MetaDataGlobal::instance().getStruct(field);
+    if (!stru)
+    {
+        m_visitor.notifyError(reinterpret_cast<const char*>(m_ptr), "typename not found");
+        return false;
+    }
 
-}   // namespace finalmq
+    const MetaField* fieldWithoutArray = field.fieldWithoutArray;
+    assert(fieldWithoutArray);
+    m_visitor.enterArrayStruct(field);
+    for (std::uint32_t i = 0; i < size && ok; ++i)
+    {
+        m_visitor.enterStruct(*fieldWithoutArray);
+        ok = parseStructIntern(*stru, false);
+        m_visitor.exitStruct(*fieldWithoutArray);
+    }
+    m_visitor.exitArrayStruct(field);
+
+    return (m_ptr != nullptr);
+}
+
+bool ParserQt::parseQVariantHeader(const MetaField& /*field*/)
+{
+    std::uint32_t typeId;
+    bool ok = parse(typeId);
+    if (ok)
+    {
+        std::uint8_t isNull;
+        ok = parse(isNull);
+    }
+    if (ok)
+    {
+        if (typeId == static_cast<std::uint32_t>(QtType::User))
+        {
+            Bytes typeName;
+            ok = parse(typeName);
+        }
+    }
+    return ok;
+}
+
+void ParserQt::checkIndex(const MetaField& field, std::int64_t value, std::int64_t& index)
+{
+    if ((field.flags & MetaFieldFlags::METAFLAG_INDEX) != 0)
+    {
+        if (value < 0)
+        {
+            index = INDEX_ABORTSTRUCT;
+        }
+        else
+        {
+            index = field.index + 1 + value;
+        }
+    }
+}
+
+} // namespace finalmq

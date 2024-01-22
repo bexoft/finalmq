@@ -22,15 +22,15 @@
 
 #pragma once
 
-#include "finalmq/streamconnection/IMessage.h"
-#include "finalmq/protocolsession/IProtocol.h"
-#include "finalmq/helpers/FmqDefines.h"
-
 #include <deque>
 #include <functional>
 
-namespace finalmq {
+#include "finalmq/helpers/FmqDefines.h"
+#include "finalmq/protocolsession/IProtocol.h"
+#include "finalmq/streamconnection/IMessage.h"
 
+namespace finalmq
+{
 class SYMBOLEXP ProtocolFixHeaderHelper
 {
 public:
@@ -39,6 +39,10 @@ public:
     bool receive(const SocketPtr& socket, int bytesToRead, std::deque<IMessagePtr>& messages);
 
 private:
+    ProtocolFixHeaderHelper(const ProtocolFixHeaderHelper&) = delete;
+    ProtocolFixHeaderHelper(ProtocolFixHeaderHelper&&) = delete;
+    const ProtocolFixHeaderHelper& operator=(const ProtocolFixHeaderHelper&) = delete;
+    const ProtocolFixHeaderHelper& operator=(ProtocolFixHeaderHelper&&) = delete;
 
     enum class State
     {
@@ -52,17 +56,17 @@ private:
     void handlePayloadReceived();
     void clearState();
 
-    std::string m_header;
-    State       m_state = State::WAITFORHEADER;
-    ssize_t     m_sizeCurrent = 0;
+    std::string m_header{};
+    State m_state = State::WAITFORHEADER;
+    ssize_t m_sizeCurrent = 0;
 
-    ssize_t     m_sizePayload = 0;
-    IMessagePtr m_message;
-    char*       m_buffer = nullptr;
+    ssize_t m_sizePayload = 0;
+    IMessagePtr m_message{};
+    char* m_buffer = nullptr;
 
     std::deque<IMessagePtr>* m_messages = nullptr;
 
-    std::function<int(const std::string& header)>   m_funcGetPayloadSize;
+    std::function<int(const std::string& header)> m_funcGetPayloadSize;
 };
 
-}   // namespace finalmq
+} // namespace finalmq

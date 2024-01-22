@@ -22,19 +22,16 @@
 
 #pragma once
 
-#include "finalmq/streamconnection/IMessage.h"
-#include "finalmq/protocolsession/IProtocol.h"
 #include "finalmq/protocols/protocolhelpers/ProtocolFixHeaderHelper.h"
+#include "finalmq/protocolsession/IProtocol.h"
+#include "finalmq/streamconnection/IMessage.h"
 
-
-
-namespace finalmq {
-
-
+namespace finalmq
+{
 class SYMBOLEXP ProtocolHeaderBinarySize : public IProtocol
 {
 public:
-    static const std::uint32_t PROTOCOL_ID;           // 2
+    static const std::uint32_t PROTOCOL_ID; // 2
     static const std::string PROTOCOL_NAME; // headersize
 
     ProtocolHeaderBinarySize();
@@ -67,20 +64,18 @@ private:
     virtual IProtocolSessionDataPtr createProtocolSessionData() override;
     virtual void setProtocolSessionData(const IProtocolSessionDataPtr& protocolSessionData) override;
 
-    std::weak_ptr<IProtocolCallback>    m_callback;
-    IStreamConnectionPtr                m_connection;
-    ProtocolFixHeaderHelper             m_headerHelper;
-    mutable std::mutex                  m_mutex;
+    std::weak_ptr<IProtocolCallback> m_callback{};
+    IStreamConnectionPtr m_connection{};
+    ProtocolFixHeaderHelper m_headerHelper;
+    mutable std::mutex m_mutex{};
 };
-
 
 class SYMBOLEXP ProtocolHeaderBinarySizeFactory : public IProtocolFactory
 {
 public:
-
 private:
     // IProtocolFactory
     virtual IProtocolPtr createProtocol(const Variant& data) override;
 };
 
-}   // namespace finalmq
+} // namespace finalmq

@@ -22,14 +22,14 @@
 
 #pragma once
 
-
-#include "finalmq/helpers/SocketDescriptor.h"
 #include <vector>
+
 #include <assert.h>
 
+#include "finalmq/helpers/SocketDescriptor.h"
 
-namespace finalmq {
-
+namespace finalmq
+{
 struct DescriptorInfo
 {
     void clear()
@@ -46,7 +46,6 @@ struct DescriptorInfo
     bool disconnected = false;
     std::int32_t bytesToRead = 0;
 };
-
 
 class DescriptorInfos
 {
@@ -74,7 +73,7 @@ public:
         return m_size;
     }
 
-    const DescriptorInfo& operator [](ssize_t ix) const
+    const DescriptorInfo& operator[](ssize_t ix) const
     {
         assert(ix < m_size);
         assert(ix < static_cast<int>(m_descriptorInfos.size()));
@@ -82,11 +81,9 @@ public:
     }
 
 private:
-    ssize_t                     m_size = 0;
-    std::vector<DescriptorInfo> m_descriptorInfos;
+    ssize_t m_size{0};
+    std::vector<DescriptorInfo> m_descriptorInfos{};
 };
-
-
 
 struct PollerResult
 {
@@ -108,11 +105,10 @@ private:
     PollerResult(PollerResult&) = delete;
 };
 
-
-
 struct IPoller
 {
-    virtual ~IPoller() {}
+    virtual ~IPoller()
+    {}
     virtual void init() = 0;
     virtual void addSocket(const SocketDescriptorPtr& fd) = 0;
     virtual void addSocketEnableRead(const SocketDescriptorPtr& fd) = 0;
@@ -127,4 +123,4 @@ struct IPoller
 
 typedef std::shared_ptr<IPoller> IPollerPtr;
 
-}   // namespace finalmq
+} // namespace finalmq

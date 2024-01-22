@@ -22,31 +22,23 @@
 
 #include "finalmq/remoteentity/RemoteEntityFormatProto.h"
 
+#include "finalmq/helpers/ModulenameFinalmq.h"
+#include "finalmq/remoteentity/entitydata.fmq.h"
+#include "finalmq/serializeproto/ParserProto.h"
 #include "finalmq/serializeproto/SerializerProto.h"
 #include "finalmq/serializestruct/ParserStruct.h"
-
-#include "finalmq/serializeproto/ParserProto.h"
 #include "finalmq/serializestruct/SerializerStruct.h"
 #include "finalmq/serializestruct/StructFactoryRegistry.h"
 
-#include "finalmq/remoteentity/entitydata.fmq.h"
-
-#include "finalmq/helpers/ModulenameFinalmq.h"
-
-
-using finalmq::MsgMode;
 using finalmq::Header;
+using finalmq::MsgMode;
 
-
-
-namespace finalmq {
-
-
+namespace finalmq
+{
 const int RemoteEntityFormatProto::CONTENT_TYPE = 1;
 const std::string RemoteEntityFormatProto::CONTENT_TYPE_NAME = "protobuf";
 
 //static const std::string FMQ_METHOD = "fmq_method";
-
 
 struct RegisterFormatProto
 {
@@ -56,9 +48,7 @@ struct RegisterFormatProto
     }
 } g_registerFormatProto;
 
-
-#define PROTOBUFBLOCKSIZE   512
-
+#define PROTOBUFBLOCKSIZE 512
 
 void RemoteEntityFormatProto::serialize(const IProtocolSessionPtr& session, IMessage& message, const Header& header, const StructBase* structBase)
 {
@@ -81,7 +71,6 @@ void RemoteEntityFormatProto::serialize(const IProtocolSessionPtr& session, IMes
 
     serializeData(session, message, structBase);
 }
-
 
 void RemoteEntityFormatProto::serializeData(const IProtocolSessionPtr& /*session*/, IMessage& message, const StructBase* structBase)
 {
@@ -117,7 +106,6 @@ void RemoteEntityFormatProto::serializeData(const IProtocolSessionPtr& /*session
     *bufferSizePayload = static_cast<unsigned char>(uSizePayload >> 24);
 }
 
-
 std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus)
 {
     formatStatus = 0;
@@ -133,13 +121,13 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const IProtocolSessio
     ssize_t sizeHeader = 0;
     if (sizeBuffer >= 4)
     {
-        sizeHeader = (unsigned int)(unsigned char)*buffer;
+        sizeHeader = static_cast<unsigned int>(static_cast<unsigned char>(*buffer));
         ++buffer;
-        sizeHeader |= ((unsigned int)(unsigned char)*buffer) << 8;
+        sizeHeader |= (static_cast<unsigned int>(static_cast<unsigned char>(*buffer))) << 8;
         ++buffer;
-        sizeHeader |= ((unsigned int)(unsigned char)*buffer) << 16;
+        sizeHeader |= (static_cast<unsigned int>(static_cast<unsigned char>(*buffer))) << 16;
         ++buffer;
-        sizeHeader |= ((unsigned int)(unsigned char)*buffer) << 24;
+        sizeHeader |= (static_cast<unsigned int>(static_cast<unsigned char>(*buffer))) << 24;
         ++buffer;
     }
     bool ok = false;
@@ -175,7 +163,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const IProtocolSessio
         if (header.path.empty() && !header.type.empty())
         {
             header.path = header.type;
-        }   
+        }
         else if (!header.path.empty() && header.type.empty())
         {
             header.type = header.path;
@@ -189,14 +177,12 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const IProtocolSessio
         ssize_t sizeData = sizePayload - sizeHeader;
         buffer += sizeHeader;
 
-        BufferRef bufferRefData = { buffer, sizeData };
+        BufferRef bufferRefData = {buffer, sizeData};
         data = parseData(session, bufferRefData, storeRawData, header.type, formatStatus);
     }
 
     return data;
 }
-
-
 
 std::shared_ptr<StructBase> RemoteEntityFormatProto::parseData(const IProtocolSessionPtr& /*session*/, const BufferRef& bufferRef, bool storeRawData, std::string& type, int& formatStatus)
 {
@@ -224,13 +210,13 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parseData(const IProtocolSe
         ssize_t sizeDataInStream = 0;
         if (ok)
         {
-            sizeDataInStream = (unsigned int)(unsigned char)*buffer;
+            sizeDataInStream = static_cast<unsigned int>(static_cast<unsigned char>(*buffer));
             ++buffer;
-            sizeDataInStream |= ((unsigned int)(unsigned char)*buffer) << 8;
+            sizeDataInStream |= (static_cast<unsigned int>(static_cast<unsigned char>(*buffer))) << 8;
             ++buffer;
-            sizeDataInStream |= ((unsigned int)(unsigned char)*buffer) << 16;
+            sizeDataInStream |= (static_cast<unsigned int>(static_cast<unsigned char>(*buffer))) << 16;
             ++buffer;
-            sizeDataInStream |= ((unsigned int)(unsigned char)*buffer) << 24;
+            sizeDataInStream |= (static_cast<unsigned int>(static_cast<unsigned char>(*buffer))) << 24;
             ++buffer;
             sizeRemaining -= 4;
         }
@@ -270,7 +256,4 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parseData(const IProtocolSe
     return data;
 }
 
-
-
-
-}   // namespace finalmq
+} // namespace finalmq

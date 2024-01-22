@@ -22,13 +22,11 @@
 
 #pragma once
 
-#include "finalmq/streamconnection/IMessage.h"
 #include "finalmq/protocolsession/IProtocol.h"
+#include "finalmq/streamconnection/IMessage.h"
 
-
-namespace finalmq {
-
-
+namespace finalmq
+{
 class SYMBOLEXP ProtocolStream : public IProtocol
 {
 public:
@@ -65,19 +63,17 @@ private:
     virtual IProtocolSessionDataPtr createProtocolSessionData() override;
     virtual void setProtocolSessionData(const IProtocolSessionDataPtr& protocolSessionData) override;
 
-    std::weak_ptr<IProtocolCallback>    m_callback;
-    IStreamConnectionPtr                m_connection;
-    mutable std::mutex                  m_mutex;
+    std::weak_ptr<IProtocolCallback> m_callback{};
+    IStreamConnectionPtr m_connection{};
+    mutable std::mutex m_mutex{};
 };
-
 
 class SYMBOLEXP ProtocolStreamFactory : public IProtocolFactory
 {
 public:
-
 private:
     // IProtocolFactory
     virtual IProtocolPtr createProtocol(const Variant& data) override;
 };
 
-}   // namespace finalmq
+} // namespace finalmq

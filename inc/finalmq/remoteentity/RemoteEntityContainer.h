@@ -22,16 +22,16 @@
 
 #pragma once
 
-#include "finalmq/remoteentity/RemoteEntity.h"
 #include "finalmq/remoteentity/FileTransferReply.h"
+#include "finalmq/remoteentity/RemoteEntity.h"
 
-
-namespace finalmq {
-
+namespace finalmq
+{
 class SYMBOLEXP ConnectionEvent
 {
 public:
-    enum Enum : std::int32_t {
+    enum Enum : std::int32_t
+    {
         CONNECTIONEVENT_CONNECTED = 0,
         CONNECTIONEVENT_DISCONNECTED = 1,
         CONNECTIONEVENT_SOCKET_CONNECTED = 2,
@@ -42,7 +42,7 @@ public:
     ConnectionEvent(Enum en);
     operator const Enum&() const;
     operator Enum&();
-    const ConnectionEvent& operator =(Enum en);
+    const ConnectionEvent& operator=(Enum en);
     const std::string& toName() const;
     const std::string& toString() const;
     void fromString(const std::string& name);
@@ -52,16 +52,15 @@ private:
     static const EnumInfo _enumInfo;
 };
 
-
 typedef std::function<void(const SessionInfo& session, ConnectionEvent connectionEvent)> FuncConnectionEvent;
-
 
 struct IRemoteEntityContainer
 {
     /**
      * @brief ~IRemoteEntityContainer is the virtual destructor of the interface.
      */
-    virtual ~IRemoteEntityContainer() {}
+    virtual ~IRemoteEntityContainer()
+    {}
 
     /**
      * @brief init initializes the instance. Call it once after constructing the object.
@@ -177,13 +176,7 @@ struct IRemoteEntityContainer
 
 typedef std::shared_ptr<IRemoteEntityContainer> IRemoteEntityContainerPtr;
 
-
-
-
-
-class SYMBOLEXP RemoteEntityContainer : public IRemoteEntityContainer
-                                      , private IProtocolSessionCallback
-                                      , private std::enable_shared_from_this<RemoteEntityContainer>
+class SYMBOLEXP RemoteEntityContainer : public IRemoteEntityContainer, private IProtocolSessionCallback, private std::enable_shared_from_this<RemoteEntityContainer>
 {
 public:
     RemoteEntityContainer();
@@ -199,7 +192,7 @@ public:
     virtual IExecutorPtr getExecutor() const override;
 
     virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, std::string name = "") override;
-//    virtual void addPureDataPaths(std::vector<std::string>& paths) override;
+    //    virtual void addPureDataPaths(std::vector<std::string>& paths) override;
     virtual void unregisterEntity(EntityId entityId) override;
     virtual void registerConnectionEvent(FuncConnectionEvent funcConnectionEvent) override;
 
@@ -219,25 +212,25 @@ private:
     SessionInfo createSessionInfo(const IProtocolSessionPtr& session);
     inline void triggerConnectionEvent(const SessionInfo& session, ConnectionEvent connectionEvent) const;
     void deinit();
-//    bool isPureDataPath(const std::string& path);
+    //    bool isPureDataPath(const std::string& path);
     void subscribeEntityNames(const IProtocolSessionPtr& session);
     void subscribeSessions(std::string name);
 
-    const std::unique_ptr<IProtocolSessionContainer>            m_protocolSessionContainer;
-    std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>  m_name2entity;
-    std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>>     m_entityId2entity;
-    std::unordered_map<EntityId, std::string>                   m_entityId2name;
-    std::shared_ptr<FuncConnectionEvent>                        m_funcConnectionEvent;
-    bool                                                        m_storeRawDataInReceiveStruct = false;
-//    std::list<std::string>                                      m_pureDataPaths;
-//    std::list<std::string>                                      m_pureDataPathPrefixes;
-    const IExecutorPtr                                          m_executor;
+    const std::unique_ptr<IProtocolSessionContainer> m_protocolSessionContainer{};
+    std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>> m_name2entity{};
+    std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>> m_entityId2entity{};
+    std::unordered_map<EntityId, std::string> m_entityId2name{};
+    std::shared_ptr<FuncConnectionEvent> m_funcConnectionEvent{};
+    bool m_storeRawDataInReceiveStruct = false;
+    //    std::list<std::string>                                      m_pureDataPaths{};
+    //    std::list<std::string>                                      m_pureDataPathPrefixes{};
+    const IExecutorPtr m_executor;
 
-    std::atomic_int64_t                                         m_entitiesChanged = {};
-    static std::atomic_uint64_t                                 m_nextContainerId;
-    const std::uint64_t                                         m_containerId;
+    std::atomic_int64_t m_entitiesChanged = {};
+    static std::atomic_uint64_t m_nextContainerId;
+    const std::uint64_t m_containerId{};
 
-    mutable std::mutex                                          m_mutex;
+    mutable std::mutex m_mutex{};
 };
 
-}   // namespace finalmq
+} // namespace finalmq

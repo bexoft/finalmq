@@ -22,23 +22,23 @@
 
 #pragma once
 
-#include "IProtocolSession.h"
-
 #include <unordered_map>
 
-namespace finalmq {
+#include "IProtocolSession.h"
 
+namespace finalmq
+{
 struct IProtocolSessionPrivate;
 typedef std::shared_ptr<IProtocolSessionPrivate> IProtocolSessionPrivatePtr;
 
-
 struct IProtocolSessionList
 {
-    virtual ~IProtocolSessionList() {}
+    virtual ~IProtocolSessionList()
+    {}
     virtual std::int64_t getNextSessionId() = 0;
     virtual void addProtocolSession(IProtocolSessionPrivatePtr ProtocolSession, std::int64_t sessionId, bool verified) = 0;
     virtual void removeProtocolSession(std::int64_t sessionId) = 0;
-    virtual std::vector< IProtocolSessionPrivatePtr > getAllSessions() const = 0;
+    virtual std::vector<IProtocolSessionPrivatePtr> getAllSessions() const = 0;
     virtual IProtocolSessionPtr getSession(std::int64_t sessionId) const = 0;
     virtual IProtocolSessionPrivatePtr findSessionByName(const std::string& sessionName) const = 0;
     virtual bool setSessionName(std::int64_t sessionId, const std::string& sessionName) = 0;
@@ -46,32 +46,31 @@ struct IProtocolSessionList
 
 typedef std::shared_ptr<IProtocolSessionList> IProtocolSessionListPtr;
 
-
-
 class ProtocolSessionList : public IProtocolSessionList
 {
 public:
     ProtocolSessionList();
     virtual ~ProtocolSessionList();
+
 private:
     virtual std::int64_t getNextSessionId() override;
     virtual void addProtocolSession(IProtocolSessionPrivatePtr ProtocolSession, std::int64_t sessionId, bool verified) override;
     virtual void removeProtocolSession(std::int64_t sessionId) override;
-    virtual std::vector< IProtocolSessionPrivatePtr > getAllSessions() const override;
+    virtual std::vector<IProtocolSessionPrivatePtr> getAllSessions() const override;
     virtual IProtocolSessionPtr getSession(std::int64_t sessionId) const override;
     virtual IProtocolSessionPrivatePtr findSessionByName(const std::string& sessionName) const override;
     virtual bool setSessionName(std::int64_t sessionId, const std::string& sessionName) override;
 
     struct SessionData
     {
-        IProtocolSessionPrivatePtr  session;
-        bool                        verified = false;
-        std::string                 name;
+        IProtocolSessionPrivatePtr session{};
+        bool verified = false;
+        std::string name{};
     };
 
-    std::unordered_map<std::int64_t, SessionData>       m_connectionId2ProtocolSession;
-    static std::atomic_int64_t                          m_nextSessionId;
-    mutable std::mutex                                  m_mutex;
+    std::unordered_map<std::int64_t, SessionData> m_connectionId2ProtocolSession{};
+    static std::atomic_int64_t m_nextSessionId;
+    mutable std::mutex m_mutex{};
 };
 
-}   // namespace finalmq
+} // namespace finalmq

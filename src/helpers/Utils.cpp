@@ -21,14 +21,14 @@
 //SOFTWARE.
 
 #include "finalmq/helpers/Utils.h"
-#include "finalmq/helpers/OperatingSystem.h"
-#include <assert.h>
 
+#include <assert.h>
 #include <fcntl.h>
 
+#include "finalmq/helpers/OperatingSystem.h"
 
-namespace finalmq {
-
+namespace finalmq
+{
 void Utils::split(const std::string& src, ssize_t indexBegin, ssize_t indexEnd, char delimiter, std::vector<std::string>& dest)
 {
     while (indexBegin < indexEnd)
@@ -48,7 +48,7 @@ void Utils::split(const std::string& src, ssize_t indexBegin, ssize_t indexEnd, 
 std::string Utils::replaceAll(std::string str, const std::string& from, const std::string& to)
 {
     size_t start_pos = 0;
-    while ((start_pos = str.find(from, start_pos)) != std::string::npos) 
+    while ((start_pos = str.find(from, start_pos)) != std::string::npos)
     {
         str.replace(start_pos, from.length(), to);
         start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
@@ -64,12 +64,12 @@ int Utils::readAll(const std::string& filename, std::string& buffer)
     {
         int fd = OperatingSystem::instance().open(filename.c_str(), O_RDONLY
 #if defined(WIN32) || defined(__MINGW32__)
-            | O_BINARY
+                                                                        | O_BINARY
 #endif
         );
         if (fd >= 0)
         {
-            int size = s.st_size;
+            int size = static_cast<int>(s.st_size);
 
             buffer.resize(size);
             char* buf = const_cast<char*>(buffer.data());
@@ -91,7 +91,6 @@ int Utils::readAll(const std::string& filename, std::string& buffer)
                 }
             } while (size > 0 && res > 0);
 
-
             OperatingSystem::instance().close(fd);
         }
         else
@@ -101,7 +100,5 @@ int Utils::readAll(const std::string& filename, std::string& buffer)
     }
     return res;
 }
-
-
 
 } // namespace finalmq

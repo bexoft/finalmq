@@ -22,28 +22,28 @@
 
 #pragma once
 
-#include "finalmq/helpers/hybrid_ptr.h"
+#include <memory>
+#include <mutex>
+#include <thread>
+#include <unordered_map>
+#include <vector>
+
 #include "ConnectionData.h"
-#include "finalmq/poller/Poller.h"
 #include "Socket.h"
 #include "StreamConnection.h"
 #include "finalmq/helpers/CondVar.h"
 #include "finalmq/helpers/IExecutor.h"
+#include "finalmq/helpers/hybrid_ptr.h"
+#include "finalmq/poller/Poller.h"
 
-#include <memory>
-#include <vector>
-#include <mutex>
-#include <thread>
-#include <unordered_map>
-
-
-namespace finalmq {
-
-typedef std::function<void()>   FuncPollerLoopTimer;
+namespace finalmq
+{
+typedef std::function<void()> FuncPollerLoopTimer;
 
 struct IStreamConnectionContainer
 {
-    virtual ~IStreamConnectionContainer() {}
+    virtual ~IStreamConnectionContainer()
+    {}
 
     virtual void init(int cycleTime = 100, FuncPollerLoopTimer funcTimer = {}, int checkReconnectInterval = 1000) = 0;
     virtual int bind(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const BindProperties& bindProperties = {}) = 0;
@@ -51,15 +51,12 @@ struct IStreamConnectionContainer
     virtual IStreamConnectionPtr connect(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const ConnectProperties& connectionProperties = {}) = 0;
     virtual IStreamConnectionPtr createConnection(hybrid_ptr<IStreamConnectionCallback> callback) = 0;
     virtual bool connect(const std::string& endpoint, const IStreamConnectionPtr& streamConnection, const ConnectProperties& connectionProperties = {}) = 0;
-    virtual std::vector< IStreamConnectionPtr > getAllConnections() const = 0;
+    virtual std::vector<IStreamConnectionPtr> getAllConnections() const = 0;
     virtual IStreamConnectionPtr getConnection(std::int64_t connectionId) const = 0;
     virtual void run() = 0;
     virtual void terminatePollerLoop() = 0;
     virtual IExecutorPtr getPollerThreadExecutor() const = 0;
 };
-
-
-
 
 class SYMBOLEXP StreamConnectionContainer : public IStreamConnectionContainer
 {
@@ -75,7 +72,7 @@ private:
     virtual IStreamConnectionPtr connect(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callback, const ConnectProperties& connectionProperties = {}) override;
     virtual IStreamConnectionPtr createConnection(hybrid_ptr<IStreamConnectionCallback> callback) override;
     virtual bool connect(const std::string& endpoint, const IStreamConnectionPtr& streamConnection, const ConnectProperties& connectionProperties = {}) override;
-    virtual std::vector< IStreamConnectionPtr > getAllConnections() const override;
+    virtual std::vector<IStreamConnectionPtr> getAllConnections() const override;
     virtual IStreamConnectionPtr getConnection(std::int64_t connectionId) const override;
     virtual void run() override;
     virtual void terminatePollerLoop() override;
@@ -85,9 +82,9 @@ private:
 
     struct BindData
     {
-        ConnectionData                          connectionData;
-        SocketPtr                               socket;
-        hybrid_ptr<IStreamConnectionCallback>   callback;
+        ConnectionData connectionData{};
+        SocketPtr socket{};
+        hybrid_ptr<IStreamConnectionCallback> callback{};
     };
 
     std::unordered_map<SOCKET, BindData>::iterator findBindByEndpoint(const std::string& endpoint);
@@ -103,23 +100,23 @@ private:
     static bool isTimerExpired(std::chrono::time_point<std::chrono::steady_clock>& lastTime, int interval);
     void doReconnect();
 
-    const std::shared_ptr<IPoller>                                  m_poller;
-    std::unordered_map<SOCKET, BindData>                            m_sd2binds;
-    std::unordered_map<std::int64_t, IStreamConnectionPrivatePtr>   m_connectionId2Connection;
-    std::unordered_map<SOCKET, IStreamConnectionPrivatePtr>         m_sd2Connection;
-    std::unordered_map<SOCKET, IStreamConnectionPrivatePtr>         m_sd2ConnectionPollerLoop;
-    std::atomic_flag                                                m_connectionsStable{};
-    static std::atomic_int64_t                                      m_nextConnectionId;
-    std::atomic_bool                                                m_terminatePollerLoop{false};
-    int                                                             m_cycleTime = 100;
-    int                                                             m_checkReconnectInterval = 1000;
-    FuncPollerLoopTimer                                             m_funcTimer;
-    const IExecutorPtr                                              m_executorPollerThread;
-    std::unique_ptr<IExecutorWorker>                                m_executorWorker;
-    std::thread                                                     m_threadTimer;
-    mutable std::mutex                                              m_mutex;
+    const std::shared_ptr<IPoller> m_poller{};
+    std::unordered_map<SOCKET, BindData> m_sd2binds{};
+    std::unordered_map<std::int64_t, IStreamConnectionPrivatePtr> m_connectionId2Connection{};
+    std::unordered_map<SOCKET, IStreamConnectionPrivatePtr> m_sd2Connection{};
+    std::unordered_map<SOCKET, IStreamConnectionPrivatePtr> m_sd2ConnectionPollerLoop{};
+    std::atomic_flag m_connectionsStable{};
+    static std::atomic_int64_t m_nextConnectionId;
+    std::atomic_bool m_terminatePollerLoop{false};
+    int m_cycleTime = 100;
+    int m_checkReconnectInterval = 1000;
+    FuncPollerLoopTimer m_funcTimer{};
+    const IExecutorPtr m_executorPollerThread;
+    std::unique_ptr<IExecutorWorker> m_executorWorker{};
+    std::thread m_threadTimer{};
+    mutable std::mutex m_mutex{};
 
-    std::chrono::time_point<std::chrono::steady_clock>              m_lastReconnectTime;
+    std::chrono::time_point<std::chrono::steady_clock> m_lastReconnectTime{};
 
 #ifdef USE_OPENSSL
     struct SslAcceptingData
@@ -129,8 +126,8 @@ private:
         hybrid_ptr<IStreamConnectionCallback> callback;
     };
     bool sslAccepting(SslAcceptingData& sslAcceptingData);
-    std::unordered_map<SOCKET, SslAcceptingData>                    m_sslAcceptings;
+    std::unordered_map<SOCKET, SslAcceptingData> m_sslAcceptings{};
 #endif
 };
 
-}   // namespace finalmq
+} // namespace finalmq

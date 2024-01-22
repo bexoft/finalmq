@@ -3,10 +3,12 @@ cmake_minimum_required(VERSION 3.11)
 
 project(finalmq)
 
+option(FINALMQ_FETCH_HL7 "Fetches HL7" ON)
 option(FINALMQ_BUILD_EXAMPLES "Build examples" ON)
 option(FINALMQ_BUILD_TESTS "Build tests" OFF)
 option(FINALMQ_BUILD_COVERAGE "Enable gcov" OFF)
 option(FINALMQ_BUILD_DOXYGEN "Enable doxygen" OFF)
+option(FINALMQ_HAS_NOT_WEAK_FROM_THIS "Has weak_from_this" OFF)
 
 if (WIN32)
 #    option(FINALMQ_BUILD_FMQFCGI "Build fmqfcgi" OFF)   # avoid dependency to fcgi for windows
@@ -21,8 +23,8 @@ SET(FINALMQ_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 SET(FINALMQ_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
 
+if (FINALMQ_FETCH_HL7)
 include(FetchContent)
-
 function(CloneRepository repositoryURL branchName projectName sourceDir)
   #Commands are left empty so that we only checkout the source and no not perform any kind of build
   message("Starting to clone ${projectName} into ${sourceDir}")
@@ -37,8 +39,8 @@ function(CloneRepository repositoryURL branchName projectName sourceDir)
   )
   FetchContent_MakeAvailable(${projectName})
 endfunction(CloneRepository)
-
 CloneRepository("https://github.com/beckdave/hl7-dictionary.git" "beckdave-fix-compounds" "hl7-dictionary" "${FINALMQ_BINARY_DIR}/hl7-dictionary")
+endif(FINALMQ_FETCH_HL7)
 
 # Add compile flags to determine coverage   
 if (FINALMQ_BUILD_COVERAGE)
@@ -60,13 +62,14 @@ endif(FINALMQ_USE_SSL)
 SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS} -DNOMINMAX" )
 SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}" )
 
+if (FINALMQ_HAS_NOT_WEAK_FROM_THIS)
+    SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DFINALMQ_HAS_NOT_WEAK_FROM_THIS" )
+endif(FINALMQ_HAS_NOT_WEAK_FROM_THIS)
 
 set(CMAKE_CXX_STANDARD 14)
 
 # this target needs to be set before digging into subdirectories
 add_custom_target( verify ${CMAKE_CURRENT_BINARY_DIR}/test/testfinalmq)
-
-message(${CMAKE_CURRENT_BINARY_DIR})
 
 if (FINALMQ_BUILD_COVERAGE)
 # go for the latest gcovr version locally installed via pip if available
@@ -143,9 +146,6 @@ add_custom_command(
 )
 
 
-#Bring the headers into the project
-#include_directories(inc)
-
 #However, the file(GLOB...) allows for wildcard additions:
 file(GLOB SOURCES "src/*.cpp" "inc/finalmq/*.h"
                   "src/helpers/*.cpp" "inc/finalmq/helpers/*.h"
@@ -189,7 +189,7 @@ target_include_directories(finalmq PUBLIC ${FINALMQ_SOURCE_DIR}/inc)
 #target_include_directories(finalmqStatic PUBLIC ${FINALMQ_SOURCE_DIR}/inc)
 
 if (WIN32)
-    message("== WIN32 ==")
+#    message("== WIN32 ==")
     set(LINKLIBS ${LINKLIBS} wsock32 ws2_32 Rpcrt4)
     if (FINALMQ_USE_SSL)
         SET(OPENSSL_DIR "$ENV{OPENSSL_ROOT_DIR}")
@@ -198,13 +198,11 @@ if (WIN32)
         set(LINKLIBS ${LINKLIBS} wsock32 ws2_32 Rpcrt4 "${OPENSSL_DIR}/lib/libssl.lib" "${OPENSSL_DIR}/lib/libcrypto.lib")
     endif()
     target_compile_options(finalmq PRIVATE -DEXPORT_finalmq)
-#    target_compile_options(finalmqStatic PRIVATE -DEXPORT_finalmq)
 elseif(UNIX)
-    message("== UNIX ==")
+#    message("== UNIX ==")
     target_compile_options(finalmq PRIVATE -Werror -Wall -Wextra)
-#    target_compile_options(finalmqStatic PRIVATE -Werror -Wall -Wextra)
     if (${CMAKE_SYSTEM_NAME} MATCHES "QNX")
-        message("== QNX ==")
+#        message("== QNX ==")
     else()
         set(LINKLIBS ${LINKLIBS} uuid pthread)
     endif()

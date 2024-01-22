@@ -22,14 +22,13 @@
 
 #pragma once
 
-#include "IZeroCopyBuffer.h"
-
 #include <list>
 #include <string>
 
-namespace finalmq {
+#include "IZeroCopyBuffer.h"
 
-
+namespace finalmq
+{
 class SYMBOLEXP ZeroCopyBuffer : public IZeroCopyBuffer
 {
 public:
@@ -41,9 +40,7 @@ private:
     virtual void downsizeLastBuffer(ssize_t newSize) override;
     virtual ssize_t getRemainingSize() const override;
 
-    std::list<std::string>  m_chunks;
+    std::list<std::string> m_chunks{};
 };
 
-
-}   // namespace finalmq
-
+} // namespace finalmq

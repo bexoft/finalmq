@@ -21,27 +21,23 @@
 //SOFTWARE.
 
 #include "finalmq/remoteentity/RemoteEntityFormatRegistry.h"
-#include "finalmq/remoteentity/entitydata.fmq.h"
+
+#include <atomic>
+#include <mutex>
+
+#include "finalmq/helpers/ModulenameFinalmq.h"
 #include "finalmq/protocolsession/ProtocolMessage.h"
+#include "finalmq/remoteentity/entitydata.fmq.h"
 #include "finalmq/variant/Variant.h"
 #include "finalmq/variant/VariantValueStruct.h"
 #include "finalmq/variant/VariantValues.h"
-#include "finalmq/helpers/ModulenameFinalmq.h"
 
-#include <mutex>
-#include <atomic>
-
-
-
+using finalmq::Header;
 using finalmq::MsgMode;
 using finalmq::Status;
-using finalmq::Header;
 
-
-namespace finalmq {
-
-
-
+namespace finalmq
+{
 static const std::string FMQ_HTTP = "fmq_http";
 static const std::string FMQ_METHOD = "fmq_method";
 static const std::string FMQ_HTTP_STATUS = "fmq_http_status";
@@ -60,14 +56,11 @@ static const std::string MSG_REPLY = "MSG_REPLY";
 
 static const std::string FMQ_VIRTUAL_SESSION_ID = "fmq_virtsessid";
 
-
-
 void RemoteEntityFormatRegistryImpl::registerFormat(const std::string& contentTypeName, int contentType, const std::shared_ptr<IRemoteEntityFormat>& format)
 {
     m_contentTypeToFormat[contentType] = format;
     m_contentTypeNameToContentType[contentTypeName] = contentType;
 }
-
 
 bool RemoteEntityFormatRegistryImpl::isRegistered(int contentType) const
 {
@@ -79,7 +72,6 @@ bool RemoteEntityFormatRegistryImpl::isRegistered(int contentType) const
     return false;
 }
 
-
 int RemoteEntityFormatRegistryImpl::getContentType(const std::string& contentTypeName) const
 {
     auto it = m_contentTypeNameToContentType.find(contentTypeName);
@@ -89,9 +81,6 @@ int RemoteEntityFormatRegistryImpl::getContentType(const std::string& contentTyp
     }
     return 0;
 }
-
-
-
 
 bool RemoteEntityFormatRegistryImpl::serialize(const IProtocolSessionPtr& session, IMessage& message, const Header& header, const StructBase* structBase)
 {
@@ -106,7 +95,6 @@ bool RemoteEntityFormatRegistryImpl::serialize(const IProtocolSessionPtr& sessio
     streamError << "ContentType not found: " << contentType;
     return false;
 }
-
 
 void RemoteEntityFormatRegistryImpl::serializeHeaderToMetainfo(IMessage& message, const Header& header)
 {
@@ -133,7 +121,6 @@ void RemoteEntityFormatRegistryImpl::serializeHeaderToMetainfo(IMessage& message
     metainfo[FMQ_TYPE] = header.type;
 }
 
-
 bool RemoteEntityFormatRegistryImpl::serializeData(const IProtocolSessionPtr& session, IMessage& message, const StructBase* structBase)
 {
     int contentType = session->getContentType();
@@ -148,26 +135,21 @@ bool RemoteEntityFormatRegistryImpl::serializeData(const IProtocolSessionPtr& se
     return false;
 }
 
-
 inline static bool shallSend(const Header& header, const IProtocolSessionPtr& session)
 {
-    if ((header.mode != MsgMode::MSG_REPLY) ||
-        (header.corrid != CORRELATIONID_NONE) || 
-        session->needsReply())
+    if ((header.mode != MsgMode::MSG_REPLY) || (header.corrid != CORRELATIONID_NONE) || session->needsReply())
     {
         return true;
     }
     return false;
 }
 
-
-
 static void statusToProtocolStatus(Status status, Variant& controlData, IMessage::Metainfo* metainfo, const IProtocolSessionPtr& session)
 {
     controlData.add(FMQ_HTTP, HTTP_RESPONSE);
-    switch (status)
+    switch(status)
     {
-    case Status::STATUS_OK:
+        case Status::STATUS_OK:
         {
             bool statusOk = true;
             if (metainfo)
@@ -197,32 +179,32 @@ static void statusToProtocolStatus(Status status, Variant& controlData, IMessage
             }
         }
         break;
-    case Status::STATUS_ENTITY_NOT_FOUND:
-    case Status::STATUS_REQUEST_NOT_FOUND:
-    case Status::STATUS_REQUESTTYPE_NOT_KNOWN:
-        controlData.add(FMQ_HTTP_STATUS, 404);
-        controlData.add(FMQ_HTTP_STATUSTEXT, std::string("Not Found"));
-        break;
-    case Status::STATUS_SYNTAX_ERROR:
-        controlData.add(FMQ_HTTP_STATUS, 400);
-        controlData.add(FMQ_HTTP_STATUSTEXT, std::string("Bad Request"));
-        break;
-    case Status::STATUS_NO_REPLY:
-        if (session->needsReply())
-        {
-            controlData.add(FMQ_HTTP_STATUS, 200);
-            controlData.add(FMQ_HTTP_STATUSTEXT, std::string("OK"));
-        }
-        else
-        {
+        case Status::STATUS_ENTITY_NOT_FOUND:
+        case Status::STATUS_REQUEST_NOT_FOUND:
+        case Status::STATUS_REQUESTTYPE_NOT_KNOWN:
+            controlData.add(FMQ_HTTP_STATUS, 404);
+            controlData.add(FMQ_HTTP_STATUSTEXT, std::string("Not Found"));
+            break;
+        case Status::STATUS_SYNTAX_ERROR:
+            controlData.add(FMQ_HTTP_STATUS, 400);
+            controlData.add(FMQ_HTTP_STATUSTEXT, std::string("Bad Request"));
+            break;
+        case Status::STATUS_NO_REPLY:
+            if (session->needsReply())
+            {
+                controlData.add(FMQ_HTTP_STATUS, 200);
+                controlData.add(FMQ_HTTP_STATUSTEXT, std::string("OK"));
+            }
+            else
+            {
+                controlData.add(FMQ_HTTP_STATUS, 500);
+                controlData.add(FMQ_HTTP_STATUSTEXT, std::string("Internal Server Error"));
+            }
+            break;
+        default:
             controlData.add(FMQ_HTTP_STATUS, 500);
             controlData.add(FMQ_HTTP_STATUSTEXT, std::string("Internal Server Error"));
-        }
-        break;
-    default:
-        controlData.add(FMQ_HTTP_STATUS, 500);
-        controlData.add(FMQ_HTTP_STATUSTEXT, std::string("Internal Server Error"));
-        break;
+            break;
     }
 }
 
@@ -236,7 +218,6 @@ static void metainfoToHeader(Header& header, IMessage::Metainfo& metainfo)
     }
     metainfo.clear();
 }
-
 
 void RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, const std::string& virtualSessionId, Header& header, Variant&& echoData, const StructBase* structBase, IMessage::Metainfo* metainfo, Variant* controlData)
 {
@@ -323,14 +304,12 @@ void RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, co
         }
         if (!virtualSessionId.empty())
         {
-            Variant& controlData = message->getControlData();
-            controlData.add(FMQ_VIRTUAL_SESSION_ID, virtualSessionId);
+            Variant& controlData1 = message->getControlData();
+            controlData1.add(FMQ_VIRTUAL_SESSION_ID, virtualSessionId);
         }
         session->sendMessage(message, (header.mode == MsgMode::MSG_REPLY));
     }
 }
-
-
 
 static void metainfoToMessage(IMessage& message, std::vector<std::string>& meta)
 {
@@ -346,8 +325,6 @@ static void metainfoToMessage(IMessage& message, std::vector<std::string>& meta)
     }
     meta.clear();
 }
-
-
 
 //inline static bool isDestinationIdDefined(const Header& header)
 //{
@@ -373,7 +350,6 @@ inline static bool isDestAndSubPathDefined(const Header& header)
 {
     return (isDestinationDefined(header) && isSubPathDefined(header));
 }
-
 
 std::string RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header)
 {
@@ -454,13 +430,13 @@ std::string RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, con
         std::string pathWithoutFirstSlash;
         if (path[0] == '/')
         {
-            pathWithoutFirstSlash = { &path[1], path.size() - 1 };
+            pathWithoutFirstSlash = {&path[1], path.size() - 1};
         }
         else
         {
             pathWithoutFirstSlash = path;
         }
-        size_t ixEndHeader = pathWithoutFirstSlash.find_first_of('{');   //28
+        size_t ixEndHeader = pathWithoutFirstSlash.find_first_of('{'); //28
         if (ixEndHeader == std::string::npos)
         {
             ixEndHeader = pathWithoutFirstSlash.size();
@@ -472,10 +448,7 @@ std::string RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, con
         for (auto it = name2Entity.begin(); it != name2Entity.end() && !foundEntityName; ++it)
         {
             const std::string& prefix = it->first;
-            if (prefix != WILDCARD &&
-                pathWithoutFirstSlash.size() >= prefix.size() &&
-                pathWithoutFirstSlash.compare(0, prefix.size(), prefix) == 0 &&
-                (pathWithoutFirstSlash.size() == prefix.size() || pathWithoutFirstSlash[prefix.size()] == '/'))
+            if (prefix != WILDCARD && pathWithoutFirstSlash.size() >= prefix.size() && pathWithoutFirstSlash.compare(0, prefix.size(), prefix) == 0 && (pathWithoutFirstSlash.size() == prefix.size() || pathWithoutFirstSlash[prefix.size()] == '/'))
             {
                 foundEntityName = &prefix;
                 remoteEntity = it->second;
@@ -532,7 +505,6 @@ std::string RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, con
     return data;
 }
 
-
 std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainfo(const IProtocolSessionPtr& session, IMessage& message, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus)
 {
     std::string data = parseMetainfo(message, name2Entity, header);
@@ -562,7 +534,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainf
     else
     {
         std::shared_ptr<RawBytes> structRawBytes = std::make_shared<RawBytes>();
-        structRawBytes->data = { bufferRef.first, bufferRef.first + bufferRef.second };
+        structRawBytes->data = {bufferRef.first, bufferRef.first + bufferRef.second};
         structBase = structRawBytes;
     }
 
@@ -573,7 +545,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(const IProtoco
 {
     formatStatus = 0;
     BufferRef bufferRef = message.getReceivePayload();
-            
+
     std::shared_ptr<StructBase> structBase;
 
     int contentType = session->getContentType();
@@ -588,8 +560,6 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(const IProtoco
     return structBase;
 }
 
-
-
 //std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parsePureData(IMessage& message, Header& header)
 //{
 //    const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity;
@@ -603,9 +573,6 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(const IProtoco
 //
 //    return structBytes;
 //}
-
-
-
 
 //////////////////////////////////////
 /// RemoteEntityFormat
@@ -641,6 +608,4 @@ std::unique_ptr<IRemoteEntityFormatRegistry>& RemoteEntityFormatRegistry::getSta
     return instanceUniquePtr;
 }
 
-
-
-}   // namespace finalmq
+} // namespace finalmq

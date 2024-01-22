@@ -20,30 +20,24 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-
 #include "finalmq/serializeproto/ParserProto.h"
-#include "finalmq/metadata/MetaData.h"
-#include "finalmq/helpers/FmqDefines.h"
 
+#include <iostream>
 
 #include <assert.h>
 #include <memory.h>
-#include <iostream>
 
+#include "finalmq/helpers/FmqDefines.h"
+#include "finalmq/metadata/MetaData.h"
 
-
-namespace finalmq {
-
+namespace finalmq
+{
 static constexpr int INDEX2ID = 1;
 
-
 ParserProto::ParserProto(IParserVisitor& visitor, const char* ptr, ssize_t size)
-    : m_ptr(ptr)
-    , m_size(size)
-    , m_visitor(visitor)
+    : m_ptr(ptr), m_size(size), m_visitor(visitor)
 {
 }
-
 
 template<class T>
 bool ParserProto::parseValue(T& value, bool zz)
@@ -51,29 +45,28 @@ bool ParserProto::parseValue(T& value, bool zz)
     bool ok = true;
     WireType wireType = static_cast<WireType>(m_tag & 0x7);
     m_tag = 0;
-    switch (wireType)
+    switch(wireType)
     {
-    case WIRETYPE_VARINT:
-        value = static_cast<T>(parseVarint());
-        if (zz)
-        {
-            value = static_cast<T>(zigzag(value));
-        }
-        break;
-    case WIRETYPE_FIXED32:
-        value = static_cast<T>(parseFixed<std::uint32_t>());
-        break;
-    case WIRETYPE_FIXED64:
-        value = static_cast<T>(parseFixed<std::uint64_t>());
-        break;
-    default:
-        skip(wireType);
-        ok = false;
-        break;
+        case WIRETYPE_VARINT:
+            value = static_cast<T>(parseVarint());
+            if (zz)
+            {
+                value = static_cast<T>(zigzag(value));
+            }
+            break;
+        case WIRETYPE_FIXED32:
+            value = static_cast<T>(parseFixed<std::uint32_t>());
+            break;
+        case WIRETYPE_FIXED64:
+            value = static_cast<T>(parseFixed<std::uint64_t>());
+            break;
+        default:
+            skip(wireType);
+            ok = false;
+            break;
     }
     return ok;
 }
-
 
 //template<class T, class D>
 //bool ParserProto::parseZigZagValue(T& value)
@@ -102,8 +95,6 @@ bool ParserProto::parseValue(T& value, bool zz)
 //    }
 //    return ok;
 //}
-
-
 
 bool ParserProto::parseString(const char*& buffer, ssize_t& size)
 {
@@ -136,8 +127,6 @@ bool ParserProto::parseString(const char*& buffer, ssize_t& size)
     }
     return ok;
 }
-
-
 
 void ParserProto::parseStructWire(const MetaField& field)
 {
@@ -184,7 +173,6 @@ void ParserProto::parseStructWire(const MetaField& field)
     }
 }
 
-
 template<class T, int WIRETYPE>
 bool ParserProto::parseFixedValue(T& value)
 {
@@ -214,34 +202,34 @@ bool ParserProto::parseArrayFixed(std::vector<T>& array)
     WireType wireType = static_cast<WireType>(m_tag & 0x7);
     std::uint32_t tag = m_tag;
     m_tag = 0;
-    switch (wireType)
+    switch(wireType)
     {
-    case WIRETYPE:
-        do
-        {
-            T value = parseFixed<T>();
-            if (m_ptr)
+        case WIRETYPE:
+            do
             {
-                array.push_back(value);
-                if (m_size > 0)
+                T value = parseFixed<T>();
+                if (m_ptr)
                 {
-                    m_tag = static_cast<std::int32_t>(parseVarint());
+                    array.push_back(value);
+                    if (m_size > 0)
+                    {
+                        m_tag = static_cast<std::int32_t>(parseVarint());
+                    }
+                    else
+                    {
+                        m_tag = 0;
+                        break;
+                    }
                 }
                 else
                 {
-                    m_tag = 0;
-                    break;
+                    m_ptr = nullptr;
+                    m_size = 0;
+                    ok = false;
                 }
-            }
-            else
-            {
-                m_ptr = nullptr;
-                m_size = 0;
-                ok = false;
-            }
-        } while ((m_tag == tag) && m_ptr);
-        break;
-    case WIRETYPE_LENGTH_DELIMITED:
+            } while ((m_tag == tag) && m_ptr);
+            break;
+        case WIRETYPE_LENGTH_DELIMITED:
         {
             int sizeBuffer = static_cast<std::int32_t>(parseVarint());
             if ((sizeBuffer >= 0 && sizeBuffer <= m_size) && m_ptr)
@@ -267,15 +255,14 @@ bool ParserProto::parseArrayFixed(std::vector<T>& array)
             }
         }
         break;
-    default:
-        skip(wireType);
-        ok = false;
-        break;
+        default:
+            skip(wireType);
+            ok = false;
+            break;
     }
 
     return ok;
 }
-
 
 template<class T, bool ZIGZAG>
 bool ParserProto::parseArrayVarint(std::vector<T>& array)
@@ -284,35 +271,35 @@ bool ParserProto::parseArrayVarint(std::vector<T>& array)
     WireType wireType = static_cast<WireType>(m_tag & 0x7);
     std::uint32_t tag = m_tag;
     m_tag = 0;
-    switch (wireType)
+    switch(wireType)
     {
-    case WIRETYPE_VARINT:
-        do
-        {
-            std::uint64_t value = parseVarint();
-            if (m_ptr)
+        case WIRETYPE_VARINT:
+            do
             {
-                T v = (ZIGZAG) ? static_cast<T>(zigzag(value)) : static_cast<T>(value);
-                array.push_back(v);
-                if (m_size > 0)
+                std::uint64_t value = parseVarint();
+                if (m_ptr)
                 {
-                    m_tag = static_cast<std::uint32_t>(parseVarint());
+                    T v = (ZIGZAG) ? static_cast<T>(zigzag(value)) : static_cast<T>(value);
+                    array.push_back(v);
+                    if (m_size > 0)
+                    {
+                        m_tag = static_cast<std::uint32_t>(parseVarint());
+                    }
+                    else
+                    {
+                        m_tag = 0;
+                        break;
+                    }
                 }
                 else
                 {
-                    m_tag = 0;
-                    break;
+                    m_ptr = nullptr;
+                    m_size = 0;
+                    ok = false;
                 }
-            }
-            else
-            {
-                m_ptr = nullptr;
-                m_size = 0;
-                ok = false;
-            }
-        } while ((m_tag == tag) && m_ptr);
-        break;
-    case WIRETYPE_LENGTH_DELIMITED:
+            } while ((m_tag == tag) && m_ptr);
+            break;
+        case WIRETYPE_LENGTH_DELIMITED:
         {
             int sizeBuffer = static_cast<std::int32_t>(parseVarint());
             if ((sizeBuffer >= 0 && sizeBuffer <= m_size) && m_ptr)
@@ -334,16 +321,14 @@ bool ParserProto::parseArrayVarint(std::vector<T>& array)
             }
         }
         break;
-    default:
-        skip(wireType);
-        ok = false;
-        break;
+        default:
+            skip(wireType);
+            ok = false;
+            break;
     }
 
     return ok;
 }
-
-
 
 template<class T>
 bool ParserProto::parseArrayString(std::vector<T>& array)
@@ -394,9 +379,6 @@ bool ParserProto::parseArrayString(std::vector<T>& array)
     return ok;
 }
 
-
-
-
 void ParserProto::parseArrayStruct(const MetaField& field)
 {
     if (m_ptr == nullptr)
@@ -418,7 +400,6 @@ void ParserProto::parseArrayStruct(const MetaField& field)
     m_tag = 0;
     if (wireType == WIRETYPE_LENGTH_DELIMITED)
     {
-
         const MetaField* fieldWithoutArray = field.fieldWithoutArray;
         assert(fieldWithoutArray);
         m_visitor.enterArrayStruct(field);
@@ -468,7 +449,6 @@ void ParserProto::parseArrayStruct(const MetaField& field)
     }
 }
 
-
 bool ParserProto::parseStruct(const std::string& typeName)
 {
     if (!m_ptr || m_size < 0)
@@ -491,7 +471,6 @@ bool ParserProto::parseStruct(const std::string& typeName)
     return res;
 }
 
-
 bool ParserProto::parseStructIntern(const MetaStruct& stru)
 {
     if (!m_ptr || m_size < 0)
@@ -513,11 +492,11 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
             const MetaField* field = stru.getFieldByIndex(index);
             if (field)
             {
-                switch (field->typeId)
+                switch(field->typeId)
                 {
-                case MetaTypeId::TYPE_NONE:
-                    break;
-                case MetaTypeId::TYPE_BOOL:
+                    case MetaTypeId::TYPE_NONE:
+                        break;
+                    case MetaTypeId::TYPE_BOOL:
                     {
                         bool value = false;
                         bool ok = parseValue(value, false);
@@ -527,7 +506,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::TYPE_INT8:
+                    case MetaTypeId::TYPE_INT8:
                     {
                         std::int32_t value = 0;
                         bool zz = (field->flags & METAFLAG_PROTO_ZIGZAG);
@@ -538,7 +517,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::TYPE_UINT8:
+                    case MetaTypeId::TYPE_UINT8:
                     {
                         std::uint32_t value = 0;
                         bool ok = parseValue(value, false);
@@ -548,7 +527,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::TYPE_INT16:
+                    case MetaTypeId::TYPE_INT16:
                     {
                         std::int32_t value = 0;
                         bool zz = (field->flags & METAFLAG_PROTO_ZIGZAG);
@@ -558,8 +537,8 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                             m_visitor.enterInt16(*field, static_cast<std::int16_t>(value));
                         }
                     }
-                break;
-                case MetaTypeId::TYPE_UINT16:
+                    break;
+                    case MetaTypeId::TYPE_UINT16:
                     {
                         std::uint32_t value = 0;
                         bool ok = parseValue(value, false);
@@ -569,7 +548,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::TYPE_INT32:
+                    case MetaTypeId::TYPE_INT32:
                     {
                         std::int32_t value = 0;
                         bool zz = (field->flags & METAFLAG_PROTO_ZIGZAG);
@@ -580,7 +559,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::TYPE_UINT32:
+                    case MetaTypeId::TYPE_UINT32:
                     {
                         std::uint32_t value = 0;
                         bool ok = parseValue(value, false);
@@ -590,7 +569,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::TYPE_INT64:
+                    case MetaTypeId::TYPE_INT64:
                     {
                         std::int64_t value = 0;
                         bool zz = (field->flags & METAFLAG_PROTO_ZIGZAG);
@@ -601,7 +580,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::TYPE_UINT64:
+                    case MetaTypeId::TYPE_UINT64:
                     {
                         std::uint64_t value = 0;
                         bool ok = parseValue(value, false);
@@ -611,7 +590,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::TYPE_FLOAT:
+                    case MetaTypeId::TYPE_FLOAT:
                     {
                         float value = 0.0;
                         bool ok = parseFixedValue<float, WIRETYPE_FIXED32>(value);
@@ -621,7 +600,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::TYPE_DOUBLE:
+                    case MetaTypeId::TYPE_DOUBLE:
                     {
                         double value = 0.0;
                         bool ok = parseFixedValue<double, WIRETYPE_FIXED64>(value);
@@ -631,7 +610,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::TYPE_STRING:
+                    case MetaTypeId::TYPE_STRING:
                     {
                         const char* buffer = nullptr;
                         ssize_t size = 0;
@@ -642,7 +621,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::TYPE_BYTES:
+                    case MetaTypeId::TYPE_BYTES:
                     {
                         const char* buffer = nullptr;
                         ssize_t size = 0;
@@ -653,10 +632,10 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::TYPE_STRUCT:
-                    parseStructWire(*field);
-                    break;
-                case MetaTypeId::TYPE_ENUM:
+                    case MetaTypeId::TYPE_STRUCT:
+                        parseStructWire(*field);
+                        break;
+                    case MetaTypeId::TYPE_ENUM:
                     {
                         std::int32_t value = 0;
                         bool ok = parseValue(value, false);
@@ -666,7 +645,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::TYPE_ARRAY_BOOL:
+                    case MetaTypeId::TYPE_ARRAY_BOOL:
                     {
                         std::vector<bool> array;
                         bool ok = parseArrayVarint(array);
@@ -676,7 +655,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::TYPE_ARRAY_INT8:
+                    case MetaTypeId::TYPE_ARRAY_INT8:
                     {
                         std::vector<std::int32_t> array;
                         bool ok = false;
@@ -704,7 +683,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::TYPE_ARRAY_INT16:
+                    case MetaTypeId::TYPE_ARRAY_INT16:
                     {
                         std::vector<std::int32_t> array;
                         bool ok = false;
@@ -732,7 +711,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::TYPE_ARRAY_UINT16:
+                    case MetaTypeId::TYPE_ARRAY_UINT16:
                     {
                         std::vector<std::uint32_t> array;
                         bool ok = false;
@@ -756,7 +735,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::TYPE_ARRAY_INT32:
+                    case MetaTypeId::TYPE_ARRAY_INT32:
                     {
                         std::vector<std::int32_t> array;
                         bool ok = false;
@@ -778,7 +757,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::TYPE_ARRAY_UINT32:
+                    case MetaTypeId::TYPE_ARRAY_UINT32:
                     {
                         std::vector<std::uint32_t> array;
                         bool ok = false;
@@ -796,7 +775,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::TYPE_ARRAY_INT64:
+                    case MetaTypeId::TYPE_ARRAY_INT64:
                     {
                         std::vector<std::int64_t> array;
                         bool ok = false;
@@ -818,7 +797,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::TYPE_ARRAY_UINT64:
+                    case MetaTypeId::TYPE_ARRAY_UINT64:
                     {
                         std::vector<std::uint64_t> array;
                         bool ok = false;
@@ -836,7 +815,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::TYPE_ARRAY_FLOAT:
+                    case MetaTypeId::TYPE_ARRAY_FLOAT:
                     {
                         std::vector<float> array;
                         bool ok = parseArrayFixed<float, WIRETYPE_FIXED32>(array);
@@ -846,7 +825,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::TYPE_ARRAY_DOUBLE:
+                    case MetaTypeId::TYPE_ARRAY_DOUBLE:
                     {
                         std::vector<double> array;
                         bool ok = parseArrayFixed<double, WIRETYPE_FIXED64>(array);
@@ -856,7 +835,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::TYPE_ARRAY_STRING:
+                    case MetaTypeId::TYPE_ARRAY_STRING:
                     {
                         std::vector<std::string> array;
                         bool ok = parseArrayString(array);
@@ -866,7 +845,7 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::TYPE_ARRAY_BYTES:
+                    case MetaTypeId::TYPE_ARRAY_BYTES:
                     {
                         std::vector<Bytes> array;
                         bool ok = parseArrayString(array);
@@ -876,10 +855,10 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::TYPE_ARRAY_STRUCT:
-                    parseArrayStruct(*field);
-                    break;
-                case MetaTypeId::TYPE_ARRAY_ENUM:
+                    case MetaTypeId::TYPE_ARRAY_STRUCT:
+                        parseArrayStruct(*field);
+                        break;
+                    case MetaTypeId::TYPE_ARRAY_ENUM:
                     {
                         std::vector<std::int32_t> array;
                         bool ok = parseArrayVarint(array);
@@ -889,12 +868,12 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
-                case MetaTypeId::OFFSET_ARRAY_FLAG:
-                    assert(false);
-                    break;
-                default:
-                    assert(false);
-                    break;
+                    case MetaTypeId::OFFSET_ARRAY_FLAG:
+                        assert(false);
+                        break;
+                    default:
+                        assert(false);
+                        break;
                 }
             }
             else
@@ -908,9 +887,6 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
 
     return (m_ptr != nullptr);
 }
-
-
-
 
 std::uint64_t ParserProto::parseVarint()
 {
@@ -949,14 +925,13 @@ std::uint64_t ParserProto::parseVarint()
     return 0;
 }
 
-
 template<class T>
 T ParserProto::parseFixed()
 {
     T value = 0;
     if (m_size >= static_cast<ssize_t>(sizeof(T)))
     {
-        EndianHelper<sizeof(T)>::read(m_ptr, value);
+        EndianHelper<static_cast<int>(sizeof(T))>::read(m_ptr, value);
         m_ptr += sizeof(T);
         m_size -= sizeof(T);
     }
@@ -968,7 +943,6 @@ T ParserProto::parseFixed()
     return value;
 }
 
-
 //std::int32_t ParserProto::zigzag(std::uint32_t value)
 //{
 //    return static_cast<std::int32_t>((value >> 1) ^ (~(value & 1) + 1));
@@ -979,23 +953,21 @@ std::int64_t ParserProto::zigzag(std::uint64_t value)
     return static_cast<std::int64_t>((value >> 1) ^ (~(value & 1) + 1));
 }
 
-
-
 void ParserProto::skip(WireType wireType)
 {
-    switch (wireType)
+    switch(wireType)
     {
-    case WIRETYPE_VARINT:
-        parseVarint();
-        break;
-    case WIRETYPE_FIXED64:
-        if (m_ptr)
-        {
-            m_ptr += sizeof(std::uint64_t);
-            m_size -= sizeof(std::uint64_t);
-        }
-        break;
-    case WIRETYPE_LENGTH_DELIMITED:
+        case WIRETYPE_VARINT:
+            parseVarint();
+            break;
+        case WIRETYPE_FIXED64:
+            if (m_ptr)
+            {
+                m_ptr += sizeof(std::uint64_t);
+                m_size -= sizeof(std::uint64_t);
+            }
+            break;
+        case WIRETYPE_LENGTH_DELIMITED:
         {
             std::uint64_t len = parseVarint();
             if (m_ptr)
@@ -1005,17 +977,17 @@ void ParserProto::skip(WireType wireType)
             }
         }
         break;
-    case WIRETYPE_FIXED32:
-        if (m_ptr)
-        {
-            m_ptr += sizeof(std::uint32_t);
-            m_size -= sizeof(std::uint32_t);
-        }
-        break;
-    default:
-        m_ptr = nullptr;
-        m_size = 0;
-        break;
+        case WIRETYPE_FIXED32:
+            if (m_ptr)
+            {
+                m_ptr += sizeof(std::uint32_t);
+                m_size -= sizeof(std::uint32_t);
+            }
+            break;
+        default:
+            m_ptr = nullptr;
+            m_size = 0;
+            break;
     }
     if (m_size < 0)
     {
@@ -1024,4 +996,4 @@ void ParserProto::skip(WireType wireType)
     }
 }
 
-}   // namespace finalmq
+} // namespace finalmq

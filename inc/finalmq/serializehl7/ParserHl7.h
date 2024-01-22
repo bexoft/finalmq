@@ -22,16 +22,15 @@
 
 #pragma once
 
+#include <deque>
+#include <string>
+
+#include "finalmq/hl7/Hl7Parser.h"
 #include "finalmq/metadata/MetaStruct.h"
 #include "finalmq/serialize/IParserVisitor.h"
-#include "finalmq/hl7/Hl7Parser.h"
 
-
-#include <string>
-#include <deque>
-
-namespace finalmq {
-
+namespace finalmq
+{
 class SYMBOLEXP ParserHl7
 {
 public:
@@ -40,16 +39,20 @@ public:
     const char* parseStruct(const std::string& typeName);
 
 private:
+    ParserHl7(const ParserHl7&) = delete;
+    ParserHl7(ParserHl7&&) = delete;
+    const ParserHl7& operator=(const ParserHl7&) = delete;
+    const ParserHl7& operator=(ParserHl7&&) = delete;
+
     int parseStruct(int levelSegment, const MetaStruct& stru, bool& isarray);
     bool matches(const std::string& segId, const MetaStruct& stru, ssize_t ixStart);
     bool matchesUp(const std::string& segId);
 
-
-    const char*         m_ptr = nullptr;
-    ssize_t             m_size = 0;
-    IParserVisitor&     m_visitor;
-    Hl7Parser           m_parser;
-    std::vector<std::pair<MetaStruct, ssize_t>> m_stackStruct;
+    const char* m_ptr = nullptr;
+    ssize_t m_size = 0;
+    IParserVisitor& m_visitor;
+    Hl7Parser m_parser{};
+    std::vector<std::pair<MetaStruct, ssize_t>> m_stackStruct{};
 };
 
-}   // namespace finalmq
+} // namespace finalmq

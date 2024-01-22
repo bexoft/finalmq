@@ -22,16 +22,15 @@
 
 #pragma once
 
+#include <deque>
+#include <string>
+
+#include "finalmq/json/JsonParser.h"
 #include "finalmq/metadata/MetaStruct.h"
 #include "finalmq/serialize/IParserVisitor.h"
-#include "finalmq/json/JsonParser.h"
 
-
-#include <string>
-#include <deque>
-
-namespace finalmq {
-
+namespace finalmq
+{
 class SYMBOLEXP ParserJson : public IJsonParserVisitor
 {
 public:
@@ -40,6 +39,11 @@ public:
     const char* parseStruct(const std::string& typeName);
 
 private:
+    ParserJson(const ParserJson&) = delete;
+    ParserJson(ParserJson&&) = delete;
+    const ParserJson& operator=(const ParserJson&) = delete;
+    const ParserJson& operator=(ParserJson&&) = delete;
+
     // IJsonParserVisitor
     virtual void syntaxError(const char* str, const char* message) override;
     virtual void enterNull() override;
@@ -59,34 +63,33 @@ private:
     virtual void enterKey(std::string&& key) override;
     virtual void finished() override;
 
-
     template<class T>
     void enterNumber(T value);
 
-    template< class T>
+    template<class T>
     T convert(const char* value, ssize_t size);
 
-    const char*         m_ptr = nullptr;
-    ssize_t             m_size = 0;
-    IParserVisitor&     m_visitor;
-    JsonParser          m_parser;
+    const char* m_ptr = nullptr;
+    ssize_t m_size = 0;
+    IParserVisitor& m_visitor;
+    JsonParser m_parser;
 
-    std::deque<const MetaField*>   m_stack;
-    const MetaStruct*   m_structCurrent = nullptr;
-    const MetaField*    m_fieldCurrent = nullptr;
+    std::deque<const MetaField*> m_stack{};
+    const MetaStruct* m_structCurrent = nullptr;
+    const MetaField* m_fieldCurrent = nullptr;
 
-    std::vector<bool>           m_arrayBool;
-    std::vector<std::int8_t>    m_arrayInt8;
-    std::vector<std::int16_t>   m_arrayInt16;
-    std::vector<std::uint16_t>  m_arrayUInt16;
-    std::vector<std::int32_t>   m_arrayInt32;
-    std::vector<std::uint32_t>  m_arrayUInt32;
-    std::vector<std::int64_t>   m_arrayInt64;
-    std::vector<std::uint64_t>  m_arrayUInt64;
-    std::vector<float>          m_arrayFloat;
-    std::vector<double>         m_arrayDouble;
-    std::vector<std::string>    m_arrayString;
-    std::vector<Bytes>          m_arrayBytes;
+    std::vector<bool> m_arrayBool{};
+    std::vector<std::int8_t> m_arrayInt8{};
+    std::vector<std::int16_t> m_arrayInt16{};
+    std::vector<std::uint16_t> m_arrayUInt16{};
+    std::vector<std::int32_t> m_arrayInt32{};
+    std::vector<std::uint32_t> m_arrayUInt32{};
+    std::vector<std::int64_t> m_arrayInt64{};
+    std::vector<std::uint64_t> m_arrayUInt64{};
+    std::vector<float> m_arrayFloat{};
+    std::vector<double> m_arrayDouble{};
+    std::vector<std::string> m_arrayString{};
+    std::vector<Bytes> m_arrayBytes{};
 };
 
-}   // namespace finalmq
+} // namespace finalmq

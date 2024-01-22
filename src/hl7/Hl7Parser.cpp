@@ -21,33 +21,27 @@
 //SOFTWARE.
 
 #include "finalmq/hl7/Hl7Parser.h"
-#include "finalmq/helpers/FmqDefines.h"
 
-#include <string>
 #include <climits>
 #include <limits>
+#include <string>
+
 #include <assert.h>
 
+#include "finalmq/helpers/FmqDefines.h"
 
-
-namespace finalmq {
-
-static const char SEGMENT_END = 0x0D;   // '\r'
-
+namespace finalmq
+{
+static const char SEGMENT_END = 0x0D; // '\r'
 
 Hl7Parser::Hl7Parser()
 {
 }
 
-
 char Hl7Parser::getChar(const char* str) const
 {
     return ((str < m_end) ? *str : 0);
 }
-
-
-
-
 
 bool Hl7Parser::startParse(const char* str, ssize_t size)
 {
@@ -57,40 +51,25 @@ bool Hl7Parser::startParse(const char* str, ssize_t size)
     {
         if (size == CHECK_ON_ZEROTERM)
         {
-            m_end = (char*)nullptr - 1;     // highest possible address
+            size = strlen(str);
         }
-        else
-        {
-            m_end = str + size;
-        }
+        m_end = str + size;
+
         skipControlCharacters();
 
-        if (size == CHECK_ON_ZEROTERM)
+        if (size < 8)
         {
-            for (int i = 0; i < 8; ++i)
-            {
-                if (m_str[i] == 0)
-                {
-                    return false;
-                }
-            }
-        }
-        else
-        {
-            if (size < 8)
-            {
-                return false;
-            }
+            return false;
         }
 
         if (m_str[0] == 'M' && m_str[1] == 'S' && m_str[2] == 'H')
         {
-            m_delimiterField[0] = SEGMENT_END;      // segment delimiter '\r', 0x0D
-            m_delimiterField[1] = m_str[3 + 0];    // |
-            m_delimiterField[2] = m_str[3 + 1];    // ^
-            m_delimiterField[3] = m_str[3 + 4];    // &
-            m_delimiterRepeat   = m_str[3 + 2];    // ~
-            m_escape            = m_str[3 + 3];    // '\\'
+            m_delimiterField[0] = SEGMENT_END;  // segment delimiter '\r', 0x0D
+            m_delimiterField[1] = m_str[3 + 0]; // |
+            m_delimiterField[2] = m_str[3 + 1]; // ^
+            m_delimiterField[3] = m_str[3 + 4]; // &
+            m_delimiterRepeat = m_str[3 + 2];   // ~
+            m_escape = m_str[3 + 3];            // '\\'
         }
         else
         {
@@ -99,7 +78,6 @@ bool Hl7Parser::startParse(const char* str, ssize_t size)
     }
     return true;
 }
-
 
 int Hl7Parser::isDelimiter(char c) const
 {
@@ -119,7 +97,6 @@ int Hl7Parser::isDelimiter(char c) const
     return i;
 }
 
-
 void Hl7Parser::getSegmentId(std::string& token) const
 {
     token.clear();
@@ -138,7 +115,6 @@ void Hl7Parser::getSegmentId(std::string& token) const
         ++i;
     }
 }
-
 
 int Hl7Parser::isNextFieldFilled(int level, bool& filled)
 {
@@ -166,7 +142,6 @@ int Hl7Parser::isNextFieldFilled(int level, bool& filled)
     assert(l <= level);
     return l;
 }
-
 
 int Hl7Parser::parseToken(int level, std::string& token, bool& isarray)
 {
@@ -196,7 +171,7 @@ int Hl7Parser::parseToken(int level, std::string& token, bool& isarray)
                 token = deEscape(start, m_str);
                 ++m_str;
                 isarray = true;
-                l = 1;  // array is only on level = 1
+                l = 1; // array is only on level = 1
                 break;
             }
             else
@@ -250,7 +225,7 @@ int Hl7Parser::parseTokenArray(int level, std::vector<std::string>& array)
             l = isDelimiter(c);
             if (l < LAYER_MAX)
             {
-                if (filled || (l > 1))   // array/repeated (~) is on layer 1 possible
+                if (filled || (l > 1)) // array/repeated (~) is on layer 1 possible
                 {
                     array.emplace_back(deEscape(start, m_str));
                 }
@@ -290,7 +265,6 @@ int Hl7Parser::parseTillEndOfStruct(int level)
     return parseTillEndOfStructIntern(level, false, isarrayDummy);
 }
 
-
 int Hl7Parser::parseTillEndOfStructIntern(int level, bool stopOnArray, bool& isarray)
 {
     isarray = false;
@@ -322,8 +296,6 @@ const char* Hl7Parser::getCurrentPosition() const
     return m_str;
 }
 
-
-
 void Hl7Parser::skipControlCharacters()
 {
     while (true)
@@ -340,28 +312,27 @@ void Hl7Parser::skipControlCharacters()
     }
 }
 
-static char hex2char(char c)
+static unsigned char hex2char(char c)
 {
-    char num = 0;
+    unsigned char num = 0;
     if ('0' <= c && c <= '9')
     {
-        num = c - '0';
+        num = static_cast<unsigned char>(c - '0');
     }
     else if ('a' <= c && c <= 'f')
     {
-        num = (c - 'a') + 10;
-    }   
+        num = static_cast<unsigned char>((c - 'a') + 10);
+    }
     else if ('A' <= c && c <= 'F')
     {
-        num = (c - 'A') + 10;
+        num = static_cast<unsigned char>((c - 'A') + 10);
     }
     else
     {
-        num = static_cast<char>(0xff);
+        num = static_cast<unsigned char>(0xff);
     }
     return num;
 }
-
 
 std::string Hl7Parser::deEscape(const char* start, const char* end) const
 {
@@ -378,65 +349,65 @@ std::string Hl7Parser::deEscape(const char* start, const char* end) const
                 return dest;
             }
             c = *src;
-            switch (c)
+            switch(c)
             {
-            case 'E':
-                dest += m_escape;
-                ++src;
-                break;
-            case 'F':
-                dest += m_delimiterField[1];    // |
-                ++src;
-                break;
-            case 'R':
-                dest += m_delimiterRepeat;      // ~
-                ++src;
-                break;
-            case 'S':
-                dest += m_delimiterField[2];    // ^
-                ++src;
-                break;
-            case 'T':
-                dest += m_delimiterField[3];    // &
-                ++src;
-                break;
-            case 'X':
-                while (true)
-                {
+                case 'E':
+                    dest += m_escape;
                     ++src;
-                    if (src >= end)
-                    {
-                        break;
-                    }
-                    c = *src;
-                    if (c == '\\')
-                    {
-                        break;
-                    }
-                    char num = hex2char(c);
-                    if ((unsigned char)num == 0xff)
-                    {
-                        return dest;
-                    }
-                    char d = num;
+                    break;
+                case 'F':
+                    dest += m_delimiterField[1]; // |
                     ++src;
-                    if (src >= end)
+                    break;
+                case 'R':
+                    dest += m_delimiterRepeat; // ~
+                    ++src;
+                    break;
+                case 'S':
+                    dest += m_delimiterField[2]; // ^
+                    ++src;
+                    break;
+                case 'T':
+                    dest += m_delimiterField[3]; // &
+                    ++src;
+                    break;
+                case 'X':
+                    while (true)
                     {
-                        break;
+                        ++src;
+                        if (src >= end)
+                        {
+                            break;
+                        }
+                        c = *src;
+                        if (c == '\\')
+                        {
+                            break;
+                        }
+                        unsigned char num = hex2char(c);
+                        if (num == static_cast<unsigned char>(0xff))
+                        {
+                            return dest;
+                        }
+                        unsigned char d = num;
+                        ++src;
+                        if (src >= end)
+                        {
+                            break;
+                        }
+                        c = *src;
+                        num = hex2char(c);
+                        if (num == static_cast<unsigned char>(0xff))
+                        {
+                            return dest;
+                        }
+                        d = static_cast<unsigned char>(d << 4);
+                        d |= num;
+                        dest += d;
                     }
-                    c = *src;
-                    num = hex2char(c);
-                    if ((unsigned char)num == 0xff)
-                    {
-                        return dest;
-                    }
-                    d <<= 4;
-                    d |= num;
-                    dest += d;
-                }
-                break;
-            default:
-                break;
+                    break;
+                default:
+                    break;
             }
         }
         else
@@ -449,6 +420,4 @@ std::string Hl7Parser::deEscape(const char* start, const char* end) const
     return dest;
 }
 
-
-
-}   // namespace finalmq
+} // namespace finalmq

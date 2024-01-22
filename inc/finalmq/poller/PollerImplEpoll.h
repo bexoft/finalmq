@@ -24,18 +24,17 @@
 
 #if !defined(WIN32) && !defined(__MINGW32__) && !defined(__QNX__)
 
-#include "Poller.h"
-#include <unordered_map>
 #include <array>
 #include <atomic>
 #include <mutex>
-
+#include <unordered_map>
 
 #include <sys/epoll.h>
 
-namespace finalmq {
+#include "Poller.h"
 
-
+namespace finalmq
+{
 class SYMBOLEXP PollerImplEpoll : public IPoller
 {
 public:
@@ -44,9 +43,9 @@ public:
 
 private:
     PollerImplEpoll(const PollerImplEpoll&) = delete;
-    const PollerImplEpoll& operator =(const PollerImplEpoll&) = delete;
+    const PollerImplEpoll& operator=(const PollerImplEpoll&) = delete;
     PollerImplEpoll(const PollerImplEpoll&&) = delete;
-    const PollerImplEpoll& operator =(PollerImplEpoll&&) = delete;
+    const PollerImplEpoll& operator=(PollerImplEpoll&&) = delete;
 
     virtual void init() override;
     virtual void addSocket(const SocketDescriptorPtr& fd) override;
@@ -65,24 +64,22 @@ private:
     void collectSockets(int res);
     void releaseWaitInternal(char info);
 
-    SocketDescriptorPtr m_controlSocketRead;
-    SocketDescriptorPtr m_controlSocketWrite;
+    SocketDescriptorPtr m_controlSocketRead{};
+    SocketDescriptorPtr m_controlSocketWrite{};
 
-    std::unordered_map<SocketDescriptorPtr, int> m_socketDescriptors;
+    std::unordered_map<SocketDescriptorPtr, int> m_socketDescriptors{};
 
-    PollerResult        m_result;
-    int                 m_fdEpoll = -1;
-    std::atomic_flag    m_socketDescriptorsStable{};
+    PollerResult m_result{};
+    int m_fdEpoll{-1};
+    std::atomic_flag m_socketDescriptorsStable{ATOMIC_FLAG_INIT};
     std::atomic_uint32_t m_releaseFlags{};
-    std::array<epoll_event, 32>     m_events;
+    std::array<epoll_event, 32> m_events{};
 
+    std::vector<SocketDescriptorPtr> m_socketDescriptorsConstForEpoll{};
 
-    std::vector<SocketDescriptorPtr> m_socketDescriptorsConstForEpoll;
-
-    std::mutex m_mutex;
+    std::mutex m_mutex{};
 };
 
-}   // namespace finalmq
-
+} // namespace finalmq
 
 #endif

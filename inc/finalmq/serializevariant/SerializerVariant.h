@@ -22,14 +22,14 @@
 
 #pragma once
 
+#include <deque>
+
 #include "finalmq/metadata/MetaStruct.h"
 #include "finalmq/serialize/ParserConverter.h"
 #include "finalmq/variant/Variant.h"
 
-#include <deque>
-
-namespace finalmq {
-
+namespace finalmq
+{
 class VarValueToVariant;
 class ParserProcessDefaultValues;
 
@@ -43,7 +43,13 @@ private:
     {
     public:
         Internal(SerializerVariant& outer, Variant& root, bool enumAsString);
+
     private:
+        Internal(const Internal&) = delete;
+        Internal(Internal&&) = delete;
+        const Internal& operator=(const Internal&) = delete;
+        const Internal& operator=(Internal&&) = delete;
+
         // IParserVisitor
         virtual void notifyError(const char* str, const char* message) override;
         virtual void startStruct(const MetaStruct& stru) override;
@@ -104,22 +110,22 @@ private:
         virtual void enterArrayEnumMove(const MetaField& field, std::vector<std::string>&& value) override;
         virtual void enterArrayEnum(const MetaField& field, const std::vector<std::string>& value) override;
 
-        template <class T>
+        template<class T>
         inline void add(const MetaField& field, const T& value);
-        template <class T>
+        template<class T>
         void add(const MetaField& field, T&& value);
 
-        Variant&                        m_root;
-        Variant*                        m_current = nullptr;
-        std::deque<Variant*>            m_stack;
-        bool                            m_enumAsString = true;
-        std::shared_ptr<VarValueToVariant> m_varValueToVariant;
-        SerializerVariant&              m_outer;
+        Variant& m_root;
+        Variant* m_current = nullptr;
+        std::deque<Variant*> m_stack{};
+        bool m_enumAsString = true;
+        std::shared_ptr<VarValueToVariant> m_varValueToVariant{};
+        SerializerVariant& m_outer;
     };
 
-    Internal                                    m_internal;
-    std::unique_ptr<IParserVisitor>             m_parserAbortAndIndex;
-    std::shared_ptr<ParserProcessDefaultValues> m_parserProcessDefaultValues;
+    Internal m_internal;
+    std::unique_ptr<IParserVisitor> m_parserAbortAndIndex{};
+    std::shared_ptr<ParserProcessDefaultValues> m_parserProcessDefaultValues{};
 };
 
-}   // namespace finalmq
+} // namespace finalmq

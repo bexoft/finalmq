@@ -22,52 +22,45 @@
 
 #pragma once
 
-#include "finalmq/helpers/FmqDefines.h"
-
-#include <functional>
-#include <memory>
 #include <atomic>
 #include <deque>
+#include <functional>
+#include <memory>
 #include <mutex>
 
+#include "finalmq/helpers/FmqDefines.h"
 
-namespace finalmq {
-
-
-
+namespace finalmq
+{
 enum LogLevel
 {
-    LOG_NONE        = 0,
-    LOG_DEBUG       = 1,
-    LOG_INFO        = 2,
-    LOG_WARNING     = 3,
-    LOG_ERROR       = 4,
-    LOG_CRITICAL    = 5,
-    LOG_FATAL       = 6,
+    LOG_NONE = 0,
+    LOG_DEBUG = 1,
+    LOG_INFO = 2,
+    LOG_WARNING = 3,
+    LOG_ERROR = 4,
+    LOG_CRITICAL = 5,
+    LOG_FATAL = 6,
 };
-
 
 struct LogContext
 {
-    LogLevel    level = LOG_NONE;
+    LogLevel level = LOG_NONE;
     const char* module = nullptr;
     const char* method = nullptr;
     const char* filename = nullptr;
-    int         line = -1;
+    int line = -1;
 };
-
 
 typedef std::function<void(const LogContext& context, const char* text)> FuncLogEvent;
 
-
 struct ILogger
 {
-    virtual ~ILogger() {}
+    virtual ~ILogger()
+    {}
     virtual void registerConsumer(FuncLogEvent consumer) = 0;
     virtual void triggerLog(const LogContext& context, const char* text) = 0;
 };
-
-
 
 /**
  * @brief The LoggerImpl class implements a central point of collecting log data
@@ -86,11 +79,10 @@ private:
     virtual void registerConsumer(FuncLogEvent consumer) override;
     virtual void triggerLog(const LogContext& context, const char* text) override;
 
-    std::deque<FuncLogEvent>    m_consumers;
-    std::atomic_int             m_sizeConsumers{};
-    std::mutex                  m_mutex;
+    std::deque<FuncLogEvent> m_consumers{};
+    std::atomic_int m_sizeConsumers{};
+    std::mutex m_mutex{};
 };
-
 
 class SYMBOLEXP Logger
 {
@@ -122,6 +114,4 @@ private:
     static std::unique_ptr<ILogger>& getStaticUniquePtrRef();
 };
 
-
 } // namespace finalmq
-

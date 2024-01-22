@@ -22,23 +22,20 @@
 
 #include "finalmq/remoteentity/RemoteEntityFormatHl7.h"
 
+#include "finalmq/protocolsession/ProtocolMessage.h"
+#include "finalmq/remoteentity/entitydata.fmq.h"
+#include "finalmq/serializehl7/ParserHl7.h"
 #include "finalmq/serializehl7/SerializerHl7.h"
 #include "finalmq/serializestruct/ParserStruct.h"
-#include "finalmq/serializehl7/ParserHl7.h"
 #include "finalmq/serializestruct/SerializerStruct.h"
 #include "finalmq/serializestruct/StructFactoryRegistry.h"
 #include "finalmq/variant/VariantValues.h"
-#include "finalmq/protocolsession/ProtocolMessage.h"
 
-#include "finalmq/remoteentity/entitydata.fmq.h"
-
-
-using finalmq::MsgMode;
 using finalmq::Header;
+using finalmq::MsgMode;
 
-
-namespace finalmq {
-
+namespace finalmq
+{
 const int RemoteEntityFormatHl7::CONTENT_TYPE = 3;
 const std::string RemoteEntityFormatHl7::CONTENT_TYPE_NAME = "hl7";
 
@@ -48,8 +45,6 @@ const std::string RemoteEntityFormatHl7::PROPERTY_LINEEND = "lineend";
 const std::string RemoteEntityFormatHl7::PROPERTY_MESSAGESTART = "messagestart";
 const std::string RemoteEntityFormatHl7::PROPERTY_MESSAGEEND = "messageend";
 
-
-
 struct RegisterFormatHl7
 {
     RegisterFormatHl7()
@@ -58,14 +53,13 @@ struct RegisterFormatHl7
     }
 } g_registerFormatHl7;
 
-
 static char* fmq_strnstr(const char* haystack, const char* needle, ssize_t len)
 {
-    ssize_t  i;
-    ssize_t  j;
+    ssize_t i;
+    ssize_t j;
 
     if (needle[0] == '\0')
-        return ((char*)haystack);
+        return (const_cast<char*>(haystack));
     j = 0;
     while (j < len && haystack[j])
     {
@@ -76,13 +70,11 @@ static char* fmq_strnstr(const char* haystack, const char* needle, ssize_t len)
             ++j;
         }
         if (needle[i] == '\0')
-            return ((char*)&haystack[j - i]);
+            return (const_cast<char*>(&haystack[j - i]));
         j = j - i + 1;
     }
     return nullptr;
 }
-
-
 
 static void replaceSerialize(IMessage& source, const std::string& lineend, IMessage& destination)
 {
@@ -108,7 +100,7 @@ static void replaceSerialize(IMessage& source, const std::string& lineend, IMess
             char* buffer = destination.addSendPayload(sizeTotal, 512);
             memcpy(buffer, current, sizeData);
             memcpy(buffer + sizeData, lineend.c_str(), lineend.size());
-            current = found + 1;  // 1: size of character '\r'
+            current = found + 1; // 1: size of character '\r'
             sizeRest -= sizeData + 1;
         }
 
@@ -119,7 +111,6 @@ static void replaceSerialize(IMessage& source, const std::string& lineend, IMess
         }
     }
 }
-
 
 static void replaceParser(const char* source, ssize_t sizeSource, const std::string& lineend, std::string& destination)
 {
@@ -154,8 +145,6 @@ static void replaceParser(const char* source, ssize_t sizeSource, const std::str
     }
 }
 
-
-
 static bool isReplaceNeeded(const IProtocolSessionPtr& session, std::string& lineend, std::string& messagestart, std::string& messageend)
 {
     lineend.clear();
@@ -172,7 +161,7 @@ static bool isReplaceNeeded(const IProtocolSessionPtr& session, std::string& lin
         hl7messagestart = formatData.getData<std::string>(RemoteEntityFormatHl7::PROPERTY_MESSAGESTART);
         hl7messageend = formatData.getData<std::string>(RemoteEntityFormatHl7::PROPERTY_MESSAGEEND);
 
-        replaceNeeded = ( (hl7lineend != nullptr && *hl7lineend != "\r") );
+        replaceNeeded = ((hl7lineend != nullptr && *hl7lineend != "\r"));
 
         if (hl7lineend)
         {
@@ -190,13 +179,10 @@ static bool isReplaceNeeded(const IProtocolSessionPtr& session, std::string& lin
     return replaceNeeded;
 }
 
-
-
 void RemoteEntityFormatHl7::serialize(const IProtocolSessionPtr& session, IMessage& message, const Header& /*header*/, const StructBase* structBase)
 {
     serializeData(session, message, structBase);
 }
-
 
 void RemoteEntityFormatHl7::serializeData(const IProtocolSessionPtr& session, IMessage& message, const StructBase* structBase)
 {
@@ -241,11 +227,6 @@ void RemoteEntityFormatHl7::serializeData(const IProtocolSessionPtr& session, IM
         }
     }
 }
-
-
-
-
-
 
 std::shared_ptr<StructBase> RemoteEntityFormatHl7::parse(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& /*name2Entity*/, Header& header, int& formatStatus)
 {
@@ -346,7 +327,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatHl7::parse(const IProtocolSessionP
         }
         header.corrid = 1;
 
-        BufferRef bufferRefData = { buffer, sizeBuffer };
+        BufferRef bufferRefData = {buffer, sizeBuffer};
         data = parseData(session, bufferRefData, storeRawData, header.type, formatStatus);
 
         formatStatus |= FORMATSTATUS_AUTOMATIC_CONNECT;
@@ -354,8 +335,6 @@ std::shared_ptr<StructBase> RemoteEntityFormatHl7::parse(const IProtocolSessionP
 
     return data;
 }
-
-
 
 std::shared_ptr<StructBase> RemoteEntityFormatHl7::parseData(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, std::string& type, int& formatStatus)
 {
@@ -450,8 +429,4 @@ std::shared_ptr<StructBase> RemoteEntityFormatHl7::parseData(const IProtocolSess
     return data;
 }
 
-
-
-
-
-}   // namespace finalmq
+} // namespace finalmq

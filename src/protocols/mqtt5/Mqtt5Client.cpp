@@ -20,20 +20,17 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-
 #include "finalmq/protocols/mqtt5/Mqtt5Client.h"
+
 #include "finalmq/protocols/mqtt5/Mqtt5Properties.h"
 #include "finalmq/variant/VariantValues.h"
 
-
-namespace finalmq {
-
-
+namespace finalmq
+{
 Mqtt5Client::Mqtt5Client()
 {
     m_protocol->setCallback(this);
 }
-
 
 // IMqtt5Protocol
 void Mqtt5Client::setCallback(hybrid_ptr<IMqtt5ClientCallback> callback)
@@ -45,8 +42,6 @@ bool Mqtt5Client::receive(const IStreamConnectionPtr& connection, const SocketPt
 {
     return m_protocol->receive(connection, socket, bytesToRead);
 }
-
-
 
 void Mqtt5Client::startConnection(const IStreamConnectionPtr& connection, const ConnectData& data)
 {
@@ -79,7 +74,7 @@ void Mqtt5Client::startConnection(const IStreamConnectionPtr& connection, const 
     }
     if (data.receiveMaximum != 65535)
     {
-        dataInternal.properties[Mqtt5PropertyId::ReceiveMaximum] = (std::uint32_t)data.receiveMaximum;
+        dataInternal.properties[Mqtt5PropertyId::ReceiveMaximum] = static_cast<std::uint32_t>(data.receiveMaximum);
     }
     dataInternal.clientId = data.clientId;
 
@@ -138,7 +133,6 @@ void Mqtt5Client::unsubscribe(const IStreamConnectionPtr& connection, const std:
     m_protocol->sendUnsubscribe(connection, dataInternal);
 }
 
-
 void Mqtt5Client::endConnection(const IStreamConnectionPtr& connection, const DisconnectData& data)
 {
     Mqtt5DisconnectData dataInternal;
@@ -153,7 +147,6 @@ void Mqtt5Client::endConnection(const IStreamConnectionPtr& connection, const Di
     }
     m_protocol->sendDisconnect(connection, dataInternal);
 }
-
 
 void Mqtt5Client::auth(const IStreamConnectionPtr& connection, const AuthData& data)
 {
@@ -174,8 +167,6 @@ void Mqtt5Client::auth(const IStreamConnectionPtr& connection, const AuthData& d
     m_protocol->sendAuth(connection, dataInternal);
 }
 
-
-
 void Mqtt5Client::cycleTime(const IStreamConnectionPtr& connection)
 {
     if (m_timerPing.isExpired())
@@ -194,25 +185,23 @@ void Mqtt5Client::cycleTime(const IStreamConnectionPtr& connection)
         auto callback = m_callback.lock();
         if (callback)
         {
-            endConnection(connection, { ReasonKeepAliveTimeout, "Keep Alive Timeout", ""});
+            endConnection(connection, {ReasonKeepAliveTimeout, "Keep Alive Timeout", ""});
             callback->closeConnection();
         }
     }
 }
 
-
 void Mqtt5Client::setReceiveActivity()
 {
     if (m_keepAlive > 0)
     {
-        m_timerReceiveActivity.setTimeout(m_keepAlive * 1500);  // x1.5
+        m_timerReceiveActivity.setTimeout(m_keepAlive * 1500); // x1.5
     }
     else
     {
         m_timerReceiveActivity.stop();
     }
 }
-
 
 // IMqtt5ProtocolCallback
 void Mqtt5Client::receivedConnect(const Mqtt5ConnectData& /*data*/)
@@ -224,7 +213,7 @@ void Mqtt5Client::receivedConnAck(const Mqtt5ConnAckData& data)
 {
     IMqtt5ClientCallback::ConnAckData dataDest;
     dataDest.sessionPresent = data.sessionPresent;
-    dataDest.reasoncode = data.reasoncode;
+    dataDest.reasoncode = static_cast<std::uint8_t>(data.reasoncode);
     dataDest.serverKeepAlive = m_keepAlive;
     dataDest.sessionExpiryInterval = m_sessionExpiryInterval;
     std::unordered_map<unsigned int, Variant>::const_iterator it;
@@ -235,11 +224,11 @@ void Mqtt5Client::receivedConnAck(const Mqtt5ConnAckData& data)
     }
     if ((it = data.properties.find(Mqtt5PropertyId::ReceiveMaximum)) != data.properties.end())
     {
-        dataDest.receiveMaximum = static_cast<std::uint32_t>(it->second);
+        dataDest.receiveMaximum = static_cast<std::uint16_t>(it->second);
     }
     if ((it = data.properties.find(Mqtt5PropertyId::MaximumQoS)) != data.properties.end())
     {
-        dataDest.maximumQoS = static_cast<std::uint32_t>(it->second);
+        dataDest.maximumQoS = static_cast<std::uint8_t>(it->second);
     }
     if ((it = data.properties.find(Mqtt5PropertyId::RetainAvailable)) != data.properties.end())
     {
@@ -273,7 +262,7 @@ void Mqtt5Client::receivedConnAck(const Mqtt5ConnAckData& data)
     }
     if ((it = data.properties.find(Mqtt5PropertyId::ServerKeepAlive)) != data.properties.end())
     {
-        m_keepAlive = static_cast<std::uint32_t>(it->second);
+        m_keepAlive = static_cast<std::uint16_t>(it->second);
         dataDest.serverKeepAlive = m_keepAlive;
     }
     if ((it = data.properties.find(Mqtt5PropertyId::ServerReference)) != data.properties.end())
@@ -309,7 +298,7 @@ void Mqtt5Client::receivedPublish(Mqtt5PublishData&& data, const IMessagePtr& me
 {
     IMqtt5ClientCallback::PublishData dataDest;
 
-    dataDest.qos = data.qos;
+    dataDest.qos = static_cast<std::uint8_t>(data.qos);
     dataDest.retain = data.retain;
     dataDest.topic = data.topic;
     message->getAllMetainfo() = std::move(data.metainfo);
@@ -404,7 +393,7 @@ void Mqtt5Client::receivedDisconnect(const Mqtt5DisconnectData& data)
 {
     IMqtt5ClientCallback::DisconnectData dataDest;
 
-    dataDest.reasoncode = data.reasoncode;
+    dataDest.reasoncode = static_cast<std::uint8_t>(data.reasoncode);
     std::unordered_map<unsigned int, Variant>::const_iterator it;
     if ((it = data.properties.find(Mqtt5PropertyId::ReasonString)) != data.properties.end())
     {
@@ -434,7 +423,7 @@ void Mqtt5Client::receivedAuth(const Mqtt5AuthData& data)
 {
     IMqtt5ClientCallback::AuthData dataDest;
 
-    dataDest.reasoncode = data.reasoncode;
+    dataDest.reasoncode = static_cast<std::uint8_t>(data.reasoncode);
     std::unordered_map<unsigned int, Variant>::const_iterator it;
     if ((it = data.properties.find(Mqtt5PropertyId::ReasonString)) != data.properties.end())
     {
@@ -470,8 +459,4 @@ void Mqtt5Client::receivedAuth(const Mqtt5AuthData& data)
     }
 }
 
-
-
-
-
-}   // namespace finalmq
+} // namespace finalmq

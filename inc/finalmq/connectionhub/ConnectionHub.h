@@ -24,19 +24,18 @@
 
 #include "finalmq/protocolsession/ProtocolSessionContainer.h"
 
-
-namespace finalmq {
-
-
+namespace finalmq
+{
 struct IConnectionHub
 {
-    virtual ~IConnectionHub() {}
+    virtual ~IConnectionHub()
+    {}
 
     virtual void init(int cycleTime = 100, int checkReconnectInterval = 1000) = 0;
     virtual int bind(const std::string& endpoint, const BindProperties& bindProperties = {}) = 0;
     virtual void unbind(const std::string& endpoint) = 0;
     virtual IProtocolSessionPtr connect(const std::string& endpoint, const ConnectProperties& connectProperties = {}) = 0;
-    virtual std::vector< IProtocolSessionPtr > getAllSessions() const = 0;
+    virtual std::vector<IProtocolSessionPtr> getAllSessions() const = 0;
     virtual IProtocolSessionPtr getSession(std::int64_t sessionId) const = 0;
     virtual void run() = 0;
     virtual void waitForTerminationOfPollerLoop() = 0;
@@ -46,11 +45,7 @@ struct IConnectionHub
     virtual void stopForwardingToSession(std::int64_t sessionId) = 0;
 };
 
-
-
-
-class SYMBOLEXP ConnectionHub : public IConnectionHub
-                              , private IProtocolSessionCallback
+class SYMBOLEXP ConnectionHub : public IConnectionHub, private IProtocolSessionCallback
 {
 public:
     ConnectionHub();
@@ -61,7 +56,7 @@ private:
     virtual int bind(const std::string& endpoint, const BindProperties& bindProperties = {}) override;
     virtual void unbind(const std::string& endpoint) override;
     virtual IProtocolSessionPtr connect(const std::string& endpoint, const ConnectProperties& connectProperties = {}) override;
-    virtual std::vector< IProtocolSessionPtr > getAllSessions() const override;
+    virtual std::vector<IProtocolSessionPtr> getAllSessions() const override;
     virtual IProtocolSessionPtr getSession(std::int64_t sessionId) const override;
     virtual void run() override;
     virtual void waitForTerminationOfPollerLoop() override;
@@ -78,14 +73,13 @@ private:
     virtual void socketConnected(const IProtocolSessionPtr& session) override;
     virtual void socketDisconnected(const IProtocolSessionPtr& session) override;
 
-    std::unique_ptr<IProtocolSessionContainer>  m_protocolSessionContainer;
-    std::vector<std::int64_t>                   m_sessionIdsStopForwardingFromSession;
-    std::vector<std::int64_t>                   m_sessionIdsStopForwardingToSession;
-    bool                                        m_startMessageForwarding = false;
-    std::vector<std::pair<IProtocolSessionPtr, IMessagePtr>>    m_messagesForForwarding;
+    std::unique_ptr<IProtocolSessionContainer> m_protocolSessionContainer{};
+    std::vector<std::int64_t> m_sessionIdsStopForwardingFromSession{};
+    std::vector<std::int64_t> m_sessionIdsStopForwardingToSession{};
+    bool m_startMessageForwarding = false;
+    std::vector<std::pair<IProtocolSessionPtr, IMessagePtr>> m_messagesForForwarding{};
 
-    std::recursive_mutex                        m_mutex;
-
+    std::recursive_mutex m_mutex{};
 };
 
-}   // namespace finalmq
+} // namespace finalmq

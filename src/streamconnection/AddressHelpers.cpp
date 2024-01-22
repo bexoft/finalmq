@@ -21,27 +21,29 @@
 //SOFTWARE.
 
 #include "finalmq/streamconnection/AddressHelpers.h"
-#include "finalmq/logger/LogStream.h"
-#include "finalmq/helpers/ModulenameFinalmq.h"
+
 #include <assert.h>
 
+#include "finalmq/helpers/ModulenameFinalmq.h"
+#include "finalmq/logger/LogStream.h"
+
 #if defined(WIN32) || defined(__MINGW32__)
-#pragma warning(disable: 4996)
+#pragma warning(disable : 4996)
 #else
-#include <sys/un.h>
 #include <netdb.h>
+
+#include <sys/un.h>
 #endif
 
 #ifdef __QNX__
-#include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/socket.h>
 #endif
 
 #include <iostream>
 
-
-namespace finalmq {
-
+namespace finalmq
+{
 int AddressHelpers::parseEndpoint(const std::string& endpoint, std::string& protocol, std::string& address)
 {
     if (endpoint.empty())
@@ -96,7 +98,6 @@ int AddressHelpers::parseTcpAddress(const std::string& address, std::string& hos
     return 0;
 }
 
-
 ConnectionData AddressHelpers::endpoint2ConnectionData(const std::string& endpoint)
 {
     ConnectionData connectionData;
@@ -143,9 +144,6 @@ ConnectionData AddressHelpers::endpoint2ConnectionData(const std::string& endpoi
     return connectionData;
 }
 
-
-
-
 std::string AddressHelpers::makeSocketAddress(const std::string& hostname, int port, int af, bool asyncGetHostByName, bool& doAsyncGetHostByName)
 {
     const sockaddr* addr = nullptr;
@@ -156,9 +154,9 @@ std::string AddressHelpers::makeSocketAddress(const std::string& hostname, int p
 #ifndef WIN32
     struct sockaddr_un addrUnix;
 #endif
-    switch (af)
+    switch(af)
     {
-    case AF_INET:
+        case AF_INET:
         {
             assert(!hostname.empty());
             addrlen = 0;
@@ -178,30 +176,34 @@ std::string AddressHelpers::makeSocketAddress(const std::string& hostname, int p
                 if (hp)
                 {
                     memset(&addrTcp, 0, addrlen);
-                    addrTcp.sin_family = af;
-                    addrTcp.sin_addr.s_addr = ((struct in_addr *)(hp->h_addr))->s_addr;
-                    addrTcp.sin_port = htons(port);
-                    addr = (sockaddr*)&addrTcp;
+#ifdef WIN32
+                    addrTcp.sin_family = static_cast<ADDRESS_FAMILY>(af);
+#else
+                    addrTcp.sin_family = static_cast<in_port_t>(af);
+#endif
+                    addrTcp.sin_addr.s_addr = reinterpret_cast<struct in_addr*>(hp->h_addr)->s_addr;
+                    addrTcp.sin_port = htons(static_cast<std::uint16_t>(port));
+                    addr = reinterpret_cast<sockaddr*>(&addrTcp);
                 }
             }
         }
         break;
 #ifndef WIN32
-    case AF_UNIX:
-        addrlen = sizeof(addrUnix);
-        memset(&addrUnix, 0, sizeof(addrUnix));
-        addrUnix.sun_family = af;
-        strcpy(addrUnix.sun_path, hostname.c_str());
-        addr = (sockaddr*)&addrUnix;
-        break;
+        case AF_UNIX:
+            addrlen = sizeof(addrUnix);
+            memset(&addrUnix, 0, sizeof(addrUnix));
+            addrUnix.sun_family = static_cast<unsigned short>(af);
+            strcpy(addrUnix.sun_path, hostname.c_str());
+            addr = reinterpret_cast<sockaddr*>(&addrUnix);
+            break;
 #endif
-    default:
-        streamError << "protocol not supported";
-        break;
+        default:
+            streamError << "protocol not supported";
+            break;
     }
     if (addr)
     {
-        return std::string((char*)addr, addrlen);
+        return std::string(reinterpret_cast<const char*>(addr), addrlen);
     }
     else
     {
@@ -209,16 +211,14 @@ std::string AddressHelpers::makeSocketAddress(const std::string& hostname, int p
     }
 }
 
-
-
 void AddressHelpers::addr2peer(sockaddr* addr, ConnectionData& connectionData)
 {
-    switch (addr->sa_family)
+    switch(addr->sa_family)
     {
 #ifndef WIN32
-    case AF_UNIX:
+        case AF_UNIX:
         {
-            struct sockaddr_un* a = (struct sockaddr_un*)addr;
+            struct sockaddr_un* a = reinterpret_cast<struct sockaddr_un*>(addr);
             std::string endpoint = "icp://";
             endpoint += a->sun_path;
             connectionData.endpointPeer = std::move(endpoint);
@@ -227,11 +227,11 @@ void AddressHelpers::addr2peer(sockaddr* addr, ConnectionData& connectionData)
         }
         break;
 #endif
-    case AF_INET:
+        case AF_INET:
         {
-            struct sockaddr_in* a = (struct sockaddr_in*)addr;
+            struct sockaddr_in* a = reinterpret_cast<struct sockaddr_in*>(addr);
             int port = ntohs(a->sin_port);
-            unsigned char* ipaddr = (unsigned char*)&a->sin_addr.s_addr;
+            unsigned char* ipaddr = reinterpret_cast<unsigned char*>(&a->sin_addr.s_addr);
             std::string address;
             address += std::to_string(ipaddr[0]);
             address += '.';
@@ -249,12 +249,12 @@ void AddressHelpers::addr2peer(sockaddr* addr, ConnectionData& connectionData)
             connectionData.portPeer = port;
         }
         break;
-    default:
-        connectionData.endpointPeer.clear();
-        connectionData.addressPeer.clear();
-        connectionData.portPeer = 0;
-        break;
+        default:
+            connectionData.endpointPeer.clear();
+            connectionData.addressPeer.clear();
+            connectionData.portPeer = 0;
+            break;
     }
 }
 
-}   // namespace finalmq
+} // namespace finalmq

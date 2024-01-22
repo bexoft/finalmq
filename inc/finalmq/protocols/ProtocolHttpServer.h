@@ -22,22 +22,26 @@
 
 #pragma once
 
-#include "finalmq/streamconnection/IMessage.h"
-#include "finalmq/protocolsession/IProtocol.h"
-#include "finalmq/helpers/FmqDefines.h"
-#include "finalmq/helpers/Executor.h"
-
 #include <random>
 
+#include "finalmq/helpers/Executor.h"
+#include "finalmq/helpers/FmqDefines.h"
+#include "finalmq/protocolsession/IProtocol.h"
+#include "finalmq/streamconnection/IMessage.h"
 
-namespace finalmq {
-
-
-class SYMBOLEXP ProtocolHttpServer : public IProtocol
-                                   , public std::enable_shared_from_this<ProtocolHttpServer>
+namespace finalmq
 {
+#ifndef WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
+#endif
+class SYMBOLEXP ProtocolHttpServer : public IProtocol, public std::enable_shared_from_this<ProtocolHttpServer>
+{
+#ifndef WIN32
+#pragma GCC diagnostic pop
+#endif
 public:
-    static const std::uint32_t PROTOCOL_ID;           // 4
+    static const std::uint32_t PROTOCOL_ID; // 4
     static const std::string PROTOCOL_NAME; // httpserver
 
     static const std::string FMQ_HTTP;
@@ -54,6 +58,10 @@ public:
     virtual ~ProtocolHttpServer();
 
 private:
+    ProtocolHttpServer(const ProtocolHttpServer&) = delete;
+    ProtocolHttpServer(ProtocolHttpServer&&) = delete;
+    const ProtocolHttpServer& operator=(const ProtocolHttpServer&) = delete;
+    const ProtocolHttpServer& operator=(ProtocolHttpServer&&) = delete;
 
     enum ChunkedState
     {
@@ -90,7 +98,6 @@ private:
     virtual IProtocolSessionDataPtr createProtocolSessionData() override;
     virtual void setProtocolSessionData(const IProtocolSessionDataPtr& protocolSessionData) override;
 
-
     bool receiveHeaders(ssize_t bytesReceived);
     void reset();
     std::string createSessionName();
@@ -113,44 +120,42 @@ private:
         SESSIONID_FMQ = 2
     };
 
-    std::random_device                              m_randomDevice;
-    std::mt19937                                    m_randomGenerator;
-    std::uniform_int_distribution<std::uint64_t>    m_randomVariable;
-    IMessage::Metainfo                              m_headerSendNext;
-    StateSessionId                                  m_stateSessionId = StateSessionId::SESSIONID_NONE;
-    std::vector<std::string>                        m_sessionNames;
+    std::random_device m_randomDevice{};
+    std::mt19937 m_randomGenerator{};
+    std::uniform_int_distribution<std::uint64_t> m_randomVariable{};
+    IMessage::Metainfo m_headerSendNext{};
+    StateSessionId m_stateSessionId = StateSessionId::SESSIONID_NONE;
+    std::vector<std::string> m_sessionNames{};
 
-    State                               m_state = State::STATE_FIND_FIRST_LINE;
-    std::string                         m_receiveBuffer;
-    ssize_t                             m_offsetRemaining = 0;
-    ssize_t                             m_sizeRemaining = 0;
-    IMessagePtr                         m_message;
-    ssize_t                             m_contentLength = 0;
-    ssize_t                             m_indexFilled = 0;
-    std::string                         m_headerHost;
-    std::int64_t                        m_connectionId = 0;
-    bool                                m_createSession = false;
-    std::string                         m_sessionName;
-    std::weak_ptr<IProtocolCallback>    m_callback;
-    IStreamConnectionPtr                m_connection;
-    ChunkedState                        m_chunkedState = STATE_STOP;
-    bool                                m_multipart = false;
+    State m_state = State::STATE_FIND_FIRST_LINE;
+    std::string m_receiveBuffer{};
+    ssize_t m_offsetRemaining = 0;
+    ssize_t m_sizeRemaining = 0;
+    IMessagePtr m_message{};
+    ssize_t m_contentLength = 0;
+    ssize_t m_indexFilled = 0;
+    std::string m_headerHost{};
+    std::int64_t m_connectionId = 0;
+    bool m_createSession = false;
+    std::string m_sessionName{};
+    std::weak_ptr<IProtocolCallback> m_callback{};
+    IStreamConnectionPtr m_connection{};
+    ChunkedState m_chunkedState = STATE_STOP;
+    bool m_multipart = false;
 
     // path
-    std::string*                        m_path = nullptr;
+    std::string* m_path = nullptr;
 
-    mutable std::mutex                  m_mutex;
-    static std::atomic_int64_t          m_nextSessionNameCounter;
+    mutable std::mutex m_mutex{};
+    static std::atomic_int64_t m_nextSessionNameCounter;
 };
-
 
 class SYMBOLEXP ProtocolHttpServerFactory : public IProtocolFactory
 {
 public:
-
 private:
     // IProtocolFactory
     virtual IProtocolPtr createProtocol(const Variant& data) override;
 };
 
-}   // namespace finalmq
+} // namespace finalmq

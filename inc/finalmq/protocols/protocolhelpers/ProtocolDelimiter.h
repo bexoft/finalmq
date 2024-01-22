@@ -22,15 +22,14 @@
 
 #pragma once
 
-#include "finalmq/streamconnection/IMessage.h"
-#include "finalmq/protocolsession/IProtocol.h"
-#include "finalmq/helpers/FmqDefines.h"
 #include <vector>
 
+#include "finalmq/helpers/FmqDefines.h"
+#include "finalmq/protocolsession/IProtocol.h"
+#include "finalmq/streamconnection/IMessage.h"
 
-namespace finalmq {
-
-
+namespace finalmq
+{
 class SYMBOLEXP ProtocolDelimiter : public IProtocol
 {
 public:
@@ -43,7 +42,7 @@ private:
     virtual void setConnection(const IStreamConnectionPtr& connection) override;
     virtual IStreamConnectionPtr getConnection() const override;
     virtual void disconnect() override;
-    virtual std::uint32_t getProtocolId() const = 0;
+    //virtual std::uint32_t getProtocolId() const = 0;
     virtual bool areMessagesResendable() const override;
     virtual bool doesSupportMetainfo() const override;
     virtual bool doesSupportSession() const override;
@@ -66,27 +65,25 @@ private:
 
     std::vector<ssize_t> findEndOfMessage(const char* buffer, ssize_t size);
 
-    std::weak_ptr<IProtocolCallback>    m_callback;
-    IStreamConnectionPtr                m_connection;
+    std::weak_ptr<IProtocolCallback> m_callback{};
+    IStreamConnectionPtr m_connection{};
 
-    const std::string                   m_delimiter;
-    const char                          m_delimiterStart;
-    ssize_t                             m_indexStartMessage = 0;
-    std::shared_ptr<std::string>        m_receiveBuffer;
-    ssize_t                             m_bufferSize = 0;
+    const std::string m_delimiter{};
+    const char m_delimiterStart{};
+    ssize_t m_indexStartMessage = 0;
+    std::shared_ptr<std::string> m_receiveBuffer{};
+    ssize_t m_bufferSize = 0;
 
     struct ReceiveBufferStore
     {
-        std::shared_ptr<std::string> receiveBuffer;
-        ssize_t                      indexStartMessage = -1;
-        ssize_t                      indexEndMessage = -1;
+        std::shared_ptr<std::string> receiveBuffer{};
+        ssize_t indexStartMessage = -1;
+        ssize_t indexEndMessage = -1;
     };
-    std::vector<ReceiveBufferStore>     m_receiveBuffers;
-    ssize_t                             m_receiveBuffersTotal = 0;
+    std::vector<ReceiveBufferStore> m_receiveBuffers{};
+    ssize_t m_receiveBuffersTotal = 0;
 
-    mutable std::mutex                  m_mutex;
+    mutable std::mutex m_mutex{};
 };
 
-
-
-}   // namespace finalmq
+} // namespace finalmq

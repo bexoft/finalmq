@@ -109,6 +109,10 @@ std::shared_ptr<finalmq::StructBase> <%- plaintype %>::clone() const
     return std::make_shared<<%- plaintype %>>(*this);
 }
 
+#ifndef WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
 bool <%- plaintype %>::operator ==(const <%- plaintype %>& <% if (stru.fields.length == 0) { %>/*<% } %>rhs<% if (stru.fields.length == 0) { %>*/<% } %>) const
 {
 <% if (stru.fields.length > 0) { %>
@@ -124,6 +128,10 @@ bool <%- plaintype %>::operator ==(const <%- plaintype %>& <% if (stru.fields.le
     return true;
 <% } -%>
 }
+#ifndef WIN32
+#pragma GCC diagnostic pop
+#endif
+
 bool <%- plaintype %>::operator !=(const <%- plaintype %>& rhs) const
 {
     return !(*this == rhs);

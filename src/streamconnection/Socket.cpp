@@ -20,30 +20,27 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-
 #include "finalmq/streamconnection/Socket.h"
-#include "finalmq/helpers/OperatingSystem.h"
-#include "finalmq/logger/LogStream.h"
-#include "finalmq/helpers/ModulenameFinalmq.h"
 
-
+#include <assert.h>
 #include <errno.h>
 #include <string.h>
-#include <assert.h>
+
+#include "finalmq/helpers/ModulenameFinalmq.h"
+#include "finalmq/helpers/OperatingSystem.h"
+#include "finalmq/logger/LogStream.h"
 
 #if defined(WIN32) || defined(__MINGW32__)
-#pragma warning(disable: 4996)
+#pragma warning(disable : 4996)
 //#include <winsock2.h>
 #else
-#include <netinet/tcp.h>
 #include <fcntl.h>
+
+#include <netinet/tcp.h>
 #ifndef __QNX__
 #include <sys/unistd.h>
 #endif
 #endif
-
-
-
 
 class InitWinSocket
 {
@@ -65,21 +62,16 @@ public:
 };
 static InitWinSocket g_initWinSocket;
 
-
-
-namespace finalmq {
-
-
+namespace finalmq
+{
 Socket::Socket()
 {
 }
-
 
 Socket::~Socket()
 {
     destroy();
 }
-
 
 bool Socket::create(int af, int type, int protocol)
 {
@@ -101,8 +93,6 @@ bool Socket::create(int af, int type, int protocol)
     }
     return ok;
 }
-
-
 
 #ifdef USE_OPENSSL
 bool Socket::createSslServer(int af, int type, int protocol, const CertificateData& certificateData)
@@ -142,7 +132,6 @@ bool Socket::createSslClient(int af, int type, int protocol, const CertificateDa
 }
 #endif
 
-
 bool Socket::isValid() const
 {
     return (m_sd != nullptr);
@@ -168,7 +157,7 @@ bool Socket::accept(sockaddr* addr, socklen_t* addrlen, SocketPtr& socketAccept)
     bool ok = false;
     socketAccept = nullptr;
     assert(m_sd);
-    SOCKET sd = OperatingSystem::instance().accept(m_sd->getDescriptor(), addr, (socklen_t*)addrlen);
+    SOCKET sd = OperatingSystem::instance().accept(m_sd->getDescriptor(), addr, addrlen);
     if (sd != INVALID_SOCKET)
     {
         ok = true;
@@ -184,13 +173,12 @@ bool Socket::accept(sockaddr* addr, socklen_t* addrlen, SocketPtr& socketAccept)
     return ok;
 }
 
-
 int Socket::bind(const sockaddr* addr, int addrlen)
 {
 #if !defined(WIN32) && !defined(__MINGW32__)
     if (m_af == AF_UNIX)
     {
-        struct sockaddr_un* addrunix = (sockaddr_un*)addr;
+        const struct sockaddr_un* addrunix = reinterpret_cast<const sockaddr_un*>(addr);
         if (addrunix)
         {
             m_name = addrunix->sun_path;
@@ -210,7 +198,6 @@ int Socket::bind(const sockaddr* addr, int addrlen)
     return err;
 }
 
-
 int Socket::listen(int backlog)
 {
     assert(m_sd);
@@ -218,9 +205,6 @@ int Socket::listen(int backlog)
     err = handleError(err, "listen");
     return err;
 }
-
-
-
 
 int Socket::send(const char* buf, int len, int flags)
 {
@@ -254,7 +238,7 @@ int Socket::send(const char* buf, int len, int flags)
             do
             {
                 err = OperatingSystem::instance().send(m_sd->getDescriptor(), buf, len, flags);
-            } while(err == -1 && getLastError() == SOCKETERROR(EINTR));
+            } while (err == -1 && getLastError() == SOCKETERROR(EINTR));
         }
 
         if (err > 0)
@@ -281,8 +265,6 @@ int Socket::send(const char* buf, int len, int flags)
     }
     return err;
 }
-
-
 
 int Socket::receive(char* buf, int len, int flags)
 {
@@ -316,7 +298,7 @@ int Socket::receive(char* buf, int len, int flags)
             do
             {
                 err = OperatingSystem::instance().recv(m_sd->getDescriptor(), buf, len, flags);
-            } while(err == -1 && getLastError() == SOCKETERROR(EINTR));
+            } while (err == -1 && getLastError() == SOCKETERROR(EINTR));
         }
 
         if (err > 0)
@@ -344,7 +326,6 @@ int Socket::receive(char* buf, int len, int flags)
     return err;
 }
 
-
 void Socket::destroy()
 {
     if (m_sd)
@@ -357,16 +338,10 @@ void Socket::destroy()
     }
 }
 
-
-
 SocketDescriptorPtr Socket::getSocketDescriptor() const
 {
     return m_sd;
 }
-
-
-
-
 
 void Socket::attach(SOCKET sd)
 {
@@ -382,7 +357,6 @@ void Socket::attach(SOCKET sd)
     }
 }
 
-
 int Socket::pendingRead() const
 {
     assert(m_sd);
@@ -395,7 +369,6 @@ int Socket::pendingRead() const
     return countRead;
 }
 
-
 int Socket::getLastError()
 {
     int errorNumber = OperatingSystem::instance().getLastError();
@@ -405,7 +378,6 @@ int Socket::getLastError()
     }
     return errorNumber;
 }
-
 
 int Socket::handleError(int err, const char* funcName)
 {
@@ -422,7 +394,6 @@ int Socket::handleError(int err, const char* funcName)
     }
     return err;
 }
-
 
 #ifdef USE_OPENSSL
 
@@ -462,14 +433,11 @@ int Socket::sslPending()
     return m_sslSocket->sslPending();
 }
 
-
-
 SslSocket::IoState Socket::sslAccepting()
 {
     assert(m_sslSocket);
     return m_sslSocket->accepting();
 }
-
 
 SslSocket::IoState Socket::sslConnecting()
 {
@@ -477,8 +445,6 @@ SslSocket::IoState Socket::sslConnecting()
     return m_sslSocket->connecting();
 }
 
-
 #endif
 
-
-}   // namespace finalmq
+} // namespace finalmq

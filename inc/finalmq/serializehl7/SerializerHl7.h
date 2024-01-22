@@ -22,14 +22,14 @@
 
 #pragma once
 
-#include "finalmq/metadata/MetaStruct.h"
 #include "finalmq/helpers/IZeroCopyBuffer.h"
+#include "finalmq/hl7/Hl7Builder.h"
+#include "finalmq/metadata/MetaStruct.h"
 #include "finalmq/serialize/IParserVisitor.h"
 #include "finalmq/serialize/ParserProcessDefaultValues.h"
-#include "finalmq/hl7/Hl7Builder.h"
 
-namespace finalmq {
-
+namespace finalmq
+{
 class SYMBOLEXP SerializerHl7 : public ParserProcessDefaultValues
 {
 public:
@@ -40,6 +40,7 @@ private:
     {
     public:
         Internal(IZeroCopyBuffer& buffer, int maxBlockSize);
+
     private:
         // IParserVisitor
         virtual void notifyError(const char* str, const char* message) override;
@@ -105,16 +106,16 @@ private:
 
         static const int NO_ARRAY_STRUCT = -2;
 
-        std::unique_ptr<IHl7BuilderVisitor> m_uniqueHl7Builder;
-        IHl7BuilderVisitor&                 m_hl7Builder;
+        std::unique_ptr<IHl7BuilderVisitor> m_uniqueHl7Builder{};
+        IHl7BuilderVisitor& m_hl7Builder;
 
-        bool                                m_inSegment = false;
+        bool m_inSegment = false;
 
-        std::vector<int>                    m_indexOfLayer;
-        int                                 m_ixArrayStruct = NO_ARRAY_STRUCT;
+        std::vector<int> m_indexOfLayer{};
+        int m_ixArrayStruct = NO_ARRAY_STRUCT;
     };
 
-    Internal                            m_internal;
+    Internal m_internal;
 };
 
-}   // namespace finalmq
+} // namespace finalmq

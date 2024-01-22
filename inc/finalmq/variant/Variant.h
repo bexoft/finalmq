@@ -22,17 +22,15 @@
 
 #pragma once
 
-#include <string>
 #include <memory>
 #include <string>
+
 #include <assert.h>
 
 #include "IVariantValue.h"
 
-
-namespace finalmq {
-
-
+namespace finalmq
+{
 //////////////////////
 
 const static int VARTYPE_NONE = 0;
@@ -51,9 +49,17 @@ public:
     }
 
     template<class T>
-    void operator =(T data)
+    const Variant& operator=(T data)
     {
         m_value = std::make_shared<typename VariantValueTypeInfo<T>::VariantValueType>(std::move(data));
+#ifndef WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Weffc++"
+#endif
+        return *this;
+#ifndef WIN32
+#pragma GCC diagnostic pop
+#endif
     }
 
     template<class T>
@@ -141,18 +147,17 @@ public:
         }
     }
 
-
     Variant(const Variant& rhs);
-    const Variant& operator =(const Variant& rhs);
+    const Variant& operator=(const Variant& rhs);
     Variant(Variant&& rhs) noexcept;
-    Variant& operator =(Variant&& rhs) noexcept;
+    Variant& operator=(Variant&& rhs) noexcept;
 
     void accept(IVariantVisitor& visitor, ssize_t index = 0, int level = 0, ssize_t size = 0, const std::string& name = "");
 
     Variant* getVariant(const std::string& name);
     const Variant* getVariant(const std::string& name) const;
 
-    bool operator ==(const Variant& rhs) const;
+    bool operator==(const Variant& rhs) const;
 
     bool add(const std::string& name, const Variant& variant);
     bool add(const std::string& name, Variant&& variant);
@@ -163,16 +168,12 @@ public:
     Variant& getOrCreate(const std::string& name);
 
 private:
-
-    std::shared_ptr<IVariantValue> m_value;
+    std::shared_ptr<IVariantValue> m_value{};
 };
 
-
-}   // namespace finalmq
-
+} // namespace finalmq
 
 // includes, so that the application does not have to include these header files
-#include "VariantValues.h"
-#include "VariantValueStruct.h"
 #include "VariantValueList.h"
-
+#include "VariantValueStruct.h"
+#include "VariantValues.h"

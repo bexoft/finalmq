@@ -22,14 +22,14 @@
 
 #pragma once
 
+#include <atomic>
+#include <mutex>
+
 #include "finalmq/protocolsession/ProtocolSessionContainer.h"
 #include "finalmq/remoteentity/IRemoteEntity.h"
 
-#include <mutex>
-#include <atomic>
-
-namespace finalmq {
-
+namespace finalmq
+{
 typedef std::shared_ptr<IProtocolSession> IProtocolSessionPtr;
 
 class Header;
@@ -42,20 +42,20 @@ enum FormatStatus
     FORMATSTATUS_HEADER_PARSED_BY_FORMAT = 4,
 };
 
-
 struct IRemoteEntityFormat
 {
-    virtual ~IRemoteEntityFormat() {}
+    virtual ~IRemoteEntityFormat()
+    {}
     virtual std::shared_ptr<StructBase> parse(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus) = 0;
     virtual std::shared_ptr<StructBase> parseData(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, std::string& type, int& formatStatus) = 0;
     virtual void serialize(const IProtocolSessionPtr& session, IMessage& message, const Header& header, const StructBase* structBase = nullptr) = 0;
     virtual void serializeData(const IProtocolSessionPtr& session, IMessage& message, const StructBase* structBase = nullptr) = 0;
 };
 
-
 struct IRemoteEntityFormatRegistry
 {
-    virtual ~IRemoteEntityFormatRegistry() {}
+    virtual ~IRemoteEntityFormatRegistry()
+    {}
     virtual std::shared_ptr<StructBase> parse(const IProtocolSessionPtr& session, IMessage& message, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus) = 0;
     virtual std::shared_ptr<StructBase> parseHeaderInMetainfo(const IProtocolSessionPtr& session, IMessage& message, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus) = 0;
     virtual void send(const IProtocolSessionPtr& session, const std::string& virtualSessionId, Header& header, Variant&& echoData, const StructBase* structBase = nullptr, IMessage::Metainfo* metainfo = nullptr, Variant* controlData = nullptr) = 0;
@@ -64,9 +64,6 @@ struct IRemoteEntityFormatRegistry
     virtual bool isRegistered(int contentType) const = 0;
     virtual int getContentType(const std::string& contentTypeName) const = 0;
 };
-
-
-
 
 class RemoteEntityFormatRegistryImpl : public IRemoteEntityFormatRegistry
 {
@@ -84,10 +81,9 @@ private:
     bool serialize(const IProtocolSessionPtr& session, IMessage& message, const Header& header, const StructBase* structBase = nullptr);
     bool serializeData(const IProtocolSessionPtr& session, IMessage& message, const StructBase* structBase);
 
-    std::unordered_map<int, std::shared_ptr<IRemoteEntityFormat>>   m_contentTypeToFormat;
-    std::unordered_map<std::string, int>                            m_contentTypeNameToContentType;
+    std::unordered_map<int, std::shared_ptr<IRemoteEntityFormat>> m_contentTypeToFormat{};
+    std::unordered_map<std::string, int> m_contentTypeNameToContentType{};
 };
-
 
 class SYMBOLEXP RemoteEntityFormatRegistry
 {
@@ -118,8 +114,4 @@ private:
     static std::unique_ptr<IRemoteEntityFormatRegistry>& getStaticUniquePtrRef();
 };
 
-
-
-
-
-}   // namespace finalmq
+} // namespace finalmq

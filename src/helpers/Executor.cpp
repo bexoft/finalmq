@@ -21,20 +21,17 @@
 //SOFTWARE.
 
 #include "finalmq/helpers/Executor.h"
-#include <assert.h>
-
 
 #include <iostream>
 
+#include <assert.h>
 
-namespace finalmq {
-
-
+namespace finalmq
+{
 void ExecutorBase::registerActionNotification(std::function<void()> func)
 {
     m_funcNotify = func;
 }
-
 
 void ExecutorBase::run()
 {
@@ -63,13 +60,7 @@ bool ExecutorBase::isTerminating() const
     return m_terminate;
 }
 
-
-
-
 ////////////////////////////////////////////////////////
-
-
-
 
 bool Executor::runAvailableActions(const FuncIsAbort& funcIsAbort)
 {
@@ -84,12 +75,12 @@ bool Executor::runAvailableActions(const FuncIsAbort& funcIsAbort)
 
     if (!actions.empty())
     {
-        for (auto it = actions.begin(); it != actions.end(); ++it)
+        for (auto it1 = actions.begin(); it1 != actions.end(); ++it1)
         {
-            ActionEntry& entry = *it;
-            for (auto it = entry.funcs.begin(); it != entry.funcs.end(); ++it)
+            ActionEntry& entry = *it1;
+            for (auto it2 = entry.funcs.begin(); it2 != entry.funcs.end(); ++it2)
             {
-                std::unique_ptr<std::function<void()>>& func = *it;
+                std::unique_ptr<std::function<void()>>& func = *it2;
                 assert(func && *func);
                 if (!funcIsAbort || !funcIsAbort())
                 {
@@ -108,7 +99,6 @@ bool Executor::runAvailableActions(const FuncIsAbort& funcIsAbort)
         return false;
     }
 }
-    
 
 bool Executor::areRunnableActionsAvailable() const
 {
@@ -118,8 +108,6 @@ bool Executor::areRunnableActionsAvailable() const
     }
     return true;
 }
-
-
 
 bool Executor::runAvailableActionBatch(const FuncIsAbort& funcIsAbort)
 {
@@ -253,9 +241,6 @@ void Executor::addAction(std::function<void()> func, std::int64_t instanceId)
     }
 }
 
-
-
-
 //////////////////////////////////////////////////
 
 bool ExecutorIgnoreOrderOfInstance::runAvailableActions(const FuncIsAbort& funcIsAbort)
@@ -331,9 +316,7 @@ void ExecutorIgnoreOrderOfInstance::addAction(std::function<void()> func, std::i
     }
 }
 
-
 //////////////////////////////////////////////////
-
 
 ExecutorWorkerBase::ExecutorWorkerBase(const std::shared_ptr<IExecutor>& executor, int numberOfWorkerThreads)
     : m_executor(executor)
@@ -379,7 +362,6 @@ void ExecutorWorkerBase::join()
         m_threads[i].join();
     }
 }
-
 
 /////////////////////////////////////////////////////
 

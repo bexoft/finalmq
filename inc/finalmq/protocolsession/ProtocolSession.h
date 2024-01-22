@@ -22,41 +22,45 @@
 
 #pragma once
 
-#include "finalmq/streamconnection/StreamConnection.h"
-#include "finalmq/variant/Variant.h"
-#include "finalmq/helpers/IExecutor.h"
-#include "finalmq/helpers/PollingTimer.h"
-#include "IProtocol.h"
-#include "ProtocolSessionList.h"
-#include "IProtocolSession.h"
-
 #include <unordered_set>
 
-namespace finalmq {
+#include "IProtocol.h"
+#include "IProtocolSession.h"
+#include "ProtocolSessionList.h"
+#include "finalmq/helpers/IExecutor.h"
+#include "finalmq/helpers/PollingTimer.h"
+#include "finalmq/streamconnection/StreamConnection.h"
+#include "finalmq/variant/Variant.h"
 
-
+namespace finalmq
+{
 struct IProtocolSessionPrivate : public IProtocolSession
 {
+    virtual ~IProtocolSessionPrivate() override
+    {}
     virtual bool connect() = 0;
-//    virtual void createConnection() = 0;
+    //    virtual void createConnection() = 0;
     virtual void setConnection(const IStreamConnectionPtr& connection, bool verified) = 0;
     virtual void setProtocol(const IProtocolPtr& protocol) = 0;
     virtual void setSessionNameInternal(const std::string& sessionName) = 0;
     virtual void cycleTime() = 0;
+
+    virtual bool connect(const std::string& endpoint, const ConnectProperties& connectionProperties = {}, int contentType = 0) override = 0;
 };
 
 typedef std::shared_ptr<IProtocolSessionPrivate> IProtocolSessionPrivatePtr;
 
-
 struct IStreamConnectionContainer;
 
-
-
-
-class ProtocolSession : public IProtocolSessionPrivate
-                      , public IProtocolCallback
-                      , public std::enable_shared_from_this<ProtocolSession>
+#ifndef WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
+#endif
+class ProtocolSession : public IProtocolSessionPrivate, public IProtocolCallback, public std::enable_shared_from_this<ProtocolSession>
 {
+#ifndef WIN32
+#pragma GCC diagnostic pop
+#endif
 public:
     ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const IProtocolPtr& protocol, const std::shared_ptr<IProtocolSessionList>& protocolSessionList, const BindProperties& bindProperties, int contentType);
     ProtocolSession(hybrid_ptr<IProtocolSessionCallback> callback, const IExecutorPtr& executor, const IExecutorPtr& executorPollerThread, const IProtocolFactoryPtr& protocolFactory, const std::shared_ptr<IProtocolSessionList>& protocolSessionList, const std::shared_ptr<IStreamConnectionContainer>& streamConnectionContainer, const std::string& endpointStreamConnection, const ConnectProperties& connectProperties, int contentType);
@@ -68,7 +72,7 @@ private:
     // IProtocolSession
     virtual IMessagePtr createMessage() const override;
     virtual void sendMessage(const IMessagePtr& msg, bool isReply = false) override;
-    virtual std::int64_t getSessionId() const;
+    virtual std::int64_t getSessionId() const override;
     virtual ConnectionData getConnectionData() const override;
     virtual int getContentType() const override;
     virtual bool doesSupportMetainfo() const override;
@@ -78,7 +82,7 @@ private:
     virtual bool doesSupportFileTransfer() const override;
     virtual bool isSynchronousRequestReply() const override;
     virtual void disconnect() override;
-//    virtual bool connect(const std::string& endpoint, const ConnectProperties& connectionProperties = {}) override;
+    //    virtual bool connect(const std::string& endpoint, const ConnectProperties& connectionProperties = {}) override;
     virtual bool connect(const std::string& endpoint, const ConnectProperties& connectionProperties = {}, int contentType = 0) override;
     virtual IExecutorPtr getExecutor() const override;
     virtual void subscribe(const std::vector<std::string>& subscribtions) override;
@@ -91,7 +95,7 @@ private:
 
     // IProtocolSessionPrivate
     virtual bool connect() override;
-//    virtual void createConnection() override;
+    //    virtual void createConnection() override;
     virtual void setConnection(const IStreamConnectionPtr& connection, bool verified) override;
     virtual void setProtocol(const IProtocolPtr& protocol) override;
     virtual void setSessionNameInternal(const std::string& sessionName) override;
@@ -127,63 +131,62 @@ private:
     IProtocolPtr createRequestConnection();
     void sendNextRequests();
 
+    const hybrid_ptr<IProtocolSessionCallback> m_callback;
+    const IExecutorPtr m_executor;
+    const IExecutorPtr m_executorPollerThread;
+    IProtocolPtr m_protocol{};
+    std::atomic<std::int64_t> m_connectionId{0};
+    std::unordered_map<std::int64_t, IProtocolPtr> m_multiProtocols{};
+    std::unordered_set<std::int64_t> m_unallocatedConnections{};
 
-    const hybrid_ptr<IProtocolSessionCallback>              m_callback;
-    const IExecutorPtr                                      m_executor;
-    const IExecutorPtr                                      m_executorPollerThread;
-    IProtocolPtr                                            m_protocol;
-    std::atomic<std::int64_t>                               m_connectionId{0};
-    std::unordered_map<std::int64_t, IProtocolPtr>          m_multiProtocols;
-    std::unordered_set<std::int64_t>                        m_unallocatedConnections;
+    const std::weak_ptr<IProtocolSessionList> m_protocolSessionList;
+    const int64_t m_sessionId = 0;
+    const int64_t m_instanceId = 0;
 
-    const std::weak_ptr<IProtocolSessionList>       m_protocolSessionList;
-    const int64_t                                   m_sessionId = 0;
-    const int64_t                                   m_instanceId = 0;
+    std::atomic<int> m_contentType{false};
+    std::uint32_t m_protocolId = false;
+    std::atomic<bool> m_protocolFlagMessagesResendable{false};
+    std::atomic<bool> m_protocolFlagSupportMetainfo{false};
+    std::atomic<bool> m_protocolFlagNeedsReply{false};
+    std::atomic<bool> m_protocolFlagIsMultiConnectionSession{false};
+    std::atomic<bool> m_protocolFlagIsSendRequestByPoll{false};
+    std::atomic<bool> m_protocolFlagSupportFileTransfer{false};
+    std::atomic<bool> m_protocolFlagSynchronousRequestReply{false};
 
-    std::atomic<int>                                m_contentType{false};
-    std::uint32_t                                   m_protocolId = false;
-    std::atomic<bool>                               m_protocolFlagMessagesResendable{false};
-    std::atomic<bool>                               m_protocolFlagSupportMetainfo{false};
-    std::atomic<bool>                               m_protocolFlagNeedsReply{false};
-    std::atomic<bool>                               m_protocolFlagIsMultiConnectionSession{false};
-    std::atomic<bool>                               m_protocolFlagIsSendRequestByPoll{false};
-    std::atomic<bool>                               m_protocolFlagSupportFileTransfer{ false };
-    std::atomic<bool>                               m_protocolFlagSynchronousRequestReply{ false };
+    IProtocolFactoryPtr m_protocolFactory{};
+    IProtocol::FuncCreateMessage m_messageFactory{};
+    std::atomic_bool m_protocolSet{false};
+    bool m_triggeredConnected = false;
+    bool m_triggeredDisconnected = false;
 
-    IProtocolFactoryPtr                             m_protocolFactory;
-    IProtocol::FuncCreateMessage                    m_messageFactory;
-    std::atomic_bool                                m_protocolSet{false};
-    bool                                            m_triggeredConnected = false;
-    bool                                            m_triggeredDisconnected = false;
+    const std::shared_ptr<IStreamConnectionContainer> m_streamConnectionContainer{};
+    std::string m_endpointStreamConnection{};
 
-    const std::shared_ptr<IStreamConnectionContainer>   m_streamConnectionContainer;
-    std::string                                         m_endpointStreamConnection;
+    const BindProperties m_bindProperties{};
+    ConnectProperties m_connectionProperties{};
+    Variant m_protocolData{};
+    IProtocolSessionDataPtr m_protocolSessionData{};
+    Variant m_formatData{};
+    int m_maxSynchReqRepConnections = -1;
 
-    const BindProperties                            m_bindProperties;
-    ConnectProperties                               m_connectionProperties;
-    Variant                                         m_protocolData;
-    IProtocolSessionDataPtr                         m_protocolSessionData;
-    Variant                                         m_formatData;
-    int                                             m_maxSynchReqRepConnections = -1;
+    std::deque<IMessagePtr> m_messagesBuffered{};
+    std::unordered_map<std::int64_t, Variant> m_runningRequests{};
 
-    std::deque<IMessagePtr>                         m_messagesBuffered;
-    std::unordered_map<std::int64_t, Variant>       m_runningRequests;
+    std::deque<IMessagePtr> m_pollMessages{};
+    int m_pollMaxRequests = 10000;
+    //    IMessagePtr                                     m_pollReply;
+    IProtocolPtr m_pollProtocol = nullptr;
+    PollingTimer m_pollTimer{};
+    int m_pollCountMax = 0;
+    int m_pollCounter = 0;
 
-    std::deque<IMessagePtr>                         m_pollMessages;
-    int                                             m_pollMaxRequests = 10000;
-//    IMessagePtr                                     m_pollReply;
-    IProtocolPtr                                    m_pollProtocol = nullptr;
-    PollingTimer                                    m_pollTimer;
-    int                                             m_pollCountMax = 0;
-    int                                             m_pollCounter = 0;
+    std::atomic<int> m_activityTimeout{-1};
+    PollingTimer m_activityTimer{};
 
-    std::atomic<int>                                m_activityTimeout{ -1 };
-    PollingTimer                                    m_activityTimer;
+    bool m_verified = false;
+    std::string m_sessionName{};
 
-    bool                                            m_verified = false;
-    std::string                                     m_sessionName;
-
-    mutable std::mutex                              m_mutex;
+    mutable std::mutex m_mutex{};
 };
 
-}   // namespace finalmq
+} // namespace finalmq

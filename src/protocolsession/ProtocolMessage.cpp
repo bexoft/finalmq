@@ -20,23 +20,18 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-
 #include "finalmq/protocolsession/ProtocolMessage.h"
 
-
-namespace finalmq {
-
+namespace finalmq
+{
 //---------------------------------------
 // ProtocolMessage
 //---------------------------------------
 
 const std::string ProtocolMessage::FMQ_PROTOCOLDATA = "fmq_protocoldata";
 
-
 ProtocolMessage::ProtocolMessage(std::uint32_t protocolId, ssize_t sizeHeader, ssize_t sizeTrailer)
-    : m_sizeHeader(sizeHeader)
-    , m_sizeTrailer(sizeTrailer)
-    , m_protocolId(protocolId)
+    : m_sizeHeader(sizeHeader), m_sizeTrailer(sizeTrailer), m_protocolId(protocolId)
 {
     m_itSendBufferRefsPayloadBegin = m_sendBufferRefs.end();
 }
@@ -171,7 +166,6 @@ ssize_t ProtocolMessage::getRemainingSize() const
     return 0;
 }
 
-
 // metadata
 const ProtocolMessage::Metainfo& ProtocolMessage::getAllMetainfo() const
 {
@@ -198,7 +192,6 @@ const std::string* ProtocolMessage::getMetainfo(const std::string& key) const
     return const_cast<ProtocolMessage*>(this)->getMetainfo(key);
 }
 
-
 std::string* ProtocolMessage::getMetainfo(const std::string& key)
 {
     auto it = m_metainfo.find(key);
@@ -208,7 +201,6 @@ std::string* ProtocolMessage::getMetainfo(const std::string& key)
     }
     return nullptr;
 }
-
 
 // controlData
 
@@ -220,7 +212,6 @@ Variant* ProtocolMessage::getControlDataIfAvailable()
     }
     return &m_controlData;
 }
-
 
 Variant& ProtocolMessage::getControlData()
 {
@@ -240,7 +231,6 @@ const Variant& ProtocolMessage::getControlData() const
     return m_controlData;
 }
 
-
 // echoData
 Variant& ProtocolMessage::getEchoData()
 {
@@ -259,8 +249,6 @@ const Variant& ProtocolMessage::getEchoData() const
     }
     return m_echoData;
 }
-
-
 
 // for send
 void ProtocolMessage::addSendPayload(const std::string& payload, ssize_t reserve)
@@ -285,14 +273,13 @@ void ProtocolMessage::downsizeLastSendPayload(ssize_t newSize)
 // for receive
 BufferRef ProtocolMessage::getReceiveHeader() const
 {
-    return { m_receiveBufferRef.first, m_sizeHeader };
+    return {m_receiveBufferRef.first, m_sizeHeader};
 }
 
 BufferRef ProtocolMessage::getReceivePayload() const
 {
-    return { const_cast<char*>(m_receiveBufferRef.first + m_sizeHeader), m_receiveBufferRef.second - m_sizeHeader };
+    return {m_receiveBufferRef.first + m_sizeHeader, m_receiveBufferRef.second - m_sizeHeader};
 }
-
 
 char* ProtocolMessage::resizeReceiveBuffer(ssize_t size)
 {
@@ -310,7 +297,7 @@ char* ProtocolMessage::resizeReceiveBuffer(ssize_t size)
         m_receiveBufferRef.first = const_cast<char*>(m_receiveBuffer->data());
     }
     m_receiveBufferRef.second = size;
-    return const_cast<char*>(m_receiveBufferRef.first);
+    return m_receiveBufferRef.first;
 }
 
 void ProtocolMessage::setReceiveBuffer(const std::shared_ptr<std::string>& receiveBuffer, ssize_t offset, ssize_t size)
@@ -326,7 +313,6 @@ void ProtocolMessage::setHeaderSize(ssize_t sizeHeader)
 {
     m_sizeHeader = sizeHeader;
 }
-
 
 // for the framework
 const std::list<BufferRef>& ProtocolMessage::getAllSendBuffers() const
@@ -368,7 +354,6 @@ std::list<std::string>& ProtocolMessage::getSendPayloadBuffers()
 {
     return m_payloadBuffers;
 }
-
 
 // for the protocol to add a header
 void ProtocolMessage::addSendHeader(const std::string& buffer)
@@ -416,7 +401,7 @@ void ProtocolMessage::downsizeLastSendHeader(ssize_t newSize)
 void ProtocolMessage::prepareMessageToSend()
 {
     m_preparedToSend = true;
-    for (auto it = m_sendBufferRefs.begin(); it != m_sendBufferRefs.end(); )
+    for (auto it = m_sendBufferRefs.begin(); it != m_sendBufferRefs.end();)
     {
         if (it->second == 0)
         {
@@ -455,4 +440,4 @@ IMessagePtr ProtocolMessage::getMessage(std::uint32_t protocolId) const
     return nullptr;
 }
 
-}   // namespace finalmq
+} // namespace finalmq

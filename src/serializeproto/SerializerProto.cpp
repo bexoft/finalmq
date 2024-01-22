@@ -20,47 +20,36 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-
 #include "finalmq/serializeproto/SerializerProto.h"
-#include "finalmq/serialize/ParserAbortAndIndex.h"
-#include "finalmq/metadata/MetaData.h"
-#include "finalmq/helpers/FmqDefines.h"
-#include "finalmq/helpers/ModulenameFinalmq.h"
-#include "finalmq/logger/LogStream.h"
+
+#include <iostream>
 
 #include <assert.h>
 #include <memory.h>
-#include <iostream>
 
+#include "finalmq/helpers/FmqDefines.h"
+#include "finalmq/helpers/ModulenameFinalmq.h"
+#include "finalmq/logger/LogStream.h"
+#include "finalmq/metadata/MetaData.h"
+#include "finalmq/serialize/ParserAbortAndIndex.h"
 
-namespace finalmq {
-
+namespace finalmq
+{
 static constexpr int INDEX2ID = 1;
 static constexpr int MAX_VARINT_SIZE = 10;
 static constexpr int STRUCT_SIZE_COPY = 128;
 
-
-
-
 SerializerProto::SerializerProto(IZeroCopyBuffer& buffer, int maxBlockSize)
-    : ParserConverter()
-    , m_internal(buffer, maxBlockSize)
-    , m_parserAbortAndIndex()
+    : ParserConverter(), m_internal(buffer, maxBlockSize), m_parserAbortAndIndex()
 {
     m_parserAbortAndIndex = std::make_unique<ParserAbortAndIndex>(&m_internal);
     ParserConverter::setVisitor(*m_parserAbortAndIndex);
 }
 
-
-
 SerializerProto::Internal::Internal(IZeroCopyBuffer& buffer, int maxBlockSize)
-    : m_zeroCopybuffer(buffer)
-    , m_maxBlockSize(maxBlockSize)
+    : m_zeroCopybuffer(buffer), m_maxBlockSize(maxBlockSize)
 {
 }
-
-
-
 
 void SerializerProto::Internal::serializeVarint(std::uint64_t value)
 {
@@ -73,8 +62,6 @@ void SerializerProto::Internal::serializeVarint(std::uint64_t value)
     *m_buffer = static_cast<char>(value);
     ++m_buffer;
 }
-
-
 
 void SerializerProto::Internal::serializeVarintValue(int id, std::uint64_t value)
 {
@@ -90,10 +77,6 @@ void SerializerProto::Internal::serializeVarintValue(int id, std::uint64_t value
     serializeVarint(value);
 }
 
-
-
-
-
 void SerializerProto::Internal::serializeZigZagValue(int id, std::int64_t value)
 {
     if (value == 0)
@@ -105,19 +88,22 @@ void SerializerProto::Internal::serializeZigZagValue(int id, std::int64_t value)
     serializeVarintValue(id, v);
 }
 
-
 std::uint64_t SerializerProto::Internal::zigzag(std::int64_t value)
 {
     return (static_cast<std::uint64_t>(value) << 1) ^ static_cast<std::uint64_t>(value >> 63);
 }
 
-
-
-
 template<class T, int WIRETYPE>
 void SerializerProto::Internal::serializeFixedValue(int id, T value)
 {
+#ifndef WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
     if (value == 0)
+#ifndef WIN32
+#pragma GCC diagnostic pop
+#endif
     {
         return;
     }
@@ -126,10 +112,9 @@ void SerializerProto::Internal::serializeFixedValue(int id, T value)
 
     std::uint32_t tag = (id << 3) | WIRETYPE;
     serializeVarint(tag);
-    EndianHelper<sizeof(T)>::write(m_buffer, value);
+    EndianHelper<static_cast<int>(sizeof(T))>::write(m_buffer, value);
     m_buffer += sizeof(T);
 }
-
 
 template<bool ignoreZeroLength>
 void SerializerProto::Internal::serializeString(int id, const char* value, ssize_t size)
@@ -147,10 +132,6 @@ void SerializerProto::Internal::serializeString(int id, const char* value, ssize
     memcpy(m_buffer, value, size);
     m_buffer += size;
 }
-
-
-
-
 
 template<class T>
 void SerializerProto::Internal::serializeArrayFixed(int id, const T* value, ssize_t size)
@@ -178,7 +159,6 @@ void SerializerProto::Internal::serializeArrayFixed(int id, const T* value, ssiz
     m_buffer += sizeByte;
 }
 
-
 void SerializerProto::Internal::serializeArrayBool(int id, const std::vector<bool>& value)
 {
     if (value.size() <= 0)
@@ -199,7 +179,6 @@ void SerializerProto::Internal::serializeArrayBool(int id, const std::vector<boo
     }
 }
 
-
 void SerializerProto::Internal::serializeArrayString(int id, const std::vector<std::string>& value)
 {
     ssize_t size = value.size();
@@ -215,7 +194,6 @@ void SerializerProto::Internal::serializeArrayString(int id, const std::vector<s
     }
 }
 
-
 void SerializerProto::Internal::serializeArrayBytes(int id, const std::vector<Bytes>& value)
 {
     ssize_t size = value.size();
@@ -227,11 +205,9 @@ void SerializerProto::Internal::serializeArrayBytes(int id, const std::vector<By
     for (int i = 0; i < size; i++)
     {
         const Bytes& bytes = value[i];
-        serializeString<false>(id, reinterpret_cast<const char*>(bytes.data()), bytes.size());
+        serializeString<false>(id, bytes.data(), bytes.size());
     }
 }
-
-
 
 template<class T>
 void SerializerProto::Internal::serializeArrayVarint(int id, const T* value, ssize_t size)
@@ -251,7 +227,6 @@ void SerializerProto::Internal::serializeArrayVarint(int id, const T* value, ssi
         serializeVarint(value[i]);
     }
 }
-
 
 template<class T>
 void SerializerProto::Internal::serializeArrayZigZag(int id, const T* value, ssize_t size)
@@ -273,12 +248,8 @@ void SerializerProto::Internal::serializeArrayZigZag(int id, const T* value, ssi
     }
 }
 
-
-
-
 static const int RESERVE_STRUCT_SIZE = 8;
 static const int DUMMY_ID = 2047;
-
 
 char* SerializerProto::Internal::serializeStruct(int id)
 {
@@ -289,9 +260,6 @@ char* SerializerProto::Internal::serializeStruct(int id)
     serializeVarint(tag);
     return bufferStructStart;
 }
-
-
-
 
 void SerializerProto::Internal::reserveSpace(ssize_t space)
 {
@@ -349,29 +317,19 @@ void SerializerProto::Internal::resizeBuffer()
     }
 }
 
-
-
-
-
-
 // IParserVisitor
 void SerializerProto::Internal::notifyError(const char* /*str*/, const char* /*message*/)
 {
-
 }
-
-
 
 void SerializerProto::Internal::startStruct(const MetaStruct& /*stru*/)
 {
 }
 
-
 void SerializerProto::Internal::finished()
 {
     resizeBuffer();
 }
-
 
 void SerializerProto::Internal::enterStruct(const MetaField& field)
 {
@@ -446,26 +404,26 @@ ssize_t SerializerProto::Internal::calculateStructSize(ssize_t& structSize)
 
 void SerializerProto::Internal::fillRemainingStruct(ssize_t remainingSize)
 {
-    switch (remainingSize)
+    switch(remainingSize)
     {
-    case 1:
-        serializeVarint(1);
-        break;
-    case 2:
-        serializeVarint(128);
-        break;
-    case 3:
-        serializeVarint(16384);
-        break;
-    case 4:
-        serializeVarint(2097152);
-        break;
-    case 5:
-        serializeVarint(268435456);
-        break;
-    default:
-        assert(false);
-        break;
+        case 1:
+            serializeVarint(1);
+            break;
+        case 2:
+            serializeVarint(128);
+            break;
+        case 3:
+            serializeVarint(16384);
+            break;
+        case 4:
+            serializeVarint(2097152);
+            break;
+        case 5:
+            serializeVarint(268435456);
+            break;
+        default:
+            assert(false);
+            break;
     }
 }
 
@@ -544,8 +502,6 @@ void SerializerProto::Internal::enterBool(const MetaField& field, bool value)
     int id = field.index + INDEX2ID;
     serializeVarintValue(id, value);
 }
-
-
 
 void SerializerProto::Internal::enterInt8(const MetaField& field, std::int8_t value)
 {
@@ -665,8 +621,6 @@ void SerializerProto::Internal::enterEnum(const MetaField& field, const char* va
 {
     enterEnum(field, std::string(value, size));
 }
-
-
 
 void SerializerProto::Internal::enterArrayBoolMove(const MetaField& field, std::vector<bool>&& value)
 {
@@ -877,4 +831,4 @@ void SerializerProto::Internal::enterArrayEnum(const MetaField& field, const std
     }
 }
 
-}   // namespace finalmq
+} // namespace finalmq

@@ -22,14 +22,13 @@
 
 #pragma once
 
-
+#include <chrono>
+#include <string>
 
 #include "finalmq/helpers/FmqDefines.h"
-#include <string>
-#include <chrono>
 
-namespace finalmq {
-
+namespace finalmq
+{
 enum class ConnectionState
 {
     CONNECTIONSTATE_CREATED = 0,
@@ -39,28 +38,26 @@ enum class ConnectionState
     CONNECTIONSTATE_DISCONNECTED = 4,
 };
 
-
-
 struct ConnectionData
 {
-    std::int64_t    connectionId = 0;
-    std::string     endpoint;
-    std::string     hostname;
-    int             port = 0;
-    std::string     endpointPeer;
-    std::string     addressPeer;
-    int             af = 0;
-    int             type = 0;
-    int             protocol = 0;
-    int             portPeer = 0;
-    std::string     sockaddr;
-    bool            incomingConnection = false;
-    SOCKET          sd = INVALID_SOCKET;
-    int             reconnectInterval = 5000;
-    int             totalReconnectDuration = -1;
+    std::int64_t connectionId = 0;
+    std::string endpoint{};
+    std::string hostname{};
+    int port = 0;
+    std::string endpointPeer{};
+    std::string addressPeer{};
+    int af = 0;
+    int type = 0;
+    int protocol = 0;
+    int portPeer = 0;
+    std::string sockaddr{};
+    bool incomingConnection = false;
+    SOCKET sd = INVALID_SOCKET;
+    int reconnectInterval = 5000;
+    int totalReconnectDuration = -1;
     std::chrono::time_point<std::chrono::steady_clock> startTime{};
-    bool            ssl = false;
+    bool ssl = false;
     ConnectionState connectionState = ConnectionState::CONNECTIONSTATE_CREATED;
 };
 
-}   // namespace finalmq
+} // namespace finalmq

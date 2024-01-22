@@ -22,22 +22,21 @@
 
 #pragma once
 
-#include "finalmq/streamconnection/IMessage.h"
-#include "finalmq/protocols/mqtt5/Mqtt5CommandData.h"
-#include "finalmq/streamconnection/StreamConnection.h"
-#include "Mqtt5Serialization.h"
-
 #include <deque>
 #include <functional>
 #include <unordered_set>
 
-namespace finalmq {
+#include "Mqtt5Serialization.h"
+#include "finalmq/protocols/mqtt5/Mqtt5CommandData.h"
+#include "finalmq/streamconnection/IMessage.h"
+#include "finalmq/streamconnection/StreamConnection.h"
 
-
-enum Mqtt5ReasonCode {
+namespace finalmq
+{
+enum Mqtt5ReasonCode
+{
     ReasonKeepAliveTimeout = 0x8d,
 };
-
 
 struct IMqtt5ProtocolCallback
 {
@@ -71,13 +70,17 @@ struct IMqtt5Protocol
     virtual void sendAuth(const IStreamConnectionPtr& connection, const Mqtt5AuthData& data) = 0;
 };
 
-
 class Mqtt5Protocol : public IMqtt5Protocol
 {
 public:
     Mqtt5Protocol();
 
 public:
+    Mqtt5Protocol(const Mqtt5Protocol&) = delete;
+    Mqtt5Protocol(Mqtt5Protocol&&) = delete;
+    const Mqtt5Protocol& operator=(const Mqtt5Protocol&) = delete;
+    const Mqtt5Protocol& operator=(Mqtt5Protocol&&) = delete;
+
     enum class State
     {
         WAITFORHEADER,
@@ -108,7 +111,6 @@ public:
     void sendPubAck(const IStreamConnectionPtr& connection, Mqtt5Command command, const Mqtt5PubAckData& data);
     void sendSubAck(const IStreamConnectionPtr& connection, Mqtt5Command command, const Mqtt5SubAckData& data);
 
-
     // IMqtt5Protocol
     virtual void setCallback(hybrid_ptr<IMqtt5ProtocolCallback> callback) override;
     virtual bool receive(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) override;
@@ -123,22 +125,22 @@ public:
     virtual void sendAuth(const IStreamConnectionPtr& connection, const Mqtt5AuthData& data) override;
 
     char m_header{};
-    int         m_remainingSize = 0;
-    int         m_remainingSizeShift = 0;
-    State       m_state = State::WAITFORHEADER;
-    ssize_t     m_sizeCurrent = 0;
+    int m_remainingSize = 0;
+    int m_remainingSizeShift = 0;
+    State m_state = State::WAITFORHEADER;
+    ssize_t m_sizeCurrent = 0;
 
-    ssize_t     m_sizePayload = 0;
-    IMessagePtr m_message;
-    Bytes       m_messageBuffer;
-    char*       m_buffer = nullptr;
+    ssize_t m_sizePayload = 0;
+    IMessagePtr m_message{};
+    Bytes m_messageBuffer{};
+    char* m_buffer = nullptr;
 
     struct PendingMessage
     {
-        IMessagePtr     message;
-        std::uint8_t*   bufferPacketId = nullptr;
-        unsigned int    qos = 0;
-        Mqtt5Command    command {};
+        IMessagePtr message;
+        std::uint8_t* bufferPacketId = nullptr;
+        unsigned int qos = 0;
+        Mqtt5Command command{};
     };
     struct MessageStatus
     {
@@ -152,23 +154,21 @@ public:
             SENDSTAT_WAITUNSUBACK,
         };
 
-        Status                              status = SENDSTAT_NONE;
-        std::list<IMessagePtr>::iterator    iterator;
+        Status status = SENDSTAT_NONE;
+        std::list<IMessagePtr>::iterator iterator;
     };
 
-    bool                        m_connecting = true;
-    std::uint16_t               m_sendMax = 0;              ///< max. messages that will wait for an ack. In case of exceed, the messages will wait in m_messagesPending.
-    std::deque<PendingMessage>  m_messagesPending;          ///< messages that were not sent, yet, because of flow control
-    std::list<IMessagePtr>      m_messagesWaitAck;          ///< keeps the messages in order that could be resent
-    std::deque<MessageStatus>   m_messageIdsAllocated;      ///< the message status of messages that wait for ack, the index is the message id
-    std::deque<std::uint16_t>   m_messageIdsFree;           ///< free message ids
-    std::unordered_set<std::uint16_t> m_setExactlyOne;
+    bool m_connecting = true;
+    std::uint16_t m_sendMax = 0;                       ///< max. messages that will wait for an ack. In case of exceed, the messages will wait in m_messagesPending.
+    std::deque<PendingMessage> m_messagesPending{};    ///< messages that were not sent, yet, because of flow control
+    std::list<IMessagePtr> m_messagesWaitAck{};        ///< keeps the messages in order that could be resent
+    std::deque<MessageStatus> m_messageIdsAllocated{}; ///< the message status of messages that wait for ack, the index is the message id
+    std::deque<std::uint16_t> m_messageIdsFree{};      ///< free message ids
+    std::unordered_set<std::uint16_t> m_setExactlyOne{};
 
-    hybrid_ptr<IMqtt5ProtocolCallback>  m_callback;
+    hybrid_ptr<IMqtt5ProtocolCallback> m_callback{};
 
-    std::mutex                          m_mutex;
+    std::mutex m_mutex{};
 };
 
-
-
-}   // namespace finalmq
+} // namespace finalmq

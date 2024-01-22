@@ -22,18 +22,18 @@
 
 #pragma once
 
-#include "Poller.h"
-#include <unordered_set>
 #include <atomic>
 #include <mutex>
+#include <unordered_set>
+
+#include "Poller.h"
 
 #ifdef __QNX__
 #include <sys/select.h>
 #endif
 
-
-namespace finalmq {
-
+namespace finalmq
+{
 class SYMBOLEXP PollerImplSelect : public IPoller
 {
 public:
@@ -41,9 +41,9 @@ public:
 
 private:
     PollerImplSelect(const PollerImplSelect&) = delete;
-    const PollerImplSelect& operator =(const PollerImplSelect&) = delete;
+    const PollerImplSelect& operator=(const PollerImplSelect&) = delete;
     PollerImplSelect(const PollerImplSelect&&) = delete;
-    const PollerImplSelect& operator =(PollerImplSelect&&) = delete;
+    const PollerImplSelect& operator=(PollerImplSelect&&) = delete;
 
     virtual void init() override;
     virtual void addSocket(const SocketDescriptorPtr& fd) override;
@@ -70,13 +70,12 @@ private:
 
     void collectSockets(int res);
 
+    SocketDescriptorPtr m_controlSocketRead{};
+    SocketDescriptorPtr m_controlSocketWrite{};
 
-    SocketDescriptorPtr m_controlSocketRead;
-    SocketDescriptorPtr m_controlSocketWrite;
+    std::unordered_set<SocketDescriptorPtr> m_socketDescriptors{};
 
-    std::unordered_set<SocketDescriptorPtr> m_socketDescriptors;
-
-    PollerResult m_result;
+    PollerResult m_result{};
     fd_set m_readfdsCached{};
     fd_set m_writefdsCached{};
     fd_set m_errorfdsCached{};
@@ -93,9 +92,9 @@ private:
 
     // parameters that are const during select and collect.
     int m_sdMax = 0;
-    std::vector<SocketDescriptorPtr> m_socketDescriptorsConstForSelect;
+    std::vector<SocketDescriptorPtr> m_socketDescriptorsConstForSelect{};
 
-    std::mutex m_mutex;
+    std::mutex m_mutex{};
 };
 
-}   // namespace finalmq
+} // namespace finalmq

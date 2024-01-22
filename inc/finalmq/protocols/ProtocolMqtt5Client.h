@@ -22,28 +22,25 @@
 
 #pragma once
 
-#include "finalmq/protocolsession/IProtocol.h"
-#include "finalmq/helpers/FmqDefines.h"
-#include "finalmq/protocols/mqtt5/Mqtt5Client.h"
-
 #include <deque>
 #include <functional>
 
-namespace finalmq {
+#include "finalmq/helpers/FmqDefines.h"
+#include "finalmq/protocols/mqtt5/Mqtt5Client.h"
+#include "finalmq/protocolsession/IProtocol.h"
 
-
-class SYMBOLEXP ProtocolMqtt5Client : public IProtocol
-                                    , public IMqtt5ClientCallback
+namespace finalmq
+{
+class SYMBOLEXP ProtocolMqtt5Client : public IProtocol, public IMqtt5ClientCallback
 {
 public:
-    static const std::string KEY_USERNAME;                  ///< the username for the broker
-    static const std::string KEY_PASSWORD;                  ///< the password for the broker
-    static const std::string KEY_SESSIONEXPIRYINTERVAL;     ///< the mqtt session expiry interval in seconds
-    static const std::string KEY_KEEPALIVE;                 ///< the mqtt keep alive interval in seconds
-    
-    static const std::uint32_t PROTOCOL_ID;           // 5
-    static const std::string PROTOCOL_NAME; // mqtt5client
+    static const std::string KEY_USERNAME;              ///< the username for the broker
+    static const std::string KEY_PASSWORD;              ///< the password for the broker
+    static const std::string KEY_SESSIONEXPIRYINTERVAL; ///< the mqtt session expiry interval in seconds
+    static const std::string KEY_KEEPALIVE;             ///< the mqtt keep alive interval in seconds
 
+    static const std::uint32_t PROTOCOL_ID; // 5
+    static const std::string PROTOCOL_NAME; // mqtt5client
 
     ProtocolMqtt5Client(const Variant& data);
     ~ProtocolMqtt5Client();
@@ -96,35 +93,32 @@ private:
     bool receiveHeader(const SocketPtr& socket, int& bytesToRead);
     bool receiveRemainingSize(const SocketPtr& socket, int& bytesToRead);
     void setPayloadSize();
-    bool receivePayload(const SocketPtr& socket, int& bytesToRead); 
+    bool receivePayload(const SocketPtr& socket, int& bytesToRead);
     bool processPayload();
     void clearState();
 
-    std::string                         m_username;
-    std::string                         m_password;
-    std::uint32_t                       m_sessionExpiryInterval = 5*60;     // default 5 minutes
-    std::uint32_t                       m_keepAlive = 20;                   // default 20 seconds
-    std::string                         m_clientId;
-    std::string                         m_virtualSessionId;
+    std::string m_username{};
+    std::string m_password{};
+    std::uint32_t m_sessionExpiryInterval = 5 * 60; // default 5 minutes
+    std::uint32_t m_keepAlive = 20;                 // default 20 seconds
+    std::string m_clientId{};
+    std::string m_virtualSessionId{};
 
-    bool                                m_firstConnection = true;
-    PollingTimer                        m_timerReconnect;
+    bool m_firstConnection = true;
+    PollingTimer m_timerReconnect{};
 
-    std::weak_ptr<IProtocolCallback>    m_callback;
-    IStreamConnectionPtr                m_connection;
-    std::unique_ptr<IMqtt5Client>       m_client;
-    mutable std::mutex                  m_mutex;
+    std::weak_ptr<IProtocolCallback> m_callback{};
+    IStreamConnectionPtr m_connection{};
+    std::unique_ptr<IMqtt5Client> m_client{};
+    mutable std::mutex m_mutex{};
 };
-
 
 class SYMBOLEXP ProtocolMqtt5ClientFactory : public IProtocolFactory
 {
 public:
-
 private:
     // IProtocolFactory
     virtual IProtocolPtr createProtocol(const Variant& data) override;
 };
 
-
-}   // namespace finalmq
+} // namespace finalmq

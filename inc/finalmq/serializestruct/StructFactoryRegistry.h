@@ -22,35 +22,32 @@
 
 #pragma once
 
+#include <atomic>
+#include <memory>
+#include <mutex>
+#include <unordered_map>
+
 #include "StructBase.h"
 
-#include <memory>
-#include <unordered_map>
-#include <mutex>
-#include <atomic>
-
-
-namespace finalmq {
-
-
+namespace finalmq
+{
 struct IStructFactoryRegistry
 {
-    virtual ~IStructFactoryRegistry() {}
+    virtual ~IStructFactoryRegistry()
+    {}
     virtual void registerFactory(const std::string& typeName, FuncStructBaseFactory factory) = 0;
     virtual std::shared_ptr<StructBase> createStruct(const std::string& typeName) = 0;
 };
 
-
 class SYMBOLEXP StructFactoryRegistryImpl : public IStructFactoryRegistry
 {
 public:
-
 private:
     // IStructFactoryRegistry
     virtual void registerFactory(const std::string& typeName, FuncStructBaseFactory factory) override;
     virtual std::shared_ptr<StructBase> createStruct(const std::string& typeName) override;
 
-    std::unordered_map<std::string, FuncStructBaseFactory> m_factories;
+    std::unordered_map<std::string, FuncStructBaseFactory> m_factories{};
 };
 
 class SYMBOLEXP StructFactoryRegistry
@@ -83,7 +80,4 @@ private:
     static std::unique_ptr<IStructFactoryRegistry>& getStaticUniquePtrRef();
 };
 
-
-
-}   // namespace finalmq
-
+} // namespace finalmq

@@ -22,11 +22,11 @@
 
 #pragma once
 
-#include "finalmq/json/JsonParser.h"
 #include "finalmq/helpers/IZeroCopyBuffer.h"
+#include "finalmq/json/JsonParser.h"
 
-namespace finalmq {
-
+namespace finalmq
+{
 class SYMBOLEXP JsonBuilder : public IJsonParserVisitor
 {
 public:
@@ -34,6 +34,11 @@ public:
     ~JsonBuilder();
 
 private:
+    JsonBuilder(const JsonBuilder&) = delete;
+    JsonBuilder(JsonBuilder&&) = delete;
+    const JsonBuilder& operator=(const JsonBuilder&) = delete;
+    const JsonBuilder& operator=(JsonBuilder&&) = delete;
+
     // IJsonParserVisitor
     virtual void syntaxError(const char* str, const char* message) override;
     virtual void enterNull() override;
@@ -58,11 +63,11 @@ private:
     void correctComma();
     void escapeString(const char* str, ssize_t size);
 
-    IZeroCopyBuffer&        m_zeroCopybuffer;
-    ssize_t                 m_maxBlockSize = 512;
-    char*                   m_bufferStart = nullptr;
-    char*                   m_buffer = nullptr;
-    char*                   m_bufferEnd = nullptr;
+    IZeroCopyBuffer& m_zeroCopybuffer;
+    ssize_t m_maxBlockSize = 512;
+    char* m_bufferStart = nullptr;
+    char* m_buffer = nullptr;
+    char* m_bufferEnd = nullptr;
 };
 
-}   // namespace finalmq
+} // namespace finalmq

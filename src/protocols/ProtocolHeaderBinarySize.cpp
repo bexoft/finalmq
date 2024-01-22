@@ -20,42 +20,37 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-
 #include "finalmq/protocols/ProtocolHeaderBinarySize.h"
+
+#include <cassert>
+
 #include "finalmq/protocolsession/ProtocolMessage.h"
 #include "finalmq/protocolsession/ProtocolRegistry.h"
 #include "finalmq/streamconnection/Socket.h"
 
-#include <cassert>
-
-namespace finalmq {
-
+namespace finalmq
+{
 const std::uint32_t ProtocolHeaderBinarySize::PROTOCOL_ID = 2;
 const std::string ProtocolHeaderBinarySize::PROTOCOL_NAME = "headersize";
 
-
 static const int HEADERSIZE = 4;
-
 
 //---------------------------------------
 // ProtocolHeaderBinarySize
 //---------------------------------------
 
-
 ProtocolHeaderBinarySize::ProtocolHeaderBinarySize()
-    : m_headerHelper(HEADERSIZE, [] (const std::string& header) {
-            assert(header.size() == 4);
-            int sizePayload = 0;
-            for (int i = 0; i < 4; ++i)
-            {
-                sizePayload |= ((unsigned int)header[i] & 0xff) << (8 * i);
-            }
-            return sizePayload;
+    : m_headerHelper(HEADERSIZE, [](const std::string& header) {
+          assert(header.size() == 4);
+          int sizePayload = 0;
+          for (int i = 0; i < 4; ++i)
+          {
+              sizePayload |= (static_cast<unsigned int>(header[i]) & 0xff) << (8 * i);
+          }
+          return sizePayload;
       })
 {
-
 }
-
 
 ProtocolHeaderBinarySize::~ProtocolHeaderBinarySize()
 {
@@ -64,7 +59,6 @@ ProtocolHeaderBinarySize::~ProtocolHeaderBinarySize()
         m_connection->disconnect();
     }
 }
-
 
 // IProtocol
 void ProtocolHeaderBinarySize::setCallback(const std::weak_ptr<IProtocolCallback>& callback)
@@ -159,7 +153,7 @@ void ProtocolHeaderBinarySize::sendMessage(IMessagePtr message)
         char* header = buffers.begin()->first;
         for (int i = 0; i < HEADERSIZE; ++i)
         {
-            header[i] = (sizePayload >> (i * 8)) & 0xff;
+            header[i] = static_cast<char>((sizePayload >> (i * 8)) & 0xff);
         }
         message->prepareMessageToSend();
     }
@@ -169,7 +163,6 @@ void ProtocolHeaderBinarySize::sendMessage(IMessagePtr message)
 
 void ProtocolHeaderBinarySize::moveOldProtocolState(IProtocol& /*protocolOld*/)
 {
-
 }
 
 bool ProtocolHeaderBinarySize::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
@@ -179,14 +172,13 @@ bool ProtocolHeaderBinarySize::received(const IStreamConnectionPtr& /*connection
     auto callback = m_callback.lock();
     if (callback)
     {
-        for (const auto &message : messages)
+        for (const auto& message : messages)
         {
             callback->received(message);
         }
     }
     return ok;
 }
-
 
 hybrid_ptr<IStreamConnectionCallback> ProtocolHeaderBinarySize::connected(const IStreamConnectionPtr& /*connection*/)
 {
@@ -207,7 +199,6 @@ void ProtocolHeaderBinarySize::disconnected(const IStreamConnectionPtr& /*connec
     }
 }
 
-
 IMessagePtr ProtocolHeaderBinarySize::pollReply(std::deque<IMessagePtr>&& /*messages*/)
 {
     return {};
@@ -215,12 +206,10 @@ IMessagePtr ProtocolHeaderBinarySize::pollReply(std::deque<IMessagePtr>&& /*mess
 
 void ProtocolHeaderBinarySize::subscribe(const std::vector<std::string>& /*subscribtions*/)
 {
-
 }
 
 void ProtocolHeaderBinarySize::cycleTime()
 {
-
 }
 
 IProtocolSessionDataPtr ProtocolHeaderBinarySize::createProtocolSessionData()
@@ -231,8 +220,6 @@ IProtocolSessionDataPtr ProtocolHeaderBinarySize::createProtocolSessionData()
 void ProtocolHeaderBinarySize::setProtocolSessionData(const IProtocolSessionDataPtr& /*protocolSessionData*/)
 {
 }
-
-
 
 //---------------------------------------
 // ProtocolHeaderBinarySizeFactory
@@ -246,14 +233,10 @@ struct RegisterProtocolHeaderBinarySizeFactory
     }
 } g_registerProtocolHeaderBinarySizeFactory;
 
-
-
 // IProtocolFactory
 IProtocolPtr ProtocolHeaderBinarySizeFactory::createProtocol(const Variant& /*data*/)
 {
     return std::make_shared<ProtocolHeaderBinarySize>();
 }
 
-
-
-}   // namespace finalmq
+} // namespace finalmq

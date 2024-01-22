@@ -20,31 +20,23 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-
 #include "finalmq/streamconnection/StreamConnection.h"
-#include "finalmq/streamconnection/AddressHelpers.h"
+
 #include <thread>
 
+#include "finalmq/streamconnection/AddressHelpers.h"
 
-namespace finalmq {
-
-
+namespace finalmq
+{
 StreamConnection::StreamConnection(const ConnectionData& connectionData, std::shared_ptr<Socket> socket, const IPollerPtr& poller, hybrid_ptr<IStreamConnectionCallback> callback)
-    : m_connectionId(connectionData.connectionId)
-    , m_connectionData(connectionData)
-    , m_socketPrivate(socket)
-    , m_socket(socket)
-    , m_poller(poller)
-    , m_callback(callback)
+    : m_connectionId(connectionData.connectionId), m_connectionData(connectionData), m_socketPrivate(socket), m_socket(socket), m_poller(poller), m_callback(callback)
 {
     m_lastReconnectTime = std::chrono::steady_clock::now();
 }
 
-
 StreamConnection::~StreamConnection()
 {
 }
-
 
 // IStreamConnection
 void StreamConnection::sendMessage(const IMessagePtr& msg)
@@ -60,8 +52,7 @@ void StreamConnection::sendMessage(const IMessagePtr& msg)
         if (size > 0)
         {
             const auto& payloads = msg->getAllSendBuffers();
-            if (!m_pendingMessages.empty() ||
-                m_connectionData.connectionState != ConnectionState::CONNECTIONSTATE_CONNECTED)
+            if (!m_pendingMessages.empty() || m_connectionData.connectionState != ConnectionState::CONNECTIONSTATE_CONNECTED)
             {
                 m_pendingMessages.push_back({msg, payloads.begin(), 0});
             }
@@ -78,15 +69,15 @@ void StreamConnection::sendMessage(const IMessagePtr& msg)
                     const BufferRef& payload = *it;
                     ++it;
 
-#if __QNX__
+#ifdef __QNX__
                     int flags = 0;
 #else
                     bool last = (it == payloads.end());
-                    int flags = last ? 0 : MSG_MORE;    // win32: MSG_PARTIAL
+                    int flags = last ? 0 : MSG_MORE; // win32: MSG_PARTIAL
 #endif
 
 #if !defined WIN32
-                    flags |= MSG_NOSIGNAL;              // no sigpipe
+                    flags |= MSG_NOSIGNAL; // no sigpipe
 #endif
                     int err = m_socketPrivate->send(payload.first, static_cast<int>(payload.second), flags);
                     if (err != payload.second)
@@ -109,13 +100,11 @@ void StreamConnection::sendMessage(const IMessagePtr& msg)
     lock.unlock();
 }
 
-
 ConnectionData StreamConnection::getConnectionData() const
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     return m_connectionData;
 }
-
 
 ConnectionState StreamConnection::getConnectionState() const
 {
@@ -128,14 +117,11 @@ std::int64_t StreamConnection::getConnectionId() const
     return m_connectionId;
 }
 
-
-
 SocketPtr StreamConnection::getSocketPrivate()
 {
     // do not mutex lock here, because the removeSocket and getSocketPrivate will be called from same thread.
     return m_socketPrivate;
 }
-
 
 SocketPtr StreamConnection::getSocket()
 {
@@ -143,22 +129,19 @@ SocketPtr StreamConnection::getSocket()
     return m_socket;
 }
 
-
 void StreamConnection::disconnect()
 {
     m_disconnectFlag = true;
     m_poller->releaseWait(RELEASE_DISCONNECT);
 }
 
-
 bool StreamConnection::connect()
 {
     bool connecting = false;
     std::unique_lock<std::mutex> lock(m_mutex);
-    if ((m_connectionData.connectionState == ConnectionState::CONNECTIONSTATE_CREATED || m_connectionData.connectionState == ConnectionState::CONNECTIONSTATE_CONNECTING_FAILED) &&
-        m_socketPrivate)
+    if ((m_connectionData.connectionState == ConnectionState::CONNECTIONSTATE_CREATED || m_connectionData.connectionState == ConnectionState::CONNECTIONSTATE_CONNECTING_FAILED) && m_socketPrivate)
     {
-        int ret = m_socketPrivate->connect((const sockaddr*)m_connectionData.sockaddr.c_str(), (int)m_connectionData.sockaddr.size());
+        int ret = m_socketPrivate->connect(reinterpret_cast<const sockaddr*>(m_connectionData.sockaddr.c_str()), static_cast<int>(m_connectionData.sockaddr.size()));
         if (ret == 0)
         {
             connecting = true;
@@ -171,9 +154,6 @@ bool StreamConnection::connect()
     }
     return connecting;
 }
-
-
-
 
 bool StreamConnection::sendPendingMessages()
 {
@@ -189,18 +169,18 @@ bool StreamConnection::sendPendingMessages()
                 IMessagePtr& msg = messageSendState.msg;
                 assert(msg);
                 const auto& payloads = msg->getAllSendBuffers();
-                for (auto it = messageSendState.it ; it != payloads.end() && !pending; )
+                for (auto it = messageSendState.it; it != payloads.end() && !pending;)
                 {
                     const BufferRef& payload = *it;
                     ++it;
-#if __QNX__
+#ifdef __QNX__
                     int flags = 0;
 #else
                     bool last = ((it == payloads.end()) && (m_pendingMessages.size() == 1));
-                    int flags = last ? 0 : MSG_MORE;    // win32: MSG_PARTIAL
+                    int flags = last ? 0 : MSG_MORE; // win32: MSG_PARTIAL
 #endif
 #if !defined WIN32
-                    flags |= MSG_NOSIGNAL;              // no sigpipe
+                    flags |= MSG_NOSIGNAL; // no sigpipe
 #endif
                     ssize_t size = payload.second - messageSendState.offset;
                     assert((payload.second == 0 && size == 0) || (size > 0));
@@ -237,10 +217,6 @@ bool StreamConnection::sendPendingMessages()
     return pending;
 }
 
-
-
-
-
 bool StreamConnection::checkEdgeConnected()
 {
     std::unique_lock<std::mutex> lock(m_mutex);
@@ -253,13 +229,10 @@ bool StreamConnection::checkEdgeConnected()
     return edgeConnected;
 }
 
-
 bool StreamConnection::doReconnect()
 {
     bool reconnecting = false;
-    if (!m_connectionData.incomingConnection &&
-        m_connectionData.connectionState == ConnectionState::CONNECTIONSTATE_CONNECTING_FAILED &&
-        m_connectionData.reconnectInterval >= 0)
+    if (!m_connectionData.incomingConnection && m_connectionData.connectionState == ConnectionState::CONNECTIONSTATE_CONNECTING_FAILED && m_connectionData.reconnectInterval >= 0)
     {
         std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
         std::chrono::duration<double> dur = now - m_lastReconnectTime;
@@ -272,7 +245,6 @@ bool StreamConnection::doReconnect()
     }
     return reconnecting;
 }
-
 
 bool StreamConnection::changeStateForDisconnect()
 {
@@ -308,12 +280,10 @@ bool StreamConnection::changeStateForDisconnect()
     return removeConnection;
 }
 
-
 bool StreamConnection::getDisconnectFlag() const
 {
     return m_disconnectFlag;
 }
-
 
 void StreamConnection::updateConnectionData(const ConnectionData& connectionData)
 {
@@ -322,7 +292,6 @@ void StreamConnection::updateConnectionData(const ConnectionData& connectionData
     m_connectionData = connectionData;
     lock.unlock();
 }
-
 
 void StreamConnection::connected(const IStreamConnectionPtr& connection)
 {
@@ -363,4 +332,4 @@ bool StreamConnection::received(const IStreamConnectionPtr& connection, const So
     return ok;
 }
 
-}   // namespace finalmq
+} // namespace finalmq

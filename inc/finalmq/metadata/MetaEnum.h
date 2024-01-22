@@ -22,26 +22,23 @@
 
 #pragma once
 
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
 #include "finalmq/helpers/FmqDefines.h"
 
-#include <vector>
-#include <string>
-#include <memory>
-#include <unordered_map>
-
-namespace finalmq {
-
-
+namespace finalmq
+{
 struct MetaEnumEntry
 {
 public:
-    std::string     name;
-    int             id = 0;
-    std::string     description;
-    std::string     alias;
+    std::string name{};
+    int id{0};
+    std::string description{};
+    std::string alias{};
 };
-
-
 
 class SYMBOLEXP MetaEnum
 {
@@ -84,15 +81,15 @@ public:
 
 private:
     static std::unordered_map<std::string, std::string> generateProperties(const std::vector<std::string>& attrs);
-        
-    std::string                                                             m_typeName;
-    std::string                                                             m_description;
-    std::vector<std::shared_ptr<const MetaEnumEntry>>                       m_entries;
-    const std::vector<std::string>                                          m_attrs;
-    const std::unordered_map<std::string, std::string>                      m_properties;
-    std::unordered_map<int, std::shared_ptr<const MetaEnumEntry>>           m_id2Entry;
-    std::unordered_map<std::string, std::shared_ptr<const MetaEnumEntry>>   m_name2Entry;
-    std::unordered_map<std::string, std::shared_ptr<const MetaEnumEntry>>   m_alias2Entry;
+
+    std::string m_typeName{};
+    std::string m_description{};
+    std::vector<std::shared_ptr<const MetaEnumEntry>> m_entries{};
+    const std::vector<std::string> m_attrs{};
+    const std::unordered_map<std::string, std::string> m_properties{};
+    std::unordered_map<int, std::shared_ptr<const MetaEnumEntry>> m_id2Entry{};
+    std::unordered_map<std::string, std::shared_ptr<const MetaEnumEntry>> m_name2Entry{};
+    std::unordered_map<std::string, std::shared_ptr<const MetaEnumEntry>> m_alias2Entry{};
 };
 
-}   // namespace finalmq
+} // namespace finalmq

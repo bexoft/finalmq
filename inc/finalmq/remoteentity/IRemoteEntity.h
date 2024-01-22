@@ -22,13 +22,11 @@
 
 #pragma once
 
-
-#include "finalmq/remoteentity/entitydata.fmq.h"
 #include "finalmq/remoteentity/FileTransferReply.h"
+#include "finalmq/remoteentity/entitydata.fmq.h"
 
-
-namespace finalmq {
-
+namespace finalmq
+{
 using PeerId = std::int64_t;
 static constexpr PeerId PEERID_INVALID = 0;
 
@@ -50,8 +48,7 @@ class SessionInfo
 {
 public:
     SessionInfo(const hybrid_ptr<IRemoteEntityContainer>& entityContainer, const IProtocolSessionPtr& session)
-        : m_entityContainer(entityContainer)
-        , m_session(session)
+        : m_entityContainer(entityContainer), m_session(session)
     {
         assert(m_entityContainer.lock());
         assert(m_session);
@@ -108,25 +105,20 @@ public:
     }
 
 private:
-    hybrid_ptr<IRemoteEntityContainer> m_entityContainer;
-    IProtocolSessionPtr m_session;
+    hybrid_ptr<IRemoteEntityContainer> m_entityContainer{};
+    IProtocolSessionPtr m_session{};
     std::int64_t m_sessionId = 0;
 };
 
-
-
 struct ReceiveData
 {
-    SessionInfo                 session;
-    std::string                 virtualSessionId;
-    IMessagePtr                 message;
-    Header                      header;
-    bool                        automaticConnect = false;
-    std::shared_ptr<StructBase> structBase;
+    SessionInfo session{};
+    std::string virtualSessionId{};
+    IMessagePtr message{};
+    Header header{};
+    bool automaticConnect = false;
+    std::shared_ptr<StructBase> structBase{};
 };
-
-
-
 
 typedef std::function<void(PeerId peerId, Status status, const StructBasePtr& structBase)> FuncReply;
 typedef std::function<void(PeerId peerId, Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase)> FuncReplyMeta;
@@ -135,13 +127,13 @@ typedef std::function<void(PeerId peerId, const SessionInfo& sessionInfo, Entity
 typedef std::function<bool(CorrelationId correlationId, Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase)> FuncReplyEvent; // return bool reply handled -> skip looking for reply lambda.
 typedef std::function<void(PeerId peerId, Status status)> FuncReplyConnect;
 
-
 struct IRemoteEntity
 {
     /**
      * @brief ~IRemoteEntity is the virtual destructor of the interface.
      */
-    virtual ~IRemoteEntity() {}
+    virtual ~IRemoteEntity()
+    {}
 
     /**
      * @brief requestReply sends a request to the peer and the funcReply is triggered when
@@ -157,24 +149,25 @@ struct IRemoteEntity
      */
     template<class R>
     CorrelationId requestReply(const PeerId& peerId,
-        const std::string& path, const StructBase& structBase,
-        std::function<void(PeerId peerId, Status status, const std::shared_ptr<R>& reply)> funcReply)
+                               const std::string& path,
+                               const StructBase& structBase,
+                               std::function<void(PeerId peerId, Status status, const std::shared_ptr<R>& reply)> funcReply)
     {
         assert(funcReply);
-        CorrelationId correlationId = sendRequest(peerId, path, structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, Status status, const StructBasePtr& structBase) {
+        CorrelationId correlationId = sendRequest(peerId, path, structBase, [funcReply{std::move(funcReply)}](PeerId peerId1, Status status, const StructBasePtr& structBase1) {
             std::shared_ptr<R> reply;
-            if (status == Status::STATUS_OK && structBase != nullptr)
+            if (status == Status::STATUS_OK && structBase1 != nullptr)
             {
-                if (structBase->getStructInfo().getTypeName() == R::structInfo().getTypeName())
+                if (structBase1->getStructInfo().getTypeName() == R::structInfo().getTypeName())
                 {
-                    reply = std::static_pointer_cast<R>(structBase);
+                    reply = std::static_pointer_cast<R>(structBase1);
                 }
                 if (reply == nullptr)
                 {
                     status = Status::STATUS_WRONG_REPLY_TYPE;
                 }
             }
-            funcReply(peerId, status, reply);
+            funcReply(peerId1, status, reply);
         });
         return correlationId;
     }
@@ -196,26 +189,26 @@ struct IRemoteEntity
      */
     template<class R>
     CorrelationId requestReply(const PeerId& peerId,
-        const std::string& path,
-        IMessage::Metainfo&& metainfo,
-        const StructBase& structBase,
-        std::function<void(PeerId peerId, Status status, IMessage::Metainfo& metainfo, const std::shared_ptr<R>& reply)> funcReply)
+                               const std::string& path,
+                               IMessage::Metainfo&& metainfo,
+                               const StructBase& structBase,
+                               std::function<void(PeerId peerId, Status status, IMessage::Metainfo& metainfo, const std::shared_ptr<R>& reply)> funcReply)
     {
         assert(funcReply);
-        CorrelationId correlationId = sendRequest(peerId, path, std::move(metainfo), structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase) {
+        CorrelationId correlationId = sendRequest(peerId, path, std::move(metainfo), structBase, [funcReply{std::move(funcReply)}](PeerId peerId1, Status status, IMessage::Metainfo& metainfo1, const StructBasePtr& structBase1) {
             std::shared_ptr<R> reply;
-            if (status == Status::STATUS_OK && structBase != nullptr)
+            if (status == Status::STATUS_OK && structBase1 != nullptr)
             {
-                if (structBase->getStructInfo().getTypeName() == R::structInfo().getTypeName())
+                if (structBase1->getStructInfo().getTypeName() == R::structInfo().getTypeName())
                 {
-                    reply = std::static_pointer_cast<R>(structBase);
+                    reply = std::static_pointer_cast<R>(structBase1);
                 }
                 if (reply == nullptr)
                 {
                     status = Status::STATUS_WRONG_REPLY_TYPE;
                 }
             }
-            funcReply(peerId, status, metainfo, reply);
+            funcReply(peerId1, status, metainfo1, reply);
         });
         return correlationId;
     }
@@ -233,24 +226,24 @@ struct IRemoteEntity
      */
     template<class R>
     CorrelationId requestReply(const PeerId& peerId,
-        const StructBase& structBase,
-        std::function<void(PeerId peerId, Status status, const std::shared_ptr<R>& reply)> funcReply)
+                               const StructBase& structBase,
+                               std::function<void(PeerId peerId, Status status, const std::shared_ptr<R>& reply)> funcReply)
     {
         assert(funcReply);
-        CorrelationId correlationId = sendRequest(peerId, structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, Status status, const StructBasePtr& structBase) {
+        CorrelationId correlationId = sendRequest(peerId, structBase, [funcReply{std::move(funcReply)}](PeerId peerId1, Status status, const StructBasePtr& structBase1) {
             std::shared_ptr<R> reply;
-            if (status == Status::STATUS_OK && structBase != nullptr)
+            if (status == Status::STATUS_OK && structBase1 != nullptr)
             {
-                if (structBase->getStructInfo().getTypeName() == R::structInfo().getTypeName())
+                if (structBase1->getStructInfo().getTypeName() == R::structInfo().getTypeName())
                 {
-                    reply = std::static_pointer_cast<R>(structBase);
+                    reply = std::static_pointer_cast<R>(structBase1);
                 }
                 if (reply == nullptr)
                 {
                     status = Status::STATUS_WRONG_REPLY_TYPE;
                 }
             }
-            funcReply(peerId, status, reply);
+            funcReply(peerId1, status, reply);
         });
         return correlationId;
     }
@@ -271,25 +264,25 @@ struct IRemoteEntity
      */
     template<class R>
     CorrelationId requestReply(const PeerId& peerId,
-        IMessage::Metainfo&& metainfo,
-        const StructBase& structBase,
-        std::function<void(PeerId peerId, Status status, IMessage::Metainfo& metainfo, const std::shared_ptr<R>& reply)> funcReply)
+                               IMessage::Metainfo&& metainfo,
+                               const StructBase& structBase,
+                               std::function<void(PeerId peerId, Status status, IMessage::Metainfo& metainfo, const std::shared_ptr<R>& reply)> funcReply)
     {
         assert(funcReply);
-        CorrelationId correlationId = sendRequest(peerId, std::move(metainfo), structBase, [funcReply{ std::move(funcReply) }](PeerId peerId, Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase) {
+        CorrelationId correlationId = sendRequest(peerId, std::move(metainfo), structBase, [funcReply{std::move(funcReply)}](PeerId peerId1, Status status, IMessage::Metainfo& metainfo1, const StructBasePtr& structBase1) {
             std::shared_ptr<R> reply;
-            if (status == Status::STATUS_OK && structBase != nullptr)
+            if (status == Status::STATUS_OK && structBase1 != nullptr)
             {
-                if (structBase->getStructInfo().getTypeName() == R::structInfo().getTypeName())
+                if (structBase1->getStructInfo().getTypeName() == R::structInfo().getTypeName())
                 {
-                    reply = std::static_pointer_cast<R>(structBase);
+                    reply = std::static_pointer_cast<R>(structBase1);
                 }
                 if (reply == nullptr)
                 {
                     status = Status::STATUS_WRONG_REPLY_TYPE;
                 }
             }
-            funcReply(peerId, status, metainfo, reply);
+            funcReply(peerId1, status, metainfo1, reply);
         });
         return correlationId;
     }
@@ -632,7 +625,6 @@ struct IRemoteEntity
     */
     virtual PeerId createPublishPeer(const SessionInfo& session, const std::string& entityName) = 0;
 
-
 private:
     // methods for RemoteEntityContainer
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) = 0;
@@ -644,7 +636,4 @@ private:
 };
 typedef std::shared_ptr<IRemoteEntity> IRemoteEntityPtr;
 
-
-
-
-}   // namespace finalmq
+} // namespace finalmq

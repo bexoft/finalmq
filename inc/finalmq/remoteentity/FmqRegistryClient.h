@@ -22,13 +22,13 @@
 
 #pragma once
 
-#include "finalmq/remoteentity/RemoteEntityContainer.h"
-#include "finalmq/interfaces/fmqreg.fmq.h"
-
 #include <sys/types.h>
 
-namespace finalmq {
+#include "finalmq/interfaces/fmqreg.fmq.h"
+#include "finalmq/remoteentity/RemoteEntityContainer.h"
 
+namespace finalmq
+{
 class SYMBOLEXP FmqRegistryClient
 {
 public:
@@ -44,11 +44,9 @@ private:
     void init();
     SessionInfo createRegistrySession(const std::string& hostname, const ConnectProperties& connectProperties = {});
 
-    bool                                m_init = false;
-    hybrid_ptr<IRemoteEntityContainer>  m_remoteEntityContainer;
-    IRemoteEntityPtr                    m_entityRegistry;
+    bool m_init = false;
+    hybrid_ptr<IRemoteEntityContainer> m_remoteEntityContainer{};
+    IRemoteEntityPtr m_entityRegistry{};
 };
 
-
-}   // namespace finalmq
-
+} // namespace finalmq

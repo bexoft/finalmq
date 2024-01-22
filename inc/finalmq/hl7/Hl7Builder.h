@@ -22,16 +22,17 @@
 
 #pragma once
 
-#include "finalmq/helpers/IZeroCopyBuffer.h"
 #include <string>
 #include <vector>
 
-namespace finalmq {
+#include "finalmq/helpers/IZeroCopyBuffer.h"
 
-
+namespace finalmq
+{
 struct IHl7BuilderVisitor
 {
-    virtual ~IHl7BuilderVisitor() {}
+    virtual ~IHl7BuilderVisitor()
+    {}
     virtual void enterNull(const int* levelIndex, int sizeLevelIndex, int index) = 0;
     virtual void enterInt64(const int* levelIndex, int sizeLevelIndex, int index, std::int64_t value) = 0;
     virtual void enterUInt64(const int* levelIndex, int sizeLevelIndex, int index, std::uint64_t value) = 0;
@@ -42,9 +43,7 @@ struct IHl7BuilderVisitor
     virtual void finished() = 0;
 };
 
-
 class Hl7Node;
-
 
 class SYMBOLEXP Hl7Builder : public IHl7BuilderVisitor
 {
@@ -53,6 +52,11 @@ public:
     ~Hl7Builder();
 
 private:
+    Hl7Builder(const Hl7Builder&) = delete;
+    Hl7Builder(Hl7Builder&&) = delete;
+    const Hl7Builder& operator=(const Hl7Builder&) = delete;
+    const Hl7Builder& operator=(Hl7Builder&&) = delete;
+
     // IHl7BuilderVisitor
     virtual void enterNull(const int* levelIndex, int sizeLevelIndex, int index) override;
     virtual void enterInt64(const int* levelIndex, int sizeLevelIndex, int index, std::int64_t value) override;
@@ -68,20 +72,20 @@ private:
     void escapeString(const char* str, ssize_t size);
     void serialize(const Hl7Node& node, int index, int iStart);
 
-    IZeroCopyBuffer&        m_zeroCopybuffer;
-    ssize_t                 m_maxBlockSize = 512;
-    char*                   m_bufferStart = nullptr;
-    char*                   m_buffer = nullptr;
-    char*                   m_bufferEnd = nullptr;
+    IZeroCopyBuffer& m_zeroCopybuffer;
+    ssize_t m_maxBlockSize{512};
+    char* m_bufferStart{nullptr};
+    char* m_buffer{nullptr};
+    char* m_bufferEnd{nullptr};
 
-    static const int LAYER_MAX = 5;     // array index is on index = 2
+    static const int LAYER_MAX = 5; // array index is on index = 2
 
-    std::string             m_delimitersForField;
-    char                    m_delimiterField[LAYER_MAX];
-    char                    m_delimiterRepeat;
-    char                    m_escape;
+    std::string m_delimitersForField{};
+    char m_delimiterField[LAYER_MAX]{};
+    char m_delimiterRepeat{};
+    char m_escape{};
 
-    std::unique_ptr<Hl7Node> m_root;
+    std::unique_ptr<Hl7Node> m_root{};
 };
 
-}   // namespace finalmq
+} // namespace finalmq
