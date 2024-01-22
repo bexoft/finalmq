@@ -40,11 +40,11 @@ using finalmq::fmqreg::Service;
 Registry::Registry()
 {
     // register peer events to see when a remote entity connects or disconnects.
-    registerPeerEvent([] (PeerId peerId, const SessionInfo& session, EntityId entityId, PeerEvent peerEvent, bool incoming) {
+    registerPeerEvent([] (PeerId /*peerId*/, const SessionInfo& /*session*/, EntityId /*entityId*/, PeerEvent peerEvent, bool /*incoming*/) {
         streamInfo << "peer event " << peerEvent.toString();
     });
 
-    registerCommand<RegisterService>([this] (const RequestContextPtr& requestContext, const std::shared_ptr<RegisterService>& request) {
+    registerCommand<RegisterService>([this] (const RequestContextPtr& /*requestContext*/, const std::shared_ptr<RegisterService>& request) {
         assert(request);
         m_services[request->service.name] = request->service;
     });

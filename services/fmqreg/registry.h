@@ -32,7 +32,7 @@ public:
     Registry();
 
 private:
-    std::unordered_map<std::string, finalmq::fmqreg::Service>    m_services;
+    std::unordered_map<std::string, finalmq::fmqreg::Service>    m_services{};
 };
 
 

@@ -40,7 +40,7 @@ static const char SEGMENT_END = 0x0D; // '\r'
 //static const char MESSAGE_END2 = 0x0D;   // '\r'
 
 Hl7Builder::Hl7Builder(IZeroCopyBuffer& buffer, int maxBlockSize, const std::string& delimiters)
-    : m_zeroCopybuffer(buffer), m_maxBlockSize(maxBlockSize), m_root(std::make_unique<Hl7Node>())
+    : m_zeroCopybuffer(buffer), m_maxBlockSize(maxBlockSize), m_root(std::make_shared<Hl7Node>())
 {
     assert(delimiters.size() == 5);
     m_delimitersForField = delimiters;
