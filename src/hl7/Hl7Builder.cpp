@@ -20,48 +20,44 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-
 #include "finalmq/hl7/Hl7Builder.h"
-#include "finalmq/conversions/itoa.h"
-#include "finalmq/conversions/dtoa.h"
-#include "finalmq/logger/LogStream.h"
+
+#include <iostream>
 
 #include <assert.h>
 #include <string.h>
-#include <iostream>
 
+#include "finalmq/conversions/dtoa.h"
+#include "finalmq/conversions/itoa.h"
+#include "finalmq/logger/LogStream.h"
 
-namespace finalmq {
-
-static const char SEGMENT_END = 0x0D;   // '\r'
+namespace finalmq
+{
+static const char SEGMENT_END = 0x0D; // '\r'
 
 //static const char MESSAGE_START = 0x0B;
 //static const char MESSAGE_END1 = 0x1C;
 //static const char MESSAGE_END2 = 0x0D;   // '\r'
 
-
 Hl7Builder::Hl7Builder(IZeroCopyBuffer& buffer, int maxBlockSize, const std::string& delimiters)
-    : m_zeroCopybuffer(buffer)
-    , m_maxBlockSize(maxBlockSize)
-    , m_root(std::make_unique<Hl7Node>())
+    : m_zeroCopybuffer(buffer), m_maxBlockSize(maxBlockSize), m_root(std::make_unique<Hl7Node>())
 {
     assert(delimiters.size() == 5);
     m_delimitersForField = delimiters;
-    m_delimitersForField += delimiters[0];  // |^~\&|
-    m_delimiterField[0] = SEGMENT_END;      // segment delimiter '\r', 0x0D
-    m_delimiterField[1] = delimiters[0];    // |
-    m_delimiterField[2] = delimiters[2];    // ~
-    m_delimiterField[3] = delimiters[1];    // ^
-    m_delimiterField[4] = delimiters[4];    // &
-    m_delimiterRepeat   = delimiters[2];    // ~
-    m_escape            = delimiters[3];    // '\\'
+    m_delimitersForField += delimiters[0]; // |^~\&|
+    m_delimiterField[0] = SEGMENT_END;     // segment delimiter '\r', 0x0D
+    m_delimiterField[1] = delimiters[0];   // |
+    m_delimiterField[2] = delimiters[2];   // ~
+    m_delimiterField[3] = delimiters[1];   // ^
+    m_delimiterField[4] = delimiters[4];   // &
+    m_delimiterRepeat = delimiters[2];     // ~
+    m_escape = delimiters[3];              // '\\'
 }
 
 Hl7Builder::~Hl7Builder()
 {
     m_root.reset();
 }
-
 
 void Hl7Builder::reserveSpace(ssize_t space)
 {
@@ -101,7 +97,6 @@ void Hl7Builder::resizeBuffer()
         m_buffer = nullptr;
     }
 }
-
 
 class Hl7Node
 {
@@ -143,13 +138,12 @@ public:
         }
     }
 
-    std::string                 m_segmentId;
-    std::vector<Hl7Node>        m_nodes;
-    std::vector<std::string>    m_strings;
+    std::string m_segmentId{};
+    std::vector<Hl7Node> m_nodes{};
+    std::vector<std::string> m_strings{};
 };
 
 // IJsonParserVisitor
-
 
 void Hl7Builder::enterNull(const int* levelIndex, int sizeLevelIndex, int index)
 {
@@ -186,7 +180,6 @@ void Hl7Builder::addArrayStruct(const int* levelIndex, int sizeLevelIndex, int i
     m_root->enterString(levelIndex, sizeLevelIndex, index, "");
 }
 
-
 void Hl7Builder::finished()
 {
     reserveSpace(3 + m_delimitersForField.size());
@@ -203,14 +196,13 @@ void Hl7Builder::finished()
     m_root.reset();
 }
 
-
 void Hl7Builder::serialize(const Hl7Node& node, int index, int iStart)
 {
     const std::vector<Hl7Node>& nodes = node.m_nodes;
 
     for (size_t i = iStart; i < nodes.size(); ++i)
     {
-        const Hl7Node& subNode = nodes[i];        
+        const Hl7Node& subNode = nodes[i];
 
         if (i != 0 && index == 0 && !subNode.m_segmentId.empty())
         {
@@ -227,7 +219,7 @@ void Hl7Builder::serialize(const Hl7Node& node, int index, int iStart)
 
         if (!subNode.m_nodes.empty())
         {
-            serialize(subNode, index + 1, (index == 0 && i == 0) ? 2 : 0);    // skip MSH|^~\&|
+            serialize(subNode, index + 1, (index == 0 && i == 0) ? 2 : 0); // skip MSH|^~\&|
         }
         else
         {
@@ -255,10 +247,9 @@ void Hl7Builder::serialize(const Hl7Node& node, int index, int iStart)
     }
 }
 
-
 void Hl7Builder::escapeString(const char* str, ssize_t size)
 {
-    static const char hexDigits[16]{ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+    static const char hexDigits[16]{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
     const char* end = str + size;
 
@@ -280,7 +271,7 @@ void Hl7Builder::escapeString(const char* str, ssize_t size)
         }
         else
         {
-            if (c == m_delimiterField[1])   // '|'
+            if (c == m_delimiterField[1]) // '|'
             {
                 *m_buffer = m_escape;
                 m_buffer++;
@@ -289,7 +280,7 @@ void Hl7Builder::escapeString(const char* str, ssize_t size)
                 *m_buffer = m_escape;
                 m_buffer++;
             }
-            else if (c == m_delimiterField[3])   // '^'
+            else if (c == m_delimiterField[3]) // '^'
             {
                 *m_buffer = m_escape;
                 m_buffer++;
@@ -298,7 +289,7 @@ void Hl7Builder::escapeString(const char* str, ssize_t size)
                 *m_buffer = m_escape;
                 m_buffer++;
             }
-            else if (c == m_delimiterField[4])   // '&'
+            else if (c == m_delimiterField[4]) // '&'
             {
                 *m_buffer = m_escape;
                 m_buffer++;
@@ -307,7 +298,7 @@ void Hl7Builder::escapeString(const char* str, ssize_t size)
                 *m_buffer = m_escape;
                 m_buffer++;
             }
-            else if (c == m_escape)   // '\\'
+            else if (c == m_escape) // '\\'
             {
                 *m_buffer = m_escape;
                 m_buffer++;
@@ -316,7 +307,7 @@ void Hl7Builder::escapeString(const char* str, ssize_t size)
                 *m_buffer = m_escape;
                 m_buffer++;
             }
-            else if (c == m_delimiterRepeat)   // '~'
+            else if (c == m_delimiterRepeat) // '~'
             {
                 *m_buffer = m_escape;
                 m_buffer++;
@@ -335,4 +326,4 @@ void Hl7Builder::escapeString(const char* str, ssize_t size)
     }
 }
 
-}   // namespace finalmq
+} // namespace finalmq

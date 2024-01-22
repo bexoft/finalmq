@@ -22,14 +22,14 @@
 
 #pragma once
 
-#include "finalmq/metadata/MetaStruct.h"
-#include "finalmq/helpers/IZeroCopyBuffer.h"
-#include "finalmq/serialize/ParserConverter.h"
-
 #include <deque>
 
-namespace finalmq {
+#include "finalmq/helpers/IZeroCopyBuffer.h"
+#include "finalmq/metadata/MetaStruct.h"
+#include "finalmq/serialize/ParserConverter.h"
 
+namespace finalmq
+{
 class SYMBOLEXP SerializerProto : public ParserConverter
 {
 public:
@@ -50,7 +50,13 @@ private:
     {
     public:
         Internal(IZeroCopyBuffer& buffer, int maxBlockSize);
+
     private:
+        Internal(const Internal&) = delete;
+        Internal(Internal&&) = delete;
+        const Internal& operator=(const Internal&) = delete;
+        const Internal& operator=(Internal&&) = delete;
+
         // IParserVisitor
         virtual void notifyError(const char* str, const char* message) override;
         virtual void startStruct(const MetaStruct& stru) override;
@@ -147,33 +153,30 @@ private:
         struct StructData
         {
             StructData(char* bstart, char* bsize, char* b, bool ae)
-                : bufferStructStart(bstart)
-                , bufferStructSize(bsize)
-                , buffer(b)
-                , arrayEntry(ae)
+                : bufferStructStart(bstart), bufferStructSize(bsize), buffer(b), arrayEntry(ae)
             {
             }
-            char*   bufferStructStart = nullptr;
-            char*   bufferStructSize = nullptr;
-            char*   buffer = nullptr;
+            char* bufferStructStart = nullptr;
+            char* bufferStructSize = nullptr;
+            char* buffer = nullptr;
             ssize_t size = 0;
-            bool    allocateNextDataBuffer = false;
-            bool    arrayParent = false;
-            bool    arrayEntry = false;
+            bool allocateNextDataBuffer = false;
+            bool arrayParent = false;
+            bool arrayEntry = false;
         };
 
-        IZeroCopyBuffer&        m_zeroCopybuffer;
-        ssize_t                 m_maxBlockSize = 512;
-        char*                   m_bufferStart = nullptr;
-        char*                   m_buffer = nullptr;
-        char*                   m_bufferEnd = nullptr;
-        bool                    m_arrayParent = false;
-        std::deque<StructData>  m_stackStruct;
+        IZeroCopyBuffer& m_zeroCopybuffer;
+        ssize_t m_maxBlockSize = 512;
+        char* m_bufferStart = nullptr;
+        char* m_buffer = nullptr;
+        char* m_bufferEnd = nullptr;
+        bool m_arrayParent = false;
+        std::deque<StructData> m_stackStruct{};
     };
 
-    Internal    m_internal;
+    Internal m_internal;
 
-    std::unique_ptr<IParserVisitor>     m_parserAbortAndIndex;
+    std::unique_ptr<IParserVisitor> m_parserAbortAndIndex;
 };
 
-}   // namespace finalmq
+} // namespace finalmq

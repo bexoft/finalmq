@@ -24,20 +24,18 @@
 
 #include "finalmq/poller/PollerImplEpoll.h"
 
-#include "finalmq/helpers/OperatingSystem.h"
-#include "finalmq/helpers/ModulenameFinalmq.h"
-#include "finalmq/logger/LogStream.h"
-
+#include <assert.h>
 
 #include <netinet/tcp.h>
 #include <sys/ioctl.h>
-#include <assert.h>
 
-namespace finalmq {
+#include "finalmq/helpers/ModulenameFinalmq.h"
+#include "finalmq/helpers/OperatingSystem.h"
+#include "finalmq/logger/LogStream.h"
 
-
+namespace finalmq
+{
 PollerImplEpoll::PollerImplEpoll()
-    : m_socketDescriptorsStable(ATOMIC_FLAG_INIT)
 {
     m_socketDescriptorsStable.test_and_set();
 }
@@ -49,8 +47,6 @@ PollerImplEpoll::~PollerImplEpoll()
         OperatingSystem::instance().close(m_fdEpoll);
     }
 }
-
-
 
 void PollerImplEpoll::init()
 {
@@ -64,7 +60,6 @@ void PollerImplEpoll::init()
         addSocketEnableRead(m_controlSocketRead);
     }
 }
-
 
 void PollerImplEpoll::addSocket(const SocketDescriptorPtr& fd)
 {
@@ -90,7 +85,6 @@ void PollerImplEpoll::addSocket(const SocketDescriptorPtr& fd)
     locker.unlock();
 }
 
-
 void PollerImplEpoll::addSocketEnableRead(const SocketDescriptorPtr& fd)
 {
     std::unique_lock<std::mutex> locker(m_mutex);
@@ -114,7 +108,6 @@ void PollerImplEpoll::addSocketEnableRead(const SocketDescriptorPtr& fd)
     }
     locker.unlock();
 }
-
 
 void PollerImplEpoll::removeSocket(const SocketDescriptorPtr& fd)
 {
@@ -141,8 +134,6 @@ void PollerImplEpoll::removeSocket(const SocketDescriptorPtr& fd)
     locker.unlock();
 }
 
-
-
 void PollerImplEpoll::enableRead(const SocketDescriptorPtr& fd)
 {
     std::unique_lock<std::mutex> locker(m_mutex);
@@ -166,7 +157,6 @@ void PollerImplEpoll::enableRead(const SocketDescriptorPtr& fd)
     }
     locker.unlock();
 }
-
 
 void PollerImplEpoll::disableRead(const SocketDescriptorPtr& fd)
 {
@@ -192,9 +182,6 @@ void PollerImplEpoll::disableRead(const SocketDescriptorPtr& fd)
     locker.unlock();
 }
 
-
-
-
 void PollerImplEpoll::enableWrite(const SocketDescriptorPtr& fd)
 {
     std::unique_lock<std::mutex> locker(m_mutex);
@@ -218,7 +205,6 @@ void PollerImplEpoll::enableWrite(const SocketDescriptorPtr& fd)
     }
     locker.unlock();
 }
-
 
 void PollerImplEpoll::disableWrite(const SocketDescriptorPtr& fd)
 {
@@ -244,13 +230,10 @@ void PollerImplEpoll::disableWrite(const SocketDescriptorPtr& fd)
     locker.unlock();
 }
 
-
-
 void PollerImplEpoll::sockedDescriptorHasChanged()
 {
     m_socketDescriptorsStable.clear(std::memory_order_release);
 }
-
 
 void PollerImplEpoll::updateSocketDescriptors()
 {
@@ -261,8 +244,6 @@ void PollerImplEpoll::updateSocketDescriptors()
         m_socketDescriptorsConstForEpoll.push_back(it->first);
     }
 }
-
-
 
 void PollerImplEpoll::collectSockets(int res)
 {
@@ -316,7 +297,7 @@ void PollerImplEpoll::collectSockets(int res)
                     {
                         // read pending bytes from control socket
                         std::vector<char> buffer(countRead);
-                        OperatingSystem::instance().recv(sd, buffer.data(), buffer.size(), 0);
+                        OperatingSystem::instance().recv(sd, buffer.data(), static_cast<int>(buffer.size()), 0);
                         m_result.releaseWait = m_releaseFlags.exchange(0, std::memory_order_acq_rel);
                     }
                     else
@@ -367,7 +348,7 @@ const PollerResult& PollerImplEpoll::wait(std::int32_t timeout)
 
     do
     {
-        res = OperatingSystem::instance().epoll_pwait(m_fdEpoll, &m_events[0], m_events.size(), timeout, nullptr);
+        res = OperatingSystem::instance().epoll_pwait(m_fdEpoll, &m_events[0], static_cast<int>(m_events.size()), timeout, nullptr);
 
         if (res == -1)
         {
@@ -401,6 +382,6 @@ void PollerImplEpoll::releaseWait(std::uint32_t info)
     }
 }
 
-}   // namespace finalmq
+} // namespace finalmq
 
 #endif

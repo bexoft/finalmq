@@ -21,28 +21,27 @@
 //SOFTWARE.
 
 #include "finalmq/metadataserialize/MetaDataExchange.h"
+
+#include <algorithm>
+
+#include "finalmq/helpers/ZeroCopyBuffer.h"
 #include "finalmq/metadata/MetaData.h"
 #include "finalmq/serializejson/ParserJson.h"
 #include "finalmq/serializejson/SerializerJson.h"
 #include "finalmq/serializeproto/ParserProto.h"
 #include "finalmq/serializeproto/SerializerProto.h"
-#include "finalmq/serializestruct/SerializerStruct.h"
 #include "finalmq/serializestruct/ParserStruct.h"
-#include "finalmq/helpers/ZeroCopyBuffer.h"
+#include "finalmq/serializestruct/SerializerStruct.h"
 
-#include <algorithm>
-
-
-namespace finalmq {
-
-
+namespace finalmq
+{
 static MetaTypeId convert(SerializeMetaTypeId value)
 {
     return static_cast<MetaTypeId>(static_cast<SerializeMetaTypeId::Enum>(value));
 }
 static SerializeMetaTypeId convert(MetaTypeId value)
 {
-    return static_cast<SerializeMetaTypeId::Enum>(static_cast<MetaTypeId>(value));
+    return static_cast<SerializeMetaTypeId::Enum>(value);
 }
 
 static bool isInData(const SerializeMetaData& metadata, const std::string& type)
@@ -98,7 +97,7 @@ void MetaDataExchange::importMetaData(const SerializeMetaData& metadata)
         {
             const SerializeMetaField& fieldSource = structSource.fields[n];
             int flags = 0;
-            std::for_each(fieldSource.flags.begin(), fieldSource.flags.end(), [&flags] (const SerializeMetaFieldFlags& flag) {
+            std::for_each(fieldSource.flags.begin(), fieldSource.flags.end(), [&flags](const SerializeMetaFieldFlags& flag) {
                 flags |= flag;
             });
 
@@ -179,8 +178,6 @@ void MetaDataExchange::exportMetaData(SerializeMetaData& metadata)
     }
 }
 
-
-
 void MetaDataExchange::importMetaDataJson(const char* json)
 {
     SerializeMetaData root;
@@ -190,7 +187,6 @@ void MetaDataExchange::importMetaDataJson(const char* json)
 
     importMetaData(root);
 }
-
 
 void MetaDataExchange::exportMetaDataJson(std::string& json)
 {
@@ -205,8 +201,6 @@ void MetaDataExchange::exportMetaDataJson(std::string& json)
     json = buffer.getData();
 }
 
-
-
 void MetaDataExchange::importMetaDataProto(const char* proto, ssize_t size)
 {
     SerializeMetaData root;
@@ -216,7 +210,6 @@ void MetaDataExchange::importMetaDataProto(const char* proto, ssize_t size)
 
     importMetaData(root);
 }
-
 
 void MetaDataExchange::exportMetaDataProto(std::string& proto)
 {
@@ -231,4 +224,4 @@ void MetaDataExchange::exportMetaDataProto(std::string& proto)
     proto = buffer.getData();
 }
 
-}   // namespace finalmq
+} // namespace finalmq

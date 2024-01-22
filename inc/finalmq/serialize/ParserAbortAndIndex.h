@@ -22,22 +22,25 @@
 
 #pragma once
 
+#include <deque>
+
 #include "finalmq/metadata/MetaStruct.h"
 #include "finalmq/serialize/IParserVisitor.h"
 
-#include <deque>
-
-
-namespace finalmq {
-
-
+namespace finalmq
+{
 class SYMBOLEXP ParserAbortAndIndex : public IParserVisitor
 {
 public:
     ParserAbortAndIndex(IParserVisitor* visitor = nullptr);
-    void setVisitor(IParserVisitor &visitor);
+    void setVisitor(IParserVisitor& visitor);
 
 private:
+    ParserAbortAndIndex(const ParserAbortAndIndex&) = delete;
+    ParserAbortAndIndex(ParserAbortAndIndex&&) = delete;
+    const ParserAbortAndIndex& operator=(const ParserAbortAndIndex&) = delete;
+    const ParserAbortAndIndex& operator=(ParserAbortAndIndex&&) = delete;
+
     // IParserVisitor
     virtual void notifyError(const char* str, const char* message) override;
     virtual void startStruct(const MetaStruct& stru) override;
@@ -122,7 +125,7 @@ private:
         std::int32_t arrayStructCounter = -1;
     };
 
-    std::deque<LevelState> m_levelState;
+    std::deque<LevelState> m_levelState{};
 };
 
-}   // namespace finalmq
+} // namespace finalmq

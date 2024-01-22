@@ -20,34 +20,30 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-
 #include "finalmq/serialize/ParserConverter.h"
-#include "finalmq/metadata/MetaData.h"
-#include "finalmq/logger/LogStream.h"
-#include "finalmq/helpers/ModulenameFinalmq.h"
 
-#include "finalmq/conversions/itoa.h"
-#include "finalmq/conversions/dtoa.h"
+#include <algorithm>
+#include <iostream>
 
 #include <assert.h>
-#include <iostream>
-#include <algorithm>
 
+#include "finalmq/conversions/dtoa.h"
+#include "finalmq/conversions/itoa.h"
+#include "finalmq/helpers/ModulenameFinalmq.h"
+#include "finalmq/logger/LogStream.h"
+#include "finalmq/metadata/MetaData.h"
 
-namespace finalmq {
-
-
+namespace finalmq
+{
 ParserConverter::ParserConverter(IParserVisitor* visitor)
     : m_visitor(visitor)
 {
 }
 
-void ParserConverter::setVisitor(IParserVisitor &visitor)
+void ParserConverter::setVisitor(IParserVisitor& visitor)
 {
     m_visitor = &visitor;
 }
-
-
 
 // ParserConverter
 void ParserConverter::notifyError(const char* str, const char* message)
@@ -632,499 +628,522 @@ void ParserConverter::enterArrayEnum(const MetaField& field, const std::vector<s
     }
 }
 
-
-
 ///////////////////////////////
-
 
 template<class T>
 void ParserConverter::convertNumber(const MetaField& field, T value)
 {
-    switch (field.typeId)
+    switch(field.typeId)
     {
-    case MetaTypeId::TYPE_BOOL:
-        m_visitor->enterBool(field, value);
-        break;
-    case MetaTypeId::TYPE_INT8:
-        m_visitor->enterInt8(field, static_cast<std::int8_t>(value));
-        break;
-    case MetaTypeId::TYPE_UINT8:
-        m_visitor->enterUInt8(field, static_cast<std::uint8_t>(value));
-        break;
-    case MetaTypeId::TYPE_INT16:
-        m_visitor->enterInt16(field, static_cast<std::int16_t>(value));
-        break;
-    case MetaTypeId::TYPE_UINT16:
-        m_visitor->enterUInt16(field, static_cast<std::uint16_t>(value));
-        break;
-    case MetaTypeId::TYPE_INT32:
-        m_visitor->enterInt32(field, static_cast<std::int32_t>(value));
-        break;
-    case MetaTypeId::TYPE_UINT32:
-        m_visitor->enterUInt32(field, static_cast<std::uint32_t>(value));
-        break;
-    case MetaTypeId::TYPE_INT64:
-        m_visitor->enterInt64(field, static_cast<std::int64_t>(value));
-        break;
-    case MetaTypeId::TYPE_UINT64:
-        m_visitor->enterUInt64(field, static_cast<std::uint64_t>(value));
-        break;
-    case MetaTypeId::TYPE_FLOAT:
-        m_visitor->enterFloat(field, static_cast<float>(value));
-        break;
-    case MetaTypeId::TYPE_DOUBLE:
-        m_visitor->enterDouble(field, static_cast<double>(value));
-        break;
-    case MetaTypeId::TYPE_STRING:
-        m_visitor->enterString(field, std::to_string(value));
-        break;
-    case MetaTypeId::TYPE_ENUM:
-        m_visitor->enterEnum(field, static_cast<std::int32_t>(value));
-        break;
-    case MetaTypeId::TYPE_ARRAY_BOOL:
+        case MetaTypeId::TYPE_BOOL:
+#ifndef WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
+            m_visitor->enterBool(field, value);
+#ifndef WIN32
+#pragma GCC diagnostic pop
+#endif
+            break;
+        case MetaTypeId::TYPE_INT8:
+            m_visitor->enterInt8(field, static_cast<std::int8_t>(value));
+            break;
+        case MetaTypeId::TYPE_UINT8:
+            m_visitor->enterUInt8(field, static_cast<std::uint8_t>(value));
+            break;
+        case MetaTypeId::TYPE_INT16:
+            m_visitor->enterInt16(field, static_cast<std::int16_t>(value));
+            break;
+        case MetaTypeId::TYPE_UINT16:
+            m_visitor->enterUInt16(field, static_cast<std::uint16_t>(value));
+            break;
+        case MetaTypeId::TYPE_INT32:
+            m_visitor->enterInt32(field, static_cast<std::int32_t>(value));
+            break;
+        case MetaTypeId::TYPE_UINT32:
+            m_visitor->enterUInt32(field, static_cast<std::uint32_t>(value));
+            break;
+        case MetaTypeId::TYPE_INT64:
+            m_visitor->enterInt64(field, static_cast<std::int64_t>(value));
+            break;
+        case MetaTypeId::TYPE_UINT64:
+            m_visitor->enterUInt64(field, static_cast<std::uint64_t>(value));
+            break;
+        case MetaTypeId::TYPE_FLOAT:
+            m_visitor->enterFloat(field, static_cast<float>(value));
+            break;
+        case MetaTypeId::TYPE_DOUBLE:
+            m_visitor->enterDouble(field, static_cast<double>(value));
+            break;
+        case MetaTypeId::TYPE_STRING:
+            m_visitor->enterString(field, std::to_string(value));
+            break;
+        case MetaTypeId::TYPE_ENUM:
+            m_visitor->enterEnum(field, static_cast<std::int32_t>(value));
+            break;
+        case MetaTypeId::TYPE_ARRAY_BOOL:
         {
+#ifndef WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
             bool v = value;
+#ifndef WIN32
+#pragma GCC diagnostic pop
+#endif
             m_visitor->enterArrayBool(field, std::vector<bool>(&v, &v + 1));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_INT8:
+        case MetaTypeId::TYPE_ARRAY_INT8:
         {
             std::int8_t v = static_cast<std::int8_t>(value);
             m_visitor->enterArrayInt8(field, &v, 1);
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_INT16:
+        case MetaTypeId::TYPE_ARRAY_INT16:
         {
             std::int16_t v = static_cast<std::int16_t>(value);
             m_visitor->enterArrayInt16(field, &v, 1);
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_UINT16:
+        case MetaTypeId::TYPE_ARRAY_UINT16:
         {
             std::uint16_t v = static_cast<std::uint16_t>(value);
             m_visitor->enterArrayUInt16(field, &v, 1);
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_INT32:
+        case MetaTypeId::TYPE_ARRAY_INT32:
         {
             std::int32_t v = static_cast<std::int32_t>(value);
             m_visitor->enterArrayInt32(field, &v, 1);
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_UINT32:
+        case MetaTypeId::TYPE_ARRAY_UINT32:
         {
             std::uint32_t v = static_cast<std::uint32_t>(value);
             m_visitor->enterArrayUInt32(field, &v, 1);
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_INT64:
+        case MetaTypeId::TYPE_ARRAY_INT64:
         {
             std::int64_t v = static_cast<std::int64_t>(value);
             m_visitor->enterArrayInt64(field, &v, 1);
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_UINT64:
+        case MetaTypeId::TYPE_ARRAY_UINT64:
         {
             std::uint64_t v = static_cast<std::uint64_t>(value);
             m_visitor->enterArrayUInt64(field, &v, 1);
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_FLOAT:
+        case MetaTypeId::TYPE_ARRAY_FLOAT:
         {
             float v = static_cast<float>(value);
             m_visitor->enterArrayFloat(field, &v, 1);
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_DOUBLE:
+        case MetaTypeId::TYPE_ARRAY_DOUBLE:
         {
             double v = static_cast<double>(value);
             m_visitor->enterArrayDouble(field, &v, 1);
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_STRING:
+        case MetaTypeId::TYPE_ARRAY_STRING:
         {
             m_visitor->enterArrayString(field, {std::to_string(value)});
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_BYTES:
+        case MetaTypeId::TYPE_ARRAY_BYTES:
         {
             std::string str = std::to_string(value);
             Bytes bytes(str.begin(), str.end());
-            m_visitor->enterArrayBytes(field, { bytes });
+            m_visitor->enterArrayBytes(field, {bytes});
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_ENUM:
+        case MetaTypeId::TYPE_ARRAY_ENUM:
         {
             std::int32_t v = static_cast<std::int32_t>(value);
             m_visitor->enterArrayEnum(field, &v, 1);
         }
         break;
-    default:
-        streamError << "number not expected";
-        break;
+        default:
+            streamError << "number not expected";
+            break;
     }
 }
 
-
 void ParserConverter::convertString(const MetaField& field, const char* value, ssize_t size)
 {
-    switch (field.typeId)
+    switch(field.typeId)
     {
-    case MetaTypeId::TYPE_BOOL:
+        case MetaTypeId::TYPE_BOOL:
         {
             bool v = (size == 4 && (memcmp(value, "true", 4) == 0));
             m_visitor->enterBool(field, v);
         }
         break;
-    case MetaTypeId::TYPE_INT8:
+        case MetaTypeId::TYPE_INT8:
         {
             std::int8_t v = static_cast<std::int8_t>(strtol(value, nullptr, 10));
             m_visitor->enterInt8(field, v);
         }
         break;
-    case MetaTypeId::TYPE_UINT8:
+        case MetaTypeId::TYPE_UINT8:
         {
             std::uint8_t v = static_cast<std::uint8_t>(strtoul(value, nullptr, 10));
             m_visitor->enterUInt8(field, v);
         }
         break;
-    case MetaTypeId::TYPE_INT16:
+        case MetaTypeId::TYPE_INT16:
         {
             std::int16_t v = static_cast<std::int16_t>(strtol(value, nullptr, 10));
             m_visitor->enterInt16(field, v);
         }
         break;
-    case MetaTypeId::TYPE_UINT16:
+        case MetaTypeId::TYPE_UINT16:
         {
             std::uint16_t v = static_cast<std::uint16_t>(strtoul(value, nullptr, 10));
             m_visitor->enterUInt16(field, v);
         }
         break;
-    case MetaTypeId::TYPE_INT32:
+        case MetaTypeId::TYPE_INT32:
         {
-            std::int32_t v = strtol(value, nullptr, 10);
+            std::int32_t v = static_cast<std::int32_t>(strtol(value, nullptr, 10));
             m_visitor->enterInt32(field, v);
         }
         break;
-    case MetaTypeId::TYPE_UINT32:
+        case MetaTypeId::TYPE_UINT32:
         {
-            std::uint32_t v = strtoul(value, nullptr, 10);
+            std::uint32_t v = static_cast<std::uint32_t>(strtoul(value, nullptr, 10));
             m_visitor->enterUInt32(field, v);
         }
         break;
-    case MetaTypeId::TYPE_INT64:
+        case MetaTypeId::TYPE_INT64:
         {
             std::int64_t v = strtoll(value, nullptr, 10);
             m_visitor->enterInt64(field, v);
         }
         break;
-    case MetaTypeId::TYPE_UINT64:
+        case MetaTypeId::TYPE_UINT64:
         {
             std::uint64_t v = strtoull(value, nullptr, 10);
             m_visitor->enterUInt64(field, v);
         }
         break;
-    case MetaTypeId::TYPE_FLOAT:
+        case MetaTypeId::TYPE_FLOAT:
         {
             float v = strtof32(value, nullptr);
             m_visitor->enterFloat(field, v);
         }
         break;
-    case MetaTypeId::TYPE_DOUBLE:
+        case MetaTypeId::TYPE_DOUBLE:
         {
             double v = strtof64(value, nullptr);
             m_visitor->enterDouble(field, v);
         }
         break;
-    case MetaTypeId::TYPE_STRING:
-        m_visitor->enterString(field, value, size);
-        break;
-    case MetaTypeId::TYPE_ENUM:
-        m_visitor->enterEnum(field, value, size);
-        break;
-    case MetaTypeId::TYPE_ARRAY_BOOL:
+        case MetaTypeId::TYPE_STRING:
+            m_visitor->enterString(field, value, size);
+            break;
+        case MetaTypeId::TYPE_ENUM:
+            m_visitor->enterEnum(field, value, size);
+            break;
+        case MetaTypeId::TYPE_ARRAY_BOOL:
         {
             bool v = (size == 4 && (memcmp(value, "true", 4) == 0));
             m_visitor->enterArrayBool(field, std::vector<bool>(&v, &v + 1));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_INT8:
+        case MetaTypeId::TYPE_ARRAY_INT8:
         {
             std::int8_t v = static_cast<std::int8_t>(strtol(value, nullptr, 10));
             m_visitor->enterArrayInt8(field, &v, 1);
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_INT16:
+        case MetaTypeId::TYPE_ARRAY_INT16:
         {
             std::int16_t v = static_cast<std::int16_t>(strtol(value, nullptr, 10));
             m_visitor->enterArrayInt16(field, &v, 1);
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_UINT16:
+        case MetaTypeId::TYPE_ARRAY_UINT16:
         {
             std::uint16_t v = static_cast<std::uint16_t>(strtoul(value, nullptr, 10));
             m_visitor->enterArrayUInt16(field, &v, 1);
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_INT32:
+        case MetaTypeId::TYPE_ARRAY_INT32:
         {
-            std::int32_t v = strtol(value, nullptr, 10);
+            std::int32_t v = static_cast<std::int32_t>(strtol(value, nullptr, 10));
             m_visitor->enterArrayInt32(field, &v, 1);
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_UINT32:
+        case MetaTypeId::TYPE_ARRAY_UINT32:
         {
-            std::uint32_t v = strtoul(value, nullptr, 10);
+            std::uint32_t v = static_cast<std::uint32_t>(strtoul(value, nullptr, 10));
             m_visitor->enterArrayUInt32(field, &v, 1);
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_INT64:
+        case MetaTypeId::TYPE_ARRAY_INT64:
         {
             std::int64_t v = strtoll(value, nullptr, 10);
             m_visitor->enterArrayInt64(field, &v, 1);
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_UINT64:
+        case MetaTypeId::TYPE_ARRAY_UINT64:
         {
             std::uint64_t v = strtoull(value, nullptr, 10);
             m_visitor->enterArrayUInt64(field, &v, 1);
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_FLOAT:
+        case MetaTypeId::TYPE_ARRAY_FLOAT:
         {
             float v = strtof32(value, nullptr);
             m_visitor->enterArrayFloat(field, &v, 1);
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_DOUBLE:
+        case MetaTypeId::TYPE_ARRAY_DOUBLE:
         {
             double v = strtof64(value, nullptr);
             m_visitor->enterArrayDouble(field, &v, 1);
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_STRING:
+        case MetaTypeId::TYPE_ARRAY_STRING:
         {
             m_visitor->enterArrayString(field, {std::string(value, size)});
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_ENUM:
+        case MetaTypeId::TYPE_ARRAY_ENUM:
         {
             m_visitor->enterArrayEnum(field, {std::string(value, size)});
         }
         break;
-    default:
-        streamError << "number not expected";
-        break;
+        default:
+            streamError << "number not expected";
+            break;
     }
 }
-
 
 template<class T>
 void ParserConverter::convertArraytNumber(const MetaField& field, const T* value, ssize_t size)
 {
-    switch (field.typeId)
+    switch(field.typeId)
     {
-    case MetaTypeId::TYPE_BOOL:
-        if (value && size > 0)
-        {
-            m_visitor->enterBool(field, value[0]);
-        }
-        break;
-    case MetaTypeId::TYPE_INT8:
-        if (value && size > 0)
-        {
-            m_visitor->enterInt8(field, static_cast<std::int8_t>(value[0]));
-        }
-        break;
-    case MetaTypeId::TYPE_UINT8:
-        if (value && size > 0)
-        {
-            m_visitor->enterUInt8(field, static_cast<std::uint8_t>(value[0]));
-        }
-        break;
-    case MetaTypeId::TYPE_INT16:
-        if (value && size > 0)
-        {
-            m_visitor->enterInt16(field, static_cast<std::int16_t>(value[0]));
-        }
-        break;
-    case MetaTypeId::TYPE_UINT16:
-        if (value && size > 0)
-        {
-            m_visitor->enterUInt16(field, static_cast<std::uint16_t>(value[0]));
-        }
-        break;
-    case MetaTypeId::TYPE_INT32:
-        if (value && size > 0)
-        {
-            m_visitor->enterInt32(field, static_cast<std::int32_t>(value[0]));
-        }
-        break;
-    case MetaTypeId::TYPE_UINT32:
-        if (value && size > 0)
-        {
-            m_visitor->enterUInt32(field, static_cast<std::uint32_t>(value[0]));
-        }
-        break;
-    case MetaTypeId::TYPE_INT64:
-        if (value && size > 0)
-        {
-            m_visitor->enterInt64(field, static_cast<std::int64_t>(value[0]));
-        }
-        break;
-    case MetaTypeId::TYPE_UINT64:
-        if (value && size > 0)
-        {
-            m_visitor->enterUInt64(field, static_cast<std::uint64_t>(value[0]));
-        }
-        break;
-    case MetaTypeId::TYPE_FLOAT:
-        if (value && size > 0)
-        {
-            m_visitor->enterFloat(field, static_cast<float>(value[0]));
-        }
-        break;
-    case MetaTypeId::TYPE_DOUBLE:
-        if (value && size > 0)
-        {
-            m_visitor->enterDouble(field, static_cast<double>(value[0]));
-        }
-        break;
-    case MetaTypeId::TYPE_STRING:
-        if (value && size > 0)
-        {
-            m_visitor->enterString(field, std::to_string(value[0]));
-        }
-        break;
-    case MetaTypeId::TYPE_ENUM:
-        if (value && size > 0)
-        {
-            m_visitor->enterEnum(field, static_cast<std::int32_t>(value[0]));
-        }
-        break;
-    case MetaTypeId::TYPE_ARRAY_BOOL:
+        case MetaTypeId::TYPE_BOOL:
+            if (value && size > 0)
+            {
+#ifndef WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
+                m_visitor->enterBool(field, value[0]);
+#ifndef WIN32
+#pragma GCC diagnostic pop
+#endif
+            }
+            break;
+        case MetaTypeId::TYPE_INT8:
+            if (value && size > 0)
+            {
+                m_visitor->enterInt8(field, static_cast<std::int8_t>(value[0]));
+            }
+            break;
+        case MetaTypeId::TYPE_UINT8:
+            if (value && size > 0)
+            {
+                m_visitor->enterUInt8(field, static_cast<std::uint8_t>(value[0]));
+            }
+            break;
+        case MetaTypeId::TYPE_INT16:
+            if (value && size > 0)
+            {
+                m_visitor->enterInt16(field, static_cast<std::int16_t>(value[0]));
+            }
+            break;
+        case MetaTypeId::TYPE_UINT16:
+            if (value && size > 0)
+            {
+                m_visitor->enterUInt16(field, static_cast<std::uint16_t>(value[0]));
+            }
+            break;
+        case MetaTypeId::TYPE_INT32:
+            if (value && size > 0)
+            {
+                m_visitor->enterInt32(field, static_cast<std::int32_t>(value[0]));
+            }
+            break;
+        case MetaTypeId::TYPE_UINT32:
+            if (value && size > 0)
+            {
+                m_visitor->enterUInt32(field, static_cast<std::uint32_t>(value[0]));
+            }
+            break;
+        case MetaTypeId::TYPE_INT64:
+            if (value && size > 0)
+            {
+                m_visitor->enterInt64(field, static_cast<std::int64_t>(value[0]));
+            }
+            break;
+        case MetaTypeId::TYPE_UINT64:
+            if (value && size > 0)
+            {
+                m_visitor->enterUInt64(field, static_cast<std::uint64_t>(value[0]));
+            }
+            break;
+        case MetaTypeId::TYPE_FLOAT:
+            if (value && size > 0)
+            {
+                m_visitor->enterFloat(field, static_cast<float>(value[0]));
+            }
+            break;
+        case MetaTypeId::TYPE_DOUBLE:
+            if (value && size > 0)
+            {
+                m_visitor->enterDouble(field, static_cast<double>(value[0]));
+            }
+            break;
+        case MetaTypeId::TYPE_STRING:
+            if (value && size > 0)
+            {
+                m_visitor->enterString(field, std::to_string(value[0]));
+            }
+            break;
+        case MetaTypeId::TYPE_ENUM:
+            if (value && size > 0)
+            {
+                m_visitor->enterEnum(field, static_cast<std::int32_t>(value[0]));
+            }
+            break;
+        case MetaTypeId::TYPE_ARRAY_BOOL:
         {
             std::vector<bool> v;
             v.reserve(size);
-            std::for_each(value, value + size, [&v] (const T& entry) {
+            std::for_each(value, value + size, [&v](const T& entry) {
+#ifndef WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
                 v.push_back(entry);
+#ifndef WIN32
+#pragma GCC diagnostic pop
+#endif
             });
             m_visitor->enterArrayBool(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_INT8:
+        case MetaTypeId::TYPE_ARRAY_INT8:
         {
             std::vector<std::int8_t> v;
             v.reserve(size);
-            std::for_each(value, value + size, [&v] (const T& entry) {
+            std::for_each(value, value + size, [&v](const T& entry) {
                 v.push_back(static_cast<std::int8_t>(entry));
             });
             m_visitor->enterArrayInt8(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_INT16:
+        case MetaTypeId::TYPE_ARRAY_INT16:
         {
             std::vector<std::int16_t> v;
             v.reserve(size);
             std::for_each(value, value + size, [&v](const T& entry) {
                 v.push_back(static_cast<std::int16_t>(entry));
-                });
+            });
             m_visitor->enterArrayInt16(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_UINT16:
+        case MetaTypeId::TYPE_ARRAY_UINT16:
         {
             std::vector<std::uint16_t> v;
             v.reserve(size);
             std::for_each(value, value + size, [&v](const T& entry) {
                 v.push_back(static_cast<std::uint16_t>(entry));
-                });
+            });
             m_visitor->enterArrayUInt16(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_INT32:
+        case MetaTypeId::TYPE_ARRAY_INT32:
         {
             std::vector<std::int32_t> v;
             v.reserve(size);
             std::for_each(value, value + size, [&v](const T& entry) {
                 v.push_back(static_cast<std::int32_t>(entry));
-                });
+            });
             m_visitor->enterArrayInt32(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_UINT32:
+        case MetaTypeId::TYPE_ARRAY_UINT32:
         {
             std::vector<std::uint32_t> v;
             v.reserve(size);
             std::for_each(value, value + size, [&v](const T& entry) {
                 v.push_back(static_cast<std::uint32_t>(entry));
-                });
+            });
             m_visitor->enterArrayUInt32(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_INT64:
+        case MetaTypeId::TYPE_ARRAY_INT64:
         {
             std::vector<std::int64_t> v;
             v.reserve(size);
-            std::for_each(value, value + size, [&v] (const T& entry) {
+            std::for_each(value, value + size, [&v](const T& entry) {
                 v.push_back(static_cast<std::int64_t>(entry));
             });
             m_visitor->enterArrayInt64(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_UINT64:
+        case MetaTypeId::TYPE_ARRAY_UINT64:
         {
             std::vector<std::uint64_t> v;
             v.reserve(size);
-            std::for_each(value, value + size, [&v] (const T& entry) {
+            std::for_each(value, value + size, [&v](const T& entry) {
                 v.push_back(static_cast<std::uint64_t>(entry));
             });
             m_visitor->enterArrayUInt64(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_FLOAT:
+        case MetaTypeId::TYPE_ARRAY_FLOAT:
         {
             std::vector<float> v;
             v.reserve(size);
-            std::for_each(value, value + size, [&v] (const T& entry) {
+            std::for_each(value, value + size, [&v](const T& entry) {
                 v.push_back(static_cast<float>(entry));
             });
             m_visitor->enterArrayFloat(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_DOUBLE:
+        case MetaTypeId::TYPE_ARRAY_DOUBLE:
         {
             std::vector<double> v;
             v.reserve(size);
-            std::for_each(value, value + size, [&v] (const T& entry) {
+            std::for_each(value, value + size, [&v](const T& entry) {
                 v.push_back(static_cast<double>(entry));
             });
             m_visitor->enterArrayDouble(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_STRING:
+        case MetaTypeId::TYPE_ARRAY_STRING:
         {
             std::vector<std::string> v;
             v.reserve(size);
-            std::for_each(value, value + size, [&v] (const T& entry) {
+            std::for_each(value, value + size, [&v](const T& entry) {
                 v.push_back(std::to_string(entry));
             });
             m_visitor->enterArrayString(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_ENUM:
+        case MetaTypeId::TYPE_ARRAY_ENUM:
         {
             std::vector<std::int32_t> v;
             v.reserve(size);
-            std::for_each(value, value + size, [&v] (const T& entry) {
+            std::for_each(value, value + size, [&v](const T& entry) {
                 v.push_back(static_cast<std::int32_t>(entry));
             });
             m_visitor->enterArrayEnum(field, std::move(v));
         }
         break;
-    default:
-        streamError << "array not expected";
-        break;
+        default:
+            streamError << "array not expected";
+            break;
     }
 }
 
@@ -1132,428 +1151,438 @@ template<class T>
 void ParserConverter::convertArraytNumber(const MetaField& field, const std::vector<T>& value)
 {
     ssize_t size = value.size();
-    switch (field.typeId)
+    switch(field.typeId)
     {
-    case MetaTypeId::TYPE_BOOL:
-        if (value.size() > 0)
-        {
-            m_visitor->enterBool(field, value[0]);
-        }
-        break;
-    case MetaTypeId::TYPE_INT8:
-        if (value.size() > 0)
-        {
-            m_visitor->enterInt8(field, static_cast<std::int8_t>(value[0]));
-        }
-        break;
-    case MetaTypeId::TYPE_UINT8:
-        if (value.size() > 0)
-        {
-            m_visitor->enterUInt8(field, static_cast<std::uint8_t>(value[0]));
-        }
-        break;
-    case MetaTypeId::TYPE_INT16:
-        if (value.size() > 0)
-        {
-            m_visitor->enterInt16(field, static_cast<std::int16_t>(value[0]));
-        }
-        break;
-    case MetaTypeId::TYPE_UINT16:
-        if (value.size() > 0)
-        {
-            m_visitor->enterUInt16(field, static_cast<std::uint16_t>(value[0]));
-        }
-        break;
-    case MetaTypeId::TYPE_INT32:
-        if (value.size() > 0)
-        {
-            m_visitor->enterInt32(field, static_cast<std::int32_t>(value[0]));
-        }
-        break;
-    case MetaTypeId::TYPE_UINT32:
-        if (value.size() > 0)
-        {
-            m_visitor->enterUInt32(field, static_cast<std::uint32_t>(value[0]));
-        }
-        break;
-    case MetaTypeId::TYPE_INT64:
-        if (value.size() > 0)
-        {
-            m_visitor->enterInt64(field, static_cast<std::int64_t>(value[0]));
-        }
-        break;
-    case MetaTypeId::TYPE_UINT64:
-        if (value.size() > 0)
-        {
-            m_visitor->enterUInt64(field, static_cast<std::uint64_t>(value[0]));
-        }
-        break;
-    case MetaTypeId::TYPE_FLOAT:
-        if (value.size() > 0)
-        {
-            m_visitor->enterFloat(field, static_cast<float>(value[0]));
-        }
-        break;
-    case MetaTypeId::TYPE_DOUBLE:
-        if (value.size() > 0)
-        {
-            m_visitor->enterDouble(field, static_cast<double>(value[0]));
-        }
-        break;
-    case MetaTypeId::TYPE_STRING:
-        if (value.size() > 0)
-        {
-            m_visitor->enterString(field, std::to_string(value[0]));
-        }
-        break;
-    case MetaTypeId::TYPE_ENUM:
-        if (value.size() > 0)
-        {
-            m_visitor->enterEnum(field, static_cast<std::int32_t>(value[0]));
-        }
-        break;
-    case MetaTypeId::TYPE_ARRAY_BOOL:
+        case MetaTypeId::TYPE_BOOL:
+            if (value.size() > 0)
+            {
+#ifndef WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
+                m_visitor->enterBool(field, value[0]);
+#ifndef WIN32
+#pragma GCC diagnostic pop
+#endif
+            }
+            break;
+        case MetaTypeId::TYPE_INT8:
+            if (value.size() > 0)
+            {
+                m_visitor->enterInt8(field, static_cast<std::int8_t>(value[0]));
+            }
+            break;
+        case MetaTypeId::TYPE_UINT8:
+            if (value.size() > 0)
+            {
+                m_visitor->enterUInt8(field, static_cast<std::uint8_t>(value[0]));
+            }
+            break;
+        case MetaTypeId::TYPE_INT16:
+            if (value.size() > 0)
+            {
+                m_visitor->enterInt16(field, static_cast<std::int16_t>(value[0]));
+            }
+            break;
+        case MetaTypeId::TYPE_UINT16:
+            if (value.size() > 0)
+            {
+                m_visitor->enterUInt16(field, static_cast<std::uint16_t>(value[0]));
+            }
+            break;
+        case MetaTypeId::TYPE_INT32:
+            if (value.size() > 0)
+            {
+                m_visitor->enterInt32(field, static_cast<std::int32_t>(value[0]));
+            }
+            break;
+        case MetaTypeId::TYPE_UINT32:
+            if (value.size() > 0)
+            {
+                m_visitor->enterUInt32(field, static_cast<std::uint32_t>(value[0]));
+            }
+            break;
+        case MetaTypeId::TYPE_INT64:
+            if (value.size() > 0)
+            {
+                m_visitor->enterInt64(field, static_cast<std::int64_t>(value[0]));
+            }
+            break;
+        case MetaTypeId::TYPE_UINT64:
+            if (value.size() > 0)
+            {
+                m_visitor->enterUInt64(field, static_cast<std::uint64_t>(value[0]));
+            }
+            break;
+        case MetaTypeId::TYPE_FLOAT:
+            if (value.size() > 0)
+            {
+                m_visitor->enterFloat(field, static_cast<float>(value[0]));
+            }
+            break;
+        case MetaTypeId::TYPE_DOUBLE:
+            if (value.size() > 0)
+            {
+                m_visitor->enterDouble(field, static_cast<double>(value[0]));
+            }
+            break;
+        case MetaTypeId::TYPE_STRING:
+            if (value.size() > 0)
+            {
+                m_visitor->enterString(field, std::to_string(value[0]));
+            }
+            break;
+        case MetaTypeId::TYPE_ENUM:
+            if (value.size() > 0)
+            {
+                m_visitor->enterEnum(field, static_cast<std::int32_t>(value[0]));
+            }
+            break;
+        case MetaTypeId::TYPE_ARRAY_BOOL:
         {
             std::vector<bool> v;
             v.reserve(size);
-            std::for_each(value.begin(), value.end(), [&v] (const T& entry) {
+            std::for_each(value.begin(), value.end(), [&v](const T& entry) {
+#ifndef WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
                 v.push_back(entry);
+#ifndef WIN32
+#pragma GCC diagnostic pop
+#endif
             });
             m_visitor->enterArrayBool(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_INT8:
+        case MetaTypeId::TYPE_ARRAY_INT8:
         {
             std::vector<std::int8_t> v;
             v.reserve(size);
-            std::for_each(value.begin(), value.end(), [&v] (const T& entry) {
+            std::for_each(value.begin(), value.end(), [&v](const T& entry) {
                 v.push_back(static_cast<std::int8_t>(entry));
             });
             m_visitor->enterArrayInt8(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_INT16:
+        case MetaTypeId::TYPE_ARRAY_INT16:
         {
             std::vector<std::int16_t> v;
             v.reserve(size);
-            std::for_each(value.begin(), value.end(), [&v] (const T& entry) {
+            std::for_each(value.begin(), value.end(), [&v](const T& entry) {
                 v.push_back(static_cast<std::int16_t>(entry));
             });
             m_visitor->enterArrayInt16(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_UINT16:
+        case MetaTypeId::TYPE_ARRAY_UINT16:
         {
             std::vector<std::uint16_t> v;
             v.reserve(size);
-            std::for_each(value.begin(), value.end(), [&v] (const T& entry) {
+            std::for_each(value.begin(), value.end(), [&v](const T& entry) {
                 v.push_back(static_cast<std::uint16_t>(entry));
             });
             m_visitor->enterArrayUInt16(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_INT32:
+        case MetaTypeId::TYPE_ARRAY_INT32:
         {
             std::vector<std::int32_t> v;
             v.reserve(size);
-            std::for_each(value.begin(), value.end(), [&v] (const T& entry) {
+            std::for_each(value.begin(), value.end(), [&v](const T& entry) {
                 v.push_back(static_cast<std::int32_t>(entry));
             });
             m_visitor->enterArrayInt32(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_UINT32:
+        case MetaTypeId::TYPE_ARRAY_UINT32:
         {
             std::vector<std::uint32_t> v;
             v.reserve(size);
-            std::for_each(value.begin(), value.end(), [&v] (const T& entry) {
+            std::for_each(value.begin(), value.end(), [&v](const T& entry) {
                 v.push_back(static_cast<std::uint32_t>(entry));
             });
             m_visitor->enterArrayUInt32(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_INT64:
+        case MetaTypeId::TYPE_ARRAY_INT64:
         {
             std::vector<std::int64_t> v;
             v.reserve(size);
-            std::for_each(value.begin(), value.end(), [&v] (const T& entry) {
+            std::for_each(value.begin(), value.end(), [&v](const T& entry) {
                 v.push_back(static_cast<std::int64_t>(entry));
             });
             m_visitor->enterArrayInt64(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_UINT64:
+        case MetaTypeId::TYPE_ARRAY_UINT64:
         {
             std::vector<std::uint64_t> v;
             v.reserve(size);
-            std::for_each(value.begin(), value.end(), [&v] (const T& entry) {
+            std::for_each(value.begin(), value.end(), [&v](const T& entry) {
                 v.push_back(static_cast<std::uint64_t>(entry));
             });
             m_visitor->enterArrayUInt64(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_FLOAT:
+        case MetaTypeId::TYPE_ARRAY_FLOAT:
         {
             std::vector<float> v;
             v.reserve(size);
-            std::for_each(value.begin(), value.end(), [&v] (const T& entry) {
+            std::for_each(value.begin(), value.end(), [&v](const T& entry) {
                 v.push_back(static_cast<float>(entry));
             });
             m_visitor->enterArrayFloat(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_DOUBLE:
+        case MetaTypeId::TYPE_ARRAY_DOUBLE:
         {
             std::vector<double> v;
             v.reserve(size);
-            std::for_each(value.begin(), value.end(), [&v] (const T& entry) {
+            std::for_each(value.begin(), value.end(), [&v](const T& entry) {
                 v.push_back(static_cast<double>(entry));
             });
             m_visitor->enterArrayDouble(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_STRING:
+        case MetaTypeId::TYPE_ARRAY_STRING:
         {
             std::vector<std::string> v;
             v.reserve(size);
-            std::for_each(value.begin(), value.end(), [&v] (const T& entry) {
+            std::for_each(value.begin(), value.end(), [&v](const T& entry) {
                 v.push_back(std::to_string(entry));
             });
             m_visitor->enterArrayString(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_ENUM:
+        case MetaTypeId::TYPE_ARRAY_ENUM:
         {
             std::vector<std::int32_t> v;
             v.reserve(size);
-            std::for_each(value.begin(), value.end(), [&v] (const T& entry) {
+            std::for_each(value.begin(), value.end(), [&v](const T& entry) {
                 v.push_back(static_cast<std::int32_t>(entry));
             });
             m_visitor->enterArrayEnum(field, std::move(v));
         }
         break;
-    default:
-        streamError << "array not expected";
-        break;
+        default:
+            streamError << "array not expected";
+            break;
     }
 }
 
 void ParserConverter::convertArraytString(const MetaField& field, const std::vector<std::string>& value)
 {
     size_t size = value.size();
-    switch (field.typeId)
+    switch(field.typeId)
     {
-    case MetaTypeId::TYPE_BOOL:
-        if (!value.empty())
-        {
-            bool v = (value[0].size() == 4 && (memcmp(value[0].c_str(), "true", 4) == 0));
-            m_visitor->enterBool(field, v);
-        }
-        break;
-    case MetaTypeId::TYPE_INT8:
-        if (!value.empty())
-        {
-            std::int8_t v = static_cast<std::int8_t>(strtol(value[0].c_str(), nullptr, 10));
-            m_visitor->enterInt8(field, v);
-        }
-        break;
-    case MetaTypeId::TYPE_UINT8:
-        if (!value.empty())
-        {
-            std::uint8_t v = static_cast<std::uint8_t>(strtoul(value[0].c_str(), nullptr, 10));
-            m_visitor->enterUInt8(field, v);
-        }
-        break;
-    case MetaTypeId::TYPE_INT16:
-        if (!value.empty())
-        {
-            std::int16_t v = static_cast<std::int16_t>(strtol(value[0].c_str(), nullptr, 10));
-            m_visitor->enterInt16(field, v);
-        }
-        break;
-    case MetaTypeId::TYPE_UINT16:
-        if (!value.empty())
-        {
-            std::uint16_t v = static_cast<std::uint16_t>(strtoul(value[0].c_str(), nullptr, 10));
-            m_visitor->enterUInt16(field, v);
-        }
-        break;
-    case MetaTypeId::TYPE_INT32:
-        if (!value.empty())
-        {
-            std::int32_t v = strtol(value[0].c_str(), nullptr, 10);
-            m_visitor->enterInt32(field, v);
-        }
-        break;
-    case MetaTypeId::TYPE_UINT32:
-        if (!value.empty())
-        {
-            std::uint32_t v = strtoul(value[0].c_str(), nullptr, 10);
-            m_visitor->enterUInt32(field, v);
-        }
-        break;
-    case MetaTypeId::TYPE_INT64:
-        if (!value.empty())
-        {
-            std::int64_t v = strtoll(value[0].c_str(), nullptr, 10);
-            m_visitor->enterInt64(field, v);
-        }
-        break;
-    case MetaTypeId::TYPE_UINT64:
-        if (!value.empty())
-        {
-            std::uint64_t v = strtoull(value[0].c_str(), nullptr, 10);
-            m_visitor->enterUInt64(field, v);
-        }
-        break;
-    case MetaTypeId::TYPE_FLOAT:
-        if (!value.empty())
-        {
-            float v = strtof32(value[0].c_str(), nullptr);
-            m_visitor->enterFloat(field, v);
-        }
-        break;
-    case MetaTypeId::TYPE_DOUBLE:
-        if (!value.empty())
-        {
-            double v = strtof64(value[0].c_str(), nullptr);
-            m_visitor->enterDouble(field, v);
-        }
-        break;
-    case MetaTypeId::TYPE_STRING:
-        if (!value.empty())
-        {
-            m_visitor->enterString(field, value[0].c_str(), value[0].size());
-        }
-        break;
-    case MetaTypeId::TYPE_ENUM:
-        if (!value.empty())
-        {
-            m_visitor->enterEnum(field, value[0].c_str(), value[0].size());
-        }
-        break;
-    case MetaTypeId::TYPE_ARRAY_BOOL:
+        case MetaTypeId::TYPE_BOOL:
+            if (!value.empty())
+            {
+                bool v = (value[0].size() == 4 && (memcmp(value[0].c_str(), "true", 4) == 0));
+                m_visitor->enterBool(field, v);
+            }
+            break;
+        case MetaTypeId::TYPE_INT8:
+            if (!value.empty())
+            {
+                std::int8_t v = static_cast<std::int8_t>(strtol(value[0].c_str(), nullptr, 10));
+                m_visitor->enterInt8(field, v);
+            }
+            break;
+        case MetaTypeId::TYPE_UINT8:
+            if (!value.empty())
+            {
+                std::uint8_t v = static_cast<std::uint8_t>(strtoul(value[0].c_str(), nullptr, 10));
+                m_visitor->enterUInt8(field, v);
+            }
+            break;
+        case MetaTypeId::TYPE_INT16:
+            if (!value.empty())
+            {
+                std::int16_t v = static_cast<std::int16_t>(strtol(value[0].c_str(), nullptr, 10));
+                m_visitor->enterInt16(field, v);
+            }
+            break;
+        case MetaTypeId::TYPE_UINT16:
+            if (!value.empty())
+            {
+                std::uint16_t v = static_cast<std::uint16_t>(strtoul(value[0].c_str(), nullptr, 10));
+                m_visitor->enterUInt16(field, v);
+            }
+            break;
+        case MetaTypeId::TYPE_INT32:
+            if (!value.empty())
+            {
+                std::int32_t v = static_cast<std::int32_t>(strtol(value[0].c_str(), nullptr, 10));
+                m_visitor->enterInt32(field, v);
+            }
+            break;
+        case MetaTypeId::TYPE_UINT32:
+            if (!value.empty())
+            {
+                std::uint32_t v = static_cast<std::uint32_t>(strtoul(value[0].c_str(), nullptr, 10));
+                m_visitor->enterUInt32(field, v);
+            }
+            break;
+        case MetaTypeId::TYPE_INT64:
+            if (!value.empty())
+            {
+                std::int64_t v = strtoll(value[0].c_str(), nullptr, 10);
+                m_visitor->enterInt64(field, v);
+            }
+            break;
+        case MetaTypeId::TYPE_UINT64:
+            if (!value.empty())
+            {
+                std::uint64_t v = strtoull(value[0].c_str(), nullptr, 10);
+                m_visitor->enterUInt64(field, v);
+            }
+            break;
+        case MetaTypeId::TYPE_FLOAT:
+            if (!value.empty())
+            {
+                float v = strtof32(value[0].c_str(), nullptr);
+                m_visitor->enterFloat(field, v);
+            }
+            break;
+        case MetaTypeId::TYPE_DOUBLE:
+            if (!value.empty())
+            {
+                double v = strtof64(value[0].c_str(), nullptr);
+                m_visitor->enterDouble(field, v);
+            }
+            break;
+        case MetaTypeId::TYPE_STRING:
+            if (!value.empty())
+            {
+                m_visitor->enterString(field, value[0].c_str(), value[0].size());
+            }
+            break;
+        case MetaTypeId::TYPE_ENUM:
+            if (!value.empty())
+            {
+                m_visitor->enterEnum(field, value[0].c_str(), value[0].size());
+            }
+            break;
+        case MetaTypeId::TYPE_ARRAY_BOOL:
         {
             std::vector<bool> v;
             v.reserve(size);
-            std::for_each(value.begin(), value.end(), [&v] (const std::string& entry) {
+            std::for_each(value.begin(), value.end(), [&v](const std::string& entry) {
                 bool val = (entry.size() == 4 && (memcmp(entry.c_str(), "true", 4) == 0)) || (entry.size() >= 1 && (entry[0] == 1));
                 v.push_back(val);
             });
             m_visitor->enterArrayBool(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_INT8:
+        case MetaTypeId::TYPE_ARRAY_INT8:
         {
             std::vector<std::int8_t> v;
             v.reserve(size);
-            std::for_each(value.begin(), value.end(), [&v] (const std::string& entry) {
+            std::for_each(value.begin(), value.end(), [&v](const std::string& entry) {
                 v.push_back(static_cast<std::int8_t>(strtol(entry.c_str(), nullptr, 10)));
             });
             m_visitor->enterArrayInt8(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_INT16:
+        case MetaTypeId::TYPE_ARRAY_INT16:
         {
             std::vector<std::int16_t> v;
             v.reserve(size);
             std::for_each(value.begin(), value.end(), [&v](const std::string& entry) {
                 v.push_back(static_cast<std::int16_t>(strtol(entry.c_str(), nullptr, 10)));
-                });
+            });
             m_visitor->enterArrayInt16(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_UINT16:
+        case MetaTypeId::TYPE_ARRAY_UINT16:
         {
             std::vector<std::uint16_t> v;
             v.reserve(size);
             std::for_each(value.begin(), value.end(), [&v](const std::string& entry) {
                 v.push_back(static_cast<std::uint16_t>(strtoul(entry.c_str(), nullptr, 10)));
-                });
+            });
             m_visitor->enterArrayUInt16(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_INT32:
+        case MetaTypeId::TYPE_ARRAY_INT32:
         {
             std::vector<std::int32_t> v;
             v.reserve(size);
             std::for_each(value.begin(), value.end(), [&v](const std::string& entry) {
-                v.push_back(strtol(entry.c_str(), nullptr, 10));
-                });
+                v.push_back(static_cast<std::int32_t>(strtol(entry.c_str(), nullptr, 10)));
+            });
             m_visitor->enterArrayInt32(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_UINT32:
+        case MetaTypeId::TYPE_ARRAY_UINT32:
         {
             std::vector<std::uint32_t> v;
             v.reserve(size);
             std::for_each(value.begin(), value.end(), [&v](const std::string& entry) {
-                v.push_back(strtoul(entry.c_str(), nullptr, 10));
-                });
+                v.push_back(static_cast<std::int32_t>(strtoul(entry.c_str(), nullptr, 10)));
+            });
             m_visitor->enterArrayUInt32(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_INT64:
+        case MetaTypeId::TYPE_ARRAY_INT64:
         {
             std::vector<std::int64_t> v;
             v.reserve(size);
-            std::for_each(value.begin(), value.end(), [&v] (const std::string& entry) {
+            std::for_each(value.begin(), value.end(), [&v](const std::string& entry) {
                 v.push_back(strtoll(entry.c_str(), nullptr, 10));
             });
             m_visitor->enterArrayInt64(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_UINT64:
+        case MetaTypeId::TYPE_ARRAY_UINT64:
         {
             std::vector<std::uint64_t> v;
             v.reserve(size);
-            std::for_each(value.begin(), value.end(), [&v] (const std::string& entry) {
+            std::for_each(value.begin(), value.end(), [&v](const std::string& entry) {
                 v.push_back(strtoull(entry.c_str(), nullptr, 10));
             });
             m_visitor->enterArrayUInt64(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_FLOAT:
+        case MetaTypeId::TYPE_ARRAY_FLOAT:
         {
             std::vector<float> v;
             v.reserve(size);
-            std::for_each(value.begin(), value.end(), [&v] (const std::string& entry) {
+            std::for_each(value.begin(), value.end(), [&v](const std::string& entry) {
                 v.push_back(strtof32(entry.c_str(), nullptr));
             });
             m_visitor->enterArrayFloat(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_DOUBLE:
+        case MetaTypeId::TYPE_ARRAY_DOUBLE:
         {
             std::vector<double> v;
             v.reserve(size);
-            std::for_each(value.begin(), value.end(), [&v] (const std::string& entry) {
+            std::for_each(value.begin(), value.end(), [&v](const std::string& entry) {
                 v.push_back(strtof64(entry.c_str(), nullptr));
             });
             m_visitor->enterArrayDouble(field, std::move(v));
         }
         break;
-    case MetaTypeId::TYPE_ARRAY_STRING:
-        m_visitor->enterArrayString(field, value);
-        break;
-    case MetaTypeId::TYPE_ARRAY_ENUM:
+        case MetaTypeId::TYPE_ARRAY_STRING:
+            m_visitor->enterArrayString(field, value);
+            break;
+        case MetaTypeId::TYPE_ARRAY_ENUM:
         {
             std::vector<std::string> v;
             v.reserve(size);
-            std::for_each(value.begin(), value.end(), [&v] (const std::string& entry) {
+            std::for_each(value.begin(), value.end(), [&v](const std::string& entry) {
                 v.push_back(entry);
             });
             m_visitor->enterArrayEnum(field, std::move(v));
         }
         break;
-    default:
-        streamError << "array not expected";
-        break;
+        default:
+            streamError << "array not expected";
+            break;
     }
 }
 
-
-
-
-
-}   //namespace finalmq
+} //namespace finalmq

@@ -22,70 +22,65 @@
 
 #pragma once
 
+#include <list>
+#include <memory>
+#include <mutex>
+#include <vector>
+
+#include <assert.h>
 
 #include "ConnectionData.h"
 #include "Socket.h"
-#include "finalmq/poller/Poller.h"
-#include "finalmq/helpers/hybrid_ptr.h"
-#include "finalmq/streamconnection/IMessage.h"
 #include "finalmq/helpers/CondVar.h"
 #include "finalmq/helpers/IExecutor.h"
+#include "finalmq/helpers/hybrid_ptr.h"
+#include "finalmq/poller/Poller.h"
+#include "finalmq/streamconnection/IMessage.h"
 #include "finalmq/variant/Variant.h"
 
-#include <memory>
-#include <vector>
-#include <list>
-#include <mutex>
-#include <assert.h>
-
-
-namespace finalmq {
-
-#define RELEASE_DISCONNECT              1
-#define RELEASE_EXECUTEINPOLLERTHREAD   2
-#define RELEASE_TERMINATE               4
-
+namespace finalmq
+{
+#define RELEASE_DISCONNECT 1
+#define RELEASE_EXECUTEINPOLLERTHREAD 2
+#define RELEASE_TERMINATE 4
 
 struct BindProperties
 {
-    CertificateData certificateData;
-    Variant protocolData;
-    Variant formatData;                 ///< data for the serialization format
+    CertificateData certificateData{};
+    Variant protocolData{};
+    Variant formatData{}; ///< data for the serialization format
 };
 
 struct ConnectConfig
 {
-    int reconnectInterval = 5000;       ///< if the server is not available, you can pass a reconnection intervall in [ms]
-    int totalReconnectDuration = -1;    ///< if the server is not available, you can pass a duration in [ms] how long the reconnect shall happen. -1 means: try for ever.
+    int reconnectInterval = 5000;    ///< if the server is not available, you can pass a reconnection intervall in [ms]
+    int totalReconnectDuration = -1; ///< if the server is not available, you can pass a duration in [ms] how long the reconnect shall happen. -1 means: try for ever.
 };
 
 struct ConnectProperties
 {
-    CertificateData certificateData;
-    ConnectConfig config;
-    Variant protocolData;
-    Variant formatData;                 ///< data for the serialization format
+    CertificateData certificateData{};
+    ConnectConfig config{};
+    Variant protocolData{};
+    Variant formatData{}; ///< data for the serialization format
 };
-
-
 
 struct IStreamConnection;
 typedef std::shared_ptr<IStreamConnection> IStreamConnectionPtr;
 
 struct IStreamConnectionCallback
 {
-    virtual ~IStreamConnectionCallback() {}
+    virtual ~IStreamConnectionCallback()
+    {}
     virtual hybrid_ptr<IStreamConnectionCallback> connected(const IStreamConnectionPtr& connection) = 0;
     virtual void disconnected(const IStreamConnectionPtr& connection) = 0;
     virtual bool received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) = 0;
 };
 
-
-
-
 struct IStreamConnection
 {
-    virtual ~IStreamConnection() {}
+    virtual ~IStreamConnection()
+    {}
     virtual void sendMessage(const IMessagePtr& msg) = 0;
     virtual ConnectionData getConnectionData() const = 0;
     virtual ConnectionState getConnectionState() const = 0;
@@ -93,7 +88,6 @@ struct IStreamConnection
     virtual SocketPtr getSocket() = 0;
     virtual void disconnect() = 0;
 };
-
 
 struct IStreamConnectionPrivate : public IStreamConnection
 {
@@ -111,10 +105,7 @@ struct IStreamConnectionPrivate : public IStreamConnection
     virtual bool received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) = 0;
 };
 
-
-
 typedef std::shared_ptr<IStreamConnectionPrivate> IStreamConnectionPrivatePtr;
-
 
 class SYMBOLEXP StreamConnection : public IStreamConnectionPrivate
 {
@@ -147,23 +138,23 @@ private:
 
     struct MessageSendState
     {
-        IMessagePtr msg;
-        std::list<BufferRef>::const_iterator it;
+        IMessagePtr msg{};
+        std::list<BufferRef>::const_iterator it{};
         int offset = 0;
     };
 
-    const std::int64_t          m_connectionId = 0;
-    ConnectionData              m_connectionData;
-    SocketPtr                   m_socketPrivate;
-    SocketPtr                   m_socket;
-    const IPollerPtr            m_poller;
-    std::list<MessageSendState> m_pendingMessages;
-    std::atomic<bool>           m_disconnectFlag{};
-    hybrid_ptr<IStreamConnectionCallback> m_callback;
+    const std::int64_t m_connectionId = 0;
+    ConnectionData m_connectionData{};
+    SocketPtr m_socketPrivate{};
+    SocketPtr m_socket{};
+    const IPollerPtr m_poller{};
+    std::list<MessageSendState> m_pendingMessages{};
+    std::atomic<bool> m_disconnectFlag{};
+    hybrid_ptr<IStreamConnectionCallback> m_callback{};
 
-    std::chrono::time_point<std::chrono::steady_clock> m_lastReconnectTime;
+    std::chrono::time_point<std::chrono::steady_clock> m_lastReconnectTime{};
 
-    mutable std::mutex          m_mutex;
+    mutable std::mutex m_mutex{};
 };
 
-}   // namespace finalmq
+} // namespace finalmq

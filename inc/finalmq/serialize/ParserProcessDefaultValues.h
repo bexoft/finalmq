@@ -22,23 +22,26 @@
 
 #pragma once
 
+#include <deque>
+
 #include "finalmq/metadata/MetaStruct.h"
 #include "finalmq/serialize/IParserVisitor.h"
 
-#include <deque>
-
-
-namespace finalmq {
-
-
+namespace finalmq
+{
 class SYMBOLEXP ParserProcessDefaultValues : public IParserVisitor
 {
 public:
     ParserProcessDefaultValues(bool skipDefaultValues, IParserVisitor* visitor = nullptr);
-    void setVisitor(IParserVisitor &visitor);
+    void setVisitor(IParserVisitor& visitor);
     void resetVarValueActive();
 
 private:
+    ParserProcessDefaultValues(const ParserProcessDefaultValues&) = delete;
+    ParserProcessDefaultValues(ParserProcessDefaultValues&&) = delete;
+    const ParserProcessDefaultValues& operator=(const ParserProcessDefaultValues&) = delete;
+    const ParserProcessDefaultValues& operator=(ParserProcessDefaultValues&&) = delete;
+
     // IParserVisitor
     virtual void notifyError(const char* str, const char* message) override;
     virtual void startStruct(const MetaStruct& stru) override;
@@ -107,11 +110,7 @@ private:
     {
     public:
         EntrySkipDefault(const MetaField* field, bool enterStructCalled)
-            : m_field(field)
-            , m_fieldArrayStruct(nullptr)
-            , m_enterArrayStructCalled(false)
-            , m_countMember(0)
-            , m_enterStructCalled(enterStructCalled)
+            : m_field(field), m_fieldArrayStruct(nullptr), m_enterArrayStructCalled(false), m_countMember(0), m_enterStructCalled(enterStructCalled)
         {
         }
 
@@ -148,12 +147,12 @@ private:
         bool m_enterStructCalled;
     };
 
-    IParserVisitor*                 m_visitor = nullptr;
-    bool                            m_skipDefaultValues = true;
-    const MetaStruct*               m_struct = nullptr;
-    std::deque<std::vector<bool>>   m_stackFieldsDone;
-    int                             m_varValueActive = 0;
-    std::deque<EntrySkipDefault>    m_stackSkipDefault;
+    IParserVisitor* m_visitor{nullptr};
+    bool m_skipDefaultValues{true};
+    const MetaStruct* m_struct{nullptr};
+    std::deque<std::vector<bool>> m_stackFieldsDone{};
+    int m_varValueActive{0};
+    std::deque<EntrySkipDefault> m_stackSkipDefault{};
 };
 
-}   // namespace finalmq
+} // namespace finalmq

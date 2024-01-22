@@ -22,11 +22,11 @@
 
 #pragma once
 
+#include <atomic>
 #include <chrono>
 
-namespace finalmq {
-
-
+namespace finalmq
+{
 class PollingTimer
 {
 public:
@@ -68,6 +68,5 @@ public:
 private:
     std::atomic<std::int64_t> m_timeExpired{-1};
 };
-
 
 } // namespace finalmq

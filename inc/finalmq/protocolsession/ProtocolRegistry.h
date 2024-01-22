@@ -22,35 +22,29 @@
 
 #pragma once
 
+#include <atomic>
+#include <mutex>
+#include <unordered_map>
 
 #include "finalmq/protocolsession/IProtocol.h"
 
-#include <unordered_map>
-
-#include <mutex>
-#include <atomic>
-
-namespace finalmq {
-
-
+namespace finalmq
+{
 enum
 {
     REMOTEENTITYPROTOCOL_DELIMITERLINEFEED = 1,
     REMOTEENTITYPROTOCOL_HEADERBINARYSIZE = 2,
 };
 
-
 struct IProtocolRegistry
 {
-    virtual ~IProtocolRegistry() {}
+    virtual ~IProtocolRegistry()
+    {}
 
     virtual void registerProtocolFactory(const std::string& protocolName, int protocolId, const IProtocolFactoryPtr& protocolFactory) = 0;
     virtual IProtocolFactoryPtr getProtocolFactory(const std::string& protocolName) const = 0;
     virtual IProtocolFactoryPtr getProtocolFactory(int protocolId) const = 0;
 };
-
-
-
 
 class ProtocolRegistryImpl : public IProtocolRegistry
 {
@@ -60,10 +54,9 @@ public:
     virtual IProtocolFactoryPtr getProtocolFactory(int protocolId) const override;
 
 private:
-    std::unordered_map<std::string, IProtocolFactoryPtr>    m_protocolNameToFactory;
-    std::unordered_map<int, IProtocolFactoryPtr>            m_protocolIdToFactory;
+    std::unordered_map<std::string, IProtocolFactoryPtr> m_protocolNameToFactory{};
+    std::unordered_map<int, IProtocolFactoryPtr> m_protocolIdToFactory{};
 };
-
 
 class SYMBOLEXP ProtocolRegistry
 {
@@ -94,5 +87,4 @@ private:
     static std::unique_ptr<IProtocolRegistry>& getStaticUniquePtrRef();
 };
 
-
-}   // namespace finalmq
+} // namespace finalmq

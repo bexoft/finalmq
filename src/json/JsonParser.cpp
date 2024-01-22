@@ -21,52 +21,47 @@
 //SOFTWARE.
 
 #include "finalmq/json/JsonParser.h"
-#include "finalmq/helpers/FmqDefines.h"
 
-#include <string>
 #include <climits>
 #include <limits>
+#include <string>
+
 #include <assert.h>
 
+#include "finalmq/helpers/FmqDefines.h"
 
-
-namespace finalmq {
-
-
+namespace finalmq
+{
 JsonParser::JsonParser(IJsonParserVisitor& visitor)
     : m_visitor(visitor)
 {
 }
-
 
 char JsonParser::getChar(const char* str) const
 {
     return ((str < m_end) ? *str : 0);
 }
 
-
-
 const char* JsonParser::parseWhiteSpace(const char* str)
 {
     char c;
     while ((c = this->getChar(str)) != 0)
     {
-        switch (c)
+        switch(c)
         {
-        case ' ':
-        case '\t':
-        case '\n':
-        case '\r':
-            str++;
-            break;
-        default:
-            return str;
-            break;
+            case ' ':
+            case '\t':
+            case '\n':
+            case '\r':
+                str++;
+                break;
+            default:
+                return str;
+                break;
         }
     }
     return str;
 }
-
 
 const char* JsonParser::parse(const char* str, ssize_t size)
 {
@@ -74,19 +69,15 @@ const char* JsonParser::parse(const char* str, ssize_t size)
     {
         if (size == CHECK_ON_ZEROTERM)
         {
-            m_end = (char*)nullptr - 1; // highest possible address
+            size = strlen(str);
         }
-        else
-        {
-            m_end = str + size;
-        }
+
+        m_end = str + size;
     }
     const char* ret = parseValue(str);
     m_visitor.finished();
     return ret;
 }
-
-
 
 const char* JsonParser::parseValue(const char* str)
 {
@@ -97,31 +88,31 @@ const char* JsonParser::parseValue(const char* str)
         m_visitor.syntaxError(str, "value expected");
         return nullptr;
     }
-    switch (c)
+    switch(c)
     {
-    // string
-    case '\"':
-        str = parseString(str, false);
-        break;
-    // object
-    case '{':
-        str = parseObject(str);
-        break;
-    case '[':
-        str = parseArray(str);
-        break;
-    case 'n':
-        str = parseNull(str);
-        break;
-    case 't':
-        str = parseTrue(str);
-        break;
-    case 'f':
-        str = parseFalse(str);
-        break;
-    default:
-        str = parseNumber(str);
-        break;
+        // string
+        case '\"':
+            str = parseString(str, false);
+            break;
+        // object
+        case '{':
+            str = parseObject(str);
+            break;
+        case '[':
+            str = parseArray(str);
+            break;
+        case 'n':
+            str = parseNull(str);
+            break;
+        case 't':
+            str = parseTrue(str);
+            break;
+        case 'f':
+            str = parseFalse(str);
+            break;
+        default:
+            str = parseNumber(str);
+            break;
     }
     if (str)
     {
@@ -130,8 +121,6 @@ const char* JsonParser::parseValue(const char* str)
     }
     return nullptr;
 }
-
-
 
 const char* JsonParser::cmpString(const char* str, const char* strCmp)
 {
@@ -143,7 +132,7 @@ const char* JsonParser::cmpString(const char* str, const char* strCmp)
             std::string message;
             message += c;
             message += " expected";
-            m_visitor.syntaxError(str,  message.c_str());
+            m_visitor.syntaxError(str, message.c_str());
             return nullptr;
         }
         str++;
@@ -152,7 +141,6 @@ const char* JsonParser::cmpString(const char* str, const char* strCmp)
 
     return str;
 }
-
 
 const char* JsonParser::parseNull(const char* str)
 {
@@ -184,9 +172,6 @@ const char* JsonParser::parseFalse(const char* str)
     return str;
 }
 
-
-
-
 const char* JsonParser::parseNumber(const char* str)
 {
     const char* first = str;
@@ -203,7 +188,7 @@ const char* JsonParser::parseNumber(const char* str)
         }
         else
         {
-            m_visitor.syntaxError(str,  "digit expected");
+            m_visitor.syntaxError(str, "digit expected");
             return nullptr;
         }
     }
@@ -213,7 +198,7 @@ const char* JsonParser::parseNumber(const char* str)
     }
     else
     {
-        m_visitor.syntaxError(str,  "digit expected");
+        m_visitor.syntaxError(str, "digit expected");
         return nullptr;
     }
 
@@ -241,7 +226,7 @@ const char* JsonParser::parseNumber(const char* str)
         double value = strtof64(first, &res);
         if (res != str)
         {
-            m_visitor.syntaxError(res,  "wrong number format");
+            m_visitor.syntaxError(res, "wrong number format");
             return nullptr;
         }
         m_visitor.enterDouble(value);
@@ -251,7 +236,7 @@ const char* JsonParser::parseNumber(const char* str)
         long long value = strtoll(first, &res, 10);
         if (res != str)
         {
-            m_visitor.syntaxError(res,  "wrong number format");
+            m_visitor.syntaxError(res, "wrong number format");
             return nullptr;
         }
         assert(value < 0);
@@ -269,7 +254,7 @@ const char* JsonParser::parseNumber(const char* str)
         unsigned long long value = strtoull(first, &res, 10);
         if (res != str)
         {
-            m_visitor.syntaxError(res,  "wrong number format");
+            m_visitor.syntaxError(res, "wrong number format");
             return nullptr;
         }
         if (value <= INT_MAX)
@@ -288,7 +273,6 @@ const char* JsonParser::parseNumber(const char* str)
     return str;
 }
 
-
 static std::int32_t getHexDigit(char c)
 {
     if (c >= '0' && c <= '9')
@@ -306,7 +290,6 @@ static std::int32_t getHexDigit(char c)
     return -1;
 }
 
-
 const char* JsonParser::parseUEscape(const char* str, std::uint32_t& value)
 {
     value = 0;
@@ -318,13 +301,12 @@ const char* JsonParser::parseUEscape(const char* str, std::uint32_t& value)
             m_visitor.syntaxError(str, "invalid u escape");
             return nullptr;
         }
-        v <<= 12 - 4*i;
+        v <<= 12 - 4 * i;
         value += v;
         str++;
     }
     return str;
 }
-
 
 const char* JsonParser::parseString(const char* str, bool key)
 {
@@ -388,27 +370,27 @@ const char* JsonParser::parseString(const char* str, bool key)
             {
                 switch(c)
                 {
-                case '\"':
-                case '\\':
-                case '/':
-                    dest += c;
-                    break;
-                case 'b':
-                    dest += '\b';
-                    break;
-                case 'f':
-                    dest += '\f';
-                    break;
-                case 'n':
-                    dest += '\n';
-                    break;
-                case 'r':
-                    dest += '\r';
-                    break;
-                case 't':
-                    dest += '\t';
-                    break;
-                case 'u':
+                    case '\"':
+                    case '\\':
+                    case '/':
+                        dest += c;
+                        break;
+                    case 'b':
+                        dest += '\b';
+                        break;
+                    case 'f':
+                        dest += '\f';
+                        break;
+                    case 'n':
+                        dest += '\n';
+                        break;
+                    case 'r':
+                        dest += '\r';
+                        break;
+                    case 't':
+                        dest += '\t';
+                        break;
+                    case 'u':
                     {
                         str++;
                         std::uint32_t num = 0;
@@ -477,10 +459,10 @@ const char* JsonParser::parseString(const char* str, bool key)
                         }
                     }
                     break;
-                default:
-                    dest += '\\';
-                    dest += c;
-                    break;
+                    default:
+                        dest += '\\';
+                        dest += c;
+                        break;
                 }
             }
         }
@@ -493,7 +475,6 @@ const char* JsonParser::parseString(const char* str, bool key)
     m_visitor.syntaxError(str, "'\"' expected");
     return nullptr;
 }
-
 
 const char* JsonParser::parseArray(const char* str)
 {
@@ -530,7 +511,6 @@ const char* JsonParser::parseArray(const char* str)
     m_visitor.syntaxError(str, "',' or ']' expected");
     return nullptr;
 }
-
 
 const char* JsonParser::parseObject(const char* str)
 {
@@ -588,4 +568,4 @@ const char* JsonParser::parseObject(const char* str)
     return nullptr;
 }
 
-}   // namespace finalmq
+} // namespace finalmq

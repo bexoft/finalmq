@@ -21,18 +21,16 @@
 //SOFTWARE.
 
 #include "finalmq/remoteentity/FileTransferReply.h"
-#include "finalmq/remoteentity/RemoteEntity.h"
-#include "finalmq/helpers/Executor.h"
-#include "finalmq/variant/VariantValueStruct.h"
-#include "finalmq/variant/VariantValues.h"
 
 #include <fcntl.h>
 
+#include "finalmq/helpers/Executor.h"
+#include "finalmq/remoteentity/RemoteEntity.h"
+#include "finalmq/variant/VariantValueStruct.h"
+#include "finalmq/variant/VariantValues.h"
 
-namespace finalmq {
-
-
-
+namespace finalmq
+{
 bool FileTransferReply::replyFile(const RequestContextPtr& requestContext, const std::string& filename, IMessage::Metainfo* metainfo)
 {
     bool handeled = false;
@@ -47,12 +45,12 @@ bool FileTransferReply::replyFile(const RequestContextPtr& requestContext, const
 
         if (requestContext->doesSupportFileTransfer())
         {
-            Variant controlData = VariantStruct{ {"filetransfer", filename} };
+            Variant controlData = VariantStruct{{"filetransfer", filename}};
             requestContext->reply(controlData);
         }
         else
         {
-            int sizeFile = statdata.st_size;
+            int sizeFile = static_cast<int>(statdata.st_size);
 
             std::shared_ptr<IMessage::Metainfo> mi;
             if (metainfo)
@@ -118,5 +116,4 @@ bool FileTransferReply::replyFile(const RequestContextPtr& requestContext, const
     return handeled;
 }
 
-
-}   // namespace finalmq
+} // namespace finalmq

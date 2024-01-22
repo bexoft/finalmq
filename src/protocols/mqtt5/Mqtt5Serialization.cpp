@@ -20,55 +20,49 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-
 #include "finalmq/protocols/mqtt5/Mqtt5Serialization.h"
+
 #include "finalmq/protocols/mqtt5/Mqtt5Properties.h"
 #include "finalmq/variant/VariantValues.h"
 
-namespace finalmq {
-
+namespace finalmq
+{
 static const ssize_t HEADERSIZE = 1;
 
+#define HEADER_Low4bits(header) (((header) >> 0) & 0x0f)
+#define HEADER_Dup(header) (((header) >> 3) & 0x01)
+#define HEADER_QoS(header) (((header) >> 1) & 0x03)
+#define HEADER_Retain(header) (((header) >> 0) & 0x01)
 
-#define HEADER_Low4bits(header)     (((header) >> 0) & 0x0f)
-#define HEADER_Dup(header)          (((header) >> 3) & 0x01)
-#define HEADER_QoS(header)          (((header) >> 1) & 0x03)
-#define HEADER_Retain(header)       (((header) >> 0) & 0x01)
+#define HEADER_SetCommand(value) ((static_cast<unsigned int>(value) & 0x0f) << 4)
+#define HEADER_SetLow4bits(value) (((value)&0x0f) << 0)
+#define HEADER_SetDup(value) (((value)&0x01) << 3)
+#define HEADER_SetQoS(value) (((value)&0x03) << 1)
+#define HEADER_SetRetain(value) (((value)&0x01) << 0)
 
-#define HEADER_SetCommand(value)    ((static_cast<unsigned int>(value) & 0x0f) << 4)
-#define HEADER_SetLow4bits(value)   (((value) & 0x0f) << 0)
-#define HEADER_SetDup(value)        (((value) & 0x01) << 3)
-#define HEADER_SetQoS(value)        (((value) & 0x03) << 1)
-#define HEADER_SetRetain(value)     (((value) & 0x01) << 0)
+#define CF_UserName(flags) (((flags) >> 7) & 0x01)
+#define CF_Password(flags) (((flags) >> 6) & 0x01)
+#define CF_WillRetain(flags) (((flags) >> 5) & 0x01)
+#define CF_WillQoS(flags) (((flags) >> 3) & 0x03)
+#define CF_WillFlag(flags) (((flags) >> 2) & 0x01)
+#define CF_CleanStart(flags) (((flags) >> 1) & 0x01)
 
-#define CF_UserName(flags)       (((flags) >> 7) & 0x01) 
-#define CF_Password(flags)       (((flags) >> 6) & 0x01) 
-#define CF_WillRetain(flags)     (((flags) >> 5) & 0x01) 
-#define CF_WillQoS(flags)        (((flags) >> 3) & 0x03) 
-#define CF_WillFlag(flags)       (((flags) >> 2) & 0x01) 
-#define CF_CleanStart(flags)     (((flags) >> 1) & 0x01) 
-
-#define CF_SetUserName(value)    (((value) & 0x01) << 7)
-#define CF_SetPassword(value)    (((value) & 0x01) << 6) 
-#define CF_SetWillRetain(value)  (((value) & 0x01) << 5)
-#define CF_SetWillQoS(value)     (((value) & 0x03) << 3)
-#define CF_SetWillFlag(value)    (((value) & 0x01) << 2)
-#define CF_SetCleanStart(value)  (((value) & 0x01) << 1)
-
+#define CF_SetUserName(value) (((value)&0x01) << 7)
+#define CF_SetPassword(value) (((value)&0x01) << 6)
+#define CF_SetWillRetain(value) (((value)&0x01) << 5)
+#define CF_SetWillQoS(value) (((value)&0x03) << 3)
+#define CF_SetWillFlag(value) (((value)&0x01) << 2)
+#define CF_SetCleanStart(value) (((value)&0x01) << 1)
 
 Mqtt5Serialization::Mqtt5Serialization(char* buffer, unsigned int sizeBuffer, unsigned int indexBuffer)
-    : m_buffer(reinterpret_cast<std::uint8_t*>(buffer))
-    , m_sizeBuffer(sizeBuffer)
-    , m_indexBuffer(indexBuffer)
+    : m_buffer(reinterpret_cast<std::uint8_t*>(buffer)), m_sizeBuffer(sizeBuffer), m_indexBuffer(indexBuffer)
 {
-
 }
 
 unsigned int Mqtt5Serialization::getReadIndex() const
 {
     return m_indexBuffer;
 }
-
 
 bool Mqtt5Serialization::deserializeConnect(Mqtt5ConnectData& data)
 {
@@ -249,7 +243,6 @@ void Mqtt5Serialization::serializeConnect(const Mqtt5ConnectData& data, unsigned
     }
     connectFlags |= CF_SetCleanStart(data.cleanStart ? 1 : 0);
 
-
     write1ByteNumber(connectFlags);
 
     // keep alive
@@ -289,10 +282,8 @@ void Mqtt5Serialization::serializeConnect(const Mqtt5ConnectData& data, unsigned
     assert(m_indexBuffer == m_sizeBuffer);
 }
 
-
-
-#define CAF_SessionPresent(flags)       (((flags) & 0x01) >> 0)
-#define CAF_SetSessionPresent(value)    (((value) & 0x01) << 1)
+#define CAF_SessionPresent(flags) (((flags)&0x01) >> 0)
+#define CAF_SetSessionPresent(value) (((value)&0x01) << 1)
 
 bool Mqtt5Serialization::deserializeConnAck(Mqtt5ConnAckData& data)
 {
@@ -528,18 +519,15 @@ void Mqtt5Serialization::serializePubAck(const Mqtt5PubAckData& data, Mqtt5Comma
     assert(m_indexBuffer == m_sizeBuffer);
 }
 
+#define SO_RetainHandling(flags) (((flags) >> 4) & 0x03)
+#define SO_RetainAsPublished(flags) (((flags) >> 3) & 0x01)
+#define SO_NoLocal(flags) (((flags) >> 2) & 0x01)
+#define SO_QoS(flags) (((flags) >> 0) & 0x03)
 
-
-#define SO_RetainHandling(flags)        (((flags) >> 4) & 0x03)
-#define SO_RetainAsPublished(flags)     (((flags) >> 3) & 0x01)
-#define SO_NoLocal(flags)               (((flags) >> 2) & 0x01)
-#define SO_QoS(flags)                   (((flags) >> 0) & 0x03)
-
-#define SO_SetRetainHandling(value)     (((value) & 0x03) << 4)
-#define SO_SetRetainAsPublished(value)  (((value) & 0x01) << 3)
-#define SO_SetNoLocal(value)            (((value) & 0x01) << 2)
-#define SO_SetQoS(value)                (((value) & 0x03) << 0)
-
+#define SO_SetRetainHandling(value) (((value)&0x03) << 4)
+#define SO_SetRetainAsPublished(value) (((value)&0x01) << 3)
+#define SO_SetNoLocal(value) (((value)&0x01) << 2)
+#define SO_SetQoS(value) (((value)&0x03) << 0)
 
 bool Mqtt5Serialization::deserializeSubscribe(Mqtt5SubscribeData& data)
 {
@@ -593,7 +581,6 @@ bool Mqtt5Serialization::deserializeSubscribe(Mqtt5SubscribeData& data)
     return ok;
 }
 
-
 unsigned int Mqtt5Serialization::sizeSubscribe(const Mqtt5SubscribeData& data, unsigned int& sizePropPayload)
 {
     unsigned int size = 0;
@@ -617,7 +604,6 @@ unsigned int Mqtt5Serialization::sizeSubscribe(const Mqtt5SubscribeData& data, u
     return size;
 }
 
-
 void Mqtt5Serialization::serializeSubscribe(const Mqtt5SubscribeData& data, unsigned int sizePayload, unsigned int sizePropPayload, std::uint8_t*& bufferPacketId)
 {
     unsigned int header = 0;
@@ -636,7 +622,7 @@ void Mqtt5Serialization::serializeSubscribe(const Mqtt5SubscribeData& data, unsi
     // at least one subscription must be available
     assert(!data.subscriptions.empty());
 
-    for (const auto & entry: data.subscriptions)
+    for (const auto& entry : data.subscriptions)
     {
         writeString(entry.topic);
         unsigned int option = 0;
@@ -649,8 +635,6 @@ void Mqtt5Serialization::serializeSubscribe(const Mqtt5SubscribeData& data, unsi
 
     assert(m_indexBuffer == m_sizeBuffer);
 }
-
-
 
 bool Mqtt5Serialization::deserializeSubAck(Mqtt5SubAckData& data)
 {
@@ -687,7 +671,7 @@ bool Mqtt5Serialization::deserializeSubAck(Mqtt5SubAckData& data)
         {
             return false;
         }
-        data.reasoncodes.push_back(reasoncode);
+        data.reasoncodes.push_back(static_cast<std::uint8_t>(reasoncode));
     }
 
     return ok;
@@ -699,7 +683,7 @@ unsigned int Mqtt5Serialization::sizeSubAck(const Mqtt5SubAckData& data, unsigne
 
     // packet identifier
     size += 2;
-    
+
     // properties
     size += sizeProperties(data.properties, data.metainfo, sizePropPayload);
 
@@ -726,15 +710,13 @@ void Mqtt5Serialization::serializeSubAck(const Mqtt5SubAckData& data, Mqtt5Comma
     // at least one ack must be available
     assert(!data.reasoncodes.empty());
 
-    for (const auto reasonCode: data.reasoncodes)
+    for (const auto reasonCode : data.reasoncodes)
     {
         write1ByteNumber(reasonCode);
     }
 
     assert(m_indexBuffer == m_sizeBuffer);
 }
-
-
 
 bool Mqtt5Serialization::deserializeUnsubscribe(Mqtt5UnsubscribeData& data)
 {
@@ -777,7 +759,6 @@ bool Mqtt5Serialization::deserializeUnsubscribe(Mqtt5UnsubscribeData& data)
     return ok;
 }
 
-
 unsigned int Mqtt5Serialization::sizeUnsubscribe(const Mqtt5UnsubscribeData& data, unsigned int& sizePropPayload)
 {
     unsigned int size = 0;
@@ -791,7 +772,7 @@ unsigned int Mqtt5Serialization::sizeUnsubscribe(const Mqtt5UnsubscribeData& dat
     // at least one unsubscription must be available
     assert(!data.topics.empty());
 
-    for (const auto & topic: data.topics)
+    for (const auto& topic : data.topics)
     {
         size += sizeString(topic);
     }
@@ -817,14 +798,13 @@ void Mqtt5Serialization::serializeUnsubscribe(const Mqtt5UnsubscribeData& data, 
     // at least one unsubscription must be available
     assert(!data.topics.empty());
 
-    for (const auto &topic: data.topics)
+    for (const auto& topic : data.topics)
     {
         writeString(topic);
     }
 
     assert(m_indexBuffer == m_sizeBuffer);
 }
-
 
 void Mqtt5Serialization::serializePingReq()
 {
@@ -841,8 +821,6 @@ void Mqtt5Serialization::serializePingResp()
     writeVarByteNumber(0);
     assert(m_indexBuffer == m_sizeBuffer);
 }
-
-
 
 bool Mqtt5Serialization::deserializeDisconnect(Mqtt5DisconnectData& data)
 {
@@ -970,14 +948,11 @@ void Mqtt5Serialization::serializeAuth(const Mqtt5AuthData& data, unsigned int s
     assert(m_indexBuffer == m_sizeBuffer);
 }
 
-
 bool Mqtt5Serialization::doesFit(int size) const
 {
     bool ok = (m_indexBuffer + size <= m_sizeBuffer);
     return ok;
 }
-
-
 
 bool Mqtt5Serialization::read1ByteNumber(unsigned int& number)
 {
@@ -1045,13 +1020,13 @@ bool Mqtt5Serialization::read4ByteNumber(unsigned int& number)
 void Mqtt5Serialization::write4ByteNumber(unsigned int number)
 {
     assert(m_indexBuffer + 4 <= m_sizeBuffer);
-    m_buffer[m_indexBuffer] = (number >> 24) & 0xff;
+    m_buffer[m_indexBuffer] = static_cast<std::uint8_t>((number >> 24) & 0xff);
     ++m_indexBuffer;
-    m_buffer[m_indexBuffer] = (number >> 16) & 0xff;
+    m_buffer[m_indexBuffer] = static_cast<std::uint8_t>((number >> 16) & 0xff);
     ++m_indexBuffer;
-    m_buffer[m_indexBuffer] = (number >> 8) & 0xff;
+    m_buffer[m_indexBuffer] = static_cast<std::uint8_t>((number >> 8) & 0xff);
     ++m_indexBuffer;
-    m_buffer[m_indexBuffer] = (number >> 0) & 0xff;
+    m_buffer[m_indexBuffer] = static_cast<std::uint8_t>((number >> 0) & 0xff);
     ++m_indexBuffer;
 }
 
@@ -1146,7 +1121,6 @@ void Mqtt5Serialization::writeStringPair(const std::string& key, const std::stri
     writeString(value);
 }
 
-
 bool Mqtt5Serialization::readBinary(Bytes& value)
 {
     unsigned int size = 0;
@@ -1177,10 +1151,6 @@ void Mqtt5Serialization::writeBinary(const Bytes& value)
     memcpy(&m_buffer[m_indexBuffer], value.data(), size);
     m_indexBuffer += size;
 }
-
-
-
-
 
 bool Mqtt5Serialization::readProperties(std::unordered_map<unsigned int, Variant>& properties, std::unordered_map<std::string, std::string>& metainfo)
 {
@@ -1216,12 +1186,12 @@ bool Mqtt5Serialization::readProperties(std::unordered_map<unsigned int, Variant
                 return false;
             }
             Mqtt5Type type = propertyId.getPropertyType();
-            switch (type)
+            switch(type)
             {
-            case Mqtt5Type::TypeNone:
-                ok = false;
-                break;
-            case Mqtt5Type::TypeByte:
+                case Mqtt5Type::TypeNone:
+                    ok = false;
+                    break;
+                case Mqtt5Type::TypeByte:
                 {
                     unsigned int value;
                     ok = read1ByteNumber(value);
@@ -1231,7 +1201,7 @@ bool Mqtt5Serialization::readProperties(std::unordered_map<unsigned int, Variant
                     }
                 }
                 break;
-            case Mqtt5Type::TypeTwoByteInteger:
+                case Mqtt5Type::TypeTwoByteInteger:
                 {
                     unsigned int value;
                     ok = read2ByteNumber(value);
@@ -1241,7 +1211,7 @@ bool Mqtt5Serialization::readProperties(std::unordered_map<unsigned int, Variant
                     }
                 }
                 break;
-            case Mqtt5Type::TypeFourByteInteger:
+                case Mqtt5Type::TypeFourByteInteger:
                 {
                     unsigned int value;
                     ok = read4ByteNumber(value);
@@ -1251,7 +1221,7 @@ bool Mqtt5Serialization::readProperties(std::unordered_map<unsigned int, Variant
                     }
                 }
                 break;
-            case Mqtt5Type::TypeVariableByteInteger:
+                case Mqtt5Type::TypeVariableByteInteger:
                 {
                     unsigned int value = 0;
                     ok = readVarByteNumber(value);
@@ -1261,7 +1231,7 @@ bool Mqtt5Serialization::readProperties(std::unordered_map<unsigned int, Variant
                     }
                 }
                 break;
-            case Mqtt5Type::TypeUTF8String:
+                case Mqtt5Type::TypeUTF8String:
                 {
                     std::string value;
                     ok = readString(value);
@@ -1271,7 +1241,7 @@ bool Mqtt5Serialization::readProperties(std::unordered_map<unsigned int, Variant
                     }
                 }
                 break;
-            case Mqtt5Type::TypeUTF8StringPair:
+                case Mqtt5Type::TypeUTF8StringPair:
                 {
                     std::string key;
                     std::string value;
@@ -1285,7 +1255,7 @@ bool Mqtt5Serialization::readProperties(std::unordered_map<unsigned int, Variant
                     }
                 }
                 break;
-            case Mqtt5Type::TypeBinaryData:
+                case Mqtt5Type::TypeBinaryData:
                 {
                     Bytes value;
                     ok = readBinary(value);
@@ -1295,28 +1265,28 @@ bool Mqtt5Serialization::readProperties(std::unordered_map<unsigned int, Variant
                     }
                 }
                 break;
-            case Mqtt5Type::TypeArrayVariableByteInteger:
-            {
-                unsigned int value = 0;
-                ok = readVarByteNumber(value);
-                if (ok)
+                case Mqtt5Type::TypeArrayVariableByteInteger:
                 {
-                    Variant& property = properties[propertyId];
-                    std::vector<std::uint32_t>* arr = property;
-                    if (arr == nullptr)
+                    unsigned int value = 0;
+                    ok = readVarByteNumber(value);
+                    if (ok)
                     {
-                        property = std::vector<std::uint32_t>();
+                        Variant& property = properties[propertyId];
+                        std::vector<std::uint32_t>* arr = property;
+                        if (arr == nullptr)
+                        {
+                            property = std::vector<std::uint32_t>();
+                        }
+                        arr = property;
+                        assert(arr != nullptr);
+                        arr->push_back(value);
                     }
-                    arr = property;
-                    assert(arr != nullptr);
-                    arr->push_back(value);
                 }
-            }
-            break;
-            default:
-                assert(false);
-                ok = false;
                 break;
+                default:
+                    assert(false);
+                    ok = false;
+                    break;
             }
             if (m_indexBuffer == indexEndProperties)
             {
@@ -1339,39 +1309,39 @@ unsigned int Mqtt5Serialization::sizeProperties(const std::unordered_map<unsigne
         Mqtt5PropertyId propertyId(static_cast<Mqtt5PropertyId::Enum>(id));
         assert(propertyId != Mqtt5PropertyId::Invalid);
         Mqtt5Type type = propertyId.getPropertyType();
-        switch (type)
+        switch(type)
         {
-        case Mqtt5Type::TypeNone:
-            assert(false);
-            break;
-        case Mqtt5Type::TypeByte:
-            sizePropertyPayload += sizeVarByteNumber(id);
-            sizePropertyPayload += 1;
-            break;
-        case Mqtt5Type::TypeTwoByteInteger:
-            sizePropertyPayload += sizeVarByteNumber(id);
-            sizePropertyPayload += 2;
-            break;
-        case Mqtt5Type::TypeFourByteInteger:
-            sizePropertyPayload += sizeVarByteNumber(id);
-            sizePropertyPayload += 4;
-            break;
-        case Mqtt5Type::TypeVariableByteInteger:
-            sizePropertyPayload += sizeVarByteNumber(id);
-            sizePropertyPayload += sizeVarByteNumber(value);
-            break;
-        case Mqtt5Type::TypeUTF8String:
-            sizePropertyPayload += sizeVarByteNumber(id);
-            sizePropertyPayload += sizeString(value);
-            break;
-        case Mqtt5Type::TypeUTF8StringPair:
-            assert(false);
-            break;
-        case Mqtt5Type::TypeBinaryData:
-            sizePropertyPayload += sizeVarByteNumber(id);
-            sizePropertyPayload += sizeBinary(value);
-            break;
-        case Mqtt5Type::TypeArrayVariableByteInteger:
+            case Mqtt5Type::TypeNone:
+                assert(false);
+                break;
+            case Mqtt5Type::TypeByte:
+                sizePropertyPayload += sizeVarByteNumber(id);
+                sizePropertyPayload += 1;
+                break;
+            case Mqtt5Type::TypeTwoByteInteger:
+                sizePropertyPayload += sizeVarByteNumber(id);
+                sizePropertyPayload += 2;
+                break;
+            case Mqtt5Type::TypeFourByteInteger:
+                sizePropertyPayload += sizeVarByteNumber(id);
+                sizePropertyPayload += 4;
+                break;
+            case Mqtt5Type::TypeVariableByteInteger:
+                sizePropertyPayload += sizeVarByteNumber(id);
+                sizePropertyPayload += sizeVarByteNumber(value);
+                break;
+            case Mqtt5Type::TypeUTF8String:
+                sizePropertyPayload += sizeVarByteNumber(id);
+                sizePropertyPayload += sizeString(value);
+                break;
+            case Mqtt5Type::TypeUTF8StringPair:
+                assert(false);
+                break;
+            case Mqtt5Type::TypeBinaryData:
+                sizePropertyPayload += sizeVarByteNumber(id);
+                sizePropertyPayload += sizeBinary(value);
+                break;
+            case Mqtt5Type::TypeArrayVariableByteInteger:
             {
                 const std::vector<std::uint32_t>* arr = value;
                 if (arr != nullptr)
@@ -1384,9 +1354,9 @@ unsigned int Mqtt5Serialization::sizeProperties(const std::unordered_map<unsigne
                 }
             }
             break;
-        default:
-            assert(false);
-            break;
+            default:
+                assert(false);
+                break;
         }
     }
 
@@ -1397,7 +1367,7 @@ unsigned int Mqtt5Serialization::sizeProperties(const std::unordered_map<unsigne
         sizePropertyPayload += sizeVarByteNumber(Mqtt5PropertyId::UserProperty);
         sizePropertyPayload += sizeStringPair(key, value);
     }
-    
+
     return (sizeVarByteNumber(sizePropertyPayload) + sizePropertyPayload);
 }
 
@@ -1412,39 +1382,39 @@ void Mqtt5Serialization::writeProperties(const std::unordered_map<unsigned int, 
         Mqtt5PropertyId propertyId(static_cast<Mqtt5PropertyId::Enum>(id));
         assert(propertyId != Mqtt5PropertyId::Invalid);
         Mqtt5Type type = propertyId.getPropertyType();
-        switch (type)
+        switch(type)
         {
-        case Mqtt5Type::TypeNone:
-            assert(false);
-            break;
-        case Mqtt5Type::TypeByte:
-            writeVarByteNumber(id);
-            write1ByteNumber(value);
-            break;
-        case Mqtt5Type::TypeTwoByteInteger:
-            writeVarByteNumber(id);
-            write2ByteNumber(value);
-            break;
-        case Mqtt5Type::TypeFourByteInteger:
-            writeVarByteNumber(id);
-            write4ByteNumber(value);
-            break;
-        case Mqtt5Type::TypeVariableByteInteger:
-            writeVarByteNumber(id);
-            writeVarByteNumber(value);
-            break;
-        case Mqtt5Type::TypeUTF8String:
-            writeVarByteNumber(id);
-            writeString(value);
-            break;
-        case Mqtt5Type::TypeUTF8StringPair:
-            assert(false);
-            break;
-        case Mqtt5Type::TypeBinaryData:
-            writeVarByteNumber(id);
-            writeBinary(value);
-            break;
-        case Mqtt5Type::TypeArrayVariableByteInteger:
+            case Mqtt5Type::TypeNone:
+                assert(false);
+                break;
+            case Mqtt5Type::TypeByte:
+                writeVarByteNumber(id);
+                write1ByteNumber(value);
+                break;
+            case Mqtt5Type::TypeTwoByteInteger:
+                writeVarByteNumber(id);
+                write2ByteNumber(value);
+                break;
+            case Mqtt5Type::TypeFourByteInteger:
+                writeVarByteNumber(id);
+                write4ByteNumber(value);
+                break;
+            case Mqtt5Type::TypeVariableByteInteger:
+                writeVarByteNumber(id);
+                writeVarByteNumber(value);
+                break;
+            case Mqtt5Type::TypeUTF8String:
+                writeVarByteNumber(id);
+                writeString(value);
+                break;
+            case Mqtt5Type::TypeUTF8StringPair:
+                assert(false);
+                break;
+            case Mqtt5Type::TypeBinaryData:
+                writeVarByteNumber(id);
+                writeBinary(value);
+                break;
+            case Mqtt5Type::TypeArrayVariableByteInteger:
             {
                 const std::vector<std::uint32_t>* arr = value;
                 if (arr != nullptr)
@@ -1457,9 +1427,9 @@ void Mqtt5Serialization::writeProperties(const std::unordered_map<unsigned int, 
                 }
             }
             break;
-        default:
-            assert(false);
-            break;
+            default:
+                assert(false);
+                break;
         }
     }
 
@@ -1472,6 +1442,4 @@ void Mqtt5Serialization::writeProperties(const std::unordered_map<unsigned int, 
     }
 }
 
-
-
-}   // namespace finalmq
+} // namespace finalmq

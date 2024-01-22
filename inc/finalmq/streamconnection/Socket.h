@@ -22,26 +22,25 @@
 
 #pragma once
 
-#include "finalmq/helpers/SocketDescriptor.h"
-#include "finalmq/helpers/OperatingSystem.h"
-#include "OpenSsl.h"
-
 #include <memory>
-#include <vector>
 #include <mutex>
+#include <vector>
+
+#include "OpenSsl.h"
+#include "finalmq/helpers/OperatingSystem.h"
+#include "finalmq/helpers/SocketDescriptor.h"
 
 #if !defined(WIN32) && !defined(__MINGW32__)
 #include <netdb.h>
 #endif
 
-namespace finalmq {
-
+namespace finalmq
+{
 class SslContext;
 class SslSocket;
 
 class Socket;
 typedef std::shared_ptr<Socket> SocketPtr;
-
 
 class SYMBOLEXP Socket
 {
@@ -71,14 +70,14 @@ public:
 
 private:
     Socket(const Socket& obj) = delete;
-    const Socket& operator =(const Socket& obj) = delete;
+    const Socket& operator=(const Socket& obj) = delete;
 
     int handleError(int err, const char* funcName);
 
-    SocketDescriptorPtr m_sd;
-    int                 m_af = 0;
-    int                 m_protocol = 0;
-    std::string         m_name;
+    SocketDescriptorPtr m_sd{};
+    int m_af = 0;
+    int m_protocol = 0;
+    std::string m_name{};
 
 #ifdef USE_OPENSSL
 public:
@@ -109,14 +108,15 @@ public:
         return false;
     }
     int sslPending();
+
 private:
     void startSslAccept(const std::shared_ptr<SslContext>& sslContext);
 #endif
-    std::shared_ptr<SslContext> m_sslContext;
-    std::shared_ptr<SslSocket>  m_sslSocket;
-    bool                        m_readWhenWritable = false;
-    bool                        m_writeWhenReadable = false;
-    //std::mutex          m_mtx;
+    std::shared_ptr<SslContext> m_sslContext{};
+    std::shared_ptr<SslSocket> m_sslSocket{};
+    bool m_readWhenWritable = false;
+    bool m_writeWhenReadable = false;
+    //std::mutex          m_mtx{};
 };
 
-}   // namespace finalmq
+} // namespace finalmq

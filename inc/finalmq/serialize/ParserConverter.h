@@ -25,10 +25,8 @@
 #include "finalmq/metadata/MetaStruct.h"
 #include "finalmq/serialize/IParserVisitor.h"
 
-namespace finalmq {
-
-
-
+namespace finalmq
+{
 class SYMBOLEXP ParserConverter : public IParserVisitor
 {
 public:
@@ -36,6 +34,11 @@ public:
     void setVisitor(IParserVisitor& visitor);
 
 private:
+    ParserConverter(const ParserConverter&) = delete;
+    ParserConverter(ParserConverter&&) = delete;
+    const ParserConverter& operator=(const ParserConverter&) = delete;
+    const ParserConverter& operator=(ParserConverter&&) = delete;
+
     // IParserVisitor
     virtual void notifyError(const char* str, const char* message) override;
     virtual void startStruct(const MetaStruct& stru) override;
@@ -106,8 +109,7 @@ private:
     void convertString(const MetaField& field, const char* value, ssize_t size);
     void convertArraytString(const MetaField& field, const std::vector<std::string>& value);
 
-    IParserVisitor*     m_visitor = nullptr;
+    IParserVisitor* m_visitor = nullptr;
 };
 
-}   // namespace finalmq
-
+} // namespace finalmq

@@ -22,25 +22,22 @@
 
 #pragma once
 
-#include "finalmq/helpers/CondVar.h"
-#include "finalmq/helpers/IExecutor.h"
-
-#include <list>
-#include <deque>
-#include <vector>
 #include <atomic>
+#include <deque>
+#include <list>
 #include <thread>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
+#include "finalmq/helpers/CondVar.h"
+#include "finalmq/helpers/IExecutor.h"
 
-namespace finalmq {
-
-
+namespace finalmq
+{
 class SYMBOLEXP ExecutorBase : public IExecutor
 {
 public:
-
 private:
     virtual void registerActionNotification(std::function<void()> func) override;
     virtual void run() override;
@@ -48,19 +45,15 @@ private:
     virtual bool isTerminating() const override;
 
 protected:
-    std::atomic<bool>                   m_terminate;
-    CondVar                             m_newActions;
-    std::function<void()>               m_funcNotify;
-    std::mutex                          m_mutex;
+    std::atomic<bool> m_terminate{};
+    CondVar m_newActions{};
+    std::function<void()> m_funcNotify{};
+    std::mutex m_mutex{};
 };
-
-
-
 
 class SYMBOLEXP Executor : public ExecutorBase
 {
 public:
-
 private:
     virtual bool runAvailableActions(const FuncIsAbort& funcIsAbort = nullptr) override;
     virtual bool runAvailableActionBatch(const FuncIsAbort& funcIsAbort = nullptr) override;
@@ -69,7 +62,6 @@ private:
     inline bool areRunnableActionsAvailable() const;
 
 private:
-
     struct ActionEntry
     {
         ActionEntry(std::int64_t i, std::unique_ptr<std::function<void()>>&& f)
@@ -77,32 +69,27 @@ private:
         {
             funcs.emplace_back(std::move(f));
         }
-        std::int64_t                                         instanceId;
-        std::deque<std::unique_ptr<std::function<void()>>>   funcs;
+        std::int64_t instanceId{};
+        std::deque<std::unique_ptr<std::function<void()>>> funcs{};
     };
-    std::list<ActionEntry>      m_actions;
+    std::list<ActionEntry> m_actions{};
 
-    std::unordered_map<std::int64_t, std::int32_t>  m_storedIds;
-    std::unordered_set<std::int64_t>                m_runningIds;
-    int                                             m_zeroIdCounter = 0;
+    std::unordered_map<std::int64_t, std::int32_t> m_storedIds{};
+    std::unordered_set<std::int64_t> m_runningIds{};
+    int m_zeroIdCounter = 0;
 };
-
-
 
 class SYMBOLEXP ExecutorIgnoreOrderOfInstance : public ExecutorBase
 {
 public:
-
 private:
     virtual bool runAvailableActions(const FuncIsAbort& funcIsAbort = nullptr) override;
     virtual bool runAvailableActionBatch(const FuncIsAbort& funcIsAbort = nullptr) override;
     virtual void addAction(std::function<void()> func, std::int64_t instanceId = 0) override;
 
 private:
-    std::deque<std::function<void()>>   m_actions;
+    std::deque<std::function<void()>> m_actions{};
 };
-
-
 
 class SYMBOLEXP ExecutorWorkerBase : public IExecutorWorker
 {
@@ -118,13 +105,11 @@ public:
 
 private:
     ExecutorWorkerBase(const ExecutorWorkerBase&) = delete;
-    const ExecutorWorkerBase& operator =(const ExecutorWorkerBase&) = delete;
+    const ExecutorWorkerBase& operator=(const ExecutorWorkerBase&) = delete;
 
-    std::shared_ptr<IExecutor>  m_executor;
-    std::vector<std::thread>    m_threads;
+    std::shared_ptr<IExecutor> m_executor{};
+    std::vector<std::thread> m_threads{};
 };
-
-
 
 template<class T>
 class ExecutorWorker : public ExecutorWorkerBase
@@ -135,8 +120,6 @@ public:
     {
     }
 };
-
-
 
 class SYMBOLEXP GlobalExecutorWorker
 {
@@ -167,7 +150,5 @@ private:
     static std::atomic<IExecutorWorker*>& getStaticInstanceRef();
     static std::unique_ptr<IExecutorWorker>& getStaticUniquePtrRef();
 };
-
-
 
 } // namespace finalmq

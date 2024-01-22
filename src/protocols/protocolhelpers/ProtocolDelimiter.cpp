@@ -20,26 +20,22 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-
 #include "finalmq/protocols/protocolhelpers/ProtocolDelimiter.h"
+
 #include "finalmq/protocolsession/ProtocolMessage.h"
 #include "finalmq/streamconnection/Socket.h"
 
-
-namespace finalmq {
-
+namespace finalmq
+{
 //---------------------------------------
 // ProtocolDelimiter
 //---------------------------------------
 
-
 ProtocolDelimiter::ProtocolDelimiter(const std::string& delimiter)
-    : m_delimiter(delimiter)
-    , m_delimiterStart((!delimiter.empty()) ? delimiter[0] : ' ')
+    : m_delimiter(delimiter), m_delimiterStart((!delimiter.empty()) ? delimiter[0] : ' ')
 {
     assert(!delimiter.empty());
 }
-
 
 ProtocolDelimiter::~ProtocolDelimiter()
 {
@@ -48,8 +44,6 @@ ProtocolDelimiter::~ProtocolDelimiter()
         m_connection->disconnect();
     }
 }
-
-
 
 // IProtocol
 void ProtocolDelimiter::setCallback(const std::weak_ptr<IProtocolCallback>& callback)
@@ -130,10 +124,6 @@ IProtocol::FuncCreateMessage ProtocolDelimiter::getMessageFactory() const
     };
 }
 
-
-
-
-
 void ProtocolDelimiter::sendMessage(IMessagePtr message)
 {
     if (message == nullptr)
@@ -155,12 +145,9 @@ void ProtocolDelimiter::sendMessage(IMessagePtr message)
     m_connection->sendMessage(message);
 }
 
-
 void ProtocolDelimiter::moveOldProtocolState(IProtocol& /*protocolOld*/)
 {
-
 }
-
 
 bool ProtocolDelimiter::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
 {
@@ -181,7 +168,7 @@ bool ProtocolDelimiter::received(const IStreamConnectionPtr& /*connection*/, con
     {
         memcpy(const_cast<char*>(m_receiveBuffer->data()), const_cast<char*>(receiveBufferOld->data() + indexStart), sizeDelimiterPrefix);
     }
-    int res = socket->receive(const_cast<char*>(m_receiveBuffer->data()) + sizeDelimiterPrefix, static_cast<int>(bytesToRead));
+    int res = socket->receive(const_cast<char*>(m_receiveBuffer->data()) + sizeDelimiterPrefix, bytesToRead);
     if (res > 0)
     {
         auto callback = m_callback.lock();
@@ -228,8 +215,8 @@ bool ProtocolDelimiter::received(const IStreamConnectionPtr& /*connection*/, con
                             const auto& receiveBufferStore = m_receiveBuffers[n];
                             ssize_t sizeCopy = receiveBufferStore.indexEndMessage - receiveBufferStore.indexStartMessage;
                             memcpy(const_cast<char*>(receiveBufferHelper->data()) + offset,
-                                const_cast<char*>(receiveBufferStore.receiveBuffer->data()) + receiveBufferStore.indexStartMessage,
-                                sizeCopy);
+                                   const_cast<char*>(receiveBufferStore.receiveBuffer->data()) + receiveBufferStore.indexStartMessage,
+                                   sizeCopy);
                             offset += sizeCopy;
                         }
                         memcpy(const_cast<char*>(receiveBufferHelper->data()) + offset, const_cast<char*>(m_receiveBuffer->data()), sizeLast);
@@ -257,7 +244,7 @@ bool ProtocolDelimiter::received(const IStreamConnectionPtr& /*connection*/, con
         {
             if (m_indexStartMessage < offsetEnd)
             {
-                m_receiveBuffers.emplace_back(ReceiveBufferStore{ m_receiveBuffer, m_indexStartMessage, offsetEnd });
+                m_receiveBuffers.emplace_back(ReceiveBufferStore{m_receiveBuffer, m_indexStartMessage, offsetEnd});
                 m_receiveBuffersTotal += offsetEnd - m_indexStartMessage;
                 m_indexStartMessage = offsetEnd;
             }
@@ -265,8 +252,6 @@ bool ProtocolDelimiter::received(const IStreamConnectionPtr& /*connection*/, con
     }
     return (res > 0);
 }
-
-
 
 hybrid_ptr<IStreamConnectionCallback> ProtocolDelimiter::connected(const IStreamConnectionPtr& /*connection*/)
 {
@@ -287,7 +272,6 @@ void ProtocolDelimiter::disconnected(const IStreamConnectionPtr& /*connection*/)
     }
 }
 
-
 IMessagePtr ProtocolDelimiter::pollReply(std::deque<IMessagePtr>&& /*messages*/)
 {
     return {};
@@ -295,12 +279,10 @@ IMessagePtr ProtocolDelimiter::pollReply(std::deque<IMessagePtr>&& /*messages*/)
 
 void ProtocolDelimiter::subscribe(const std::vector<std::string>& /*subscribtions*/)
 {
-
 }
 
 void ProtocolDelimiter::cycleTime()
 {
-
 }
 
 IProtocolSessionDataPtr ProtocolDelimiter::createProtocolSessionData()
@@ -312,4 +294,4 @@ void ProtocolDelimiter::setProtocolSessionData(const IProtocolSessionDataPtr& /*
 {
 }
 
-}   // namespace finalmq
+} // namespace finalmq

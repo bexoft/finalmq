@@ -22,25 +22,22 @@
 
 #pragma once
 
+#include <list>
+#include <memory>
+#include <unordered_map>
+#include <vector>
+
 #include "MetaField.h"
 #include "finalmq/helpers/FmqDefines.h"
 
-#include <vector>
-#include <list>
-#include <unordered_map>
-#include <memory>
-
-
-namespace finalmq {
-
-
+namespace finalmq
+{
 enum MetaStructFlags : std::int32_t
 {
     METASTRUCTFLAG_NONE = 0,
     METASTRUCTFLAG_HL7_SEGMENT = 1,
     METASTRUCTFLAG_CHOICE = 2,
 };
-
 
 class SYMBOLEXP MetaStruct
 {
@@ -77,15 +74,15 @@ public:
 
 private:
     static std::unordered_map<std::string, std::string> generateProperties(const std::vector<std::string>& attrs);
-        
-    const std::string                                                   m_typeName;
-    const std::string                                                   m_typeNameWithoutNamespace;
-    const std::string                                                   m_description;
-    std::vector<std::shared_ptr<const MetaField>>                       m_fields;
-    const int                                                           m_flags;
-    const std::vector<std::string>                                      m_attrs;
-    const std::unordered_map<std::string, std::string>                  m_properties;
-    std::unordered_map<std::string, std::shared_ptr<const MetaField>>   m_name2Field;
+
+    const std::string m_typeName{};
+    const std::string m_typeNameWithoutNamespace{};
+    const std::string m_description{};
+    std::vector<std::shared_ptr<const MetaField>> m_fields{};
+    const int m_flags{};
+    const std::vector<std::string> m_attrs{};
+    const std::unordered_map<std::string, std::string> m_properties{};
+    std::unordered_map<std::string, std::shared_ptr<const MetaField>> m_name2Field{};
 };
 
-}   // namespace finalmq
+} // namespace finalmq

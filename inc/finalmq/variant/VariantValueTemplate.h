@@ -22,18 +22,16 @@
 
 #pragma once
 
-#include "IVariantValue.h"
-#include "Variant.h"
-#include "finalmq/metadata/MetaType.h"
-#include "assert.h"
-
 #include <functional>
 #include <unordered_map>
 
+#include "IVariantValue.h"
+#include "Variant.h"
+#include "assert.h"
+#include "finalmq/metadata/MetaType.h"
 
-namespace finalmq {
-
-
+namespace finalmq
+{
 template<int VARTYPE>
 class VariantValueTemplate : public IVariantValue
 {
@@ -84,7 +82,7 @@ private:
         return std::make_shared<VariantValueTemplate>(*this);
     }
 
-    virtual bool operator ==(const IVariantValue& rhs) const override
+    virtual bool operator==(const IVariantValue& rhs) const override
     {
         if (this == &rhs)
         {
@@ -99,7 +97,14 @@ private:
         const typename MetaTypeIdInfo<VARTYPE>::Type* rhsData = static_cast<const typename MetaTypeIdInfo<VARTYPE>::Type*>(rhs.getData());
         assert(rhsData);
 
+#ifndef WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
         return m_value == *rhsData;
+#ifndef WIN32
+#pragma GCC diagnostic pop
+#endif
     }
 
     virtual bool add(const std::string& /*name*/, const Variant& /*variant*/) override
@@ -131,4 +136,4 @@ private:
     typename MetaTypeIdInfo<VARTYPE>::Type m_value;
 };
 
-}   // namespace finalmq
+} // namespace finalmq

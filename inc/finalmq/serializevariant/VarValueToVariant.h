@@ -22,18 +22,15 @@
 
 #pragma once
 
-
-#include "finalmq/helpers/FmqDefines.h"
-#include "finalmq/variant/Variant.h"
-#include "finalmq/serialize/IParserVisitor.h"
-
-
 #include <deque>
 #include <functional>
 
+#include "finalmq/helpers/FmqDefines.h"
+#include "finalmq/serialize/IParserVisitor.h"
+#include "finalmq/variant/Variant.h"
 
-namespace finalmq {
-
+namespace finalmq
+{
 enum VarValueType2Index
 {
     VARVALUETYPE_NONE = 0,
@@ -66,10 +63,9 @@ enum VarValueType2Index
     VARVALUETYPE_VARIANTLIST = 27,
 };
 
-
-
-namespace variant {
-    class VarValue;
+namespace variant
+{
+class VarValue;
 }
 class SerializerStruct;
 
@@ -84,15 +80,15 @@ public:
 
 private:
     VarValueToVariant(const VarValueToVariant&) = delete;
-    const VarValueToVariant& operator =(const VarValueToVariant&) = delete;
+    const VarValueToVariant& operator=(const VarValueToVariant&) = delete;
     VarValueToVariant(const VarValueToVariant&&) = delete;
-    const VarValueToVariant& operator =(const VarValueToVariant&&) = delete;
+    const VarValueToVariant& operator=(const VarValueToVariant&&) = delete;
 
     void processVarValue(const variant::VarValue& varValue, Variant& variant);
 
-    Variant&                            m_variant;
-    std::shared_ptr<SerializerStruct>   m_serializerStruct;
-    std::shared_ptr<variant::VarValue>  m_varValue;
+    Variant& m_variant;
+    std::shared_ptr<SerializerStruct> m_serializerStruct{};
+    std::shared_ptr<variant::VarValue> m_varValue{};
 };
 
-}   // namespace finalmq
+} // namespace finalmq

@@ -20,27 +20,26 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-
 #include "finalmq/protocols/ProtocolHttpServer.h"
+
+#include "finalmq/helpers/Utils.h"
 #include "finalmq/protocolsession/ProtocolMessage.h"
 #include "finalmq/protocolsession/ProtocolRegistry.h"
 #include "finalmq/protocolsession/ProtocolSession.h"
 #include "finalmq/streamconnection/Socket.h"
-#include "finalmq/helpers/Utils.h"
 
 //#include "finalmq/helpers/ModulenameFinalmq.h"
 
 #include <algorithm>
 #include <cassert>
-#include <fcntl.h>
 #include <cstdlib>
 
+#include <fcntl.h>
 
-namespace finalmq {
-
+namespace finalmq
+{
 const std::uint32_t ProtocolHttpServer::PROTOCOL_ID = 4;
 const std::string ProtocolHttpServer::PROTOCOL_NAME = "httpserver";
-
 
 const std::string ProtocolHttpServer::FMQ_HTTP = "fmq_http";
 const std::string ProtocolHttpServer::FMQ_METHOD = "fmq_method";
@@ -51,7 +50,7 @@ const std::string ProtocolHttpServer::FMQ_HTTP_STATUS = "fmq_http_status";
 const std::string ProtocolHttpServer::FMQ_HTTP_STATUSTEXT = "fmq_http_statustext";
 const std::string ProtocolHttpServer::HTTP_REQUEST = "request";
 const std::string ProtocolHttpServer::HTTP_RESPONSE = "response";
-    
+
 static const std::string CONTENT_LENGTH = "Content-Length";
 static const std::string FMQ_SESSIONID = "fmq_sessionid";
 static const std::string HTTP_COOKIE = "Cookie";
@@ -68,7 +67,6 @@ static const std::string FMQ_PATH_CREATESESSION = "/fmq/createsession";
 static const std::string FMQ_PATH_REMOVESESSION = "/fmq/removesession";
 static const std::string FMQ_MULTIPART_BOUNDARY = "B9BMAhxAhY.mQw1IDRBA";
 
-
 enum ChunkedState
 {
     STATE_STOP = 0,
@@ -82,14 +80,11 @@ enum ChunkedState
 // ProtocolHttpServer
 //---------------------------------------
 
-
-std::atomic_int64_t ProtocolHttpServer::m_nextSessionNameCounter{ 1 };
+std::atomic_int64_t ProtocolHttpServer::m_nextSessionNameCounter{1};
 
 ProtocolHttpServer::ProtocolHttpServer()
-    : m_randomDevice()
-    , m_randomGenerator(m_randomDevice())
+    : m_randomDevice(), m_randomGenerator(m_randomDevice())
 {
-
 }
 
 ProtocolHttpServer::~ProtocolHttpServer()
@@ -99,7 +94,6 @@ ProtocolHttpServer::~ProtocolHttpServer()
         m_connection->disconnect();
     }
 }
-
 
 // IProtocol
 void ProtocolHttpServer::setCallback(const std::weak_ptr<IProtocolCallback>& callback)
@@ -190,7 +184,6 @@ IProtocol::FuncCreateMessage ProtocolHttpServer::getMessageFactory() const
     };
 }
 
-
 static void splitOnce(const std::string& src, ssize_t indexBegin, ssize_t indexEnd, char delimiter, std::vector<std::string>& dest)
 {
     size_t pos = src.find_first_of(delimiter, indexBegin);
@@ -211,10 +204,23 @@ static void splitOnce(const std::string& src, ssize_t indexBegin, ssize_t indexE
     }
 }
 
-
 static const char tabDecToHex[] = {
-    '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
-};
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    'A',
+    'B',
+    'C',
+    'D',
+    'E',
+    'F'};
 
 static void encode(std::string& dest, const std::string& src)
 {
@@ -222,14 +228,14 @@ static void encode(std::string& dest, const std::string& src)
     char c;
     unsigned char uc;
 
-    for (size_t i = 0; i < src.size(); ++i) 
+    for (size_t i = 0; i < src.size(); ++i)
     {
         c = src[i];
         if (isalnum(c) || c == '/' || c == '-' || c == '_' || c == '.' || c == '~')
         {
             dest += c;
         }
-        else 
+        else
         {
             uc = c;
             int first = (uc >> 4) & 0x0f;
@@ -243,11 +249,10 @@ static void encode(std::string& dest, const std::string& src)
     }
 }
 
-
 static void decode(std::string& dest, const std::string& src)
 {
     dest.reserve(src.size());
-    char code[3] = { 0 };
+    char code[3] = {0};
     unsigned long c = 0;
 
     for (size_t i = 0; i < src.size(); ++i)
@@ -257,7 +262,7 @@ static void decode(std::string& dest, const std::string& src)
             ++i;
             memcpy(code, &src[i], 2);
             c = strtoul(code, NULL, 16);
-            dest += (char)c;
+            dest += static_cast<char>(c);
             ++i;
         }
         else
@@ -267,9 +272,6 @@ static void decode(std::string& dest, const std::string& src)
     }
 }
 
-
-
-
 std::string ProtocolHttpServer::createSessionName()
 {
     std::uint64_t sessionCounter = m_nextSessionNameCounter.fetch_add(1);
@@ -277,12 +279,10 @@ std::string ProtocolHttpServer::createSessionName()
     std::uint64_t v2 = m_randomVariable(m_randomGenerator);
 
     std::ostringstream oss;
-    oss << std::hex << v2 << v1 << '.' << std::dec <<sessionCounter;
+    oss << std::hex << v2 << v1 << '.' << std::dec << sessionCounter;
     std::string sessionName = oss.str();
     return sessionName;
 }
-
-
 
 void ProtocolHttpServer::checkSessionName()
 {
@@ -302,7 +302,7 @@ void ProtocolHttpServer::checkSessionName()
             {
                 assert(m_connection);
                 bool foundInNames = callback->findSessionByName(m_sessionNames[i], shared_from_this());
-//                streamInfo << this << " findSessionByName: " << foundInNames;
+                //                streamInfo << this << " findSessionByName: " << foundInNames;
                 if (foundInNames)
                 {
                     sessionMatched.push_back(std::move(m_sessionNames[i]));
@@ -336,16 +336,16 @@ void ProtocolHttpServer::checkSessionName()
                 found = true;
                 if (m_sessionName != sessionFound)
                 {
-//                    streamInfo << this << " name before: " << m_sessionName;
+                    //                    streamInfo << this << " name before: " << m_sessionName;
                     m_sessionName = std::move(sessionFound);
                 }
             }
         }
-//        streamInfo << this << " name: " << m_sessionName;
+        //        streamInfo << this << " name: " << m_sessionName;
         if (m_createSession || !found)
         {
             m_sessionName = createSessionName();
-//            streamInfo << this << " create session: " << m_sessionName;
+            //            streamInfo << this << " create session: " << m_sessionName;
             assert(m_connection);
             callback->setSessionName(m_sessionName, shared_from_this(), m_connection);
             m_headerSendNext[FMQ_SET_SESSION] = m_sessionName;
@@ -354,8 +354,6 @@ void ProtocolHttpServer::checkSessionName()
     }
     m_sessionNames.clear();
 }
-
-
 
 void ProtocolHttpServer::cookiesToSessionIds(const std::string& cookies)
 {
@@ -380,7 +378,7 @@ void ProtocolHttpServer::cookiesToSessionIds(const std::string& cookies)
         if (pos != std::string::npos)
         {
             pos += 4;
-            std::string sessionId = { cookie, pos };
+            std::string sessionId = {cookie, pos};
             if (!sessionId.empty())
             {
                 m_sessionNames.emplace_back(std::move(sessionId));
@@ -388,9 +386,6 @@ void ProtocolHttpServer::cookiesToSessionIds(const std::string& cookies)
         }
     }
 }
-
-
-
 
 bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
 {
@@ -539,10 +534,10 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
                                 if (m_stateSessionId == StateSessionId::SESSIONID_NONE)
                                 {
                                     cookiesToSessionIds(value);
-//                                    if (!m_sessionNames.empty())
-//                                    {
-//                                        streamInfo << this << " input cookie: " << m_sessionNames[0];
-//                                    }
+                                    //                                    if (!m_sessionNames.empty())
+                                    //                                    {
+                                    //                                        streamInfo << this << " input cookie: " << m_sessionNames[0];
+                                    //                                    }
                                     m_stateSessionId = StateSessionId::SESSIONID_COOKIE;
                                 }
                             }
@@ -572,7 +567,6 @@ bool ProtocolHttpServer::receiveHeaders(ssize_t bytesReceived)
     return ok;
 }
 
-
 void ProtocolHttpServer::reset()
 {
     m_offsetRemaining = 0;
@@ -586,8 +580,6 @@ void ProtocolHttpServer::reset()
     m_sessionNames.clear();
     m_path = nullptr;
 }
-
-
 
 static std::string HEADER_KEEP_ALIVE = "Connection: keep-alive\r\n";
 
@@ -702,12 +694,12 @@ void ProtocolHttpServer::sendMessage(IMessagePtr message)
     size_t sumHeaderSize = 0;
     if (m_chunkedState < STATE_FIRST_CHUNK)
     {
-        sumHeaderSize += firstLine.size() + 2 + 2;   // 2 = '\r\n' and 2 = last empty line
-        sumHeaderSize += HEADER_KEEP_ALIVE.size();  // Connection: keep-alive\r\n
+        sumHeaderSize += firstLine.size() + 2 + 2; // 2 = '\r\n' and 2 = last empty line
+        sumHeaderSize += HEADER_KEEP_ALIVE.size(); // Connection: keep-alive\r\n
     }
     if (http && *http == HTTP_REQUEST)
     {
-        sumHeaderSize += m_headerHost.size();   // Host: hostname\r\n
+        sumHeaderSize += m_headerHost.size(); // Host: hostname\r\n
     }
 
     ssize_t sizeBody = message->getTotalSendPayloadSize();
@@ -732,7 +724,7 @@ void ProtocolHttpServer::sendMessage(IMessagePtr message)
         const std::string& value = it->second;
         if (!key.empty())
         {
-            sumHeaderSize += key.size() + value.size() + 4;    // 4 = ': ' and '\r\n'
+            sumHeaderSize += key.size() + value.size() + 4; // 4 = ': ' and '\r\n'
         }
     }
 
@@ -752,7 +744,7 @@ void ProtocolHttpServer::sendMessage(IMessagePtr message)
             }
             else
             {
-//                firstLine = "\r\n";
+                //                firstLine = "\r\n";
             }
             char buffer[50];
 #ifdef WIN32
@@ -763,9 +755,9 @@ void ProtocolHttpServer::sendMessage(IMessagePtr message)
             firstLine += buffer;
             for (auto& c : firstLine)
             {
-                c = toupper(c);
+                c = static_cast<char>(toupper(c));
             }
-            sumHeaderSize += firstLine.size() + 2;  // "\r\n"
+            sumHeaderSize += firstLine.size() + 2; // "\r\n"
         }
 
         headerBuffer = message->addSendHeader(sumHeaderSize);
@@ -832,7 +824,6 @@ void ProtocolHttpServer::sendMessage(IMessagePtr message)
 
     assert(m_connection);
     m_connection->sendMessage(message);
-
 
     if (filename && filesize > 0)
     {
@@ -901,7 +892,6 @@ void ProtocolHttpServer::sendMessage(IMessagePtr message)
     }
 }
 
-
 void ProtocolHttpServer::moveOldProtocolState(IProtocol& /*protocolOld*/)
 {
     //assert(protocolOld.getProtocolId() == PROTOCOL_ID);
@@ -910,9 +900,6 @@ void ProtocolHttpServer::moveOldProtocolState(IProtocol& /*protocolOld*/)
     //    ProtocolHttpServer& old = static_cast<ProtocolHttpServer&>(protocolOld);
     //}
 }
-
-
-
 
 bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolCallback>& callback, bool& ok)
 {
@@ -1008,8 +995,6 @@ bool ProtocolHttpServer::handleInternalCommands(const std::shared_ptr<IProtocolC
     return handled;
 }
 
-
-
 bool ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, const SocketPtr& socket, int bytesToRead)
 {
     bool ok = true;
@@ -1077,7 +1062,7 @@ bool ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, co
             int res = 0;
             do
             {
-                res = socket->receive(const_cast<char*>(payload.first + bytesReceived + m_indexFilled), static_cast<int>(bytesToRead - bytesReceived));
+                res = socket->receive(payload.first + bytesReceived + m_indexFilled, static_cast<int>(bytesToRead - bytesReceived));
                 if (res > 0)
                 {
                     bytesReceived += res;
@@ -1120,9 +1105,6 @@ bool ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, co
     return ok;
 }
 
-
-
-
 hybrid_ptr<IStreamConnectionCallback> ProtocolHttpServer::connected(const IStreamConnectionPtr& connection)
 {
     ConnectionData connectionData = connection->getConnectionData();
@@ -1144,8 +1126,6 @@ void ProtocolHttpServer::disconnected(const IStreamConnectionPtr& /*connection*/
         callback->disconnectedMultiConnection(shared_from_this());
     }
 }
-
-
 
 IMessagePtr ProtocolHttpServer::pollReply(std::deque<IMessagePtr>&& messages)
 {
@@ -1201,16 +1181,12 @@ IMessagePtr ProtocolHttpServer::pollReply(std::deque<IMessagePtr>&& messages)
     return message;
 }
 
-
 void ProtocolHttpServer::subscribe(const std::vector<std::string>& /*subscribtions*/)
 {
-
 }
-
 
 void ProtocolHttpServer::cycleTime()
 {
-
 }
 
 IProtocolSessionDataPtr ProtocolHttpServer::createProtocolSessionData()
@@ -1222,11 +1198,9 @@ void ProtocolHttpServer::setProtocolSessionData(const IProtocolSessionDataPtr& /
 {
 }
 
-
 //---------------------------------------
 // ProtocolHttpFactory
 //---------------------------------------
-
 
 struct RegisterProtocolHttpServerFactory
 {
@@ -1236,14 +1210,10 @@ struct RegisterProtocolHttpServerFactory
     }
 } g_registerProtocolHttpServerFactory;
 
-
 // IProtocolFactory
 IProtocolPtr ProtocolHttpServerFactory::createProtocol(const Variant& /*data*/)
 {
     return std::make_shared<ProtocolHttpServer>();
 }
 
-
-
-
-}   // namespace finalmq
+} // namespace finalmq

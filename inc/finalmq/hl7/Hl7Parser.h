@@ -22,18 +22,18 @@
 
 #pragma once
 
-#include "finalmq/helpers/FmqDefines.h"
-
 #include <cstdint>
 #include <string>
 #include <vector>
 
-namespace finalmq {
+#include "finalmq/helpers/FmqDefines.h"
 
-
+namespace finalmq
+{
 struct IHl7Parser
 {
-    virtual ~IHl7Parser() {}
+    virtual ~IHl7Parser()
+    {}
     virtual bool startParse(const char* str, ssize_t size = CHECK_ON_ZEROTERM) = 0;
     virtual int parseToken(int level, std::string& token, bool& isarray) = 0;
     virtual int parseTokenArray(int level, std::vector<std::string>& array) = 0;
@@ -42,7 +42,6 @@ struct IHl7Parser
     virtual int isNextFieldFilled(int level, bool& filled) = 0;
     virtual const char* getCurrentPosition() const = 0;
 };
-
 
 class SYMBOLEXP Hl7Parser : public IHl7Parser
 {
@@ -58,6 +57,11 @@ public:
     virtual const char* getCurrentPosition() const override;
 
 private:
+    Hl7Parser(const Hl7Parser&) = delete;
+    Hl7Parser(Hl7Parser&&) = delete;
+    const Hl7Parser& operator=(const Hl7Parser&) = delete;
+    const Hl7Parser& operator=(Hl7Parser&&) = delete;
+
     inline char getChar(const char* str) const;
     void skipControlCharacters();
     int isDelimiter(char c) const;
@@ -69,11 +73,11 @@ private:
 
     static const int LAYER_MAX = 4;
 
-    char                    m_delimiterField[LAYER_MAX] = {0, 0, 0, 0};
-    char                    m_delimiterRepeat = 0;
-    char                    m_escape = 0;
+    char m_delimiterField[LAYER_MAX] = {0, 0, 0, 0};
+    char m_delimiterRepeat = 0;
+    char m_escape = 0;
 
-    int                     m_waitForDeleimiterField = 0;
+    int m_waitForDeleimiterField = 0;
 };
 
-}   // namespace finalmq
+} // namespace finalmq

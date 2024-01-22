@@ -23,15 +23,14 @@
 #pragma once
 
 #include <condition_variable>
+
 #include "finalmq/helpers/FmqDefines.h"
 
-namespace finalmq {
-
-
+namespace finalmq
+{
 class SYMBOLEXP CondVar
 {
 public:
-
     /**
     * Enumeration for the two CSignal modes.
     */
@@ -75,7 +74,7 @@ public:
     * Example: 	CondVar condVar = true;    //condVar is true
     * @param val the value to set the CondVar
     */
-    void operator =(bool val);
+    const CondVar& operator=(bool val);
 
     /**
     * The conversion operator bool allows read access to the CondVar value.
@@ -95,10 +94,10 @@ private:
     CondVar(const CondVar& obj) = delete;
     const CondVar& operator=(const CondVar& obj) = delete;
 
-    mutable std::condition_variable     m_condvar;
-    mutable bool                        m_value = false;
-    const CondVarMode                   m_mode = CondVarMode::CONDVAR_MANUALRESET;
-    mutable std::mutex                  m_mutex;
+    mutable std::condition_variable m_condvar{};
+    mutable bool m_value = false;
+    const CondVarMode m_mode = CondVarMode::CONDVAR_MANUALRESET;
+    mutable std::mutex m_mutex{};
 };
 
 } // namespace finalmq

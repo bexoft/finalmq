@@ -22,24 +22,27 @@
 
 #pragma once
 
+#include <deque>
+#include <functional>
+#include <vector>
+
 #include "finalmq/metadata/MetaStruct.h"
 #include "finalmq/serialize/IParserVisitor.h"
 
-#include <deque>
-#include <vector>
-#include <functional>
-
-
-namespace finalmq {
-
-
+namespace finalmq
+{
 class SYMBOLEXP ParserProcessValuesInOrder : public IParserVisitor
 {
 public:
     ParserProcessValuesInOrder(IParserVisitor* visitor = nullptr);
-    void setVisitor(IParserVisitor &visitor);
+    void setVisitor(IParserVisitor& visitor);
 
 private:
+    ParserProcessValuesInOrder(const ParserProcessValuesInOrder&) = delete;
+    ParserProcessValuesInOrder(ParserProcessValuesInOrder&&) = delete;
+    const ParserProcessValuesInOrder& operator=(const ParserProcessValuesInOrder&) = delete;
+    const ParserProcessValuesInOrder& operator=(ParserProcessValuesInOrder&&) = delete;
+
     // IParserVisitor
     virtual void notifyError(const char* str, const char* message) override;
     virtual void startStruct(const MetaStruct& stru) override;
@@ -100,7 +103,6 @@ private:
     virtual void enterArrayEnumMove(const MetaField& field, std::vector<std::string>&& value) override;
     virtual void enterArrayEnum(const MetaField& field, const std::vector<std::string>& value) override;
 
-
     struct CallNode
     {
         std::vector<std::function<void()>> calls;
@@ -110,7 +112,7 @@ private:
     IParserVisitor* m_visitor;
 
     CallNode* m_currentCalls = nullptr;
-    std::deque<CallNode>  m_stackCalls;
+    std::deque<CallNode> m_stackCalls{};
 };
 
-}   // namespace finalmq
+} // namespace finalmq

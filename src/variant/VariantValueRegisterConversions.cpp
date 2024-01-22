@@ -20,39 +20,40 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-
-
 #include "finalmq/variant/VariantValueRegisterConversions.h"
 
-#include "finalmq/variant/VariantValues.h"
 #include "finalmq/conversions/Conversions.h"
+#include "finalmq/variant/VariantValues.h"
 
-
-namespace finalmq {
-
-
+namespace finalmq
+{
 static VariantValueRegisterConversions g_registerConversions;
-
 
 template<class FROM, class TO>
 class FunctionConvert
 {
 public:
-    TO operator ()(const Variant& variant)
+    TO operator()(const Variant& variant)
     {
         assert(variant.getType() == MetaTypeInfo<FROM>::TypeId);
         const FROM* data = variant;
         assert(data);
+#ifndef WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
         return static_cast<TO>(*data);
+#ifndef WIN32
+#pragma GCC diagnostic pop
+#endif
     }
 };
-
 
 template<class TO>
 class FunctionConvertStringToNumber
 {
 public:
-    TO operator ()(const Variant& variant)
+    TO operator()(const Variant& variant)
     {
         assert(variant.getType() == MetaTypeId::TYPE_STRING);
         const std::string* data = variant;
@@ -62,12 +63,11 @@ public:
     }
 };
 
-
 template<class FROM>
 class FunctionConvertNumberToString
 {
 public:
-    std::string operator ()(const Variant& variant)
+    std::string operator()(const Variant& variant)
     {
         assert(variant.getType() == MetaTypeInfo<FROM>::TypeId);
         const FROM* data = variant;
@@ -79,7 +79,7 @@ template<>
 class FunctionConvertNumberToString<bool>
 {
 public:
-    std::string operator ()(const Variant& variant)
+    std::string operator()(const Variant& variant)
     {
         assert(variant.getType() == MetaTypeInfo<bool>::TypeId);
         const bool* data = variant;
@@ -87,7 +87,6 @@ public:
         return (*data) ? "true" : "false";
     }
 };
-
 
 template<class TO>
 void VariantValueRegisterConversions::registerConversionsTo()
@@ -105,8 +104,6 @@ void VariantValueRegisterConversions::registerConversionsTo()
     Convert<TO>::registerConversion(MetaTypeId::TYPE_DOUBLE, FunctionConvert<double, TO>());
 }
 
-
-
 VariantValueRegisterConversions::VariantValueRegisterConversions()
 {
     registerConversionsTo<bool>();
@@ -121,29 +118,29 @@ VariantValueRegisterConversions::VariantValueRegisterConversions()
     registerConversionsTo<float>();
     registerConversionsTo<double>();
 
-    Convert<std::string>::registerConversion(MetaTypeId::TYPE_BOOL,     FunctionConvertNumberToString<bool>());
-    Convert<std::string>::registerConversion(MetaTypeId::TYPE_INT8,     FunctionConvertNumberToString<std::int8_t>());
-    Convert<std::string>::registerConversion(MetaTypeId::TYPE_UINT8,    FunctionConvertNumberToString<std::uint8_t>());
-    Convert<std::string>::registerConversion(MetaTypeId::TYPE_INT16,    FunctionConvertNumberToString<std::int16_t>());
-    Convert<std::string>::registerConversion(MetaTypeId::TYPE_UINT16,   FunctionConvertNumberToString<std::uint16_t>());
-    Convert<std::string>::registerConversion(MetaTypeId::TYPE_INT32,    FunctionConvertNumberToString<std::int32_t>());
-    Convert<std::string>::registerConversion(MetaTypeId::TYPE_UINT32,   FunctionConvertNumberToString<std::uint32_t>());
-    Convert<std::string>::registerConversion(MetaTypeId::TYPE_INT64,    FunctionConvertNumberToString<std::int64_t>());
-    Convert<std::string>::registerConversion(MetaTypeId::TYPE_UINT64,   FunctionConvertNumberToString<std::uint64_t>());
-    Convert<std::string>::registerConversion(MetaTypeId::TYPE_FLOAT,    FunctionConvertNumberToString<float>());
-    Convert<std::string>::registerConversion(MetaTypeId::TYPE_DOUBLE,   FunctionConvertNumberToString<double>());
+    Convert<std::string>::registerConversion(MetaTypeId::TYPE_BOOL, FunctionConvertNumberToString<bool>());
+    Convert<std::string>::registerConversion(MetaTypeId::TYPE_INT8, FunctionConvertNumberToString<std::int8_t>());
+    Convert<std::string>::registerConversion(MetaTypeId::TYPE_UINT8, FunctionConvertNumberToString<std::uint8_t>());
+    Convert<std::string>::registerConversion(MetaTypeId::TYPE_INT16, FunctionConvertNumberToString<std::int16_t>());
+    Convert<std::string>::registerConversion(MetaTypeId::TYPE_UINT16, FunctionConvertNumberToString<std::uint16_t>());
+    Convert<std::string>::registerConversion(MetaTypeId::TYPE_INT32, FunctionConvertNumberToString<std::int32_t>());
+    Convert<std::string>::registerConversion(MetaTypeId::TYPE_UINT32, FunctionConvertNumberToString<std::uint32_t>());
+    Convert<std::string>::registerConversion(MetaTypeId::TYPE_INT64, FunctionConvertNumberToString<std::int64_t>());
+    Convert<std::string>::registerConversion(MetaTypeId::TYPE_UINT64, FunctionConvertNumberToString<std::uint64_t>());
+    Convert<std::string>::registerConversion(MetaTypeId::TYPE_FLOAT, FunctionConvertNumberToString<float>());
+    Convert<std::string>::registerConversion(MetaTypeId::TYPE_DOUBLE, FunctionConvertNumberToString<double>());
 
-    Convert<bool>::registerConversion(MetaTypeId::TYPE_STRING,          FunctionConvertStringToNumber<bool>());
+    Convert<bool>::registerConversion(MetaTypeId::TYPE_STRING, FunctionConvertStringToNumber<bool>());
     Convert<std::int8_t>::registerConversion(MetaTypeId::TYPE_STRING, FunctionConvertStringToNumber<std::int8_t>());
     Convert<std::uint8_t>::registerConversion(MetaTypeId::TYPE_STRING, FunctionConvertStringToNumber<std::uint8_t>());
     Convert<std::int16_t>::registerConversion(MetaTypeId::TYPE_STRING, FunctionConvertStringToNumber<std::int16_t>());
     Convert<std::uint16_t>::registerConversion(MetaTypeId::TYPE_STRING, FunctionConvertStringToNumber<std::uint16_t>());
     Convert<std::int32_t>::registerConversion(MetaTypeId::TYPE_STRING, FunctionConvertStringToNumber<std::int32_t>());
     Convert<std::uint32_t>::registerConversion(MetaTypeId::TYPE_STRING, FunctionConvertStringToNumber<std::uint32_t>());
-    Convert<std::int64_t>::registerConversion(MetaTypeId::TYPE_STRING,  FunctionConvertStringToNumber<std::int64_t>());
+    Convert<std::int64_t>::registerConversion(MetaTypeId::TYPE_STRING, FunctionConvertStringToNumber<std::int64_t>());
     Convert<std::uint64_t>::registerConversion(MetaTypeId::TYPE_STRING, FunctionConvertStringToNumber<std::uint64_t>());
-    Convert<float>::registerConversion(MetaTypeId::TYPE_STRING,         FunctionConvertStringToNumber<float>());
-    Convert<double>::registerConversion(MetaTypeId::TYPE_STRING,        FunctionConvertStringToNumber<double>());
+    Convert<float>::registerConversion(MetaTypeId::TYPE_STRING, FunctionConvertStringToNumber<float>());
+    Convert<double>::registerConversion(MetaTypeId::TYPE_STRING, FunctionConvertStringToNumber<double>());
 }
 
-}   // namespace finalmq
+} // namespace finalmq

@@ -22,16 +22,14 @@
 
 #pragma once
 
-#include "finalmq/streamconnection/IMessage.h"
-#include "finalmq/streamconnection/StreamConnection.h"
+#include "finalmq/helpers/PollingTimer.h"
 #include "finalmq/metadata/MetaType.h"
 #include "finalmq/protocols/mqtt5/Mqtt5Protocol.h"
-#include "finalmq/helpers/PollingTimer.h"
+#include "finalmq/streamconnection/IMessage.h"
+#include "finalmq/streamconnection/StreamConnection.h"
 
-
-namespace finalmq {
-
-
+namespace finalmq
+{
 struct IMqtt5ClientCallback
 {
     virtual ~IMqtt5ClientCallback() = default;
@@ -45,15 +43,15 @@ struct IMqtt5ClientCallback
         std::uint8_t maximumQoS = 2;
         bool retainAvailable = true;
         std::uint32_t maximumPacketSize = 268435455;
-        std::string assignedClientId;
-        std::string reasonString;
+        std::string assignedClientId{};
+        std::string reasonString{};
         bool wildcardSubscriptionAvailable = true;
         bool subscriptionIdentifiersAvailable = true;
         bool sharedSubscriptionAvailable = true;
         std::uint16_t serverKeepAlive = 0;
-        std::string serverReference;
-        std::string authenticationMethod;
-        Bytes authenticationData;
+        std::string serverReference{};
+        std::string authenticationMethod{};
+        Bytes authenticationData{};
     };
     virtual void receivedConnAck(const ConnAckData& data) = 0;
 
@@ -61,11 +59,11 @@ struct IMqtt5ClientCallback
     {
         std::uint8_t qos = 0;
         bool retain = false;
-        std::string topic;
+        std::string topic{};
         std::uint32_t messageExpiryInterval = 0;
-        std::string responseTopic;
-        Bytes correlationData;
-        std::string contentType;
+        std::string responseTopic{};
+        Bytes correlationData{};
+        std::string contentType{};
     };
     virtual void receivedPublish(const PublishData& data, const IMessagePtr& message) = 0;
 
@@ -76,17 +74,17 @@ struct IMqtt5ClientCallback
     struct DisconnectData
     {
         std::uint8_t reasoncode = 0;
-        std::string reasonString;
-        std::string serverReference;
+        std::string reasonString{};
+        std::string serverReference{};
     };
     virtual void receivedDisconnect(const DisconnectData& data) = 0;
 
     struct AuthData
     {
         std::uint8_t reasoncode = 0;
-        std::string authenticationMethod;
-        Bytes authenticationData;
-        std::string reasonString;
+        std::string authenticationMethod{};
+        Bytes authenticationData{};
+        std::string reasonString{};
     };
     virtual void receivedAuth(const AuthData& data) = 0;
 
@@ -104,20 +102,20 @@ struct IMqtt5Client
         std::uint8_t qos = 0;
         bool retain = false;
         std::uint32_t delayInterval = 0;
-        std::string contentType;
-        std::string topic;
-        Bytes payload;
+        std::string contentType{};
+        std::string topic{};
+        Bytes payload{};
     };
     struct ConnectData
     {
         bool cleanStart = false;
-        std::unique_ptr<WillMessage> willMessage;
-        std::string username;
-        std::string password;
+        std::unique_ptr<WillMessage> willMessage{};
+        std::string username{};
+        std::string password{};
         std::uint16_t keepAlive = 0;
         std::uint32_t sessionExpiryInterval = 0;
         std::uint16_t receiveMaximum = 65535;
-        std::string clientId;
+        std::string clientId{};
     };
     virtual void startConnection(const IStreamConnectionPtr& connection, const ConnectData& data) = 0;
 
@@ -125,17 +123,17 @@ struct IMqtt5Client
     {
         std::uint8_t qos = 0;
         bool retain = false;
-        std::string topic;
+        std::string topic{};
         std::uint32_t messageExpiryInterval = 0;
-        std::string responseTopic;
-        Bytes correlationData;
-        std::string contentType;
+        std::string responseTopic{};
+        Bytes correlationData{};
+        std::string contentType{};
     };
     virtual void publish(const IStreamConnectionPtr& connection, PublishData&& data, const IMessagePtr& message) = 0;
 
     struct SubscribeEntry
     {
-        std::string topic;
+        std::string topic{};
         unsigned int retainHandling = 0;
         bool retainAsPublished = false;
         bool noLocal = false;
@@ -143,7 +141,7 @@ struct IMqtt5Client
     };
     struct SubscribeData
     {
-        std::vector<SubscribeEntry> subscriptions;
+        std::vector<SubscribeEntry> subscriptions{};
     };
     virtual void subscribe(const IStreamConnectionPtr& connection, const SubscribeData& data) = 0;
     virtual void unsubscribe(const IStreamConnectionPtr& connection, const std::vector<std::string>& topics) = 0;
@@ -168,10 +166,7 @@ struct IMqtt5Client
     virtual void cycleTime(const IStreamConnectionPtr& connection) = 0;
 };
 
-
-
-class Mqtt5Client : public IMqtt5Client
-                  , private IMqtt5ProtocolCallback
+class Mqtt5Client : public IMqtt5Client, private IMqtt5ProtocolCallback
 {
 public:
     Mqtt5Client();
@@ -203,16 +198,14 @@ private:
 
     void setReceiveActivity();
 
-    hybrid_ptr<IMqtt5ClientCallback> m_callback;
+    hybrid_ptr<IMqtt5ClientCallback> m_callback{};
     std::uint16_t m_keepAlive = 0;
-    PollingTimer  m_timerPing;
-    PollingTimer  m_timerReceiveActivity;
+    PollingTimer m_timerPing{};
+    PollingTimer m_timerReceiveActivity{};
 
     std::uint32_t m_sessionExpiryInterval = 0;
 
     std::unique_ptr<IMqtt5Protocol> m_protocol = std::make_unique<Mqtt5Protocol>();
 };
 
-
-
-}   // namespace finalmq
+} // namespace finalmq

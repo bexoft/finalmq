@@ -21,21 +21,17 @@
 //SOFTWARE.
 
 #include "finalmq/remoteentity/RemoteEntityContainer.h"
+
 #include "finalmq/helpers/ModulenameFinalmq.h"
+#include "finalmq/remoteentity/entitydata.fmq.h"
 #include "finalmq/variant/VariantValues.h"
 
-#include "finalmq/remoteentity/entitydata.fmq.h"
-
-
+using finalmq::Header;
 using finalmq::MsgMode;
 using finalmq::Status;
-using finalmq::Header;
 
-
-namespace finalmq {
-
-
-
+namespace finalmq
+{
 ConnectionEvent::ConnectionEvent()
 {
 }
@@ -51,7 +47,7 @@ ConnectionEvent::operator Enum&()
 {
     return m_value;
 }
-const ConnectionEvent& ConnectionEvent::operator =(Enum en)
+const ConnectionEvent& ConnectionEvent::operator=(Enum en)
 {
     m_value = en;
     return *this;
@@ -69,24 +65,22 @@ void ConnectionEvent::fromString(const std::string& name)
     m_value = static_cast<Enum>(_enumInfo.getMetaEnum().getValueByName(name));
 }
 const EnumInfo ConnectionEvent::_enumInfo = {
-    "ConnectionEvent", "", {},  {
+    "ConnectionEvent",
+    "",
+    {},
+    {
         {"CONNECTIONEVENT_CONNECTED", 0, "", "connected"},
         {"CONNECTIONEVENT_DISCONNECTED", 1, "", "disconnected"},
         {"CONNECTIONEVENT_SOCKET_CONNECTED", 2, "", "socket connected"},
         {"CONNECTIONEVENT_SOCKET_DISCONNECTED", 3, "", "socket disconnected"},
-     }
-};
-
-
+    }};
 
 ///////////////////////////////////
 
 std::atomic_uint64_t RemoteEntityContainer::m_nextContainerId = {};
 
 RemoteEntityContainer::RemoteEntityContainer()
-    : m_protocolSessionContainer(std::make_unique<ProtocolSessionContainer>())
-    , m_executor(m_protocolSessionContainer->getExecutor())
-    , m_containerId(m_nextContainerId.fetch_add(1))
+    : m_protocolSessionContainer(std::make_unique<ProtocolSessionContainer>()), m_executor(m_protocolSessionContainer->getExecutor()), m_containerId(m_nextContainerId.fetch_add(1))
 {
 }
 
@@ -94,7 +88,6 @@ RemoteEntityContainer::~RemoteEntityContainer()
 {
     deinit();
 }
-
 
 void RemoteEntityContainer::deinit()
 {
@@ -120,11 +113,7 @@ void RemoteEntityContainer::deinit()
     }
 }
 
-
-
 // IRemoteEntityContainer
-
-
 
 void RemoteEntityContainer::init(const IExecutorPtr& executor, int cycleTime, FuncTimer funcTimer, bool storeRawDataInReceiveStruct, int checkReconnectInterval)
 {
@@ -145,7 +134,6 @@ static std::string endpointToProtocolEndpoint(const std::string& endpoint, std::
     }
     return endpoint.substr(0, ixEndpoint);
 }
-
 
 int RemoteEntityContainer::bind(const std::string& endpoint, const BindProperties& bindProperties)
 {
@@ -194,14 +182,18 @@ SessionInfo RemoteEntityContainer::connect(const std::string& endpoint, const Co
 
 SessionInfo RemoteEntityContainer::createSessionInfo(const IProtocolSessionPtr& session)
 {
+#ifdef FINALMQ_HAS_NOT_WEAK_FROM_THIS
+    std::weak_ptr<IRemoteEntityContainer> thisEntityContainer = *reinterpret_cast<std::weak_ptr<IRemoteEntityContainer>*>(static_cast<std::enable_shared_from_this<RemoteEntityContainer>*>(this));
+#else
     std::weak_ptr<IRemoteEntityContainer> thisEntityContainer = weak_from_this();
+#endif
     if (thisEntityContainer.lock())
     {
-        return { thisEntityContainer, session };
+        return {thisEntityContainer, session};
     }
     else
     {
-        return { this, session };
+        return {this, session};
     }
 }
 
@@ -240,18 +232,15 @@ void RemoteEntityContainer::subscribeSessions(std::string name)
 
     name = name + "/#";
 
-    std::vector< IProtocolSessionPtr > sessions = m_protocolSessionContainer->getAllSessions();
+    std::vector<IProtocolSessionPtr> sessions = m_protocolSessionContainer->getAllSessions();
     for (auto it = sessions.begin(); it != sessions.end(); ++it)
     {
         if (*it)
         {
-            (*it)->subscribe({ name });
+            (*it)->subscribe({name});
         }
     }
 }
-
-
-
 
 void RemoteEntityContainer::run()
 {
@@ -268,7 +257,6 @@ IExecutorPtr RemoteEntityContainer::getExecutor() const
 {
     return m_executor;
 }
-
 
 EntityId RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, std::string name)
 {
@@ -318,7 +306,6 @@ EntityId RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> remoteE
     return entityId;
 }
 
-
 //void RemoteEntityContainer::addPureDataPaths(std::vector<std::string>& paths)
 //{
 //    for (size_t i = 0; i < paths.size(); ++i)
@@ -338,8 +325,6 @@ EntityId RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> remoteE
 //    }
 //}
 
-
-
 void RemoteEntityContainer::unregisterEntity(EntityId entityId)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
@@ -354,13 +339,11 @@ void RemoteEntityContainer::unregisterEntity(EntityId entityId)
     m_entityId2entity.erase(entityId);
 }
 
-
 void RemoteEntityContainer::registerConnectionEvent(FuncConnectionEvent funcConnectionEvent)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     m_funcConnectionEvent = std::make_shared<FuncConnectionEvent>(std::move(funcConnectionEvent));
 }
-
 
 std::vector<EntityId> RemoteEntityContainer::getAllEntities() const
 {
@@ -378,7 +361,7 @@ hybrid_ptr<IRemoteEntity> RemoteEntityContainer::getEntity(EntityId entityId) co
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     auto it = m_entityId2entity.find(entityId);
-    if (it !=  m_entityId2entity.end())
+    if (it != m_entityId2entity.end())
     {
         return it->second;
     }
@@ -398,8 +381,6 @@ std::string RemoteEntityContainer::getEntityName(EntityId entityId, bool& regist
     return {};
 }
 
-
-
 inline void RemoteEntityContainer::triggerConnectionEvent(const SessionInfo& session, ConnectionEvent connectionEvent) const
 {
     std::unique_lock<std::mutex> lock(m_mutex);
@@ -410,7 +391,6 @@ inline void RemoteEntityContainer::triggerConnectionEvent(const SessionInfo& ses
         (*funcConnectionEvent)(session, connectionEvent);
     }
 }
-
 
 // IProtocolSessionCallback
 void RemoteEntityContainer::connected(const IProtocolSessionPtr& session)
@@ -441,7 +421,6 @@ void RemoteEntityContainer::disconnected(const IProtocolSessionPtr& session)
     }
 }
 
-
 void RemoteEntityContainer::disconnectedVirtualSession(const IProtocolSessionPtr& session, const std::string& virtualSessionId)
 {
     std::vector<hybrid_ptr<IRemoteEntity>> entities;
@@ -462,7 +441,6 @@ void RemoteEntityContainer::disconnectedVirtualSession(const IProtocolSessionPtr
         }
     }
 }
-
 
 //bool RemoteEntityContainer::isPureDataPath(const std::string& path)
 //{
@@ -485,22 +463,19 @@ void RemoteEntityContainer::disconnectedVirtualSession(const IProtocolSessionPtr
 //    return false;
 //}
 
-
-
 struct ThreadLocalDataEntities
 {
-    std::int64_t                                                changeId = 0;
-    std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>  name2entityNoLock;
-    std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>>     entityId2entityNoLock;
+    std::int64_t changeId = 0;
+    std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>> name2entityNoLock{};
+    std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>> entityId2entityNoLock{};
 };
 thread_local std::unordered_map<std::uint64_t, ThreadLocalDataEntities> t_threadLocalDataEntities;
-
 
 void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const IMessagePtr& message)
 {
     assert(session);
     assert(message);
-    
+
     ThreadLocalDataEntities& threadLocalDataEntities = t_threadLocalDataEntities[m_containerId];
     std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2entityNoLock = threadLocalDataEntities.name2entityNoLock;
     std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>>& entityId2entityNoLock = threadLocalDataEntities.entityId2entityNoLock;
@@ -514,7 +489,7 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     }
 
     int formatStatus = 0;
-    ReceiveData receiveData{ createSessionInfo(session), {}, message, {}, false, {} };
+    ReceiveData receiveData{createSessionInfo(session), {}, message, {}, false, {}};
     if (!session->doesSupportMetainfo())
     {
         receiveData.structBase = RemoteEntityFormatRegistry::instance().parse(session, *message, m_storeRawDataInReceiveStruct, name2entityNoLock, receiveData.header, formatStatus);
@@ -586,7 +561,7 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
             {
                 entityId = entity->getEntityId();
             }
-            Header headerReply{ receiveData.header.srcid, "", entityId, MsgMode::MSG_REPLY, replyStatus, {}, {}, receiveData.header.corrid, {} };
+            Header headerReply{receiveData.header.srcid, "", entityId, MsgMode::MSG_REPLY, replyStatus, {}, {}, receiveData.header.corrid, {}};
             RemoteEntityFormatRegistry::instance().send(session, receiveData.virtualSessionId, headerReply, std::move(message->getEchoData()));
         }
     }
@@ -613,6 +588,4 @@ void RemoteEntityContainer::socketDisconnected(const IProtocolSessionPtr& sessio
     triggerConnectionEvent(createSessionInfo(session), ConnectionEvent::CONNECTIONEVENT_SOCKET_DISCONNECTED);
 }
 
-
-
-}   // namespace finalmq
+} // namespace finalmq

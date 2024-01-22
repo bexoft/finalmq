@@ -22,24 +22,22 @@
 
 #pragma once
 
-#include "finalmq/streamconnection/IMessage.h"
-#include "finalmq/protocolsession/IProtocol.h"
-#include "finalmq/variant/Variant.h"
-#include "finalmq/variant/VariantValues.h"
-#include "finalmq/variant/VariantValueStruct.h"
-#include "finalmq/variant/VariantValueList.h"
-
-
 #include <unordered_map>
 
-namespace finalmq {
+#include "finalmq/protocolsession/IProtocol.h"
+#include "finalmq/streamconnection/IMessage.h"
+#include "finalmq/variant/Variant.h"
+#include "finalmq/variant/VariantValueList.h"
+#include "finalmq/variant/VariantValueStruct.h"
+#include "finalmq/variant/VariantValues.h"
 
-
+namespace finalmq
+{
 class SYMBOLEXP ProtocolMessage : public IMessage
 {
 public:
     static const std::string FMQ_PROTOCOLDATA;
-    
+
     ProtocolMessage(std::uint32_t protocolId, ssize_t sizeHeader = 0, ssize_t sizeTrailer = 0);
 
 private:
@@ -95,40 +93,39 @@ private:
     virtual void prepareMessageToSend() override;
 
     // for the protocol to check if which protocol created the message
-    virtual std::uint32_t getProtocolId() const;
+    virtual std::uint32_t getProtocolId() const override;
     virtual bool wasSent() const override;
 
     virtual void addMessage(const IMessagePtr& msg) override;
     virtual IMessagePtr getMessage(std::uint32_t protocolId) const override;
 
 private:
-
-    Metainfo                    m_metainfo;
-    Variant                     m_controlData;
-    Variant                     m_echoData;
+    Metainfo m_metainfo{};
+    Variant m_controlData{};
+    Variant m_echoData{};
 
     // send
-    std::list<std::string>      m_headerBuffers;
-    std::list<std::string>      m_payloadBuffers;
-    std::list<BufferRef>        m_sendBufferRefs;
-    std::list<BufferRef>::iterator m_itSendBufferRefsPayloadBegin;
-    ssize_t                     m_offset = -1;
-    ssize_t                     m_sizeLastBlock = 0;
-    ssize_t                     m_sizeSendBufferTotal = 0;
-    std::list<BufferRef>        m_sendPayloadRefs;
-    ssize_t                     m_sizeSendPayloadTotal = 0;
+    std::list<std::string> m_headerBuffers{};
+    std::list<std::string> m_payloadBuffers{};
+    std::list<BufferRef> m_sendBufferRefs{};
+    std::list<BufferRef>::iterator m_itSendBufferRefsPayloadBegin{};
+    ssize_t m_offset = -1;
+    ssize_t m_sizeLastBlock = 0;
+    ssize_t m_sizeSendBufferTotal = 0;
+    std::list<BufferRef> m_sendPayloadRefs{};
+    ssize_t m_sizeSendPayloadTotal = 0;
 
     // receive
-    std::shared_ptr<std::string> m_receiveBuffer;
-    BufferRef                    m_receiveBufferRef;
+    std::shared_ptr<std::string> m_receiveBuffer{};
+    BufferRef m_receiveBufferRef{};
 
-    ssize_t                     m_sizeHeader = 0;
-    ssize_t                     m_sizeTrailer = 0;
+    ssize_t m_sizeHeader = 0;
+    ssize_t m_sizeTrailer = 0;
 
-    bool                        m_preparedToSend = false;
-    const std::uint32_t         m_protocolId;
+    bool m_preparedToSend = false;
+    const std::uint32_t m_protocolId;
 
-    std::unordered_map<std::uint32_t, IMessagePtr> m_messages;
+    std::unordered_map<std::uint32_t, IMessagePtr> m_messages{};
 };
 
-}   // namespace finalmq
+} // namespace finalmq

@@ -22,16 +22,15 @@
 
 #pragma once
 
-#include "finalmq/streamconnection/IMessage.h"
-#include "finalmq/protocolsession/IProtocol.h"
-#include "finalmq/helpers/FmqDefines.h"
-#include "finalmq/helpers/Executor.h"
-
 #include <random>
 
+#include "finalmq/helpers/Executor.h"
+#include "finalmq/helpers/FmqDefines.h"
+#include "finalmq/protocolsession/IProtocol.h"
+#include "finalmq/streamconnection/IMessage.h"
 
-namespace finalmq {
-
+namespace finalmq
+{
 class Cookie;
 
 class CookieStore : public IProtocolSessionData
@@ -45,17 +44,22 @@ private:
     std::vector<std::shared_ptr<Cookie>> getCookiesIntern(const std::string& host, const std::string& path);
     std::shared_ptr<Cookie>& getCookieInternExactPath(const std::string& host, const std::string& path);
 
-    std::list<std::shared_ptr<Cookie>> m_cookies;
-    mutable std::mutex                 m_mutex;
+    std::list<std::shared_ptr<Cookie>> m_cookies{};
+    mutable std::mutex m_mutex{};
 };
 typedef std::shared_ptr<CookieStore> CookieStorePtr;
 
-
-class SYMBOLEXP ProtocolHttpClient : public IProtocol
-                                   , public std::enable_shared_from_this<ProtocolHttpClient>
+#ifndef WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
+#endif
+class SYMBOLEXP ProtocolHttpClient : public IProtocol, public std::enable_shared_from_this<ProtocolHttpClient>
 {
+#ifndef WIN32
+#pragma GCC diagnostic pop
+#endif
 public:
-    static const std::uint32_t PROTOCOL_ID;           // 7
+    static const std::uint32_t PROTOCOL_ID; // 7
     static const std::string PROTOCOL_NAME; // httpclient
 
     static const std::string FMQ_HTTP;
@@ -72,7 +76,6 @@ public:
     virtual ~ProtocolHttpClient();
 
 private:
-
     // IProtocol
     virtual void setCallback(const std::weak_ptr<IProtocolCallback>& callback) override;
     virtual void setConnection(const IStreamConnectionPtr& connection) override;
@@ -99,10 +102,9 @@ private:
     virtual IProtocolSessionDataPtr createProtocolSessionData() override;
     virtual void setProtocolSessionData(const IProtocolSessionDataPtr& protocolSessionData) override;
 
-
     bool receiveHeaders(ssize_t bytesReceived);
     void reset();
-//    bool handleInternalCommands(const std::shared_ptr<IProtocolCallback>& callback, bool& ok);
+    //    bool handleInternalCommands(const std::shared_ptr<IProtocolCallback>& callback, bool& ok);
 
     enum class State
     {
@@ -119,38 +121,36 @@ private:
         SESSIONID_FMQ = 2
     };
 
-    std::random_device                              m_randomDevice;
-    std::mt19937                                    m_randomGenerator;
-    std::uniform_int_distribution<std::uint64_t>    m_randomVariable;
-    IMessage::Metainfo                              m_headerSendNext;
+    std::random_device m_randomDevice{};
+    std::mt19937 m_randomGenerator{};
+    std::uniform_int_distribution<std::uint64_t> m_randomVariable{};
+    IMessage::Metainfo m_headerSendNext{};
 
-    State                               m_state = State::STATE_FIND_FIRST_LINE;
-    std::string                         m_receiveBuffer;
-    ssize_t                             m_offsetRemaining = 0;
-    ssize_t                             m_sizeRemaining = 0;
-    IMessagePtr                         m_message;
-    ssize_t                             m_contentLength = 0;
-    ssize_t                             m_indexFilled = 0;
-    std::string                         m_headerHost;
-    std::string                         m_hostname;
-    std::int64_t                        m_connectionId = 0;
-    std::weak_ptr<IProtocolCallback>    m_callback;
-    IStreamConnectionPtr                m_connection;
-    bool                                m_multipart = false;
+    State m_state = State::STATE_FIND_FIRST_LINE;
+    std::string m_receiveBuffer{};
+    ssize_t m_offsetRemaining = 0;
+    ssize_t m_sizeRemaining = 0;
+    IMessagePtr m_message{};
+    ssize_t m_contentLength = 0;
+    ssize_t m_indexFilled = 0;
+    std::string m_headerHost{};
+    std::string m_hostname{};
+    std::int64_t m_connectionId = 0;
+    std::weak_ptr<IProtocolCallback> m_callback{};
+    IStreamConnectionPtr m_connection{};
+    bool m_multipart = false;
 
-    CookieStorePtr                      m_cookieStore;
+    CookieStorePtr m_cookieStore{};
 
-    mutable std::mutex                  m_mutex;
+    mutable std::mutex m_mutex{};
 };
-
 
 class SYMBOLEXP ProtocolHttpClientFactory : public IProtocolFactory
 {
 public:
-
 private:
     // IProtocolFactory
     virtual IProtocolPtr createProtocol(const Variant& data) override;
 };
 
-}   // namespace finalmq
+} // namespace finalmq

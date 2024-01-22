@@ -945,7 +945,7 @@ public:
         const char* httpHeaderCreateSession = FCGX_GetParam("HTTP_FMQ_CREATESESSION", request->envp);
         const char* httpHeaderSessionId = FCGX_GetParam("HTTP_FMQ_SESSIONID", request->envp);
 
-        //for(int i=0; request->envp[i] != NULL; i+=1)
+        //for (int i=0; request->envp[i] != NULL; i+=1)
         //{
         //    streamInfo << request->envp[i];
         //}

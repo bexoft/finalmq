@@ -22,21 +22,19 @@
 
 #pragma once
 
-#include "finalmq/metadata/MetaStruct.h"
-#include "finalmq/metadata/MetaEnum.h"
-
-#include <mutex>
+#include <atomic>
 #include <memory>
 #include <mutex>
-#include <atomic>
 
+#include "finalmq/metadata/MetaEnum.h"
+#include "finalmq/metadata/MetaStruct.h"
 
-namespace finalmq {
-
-
+namespace finalmq
+{
 struct IMetaData
 {
-    virtual ~IMetaData() {}
+    virtual ~IMetaData()
+    {}
     virtual const MetaStruct* getStruct(const std::string& typeName) const = 0;
     virtual const MetaEnum* getEnum(const std::string& typeName) const = 0;
     virtual const MetaStruct* getStruct(const MetaField& field) const = 0;
@@ -56,11 +54,9 @@ struct IMetaData
     virtual const std::unordered_map<std::string, MetaEnum> getAllEnums() const = 0;
 };
 
-
 class SYMBOLEXP MetaData : public IMetaData
 {
 public:
-
 private:
     // IMetaData
     virtual const MetaStruct* getStruct(const std::string& typeName) const override;
@@ -81,11 +77,10 @@ private:
     virtual const std::unordered_map<std::string, MetaStruct> getAllStructs() const override;
     virtual const std::unordered_map<std::string, MetaEnum> getAllEnums() const override;
 
-    std::unordered_map<std::string, MetaStruct> m_name2Struct;
-    std::unordered_map<std::string, MetaEnum>   m_name2Enum;
-    mutable std::mutex                          m_mutex;
+    std::unordered_map<std::string, MetaStruct> m_name2Struct{};
+    std::unordered_map<std::string, MetaEnum> m_name2Enum{};
+    mutable std::mutex m_mutex{};
 };
-
 
 class SYMBOLEXP MetaDataGlobal
 {
@@ -117,4 +112,4 @@ private:
     static std::unique_ptr<IMetaData>& getStaticUniquePtrRef();
 };
 
-}   // namespace finalmq
+} // namespace finalmq

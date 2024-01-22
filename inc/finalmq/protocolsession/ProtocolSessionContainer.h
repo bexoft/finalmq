@@ -22,28 +22,29 @@
 
 #pragma once
 
-#include "ProtocolSession.h"
+#include <thread>
+#include <unordered_map>
+
 #include "IProtocol.h"
+#include "ProtocolSession.h"
 #include "ProtocolSessionList.h"
 
-#include <unordered_map>
-#include <thread>
-
-namespace finalmq {
-
-typedef std::function<void()>   FuncTimer;
+namespace finalmq
+{
+typedef std::function<void()> FuncTimer;
 
 struct IProtocolSessionContainer
 {
-    virtual ~IProtocolSessionContainer() {}
+    virtual ~IProtocolSessionContainer()
+    {}
 
     virtual void init(const IExecutorPtr& executor = nullptr, int cycleTime = 100, FuncTimer funcTimer = {}, int checkReconnectInterval = 1000) = 0;
     virtual int bind(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const BindProperties& bindProperties = {}, int contentType = 0) = 0;
     virtual void unbind(const std::string& endpoint) = 0;
     virtual IProtocolSessionPtr connect(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const ConnectProperties& connectProperties = {}, int contentType = 0) = 0;
-//    virtual IProtocolSessionPtr createSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, int contentType = 0) = 0;
+    //    virtual IProtocolSessionPtr createSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, int contentType = 0) = 0;
     virtual IProtocolSessionPtr createSession(hybrid_ptr<IProtocolSessionCallback> callback) = 0;
-    virtual std::vector< IProtocolSessionPtr > getAllSessions() const = 0;
+    virtual std::vector<IProtocolSessionPtr> getAllSessions() const = 0;
     virtual IProtocolSessionPtr getSession(std::int64_t sessionId) const = 0;
     virtual void run() = 0;
     virtual void terminatePollerLoop() = 0;
@@ -52,10 +53,7 @@ struct IProtocolSessionContainer
 
 typedef std::shared_ptr<IProtocolSessionContainer> IProtocolSessionContainerPtr;
 
-
-
 struct IStreamConnectionContainer;
-
 
 class ProtocolBind : public IStreamConnectionCallback
 {
@@ -68,20 +66,16 @@ private:
     virtual void disconnected(const IStreamConnectionPtr& connection) override;
     virtual bool received(const IStreamConnectionPtr& connection, const SocketPtr& socket, int bytesToRead) override;
 
-    const hybrid_ptr<IProtocolSessionCallback>  m_callback;
-    const IExecutorPtr                          m_executor;
-    const IExecutorPtr                          m_executorPollerThread;
-    const IProtocolFactoryPtr                   m_protocolFactory;
-    const std::weak_ptr<IProtocolSessionList>   m_protocolSessionList;
-    const BindProperties                        m_bindProperties;
-    const int                                   m_contentType = 0;
+    const hybrid_ptr<IProtocolSessionCallback> m_callback;
+    const IExecutorPtr m_executor;
+    const IExecutorPtr m_executorPollerThread;
+    const IProtocolFactoryPtr m_protocolFactory;
+    const std::weak_ptr<IProtocolSessionList> m_protocolSessionList;
+    const BindProperties m_bindProperties;
+    const int m_contentType = 0;
 };
 
 typedef std::shared_ptr<ProtocolBind> ProtocolBindPtr;
-
-
-
-
 
 class SYMBOLEXP ProtocolSessionContainer : public IProtocolSessionContainer
 {
@@ -94,23 +88,23 @@ public:
     virtual int bind(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const BindProperties& bindProperties = {}, int contentType = 0) override;
     virtual void unbind(const std::string& endpoint) override;
     virtual IProtocolSessionPtr connect(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const ConnectProperties& connectProperties = {}, int contentType = 0) override;
-//    virtual IProtocolSessionPtr createSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, int contentType = 0) override;
+    //    virtual IProtocolSessionPtr createSession(hybrid_ptr<IProtocolSessionCallback> callback, const IProtocolPtr& protocol, int contentType = 0) override;
     virtual IProtocolSessionPtr createSession(hybrid_ptr<IProtocolSessionCallback> callback) override;
-    virtual std::vector< IProtocolSessionPtr > getAllSessions() const override;
+    virtual std::vector<IProtocolSessionPtr> getAllSessions() const override;
     virtual IProtocolSessionPtr getSession(std::int64_t sessionId) const override;
     virtual void run() override;
     virtual void terminatePollerLoop() override;
     virtual IExecutorPtr getExecutor() const override;
 
 private:
-    IProtocolSessionListPtr                                     m_protocolSessionList;
-    std::unordered_map<std::string,  ProtocolBindPtr>           m_endpoint2Bind;
-    std::shared_ptr<IStreamConnectionContainer>                 m_streamConnectionContainer;
-    int                                                         m_counterTimer = 0;
-    IExecutorPtr                                                m_executor;
-    IExecutorPtr                                                m_executorPollerThread;
-    std::thread                                                 m_thread;
-    mutable std::mutex                                          m_mutex;
+    IProtocolSessionListPtr m_protocolSessionList{};
+    std::unordered_map<std::string, ProtocolBindPtr> m_endpoint2Bind{};
+    std::shared_ptr<IStreamConnectionContainer> m_streamConnectionContainer{};
+    int m_counterTimer = 0;
+    IExecutorPtr m_executor{};
+    IExecutorPtr m_executorPollerThread{};
+    std::thread m_thread{};
+    mutable std::mutex m_mutex{};
 };
 
-}   // namespace finalmq
+} // namespace finalmq
