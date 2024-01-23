@@ -11,10 +11,8 @@ option(FINALMQ_BUILD_DOXYGEN "Enable doxygen" OFF)
 option(FINALMQ_HAS_NOT_WEAK_FROM_THIS "Has weak_from_this" OFF)
 
 if (WIN32)
-#    option(FINALMQ_BUILD_FMQFCGI "Build fmqfcgi" OFF)   # avoid dependency to fcgi for windows
     option(FINALMQ_USE_SSL "Build with openssl" OFF)    # avoid dependency to openssl for windows
 else()
-#    option(FINALMQ_BUILD_FMQFCGI "Build fmqfcgi" ON)
     option(FINALMQ_USE_SSL "Build with openssl" ON)
 endif()
 
@@ -183,10 +181,13 @@ SET(FINALMQ_LIBRARY_SOURCES ${SOURCES}
     ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/Qt/qtdata.fmq.cpp)
 
 add_library(finalmq SHARED ${FINALMQ_LIBRARY_SOURCES})
-#add_library(finalmqStatic STATIC ${FINALMQ_LIBRARY_SOURCES})
 
 target_include_directories(finalmq PUBLIC ${FINALMQ_SOURCE_DIR}/inc)
-#target_include_directories(finalmqStatic PUBLIC ${FINALMQ_SOURCE_DIR}/inc)
+
+
+set_property(TARGET finalmq PROPERTY DISABLE_STATIC_ANALYSIS TRUE)
+#set_property(TARGET finalmq APPEND PROPERTY COMPILE_FLAGS "-w")
+
 
 if (WIN32)
 #    message("== WIN32 ==")
