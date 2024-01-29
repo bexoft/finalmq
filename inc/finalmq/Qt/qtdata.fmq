@@ -3,41 +3,72 @@
 	],
     "namespace":"finalmq.qt",
     "enums": [
-        {"type":"Foo","desc":"","entries":[
-            {"name":"FOO1",      "id":0,     "desc":""},
-            {"name":"FOO2",      "id":1,     "desc":""}
+        {"type":"MethodAccess","desc":"","entries":[
+            {"name":"Private",      "id":0,     "desc":""},
+            {"name":"Protected",    "id":1,     "desc":""},
+            {"name":"Public",       "id":2,     "desc":""}
+        ]},
+        {"type":"MethodType","desc":"","entries":[
+            {"name":"Method",       "id":0,     "desc":""},
+            {"name":"Signal",       "id":1,     "desc":""},
+            {"name":"Slot",         "id":2,     "desc":""},
+            {"name":"Constuctor",   "id":3,     "desc":""}
         ]}
     ],
 
     "structs":[
+        {"type":"Parameter","desc":"","fields":[
+            {"tid":"string",       "type":"",          "name":"name",       "desc":"","flags":[]},
+            {"tid":"string",       "type":"",          "name":"typeName",   "desc":"","flags":[]},
+            {"tid":"int32",        "type":"",          "name":"typeId",     "desc":"","flags":[]}
+         ]},
+        {"type":"Method","desc":"","fields":[
+            {"tid":"string",       "type":"",          "name":"name",       "desc":"","flags":[]},
+            {"tid":"int32",        "type":"",          "name":"index",      "desc":"","flags":[]},
+            {"tid":"enum",         "type":"MethodAccess","name":"access",     "desc":"","flags":[]},
+            {"tid":"enum",         "type":"MethodType","name":"methodType", "desc":"","flags":[]},
+            {"tid":"string",       "type":"",          "name":"signature",  "desc":"","flags":[]},
+            {"tid":"struct",       "type":"Parameter", "name":"returnType", "desc":"","flags":[]},
+            {"tid":"struct[]",     "type":"Parameter", "name":"parameters", "desc":"","flags":[]}
+         ]},
         {"type":"Property","desc":"","fields":[
-            {"tid":"TYPE_STRING",       "type":"",          "name":"name",      "desc":"","flags":[]},
-            {"tid":"TYPE_STRING",       "type":"",          "name":"value",     "desc":"","flags":[]}
+            {"tid":"string",       "type":"",          "name":"name",       "desc":"","flags":[]},
+            {"tid":"string",       "type":"",          "name":"value",      "desc":"","flags":[]}
          ]},
         {"type":"ObjectData","desc":"","fields":[
-            {"tid":"TYPE_ARRAY_STRUCT", "type":"Property",  "name":"properties","desc":"","flags":[]},
-            {"tid":"TYPE_ARRAY_STRUCT", "type":"ObjectData","name":"children","desc":"","flags":[]},
-            {"tid":"TYPE_ARRAY_STRING", "type":"",			"name":"classchain","desc":"","flags":[]}
+            {"tid":"struct[]", "type":"Property",   "name":"properties",    "desc":"","flags":[]},
+            {"tid":"struct[]", "type":"ObjectData", "name":"children",      "desc":"","flags":[]},
+            {"tid":"string[]", "type":"",			"name":"classchain",    "desc":"","flags":[]},
+            {"tid":"struct[]", "type":"Method",     "name":"methods",       "desc":"","flags":[]}
          ]},
 
         {"type":"GetObjectTreeRequest","desc":"","fields":[
          ]},
         {"type":"GetObjectTreeReply","desc":"","fields":[
-            {"tid":"TYPE_STRUCT", "type":"ObjectData","name":"root","desc":"","flags":[]}
+            {"tid":"struct", "type":"ObjectData","name":"root","desc":"","flags":[]}
          ]},
         
+        {"type":"InvokeRequest","desc":"","fields":[
+            {"tid":"string",    "type":"",  "name":"objectName",                "desc":"","flags":[]},
+            {"tid":"string",    "type":"",  "name":"methodNameWithSignature",   "desc":"","flags":[]},
+            {"tid":"string[]",  "type":"",  "name":"parameters",                "desc":"","flags":[]}
+         ]},
+        {"type":"InvokeReply","desc":"","fields":[
+            {"tid":"string", "type":"","name":"returnValue","desc":"","flags":[]}
+         ]},
+
         {"type":"PressButtonRequest","desc":"","fields":[
-            {"tid":"TYPE_STRING",       "type":"",          "name":"objectName",     "desc":"","flags":[]}
+            {"tid":"string",       "type":"",          "name":"objectName",     "desc":"","flags":[]}
          ]},
     
         {"type":"GetScreenshotRequest","desc":"","fields":[
          ]},
         {"type":"GetScreenshotReply","desc":"","fields":[
-            {"tid":"TYPE_BYTES", "type":"","name":"screen","desc":"","flags":[]},
-            {"tid":"TYPE_INT32", "type":"","name":"x","desc":"","flags":[]},
-            {"tid":"TYPE_INT32", "type":"","name":"y","desc":"","flags":[]},
-            {"tid":"TYPE_INT32", "type":"","name":"width","desc":"","flags":[]},
-            {"tid":"TYPE_INT32", "type":"","name":"height","desc":"","flags":[]}
+            {"tid":"bytes", "type":"","name":"screen","desc":"","flags":[]},
+            {"tid":"int32", "type":"","name":"x","desc":"","flags":[]},
+            {"tid":"int32", "type":"","name":"y","desc":"","flags":[]},
+            {"tid":"int32", "type":"","name":"width","desc":"","flags":[]},
+            {"tid":"int32", "type":"","name":"height","desc":"","flags":[]}
         ]}
         
     ]
