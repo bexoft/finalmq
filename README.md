@@ -715,12 +715,12 @@ The request starts with "/entityname/messagetype". As you can see, the message t
 
 The reply consists of two parts (objects) inside a json list. These parts are the header and the message:
 
-	[{<header>},\t{<message>}]\t 
+	[{<header>},\t{<message>}]\t\t 
 
-There is a tab-character between header and message and also at the end of the reply. 
+There is a tab-character between header and message and two tab-characters at the end of the reply. 
 
 Note:
-If you want to separate header and message, because you want to parse header and message separately, then you can remove the first and the last two characters and search for the tab.
+If you want to separate header and message, because you want to parse header and message separately, then you can remove the first and the last three characters and search for the tab.
 
 	{<header>},\t{<message>} 
 
@@ -737,6 +737,7 @@ The header has the following fields:
 | status   | This field is set in case of an error. It is only relevant for replies. |
 | destname | It is only needed for requests: The name of the entity that shall be called |
 | type     | The type of the message                                      |
+| path     | The destination path of the message. Optional for requests.  |
 | corrid   | The correlation ID                                           |
 | meta     | A list of strings. It acts same as HTTP headers. The application can give additional data to the message. The meaning of the strings alternate between key and value. The string at index 0 is a key, its according value is at index 1. So, even indexes are key and odd indexes are values.<br />The meta info can be used for requests and replies. |
 
@@ -1269,20 +1270,20 @@ Now, you will see all the stored TimerEvent(s). And the fmq/poll request will st
 
 All server requests/notifications also from other server-remote-entities that are connected through this session (listening port) will be received by this fmq/poll request. The "srcid" in the header tells the entityId from which server-remote-entity the request/notification is coming. In the ConnectEntityReply message there is the correlation between entityName and entityId.
 
-	[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T14:51:10Z"}]\t	
-	[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T14:51:11Z"}]\t	
-	[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T14:51:12Z"}]\t	
-	[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T14:51:13Z"}]\t	
-	[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T14:51:14Z"}]\t	
-	[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T14:51:15Z"}]\t	
-	[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T14:51:16Z"}]\t	
-	[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T14:51:17Z"}]\t	
-	[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T14:51:18Z"}]\t	
-	[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T14:51:19Z"}]\t	
+	[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T14:51:10Z"}]\t\t	
+	[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T14:51:11Z"}]\t\t	
+	[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T14:51:12Z"}]\t\t	
+	[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T14:51:13Z"}]\t\t	
+	[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T14:51:14Z"}]\t\t	
+	[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T14:51:15Z"}]\t\t	
+	[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T14:51:16Z"}]\t\t	
+	[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T14:51:17Z"}]\t\t	
+	[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T14:51:18Z"}]\t\t	
+	[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T14:51:19Z"}]\t\t	
 
 Notes:
 
-- The tabs are shown as \\t. These tabs can help to separate the requests/notifications. There is no LF (\\n) between the requests. The separator between header and message is ',\\t' and the separator between requests/notifications is ']\\t'. Or when you start counting with 0, every even tab is a separator between header and message and every odd tab is a separator between requests/notifications.
+- The tabs are shown as \\t. These tabs can help to separate the requests/notifications. There is no LF (\\n) between the requests. The separator between header and message is '\\t' and the separator between requests/notifications is '\\t\\t'.
 - In this example, the server is sending a notification/event. This means, no reply is expected by the peer (browser). But when the server sends a request and expects a reply, then there will be a "corrid" in the request's header. In this case the client peer has to send a reply. But it is not common that a server sends a request to a client. Usually a server sends notifications/events to all connected clients.
 
 
@@ -1304,43 +1305,43 @@ The mechanism is similar as the pure chunked transfer, but with the multipart me
 ```json
 --B9BMAhxAhY.mQw1IDRBA
 
-[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T15:29:07Z"}]\t
+[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T15:29:07Z"}]\t\t
 --B9BMAhxAhY.mQw1IDRBA
 
-[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T15:29:08Z"}]\t
+[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T15:29:08Z"}]\t\t
 --B9BMAhxAhY.mQw1IDRBA
 
-[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T15:29:09Z"}]\t
+[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T15:29:09Z"}]\t\t
 --B9BMAhxAhY.mQw1IDRBA
 
-[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T15:29:10Z"}]\t
+[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T15:29:10Z"}]\t\t
 --B9BMAhxAhY.mQw1IDRBA
 
-[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T15:29:11Z"}]\t
+[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T15:29:11Z"}]\t\t
 --B9BMAhxAhY.mQw1IDRBA
 
-[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T15:29:12Z"}]\t
+[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T15:29:12Z"}]\t\t
 --B9BMAhxAhY.mQw1IDRBA
 
-[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T15:29:13Z"}]\t
+[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T15:29:13Z"}]\t\t
 --B9BMAhxAhY.mQw1IDRBA
 
-[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T15:29:14Z"}]\t
+[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T15:29:14Z"}]\t\t
 --B9BMAhxAhY.mQw1IDRBA
 
-[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T15:29:15Z"}]\t
+[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T15:29:15Z"}]\t\t
 --B9BMAhxAhY.mQw1IDRBA
 
-[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T15:29:16Z"}]\t
+[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T15:29:16Z"}]\t\t
 --B9BMAhxAhY.mQw1IDRBA
 
-[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T15:29:17Z"}]\t
+[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T15:29:17Z"}]\t\t
 --B9BMAhxAhY.mQw1IDRBA
 
-[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T15:29:18Z"}]\t
+[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T15:29:18Z"}]\t\t
 --B9BMAhxAhY.mQw1IDRBA
 
-[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T15:29:19Z"}]\t
+[{"srcid":"1","type":"timer.TimerEvent"},\t{"time":"2021-07-04T15:29:19Z"}]\t\t
 --B9BMAhxAhY.mQw1IDRBA--
 
 ```
@@ -1357,7 +1358,7 @@ Notes:
 
 - Please, do not use very long polling requests, because the fmq/poll can also be used as a heartbeat on server side. If a HTTP session on server side does not receive any request, anymore, then the HTTP session will be closed after 5 minutes.
 
-- If you are not polling at all and the number of stored requests/notifications will reach 10000 messages, then the HTTP session will be closed.
+- If you are not polling at all and the number of stored requests/notifications on server side will reach 10000 messages, then the HTTP session will be closed.
 
 - With the following command, you can configure the heartbeat timeout and the maximum number of stored messages:
 
