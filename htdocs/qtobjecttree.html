@@ -1,0 +1,116 @@
+<html>                                                                          
+
+
+<head>                                                                          
+
+<script type="text/javascript" src="json2.js"></script>
+<script type="text/javascript" src="fmq.js"></script>
+
+                                                                                
+<script type="text/javascript" >
+
+//////////////////////////////////////////////////////////////////////
+
+
+var g_fmqSession = new FmqSession();
+var g_fmqQtService = null;
+
+
+
+
+function iterateObjects(obj, level, idParent)
+{
+    var table = '<table>';
+    
+    table += '<tr>';
+    table += '<td>Class Chain</td>';
+    table += '<td>Properties</td>';
+    table += '</tr>';
+    
+    table += '<tr>';
+
+    table += '<td>'
+	for (var i = 0; i < obj.classchain.length; i++)
+    {
+		var className = obj.classchain[i];
+        table += className;
+        table += ' ';
+    }
+    table += '</td>';
+
+    table += '<td>'
+	for (var i = 0; i < obj.properties.length; i++)
+	{
+		var prop = obj.properties[i];
+		table += prop.name + '=' + prop.value+'<br/>';
+	}
+    table += '</td>';
+
+    table += '</tr>';
+    
+    
+}
+
+
+function poll()
+{
+	getObjectTree();
+}
+
+function getObjectTree()
+{
+    g_fmqQtService.requestReply('finalmq.qt.GetObjectTreeRequest', null, function(outparams) {
+        if (outparams.fmqheader.status == 'STATUS_OK')
+        {
+			document.getElementById('root').innerHTML = '';
+            iterateObjects(outparams.root, 0, 'root', null);
+        }
+    });
+}
+
+
+
+function fmqReady()
+{
+	poll();
+	setInterval(poll, 2000);
+}
+
+
+function pageLoad()
+{
+    g_fmqSession.createSession(function() {
+		g_fmqQtService = g_fmqSession.createEntity('QtService');
+        fmqReady();
+    });
+}
+
+function pageUnload()
+{
+    g_fmqSession.removeSession();
+}
+												 
+												 
+</script>                                                                       
+                                                                          
+
+</head>
+
+                                                               
+<body onload="pageLoad()" onunload="pageUnload()">
+
+
+
+
+
+<div style="position:absolute; top:0; left:0; width:100%; height:100%;">
+	<div style="position:absolute; top:0; left:0; width:100%; height:100%;" id="root">
+	</div>	
+</div>
+
+
+</body>
+
+
+</html>
+       

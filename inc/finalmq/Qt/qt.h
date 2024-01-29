@@ -45,6 +45,8 @@ using finalmq::FmqRegistryClient;
 using finalmq::qt::GetObjectTreeRequest;
 using finalmq::qt::GetObjectTreeReply;
 using finalmq::qt::ObjectData;
+using finalmq::qt::InvokeRequest;
+using finalmq::qt::InvokeReply;
 //using finalmq::RawBytes;
 
 
@@ -55,10 +57,113 @@ using finalmq::qt::ObjectData;
 #include <QPushButton>
 #include <QLayout>
 #include <QBuffer>
+//#include <QtCore>
+//#include <QtDebug>
 
 namespace finalmq { namespace qt {
 
-	
+
+    QVariant call(QObject* object, const QString& methodNameWithSignature, const QVariantList& args)
+    {
+        int index = object->metaObject()->indexOfMethod(methodNameWithSignature.toUtf8());
+        QMetaMethod metaMethod = object->metaObject()->method(index);
+
+        // Convert the arguments
+
+        QVariantList converted;
+
+        // We need enough arguments to perform the conversion.
+
+        QList<QByteArray> methodTypes = metaMethod.parameterTypes();
+        if (methodTypes.size() < args.size()) {
+            qWarning() << "Insufficient arguments to call" << metaMethod.methodSignature();
+            return QVariant();
+        }
+
+        for (int i = 0; i < methodTypes.size(); i++) {
+            const QVariant& arg = args.at(i);
+
+            QByteArray methodTypeName = methodTypes.at(i);
+            QByteArray argTypeName = arg.typeName();
+
+            QVariant::Type methodType = QVariant::nameToType(methodTypeName);
+//            QVariant::Type argType = arg.type();
+
+            QVariant copy = QVariant(arg);
+
+            // If the types are not the same, attempt a conversion. If it
+            // fails, we cannot proceed.
+
+            if (copy.type() != methodType) {
+                if (copy.canConvert(methodType)) {
+                    if (!copy.convert(methodType)) {
+                        qWarning() << "Cannot convert" << argTypeName
+                            << "to" << methodTypeName;
+                        return QVariant();
+                    }
+                }
+            }
+
+            converted << copy;
+        }
+
+        QList<QGenericArgument> arguments;
+
+        for (int i = 0; i < converted.size(); i++) {
+
+            // Notice that we have to take a reference to the argument, else 
+            // we'd be pointing to a copy that will be destroyed when this
+            // loop exits. 
+
+            QVariant& argument = converted[i];
+
+            // A const_cast is needed because calling data() would detach
+            // the QVariant.
+
+            QGenericArgument genericArgument(
+                QMetaType::typeName(argument.userType()),
+                const_cast<void*>(argument.constData())
+            );
+
+            arguments << genericArgument;
+        }
+
+        QVariant returnValue(QMetaType::type(metaMethod.typeName()),
+            static_cast<void*>(NULL));
+
+        QGenericReturnArgument returnArgument(
+            metaMethod.typeName(),
+            const_cast<void*>(returnValue.constData())
+        );
+
+        // Perform the call
+
+        bool ok = metaMethod.invoke(
+            object,
+            Qt::DirectConnection,
+            returnArgument,
+            arguments.value(0),
+            arguments.value(1),
+            arguments.value(2),
+            arguments.value(3),
+            arguments.value(4),
+            arguments.value(5),
+            arguments.value(6),
+            arguments.value(7),
+            arguments.value(8),
+            arguments.value(9)
+        );
+
+        if (!ok) {
+            qWarning() << "Calling" << metaMethod.methodSignature() << "failed.";
+            return QVariant();
+        }
+        else {
+            return returnValue;
+        }
+    }
+
+
 
 struct IObjectVisitor
 {
@@ -103,6 +208,10 @@ public:
 private:
     virtual void enterObject(QObject& object, int level) override
     {
+        if (object.objectName().isEmpty())
+        {
+            object.setObjectName(getNextObjectId());
+        }
         ObjectData* objectData = nullptr;
         if (level == 0)
         {
@@ -119,27 +228,8 @@ private:
 
         const QMetaObject* metaobject = object.metaObject();
         
-        int count = metaobject->propertyCount();
-        for (int i = 0; i < count; ++i) {
-            QMetaProperty metaproperty = metaobject->property(i);
-            const char* name = metaproperty.name();
-            QVariant value = object.property(name);
-            QString v = value.toString();
-            if (v.isEmpty())
-            {
-                if (value.canConvert<QRect>())
-                {
-                    QRect rect = value.toRect();
-                    v = "{\"x\":" + QString::number(rect.x()) + ",\"y\":" + QString::number(rect.y()) + ",\"width\":" + QString::number(rect.width()) + ",\"height\":" + QString::number(rect.height()) + "}";
-                }
-                else if (value.canConvert<QSize>())
-                {
-                    QSize size = value.toSize();
-                    v = "{\"width\":" + QString::number(size.width()) + ",\"height\":" + QString::number(size.height()) + "}";
-                }
-            }
-            objectData->properties.push_back({ name, v.toUtf8().toStdString() });
-        }
+        fillProperties(metaobject, object, objectData);
+        fillMethods(metaobject, objectData);
 
         fillClassChain(metaobject, objectData->classchain);
 
@@ -174,6 +264,89 @@ private:
             fillClassChain(superClass, classChain);
         }
     }
+
+    void fillProperties(const QMetaObject* metaobject, const QObject& object, ObjectData* objectData)
+    {
+        int count = metaobject->propertyCount();
+        for (int i = 0; i < count; ++i) {
+            QMetaProperty metaproperty = metaobject->property(i);
+            const char* name = metaproperty.name();
+            QVariant value = object.property(name);
+            QString v = value.toString();
+            if (v.isEmpty())
+            {
+                if (value.canConvert<QRect>())
+                {
+                    QRect rect = value.toRect();
+                    v = "{\"x\":" + QString::number(rect.x()) + ",\"y\":" + QString::number(rect.y()) + ",\"width\":" + QString::number(rect.width()) + ",\"height\":" + QString::number(rect.height()) + "}";
+                }
+                else if (value.canConvert<QSize>())
+                {
+                    QSize size = value.toSize();
+                    v = "{\"width\":" + QString::number(size.width()) + ",\"height\":" + QString::number(size.height()) + "}";
+                }
+            }
+            objectData->properties.push_back({ name, v.toUtf8().toStdString() });
+        }
+    }
+        
+    void fillMethods(const QMetaObject* metaobject, ObjectData* objectData)
+    {
+        int count = metaobject->methodCount();
+        for (int i = 0; i < count; ++i) {
+            QMetaMethod metamethod = metaobject->method(i);
+            Method method;
+            method.name = metamethod.name();
+            method.index = metamethod.methodIndex();
+            method.access = (MethodAccess::Enum)metamethod.access();
+            method.methodType = (MethodType::Enum)metamethod.methodType();
+            method.signature = metamethod.methodSignature();
+            fillParameterType("returnType", metamethod.returnType(), method.returnType);
+            fillParameters(metamethod, method);
+
+            objectData->methods.push_back(std::move(method));
+        }
+    }
+
+    void fillParameters(const QMetaMethod& metamethod, Method& method)
+    {
+        QList<QByteArray> names = metamethod.parameterNames();
+        int count = metamethod.parameterCount();
+        for (int i = 0; i < count; ++i) {
+            Parameter parameter;
+            QString name;
+            if (i < names.size())
+            {
+                name = names[i];
+            }
+            else
+            {
+                name = "param" + QString::number(i);
+            }
+            fillParameterType(name, metamethod.parameterType(i), parameter);
+            method.parameters.push_back(std::move(parameter));
+        }
+    }
+
+    void fillParameterType(const QString& name, int typeId, Parameter& parameter)
+    {
+        parameter.name = name.toStdString();
+        const char* typeName = QMetaType::typeName(typeId);
+        if (typeName != nullptr)
+        {
+            parameter.typeName = typeName;
+        }
+        parameter.typeId = typeId;
+    }
+
+    static QString getNextObjectId()
+    {
+        static std::atomic<std::uint64_t> nextObjectId{};
+        std::uint64_t id = nextObjectId.fetch_add(1);
+        QString strId = "objid_" + QString::number(id);
+        return strId;
+    }
+
 
     std::deque<ObjectData*>     m_stack;
 };
@@ -218,7 +391,34 @@ public:
             // send reply
             requestContext->reply(std::move(reply));
 
-        });
+            });
+
+        registerCommand<InvokeRequest>([](const RequestContextPtr& requestContext, const std::shared_ptr<InvokeRequest>& request) {
+            assert(request);
+
+            InvokeReply reply;
+
+            QVariantList args;
+            for (const auto& parameter : request->parameters)
+            {
+                args.push_back(parameter.c_str());
+            }
+
+            QString objectName = request->objectName.c_str();
+            QString methodNameWithSignature = request->methodNameWithSignature.c_str();
+            QObject* object = QtServer::findObject(objectName);
+            QVariant retVal;
+            if (object)
+            {
+                retVal = call(object, methodNameWithSignature, args);
+            }
+
+            reply.returnValue = retVal.toString().toStdString();
+
+            // send reply
+            requestContext->reply(std::move(reply));
+
+            });
 
         registerCommand<PressButtonRequest>([](const RequestContextPtr& /*requestContext*/, const std::shared_ptr<PressButtonRequest>& request) {
             assert(request);
@@ -277,6 +477,21 @@ public:
         //    qApp->setStyleSheet(css);
         //    qApp->setStyle(new NoFocusRectangleStyle);
         //});
+    }
+
+
+    static QObject* findObject(const QString& objectName)
+    {
+        QWidgetList widgetList = qApp->topLevelWidgets();
+        for (int i = 0; i < widgetList.size(); ++i)
+        {
+            QList<QObject*> list = widgetList[i]->findChildren<QObject*>(objectName, Qt::FindChildrenRecursively);
+            if (!list.isEmpty())
+            {
+                return list[0];
+            }
+        }
+        return nullptr;
     }
 };
 
