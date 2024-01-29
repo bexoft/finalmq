@@ -78,11 +78,11 @@ void RemoteEntityFormatJson::serialize(const IProtocolSessionPtr& session, IMess
 
         serializeData(session, message, structBase);
 
-        message.addSendPayload("]\t", 2);
+        message.addSendPayload("]\t\t", 3);
     }
     else
     {
-        message.addSendPayload(",\t{}]\t", 6);
+        message.addSendPayload(",\t{}]\t\t", 7);
     }
 }
 

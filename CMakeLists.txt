@@ -6,6 +6,7 @@ project(finalmq)
 option(FINALMQ_FETCH_HL7 "Fetches HL7" ON)
 option(FINALMQ_BUILD_EXAMPLES "Build examples" ON)
 option(FINALMQ_BUILD_TESTS "Build tests" OFF)
+option(FINALMQ_BUILD_SERVICES "Build services" OFF)
 option(FINALMQ_BUILD_COVERAGE "Enable gcov" OFF)
 option(FINALMQ_BUILD_DOXYGEN "Enable doxygen" OFF)
 option(FINALMQ_HAS_NOT_WEAK_FROM_THIS "Has weak_from_this" OFF)
@@ -185,10 +186,6 @@ add_library(finalmq SHARED ${FINALMQ_LIBRARY_SOURCES})
 target_include_directories(finalmq PUBLIC ${FINALMQ_SOURCE_DIR}/inc)
 
 
-set_property(TARGET finalmq PROPERTY DISABLE_STATIC_ANALYSIS TRUE)
-#set_property(TARGET finalmq APPEND PROPERTY COMPILE_FLAGS "-w")
-
-
 if (WIN32)
 #    message("== WIN32 ==")
     set(LINKLIBS ${LINKLIBS} wsock32 ws2_32 Rpcrt4)
@@ -233,7 +230,9 @@ install(DIRECTORY ${CODEGENERATOR} DESTINATION lib/finalmq)
 
 
 
-add_subdirectory(services)
+if (FINALMQ_BUILD_SERVICES)
+    add_subdirectory(services)
+endif()
 
 
 if (FINALMQ_BUILD_TESTS)
