@@ -31,7 +31,7 @@ namespace finalmq
             Debug.Assert(m_structVarValue != null);
             if (m_fieldStruct == null)
             {
-                m_fieldStruct = m_structVarValue.GetFieldByName("vallist");
+                m_fieldStruct = m_structVarValue.GetFieldByName("valstruct");
             }
             MetaField? fieldStruct = m_fieldStruct;
             Debug.Assert(fieldStruct != null);
@@ -43,9 +43,28 @@ namespace finalmq
             MetaField? fieldStructWithoutArray = m_fieldStructWithoutArray;
             Debug.Assert(fieldStructWithoutArray != null);
 
+            if (m_fieldList == null)
+            {
+                m_fieldList = m_structVarValue.GetFieldByName("vallist");
+            }
+            MetaField? fieldList = m_fieldList;
+            Debug.Assert(fieldList != null);
+
+            if (m_fieldListWithoutArray == null)
+            {
+                m_fieldListWithoutArray = fieldList.FieldWithoutArray;
+            }
+            MetaField? fieldListWithoutArray = m_fieldListWithoutArray;
+            Debug.Assert(fieldListWithoutArray != null);
+
+            MetaField? field = (type == VariantValueStruct.VARTYPE_STRUCT) ? fieldStruct : fieldList;
+            Debug.Assert(field != null);
+            MetaField? fieldWithoutArray = field.FieldWithoutArray;
+            Debug.Assert(fieldWithoutArray != null);
+
             if (level > 0)
             {
-                m_visitor.EnterStruct(fieldStructWithoutArray);
+                m_visitor.EnterStruct(fieldWithoutArray);
             }
 
             if (name.Length != 0)
@@ -59,17 +78,13 @@ namespace finalmq
                 m_visitor.EnterString(fieldName, name);
             }
 
-            if (m_fieldType == null)
-            {
-                m_fieldType = m_structVarValue.GetFieldByName("type");
-            }
-            MetaField? fieldType = m_fieldType;
-            Debug.Assert(fieldType != null);
-            m_visitor.EnterEnum(fieldType, type);
+            MetaField? fieldIndex = m_structVarValue.GetFieldByName("index");
+            Debug.Assert(fieldIndex != null);
 
             switch (type)
             {
                 case (int)MetaTypeId.TYPE_NONE:
+                    m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_NONE);
                     break;
                 case (int)MetaTypeId.TYPE_BOOL:
                     {
@@ -80,6 +95,7 @@ namespace finalmq
                         MetaField? fieldBool = m_fieldBool;
                         Debug.Assert(fieldBool != null);
                         bool data = variant;
+                        m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_BOOL);
                         m_visitor.EnterBool(fieldBool, data);
                     }
                     break;
@@ -92,6 +108,7 @@ namespace finalmq
                         MetaField? fieldInt8 = m_fieldInt8;
                         Debug.Assert(fieldInt8 != null);
                         sbyte data = variant;
+                        m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_INT8);
                         m_visitor.EnterInt8(fieldInt8, data);
                     }
                     break;
@@ -104,6 +121,7 @@ namespace finalmq
                         MetaField? fieldUInt8 = m_fieldUInt8;
                         Debug.Assert(fieldUInt8 != null);
                         byte data = variant;
+                        m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_UINT8);
                         m_visitor.EnterUInt8(fieldUInt8, data);
                     }
                     break;
@@ -116,6 +134,7 @@ namespace finalmq
                         MetaField? fieldInt16 = m_fieldInt16;
                         Debug.Assert(fieldInt16 != null);
                         short data = variant;
+                        m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_INT16);
                         m_visitor.EnterInt16(fieldInt16, data);
                     }
                     break;
@@ -128,6 +147,7 @@ namespace finalmq
                         MetaField? fieldUInt16 = m_fieldUInt16;
                         Debug.Assert(fieldUInt16 != null);
                         ushort data = variant;
+                        m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_UINT16);
                         m_visitor.EnterUInt16(fieldUInt16, data);
                     }
                     break;
@@ -140,6 +160,7 @@ namespace finalmq
                         MetaField? fieldInt32 = m_fieldInt32;
                         Debug.Assert(fieldInt32 != null);
                         int data = variant;
+                        m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_INT32);
                         m_visitor.EnterInt32(fieldInt32, data);
                     }
                     break;
@@ -152,6 +173,7 @@ namespace finalmq
                         MetaField? fieldUInt32 = m_fieldUInt32;
                         Debug.Assert(fieldUInt32 != null);
                         uint data = variant;
+                        m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_UINT32);
                         m_visitor.EnterUInt32(fieldUInt32, data);
                     }
                     break;
@@ -164,6 +186,7 @@ namespace finalmq
                         MetaField? fieldInt64 = m_fieldInt64;
                         Debug.Assert(fieldInt64 != null);
                         long data = variant;
+                        m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_INT64);
                         m_visitor.EnterInt64(fieldInt64, data);
                     }
                     break;
@@ -176,6 +199,7 @@ namespace finalmq
                         MetaField? fieldUInt64 = m_fieldUInt64;
                         Debug.Assert(fieldUInt64 != null);
                         ulong data = variant;
+                        m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_UINT64);
                         m_visitor.EnterUInt64(fieldUInt64, data);
                     }
                     break;
@@ -188,6 +212,7 @@ namespace finalmq
                         MetaField? fieldFloat = m_fieldFloat;
                         Debug.Assert(fieldFloat != null);
                         float data = variant;
+                        m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_FLOAT);
                         m_visitor.EnterFloat(fieldFloat, data);
                     }
                     break;
@@ -200,6 +225,7 @@ namespace finalmq
                         MetaField? fieldDouble = m_fieldDouble;
                         Debug.Assert(fieldDouble != null);
                         double data = variant;
+                        m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_DOUBLE);
                         m_visitor.EnterDouble(fieldDouble, data);
                     }
                     break;
@@ -212,6 +238,7 @@ namespace finalmq
                         MetaField? fieldString = m_fieldString;
                         Debug.Assert(fieldString != null);
                         string data = variant;
+                        m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_STRING);
                         m_visitor.EnterString(fieldString, data);
                     }
                     break;
@@ -224,6 +251,7 @@ namespace finalmq
                         MetaField? fieldBytes = m_fieldBytes;
                         Debug.Assert(fieldBytes != null);
                         byte[] data = variant;
+                        m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_BYTES);
                         m_visitor.EnterBytes(fieldBytes, data, 0, data.Length);
                     }
                     break;
@@ -237,6 +265,7 @@ namespace finalmq
                         MetaField? fieldArrayBool = m_fieldArrayBool;
                         Debug.Assert(fieldArrayBool != null);
                         bool[] data = variant;
+                        m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_ARRAY_BOOL);
                         m_visitor.EnterArrayBool(fieldArrayBool, data);
                     }
                     break;
@@ -249,6 +278,7 @@ namespace finalmq
                         MetaField? fieldArrayInt8 = m_fieldArrayInt8;
                         Debug.Assert(fieldArrayInt8 != null);
                         sbyte[] data = variant;
+                        m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_ARRAY_INT8);
                         m_visitor.EnterArrayInt8(fieldArrayInt8, data);
                     }
                     break;
@@ -261,6 +291,7 @@ namespace finalmq
                         MetaField? fieldArrayInt16 = m_fieldArrayInt16;
                         Debug.Assert(fieldArrayInt16 != null);
                         short[] data = variant;
+                        m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_ARRAY_INT16);
                         m_visitor.EnterArrayInt16(fieldArrayInt16, data);
                     }
                     break;
@@ -273,6 +304,7 @@ namespace finalmq
                         MetaField? fieldArrayUInt16 = m_fieldArrayUInt16;
                         Debug.Assert(fieldArrayUInt16 != null);
                         ushort[] data = variant;
+                        m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_ARRAY_UINT16);
                         m_visitor.EnterArrayUInt16(fieldArrayUInt16, data);
                     }
                     break;
@@ -285,6 +317,7 @@ namespace finalmq
                         MetaField? fieldArrayInt32 = m_fieldArrayInt32;
                         Debug.Assert(fieldArrayInt32 != null);
                         int[] data = variant;
+                        m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_ARRAY_INT32);
                         m_visitor.EnterArrayInt32(fieldArrayInt32, data);
                     }
                     break;
@@ -297,6 +330,7 @@ namespace finalmq
                         MetaField? fieldArrayUInt32 = m_fieldArrayUInt32;
                         Debug.Assert(fieldArrayUInt32 != null);
                         uint[] data = variant;
+                        m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_ARRAY_UINT32);
                         m_visitor.EnterArrayUInt32(fieldArrayUInt32, data);
                     }
                     break;
@@ -309,6 +343,7 @@ namespace finalmq
                         MetaField? fieldArrayInt64 = m_fieldArrayInt64;
                         Debug.Assert(fieldArrayInt64 != null);
                         long[] data = variant;
+                        m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_ARRAY_INT64);
                         m_visitor.EnterArrayInt64(fieldArrayInt64, data);
                     }
                     break;
@@ -321,6 +356,7 @@ namespace finalmq
                         MetaField? fieldArrayUInt64 = m_fieldArrayUInt64;
                         Debug.Assert(fieldArrayUInt64 != null);
                         ulong[] data = variant;
+                        m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_ARRAY_UINT64);
                         m_visitor.EnterArrayUInt64(fieldArrayUInt64, data);
                     }
                     break;
@@ -333,6 +369,7 @@ namespace finalmq
                         MetaField? fieldArrayFloat = m_fieldArrayFloat;
                         Debug.Assert(fieldArrayFloat != null);
                         float[] data = variant;
+                        m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_ARRAY_FLOAT);
                         m_visitor.EnterArrayFloat(fieldArrayFloat, data);
                     }
                     break;
@@ -345,6 +382,7 @@ namespace finalmq
                         MetaField? fieldArrayDouble = m_fieldArrayDouble;
                         Debug.Assert(fieldArrayDouble != null);
                         double[] data = variant;
+                        m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_ARRAY_DOUBLE);
                         m_visitor.EnterArrayDouble(fieldArrayDouble, data);
                     }
                     break;
@@ -357,6 +395,7 @@ namespace finalmq
                         MetaField? fieldArrayString = m_fieldArrayString;
                         Debug.Assert(fieldArrayString != null);
                         IList<string> data = variant.GetData<IList<string>>();
+                        m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_ARRAY_STRING);
                         m_visitor.EnterArrayString(fieldArrayString, data);
                     }
                     break;
@@ -369,6 +408,7 @@ namespace finalmq
                         MetaField? fieldArrayBytes = m_fieldArrayBytes;
                         Debug.Assert(fieldArrayBytes != null);
                         IList<byte[]> data = variant.GetData<IList<byte[]>>();
+                        m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_ARRAY_BYTES);
                         m_visitor.EnterArrayBytes(fieldArrayBytes, data);
                     }
                     break;
@@ -376,11 +416,26 @@ namespace finalmq
 
             if (level > 0)
             {
-                m_visitor.ExitStruct(fieldStructWithoutArray);
+                m_visitor.ExitStruct(fieldWithoutArray);
             }
         }
         public void EnterStruct(Variant variant, int type, int index, int level, int size, string name)
         {
+            if (m_fieldStruct == null)
+            {
+                Debug.Assert(m_structVarValue != null);
+                m_fieldList = m_structVarValue.GetFieldByName("valstruct");
+            }
+            MetaField? fieldStruct = m_fieldStruct;
+            Debug.Assert(fieldStruct != null);
+
+            if (m_fieldStructWithoutArray == null)
+            {
+                m_fieldStructWithoutArray = fieldStruct.FieldWithoutArray;
+            }
+            MetaField? fieldStructWithoutArray = m_fieldStructWithoutArray;
+            Debug.Assert(fieldStructWithoutArray != null);
+
             if (m_fieldList == null)
             {
                 Debug.Assert(m_structVarValue != null);
@@ -396,16 +451,21 @@ namespace finalmq
             MetaField? fieldListWithoutArray = m_fieldListWithoutArray;
             Debug.Assert(fieldListWithoutArray != null);
 
+            MetaField? field = (type == VariantValueStruct.VARTYPE_STRUCT) ? fieldStruct : fieldList;
+            Debug.Assert(field != null);
+            MetaField? fieldWithoutArray = field.FieldWithoutArray;
+            Debug.Assert(fieldWithoutArray != null);
+
             if (level > 0)
             {
-                m_visitor.EnterStruct(fieldListWithoutArray);
+                m_visitor.EnterStruct(fieldWithoutArray);
             }
 
+            Debug.Assert(m_structVarValue != null);
             if (name.Length != 0)
             {
                 if (m_fieldName == null)
                 {
-                    Debug.Assert(m_structVarValue != null);
                     m_fieldName = m_structVarValue.GetFieldByName("name");
                 }
                 MetaField? fieldName = m_fieldName;
@@ -413,19 +473,36 @@ namespace finalmq
                 m_visitor.EnterString(fieldName, name);
             }
 
-            if (m_fieldType == null)
-            {
-                Debug.Assert(m_structVarValue != null);
-                m_fieldType = m_structVarValue.GetFieldByName("type");
-            }
-            MetaField? fieldType = m_fieldType;
-            Debug.Assert(fieldType != null);
-            m_visitor.EnterEnum(fieldType, type);
+            MetaField? fieldIndex = m_structVarValue.GetFieldByName("index");
+            Debug.Assert(fieldIndex != null);
 
-            m_visitor.EnterArrayStruct(fieldList);
+            if (type == VariantValueStruct.VARTYPE_STRUCT)
+            {
+                m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_VARIANTSTRUCT);
+            }
+            else
+            {
+                m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_VARIANTLIST);
+            }
+            m_visitor.EnterArrayStruct(field);
         }
         public void ExitStruct(Variant variant, int type, int index, int level, int size, string name)
         {
+            if (m_fieldStruct == null)
+            {
+                Debug.Assert(m_structVarValue != null);
+                m_fieldList = m_structVarValue.GetFieldByName("valstruct");
+            }
+            MetaField? fieldStruct = m_fieldStruct;
+            Debug.Assert(fieldStruct != null);
+
+            if (m_fieldStructWithoutArray == null)
+            {
+                m_fieldStructWithoutArray = fieldStruct.FieldWithoutArray;
+            }
+            MetaField? fieldStructWithoutArray = m_fieldStructWithoutArray;
+            Debug.Assert(fieldStructWithoutArray != null);
+
             if (m_fieldList == null)
             {
                 Debug.Assert(m_structVarValue != null);
@@ -434,8 +511,6 @@ namespace finalmq
             MetaField? fieldList = m_fieldList;
             Debug.Assert(fieldList != null);
 
-            m_visitor.ExitArrayStruct(fieldList);
-
             if (m_fieldListWithoutArray == null)
             {
                 m_fieldListWithoutArray = fieldList.FieldWithoutArray;
@@ -443,9 +518,14 @@ namespace finalmq
             MetaField? fieldListWithoutArray = m_fieldListWithoutArray;
             Debug.Assert(fieldListWithoutArray != null);
 
+            MetaField? field = (type == VariantValueStruct.VARTYPE_STRUCT) ? fieldStruct : fieldList;
+            Debug.Assert(field != null);
+            MetaField? fieldWithoutArray = field.FieldWithoutArray;
+            Debug.Assert(fieldWithoutArray != null);
+
             if (level > 0)
             {
-                m_visitor.ExitStruct(fieldListWithoutArray);
+                m_visitor.ExitStruct(fieldWithoutArray);
             }
         }
         public void EnterList(Variant variant, int type, int index, int level, int size, string name)

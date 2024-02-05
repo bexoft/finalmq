@@ -30,7 +30,8 @@ namespace finalmq
         METAFLAG_PROTO_VARINT = 1,
         METAFLAG_PROTO_ZIGZAG = 2,
         METAFLAG_NULLABLE = 4,
-        METAFLAG_ONE_REQUIRED = 8,
+        METAFLAG_ONE_REQUIRED = 8,    // only for array of struct
+        METAFLAG_INDEX = 16,
     };
 
     public class MetaField
@@ -53,7 +54,7 @@ namespace finalmq
                 m_attrs = new string[0];
             }
 
-            m_properties = generateProperties(m_attrs);
+            m_properties = GenerateProperties(m_attrs);
 
             m_index = index;
             MetaTypeId tId = typeId & ~MetaTypeId.OFFSET_ARRAY_FLAG;
@@ -90,13 +91,22 @@ namespace finalmq
             set { m_fieldWithoutArray = value; }
         }
 
+        string? GetProperty(string key, string? defaultValue = null)
+        {
+            if (m_properties.TryGetValue(key, out string? value))
+            {
+                return defaultValue;
+            }
+            return value;
+        }
+
         static string RemoveNamespace(string typeName)
         {
             int pos = typeName.LastIndexOf('.') + 1;
             return typeName.Substring(pos, typeName.Length - pos);
         }
 
-        private static IDictionary<string, string> generateProperties(string[] attrs)
+        private static IDictionary<string, string> GenerateProperties(string[] attrs)
         {
             IDictionary<string, string> properties = new Dictionary<string, string>();
             foreach (string attr in attrs)
