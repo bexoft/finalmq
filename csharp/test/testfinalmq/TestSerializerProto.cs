@@ -341,7 +341,7 @@ namespace testfinalmq
         {
             m_serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestVariant")!);
             m_serializer.EnterStruct(m_fieldValue);
-            m_serializer.EnterEnum(m_fieldType, (int)finalmq.variant.VarTypeId.T_NONE);
+            m_serializer.EnterEnum(m_fieldType, (int)VarValueType2Index.VARVALUETYPE_NONE);
             m_serializer.ExitStruct(m_fieldValue);
             m_serializer.Finished();
 
@@ -372,7 +372,7 @@ namespace testfinalmq
             var root = Fmq.Test.TestVariant.Parser.ParseFrom(m_data, 0, m_size);
             var cmp = new Fmq.Test.TestVariant
             {
-                Value = new Fmq.Finalmq.Variant.VarValue { Type = Fmq.Finalmq.Variant.VarTypeId.TInt32, Valint32 = VALUE },
+                Value = new Fmq.Finalmq.Variant.VarValue { Index = (int)VarValueType2Index.VARVALUETYPE_INT32, Valint32 = VALUE },
                 ValueInt32 = 0,
                 Value2 = null
             };
@@ -400,21 +400,21 @@ namespace testfinalmq
             // VariantStruct{ {"value", VariantStruct{
             m_serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestVariant")!);
             m_serializer.EnterStruct(fieldValue);
-            m_serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_STRUCT);
+            m_serializer.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_VARIANTSTRUCT);
             m_serializer.EnterArrayStruct(fieldList);
             // {"key1", VariantList{
             m_serializer.EnterStruct(fieldListWithoutArray);
             m_serializer.EnterString(fieldName, "key1");
-            m_serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_LIST);
+            m_serializer.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_VARIANTLIST);
             m_serializer.EnterArrayStruct(fieldList);
             // 2
             m_serializer.EnterStruct(fieldListWithoutArray);
-            m_serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_INT32);
+            m_serializer.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_INT32);
             m_serializer.EnterInt32(fieldInt32, 2);
             m_serializer.ExitStruct(fieldListWithoutArray);
             // , std::string("Hello")
             m_serializer.EnterStruct(fieldListWithoutArray);
-            m_serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_STRING);
+            m_serializer.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_STRING);
             m_serializer.EnterString(fieldString, "Hello");
             m_serializer.ExitStruct(fieldListWithoutArray);
             // }
@@ -424,18 +424,18 @@ namespace testfinalmq
             // {"key2", VariantStruct{
             m_serializer.EnterStruct(fieldListWithoutArray);
             m_serializer.EnterString(fieldName, "key2");
-            m_serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_STRUCT);
+            m_serializer.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_VARIANTSTRUCT);
             m_serializer.EnterArrayStruct(fieldList);
             // {"a", 3},
             m_serializer.EnterStruct(fieldListWithoutArray);
             m_serializer.EnterString(fieldName, "a");
-            m_serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_INT32);
+            m_serializer.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_INT32);
             m_serializer.EnterInt32(fieldInt32, 3);
             m_serializer.ExitStruct(fieldListWithoutArray);
             // {"b", std::string("Hi")}
             m_serializer.EnterStruct(fieldListWithoutArray);
             m_serializer.EnterString(fieldName, "b");
-            m_serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_STRING);
+            m_serializer.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_STRING);
             m_serializer.EnterString(fieldString, "Hi");
             m_serializer.ExitStruct(fieldListWithoutArray);
             // }
@@ -445,7 +445,7 @@ namespace testfinalmq
             // {
             m_serializer.EnterStruct(fieldListWithoutArray);
             m_serializer.EnterString(fieldName, "key3");
-            m_serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_NONE);
+            m_serializer.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_NONE);
             m_serializer.ExitStruct(fieldListWithoutArray);
             // }}
             m_serializer.ExitArrayStruct(fieldList);
@@ -457,15 +457,15 @@ namespace testfinalmq
             {
                 Value = new Fmq.Finalmq.Variant.VarValue
                 {
-                    Type = Fmq.Finalmq.Variant.VarTypeId.TStruct,
+                    Index = (int)VarValueType2Index.VARVALUETYPE_VARIANTSTRUCT,
                     Vallist = {
-                                                                new Fmq.Finalmq.Variant.VarValue {Name = "key1", Type = Fmq.Finalmq.Variant.VarTypeId.TList,
-                                                                    Vallist = { new Fmq.Finalmq.Variant.VarValue {Type = Fmq.Finalmq.Variant.VarTypeId.TInt32, Valint32 = 2},
-                                                                                new Fmq.Finalmq.Variant.VarValue {Type = Fmq.Finalmq.Variant.VarTypeId.TString, Valstring = "Hello" } } },
-                                                                new Fmq.Finalmq.Variant.VarValue {Name = "key2", Type = Fmq.Finalmq.Variant.VarTypeId.TStruct,
-                                                                    Vallist = { new Fmq.Finalmq.Variant.VarValue {Name = "a", Type = Fmq.Finalmq.Variant.VarTypeId.TInt32, Valint32 = 3},
-                                                                                new Fmq.Finalmq.Variant.VarValue {Name = "b", Type = Fmq.Finalmq.Variant.VarTypeId.TString, Valstring = "Hi"    } } },
-                                                                new Fmq.Finalmq.Variant.VarValue {Name = "key3", Type = Fmq.Finalmq.Variant.VarTypeId.TNone }
+                                                                new Fmq.Finalmq.Variant.VarValue {Name = "key1", Index = (int)VarValueType2Index.VARVALUETYPE_VARIANTLIST,
+                                                                    Vallist = { new Fmq.Finalmq.Variant.VarValue {Index = (int)VarValueType2Index.VARVALUETYPE_INT32, Valint32 = 2},
+                                                                                new Fmq.Finalmq.Variant.VarValue {Index = (int)VarValueType2Index.VARVALUETYPE_STRING, Valstring = "Hello" } } },
+                                                                new Fmq.Finalmq.Variant.VarValue {Name = "key2", Index = (int)VarValueType2Index.VARVALUETYPE_VARIANTSTRUCT,
+                                                                    Vallist = { new Fmq.Finalmq.Variant.VarValue {Name = "a", Index = (int)VarValueType2Index.VARVALUETYPE_INT32, Valint32 = 3},
+                                                                                new Fmq.Finalmq.Variant.VarValue {Name = "b", Index = (int)VarValueType2Index.VARVALUETYPE_STRING, Valstring = "Hi"    } } },
+                                                                new Fmq.Finalmq.Variant.VarValue {Name = "key3", Index = (int)VarValueType2Index.VARVALUETYPE_NONE }
                                                     }
                 },
                 ValueInt32 = 0,

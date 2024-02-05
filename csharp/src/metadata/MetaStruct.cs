@@ -50,7 +50,7 @@ namespace finalmq
                 m_attrs = new string[0];
             }
 
-            m_properties = generateProperties(m_attrs);
+            m_properties = GenerateProperties(m_attrs);
 
             foreach (var field in fields)
             {
@@ -112,13 +112,22 @@ namespace finalmq
         public string[] Attributes { get { return m_attrs; } }
         public IDictionary<string, string> Properties { get { return m_properties; } }
 
+        string? GetProperty(string key, string? defaultValue = null)
+        {
+            if (m_properties.TryGetValue(key, out string? value))
+            {
+                return defaultValue;
+            }
+            return value;
+        }
+
         static string RemoveNamespace(string typeName)
         {
             int pos = typeName.LastIndexOf('.') + 1;
             return typeName.Substring(pos, typeName.Length - pos);
         }
 
-        private static IDictionary<string, string> generateProperties(string[] attrs)
+        private static IDictionary<string, string> GenerateProperties(string[] attrs)
         {
             IDictionary<string, string> properties = new Dictionary<string, string>();
             foreach (string attr in attrs)

@@ -66,6 +66,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
     const MetaField* field = (type == VARTYPE_STRUCT) ? fieldStruct : fieldList;
     assert(field);
     const MetaField* fieldWithoutArray = field->fieldWithoutArray;
+    assert(fieldWithoutArray);
 
     if (level > 0)
     {
@@ -355,6 +356,7 @@ void VariantToVarValue::enterStruct(Variant& /*variant*/, int type, ssize_t /*in
     const MetaField* field = (type == VARTYPE_STRUCT) ? fieldStruct : fieldList;
     assert(field);
     const MetaField* fieldWithoutArray = field->fieldWithoutArray;
+    assert(fieldWithoutArray);
 
     if (level > 0)
     {

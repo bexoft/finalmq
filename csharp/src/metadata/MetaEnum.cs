@@ -47,10 +47,22 @@ namespace finalmq
 
     public class MetaEnum
     {
-        public MetaEnum(string typeName, string description, IList<MetaEnumEntry> entries)
+        public MetaEnum(string typeName, string description, string[]? attrs, IList<MetaEnumEntry> entries)
         {
             m_typeName = typeName;
             m_description = description;
+
+            if (attrs != null)
+            {
+                m_attrs = attrs;
+            }
+            else
+            {
+                m_attrs = new string[0];
+            }
+
+            m_properties = GenerateProperties(m_attrs);
+
             foreach (var entry in entries)
             {
                 AddEntry(entry);
@@ -186,8 +198,43 @@ namespace finalmq
             get { return m_entries.Count; }
         }
 
+        string? GetProperty(string key, string? defaultValue = null)
+        {
+            if (m_properties.TryGetValue(key, out string? value))
+            {
+                return defaultValue;
+            }
+            return value;
+        }
+
+        private static IDictionary<string, string> GenerateProperties(string[] attrs)
+        {
+            IDictionary<string, string> properties = new Dictionary<string, string>();
+            foreach (string attr in attrs)
+            {
+                string[] props = attr.Split(',');
+                foreach (string prop in props)
+                {
+                    int ix = prop.IndexOf(':');
+                    if (ix != -1)
+                    {
+                        string key = prop.Substring(0, ix);
+                        string value = prop.Substring(ix + 1);
+                        properties[key] = value;
+                    }
+                    else
+                    {
+                        properties[prop] = "";
+                    }
+                }
+            }
+            return properties;
+        }
+
         string m_typeName;
         string m_description;
+        readonly string[] m_attrs;              ///< attributes of the parameter
+        readonly IDictionary<string, string> m_properties; ///< properties of the parameter
         readonly IList<MetaEnumEntry> m_entries = new List<MetaEnumEntry>();
         readonly IDictionary<int, MetaEnumEntry> m_id2Entry = new Dictionary<int, MetaEnumEntry>();
         readonly IDictionary<string, MetaEnumEntry> m_name2Entry = new Dictionary<string, MetaEnumEntry>();

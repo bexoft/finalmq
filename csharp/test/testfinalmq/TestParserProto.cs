@@ -27,9 +27,11 @@ namespace testfinalmq
         MetaField? m_fieldValue2 = null;
         MetaField? m_fieldValueInt32 = null;
         MetaField? m_fieldName = null;
-        MetaField? m_fieldType = null;
+        MetaField? m_fieldIndex = null;
         MetaField? m_fieldInt32 = null;
         MetaField? m_fieldString = null;
+        MetaField? m_fieldStruct = null;
+        MetaField? m_fieldStructWithoutArray = null;
         MetaField? m_fieldList = null;
         MetaField? m_fieldListWithoutArray = null;
 
@@ -50,16 +52,20 @@ namespace testfinalmq
             Debug.Assert(structVarVariant != null);
 
             m_fieldName = structVarVariant.GetFieldByName("name");
-            m_fieldType = structVarVariant.GetFieldByName("type");
+            m_fieldIndex = structVarVariant.GetFieldByName("index");
             m_fieldInt32 = structVarVariant.GetFieldByName("valint32");
             m_fieldString = structVarVariant.GetFieldByName("valstring");
+            m_fieldStruct = structVarVariant.GetFieldByName("valstruct");
             m_fieldList = structVarVariant.GetFieldByName("vallist");
             m_fieldListWithoutArray = MetaDataGlobal.Instance.GetArrayField(m_fieldList!);
+            m_fieldStructWithoutArray = MetaDataGlobal.Instance.GetArrayField(m_fieldStruct!);
 
             Debug.Assert(m_fieldName != null);
-            Debug.Assert(m_fieldType != null);
+            Debug.Assert(m_fieldIndex != null);
             Debug.Assert(m_fieldInt32 != null);
             Debug.Assert(m_fieldString != null);
+            Debug.Assert(m_fieldStruct != null);
+            Debug.Assert(m_fieldStructWithoutArray != null);
             Debug.Assert(m_fieldList != null);
             Debug.Assert(m_fieldListWithoutArray != null);
         }
@@ -530,7 +536,7 @@ namespace testfinalmq
                     Debug.Assert(v == VALUE_STRING);
                 });
 
-            var root = new Fmq.Test.TestVariant { Value = new Fmq.Finalmq.Variant.VarValue { Type = Fmq.Finalmq.Variant.VarTypeId.TString, Valstring = VALUE_STRING }, 
+            var root = new Fmq.Test.TestVariant { Value = new Fmq.Finalmq.Variant.VarValue { Index = (int)VarValueType2Index.VARVALUETYPE_STRING, Valstring = VALUE_STRING }, 
                                                   ValueInt32 = 0, 
                                                   Value2 = new Fmq.Finalmq.Variant.VarValue() };
             ParserProto parser = new ParserProto(mockVisitor.Object, root.ToByteArray());
@@ -539,7 +545,7 @@ namespace testfinalmq
 
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Once);
             mockVisitor.Verify(x => x.EnterStruct(m_fieldValue!), Times.Once);
-            mockVisitor.Verify(x => x.EnterEnum(m_fieldType!, (int)finalmq.variant.VarTypeId.T_STRING), Times.Exactly(1));
+            mockVisitor.Verify(x => x.EnterInt32(m_fieldIndex!, (int)VarValueType2Index.VARVALUETYPE_STRING), Times.Exactly(1));
             mockVisitor.Verify(x => x.EnterString(m_fieldString!, It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>()), Times.Once);
             mockVisitor.Verify(x => x.ExitStruct(m_fieldValue!), Times.Once);
 
@@ -555,14 +561,14 @@ namespace testfinalmq
             Mock<IParserVisitor> mockVisitor = new Mock<IParserVisitor>();
 
             var root = new Fmq.Test.TestVariant {
-                                                    Value = new Fmq.Finalmq.Variant.VarValue { Type = Fmq.Finalmq.Variant.VarTypeId.TStruct, Vallist = {
-                                                                new Fmq.Finalmq.Variant.VarValue {Name = "key1_x", Type = Fmq.Finalmq.Variant.VarTypeId.TList,
-                                                                    Vallist = { new Fmq.Finalmq.Variant.VarValue {            Type = Fmq.Finalmq.Variant.VarTypeId.TInt32, Valint32 = 2},
-                                                                        new Fmq.Finalmq.Variant.VarValue {            Type = Fmq.Finalmq.Variant.VarTypeId.TString, Valstring = "Hello" } } },
-                                                                new Fmq.Finalmq.Variant.VarValue {Name = "key2_xx", Type = Fmq.Finalmq.Variant.VarTypeId.TStruct,
-                                                                    Vallist = { new Fmq.Finalmq.Variant.VarValue {Name = "a", Type = Fmq.Finalmq.Variant.VarTypeId.TInt32, Valint32 = 3},
-                                                                        new Fmq.Finalmq.Variant.VarValue {Name = "bb", Type = Fmq.Finalmq.Variant.VarTypeId.TString, Valstring = "Hi"    } } },
-                                                                new Fmq.Finalmq.Variant.VarValue {Name = "key3_xxx", Type = Fmq.Finalmq.Variant.VarTypeId.TNone }
+                                                    Value = new Fmq.Finalmq.Variant.VarValue { Index = (int)VarValueType2Index.VARVALUETYPE_VARIANTSTRUCT, Vallist = {
+                                                                new Fmq.Finalmq.Variant.VarValue {Name = "key1_x", Index = (int)VarValueType2Index.VARVALUETYPE_VARIANTLIST,
+                                                                    Vallist = { new Fmq.Finalmq.Variant.VarValue {            Index = (int)VarValueType2Index.VARVALUETYPE_INT32, Valint32 = 2},
+                                                                        new Fmq.Finalmq.Variant.VarValue {            Index = (int)VarValueType2Index.VARVALUETYPE_STRING, Valstring = "Hello" } } },
+                                                                new Fmq.Finalmq.Variant.VarValue {Name = "key2_xx", Index = (int)VarValueType2Index.VARVALUETYPE_VARIANTSTRUCT,
+                                                                    Vallist = { new Fmq.Finalmq.Variant.VarValue {Name = "a", Index = (int)VarValueType2Index.VARVALUETYPE_INT32, Valint32 = 3},
+                                                                        new Fmq.Finalmq.Variant.VarValue {Name = "bb", Index = (int)VarValueType2Index.VARVALUETYPE_STRING, Valstring = "Hi"    } } },
+                                                                new Fmq.Finalmq.Variant.VarValue {Name = "key3_xxx", Index = (int)VarValueType2Index.VARVALUETYPE_NONE }
                                                     }
                                                     },
                                                     ValueInt32 = 0,
@@ -575,21 +581,21 @@ namespace testfinalmq
             mockVisitor.Verify(x => x.StartStruct(It.IsAny<MetaStruct>()), Times.Exactly(1));
             // VariantStruct{ {"value", VariantStruct{
             mockVisitor.Verify(x => x.EnterStruct(m_fieldValue!), Times.Once);
-            mockVisitor.Verify(x => x.EnterEnum(m_fieldType!, (int)finalmq.variant.VarTypeId.T_STRUCT), Times.Exactly(2));
+            mockVisitor.Verify(x => x.EnterInt32(m_fieldIndex!, (int)VarValueType2Index.VARVALUETYPE_VARIANTSTRUCT), Times.Exactly(2));
             mockVisitor.Verify(x => x.EnterArrayStruct(m_fieldList!), Times.Exactly(3));
             // {"key1_x", VariantList{
             mockVisitor.Verify(x => x.EnterStruct(m_fieldListWithoutArray!), Times.Exactly(7));
             mockVisitor.Verify(x => x.EnterString(m_fieldName!, It.IsAny<byte[]>(), It.IsAny<int>(), 6), Times.Exactly(1));
-            mockVisitor.Verify(x => x.EnterEnum(m_fieldType!, (int)finalmq.variant.VarTypeId.T_LIST), Times.Exactly(1));
+            mockVisitor.Verify(x => x.EnterInt32(m_fieldIndex!, (int)VarValueType2Index.VARVALUETYPE_VARIANTLIST), Times.Exactly(1));
             //            mockVisitor.Verify(x => x.EnterArrayStruct(m_fieldList!), Times.Once);
             // 2
             //            mockVisitor.Verify(x => x.EnterStruct(m_fieldListWithoutArray!), Times.Once);
-            mockVisitor.Verify(x => x.EnterEnum(m_fieldType!, (int)finalmq.variant.VarTypeId.T_INT32), Times.Exactly(2));
+            mockVisitor.Verify(x => x.EnterInt32(m_fieldIndex!, (int)VarValueType2Index.VARVALUETYPE_INT32), Times.Exactly(2));
             mockVisitor.Verify(x => x.EnterInt32(m_fieldInt32!, 2), Times.Exactly(1));
             mockVisitor.Verify(x => x.ExitStruct(m_fieldListWithoutArray!), Times.Exactly(7));
             // , std::string("Hello")
             //            mockVisitor.Verify(x => x.EnterStruct(m_fieldListWithoutArray!), Times.Once);
-            mockVisitor.Verify(x => x.EnterEnum(m_fieldType!, (int)finalmq.variant.VarTypeId.T_STRING), Times.Exactly(2));
+            mockVisitor.Verify(x => x.EnterInt32(m_fieldIndex!, (int)VarValueType2Index.VARVALUETYPE_STRING), Times.Exactly(2));
             mockVisitor.Verify(x => x.EnterString(m_fieldString!, It.IsAny<byte[]>(), It.IsAny<int>(), 5), Times.Exactly(1));
             //            mockVisitor.Verify(x => x.ExitStruct(m_fieldListWithoutArray!), Times.Once);
             // }
@@ -599,18 +605,18 @@ namespace testfinalmq
             // {"key2_xx", VariantStruct{
             //            mockVisitor.Verify(x => x.EnterStruct(m_fieldListWithoutArray!), Times.Once);
             mockVisitor.Verify(x => x.EnterString(m_fieldName!, It.IsAny<byte[]>(), It.IsAny<int>(), 7), Times.Exactly(1));
-            //            mockVisitor.Verify(x => x.EnterEnum(m_fieldType!, (int)finalmq.variant.VarTypeId.T_STRUCT), Times.Exactly(1));
+            //            mockVisitor.Verify(x => x.EnterInt32(m_fieldIndex!, (int)VarValueType2Index.VARVALUETYPE_STRUCT), Times.Exactly(1));
             //            mockVisitor.Verify(x => x.EnterArrayStruct(m_fieldList!), Times.Exactly(1));
             // {"a", 3},
             //            mockVisitor.Verify(x => x.EnterStruct(m_fieldListWithoutArray!), Times.Once);
             mockVisitor.Verify(x => x.EnterString(m_fieldName!, It.IsAny<byte[]>(), It.IsAny<int>(), 1), Times.Exactly(1));
-            //            mockVisitor.Verify(x => x.EnterEnum(m_fieldType!, (int)finalmq.variant.VarTypeId.T_INT32), Times.Exactly(1));
+            //            mockVisitor.Verify(x => x.EnterInt32(m_fieldIndex!, (int)VarValueType2Index.VARVALUETYPE_INT32), Times.Exactly(1));
             mockVisitor.Verify(x => x.EnterInt32(m_fieldInt32!, 3), Times.Exactly(1));
             //            mockVisitor.Verify(x => x.ExitStruct(m_fieldListWithoutArray!), Times.Once);
             // {"bb", std::string("Hi")}
             //            mockVisitor.Verify(x => x.EnterStruct(m_fieldListWithoutArray!), Times.Once);
             mockVisitor.Verify(x => x.EnterString(m_fieldName!, It.IsAny<byte[]>(), It.IsAny<int>(), 2), Times.Exactly(1));
-            //            mockVisitor.Verify(x => x.EnterEnum(m_fieldType!, (int)finalmq.variant.VarTypeId.T_STRING), Times.Exactly(1));
+            //            mockVisitor.Verify(x => x.EnterInt32(m_fieldIndex!, (int)VarValueType2Index.VARVALUETYPE_STRING), Times.Exactly(1));
             mockVisitor.Verify(x => x.EnterString(m_fieldString!, It.IsAny<byte[]>(), It.IsAny<int>(), 2), Times.Exactly(1));
             //            mockVisitor.Verify(x => x.ExitStruct(m_fieldListWithoutArray!), Times.Once);
             // }
@@ -620,7 +626,7 @@ namespace testfinalmq
             // {
             //            mockVisitor.Verify(x => x.EnterStruct(m_fieldListWithoutArray!), Times.Once);
             //mockVisitor.Verify(x => x.EnterString(m_fieldName!, "key3"), Times.Exactly(1));
-            mockVisitor.Verify(x => x.EnterEnum(m_fieldType!, (int)finalmq.variant.VarTypeId.T_NONE), Times.Exactly(0));    // default not called
+            mockVisitor.Verify(x => x.EnterInt32(m_fieldIndex!, (int)VarValueType2Index.VARVALUETYPE_NONE), Times.Exactly(0));    // default not called
             //            mockVisitor.Verify(x => x.ExitStruct(m_fieldListWithoutArray!), Times.Once);
             // }}
             //            mockVisitor.Verify(x => x.ExitArrayStruct(m_fieldList!), Times.Once);
@@ -629,7 +635,7 @@ namespace testfinalmq
             mockVisitor.Verify(x => x.EnterInt32(m_fieldValueInt32!, 0), Times.Exactly(0)); // default not called
 
             mockVisitor.Verify(x => x.EnterStruct(m_fieldValue2!), Times.Once);
-            //            mockVisitor.Verify(x => x.EnterEnum(m_fieldType!, (int)finalmq.variant.VarTypeId.T_NONE), Times.Exactly(1));
+            //            mockVisitor.Verify(x => x.EnterInt32(m_fieldIndex!, (int)VarValueType2Index.VARVALUETYPE_NONE), Times.Exactly(1));
             mockVisitor.Verify(x => x.ExitStruct(m_fieldValue2!), Times.Once);
 
             mockVisitor.Verify(x => x.Finished(), Times.Exactly(1));

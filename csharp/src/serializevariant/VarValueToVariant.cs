@@ -8,6 +8,38 @@ namespace finalmq
     using VariantStruct = List<NameValue>;
     using VariantList = List<Variant>;
 
+    public enum VarValueType2Index
+    {
+        VARVALUETYPE_NONE = 0,
+        VARVALUETYPE_BOOL = 1,
+        VARVALUETYPE_INT8 = 2,
+        VARVALUETYPE_UINT8 = 3,
+        VARVALUETYPE_INT16 = 4,
+        VARVALUETYPE_UINT16 = 5,
+        VARVALUETYPE_INT32 = 6,
+        VARVALUETYPE_UINT32 = 7,
+        VARVALUETYPE_INT64 = 8,
+        VARVALUETYPE_UINT64 = 9,
+        VARVALUETYPE_FLOAT = 10,
+        VARVALUETYPE_DOUBLE = 11,
+        VARVALUETYPE_STRING = 12,
+        VARVALUETYPE_BYTES = 13,
+        VARVALUETYPE_VARIANTSTRUCT = 14,
+        VARVALUETYPE_ARRAY_BOOL = 15,
+        VARVALUETYPE_ARRAY_INT8 = 16,
+        VARVALUETYPE_ARRAY_INT16 = 17,
+        VARVALUETYPE_ARRAY_UINT16 = 18,
+        VARVALUETYPE_ARRAY_UINT32 = 19,
+        VARVALUETYPE_ARRAY_INT32 = 20,
+        VARVALUETYPE_ARRAY_INT64 = 21,
+        VARVALUETYPE_ARRAY_UINT64 = 22,
+        VARVALUETYPE_ARRAY_FLOAT = 23,
+        VARVALUETYPE_ARRAY_DOUBLE = 24,
+        VARVALUETYPE_ARRAY_STRING = 25,
+        VARVALUETYPE_ARRAY_BYTES = 26,
+        VARVALUETYPE_VARIANTLIST = 27,
+    }
+
     public class VarValueToVariant
     {
         public delegate void FuncExit();
@@ -34,53 +66,53 @@ namespace finalmq
 
         void ProcessVarValue(variant.VarValue varValue, Variant var)
         {
-            switch (varValue.type)
+            switch ((VarValueType2Index)varValue.index)
             {
-                case variant.VarTypeId.T_NONE:
+                case VarValueType2Index.VARVALUETYPE_NONE:
                     break;
-                case variant.VarTypeId.T_BOOL:
+                case VarValueType2Index.VARVALUETYPE_BOOL:
                     var.SetData(varValue.valbool);
                     break;
-                case variant.VarTypeId.T_INT8:
+                case VarValueType2Index.VARVALUETYPE_INT8:
                     var.SetData(varValue.valint8);
                     break;
-                case variant.VarTypeId.T_UINT8:
+                case VarValueType2Index.VARVALUETYPE_UINT8:
                     var.SetData(varValue.valuint8);
                     break;
-                case variant.VarTypeId.T_INT16:
+                case VarValueType2Index.VARVALUETYPE_INT16:
                     var.SetData(varValue.valint16);
                     break;
-                case variant.VarTypeId.T_UINT16:
+                case VarValueType2Index.VARVALUETYPE_UINT16:
                     var.SetData(varValue.valuint16);
                     break;
-                case variant.VarTypeId.T_INT32:
+                case VarValueType2Index.VARVALUETYPE_INT32:
                     var.SetData(varValue.valint32);
                     break;
-                case variant.VarTypeId.T_UINT32:
+                case VarValueType2Index.VARVALUETYPE_UINT32:
                     var.SetData(varValue.valuint32);
                     break;
-                case variant.VarTypeId.T_INT64:
+                case VarValueType2Index.VARVALUETYPE_INT64:
                     var.SetData(varValue.valint64);
                     break;
-                case variant.VarTypeId.T_UINT64:
+                case VarValueType2Index.VARVALUETYPE_UINT64:
                     var.SetData(varValue.valuint64);
                     break;
-                case variant.VarTypeId.T_FLOAT:
+                case VarValueType2Index.VARVALUETYPE_FLOAT:
                     var.SetData(varValue.valfloat);
                     break;
-                case variant.VarTypeId.T_DOUBLE:
+                case VarValueType2Index.VARVALUETYPE_DOUBLE:
                     var.SetData(varValue.valdouble);
                     break;
-                case variant.VarTypeId.T_STRING:
+                case VarValueType2Index.VARVALUETYPE_STRING:
                     var.SetData(varValue.valstring);
                     break;
-                case variant.VarTypeId.T_BYTES:
+                case VarValueType2Index.VARVALUETYPE_BYTES:
                     var.SetData(varValue.valbytes);
                     break;
-                case variant.VarTypeId.T_STRUCT:
+                case VarValueType2Index.VARVALUETYPE_VARIANTSTRUCT:
                     VariantStruct variantStruct = new VariantStruct();
                     Debug.Assert(variantStruct != null);
-                    foreach (var varValueElement in varValue.vallist)
+                    foreach (var varValueElement in varValue.valstruct)
                     {
                         Variant v = new Variant();
                         ProcessVarValue(varValueElement, v);
@@ -89,43 +121,43 @@ namespace finalmq
                     var.SetData(variantStruct);
                     break;
 
-                case variant.VarTypeId.T_ARRAY_BOOL:
+                case VarValueType2Index.VARVALUETYPE_ARRAY_BOOL:
                     var.SetData(varValue.valarrbool);
                     break;
-                case variant.VarTypeId.T_ARRAY_INT8:
+                case VarValueType2Index.VARVALUETYPE_ARRAY_INT8:
                     var.SetData(varValue.valarrint8);
                     break;
-                case variant.VarTypeId.T_ARRAY_INT16:
+                case VarValueType2Index.VARVALUETYPE_ARRAY_INT16:
                     var.SetData(varValue.valarrint16);
                     break;
-                case variant.VarTypeId.T_ARRAY_UINT16:
+                case VarValueType2Index.VARVALUETYPE_ARRAY_UINT16:
                     var.SetData(varValue.valarruint16);
                     break;
-                case variant.VarTypeId.T_ARRAY_INT32:
+                case VarValueType2Index.VARVALUETYPE_ARRAY_INT32:
                     var.SetData(varValue.valarrint32);
                     break;
-                case variant.VarTypeId.T_ARRAY_UINT32:
+                case VarValueType2Index.VARVALUETYPE_ARRAY_UINT32:
                     var.SetData(varValue.valarruint32);
                     break;
-                case variant.VarTypeId.T_ARRAY_INT64:
+                case VarValueType2Index.VARVALUETYPE_ARRAY_INT64:
                     var.SetData(varValue.valarrint64);
                     break;
-                case variant.VarTypeId.T_ARRAY_UINT64:
+                case VarValueType2Index.VARVALUETYPE_ARRAY_UINT64:
                     var.SetData(varValue.valarruint64);
                     break;
-                case variant.VarTypeId.T_ARRAY_FLOAT:
+                case VarValueType2Index.VARVALUETYPE_ARRAY_FLOAT:
                     var.SetData(varValue.valarrfloat);
                     break;
-                case variant.VarTypeId.T_ARRAY_DOUBLE:
+                case VarValueType2Index.VARVALUETYPE_ARRAY_DOUBLE:
                     var.SetData(varValue.valarrdouble);
                     break;
-                case variant.VarTypeId.T_ARRAY_STRING:
+                case VarValueType2Index.VARVALUETYPE_ARRAY_STRING:
                     var.SetData(varValue.valarrstring);
                     break;
-                case variant.VarTypeId.T_ARRAY_BYTES:
+                case VarValueType2Index.VARVALUETYPE_ARRAY_BYTES:
                     var.SetData(varValue.valarrbytes);
                     break;
-                case variant.VarTypeId.T_LIST:
+                case VarValueType2Index.VARVALUETYPE_VARIANTLIST:
                     VariantList variantList = new VariantList();
                     foreach (var varValueElement in varValue.vallist)
                     {
@@ -134,6 +166,8 @@ namespace finalmq
                         variantList.Add(v);
                     }
                     var.SetData(variantList);
+                    break;
+                default:
                     break;
             }
         }

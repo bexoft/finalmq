@@ -390,7 +390,7 @@ namespace testfinalmq
 
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestVariant")!);
             serializer.EnterStruct(m_fieldValue);
-            serializer.EnterEnum(m_fieldType, (int)finalmq.variant.VarTypeId.T_NONE);
+            serializer.EnterEnum(m_fieldType, (int)VarValueType2Index.VARVALUETYPE_NONE);
             serializer.ExitStruct(m_fieldValue);
             serializer.Finished();
 
@@ -443,21 +443,21 @@ namespace testfinalmq
             // VariantStruct{ {"value", VariantStruct{
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestVariant")!);
             serializer.EnterStruct(fieldValue);
-            serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_STRUCT);
+            serializer.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_VARIANTSTRUCT);
             serializer.EnterArrayStruct(fieldList);
             // {"key1", VariantList{
             serializer.EnterStruct(fieldListWithoutArray);
             serializer.EnterString(fieldName, "key1");
-            serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_LIST);
+            serializer.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_VARIANTLIST);
             serializer.EnterArrayStruct(fieldList);
             // 2
             serializer.EnterStruct(fieldListWithoutArray);
-            serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_INT32);
+            serializer.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_INT32);
             serializer.EnterInt32(fieldInt32, 2);
             serializer.ExitStruct(fieldListWithoutArray);
             // , std::string("Hello")
             serializer.EnterStruct(fieldListWithoutArray);
-            serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_STRING);
+            serializer.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_STRING);
             serializer.EnterString(fieldString, "Hello");
             serializer.ExitStruct(fieldListWithoutArray);
             // }
@@ -467,18 +467,18 @@ namespace testfinalmq
             // {"key2", VariantStruct{
             serializer.EnterStruct(fieldListWithoutArray);
             serializer.EnterString(fieldName, "key2");
-            serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_STRUCT);
+            serializer.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_VARIANTSTRUCT);
             serializer.EnterArrayStruct(fieldList);
             // {"a", 3},
             serializer.EnterStruct(fieldListWithoutArray);
             serializer.EnterString(fieldName, "a");
-            serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_INT32);
+            serializer.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_INT32);
             serializer.EnterInt32(fieldInt32, 3);
             serializer.ExitStruct(fieldListWithoutArray);
             // {"b", std::string("Hi")}
             serializer.EnterStruct(fieldListWithoutArray);
             serializer.EnterString(fieldName, "b");
-            serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_STRING);
+            serializer.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_STRING);
             serializer.EnterString(fieldString, "Hi");
             serializer.ExitStruct(fieldListWithoutArray);
             // }
@@ -488,7 +488,7 @@ namespace testfinalmq
             // {
             serializer.EnterStruct(fieldListWithoutArray);
             serializer.EnterString(fieldName, "key3");
-            serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_NONE);
+            serializer.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_NONE);
             serializer.ExitStruct(fieldListWithoutArray);
             // }}
             serializer.ExitArrayStruct(fieldList);
@@ -525,21 +525,21 @@ namespace testfinalmq
             // VariantStruct{ {"value", VariantStruct{
             serializer.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestVariant")!);
             serializer.EnterStruct(fieldValue);
-            serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_STRUCT);
+            serializer.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_VARIANTSTRUCT);
             serializer.EnterArrayStruct(fieldList);
             // {"key1", VariantList{
             serializer.EnterStruct(fieldListWithoutArray);
             serializer.EnterString(fieldName, "key1");
-            serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_LIST);
+            serializer.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_VARIANTLIST);
             serializer.EnterArrayStruct(fieldList);
             // 2
             serializer.EnterStruct(fieldListWithoutArray);
-            serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_INT32);
+            serializer.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_INT32);
             serializer.EnterInt32(fieldInt32, 2);
             serializer.ExitStruct(fieldListWithoutArray);
             // , std::string("Hello")
             serializer.EnterStruct(fieldListWithoutArray);
-            serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_STRING);
+            serializer.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_STRING);
             serializer.EnterString(fieldString, "Hello");
             serializer.ExitStruct(fieldListWithoutArray);
             // }
@@ -549,18 +549,18 @@ namespace testfinalmq
             // {"key2", VariantStruct{
             serializer.EnterStruct(fieldListWithoutArray);
             serializer.EnterString(fieldName, "key2");
-            serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_STRUCT);
+            serializer.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_VARIANTSTRUCT);
             serializer.EnterArrayStruct(fieldList);
             // {"a", 3},
             serializer.EnterStruct(fieldListWithoutArray);
             serializer.EnterString(fieldName, "a");
-            serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_INT32);
+            serializer.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_INT32);
             serializer.EnterInt32(fieldInt32, 3);
             serializer.ExitStruct(fieldListWithoutArray);
             // {"b", std::string("Hi")}
             serializer.EnterStruct(fieldListWithoutArray);
             serializer.EnterString(fieldName, "b");
-            serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_STRING);
+            serializer.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_STRING);
             serializer.EnterString(fieldString, "Hi");
             serializer.ExitStruct(fieldListWithoutArray);
             // }
@@ -570,7 +570,7 @@ namespace testfinalmq
             // {
             serializer.EnterStruct(fieldListWithoutArray);
             serializer.EnterString(fieldName, "key3");
-            serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_NONE);
+            serializer.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_NONE);
             serializer.ExitStruct(fieldListWithoutArray);
             // }}
             serializer.ExitArrayStruct(fieldList);
@@ -578,12 +578,12 @@ namespace testfinalmq
 
             // VariantStruct{ {"value2", VariantStruct{
             serializer.EnterStruct(fieldValue2);
-            serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_STRUCT);
+            serializer.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_VARIANTSTRUCT);
             serializer.EnterArrayStruct(fieldList);
             // {"key1", "Hello"}
             serializer.EnterStruct(fieldListWithoutArray);
             serializer.EnterString(fieldName, "key1");
-            serializer.EnterEnum(fieldType, (int)finalmq.variant.VarTypeId.T_STRING);
+            serializer.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_STRING);
             serializer.EnterString(fieldString, "Hello");
             serializer.ExitStruct(fieldListWithoutArray);
             serializer.ExitArrayStruct(fieldList);

@@ -73,6 +73,7 @@ namespace finalmq
                 }
             }
             string description = "";
+            string[]? attributesEnum = null;
             object[]? attributes = type.GetCustomAttributes(false);
             if (attributes != null)
             {
@@ -82,11 +83,12 @@ namespace finalmq
                     if (attr != null)
                     {
                         description = attr.Desc;
+                        attributesEnum = attr.Attributes;
                         break;
                     }
                 }
             }
-            MetaEnum en = new MetaEnum(type.FullName!, description, entries);
+            MetaEnum en = new MetaEnum(type.FullName!, description, attributesEnum, entries);
             return en;
         }
 
@@ -96,7 +98,7 @@ namespace finalmq
             string description = "";
             object[]? attributes = type.GetCustomAttributes(false);
             MetaStructFlags flagsStruct = MetaStructFlags.METASTRUCTFLAG_NONE;
-            string[] attrsStruct = new string[0];
+            string[]? attrsStruct = null;
             if (attributes != null)
             {
                 foreach (var attribute in attributes)
@@ -142,7 +144,7 @@ namespace finalmq
                     object[]? attributesProperty = propertyInfo.GetCustomAttributes(false);
                     string descriptionProperty = "";
                     MetaFieldFlags flags = MetaFieldFlags.METAFLAG_NONE;
-                    string[] attrs = new string[0];
+                    string[]? attrs = null;
                     if (attributesProperty != null)
                     {
                         foreach (var attribute in attributesProperty)
