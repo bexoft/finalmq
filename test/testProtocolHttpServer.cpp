@@ -31,6 +31,7 @@
 
 #include "MockIOperatingSystem.h"
 #include "MockIStreamConnection.h"
+#include "matchers.h"
 
 
 using ::testing::_;
@@ -40,15 +41,6 @@ using ::testing::DoAll;
 using ::testing::SetArrayArgument;
 
 using namespace finalmq;
-
-
-MATCHER_P(MatcherReceiveMessage, message, "")
-{
-    return (arg->getAllMetainfo() == message->getAllMetainfo() &&
-        arg->getReceivePayload().second == message->getReceivePayload().second &&
-        memcmp(arg->getReceivePayload().first, message->getReceivePayload().first, arg->getReceivePayload().second) == 0);
-}
-
 
 
 class TestProtocolHttpServer: public testing::Test

@@ -33,6 +33,7 @@
 #include "finalmq/variant/VariantValueList.h"
 
 #include "MockIParserVisitor.h"
+#include "matchers.h"
 
 using ::testing::_;
 using ::testing::InSequence;
@@ -41,20 +42,6 @@ using testing::StrEq;
 using namespace finalmq;
 using variant::VarValue;
 
-
-
-MATCHER_P(MatcherMetaField, metaField, "")
-{
-    return (arg.typeId == metaField.typeId &&
-        arg.typeName == metaField.typeName &&
-        arg.name == metaField.name);
-}
-
-
-MATCHER_P2(ArrayEq, compareArray, n, "")
-{
-    return (memcmp(arg, compareArray, n * sizeof(*arg)) == 0);
-}
 
 
 
@@ -420,7 +407,7 @@ TEST_F(TestVariantToVarValue, testStruct)
     static const std::int32_t VALUE_INT32 = 123;
     std::string VALUE_STRING = "Hello World";
 
-    const MetaField* fieldEntry = MetaDataGlobal::instance().getArrayField(*m_fieldList);
+    const MetaField* fieldEntry = MetaDataGlobal::instance().getArrayField(*m_fieldStruct);
     ASSERT_NE(fieldEntry, nullptr);
 
     m_root = VariantStruct{ {"key1", VALUE_INT32}, {"key2", VALUE_STRING} };

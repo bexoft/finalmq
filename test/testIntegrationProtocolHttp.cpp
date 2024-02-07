@@ -26,6 +26,7 @@
 #include "finalmq/protocolsession/ProtocolSessionContainer.h"
 #include "MockIProtocolSessionCallback.h"
 #include "testHelper.h"
+#include "matchers.h"
 
 #include <thread>
 //#include <chrono>
@@ -100,13 +101,6 @@ TEST_F(TestIntegrationProtocolHttp, testUnbind)
     m_sessionContainer->unbind("tcp://*:3335:httpclient");
 }
 
-
-MATCHER_P(ReceivedMessage, msg, "")
-{
-    BufferRef buffer = arg->getReceivePayload();
-    std::string str(buffer.first, buffer.second);
-    return str == msg;
-}
 
 TEST_F(TestIntegrationProtocolHttp, testBindConnect)
 {

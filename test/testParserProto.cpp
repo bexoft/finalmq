@@ -28,6 +28,7 @@
 #include "finalmq/metadata/MetaData.h"
 #include "MockIParserVisitor.h"
 #include "test.pb.h"
+#include "matchers.h"
 
 //#include <thread>
 //#include <chrono>
@@ -38,20 +39,6 @@ using ::testing::StrEq;
 using ::testing::ElementsAreArray;
 
 using namespace finalmq;
-
-
-MATCHER_P(MatcherMetaField, metaField, "")
-{
-    return (arg.typeId == metaField.typeId &&
-            arg.typeName == metaField.typeName &&
-            arg.name == metaField.name);
-}
-
-
-MATCHER_P2(ArrayEq, compareArray, n, "")
-{
-    return (memcmp(arg, compareArray, n * sizeof(*arg)) == 0);
-}
 
 
 

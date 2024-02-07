@@ -29,42 +29,13 @@ namespace finalmq
             Variant variant = var;
 
             Debug.Assert(m_structVarValue != null);
-            if (m_fieldStruct == null)
-            {
-                m_fieldStruct = m_structVarValue.GetFieldByName("valstruct");
-            }
-            MetaField? fieldStruct = m_fieldStruct;
-            Debug.Assert(fieldStruct != null);
-
-            if (m_fieldStructWithoutArray == null)
-            {
-                m_fieldStructWithoutArray = fieldStruct.FieldWithoutArray;
-            }
-            MetaField? fieldStructWithoutArray = m_fieldStructWithoutArray;
-            Debug.Assert(fieldStructWithoutArray != null);
-
-            if (m_fieldList == null)
-            {
-                m_fieldList = m_structVarValue.GetFieldByName("vallist");
-            }
-            MetaField? fieldList = m_fieldList;
-            Debug.Assert(fieldList != null);
-
-            if (m_fieldListWithoutArray == null)
-            {
-                m_fieldListWithoutArray = fieldList.FieldWithoutArray;
-            }
-            MetaField? fieldListWithoutArray = m_fieldListWithoutArray;
-            Debug.Assert(fieldListWithoutArray != null);
-
-            MetaField? field = (type == VariantValueStruct.VARTYPE_STRUCT) ? fieldStruct : fieldList;
-            Debug.Assert(field != null);
-            MetaField? fieldWithoutArray = field.FieldWithoutArray;
-            Debug.Assert(fieldWithoutArray != null);
 
             if (level > 0)
             {
-                m_visitor.EnterStruct(fieldWithoutArray);
+                if (m_fieldStack.Count() != 0)  // empty would be an error
+                {
+                    m_visitor.EnterStruct(m_fieldStack.Last());
+                }
             }
 
             if (name.Length != 0)
@@ -416,7 +387,10 @@ namespace finalmq
 
             if (level > 0)
             {
-                m_visitor.ExitStruct(fieldWithoutArray);
+                if (m_fieldStack.Count() != 0)  // empty would be an error
+                {
+                    m_visitor.ExitStruct(m_fieldStack.Last());
+                }
             }
         }
         public void EnterStruct(Variant variant, int type, int index, int level, int size, string name)
@@ -424,7 +398,7 @@ namespace finalmq
             if (m_fieldStruct == null)
             {
                 Debug.Assert(m_structVarValue != null);
-                m_fieldList = m_structVarValue.GetFieldByName("valstruct");
+                m_fieldStruct = m_structVarValue.GetFieldByName("valstruct");
             }
             MetaField? fieldStruct = m_fieldStruct;
             Debug.Assert(fieldStruct != null);
@@ -458,7 +432,10 @@ namespace finalmq
 
             if (level > 0)
             {
-                m_visitor.EnterStruct(fieldWithoutArray);
+                if (m_fieldStack.Count() != 0)  // empty would be an error
+                {
+                    m_visitor.EnterStruct(m_fieldStack.Last());
+                }
             }
 
             Debug.Assert(m_structVarValue != null);
@@ -485,13 +462,14 @@ namespace finalmq
                 m_visitor.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_VARIANTLIST);
             }
             m_visitor.EnterArrayStruct(field);
+            m_fieldStack.Add(fieldWithoutArray);
         }
         public void ExitStruct(Variant variant, int type, int index, int level, int size, string name)
         {
             if (m_fieldStruct == null)
             {
                 Debug.Assert(m_structVarValue != null);
-                m_fieldList = m_structVarValue.GetFieldByName("valstruct");
+                m_fieldStruct = m_structVarValue.GetFieldByName("valstruct");
             }
             MetaField? fieldStruct = m_fieldStruct;
             Debug.Assert(fieldStruct != null);
@@ -520,12 +498,20 @@ namespace finalmq
 
             MetaField? field = (type == VariantValueStruct.VARTYPE_STRUCT) ? fieldStruct : fieldList;
             Debug.Assert(field != null);
-            MetaField? fieldWithoutArray = field.FieldWithoutArray;
-            Debug.Assert(fieldWithoutArray != null);
+
+            if (m_fieldStack.Count() != 0)
+            {
+                m_fieldStack.RemoveAt(m_fieldStack.Count() - 1);
+            }
+
+            m_visitor.ExitArrayStruct(field);
 
             if (level > 0)
             {
-                m_visitor.ExitStruct(fieldWithoutArray);
+                if (m_fieldStack.Count() != 0)  // empty would be an error
+                {
+                    m_visitor.ExitStruct(m_fieldStack.Last());
+                }
             }
         }
         public void EnterList(Variant variant, int type, int index, int level, int size, string name)
@@ -539,12 +525,13 @@ namespace finalmq
 
         Variant m_variant;
         IParserVisitor m_visitor;
+        readonly IList<MetaField> m_fieldStack = new List<MetaField>();
         static MetaStruct? m_structVarValue = null;
 
         static MetaField? m_fieldStruct = null;
         static MetaField? m_fieldStructWithoutArray = null;
         static MetaField? m_fieldName = null;
-        static MetaField? m_fieldType = null;
+//        static MetaField? m_fieldIndex = null;
         static MetaField? m_fieldBool = null;
         static MetaField? m_fieldInt8 = null;
         static MetaField? m_fieldUInt8 = null;
@@ -560,7 +547,7 @@ namespace finalmq
         static MetaField? m_fieldBytes = null;
         static MetaField? m_fieldArrayBool = null;
         static MetaField? m_fieldArrayInt8 = null;
-        static MetaField? m_fieldArrayUInt8 = null;
+//        static MetaField? m_fieldArrayUInt8 = null;
         static MetaField? m_fieldArrayInt16 = null;
         static MetaField? m_fieldArrayUInt16 = null;
         static MetaField? m_fieldArrayInt32 = null;

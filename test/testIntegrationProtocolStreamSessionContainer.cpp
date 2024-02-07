@@ -27,6 +27,7 @@
 #include "MockIProtocolSessionCallback.h"
 #include "finalmq/protocols/ProtocolStream.h"
 #include "testHelper.h"
+#include "matchers.h"
 
 #include <thread>
 //#include <chrono>
@@ -101,13 +102,6 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testUnbind)
     int res = m_sessionContainer->bind("tcp://*:3333:stream", m_mockServerCallback);
     EXPECT_EQ(res, 0);
     m_sessionContainer->unbind("tcp://*:3333:stream");
-}
-
-MATCHER_P(ReceivedMessage, msg, "")
-{
-    BufferRef buffer = arg->getReceivePayload();
-    std::string str(buffer.first, buffer.second);
-    return str == msg;
 }
 
 TEST_F(TestIntegrationProtocolStreamSessionContainer, testBindConnect)

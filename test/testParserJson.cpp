@@ -27,6 +27,7 @@
 #include "finalmq/serializejson/ParserJson.h"
 #include "finalmq/metadata/MetaData.h"
 #include "MockIParserVisitor.h"
+#include "matchers.h"
 
 #include <cmath>
 //#include <thread>
@@ -38,63 +39,6 @@ using ::testing::StrEq;
 using ::testing::ElementsAreArray;
 
 using namespace finalmq;
-
-
-MATCHER_P(MatcherMetaField, metaField, "")
-{
-    return (arg.typeId == metaField.typeId &&
-        arg.typeName == metaField.typeName &&
-        arg.name == metaField.name);
-}
-
-MATCHER_P(MatcherFloat, value, "")
-{
-    return (arg == value || (std::isnan(arg) && std::isnan(value)));
-}
-
-MATCHER_P(MatcherDouble, value, "")
-{
-    return (arg == value || (std::isnan(arg) && std::isnan(value)));
-}
-
-MATCHER_P(MatcherArrayFloat, value, "")
-{
-    if (arg.size() != value.size())
-    {
-        return false;
-    }
-    for (size_t i = 0; i < arg.size(); ++i)
-    {
-        if (!(arg[i] == value[i] || (std::isnan(arg[i]) && std::isnan(value[i]))))
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
-MATCHER_P(MatcherArrayDouble, value, "")
-{
-    if (arg.size() != value.size())
-    {
-        return false;
-    }
-    for (size_t i = 0; i < arg.size(); ++i)
-    {
-        if (!(arg[i] == value[i] || (std::isnan(arg[i]) && std::isnan(value[i]))))
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
-
-MATCHER_P2(ArrayEq, compareArray, n, "")
-{
-    return (memcmp(arg, compareArray, n * sizeof(*arg)) == 0);
-}
-
 
 
 class TestParserJson : public testing::Test
@@ -110,8 +54,6 @@ protected:
     {
     }
 };
-
-
 
 
 

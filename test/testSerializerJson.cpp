@@ -30,6 +30,7 @@
 #include "MockIZeroCopyBuffer.h"
 #include "test.fmq.h"
 #include "finalmq/metadataserialize/variant.fmq.h"
+#include "matchers.h"
 
 #include <cmath>
 
@@ -42,13 +43,6 @@ using testing::DoAll;
 
 using namespace finalmq;
 
-
-MATCHER_P(MatcherMetaField, metaField, "")
-{
-    return (arg.type == metaField.type &&
-            arg.typeName == metaField.typeName &&
-            arg.name == metaField.name);
-}
 
 
 struct String : public std::string
@@ -473,7 +467,7 @@ TEST_F(TestSerializerJson, testVariantStructDefault)
     m_serializerDefault->enterEnum(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_VARIANTSTRUCT);
     m_serializerDefault->enterArrayStruct(*m_fieldStruct);
         // {"key1", VariantList{
-        m_serializerDefault->enterStruct(*m_fieldListWithoutArray);
+        m_serializerDefault->enterStruct(*m_fieldStructWithoutArray);
         m_serializerDefault->enterString(*m_fieldName, "key1", 4);
         m_serializerDefault->enterEnum(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_VARIANTLIST);
         m_serializerDefault->enterArrayStruct(*m_fieldList);
@@ -489,36 +483,36 @@ TEST_F(TestSerializerJson, testVariantStructDefault)
             m_serializerDefault->exitStruct(*m_fieldListWithoutArray);
         // }
         m_serializerDefault->exitArrayStruct(*m_fieldList);
-        m_serializerDefault->exitStruct(*m_fieldListWithoutArray);
+        m_serializerDefault->exitStruct(*m_fieldStructWithoutArray);
 
         // {"key2", VariantStruct{
-        m_serializerDefault->enterStruct(*m_fieldListWithoutArray);
+        m_serializerDefault->enterStruct(*m_fieldStructWithoutArray);
         m_serializerDefault->enterString(*m_fieldName, "key2", 4);
         m_serializerDefault->enterEnum(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_VARIANTSTRUCT);
         m_serializerDefault->enterArrayStruct(*m_fieldStruct);
             // {"a", 3},
-            m_serializerDefault->enterStruct(*m_fieldListWithoutArray);
+            m_serializerDefault->enterStruct(*m_fieldStructWithoutArray);
             m_serializerDefault->enterString(*m_fieldName, "a", 1);
             m_serializerDefault->enterEnum(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_INT32);
             m_serializerDefault->enterInt32(*m_fieldInt32, 3);
-            m_serializerDefault->exitStruct(*m_fieldListWithoutArray);
+            m_serializerDefault->exitStruct(*m_fieldStructWithoutArray);
             // {"b", std::string("Hi")}
-            m_serializerDefault->enterStruct(*m_fieldListWithoutArray);
+            m_serializerDefault->enterStruct(*m_fieldStructWithoutArray);
             m_serializerDefault->enterString(*m_fieldName, "b", 1);
             m_serializerDefault->enterEnum(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_STRING);
             m_serializerDefault->enterString(*m_fieldString, "Hi", 2);
-            m_serializerDefault->exitStruct(*m_fieldListWithoutArray);
+            m_serializerDefault->exitStruct(*m_fieldStructWithoutArray);
         // }
         m_serializerDefault->exitArrayStruct(*m_fieldList);
-        m_serializerDefault->exitStruct(*m_fieldListWithoutArray);
+        m_serializerDefault->exitStruct(*m_fieldStructWithoutArray);
 
         // {
-        m_serializerDefault->enterStruct(*m_fieldListWithoutArray);
+        m_serializerDefault->enterStruct(*m_fieldStructWithoutArray);
         m_serializerDefault->enterString(*m_fieldName, "key3", 4);
         m_serializerDefault->enterEnum(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_NONE);
-        m_serializerDefault->exitStruct(*m_fieldListWithoutArray);
+        m_serializerDefault->exitStruct(*m_fieldStructWithoutArray);
     // }}
-    m_serializerDefault->exitArrayStruct(*m_fieldList);
+    m_serializerDefault->exitArrayStruct(*m_fieldStruct);
     m_serializerDefault->exitStruct(*m_fieldValue);
     m_serializerDefault->finished();
 

@@ -59,18 +59,14 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
 {
     const Variant& variant = var;
 
-    static const MetaField* fieldStruct = m_structVarValue->getFieldByName("valstruct");
-    static const MetaField* fieldList = m_structVarValue->getFieldByName("vallist");
-    assert(fieldStruct);
-    assert(fieldList);
-    const MetaField* field = (type == VARTYPE_STRUCT) ? fieldStruct : fieldList;
-    assert(field);
-    const MetaField* fieldWithoutArray = field->fieldWithoutArray;
-    assert(fieldWithoutArray);
-
     if (level > 0)
     {
-        m_visitor.enterStruct(*fieldWithoutArray);
+        if (!m_fieldStack.empty())  // empty would be an error
+        {
+            const MetaField* f = m_fieldStack.back();
+            assert(f);
+            m_visitor.enterStruct(*f);
+        }
     }
 
     if (!name.empty())
@@ -343,7 +339,12 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
 
     if (level > 0)
     {
-        m_visitor.exitStruct(*fieldWithoutArray);
+        if (!m_fieldStack.empty())  // empty would be an error
+        {
+            const MetaField* f = m_fieldStack.back();
+            assert(f);
+            m_visitor.exitStruct(*f);
+        }
     }
 }
 
@@ -355,12 +356,17 @@ void VariantToVarValue::enterStruct(Variant& /*variant*/, int type, ssize_t /*in
     assert(fieldList);
     const MetaField* field = (type == VARTYPE_STRUCT) ? fieldStruct : fieldList;
     assert(field);
-    const MetaField* fieldWithoutArray = field->fieldWithoutArray;
+    const MetaField* fieldWithoutArray = (type == VARTYPE_STRUCT) ? fieldStruct->fieldWithoutArray : fieldList->fieldWithoutArray;
     assert(fieldWithoutArray);
 
     if (level > 0)
     {
-        m_visitor.enterStruct(*fieldWithoutArray);
+        if (!m_fieldStack.empty())  // empty would be an error
+        {
+            const MetaField* f = m_fieldStack.back();
+            assert(f);
+            m_visitor.enterStruct(*f);
+        }
     }
 
     if (!name.empty())
@@ -382,6 +388,7 @@ void VariantToVarValue::enterStruct(Variant& /*variant*/, int type, ssize_t /*in
         m_visitor.enterInt32(*fieldIndex, VarValueType2Index::VARVALUETYPE_VARIANTLIST);
     }
     m_visitor.enterArrayStruct(*field);
+    m_fieldStack.push_back(fieldWithoutArray);
 }
 
 void VariantToVarValue::exitStruct(Variant& /*variant*/, int type, ssize_t /*index*/, int level, ssize_t /*size*/, const std::string& /*name*/)
@@ -392,13 +399,21 @@ void VariantToVarValue::exitStruct(Variant& /*variant*/, int type, ssize_t /*ind
     assert(fieldList);
     const MetaField* field = (type == VARTYPE_STRUCT) ? fieldStruct : fieldList;
     assert(field);
-    const MetaField* fieldWithoutArray = field->fieldWithoutArray;
     
+    if (!m_fieldStack.empty())
+    {
+        m_fieldStack.pop_back();
+    }
     m_visitor.exitArrayStruct(*field);
 
     if (level > 0)
     {
-        m_visitor.exitStruct(*fieldWithoutArray);
+        if (!m_fieldStack.empty())  // empty would be an error
+        {
+            const MetaField* f = m_fieldStack.back();
+            assert(f);
+            m_visitor.exitStruct(*f);
+        }
     }
 }
 

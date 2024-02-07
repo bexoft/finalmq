@@ -31,6 +31,7 @@
 #include "finalmq/protocols/protocolhelpers/ProtocolDelimiter.h"
 #include "finalmq/protocolsession/ProtocolRegistry.h"
 #include "testHelper.h"
+#include "matchers.h"
 
 #include <thread>
 //#include <chrono>
@@ -47,16 +48,6 @@ static const std::string MESSAGE1_BUFFER = "Hello";
 static const std::string MESSAGE2_BUFFER(500000, 'A');
 //static const std::string DELIMITER = "lolololololololololololololololololololololololololololololololololo\n";
 
-
-
-
-
-MATCHER_P(ReceivedMessage, msg, "")
-{
-    BufferRef buffer = arg->getReceivePayload();
-    std::string str(buffer.first, buffer.second);
-    return str == msg;
-}
 
 
 class TestIntegrationProtocolDelimiterLinefeedSessionContainerSsl: public testing::Test

@@ -175,7 +175,7 @@ namespace finalmq
 
         public void Accept(IVariantVisitor visitor, Variant variant, int index, int level, int size, string name)
         {
-            visitor.EnterList(variant, VARTYPE_STRUCT, index, level, size, name);
+            visitor.EnterStruct(variant, VARTYPE_STRUCT, index, level, size, name);
             ++level;
             int i = 0;
             int subsize = m_value.Count;
@@ -185,7 +185,7 @@ namespace finalmq
                 i++;
             }
             --level;
-            visitor.ExitList(variant, VARTYPE_STRUCT, index, level, size, name);
+            visitor.ExitStruct(variant, VARTYPE_STRUCT, index, level, size, name);
         }
 
         public int VarType { get { return VARTYPE_STRUCT; } }
