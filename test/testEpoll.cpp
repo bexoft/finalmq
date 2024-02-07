@@ -31,6 +31,7 @@
 
 
 #include "MockIOperatingSystem.h"
+#include "matchers.h"
 
 
 using ::testing::_;
@@ -51,11 +52,6 @@ static const int NUMBER_OF_BYTES_TO_READ = 20;
 static const int TIMEOUT = 10;
 
 
-MATCHER_P(Event, event, "")
-{
-    return (arg->events == event->events &&
-            arg->data.fd == event->data.fd);
-}
 
 
 class TestEpoll: public testing::Test

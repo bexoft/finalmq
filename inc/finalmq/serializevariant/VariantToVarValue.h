@@ -47,9 +47,10 @@ private:
     virtual void exitList(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name) override;
 
 
-    Variant&                    m_variant;
-    IParserVisitor&             m_visitor;
-    static const MetaStruct*    m_structVarValue;
+    Variant&                        m_variant;
+    IParserVisitor&                 m_visitor;
+    std::deque<const MetaField*>    m_fieldStack;
+    static const MetaStruct*        m_structVarValue;
 };
 
 }   // namespace finalmq

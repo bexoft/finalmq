@@ -28,6 +28,7 @@
 #include "finalmq/metadata/MetaData.h"
 #include "MockIZeroCopyBuffer.h"
 #include "test.pb.h"
+#include "matchers.h"
 
 //#include <thread>
 //#include <chrono>
@@ -40,13 +41,6 @@ using testing::DoAll;
 
 using namespace finalmq;
 
-
-MATCHER_P(MatcherMetaField, metaField, "")
-{
-    return (arg.type == metaField.type &&
-            arg.typeName == metaField.typeName &&
-            arg.name == metaField.name);
-}
 
 
 struct String : public std::string

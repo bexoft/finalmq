@@ -30,6 +30,7 @@
 #include "finalmq/protocols/ProtocolStream.h"
 #include "testHelper.h"
 #include "finalmq/connectionhub/ConnectionHub.h"
+#include "matchers.h"
 
 #include <thread>
 #include <chrono>
@@ -41,14 +42,6 @@ using namespace std::chrono_literals;
 using namespace finalmq;
 
 static const std::string MESSAGE_BUFFER = "Hello";
-
-MATCHER_P(ReceivedMessage, msg, "")
-{
-    BufferRef buffer = arg->getReceivePayload();
-    std::string str(buffer.first, buffer.second);
-    return str == msg;
-}
-
 
 
 

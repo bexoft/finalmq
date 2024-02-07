@@ -29,6 +29,7 @@
 
 
 #include "MockIOperatingSystem.h"
+#include "matchers.h"
 
 
 using ::testing::_;
@@ -47,16 +48,6 @@ static const int TESTSOCKET = 7;
 static const int NUMBER_OF_BYTES_TO_READ = 20;
 static const int MILLITOMICRO = 1000;
 static const int TIMEOUT = 10;
-
-MATCHER_P(FdSet, fds, "")
-{
-    return (memcmp(arg, fds, sizeof(*fds)) == 0);
-}
-
-MATCHER_P(Time, tim, "")
-{
-    return (memcmp(arg, tim, sizeof(*tim)) == 0);
-}
 
 
 class TestSelect: public testing::Test

@@ -28,6 +28,7 @@
 #include "finalmq/protocols/protocolhelpers/ProtocolDelimiter.h"
 #include "finalmq/protocolsession/ProtocolRegistry.h"
 #include "testHelper.h"
+#include "matchers.h"
 
 #include <thread>
 //#include <chrono>
@@ -82,16 +83,6 @@ struct RegisterProtocolDelimiterTestLongFactory
     }
 } g_registerProtocolDelimiterTestLongFactory;
 
-
-
-
-
-MATCHER_P(ReceivedMessage, msg, "")
-{
-    BufferRef buffer = arg->getReceivePayload();
-    std::string str(buffer.first, buffer.second);
-    return str == msg;
-}
 
 
 class TestIntegrationProtocolDelimiterSessionContainer: public testing::Test

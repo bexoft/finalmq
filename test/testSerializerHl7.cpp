@@ -30,6 +30,7 @@
 #include "MockIZeroCopyBuffer.h"
 //#include "test.fmq.h"
 #include "testhl7.fmq.h"
+#include "matchers.h"
 
 #include <cmath>
 
@@ -42,13 +43,6 @@ using testing::DoAll;
 
 using namespace finalmq;
 
-
-MATCHER_P(MatcherMetaField, metaField, "")
-{
-    return (arg.type == metaField.type &&
-            arg.typeName == metaField.typeName &&
-            arg.name == metaField.name);
-}
 
 
 struct String : public std::string

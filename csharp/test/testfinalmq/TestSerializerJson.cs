@@ -409,13 +409,13 @@ namespace testfinalmq
             MetaStruct? struValue = MetaDataGlobal.Instance.GetStruct(stru.GetFieldByName("value")!.TypeName);
             m_serializer.StartStruct(stru);
             m_serializer.EnterStruct(stru.GetFieldByName("value")!);
-            m_serializer.EnterEnum(struValue!.GetFieldByName("type")!, "int32");
+            m_serializer.EnterInt32(struValue!.GetFieldByName("index")!, (int)VarValueType2Index.VARVALUETYPE_INT32);
             m_serializer.EnterInt32(struValue!.GetFieldByName("valint32")!, VALUE);
             m_serializer.ExitStruct(stru.GetFieldByName("value")!);
             m_serializer.Finished();
 
             string s = Encoding.UTF8.GetString(m_data, 0, m_size);
-            Debug.Assert(s == "{\"value\":{\"type\":\"int32\",\"valint32\":-2}}");
+            Debug.Assert(s == "{\"value\":{\"index\":6,\"valint32\":-2}}");
         }
 
         [Fact]
@@ -428,13 +428,13 @@ namespace testfinalmq
             MetaStruct? struValue = MetaDataGlobal.Instance.GetStruct(stru.GetFieldByName("value")!.TypeName);
             m_serializerDefault.StartStruct(stru);
             m_serializerDefault.EnterStruct(stru.GetFieldByName("value")!);
-            m_serializerDefault.EnterEnum(struValue!.GetFieldByName("type")!, "int32");
+            m_serializerDefault.EnterInt32(struValue!.GetFieldByName("index")!, (int)VarValueType2Index.VARVALUETYPE_INT32);
             m_serializerDefault.EnterInt32(struValue!.GetFieldByName("valint32")!, VALUE);
             m_serializerDefault.ExitStruct(stru.GetFieldByName("value")!);
             m_serializerDefault.Finished();
 
             string s = Encoding.UTF8.GetString(m_data, 0, m_size);
-            Debug.Assert(s == "{\"value\":{\"type\":\"int32\",\"valint32\":-2},\"valueInt32\":0,\"value2\":{}}");
+            Debug.Assert(s == "{\"value\":{\"index\":6,\"valint32\":-2},\"valueInt32\":0,\"value2\":{}}");
         }
 
         [Fact]
@@ -460,9 +460,11 @@ namespace testfinalmq
             MetaStruct structVarVariant = MetaDataGlobal.Instance.GetStruct("finalmq.variant.VarValue")!;
 
             MetaField fieldName = structVarVariant.GetFieldByName("name")!;
-            MetaField fieldType = structVarVariant.GetFieldByName("type")!;
+            MetaField fieldIndex = structVarVariant.GetFieldByName("index")!;
             MetaField fieldInt32 = structVarVariant.GetFieldByName("valint32")!;
             MetaField fieldString = structVarVariant.GetFieldByName("valstring")!;
+            MetaField fieldStruct = structVarVariant.GetFieldByName("valstruct")!;
+            MetaField fieldStructWithoutArray = MetaDataGlobal.Instance.GetArrayField(fieldStruct)!;
             MetaField fieldList = structVarVariant.GetFieldByName("vallist")!;
             MetaField fieldListWithoutArray = MetaDataGlobal.Instance.GetArrayField(fieldList)!;
 
@@ -470,59 +472,59 @@ namespace testfinalmq
             // VariantStruct{ {"value", VariantStruct{
             m_serializerDefault.StartStruct(MetaDataGlobal.Instance.GetStruct("test.TestVariant")!);
             m_serializerDefault.EnterStruct(fieldValue);
-            m_serializerDefault.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_VARIANTSTRUCT);
-            m_serializerDefault.EnterArrayStruct(fieldList);
+            m_serializerDefault.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_VARIANTSTRUCT);
+            m_serializerDefault.EnterArrayStruct(fieldStruct);
             // {"key1", VariantList{
-            m_serializerDefault.EnterStruct(fieldListWithoutArray);
+            m_serializerDefault.EnterStruct(fieldStructWithoutArray);
             m_serializerDefault.EnterString(fieldName, "key1");
-            m_serializerDefault.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_VARIANTLIST);
+            m_serializerDefault.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_VARIANTLIST);
             m_serializerDefault.EnterArrayStruct(fieldList);
             // 2
             m_serializerDefault.EnterStruct(fieldListWithoutArray);
-            m_serializerDefault.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_INT32);
+            m_serializerDefault.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_INT32);
             m_serializerDefault.EnterInt32(fieldInt32, 2);
             m_serializerDefault.ExitStruct(fieldListWithoutArray);
             // , std::string("Hello")
             m_serializerDefault.EnterStruct(fieldListWithoutArray);
-            m_serializerDefault.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_STRING);
+            m_serializerDefault.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_STRING);
             m_serializerDefault.EnterString(fieldString, "Hello");
             m_serializerDefault.ExitStruct(fieldListWithoutArray);
             // }
             m_serializerDefault.ExitArrayStruct(fieldList);
-            m_serializerDefault.ExitStruct(fieldListWithoutArray);
+            m_serializerDefault.ExitStruct(fieldStructWithoutArray);
 
             // {"key2", VariantStruct{
-            m_serializerDefault.EnterStruct(fieldListWithoutArray);
+            m_serializerDefault.EnterStruct(fieldStructWithoutArray);
             m_serializerDefault.EnterString(fieldName, "key2");
-            m_serializerDefault.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_VARIANTSTRUCT);
-            m_serializerDefault.EnterArrayStruct(fieldList);
+            m_serializerDefault.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_VARIANTSTRUCT);
+            m_serializerDefault.EnterArrayStruct(fieldStruct);
             // {"a", 3},
-            m_serializerDefault.EnterStruct(fieldListWithoutArray);
+            m_serializerDefault.EnterStruct(fieldStructWithoutArray);
             m_serializerDefault.EnterString(fieldName, "a");
-            m_serializerDefault.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_INT32);
+            m_serializerDefault.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_INT32);
             m_serializerDefault.EnterInt32(fieldInt32, 3);
-            m_serializerDefault.ExitStruct(fieldListWithoutArray);
+            m_serializerDefault.ExitStruct(fieldStructWithoutArray);
             // {"b", std::string("Hi")}
-            m_serializerDefault.EnterStruct(fieldListWithoutArray);
+            m_serializerDefault.EnterStruct(fieldStructWithoutArray);
             m_serializerDefault.EnterString(fieldName, "b");
-            m_serializerDefault.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_STRING);
+            m_serializerDefault.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_STRING);
             m_serializerDefault.EnterString(fieldString, "Hi");
-            m_serializerDefault.ExitStruct(fieldListWithoutArray);
+            m_serializerDefault.ExitStruct(fieldStructWithoutArray);
             // }
-            m_serializerDefault.ExitArrayStruct(fieldList);
-            m_serializerDefault.ExitStruct(fieldListWithoutArray);
+            m_serializerDefault.ExitArrayStruct(fieldStruct);
+            m_serializerDefault.ExitStruct(fieldStructWithoutArray);
 
             // {
-            m_serializerDefault.EnterStruct(fieldListWithoutArray);
+            m_serializerDefault.EnterStruct(fieldStructWithoutArray);
             m_serializerDefault.EnterString(fieldName, "key3");
-            m_serializerDefault.EnterEnum(fieldType, (int)VarValueType2Index.VARVALUETYPE_NONE);
-            m_serializerDefault.ExitStruct(fieldListWithoutArray);
+            m_serializerDefault.EnterInt32(fieldIndex, (int)VarValueType2Index.VARVALUETYPE_NONE);
+            m_serializerDefault.ExitStruct(fieldStructWithoutArray);
             // }}
-            m_serializerDefault.ExitArrayStruct(fieldList);
+            m_serializerDefault.ExitArrayStruct(fieldStruct);
             m_serializerDefault.ExitStruct(fieldValue);
             m_serializerDefault.Finished();
 
-            string cmp = "{\"value\":{\"type\":\"struct\",\"vallist\":[{\"name\":\"key1\",\"type\":\"list\",\"vallist\":[{\"type\":\"int32\",\"valint32\":2},{\"type\":\"string\",\"valstring\":\"Hello\"}]},{\"name\":\"key2\",\"type\":\"struct\",\"vallist\":[{\"name\":\"a\",\"type\":\"int32\",\"valint32\":3},{\"name\":\"b\",\"type\":\"string\",\"valstring\":\"Hi\"}]},{\"name\":\"key3\",\"type\":\"none\"}]},\"valueInt32\":0,\"value2\":{}}";
+            string cmp = "{\"value\":{\"index\":14,\"valstruct\":[{\"name\":\"key1\",\"index\":27,\"vallist\":[{\"index\":6,\"valint32\":2},{\"index\":12,\"valstring\":\"Hello\"}]},{\"name\":\"key2\",\"index\":14,\"valstruct\":[{\"name\":\"a\",\"index\":6,\"valint32\":3},{\"name\":\"b\",\"index\":12,\"valstring\":\"Hi\"}]},{\"name\":\"key3\",\"index\":0}]},\"valueInt32\":0,\"value2\":{}}";
             string s = Encoding.UTF8.GetString(m_data, 0, m_size);
             Debug.Assert(s == cmp);
         }

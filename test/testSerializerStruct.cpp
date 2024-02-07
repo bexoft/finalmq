@@ -32,6 +32,7 @@
 #include "finalmq/metadata/MetaData.h"
 #include "finalmq/metadataserialize/variant.fmq.h"
 #include "test.fmq.h"
+#include "matchers.h"
 
 
 using ::testing::_;
@@ -41,14 +42,6 @@ using testing::Invoke;
 using testing::DoAll;
 
 using namespace finalmq;
-
-
-MATCHER_P(MatcherMetaField, metaField, "")
-{
-    return (arg.type == metaField.type &&
-            arg.typeName == metaField.typeName &&
-            arg.name == metaField.name);
-}
 
 
 
@@ -538,7 +531,7 @@ TEST_F(TestSerializerStruct, testVariantStruct)
     serializer->enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_VARIANTSTRUCT);
     serializer->enterArrayStruct(*m_fieldStruct);
     // {"key1", VariantList{
-    serializer->enterStruct(*m_fieldListWithoutArray);
+    serializer->enterStruct(*m_fieldStructWithoutArray);
     serializer->enterString(*m_fieldName, "key1", 4);
     serializer->enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_VARIANTLIST);
     serializer->enterArrayStruct(*m_fieldList);
@@ -557,33 +550,33 @@ TEST_F(TestSerializerStruct, testVariantStruct)
     serializer->exitStruct(*m_fieldListWithoutArray);
 
     // {"key2", VariantStruct{
-    serializer->enterStruct(*m_fieldListWithoutArray);
+    serializer->enterStruct(*m_fieldStructWithoutArray);
     serializer->enterString(*m_fieldName, "key2", 4);
     serializer->enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_VARIANTSTRUCT);
     serializer->enterArrayStruct(*m_fieldStruct);
     // {"a", 3},
-    serializer->enterStruct(*m_fieldListWithoutArray);
+    serializer->enterStruct(*m_fieldStructWithoutArray);
     serializer->enterString(*m_fieldName, "a", 1);
     serializer->enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_INT32);
     serializer->enterInt32(*m_fieldInt32, 3);
-    serializer->exitStruct(*m_fieldListWithoutArray);
+    serializer->exitStruct(*m_fieldStructWithoutArray);
     // {"b", std::string("Hi")}
-    serializer->enterStruct(*m_fieldListWithoutArray);
+    serializer->enterStruct(*m_fieldStructWithoutArray);
     serializer->enterString(*m_fieldName, "b", 1);
     serializer->enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_STRING);
     serializer->enterString(*m_fieldString, "Hi", 2);
-    serializer->exitStruct(*m_fieldListWithoutArray);
+    serializer->exitStruct(*m_fieldStructWithoutArray);
     // }
-    serializer->exitArrayStruct(*m_fieldList);
-    serializer->exitStruct(*m_fieldListWithoutArray);
+    serializer->exitArrayStruct(*m_fieldStruct);
+    serializer->exitStruct(*m_fieldStructWithoutArray);
 
     // {
-    serializer->enterStruct(*m_fieldListWithoutArray);
+    serializer->enterStruct(*m_fieldStructWithoutArray);
     serializer->enterString(*m_fieldName, "key3", 4);
     serializer->enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_NONE);
-    serializer->exitStruct(*m_fieldListWithoutArray);
+    serializer->exitStruct(*m_fieldStructWithoutArray);
     // }}
-    serializer->exitArrayStruct(*m_fieldList);
+    serializer->exitArrayStruct(*m_fieldStruct);
     serializer->exitStruct(*m_fieldValue);
     serializer->finished();
 
@@ -606,7 +599,7 @@ TEST_F(TestSerializerStruct, testVariantStruct2)
     serializer->enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_VARIANTSTRUCT);
     serializer->enterArrayStruct(*m_fieldStruct);
     // {"key1", VariantList{
-    serializer->enterStruct(*m_fieldListWithoutArray);
+    serializer->enterStruct(*m_fieldStructWithoutArray);
     serializer->enterString(*m_fieldName, "key1", 4);
     serializer->enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_VARIANTLIST);
     serializer->enterArrayStruct(*m_fieldList);
@@ -622,36 +615,36 @@ TEST_F(TestSerializerStruct, testVariantStruct2)
     serializer->exitStruct(*m_fieldListWithoutArray);
     // }
     serializer->exitArrayStruct(*m_fieldList);
-    serializer->exitStruct(*m_fieldListWithoutArray);
+    serializer->exitStruct(*m_fieldStructWithoutArray);
 
     // {"key2", VariantStruct{
-    serializer->enterStruct(*m_fieldListWithoutArray);
+    serializer->enterStruct(*m_fieldStructWithoutArray);
     serializer->enterString(*m_fieldName, "key2", 4);
     serializer->enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_VARIANTSTRUCT);
     serializer->enterArrayStruct(*m_fieldStruct);
     // {"a", 3},
-    serializer->enterStruct(*m_fieldListWithoutArray);
+    serializer->enterStruct(*m_fieldStructWithoutArray);
     serializer->enterString(*m_fieldName, "a", 1);
     serializer->enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_INT32);
     serializer->enterInt32(*m_fieldInt32, 3);
-    serializer->exitStruct(*m_fieldListWithoutArray);
+    serializer->exitStruct(*m_fieldStructWithoutArray);
     // {"b", std::string("Hi")}
-    serializer->enterStruct(*m_fieldListWithoutArray);
+    serializer->enterStruct(*m_fieldStructWithoutArray);
     serializer->enterString(*m_fieldName, "b", 1);
     serializer->enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_STRING);
     serializer->enterString(*m_fieldString, "Hi", 2);
-    serializer->exitStruct(*m_fieldListWithoutArray);
+    serializer->exitStruct(*m_fieldStructWithoutArray);
     // }
-    serializer->exitArrayStruct(*m_fieldList);
-    serializer->exitStruct(*m_fieldListWithoutArray);
+    serializer->exitArrayStruct(*m_fieldStruct);
+    serializer->exitStruct(*m_fieldStructWithoutArray);
 
     // {
-    serializer->enterStruct(*m_fieldListWithoutArray);
+    serializer->enterStruct(*m_fieldStructWithoutArray);
     serializer->enterString(*m_fieldName, "key3", 4);
     serializer->enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_NONE);
-    serializer->exitStruct(*m_fieldListWithoutArray);
+    serializer->exitStruct(*m_fieldStructWithoutArray);
     // }}
-    serializer->exitArrayStruct(*m_fieldList);
+    serializer->exitArrayStruct(*m_fieldStruct);
     serializer->exitStruct(*m_fieldValue);
 
 
@@ -660,12 +653,12 @@ TEST_F(TestSerializerStruct, testVariantStruct2)
     serializer->enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_VARIANTSTRUCT);
     serializer->enterArrayStruct(*m_fieldStruct);
     // {"key1", "Hello"}
-    serializer->enterStruct(*m_fieldListWithoutArray);
+    serializer->enterStruct(*m_fieldStructWithoutArray);
     serializer->enterString(*m_fieldName, "key1", 4);
     serializer->enterInt32(*m_fieldIndex, VarValueType2Index::VARVALUETYPE_STRING);
     serializer->enterString(*m_fieldString, "Hello", 5);
-    serializer->exitStruct(*m_fieldListWithoutArray);
-    serializer->exitArrayStruct(*m_fieldList);
+    serializer->exitStruct(*m_fieldStructWithoutArray);
+    serializer->exitArrayStruct(*m_fieldStruct);
     serializer->exitStruct(*m_fieldValue2);
 
     // {"valueInt32", 5}    

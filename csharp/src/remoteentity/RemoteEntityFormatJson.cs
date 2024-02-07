@@ -38,8 +38,8 @@ namespace finalmq
 
         static readonly int JSONBLOCKSIZE = 512;
         static readonly byte[] ARRAY_BEGIN = { (byte)'[' };
-        static readonly byte[] ARRAY_END = { (byte)']', (byte)'\t' };
-        static readonly byte[] ARRAY_END_NO_DATA = { (byte)',', (byte)'\t', (byte)'{', (byte)'}', (byte)']', (byte)'\t' };
+        static readonly byte[] ARRAY_END = { (byte)']', (byte)'\t', (byte)'\t' };
+        static readonly byte[] ARRAY_END_NO_DATA = { (byte)',', (byte)'\t', (byte)'{', (byte)'}', (byte)']', (byte)'\t', (byte)'\t' };
         static readonly byte[] DELIMITER_HEADER_PAYLOAD = { (byte)',', (byte)'\t' };
         static readonly byte[] EMPTY_PAYLOAD = { (byte)'{', (byte)'}' };
 
