@@ -33,7 +33,20 @@ class SYMBOLEXP ZeroCopyBuffer : public IZeroCopyBuffer
 {
 public:
     std::string getData() const;
+    size_t size() const;
     const std::list<std::string>& chunks() const;
+
+
+    template<class TContainer>
+    void copyData(TContainer& container) const
+    {
+        container.reserve(container.size() + size());
+        for (const auto& chunk : m_chunks)
+        {
+            container.insert(container.end(), chunk.begin(), chunk.end());
+        }
+    }
+
 
 private:
     virtual char* addBuffer(ssize_t size, ssize_t reserve = 0) override;

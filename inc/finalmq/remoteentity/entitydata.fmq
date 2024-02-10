@@ -80,9 +80,13 @@
         ]},
         {"type":"DisconnectEntity","desc":"The entity that will be removed will send DisconnectEntity to all its peers.","fields":[]},
         {"type":"RawBytes","desc":"Send pure data for protocols with no meta info.","fields":[
-            {"tid":"TYPE_BYTES",       "type":"",          "name":"data",     "desc":"The data","flags":[]}
+            {"tid":"bytes",       "type":"",          "name":"data",     "desc":"The data","flags":[]}
         ]},
         {"type":"NoData","desc":"Use this type for the request if you register a command with a path and the rquest does not have any data","fields":[
+        ]},
+        {"type":"GeneralMessage","desc":"A general message holds the serializes data in protobuf format. it can be used, if type structs are not generated","fields":[
+            {"tid":"string",      "type":"",          "name":"type",     "desc":"type to deserialize the protobuf data","flags":[]},
+            {"tid":"bytes",       "type":"",          "name":"data",     "desc":"the protobuf data","flags":[]}
         ]},
     
         {"type":"HD_RE","desc":"desc","fields":[

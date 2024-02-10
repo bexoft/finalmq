@@ -34,19 +34,26 @@ namespace finalmq {
 
 std::string ZeroCopyBuffer::getData() const
 {
+    ssize_t s = size();
     std::string data;
-    ssize_t size = 0;
-    for (const auto& chunk : m_chunks)
-    {
-        size += chunk.size();
-    }
-    data.reserve(size);
+    data.reserve(s);
     for (const auto& chunk : m_chunks)
     {
         data += chunk;
     }
 
     return data;
+}
+
+
+size_t ZeroCopyBuffer::size() const
+{
+    ssize_t s = 0;
+    for (const auto& chunk : m_chunks)
+    {
+        s += chunk.size();
+    }
+    return s;
 }
 
 

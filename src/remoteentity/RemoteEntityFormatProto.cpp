@@ -86,6 +86,12 @@ void RemoteEntityFormatProto::serializeData(const IProtocolSessionPtr& /*session
             char* payload = message.addSendPayload(rawData->size());
             memcpy(payload, rawData->data(), rawData->size());
         }
+        else if (structBase->getStructInfo().getTypeName() == GeneralMessage::structInfo().getTypeName())
+        {
+            const GeneralMessage* generalMessage = static_cast<const GeneralMessage*>(structBase);
+            char* buffer = message.addSendPayload(generalMessage->data.size());
+            memcpy(buffer, generalMessage->data.data(), generalMessage->data.size());
+        }
         else if (structBase->getStructInfo().getTypeName() != finalmq::RawDataMessage::structInfo().getTypeName())
         {
             SerializerProto serializerData(message);
@@ -132,6 +138,8 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const IProtocolSessio
     }
     bool ok = false;
 
+    std::string typeOfGeneralMessage;
+
     if (sizeHeader <= sizePayload)
     {
         SerializerStruct serializerHeader(header);
@@ -157,7 +165,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const IProtocolSessio
             auto entity = remoteEntity.lock();
             if (entity)
             {
-                header.type = entity->getTypeOfCommandFunction(header.path);
+                header.type = entity->getTypeOfCommandFunction(header.path, typeOfGeneralMessage);
             }
         }
         if (header.path.empty() && !header.type.empty())
@@ -178,13 +186,13 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const IProtocolSessio
         buffer += sizeHeader;
 
         BufferRef bufferRefData = {buffer, sizeData};
-        data = parseData(session, bufferRefData, storeRawData, header.type, formatStatus);
+        data = parseData(session, bufferRefData, storeRawData, header.type, formatStatus, typeOfGeneralMessage);
     }
 
     return data;
 }
 
-std::shared_ptr<StructBase> RemoteEntityFormatProto::parseData(const IProtocolSessionPtr& /*session*/, const BufferRef& bufferRef, bool storeRawData, std::string& type, int& formatStatus)
+std::shared_ptr<StructBase> RemoteEntityFormatProto::parseData(const IProtocolSessionPtr& /*session*/, const BufferRef& bufferRef, bool storeRawData, std::string& type, int& formatStatus, const std::string& typeOfGeneralMessage)
 {
     formatStatus = 0;
     const char* buffer = bufferRef.first;
@@ -231,14 +239,23 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parseData(const IProtocolSe
             data = StructFactoryRegistry::instance().createStruct(type);
             if (data)
             {
-                assert(sizeDataInStream >= 0);
-                SerializerStruct serializerData(*data);
-                ParserProto parserData(serializerData, buffer, sizeDataInStream);
-                ok = parserData.parseStruct(type);
-                if (!ok)
+                if (type != GeneralMessage::structInfo().getTypeName() || typeOfGeneralMessage.empty())
                 {
-                    formatStatus |= FORMATSTATUS_SYNTAX_ERROR;
-                    data = nullptr;
+                    assert(sizeDataInStream >= 0);
+                    SerializerStruct serializerData(*data);
+                    ParserProto parserData(serializerData, buffer, sizeDataInStream);
+                    ok = parserData.parseStruct(type);
+                    if (!ok)
+                    {
+                        formatStatus |= FORMATSTATUS_SYNTAX_ERROR;
+                        data = nullptr;
+                    }
+                }
+                else
+                {
+                    GeneralMessage* generalMessage = static_cast<finalmq::GeneralMessage*>(data.get());
+                    generalMessage->type = typeOfGeneralMessage;
+                    generalMessage->data.insert(generalMessage->data.end(), buffer, buffer + sizeDataInStream);
                 }
             }
         }

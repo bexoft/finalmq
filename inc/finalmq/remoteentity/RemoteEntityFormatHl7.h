@@ -43,7 +43,7 @@ public:
 
 private:
     virtual std::shared_ptr<StructBase> parse(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus) override;
-    virtual std::shared_ptr<StructBase> parseData(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, std::string& type, int& formatStatus) override;
+    virtual std::shared_ptr<StructBase> parseData(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, std::string& type, int& formatStatus, const std::string& typeOfGeneralMessage) override;
     virtual void serialize(const IProtocolSessionPtr& session, IMessage& message, const Header& header, const StructBase* structBase = nullptr) override;
     virtual void serializeData(const IProtocolSessionPtr& session, IMessage& message, const StructBase* structBase = nullptr) override;
 };
