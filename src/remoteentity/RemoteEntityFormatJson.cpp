@@ -24,11 +24,14 @@
 #include "finalmq/remoteentity/RemoteEntityFormatJson.h"
 
 #include "finalmq/serializejson/SerializerJson.h"
+#include "finalmq/serializeproto/SerializerProto.h"
 #include "finalmq/serializestruct/ParserStruct.h"
 #include "finalmq/serializejson/ParserJson.h"
+#include "finalmq/serializeproto/ParserProto.h"
 #include "finalmq/serializestruct/SerializerStruct.h"
 #include "finalmq/serializestruct/StructFactoryRegistry.h"
 #include "finalmq/protocolsession/ProtocolMessage.h"
+#include "finalmq/helpers/ZeroCopyBuffer.h"
 
 #include "finalmq/remoteentity/entitydata.fmq.h"
 
@@ -91,6 +94,23 @@ void RemoteEntityFormatJson::serializeData(const IProtocolSessionPtr& session, I
 {
     if (structBase)
     {
+        bool enumAsString = true;
+        bool skipDefaultValues = false;
+        const Variant& formatData = session->getFormatData();
+        if (formatData.getType() != VARTYPE_NONE)
+        {
+            const bool* propEnumAsString = formatData.getData<bool>(PROPERTY_SERIALIZE_ENUM_AS_STRING);
+            const bool* propSkipDefaultValues = formatData.getData<bool>(PROPERTY_SERIALIZE_SKIP_DEFAULT_VALUES);
+            if (propEnumAsString != nullptr)
+            {
+                enumAsString = *propEnumAsString;
+            }
+            if (propSkipDefaultValues != nullptr)
+            {
+                skipDefaultValues = *propSkipDefaultValues;
+            }
+        }
+
         // payload
         if (structBase->getRawContentType() == CONTENT_TYPE)
         {
@@ -99,25 +119,15 @@ void RemoteEntityFormatJson::serializeData(const IProtocolSessionPtr& session, I
             char* payload = message.addSendPayload(rawData->size());
             memcpy(payload, rawData->data(), rawData->size());
         }
-        else if (structBase->getStructInfo().getTypeName() != finalmq::RawDataMessage::structInfo().getTypeName())
+        else if (structBase->getStructInfo().getTypeName() == GeneralMessage::structInfo().getTypeName())
         {
-            bool enumAsString = true;
-            bool skipDefaultValues = false;
-            const Variant& formatData = session->getFormatData();
-            if (formatData.getType() != VARTYPE_NONE)
-            {
-                const bool* propEnumAsString = formatData.getData<bool>(PROPERTY_SERIALIZE_ENUM_AS_STRING);
-                const bool* propSkipDefaultValues = formatData.getData<bool>(PROPERTY_SERIALIZE_SKIP_DEFAULT_VALUES);
-                if (propEnumAsString != nullptr)
-                {
-                    enumAsString = *propEnumAsString;
-                }
-                if (propSkipDefaultValues != nullptr)
-                {
-                    skipDefaultValues = *propSkipDefaultValues;
-                }
-            }
-            
+            const GeneralMessage* generalMessage = static_cast<const GeneralMessage*>(structBase);
+            SerializerJson serializerData(message, JSONBLOCKSIZE, enumAsString, skipDefaultValues);
+            ParserProto parserData(serializerData, generalMessage->data.data(), generalMessage->data.size());
+            parserData.parseStruct(generalMessage->type);
+        }
+        else if (structBase->getStructInfo().getTypeName() != RawDataMessage::structInfo().getTypeName())
+        {
             SerializerJson serializerData(message, JSONBLOCKSIZE, enumAsString, skipDefaultValues);
             ParserStruct parserData(serializerData, *structBase);
             parserData.parseStruct();
@@ -193,6 +203,8 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const IProtocolSession
         --sizeBuffer;
     }
 
+    std::string typeOfGeneralMessage;
+
     static const std::string WILDCARD = "*";
     const char* endHeader = nullptr;
     if (buffer[0] == '/')
@@ -249,7 +261,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const IProtocolSession
         auto entity = remoteEntity.lock();
         if (entity)
         {
-            header.type = entity->getTypeOfCommandFunction(header.path);
+            header.type = entity->getTypeOfCommandFunction(header.path, typeOfGeneralMessage);
         }
 
         std::string path = { &buffer[0], &buffer[ixCorrelationId] };
@@ -288,7 +300,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const IProtocolSession
             auto entity = remoteEntity.lock();
             if (entity)
             {
-                header.type = entity->getTypeOfCommandFunction(header.path);
+                header.type = entity->getTypeOfCommandFunction(header.path, typeOfGeneralMessage);
             }
         }
         if (header.path.empty() && !header.type.empty())
@@ -312,7 +324,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const IProtocolSession
         assert(sizeData >= 0);
 
         BufferRef bufferRefData = {buffer, sizeData};
-        data = parseData(session, bufferRefData, storeRawData, header.type, formatStatus);
+        data = parseData(session, bufferRefData, storeRawData, header.type, formatStatus, typeOfGeneralMessage);
     }
 
     return data;
@@ -320,7 +332,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const IProtocolSession
 
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatJson::parseData(const IProtocolSessionPtr& /*session*/, const BufferRef& bufferRef, bool storeRawData, std::string& type, int& formatStatus)
+std::shared_ptr<StructBase> RemoteEntityFormatJson::parseData(const IProtocolSessionPtr& /*session*/, const BufferRef& bufferRef, bool storeRawData, std::string& type, int& formatStatus, const std::string& typeOfGeneralMessage)
 {
     formatStatus = 0;
     const char* buffer = bufferRef.first;
@@ -338,13 +350,35 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parseData(const IProtocolSes
         {
             if (sizeData > 0)
             {
-                SerializerStruct serializerData(*data);
-                ParserJson parserData(serializerData, buffer, sizeData);
-                const char* endData = parserData.parseStruct(type);
-                if (!endData)
+                if (type != GeneralMessage::structInfo().getTypeName() || typeOfGeneralMessage.empty())
                 {
-                    formatStatus |= FORMATSTATUS_SYNTAX_ERROR;
-                    data = nullptr;
+                    SerializerStruct serializerData(*data);
+                    ParserJson parserData(serializerData, buffer, sizeData);
+                    const char* endData = parserData.parseStruct(type);
+                    if (!endData)
+                    {
+                        formatStatus |= FORMATSTATUS_SYNTAX_ERROR;
+                        data = nullptr;
+                    }
+                }
+                else
+                {
+                    ZeroCopyBuffer serializationBuffer;
+                    SerializerProto serializerData(serializationBuffer);
+                    ParserJson parserData(serializerData, buffer, sizeData);
+                    const char* endData = parserData.parseStruct(typeOfGeneralMessage);
+                    if (endData)
+                    {
+                        GeneralMessage* generalMessage = static_cast<finalmq::GeneralMessage*>(data.get());
+                        generalMessage->type = typeOfGeneralMessage;
+                        std::string serializedData = serializationBuffer.getData();
+                        serializationBuffer.copyData(generalMessage->data);
+                    }
+                    else
+                    {
+                        formatStatus |= FORMATSTATUS_SYNTAX_ERROR;
+                        data = nullptr;
+                    }
                 }
             }
         }

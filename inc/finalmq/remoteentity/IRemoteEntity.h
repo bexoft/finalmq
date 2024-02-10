@@ -515,10 +515,11 @@ struct IRemoteEntity
     /**
      * @brief gets the type of the function, which is defined at path.
      * @param path is the path of the function. Can be adjusted by the call, if the method is relevant for the function.
+     * @param typeOfGeneralMessage in case the message is a GeneralMessage, then the type of the general message will be returned.
      * @param method is a http method (GET,POST,...).
      * @return expected type of the function.
      */
-    virtual std::string getTypeOfCommandFunction(std::string& path, const std::string* method = nullptr) = 0;
+    virtual std::string getTypeOfCommandFunction(std::string& path, std::string& typeOfGeneralMessage, const std::string* method = nullptr) = 0;
 
     /**
      * @brief getNextCorrelationId creates a correlation ID that is unique inside the entity.
@@ -624,6 +625,14 @@ struct IRemoteEntity
     * @return the created peer id.
     */
     virtual PeerId createPublishPeer(const SessionInfo& session, const std::string& entityName) = 0;
+
+    /**
+    * @brief if the message is a GeneralMessage, then the entity will be askes for the type of 
+    * the message which is inside the general message.
+    * @param path the path of the function, which shall be called
+    * @return the type of the message.
+    */
+    virtual std::string getTypeOfGeneralMessage(const std::string& path) = 0;
 
 private:
     // methods for RemoteEntityContainer

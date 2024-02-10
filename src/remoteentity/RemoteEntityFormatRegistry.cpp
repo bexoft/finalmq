@@ -351,7 +351,7 @@ inline static bool isDestAndSubPathDefined(const Header& header)
     return (isDestinationDefined(header) && isSubPathDefined(header));
 }
 
-std::string RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header)
+std::string RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, std::string& typeOfGeneralMessage)
 {
     const IMessage::Metainfo& metainfo = message.getAllMetainfo();
     auto itPath = metainfo.find(FMQ_PATH);
@@ -493,7 +493,7 @@ std::string RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, con
             {
                 method = &itMethod->second;
             }
-            header.type = entity->getTypeOfCommandFunction(header.path, method);
+            header.type = entity->getTypeOfCommandFunction(header.path, typeOfGeneralMessage, method);
         }
     }
 
@@ -507,7 +507,8 @@ std::string RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, con
 
 std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainfo(const IProtocolSessionPtr& session, IMessage& message, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus)
 {
-    std::string data = parseMetainfo(message, name2Entity, header);
+    std::string typeOfGeneralMessage;
+    std::string data = parseMetainfo(message, name2Entity, header, typeOfGeneralMessage);
 
     formatStatus = 0;
     BufferRef bufferRef = message.getReceivePayload();
@@ -528,7 +529,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainf
         if (it != m_contentTypeToFormat.end())
         {
             assert(it->second);
-            structBase = it->second->parseData(session, bufferRef, storeRawData, header.type, formatStatus);
+            structBase = it->second->parseData(session, bufferRef, storeRawData, header.type, formatStatus, typeOfGeneralMessage);
         }
     }
     else

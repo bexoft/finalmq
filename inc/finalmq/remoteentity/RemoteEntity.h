@@ -284,7 +284,7 @@ public:
     virtual void connect(PeerId peerId, const SessionInfo& session, EntityId entityId) override;
     virtual void connect(PeerId peerId, const SessionInfo& session, const std::string& entityName, EntityId entityId) override;
     virtual void registerCommandFunction(const std::string& path, const std::string& type, FuncCommand funcCommand) override;
-    virtual std::string getTypeOfCommandFunction(std::string& path, const std::string* method = nullptr) override;
+    virtual std::string getTypeOfCommandFunction(std::string& path, std::string& typeOfGeneralMessage, const std::string* method = nullptr) override;
     virtual CorrelationId getNextCorrelationId() const override;
     virtual void sendRequest(const PeerId& peerId, const std::string& path, const StructBase& structBase, CorrelationId correlationId, IMessage::Metainfo* metainfo = nullptr) override;
     virtual CorrelationId sendRequest(const PeerId& peerId, const std::string& path, const StructBase& structBase, FuncReply funcReply) override;
@@ -294,6 +294,7 @@ public:
     virtual bool cancelReply(CorrelationId correlationId) override;
     virtual void registerReplyEvent(FuncReplyEvent funcReplyEvent) override;
     virtual PeerId createPublishPeer(const SessionInfo& session, const std::string& entityName) override;
+    virtual std::string getTypeOfGeneralMessage(const std::string& path) override;
 
 private:
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) override;

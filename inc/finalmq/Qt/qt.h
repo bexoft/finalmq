@@ -25,7 +25,6 @@
 #include "finalmq/remoteentity/RemoteEntityContainer.h"
 #include "finalmq/remoteentity/RemoteEntityFormatProto.h"
 #include "finalmq/remoteentity/RemoteEntityFormatJson.h"
-#include "finalmq/remoteentity/FmqRegistryClient.h"
 
 
 #include "finalmq/Qt/qtdata.fmq.h"
@@ -41,7 +40,7 @@ using finalmq::IRemoteEntityContainer;
 using finalmq::PeerId;
 using finalmq::PeerEvent;
 using finalmq::RequestContextPtr;
-using finalmq::FmqRegistryClient;
+using finalmq::GeneralMessage;
 using finalmq::qt::GetObjectTreeRequest;
 using finalmq::qt::GetObjectTreeReply;
 using finalmq::qt::ObjectData;
@@ -372,6 +371,22 @@ private:
 //};
 
 
+class QtInvoker : public RemoteEntity
+{
+public:
+    QtInvoker()
+    {
+        registerCommand<GeneralMessage>("{objectname}/{method}", [](const RequestContextPtr& requestContext, const std::shared_ptr<GetObjectTreeRequest>& request) {
+        });
+    }
+
+    std::string getTypeOfGeneralMessage(std::string& path) override
+    {
+
+    }
+}
+
+
 class QtServer : public RemoteEntity
 {
 public:
@@ -493,6 +508,7 @@ public:
         }
         return nullptr;
     }
+
 };
 
 

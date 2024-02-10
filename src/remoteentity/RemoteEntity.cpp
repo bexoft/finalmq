@@ -29,6 +29,7 @@
 #include "finalmq/protocolsession/ProtocolMessage.h"
 #include "finalmq/remoteentity/RemoteEntityContainer.h"
 #include "finalmq/serializestruct/StructBase.h"
+#include "finalmq/remoteentity/entitydata.fmq.h"
 
 //using finalmq::ConnectEntity;
 //using finalmq::ConnectEntityReply;
@@ -711,6 +712,12 @@ PeerId RemoteEntity::createPublishPeer(const SessionInfo& session, const std::st
     return peerId;
 }
 
+std::string RemoteEntity::getTypeOfGeneralMessage(const std::string& /*path*/)
+{
+    return {};
+}
+
+
 void RemoteEntity::sendConnectEntity(PeerId peerId, IRemoteEntityContainer& entityContainer, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect)
 {
     bool registered = false;
@@ -928,7 +935,7 @@ void RemoteEntity::registerCommandFunction(const std::string& path, const std::s
     }
 }
 
-std::string RemoteEntity::getTypeOfCommandFunction(std::string& path, const std::string* method)
+std::string RemoteEntity::getTypeOfCommandFunction(std::string& path, std::string& typeOfGeneralMessage, const std::string* method)
 {
     const RemoteEntity::Function* function = getFunction(path);
     if (!function && method)
@@ -944,6 +951,10 @@ std::string RemoteEntity::getTypeOfCommandFunction(std::string& path, const std:
     }
     if (function)
     {
+        if (function->type == finalmq::GeneralMessage::structInfo().getTypeName())
+        {
+            typeOfGeneralMessage = getTypeOfGeneralMessage(path);
+        }
         return function->type;
     }
     return {};

@@ -328,7 +328,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatHl7::parse(const IProtocolSessionP
         header.corrid = 1;
 
         BufferRef bufferRefData = {buffer, sizeBuffer};
-        data = parseData(session, bufferRefData, storeRawData, header.type, formatStatus);
+        data = parseData(session, bufferRefData, storeRawData, header.type, formatStatus, {});
 
         formatStatus |= FORMATSTATUS_AUTOMATIC_CONNECT;
     }
@@ -336,7 +336,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatHl7::parse(const IProtocolSessionP
     return data;
 }
 
-std::shared_ptr<StructBase> RemoteEntityFormatHl7::parseData(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, std::string& type, int& formatStatus)
+std::shared_ptr<StructBase> RemoteEntityFormatHl7::parseData(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, std::string& type, int& formatStatus, const std::string& /*typeOfGeneralMessage*/)
 {
     const char* buffer = bufferRef.first;
     ssize_t sizeBuffer = bufferRef.second;
