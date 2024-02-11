@@ -69,6 +69,31 @@
             {"tid":"int32", "type":"","name":"y","desc":"","flags":[]},
             {"tid":"int32", "type":"","name":"width","desc":"","flags":[]},
             {"tid":"int32", "type":"","name":"height","desc":"","flags":[]}
+        ]},
+        
+
+        {"type":"QtTypeMappings","desc":"","fields":[
+            {"tid":"bool",                      "attrs":["qttype:bool"],                    "name":"a1"},
+            {"tid":"int8",                      "attrs":["qttype:char"],                    "name":"a2"},
+            {"tid":"uint8",                     "attrs":["qttype:uchar"],                   "name":"a3"},
+            {"tid":"int16",                     "attrs":["qttype:short"],                   "name":"a4"},
+            {"tid":"uint16",                    "attrs":["qttype:ushort"],                  "name":"a5"},
+            {"tid":"int32",                     "attrs":["qttype:int"],                     "name":"a6"},
+            {"tid":"uint32",                    "attrs":["qttype:uint"],                    "name":"a7"},
+            {"tid":"uint32",                    "attrs":["qttype:ulong"],                   "name":"a8"},
+            {"tid":"int64",                     "attrs":["qttype:qlonglong"],               "name":"a9"},
+            {"tid":"uint64",                    "attrs":["qttype:qulonglong"],              "name":"a10"},
+            {"tid":"float",                     "attrs":["qttype:float"],                   "name":"a11"},
+            {"tid":"double",                    "attrs":["qttype:double"],                  "name":"a12"},
+            {"tid":"int16",                     "attrs":["qttype:QChar"],                   "name":"a13"},
+            {"tid":"string",                    "attrs":["qttype:QString"],                 "name":"a14"},
+            {"tid":"string[]",                  "attrs":["qttype:QStringList"],             "name":"a15"},
+            {"tid":"bytes",                     "attrs":["qttype:QByteArray"],              "name":"a16"},
+            {"tid":"bool[]",                    "attrs":["qttype:QBitArray"],               "name":"a17"},
+            {"tid":"int64",                     "attrs":["qttype:QDate"],                   "name":"a18"},
+            {"tid":"uint32",                    "attrs":["qttype:QTime"],                   "name":"a19"},
+            {"tid":"string",                    "attrs":["qttype:QUrl,qtcode:bytes"],       "name":"a20"},
+            {"tid":"string",                    "attrs":["qttype:QLocale"],                 "name":"a21"}
         ]}
         
     ]

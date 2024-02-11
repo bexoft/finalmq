@@ -76,6 +76,9 @@ bool ParserQt::parseStruct(const std::string& typeName)
     return res;
 }
 
+static const std::string QT_CODE = "qtcode";
+static const std::string QT_CODE_BYTES = "bytes";
+
 static const std::string ENUM_BITS = "enumbits";
 static const std::string BITS_8 = "8";
 static const std::string BITS_16 = "16";
@@ -302,11 +305,25 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                 }
                 if (ok)
                 {
-                    std::string value;
-                    ok = parse(value);
-                    if (ok)
+                    const std::string& code = field->getProperty(QT_CODE);
+                    if (code == QT_CODE_BYTES)
                     {
-                        m_visitor.enterString(*field, std::move(value));
+                        const char* buffer = nullptr;
+                        ssize_t size = 0;
+                        ok = parseArrayByte(buffer, size);
+                        if (ok)
+                        {
+                            m_visitor.enterString(*field, buffer, size);
+                        }
+                    }
+                    else
+                    {
+                        std::string value;
+                        ok = parse(value);
+                        if (ok)
+                        {
+                            m_visitor.enterString(*field, std::move(value));
+                        }
                     }
                 }
                 break;
