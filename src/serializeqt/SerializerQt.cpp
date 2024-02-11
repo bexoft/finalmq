@@ -270,6 +270,9 @@ void SerializerQt::Internal::enterDouble(const MetaField& field, double value)
     serialize(value);
 }
 
+static const std::string QT_CODE = "qtcode";
+static const std::string QT_CODE_BYTES = "bytes";
+
 void SerializerQt::Internal::enterString(const MetaField& field, std::string&& value)
 {
     assert(field.typeId == MetaTypeId::TYPE_STRING);
@@ -277,8 +280,17 @@ void SerializerQt::Internal::enterString(const MetaField& field, std::string&& v
     {
         serializeQVariantHeader(field);
     }
-    reserveSpace(sizeof(std::uint32_t) + 2 * value.size());
-    serializeString(value);
+    const std::string& code = field.getProperty(QT_CODE);
+    if (code == QT_CODE_BYTES)
+    {
+        reserveSpace(sizeof(std::uint32_t) + value.size());
+        serialize(value.c_str(), value.size());
+    }
+    else
+    {
+        reserveSpace(sizeof(std::uint32_t) + 2 * value.size());
+        serializeString(value);
+    }
 }
 
 void SerializerQt::Internal::enterString(const MetaField& field, const char* value, ssize_t size)
@@ -288,8 +300,17 @@ void SerializerQt::Internal::enterString(const MetaField& field, const char* val
     {
         serializeQVariantHeader(field);
     }
-    reserveSpace(sizeof(std::uint32_t) + 2 * size);
-    serializeString(value, size);
+    const std::string& code = field.getProperty(QT_CODE);
+    if (code == QT_CODE_BYTES)
+    {
+        reserveSpace(sizeof(std::uint32_t) + size);
+        serialize(value, size);
+    }
+    else
+    {
+        reserveSpace(sizeof(std::uint32_t) + 2 * size);
+        serializeString(value, size);
+    }
 }
 
 void SerializerQt::Internal::enterBytes(const MetaField& field, Bytes&& value)
