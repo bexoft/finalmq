@@ -954,6 +954,11 @@ std::string RemoteEntity::getTypeOfCommandFunction(std::string& path, std::strin
         if (function->type == finalmq::GeneralMessage::structInfo().getTypeName())
         {
             typeOfGeneralMessage = getTypeOfGeneralMessage(path);
+            // type not found
+            if (typeOfGeneralMessage.empty())
+            {
+                return {};
+            }
         }
         return function->type;
     }

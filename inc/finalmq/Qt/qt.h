@@ -25,6 +25,11 @@
 #include "finalmq/remoteentity/RemoteEntityContainer.h"
 #include "finalmq/remoteentity/RemoteEntityFormatProto.h"
 #include "finalmq/remoteentity/RemoteEntityFormatJson.h"
+#include "finalmq/metadata/MetaData.h"
+#include "finalmq/helpers/ZeroCopyBuffer.h"
+#include "finalmq/helpers/Utils.h"
+#include "finalmq/serializeqt/SerializerQt.h"
+#include "finalmq/serializeproto/ParserProto.h"
 
 
 #include "finalmq/Qt/qtdata.fmq.h"
@@ -41,6 +46,10 @@ using finalmq::PeerId;
 using finalmq::PeerEvent;
 using finalmq::RequestContextPtr;
 using finalmq::GeneralMessage;
+using finalmq::Utils;
+using finalmq::ZeroCopyBuffer;
+using finalmq::SerializerQt;
+using finalmq::ParserProto;
 using finalmq::qt::GetObjectTreeRequest;
 using finalmq::qt::GetObjectTreeReply;
 using finalmq::qt::ObjectData;
@@ -376,15 +385,297 @@ class QtInvoker : public RemoteEntity
 public:
     QtInvoker()
     {
-        registerCommand<GeneralMessage>("{objectname}/{method}", [](const RequestContextPtr& requestContext, const std::shared_ptr<GetObjectTreeRequest>& request) {
+        init();
+
+        registerCommand<GeneralMessage>("{objectid}/{method}", [](const RequestContextPtr& requestContext, const std::shared_ptr<GeneralMessage>& request) {
+            bool found = false;
+
+            assert(request);
+
+            ZeroCopyBuffer buffer;
+            SerializerQt serializerQt(buffer, SerializerQt::Mode::WRAPPED_BY_QVARIANTLIST);
+            ParserProto parserProto(serializerQt, request->data.data(), request->data.size());
+            parserProto.parseStruct(request->type);
+
+            QByteArray bufferByteArray;
+            bufferByteArray.reserve(static_cast<int>(buffer.size()));
+            const std::list<std::string>& chunks = buffer.chunks();
+            for (const auto& chunk : chunks)
+            {
+                bufferByteArray.append(chunk.data(), static_cast<int>(chunk.size()));
+            }
+
+            QVariantList parameters;
+            QDataStream s(bufferByteArray);
+            s >> parameters;
+
+            //bool ok = metaMethod.invoke(
+            //    object,
+            //    Qt::DirectConnection,
+            //    returnArgument,
+            //    arguments.value(0),
+            //    arguments.value(1),
+            //    arguments.value(2),
+            //    arguments.value(3),
+            //    arguments.value(4),
+            //    arguments.value(5),
+            //    arguments.value(6),
+            //    arguments.value(7),
+            //    arguments.value(8),
+            //    arguments.value(9)
+            //);
+
+            //const std::string* objId = requestContext->getMetainfo("PATH_objectid");
+            //const std::string* methodName = requestContext->getMetainfo("PATH_method");
+            //if (objId && methodName)
+            //{
+            //    const std::string typeName = getTypeName(*objId, *methodName);
+            //}
+            if (!found)
+            {
+                // not found
+                requestContext->reply(finalmq::Status::STATUS_REQUEST_NOT_FOUND);
+            }
         });
     }
 
-    std::string getTypeOfGeneralMessage(std::string& path) override
+private:
+    void init()
     {
+        m_typesToField.emplace("bool", MetaField{ MetaTypeId::TYPE_BOOL,           "", "", "", 0, {} });
+        m_typesToField.emplace("int", MetaField{ MetaTypeId::TYPE_INT32,          "", "", "", 0, {} });
+        m_typesToField.emplace("uint", MetaField{ MetaTypeId::TYPE_UINT32,         "", "", "", 0, {} });
+        m_typesToField.emplace("qlonglong", MetaField{ MetaTypeId::TYPE_INT64,          "", "", "", 0, {} });
+        m_typesToField.emplace("qulonglong", MetaField{ MetaTypeId::TYPE_UINT64,         "", "", "", 0, {} });
+        m_typesToField.emplace("double", MetaField{ MetaTypeId::TYPE_DOUBLE,         "", "", "", 0, {} });
+        m_typesToField.emplace("short", MetaField{ MetaTypeId::TYPE_INT16,          "", "", "", 0, {} });
+        m_typesToField.emplace("char", MetaField{ MetaTypeId::TYPE_INT8,           "", "", "", 0, {} });
+        m_typesToField.emplace("ulong", MetaField{ MetaTypeId::TYPE_UINT32,         "", "", "", 0, {} });
+        m_typesToField.emplace("ushort", MetaField{ MetaTypeId::TYPE_UINT16,         "", "", "", 0, {} });
+        m_typesToField.emplace("uchar", MetaField{ MetaTypeId::TYPE_UINT8,          "", "", "", 0, {} });
+        m_typesToField.emplace("float", MetaField{ MetaTypeId::TYPE_FLOAT,          "", "", "", 0, {} });
+        m_typesToField.emplace("QChar", MetaField{ MetaTypeId::TYPE_INT16,          "", "", "", 0, {} });
+        m_typesToField.emplace("QString", MetaField{ MetaTypeId::TYPE_STRING,         "", "", "", 0, {} });
+        m_typesToField.emplace("QStringList", MetaField{ MetaTypeId::TYPE_ARRAY_STRING,   "", "", "", 0, {} });
+        m_typesToField.emplace("QByteArray", MetaField{ MetaTypeId::TYPE_BYTES,          "", "", "", 0, {} });
+        m_typesToField.emplace("QBitArray", MetaField{ MetaTypeId::TYPE_ARRAY_BOOL,     "", "", "", 0, {} });
+        m_typesToField.emplace("QDate", MetaField{ MetaTypeId::TYPE_INT64,          "", "", "", 0, {} });
+        m_typesToField.emplace("QTime", MetaField{ MetaTypeId::TYPE_UINT32,         "", "", "", 0, {} });
+        //      m_typesToField.emplace("QDateTime",     MetaField{ MetaTypeId::TYPE_STRUCT,         "", "", "", 0, {} });
+        m_typesToField.emplace("QUrl", MetaField{ MetaTypeId::TYPE_BYTES,          "", "", "", 0, {"qttype:QUrl,qtcode:bytes"} });
+        m_typesToField.emplace("QLocale", MetaField{ MetaTypeId::TYPE_STRING,         "", "", "", 0, {} });
 
+
+        static const std::string KEY_QTTYPE = "qttype";
+
+        const std::unordered_map<std::string, MetaEnum> enums = MetaDataGlobal::instance().getAllEnums();
+        for (const auto& entry : enums)
+        {
+            const MetaEnum& en = entry.second;
+            const std::string& qtTypeName0 = en.getProperty(KEY_QTTYPE);
+            if (!qtTypeName0.empty())
+            {
+                m_typesToField.emplace(qtTypeName0, MetaField{ MetaTypeId::TYPE_ENUM, en.getTypeName(), "", "", 0, {} });
+            }
+        }
+
+        const std::unordered_map<std::string, MetaStruct> structs = MetaDataGlobal::instance().getAllStructs();
+        for (const auto& entry : structs)
+        {
+            const MetaStruct& stru = entry.second;
+            const std::string& qtTypeName0 = stru.getProperty(KEY_QTTYPE);
+            if (!qtTypeName0.empty())
+            {
+                m_typesToField.emplace(qtTypeName0, MetaField{ MetaTypeId::TYPE_STRUCT, stru.getTypeName(), "", "", 0, {} });
+            }
+
+            for (ssize_t i = 0; i < stru.getFieldsSize(); ++i)
+            {
+                const MetaField* field = stru.getFieldByIndex(i);
+                if (field)
+                {
+                    const std::string& qtTypeName1 = field->getProperty(KEY_QTTYPE);
+                    if (!qtTypeName1.empty())
+                    {
+                        m_typesToField.emplace(qtTypeName1, MetaField{ field->typeId, field->typeName, "", "", field->flags, field->attrs });
+                    }
+                    else if (field->typeId == MetaTypeId::TYPE_STRUCT ||
+                        field->typeId == MetaTypeId::TYPE_ARRAY_STRUCT)
+                    {
+                        const MetaStruct* s = MetaDataGlobal::instance().getStruct(field->typeName);
+                        if (s)
+                        {
+                            const std::string& qtTypeName2 = s->getProperty(KEY_QTTYPE);
+                            if (!qtTypeName2.empty())
+                            {
+                                m_typesToField.emplace(qtTypeName2, MetaField{ field->typeId, field->typeName, "", "", field->flags, field->attrs });
+                            }
+                        }
+                    }
+                    else if (field->typeId == MetaTypeId::TYPE_ENUM ||
+                        field->typeId == MetaTypeId::TYPE_ARRAY_ENUM)
+                    {
+                        const MetaEnum* e = MetaDataGlobal::instance().getEnum(field->typeName);
+                        if (e)
+                        {
+                            const std::string& qtTypeName3 = e->getProperty(KEY_QTTYPE);
+                            if (!qtTypeName3.empty())
+                            {
+                                m_typesToField.emplace(qtTypeName3, MetaField{ field->typeId, field->typeName, "", "", field->flags, field->attrs });
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
-}
+
+    virtual std::string getTypeOfGeneralMessage(const std::string& path) override
+    {
+        std::string typeOfGeneralMessage{};
+        std::vector<std::string> objIdAndMethod;
+        finalmq::Utils::split(path, 0, path.size(), '/', objIdAndMethod);
+        if (objIdAndMethod.size() >= 2)
+        {
+            const std::string& objId = objIdAndMethod[0];
+            const std::string& methodName = objIdAndMethod[1];
+            typeOfGeneralMessage = getTypeName(objId, methodName);
+        }
+        return typeOfGeneralMessage;
+    }
+
+    std::string getTypeName(const std::string& objId, const std::string& methodName)
+    {
+        std::string typeOfGeneralMessage{};
+        QObject* obj = findObject(QString::fromUtf8(objId.c_str()));
+        if (obj)
+        {
+            const QMetaObject* metaObject = obj->metaObject();
+            QMetaMethod metaMethod;
+            QMetaProperty metaProperty;
+            if (metaObject)
+            {
+                int ix = metaObject->indexOfMethod(methodName.c_str());
+                if (ix != -1)
+                {
+                    metaMethod = metaObject->method(ix);
+                }
+
+                if (!metaMethod.isValid())
+                {
+                    ix = metaObject->indexOfSlot(methodName.c_str());
+                    if (ix != -1)
+                    {
+                        metaMethod = metaObject->method(ix);
+                    }
+                }
+
+                if (!metaMethod.isValid())
+                {
+                    ix = metaObject->indexOfProperty(methodName.c_str());
+                    if (ix != -1)
+                    {
+                        metaProperty = metaObject->property(ix);
+                    }
+                }
+
+                if (!metaMethod.isValid() && !metaProperty.isValid())
+                {
+                    const QByteArray methodNameAsByteArray = methodName.c_str();
+                    for (int i = 0; i < metaObject->methodCount(); ++i)
+                    {
+                        QMetaMethod metaMethodTmp = metaObject->method(i);
+                        if (metaMethodTmp.isValid())
+                        {
+                            if (metaMethodTmp.name() == methodNameAsByteArray)
+                            {
+                                metaMethod = metaMethodTmp;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (metaMethod.isValid())
+                {
+                    QList<QByteArray> argTypes = metaMethod.parameterTypes();
+                    QList<QByteArray> argNames = metaMethod.parameterNames();
+
+                    if (argTypes.size() == argNames.size())
+                    {
+                        std::string typeName;
+                        for (int i = 0; i < argTypes.size(); ++i)
+                        {
+                            if (i > 0)
+                            {
+                                typeName += '_';
+                            }
+                            typeName += argTypes[i].toStdString();
+                            typeName += '_';
+                            typeName += argNames[i].toStdString();
+                        }
+
+                        // no parameters?
+                        if (typeName.empty())
+                        {
+                            typeName = '_';
+                        }
+
+                        bool ok = false;
+                        const MetaStruct* struFound = MetaDataGlobal::instance().getStruct(typeName);
+                        if (struFound == nullptr)
+                        {
+                            MetaStruct stru{ typeName, "", {}, 0, {} };
+                            ok = true;
+                            for (int i = 0; i < argTypes.size(); ++i)
+                            {
+                                const std::string& type = argTypes[i].toStdString();
+                                const auto it = m_typesToField.find(type);
+                                if (it != m_typesToField.end())
+                                {
+                                    const std::string& parameterName = argNames[i].toStdString();
+                                    const MetaField& field = it->second;
+                                    stru.addField(MetaField(field.typeId, field.typeName, parameterName, field.description, field.flags, field.attrs));
+                                }
+                                else
+                                {
+                                    ok = false;
+                                    break;
+                                }
+                            }
+                            if (ok)
+                            {
+                                MetaDataGlobal::instance().addStruct(stru);
+                            }
+                        }
+                        if (ok)
+                        {
+                            typeOfGeneralMessage = typeName;
+                        }
+                    }
+                }
+            }
+        }
+        return typeOfGeneralMessage;
+    }
+
+    static QObject* findObject(const QString& objectName)
+    {
+        QWidgetList widgetList = qApp->topLevelWidgets();
+        for (int i = 0; i < widgetList.size(); ++i)
+        {
+            QList<QObject*> list = widgetList[i]->findChildren<QObject*>(objectName, Qt::FindChildrenRecursively);
+            if (!list.isEmpty())
+            {
+                return list[0];
+            }
+        }
+        return nullptr;
+    }
+
+    private:
+        std::unordered_map<std::string, MetaField> m_typesToField;
+};
 
 
 class QtServer : public RemoteEntity

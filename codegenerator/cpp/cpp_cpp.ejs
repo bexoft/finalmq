@@ -137,7 +137,7 @@ bool <%- plaintype %>::operator !=(const <%- plaintype %>& rhs) const
     return !(*this == rhs);
 }
 const finalmq::StructInfo <%- plaintype %>::_structInfo = {
-    "<%- helper.typeWithNamespace(data, stru.type, '.') %>", "<%- stru.desc %>", <%- helper.convertStructFlags(stru.flags) %>, <%- helper.convertAttrs(field.attrs) %>, [] () { return std::make_shared<<%- plaintype %>>(); }, {<% -%>
+    "<%- helper.typeWithNamespace(data, stru.type, '.') %>", "<%- stru.desc %>", <%- helper.convertStructFlags(stru.flags) %>, <%- helper.convertAttrs(stru.attrs) %>, [] () { return std::make_shared<<%- plaintype %>>(); }, {<% -%>
     <% for (var n = 0; n < stru.fields.length; n++) { 
         field = stru.fields[n] 
 		if (field.tid == 'TYPE_VARIANT')
