@@ -54,6 +54,7 @@ const std::string ProtocolMqtt5Client::KEY_USERNAME = "username";
 const std::string ProtocolMqtt5Client::KEY_PASSWORD = "password";
 const std::string ProtocolMqtt5Client::KEY_SESSIONEXPIRYINTERVAL = "sessionexpiryinterval";
 const std::string ProtocolMqtt5Client::KEY_KEEPALIVE = "keepalive";
+const std::string ProtocolMqtt5Client::KEY_TOPIC_PREFIX = "topicprefix";
 
 static const std::string FMQ_PATH = "fmq_path";
 static const std::string FMQ_CORRID = "fmq_corrid";
@@ -63,7 +64,7 @@ static const std::string FMQ_DESTNAME = "fmq_destname";
 static const std::string FMQ_SUBPATH = "fmq_subpath";
 
 static const std::string TOPIC_WILLMESSAGE = "/fmq_willmsg";
-static const std::string SESSIONID_PREFIX = "/_id:";
+static const std::string SESSIONID_PREFIX = "/_id/";
 
 static const std::uint8_t ReasonCodeDisconnectWithWillMessage = 0x04;
 
@@ -173,8 +174,17 @@ ProtocolMqtt5Client::ProtocolMqtt5Client(const Variant& data)
     {
         m_keepAlive = *entry;
     }
+    m_topicPrefix = data.getDataValue<std::string>(KEY_TOPIC_PREFIX);
+    if (!m_topicPrefix.empty())
+    {
+        if (m_topicPrefix[0] != '/')
+        {
+            m_topicPrefix = "/" + m_topicPrefix;
+        }
+    }
     m_clientId = getUuid();
-    m_virtualSessionId = SESSIONID_PREFIX + m_clientId;
+    m_sessionPrefix = m_topicPrefix + '/' + SESSIONID_PREFIX;
+    m_virtualSessionId = m_sessionPrefix + m_clientId;
 
     m_client->setCallback(this);
 }
@@ -320,6 +330,11 @@ void ProtocolMqtt5Client::sendMessage(IMessagePtr message)
 
     std::string topic = message->getControlData().getDataValue<std::string>(FMQ_VIRTUAL_SESSION_ID);
 
+    if (topic.empty())
+    {
+        topic = m_topicPrefix;
+    }
+
     std::string* destname = message->getControlData().getData<std::string>(FMQ_DESTNAME);
     if (destname && !destname->empty())
     {
@@ -408,7 +423,7 @@ void ProtocolMqtt5Client::subscribe(const std::vector<std::string>& subscribtion
     for (size_t i = 0; i < subscribtions.size(); ++i)
     {
         const std::string& subscription = subscribtions[i];
-        std::string topic = "/" + subscription;
+        std::string topic = m_topicPrefix + '/' + subscription;
         data.subscriptions.push_back({topic, 2, false, false, 2});
     }
 
@@ -498,14 +513,19 @@ void ProtocolMqtt5Client::receivedPublish(const PublishData& data, const IMessag
         }
         else
         {
-            if (data.topic.compare(0, SESSIONID_PREFIX.size(), SESSIONID_PREFIX.c_str()) == 0)
+            if (data.topic.compare(0, m_sessionPrefix.size(), m_sessionPrefix.c_str()) == 0)
             {
-                size_t pos = data.topic.find_first_of('/', SESSIONID_PREFIX.size());
+                size_t pos = data.topic.find_first_of('/', m_sessionPrefix.size());
                 if (pos != std::string::npos)
                 {
                     std::string path = &data.topic[pos];
                     message->addMetainfo(FMQ_PATH, std::move(path));
                 }
+            }
+            else if (data.topic.compare(0, m_topicPrefix.size(), m_topicPrefix.c_str()) == 0)
+            {
+                std::string path = &data.topic[m_topicPrefix.size()];
+                message->addMetainfo(FMQ_PATH, std::move(path));
             }
             else
             {

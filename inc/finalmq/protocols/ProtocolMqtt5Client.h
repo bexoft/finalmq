@@ -38,6 +38,7 @@ public:
     static const std::string KEY_PASSWORD;              ///< the password for the broker
     static const std::string KEY_SESSIONEXPIRYINTERVAL; ///< the mqtt session expiry interval in seconds
     static const std::string KEY_KEEPALIVE;             ///< the mqtt keep alive interval in seconds
+    static const std::string KEY_TOPIC_PREFIX;          ///< a topic prefix
 
     static const std::uint32_t PROTOCOL_ID; // 5
     static const std::string PROTOCOL_NAME; // mqtt5client
@@ -101,6 +102,8 @@ private:
     std::string m_password{};
     std::uint32_t m_sessionExpiryInterval = 5 * 60; // default 5 minutes
     std::uint32_t m_keepAlive = 20;                 // default 20 seconds
+    std::string m_topicPrefix;
+    std::string m_sessionPrefix;
     std::string m_clientId{};
     std::string m_virtualSessionId{};
 
