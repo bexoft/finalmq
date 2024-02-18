@@ -35,7 +35,8 @@
 #include "finalmq/Qt/qtdata.fmq.h"
 
 #include <algorithm>
-//#include <QCommonStyle>
+#include <array>
+
 
 using finalmq::RemoteEntity;
 using finalmq::RemoteEntityContainer;
@@ -387,50 +388,51 @@ public:
     {
         init();
 
-        registerCommand<GeneralMessage>("{objectid}/{method}", [](const RequestContextPtr& requestContext, const std::shared_ptr<GeneralMessage>& request) {
+        registerCommand<GeneralMessage>("{objectid}/{method}", [this](const RequestContextPtr& requestContext, const std::shared_ptr<GeneralMessage>& request) {
             bool found = false;
 
             assert(request);
 
-            ZeroCopyBuffer buffer;
-            SerializerQt serializerQt(buffer, SerializerQt::Mode::WRAPPED_BY_QVARIANTLIST);
-            ParserProto parserProto(serializerQt, request->data.data(), request->data.size());
-            parserProto.parseStruct(request->type);
-
-            QByteArray bufferByteArray;
-            bufferByteArray.reserve(static_cast<int>(buffer.size()));
-            const std::list<std::string>& chunks = buffer.chunks();
-            for (const auto& chunk : chunks)
+            const std::string* objId = requestContext->getMetainfo("PATH_objectid");
+            const std::string* methodName = requestContext->getMetainfo("PATH_method");
+            if (objId && methodName)
             {
-                bufferByteArray.append(chunk.data(), static_cast<int>(chunk.size()));
+                ZeroCopyBuffer buffer;
+                SerializerQt serializerQt(buffer, SerializerQt::Mode::WRAPPED_BY_QVARIANTLIST);
+                ParserProto parserProto(serializerQt, request->data.data(), request->data.size());
+                parserProto.parseStruct(request->type);
+
+                QByteArray bufferByteArray;
+                bufferByteArray.reserve(static_cast<int>(buffer.size()));
+                const std::list<std::string>& chunks = buffer.chunks();
+                for (const auto& chunk : chunks)
+                {
+                    bufferByteArray.append(chunk.data(), static_cast<int>(chunk.size()));
+                }
+
+                QVariantList parameters;
+                QDataStream s(bufferByteArray);
+                s >> parameters;
+
+                std::array<QGenericArgument, 10> genericArguments;
+                for (int i = 0; i < parameters.length(); ++i)
+                {
+                    const QVariant& parameter = parameters[i];
+                    genericArguments[i] = QGenericArgument(parameter.typeName(), parameter.constData());
+                }
+
+                QObject* obj;
+                QMetaMethod metaMethod;
+                const std::string& typeName = getTypeName(*objId, *methodName, obj, metaMethod);
+                if ((obj != nullptr) && metaMethod.isValid() && (typeName == request->type))
+                {
+                    found = false;
+                    metaMethod.invoke(obj,
+                        genericArguments[0], genericArguments[1], genericArguments[2],
+                        genericArguments[3], genericArguments[4], genericArguments[5],
+                        genericArguments[6], genericArguments[7], genericArguments[8], genericArguments[9]);
+                }
             }
-
-            QVariantList parameters;
-            QDataStream s(bufferByteArray);
-            s >> parameters;
-
-            //bool ok = metaMethod.invoke(
-            //    object,
-            //    Qt::DirectConnection,
-            //    returnArgument,
-            //    arguments.value(0),
-            //    arguments.value(1),
-            //    arguments.value(2),
-            //    arguments.value(3),
-            //    arguments.value(4),
-            //    arguments.value(5),
-            //    arguments.value(6),
-            //    arguments.value(7),
-            //    arguments.value(8),
-            //    arguments.value(9)
-            //);
-
-            //const std::string* objId = requestContext->getMetainfo("PATH_objectid");
-            //const std::string* methodName = requestContext->getMetainfo("PATH_method");
-            //if (objId && methodName)
-            //{
-            //    const std::string typeName = getTypeName(*objId, *methodName);
-            //}
             if (!found)
             {
                 // not found
@@ -546,12 +548,18 @@ private:
 
     std::string getTypeName(const std::string& objId, const std::string& methodName)
     {
+        QObject* obj;
+        QMetaMethod metaMethod;
+        return getTypeName(objId, methodName, obj, metaMethod);
+    }
+
+    std::string getTypeName(const std::string& objId, const std::string& methodName, QObject*& obj, QMetaMethod& metaMethod)
+    {
         std::string typeOfGeneralMessage{};
-        QObject* obj = findObject(QString::fromUtf8(objId.c_str()));
+        obj = findObject(QString::fromUtf8(objId.c_str()));
         if (obj)
         {
             const QMetaObject* metaObject = obj->metaObject();
-            QMetaMethod metaMethod;
             QMetaProperty metaProperty;
             if (metaObject)
             {
