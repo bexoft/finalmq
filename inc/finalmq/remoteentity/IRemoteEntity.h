@@ -622,9 +622,10 @@ struct IRemoteEntity
     * @brief creates a peer at the own entity, so that the peer will publish events to the session.
     * This can be used e.g. for mqtt sessions.
     * @param entityName is the name of the destination. The mqtt topic will look like this: "/<entityName>/<message type>".
+    * @param triggerPeerEvent will cause a peer event, if true
     * @return the created peer id.
     */
-    virtual PeerId createPublishPeer(const SessionInfo& session, const std::string& entityName) = 0;
+    virtual PeerId createPublishPeer(const SessionInfo& session, const std::string& entityName, bool triggerPeerEvent = true) = 0;
 
     /**
     * @brief if the message is a GeneralMessage, then the entity will be askes for the type of 

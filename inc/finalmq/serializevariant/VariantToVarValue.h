@@ -49,7 +49,7 @@ private:
 
     Variant&                        m_variant;
     IParserVisitor&                 m_visitor;
-    std::deque<const MetaField*>    m_fieldStack;
+    std::deque<const MetaField*>    m_fieldStack{};
     static const MetaStruct*        m_structVarValue;
 };
 

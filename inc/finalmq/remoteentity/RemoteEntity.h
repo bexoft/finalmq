@@ -93,7 +93,7 @@ public:
     PeerId getPeerId(std::int64_t sessionId, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName) const;
     ReadyToSend getRequestHeader(const PeerId& peerId, const std::string& path, const StructBase& structBase, CorrelationId correlationId, Header& header, IProtocolSessionPtr& session, std::string& virtualSessionId);
     std::string getEntityName(const PeerId& peerId);
-    PeerId addPeer(const SessionInfo& session, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName, bool incoming, bool& added, const std::function<void()>& funcBeforeFirePeerEvent);
+    PeerId addPeer(const SessionInfo& session, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName, bool incoming, bool& added, const std::function<void()>& funcBeforeFirePeerEvent, bool triggerPeerEvent = true);
     PeerId addPeer();
     std::deque<PeerManager::Request> connect(PeerId peerId, const SessionInfo& session, EntityId entityId, const std::string& entityName);
     void setEntityId(EntityId entityId);
@@ -293,7 +293,7 @@ public:
     virtual CorrelationId sendRequest(const PeerId& peerId, IMessage::Metainfo&& metainfo, const StructBase& structBase, FuncReplyMeta funcReply) override;
     virtual bool cancelReply(CorrelationId correlationId) override;
     virtual void registerReplyEvent(FuncReplyEvent funcReplyEvent) override;
-    virtual PeerId createPublishPeer(const SessionInfo& session, const std::string& entityName) override;
+    virtual PeerId createPublishPeer(const SessionInfo& session, const std::string& entityName, bool triggerPeerEvent = true) override;
     virtual std::string getTypeOfGeneralMessage(const std::string& path) override;
 
 private:
