@@ -323,7 +323,7 @@ std::string PeerManager::getEntityName(const PeerId& peerId)
     return entityName;
 }
 
-PeerId PeerManager::addPeer(const SessionInfo& session, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName, bool incoming, bool& added, const std::function<void()>& funcBeforeFirePeerEvent)
+PeerId PeerManager::addPeer(const SessionInfo& session, const std::string& virtualSessionId, EntityId entityId, const std::string& entityName, bool incoming, bool& added, const std::function<void()>& funcBeforeFirePeerEvent, bool triggerPeerEvent)
 {
     //    assert(entityId != ENTITYID_INVALID || !entityName.empty());
     added = false;
@@ -363,7 +363,7 @@ PeerId PeerManager::addPeer(const SessionInfo& session, const std::string& virtu
         }
 
         // fire peer event CONNECTED
-        if (incoming)
+        if (incoming && triggerPeerEvent)
         {
             if (funcPeerEvent && *funcPeerEvent)
             {
@@ -704,11 +704,11 @@ void RemoteEntity::registerReplyEvent(FuncReplyEvent funcReplyEvent)
     m_funcsReplyEventChanged.fetch_add(1, std::memory_order_acq_rel);
 }
 
-PeerId RemoteEntity::createPublishPeer(const SessionInfo& session, const std::string& entityName)
+PeerId RemoteEntity::createPublishPeer(const SessionInfo& session, const std::string& entityName, bool triggerPeerEvent)
 {
     bool added = false;
     PeerId peerId = PEERID_INVALID;
-    peerId = m_peerManager->addPeer(session, "", ENTITYID_INVALID, entityName, true, added, {});
+    peerId = m_peerManager->addPeer(session, "", ENTITYID_INVALID, entityName, true, added, {}, triggerPeerEvent);
     return peerId;
 }
 

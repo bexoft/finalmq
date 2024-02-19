@@ -100,14 +100,14 @@ private:
 
     std::string m_username{};
     std::string m_password{};
-    std::uint32_t m_sessionExpiryInterval = 5 * 60; // default 5 minutes
-    std::uint32_t m_keepAlive = 20;                 // default 20 seconds
-    std::string m_topicPrefix;
-    std::string m_sessionPrefix;
+    std::uint32_t m_sessionExpiryInterval{ 5 * 60 }; // default 5 minutes
+    std::uint32_t m_keepAlive{ 20 };                 // default 20 seconds
+    std::string m_topicPrefix{};
+    std::string m_sessionPrefix{};
     std::string m_clientId{};
     std::string m_virtualSessionId{};
 
-    bool m_firstConnection = true;
+    bool m_firstConnection{ true };
     PollingTimer m_timerReconnect{};
 
     std::weak_ptr<IProtocolCallback> m_callback{};
