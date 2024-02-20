@@ -330,14 +330,11 @@ void ProtocolMqtt5Client::sendMessage(IMessagePtr message)
 
     std::string topic = message->getControlData().getDataValue<std::string>(FMQ_VIRTUAL_SESSION_ID);
 
-    if (topic.empty())
+    std::string* destname = message->getControlData().getData<std::string>(FMQ_DESTNAME);
+    if (topic.empty() && destname && !destname->empty())
     {
         topic = m_topicPrefix;
-    }
 
-    std::string* destname = message->getControlData().getData<std::string>(FMQ_DESTNAME);
-    if (destname && !destname->empty())
-    {
         if ((*destname)[0] != '/')
         {
             topic += '/';
