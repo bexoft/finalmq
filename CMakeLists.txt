@@ -10,6 +10,7 @@ option(FINALMQ_BUILD_SERVICES "Build services" OFF)
 option(FINALMQ_BUILD_COVERAGE "Enable gcov" OFF)
 option(FINALMQ_BUILD_DOXYGEN "Enable doxygen" OFF)
 option(FINALMQ_HAS_NOT_WEAK_FROM_THIS "Has weak_from_this" OFF)
+option(FINALMQ_INSTALL "Enable installation" ON)
 
 if (WIN32)
     option(FINALMQ_USE_SSL "Build with openssl" OFF)    # avoid dependency to openssl for windows
@@ -183,7 +184,11 @@ SET(FINALMQ_LIBRARY_SOURCES ${SOURCES}
 
 add_library(finalmq SHARED ${FINALMQ_LIBRARY_SOURCES})
 
-target_include_directories(finalmq PUBLIC ${FINALMQ_SOURCE_DIR}/inc)
+target_include_directories(finalmq SYSTEM PUBLIC ${FINALMQ_SOURCE_DIR}/inc)
+target_include_directories(finalmq SYSTEM PUBLIC ${FINALMQ_BINARY_DIR}/inc)
+
+
+set_property(TARGET finalmq PROPERTY DISABLE_STATIC_ANALYSIS TRUE)
 
 
 if (WIN32)
@@ -218,13 +223,14 @@ target_link_libraries(finalmq ${LINKLIBS})
 # INSTALL
 ###############################################################
 
-# Set the location for library installation
-# Use "sudo make install" to apply
-install(TARGETS finalmq DESTINATION lib)
-install(DIRECTORY inc/finalmq DESTINATION include FILES_MATCHING PATTERN "*.h")
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq DESTINATION include FILES_MATCHING PATTERN "*.h")
-install(DIRECTORY ${CODEGENERATOR} DESTINATION lib/finalmq)
-
+if (FINALMQ_INSTALL)
+    # Set the location for library installation
+    # Use "sudo make install" to apply
+    install(TARGETS finalmq DESTINATION lib)
+    install(DIRECTORY inc/finalmq DESTINATION include FILES_MATCHING PATTERN "*.h")
+    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq DESTINATION include FILES_MATCHING PATTERN "*.h")
+    install(DIRECTORY ${CODEGENERATOR} DESTINATION lib/finalmq)
+endif()
 
 ###############################################################
 
