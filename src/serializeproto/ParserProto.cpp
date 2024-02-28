@@ -451,6 +451,12 @@ void ParserProto::parseArrayStruct(const MetaField& field)
 
 bool ParserProto::parseStruct(const std::string& typeName)
 {
+    static const char EMPTY[1] = { 0 };
+    if (m_size == 0 && m_ptr == nullptr)
+    {
+        m_ptr = EMPTY;
+    }
+
     if (!m_ptr || m_size < 0)
     {
         // end of data

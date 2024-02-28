@@ -313,6 +313,9 @@ void SerializerQt::Internal::enterString(const MetaField& field, const char* val
     }
 }
 
+static const std::string PNG = "png";
+static const std::string PNG_TRUE = "true";
+
 void SerializerQt::Internal::enterBytes(const MetaField& field, Bytes&& value)
 {
     assert(field.typeId == MetaTypeId::TYPE_BYTES);
@@ -326,8 +329,17 @@ void SerializerQt::Internal::enterBytes(const MetaField& field, const BytesEleme
     {
         serializeQVariantHeader(field);
     }
-    reserveSpace(sizeof(std::uint32_t) + size);
-    serialize(value, size);
+    const std::string& png = field.getProperty(PNG);
+    if (png == PNG_TRUE)
+    {
+        reserveSpace(sizeof(std::uint32_t) + size);
+        serializePng(value, size);
+    }
+    else
+    {
+        reserveSpace(sizeof(std::uint32_t) + size);
+        serialize(value, size);
+    }
 }
 
 static const std::string QT_ENUM_BITS = "enumbits";
@@ -554,13 +566,27 @@ void SerializerQt::Internal::enterArrayString(const MetaField& field, const std:
     {
         serializeQVariantHeader(field);
     }
-    std::uint32_t len = sizeof(std::uint32_t);
-    for (size_t i = 0; i < value.size(); ++i)
+    const std::string& code = field.getProperty(QT_CODE);
+    if (code == QT_CODE_BYTES)
     {
-        len += static_cast<std::uint32_t>(sizeof(std::uint32_t) + 2 * static_cast<std::uint32_t>(value.size()));
+        std::uint32_t len = sizeof(std::uint32_t);
+        for (size_t i = 0; i < value.size(); ++i)
+        {
+            len += static_cast<std::uint32_t>(sizeof(std::uint32_t) + static_cast<std::uint32_t>(value[i].size()));
+        }
+        reserveSpace(len);
+        serializeArrayBytes(value);
     }
-    reserveSpace(len);
-    serializeArrayString(value);
+    else
+    {
+        std::uint32_t len = sizeof(std::uint32_t);
+        for (size_t i = 0; i < value.size(); ++i)
+        {
+            len += static_cast<std::uint32_t>(sizeof(std::uint32_t) + 2 * static_cast<std::uint32_t>(value[i].size()));
+        }
+        reserveSpace(len);
+        serializeArrayString(value);
+    }
 }
 
 void SerializerQt::Internal::enterArrayBytesMove(const MetaField& field, std::vector<Bytes>&& value)
@@ -575,13 +601,27 @@ void SerializerQt::Internal::enterArrayBytes(const MetaField& field, const std::
     {
         serializeQVariantHeader(field);
     }
-    std::uint32_t len = sizeof(std::uint32_t);
-    for (size_t i = 0; i < value.size(); ++i)
+    const std::string& png = field.getProperty(PNG);
+    if (png == PNG_TRUE)
     {
-        len += static_cast<std::uint32_t>(sizeof(std::uint32_t) + static_cast<std::uint32_t>(value.size()));
+        std::uint32_t len = sizeof(std::uint32_t);
+        for (size_t i = 0; i < value.size(); ++i)
+        {
+            len += static_cast<std::uint32_t>(sizeof(std::uint32_t) + static_cast<std::uint32_t>(value[i].size()));
+        }
+        reserveSpace(len);
+        serializeArrayPng(value);
     }
-    reserveSpace(len);
-    serializeArrayBytes(value);
+    else
+    {
+        std::uint32_t len = sizeof(std::uint32_t);
+        for (size_t i = 0; i < value.size(); ++i)
+        {
+            len += static_cast<std::uint32_t>(sizeof(std::uint32_t) + static_cast<std::uint32_t>(value[i].size()));
+        }
+        reserveSpace(len);
+        serializeArrayBytes(value);
+    }
 }
 
 void SerializerQt::Internal::enterArrayEnum(const MetaField& field, std::vector<std::int32_t>&& value)
@@ -652,12 +692,14 @@ void SerializerQt::Internal::enterArrayEnum(const MetaField& field, const std::v
 
 void SerializerQt::Internal::serialize(char value)
 {
-    serialize(static_cast<std::uint8_t>(value));
+    *m_buffer = static_cast<std::uint8_t>(value);
+    ++m_buffer;
 }
 
 void SerializerQt::Internal::serialize(std::int8_t value)
 {
-    serialize(static_cast<std::uint8_t>(value));
+    *m_buffer = static_cast<std::uint8_t>(value);
+    ++m_buffer;
 }
 
 void SerializerQt::Internal::serialize(std::uint8_t value)
@@ -774,6 +816,17 @@ void SerializerQt::Internal::serialize(const T* value, ssize_t size, bool sizeTi
     }
 }
 
+void SerializerQt::Internal::serializePng(const BytesElement* value, ssize_t size)
+{
+    const std::uint32_t available = (size == 0) ? 0 : 1;
+    serialize(available);
+    if (available)
+    {
+        memcpy(m_buffer, value, size);
+        m_buffer += size;
+    }
+}
+
 void SerializerQt::Internal::serializeArrayBool(const std::vector<bool>& value)
 {
     std::uint32_t s = static_cast<std::uint32_t>(value.size());
@@ -812,6 +865,32 @@ void SerializerQt::Internal::serializeArrayBytes(const std::vector<Bytes>& value
     for (std::uint32_t i = 0; i < s; ++i)
     {
         serialize(value[i].data(), value[i].size());
+    }
+}
+
+void SerializerQt::Internal::serializeArrayBytes(const std::vector<std::string>& value)
+{
+    std::uint32_t s = static_cast<std::uint32_t>(value.size());
+    serialize(s);
+    for (std::uint32_t i = 0; i < s; ++i)
+    {
+        serialize(value[i].data(), value[i].size());
+    }
+}
+
+void SerializerQt::Internal::serializeArrayPng(const std::vector<Bytes>& value)
+{
+    std::uint32_t s = static_cast<std::uint32_t>(value.size());
+    serialize(s);
+    for (std::uint32_t i = 0; i < s; ++i)
+    {
+        const std::uint32_t available = value[i].empty() ? 0 : 1;
+        serialize(available);
+        if (available)
+        {
+            memcpy(m_buffer, value[i].data(), value[i].size());
+            m_buffer += value[i].size();
+        }
     }
 }
 

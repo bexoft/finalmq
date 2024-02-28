@@ -71,10 +71,10 @@
             {"tid":"int32", "type":"","name":"height","desc":"","flags":[]}
         ]},
         {"type":"FmqQRect","attrs":["qttype:QRect"],"desc":"","fields":[
-            {"tid":"int32", "type":"","name":"left","attrs":["qttype:Hello"],"desc":"","flags":[]},
-            {"tid":"int32", "type":"","name":"top","desc":"","flags":[]},
-            {"tid":"int32", "type":"","name":"right","desc":"","flags":[]},
-            {"tid":"int32", "type":"","name":"bottom","desc":"","flags":[]}
+            {"tid":"int32", "type":"","name":"x","attrs":["qttype:Hello"],"desc":"","flags":[]},
+            {"tid":"int32", "type":"","name":"y","desc":"","flags":[]},
+            {"tid":"int32", "type":"","name":"width","desc":"","flags":[]},
+            {"tid":"int32", "type":"","name":"height","desc":"","flags":[]}
         ]}
                 
     ]

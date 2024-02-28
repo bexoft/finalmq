@@ -28,8 +28,10 @@
 #include "finalmq/metadata/MetaData.h"
 #include "finalmq/helpers/ZeroCopyBuffer.h"
 #include "finalmq/helpers/Utils.h"
+#include "finalmq/serializeqt/ParserQt.h"
 #include "finalmq/serializeqt/SerializerQt.h"
 #include "finalmq/serializeproto/ParserProto.h"
+#include "finalmq/serializeproto/SerializerProto.h"
 
 
 #include "finalmq/Qt/qtdata.fmq.h"
@@ -66,112 +68,11 @@ using finalmq::qt::InvokeReply;
 #include <QPushButton>
 #include <QLayout>
 #include <QBuffer>
+#include <QVariant>
 //#include <QtCore>
 //#include <QtDebug>
 
 namespace finalmq { namespace qt {
-
-
-    QVariant call(QObject* object, const QString& methodNameWithSignature, const QVariantList& args)
-    {
-        int index = object->metaObject()->indexOfMethod(methodNameWithSignature.toUtf8());
-        QMetaMethod metaMethod = object->metaObject()->method(index);
-
-        // Convert the arguments
-
-        QVariantList converted;
-
-        // We need enough arguments to perform the conversion.
-
-        QList<QByteArray> methodTypes = metaMethod.parameterTypes();
-        if (methodTypes.size() < args.size()) {
-            qWarning() << "Insufficient arguments to call" << metaMethod.methodSignature();
-            return QVariant();
-        }
-
-        for (int i = 0; i < methodTypes.size(); i++) {
-            const QVariant& arg = args.at(i);
-
-            QByteArray methodTypeName = methodTypes.at(i);
-            QByteArray argTypeName = arg.typeName();
-
-            QVariant::Type methodType = QVariant::nameToType(methodTypeName);
-//            QVariant::Type argType = arg.type();
-
-            QVariant copy = QVariant(arg);
-
-            // If the types are not the same, attempt a conversion. If it
-            // fails, we cannot proceed.
-
-            if (copy.type() != methodType) {
-                if (copy.canConvert(methodType)) {
-                    if (!copy.convert(methodType)) {
-                        qWarning() << "Cannot convert" << argTypeName
-                            << "to" << methodTypeName;
-                        return QVariant();
-                    }
-                }
-            }
-
-            converted << copy;
-        }
-
-        QList<QGenericArgument> arguments;
-
-        for (int i = 0; i < converted.size(); i++) {
-
-            // Notice that we have to take a reference to the argument, else 
-            // we'd be pointing to a copy that will be destroyed when this
-            // loop exits. 
-
-            QVariant& argument = converted[i];
-
-            // A const_cast is needed because calling data() would detach
-            // the QVariant.
-
-            QGenericArgument genericArgument(
-                QMetaType::typeName(argument.userType()),
-                const_cast<void*>(argument.constData())
-            );
-
-            arguments << genericArgument;
-        }
-
-        QVariant returnValue(QMetaType::type(metaMethod.typeName()),
-            static_cast<void*>(NULL));
-
-        QGenericReturnArgument returnArgument(
-            metaMethod.typeName(),
-            const_cast<void*>(returnValue.constData())
-        );
-
-        // Perform the call
-
-        bool ok = metaMethod.invoke(
-            object,
-            Qt::DirectConnection,
-            returnArgument,
-            arguments.value(0),
-            arguments.value(1),
-            arguments.value(2),
-            arguments.value(3),
-            arguments.value(4),
-            arguments.value(5),
-            arguments.value(6),
-            arguments.value(7),
-            arguments.value(8),
-            arguments.value(9)
-        );
-
-        if (!ok) {
-            qWarning() << "Calling" << metaMethod.methodSignature() << "failed.";
-            return QVariant();
-        }
-        else {
-            return returnValue;
-        }
-    }
-
 
 
 struct IObjectVisitor
@@ -391,7 +292,10 @@ public:
         registerCommand<GeneralMessage>("{objectid}/{method}", [this](const RequestContextPtr& requestContext, const std::shared_ptr<GeneralMessage>& request) {
             bool found = false;
 
-            assert(request);
+            if (request == nullptr)
+            {
+                return;
+            }
 
             const std::string* objId = requestContext->getMetainfo("PATH_objectid");
             const std::string* methodName = requestContext->getMetainfo("PATH_method");
@@ -426,11 +330,35 @@ public:
                 const std::string& typeName = getTypeName(*objId, *methodName, obj, metaMethod);
                 if ((obj != nullptr) && metaMethod.isValid() && (typeName == request->type))
                 {
-                    found = false;
-                    metaMethod.invoke(obj,
+                    found = true;
+                    QVariant returnValue(QMetaType::type(metaMethod.typeName()),
+                        static_cast<void*>(NULL));
+
+                    QGenericReturnArgument returnArgument(
+                        metaMethod.typeName(),
+                        const_cast<void*>(returnValue.constData())
+                    );
+                    metaMethod.invoke(obj, returnArgument,
                         genericArguments[0], genericArguments[1], genericArguments[2],
                         genericArguments[3], genericArguments[4], genericArguments[5],
                         genericArguments[6], genericArguments[7], genericArguments[8], genericArguments[9]);
+  
+                    QByteArray retQtBuffer;
+                    QDataStream s(&retQtBuffer, QIODevice::WriteOnly);
+                    s << returnValue;
+
+                    std::string retTypeName = getReturnTypeName(metaMethod.typeName());
+
+                    ZeroCopyBuffer bufferRet;
+                    SerializerProto serializerProto(bufferRet);
+                    ParserQt parserQt(serializerProto, retQtBuffer.data(), retQtBuffer.size(), ParserQt::Mode::WRAPPED_BY_QVARIANT);
+                    parserQt.parseStruct(retTypeName);
+
+                    GeneralMessage replyMessage;
+                    replyMessage.type = retTypeName;
+                    bufferRet.copyData(replyMessage.data);
+
+                    requestContext->reply(replyMessage);
                 }
             }
             if (!found)
@@ -466,6 +394,7 @@ private:
         //      m_typesToField.emplace("QDateTime",     MetaField{ MetaTypeId::TYPE_STRUCT,         "", "", "", 0, {} });
         m_typesToField.emplace("QUrl", MetaField{ MetaTypeId::TYPE_BYTES,          "", "", "", 0, {"qttype:QUrl,qtcode:bytes"} });
         m_typesToField.emplace("QLocale", MetaField{ MetaTypeId::TYPE_STRING,         "", "", "", 0, {} });
+        m_typesToField.emplace("QPixmap", MetaField{ MetaTypeId::TYPE_BYTES,         "", "", "", 0, {"png:true"} });
 
 
         static const std::string KEY_QTTYPE = "qttype";
@@ -553,6 +482,29 @@ private:
         return getTypeName(objId, methodName, obj, metaMethod);
     }
 
+    std::string getReturnTypeName(const std::string& type)
+    {
+        std::string typeName = "ret_" + type;
+        const MetaStruct* struFound = MetaDataGlobal::instance().getStruct(typeName);
+        if (struFound == nullptr)
+        {
+            MetaStruct stru{ typeName, "", {}, 0, {} };
+            const auto it = m_typesToField.find(type);
+            if (it != m_typesToField.end())
+            {
+                static const std::string& parameterName = "ret";
+                const MetaField& field = it->second;
+                stru.addField(MetaField(field.typeId, field.typeName, parameterName, field.description, field.flags, field.attrs));
+                MetaDataGlobal::instance().addStruct(stru);
+            }
+            else
+            {
+                typeName.clear();
+            }
+        }
+        return typeName;
+    }
+
     std::string getTypeName(const std::string& objId, const std::string& methodName, QObject*& obj, QMetaMethod& metaMethod)
     {
         std::string typeOfGeneralMessage{};
@@ -595,7 +547,8 @@ private:
                         QMetaMethod metaMethodTmp = metaObject->method(i);
                         if (metaMethodTmp.isValid())
                         {
-                            if (metaMethodTmp.name() == methodNameAsByteArray)
+                            const QByteArray& name = metaMethodTmp.name();
+                            if (name == methodNameAsByteArray)
                             {
                                 metaMethod = metaMethodTmp;
                                 break;
@@ -629,12 +582,11 @@ private:
                             typeName = '_';
                         }
 
-                        bool ok = false;
+                        bool ok = true;
                         const MetaStruct* struFound = MetaDataGlobal::instance().getStruct(typeName);
                         if (struFound == nullptr)
                         {
                             MetaStruct stru{ typeName, "", {}, 0, {} };
-                            ok = true;
                             for (int i = 0; i < argTypes.size(); ++i)
                             {
                                 const std::string& type = argTypes[i].toStdString();
@@ -705,34 +657,7 @@ public:
             // send reply
             requestContext->reply(std::move(reply));
 
-            });
-
-        registerCommand<InvokeRequest>([](const RequestContextPtr& requestContext, const std::shared_ptr<InvokeRequest>& request) {
-            assert(request);
-
-            InvokeReply reply;
-
-            QVariantList args;
-            for (const auto& parameter : request->parameters)
-            {
-                args.push_back(parameter.c_str());
-            }
-
-            QString objectName = request->objectName.c_str();
-            QString methodNameWithSignature = request->methodNameWithSignature.c_str();
-            QObject* object = QtServer::findObject(objectName);
-            QVariant retVal;
-            if (object)
-            {
-                retVal = call(object, methodNameWithSignature, args);
-            }
-
-            reply.returnValue = retVal.toString().toStdString();
-
-            // send reply
-            requestContext->reply(std::move(reply));
-
-            });
+        });
 
         registerCommand<PressButtonRequest>([](const RequestContextPtr& /*requestContext*/, const std::shared_ptr<PressButtonRequest>& request) {
             assert(request);

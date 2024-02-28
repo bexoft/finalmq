@@ -61,16 +61,20 @@ namespace finalmq {
         bool parse(double& value);
         bool parse(std::string& str);
         bool parse(Bytes& value);
+        bool parsePng(Bytes& value);
 
         template<class T>
         bool parse(std::vector<T>& value);
 
         bool parseArrayByte(const char*& buffer, ssize_t& size);
+        bool parsePng(const char*& buffer, ssize_t& size);
         bool parseArrayBool(std::vector<bool>& value);
         bool parseArrayStruct(const MetaField& field);
+        bool parseArrayPng(std::vector<Bytes>& value);
 
         bool parseQVariantHeader(const MetaField& field);
         void checkIndex(const MetaField& field, std::int64_t value, std::int64_t& index);
+        bool getPngSize(std::uint32_t& size);
 
         const std::uint8_t* m_ptr = nullptr;
         ssize_t m_size = 0;
