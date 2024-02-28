@@ -381,6 +381,14 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parseData(const IProtocolSes
                     }
                 }
             }
+            else
+            {
+                if (type == GeneralMessage::structInfo().getTypeName() && !typeOfGeneralMessage.empty())
+                {
+                    GeneralMessage* generalMessage = static_cast<finalmq::GeneralMessage*>(data.get());
+                    generalMessage->type = typeOfGeneralMessage;
+                }
+            }
         }
     }
 

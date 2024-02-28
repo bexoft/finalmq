@@ -88,6 +88,9 @@ static const std::string ABORTSTRUCT = "abortstruct";
 static const std::string ABORT_FALSE = "false";
 static const std::string ABORT_TRUE = "true";
 
+static const std::string PNG = "png";
+static const std::string PNG_TRUE = "true";
+
 bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
 {
     if (!m_ptr || m_size < 0)
@@ -336,7 +339,15 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                 {
                     const char* buffer = nullptr;
                     ssize_t size = 0;
-                    ok = parseArrayByte(buffer, size);
+                    const std::string& png = field->getProperty(PNG);
+                    if (png == PNG_TRUE)
+                    {
+                        ok = parsePng(buffer, size);
+                    }
+                    else
+                    {
+                        ok = parseArrayByte(buffer, size);
+                    }
                     if (ok)
                     {
                         m_visitor.enterBytes(*field, buffer, size);
@@ -596,7 +607,15 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                 if (ok)
                 {
                     std::vector<Bytes> array;
-                    ok = parse(array);
+                    const std::string& png = field->getProperty(PNG);
+                    if (png == PNG_TRUE)
+                    {
+                        ok = parseArrayPng(array);
+                    }
+                    else
+                    {
+                        ok = parse(array);
+                    }
                     if (ok)
                     {
                         m_visitor.enterArrayBytes(*field, std::move(array));
@@ -887,6 +906,48 @@ bool ParserQt::parse(Bytes& value)
     }
 }
 
+bool ParserQt::parsePng(Bytes& value)
+{
+    value.clear();
+
+    std::int32_t available = 0;
+    bool ok = parse(available);
+    if (!ok)
+    {
+        return false;
+    }
+    if (available == 0)
+    {
+        return true;
+    }
+
+    std::uint32_t size;
+    ok = getPngSize(size);
+    if (!ok)
+    {
+        return false;
+    }
+    if (size == 0)
+    {
+        return true;
+    }
+
+    if (m_size >= static_cast<ssize_t>(size))
+    {
+        assert(m_ptr);
+        value = Bytes(m_ptr, m_ptr + size);
+        m_ptr += size;
+        m_size -= size;
+        return true;
+    }
+    else
+    {
+        m_ptr = nullptr;
+        m_size = 0;
+        return false;
+    }
+}
+
 bool ParserQt::parseArrayByte(const char*& buffer, ssize_t& size)
 {
     buffer = nullptr;
@@ -920,6 +981,54 @@ bool ParserQt::parseArrayByte(const char*& buffer, ssize_t& size)
         return false;
     }
 }
+
+
+bool ParserQt::parsePng(const char*& buffer, ssize_t& size)
+{
+    buffer = nullptr;
+    size = 0;
+
+    std::int32_t available = 0;
+    bool ok = parse(available);
+    if (!ok)
+    {
+        return false;
+    }
+    if (available == 0)
+    {
+        return true;
+    }
+
+    std::uint32_t s;
+    ok = getPngSize(s);
+    if (!ok)
+    {
+        return false;
+    }
+    if (s == 0)
+    {
+        return true;
+    }
+
+    size = static_cast<ssize_t>(s);
+
+    if (m_size >= size)
+    {
+        assert(m_ptr);
+        buffer = reinterpret_cast<const char*>(m_ptr);
+        m_ptr += size;
+        m_size -= size;
+        return true;
+    }
+    else
+    {
+        m_ptr = nullptr;
+        m_size = 0;
+        return false;
+    }
+}
+
+
 
 bool ParserQt::parseArrayBool(std::vector<bool>& value)
 {
@@ -1028,6 +1137,35 @@ bool ParserQt::parseArrayStruct(const MetaField& field)
     return (m_ptr != nullptr);
 }
 
+bool ParserQt::parseArrayPng(std::vector<Bytes>& value)
+{
+    value.clear();
+
+    std::uint32_t size;
+    bool ok = parse(size);
+    if (!ok)
+    {
+        return false;
+    }
+
+    if (size == 0)
+    {
+        return true;
+    }
+
+    value.resize(size);
+
+    for (std::uint32_t i = 0; i < size; ++i)
+    {
+        ok = parsePng(value[i]);
+        if (!ok)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool ParserQt::parseQVariantHeader(const MetaField& /*field*/)
 {
     std::uint32_t typeId;
@@ -1062,5 +1200,61 @@ void ParserQt::checkIndex(const MetaField& field, std::int64_t value, std::int64
         }
     }
 }
+
+bool ParserQt::getPngSize(std::uint32_t& size)
+{
+    static const std::uint8_t PNG_PREFIX[] = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+    static const char* IEND = "IEND";
+
+    bool ok = true;
+    size = 0;
+
+    if (m_size < 8 || (memcmp(m_ptr, PNG_PREFIX, 8) != 0))
+    {
+        return false;
+    }
+
+    const std::uint8_t* const ptrStore = m_ptr;
+    const ssize_t sizeStore = m_size;
+    m_ptr += 8;
+    m_size -= 8;
+
+    size += 8;
+
+    while (ok)
+    {
+        std::uint32_t chunkSize = 0;
+        ok = parse(chunkSize);
+        size += 12 + chunkSize;
+
+        if (!ok)
+        {
+            break;
+        }
+        if (m_size < 4)
+        {
+            ok = false;
+            break;
+        }
+        if (memcmp(m_ptr, IEND, 4) == 0)
+        {
+            break;
+        }
+        m_size -= 8 + chunkSize;
+        m_ptr += 8 + chunkSize;
+    }
+    if (ok)
+    {
+        m_ptr = ptrStore;
+        m_size = sizeStore;
+    }
+    else
+    {
+        size = 0;
+    }
+    return ok;
+}
+
+
 
 } // namespace finalmq

@@ -133,9 +133,13 @@ private:
         template<class T>
         void serialize(const T* value, ssize_t size, bool sizeTimesTwo = false);
 
+        void serializePng(const BytesElement* value, ssize_t size);
+            
         void serializeArrayBool(const std::vector<bool>& value);
         void serializeArrayString(const std::vector<std::string>& value);
         void serializeArrayBytes(const std::vector<Bytes>& value);
+        void serializeArrayBytes(const std::vector<std::string>& value);
+        void serializeArrayPng(const std::vector<Bytes>& value);
 
         void serializeQVariantHeader(const MetaField& field);
         bool isWrappedByQVariant() const;
