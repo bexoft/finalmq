@@ -378,6 +378,10 @@ void ParserAbortAndIndex::enterEnum(const MetaField& field, std::int32_t value)
             }
         }
     }
+    else
+    {
+        checkIndex(field, value);
+    }
 }
 void ParserAbortAndIndex::enterEnum(const MetaField& field, std::string&& value)
 {
@@ -731,19 +735,43 @@ void ParserAbortAndIndex::enterArrayEnum(const MetaField& field, const std::vect
     m_visitor->enterArrayEnum(field, value);
 }
 
+
+static const std::string INDEXMODE = "indexmode";
+static const std::string INDEXMODE_MAPPING = "mapping";
+
+
 void ParserAbortAndIndex::checkIndex(const MetaField& field, std::int64_t value)
 {
     if ((field.flags & MetaFieldFlags::METAFLAG_INDEX) != 0)
     {
         assert(!m_levelState.empty());
         LevelState& levelState = m_levelState.back();
-        if (value < 0)
+
+        const std::string& indexmode = field.getProperty(INDEXMODE);
+        if (indexmode == INDEXMODE_MAPPING)
         {
-            levelState.abortStruct = ABORT_FIELD;
+            const std::string strIndex = std::to_string(value);
+            const std::string& strIndexMapped = field.getProperty(strIndex);
+            if (strIndexMapped.empty())
+            {
+                levelState.abortStruct = ABORT_FIELD;
+            }
+            else
+            {
+                int indexMapped = atoi(strIndexMapped.c_str());
+                levelState.index = field.index + 1 + indexMapped;
+            }
         }
         else
         {
-            levelState.index = field.index + 1 + value;
+            if (value < 0)
+            {
+                levelState.abortStruct = ABORT_FIELD;
+            }
+            else
+            {
+                levelState.index = field.index + 1 + value;
+            }
         }
     }
 }

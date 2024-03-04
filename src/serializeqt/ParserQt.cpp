@@ -426,6 +426,10 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                                     abortStruct = (std::find(valuesAbort.begin(), valuesAbort.end(), aliasValue) != valuesAbort.end());
                                 }
                             }
+                            else
+                            {
+                                checkIndex(*field, value, index);
+                            }
                         }
                     }
                     else
@@ -1186,17 +1190,40 @@ bool ParserQt::parseQVariantHeader(const MetaField& /*field*/)
     return ok;
 }
 
+
+static const std::string INDEXMODE = "indexmode";
+static const std::string INDEXMODE_MAPPING = "mapping";
+
+
 void ParserQt::checkIndex(const MetaField& field, std::int64_t value, std::int64_t& index)
 {
     if ((field.flags & MetaFieldFlags::METAFLAG_INDEX) != 0)
     {
-        if (value < 0)
+        const std::string& indexmode = field.getProperty(INDEXMODE);
+        if (indexmode == INDEXMODE_MAPPING)
         {
-            index = INDEX_ABORTSTRUCT;
+            const std::string strIndex = std::to_string(value);
+            const std::string& strIndexMapped = field.getProperty(strIndex);
+            if (strIndexMapped.empty())
+            {
+                index = INDEX_ABORTSTRUCT;
+            }
+            else
+            {
+                int indexMapped = atoi(strIndexMapped.c_str());
+                index = field.index + 1 + indexMapped;
+            }
         }
         else
         {
-            index = field.index + 1 + value;
+            if (value < 0)
+            {
+                index = INDEX_ABORTSTRUCT;
+            }
+            else
+            {
+                index = field.index + 1 + value;
+            }
         }
     }
 }

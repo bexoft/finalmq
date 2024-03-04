@@ -13,6 +13,14 @@
             {"name":"Signal",       "id":1,     "desc":""},
             {"name":"Slot",         "id":2,     "desc":""},
             {"name":"Constuctor",   "id":3,     "desc":""}
+        ]},
+        {"type":"FmqQColorSpec","attrs":["enumbits:8"],"desc":"","entries":[
+            {"name":"Invalid",       "id":0,     "desc":""},
+            {"name":"Rgb",           "id":1,     "desc":""},
+            {"name":"Hsv",           "id":2,     "desc":""},
+            {"name":"Cmyk",          "id":3,     "desc":""},
+            {"name":"Hsl",           "id":4,     "desc":""},
+            {"name":"ExtendedRgb",   "id":5,     "desc":""}
         ]}
     ],
 
@@ -71,10 +79,18 @@
             {"tid":"int32", "type":"","name":"height","desc":"","flags":[]}
         ]},
         {"type":"FmqQRect","attrs":["qttype:QRect"],"desc":"","fields":[
-            {"tid":"int32", "type":"","name":"x","attrs":["qttype:Hello"],"desc":"","flags":[]},
+            {"tid":"int32", "type":"","name":"x","desc":"","flags":[]},
             {"tid":"int32", "type":"","name":"y","desc":"","flags":[]},
             {"tid":"int32", "type":"","name":"width","desc":"","flags":[]},
             {"tid":"int32", "type":"","name":"height","desc":"","flags":[]}
+        ]},
+        {"type":"FmqQColor","attrs":["qttype:QColor"],"desc":"","fields":[
+            {"tid":"enum", "type":"FmqQColorSpec","name":"cspec","desc":"","flags":[]},
+            {"tid":"int16", "type":"","name":"alpha","desc":"","flags":[]},
+            {"tid":"int16", "type":"","name":"red","desc":"","flags":[]},
+            {"tid":"int16", "type":"","name":"green","desc":"","flags":[]},
+            {"tid":"int16", "type":"","name":"blue","desc":"","flags":[]},
+            {"tid":"int16", "type":"","name":"pad","desc":"","flags":[]}
         ]}
                 
     ]

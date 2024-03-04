@@ -86,7 +86,7 @@ public:
     {
     }
 
-    MetaField(MetaField&& rhs)
+    MetaField(MetaField&& rhs) noexcept
         : typeId(rhs.typeId)
         , typeName(rhs.typeName)
         , typeNameWithoutNamespace(rhs.typeNameWithoutNamespace)
