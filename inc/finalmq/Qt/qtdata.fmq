@@ -21,7 +21,50 @@
             {"name":"Cmyk",          "id":3,     "desc":""},
             {"name":"Hsl",           "id":4,     "desc":""},
             {"name":"ExtendedRgb",   "id":5,     "desc":""}
+        ]},
+        {"type":"FmqQBrushStyle","attrs":["enumbits:8"],"desc":"","entries":[
+            {"name":"NoBrush",          "id":0,     "desc":""},
+            {"name":"SolidPattern",     "id":1,     "desc":""},
+            {"name":"Dense1Pattern",    "id":2,     "desc":""},
+            {"name":"Dense2Pattern",    "id":3,     "desc":""},
+            {"name":"Dense3Pattern",    "id":4,     "desc":""},
+            {"name":"Dense4Pattern",    "id":5,     "desc":""},
+            {"name":"Dense5Pattern",    "id":6,     "desc":""},
+            {"name":"Dense6Pattern",    "id":7,     "desc":""},
+            {"name":"Dense7Pattern",    "id":8,     "desc":""},
+            {"name":"HorPattern",       "id":9,     "desc":""},
+            {"name":"VerPattern",       "id":10,    "desc":""},
+            {"name":"CrossPattern",     "id":11,    "desc":""},
+            {"name":"BDiagPattern",     "id":12,    "desc":""},
+            {"name":"FDiagPattern",     "id":13,    "desc":""},
+            {"name":"DiagCrossPattern", "id":14,    "desc":""},
+            {"name":"LinearGradientPattern",    "id":15,    "desc":""},
+            {"name":"RadialGradientPattern",    "id":16,    "desc":""},
+            {"name":"ConicalGradientPattern",   "id":17,    "desc":""},
+            {"name":"TexturePattern",           "id":24,    "desc":""}
+        ]},
+        {"type":"FmqQGradientType","desc":"","entries":[
+            {"name":"LinearGradient",   "id":0,     "desc":""},
+            {"name":"RadialGradient",   "id":1,     "desc":""},
+            {"name":"ConicalGradient",  "id":2,     "desc":""},
+            {"name":"NoGradient",       "id":3,     "desc":""}
+        ]},
+        {"type":"FmqQGradientSpread","desc":"","entries":[
+            {"name":"PadSpread",       "id":0,     "desc":""},
+            {"name":"ReflectSpread",   "id":1,     "desc":""},
+            {"name":"RepeatSpread",    "id":2,     "desc":""}
+        ]},
+        {"type":"FmqQGradientCoordinateMode","desc":"","entries":[
+            {"name":"LogicalMode",          "id":0,     "desc":""},
+            {"name":"StretchToDeviceMode",  "id":1,     "desc":""},
+            {"name":"ObjectBoundingMode",   "id":2,     "desc":""},
+            {"name":"ObjectMode",           "id":3,     "desc":""}
+        ]},
+        {"type":"FmqQGradientInterpolationMode","desc":"","entries":[
+            {"name":"ColorInterpolation",       "id":0,     "desc":""},
+            {"name":"ComponentInterpolation",   "id":1,     "desc":""}
         ]}
+        
     ],
 
     "structs":[
@@ -91,6 +134,87 @@
             {"tid":"int16", "type":"","name":"green","desc":"","flags":[]},
             {"tid":"int16", "type":"","name":"blue","desc":"","flags":[]},
             {"tid":"int16", "type":"","name":"pad","desc":"","flags":[]}
+        ]},
+
+        {"type":"FmqQTransform","desc":"","fields":[
+            {"tid":"double",                "name":"m11",     "desc":"","flags":[]},
+            {"tid":"double",                "name":"m12",     "desc":"","flags":[]},
+            {"tid":"double",                "name":"m13",     "desc":"","flags":[]},
+            {"tid":"double",                "name":"m21",     "desc":"","flags":[]},
+            {"tid":"double",                "name":"m22",     "desc":"","flags":[]},
+            {"tid":"double",                "name":"m23",     "desc":"","flags":[]},
+            {"tid":"double",                "name":"m31",     "desc":"","flags":[]},
+            {"tid":"double",                "name":"m32",     "desc":"","flags":[]},
+            {"tid":"double",                "name":"m33",     "desc":"","flags":[]}
+        ]},
+
+        {"type":"FmqQPointF","desc":"","fields":[
+            {"tid":"double",                "name":"x",     "desc":"","flags":[]},
+            {"tid":"double",                "name":"y",     "desc":"","flags":[]}
+        ]},
+
+        {"type":"FmqQBrushSimple","desc":"","fields":[
+            {"tid":"struct","type":"FmqQColor",     "name":"color",     "desc":"","flags":[]},
+            {"tid":"struct","type":"FmqQTransform", "name":"transform", "desc":"","flags":[]}
+        ]},
+
+        {"type":"FmqQBrushTexturePattern","desc":"","fields":[
+            {"tid":"struct","type":"FmqQColor",     "name":"color",     "desc":"","flags":[]},
+            {"tid":"bytes",                         "name":"texture",   "attrs":["png:true"],"desc":"","flags":[]},
+            {"tid":"struct","type":"FmqQTransform", "name":"transform", "desc":"","flags":[]}
+        ]},
+
+        {"type":"FmqQBrushGradientStop","desc":"","fields":[
+            {"tid":"double",                    "name":"first",     "desc":"","flags":[]},
+            {"tid":"struct","type":"FmqQColor", "name":"second",    "desc":"","flags":[]}
+        ]},
+
+        {"type":"FmqQBrushGradientLinear","desc":"","fields":[
+            {"tid":"enum",      "type":"FmqQGradientSpread",            "name":"spread",           "desc":"","flags":[]},
+            {"tid":"enum",      "type":"FmqQGradientCoordinateMode",    "name":"coordinateMode",   "desc":"","flags":[]},
+            {"tid":"enum",      "type":"FmqQGradientInterpolationMode", "name":"interpolationMode","desc":"","flags":[]},
+            {"tid":"struct[]",  "type":"FmqQBrushGradientStop",         "name":"stops",            "desc":"","flags":[]},
+            {"tid":"struct",    "type":"FmqQPointF",                    "name":"start",            "desc":"","flags":[]},
+            {"tid":"struct",    "type":"FmqQPointF",                    "name":"finalStop",        "desc":"","flags":[]}
+        ]},
+
+        {"type":"FmqQBrushGradientRadial","desc":"","fields":[
+            {"tid":"enum",      "type":"FmqQGradientSpread",            "name":"spread",            "desc":"","flags":[]},
+            {"tid":"enum",      "type":"FmqQGradientCoordinateMode",    "name":"coordinateMode",    "desc":"","flags":[]},
+            {"tid":"enum",      "type":"FmqQGradientInterpolationMode", "name":"interpolationMode", "desc":"","flags":[]},
+            {"tid":"struct[]",  "type":"FmqQBrushGradientStop",         "name":"stops",             "desc":"","flags":[]},
+            {"tid":"struct",    "type":"FmqQPointF",                    "name":"center",            "desc":"","flags":[]},
+            {"tid":"struct",    "type":"FmqQPointF",                    "name":"focalPoint",        "desc":"","flags":[]},
+            {"tid":"double",                                            "name":"radius",            "desc":"","flags":[]}
+        ]},
+
+        {"type":"FmqQBrushGradientConical","desc":"","fields":[
+            {"tid":"enum",      "type":"FmqQGradientSpread",            "name":"spread",            "desc":"","flags":[]},
+            {"tid":"enum",      "type":"FmqQGradientCoordinateMode",    "name":"coordinateMode",    "desc":"","flags":[]},
+            {"tid":"enum",      "type":"FmqQGradientInterpolationMode", "name":"interpolationMode", "desc":"","flags":[]},
+            {"tid":"struct[]",  "type":"FmqQBrushGradientStop",         "name":"stops",             "desc":"","flags":[]},
+            {"tid":"struct",    "type":"FmqQPointF",                    "name":"center",            "desc":"","flags":[]},
+            {"tid":"double",                                            "name":"angle",             "desc":"","flags":[]}
+        ]},
+
+        {"type":"FmqQBrushGradientDetails","desc":"","fields":[
+            {"tid":"enum",      "type":"FmqQGradientType",              "name":"type",             "desc":"","flags":["METAFLAG_INDEX"]},
+            {"tid":"struct",    "type":"FmqQBrushGradientLinear",       "name":"linear",           "desc":"","flags":[]},
+            {"tid":"struct",    "type":"FmqQBrushGradientRadial",       "name":"radial",           "desc":"","flags":[]},
+            {"tid":"struct",    "type":"FmqQBrushGradientConical",      "name":"conical",          "desc":"","flags":[]}
+        ]},
+
+        {"type":"FmqQBrushGradient","desc":"","fields":[
+            {"tid":"struct","type":"FmqQColor",                 "name":"color",     "desc":"","flags":[]},
+            {"tid":"struct","type":"FmqQBrushGradientDetails",  "name":"gradient",  "desc":"","flags":[]},
+            {"tid":"struct","type":"FmqQTransform",             "name":"transform", "desc":"","flags":[]}
+        ]},
+
+        {"type":"FmqQBrush","attrs":["qttype:QBrush"],"desc":"","fields":[
+            {"tid":"enum",  "type":"FmqQBrushStyle",            "name":"style",     "attrs":["indexmode:mapping,0:0,1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0,9:0,10:0,11:0,12:0,13:0,14:0,15:1,16:1,17:1,24:2"],"desc":"","flags":["METAFLAG_INDEX"]},
+            {"tid":"struct","type":"FmqQBrushSimple",           "name":"sinple",    "desc":"","flags":[]},
+            {"tid":"struct","type":"FmqQBrushGradient",         "name":"gradient",  "desc":"","flags":[]},
+            {"tid":"struct","type":"FmqQBrushTexturePattern",   "name":"texture",   "desc":"","flags":[]}
         ]}
                 
     ]
