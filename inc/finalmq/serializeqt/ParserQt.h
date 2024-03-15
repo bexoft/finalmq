@@ -59,22 +59,24 @@ namespace finalmq {
         bool parse(std::uint64_t& value);
         bool parse(float& value);
         bool parse(double& value);
-        bool parse(std::string& str);
-        bool parse(Bytes& value);
+        bool parse(std::string& str, const MetaField* field = nullptr);
+        bool parse(Bytes& value, const MetaField* field = nullptr);
         bool parsePng(Bytes& value);
 
         template<class T>
-        bool parse(std::vector<T>& value);
+        bool parseArray(const MetaField& field, std::vector<T>& value);
 
-        bool parseArrayByte(const char*& buffer, ssize_t& size);
+        bool parseArrayByte(const MetaField& field, const char*& buffer, ssize_t& size);
         bool parsePng(const char*& buffer, ssize_t& size);
-        bool parseArrayBool(std::vector<bool>& value);
+        bool parseArrayBool(const MetaField& field, std::vector<bool>& value);
         bool parseArrayStruct(const MetaField& field);
-        bool parseArrayPng(std::vector<Bytes>& value);
+        bool parseArrayPng(const MetaField& field, std::vector<Bytes>& value);
 
         bool parseQVariantHeader(const MetaField& field);
         void checkIndex(const MetaField& field, std::int64_t value, std::int64_t& index);
         bool getPngSize(std::uint32_t& size);
+
+        bool parseSize(const MetaField& field, std::uint32_t& value);
 
         const std::uint8_t* m_ptr = nullptr;
         ssize_t m_size = 0;

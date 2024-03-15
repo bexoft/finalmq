@@ -129,9 +129,13 @@ private:
 
         void serializeString(const std::string& value);
         void serializeString(const char* value, ssize_t size);
+        void serializeStringFixed(const std::string& value, std::uint32_t sizeFixed);
+        void serializeStringFixed(const char* value, ssize_t size, std::uint32_t sizeFixed);
 
         template<class T>
-        void serialize(const T* value, ssize_t size, bool sizeTimesTwo = false);
+        void serializeArray(const T* value, ssize_t size, bool sizeTimesTwo = false);
+        template<class T>
+        void serializeArrayFixed(const T* value, ssize_t size, std::uint32_t sizeFixed);
 
         void serializePng(const BytesElement* value, ssize_t size);
             
@@ -141,12 +145,20 @@ private:
         void serializeArrayBytes(const std::vector<std::string>& value);
         void serializeArrayPng(const std::vector<Bytes>& value);
 
+        void serializeArrayBoolFixed(const std::vector<bool>& value, std::uint32_t sizeFixed);
+        void serializeArrayStringFixed(const std::vector<std::string>& value, std::uint32_t sizeFixed);
+        void serializeArrayBytesFixed(const std::vector<Bytes>& value, std::uint32_t sizeFixed);
+        void serializeArrayBytesFixed(const std::vector<std::string>& value, std::uint32_t sizeFixed);
+        void serializeArrayPngFixed(const std::vector<Bytes>& value, std::uint32_t sizeFixed);
+
         void serializeQVariantHeader(const MetaField& field);
         bool isWrappedByQVariant() const;
         static bool getQVariantTypeFromMetaTypeId(const MetaField& field, std::uint32_t& typeId, std::string& typeName);
         static std::uint32_t getTypeIdByName(const std::string& typeName);
         static void getQVariantType(const MetaField& field, std::uint32_t& typeId, std::string& typeName);
 
+        static std::uint32_t getFixedSize(const MetaField& field);
+            
         void reserveSpace(ssize_t space);
         void resizeBuffer();
 
@@ -162,6 +174,7 @@ private:
         {
             char* arrayStructCounterBuffer = nullptr;
             std::int32_t arrayStructCounter = -1;
+            std::uint32_t sizeFixed = 0xFFFFFFFFU;
         };
 
         std::deque<LevelState> m_levelState{};
