@@ -32,6 +32,7 @@
 namespace finalmq
 {
 static const std::string STR_VARVALUE = "finalmq.variant.VarValue";
+static const std::string FIXED_ARRAY = "fixedarray";
 
 ParserProcessDefaultValues::ParserProcessDefaultValues(bool skipDefaultValues, IParserVisitor* visitor)
     : m_visitor(visitor), m_skipDefaultValues(skipDefaultValues)
@@ -110,6 +111,12 @@ void ParserProcessDefaultValues::executeEnterStruct()
 
 void ParserProcessDefaultValues::enterStruct(const MetaField& field)
 {
+    if (m_blockVisitor)
+    {
+        ++m_blockVisitor;
+        return;
+    }
+        
     assert(m_visitor);
 
     if (!m_skipDefaultValues)
@@ -131,7 +138,28 @@ void ParserProcessDefaultValues::enterStruct(const MetaField& field)
         {
             m_varValueActive++;
         }
-        m_visitor->enterStruct(field);
+
+        if (!m_stackArrayStructState.empty())
+        {
+            EntryArrayStructState& arrayStructState = m_stackArrayStructState.back();
+            if (arrayStructState.level == 0)
+            {
+                if (arrayStructState.numberOfArrayEntries < arrayStructState.fixedSize)
+                {
+                    ++arrayStructState.numberOfArrayEntries;
+                }
+                else
+                {
+                    ++m_blockVisitor;
+                }
+            }
+            ++arrayStructState.level;
+        }
+
+        if (!m_blockVisitor)
+        {
+            m_visitor->enterStruct(field);
+        }
     }
     else
     {
@@ -159,6 +187,12 @@ void ParserProcessDefaultValues::enterStruct(const MetaField& field)
 
 void ParserProcessDefaultValues::exitStruct(const MetaField& field)
 {
+    if (m_blockVisitor)
+    {
+        --m_blockVisitor;
+        return;
+    }
+
     if (!m_skipDefaultValues && m_varValueActive == 0)
     {
         assert(!m_stackFieldsDone.empty());
@@ -179,6 +213,14 @@ void ParserProcessDefaultValues::exitStruct(const MetaField& field)
     if (!m_skipDefaultValues)
     {
         m_visitor->exitStruct(field);
+        if (!m_stackArrayStructState.empty())
+        {
+            EntryArrayStructState& arrayStructState = m_stackArrayStructState.back();
+            if (arrayStructState.level > 0)
+            {
+                --arrayStructState.level;
+            }
+        }
     }
     else
     {
@@ -196,6 +238,11 @@ void ParserProcessDefaultValues::exitStruct(const MetaField& field)
 
 void ParserProcessDefaultValues::enterStructNull(const MetaField& field)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
+
     markAsDone(field);
     if (!m_skipDefaultValues)
     {
@@ -353,9 +400,20 @@ void ParserProcessDefaultValues::markAsDone(const MetaField& field)
 
 void ParserProcessDefaultValues::enterArrayStruct(const MetaField& field)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
+
     markAsDone(field);
     if (!m_skipDefaultValues)
     {
+        const std::string& fixedArray = field.getProperty(FIXED_ARRAY);
+        if (!fixedArray.empty())
+        {
+            const int fixedSize = atoi(fixedArray.c_str());
+            m_stackArrayStructState.push_back({ fixedSize, 0, 0 });
+        }
         m_visitor->enterArrayStruct(field);
     }
     else
@@ -371,8 +429,25 @@ void ParserProcessDefaultValues::enterArrayStruct(const MetaField& field)
 }
 void ParserProcessDefaultValues::exitArrayStruct(const MetaField& field)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
+
     if (!m_skipDefaultValues)
     {
+        if (!m_stackArrayStructState.empty())
+        {
+            const EntryArrayStructState& entry = m_stackArrayStructState.back();
+            const int fixedSize = entry.fixedSize;
+            const int currentSize = entry.numberOfArrayEntries;
+            for (int i = currentSize; i < fixedSize; ++i)
+            {
+                m_visitor->enterStruct(*field.fieldWithoutArray);
+                m_visitor->exitStruct(*field.fieldWithoutArray);
+            }
+            m_stackArrayStructState.pop_back();
+        }
         m_visitor->exitArrayStruct(field);
     }
     else
@@ -392,6 +467,10 @@ void ParserProcessDefaultValues::exitArrayStruct(const MetaField& field)
 
 void ParserProcessDefaultValues::enterBool(const MetaField& field, bool value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (value != false || !m_skipDefaultValues)
     {
@@ -404,6 +483,10 @@ void ParserProcessDefaultValues::enterBool(const MetaField& field, bool value)
 }
 void ParserProcessDefaultValues::enterInt8(const MetaField& field, std::int8_t value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (value != 0 || !m_skipDefaultValues)
     {
@@ -416,6 +499,10 @@ void ParserProcessDefaultValues::enterInt8(const MetaField& field, std::int8_t v
 }
 void ParserProcessDefaultValues::enterUInt8(const MetaField& field, std::uint8_t value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (value != 0 || !m_skipDefaultValues)
     {
@@ -428,6 +515,10 @@ void ParserProcessDefaultValues::enterUInt8(const MetaField& field, std::uint8_t
 }
 void ParserProcessDefaultValues::enterInt16(const MetaField& field, std::int16_t value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (value != 0 || !m_skipDefaultValues)
     {
@@ -440,6 +531,10 @@ void ParserProcessDefaultValues::enterInt16(const MetaField& field, std::int16_t
 }
 void ParserProcessDefaultValues::enterUInt16(const MetaField& field, std::uint16_t value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (value != 0 || !m_skipDefaultValues)
     {
@@ -452,6 +547,10 @@ void ParserProcessDefaultValues::enterUInt16(const MetaField& field, std::uint16
 }
 void ParserProcessDefaultValues::enterInt32(const MetaField& field, std::int32_t value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (value != 0 || !m_skipDefaultValues)
     {
@@ -464,6 +563,10 @@ void ParserProcessDefaultValues::enterInt32(const MetaField& field, std::int32_t
 }
 void ParserProcessDefaultValues::enterUInt32(const MetaField& field, std::uint32_t value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (value != 0 || !m_skipDefaultValues)
     {
@@ -476,6 +579,10 @@ void ParserProcessDefaultValues::enterUInt32(const MetaField& field, std::uint32
 }
 void ParserProcessDefaultValues::enterInt64(const MetaField& field, std::int64_t value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (value != 0 || !m_skipDefaultValues)
     {
@@ -488,6 +595,10 @@ void ParserProcessDefaultValues::enterInt64(const MetaField& field, std::int64_t
 }
 void ParserProcessDefaultValues::enterUInt64(const MetaField& field, std::uint64_t value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (value != 0 || !m_skipDefaultValues)
     {
@@ -500,6 +611,10 @@ void ParserProcessDefaultValues::enterUInt64(const MetaField& field, std::uint64
 }
 void ParserProcessDefaultValues::enterFloat(const MetaField& field, float value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
 #ifndef WIN32
 #pragma GCC diagnostic push
@@ -519,6 +634,10 @@ void ParserProcessDefaultValues::enterFloat(const MetaField& field, float value)
 }
 void ParserProcessDefaultValues::enterDouble(const MetaField& field, double value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
 #ifndef WIN32
 #pragma GCC diagnostic push
@@ -538,6 +657,10 @@ void ParserProcessDefaultValues::enterDouble(const MetaField& field, double valu
 }
 void ParserProcessDefaultValues::enterString(const MetaField& field, std::string&& value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (!value.empty() || !m_skipDefaultValues)
     {
@@ -550,6 +673,10 @@ void ParserProcessDefaultValues::enterString(const MetaField& field, std::string
 }
 void ParserProcessDefaultValues::enterString(const MetaField& field, const char* value, ssize_t size)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (size > 0 || !m_skipDefaultValues)
     {
@@ -562,6 +689,10 @@ void ParserProcessDefaultValues::enterString(const MetaField& field, const char*
 }
 void ParserProcessDefaultValues::enterBytes(const MetaField& field, Bytes&& value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (!value.empty() || !m_skipDefaultValues)
     {
@@ -574,6 +705,10 @@ void ParserProcessDefaultValues::enterBytes(const MetaField& field, Bytes&& valu
 }
 void ParserProcessDefaultValues::enterBytes(const MetaField& field, const BytesElement* value, ssize_t size)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (size > 0 || !m_skipDefaultValues)
     {
@@ -586,6 +721,10 @@ void ParserProcessDefaultValues::enterBytes(const MetaField& field, const BytesE
 }
 void ParserProcessDefaultValues::enterEnum(const MetaField& field, std::int32_t value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (value != 0 || !m_skipDefaultValues)
     {
@@ -598,6 +737,10 @@ void ParserProcessDefaultValues::enterEnum(const MetaField& field, std::int32_t 
 }
 void ParserProcessDefaultValues::enterEnum(const MetaField& field, std::string&& value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     std::int32_t v = MetaDataGlobal::instance().getEnumValueByName(field, value);
     if (v != 0 || !m_skipDefaultValues)
@@ -616,6 +759,10 @@ void ParserProcessDefaultValues::enterEnum(const MetaField& field, const char* v
 
 void ParserProcessDefaultValues::enterArrayBoolMove(const MetaField& field, std::vector<bool>&& value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (!value.empty() || !m_skipDefaultValues)
     {
@@ -628,6 +775,10 @@ void ParserProcessDefaultValues::enterArrayBoolMove(const MetaField& field, std:
 }
 void ParserProcessDefaultValues::enterArrayBool(const MetaField& field, const std::vector<bool>& value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (!value.empty() || !m_skipDefaultValues)
     {
@@ -640,6 +791,10 @@ void ParserProcessDefaultValues::enterArrayBool(const MetaField& field, const st
 }
 void ParserProcessDefaultValues::enterArrayInt8(const MetaField& field, std::vector<std::int8_t>&& value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (!value.empty() || !m_skipDefaultValues)
     {
@@ -652,6 +807,10 @@ void ParserProcessDefaultValues::enterArrayInt8(const MetaField& field, std::vec
 }
 void ParserProcessDefaultValues::enterArrayInt8(const MetaField& field, const std::int8_t* value, ssize_t size)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (size > 0 || !m_skipDefaultValues)
     {
@@ -664,6 +823,10 @@ void ParserProcessDefaultValues::enterArrayInt8(const MetaField& field, const st
 }
 void ParserProcessDefaultValues::enterArrayInt16(const MetaField& field, std::vector<std::int16_t>&& value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (!value.empty() || !m_skipDefaultValues)
     {
@@ -676,6 +839,10 @@ void ParserProcessDefaultValues::enterArrayInt16(const MetaField& field, std::ve
 }
 void ParserProcessDefaultValues::enterArrayInt16(const MetaField& field, const std::int16_t* value, ssize_t size)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (size > 0 || !m_skipDefaultValues)
     {
@@ -688,6 +855,10 @@ void ParserProcessDefaultValues::enterArrayInt16(const MetaField& field, const s
 }
 void ParserProcessDefaultValues::enterArrayUInt16(const MetaField& field, std::vector<std::uint16_t>&& value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (!value.empty() || !m_skipDefaultValues)
     {
@@ -700,6 +871,10 @@ void ParserProcessDefaultValues::enterArrayUInt16(const MetaField& field, std::v
 }
 void ParserProcessDefaultValues::enterArrayUInt16(const MetaField& field, const std::uint16_t* value, ssize_t size)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (size > 0 || !m_skipDefaultValues)
     {
@@ -712,6 +887,10 @@ void ParserProcessDefaultValues::enterArrayUInt16(const MetaField& field, const 
 }
 void ParserProcessDefaultValues::enterArrayInt32(const MetaField& field, std::vector<std::int32_t>&& value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (!value.empty() || !m_skipDefaultValues)
     {
@@ -724,6 +903,10 @@ void ParserProcessDefaultValues::enterArrayInt32(const MetaField& field, std::ve
 }
 void ParserProcessDefaultValues::enterArrayInt32(const MetaField& field, const std::int32_t* value, ssize_t size)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (size > 0 || !m_skipDefaultValues)
     {
@@ -736,6 +919,10 @@ void ParserProcessDefaultValues::enterArrayInt32(const MetaField& field, const s
 }
 void ParserProcessDefaultValues::enterArrayUInt32(const MetaField& field, std::vector<std::uint32_t>&& value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (!value.empty() || !m_skipDefaultValues)
     {
@@ -748,6 +935,10 @@ void ParserProcessDefaultValues::enterArrayUInt32(const MetaField& field, std::v
 }
 void ParserProcessDefaultValues::enterArrayUInt32(const MetaField& field, const std::uint32_t* value, ssize_t size)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (size > 0 || !m_skipDefaultValues)
     {
@@ -760,6 +951,10 @@ void ParserProcessDefaultValues::enterArrayUInt32(const MetaField& field, const 
 }
 void ParserProcessDefaultValues::enterArrayInt64(const MetaField& field, std::vector<std::int64_t>&& value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (!value.empty() || !m_skipDefaultValues)
     {
@@ -772,6 +967,10 @@ void ParserProcessDefaultValues::enterArrayInt64(const MetaField& field, std::ve
 }
 void ParserProcessDefaultValues::enterArrayInt64(const MetaField& field, const std::int64_t* value, ssize_t size)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (size > 0 || !m_skipDefaultValues)
     {
@@ -784,6 +983,10 @@ void ParserProcessDefaultValues::enterArrayInt64(const MetaField& field, const s
 }
 void ParserProcessDefaultValues::enterArrayUInt64(const MetaField& field, std::vector<std::uint64_t>&& value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (!value.empty() || !m_skipDefaultValues)
     {
@@ -796,6 +999,10 @@ void ParserProcessDefaultValues::enterArrayUInt64(const MetaField& field, std::v
 }
 void ParserProcessDefaultValues::enterArrayUInt64(const MetaField& field, const std::uint64_t* value, ssize_t size)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (size > 0 || !m_skipDefaultValues)
     {
@@ -808,6 +1015,10 @@ void ParserProcessDefaultValues::enterArrayUInt64(const MetaField& field, const 
 }
 void ParserProcessDefaultValues::enterArrayFloat(const MetaField& field, std::vector<float>&& value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (!value.empty() || !m_skipDefaultValues)
     {
@@ -820,6 +1031,10 @@ void ParserProcessDefaultValues::enterArrayFloat(const MetaField& field, std::ve
 }
 void ParserProcessDefaultValues::enterArrayFloat(const MetaField& field, const float* value, ssize_t size)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (size > 0 || !m_skipDefaultValues)
     {
@@ -832,6 +1047,10 @@ void ParserProcessDefaultValues::enterArrayFloat(const MetaField& field, const f
 }
 void ParserProcessDefaultValues::enterArrayDouble(const MetaField& field, std::vector<double>&& value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (!value.empty() || !m_skipDefaultValues)
     {
@@ -844,6 +1063,10 @@ void ParserProcessDefaultValues::enterArrayDouble(const MetaField& field, std::v
 }
 void ParserProcessDefaultValues::enterArrayDouble(const MetaField& field, const double* value, ssize_t size)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (size > 0 || !m_skipDefaultValues)
     {
@@ -856,6 +1079,10 @@ void ParserProcessDefaultValues::enterArrayDouble(const MetaField& field, const 
 }
 void ParserProcessDefaultValues::enterArrayStringMove(const MetaField& field, std::vector<std::string>&& value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (!value.empty() || !m_skipDefaultValues)
     {
@@ -868,6 +1095,10 @@ void ParserProcessDefaultValues::enterArrayStringMove(const MetaField& field, st
 }
 void ParserProcessDefaultValues::enterArrayString(const MetaField& field, const std::vector<std::string>& value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (!value.empty() || !m_skipDefaultValues)
     {
@@ -880,6 +1111,10 @@ void ParserProcessDefaultValues::enterArrayString(const MetaField& field, const 
 }
 void ParserProcessDefaultValues::enterArrayBytesMove(const MetaField& field, std::vector<Bytes>&& value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (!value.empty() || !m_skipDefaultValues)
     {
@@ -892,6 +1127,10 @@ void ParserProcessDefaultValues::enterArrayBytesMove(const MetaField& field, std
 }
 void ParserProcessDefaultValues::enterArrayBytes(const MetaField& field, const std::vector<Bytes>& value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (!value.empty() || !m_skipDefaultValues)
     {
@@ -904,6 +1143,10 @@ void ParserProcessDefaultValues::enterArrayBytes(const MetaField& field, const s
 }
 void ParserProcessDefaultValues::enterArrayEnum(const MetaField& field, std::vector<std::int32_t>&& value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (!value.empty() || !m_skipDefaultValues)
     {
@@ -916,6 +1159,10 @@ void ParserProcessDefaultValues::enterArrayEnum(const MetaField& field, std::vec
 }
 void ParserProcessDefaultValues::enterArrayEnum(const MetaField& field, const std::int32_t* value, ssize_t size)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (size > 0 || !m_skipDefaultValues)
     {
@@ -928,6 +1175,10 @@ void ParserProcessDefaultValues::enterArrayEnum(const MetaField& field, const st
 }
 void ParserProcessDefaultValues::enterArrayEnumMove(const MetaField& field, std::vector<std::string>&& value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (!value.empty() || !m_skipDefaultValues)
     {
@@ -940,6 +1191,10 @@ void ParserProcessDefaultValues::enterArrayEnumMove(const MetaField& field, std:
 }
 void ParserProcessDefaultValues::enterArrayEnum(const MetaField& field, const std::vector<std::string>& value)
 {
+    if (m_blockVisitor)
+    {
+        return;
+    }
     markAsDone(field);
     if (!value.empty() || !m_skipDefaultValues)
     {

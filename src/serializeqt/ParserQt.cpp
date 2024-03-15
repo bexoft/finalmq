@@ -36,6 +36,10 @@
 
 namespace finalmq
 {
+    
+static const std::string FIXED_ARRAY = "fixedarray";
+
+    
 ParserQt::ParserQt(IParserVisitor& visitor, const char* ptr, ssize_t size, Mode mode)
     : m_ptr(reinterpret_cast<const std::uint8_t*>(ptr)), m_size(size), m_visitor(visitor), m_mode(mode)
 {
@@ -313,7 +317,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                     {
                         const char* buffer = nullptr;
                         ssize_t size = 0;
-                        ok = parseArrayByte(buffer, size);
+                        ok = parseArrayByte(*field, buffer, size);
                         if (ok)
                         {
                             m_visitor.enterString(*field, buffer, size);
@@ -322,7 +326,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                     else
                     {
                         std::string value;
-                        ok = parse(value);
+                        ok = parse(value, field);
                         if (ok)
                         {
                             m_visitor.enterString(*field, std::move(value));
@@ -346,7 +350,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                     }
                     else
                     {
-                        ok = parseArrayByte(buffer, size);
+                        ok = parseArrayByte(*field, buffer, size);
                     }
                     if (ok)
                     {
@@ -446,7 +450,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                 if (ok)
                 {
                     std::vector<bool> array;
-                    ok = parseArrayBool(array);
+                    ok = parseArrayBool(*field, array);
                     if (ok)
                     {
                         m_visitor.enterArrayBool(*field, std::move(array));
@@ -461,7 +465,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                 if (ok)
                 {
                     std::vector<std::int8_t> array;
-                    ok = parse(array);
+                    ok = parseArray(*field, array);
                     if (ok)
                     {
                         m_visitor.enterArrayInt8(*field, std::move(array));
@@ -476,7 +480,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                 if (ok)
                 {
                     std::vector<std::int16_t> array;
-                    ok = parse(array);
+                    ok = parseArray(*field, array);
                     if (ok)
                     {
                         m_visitor.enterArrayInt16(*field, std::move(array));
@@ -491,7 +495,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                 if (ok)
                 {
                     std::vector<std::uint16_t> array;
-                    ok = parse(array);
+                    ok = parseArray(*field, array);
                     if (ok)
                     {
                         m_visitor.enterArrayUInt16(*field, std::move(array));
@@ -506,7 +510,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                 if (ok)
                 {
                     std::vector<std::int32_t> array;
-                    ok = parse(array);
+                    ok = parseArray(*field, array);
                     if (ok)
                     {
                         m_visitor.enterArrayInt32(*field, std::move(array));
@@ -521,7 +525,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                 if (ok)
                 {
                     std::vector<std::uint32_t> array;
-                    ok = parse(array);
+                    ok = parseArray(*field, array);
                     if (ok)
                     {
                         m_visitor.enterArrayUInt32(*field, std::move(array));
@@ -536,7 +540,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                 if (ok)
                 {
                     std::vector<std::int64_t> array;
-                    ok = parse(array);
+                    ok = parseArray(*field, array);
                     if (ok)
                     {
                         m_visitor.enterArrayInt64(*field, std::move(array));
@@ -551,7 +555,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                 if (ok)
                 {
                     std::vector<std::uint64_t> array;
-                    ok = parse(array);
+                    ok = parseArray(*field, array);
                     if (ok)
                     {
                         m_visitor.enterArrayUInt64(*field, std::move(array));
@@ -566,7 +570,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                 if (ok)
                 {
                     std::vector<float> array;
-                    ok = parse(array);
+                    ok = parseArray(*field, array);
                     if (ok)
                     {
                         m_visitor.enterArrayFloat(*field, std::move(array));
@@ -581,7 +585,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                 if (ok)
                 {
                     std::vector<double> array;
-                    ok = parse(array);
+                    ok = parseArray(*field, array);
                     if (ok)
                     {
                         m_visitor.enterArrayDouble(*field, std::move(array));
@@ -596,7 +600,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                 if (ok)
                 {
                     std::vector<std::string> array;
-                    ok = parse(array);
+                    ok = parseArray(*field, array);
                     if (ok)
                     {
                         m_visitor.enterArrayString(*field, std::move(array));
@@ -614,11 +618,11 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                     const std::string& png = field->getProperty(PNG);
                     if (png == PNG_TRUE)
                     {
-                        ok = parseArrayPng(array);
+                        ok = parseArrayPng(*field, array);
                     }
                     else
                     {
-                        ok = parse(array);
+                        ok = parseArray(*field, array);
                     }
                     if (ok)
                     {
@@ -650,12 +654,12 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                         std::vector<std::int32_t> value;
                         if (bits == BITS_32)
                         {
-                            ok = parse(value);
+                            ok = parseArray(*field, value);
                         }
                         else if (bits == BITS_8)
                         {
                             std::vector<std::int8_t> value8;
-                            ok = parse(value);
+                            ok = parseArray(*field, value);
                             value.resize(value8.size());
                             for (size_t n = 0; n < value8.size(); ++n)
                             {
@@ -665,7 +669,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                         else if (bits == BITS_16)
                         {
                             std::vector<std::int16_t> value16;
-                            ok = parse(value);
+                            ok = parseArray(*field, value);
                             value.resize(value16.size());
                             for (size_t n = 0; n < value16.size(); ++n)
                             {
@@ -838,14 +842,14 @@ bool ParserQt::parse(double& value)
     return ok;
 }
 
-bool ParserQt::parse(std::string& str)
+bool ParserQt::parse(std::string& str, const MetaField* field)
 {
     str.clear();
 
     std::u16string utf16;
 
     std::uint32_t sizeBytes;
-    bool ok = parse(sizeBytes);
+    bool ok = field ? parseSize(*field, sizeBytes) : parse(sizeBytes);
     if (!ok)
     {
         return false;
@@ -879,12 +883,12 @@ bool ParserQt::parse(std::string& str)
     }
 }
 
-bool ParserQt::parse(Bytes& value)
+bool ParserQt::parse(Bytes& value, const MetaField* field)
 {
     value.clear();
 
     std::uint32_t size;
-    bool ok = parse(size);
+    bool ok = field ? parseSize(*field, size) : parse(size);
     if (!ok)
     {
         return false;
@@ -952,13 +956,13 @@ bool ParserQt::parsePng(Bytes& value)
     }
 }
 
-bool ParserQt::parseArrayByte(const char*& buffer, ssize_t& size)
+bool ParserQt::parseArrayByte(const MetaField& field, const char*& buffer, ssize_t& size)
 {
     buffer = nullptr;
     size = 0;
 
     std::uint32_t s;
-    bool ok = parse(s);
+    bool ok = parseSize(field, s);
     if (!ok)
     {
         return false;
@@ -1034,12 +1038,12 @@ bool ParserQt::parsePng(const char*& buffer, ssize_t& size)
 
 
 
-bool ParserQt::parseArrayBool(std::vector<bool>& value)
+bool ParserQt::parseArrayBool(const MetaField& field, std::vector<bool>& value)
 {
     value.clear();
 
     std::uint32_t size;
-    bool ok = parse(size);
+    bool ok = parseSize(field, size);
     if (!ok)
     {
         return false;
@@ -1077,12 +1081,12 @@ bool ParserQt::parseArrayBool(std::vector<bool>& value)
 }
 
 template<class T>
-bool ParserQt::parse(std::vector<T>& value)
+bool ParserQt::parseArray(const MetaField& field, std::vector<T>& value)
 {
     value.clear();
 
     std::uint32_t size;
-    bool ok = parse(size);
+    bool ok = parseSize(field, size);
     if (!ok)
     {
         return false;
@@ -1114,7 +1118,7 @@ bool ParserQt::parseArrayStruct(const MetaField& field)
     }
 
     std::uint32_t size;
-    bool ok = parse(size);
+    bool ok = parseSize(field, size);
     if (!ok)
     {
         return false;
@@ -1141,12 +1145,12 @@ bool ParserQt::parseArrayStruct(const MetaField& field)
     return (m_ptr != nullptr);
 }
 
-bool ParserQt::parseArrayPng(std::vector<Bytes>& value)
+bool ParserQt::parseArrayPng(const MetaField& field, std::vector<Bytes>& value)
 {
     value.clear();
 
     std::uint32_t size;
-    bool ok = parse(size);
+    bool ok = parseSize(field, size);
     if (!ok)
     {
         return false;
@@ -1282,6 +1286,19 @@ bool ParserQt::getPngSize(std::uint32_t& size)
     return ok;
 }
 
+bool ParserQt::parseSize(const MetaField& field, std::uint32_t& value)
+{
+    const std::string& fixedArray = field.getProperty(FIXED_ARRAY);
+    if (!fixedArray.empty())
+    {
+        value = atoi(fixedArray.c_str());
+        return true;
+    }
+    else
+    {
+        return parse(value);
+    }
+}
 
 
 } // namespace finalmq

@@ -147,12 +147,21 @@ private:
         bool m_enterStructCalled;
     };
 
+    struct EntryArrayStructState
+    {
+        int fixedSize{-1};
+        int numberOfArrayEntries{};
+        int level{};
+    };
+
     IParserVisitor* m_visitor{nullptr};
-    bool m_skipDefaultValues{true};
+    const bool m_skipDefaultValues{true};
     const MetaStruct* m_struct{nullptr};
     std::deque<std::vector<bool>> m_stackFieldsDone{};
     int m_varValueActive{0};
+    int m_blockVisitor{0};
     std::deque<EntrySkipDefault> m_stackSkipDefault{};
+    std::deque<EntryArrayStructState> m_stackArrayStructState{};
 };
 
 } // namespace finalmq
