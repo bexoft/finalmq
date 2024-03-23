@@ -1103,7 +1103,7 @@ void SerializerQt::Internal::serializeArrayFixed(const T* value, ssize_t size, s
     {
         serialize(value[i]);
     }
-    for (std::uint32_t i = size; i < sizeFixed; ++i)
+    for (std::uint32_t i = static_cast<std::uint32_t>(size); i < sizeFixed; ++i)
     {
         serialize(T{});
     }
