@@ -91,7 +91,7 @@ namespace finalmq
             set { m_fieldWithoutArray = value; }
         }
 
-        string? GetProperty(string key, string? defaultValue = null)
+        public string? GetProperty(string key, string? defaultValue = null)
         {
             if (m_properties.TryGetValue(key, out string? value))
             {

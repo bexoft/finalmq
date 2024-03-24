@@ -16,7 +16,8 @@ namespace finalmq
         public SerializerVariant(Variant root, bool enumAsString = true, bool skipDefaultValues = false)
         {
             m_internal = new SerializerVariant.Internal(this, root, enumAsString);
-            m_parserProcessDefaultValues = new ParserProcessDefaultValues(skipDefaultValues, m_internal);
+            m_parserAbortAndIndex = new ParserAbortAndIndex(m_internal);
+            m_parserProcessDefaultValues = new ParserProcessDefaultValues(skipDefaultValues, m_parserAbortAndIndex);
             SetVisitor(m_parserProcessDefaultValues);
         }
 
@@ -355,6 +356,7 @@ namespace finalmq
         }
 
         private readonly Internal m_internal;
+        readonly IParserVisitor m_parserAbortAndIndex;
         private readonly ParserProcessDefaultValues m_parserProcessDefaultValues;
 
     }
