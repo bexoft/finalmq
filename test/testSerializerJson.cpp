@@ -443,7 +443,7 @@ TEST_F(TestSerializerJson, testVariantInt32Default)
     m_serializerDefault->exitStruct(*stru->getFieldByName("value"));
     m_serializerDefault->finished();
 
-    ASSERT_EQ(m_data, "{\"value\":{\"index\":6,\"valint32\":-2},\"valueInt32\":0,\"value2\":{}}");
+    ASSERT_EQ(m_data, "{\"value\":{\"index\":6,\"valint32\":-2,\"name\":\"\"},\"valueInt32\":0,\"value2\":{\"name\":\"\",\"index\":0,\"none\":false}}");
 }
 
 
@@ -454,7 +454,7 @@ TEST_F(TestSerializerJson, testVariantEmptyDefault)
     m_serializerDefault->startStruct(*stru);
     m_serializerDefault->finished();
 
-    ASSERT_EQ(m_data, "{\"value\":{},\"valueInt32\":0,\"value2\":{}}");
+    ASSERT_EQ(m_data, "{\"value\":{\"name\":\"\",\"index\":0,\"none\":false},\"valueInt32\":0,\"value2\":{\"name\":\"\",\"index\":0,\"none\":false}}");
 }
 
 
@@ -516,7 +516,7 @@ TEST_F(TestSerializerJson, testVariantStructDefault)
     m_serializerDefault->exitStruct(*m_fieldValue);
     m_serializerDefault->finished();
 
-    std::string cmp = "{\"value\":{\"index\":14,\"valstruct\":[{\"name\":\"key1\",\"index\":27,\"vallist\":[{\"index\":6,\"valint32\":2},{\"index\":12,\"valstring\":\"Hello\"}]},{\"name\":\"key2\",\"index\":14,\"valstruct\":[{\"name\":\"a\",\"index\":6,\"valint32\":3},{\"name\":\"b\",\"index\":12,\"valstring\":\"Hi\"}]},{\"name\":\"key3\",\"index\":0}]},\"valueInt32\":0,\"value2\":{}}";
+    std::string cmp = "{\"value\":{\"index\":14,\"valstruct\":[{\"name\":\"key1\",\"index\":27,\"vallist\":[{\"index\":6,\"valint32\":2,\"name\":\"\"},{\"index\":12,\"valstring\":\"Hello\",\"name\":\"\"}]},{\"name\":\"key2\",\"index\":14,\"valstruct\":[{\"name\":\"a\",\"index\":6,\"valint32\":3},{\"name\":\"b\",\"index\":12,\"valstring\":\"Hi\"}]},{\"name\":\"key3\",\"index\":0,\"none\":false}],\"name\":\"\"},\"valueInt32\":0,\"value2\":{\"name\":\"\",\"index\":0,\"none\":false}}";
     ASSERT_EQ(m_data == cmp, true);
 }
 

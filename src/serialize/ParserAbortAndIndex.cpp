@@ -79,7 +79,7 @@ void ParserAbortAndIndex::enterStruct(const MetaField& field)
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
 
-    if (levelState.abortStruct || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if (levelState.abortStruct || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index))
     {
         m_levelState.push_back(LevelState());
         m_levelState.back().abortStruct = ABORT_STRUCT;
@@ -111,7 +111,7 @@ void ParserAbortAndIndex::enterStructNull(const MetaField& field)
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -127,7 +127,7 @@ void ParserAbortAndIndex::enterArrayStruct(const MetaField& field)
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
 
-    if (levelState.abortStruct || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if (levelState.abortStruct || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         m_levelState.push_back(LevelState());
         m_levelState.back().abortStruct = ABORT_STRUCT;
@@ -163,7 +163,7 @@ void ParserAbortAndIndex::enterBool(const MetaField& field, bool value)
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -185,7 +185,7 @@ void ParserAbortAndIndex::enterInt8(const MetaField& field, std::int8_t value)
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -197,7 +197,7 @@ void ParserAbortAndIndex::enterUInt8(const MetaField& field, std::uint8_t value)
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -208,7 +208,7 @@ void ParserAbortAndIndex::enterInt16(const MetaField& field, std::int16_t value)
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -220,7 +220,7 @@ void ParserAbortAndIndex::enterUInt16(const MetaField& field, std::uint16_t valu
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -232,7 +232,7 @@ void ParserAbortAndIndex::enterInt32(const MetaField& field, std::int32_t value)
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -244,7 +244,7 @@ void ParserAbortAndIndex::enterUInt32(const MetaField& field, std::uint32_t valu
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -256,7 +256,7 @@ void ParserAbortAndIndex::enterInt64(const MetaField& field, std::int64_t value)
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -268,7 +268,7 @@ void ParserAbortAndIndex::enterUInt64(const MetaField& field, std::uint64_t valu
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -280,7 +280,7 @@ void ParserAbortAndIndex::enterFloat(const MetaField& field, float value)
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -291,7 +291,7 @@ void ParserAbortAndIndex::enterDouble(const MetaField& field, double value)
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -302,7 +302,7 @@ void ParserAbortAndIndex::enterString(const MetaField& field, std::string&& valu
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -313,7 +313,7 @@ void ParserAbortAndIndex::enterString(const MetaField& field, const char* value,
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -324,7 +324,7 @@ void ParserAbortAndIndex::enterBytes(const MetaField& field, Bytes&& value)
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -335,7 +335,7 @@ void ParserAbortAndIndex::enterBytes(const MetaField& field, const BytesElement*
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -346,7 +346,7 @@ void ParserAbortAndIndex::enterEnum(const MetaField& field, std::int32_t value)
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -391,7 +391,7 @@ void ParserAbortAndIndex::enterEnum(const MetaField& field, const char* value, s
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -424,13 +424,21 @@ void ParserAbortAndIndex::enterEnum(const MetaField& field, const char* value, s
             }
         }
     }
+    else
+    {
+        if (en)
+        {
+            std::int32_t v = en->getValueByName(value);
+            checkIndex(field, v);
+        }
+    }
 }
 
 void ParserAbortAndIndex::enterArrayBoolMove(const MetaField& field, std::vector<bool>&& value)
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -441,7 +449,7 @@ void ParserAbortAndIndex::enterArrayBool(const MetaField& field, const std::vect
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -452,7 +460,7 @@ void ParserAbortAndIndex::enterArrayInt8(const MetaField& field, std::vector<std
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -463,7 +471,7 @@ void ParserAbortAndIndex::enterArrayInt8(const MetaField& field, const std::int8
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -474,7 +482,7 @@ void ParserAbortAndIndex::enterArrayInt16(const MetaField& field, std::vector<st
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -485,7 +493,7 @@ void ParserAbortAndIndex::enterArrayInt16(const MetaField& field, const std::int
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -496,7 +504,7 @@ void ParserAbortAndIndex::enterArrayUInt16(const MetaField& field, std::vector<s
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -507,7 +515,7 @@ void ParserAbortAndIndex::enterArrayUInt16(const MetaField& field, const std::ui
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -518,7 +526,7 @@ void ParserAbortAndIndex::enterArrayInt32(const MetaField& field, std::vector<st
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -529,7 +537,7 @@ void ParserAbortAndIndex::enterArrayInt32(const MetaField& field, const std::int
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -540,7 +548,7 @@ void ParserAbortAndIndex::enterArrayUInt32(const MetaField& field, std::vector<s
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -551,7 +559,7 @@ void ParserAbortAndIndex::enterArrayUInt32(const MetaField& field, const std::ui
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -562,7 +570,7 @@ void ParserAbortAndIndex::enterArrayInt64(const MetaField& field, std::vector<st
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -573,7 +581,7 @@ void ParserAbortAndIndex::enterArrayInt64(const MetaField& field, const std::int
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -584,7 +592,7 @@ void ParserAbortAndIndex::enterArrayUInt64(const MetaField& field, std::vector<s
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -595,7 +603,7 @@ void ParserAbortAndIndex::enterArrayUInt64(const MetaField& field, const std::ui
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -606,7 +614,7 @@ void ParserAbortAndIndex::enterArrayFloat(const MetaField& field, std::vector<fl
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -617,7 +625,7 @@ void ParserAbortAndIndex::enterArrayFloat(const MetaField& field, const float* v
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -628,7 +636,7 @@ void ParserAbortAndIndex::enterArrayDouble(const MetaField& field, std::vector<d
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -639,7 +647,7 @@ void ParserAbortAndIndex::enterArrayDouble(const MetaField& field, const double*
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -650,7 +658,7 @@ void ParserAbortAndIndex::enterArrayStringMove(const MetaField& field, std::vect
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -661,7 +669,7 @@ void ParserAbortAndIndex::enterArrayString(const MetaField& field, const std::ve
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -672,7 +680,7 @@ void ParserAbortAndIndex::enterArrayBytesMove(const MetaField& field, std::vecto
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -683,7 +691,7 @@ void ParserAbortAndIndex::enterArrayBytes(const MetaField& field, const std::vec
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -694,7 +702,7 @@ void ParserAbortAndIndex::enterArrayEnum(const MetaField& field, std::vector<std
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -705,7 +713,7 @@ void ParserAbortAndIndex::enterArrayEnum(const MetaField& field, const std::int3
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -716,7 +724,7 @@ void ParserAbortAndIndex::enterArrayEnumMove(const MetaField& field, std::vector
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -727,7 +735,7 @@ void ParserAbortAndIndex::enterArrayEnum(const MetaField& field, const std::vect
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index))
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
     {
         return;
     }
@@ -759,6 +767,7 @@ void ParserAbortAndIndex::checkIndex(const MetaField& field, std::int64_t value)
             else
             {
                 int indexMapped = atoi(strIndexMapped.c_str());
+                levelState.indexOfIndexField = field.index;
                 levelState.index = field.index + 1 + indexMapped;
             }
         }
@@ -770,6 +779,7 @@ void ParserAbortAndIndex::checkIndex(const MetaField& field, std::int64_t value)
             }
             else
             {
+                levelState.indexOfIndexField = field.index;
                 levelState.index = field.index + 1 + value;
             }
         }

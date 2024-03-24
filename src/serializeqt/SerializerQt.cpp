@@ -119,47 +119,25 @@ void SerializerQt::Internal::enterArrayStruct(const MetaField& field)
         serializeQVariantHeader(field);
     }
 
-    levelState.sizeFixed = getFixedSize(field);
-    if (levelState.sizeFixed == 0xFFFFFFFFU)
-    {
-        reserveSpace(sizeof(std::uint32_t));
-        levelState.arrayStructCounterBuffer = m_buffer;
-        levelState.arrayStructCounter = 0;
-        serialize(levelState.arrayStructCounter);
-    }
-
-    m_levelState.push_back(LevelState());
+    reserveSpace(sizeof(std::uint32_t));
+    levelState.arrayStructCounterBuffer = m_buffer;
+    levelState.arrayStructCounter = 0;
+    serialize(levelState.arrayStructCounter);
 }
 
-void SerializerQt::Internal::exitArrayStruct(const MetaField& field)
+void SerializerQt::Internal::exitArrayStruct(const MetaField& /*field*/)
 {
     assert(!m_levelState.empty());
     LevelState& levelState = m_levelState.back();
 
-    if (levelState.sizeFixed == 0xFFFFFFFFU)
+    if (levelState.arrayStructCounterBuffer)
     {
-        if (levelState.arrayStructCounterBuffer)
-        {
-            char* buffer = m_buffer;
-            m_buffer = levelState.arrayStructCounterBuffer;
-            serialize(levelState.arrayStructCounter);
-            m_buffer = buffer;
-            levelState.arrayStructCounter = -1;
-        }
+        char* buffer = m_buffer;
+        m_buffer = levelState.arrayStructCounterBuffer;
+        serialize(levelState.arrayStructCounter);
+        m_buffer = buffer;
+        levelState.arrayStructCounter = -1;
     }
-    else
-    {
-        for (std::uint32_t i = levelState.arrayStructCounter; i < levelState.sizeFixed; ++i)
-        {
-            const MetaStruct* stru = MetaDataGlobal::instance().getStruct(field);
-            if (stru)
-            {
-                //!!!!!!!!!!!
-            }
-        }
-    }
-
-    m_levelState.pop_back();
 }
 
 static const std::string ABORTSTRUCT = "abortstruct";

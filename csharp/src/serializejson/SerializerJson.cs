@@ -11,7 +11,8 @@ namespace finalmq
         public SerializerJson(IZeroCopyBuffer buffer, int maxBlockSize = 512, bool enumAsString = true, bool skipDefaultValues = true)
         {
             m_internal = new Internal(buffer, maxBlockSize, enumAsString);
-            m_parserProcessDefaultValues = new ParserProcessDefaultValues(skipDefaultValues, m_internal);
+            m_parserAbortAndIndex = new ParserAbortAndIndex(m_internal);
+            m_parserProcessDefaultValues = new ParserProcessDefaultValues(skipDefaultValues, m_parserAbortAndIndex);
             SetVisitor(m_parserProcessDefaultValues);
         }
 
@@ -417,6 +418,7 @@ namespace finalmq
         }
 
         readonly Internal m_internal;
+        readonly IParserVisitor m_parserAbortAndIndex;
         readonly IParserVisitor m_parserProcessDefaultValues;
     }
 
