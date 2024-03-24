@@ -122,19 +122,16 @@ void ParserProcessDefaultValues::enterStruct(const MetaField& field)
     if (!m_skipDefaultValues)
     {
         markAsDone(field);
-        if (field.typeName != STR_VARVALUE)
+        const MetaStruct* stru = MetaDataGlobal::instance().getStruct(field);
+        if (stru)
         {
-            const MetaStruct* stru = MetaDataGlobal::instance().getStruct(field);
-            if (stru)
-            {
-                m_stackFieldsDone.emplace_back(stru->getFieldsSize(), false);
-            }
-            else
-            {
-                m_stackFieldsDone.emplace_back(0, false);
-            }
+            m_stackFieldsDone.emplace_back(stru->getFieldsSize(), false);
         }
         else
+        {
+            m_stackFieldsDone.emplace_back(0, false);
+        }
+        if (field.typeName == STR_VARVALUE)
         {
             m_varValueActive++;
         }
@@ -193,7 +190,7 @@ void ParserProcessDefaultValues::exitStruct(const MetaField& field)
         return;
     }
 
-    if (!m_skipDefaultValues && m_varValueActive == 0)
+    if (!m_skipDefaultValues)
     {
         assert(!m_stackFieldsDone.empty());
         const std::vector<bool>& fieldsDone = m_stackFieldsDone.back();
@@ -311,7 +308,7 @@ void ParserProcessDefaultValues::processDefaultValues(const MetaStruct& stru, co
                         {
                             m_visitor->enterStruct(*field);
                             const MetaStruct* substru = MetaDataGlobal::instance().getStruct(*field);
-                            if (substru && (field->typeName != STR_VARVALUE))
+                            if (substru)
                             {
                                 std::vector<bool> subfieldsDone(substru->getFieldsSize(), false);
                                 processDefaultValues(*substru, subfieldsDone);
@@ -385,15 +382,12 @@ void ParserProcessDefaultValues::markAsDone(const MetaField& field)
 {
     if (!m_skipDefaultValues)
     {
-        if (m_varValueActive == 0)
+        assert(!m_stackFieldsDone.empty());
+        std::vector<bool>& fieldsDone = m_stackFieldsDone.back();
+        ssize_t index = field.index;
+        if (index >= 0 && index < static_cast<ssize_t>(fieldsDone.size()))
         {
-            assert(!m_stackFieldsDone.empty());
-            std::vector<bool>& fieldsDone = m_stackFieldsDone.back();
-            ssize_t index = field.index;
-            if (index >= 0 && index < static_cast<ssize_t>(fieldsDone.size()))
-            {
-                fieldsDone[index] = true;
-            }
+            fieldsDone[index] = true;
         }
     }
 }

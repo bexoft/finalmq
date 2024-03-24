@@ -28,7 +28,8 @@ namespace finalmq
         public SerializerProto(IZeroCopyBuffer buffer, int maxBlockSize = 512)
         {
             m_internal = new Internal(buffer, maxBlockSize);
-            SetVisitor(m_internal);
+            m_parserAbortAndIndex = new ParserAbortAndIndex(m_internal);
+            SetVisitor(m_parserAbortAndIndex);
         }
 
         class Internal : IParserVisitor
@@ -907,6 +908,7 @@ namespace finalmq
         }
 
         readonly Internal m_internal;
+        readonly IParserVisitor m_parserAbortAndIndex;
     }
 
 }

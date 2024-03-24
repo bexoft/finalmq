@@ -119,10 +119,9 @@ private:
 
     struct LevelState
     {
-        AbortStatus abortStruct = ABORT_NONE;
-        std::int64_t index = INDEX_NOT_AVAILABLE;
-        char* arrayStructCounterBuffer = nullptr;
-        std::int32_t arrayStructCounter = -1;
+        AbortStatus abortStruct{ ABORT_NONE };
+        std::int64_t indexOfIndexField{ INDEX_NOT_AVAILABLE };
+        std::int64_t index{ INDEX_NOT_AVAILABLE };
     };
 
     std::deque<LevelState> m_levelState{};
