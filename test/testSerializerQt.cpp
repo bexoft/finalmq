@@ -1296,6 +1296,401 @@ TEST_F(TestSerializerQt, testArrayStruct)
     EXPECT_EQ(m_data, data);
 }
 
+
+TEST_F(TestSerializerQt, testFixedArrayStruct)
+{
+    const MetaField* fieldFixedArrayString = MetaDataGlobal::instance().getField("test.TestFixedArrayStruct", "a1");
+    const MetaField* fieldFixedArrayInner = MetaDataGlobal::instance().getField("test.TestFixedArrayStruct", "a2");
+    const MetaField* fieldFixedArrayInnerWithoutArray = MetaDataGlobal::instance().getArrayField("test.TestFixedArrayStruct", "a2");
+    const MetaField* fieldFixedArrayUInt32 = MetaDataGlobal::instance().getField("test.TestFixedArrayStruct", "a3");
+    const MetaField* fieldInnerString = MetaDataGlobal::instance().getField("test.TestInnerFixedArrayStruct", "b1");
+    const MetaField* fieldInnerFixedArray = MetaDataGlobal::instance().getField("test.TestInnerFixedArrayStruct", "b2");
+    const MetaField* fieldInnerFixedArrayWithoutArray = MetaDataGlobal::instance().getArrayField("test.TestInnerFixedArrayStruct", "b2");
+    const MetaField* fieldInnerInt32 = MetaDataGlobal::instance().getField("test.TestInnerFixedArrayStruct", "b3");
+    const MetaField* fieldInt32 = MetaDataGlobal::instance().getField("test.TestInt32", "value");
+
+    ASSERT_NE(fieldFixedArrayString, nullptr);
+    ASSERT_NE(fieldFixedArrayInner, nullptr);
+    ASSERT_NE(fieldFixedArrayInnerWithoutArray, nullptr);
+    ASSERT_NE(fieldFixedArrayUInt32, nullptr);
+    ASSERT_NE(fieldInnerString, nullptr);
+    ASSERT_NE(fieldInnerFixedArray, nullptr);
+    ASSERT_NE(fieldInnerFixedArrayWithoutArray, nullptr);
+    ASSERT_NE(fieldInnerInt32, nullptr);
+    ASSERT_NE(fieldInt32, nullptr);
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestFixedArrayStruct"));
+
+    m_serializer->enterArrayString(*fieldFixedArrayString, std::vector<std::string>({ "", "" }));
+
+    m_serializer->enterArrayStruct(*fieldFixedArrayInner);
+
+    m_serializer->enterStruct(*fieldFixedArrayInnerWithoutArray);
+    m_serializer->enterString(*fieldInnerString, "");
+    m_serializer->enterArrayStruct(*fieldInnerFixedArray);
+    m_serializer->enterStruct(*fieldInnerFixedArrayWithoutArray);
+    m_serializer->enterInt32(*fieldInt32, 1);
+    m_serializer->exitStruct(*fieldInnerFixedArrayWithoutArray);
+    m_serializer->exitArrayStruct(*fieldInnerFixedArray);
+    m_serializer->enterInt32(*fieldInnerInt32, 2);
+    m_serializer->exitStruct(*fieldFixedArrayInnerWithoutArray);
+
+    m_serializer->enterStruct(*fieldFixedArrayInnerWithoutArray);
+    m_serializer->enterString(*fieldInnerString, "");
+    m_serializer->enterArrayStruct(*fieldInnerFixedArray);
+    m_serializer->enterStruct(*fieldInnerFixedArrayWithoutArray);
+    m_serializer->enterInt32(*fieldInt32, 3);
+    m_serializer->exitStruct(*fieldInnerFixedArrayWithoutArray);
+    m_serializer->exitArrayStruct(*fieldInnerFixedArray);
+    m_serializer->enterInt32(*fieldInnerInt32, 4);
+    m_serializer->exitStruct(*fieldFixedArrayInnerWithoutArray);
+
+    m_serializer->exitArrayStruct(*fieldFixedArrayInner);
+
+    m_serializer->enterArrayUInt32(*fieldFixedArrayUInt32, std::vector<std::uint32_t>({ 5, 6 }));
+
+    m_serializer->finished();
+
+    std::string data;
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x01);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x02);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x03);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x04);
+
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x05);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x06);
+
+    EXPECT_EQ(m_data, data);
+}
+
+TEST_F(TestSerializerQt, testFixedArrayStruct_toomany)
+{
+    const MetaField* fieldFixedArrayString = MetaDataGlobal::instance().getField("test.TestFixedArrayStruct", "a1");
+    const MetaField* fieldFixedArrayInner = MetaDataGlobal::instance().getField("test.TestFixedArrayStruct", "a2");
+    const MetaField* fieldFixedArrayInnerWithoutArray = MetaDataGlobal::instance().getArrayField("test.TestFixedArrayStruct", "a2");
+    const MetaField* fieldFixedArrayUInt32 = MetaDataGlobal::instance().getField("test.TestFixedArrayStruct", "a3");
+    const MetaField* fieldInnerString = MetaDataGlobal::instance().getField("test.TestInnerFixedArrayStruct", "b1");
+    const MetaField* fieldInnerFixedArray = MetaDataGlobal::instance().getField("test.TestInnerFixedArrayStruct", "b2");
+    const MetaField* fieldInnerFixedArrayWithoutArray = MetaDataGlobal::instance().getArrayField("test.TestInnerFixedArrayStruct", "b2");
+    const MetaField* fieldInnerInt32 = MetaDataGlobal::instance().getField("test.TestInnerFixedArrayStruct", "b3");
+    const MetaField* fieldInt32 = MetaDataGlobal::instance().getField("test.TestInt32", "value");
+
+    ASSERT_NE(fieldFixedArrayString, nullptr);
+    ASSERT_NE(fieldFixedArrayInner, nullptr);
+    ASSERT_NE(fieldFixedArrayInnerWithoutArray, nullptr);
+    ASSERT_NE(fieldFixedArrayUInt32, nullptr);
+    ASSERT_NE(fieldInnerString, nullptr);
+    ASSERT_NE(fieldInnerFixedArray, nullptr);
+    ASSERT_NE(fieldInnerFixedArrayWithoutArray, nullptr);
+    ASSERT_NE(fieldInnerInt32, nullptr);
+    ASSERT_NE(fieldInt32, nullptr);
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestFixedArrayStruct"));
+
+    m_serializer->enterArrayString(*fieldFixedArrayString, std::vector<std::string>({ "", "", ""}));
+
+    m_serializer->enterArrayStruct(*fieldFixedArrayInner);
+
+    m_serializer->enterStruct(*fieldFixedArrayInnerWithoutArray);
+    m_serializer->enterString(*fieldInnerString, "");
+    m_serializer->enterArrayStruct(*fieldInnerFixedArray);
+    m_serializer->enterStruct(*fieldInnerFixedArrayWithoutArray);
+    m_serializer->enterInt32(*fieldInt32, 1);
+    m_serializer->exitStruct(*fieldInnerFixedArrayWithoutArray);
+    m_serializer->enterStruct(*fieldInnerFixedArrayWithoutArray);
+    m_serializer->enterInt32(*fieldInt32, 11);
+    m_serializer->exitStruct(*fieldInnerFixedArrayWithoutArray);
+    m_serializer->exitArrayStruct(*fieldInnerFixedArray);
+    m_serializer->enterInt32(*fieldInnerInt32, 2);
+    m_serializer->exitStruct(*fieldFixedArrayInnerWithoutArray);
+
+    m_serializer->enterStruct(*fieldFixedArrayInnerWithoutArray);
+    m_serializer->enterString(*fieldInnerString, "");
+    m_serializer->enterArrayStruct(*fieldInnerFixedArray);
+    m_serializer->enterStruct(*fieldInnerFixedArrayWithoutArray);
+    m_serializer->enterInt32(*fieldInt32, 3);
+    m_serializer->exitStruct(*fieldInnerFixedArrayWithoutArray);
+    m_serializer->enterStruct(*fieldInnerFixedArrayWithoutArray);
+    m_serializer->enterInt32(*fieldInt32, 33);
+    m_serializer->exitStruct(*fieldInnerFixedArrayWithoutArray);
+    m_serializer->exitArrayStruct(*fieldInnerFixedArray);
+    m_serializer->enterInt32(*fieldInnerInt32, 4);
+    m_serializer->exitStruct(*fieldFixedArrayInnerWithoutArray);
+
+    m_serializer->enterStruct(*fieldFixedArrayInnerWithoutArray);
+    m_serializer->enterString(*fieldInnerString, "");
+    m_serializer->enterArrayStruct(*fieldInnerFixedArray);
+    m_serializer->enterStruct(*fieldInnerFixedArrayWithoutArray);
+    m_serializer->enterInt32(*fieldInt32, 333);
+    m_serializer->exitStruct(*fieldInnerFixedArrayWithoutArray);
+    m_serializer->enterStruct(*fieldInnerFixedArrayWithoutArray);
+    m_serializer->enterInt32(*fieldInt32, 3333);
+    m_serializer->exitStruct(*fieldInnerFixedArrayWithoutArray);
+    m_serializer->enterStruct(*fieldInnerFixedArrayWithoutArray);
+    m_serializer->enterInt32(*fieldInt32, 3333);
+    m_serializer->exitStruct(*fieldInnerFixedArrayWithoutArray);
+    m_serializer->enterStruct(*fieldInnerFixedArrayWithoutArray);
+    m_serializer->enterInt32(*fieldInt32, 3333);
+    m_serializer->exitStruct(*fieldInnerFixedArrayWithoutArray);
+    m_serializer->enterStruct(*fieldInnerFixedArrayWithoutArray);
+    m_serializer->enterInt32(*fieldInt32, 3333);
+    m_serializer->exitStruct(*fieldInnerFixedArrayWithoutArray);
+    m_serializer->exitArrayStruct(*fieldInnerFixedArray);
+    m_serializer->enterInt32(*fieldInnerInt32, 44);
+    m_serializer->exitStruct(*fieldFixedArrayInnerWithoutArray);
+
+    m_serializer->exitArrayStruct(*fieldFixedArrayInner);
+
+    m_serializer->enterArrayUInt32(*fieldFixedArrayUInt32, std::vector<std::uint32_t>({ 5, 6, 7 }));
+
+    m_serializer->finished();
+
+    std::string data;
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x01);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x02);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x03);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x04);
+
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x05);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x06);
+
+    EXPECT_EQ(m_data, data);
+}
+
+
+TEST_F(TestSerializerQt, testFixedArrayStruct_tooless)
+{
+    const MetaField* fieldFixedArrayString = MetaDataGlobal::instance().getField("test.TestFixedArrayStruct", "a1");
+    const MetaField* fieldFixedArrayInner = MetaDataGlobal::instance().getField("test.TestFixedArrayStruct", "a2");
+    const MetaField* fieldFixedArrayInnerWithoutArray = MetaDataGlobal::instance().getArrayField("test.TestFixedArrayStruct", "a2");
+    const MetaField* fieldFixedArrayUInt32 = MetaDataGlobal::instance().getField("test.TestFixedArrayStruct", "a3");
+    const MetaField* fieldInnerString = MetaDataGlobal::instance().getField("test.TestInnerFixedArrayStruct", "b1");
+    const MetaField* fieldInnerFixedArray = MetaDataGlobal::instance().getField("test.TestInnerFixedArrayStruct", "b2");
+    const MetaField* fieldInnerFixedArrayWithoutArray = MetaDataGlobal::instance().getArrayField("test.TestInnerFixedArrayStruct", "b2");
+    const MetaField* fieldInnerInt32 = MetaDataGlobal::instance().getField("test.TestInnerFixedArrayStruct", "b3");
+    const MetaField* fieldInt32 = MetaDataGlobal::instance().getField("test.TestInt32", "value");
+
+    ASSERT_NE(fieldFixedArrayString, nullptr);
+    ASSERT_NE(fieldFixedArrayInner, nullptr);
+    ASSERT_NE(fieldFixedArrayInnerWithoutArray, nullptr);
+    ASSERT_NE(fieldFixedArrayUInt32, nullptr);
+    ASSERT_NE(fieldInnerString, nullptr);
+    ASSERT_NE(fieldInnerFixedArray, nullptr);
+    ASSERT_NE(fieldInnerFixedArrayWithoutArray, nullptr);
+    ASSERT_NE(fieldInnerInt32, nullptr);
+    ASSERT_NE(fieldInt32, nullptr);
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestFixedArrayStruct"));
+
+    m_serializer->enterArrayString(*fieldFixedArrayString, std::vector<std::string>({ "" }));
+
+    m_serializer->enterArrayStruct(*fieldFixedArrayInner);
+
+    m_serializer->enterStruct(*fieldFixedArrayInnerWithoutArray);
+    m_serializer->enterString(*fieldInnerString, "");
+    m_serializer->enterInt32(*fieldInnerInt32, 2);
+    m_serializer->exitStruct(*fieldFixedArrayInnerWithoutArray);
+
+    m_serializer->exitArrayStruct(*fieldFixedArrayInner);
+
+    m_serializer->enterArrayUInt32(*fieldFixedArrayUInt32, std::vector<std::uint32_t>({ 5 }));
+
+    m_serializer->finished();
+
+    std::string data;
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x02);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x05);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+
+    EXPECT_EQ(m_data, data);
+}
+
+
+TEST_F(TestSerializerQt, testFixedArrayStruct_none)
+{
+    const MetaField* fieldFixedArrayString = MetaDataGlobal::instance().getField("test.TestFixedArrayStruct", "a1");
+    const MetaField* fieldFixedArrayInner = MetaDataGlobal::instance().getField("test.TestFixedArrayStruct", "a2");
+    const MetaField* fieldFixedArrayInnerWithoutArray = MetaDataGlobal::instance().getArrayField("test.TestFixedArrayStruct", "a2");
+    const MetaField* fieldFixedArrayUInt32 = MetaDataGlobal::instance().getField("test.TestFixedArrayStruct", "a3");
+    const MetaField* fieldInnerString = MetaDataGlobal::instance().getField("test.TestInnerFixedArrayStruct", "b1");
+    const MetaField* fieldInnerFixedArray = MetaDataGlobal::instance().getField("test.TestInnerFixedArrayStruct", "b2");
+    const MetaField* fieldInnerFixedArrayWithoutArray = MetaDataGlobal::instance().getArrayField("test.TestInnerFixedArrayStruct", "b2");
+    const MetaField* fieldInnerInt32 = MetaDataGlobal::instance().getField("test.TestInnerFixedArrayStruct", "b3");
+    const MetaField* fieldInt32 = MetaDataGlobal::instance().getField("test.TestInt32", "value");
+
+    ASSERT_NE(fieldFixedArrayString, nullptr);
+    ASSERT_NE(fieldFixedArrayInner, nullptr);
+    ASSERT_NE(fieldFixedArrayInnerWithoutArray, nullptr);
+    ASSERT_NE(fieldFixedArrayUInt32, nullptr);
+    ASSERT_NE(fieldInnerString, nullptr);
+    ASSERT_NE(fieldInnerFixedArray, nullptr);
+    ASSERT_NE(fieldInnerFixedArrayWithoutArray, nullptr);
+    ASSERT_NE(fieldInnerInt32, nullptr);
+    ASSERT_NE(fieldInt32, nullptr);
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestFixedArrayStruct"));
+
+    m_serializer->finished();
+
+    std::string data;
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+
+    EXPECT_EQ(m_data, data);
+}
+
+
+
+
 TEST_F(TestSerializerQt, testArrayEnum)
 {
     static const fmq::test::Foo VALUE1 = fmq::test::Foo::FOO_HELLO;

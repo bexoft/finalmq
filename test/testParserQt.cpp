@@ -1396,6 +1396,116 @@ TEST_F(TestParserQt, testArrayStruct)
 }
 
 
+TEST_F(TestParserQt, testFixedArrayStruct)
+{
+    const MetaField* fieldFixedArrayString = MetaDataGlobal::instance().getField("test.TestFixedArrayStruct", "a1");
+    const MetaField* fieldFixedArrayInner = MetaDataGlobal::instance().getField("test.TestFixedArrayStruct", "a2");
+    const MetaField* fieldFixedArrayInnerWithoutArray = MetaDataGlobal::instance().getArrayField("test.TestFixedArrayStruct", "a2");
+    const MetaField* fieldFixedArrayUInt32 = MetaDataGlobal::instance().getField("test.TestFixedArrayStruct", "a3");
+    const MetaField* fieldInnerString = MetaDataGlobal::instance().getField("test.TestInnerFixedArrayStruct", "b1");
+    const MetaField* fieldInnerFixedArray = MetaDataGlobal::instance().getField("test.TestInnerFixedArrayStruct", "b2");
+    const MetaField* fieldInnerFixedArrayWithoutArray = MetaDataGlobal::instance().getArrayField("test.TestInnerFixedArrayStruct", "b2");
+    const MetaField* fieldInnerInt32 = MetaDataGlobal::instance().getField("test.TestInnerFixedArrayStruct", "b3");
+    const MetaField* fieldInt32 = MetaDataGlobal::instance().getField("test.TestInt32", "value");
+
+    ASSERT_NE(fieldFixedArrayString, nullptr);
+    ASSERT_NE(fieldFixedArrayInner, nullptr);
+    ASSERT_NE(fieldFixedArrayInnerWithoutArray, nullptr);
+    ASSERT_NE(fieldFixedArrayUInt32, nullptr);
+    ASSERT_NE(fieldInnerString, nullptr);
+    ASSERT_NE(fieldInnerFixedArray, nullptr);
+    ASSERT_NE(fieldInnerFixedArrayWithoutArray, nullptr);
+    ASSERT_NE(fieldInnerInt32, nullptr);
+    ASSERT_NE(fieldInt32, nullptr);
+
+    std::string data;
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x01);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x02);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x03);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x04);
+
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x05);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x06);
+
+    MockIParserVisitor mockVisitor;
+
+    {
+        testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
+
+        EXPECT_CALL(mockVisitor, enterArrayStringMove(MatcherMetaField(*fieldFixedArrayString), std::vector<std::string>({ "", ""}))).Times(1);
+
+        EXPECT_CALL(mockVisitor, enterArrayStruct(MatcherMetaField(*fieldFixedArrayInner))).Times(1);
+
+        EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldFixedArrayInnerWithoutArray))).Times(1);
+        EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*fieldInnerString), std::string(""))).Times(1);
+        EXPECT_CALL(mockVisitor, enterArrayStruct(MatcherMetaField(*fieldInnerFixedArray))).Times(1);
+        EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldInnerFixedArrayWithoutArray))).Times(1);
+        EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*fieldInt32), 1)).Times(1);
+        EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldInnerFixedArrayWithoutArray))).Times(1);
+        EXPECT_CALL(mockVisitor, exitArrayStruct(MatcherMetaField(*fieldInnerFixedArray))).Times(1);
+        EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*fieldInnerInt32), 2)).Times(1);
+        EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldFixedArrayInnerWithoutArray))).Times(1);
+
+        EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldFixedArrayInnerWithoutArray))).Times(1);
+        EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*fieldInnerString), std::string(""))).Times(1);
+        EXPECT_CALL(mockVisitor, enterArrayStruct(MatcherMetaField(*fieldInnerFixedArray))).Times(1);
+        EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldInnerFixedArrayWithoutArray))).Times(1);
+        EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*fieldInt32), 3)).Times(1);
+        EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldInnerFixedArrayWithoutArray))).Times(1);
+        EXPECT_CALL(mockVisitor, exitArrayStruct(MatcherMetaField(*fieldInnerFixedArray))).Times(1);
+        EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*fieldInnerInt32), 4)).Times(1);
+        EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldFixedArrayInnerWithoutArray))).Times(1);
+
+        EXPECT_CALL(mockVisitor, exitArrayStruct(MatcherMetaField(*fieldFixedArrayInner))).Times(1);
+
+        EXPECT_CALL(mockVisitor, enterArrayUInt32(MatcherMetaField(*fieldFixedArrayUInt32), std::vector<std::uint32_t>({ 5, 6 }))).Times(1);
+
+        EXPECT_CALL(mockVisitor, finished()).Times(1);
+    }
+
+    ParserQt parser(mockVisitor, data.data(), data.size());
+    bool res = parser.parseStruct("test.TestFixedArrayStruct");
+    EXPECT_EQ(res, true);
+}
+
+
+
 TEST_F(TestParserQt, testArrayEnum)
 {
     static const std::int32_t VALUE1 = -2;
