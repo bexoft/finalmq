@@ -122,6 +122,18 @@
         {"type":"TestArrayEnum","desc":"desc","fields":[
             {"tid":"TYPE_ARRAY_ENUM","type":"Foo","name":"value","desc":"desc","flags":[]}
         ]},
+        
+        {"type":"TestInnerFixedArrayStruct","desc":"desc","fields":[
+            {"tid":"TYPE_STRING","type":"","name":"b1","desc":"desc","flags":[]},
+            {"tid":"TYPE_ARRAY_STRUCT","type":"TestInt32","name":"b2","desc":"desc","flags":[],"attrs":["fixedarray:1"]},
+            {"tid":"TYPE_INT32","type":"","name":"b3","desc":"desc","flags":[]}
+        ]},
+        {"type":"TestFixedArrayStruct","desc":"desc","fields":[
+            {"tid":"TYPE_ARRAY_STRING","type":"","name":"a1","desc":"desc","flags":[],"attrs":["fixedarray:2"]},
+            {"tid":"TYPE_ARRAY_STRUCT","type":"TestInnerFixedArrayStruct","name":"a2","desc":"desc","flags":[],"attrs":["fixedarray:2"]},
+            {"tid":"TYPE_ARRAY_UINT32","type":"","name":"a3","desc":"desc","flags":[],"attrs":["fixedarray:2"]}
+        ]},
+        
         {"type":"TestRequest","desc":"desc","fields":[
             {"tid":"TYPE_STRING","type":"","name":"datarequest","desc":"desc","flags":[]}
         ]},

@@ -121,21 +121,6 @@ void ParserProcessDefaultValues::enterStruct(const MetaField& field)
 
     if (!m_skipDefaultValues)
     {
-        markAsDone(field);
-        const MetaStruct* stru = MetaDataGlobal::instance().getStruct(field);
-        if (stru)
-        {
-            m_stackFieldsDone.emplace_back(stru->getFieldsSize(), false);
-        }
-        else
-        {
-            m_stackFieldsDone.emplace_back(0, false);
-        }
-        if (field.typeName == STR_VARVALUE)
-        {
-            m_varValueActive++;
-        }
-
         if (!m_stackArrayStructState.empty())
         {
             EntryArrayStructState& arrayStructState = m_stackArrayStructState.back();
@@ -155,6 +140,20 @@ void ParserProcessDefaultValues::enterStruct(const MetaField& field)
 
         if (!m_blockVisitor)
         {
+            markAsDone(field);
+            const MetaStruct* stru = MetaDataGlobal::instance().getStruct(field);
+            if (stru)
+            {
+                m_stackFieldsDone.emplace_back(stru->getFieldsSize(), false);
+            }
+            else
+            {
+                m_stackFieldsDone.emplace_back(0, false);
+            }
+            if (field.typeName == STR_VARVALUE)
+            {
+                m_varValueActive++;
+            }
             m_visitor->enterStruct(field);
         }
     }
@@ -360,8 +359,8 @@ void ParserProcessDefaultValues::processDefaultValues(const MetaStruct& stru, co
                         m_visitor->enterArrayBytesMove(*field, {});
                         break;
                     case MetaTypeId::TYPE_ARRAY_STRUCT:
-                        m_visitor->enterArrayStruct(*field);
-                        m_visitor->exitArrayStruct(*field);
+                        enterArrayStruct(*field);
+                        exitArrayStruct(*field);
                         break;
                     case MetaTypeId::TYPE_ARRAY_ENUM:
                         m_visitor->enterArrayEnum(*field, std::vector<std::int32_t>());
@@ -437,8 +436,8 @@ void ParserProcessDefaultValues::exitArrayStruct(const MetaField& field)
             const int currentSize = entry.numberOfArrayEntries;
             for (int i = currentSize; i < fixedSize; ++i)
             {
-                m_visitor->enterStruct(*field.fieldWithoutArray);
-                m_visitor->exitStruct(*field.fieldWithoutArray);
+                enterStruct(*field.fieldWithoutArray);
+                exitStruct(*field.fieldWithoutArray);
             }
             m_stackArrayStructState.pop_back();
         }

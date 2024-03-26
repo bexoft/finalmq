@@ -39,6 +39,10 @@
 
 namespace finalmq
 {
+
+static const std::string FIXED_ARRAY = "fixedarray";
+
+    
 SerializerQt::SerializerQt(IZeroCopyBuffer& buffer, Mode mode, int maxBlockSize)
     : ParserConverter(), m_internal(buffer, maxBlockSize, mode), m_parserProcessDefaultValues(), m_parserAbortAndIndex(), m_parserProcessValuesInOrder()
 {
@@ -101,6 +105,7 @@ void SerializerQt::Internal::enterStruct(const MetaField& field)
 
 void SerializerQt::Internal::exitStruct(const MetaField& /*field*/)
 {
+    assert(!m_levelState.empty());
     m_levelState.pop_back();
 }
 
@@ -110,7 +115,7 @@ void SerializerQt::Internal::enterStructNull(const MetaField& /*field*/)
 
 void SerializerQt::Internal::enterArrayStruct(const MetaField& field)
 {
-    assert(!m_levelState.empty());
+    m_levelState.push_back(LevelState());
     LevelState& levelState = m_levelState.back();
 
     assert(field.typeId == MetaTypeId::TYPE_ARRAY_STRUCT);
@@ -119,10 +124,14 @@ void SerializerQt::Internal::enterArrayStruct(const MetaField& field)
         serializeQVariantHeader(field);
     }
 
-    reserveSpace(sizeof(std::uint32_t));
-    levelState.arrayStructCounterBuffer = m_buffer;
-    levelState.arrayStructCounter = 0;
-    serialize(levelState.arrayStructCounter);
+    const std::string& fixedArray = field.getProperty(FIXED_ARRAY);
+    if (fixedArray.empty())
+    {
+        reserveSpace(sizeof(std::uint32_t));
+        levelState.arrayStructCounterBuffer = m_buffer;
+        levelState.arrayStructCounter = 0;
+        serialize(levelState.arrayStructCounter);
+    }
 }
 
 void SerializerQt::Internal::exitArrayStruct(const MetaField& /*field*/)
@@ -138,6 +147,7 @@ void SerializerQt::Internal::exitArrayStruct(const MetaField& /*field*/)
         m_buffer = buffer;
         levelState.arrayStructCounter = -1;
     }
+    m_levelState.pop_back();
 }
 
 static const std::string ABORTSTRUCT = "abortstruct";
@@ -1535,8 +1545,6 @@ void SerializerQt::Internal::getQVariantType(const MetaField& field, std::uint32
     }
 }
 
-
-static const std::string FIXED_ARRAY = "fixedarray";
 
 std::uint32_t SerializerQt::Internal::getFixedSize(const MetaField& field)
 {
