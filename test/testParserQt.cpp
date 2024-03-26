@@ -86,7 +86,7 @@ TEST_F(TestParserQt, testBool)
     ASSERT_NE(fieldValue, nullptr);
 
     std::string data;
-    data.push_back(VALUE);
+    data.push_back(static_cast<char>(VALUE));
 
     MockIParserVisitor mockVisitor;
 
@@ -111,7 +111,7 @@ TEST_F(TestParserQt, testInt8)
     ASSERT_NE(fieldValue, nullptr);
 
     std::string data;
-    data.push_back(VALUE);
+    data.push_back(static_cast<char>(VALUE));
 
     MockIParserVisitor mockVisitor;
 
@@ -136,7 +136,7 @@ TEST_F(TestParserQt, testUInt8)
     ASSERT_NE(fieldValue, nullptr);
 
     std::string data;
-    data.push_back(VALUE);
+    data.push_back(static_cast<char>(VALUE));
 
     MockIParserVisitor mockVisitor;
 
@@ -161,8 +161,8 @@ TEST_F(TestParserQt, testInt16)
     ASSERT_NE(fieldValue, nullptr);
 
     std::string data;
-    data.push_back(VALUE >> 8);
-    data.push_back(VALUE >> 0);
+    data.push_back(static_cast<char>(VALUE >> 8));
+    data.push_back(static_cast<char>(VALUE >> 0));
 
     MockIParserVisitor mockVisitor;
 
@@ -187,8 +187,8 @@ TEST_F(TestParserQt, testUInt16)
     ASSERT_NE(fieldValue, nullptr);
 
     std::string data;
-    data.push_back(VALUE >> 8);
-    data.push_back(VALUE >> 0);
+    data.push_back(static_cast<char>(VALUE >> 8));
+    data.push_back(static_cast<char>(VALUE >> 0));
 
     MockIParserVisitor mockVisitor;
 
@@ -213,10 +213,10 @@ TEST_F(TestParserQt, testInt32)
     ASSERT_NE(fieldValue, nullptr);
 
     std::string data;
-    data.push_back(VALUE >> 24);
-    data.push_back(VALUE >> 16);
-    data.push_back(VALUE >> 8);
-    data.push_back(VALUE >> 0);
+    data.push_back(static_cast<char>(VALUE >> 24));
+    data.push_back(static_cast<char>(VALUE >> 16));
+    data.push_back(static_cast<char>(VALUE >> 8));
+    data.push_back(static_cast<char>(VALUE >> 0));
 
     MockIParserVisitor mockVisitor;
 
@@ -241,10 +241,10 @@ TEST_F(TestParserQt, testUInt32)
     ASSERT_NE(fieldValue, nullptr);
 
     std::string data;
-    data.push_back(VALUE >> 24);
-    data.push_back(VALUE >> 16);
-    data.push_back(VALUE >> 8);
-    data.push_back(VALUE >> 0);
+    data.push_back(static_cast<char>(VALUE >> 24));
+    data.push_back(static_cast<char>(VALUE >> 16));
+    data.push_back(static_cast<char>(VALUE >> 8));
+    data.push_back(static_cast<char>(VALUE >> 0));
 
     MockIParserVisitor mockVisitor;
 
@@ -269,14 +269,14 @@ TEST_F(TestParserQt, testInt64)
     ASSERT_NE(fieldValue, nullptr);
 
     std::string data;
-    data.push_back(VALUE >> 56);
-    data.push_back(VALUE >> 48);
-    data.push_back(VALUE >> 40);
-    data.push_back(VALUE >> 32);
-    data.push_back(VALUE >> 24);
-    data.push_back(VALUE >> 16);
-    data.push_back(VALUE >> 8);
-    data.push_back(VALUE >> 0);
+    data.push_back(static_cast<char>(VALUE >> 56));
+    data.push_back(static_cast<char>(VALUE >> 48));
+    data.push_back(static_cast<char>(VALUE >> 40));
+    data.push_back(static_cast<char>(VALUE >> 32));
+    data.push_back(static_cast<char>(VALUE >> 24));
+    data.push_back(static_cast<char>(VALUE >> 16));
+    data.push_back(static_cast<char>(VALUE >> 8));
+    data.push_back(static_cast<char>(VALUE >> 0));
 
     MockIParserVisitor mockVisitor;
 
@@ -301,14 +301,14 @@ TEST_F(TestParserQt, testUInt64)
     ASSERT_NE(fieldValue, nullptr);
 
     std::string data;
-    data.push_back(VALUE >> 56);
-    data.push_back(VALUE >> 48);
-    data.push_back(VALUE >> 40);
-    data.push_back(VALUE >> 32);
-    data.push_back(VALUE >> 24);
-    data.push_back(VALUE >> 16);
-    data.push_back(VALUE >> 8);
-    data.push_back(VALUE >> 0);
+    data.push_back(static_cast<char>(VALUE >> 56));
+    data.push_back(static_cast<char>(VALUE >> 48));
+    data.push_back(static_cast<char>(VALUE >> 40));
+    data.push_back(static_cast<char>(VALUE >> 32));
+    data.push_back(static_cast<char>(VALUE >> 24));
+    data.push_back(static_cast<char>(VALUE >> 16));
+    data.push_back(static_cast<char>(VALUE >> 8));
+    data.push_back(static_cast<char>(VALUE >> 0));
 
     MockIParserVisitor mockVisitor;
 
@@ -340,14 +340,14 @@ TEST_F(TestParserQt, testFloat)
     ASSERT_NE(fieldValue, nullptr);
 
     std::string data;
-    data.push_back(u.v >> 56);
-    data.push_back(u.v >> 48);
-    data.push_back(u.v >> 40);
-    data.push_back(u.v >> 32);
-    data.push_back(u.v >> 24);
-    data.push_back(u.v >> 16);
-    data.push_back(u.v >> 8);
-    data.push_back(u.v >> 0);
+    data.push_back(static_cast<char>(u.v >> 56));
+    data.push_back(static_cast<char>(u.v >> 48));
+    data.push_back(static_cast<char>(u.v >> 40));
+    data.push_back(static_cast<char>(u.v >> 32));
+    data.push_back(static_cast<char>(u.v >> 24));
+    data.push_back(static_cast<char>(u.v >> 16));
+    data.push_back(static_cast<char>(u.v >> 8));
+    data.push_back(static_cast<char>(u.v >> 0));
 
     MockIParserVisitor mockVisitor;
 
@@ -378,14 +378,14 @@ TEST_F(TestParserQt, testDouble)
     ASSERT_NE(fieldValue, nullptr);
 
     std::string data;
-    data.push_back(u.v >> 56);
-    data.push_back(u.v >> 48);
-    data.push_back(u.v >> 40);
-    data.push_back(u.v >> 32);
-    data.push_back(u.v >> 24);
-    data.push_back(u.v >> 16);
-    data.push_back(u.v >> 8);
-    data.push_back(u.v >> 0);
+    data.push_back(static_cast<char>(u.v >> 56));
+    data.push_back(static_cast<char>(u.v >> 48));
+    data.push_back(static_cast<char>(u.v >> 40));
+    data.push_back(static_cast<char>(u.v >> 32));
+    data.push_back(static_cast<char>(u.v >> 24));
+    data.push_back(static_cast<char>(u.v >> 16));
+    data.push_back(static_cast<char>(u.v >> 8));
+    data.push_back(static_cast<char>(u.v >> 0));
 
     MockIParserVisitor mockVisitor;
 
@@ -502,10 +502,10 @@ TEST_F(TestParserQt, testStruct)
     ASSERT_NE(fieldLastValue, nullptr);
 
     std::string data;
-    data.push_back(VALUE_INT32 >> 24);
-    data.push_back(VALUE_INT32 >> 16);
-    data.push_back(VALUE_INT32 >> 8);
-    data.push_back(VALUE_INT32 >> 0);
+    data.push_back(static_cast<char>(VALUE_INT32 >> 24));
+    data.push_back(static_cast<char>(VALUE_INT32 >> 16));
+    data.push_back(static_cast<char>(VALUE_INT32 >> 8));
+    data.push_back(static_cast<char>(VALUE_INT32 >> 0));
     data.push_back(0);
     data.push_back(0);
     data.push_back(0);
@@ -567,10 +567,10 @@ TEST_F(TestParserQt, testEnum)
     ASSERT_NE(fieldValue, nullptr);
 
     std::string data;
-    data.push_back(VALUE >> 24);
-    data.push_back(VALUE >> 16);
-    data.push_back(VALUE >> 8);
-    data.push_back(VALUE >> 0);
+    data.push_back(static_cast<char>(VALUE >> 24));
+    data.push_back(static_cast<char>(VALUE >> 16));
+    data.push_back(static_cast<char>(VALUE >> 8));
+    data.push_back(static_cast<char>(VALUE >> 0));
 
     MockIParserVisitor mockVisitor;
 
@@ -596,10 +596,10 @@ TEST_F(TestParserQt, testEnumNotAvailable)
     ASSERT_NE(fieldValue, nullptr);
 
     std::string data;
-    data.push_back(VALUE >> 24);
-    data.push_back(VALUE >> 16);
-    data.push_back(VALUE >> 8);
-    data.push_back(VALUE >> 0);
+    data.push_back(static_cast<char>(VALUE >> 24));
+    data.push_back(static_cast<char>(VALUE >> 16));
+    data.push_back(static_cast<char>(VALUE >> 8));
+    data.push_back(static_cast<char>(VALUE >> 0));
 
     MockIParserVisitor mockVisitor;
 
@@ -665,10 +665,10 @@ TEST_F(TestParserQt, testArrayInt8)
     data.push_back(0x00);
     data.push_back(0x00);
     data.push_back(0x04);
-    data.push_back(VALUE1);
-    data.push_back(VALUE2);
-    data.push_back(VALUE3);
-    data.push_back(VALUE4);
+    data.push_back(static_cast<char>(VALUE1));
+    data.push_back(static_cast<char>(VALUE2));
+    data.push_back(static_cast<char>(VALUE3));
+    data.push_back(static_cast<char>(VALUE4));
 
     MockIParserVisitor mockVisitor;
 
@@ -701,14 +701,14 @@ TEST_F(TestParserQt, testArrayInt16)
     data.push_back(0x00);
     data.push_back(0x00);
     data.push_back(0x04);
-    data.push_back(VALUE1 >> 8);
-    data.push_back(VALUE1 >> 0);
-    data.push_back(VALUE2 >> 8);
-    data.push_back(VALUE2 >> 0);
-    data.push_back(VALUE3 >> 8);
-    data.push_back(VALUE3 >> 0);
-    data.push_back(VALUE4 >> 8);
-    data.push_back(VALUE4 >> 0);
+    data.push_back(static_cast<char>(VALUE1 >> 8));
+    data.push_back(static_cast<char>(VALUE1 >> 0));
+    data.push_back(static_cast<char>(VALUE2 >> 8));
+    data.push_back(static_cast<char>(VALUE2 >> 0));
+    data.push_back(static_cast<char>(VALUE3 >> 8));
+    data.push_back(static_cast<char>(VALUE3 >> 0));
+    data.push_back(static_cast<char>(VALUE4 >> 8));
+    data.push_back(static_cast<char>(VALUE4 >> 0));
 
     MockIParserVisitor mockVisitor;
 
@@ -780,22 +780,22 @@ TEST_F(TestParserQt, testArrayInt32)
     data.push_back(0x00);
     data.push_back(0x00);
     data.push_back(0x04);
-    data.push_back(VALUE1 >> 24);
-    data.push_back(VALUE1 >> 16);
-    data.push_back(VALUE1 >> 8);
-    data.push_back(VALUE1 >> 0);
-    data.push_back(VALUE2 >> 24);
-    data.push_back(VALUE2 >> 16);
-    data.push_back(VALUE2 >> 8);
-    data.push_back(VALUE2 >> 0);
-    data.push_back(VALUE3 >> 24);
-    data.push_back(VALUE3 >> 16);
-    data.push_back(VALUE3 >> 8);
-    data.push_back(VALUE3 >> 0);
-    data.push_back(VALUE4 >> 24);
-    data.push_back(VALUE4 >> 16);
-    data.push_back(VALUE4 >> 8);
-    data.push_back(VALUE4 >> 0);
+    data.push_back(static_cast<char>(VALUE1 >> 24));
+    data.push_back(static_cast<char>(VALUE1 >> 16));
+    data.push_back(static_cast<char>(VALUE1 >> 8));
+    data.push_back(static_cast<char>(VALUE1 >> 0));
+    data.push_back(static_cast<char>(VALUE2 >> 24));
+    data.push_back(static_cast<char>(VALUE2 >> 16));
+    data.push_back(static_cast<char>(VALUE2 >> 8));
+    data.push_back(static_cast<char>(VALUE2 >> 0));
+    data.push_back(static_cast<char>(VALUE3 >> 24));
+    data.push_back(static_cast<char>(VALUE3 >> 16));
+    data.push_back(static_cast<char>(VALUE3 >> 8));
+    data.push_back(static_cast<char>(VALUE3 >> 0));
+    data.push_back(static_cast<char>(VALUE4 >> 24));
+    data.push_back(static_cast<char>(VALUE4 >> 16));
+    data.push_back(static_cast<char>(VALUE4 >> 8));
+    data.push_back(static_cast<char>(VALUE4 >> 0));
 
     MockIParserVisitor mockVisitor;
 
@@ -876,38 +876,38 @@ TEST_F(TestParserQt, testArrayInt64)
     data.push_back(0x00);
     data.push_back(0x00);
     data.push_back(0x04);
-    data.push_back(VALUE1 >> 56);
-    data.push_back(VALUE1 >> 48);
-    data.push_back(VALUE1 >> 40);
-    data.push_back(VALUE1 >> 32);
-    data.push_back(VALUE1 >> 24);
-    data.push_back(VALUE1 >> 16);
-    data.push_back(VALUE1 >> 8);
-    data.push_back(VALUE1 >> 0);
-    data.push_back(VALUE2 >> 56);
-    data.push_back(VALUE2 >> 48);
-    data.push_back(VALUE2 >> 40);
-    data.push_back(VALUE2 >> 32);
-    data.push_back(VALUE2 >> 24);
-    data.push_back(VALUE2 >> 16);
-    data.push_back(VALUE2 >> 8);
-    data.push_back(VALUE2 >> 0);
-    data.push_back(VALUE3 >> 56);
-    data.push_back(VALUE3 >> 48);
-    data.push_back(VALUE3 >> 40);
-    data.push_back(VALUE3 >> 32);
-    data.push_back(VALUE3 >> 24);
-    data.push_back(VALUE3 >> 16);
-    data.push_back(VALUE3 >> 8);
-    data.push_back(VALUE3 >> 0);
-    data.push_back(VALUE4 >> 56);
-    data.push_back(VALUE4 >> 48);
-    data.push_back(VALUE4 >> 40);
-    data.push_back(VALUE4 >> 32);
-    data.push_back(VALUE4 >> 24);
-    data.push_back(VALUE4 >> 16);
-    data.push_back(VALUE4 >> 8);
-    data.push_back(VALUE4 >> 0);
+    data.push_back(static_cast<char>(VALUE1 >> 56));
+    data.push_back(static_cast<char>(VALUE1 >> 48));
+    data.push_back(static_cast<char>(VALUE1 >> 40));
+    data.push_back(static_cast<char>(VALUE1 >> 32));
+    data.push_back(static_cast<char>(VALUE1 >> 24));
+    data.push_back(static_cast<char>(VALUE1 >> 16));
+    data.push_back(static_cast<char>(VALUE1 >> 8));
+    data.push_back(static_cast<char>(VALUE1 >> 0));
+    data.push_back(static_cast<char>(VALUE2 >> 56));
+    data.push_back(static_cast<char>(VALUE2 >> 48));
+    data.push_back(static_cast<char>(VALUE2 >> 40));
+    data.push_back(static_cast<char>(VALUE2 >> 32));
+    data.push_back(static_cast<char>(VALUE2 >> 24));
+    data.push_back(static_cast<char>(VALUE2 >> 16));
+    data.push_back(static_cast<char>(VALUE2 >> 8));
+    data.push_back(static_cast<char>(VALUE2 >> 0));
+    data.push_back(static_cast<char>(VALUE3 >> 56));
+    data.push_back(static_cast<char>(VALUE3 >> 48));
+    data.push_back(static_cast<char>(VALUE3 >> 40));
+    data.push_back(static_cast<char>(VALUE3 >> 32));
+    data.push_back(static_cast<char>(VALUE3 >> 24));
+    data.push_back(static_cast<char>(VALUE3 >> 16));
+    data.push_back(static_cast<char>(VALUE3 >> 8));
+    data.push_back(static_cast<char>(VALUE3 >> 0));
+    data.push_back(static_cast<char>(VALUE4 >> 56));
+    data.push_back(static_cast<char>(VALUE4 >> 48));
+    data.push_back(static_cast<char>(VALUE4 >> 40));
+    data.push_back(static_cast<char>(VALUE4 >> 32));
+    data.push_back(static_cast<char>(VALUE4 >> 24));
+    data.push_back(static_cast<char>(VALUE4 >> 16));
+    data.push_back(static_cast<char>(VALUE4 >> 8));
+    data.push_back(static_cast<char>(VALUE4 >> 0));
 
     MockIParserVisitor mockVisitor;
 
@@ -1009,41 +1009,41 @@ TEST_F(TestParserQt, testArrayFloat)
     data.push_back(0x00);
     data.push_back(0x04);
     u.d = static_cast<double>(VALUE1);
-    data.push_back(u.v >> 56);
-    data.push_back(u.v >> 48);
-    data.push_back(u.v >> 40);
-    data.push_back(u.v >> 32);
-    data.push_back(u.v >> 24);
-    data.push_back(u.v >> 16);
-    data.push_back(u.v >> 8);
-    data.push_back(u.v >> 0);
+    data.push_back(static_cast<char>(u.v >> 56));
+    data.push_back(static_cast<char>(u.v >> 48));
+    data.push_back(static_cast<char>(u.v >> 40));
+    data.push_back(static_cast<char>(u.v >> 32));
+    data.push_back(static_cast<char>(u.v >> 24));
+    data.push_back(static_cast<char>(u.v >> 16));
+    data.push_back(static_cast<char>(u.v >> 8));
+    data.push_back(static_cast<char>(u.v >> 0));
     u.d = static_cast<double>(VALUE2);
-    data.push_back(u.v >> 56);
-    data.push_back(u.v >> 48);
-    data.push_back(u.v >> 40);
-    data.push_back(u.v >> 32);
-    data.push_back(u.v >> 24);
-    data.push_back(u.v >> 16);
-    data.push_back(u.v >> 8);
-    data.push_back(u.v >> 0);
+    data.push_back(static_cast<char>(u.v >> 56));
+    data.push_back(static_cast<char>(u.v >> 48));
+    data.push_back(static_cast<char>(u.v >> 40));
+    data.push_back(static_cast<char>(u.v >> 32));
+    data.push_back(static_cast<char>(u.v >> 24));
+    data.push_back(static_cast<char>(u.v >> 16));
+    data.push_back(static_cast<char>(u.v >> 8));
+    data.push_back(static_cast<char>(u.v >> 0));
     u.d = static_cast<double>(VALUE3);
-    data.push_back(u.v >> 56);
-    data.push_back(u.v >> 48);
-    data.push_back(u.v >> 40);
-    data.push_back(u.v >> 32);
-    data.push_back(u.v >> 24);
-    data.push_back(u.v >> 16);
-    data.push_back(u.v >> 8);
-    data.push_back(u.v >> 0);
+    data.push_back(static_cast<char>(u.v >> 56));
+    data.push_back(static_cast<char>(u.v >> 48));
+    data.push_back(static_cast<char>(u.v >> 40));
+    data.push_back(static_cast<char>(u.v >> 32));
+    data.push_back(static_cast<char>(u.v >> 24));
+    data.push_back(static_cast<char>(u.v >> 16));
+    data.push_back(static_cast<char>(u.v >> 8));
+    data.push_back(static_cast<char>(u.v >> 0));
     u.d = static_cast<double>(VALUE4);
-    data.push_back(u.v >> 56);
-    data.push_back(u.v >> 48);
-    data.push_back(u.v >> 40);
-    data.push_back(u.v >> 32);
-    data.push_back(u.v >> 24);
-    data.push_back(u.v >> 16);
-    data.push_back(u.v >> 8);
-    data.push_back(u.v >> 0);
+    data.push_back(static_cast<char>(u.v >> 56));
+    data.push_back(static_cast<char>(u.v >> 48));
+    data.push_back(static_cast<char>(u.v >> 40));
+    data.push_back(static_cast<char>(u.v >> 32));
+    data.push_back(static_cast<char>(u.v >> 24));
+    data.push_back(static_cast<char>(u.v >> 16));
+    data.push_back(static_cast<char>(u.v >> 8));
+    data.push_back(static_cast<char>(u.v >> 0));
 
     MockIParserVisitor mockVisitor;
 
@@ -1081,41 +1081,41 @@ TEST_F(TestParserQt, testArrayDouble)
     data.push_back(0x00);
     data.push_back(0x04);
     u.d = VALUE1;
-    data.push_back(u.v >> 56);
-    data.push_back(u.v >> 48);
-    data.push_back(u.v >> 40);
-    data.push_back(u.v >> 32);
-    data.push_back(u.v >> 24);
-    data.push_back(u.v >> 16);
-    data.push_back(u.v >> 8);
-    data.push_back(u.v >> 0);
+    data.push_back(static_cast<char>(u.v >> 56));
+    data.push_back(static_cast<char>(u.v >> 48));
+    data.push_back(static_cast<char>(u.v >> 40));
+    data.push_back(static_cast<char>(u.v >> 32));
+    data.push_back(static_cast<char>(u.v >> 24));
+    data.push_back(static_cast<char>(u.v >> 16));
+    data.push_back(static_cast<char>(u.v >> 8));
+    data.push_back(static_cast<char>(u.v >> 0));
     u.d = VALUE2;
-    data.push_back(u.v >> 56);
-    data.push_back(u.v >> 48);
-    data.push_back(u.v >> 40);
-    data.push_back(u.v >> 32);
-    data.push_back(u.v >> 24);
-    data.push_back(u.v >> 16);
-    data.push_back(u.v >> 8);
-    data.push_back(u.v >> 0);
+    data.push_back(static_cast<char>(u.v >> 56));
+    data.push_back(static_cast<char>(u.v >> 48));
+    data.push_back(static_cast<char>(u.v >> 40));
+    data.push_back(static_cast<char>(u.v >> 32));
+    data.push_back(static_cast<char>(u.v >> 24));
+    data.push_back(static_cast<char>(u.v >> 16));
+    data.push_back(static_cast<char>(u.v >> 8));
+    data.push_back(static_cast<char>(u.v >> 0));
     u.d = VALUE3;
-    data.push_back(u.v >> 56);
-    data.push_back(u.v >> 48);
-    data.push_back(u.v >> 40);
-    data.push_back(u.v >> 32);
-    data.push_back(u.v >> 24);
-    data.push_back(u.v >> 16);
-    data.push_back(u.v >> 8);
-    data.push_back(u.v >> 0);
+    data.push_back(static_cast<char>(u.v >> 56));
+    data.push_back(static_cast<char>(u.v >> 48));
+    data.push_back(static_cast<char>(u.v >> 40));
+    data.push_back(static_cast<char>(u.v >> 32));
+    data.push_back(static_cast<char>(u.v >> 24));
+    data.push_back(static_cast<char>(u.v >> 16));
+    data.push_back(static_cast<char>(u.v >> 8));
+    data.push_back(static_cast<char>(u.v >> 0));
     u.d = VALUE4;
-    data.push_back(u.v >> 56);
-    data.push_back(u.v >> 48);
-    data.push_back(u.v >> 40);
-    data.push_back(u.v >> 32);
-    data.push_back(u.v >> 24);
-    data.push_back(u.v >> 16);
-    data.push_back(u.v >> 8);
-    data.push_back(u.v >> 0);
+    data.push_back(static_cast<char>(u.v >> 56));
+    data.push_back(static_cast<char>(u.v >> 48));
+    data.push_back(static_cast<char>(u.v >> 40));
+    data.push_back(static_cast<char>(u.v >> 32));
+    data.push_back(static_cast<char>(u.v >> 24));
+    data.push_back(static_cast<char>(u.v >> 16));
+    data.push_back(static_cast<char>(u.v >> 8));
+    data.push_back(static_cast<char>(u.v >> 0));
 
     MockIParserVisitor mockVisitor;
 
@@ -1162,10 +1162,10 @@ TEST_F(TestParserQt, testArrayString)
     data.push_back('l');
     data.push_back(0);
     data.push_back('o');
-    data.push_back(0xff);
-    data.push_back(0xff);
-    data.push_back(0xff);
-    data.push_back(0xff);
+    data.push_back(static_cast<char>(0xff));
+    data.push_back(static_cast<char>(0xff));
+    data.push_back(static_cast<char>(0xff));
+    data.push_back(static_cast<char>(0xff));
     data.push_back(0x00);
     data.push_back(0x00);
     data.push_back(0x00);
@@ -1231,10 +1231,10 @@ TEST_F(TestParserQt, testArrayBytes)
     data.push_back(0);
     data.push_back('l');
     data.push_back('o');
-    data.push_back(0xff);
-    data.push_back(0xff);
-    data.push_back(0xff);
-    data.push_back(0xff);
+    data.push_back(static_cast<char>(0xff));
+    data.push_back(static_cast<char>(0xff));
+    data.push_back(static_cast<char>(0xff));
+    data.push_back(static_cast<char>(0xff));
     data.push_back(0x00);
     data.push_back(0x00);
     data.push_back(0x00);
@@ -1301,10 +1301,10 @@ TEST_F(TestParserQt, testArrayStruct)
     data.push_back(0x00);
     data.push_back(0x00);
     data.push_back(0x02);
-    data.push_back(VALUE1_INT32 >> 24);
-    data.push_back(VALUE1_INT32 >> 16);
-    data.push_back(VALUE1_INT32 >> 8);
-    data.push_back(VALUE1_INT32 >> 0);
+    data.push_back(static_cast<char>(VALUE1_INT32 >> 24));
+    data.push_back(static_cast<char>(VALUE1_INT32 >> 16));
+    data.push_back(static_cast<char>(VALUE1_INT32 >> 8));
+    data.push_back(static_cast<char>(VALUE1_INT32 >> 0));
     data.push_back(0);
     data.push_back(0);
     data.push_back(0);
@@ -1396,6 +1396,116 @@ TEST_F(TestParserQt, testArrayStruct)
 }
 
 
+TEST_F(TestParserQt, testFixedArrayStruct)
+{
+    const MetaField* fieldFixedArrayString = MetaDataGlobal::instance().getField("test.TestFixedArrayStruct", "a1");
+    const MetaField* fieldFixedArrayInner = MetaDataGlobal::instance().getField("test.TestFixedArrayStruct", "a2");
+    const MetaField* fieldFixedArrayInnerWithoutArray = MetaDataGlobal::instance().getArrayField("test.TestFixedArrayStruct", "a2");
+    const MetaField* fieldFixedArrayUInt32 = MetaDataGlobal::instance().getField("test.TestFixedArrayStruct", "a3");
+    const MetaField* fieldInnerString = MetaDataGlobal::instance().getField("test.TestInnerFixedArrayStruct", "b1");
+    const MetaField* fieldInnerFixedArray = MetaDataGlobal::instance().getField("test.TestInnerFixedArrayStruct", "b2");
+    const MetaField* fieldInnerFixedArrayWithoutArray = MetaDataGlobal::instance().getArrayField("test.TestInnerFixedArrayStruct", "b2");
+    const MetaField* fieldInnerInt32 = MetaDataGlobal::instance().getField("test.TestInnerFixedArrayStruct", "b3");
+    const MetaField* fieldInt32 = MetaDataGlobal::instance().getField("test.TestInt32", "value");
+
+    ASSERT_NE(fieldFixedArrayString, nullptr);
+    ASSERT_NE(fieldFixedArrayInner, nullptr);
+    ASSERT_NE(fieldFixedArrayInnerWithoutArray, nullptr);
+    ASSERT_NE(fieldFixedArrayUInt32, nullptr);
+    ASSERT_NE(fieldInnerString, nullptr);
+    ASSERT_NE(fieldInnerFixedArray, nullptr);
+    ASSERT_NE(fieldInnerFixedArrayWithoutArray, nullptr);
+    ASSERT_NE(fieldInnerInt32, nullptr);
+    ASSERT_NE(fieldInt32, nullptr);
+
+    std::string data;
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x01);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x02);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x03);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x04);
+
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x05);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x00);
+    data.push_back(0x06);
+
+    MockIParserVisitor mockVisitor;
+
+    {
+        testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
+
+        EXPECT_CALL(mockVisitor, enterArrayStringMove(MatcherMetaField(*fieldFixedArrayString), std::vector<std::string>({ "", ""}))).Times(1);
+
+        EXPECT_CALL(mockVisitor, enterArrayStruct(MatcherMetaField(*fieldFixedArrayInner))).Times(1);
+
+        EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldFixedArrayInnerWithoutArray))).Times(1);
+        EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*fieldInnerString), std::string(""))).Times(1);
+        EXPECT_CALL(mockVisitor, enterArrayStruct(MatcherMetaField(*fieldInnerFixedArray))).Times(1);
+        EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldInnerFixedArrayWithoutArray))).Times(1);
+        EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*fieldInt32), 1)).Times(1);
+        EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldInnerFixedArrayWithoutArray))).Times(1);
+        EXPECT_CALL(mockVisitor, exitArrayStruct(MatcherMetaField(*fieldInnerFixedArray))).Times(1);
+        EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*fieldInnerInt32), 2)).Times(1);
+        EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldFixedArrayInnerWithoutArray))).Times(1);
+
+        EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldFixedArrayInnerWithoutArray))).Times(1);
+        EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*fieldInnerString), std::string(""))).Times(1);
+        EXPECT_CALL(mockVisitor, enterArrayStruct(MatcherMetaField(*fieldInnerFixedArray))).Times(1);
+        EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldInnerFixedArrayWithoutArray))).Times(1);
+        EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*fieldInt32), 3)).Times(1);
+        EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldInnerFixedArrayWithoutArray))).Times(1);
+        EXPECT_CALL(mockVisitor, exitArrayStruct(MatcherMetaField(*fieldInnerFixedArray))).Times(1);
+        EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*fieldInnerInt32), 4)).Times(1);
+        EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldFixedArrayInnerWithoutArray))).Times(1);
+
+        EXPECT_CALL(mockVisitor, exitArrayStruct(MatcherMetaField(*fieldFixedArrayInner))).Times(1);
+
+        EXPECT_CALL(mockVisitor, enterArrayUInt32(MatcherMetaField(*fieldFixedArrayUInt32), std::vector<std::uint32_t>({ 5, 6 }))).Times(1);
+
+        EXPECT_CALL(mockVisitor, finished()).Times(1);
+    }
+
+    ParserQt parser(mockVisitor, data.data(), data.size());
+    bool res = parser.parseStruct("test.TestFixedArrayStruct");
+    EXPECT_EQ(res, true);
+}
+
+
+
 TEST_F(TestParserQt, testArrayEnum)
 {
     static const std::int32_t VALUE1 = -2;
@@ -1411,22 +1521,22 @@ TEST_F(TestParserQt, testArrayEnum)
     data.push_back(0x00);
     data.push_back(0x00);
     data.push_back(0x04);
-    data.push_back(VALUE1 >> 24);
-    data.push_back(VALUE1 >> 16);
-    data.push_back(VALUE1 >> 8);
-    data.push_back(VALUE1 >> 0);
-    data.push_back(VALUE2 >> 24);
-    data.push_back(VALUE2 >> 16);
-    data.push_back(VALUE2 >> 8);
-    data.push_back(VALUE2 >> 0);
-    data.push_back(VALUE3 >> 24);
-    data.push_back(VALUE3 >> 16);
-    data.push_back(VALUE3 >> 8);
-    data.push_back(VALUE3 >> 0);
-    data.push_back(VALUE4 >> 24);
-    data.push_back(VALUE4 >> 16);
-    data.push_back(VALUE4 >> 8);
-    data.push_back(VALUE4 >> 0);
+    data.push_back(static_cast<char>(VALUE1 >> 24));
+    data.push_back(static_cast<char>(VALUE1 >> 16));
+    data.push_back(static_cast<char>(VALUE1 >> 8));
+    data.push_back(static_cast<char>(VALUE1 >> 0));
+    data.push_back(static_cast<char>(VALUE2 >> 24));
+    data.push_back(static_cast<char>(VALUE2 >> 16));
+    data.push_back(static_cast<char>(VALUE2 >> 8));
+    data.push_back(static_cast<char>(VALUE2 >> 0));
+    data.push_back(static_cast<char>(VALUE3 >> 24));
+    data.push_back(static_cast<char>(VALUE3 >> 16));
+    data.push_back(static_cast<char>(VALUE3 >> 8));
+    data.push_back(static_cast<char>(VALUE3 >> 0));
+    data.push_back(static_cast<char>(VALUE4 >> 24));
+    data.push_back(static_cast<char>(VALUE4 >> 16));
+    data.push_back(static_cast<char>(VALUE4 >> 8));
+    data.push_back(static_cast<char>(VALUE4 >> 0));
 
     MockIParserVisitor mockVisitor;
 
