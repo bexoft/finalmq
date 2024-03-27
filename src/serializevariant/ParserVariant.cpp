@@ -47,6 +47,7 @@ bool ParserVariant::parseStruct(const std::string& typeName)
     {
         m_visitor.startStruct(*stru);
         parseStruct(*stru, m_root);
+        m_visitor.finished();
         ok = true;
     }
     else
@@ -54,7 +55,6 @@ bool ParserVariant::parseStruct(const std::string& typeName)
         m_visitor.notifyError(nullptr, "typename not found");
     }
 
-    m_visitor.finished();
     return ok;
 }
 

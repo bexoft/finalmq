@@ -115,7 +115,6 @@ TEST_F(TestParserVariant, testUnknownStruct)
         testing::InSequence seq;
         //EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
         EXPECT_CALL(mockVisitor, notifyError(nullptr, _)).Times(1);
-        EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
 
     static const bool VALUE = true;

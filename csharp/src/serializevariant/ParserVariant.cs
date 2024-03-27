@@ -25,6 +25,7 @@ namespace finalmq
             {
                 m_visitor.StartStruct(stru);
                 ParseStruct(stru, m_root);
+                m_visitor.Finished();
                 ok = true;
             }
             else
@@ -32,7 +33,6 @@ namespace finalmq
                 m_visitor.NotifyError(EmptyString, "typename not found");
             }
 
-            m_visitor.Finished();
             return ok;
         }
 
