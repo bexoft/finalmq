@@ -122,9 +122,16 @@ void RemoteEntityFormatJson::serializeData(const IProtocolSessionPtr& session, I
         else if (structBase->getStructInfo().getTypeName() == GeneralMessage::structInfo().getTypeName())
         {
             const GeneralMessage* generalMessage = static_cast<const GeneralMessage*>(structBase);
-            SerializerJson serializerData(message, JSONBLOCKSIZE, enumAsString, skipDefaultValues);
-            ParserProto parserData(serializerData, generalMessage->data.data(), generalMessage->data.size());
-            parserData.parseStruct(generalMessage->type);
+            if (!generalMessage->type.empty())
+            {
+                SerializerJson serializerData(message, JSONBLOCKSIZE, enumAsString, skipDefaultValues);
+                ParserProto parserData(serializerData, generalMessage->data.data(), generalMessage->data.size());
+                parserData.parseStruct(generalMessage->type);
+            }
+            else
+            {
+                message.addSendPayload("{}", 2);
+            }
         }
         else if (structBase->getStructInfo().getTypeName() != RawDataMessage::structInfo().getTypeName())
         {

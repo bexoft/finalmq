@@ -57,7 +57,6 @@ bool ParserQt::parseStruct(const std::string& typeName)
     if (!stru)
     {
         m_visitor.notifyError(reinterpret_cast<const char*>(m_ptr), "typename not found");
-        m_visitor.finished();
         return false;
     }
 
@@ -69,7 +68,6 @@ bool ParserQt::parseStruct(const std::string& typeName)
         if (ok && count != numberOfFields)
         {
             m_visitor.notifyError(reinterpret_cast<const char*>(m_ptr), "number of fields does not match");
-            m_visitor.finished();
             return false;
         }
     }

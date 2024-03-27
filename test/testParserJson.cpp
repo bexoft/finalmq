@@ -64,7 +64,6 @@ TEST_F(TestParserJson, testUnknownStruct)
     {
         testing::InSequence seq;
         EXPECT_CALL(mockVisitor, notifyError(data.c_str(), _)).Times(1);
-        EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
     ParserJson parser(mockVisitor, data.data(), data.size());
     bool res = parser.parseStruct("test.BlaBla");

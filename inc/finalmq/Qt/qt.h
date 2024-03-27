@@ -83,6 +83,15 @@ struct IObjectVisitor
 };
 
 
+std::string parameterName(const std::string& name, int i)
+{
+    if (name.empty())
+    {
+        return "param" + std::to_string(i);
+    }
+    return name;
+}
+
 
 class ObjectIterator
 {
@@ -211,7 +220,7 @@ private:
             method.access = (MethodAccess::Enum)metamethod.access();
             method.methodType = (MethodType::Enum)metamethod.methodType();
             method.signature = metamethod.methodSignature();
-            fillParameterType("returnType", metamethod.returnType(), method.returnType);
+            fillParameterType("returnType", metamethod.returnType(), metamethod.typeName(), method.returnType);
             fillParameters(metamethod, method);
 
             objectData->methods.push_back(std::move(method));
@@ -220,28 +229,28 @@ private:
 
     void fillParameters(const QMetaMethod& metamethod, Method& method)
     {
-        QList<QByteArray> names = metamethod.parameterNames();
-        int count = metamethod.parameterCount();
-        for (int i = 0; i < count; ++i) {
-            Parameter parameter;
-            QString name;
-            if (i < names.size())
+        QList<QByteArray> argNames = metamethod.parameterNames();
+        QList<QByteArray> argTypes = metamethod.parameterTypes();
+        if (argTypes.size() == argNames.size())
+        {
+            for (int i = 0; i < argTypes.size(); ++i)
             {
-                name = names[i];
+                Parameter parameter;
+                std::string name = parameterName(argNames[i].toStdString(), i);
+                const char* typeName = argTypes[i].data();
+                fillParameterType(name, metamethod.parameterType(i), typeName, parameter);
+                method.parameters.push_back(std::move(parameter));
             }
-            else
-            {
-                name = "param" + QString::number(i);
-            }
-            fillParameterType(name, metamethod.parameterType(i), parameter);
-            method.parameters.push_back(std::move(parameter));
         }
     }
 
-    void fillParameterType(const QString& name, int typeId, Parameter& parameter)
+    void fillParameterType(const std::string& name, int typeId, const char* typeName, Parameter& parameter)
     {
-        parameter.name = name.toStdString();
-        const char* typeName = QMetaType::typeName(typeId);
+        parameter.name = name;
+        if (typeName == nullptr)
+        {
+            typeName = QMetaType::typeName(typeId);
+        }
         if (typeName != nullptr)
         {
             parameter.typeName = typeName;
@@ -294,6 +303,7 @@ public:
 
             if (request == nullptr)
             {
+                requestContext->reply(finalmq::Status::STATUS_ENTITY_NOT_FOUND);
                 return;
             }
 
@@ -349,15 +359,17 @@ public:
 
                     std::string retTypeName = getReturnTypeName(metaMethod.typeName());
 
-                    ZeroCopyBuffer bufferRet;
-                    SerializerProto serializerProto(bufferRet);
-                    ParserQt parserQt(serializerProto, retQtBuffer.data(), retQtBuffer.size(), ParserQt::Mode::WRAPPED_BY_QVARIANT);
-                    parserQt.parseStruct(retTypeName);
-
                     GeneralMessage replyMessage;
-                    replyMessage.type = retTypeName;
-                    bufferRet.copyData(replyMessage.data);
+                    if (!retTypeName.empty())
+                    {
+                        ZeroCopyBuffer bufferRet;
+                        SerializerProto serializerProto(bufferRet);
+                        ParserQt parserQt(serializerProto, retQtBuffer.data(), retQtBuffer.size(), ParserQt::Mode::WRAPPED_BY_QVARIANT);
+                        parserQt.parseStruct(retTypeName);
 
+                        replyMessage.type = retTypeName;
+                        bufferRet.copyData(replyMessage.data);
+                    }
                     requestContext->reply(replyMessage);
                 }
             }
@@ -492,9 +504,9 @@ private:
             const auto it = m_typesToField.find(type);
             if (it != m_typesToField.end())
             {
-                static const std::string& parameterName = "ret";
+                static const std::string& name = "ret";
                 const MetaField& field = it->second;
-                stru.addField(MetaField(field.typeId, field.typeName, parameterName, field.description, field.flags, field.attrs));
+                stru.addField(MetaField(field.typeId, field.typeName, name, field.description, field.flags, field.attrs));
                 MetaDataGlobal::instance().addStruct(stru);
             }
             else
@@ -567,13 +579,14 @@ private:
                         std::string typeName;
                         for (int i = 0; i < argTypes.size(); ++i)
                         {
+                            std::string name = parameterName(argNames[i].toStdString(), i);
                             if (i > 0)
                             {
                                 typeName += '_';
                             }
                             typeName += argTypes[i].toStdString();
                             typeName += '_';
-                            typeName += argNames[i].toStdString();
+                            typeName += name;
                         }
 
                         // no parameters?
@@ -593,9 +606,9 @@ private:
                                 const auto it = m_typesToField.find(type);
                                 if (it != m_typesToField.end())
                                 {
-                                    const std::string& parameterName = argNames[i].toStdString();
+                                    std::string name = parameterName(argNames[i].toStdString(), i);
                                     const MetaField& field = it->second;
-                                    stru.addField(MetaField(field.typeId, field.typeName, parameterName, field.description, field.flags, field.attrs));
+                                    stru.addField(MetaField(field.typeId, field.typeName, name, field.description, field.flags, field.attrs));
                                 }
                                 else
                                 {
@@ -624,7 +637,12 @@ private:
         QWidgetList widgetList = qApp->topLevelWidgets();
         for (int i = 0; i < widgetList.size(); ++i)
         {
-            QList<QObject*> list = widgetList[i]->findChildren<QObject*>(objectName, Qt::FindChildrenRecursively);
+            QObject* obj = widgetList[i];
+            if (obj->objectName() == objectName)
+            {
+                return obj;
+            }
+            QList<QObject*> list = obj->findChildren<QObject*>(objectName, Qt::FindChildrenRecursively);
             if (!list.isEmpty())
             {
                 return list[0];

@@ -86,7 +86,6 @@ namespace testfinalmq
             Debug.Assert(!res);
 
             mockVisitor.Verify(x => x.NotifyError("", It.IsAny<string>()), Times.Once);
-            mockVisitor.Verify(x => x.Finished(), Times.Once);
         }
 
         [Fact]

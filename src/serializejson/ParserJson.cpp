@@ -50,7 +50,6 @@ const char* ParserJson::parseStruct(const std::string& typeName)
     if (!stru)
     {
         m_visitor.notifyError(m_ptr, "typename not found");
-        m_visitor.finished();
         return nullptr;
     }
 

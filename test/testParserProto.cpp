@@ -71,7 +71,6 @@ TEST_F(TestParserProto, testUnknownStruct)
     {
         testing::InSequence seq;
         EXPECT_CALL(mockVisitor, notifyError(data.c_str(), _)).Times(1);
-        EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
 
     ParserProto parser(mockVisitor, data.data(), data.size());

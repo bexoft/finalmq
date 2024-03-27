@@ -37,7 +37,6 @@ namespace finalmq
             if (stru == null)
             {
                 m_visitor.NotifyError("", "typename not found");
-                m_visitor.Finished();
                 return false;
             }
 
