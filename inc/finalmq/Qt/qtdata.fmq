@@ -122,10 +122,10 @@
             {"tid":"int32", "type":"","name":"height","desc":"","flags":[]}
         ]},
         {"type":"FmqQRect","attrs":["qttype:QRect"],"desc":"","fields":[
-            {"tid":"int32", "type":"","name":"x","desc":"","flags":[]},
-            {"tid":"int32", "type":"","name":"y","desc":"","flags":[]},
-            {"tid":"int32", "type":"","name":"width","desc":"","flags":[]},
-            {"tid":"int32", "type":"","name":"height","desc":"","flags":[]}
+            {"tid":"int32", "type":"","name":"left","desc":"","flags":[]},
+            {"tid":"int32", "type":"","name":"top","desc":"","flags":[]},
+            {"tid":"int32", "type":"","name":"right","desc":"","flags":[]},
+            {"tid":"int32", "type":"","name":"bottom","desc":"","flags":[]}
         ]},
         {"type":"FmqQColor","attrs":["qttype:QColor"],"desc":"","fields":[
             {"tid":"enum", "type":"FmqQColorSpec","name":"cspec","desc":"","flags":[]},

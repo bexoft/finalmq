@@ -157,10 +157,10 @@ private:
         {
             QLayout* layout = (QLayout*)&object;
             QRect rect = layout->geometry();
-            objectData->properties.push_back({ "x", std::to_string(rect.x()) });
-            objectData->properties.push_back({ "y", std::to_string(rect.y()) });
-            objectData->properties.push_back({ "width", std::to_string(rect.width()) });
-            objectData->properties.push_back({ "height", std::to_string(rect.height()) });
+            objectData->properties.push_back({ "left", std::to_string(rect.left()) });
+            objectData->properties.push_back({ "top", std::to_string(rect.top()) });
+            objectData->properties.push_back({ "right", std::to_string(rect.right()) });
+            objectData->properties.push_back({ "bottom", std::to_string(rect.bottom()) });
             objectData->properties.push_back({ "enabled", std::to_string(layout->isEnabled()) });
 
         }
@@ -197,7 +197,7 @@ private:
                 if (value.canConvert<QRect>())
                 {
                     QRect rect = value.toRect();
-                    v = "{\"x\":" + QString::number(rect.x()) + ",\"y\":" + QString::number(rect.y()) + ",\"width\":" + QString::number(rect.width()) + ",\"height\":" + QString::number(rect.height()) + "}";
+                    v = "{\"left\":" + QString::number(rect.left()) + ",\"top\":" + QString::number(rect.top()) + ",\"right\":" + QString::number(rect.right()) + ",\"bottom\":" + QString::number(rect.bottom()) + "}";
                 }
                 else if (value.canConvert<QSize>())
                 {
@@ -311,66 +311,128 @@ public:
             const std::string* methodName = requestContext->getMetainfo("PATH_method");
             if (objId && methodName)
             {
-                ZeroCopyBuffer buffer;
-                SerializerQt serializerQt(buffer, SerializerQt::Mode::WRAPPED_BY_QVARIANTLIST);
-                ParserProto parserProto(serializerQt, request->data.data(), request->data.size());
-                parserProto.parseStruct(request->type);
-
-                QByteArray bufferByteArray;
-                bufferByteArray.reserve(static_cast<int>(buffer.size()));
-                const std::list<std::string>& chunks = buffer.chunks();
-                for (const auto& chunk : chunks)
-                {
-                    bufferByteArray.append(chunk.data(), static_cast<int>(chunk.size()));
-                }
-
-                QVariantList parameters;
-                QDataStream s(bufferByteArray);
-                s >> parameters;
-
-                std::array<QGenericArgument, 10> genericArguments;
-                for (int i = 0; i < parameters.length(); ++i)
-                {
-                    const QVariant& parameter = parameters[i];
-                    genericArguments[i] = QGenericArgument(parameter.typeName(), parameter.constData());
-                }
-
                 QObject* obj;
                 QMetaMethod metaMethod;
-                const std::string& typeName = getTypeName(*objId, *methodName, obj, metaMethod);
-                if ((obj != nullptr) && metaMethod.isValid() && (typeName == request->type))
+                QMetaProperty metaProperty;
+                bool propertySet = false;
+                const std::string& typeName = getTypeName(*objId, *methodName, obj, metaMethod, metaProperty, propertySet);
+                if ((obj != nullptr) && (typeName == request->type))
                 {
-                    found = true;
-                    QVariant returnValue(QMetaType::type(metaMethod.typeName()),
-                        static_cast<void*>(NULL));
-
-                    QGenericReturnArgument returnArgument(
-                        metaMethod.typeName(),
-                        const_cast<void*>(returnValue.constData())
-                    );
-                    metaMethod.invoke(obj, returnArgument,
-                        genericArguments[0], genericArguments[1], genericArguments[2],
-                        genericArguments[3], genericArguments[4], genericArguments[5],
-                        genericArguments[6], genericArguments[7], genericArguments[8], genericArguments[9]);
-  
-                    QByteArray retQtBuffer;
-                    QDataStream s(&retQtBuffer, QIODevice::WriteOnly);
-                    s << returnValue;
-
-                    std::string retTypeName = getReturnTypeName(metaMethod.typeName());
-
-                    GeneralMessage replyMessage;
-                    if (!retTypeName.empty())
+                    if (metaMethod.isValid())
                     {
-                        ZeroCopyBuffer bufferRet;
-                        SerializerProto serializerProto(bufferRet);
-                        ParserQt parserQt(serializerProto, retQtBuffer.data(), retQtBuffer.size(), ParserQt::Mode::WRAPPED_BY_QVARIANT);
-                        parserQt.parseStruct(retTypeName);
+                        found = true;
 
-                        replyMessage.type = retTypeName;
-                        bufferRet.copyData(replyMessage.data);
+                        ZeroCopyBuffer buffer;
+                        SerializerQt serializerQt(buffer, SerializerQt::Mode::WRAPPED_BY_QVARIANTLIST);
+                        ParserProto parserProto(serializerQt, request->data.data(), request->data.size());
+                        parserProto.parseStruct(request->type);
+
+                        QByteArray bufferByteArray;
+                        bufferByteArray.reserve(static_cast<int>(buffer.size()));
+                        const std::list<std::string>& chunks = buffer.chunks();
+                        for (const auto& chunk : chunks)
+                        {
+                            bufferByteArray.append(chunk.data(), static_cast<int>(chunk.size()));
+                        }
+
+                        QVariantList parameters;
+                        QDataStream streamInParams(bufferByteArray);
+                        streamInParams >> parameters;
+
+                        std::array<QGenericArgument, 10> genericArguments;
+                        for (int i = 0; i < parameters.length(); ++i)
+                        {
+                            const QVariant& parameter = parameters[i];
+                            genericArguments[i] = QGenericArgument(parameter.typeName(), parameter.constData());
+                        }
+
+                        QVariant returnValue(QMetaType::type(metaMethod.typeName()),
+                            static_cast<void*>(NULL));
+
+                        QGenericReturnArgument returnArgument(
+                            metaMethod.typeName(),
+                            const_cast<void*>(returnValue.constData())
+                        );
+                        metaMethod.invoke(obj, returnArgument,
+                            genericArguments[0], genericArguments[1], genericArguments[2],
+                            genericArguments[3], genericArguments[4], genericArguments[5],
+                            genericArguments[6], genericArguments[7], genericArguments[8], genericArguments[9]);
+
+                        QByteArray retQtBuffer;
+                        QDataStream streamRetParam(&retQtBuffer, QIODevice::WriteOnly);
+                        streamRetParam << returnValue;
+
+                        std::string retTypeName = getReturnTypeName(metaMethod.typeName());
+
+                        GeneralMessage replyMessage;
+                        if (!retTypeName.empty())
+                        {
+                            ZeroCopyBuffer bufferRet;
+                            SerializerProto serializerProto(bufferRet);
+                            ParserQt parserQt(serializerProto, retQtBuffer.data(), retQtBuffer.size(), ParserQt::Mode::WRAPPED_BY_QVARIANT);
+                            parserQt.parseStruct(retTypeName);
+
+                            replyMessage.type = retTypeName;
+                            bufferRet.copyData(replyMessage.data);
+                        }
+                        requestContext->reply(replyMessage);
                     }
-                    requestContext->reply(replyMessage);
+                    else if (metaProperty.isValid())
+                    {
+                        found = true;
+                        if (propertySet)
+                        {
+                            ZeroCopyBuffer buffer;
+                            SerializerQt serializerQt(buffer, SerializerQt::Mode::WRAPPED_BY_QVARIANT);
+                            ParserProto parserProto(serializerQt, request->data.data(), request->data.size());
+                            parserProto.parseStruct(request->type);
+
+                            QByteArray bufferByteArray;
+                            bufferByteArray.reserve(static_cast<int>(buffer.size()));
+                            const std::list<std::string>& chunks = buffer.chunks();
+                            for (const auto& chunk : chunks)
+                            {
+                                bufferByteArray.append(chunk.data(), static_cast<int>(chunk.size()));
+                            }
+
+                            QVariant value;
+                            QDataStream streamInParam(bufferByteArray);
+                            streamInParam >> value;
+
+                            const bool result = metaProperty.write(obj, value);
+                            if (result)
+                            {
+                                GeneralMessage replyMessage;
+                                requestContext->reply(replyMessage);
+                            }
+                            else
+                            {
+                                requestContext->reply(finalmq::Status::STATUS_REQUEST_PROCESSING_ERROR);
+                            }
+                        }
+                        else
+                        {
+                            QVariant value = metaProperty.read(obj);
+
+                            QByteArray retQtBuffer;
+                            QDataStream streamRetParam(&retQtBuffer, QIODevice::WriteOnly);
+                            streamRetParam << value;
+
+                            std::string retTypeName = getReturnTypeName(metaProperty.typeName());
+
+                            GeneralMessage replyMessage;
+
+                            ZeroCopyBuffer bufferRet;
+                            SerializerProto serializerProto(bufferRet);
+                            ParserQt parserQt(serializerProto, retQtBuffer.data(), retQtBuffer.size(), ParserQt::Mode::WRAPPED_BY_QVARIANT);
+                            parserQt.parseStruct(retTypeName);
+
+                            replyMessage.type = retTypeName;
+                            bufferRet.copyData(replyMessage.data);
+
+                            requestContext->reply(replyMessage);
+                        }
+                    }
                 }
             }
             if (!found)
@@ -491,12 +553,14 @@ private:
     {
         QObject* obj;
         QMetaMethod metaMethod;
-        return getTypeName(objId, methodName, obj, metaMethod);
+        QMetaProperty metaProperty;
+        bool propertySet = false;
+        return getTypeName(objId, methodName, obj, metaMethod, metaProperty, propertySet);
     }
 
     std::string getReturnTypeName(const std::string& type)
     {
-        std::string typeName = "ret_" + type;
+        std::string typeName = type + "_v";
         const MetaStruct* struFound = MetaDataGlobal::instance().getStruct(typeName);
         if (struFound == nullptr)
         {
@@ -504,7 +568,7 @@ private:
             const auto it = m_typesToField.find(type);
             if (it != m_typesToField.end())
             {
-                static const std::string& name = "ret";
+                static const std::string& name = "v";
                 const MetaField& field = it->second;
                 stru.addField(MetaField(field.typeId, field.typeName, name, field.description, field.flags, field.attrs));
                 MetaDataGlobal::instance().addStruct(stru);
@@ -517,14 +581,14 @@ private:
         return typeName;
     }
 
-    std::string getTypeName(const std::string& objId, const std::string& methodName, QObject*& obj, QMetaMethod& metaMethod)
+    std::string getTypeName(const std::string& objId, const std::string& methodName, QObject*& obj, QMetaMethod& metaMethod, QMetaProperty& metaProperty, bool& propertySet)
     {
+        propertySet = false;
         std::string typeOfGeneralMessage{};
         obj = findObject(QString::fromUtf8(objId.c_str()));
         if (obj)
         {
             const QMetaObject* metaObject = obj->metaObject();
-            QMetaProperty metaProperty;
             if (metaObject)
             {
                 int ix = metaObject->indexOfMethod(methodName.c_str());
@@ -544,7 +608,15 @@ private:
 
                 if (!metaMethod.isValid())
                 {
-                    ix = metaObject->indexOfProperty(methodName.c_str());
+                    if (methodName.substr(0, 4) == "set_")
+                    {
+                        propertySet = true;
+                        ix = metaObject->indexOfProperty(methodName.substr(4).c_str());
+                    }
+                    else
+                    {
+                        ix = metaObject->indexOfProperty(methodName.c_str());
+                    }
                     if (ix != -1)
                     {
                         metaProperty = metaObject->property(ix);
@@ -625,6 +697,44 @@ private:
                         {
                             typeOfGeneralMessage = typeName;
                         }
+                    }
+                }
+                else if (metaProperty.isValid())
+                {
+                    std::string typeName = metaProperty.typeName();
+                    typeName += "_v";
+
+                    // no parameters?
+                    if (!propertySet)
+                    {
+                        typeName = '_';
+                    }
+
+                    bool ok = true;
+                    const MetaStruct* struFound = MetaDataGlobal::instance().getStruct(typeName);
+                    if (struFound == nullptr)
+                    {
+                        MetaStruct stru{ typeName, "", {}, 0, {} };
+                        const std::string& type = metaProperty.typeName();
+                        const auto it = m_typesToField.find(type);
+                        if (it != m_typesToField.end())
+                        {
+                            static const std::string name = "v";
+                            const MetaField& field = it->second;
+                            stru.addField(MetaField(field.typeId, field.typeName, name, field.description, field.flags, field.attrs));
+                        }
+                        else
+                        {
+                            ok = false;
+                        }
+                        if (ok)
+                        {
+                            MetaDataGlobal::instance().addStruct(stru);
+                        }
+                    }
+                    if (ok)
+                    {
+                        typeOfGeneralMessage = typeName;
                     }
                 }
             }
