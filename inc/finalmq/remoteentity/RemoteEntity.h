@@ -295,6 +295,8 @@ public:
     virtual void registerReplyEvent(FuncReplyEvent funcReplyEvent) override;
     virtual PeerId createPublishPeer(const SessionInfo& session, const std::string& entityName, bool triggerPeerEvent = true) override;
     virtual std::string getTypeOfGeneralMessage(const std::string& path) override;
+    virtual PeerId connectPeer(const SessionInfo& session, const std::string& virtualSessionId, EntityId entityId) override;
+    virtual void disconnectPeer(PeerId peerId) override;
 
 private:
     virtual void sessionDisconnected(const IProtocolSessionPtr& session) override;
@@ -303,6 +305,10 @@ private:
     virtual void receivedReply(const ReceiveData& receiveData) override;
     virtual void deinit() override;
 
+protected:
+    hybrid_ptr<IRemoteEntity> getWeakPtr();
+
+private:
     PeerId connectIntern(const SessionInfo& session, const std::string& virtualSessionId, const std::string& entityName, EntityId, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect);
     void connectIntern(PeerId peerId, const SessionInfo& session, const std::string& entityName, EntityId entityId);
     void removePeer(PeerId peerId, Status status);
