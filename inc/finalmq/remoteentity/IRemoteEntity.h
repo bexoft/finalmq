@@ -141,7 +141,7 @@ struct IRemoteEntity
      * @param peerId is the id of the peer. You can get it when you connect() to a peer, when you
      * call getAllPeers(), inside a peer event or by calling requestContext->peerId() inside a
      * command execution. The peerId belongs to this entity. Because an entity can have multiple
-     * connections to remote entities, a remote entity must be identified be the peerId.
+     * connections to remote entities, a remote entity must be identified by the peerId.
      * @param path is the path that shall be called at the remote entity
      * @param structBase is the request message to send (generated code of fmq file).
      * @param funcReply is the reply callback.
@@ -180,7 +180,7 @@ struct IRemoteEntity
      * @param peerId is the id of the peer. You can get it when you connect() to a peer, when you
      * call getAllPeers(), inside a peer event or by calling requestContext->peerId() inside a
      * command execution. The peerId belongs to this entity. Because an entity can have multiple
-     * connections to remote entities, a remote entity must be identified be the peerId.
+     * connections to remote entities, a remote entity must be identified by the peerId.
      * @param path is the path that shall be called at the remote entity
      * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
      * @param structBase is the request message to send (generated code of fmq file).
@@ -219,7 +219,7 @@ struct IRemoteEntity
      * @param peerId is the id of the peer. You can get it when you connect() to a peer, when you
      * call getAllPeers(), inside a peer event or by calling requestContext->peerId() inside a
      * command execution. The peerId belongs to this entity. Because an entity can have multiple
-     * connections to remote entities, a remote entity must be identified be the peerId.
+     * connections to remote entities, a remote entity must be identified by the peerId.
      * @param structBase is the request message to send (generated code of fmq file).
      * @param funcReply is the reply callback.
      * @return if successful, valid correlation ID.
@@ -256,7 +256,7 @@ struct IRemoteEntity
      * @param peerId is the id of the peer. You can get it when you connect() to a peer, when you
      * call getAllPeers(), inside a peer event or by calling requestContext->peerId() inside a
      * command execution. The peerId belongs to this entity. Because an entity can have multiple
-     * connections to remote entities, a remote entity must be identified be the peerId.
+     * connections to remote entities, a remote entity must be identified by the peerId.
      * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
      * @param structBase is the request message to send (generated code of fmq file).
      * @param funcReply is the reply callback.
@@ -292,7 +292,7 @@ struct IRemoteEntity
      * @param peerId is the id of the peer. You can get it when you connect() to a peer, when you
      * call getAllPeers(), inside a peer event or by calling requestContext->peerId() inside a
      * command execution. The peerId belongs to this entity. Because an entity can have multiple
-     * connections to remote entities, a remote entity must be identified be the peerId.
+     * connections to remote entities, a remote entity must be identified by the peerId.
      * @param structBase is the event message to send (generated code of fmq file).
      */
     virtual void sendEvent(const PeerId& peerId, const StructBase& structBase) = 0;
@@ -304,7 +304,7 @@ struct IRemoteEntity
      * @param peerId is the id of the peer. You can get it when you connect() to a peer, when you
      * call getAllPeers(), inside a peer event or by calling requestContext->peerId() inside a
      * command execution. The peerId belongs to this entity. Because an entity can have multiple
-     * connections to remote entities, a remote entity must be identified be the peerId.
+     * connections to remote entities, a remote entity must be identified by the peerId.
      * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
      * @param structBase is the event message to send (generated code of fmq file).
      */
@@ -315,7 +315,7 @@ struct IRemoteEntity
      * @param peerId is the id of the peer. You can get it when you connect() to a peer, when you
      * call getAllPeers(), inside a peer event or by calling requestContext->peerId() inside a
      * command execution. The peerId belongs to this entity. Because an entity can have multiple
-     * connections to remote entities, a remote entity must be identified be the peerId.
+     * connections to remote entities, a remote entity must be identified by the peerId.
      * @param path is the path that shall be called at the remote entity
      * @param structBase is the event message to send (generated code of fmq file).
      */
@@ -328,7 +328,7 @@ struct IRemoteEntity
      * @param peerId is the id of the peer. You can get it when you connect() to a peer, when you
      * call getAllPeers(), inside a peer event or by calling requestContext->peerId() inside a
      * command execution. The peerId belongs to this entity. Because an entity can have multiple
-     * connections to remote entities, a remote entity must be identified be the peerId.
+     * connections to remote entities, a remote entity must be identified by the peerId.
      * @param path is the path that shall be called at the remote entity
      * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
      * @param structBase is the event message to send (generated code of fmq file).
@@ -533,7 +533,7 @@ struct IRemoteEntity
      * @param peerId is the id of the peer. You can get it when you connect() to a peer, when you
      * call getAllPeers(), inside a peer event or by calling requestContext->peerId() inside a
      * command execution. The peerId belongs to this entity. Because an entity can have multiple
-     * connections to remote entities, a remote entity must be identified be the peerId.
+     * connections to remote entities, a remote entity must be identified by the peerId.
      * @param path is the path that shall be called at the remote entity
      * @param structBase is the request message to send (generated code of fmq file).
      * @param correlationId is an ID that can be matched at the callback, which is registered
@@ -548,7 +548,7 @@ struct IRemoteEntity
      * @param peerId is the id of the peer. You can get it when you connect() to a peer, when you
      * call getAllPeers(), inside a peer event or by calling requestContext->peerId() inside a
      * command execution. The peerId belongs to this entity. Because an entity can have multiple
-     * connections to remote entities, a remote entity must be identified be the peerId.
+     * connections to remote entities, a remote entity must be identified by the peerId.
      * @param path is the path that shall be called at the remote entity
      * @param structBase is the request message to send (generated code of fmq file).
      * @param funcReply is the reply callback.
@@ -564,7 +564,7 @@ struct IRemoteEntity
      * @param peerId is the id of the peer. You can get it when you connect() to a peer, when you
      * call getAllPeers(), inside a peer event or by calling requestContext->peerId() inside a
      * command execution. The peerId belongs to this entity. Because an entity can have multiple
-     * connections to remote entities, a remote entity must be identified be the peerId.
+     * connections to remote entities, a remote entity must be identified by the peerId.
      * @param path is the path that shall be called at the remote entity
      * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
      * @param structBase is the request message to send (generated code of fmq file).
@@ -579,7 +579,7 @@ struct IRemoteEntity
      * @param peerId is the id of the peer. You can get it when you connect() to a peer, when you
      * call getAllPeers(), inside a peer event or by calling requestContext->peerId() inside a
      * command execution. The peerId belongs to this entity. Because an entity can have multiple
-     * connections to remote entities, a remote entity must be identified be the peerId.
+     * connections to remote entities, a remote entity must be identified by the peerId.
      * @param structBase is the request message to send (generated code of fmq file).
      * @param funcReply is the reply callback.
      * @return if successful, valid correlation ID.
@@ -594,7 +594,7 @@ struct IRemoteEntity
      * @param peerId is the id of the peer. You can get it when you connect() to a peer, when you
      * call getAllPeers(), inside a peer event or by calling requestContext->peerId() inside a
      * command execution. The peerId belongs to this entity. Because an entity can have multiple
-     * connections to remote entities, a remote entity must be identified be the peerId.
+     * connections to remote entities, a remote entity must be identified by the peerId.
      * @param metainfo is a key/value map of additional data besides the request data. Metainfo is very similar to HTTP headers.
      * @param structBase is the request message to send (generated code of fmq file).
      * @param funcReply is the reply callback.
@@ -621,6 +621,7 @@ struct IRemoteEntity
     /**
     * @brief creates a peer at the own entity, so that the peer will publish events to the session.
     * This can be used e.g. for mqtt sessions.
+    * @param session is the session that is used for this entity-to-entity connection.
     * @param entityName is the name of the destination. The mqtt topic will look like this: "/<entityName>/<message type>".
     * @param triggerPeerEvent will cause a peer event, if true
     * @return the created peer id.
@@ -634,6 +635,22 @@ struct IRemoteEntity
     * @return the type of the message.
     */
     virtual std::string getTypeOfGeneralMessage(const std::string& path) = 0;
+
+    /**
+    * @brief at a request, you can connect the peer. the peer will be connected (created) in case the peer was not already connected.
+    * @param session is the session that is used for this entity-to-entity connection.
+    * @param virtualSessionId the virtual session ID
+    * @param entityId is the ID of the remote entity to which this entity shall be connected.
+    * @return the (created) peer id.
+    */
+    virtual PeerId connectPeer(const SessionInfo& session, const std::string& virtualSessionId, EntityId entityId) = 0;
+
+    /**
+    * @brief removes a peer in case it exists
+    * @param peerId is the id of the peer. You can get it when you connect() to a peer.
+    */
+    virtual void disconnectPeer(PeerId peerId) = 0;
+
 
 private:
     // methods for RemoteEntityContainer

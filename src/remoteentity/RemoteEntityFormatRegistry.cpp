@@ -224,6 +224,11 @@ void RemoteEntityFormatRegistryImpl::send(const IProtocolSessionPtr& session, co
     assert(session);
     if (shallSend(header, session))
     {
+        if (structBase && (header.type == GeneralMessage::structInfo().getTypeName()))
+        {
+            const GeneralMessage* generalMessage = static_cast<const GeneralMessage*>(structBase);
+            header.type = generalMessage->type;
+        }
         const finalmq::Bytes* pureData = nullptr;
         IMessagePtr message = session->createMessage();
         assert(message);

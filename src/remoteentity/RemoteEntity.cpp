@@ -717,6 +717,45 @@ std::string RemoteEntity::getTypeOfGeneralMessage(const std::string& /*path*/)
     return {};
 }
 
+PeerId RemoteEntity::connectPeer(const SessionInfo& session, const std::string& virtualSessionId, EntityId entityId)
+{
+    static std::string STR_DUMMY = "";
+    bool added{};
+    std::uint64_t srcid = entityId;
+    //if (srcid == 0)
+    //{
+    //    srcid = ENTITYID_INVALID;
+    //}
+    PeerId peerId = m_peerManager->addPeer(session, virtualSessionId, srcid, STR_DUMMY, true, added, nullptr);
+    return peerId;
+}
+
+void RemoteEntity::disconnectPeer(PeerId peerId)
+{
+    removePeer(peerId, Status::STATUS_PEER_DISCONNECTED);
+}
+
+
+hybrid_ptr<IRemoteEntity> RemoteEntity::getWeakPtr()
+{
+#ifdef FINALMQ_HAS_NOT_WEAK_FROM_THIS
+    std::weak_ptr<RemoteEntity> thisEntityWeak = *reinterpret_cast<std::weak_ptr<RemoteEntity>*>(static_cast<std::enable_shared_from_this<RemoteEntity>*>(this));
+#else
+    std::weak_ptr<RemoteEntity> thisEntityWeak = weak_from_this();
+#endif
+    hybrid_ptr<IRemoteEntity> thisEntity;
+    if (thisEntityWeak.lock())
+    {
+        thisEntity = thisEntityWeak;
+    }
+    else
+    {
+        thisEntity = this;
+    }
+
+    return thisEntity;
+}
+
 
 void RemoteEntity::sendConnectEntity(PeerId peerId, IRemoteEntityContainer& entityContainer, const std::shared_ptr<FuncReplyConnect>& funcReplyConnect)
 {
@@ -726,20 +765,7 @@ void RemoteEntity::sendConnectEntity(PeerId peerId, IRemoteEntityContainer& enti
     if (!registered)
     {
         // entity not registered, yet
-        hybrid_ptr<IRemoteEntity> thisEntity;
-#ifdef FINALMQ_HAS_NOT_WEAK_FROM_THIS
-        std::weak_ptr<RemoteEntity> thisEntityWeak = *reinterpret_cast<std::weak_ptr<RemoteEntity>*>(static_cast<std::enable_shared_from_this<RemoteEntity>*>(this));
-#else
-        std::weak_ptr<RemoteEntity> thisEntityWeak = weak_from_this();
-#endif
-        if (thisEntityWeak.lock())
-        {
-            thisEntity = thisEntityWeak;
-        }
-        else
-        {
-            thisEntity = this;
-        }
+        hybrid_ptr<IRemoteEntity> thisEntity = getWeakPtr();
         entityContainer.registerEntity(thisEntity);
     }
 
@@ -1122,14 +1148,7 @@ void RemoteEntity::receivedRequest(ReceiveData& receiveData)
 {
     if (receiveData.automaticConnect)
     {
-        static std::string STR_DUMMY = "dummy";
-        bool added{};
-        std::uint64_t srcid = receiveData.header.srcid;
-        if (srcid == 0)
-        {
-            srcid = ENTITYID_INVALID;
-        }
-        m_peerManager->addPeer(receiveData.session, receiveData.virtualSessionId, srcid, STR_DUMMY, true, added, nullptr);
+        connectPeer(receiveData.session, receiveData.virtualSessionId, receiveData.header.srcid);
     }
 
     std::shared_ptr<FuncCommand> func;
