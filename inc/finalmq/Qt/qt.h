@@ -30,6 +30,7 @@
 #include "finalmq/helpers/Utils.h"
 #include "finalmq/serializeqt/ParserQt.h"
 #include "finalmq/serializeqt/SerializerQt.h"
+#include "finalmq/serializejson/SerializerJson.h"
 #include "finalmq/serializeproto/ParserProto.h"
 #include "finalmq/serializeproto/SerializerProto.h"
 
@@ -112,7 +113,482 @@ public:
     }
 };
 
+class ObjectHelper
+{
+public:
+    static QObject* findObject(const QString& objectName)
+    {
+        QWidgetList widgetList = qApp->topLevelWidgets();
+        for (int i = 0; i < widgetList.size(); ++i)
+        {
+            QObject* obj = widgetList[i];
+            if (obj->objectName() == objectName)
+            {
+                return obj;
+            }
+            QList<QObject*> list = obj->findChildren<QObject*>(objectName, Qt::FindChildrenRecursively);
+            if (!list.isEmpty())
+            {
+                return list[0];
+            }
+        }
+        return nullptr;
+    }
+};
 
+
+
+class QtTypeHelper
+{
+public:
+    static QtTypeHelper& getInstance()
+    {
+        static QtTypeHelper instance;
+        return instance;
+    }
+
+private:
+    QtTypeHelper()
+    {
+        init();
+    }
+
+    void init()
+    {
+        m_typesToField.emplace("bool", MetaField{ MetaTypeId::TYPE_BOOL,           "", "", "", 0, {} });
+        m_typesToField.emplace("int", MetaField{ MetaTypeId::TYPE_INT32,          "", "", "", 0, {} });
+        m_typesToField.emplace("uint", MetaField{ MetaTypeId::TYPE_UINT32,         "", "", "", 0, {} });
+        m_typesToField.emplace("qlonglong", MetaField{ MetaTypeId::TYPE_INT64,          "", "", "", 0, {} });
+        m_typesToField.emplace("qulonglong", MetaField{ MetaTypeId::TYPE_UINT64,         "", "", "", 0, {} });
+        m_typesToField.emplace("double", MetaField{ MetaTypeId::TYPE_DOUBLE,         "", "", "", 0, {} });
+        m_typesToField.emplace("short", MetaField{ MetaTypeId::TYPE_INT16,          "", "", "", 0, {} });
+        m_typesToField.emplace("char", MetaField{ MetaTypeId::TYPE_INT8,           "", "", "", 0, {} });
+        m_typesToField.emplace("ulong", MetaField{ MetaTypeId::TYPE_UINT32,         "", "", "", 0, {} });
+        m_typesToField.emplace("ushort", MetaField{ MetaTypeId::TYPE_UINT16,         "", "", "", 0, {} });
+        m_typesToField.emplace("uchar", MetaField{ MetaTypeId::TYPE_UINT8,          "", "", "", 0, {} });
+        m_typesToField.emplace("float", MetaField{ MetaTypeId::TYPE_FLOAT,          "", "", "", 0, {} });
+        m_typesToField.emplace("QChar", MetaField{ MetaTypeId::TYPE_INT16,          "", "", "", 0, {} });
+        m_typesToField.emplace("QString", MetaField{ MetaTypeId::TYPE_STRING,         "", "", "", 0, {} });
+        m_typesToField.emplace("QStringList", MetaField{ MetaTypeId::TYPE_ARRAY_STRING,   "", "", "", 0, {} });
+        m_typesToField.emplace("QByteArray", MetaField{ MetaTypeId::TYPE_BYTES,          "", "", "", 0, {} });
+        m_typesToField.emplace("QBitArray", MetaField{ MetaTypeId::TYPE_ARRAY_BOOL,     "", "", "", 0, {} });
+        m_typesToField.emplace("QDate", MetaField{ MetaTypeId::TYPE_INT64,          "", "", "", 0, {} });
+        m_typesToField.emplace("QTime", MetaField{ MetaTypeId::TYPE_UINT32,         "", "", "", 0, {} });
+        //      m_typesToField.emplace("QDateTime",     MetaField{ MetaTypeId::TYPE_STRUCT,         "", "", "", 0, {} });
+        m_typesToField.emplace("QUrl", MetaField{ MetaTypeId::TYPE_BYTES,          "", "", "", 0, {"qttype:QUrl,qtcode:bytes"} });
+        m_typesToField.emplace("QLocale", MetaField{ MetaTypeId::TYPE_STRING,         "", "", "", 0, {} });
+        m_typesToField.emplace("QPixmap", MetaField{ MetaTypeId::TYPE_BYTES,         "", "", "", 0, {"png:true"} });
+
+
+        static const std::string KEY_QTTYPE = "qttype";
+
+        const std::unordered_map<std::string, MetaEnum> enums = MetaDataGlobal::instance().getAllEnums();
+        for (const auto& entry : enums)
+        {
+            const MetaEnum& en = entry.second;
+            const std::string& qtTypeName0 = en.getProperty(KEY_QTTYPE);
+            if (!qtTypeName0.empty())
+            {
+                m_typesToField.emplace(qtTypeName0, MetaField{ MetaTypeId::TYPE_ENUM, en.getTypeName(), "", "", 0, {} });
+            }
+        }
+
+        const std::unordered_map<std::string, MetaStruct> structs = MetaDataGlobal::instance().getAllStructs();
+        for (const auto& entry : structs)
+        {
+            const MetaStruct& stru = entry.second;
+            const std::string& qtTypeName0 = stru.getProperty(KEY_QTTYPE);
+            if (!qtTypeName0.empty())
+            {
+                m_typesToField.emplace(qtTypeName0, MetaField{ MetaTypeId::TYPE_STRUCT, stru.getTypeName(), "", "", 0, {} });
+            }
+
+            for (ssize_t i = 0; i < stru.getFieldsSize(); ++i)
+            {
+                const MetaField* field = stru.getFieldByIndex(i);
+                if (field)
+                {
+                    const std::string& qtTypeName1 = field->getProperty(KEY_QTTYPE);
+                    if (!qtTypeName1.empty())
+                    {
+                        m_typesToField.emplace(qtTypeName1, MetaField{ field->typeId, field->typeName, "", "", field->flags, field->attrs });
+                    }
+                    else if (field->typeId == MetaTypeId::TYPE_STRUCT ||
+                        field->typeId == MetaTypeId::TYPE_ARRAY_STRUCT)
+                    {
+                        const MetaStruct* s = MetaDataGlobal::instance().getStruct(field->typeName);
+                        if (s)
+                        {
+                            const std::string& qtTypeName2 = s->getProperty(KEY_QTTYPE);
+                            if (!qtTypeName2.empty())
+                            {
+                                m_typesToField.emplace(qtTypeName2, MetaField{ field->typeId, field->typeName, "", "", field->flags, field->attrs });
+                            }
+                        }
+                    }
+                    else if (field->typeId == MetaTypeId::TYPE_ENUM ||
+                        field->typeId == MetaTypeId::TYPE_ARRAY_ENUM)
+                    {
+                        const MetaEnum* e = MetaDataGlobal::instance().getEnum(field->typeName);
+                        if (e)
+                        {
+                            const std::string& qtTypeName3 = e->getProperty(KEY_QTTYPE);
+                            if (!qtTypeName3.empty())
+                            {
+                                m_typesToField.emplace(qtTypeName3, MetaField{ field->typeId, field->typeName, "", "", field->flags, field->attrs });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+public:
+    std::string getTypeName(const std::string& objId, const std::string& methodName)
+    {
+        QObject* obj;
+        QMetaMethod metaMethod;
+        QMetaProperty metaProperty;
+        bool propertySet = false;
+        bool connect = false;
+        bool disconnect = false;
+        std::string connectTypeName;
+        return getTypeName(objId, methodName, obj, metaMethod, metaProperty, propertySet, connect, disconnect, connectTypeName);
+    }
+
+    std::string getReturnTypeName(const std::string& type)
+    {
+        std::string typeName = type + "_v";
+        const MetaStruct* struFound = MetaDataGlobal::instance().getStruct(typeName);
+        if (struFound == nullptr)
+        {
+            MetaStruct stru{ typeName, "", {}, 0, {} };
+            const auto it = m_typesToField.find(type);
+            if (it != m_typesToField.end())
+            {
+                static const std::string& name = "v";
+                const MetaField& field = it->second;
+                stru.addField(MetaField(field.typeId, field.typeName, name, field.description, field.flags, field.attrs));
+                MetaDataGlobal::instance().addStruct(stru);
+            }
+            else
+            {
+                typeName.clear();
+            }
+        }
+        return typeName;
+    }
+
+    std::string getTypeName(const std::string& objId, const std::string& methodName, QObject*& obj, QMetaMethod& metaMethod, QMetaProperty& metaProperty, bool& propertySet, bool& connect, bool& disconnect, std::string& connectTypeName)
+    {
+        propertySet = false;
+        connect = false;
+        disconnect = false;
+        connectTypeName.clear();
+
+        std::string typeOfGeneralMessage{};
+        obj = ObjectHelper::findObject(QString::fromUtf8(objId.c_str()));
+        if (obj)
+        {
+            const QMetaObject* metaObject = obj->metaObject();
+            typeOfGeneralMessage = getTypeName(metaObject, methodName, metaMethod, metaProperty, propertySet, connect, disconnect, connectTypeName);
+        }
+        return typeOfGeneralMessage;
+    }
+
+    std::string getTypeName(const QMetaObject* metaObject, const std::string& methodName, QMetaMethod& metaMethod, QMetaProperty& metaProperty, bool& propertySet, bool& connect, bool& disconnect, std::string& connectTypeName)
+    {
+        propertySet = false;
+        connect = false;
+        disconnect = false;
+        connectTypeName.clear();
+
+        std::string typeOfGeneralMessage{};
+        if (metaObject)
+        {
+            int ix = -1;
+
+            ix = metaObject->indexOfMethod(methodName.c_str());
+            if (ix != -1)
+            {
+                metaMethod = metaObject->method(ix);
+            }
+
+            if (!metaMethod.isValid())
+            {
+                ix = metaObject->indexOfSlot(methodName.c_str());
+                if (ix != -1)
+                {
+                    metaMethod = metaObject->method(ix);
+                }
+            }
+
+            if (!metaMethod.isValid())
+            {
+                if (methodName.compare(0, 4, "set_") == 0)
+                {
+                    propertySet = true;
+                    ix = metaObject->indexOfProperty(&methodName[4]);
+                }
+                if (methodName.compare(0, 8, "connect_") == 0)
+                {
+                    connect = true;
+                    ix = metaObject->indexOfProperty(&methodName[8]);
+                }
+                else if (methodName.compare(0, 11, "disconnect_") == 0)
+                {
+                    disconnect = true;
+                    ix = metaObject->indexOfProperty(&methodName[11]);
+                }
+                else
+                {
+                    ix = metaObject->indexOfProperty(methodName.c_str());
+                }
+                if (ix != -1)
+                {
+                    metaProperty = metaObject->property(ix);
+                }
+                else
+                {
+                    propertySet = false;
+                    connect = false;
+                    disconnect = false;
+                }
+            }
+
+            if (!metaMethod.isValid() && !metaProperty.isValid())
+            {
+                if (methodName.compare(0, 8, "connect_") == 0)
+                {
+                    connect = true;
+                    ix = metaObject->indexOfSignal(&methodName[8]);
+                }
+                else if (methodName.compare(0, 11, "disconnect_") == 0)
+                {
+                    disconnect = true;
+                    ix = metaObject->indexOfSignal(&methodName[11]);
+                }
+                else
+                {
+                    ix = metaObject->indexOfSignal(methodName.c_str());
+                }
+                if (ix != -1)
+                {
+                    metaMethod = metaObject->method(ix);
+                }
+                else
+                {
+                    connect = false;
+                    disconnect = false;
+                }
+            }
+
+            if (!metaMethod.isValid() && !metaProperty.isValid())
+            {
+                QByteArray methodNameAsByteArray = methodName.c_str();
+                if (methodName.compare(0, 8, "connect_") == 0)
+                {
+                    connect = true;
+                    methodNameAsByteArray = &methodName[8];
+                }
+                else if (methodName.compare(0, 11, "disconnect_") == 0)
+                {
+                    disconnect = true;
+                    methodNameAsByteArray = &methodName[11];
+                }
+                for (int i = 0; i < metaObject->methodCount(); ++i)
+                {
+                    QMetaMethod metaMethodTmp = metaObject->method(i);
+                    if (metaMethodTmp.isValid())
+                    {
+                        const QByteArray& name = metaMethodTmp.name();
+                        if (name == methodNameAsByteArray)
+                        {
+                            if (connect || disconnect)
+                            {
+                                if (metaMethodTmp.methodType() == QMetaMethod::Signal)
+                                {
+                                    metaMethod = metaMethodTmp;
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                metaMethod = metaMethodTmp;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (!metaMethod.isValid())
+                {
+                    connect = false;
+                    disconnect = false;
+                }
+            }
+
+            if (metaMethod.isValid())
+            {
+                std::string typeName;
+                QList<QByteArray> argTypes = metaMethod.parameterTypes();
+                QList<QByteArray> argNames = metaMethod.parameterNames();
+
+                if (argTypes.size() == argNames.size())
+                {
+                    for (int i = 0; i < argTypes.size(); ++i)
+                    {
+                        std::string name = parameterName(argNames[i].toStdString(), i);
+                        if (i > 0)
+                        {
+                            typeName += '_';
+                        }
+                        typeName += argTypes[i].toStdString();
+                        typeName += '_';
+                        typeName += name;
+                    }
+
+                    // no parameters?
+                    if (typeName.empty())
+                    {
+                        typeName = '_';
+                    }
+                }
+
+                bool ok = true;
+                const MetaStruct* struFound = MetaDataGlobal::instance().getStruct(typeName);
+                if (struFound == nullptr)
+                {
+                    MetaStruct stru{ typeName, "", {}, 0, {} };
+                    for (int i = 0; i < argTypes.size(); ++i)
+                    {
+                        const std::string& type = argTypes[i].toStdString();
+                        const auto it = m_typesToField.find(type);
+                        if (it != m_typesToField.end())
+                        {
+                            std::string name = parameterName(argNames[i].toStdString(), i);
+                            const MetaField& field = it->second;
+                            stru.addField(MetaField(field.typeId, field.typeName, name, field.description, field.flags, field.attrs));
+                        }
+                        else
+                        {
+                            ok = false;
+                            break;
+                        }
+                    }
+                    if (ok)
+                    {
+                        MetaDataGlobal::instance().addStruct(stru);
+                    }
+                }
+                if (ok)
+                {
+                    if (connect || disconnect)
+                    {
+                        connectTypeName = typeName;
+                        typeName = '_';
+                        const MetaStruct* struFound = MetaDataGlobal::instance().getStruct(typeName);
+                        if (struFound == nullptr)
+                        {
+                            MetaStruct stru{ typeName, "", {}, 0, {} };
+                            MetaDataGlobal::instance().addStruct(stru);
+                        }
+                    }
+
+                    typeOfGeneralMessage = typeName;
+                }
+            }
+            else if (metaProperty.isValid())
+            {
+                std::string typeName = metaProperty.typeName();
+                typeName += "_v";
+
+                // no parameters?
+                if (!propertySet)
+                {
+                    typeName = '_';
+                }
+
+                bool ok = true;
+                const MetaStruct* struFound = MetaDataGlobal::instance().getStruct(typeName);
+                if (struFound == nullptr)
+                {
+                    MetaStruct stru{ typeName, "", {}, 0, {} };
+                    const std::string& type = metaProperty.typeName();
+                    const auto it = m_typesToField.find(type);
+                    if (it != m_typesToField.end())
+                    {
+                        static const std::string name = "v";
+                        const MetaField& field = it->second;
+                        stru.addField(MetaField(field.typeId, field.typeName, name, field.description, field.flags, field.attrs));
+                    }
+                    else
+                    {
+                        ok = false;
+                    }
+                    if (ok)
+                    {
+                        MetaDataGlobal::instance().addStruct(stru);
+                    }
+                }
+                if (ok)
+                {
+                    if (connect || disconnect)
+                    {
+                        connectTypeName = typeName;
+                        typeName = '_';
+                        const MetaStruct* struFound = MetaDataGlobal::instance().getStruct(typeName);
+                        if (struFound == nullptr)
+                        {
+                            MetaStruct stru{ typeName, "", {}, 0, {} };
+                            MetaDataGlobal::instance().addStruct(stru);
+                        }
+                    }
+
+                    typeOfGeneralMessage = typeName;
+                }
+            }
+        }
+        return typeOfGeneralMessage;
+    }
+
+    std::string getPropertyTypeName(QMetaProperty& metaProperty)
+    {
+        std::string typeName = metaProperty.typeName();
+        typeName += "_v";
+
+        bool ok = true;
+        const MetaStruct* struFound = MetaDataGlobal::instance().getStruct(typeName);
+        if (struFound == nullptr)
+        {
+            MetaStruct stru{ typeName, "", {}, 0, {} };
+            const std::string& type = metaProperty.typeName();
+            const auto it = m_typesToField.find(type);
+            if (it != m_typesToField.end())
+            {
+                static const std::string name = "v";
+                const MetaField& field = it->second;
+                stru.addField(MetaField(field.typeId, field.typeName, name, field.description, field.flags, field.attrs));
+            }
+            else
+            {
+                ok = false;
+            }
+            if (ok)
+            {
+                MetaDataGlobal::instance().addStruct(stru);
+            }
+        }
+        if (!ok)
+        {
+            typeName.clear();
+        }
+        return typeName;
+    }
+
+private:
+    std::unordered_map<std::string, MetaField> m_typesToField;
+};
 
 
 
@@ -157,11 +633,11 @@ private:
         {
             QLayout* layout = (QLayout*)&object;
             QRect rect = layout->geometry();
-            objectData->properties.push_back({ "left", std::to_string(rect.left()) });
-            objectData->properties.push_back({ "top", std::to_string(rect.top()) });
-            objectData->properties.push_back({ "right", std::to_string(rect.right()) });
-            objectData->properties.push_back({ "bottom", std::to_string(rect.bottom()) });
-            objectData->properties.push_back({ "enabled", std::to_string(layout->isEnabled()) });
+            objectData->properties.push_back({ "int", "left", std::to_string(rect.left()), false });
+            objectData->properties.push_back({ "int", "top", std::to_string(rect.top()), false });
+            objectData->properties.push_back({ "int", "right", std::to_string(rect.right()), false });
+            objectData->properties.push_back({ "int", "bottom", std::to_string(rect.bottom()), false });
+            objectData->properties.push_back({ "int", "enabled", std::to_string(layout->isEnabled()), false });
 
         }
     }
@@ -190,22 +666,24 @@ private:
         for (int i = 0; i < count; ++i) {
             QMetaProperty metaproperty = metaobject->property(i);
             const char* name = metaproperty.name();
-            QVariant value = object.property(name);
-            QString v = value.toString();
-            if (v.isEmpty())
-            {
-                if (value.canConvert<QRect>())
-                {
-                    QRect rect = value.toRect();
-                    v = "{\"left\":" + QString::number(rect.left()) + ",\"top\":" + QString::number(rect.top()) + ",\"right\":" + QString::number(rect.right()) + ",\"bottom\":" + QString::number(rect.bottom()) + "}";
-                }
-                else if (value.canConvert<QSize>())
-                {
-                    QSize size = value.toSize();
-                    v = "{\"width\":" + QString::number(size.width()) + ",\"height\":" + QString::number(size.height()) + "}";
-                }
-            }
-            objectData->properties.push_back({ name, v.toUtf8().toStdString() });
+
+            const std::string& typeName = QtTypeHelper::getInstance().getPropertyTypeName(metaproperty);
+
+            QVariant value = metaproperty.read(&object);
+
+            QByteArray qtBuffer;
+            QDataStream streamValue(&qtBuffer, QIODevice::WriteOnly);
+            streamValue << value;
+
+            ZeroCopyBuffer bufferJson;
+            SerializerJson serializerJson(bufferJson, 512, true, false);
+            ParserQt parserQt(serializerJson, qtBuffer.data(), qtBuffer.size(), ParserQt::Mode::WRAPPED_BY_QVARIANT);
+            const bool res = parserQt.parseStruct(typeName);
+
+            std::string v;
+            bufferJson.copyData(v);
+
+            objectData->properties.push_back({ metaproperty.typeName(), name, v, metaproperty.hasNotifySignal()});
         }
     }
         
@@ -270,29 +748,6 @@ private:
     std::deque<ObjectData*>     m_stack;
 };
 
-
-class ObjectHelper
-{
-public:
-    static QObject* findObject(const QString& objectName)
-    {
-        QWidgetList widgetList = qApp->topLevelWidgets();
-        for (int i = 0; i < widgetList.size(); ++i)
-        {
-            QObject* obj = widgetList[i];
-            if (obj->objectName() == objectName)
-            {
-                return obj;
-            }
-            QList<QObject*> list = obj->findChildren<QObject*>(objectName, Qt::FindChildrenRecursively);
-            if (!list.isEmpty())
-            {
-                return list[0];
-            }
-        }
-        return nullptr;
-    }
-};
 
 
 class ConnectObject : public QObject
@@ -365,7 +820,7 @@ private:
     const PeerId m_peerId;
     const std::string m_typeName;
     const std::string m_path;
-    const const QMetaMethod m_metaMethod;
+    const QMetaMethod m_metaMethod;
     QMetaObject::Connection m_connection;
 };
 
@@ -375,10 +830,8 @@ class QtInvoker : public RemoteEntity
 public:
     QtInvoker()
     {
-        init();
-
         // register peer events to see when a remote entity connects or disconnects.
-        registerPeerEvent([this](PeerId peerId, const SessionInfo& session, EntityId entityId, PeerEvent peerEvent, bool incoming) {
+        registerPeerEvent([this](PeerId peerId, const SessionInfo& /*session*/, EntityId /*entityId*/, PeerEvent peerEvent, bool /*incoming*/) {
             if (peerEvent == PeerEvent::PEER_DISCONNECTED)
             {
                 auto itPeer = m_connectObjects.find(peerId);
@@ -409,7 +862,7 @@ public:
                 bool connect = false;
                 bool disconnect = false;
                 std::string connectTypeName;
-                const std::string& typeName = getTypeName(*objId, *methodName, obj, metaMethod, metaProperty, propertySet, connect, disconnect, connectTypeName);
+                const std::string& typeName = QtTypeHelper::getInstance().getTypeName(*objId, *methodName, obj, metaMethod, metaProperty, propertySet, connect, disconnect, connectTypeName);
                 if ((obj != nullptr) && (typeName == request->type))
                 {
                     if (metaMethod.isValid())
@@ -507,7 +960,7 @@ public:
                             QDataStream streamRetParam(&retQtBuffer, QIODevice::WriteOnly);
                             streamRetParam << returnValue;
 
-                            std::string retTypeName = getReturnTypeName(metaMethod.typeName());
+                            std::string retTypeName = QtTypeHelper::getInstance().getReturnTypeName(metaMethod.typeName());
 
                             GeneralMessage replyMessage;
                             if (!retTypeName.empty())
@@ -622,7 +1075,7 @@ public:
                             QDataStream streamRetParam(&retQtBuffer, QIODevice::WriteOnly);
                             streamRetParam << value;
 
-                            std::string retTypeName = getReturnTypeName(metaProperty.typeName());
+                            std::string retTypeName = QtTypeHelper::getInstance().getReturnTypeName(metaProperty.typeName());
 
                             GeneralMessage replyMessage;
 
@@ -648,97 +1101,6 @@ public:
     }
 
 private:
-    void init()
-    {
-        m_typesToField.emplace("bool", MetaField{ MetaTypeId::TYPE_BOOL,           "", "", "", 0, {} });
-        m_typesToField.emplace("int", MetaField{ MetaTypeId::TYPE_INT32,          "", "", "", 0, {} });
-        m_typesToField.emplace("uint", MetaField{ MetaTypeId::TYPE_UINT32,         "", "", "", 0, {} });
-        m_typesToField.emplace("qlonglong", MetaField{ MetaTypeId::TYPE_INT64,          "", "", "", 0, {} });
-        m_typesToField.emplace("qulonglong", MetaField{ MetaTypeId::TYPE_UINT64,         "", "", "", 0, {} });
-        m_typesToField.emplace("double", MetaField{ MetaTypeId::TYPE_DOUBLE,         "", "", "", 0, {} });
-        m_typesToField.emplace("short", MetaField{ MetaTypeId::TYPE_INT16,          "", "", "", 0, {} });
-        m_typesToField.emplace("char", MetaField{ MetaTypeId::TYPE_INT8,           "", "", "", 0, {} });
-        m_typesToField.emplace("ulong", MetaField{ MetaTypeId::TYPE_UINT32,         "", "", "", 0, {} });
-        m_typesToField.emplace("ushort", MetaField{ MetaTypeId::TYPE_UINT16,         "", "", "", 0, {} });
-        m_typesToField.emplace("uchar", MetaField{ MetaTypeId::TYPE_UINT8,          "", "", "", 0, {} });
-        m_typesToField.emplace("float", MetaField{ MetaTypeId::TYPE_FLOAT,          "", "", "", 0, {} });
-        m_typesToField.emplace("QChar", MetaField{ MetaTypeId::TYPE_INT16,          "", "", "", 0, {} });
-        m_typesToField.emplace("QString", MetaField{ MetaTypeId::TYPE_STRING,         "", "", "", 0, {} });
-        m_typesToField.emplace("QStringList", MetaField{ MetaTypeId::TYPE_ARRAY_STRING,   "", "", "", 0, {} });
-        m_typesToField.emplace("QByteArray", MetaField{ MetaTypeId::TYPE_BYTES,          "", "", "", 0, {} });
-        m_typesToField.emplace("QBitArray", MetaField{ MetaTypeId::TYPE_ARRAY_BOOL,     "", "", "", 0, {} });
-        m_typesToField.emplace("QDate", MetaField{ MetaTypeId::TYPE_INT64,          "", "", "", 0, {} });
-        m_typesToField.emplace("QTime", MetaField{ MetaTypeId::TYPE_UINT32,         "", "", "", 0, {} });
-        //      m_typesToField.emplace("QDateTime",     MetaField{ MetaTypeId::TYPE_STRUCT,         "", "", "", 0, {} });
-        m_typesToField.emplace("QUrl", MetaField{ MetaTypeId::TYPE_BYTES,          "", "", "", 0, {"qttype:QUrl,qtcode:bytes"} });
-        m_typesToField.emplace("QLocale", MetaField{ MetaTypeId::TYPE_STRING,         "", "", "", 0, {} });
-        m_typesToField.emplace("QPixmap", MetaField{ MetaTypeId::TYPE_BYTES,         "", "", "", 0, {"png:true"} });
-
-
-        static const std::string KEY_QTTYPE = "qttype";
-
-        const std::unordered_map<std::string, MetaEnum> enums = MetaDataGlobal::instance().getAllEnums();
-        for (const auto& entry : enums)
-        {
-            const MetaEnum& en = entry.second;
-            const std::string& qtTypeName0 = en.getProperty(KEY_QTTYPE);
-            if (!qtTypeName0.empty())
-            {
-                m_typesToField.emplace(qtTypeName0, MetaField{ MetaTypeId::TYPE_ENUM, en.getTypeName(), "", "", 0, {} });
-            }
-        }
-
-        const std::unordered_map<std::string, MetaStruct> structs = MetaDataGlobal::instance().getAllStructs();
-        for (const auto& entry : structs)
-        {
-            const MetaStruct& stru = entry.second;
-            const std::string& qtTypeName0 = stru.getProperty(KEY_QTTYPE);
-            if (!qtTypeName0.empty())
-            {
-                m_typesToField.emplace(qtTypeName0, MetaField{ MetaTypeId::TYPE_STRUCT, stru.getTypeName(), "", "", 0, {} });
-            }
-
-            for (ssize_t i = 0; i < stru.getFieldsSize(); ++i)
-            {
-                const MetaField* field = stru.getFieldByIndex(i);
-                if (field)
-                {
-                    const std::string& qtTypeName1 = field->getProperty(KEY_QTTYPE);
-                    if (!qtTypeName1.empty())
-                    {
-                        m_typesToField.emplace(qtTypeName1, MetaField{ field->typeId, field->typeName, "", "", field->flags, field->attrs });
-                    }
-                    else if (field->typeId == MetaTypeId::TYPE_STRUCT ||
-                        field->typeId == MetaTypeId::TYPE_ARRAY_STRUCT)
-                    {
-                        const MetaStruct* s = MetaDataGlobal::instance().getStruct(field->typeName);
-                        if (s)
-                        {
-                            const std::string& qtTypeName2 = s->getProperty(KEY_QTTYPE);
-                            if (!qtTypeName2.empty())
-                            {
-                                m_typesToField.emplace(qtTypeName2, MetaField{ field->typeId, field->typeName, "", "", field->flags, field->attrs });
-                            }
-                        }
-                    }
-                    else if (field->typeId == MetaTypeId::TYPE_ENUM ||
-                        field->typeId == MetaTypeId::TYPE_ARRAY_ENUM)
-                    {
-                        const MetaEnum* e = MetaDataGlobal::instance().getEnum(field->typeName);
-                        if (e)
-                        {
-                            const std::string& qtTypeName3 = e->getProperty(KEY_QTTYPE);
-                            if (!qtTypeName3.empty())
-                            {
-                                m_typesToField.emplace(qtTypeName3, MetaField{ field->typeId, field->typeName, "", "", field->flags, field->attrs });
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     virtual std::string getTypeOfGeneralMessage(const std::string& path) override
     {
         std::string typeOfGeneralMessage{};
@@ -748,308 +1110,12 @@ private:
         {
             const std::string& objId = objIdAndMethod[0];
             const std::string& methodName = objIdAndMethod[1];
-            typeOfGeneralMessage = getTypeName(objId, methodName);
-        }
-        return typeOfGeneralMessage;
-    }
-
-    std::string getTypeName(const std::string& objId, const std::string& methodName)
-    {
-        QObject* obj;
-        QMetaMethod metaMethod;
-        QMetaProperty metaProperty;
-        bool propertySet = false;
-        bool connect = false;
-        bool disconnect = false;
-        std::string connectTypeName;
-        return getTypeName(objId, methodName, obj, metaMethod, metaProperty, propertySet, connect, disconnect, connectTypeName);
-    }
-
-    std::string getReturnTypeName(const std::string& type)
-    {
-        std::string typeName = type + "_v";
-        const MetaStruct* struFound = MetaDataGlobal::instance().getStruct(typeName);
-        if (struFound == nullptr)
-        {
-            MetaStruct stru{ typeName, "", {}, 0, {} };
-            const auto it = m_typesToField.find(type);
-            if (it != m_typesToField.end())
-            {
-                static const std::string& name = "v";
-                const MetaField& field = it->second;
-                stru.addField(MetaField(field.typeId, field.typeName, name, field.description, field.flags, field.attrs));
-                MetaDataGlobal::instance().addStruct(stru);
-            }
-            else
-            {
-                typeName.clear();
-            }
-        }
-        return typeName;
-    }
-
-    std::string getTypeName(const std::string& objId, const std::string& methodName, QObject*& obj, QMetaMethod& metaMethod, QMetaProperty& metaProperty, bool& propertySet, bool& connect, bool& disconnect, std::string& connectTypeName)
-    {
-        propertySet = false;
-        connect = false;
-        disconnect = false;
-        connectTypeName.clear();
-
-        std::string typeOfGeneralMessage{};
-        obj = ObjectHelper::findObject(QString::fromUtf8(objId.c_str()));
-        if (obj)
-        {
-            const QMetaObject* metaObject = obj->metaObject();
-            if (metaObject)
-            {
-                int ix = -1;
-
-                ix = metaObject->indexOfMethod(methodName.c_str());
-                if (ix != -1)
-                {
-                    metaMethod = metaObject->method(ix);
-                }
-
-                if (!metaMethod.isValid())
-                {
-                    ix = metaObject->indexOfSlot(methodName.c_str());
-                    if (ix != -1)
-                    {
-                        metaMethod = metaObject->method(ix);
-                    }
-                }
-
-                if (!metaMethod.isValid())
-                {
-                    if (methodName.compare(0, 4, "set_") == 0)
-                    {
-                        propertySet = true;
-                        ix = metaObject->indexOfProperty(&methodName[4]);
-                    }
-                    if (methodName.compare(0, 8, "connect_") == 0)
-                    {
-                        connect = true;
-                        ix = metaObject->indexOfProperty(&methodName[8]);
-                    }
-                    else if (methodName.compare(0, 11, "disconnect_") == 0)
-                    {
-                        disconnect = true;
-                        ix = metaObject->indexOfProperty(&methodName[11]);
-                    }
-                    else
-                    {
-                        ix = metaObject->indexOfProperty(methodName.c_str());
-                    }
-                    if (ix != -1)
-                    {
-                        metaProperty = metaObject->property(ix);
-                    }
-                    else
-                    {
-                        propertySet = false;
-                        connect = false;
-                        disconnect = false;
-                    }
-                }
-
-                if (!metaMethod.isValid() && !metaProperty.isValid())
-                {
-                    if (methodName.compare(0, 8, "connect_") == 0)
-                    {
-                        connect = true;
-                        ix = metaObject->indexOfSignal(&methodName[8]);
-                    }
-                    else if (methodName.compare(0, 11, "disconnect_") == 0)
-                    {
-                        disconnect = true;
-                        ix = metaObject->indexOfSignal(&methodName[11]);
-                    }
-                    else
-                    {
-                        ix = metaObject->indexOfSignal(methodName.c_str());
-                    }
-                    if (ix != -1)
-                    {
-                        metaMethod = metaObject->method(ix);
-                    }
-                    else
-                    {
-                        connect = false;
-                        disconnect = false;
-                    }
-                }
-
-                if (!metaMethod.isValid() && !metaProperty.isValid())
-                {
-                    QByteArray methodNameAsByteArray = methodName.c_str();
-                    if (methodName.compare(0, 8, "connect_") == 0)
-                    {
-                        connect = true;
-                        methodNameAsByteArray = &methodName[8];
-                    }
-                    else if (methodName.compare(0, 11, "disconnect_") == 0)
-                    {
-                        disconnect = true;
-                        methodNameAsByteArray = &methodName[11];
-                    }
-                    for (int i = 0; i < metaObject->methodCount(); ++i)
-                    {
-                        QMetaMethod metaMethodTmp = metaObject->method(i);
-                        if (metaMethodTmp.isValid())
-                        {
-                            const QByteArray& name = metaMethodTmp.name();
-                            if (name == methodNameAsByteArray)
-                            {
-                                if (connect || disconnect)
-                                {
-                                    if (metaMethodTmp.methodType() == QMetaMethod::Signal)
-                                    {
-                                        metaMethod = metaMethodTmp;
-                                        break;
-                                    }
-                                }
-                                else
-                                {
-                                    metaMethod = metaMethodTmp;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    if (!metaMethod.isValid())
-                    {
-                        connect = false;
-                        disconnect = false;
-                    }
-                }
-
-                if (metaMethod.isValid())
-                {
-                    std::string typeName;
-                    QList<QByteArray> argTypes = metaMethod.parameterTypes();
-                    QList<QByteArray> argNames = metaMethod.parameterNames();
-
-                    if (argTypes.size() == argNames.size())
-                    {
-                        for (int i = 0; i < argTypes.size(); ++i)
-                        {
-                            std::string name = parameterName(argNames[i].toStdString(), i);
-                            if (i > 0)
-                            {
-                                typeName += '_';
-                            }
-                            typeName += argTypes[i].toStdString();
-                            typeName += '_';
-                            typeName += name;
-                        }
-
-                        // no parameters?
-                        if (typeName.empty())
-                        {
-                            typeName = '_';
-                        }
-                    }
-
-                    bool ok = true;
-                    const MetaStruct* struFound = MetaDataGlobal::instance().getStruct(typeName);
-                    if (struFound == nullptr)
-                    {
-                        MetaStruct stru{ typeName, "", {}, 0, {} };
-                        for (int i = 0; i < argTypes.size(); ++i)
-                        {
-                            const std::string& type = argTypes[i].toStdString();
-                            const auto it = m_typesToField.find(type);
-                            if (it != m_typesToField.end())
-                            {
-                                std::string name = parameterName(argNames[i].toStdString(), i);
-                                const MetaField& field = it->second;
-                                stru.addField(MetaField(field.typeId, field.typeName, name, field.description, field.flags, field.attrs));
-                            }
-                            else
-                            {
-                                ok = false;
-                                break;
-                            }
-                        }
-                        if (ok)
-                        {
-                            MetaDataGlobal::instance().addStruct(stru);
-                        }
-                    }
-                    if (ok)
-                    {
-                        if (connect || disconnect)
-                        {
-                            connectTypeName = typeName;
-                            typeName = '_';
-                            const MetaStruct* struFound = MetaDataGlobal::instance().getStruct(typeName);
-                            if (struFound == nullptr)
-                            {
-                                MetaStruct stru{ typeName, "", {}, 0, {} };
-                                MetaDataGlobal::instance().addStruct(stru);
-                            }
-                        }
-
-                        typeOfGeneralMessage = typeName;
-                    }
-                }
-                else if (metaProperty.isValid())
-                {
-                    std::string typeName = metaProperty.typeName();
-                    typeName += "_v";
-
-                    // no parameters?
-                    if (!propertySet)
-                    {
-                        typeName = '_';
-                    }
-
-                    bool ok = true;
-                    const MetaStruct* struFound = MetaDataGlobal::instance().getStruct(typeName);
-                    if (struFound == nullptr)
-                    {
-                        MetaStruct stru{ typeName, "", {}, 0, {} };
-                        const std::string& type = metaProperty.typeName();
-                        const auto it = m_typesToField.find(type);
-                        if (it != m_typesToField.end())
-                        {
-                            static const std::string name = "v";
-                            const MetaField& field = it->second;
-                            stru.addField(MetaField(field.typeId, field.typeName, name, field.description, field.flags, field.attrs));
-                        }
-                        else
-                        {
-                            ok = false;
-                        }
-                        if (ok)
-                        {
-                            MetaDataGlobal::instance().addStruct(stru);
-                        }
-                    }
-                    if (ok)
-                    {
-                        if (connect || disconnect)
-                        {
-                            connectTypeName = typeName;
-                            typeName = '_';
-                            const MetaStruct* struFound = MetaDataGlobal::instance().getStruct(typeName);
-                            if (struFound == nullptr)
-                            {
-                                MetaStruct stru{ typeName, "", {}, 0, {} };
-                                MetaDataGlobal::instance().addStruct(stru);
-                            }
-                        }
-
-                        typeOfGeneralMessage = typeName;
-                    }
-                }
-            }
+            typeOfGeneralMessage = QtTypeHelper::getInstance().getTypeName(objId, methodName);
         }
         return typeOfGeneralMessage;
     }
 
 private:
-    std::unordered_map<std::string, MetaField> m_typesToField;
     std::unordered_map<PeerId, std::unordered_map<QByteArray, std::shared_ptr<ConnectObject>>> m_connectObjects;
 };
 
