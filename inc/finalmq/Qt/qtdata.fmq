@@ -86,7 +86,8 @@
             {"tid":"string",       "type":"",          "name":"type",           "desc":"","flags":[]},
             {"tid":"string",       "type":"",          "name":"name",           "desc":"","flags":[]},
             {"tid":"string",       "type":"",          "name":"value",          "desc":"","flags":[]},
-            {"tid":"bool",         "type":"",          "name":"hasNotifySignal","desc":"","flags":[]}
+            {"tid":"bool",         "type":"",          "name":"hasNotifySignal","desc":"","flags":[]},
+            {"tid":"string",       "type":"",          "name":"signal",         "desc":"","flags":[]}
          ]},
         {"type":"ObjectData","desc":"","fields":[
             {"tid":"struct[]", "type":"Property",   "name":"properties",    "desc":"","flags":[]},
