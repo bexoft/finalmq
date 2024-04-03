@@ -118,11 +118,22 @@ class ObjectHelper
 public:
     static QObject* findObject(const QString& objectName)
     {
-        QWidgetList widgetList = qApp->topLevelWidgets();
-        for (int i = 0; i < widgetList.size(); ++i)
+        const QString& objname = qApp->objectName();
+        if (objname == objectName)
         {
-            QObject* obj = widgetList[i];
-            if (obj->objectName() == objectName)
+            return qApp;
+        }
+        QList<QObject*> list = qApp->findChildren<QObject*>(objectName, Qt::FindChildrenRecursively);
+        if (!list.isEmpty())
+        {
+            return list[0];
+        }
+        QWidgetList objList = qApp->topLevelWidgets();
+        for (int i = 0; i < objList.size(); ++i)
+        {
+            QObject* obj = objList[i];
+            QString objname = obj->objectName();
+            if (objname == objectName)
             {
                 return obj;
             }
@@ -633,12 +644,11 @@ private:
         {
             QLayout* layout = (QLayout*)&object;
             QRect rect = layout->geometry();
-            objectData->properties.push_back({ "int", "left", std::to_string(rect.left()), false });
-            objectData->properties.push_back({ "int", "top", std::to_string(rect.top()), false });
-            objectData->properties.push_back({ "int", "right", std::to_string(rect.right()), false });
-            objectData->properties.push_back({ "int", "bottom", std::to_string(rect.bottom()), false });
-            objectData->properties.push_back({ "int", "enabled", std::to_string(layout->isEnabled()), false });
-
+            objectData->properties.push_back({ "int", "left", std::to_string(rect.left()), false, ""});
+            objectData->properties.push_back({ "int", "top", std::to_string(rect.top()), false, "" });
+            objectData->properties.push_back({ "int", "right", std::to_string(rect.right()), false, "" });
+            objectData->properties.push_back({ "int", "bottom", std::to_string(rect.bottom()), false, "" });
+            objectData->properties.push_back({ "int", "enabled", std::to_string(layout->isEnabled()), false, "" });
         }
     }
 
@@ -683,7 +693,7 @@ private:
             std::string v;
             bufferJson.copyData(v);
 
-            objectData->properties.push_back({ metaproperty.typeName(), name, v, metaproperty.hasNotifySignal()});
+            objectData->properties.push_back({ metaproperty.typeName(), name, v, metaproperty.hasNotifySignal(), metaproperty.notifySignal().methodSignature().toStdString()});
         }
     }
         
@@ -757,7 +767,7 @@ public:
         : m_remoteEntity(remoteEntity)
         , m_peerId(peerId)
         , m_typeName(typeName)
-        , m_path(objectName + "." + metaMethod.name().toStdString())
+        , m_path(objectName + "/" + metaMethod.methodSignature().toStdString())
         , m_metaMethod(metaMethod)
     {
     }
@@ -806,7 +816,7 @@ private:
             message.type = m_typeName;
             bufferProto.copyData(message.data);
 
-            remoteEntity->sendEvent(m_peerId, message);
+            remoteEntity->sendEvent(m_peerId, m_path, message);
         }
         else
         {
@@ -870,16 +880,17 @@ public:
                         if (connect)
                         {
                             found = true;
+                            std::string signalPath = *objId + "/" + metaMethod.methodSignature().toStdString();
                             PeerId peerId = connectPeer(requestContext->session(), requestContext->getVirtualSessionId(), requestContext->entityId());
 
                             bool foundConnect = false;
                             auto itPeer = m_connectObjects.find(peerId);
                             if (itPeer != m_connectObjects.end())
                             {
-                                auto itSignalName = itPeer->second.find(metaMethod.name());
-                                if (itSignalName != itPeer->second.end())
+                                auto itPath = itPeer->second.find(signalPath);
+                                if (itPath != itPeer->second.end())
                                 {
-                                    if (itSignalName->second->isConnected())
+                                    if (itPath->second->isConnected())
                                     {
                                         foundConnect = true;
                                     }
@@ -889,7 +900,7 @@ public:
                             {
                                 hybrid_ptr<IRemoteEntity> thisRemoteEntity = getWeakPtr();
                                 std::shared_ptr<ConnectObject> connectObject = std::make_shared<ConnectObject>(thisRemoteEntity, peerId, *objId, connectTypeName, metaMethod);
-                                m_connectObjects[peerId][metaMethod.name()] = connectObject;
+                                m_connectObjects[peerId][signalPath] = connectObject;
 
                                 QMetaObject::Connection conn = QMetaObject::connect(obj, metaMethod.methodIndex(), connectObject.get(), metaMethod.methodIndex(), Qt::AutoConnection);
                                 connectObject->setConnection(conn);
@@ -902,14 +913,15 @@ public:
                         else if (disconnect)
                         {
                             found = true;
+                            std::string signalPath = *objId + "/" + metaMethod.methodSignature().toStdString();
                             PeerId peerId = requestContext->peerId();
                             auto itPeer = m_connectObjects.find(peerId);
                             if (itPeer != m_connectObjects.end())
                             {
-                                auto itSignalName = itPeer->second.find(metaMethod.name());
-                                if (itSignalName != itPeer->second.end())
+                                auto itPath = itPeer->second.find(signalPath);
+                                if (itPath != itPeer->second.end())
                                 {
-                                    itPeer->second.erase(itSignalName);
+                                    itPeer->second.erase(itPath);
                                 }
                             }
                             GeneralMessage replyMessage;
@@ -1016,16 +1028,17 @@ public:
                             {
                                 found = true;
                                 metaMethod = metaProperty.notifySignal();
+                                std::string signalPath = *objId + "/" + metaMethod.methodSignature().toStdString();
                                 PeerId peerId = connectPeer(requestContext->session(), requestContext->getVirtualSessionId(), requestContext->entityId());
 
                                 bool foundConnect = false;
                                 auto itPeer = m_connectObjects.find(peerId);
                                 if (itPeer != m_connectObjects.end())
                                 {
-                                    auto itSignalName = itPeer->second.find(metaMethod.name());
-                                    if (itSignalName != itPeer->second.end())
+                                    auto itPath = itPeer->second.find(signalPath);
+                                    if (itPath != itPeer->second.end())
                                     {
-                                        if (itSignalName->second->isConnected())
+                                        if (itPath->second->isConnected())
                                         {
                                             foundConnect = true;
                                         }
@@ -1035,7 +1048,7 @@ public:
                                 {
                                     hybrid_ptr<IRemoteEntity> thisRemoteEntity = getWeakPtr();
                                     std::shared_ptr<ConnectObject> connectObject = std::make_shared<ConnectObject>(thisRemoteEntity, peerId, *objId, connectTypeName, metaMethod);
-                                    m_connectObjects[peerId][metaMethod.name()] = connectObject;
+                                    m_connectObjects[peerId][signalPath] = connectObject;
 
                                     QMetaObject::Connection conn = QMetaObject::connect(obj, metaMethod.methodIndex(), connectObject.get(), metaMethod.methodIndex(), Qt::AutoConnection);
                                     connectObject->setConnection(conn);
@@ -1051,14 +1064,17 @@ public:
                             if (metaProperty.hasNotifySignal())
                             {
                                 found = true;
+                                metaMethod = metaProperty.notifySignal();
+                                std::string signalPath = *objId + "/" + metaMethod.methodSignature().toStdString();
+
                                 PeerId peerId = requestContext->peerId();
                                 auto itPeer = m_connectObjects.find(peerId);
                                 if (itPeer != m_connectObjects.end())
                                 {
-                                    auto itSignalName = itPeer->second.find(metaMethod.name());
-                                    if (itSignalName != itPeer->second.end())
+                                    auto itPath = itPeer->second.find(signalPath);
+                                    if (itPath != itPeer->second.end())
                                     {
-                                        itPeer->second.erase(itSignalName);
+                                        itPeer->second.erase(itPath);
                                     }
                                 }
                                 GeneralMessage replyMessage;
@@ -1116,7 +1132,7 @@ private:
     }
 
 private:
-    std::unordered_map<PeerId, std::unordered_map<QByteArray, std::shared_ptr<ConnectObject>>> m_connectObjects;
+    std::unordered_map<PeerId, std::unordered_map<std::string, std::shared_ptr<ConnectObject>>> m_connectObjects;
 };
 
 
@@ -1198,21 +1214,6 @@ public:
         //    qApp->setStyleSheet(css);
         //    qApp->setStyle(new NoFocusRectangleStyle);
         //});
-    }
-
-
-    static QObject* findObject(const QString& objectName)
-    {
-        QWidgetList widgetList = qApp->topLevelWidgets();
-        for (int i = 0; i < widgetList.size(); ++i)
-        {
-            QList<QObject*> list = widgetList[i]->findChildren<QObject*>(objectName, Qt::FindChildrenRecursively);
-            if (!list.isEmpty())
-            {
-                return list[0];
-            }
-        }
-        return nullptr;
     }
 
 };

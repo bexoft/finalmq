@@ -13,8 +13,62 @@
 
 var g_fmqSession = new FmqSession();
 var g_fmqQtService = null;
+var g_fmqQtInvoker = null;
+
+class Events extends FmqEntity
+{
+    allRequests(correlationId, path, params)
+    {
+        var elCounter = document.getElementById(path + '/counter');
+        if (elCounter)
+        {
+            var counter = parseInt(elCounter.innerHTML);
+            counter++;
+            elCounter.innerHTML = counter;
+        }
+        var elValue = document.getElementById(path + '/value');
+        if (elValue)
+        {
+            elValue.innerHTML = params.fmqparamsjson;
+        }
+        var elProp = document.getElementById(path + '/prop');
+        if (elProp)
+        {
+            elProp.innerHTML = params.fmqparamsjson;
+        }
+    }
+
+    sessionDisconnected()
+    {
+    }
+
+    sessionConnected()
+    {
+    }
+
+    serverDisconnected()
+    {
+    }
+
+    serverConnected()
+    {
+    }
+}
 
 
+
+function getObjectName(obj)
+{
+	for (var i = 0; i < obj.properties.length; i++)
+	{
+		var prop = obj.properties[i];
+        if (prop.name == 'objectName')
+        {
+            return JSON.parse(prop.value).v;
+        }
+    }
+    return '';
+}
 
 
 function iterateObjects(obj, level, idParent)
@@ -22,14 +76,20 @@ function iterateObjects(obj, level, idParent)
     var table = '<table border="1">';
     
     table += '<tr>';
+    table += '<td>Image</td>';
     table += '<td>Class Chain</td>';
     table += '<td>Properties</td>';
     table += '<td>Methods</td>';
     table += '<td>Children</td>';
     table += '</tr>';
 
+    objectName = getObjectName(obj);
+
     // Class Chain
     table += '<tr>';
+
+    table += '<td id="' + objectName + '/img">'
+    table += '</td>';    
 
     table += '<td>'
 	for (var i = 0; i < obj.classchain.length; i++)
@@ -48,8 +108,31 @@ function iterateObjects(obj, level, idParent)
         table += '<tr>';
         table += '<td>' + prop.type + '</td>';
         table += '<td>' + prop.name + '</td>';
+        if (prop.hasNotifySignal)
+        {
+            var id = objectName + '/' + prop.signal;
+            table += '<td id="' + id + '/prop">' + prop.value.substr(0, 100) + '</td>';
+            table += '<td>' + prop.signal + '</td>';
+        }
+        else
+        {
         table += '<td>' + prop.value.substr(0, 100) + '</td>';
-        table += '<td>' + prop.hasNotifySignal + '</td>';
+            table += '<td>-</td>';
+        }
+
+        if (prop.name == 'size')
+        {
+            var size = JSON.parse(prop.value);
+            var params = {rectangle:{left:0,top:0,right:size.v.width,bottom:size.v.height}};
+            g_fmqQtInvoker.requestReply(objectName + '/grab(QRect)', params, function(outparams, objectName) {
+                var elImg = document.getElementById(objectName+'/img');
+                if (elImg)
+                {
+                    elImg.innerHTML = '<img style="position:relative; left:'+0+'; top:'+0+'; width:'+size.v.width+'; height:'+size.v.height+';" src="data:image/png;base64,' + outparams.v + '"></img>';
+                }
+            }, objectName);
+
+        }
 
         table += '</tr>';
     }
@@ -79,7 +162,17 @@ function iterateObjects(obj, level, idParent)
             table += '<td>' + parameter.typeId + '</td>';
             table += '</tr>';
         }
+                
         table += '</table></td>';
+
+        if (method.methodType == 'Signal')
+        {
+            var id = objectName + '/' + method.signature;
+            
+            table += '<td id="' + id + '/counter">' + 0 + '</td>';
+            g_fmqQtInvoker.requestReply(objectName + '/connect_' + method.signature, null, function(outparams) {});
+            table += '<td id="' + id + '/value"></td>';
+        }
 
         table += '</tr>';
     }
@@ -138,6 +231,7 @@ function pageLoad()
 {
     g_fmqSession.createSession(function() {
 		g_fmqQtService = g_fmqSession.createEntity('QtService');
+		g_fmqQtInvoker = g_fmqSession.createEntity('QtInvoker', Events);
         fmqReady();
     });
 }

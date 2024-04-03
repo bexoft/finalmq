@@ -384,16 +384,17 @@ class FmqSession
                                 {
                                     path = header.type;
                                 }
-                                else
-                                {
-                                    path = path.replace(/\//g, '_');  // replace all '/' by '_'
-                                }
-                                path = path.replace(/\./g, '_');  // replace all '.' by '_'
 
 								var entity = xmlhttp._this._getEntity(header.srcid);
 								if (entity && entity[path])
 								{
-									entity[path](header.corrid, params);
+                                    var pathWithUnderscore = path;
+                                    pathWithUnderscore = pathWithUnderscore.replace(/\//g, '_');  // replace all '/' by '_'
+                                    pathWithUnderscore = pathWithUnderscore.replace(/\./g, '_');  // replace all '.' by '_'
+                                    pathWithUnderscore = pathWithUnderscore.replace(/\(/g, '_');  // replace all '(' by '_'
+                                    pathWithUnderscore = pathWithUnderscore.replace(/\)/g, '_');  // replace all ')' by '_'
+                                    pathWithUnderscore = pathWithUnderscore.replace(/\,/g, '_');  // replace all ',' by '_'
+									entity[pathWithUnderscore](header.corrid, params);
 								}
 								else if (entity && entity['allRequests'])
                                 {
