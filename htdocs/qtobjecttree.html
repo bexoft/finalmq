@@ -3,7 +3,6 @@
 
 <head>                                                                          
 
-<script type="text/javascript" src="json2.js"></script>
 <script type="text/javascript" src="fmq.js"></script>
 
                                                                                 
@@ -20,13 +19,16 @@ var g_fmqQtService = null;
 
 function iterateObjects(obj, level, idParent)
 {
-    var table = '<table>';
+    var table = '<table border="1">';
     
     table += '<tr>';
     table += '<td>Class Chain</td>';
     table += '<td>Properties</td>';
+    table += '<td>Methods</td>';
+    table += '<td>Children</td>';
     table += '</tr>';
-    
+
+    // Class Chain
     table += '<tr>';
 
     table += '<td>'
@@ -34,21 +36,76 @@ function iterateObjects(obj, level, idParent)
     {
 		var className = obj.classchain[i];
         table += className;
-        table += ' ';
+        table += '<br/>';
     }
     table += '</td>';
 
-    table += '<td>'
+    // properties
+    table += '<td><table border="1">';
 	for (var i = 0; i < obj.properties.length; i++)
 	{
 		var prop = obj.properties[i];
-		table += prop.name + '=' + prop.value+'<br/>';
-	}
-    table += '</td>';
+        table += '<tr>';
+        table += '<td>' + prop.type + '</td>';
+        table += '<td>' + prop.name + '</td>';
+        table += '<td>' + prop.value.substr(0, 100) + '</td>';
+        table += '<td>' + prop.hasNotifySignal + '</td>';
+
+        table += '</tr>';
+    }
+    table += '</table></td>';
+
+    // Methods
+    table += '<td><table border="1">';
+	for (var i = 0; i < obj.methods.length; i++)
+    {
+        var method = obj.methods[i];
+        table += '<tr>';
+        table += '<td>' + method.name + '</td>';
+        table += '<td>' + method.index + '</td>';
+        table += '<td>' + method.access + '</td>';
+        table += '<td>' + method.methodType + '</td>';
+        table += '<td>' + method.signature + '</td>';
+        table += '<td>' + method.returnType.typeName + '</td>';
+
+        // Parameters
+        table += '<td><table border="1">';
+        for (var j = 0; j < method.parameters.length; j++)
+        {
+            var parameter = method.parameters[j];
+            table += '<tr>';
+            table += '<td>' + parameter.name + '</td>';
+            table += '<td>' + parameter.typeName + '</td>';
+            table += '<td>' + parameter.typeId + '</td>';
+            table += '</tr>';
+        }
+        table += '</table></td>';
+
+        table += '</tr>';
+    }
+    table += '</table></td>';
+    
+    // Children
+    table += '<td><table border="1">';
+	for (var i = 0; i < obj.children.length; i++)
+    {
+        var id = idParent + '.' + i;
+        table += '<tr>';
+        table += '<td id="'+ id +'">';
+        table += '</td>';
+        table += '</tr>';
+    }
+    table += '</table></td>';
 
     table += '</tr>';
     
-    
+    document.getElementById(idParent).innerHTML = table;
+
+	for (var i = 0; i < obj.children.length; i++)
+    {
+        var id = idParent + '.' + i;
+        iterateObjects(obj.children[i], level + 1, id);
+    }
 }
 
 
@@ -73,7 +130,7 @@ function getObjectTree()
 function fmqReady()
 {
 	poll();
-	setInterval(poll, 2000);
+	//setInterval(poll, 2000);
 }
 
 
