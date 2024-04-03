@@ -83,8 +83,10 @@
             {"tid":"struct[]",     "type":"Parameter", "name":"parameters", "desc":"","flags":[]}
          ]},
         {"type":"Property","desc":"","fields":[
-            {"tid":"string",       "type":"",          "name":"name",       "desc":"","flags":[]},
-            {"tid":"string",       "type":"",          "name":"value",      "desc":"","flags":[]}
+            {"tid":"string",       "type":"",          "name":"type",           "desc":"","flags":[]},
+            {"tid":"string",       "type":"",          "name":"name",           "desc":"","flags":[]},
+            {"tid":"string",       "type":"",          "name":"value",          "desc":"","flags":[]},
+            {"tid":"bool",         "type":"",          "name":"hasNotifySignal","desc":"","flags":[]}
          ]},
         {"type":"ObjectData","desc":"","fields":[
             {"tid":"struct[]", "type":"Property",   "name":"properties",    "desc":"","flags":[]},
@@ -127,16 +129,20 @@
             {"tid":"int32", "type":"","name":"right","desc":"","flags":[]},
             {"tid":"int32", "type":"","name":"bottom","desc":"","flags":[]}
         ]},
+        {"type":"FmqQSize","attrs":["qttype:QSize"],"desc":"","fields":[
+            {"tid":"int32", "type":"","name":"width","desc":"","flags":[]},
+            {"tid":"int32", "type":"","name":"height","desc":"","flags":[]}
+        ]},
         {"type":"FmqQColor","attrs":["qttype:QColor"],"desc":"","fields":[
             {"tid":"enum", "type":"FmqQColorSpec","name":"cspec","desc":"","flags":[]},
-            {"tid":"int16", "type":"","name":"alpha","desc":"","flags":[]},
-            {"tid":"int16", "type":"","name":"red","desc":"","flags":[]},
-            {"tid":"int16", "type":"","name":"green","desc":"","flags":[]},
-            {"tid":"int16", "type":"","name":"blue","desc":"","flags":[]},
-            {"tid":"int16", "type":"","name":"pad","desc":"","flags":[]}
+            {"tid":"uint16", "type":"","name":"alpha","desc":"","flags":[]},
+            {"tid":"uint16", "type":"","name":"red","desc":"","flags":[]},
+            {"tid":"uint16", "type":"","name":"green","desc":"","flags":[]},
+            {"tid":"uint16", "type":"","name":"blue","desc":"","flags":[]},
+            {"tid":"uint16", "type":"","name":"pad","desc":"","flags":[]}
         ]},
 
-        {"type":"FmqQTransform","desc":"","fields":[
+        {"type":"FmqQTransform","attrs":["qttype:QTransform"],"desc":"","fields":[
             {"tid":"double",                "name":"m11",     "desc":"","flags":[]},
             {"tid":"double",                "name":"m12",     "desc":"","flags":[]},
             {"tid":"double",                "name":"m13",     "desc":"","flags":[]},
@@ -148,9 +154,14 @@
             {"tid":"double",                "name":"m33",     "desc":"","flags":[]}
         ]},
 
-        {"type":"FmqQPointF","desc":"","fields":[
+        {"type":"FmqQPointF","attrs":["qttype:QPointF"],"desc":"","fields":[
             {"tid":"double",                "name":"x",     "desc":"","flags":[]},
             {"tid":"double",                "name":"y",     "desc":"","flags":[]}
+        ]},
+
+        {"type":"FmqQPoint","attrs":["qttype:QPoint"],"desc":"","fields":[
+            {"tid":"int32",                "name":"x",     "desc":"","flags":[]},
+            {"tid":"int32",                "name":"y",     "desc":"","flags":[]}
         ]},
 
         {"type":"FmqQBrushSimple","desc":"","fields":[
@@ -212,11 +223,18 @@
 
         {"type":"FmqQBrush","attrs":["qttype:QBrush"],"desc":"","fields":[
             {"tid":"enum",  "type":"FmqQBrushStyle",            "name":"style",     "attrs":["indexmode:mapping,0:0,1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0,9:0,10:0,11:0,12:0,13:0,14:0,15:1,16:1,17:1,24:2"],"desc":"","flags":["METAFLAG_INDEX"]},
-            {"tid":"struct","type":"FmqQBrushSimple",           "name":"sinple",    "desc":"","flags":[]},
+            {"tid":"struct","type":"FmqQBrushSimple",           "name":"simple",    "desc":"","flags":[]},
             {"tid":"struct","type":"FmqQBrushGradient",         "name":"gradient",  "desc":"","flags":[]},
             {"tid":"struct","type":"FmqQBrushTexturePattern",   "name":"texture",   "desc":"","flags":[]}
-        ]}
+        ]},
                 
+        {"type":"FmqQPaletteColorRole","desc":"","fields":[
+            {"tid":"struct[]","type":"FmqQBrush", "name":"roles", "attrs":["fixedarray:21"], "desc":"","flags":[]}
+        ]},
+    
+        {"type":"FmqQPalette","attrs":["qttype:QPalette"],"desc":"","fields":[
+            {"tid":"struct[]","type":"FmqQPaletteColorRole", "name":"goups", "attrs":["fixedarray:3"], "desc":"","flags":[]}
+        ]}
     ]
 }
 
