@@ -97,9 +97,17 @@
          ]},
 
         {"type":"GetObjectTreeRequest","desc":"","fields":[
+            {"tid":"int32",                      "name":"levels","desc":"","flags":[]}
          ]},
         {"type":"GetObjectTreeReply","desc":"","fields":[
-            {"tid":"struct", "type":"ObjectData","name":"root","desc":"","flags":[]}
+            {"tid":"struct", "type":"ObjectData","name":"obj","desc":"","flags":[]}
+         ]},
+        
+        {"type":"GetObjectRequest","desc":"","fields":[
+            {"tid":"string",                     "name":"objectName","desc":"","flags":[]}
+         ]},
+        {"type":"GetObjectReply","desc":"","fields":[
+            {"tid":"struct", "type":"ObjectData","name":"obj","desc":"","flags":[]}
          ]},
         
         {"type":"InvokeRequest","desc":"","fields":[
