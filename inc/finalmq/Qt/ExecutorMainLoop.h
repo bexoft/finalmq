@@ -28,13 +28,13 @@
 
 class ExecutorMainLoop : private QObject
 {
-    Q_OBJECT;
+    Q_OBJECT
 public:
     ExecutorMainLoop()
     {
         connect(this, SIGNAL(requestThreadSignal()), SLOT(requestThreadSlot()));
         m_executor->registerActionNotification([this]() {
-            requestThreadSignal(); 
+            requestThreadSignal();
         });
     }
     finalmq::IExecutorPtr getExecutor()
@@ -48,6 +48,7 @@ private Q_SLOTS:
     }
 signals:
     void requestThreadSignal();
+
 private:
     finalmq::IExecutorPtr m_executor = std::make_shared<finalmq::Executor>();
 };
