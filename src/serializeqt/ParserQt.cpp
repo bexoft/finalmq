@@ -33,6 +33,8 @@
 #include "finalmq/helpers/FmqDefines.h"
 #include "finalmq/metadata/MetaData.h"
 #include "finalmq/serializeqt/Qt.h"
+#include "finalmq/logger/LogStream.h"
+#include "finalmq//helpers/ModulenameFinalmq.h"
 
 namespace finalmq
 {
@@ -696,6 +698,11 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
         if ((index == INDEX_ABORTSTRUCT) || (index >= numberOfFields))
         {
             abortStruct = true;
+        }
+
+        if (!ok)
+        {
+            streamError << "ParserQt error inside struct " << stru.getTypeName() << " at " << field->name;
         }
     }
 
