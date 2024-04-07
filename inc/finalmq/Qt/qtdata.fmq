@@ -110,37 +110,25 @@
             {"tid":"struct", "type":"ObjectData","name":"obj","desc":"","flags":[]}
          ]},
         
-        {"type":"InvokeRequest","desc":"","fields":[
-            {"tid":"string",    "type":"",  "name":"objectName",                "desc":"","flags":[]},
-            {"tid":"string",    "type":"",  "name":"methodNameWithSignature",   "desc":"","flags":[]},
-            {"tid":"string[]",  "type":"",  "name":"parameters",                "desc":"","flags":[]}
-         ]},
-        {"type":"InvokeReply","desc":"","fields":[
-            {"tid":"string", "type":"","name":"returnValue","desc":"","flags":[]}
-         ]},
-
-        {"type":"PressButtonRequest","desc":"","fields":[
-            {"tid":"string",       "type":"",          "name":"objectName",     "desc":"","flags":[]}
-         ]},
-    
-        {"type":"GetScreenshotRequest","desc":"","fields":[
-         ]},
-        {"type":"GetScreenshotReply","desc":"","fields":[
-            {"tid":"bytes", "type":"","name":"screen","desc":"","flags":[]},
-            {"tid":"int32", "type":"","name":"x","desc":"","flags":[]},
-            {"tid":"int32", "type":"","name":"y","desc":"","flags":[]},
-            {"tid":"int32", "type":"","name":"width","desc":"","flags":[]},
-            {"tid":"int32", "type":"","name":"height","desc":"","flags":[]}
-        ]},
         {"type":"FmqQRect","attrs":["qttype:QRect"],"desc":"","fields":[
             {"tid":"int32", "type":"","name":"left","desc":"","flags":[]},
             {"tid":"int32", "type":"","name":"top","desc":"","flags":[]},
             {"tid":"int32", "type":"","name":"right","desc":"","flags":[]},
             {"tid":"int32", "type":"","name":"bottom","desc":"","flags":[]}
         ]},
+        {"type":"FmqQRectF","attrs":["qttype:QRectF"],"desc":"","fields":[
+            {"tid":"double", "type":"","name":"left","desc":"","flags":[]},
+            {"tid":"double", "type":"","name":"top","desc":"","flags":[]},
+            {"tid":"double", "type":"","name":"right","desc":"","flags":[]},
+            {"tid":"double", "type":"","name":"bottom","desc":"","flags":[]}
+        ]},
         {"type":"FmqQSize","attrs":["qttype:QSize"],"desc":"","fields":[
             {"tid":"int32", "type":"","name":"width","desc":"","flags":[]},
             {"tid":"int32", "type":"","name":"height","desc":"","flags":[]}
+        ]},
+        {"type":"FmqQSizeF","attrs":["qttype:QSizeF"],"desc":"","fields":[
+            {"tid":"double", "type":"","name":"width","desc":"","flags":[]},
+            {"tid":"double", "type":"","name":"height","desc":"","flags":[]}
         ]},
         {"type":"FmqQColor","attrs":["qttype:QColor"],"desc":"","fields":[
             {"tid":"enum", "type":"FmqQColorSpec","name":"cspec","desc":"","flags":[]},
@@ -163,14 +151,14 @@
             {"tid":"double",                "name":"m33",     "desc":"","flags":[]}
         ]},
 
-        {"type":"FmqQPointF","attrs":["qttype:QPointF"],"desc":"","fields":[
-            {"tid":"double",                "name":"x",     "desc":"","flags":[]},
-            {"tid":"double",                "name":"y",     "desc":"","flags":[]}
-        ]},
-
         {"type":"FmqQPoint","attrs":["qttype:QPoint"],"desc":"","fields":[
             {"tid":"int32",                "name":"x",     "desc":"","flags":[]},
             {"tid":"int32",                "name":"y",     "desc":"","flags":[]}
+        ]},
+
+        {"type":"FmqQPointF","attrs":["qttype:QPointF"],"desc":"","fields":[
+            {"tid":"double",                "name":"x",     "desc":"","flags":[]},
+            {"tid":"double",                "name":"y",     "desc":"","flags":[]}
         ]},
 
         {"type":"FmqQBrushSimple","desc":"","fields":[
