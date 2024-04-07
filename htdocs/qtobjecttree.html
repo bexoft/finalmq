@@ -12,8 +12,7 @@
 
 
 var g_fmqSession = new FmqSession();
-var g_fmqQtService = null;
-var g_fmqQtInvoker = null;
+var g_fmqQtAccessService = null;
 
 class Events extends FmqEntity
 {
@@ -99,7 +98,9 @@ function iterateObjects(obj, level, objectNameId)
 
     // properties
     var size = null;
-    table += '<td><table border="1">';
+    var width = null;
+    var height = null;
+table += '<td><table border="1">';
 	for (var i = 0; i < obj.properties.length; i++)
 	{
 		var prop = obj.properties[i];
@@ -114,18 +115,30 @@ function iterateObjects(obj, level, objectNameId)
         }
         else
         {
-        table += '<td>' + prop.value.substr(0, 100) + '</td>';
+            table += '<td>' + prop.value.substr(0, 100) + '</td>';
             table += '<td>-</td>';
         }
 
         if (prop.type == 'QSize' && prop.name == 'size')
         {
-            size = JSON.parse(prop.value);
+            size = JSON.parse(prop.value).v;
+        }
+        else if (prop.type == 'double' && prop.name == 'width')
+        {
+            width = JSON.parse(prop.value).v;
+        }
+        else if (prop.type == 'double' && prop.name == 'height')
+        {
+            height = JSON.parse(prop.value).v;
         }
 
         table += '</tr>';
     }
     table += '</table></td>';
+    if (size == null && width != null && height != null)
+    {
+        size = {width:width,height:height};
+    }
 
     // Methods
     table += '<td><table border="1">';
@@ -159,20 +172,33 @@ function iterateObjects(obj, level, objectNameId)
             var id = objectName + '/' + method.signature;
             
             table += '<td id="' + id + '/counter">' + 0 + '</td>';
-            g_fmqQtInvoker.requestReply(objectName + '/connect_' + method.signature, null, function(outparams) {});
+            g_fmqQtAccessService.requestReply(objectName + '/connect_' + method.signature, null, function(outparams) {});
             table += '<td id="' + id + '/value"></td>';
         }
         
         if (size != null && method.signature == 'grab(QRect)')
         {
-            var params = {rectangle:{left:0,top:0,right:size.v.width,bottom:size.v.height}};
-            g_fmqQtInvoker.requestReply(objectName + '/grab(QRect)', params, function(outparams, context) {
+            var params = {rectangle:{left:0,top:0,right:size.width,bottom:size.height}};
+            g_fmqQtAccessService.requestReply(objectName + '/grab(QRect)', params, function(outparams, context) {
                 var objectName = context.objectName;
                 var size = context.size;
                 var elImg = document.getElementById(objectName+'/img');
                 if (elImg)
                 {
-                    elImg.innerHTML = '<img style="position:relative; left:'+0+'; top:'+0+'; width:'+size.v.width+'; height:'+size.v.height+';" src="data:image/png;base64,' + outparams.v + '"></img>';
+                    elImg.innerHTML = '<img style="position:relative; left:'+0+'; top:'+0+'; width:'+size.width+'; height:'+size.height+';" src="data:image/png;base64,' + outparams.v + '"></img>';
+                }
+            }, {objectName:objectName,size:size});
+        }
+        else if (size != null && method.signature == 'grabToImage(QJSValue,QSize)')
+        {
+            var params = {targetSize:size};
+            g_fmqQtAccessService.requestReply(objectName + '/grabToImage', params, function(outparams, context) {
+                var objectName = context.objectName;
+                var size = context.size;
+                var elImg = document.getElementById(objectName+'/img');
+                if (elImg)
+                {
+                    elImg.innerHTML = '<img style="position:relative; left:'+0+'; top:'+0+'; width:'+size.width+'; height:'+size.height+';" src="data:image/png;base64,' + outparams.v + '"></img>';
                 }
             }, {objectName:objectName,size:size});
         }
@@ -189,14 +215,28 @@ function iterateObjects(obj, level, objectNameId)
         var childName = getObjectName(child);
 
         var size = null;
+        var width = null;
+        var height = null;
         // properties
         for (var n = 0; n < child.properties.length; n++)
         {
             var prop = child.properties[n];
             if (prop.type == 'QSize' && prop.name == 'size')
             {
-                size = JSON.parse(prop.value);
+                size = JSON.parse(prop.value).v;
             }
+            else if (prop.type == 'double' && prop.name == 'width')
+            {
+                width = JSON.parse(prop.value).v;
+            }
+            else if (prop.type == 'double' && prop.name == 'height')
+            {
+                height = JSON.parse(prop.value).v;
+            }
+        }
+        if (size == null && width != null && height != null)
+        {
+            size = {width:width,height:height};
         }
 
         // Methods
@@ -205,14 +245,27 @@ function iterateObjects(obj, level, objectNameId)
             var method = child.methods[n];
             if (size != null && method.signature == 'grab(QRect)')
             {
-                var params = {rectangle:{left:0,top:0,right:size.v.width,bottom:size.v.height}};
-                g_fmqQtInvoker.requestReply(childName + '/grab(QRect)', params, function(outparams, context) {
+                var params = {rectangle:{left:0,top:0,right:size.width,bottom:size.height}};
+                g_fmqQtAccessService.requestReply(childName + '/grab(QRect)', params, function(outparams, context) {
                     var objectName = context.objectName;
                     var size = context.size;
                     var elImg = document.getElementById(objectName+'/img');
                     if (elImg)
                     {
-                        elImg.innerHTML = '<img style="position:relative; left:'+0+'; top:'+0+'; width:'+size.v.width+'; height:'+size.v.height+';" src="data:image/png;base64,' + outparams.v + '"></img>';
+                        elImg.innerHTML = '<img style="position:relative; left:'+0+'; top:'+0+'; width:'+size.width+'; height:'+size.height+';" src="data:image/png;base64,' + outparams.v + '"></img>';
+                    }
+                }, {objectName:childName,size:size});
+            }
+            else if (size != null && method.signature == 'grabToImage(QJSValue,QSize)')
+            {
+                var params = {targetSize:size};
+                g_fmqQtAccessService.requestReply(childName + '/grabToImage', params, function(outparams, context) {
+                    var objectName = context.objectName;
+                    var size = context.size;
+                    var elImg = document.getElementById(objectName+'/img');
+                    if (elImg)
+                    {
+                        elImg.innerHTML = '<img style="position:relative; left:'+0+'; top:'+0+'; width:'+size.width+'; height:'+size.height+';" src="data:image/png;base64,' + outparams.v + '"></img>';
                     }
                 }, {objectName:childName,size:size});
             }
@@ -231,8 +284,6 @@ function iterateObjects(obj, level, objectNameId)
 
     table += '</tr>';
     
-    a1 = document.getElementById(objectNameId + '/button').innerHTML;
-    a2 = document.getElementById(objectNameId).innerHTML
     text = obj.classchain[0] + ' ' + objectNameId;
     button = '<button onclick="removeObject(\''+objectNameId+'\',\''+text+'\')">' + text + '</button>';
     document.getElementById(objectNameId + '/button').innerHTML = button;
@@ -242,7 +293,7 @@ function iterateObjects(obj, level, objectNameId)
 
 function fetchObject(objectName)
 {
-    g_fmqQtService.requestReply('finalmq.qt.GetObjectRequest', {objectName:objectName}, function(outparams) {
+    g_fmqQtAccessService.requestReply('finalmq.qt.GetObjectRequest', {objectName:objectName}, function(outparams) {
         if (outparams.fmqheader.status == 'STATUS_OK')
         {
             iterateObjects(outparams.obj, 0, objectName, null);
@@ -270,14 +321,28 @@ function rootObjects(obj, level, objectNameId)
         var childName = getObjectName(child);
 
         var size = null;
+        var width = null;
+        var height = null;
         // properties
         for (var n = 0; n < child.properties.length; n++)
         {
             var prop = child.properties[n];
             if (prop.type == 'QSize' && prop.name == 'size')
             {
-                size = JSON.parse(prop.value);
+                size = JSON.parse(prop.value).v;
             }
+            else if (prop.type == 'double' && prop.name == 'width')
+            {
+                width = JSON.parse(prop.value).v;
+            }
+            else if (prop.type == 'double' && prop.name == 'height')
+            {
+                height = JSON.parse(prop.value).v;
+            }
+        }
+        if (size == null && width != null && height != null)
+        {
+            size = {width:width,height:height};
         }
 
         // Methods
@@ -286,14 +351,27 @@ function rootObjects(obj, level, objectNameId)
             var method = child.methods[n];
             if (size != null && method.signature == 'grab(QRect)')
             {
-                var params = {rectangle:{left:0,top:0,right:size.v.width,bottom:size.v.height}};
-                g_fmqQtInvoker.requestReply(getObjectName(child) + '/grab(QRect)', params, function(outparams, context) {
+                var params = {rectangle:{left:0,top:0,right:size.width,bottom:size.height}};
+                g_fmqQtAccessService.requestReply(childName + '/grab(QRect)', params, function(outparams, context) {
                     var objectName = context.objectName;
                     var size = context.size;
-                    var elImg = document.getElementById(childName+'/img');
+                    var elImg = document.getElementById(objectName+'/img');
                     if (elImg)
                     {
-                        elImg.innerHTML = '<img style="position:relative; left:'+0+'; top:'+0+'; width:'+size.v.width+'; height:'+size.v.height+';" src="data:image/png;base64,' + outparams.v + '"></img>';
+                        elImg.innerHTML = '<img style="position:relative; left:'+0+'; top:'+0+'; width:'+size.width+'; height:'+size.height+';" src="data:image/png;base64,' + outparams.v + '"></img>';
+                    }
+                }, {objectName:childName,size:size});
+            }
+            else if (size != null && method.signature == 'grabToImage(QJSValue,QSize)')
+            {
+                var params = {targetSize:size};
+                g_fmqQtAccessService.requestReply(childName + '/grabToImage', params, function(outparams, context) {
+                    var objectName = context.objectName;
+                    var size = context.size;
+                    var elImg = document.getElementById(objectName+'/img');
+                    if (elImg)
+                    {
+                        elImg.innerHTML = '<img style="position:relative; left:'+0+'; top:'+0+'; width:'+size.width+'; height:'+size.height+';" src="data:image/png;base64,' + outparams.v + '"></img>';
                     }
                 }, {objectName:childName,size:size});
             }
@@ -322,7 +400,7 @@ function poll()
 
 function getObjectTree()
 {
-    g_fmqQtService.requestReply('finalmq.qt.GetObjectTreeRequest', {levels:20}, function(outparams) {
+    g_fmqQtAccessService.requestReply('finalmq.qt.GetObjectTreeRequest', {levels:20}, function(outparams) {
         if (outparams.fmqheader.status == 'STATUS_OK')
         {
 			document.getElementById('_root_').innerHTML = '';
@@ -343,8 +421,7 @@ function fmqReady()
 function pageLoad()
 {
     g_fmqSession.createSession(function() {
-		g_fmqQtService = g_fmqSession.createEntity('QtService');
-		g_fmqQtInvoker = g_fmqSession.createEntity('QtInvoker', Events);
+		g_fmqQtAccessService = g_fmqSession.createEntity('QtAccessService');
         fmqReady();
     });
 }
