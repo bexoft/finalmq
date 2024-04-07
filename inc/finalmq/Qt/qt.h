@@ -1200,7 +1200,7 @@ private:
 #ifdef FINALMQ_QQUICK
     void callGrabToImage(const std::string& objId, const RequestContextPtr& requestContext, const std::shared_ptr<GeneralMessage>& request)
     {
-        QObject* obj = ObjectHelper::findObject(QString::fromUtf8(objId.c_str()), m_root);
+        QObject* obj = ObjectHelper::findObject(QString::fromUtf8(objId.c_str()), m_roots);
         const std::string typeName = QtTypeHelper::getInstance().getTypeName1Parameter("QSize", "targetSize");
         if (obj && !typeName.empty())
         {
