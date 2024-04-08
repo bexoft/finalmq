@@ -746,6 +746,7 @@ void ParserAbortAndIndex::enterArrayEnum(const MetaField& field, const std::vect
 
 static const std::string INDEXMODE = "indexmode";
 static const std::string INDEXMODE_MAPPING = "mapping";
+static const std::string INDEXOFFSET = "indexoffset";
 
 
 void ParserAbortAndIndex::checkIndex(const MetaField& field, std::int64_t value)
@@ -755,6 +756,12 @@ void ParserAbortAndIndex::checkIndex(const MetaField& field, std::int64_t value)
         assert(!m_levelState.empty());
         LevelState& levelState = m_levelState.back();
 
+        std::int64_t indexOffset = 0;
+        const std::string& strIndexOffset = field.getProperty(INDEXOFFSET);
+        if (!strIndexOffset.empty())
+        {
+            indexOffset = atoll(strIndexOffset.c_str());
+        }
         const std::string& indexmode = field.getProperty(INDEXMODE);
         if (indexmode == INDEXMODE_MAPPING)
         {
@@ -767,8 +774,8 @@ void ParserAbortAndIndex::checkIndex(const MetaField& field, std::int64_t value)
             else
             {
                 int indexMapped = atoi(strIndexMapped.c_str());
-                levelState.indexOfIndexField = field.index;
-                levelState.index = field.index + 1 + indexMapped;
+                levelState.indexOfIndexField = field.index + indexOffset;
+                levelState.index = field.index + indexOffset + 1 + indexMapped;
             }
         }
         else
@@ -779,8 +786,8 @@ void ParserAbortAndIndex::checkIndex(const MetaField& field, std::int64_t value)
             }
             else
             {
-                levelState.indexOfIndexField = field.index;
-                levelState.index = field.index + 1 + value;
+                levelState.indexOfIndexField = field.index + indexOffset;
+                levelState.index = field.index + indexOffset + 1 + value;
             }
         }
     }
