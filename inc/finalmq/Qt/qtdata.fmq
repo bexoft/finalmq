@@ -231,7 +231,39 @@
     
         {"type":"FmqQPalette","attrs":["qttype:QPalette"],"desc":"","fields":[
             {"tid":"struct[]","type":"FmqQPaletteColorRole", "name":"goups", "attrs":["fixedarray:3"], "desc":"","flags":[]}
+        ]},
+    
+        {"type":"FmqQVariant","attrs":["qttype:QVariant"],"desc":"desc","fields":[
+            {"tid":"TYPE_UINT32","type":"","name":"typeId","attrs":["indexoffset:1,indexmode:mapping,0:0,1:1,2:2,3:3,4:4,5:5,6:6,32:7,33:8,34:9,35:10,36:11,37:12,38:13,31:14,7:15,10:16,12:17,13:18,19:19,20:20,21:21,22:22,25:23,26:24"],"desc":"desc","flags":["METAFLAG_INDEX"]},
+            {"tid":"TYPE_UINT8","type":"","name":"isnull","desc":"desc","flags":[]},
+            {"tid":"TYPE_UINT8","type":"","name":"valueUnknown","desc":"desc","attrs":["fixedarray:0"],"flags":[]},
+            {"tid":"TYPE_BOOL", "name":"valueBool"},
+            {"tid":"TYPE_INT32", "name":"valueInt"},
+            {"tid":"TYPE_UINT32", "name":"valueUInt"},
+            {"tid":"TYPE_INT64", "name":"valueLongLong"},
+            {"tid":"TYPE_UINT64", "name":"valueULongLong"},
+            {"tid":"TYPE_DOUBLE", "name":"valueDouble"},
+            {"tid":"TYPE_INT32", "name":"valueLong"},
+            {"tid":"TYPE_INT16", "name":"valueShort"},
+            {"tid":"TYPE_INT8", "name":"valueChar"},
+            {"tid":"TYPE_UINT32", "name":"valueULong"},
+            {"tid":"TYPE_UINT16", "name":"valueUShort"},
+            {"tid":"TYPE_UINT8", "name":"valueUChar"},
+            {"tid":"TYPE_FLOAT", "name":"valueFloat"},
+            {"tid":"TYPE_UINT64", "name":"valueVoidStar"},
+            {"tid":"TYPE_UINT16", "name":"valueQChar"},
+            {"tid":"TYPE_STRING", "name":"valueQString"},
+            {"tid":"TYPE_ARRAY_STRING", "name":"valueQStringList"},
+            {"tid":"TYPE_BYTES", "name":"valueQByteArray"},
+            {"tid":"TYPE_ARRAY_BOOL", "name":"valueQBitArray"},
+            {"tid":"TYPE_STRUCT", "type":"FmqQRect", "name":"valueQRect"},
+            {"tid":"TYPE_STRUCT", "type":"FmqQRectF", "name":"valueQRectF"},
+            {"tid":"TYPE_STRUCT", "type":"FmqQSize", "name":"valueQSize"},
+            {"tid":"TYPE_STRUCT", "type":"FmqQSizeF", "name":"valueQSizeF"},
+            {"tid":"TYPE_STRUCT", "type":"FmqQPoint", "name":"valuePoint"},
+            {"tid":"TYPE_STRUCT", "type":"FmqQPointF", "name":"valuePointF"}
         ]}
+    
     ]
 }
 

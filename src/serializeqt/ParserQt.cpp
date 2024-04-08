@@ -106,14 +106,22 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
     bool ok = true;
     bool abortStruct = false;
     std::int64_t index = INDEX_NOT_AVAILABLE;
+    std::int64_t indexOffset = 0;
 
     const ssize_t numberOfFields = stru.getFieldsSize();
     for (ssize_t i = 0; i < numberOfFields && ok && !abortStruct; ++i)
     {
         if (index >= 0)
         {
-            i = index;
-            index = INDEX_ABORTSTRUCT;
+            if (indexOffset == 0)
+            {
+                i = index;
+                index = INDEX_ABORTSTRUCT;
+            }
+            else
+            {
+                --indexOffset;
+            }
         }
         const MetaField* field = stru.getFieldByIndex(i);
         assert(field);
@@ -159,7 +167,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                     if (ok)
                     {
                         m_visitor.enterInt8(*field, value);
-                        checkIndex(*field, value, index);
+                        checkIndex(*field, value, index, indexOffset);
                     }
                 }
                 break;
@@ -175,7 +183,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                     if (ok)
                     {
                         m_visitor.enterUInt8(*field, value);
-                        checkIndex(*field, value, index);
+                        checkIndex(*field, value, index, indexOffset);
                     }
                 }
                 break;
@@ -191,7 +199,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                     if (ok)
                     {
                         m_visitor.enterInt16(*field, value);
-                        checkIndex(*field, value, index);
+                        checkIndex(*field, value, index, indexOffset);
                     }
                 }
                 break;
@@ -207,7 +215,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                     if (ok)
                     {
                         m_visitor.enterUInt16(*field, value);
-                        checkIndex(*field, value, index);
+                        checkIndex(*field, value, index, indexOffset);
                     }
                 }
                 break;
@@ -223,7 +231,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                     if (ok)
                     {
                         m_visitor.enterInt32(*field, value);
-                        checkIndex(*field, value, index);
+                        checkIndex(*field, value, index, indexOffset);
                     }
                 }
                 break;
@@ -239,7 +247,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                     if (ok)
                     {
                         m_visitor.enterUInt32(*field, value);
-                        checkIndex(*field, value, index);
+                        checkIndex(*field, value, index, indexOffset);
                     }
                 }
                 break;
@@ -255,7 +263,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                     if (ok)
                     {
                         m_visitor.enterInt64(*field, value);
-                        checkIndex(*field, value, index);
+                        checkIndex(*field, value, index, indexOffset);
                     }
                 }
                 break;
@@ -271,7 +279,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                     if (ok)
                     {
                         m_visitor.enterUInt64(*field, value);
-                        checkIndex(*field, value, index);
+                        checkIndex(*field, value, index, indexOffset);
                     }
                 }
                 break;
@@ -432,7 +440,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                             }
                             else
                             {
-                                checkIndex(*field, value, index);
+                                checkIndex(*field, value, index, indexOffset);
                             }
                         }
                     }
@@ -1211,12 +1219,18 @@ bool ParserQt::parseQVariantHeader(const MetaField& /*field*/)
 
 static const std::string INDEXMODE = "indexmode";
 static const std::string INDEXMODE_MAPPING = "mapping";
+static const std::string INDEXOFFSET = "indexoffset";
 
 
-void ParserQt::checkIndex(const MetaField& field, std::int64_t value, std::int64_t& index)
+void ParserQt::checkIndex(const MetaField& field, std::int64_t value, std::int64_t& index, std::int64_t& indexOffset)
 {
     if ((field.flags & MetaFieldFlags::METAFLAG_INDEX) != 0)
     {
+        const std::string& strIndexOffset = field.getProperty(INDEXOFFSET);
+        if (!strIndexOffset.empty())
+        {
+            indexOffset = atoll(strIndexOffset.c_str());
+        }
         const std::string& indexmode = field.getProperty(INDEXMODE);
         if (indexmode == INDEXMODE_MAPPING)
         {
@@ -1229,7 +1243,7 @@ void ParserQt::checkIndex(const MetaField& field, std::int64_t value, std::int64
             else
             {
                 int indexMapped = atoi(strIndexMapped.c_str());
-                index = field.index + 1 + indexMapped;
+                index = field.index + indexOffset + 1 + indexMapped;
             }
         }
         else
@@ -1240,7 +1254,7 @@ void ParserQt::checkIndex(const MetaField& field, std::int64_t value, std::int64
             }
             else
             {
-                index = field.index + 1 + value;
+                index = field.index + indexOffset + 1 + value;
             }
         }
     }
