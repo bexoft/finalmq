@@ -421,7 +421,7 @@ function fmqReady()
 function pageLoad()
 {
     g_fmqSession.createSession(function() {
-		g_fmqQtAccessService = g_fmqSession.createEntity('QtAccessService');
+		g_fmqQtAccessService = g_fmqSession.createEntity('QtAccessService', Events);
         fmqReady();
     });
 }
