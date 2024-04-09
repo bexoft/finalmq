@@ -193,7 +193,6 @@ private:
         m_typesToField.emplace("QBitArray", MetaField{MetaTypeId::TYPE_ARRAY_BOOL, "", "", "", 0, {}});
         m_typesToField.emplace("QDate", MetaField{MetaTypeId::TYPE_INT64, "", "", "", 0, {}});
         m_typesToField.emplace("QTime", MetaField{MetaTypeId::TYPE_UINT32, "", "", "", 0, {}});
-        //      m_typesToField.emplace("QDateTime",     MetaField{ MetaTypeId::TYPE_STRUCT,         "", "", "", 0, {} });
         m_typesToField.emplace("QUrl", MetaField{MetaTypeId::TYPE_BYTES, "", "", "", 0, {"qttype:QUrl,qtcode:bytes"}});
         m_typesToField.emplace("QLocale", MetaField{MetaTypeId::TYPE_STRING, "", "", "", 0, {}});
         m_typesToField.emplace("QPixmap", MetaField{MetaTypeId::TYPE_BYTES, "", "", "", 0, {"png:true"}});
@@ -829,11 +828,14 @@ private:
         if(remoteEntity)
         {
             QVariantList args;
-            const QList<QByteArray> parameterTypes = m_metaMethod.parameterTypes();
-            for(int i = 0; i < parameterTypes.size(); ++i)
+            if (params[0] != nullptr)
             {
-                int type = QMetaType::type(parameterTypes[i]);
-                args.append(QVariant(type, params[i + 1]));
+                const QList<QByteArray> parameterTypes = m_metaMethod.parameterTypes();
+                for (int i = 0; i < parameterTypes.size(); ++i)
+                {
+                    int type = QMetaType::type(parameterTypes[i]);
+                    args.append(QVariant(type, params[i + 1]));
+                }
             }
 
             QByteArray bufferQt;
