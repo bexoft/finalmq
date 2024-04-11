@@ -40,6 +40,9 @@
 namespace finalmq
 {
 
+static const std::string KEY_QTTYPE = "qttype";
+static const std::string QTTYPE_QVARIANT = "QVariant";
+
 static const std::string FIXED_ARRAY = "fixedarray";
 
     
@@ -92,7 +95,14 @@ void SerializerQt::Internal::enterStruct(const MetaField& field)
     assert(field.typeId == MetaTypeId::TYPE_STRUCT);
     if (isWrappedByQVariant())
     {
-        serializeQVariantHeader(field);
+        // serialize QVariant header, if qttype not QVariant
+        const MetaStruct* stru = MetaDataGlobal::instance().getStruct(field);
+        const std::string& qttypeField = field.getProperty(KEY_QTTYPE);
+        if ((!qttypeField.empty() && (qttypeField != QTTYPE_QVARIANT)) ||
+            (qttypeField.empty() && ((stru == nullptr) || (stru->getProperty(KEY_QTTYPE) != QTTYPE_QVARIANT))))
+        {
+            serializeQVariantHeader(field);
+        }
     }
 
     if (levelState.arrayStructCounter >= 0)

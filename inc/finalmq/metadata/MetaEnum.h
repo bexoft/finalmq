@@ -69,7 +69,7 @@ public:
         return m_entries.size();
     }
 
-    const std::string& getProperty(const std::string& key, const std::string& defaultValue = {}) const
+    std::string getProperty(const std::string& key, const std::string& defaultValue) const
     {
         const auto it = m_properties.find(key);
         if (it != m_properties.end())
@@ -77,6 +77,16 @@ public:
             return it->second;
         }
         return defaultValue;
+    }
+
+    const std::string& getProperty(const std::string& key) const
+    {
+        const auto it = m_properties.find(key);
+        if (it != m_properties.end())
+        {
+            return it->second;
+        }
+        return EMPTY_STRING;
     }
 
 private:
@@ -90,6 +100,7 @@ private:
     std::unordered_map<int, std::shared_ptr<const MetaEnumEntry>> m_id2Entry{};
     std::unordered_map<std::string, std::shared_ptr<const MetaEnumEntry>> m_name2Entry{};
     std::unordered_map<std::string, std::shared_ptr<const MetaEnumEntry>> m_alias2Entry{};
+    const std::string EMPTY_STRING{};
 };
 
 } // namespace finalmq
