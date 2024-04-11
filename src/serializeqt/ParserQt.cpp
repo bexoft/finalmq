@@ -80,6 +80,9 @@ bool ParserQt::parseStruct(const std::string& typeName)
     return res;
 }
 
+static const std::string KEY_QTTYPE = "qttype";
+static const std::string QTTYPE_QVARIANT = "QVariant";
+
 static const std::string QT_CODE = "qtcode";
 static const std::string QT_CODE_BYTES = "bytes";
 
@@ -367,24 +370,31 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                 }
                 break;
             case MetaTypeId::TYPE_STRUCT:
-                if (wrappedByQVariant)
-                {
-                    ok = parseQVariantHeader(*field);
-                }
-                if (ok)
                 {
                     const MetaStruct* stru1 = MetaDataGlobal::instance().getStruct(field->typeName);
                     if (!stru1)
                     {
                         m_visitor.notifyError(reinterpret_cast<const char*>(m_ptr), "typename not found");
-                        m_visitor.finished();
                         ok = false;
                     }
                     else
                     {
-                        m_visitor.enterStruct(*field);
-                        ok = parseStructIntern(*stru1, false);
-                        m_visitor.exitStruct(*field);
+                        if (wrappedByQVariant)
+                        {
+                            // parse QVariant header, if qttype not QVariant
+                            const std::string& qttypeField = field->getProperty(KEY_QTTYPE);
+                            if ((!qttypeField.empty() && (qttypeField != QTTYPE_QVARIANT)) ||
+                                (qttypeField.empty() && (stru1->getProperty(KEY_QTTYPE) != QTTYPE_QVARIANT)))
+                            {
+                                ok = parseQVariantHeader(*field);
+                            }
+                        }
+                        if (ok)
+                        {
+                            m_visitor.enterStruct(*field);
+                            ok = parseStructIntern(*stru1, false);
+                            m_visitor.exitStruct(*field);
+                        }
                     }
                 }
                 break;

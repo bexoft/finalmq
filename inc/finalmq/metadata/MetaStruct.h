@@ -62,7 +62,7 @@ public:
         return m_fields.size();
     }
 
-    const std::string& getProperty(const std::string& key, const std::string& defaultValue = {}) const
+    std::string getProperty(const std::string& key, const std::string& defaultValue) const
     {
         const auto it = m_properties.find(key);
         if (it != m_properties.end())
@@ -70,6 +70,16 @@ public:
             return it->second;
         }
         return defaultValue;
+    }
+
+    const std::string& getProperty(const std::string& key) const
+    {
+        const auto it = m_properties.find(key);
+        if (it != m_properties.end())
+        {
+            return it->second;
+        }
+        return EMPTY_STRING;
     }
 
 private:
@@ -83,6 +93,7 @@ private:
     const std::vector<std::string> m_attrs{};
     const std::unordered_map<std::string, std::string> m_properties{};
     std::unordered_map<std::string, std::shared_ptr<const MetaField>> m_name2Field{};
+    const std::string EMPTY_STRING{};
 };
 
 } // namespace finalmq

@@ -104,7 +104,7 @@ public:
     const MetaField& operator =(MetaField& rhs) = delete;
     const MetaField& operator =(MetaField&& rhs) = delete;
 
-    const std::string& getProperty(const std::string& key, const std::string& defaultValue = {}) const
+    std::string getProperty(const std::string& key, const std::string& defaultValue) const
     {
         const auto it = properties.find(key);
         if (it != properties.end())
@@ -112,6 +112,16 @@ public:
             return it->second;
         }
         return defaultValue;
+    }
+
+    const std::string& getProperty(const std::string& key) const
+    {
+        const auto it = properties.find(key);
+        if (it != properties.end())
+        {
+            return it->second;
+        }
+        return EMPTY_STRING;
     }
 
     const MetaTypeId        typeId;                         ///< type id of the parameter
@@ -163,6 +173,7 @@ private:
         return properties;
     }
 
+    const std::string EMPTY_STRING{};
     mutable const MetaEnum*     metaEnum    = nullptr;      ///< cache to find MetaEnum of typeName faster
     mutable const MetaStruct*   metaStruct  = nullptr;      ///< cache to find MetaStruct of typeName faster
 
