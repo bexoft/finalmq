@@ -198,7 +198,7 @@ table += '<td><table border="1">';
                 var elImg = document.getElementById(objectName+'/img');
                 if (elImg)
                 {
-                    elImg.innerHTML = '<img style="position:relative; left:'+0+'; top:'+0+'; width:'+size.width+'; height:'+size.height+';" src="data:image/png;base64,' + outparams.v + '"></img>';
+                    elImg.innerHTML = '<img style="background:black;position:relative; left:'+0+'; top:'+0+'; width:'+size.width+'; height:'+size.height+';" src="data:image/png;base64,' + outparams.v + '"></img>';
                 }
             }, {objectName:objectName,size:size});
         }
@@ -265,7 +265,7 @@ table += '<td><table border="1">';
                     var elImg = document.getElementById(objectName+'/img');
                     if (elImg)
                     {
-                        elImg.innerHTML = '<img style="position:relative; left:'+0+'; top:'+0+'; width:'+size.width+'; height:'+size.height+';" src="data:image/png;base64,' + outparams.v + '"></img>';
+                        elImg.innerHTML = '<img style="background:black;position:relative; left:'+0+'; top:'+0+'; width:'+size.width+'; height:'+size.height+';" src="data:image/png;base64,' + outparams.v + '"></img>';
                     }
                 }, {objectName:childName,size:size});
             }
@@ -371,7 +371,7 @@ function rootObjects(obj, level, objectNameId)
                     var elImg = document.getElementById(objectName+'/img');
                     if (elImg)
                     {
-                        elImg.innerHTML = '<img style="position:relative; left:'+0+'; top:'+0+'; width:'+size.width+'; height:'+size.height+';" src="data:image/png;base64,' + outparams.v + '"></img>';
+                        elImg.innerHTML = '<img style="background:black;position:relative; left:'+0+'; top:'+0+'; width:'+size.width+'; height:'+size.height+';" src="data:image/png;base64,' + outparams.v + '"></img>';
                     }
                 }, {objectName:childName,size:size});
             }

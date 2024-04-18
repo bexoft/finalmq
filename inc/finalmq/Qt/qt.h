@@ -24,6 +24,7 @@
 
 #include <algorithm>
 #include <array>
+#include <vector>
 
 #include "finalmq/Qt/qtdata.fmq.h"
 #include "finalmq/helpers/Utils.h"
@@ -83,13 +84,39 @@ struct IObjectVisitor
     virtual void exitObject(QObject& object, int level) = 0;
 };
 
-std::string parameterName(const std::string& name, int i)
+static std::string parameterName(const std::string& name, int i)
 {
     if(name.empty())
     {
         return "param" + std::to_string(i);
     }
     return name;
+}
+
+static bool isQVariantSerializable(int type)
+{
+    switch(type)
+    {
+        case QMetaType::UnknownType:
+        case QMetaType::Void:
+        case QMetaType::VoidStar:
+        case QMetaType::QObjectStar:
+        case QMetaType::QModelIndex:
+        case QMetaType::QPersistentModelIndex:
+        case QMetaType::QJsonValue:
+        case QMetaType::QJsonObject:
+        case QMetaType::QJsonArray:
+        case QMetaType::QJsonDocument:
+        case QMetaType::QCborValue:
+        case QMetaType::QCborArray:
+        case QMetaType::QCborMap:
+            return false;
+    }
+    if(type >= QMetaType::User)
+    {
+        return false;
+    }
+    return true;
 }
 
 class ObjectIterator
@@ -193,6 +220,7 @@ private:
         m_typesToField.emplace("QBitArray", MetaField{MetaTypeId::TYPE_ARRAY_BOOL, "", "", "", 0, {}});
         m_typesToField.emplace("QDate", MetaField{MetaTypeId::TYPE_INT64, "", "", "", 0, {}});
         m_typesToField.emplace("QTime", MetaField{MetaTypeId::TYPE_UINT32, "", "", "", 0, {}});
+        //      m_typesToField.emplace("QDateTime",     MetaField{ MetaTypeId::TYPE_STRUCT,         "", "", "", 0, {} });
         m_typesToField.emplace("QUrl", MetaField{MetaTypeId::TYPE_BYTES, "", "", "", 0, {"qttype:QUrl,qtcode:bytes"}});
         m_typesToField.emplace("QLocale", MetaField{MetaTypeId::TYPE_STRING, "", "", "", 0, {}});
         m_typesToField.emplace("QPixmap", MetaField{MetaTypeId::TYPE_BYTES, "", "", "", 0, {"png:true"}});
@@ -346,7 +374,7 @@ public:
                     propertySet = true;
                     ix = metaObject->indexOfProperty(&methodName[4]);
                 }
-                if(methodName.compare(0, 8, "connect_") == 0)
+                else if(methodName.compare(0, 8, "connect_") == 0)
                 {
                     connect = true;
                     ix = metaObject->indexOfProperty(&methodName[8]);
@@ -716,20 +744,35 @@ private:
             const std::string& typeName = QtTypeHelper::getInstance().getPropertyTypeName(metaproperty);
 
             std::string v;
-            if(!typeName.empty())
+            const bool readable = metaproperty.isReadable();
+            const bool valid = metaproperty.isValid();
+            if(readable && valid)
             {
-                QVariant value = metaproperty.read(&object);
+                if(!typeName.empty())
+                {
+                    QVariant value = metaproperty.read(&object);
 
-                QByteArray qtBuffer;
-                QDataStream streamValue(&qtBuffer, QIODevice::WriteOnly);
-                streamValue << value;
+                    const bool ok = isQVariantSerializable(value.type());
+                    if(!ok)
+                    {
+                        value = QString("!!! not serializable type: ") + QString::number(value.type());
+                    }
 
-                ZeroCopyBuffer bufferJson;
-                SerializerJson serializerJson(bufferJson, 512, true, false);
-                ParserQt parserQt(serializerJson, qtBuffer.data(), qtBuffer.size(), ParserQt::Mode::WRAPPED_BY_QVARIANT);
-                parserQt.parseStruct(typeName);
+                    QByteArray qtBuffer;
+                    QDataStream streamValue(&qtBuffer, QIODevice::WriteOnly);
+                    streamValue << value;
 
-                bufferJson.copyData(v);
+                    ZeroCopyBuffer bufferJson;
+                    SerializerJson serializerJson(bufferJson, 512, true, false);
+                    ParserQt parserQt(serializerJson, qtBuffer.data(), qtBuffer.size(), ParserQt::Mode::WRAPPED_BY_QVARIANT);
+                    parserQt.parseStruct(typeName);
+
+                    bufferJson.copyData(v);
+                }
+            }
+            else
+            {
+                v = "!!! not readable or not valid";
             }
 
             objectData->properties.push_back({metaproperty.typeName(), name, v, metaproperty.hasNotifySignal(), metaproperty.notifySignal().methodSignature().toStdString()});
@@ -828,13 +871,20 @@ private:
         if(remoteEntity)
         {
             QVariantList args;
-            if (params[0] != nullptr)
+            if(params[0] != nullptr)
             {
                 const QList<QByteArray> parameterTypes = m_metaMethod.parameterTypes();
-                for (int i = 0; i < parameterTypes.size(); ++i)
+                for(int i = 0; i < parameterTypes.size(); ++i)
                 {
-                    int type = QMetaType::type(parameterTypes[i]);
-                    args.append(QVariant(type, params[i + 1]));
+                    const QByteArray& typeName = parameterTypes[i];
+                    int type = QMetaType::type(typeName);
+                    QVariant value(type, params[i + 1]);
+                    const bool ok = isQVariantSerializable(value.type());
+                    if(!ok)
+                    {
+                        value = QString("!!! not serializable type: ") + QString::number(value.type());
+                    }
+                    args.append(std::move(value));
                 }
             }
 
@@ -869,7 +919,6 @@ private:
     const QMetaMethod m_metaMethod{};
     QMetaObject::Connection m_connection{};
 };
-
 
 class QtAccessService : public RemoteEntity
 {
@@ -913,10 +962,10 @@ public:
 
         // register peer events to see when a remote entity connects or disconnects.
         registerPeerEvent([this](PeerId peerId, const SessionInfo& /*session*/, EntityId /*entityId*/, PeerEvent peerEvent, bool /*incoming*/) {
-            if (peerEvent == PeerEvent::PEER_DISCONNECTED)
+            if(peerEvent == PeerEvent::PEER_DISCONNECTED)
             {
                 auto itPeer = m_connectObjects.find(peerId);
-                if (itPeer != m_connectObjects.end())
+                if(itPeer != m_connectObjects.end())
                 {
                     m_connectObjects.erase(itPeer);
                 }
@@ -926,7 +975,7 @@ public:
         registerCommand<GeneralMessage>("{objectid}/{method}", [this](const RequestContextPtr& requestContext, const std::shared_ptr<GeneralMessage>& request) {
             bool found = false;
 
-            if (request == nullptr)
+            if(request == nullptr)
             {
                 requestContext->reply(finalmq::Status::STATUS_ENTITY_NOT_FOUND);
                 return;
@@ -934,10 +983,10 @@ public:
 
             const std::string* objId = requestContext->getMetainfo("PATH_objectid");
             const std::string* methodName = requestContext->getMetainfo("PATH_method");
-            if (objId && methodName)
+            if(objId && methodName)
             {
 #ifdef FINALMQ_QQUICK
-                if (*methodName == "grabToImage")
+                if(*methodName == "grabToImage")
                 {
                     found = true;
                     callGrabToImage(*objId, requestContext, request);
@@ -953,11 +1002,11 @@ public:
                     bool disconnect = false;
                     std::string connectTypeName;
                     const std::string& typeName = QtTypeHelper::getInstance().getTypeName(m_roots, *objId, *methodName, obj, metaMethod, metaProperty, propertySet, connect, disconnect, connectTypeName);
-                    if ((obj != nullptr) && (typeName == request->type))
+                    if((obj != nullptr) && (typeName == request->type))
                     {
-                        if (metaMethod.isValid())
+                        if(metaMethod.isValid())
                         {
-                            if (connect)
+                            if(connect)
                             {
                                 found = true;
                                 std::string signalPath = *objId + "/" + metaMethod.methodSignature().toStdString();
@@ -965,18 +1014,18 @@ public:
 
                                 bool foundConnect = false;
                                 auto itPeer = m_connectObjects.find(peerId);
-                                if (itPeer != m_connectObjects.end())
+                                if(itPeer != m_connectObjects.end())
                                 {
                                     auto itPath = itPeer->second.find(signalPath);
-                                    if (itPath != itPeer->second.end())
+                                    if(itPath != itPeer->second.end())
                                     {
-                                        if (itPath->second->isConnected())
+                                        if(itPath->second->isConnected())
                                         {
                                             foundConnect = true;
                                         }
                                     }
                                 }
-                                if (!foundConnect)
+                                if(!foundConnect)
                                 {
                                     hybrid_ptr<IRemoteEntity> thisRemoteEntity = getWeakPtr();
                                     std::shared_ptr<ConnectObject> connectObject = std::make_shared<ConnectObject>(thisRemoteEntity, peerId, *objId, connectTypeName, metaMethod);
@@ -990,16 +1039,16 @@ public:
                                 replyMessage.type = typeName;
                                 requestContext->reply(replyMessage);
                             }
-                            else if (disconnect)
+                            else if(disconnect)
                             {
                                 found = true;
                                 std::string signalPath = *objId + "/" + metaMethod.methodSignature().toStdString();
                                 PeerId peerId = requestContext->peerId();
                                 auto itPeer = m_connectObjects.find(peerId);
-                                if (itPeer != m_connectObjects.end())
+                                if(itPeer != m_connectObjects.end())
                                 {
                                     auto itPath = itPeer->second.find(signalPath);
-                                    if (itPath != itPeer->second.end())
+                                    if(itPath != itPeer->second.end())
                                     {
                                         itPeer->second.erase(itPath);
                                     }
@@ -1020,7 +1069,7 @@ public:
                                 QByteArray bufferByteArray;
                                 bufferByteArray.reserve(static_cast<int>(buffer.size()));
                                 const std::list<std::string>& chunks = buffer.chunks();
-                                for (const auto& chunk : chunks)
+                                for(const auto& chunk : chunks)
                                 {
                                     bufferByteArray.append(chunk.data(), static_cast<int>(chunk.size()));
                                 }
@@ -1030,19 +1079,25 @@ public:
                                 streamInParams >> parameters;
 
                                 std::array<QGenericArgument, 10> genericArguments;
-                                for (int i = 0; i < parameters.length(); ++i)
+                                for(int i = 0; i < parameters.length(); ++i)
                                 {
                                     const QVariant& parameter = parameters[i];
                                     genericArguments[i] = QGenericArgument(parameter.typeName(), parameter.constData());
                                 }
 
                                 QVariant returnValue(QMetaType::type(metaMethod.typeName()),
-                                    static_cast<void*>(NULL));
+                                                     static_cast<void*>(NULL));
 
                                 QGenericReturnArgument returnArgument(
                                     metaMethod.typeName(),
                                     const_cast<void*>(returnValue.constData()));
                                 metaMethod.invoke(obj, returnArgument, genericArguments[0], genericArguments[1], genericArguments[2], genericArguments[3], genericArguments[4], genericArguments[5], genericArguments[6], genericArguments[7], genericArguments[8], genericArguments[9]);
+
+                                const bool ok = isQVariantSerializable(returnValue.type());
+                                if(!ok)
+                                {
+                                    returnValue = QString("!!! not serializable type: ") + QString::number(returnValue.type());
+                                }
 
                                 QByteArray retQtBuffer;
                                 QDataStream streamRetParam(&retQtBuffer, QIODevice::WriteOnly);
@@ -1051,7 +1106,7 @@ public:
                                 std::string retTypeName = QtTypeHelper::getInstance().getReturnTypeName(metaMethod.typeName());
 
                                 GeneralMessage replyMessage;
-                                if (!retTypeName.empty())
+                                if(!retTypeName.empty())
                                 {
                                     ZeroCopyBuffer bufferRet;
                                     SerializerProto serializerProto(bufferRet);
@@ -1064,9 +1119,9 @@ public:
                                 requestContext->reply(replyMessage);
                             }
                         }
-                        else if (metaProperty.isValid())
+                        else if(metaProperty.isValid())
                         {
-                            if (propertySet)
+                            if(propertySet)
                             {
                                 found = true;
                                 ZeroCopyBuffer buffer;
@@ -1077,7 +1132,7 @@ public:
                                 QByteArray bufferByteArray;
                                 bufferByteArray.reserve(static_cast<int>(buffer.size()));
                                 const std::list<std::string>& chunks = buffer.chunks();
-                                for (const auto& chunk : chunks)
+                                for(const auto& chunk : chunks)
                                 {
                                     bufferByteArray.append(chunk.data(), static_cast<int>(chunk.size()));
                                 }
@@ -1087,10 +1142,11 @@ public:
                                 streamInParam >> value;
 
                                 const bool result = metaProperty.write(obj, value);
-                                if (result)
+                                if(result)
                                 {
                                     GeneralMessage replyMessage;
                                     replyMessage.type = typeName;
+                                    replyMessage.data = request->data;
                                     requestContext->reply(replyMessage);
                                 }
                                 else
@@ -1098,9 +1154,9 @@ public:
                                     requestContext->reply(finalmq::Status::STATUS_REQUEST_PROCESSING_ERROR);
                                 }
                             }
-                            else if (connect)
+                            else if(connect)
                             {
-                                if (metaProperty.hasNotifySignal())
+                                if(metaProperty.hasNotifySignal())
                                 {
                                     found = true;
                                     metaMethod = metaProperty.notifySignal();
@@ -1109,18 +1165,18 @@ public:
 
                                     bool foundConnect = false;
                                     auto itPeer = m_connectObjects.find(peerId);
-                                    if (itPeer != m_connectObjects.end())
+                                    if(itPeer != m_connectObjects.end())
                                     {
                                         auto itPath = itPeer->second.find(signalPath);
-                                        if (itPath != itPeer->second.end())
+                                        if(itPath != itPeer->second.end())
                                         {
-                                            if (itPath->second->isConnected())
+                                            if(itPath->second->isConnected())
                                             {
                                                 foundConnect = true;
                                             }
                                         }
                                     }
-                                    if (!foundConnect)
+                                    if(!foundConnect)
                                     {
                                         hybrid_ptr<IRemoteEntity> thisRemoteEntity = getWeakPtr();
                                         std::shared_ptr<ConnectObject> connectObject = std::make_shared<ConnectObject>(thisRemoteEntity, peerId, *objId, connectTypeName, metaMethod);
@@ -1135,9 +1191,9 @@ public:
                                     requestContext->reply(replyMessage);
                                 }
                             }
-                            else if (disconnect)
+                            else if(disconnect)
                             {
-                                if (metaProperty.hasNotifySignal())
+                                if(metaProperty.hasNotifySignal())
                                 {
                                     found = true;
                                     metaMethod = metaProperty.notifySignal();
@@ -1145,10 +1201,10 @@ public:
 
                                     PeerId peerId = requestContext->peerId();
                                     auto itPeer = m_connectObjects.find(peerId);
-                                    if (itPeer != m_connectObjects.end())
+                                    if(itPeer != m_connectObjects.end())
                                     {
                                         auto itPath = itPeer->second.find(signalPath);
-                                        if (itPath != itPeer->second.end())
+                                        if(itPath != itPeer->second.end())
                                         {
                                             itPeer->second.erase(itPath);
                                         }
@@ -1161,13 +1217,18 @@ public:
                             else
                             {
                                 found = true;
+                                std::string retTypeName = QtTypeHelper::getInstance().getReturnTypeName(metaProperty.typeName());
                                 QVariant value = metaProperty.read(obj);
+
+                                const bool ok = isQVariantSerializable(value.type());
+                                if(!ok)
+                                {
+                                    value = QString("!!! not serializable type: ") + QString::number(value.type());
+                                }
 
                                 QByteArray retQtBuffer;
                                 QDataStream streamRetParam(&retQtBuffer, QIODevice::WriteOnly);
                                 streamRetParam << value;
-
-                                std::string retTypeName = QtTypeHelper::getInstance().getReturnTypeName(metaProperty.typeName());
 
                                 GeneralMessage replyMessage;
 
@@ -1185,7 +1246,7 @@ public:
                     }
                 }
             }
-            if (!found)
+            if(!found)
             {
                 // not found
                 requestContext->reply(finalmq::Status::STATUS_REQUEST_NOT_FOUND);
@@ -1204,7 +1265,7 @@ private:
     {
         QObject* obj = ObjectHelper::findObject(QString::fromUtf8(objId.c_str()), m_roots);
         const std::string typeName = QtTypeHelper::getInstance().getTypeName1Parameter("QSize", "targetSize");
-        if (obj && !typeName.empty())
+        if(obj && !typeName.empty())
         {
             FmqQSize targetSize;
             SerializerStruct serializerStruct(targetSize);
@@ -1212,7 +1273,7 @@ private:
             parserProto.parseStruct(request->type);
             QQuickItem* item = reinterpret_cast<QQuickItem*>(obj);
             QSharedPointer<QQuickItemGrabResult> result = item->grabToImage(QSize(targetSize.width, targetSize.height));
-            if (result)
+            if(result)
             {
                 m_grabToImageResults[result.get()] = std::make_pair(result, requestContext);
                 QObject::connect(result.get(), &QQuickItemGrabResult::ready, [this, result, requestContext]() {
@@ -1236,11 +1297,11 @@ private:
                     requestContext->reply(replyMessage);
 
                     auto it = m_grabToImageResults.find(result.get());
-                    if (it != m_grabToImageResults.end())
+                    if(it != m_grabToImageResults.end())
                     {
                         m_grabToImageResults.erase(it);
                     }
-                    });
+                });
             }
         }
     }
@@ -1251,11 +1312,11 @@ private:
         std::string typeOfGeneralMessage{};
         std::vector<std::string> objIdAndMethod;
         finalmq::Utils::split(path, 0, path.size(), '/', objIdAndMethod);
-        if (objIdAndMethod.size() >= 2)
+        if(objIdAndMethod.size() >= 2)
         {
             const std::string& objId = objIdAndMethod[0];
             const std::string& methodName = objIdAndMethod[1];
-            if (methodName == "grabToImage")
+            if(methodName == "grabToImage")
             {
                 typeOfGeneralMessage = QtTypeHelper::getInstance().getTypeName1Parameter("QSize", "targetSize");
             }

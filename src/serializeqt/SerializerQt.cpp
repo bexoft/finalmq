@@ -1522,7 +1522,6 @@ void SerializerQt::Internal::getQVariantType(const MetaField& field, std::uint32
 {
     typeName.clear();
 
-    static const std::string KEY_QTTYPE = "qttype";
     typeName = field.getProperty(KEY_QTTYPE);
 
     if (typeName.empty())
