@@ -102,6 +102,7 @@ private:
     virtual void enterArrayEnum(const MetaField& field, const std::vector<std::string>& value) override;
 
     void checkIndex(const MetaField& field, std::int64_t value);
+    void checkIndex(const MetaField& field, const std::string& value);
 
     IParserVisitor* m_visitor;
 
