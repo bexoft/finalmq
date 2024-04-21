@@ -323,11 +323,13 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                 }
                 if (ok)
                 {
+                    const char* buffer = nullptr;
+                    ssize_t size = 0;
+                    std::string value;
+
                     const std::string& code = field->getProperty(QT_CODE);
                     if (code == QT_CODE_BYTES)
                     {
-                        const char* buffer = nullptr;
-                        ssize_t size = 0;
                         ok = parseArrayByte(*field, buffer, size);
                         if (ok)
                         {
@@ -336,12 +338,27 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                     }
                     else
                     {
-                        std::string value;
                         ok = parse(value, field);
                         if (ok)
                         {
-                            m_visitor.enterString(*field, std::move(value));
+                            m_visitor.enterString(*field, value.c_str(), value.size());
                         }
+                    }
+
+                    if (buffer)
+                    {
+                        value = std::string(buffer, &buffer[size]);
+                    }
+                    const std::string& valueAbort = field->getProperty(ABORTSTRUCT);
+                    if (!valueAbort.empty())
+                    {
+                        std::vector<std::string> valuesAbort;
+                        Utils::split(valueAbort, 0, valueAbort.size(), '|', valuesAbort);
+                        abortStruct = (std::find(valuesAbort.begin(), valuesAbort.end(), value) != valuesAbort.end());
+                    }
+                    else
+                    {
+                        checkIndex(*field, value, index, indexOffset);
                     }
                 }
                 break;
@@ -1265,6 +1282,44 @@ void ParserQt::checkIndex(const MetaField& field, std::int64_t value, std::int64
             else
             {
                 index = field.index + indexOffset + 1 + value;
+            }
+        }
+    }
+}
+
+void ParserQt::checkIndex(const MetaField& field, const std::string& value, std::int64_t& index, std::int64_t& indexOffset)
+{
+    if ((field.flags & MetaFieldFlags::METAFLAG_INDEX) != 0)
+    {
+        const std::string& strIndexOffset = field.getProperty(INDEXOFFSET);
+        if (!strIndexOffset.empty())
+        {
+            indexOffset = atoll(strIndexOffset.c_str());
+        }
+        const std::string& indexmode = field.getProperty(INDEXMODE);
+        if (indexmode == INDEXMODE_MAPPING)
+        {
+            const std::string& strIndexMapped = field.getProperty(value);
+            if (strIndexMapped.empty())
+            {
+                index = INDEX_ABORTSTRUCT;
+            }
+            else
+            {
+                int indexMapped = atoi(strIndexMapped.c_str());
+                index = field.index + indexOffset + 1 + indexMapped;
+            }
+        }
+        else
+        {
+            const std::int64_t indexValue = atoll(value.c_str());
+            if (indexValue < 0)
+            {
+                index = INDEX_ABORTSTRUCT;
+            }
+            else
+            {
+                index = field.index + indexOffset + 1 + indexValue;
             }
         }
     }

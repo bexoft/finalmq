@@ -107,15 +107,44 @@ table += '<td><table border="1">';
         table += '<tr>';
         table += '<td>' + prop.type + '</td>';
         table += '<td>' + prop.name + '</td>';
+        var propertyValue = prop.value.substr(0, 100);
+        
+        if (prop.type == 'QIcon')
+        {
+            var icon = JSON.parse(prop.value).v;
+            if ('qPixmapIconEngine' in icon)
+            {
+                var tableIcon = '<table border="1">';            
+                tableIcon += '<tr>';
+                tableIcon += '<td>Image</td>';
+                tableIcon += '<td>Filename</td>';
+                tableIcon += '<td>Mode</td>';
+                tableIcon += '<td>State</td>';
+                tableIcon += '</tr>';
+                for (n = 0; n < icon.qPixmapIconEngine.length; n++)
+                {
+                    var pixmap = icon.qPixmapIconEngine[n];
+                    var img = '<img style="position:relative; left:'+0+'; top:'+0+'; width:'+pixmap.size.width+'; height:'+pixmap.size.height+';" src="data:image/png;base64,' + pixmap.pixmap + '"></img>';
+                    tableIcon += '<tr>';
+                    tableIcon += '<td>' + img + '</td>';
+                    tableIcon += '<td>' + pixmap.filename + '</td>';
+                    tableIcon += '<td>' + pixmap.mode + '</td>';
+                    tableIcon += '<td>' + pixmap.state + '</td>';
+                    tableIcon += '</tr>';
+                }
+                tableIcon += '</table>';
+                propertyValue = tableIcon;
+            }
+        }
         if (prop.hasNotifySignal)
         {
             var id = objectName + '/' + prop.signal;
-            table += '<td id="' + id + '/prop">' + prop.value.substr(0, 100) + '</td>';
+            table += '<td id="' + id + '/prop">' + propertyValue + '</td>';
             table += '<td>' + prop.signal + '</td>';
         }
         else
         {
-            table += '<td>' + prop.value.substr(0, 100) + '</td>';
+            table += '<td>' + propertyValue + '</td>';
             table += '<td>-</td>';
         }
 

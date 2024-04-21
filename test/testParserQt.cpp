@@ -441,7 +441,7 @@ TEST_F(TestParserQt, testString)
     {
         testing::InSequence seq;
         EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
-        EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*fieldValue), std::string(VALUE))).Times(1);
+        EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*fieldValue), ArrayEq(VALUE.data(), VALUE.size()), VALUE.size())).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
 
@@ -545,7 +545,7 @@ TEST_F(TestParserQt, testStruct)
         EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*fieldInt32), VALUE_INT32)).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldStructInt32))).Times(1);
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldStructString))).Times(1);
-        EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*fieldString), std::string(VALUE_STRING))).Times(1);
+        EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*fieldString), ArrayEq(VALUE_STRING.data(), VALUE_STRING.size()), VALUE_STRING.size())).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldStructString))).Times(1);
         EXPECT_CALL(mockVisitor, enterUInt32(MatcherMetaField(*fieldLastValue), VALUE_UINT32)).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
@@ -1369,7 +1369,7 @@ TEST_F(TestParserQt, testArrayStruct)
         EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*fieldInt32), VALUE1_INT32)).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldStructInt32))).Times(1);
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldStructString))).Times(1);
-        EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*fieldString), std::string(VALUE1_STRING))).Times(1);
+        EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*fieldString), ArrayEq(VALUE1_STRING.data(), VALUE1_STRING.size()), VALUE1_STRING.size())).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldStructString))).Times(1);
         EXPECT_CALL(mockVisitor, enterUInt32(MatcherMetaField(*fieldUInt32), VALUE1_LAST)).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldStructWithoutArray))).Times(1);
@@ -1379,7 +1379,7 @@ TEST_F(TestParserQt, testArrayStruct)
         EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*fieldInt32), VALUE2_INT32)).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldStructInt32))).Times(1);
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldStructString))).Times(1);
-        EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*fieldString), std::string(VALUE2_STRING))).Times(1);
+        EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*fieldString), ArrayEq(VALUE2_STRING.data(), VALUE2_STRING.size()), VALUE2_STRING.size())).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldStructString))).Times(1);
         EXPECT_CALL(mockVisitor, enterUInt32(MatcherMetaField(*fieldUInt32), VALUE2_LAST)).Times(1);
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldStructWithoutArray))).Times(1);
@@ -1472,7 +1472,7 @@ TEST_F(TestParserQt, testFixedArrayStruct)
         EXPECT_CALL(mockVisitor, enterArrayStruct(MatcherMetaField(*fieldFixedArrayInner))).Times(1);
 
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldFixedArrayInnerWithoutArray))).Times(1);
-        EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*fieldInnerString), std::string(""))).Times(1);
+        EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*fieldInnerString), ArrayEq("", 0), 0)).Times(1);
         EXPECT_CALL(mockVisitor, enterArrayStruct(MatcherMetaField(*fieldInnerFixedArray))).Times(1);
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldInnerFixedArrayWithoutArray))).Times(1);
         EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*fieldInt32), 1)).Times(1);
@@ -1482,7 +1482,7 @@ TEST_F(TestParserQt, testFixedArrayStruct)
         EXPECT_CALL(mockVisitor, exitStruct(MatcherMetaField(*fieldFixedArrayInnerWithoutArray))).Times(1);
 
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldFixedArrayInnerWithoutArray))).Times(1);
-        EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*fieldInnerString), std::string(""))).Times(1);
+        EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*fieldInnerString), ArrayEq("", 0), 0)).Times(1);
         EXPECT_CALL(mockVisitor, enterArrayStruct(MatcherMetaField(*fieldInnerFixedArray))).Times(1);
         EXPECT_CALL(mockVisitor, enterStruct(MatcherMetaField(*fieldInnerFixedArrayWithoutArray))).Times(1);
         EXPECT_CALL(mockVisitor, enterInt32(MatcherMetaField(*fieldInt32), 3)).Times(1);

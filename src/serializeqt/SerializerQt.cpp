@@ -160,9 +160,6 @@ void SerializerQt::Internal::exitArrayStruct(const MetaField& /*field*/)
     m_levelState.pop_back();
 }
 
-static const std::string ABORTSTRUCT = "abortstruct";
-static const std::string ABORT_FALSE = "false";
-static const std::string ABORT_TRUE = "true";
 
 void SerializerQt::Internal::enterBool(const MetaField& field, bool value)
 {

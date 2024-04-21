@@ -223,7 +223,7 @@ private:
         //      m_typesToField.emplace("QDateTime",     MetaField{ MetaTypeId::TYPE_STRUCT,         "", "", "", 0, {} });
         m_typesToField.emplace("QUrl", MetaField{MetaTypeId::TYPE_BYTES, "", "", "", 0, {"qttype:QUrl,qtcode:bytes"}});
         m_typesToField.emplace("QLocale", MetaField{MetaTypeId::TYPE_STRING, "", "", "", 0, {}});
-        m_typesToField.emplace("QPixmap", MetaField{MetaTypeId::TYPE_BYTES, "", "", "", 0, {"png:true"}});
+        m_typesToField.emplace("QPixmap", MetaField{ MetaTypeId::TYPE_BYTES, "", "", "", 0, {"png:true"} });
 
         static const std::string KEY_QTTYPE = "qttype";
 
@@ -865,44 +865,44 @@ public:
     }
 
 private:
-    virtual int qt_metacall(QMetaObject::Call /*call*/, int /*methodId*/, void** params) override
+    virtual int qt_metacall(QMetaObject::Call /*call*/, int methodId, void** params) override
     {
         auto remoteEntity = m_remoteEntity.lock();
         if(remoteEntity)
         {
-            QVariantList args;
-            if(params[0] != nullptr)
+            if (methodId == m_metaMethod.methodIndex())
             {
+                QVariantList args;
                 const QList<QByteArray> parameterTypes = m_metaMethod.parameterTypes();
-                for(int i = 0; i < parameterTypes.size(); ++i)
+                for (int i = 0; i < parameterTypes.size(); ++i)
                 {
                     const QByteArray& typeName = parameterTypes[i];
                     int type = QMetaType::type(typeName);
                     QVariant value(type, params[i + 1]);
                     const bool ok = isQVariantSerializable(value.type());
-                    if(!ok)
+                    if (!ok)
                     {
                         value = QString("!!! not serializable type: ") + QString::number(value.type());
                     }
                     args.append(std::move(value));
                 }
+
+                QByteArray bufferQt;
+                QDataStream streamParam(&bufferQt, QIODevice::WriteOnly);
+                streamParam << args;
+
+                ZeroCopyBuffer bufferProto;
+                SerializerProto serializerProto(bufferProto);
+                ParserQt parserQt(serializerProto, bufferQt.data(), bufferQt.size(), ParserQt::Mode::WRAPPED_BY_QVARIANTLIST);
+                parserQt.parseStruct(m_typeName);
+
+                GeneralMessage message;
+
+                message.type = m_typeName;
+                bufferProto.copyData(message.data);
+
+                remoteEntity->sendEvent(m_peerId, m_path, message);
             }
-
-            QByteArray bufferQt;
-            QDataStream streamParam(&bufferQt, QIODevice::WriteOnly);
-            streamParam << args;
-
-            ZeroCopyBuffer bufferProto;
-            SerializerProto serializerProto(bufferProto);
-            ParserQt parserQt(serializerProto, bufferQt.data(), bufferQt.size(), ParserQt::Mode::WRAPPED_BY_QVARIANTLIST);
-            parserQt.parseStruct(m_typeName);
-
-            GeneralMessage message;
-
-            message.type = m_typeName;
-            bufferProto.copyData(message.data);
-
-            remoteEntity->sendEvent(m_peerId, m_path, message);
         }
         else
         {

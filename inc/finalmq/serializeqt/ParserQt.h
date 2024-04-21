@@ -74,6 +74,7 @@ namespace finalmq {
 
         bool parseQVariantHeader(const MetaField& field);
         void checkIndex(const MetaField& field, std::int64_t value, std::int64_t& index, std::int64_t& indexOffset);
+        void checkIndex(const MetaField& field, const std::string& value, std::int64_t& index, std::int64_t& indexOffset);
         bool getPngSize(std::uint32_t& size);
 
         bool parseSize(const MetaField& field, std::uint32_t& value);

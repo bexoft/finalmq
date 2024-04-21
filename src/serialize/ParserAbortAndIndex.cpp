@@ -300,14 +300,7 @@ void ParserAbortAndIndex::enterDouble(const MetaField& field, double value)
 }
 void ParserAbortAndIndex::enterString(const MetaField& field, std::string&& value)
 {
-    assert(!m_levelState.empty());
-    LevelState& levelState = m_levelState.back();
-    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index ))
-    {
-        return;
-    }
-    
-    m_visitor->enterString(field, std::move(value));
+    enterString(field, value.c_str(), value.size());
 }
 void ParserAbortAndIndex::enterString(const MetaField& field, const char* value, ssize_t size)
 {
@@ -319,6 +312,27 @@ void ParserAbortAndIndex::enterString(const MetaField& field, const char* value,
     }
     
     m_visitor->enterString(field, value, size);
+
+    // check abort
+    std::string strValue;
+    if (value)
+    {
+        strValue = std::string(value, &value[size]);
+    }
+    const std::string& valueAbort = field.getProperty(ABORTSTRUCT);
+    if (!valueAbort.empty())
+    {
+        std::vector<std::string> valuesAbort;
+        Utils::split(valueAbort, 0, valueAbort.size(), '|', valuesAbort);
+        if (std::find(valuesAbort.begin(), valuesAbort.end(), strValue) != valuesAbort.end())
+        {
+            levelState.abortStruct = ABORT_FIELD;
+        }
+    }
+    else
+    {
+        checkIndex(field, strValue);
+    }
 }
 void ParserAbortAndIndex::enterBytes(const MetaField& field, Bytes&& value)
 {
@@ -792,5 +806,51 @@ void ParserAbortAndIndex::checkIndex(const MetaField& field, std::int64_t value)
         }
     }
 }
+
+void ParserAbortAndIndex::checkIndex(const MetaField& field, const std::string& value)
+{
+    if ((field.flags & MetaFieldFlags::METAFLAG_INDEX) != 0)
+    {
+        assert(!m_levelState.empty());
+        LevelState& levelState = m_levelState.back();
+
+        std::int64_t indexOffset = 0;
+        const std::string& strIndexOffset = field.getProperty(INDEXOFFSET);
+        if (!strIndexOffset.empty())
+        {
+            indexOffset = atoll(strIndexOffset.c_str());
+        }
+        const std::string& indexmode = field.getProperty(INDEXMODE);
+        if (indexmode == INDEXMODE_MAPPING)
+        {
+            const std::string& strIndexMapped = field.getProperty(value);
+            if (strIndexMapped.empty())
+            {
+                levelState.abortStruct = ABORT_FIELD;
+            }
+            else
+            {
+                int indexMapped = atoi(strIndexMapped.c_str());
+                levelState.indexOfIndexField = field.index + indexOffset;
+                levelState.index = field.index + indexOffset + 1 + indexMapped;
+            }
+        }
+        else
+        {
+            const std::int64_t indexValue = atoll(value.c_str());
+            if (indexValue < 0)
+            {
+                levelState.abortStruct = ABORT_FIELD;
+            }
+            else
+            {
+                levelState.indexOfIndexField = field.index + indexOffset;
+                levelState.index = field.index + indexOffset + 1 + indexValue;
+            }
+        }
+    }
+}
+
+
 
 }   // namespace finalmq
