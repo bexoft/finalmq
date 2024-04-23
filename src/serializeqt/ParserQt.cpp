@@ -170,7 +170,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                     if (ok)
                     {
                         m_visitor.enterInt8(*field, value);
-                        checkIndex(*field, value, index, indexOffset);
+                        checkAbortAndIndex(*field, value, index, indexOffset, abortStruct);
                     }
                 }
                 break;
@@ -186,7 +186,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                     if (ok)
                     {
                         m_visitor.enterUInt8(*field, value);
-                        checkIndex(*field, value, index, indexOffset);
+                        checkAbortAndIndex(*field, value, index, indexOffset, abortStruct);
                     }
                 }
                 break;
@@ -202,7 +202,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                     if (ok)
                     {
                         m_visitor.enterInt16(*field, value);
-                        checkIndex(*field, value, index, indexOffset);
+                        checkAbortAndIndex(*field, value, index, indexOffset, abortStruct);
                     }
                 }
                 break;
@@ -218,7 +218,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                     if (ok)
                     {
                         m_visitor.enterUInt16(*field, value);
-                        checkIndex(*field, value, index, indexOffset);
+                        checkAbortAndIndex(*field, value, index, indexOffset, abortStruct);
                     }
                 }
                 break;
@@ -234,7 +234,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                     if (ok)
                     {
                         m_visitor.enterInt32(*field, value);
-                        checkIndex(*field, value, index, indexOffset);
+                        checkAbortAndIndex(*field, value, index, indexOffset, abortStruct);
                     }
                 }
                 break;
@@ -250,7 +250,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                     if (ok)
                     {
                         m_visitor.enterUInt32(*field, value);
-                        checkIndex(*field, value, index, indexOffset);
+                        checkAbortAndIndex(*field, value, index, indexOffset, abortStruct);
                     }
                 }
                 break;
@@ -266,7 +266,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                     if (ok)
                     {
                         m_visitor.enterInt64(*field, value);
-                        checkIndex(*field, value, index, indexOffset);
+                        checkAbortAndIndex(*field, value, index, indexOffset, abortStruct);
                     }
                 }
                 break;
@@ -282,7 +282,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                     if (ok)
                     {
                         m_visitor.enterUInt64(*field, value);
-                        checkIndex(*field, value, index, indexOffset);
+                        checkAbortAndIndex(*field, value, index, indexOffset, abortStruct);
                     }
                 }
                 break;
@@ -349,17 +349,7 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                     {
                         value = std::string(buffer, &buffer[size]);
                     }
-                    const std::string& valueAbort = field->getProperty(ABORTSTRUCT);
-                    if (!valueAbort.empty())
-                    {
-                        std::vector<std::string> valuesAbort;
-                        Utils::split(valueAbort, 0, valueAbort.size(), '|', valuesAbort);
-                        abortStruct = (std::find(valuesAbort.begin(), valuesAbort.end(), value) != valuesAbort.end());
-                    }
-                    else
-                    {
-                        checkIndex(*field, value, index, indexOffset);
-                    }
+                    checkAbortAndIndex(*field, value, index, indexOffset, abortStruct);
                 }
                 break;
             case MetaTypeId::TYPE_BYTES:
@@ -1324,6 +1314,40 @@ void ParserQt::checkIndex(const MetaField& field, const std::string& value, std:
         }
     }
 }
+
+void ParserQt::checkAbortAndIndex(const MetaField& field, const std::string& value, std::int64_t& index, std::int64_t& indexOffset, bool& abortStruct)
+{
+    // check abort
+    const std::string& valueAbort = field.getProperty(ABORTSTRUCT);
+    if (!valueAbort.empty())
+    {
+        std::vector<std::string> valuesAbort;
+        Utils::split(valueAbort, 0, valueAbort.size(), '|', valuesAbort);
+        abortStruct = (std::find(valuesAbort.begin(), valuesAbort.end(), value) != valuesAbort.end());
+    }
+    else
+    {
+        checkIndex(field, value, index, indexOffset);
+    }
+}
+
+void ParserQt::checkAbortAndIndex(const MetaField& field, std::int64_t value, std::int64_t& index, std::int64_t& indexOffset, bool& abortStruct)
+{
+    // check abort
+    const std::string& valueAbort = field.getProperty(ABORTSTRUCT);
+    if (!valueAbort.empty())
+    {
+        std::string strValue = std::to_string(value);
+        std::vector<std::string> valuesAbort;
+        Utils::split(valueAbort, 0, valueAbort.size(), '|', valuesAbort);
+        abortStruct = (std::find(valuesAbort.begin(), valuesAbort.end(), strValue) != valuesAbort.end());
+    }
+    else
+    {
+        checkIndex(field, value, index, indexOffset);
+    }
+}
+
 
 bool ParserQt::getPngSize(std::uint32_t& size)
 {

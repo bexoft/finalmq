@@ -101,11 +101,6 @@ private:
     virtual void enterArrayEnumMove(const MetaField& field, std::vector<std::string>&& value) override;
     virtual void enterArrayEnum(const MetaField& field, const std::vector<std::string>& value) override;
 
-    void checkIndex(const MetaField& field, std::int64_t value);
-    void checkIndex(const MetaField& field, const std::string& value);
-
-    IParserVisitor* m_visitor;
-
     enum IndexStatus
     {
         INDEX_NOT_AVAILABLE = -1,
@@ -124,6 +119,13 @@ private:
         std::int64_t indexOfIndexField{ INDEX_NOT_AVAILABLE };
         std::int64_t index{ INDEX_NOT_AVAILABLE };
     };
+
+    void checkIndex(const MetaField& field, std::int64_t value);
+    void checkIndex(const MetaField& field, const std::string& value);
+    void checkAbortAndIndex(const MetaField& field, const std::string& value, LevelState& levelState);
+    void checkAbortAndIndex(const MetaField& field, std::int64_t value, LevelState& levelState);
+
+    IParserVisitor* m_visitor;
 
     std::deque<LevelState> m_levelState{};
 };

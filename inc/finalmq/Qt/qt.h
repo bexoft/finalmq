@@ -220,10 +220,10 @@ private:
         m_typesToField.emplace("QBitArray", MetaField{MetaTypeId::TYPE_ARRAY_BOOL, "", "", "", 0, {}});
         m_typesToField.emplace("QDate", MetaField{MetaTypeId::TYPE_INT64, "", "", "", 0, {}});
         m_typesToField.emplace("QTime", MetaField{MetaTypeId::TYPE_UINT32, "", "", "", 0, {}});
-        //      m_typesToField.emplace("QDateTime",     MetaField{ MetaTypeId::TYPE_STRUCT,         "", "", "", 0, {} });
         m_typesToField.emplace("QUrl", MetaField{MetaTypeId::TYPE_BYTES, "", "", "", 0, {"qttype:QUrl,qtcode:bytes"}});
         m_typesToField.emplace("QLocale", MetaField{MetaTypeId::TYPE_STRING, "", "", "", 0, {}});
         m_typesToField.emplace("QPixmap", MetaField{ MetaTypeId::TYPE_BYTES, "", "", "", 0, {"png:true"} });
+        m_typesToField.emplace("QSizePolicy", MetaField{ MetaTypeId::TYPE_UINT32, "", "", "", 0, {} });
 
         static const std::string KEY_QTTYPE = "qttype";
 
