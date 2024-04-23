@@ -79,7 +79,62 @@
         {"type":"FmqQIconState","attrs":[],"desc":"","entries":[
             {"name":"On",       "id":0,     "desc":""},
             {"name":"Off",      "id":1,     "desc":""}
+        ]},
+        {"type":"FmqQtWindowModality","attrs":["qttype:Qt::WindowModality"],"desc":"","entries":[
+            {"name":"NonModal",         "id":0,     "desc":""},
+            {"name":"WindowModal",      "id":1,     "desc":""},
+            {"name":"ApplicationModal", "id":2,     "desc":""}
+        ]},
+        {"type":"FmqQFontStyleHint","attrs":["enumbits:8"],"desc":"","entries":[
+            {"name":"Helvetica",    "id":0,     "desc":""},
+            {"name":"Times",        "id":1,     "desc":""},
+            {"name":"Courier",      "id":2,     "desc":""},
+            {"name":"OldEnglish",   "id":3,     "desc":""},
+            {"name":"System",       "id":4,     "desc":""},
+            {"name":"AnyStyle",     "id":5,     "desc":""},
+            {"name":"Cursive",      "id":6,     "desc":""},
+            {"name":"Monospace",    "id":7,     "desc":""},
+            {"name":"Fantasy",      "id":8,     "desc":""}
+        ]},
+        {"type":"FmqQFontStyleStrategy","attrs":["enumbits:16"],"desc":"","entries":[
+            {"name":"None",                 "id":0,         "desc":""},
+            {"name":"PreferDefault",        "id":1,         "desc":""},
+            {"name":"PreferBitmap",         "id":2,         "desc":""},
+            {"name":"PreferDevice",         "id":4,         "desc":""},
+            {"name":"PreferOutline",        "id":8,         "desc":""},
+            {"name":"ForceOutline",         "id":16,        "desc":""},
+            {"name":"PreferMatch",          "id":32,        "desc":""},
+            {"name":"PreferQuality",        "id":64,        "desc":""},
+            {"name":"PreferAntialias",      "id":128,       "desc":""},
+            {"name":"NoAntialias",          "id":256,       "desc":""},
+            {"name":"OpenGLCompatible",     "id":512,       "desc":""},
+            {"name":"ForceIntegerMetrics",  "id":1024,      "desc":""},
+            {"name":"NoSubpixelAntialias",  "id":2048,      "desc":""},
+            {"name":"PreferNoShaping",      "id":4096,      "desc":""},
+            {"name":"NoFontMerging",        "id":32768,     "desc":""}
+        ]},
+        {"type":"FmqQFontFontBits","attrs":["enumbits:8"],"desc":"","entries":[
+            {"name":"None",                 "id":0,         "desc":""},
+            {"name":"Style",                "id":1,         "desc":""},
+            {"name":"Underline",            "id":2,         "desc":""},
+            {"name":"Overline",             "id":64,        "desc":""},
+            {"name":"StrikeOut",            "id":4,         "desc":""},
+            {"name":"FixedPitch",           "id":8,         "desc":""},
+            {"name":"Kerning",              "id":16,        "desc":""},
+            {"name":"StyleOblique",         "id":128,       "desc":""}
+        ]},
+        {"type":"FmqQFontExtendedFontBits","attrs":["enumbits:8"],"desc":"","entries":[
+            {"name":"None",                     "id":0,         "desc":""},
+            {"name":"IgnorePitch",              "id":1,         "desc":""},
+            {"name":"LetterSpacingIsAbsolute",  "id":2,         "desc":""}
+        ]},
+        {"type":"FmqQFontHintingPreference","attrs":["enumbits:8"],"desc":"","entries":[
+            {"name":"PreferDefaultHinting",     "id":0,         "desc":""},
+            {"name":"PreferNoHinting",          "id":1,         "desc":""},
+            {"name":"PreferVerticalHinting",    "id":2,         "desc":""},
+            {"name":"PreferFullHinting",        "id":3,         "desc":""}
         ]}
+
 
     ],
 
@@ -317,8 +372,32 @@
             {"tid":"string",                                    "name":"iconEngineKey",  "attrs":["indexmode:mapping,:0,QPixmapIconEngine:1"],  "desc":"","flags":["METAFLAG_INDEX"]},
             {"tid":"int8[]",                                    "name":"valueNone",             "desc":"desc","attrs":["fixedarray:0"],"flags":[]},
             {"tid":"struct[]", "type":"FmqQPixmapIconEngine",   "name":"qPixmapIconEngine",     "desc":"","flags":[]}
-        ]}
+        ]},
 
+        {"type":"FmqQRegion","attrs":["qttype:QRegion"],"desc":"","fields":[
+            {"tid":"int32",                                     "name":"sizeBytes",  "attrs":["structabort:0"],  "desc":"When you change FmqQRegion, you always have to set this value to [8+16*rects.size()} or to 0, if rects.size() is 0.","flags":[]},
+            {"tid":"int32",                                     "name":"command",                                "desc":"When you change FmqQRegion, you have to set this value to 10","flags":[]},
+            {"tid":"struct[]",  "type":"FmqQRect",              "name":"rects",                                  "desc":"","flags":[]}
+        ]},
+        
+        {"type":"FmqQFont","attrs":["qttype:QFont"],"desc":"","fields":[
+            {"tid":"string",                                    "name":"family",            "desc":"","flags":[]},
+            {"tid":"string",                                    "name":"style",             "desc":"","flags":[]},
+            {"tid":"double",                                    "name":"pointSize",         "desc":"","flags":[]},
+            {"tid":"int32",                                     "name":"pixelSize",         "desc":"","flags":[]},
+            {"tid":"enum",  "type":"FmqQFontStyleHint",         "name":"styleHint",         "desc":"","flags":[]},
+            {"tid":"uint16",                                    "name":"styleStrategy",     "desc":"","flags":[]},
+            {"tid":"uint8",                                     "name":"dummy",             "desc":"","flags":[]},
+            {"tid":"uint8",                                     "name":"weight",            "desc":"","flags":[]},
+            {"tid":"uint8",                                     "name":"fontBits",          "desc":"","flags":[]},
+            {"tid":"uint16",                                    "name":"stretch",           "desc":"","flags":[]},
+            {"tid":"uint8",                                     "name":"extendedFontBits",  "desc":"","flags":[]},
+            {"tid":"int32",                                     "name":"letterSpacing",     "desc":"","flags":[]},
+            {"tid":"int32",                                     "name":"wordSpacing",       "desc":"","flags":[]},
+            {"tid":"enum",  "type":"FmqQFontHintingPreference", "name":"hintingPreference", "desc":"","flags":[]},
+            {"tid":"uint8",                                     "name":"capital",           "desc":"","flags":[]},
+            {"tid":"string[]",                                  "name":"families",          "desc":"","flags":[]}
+        ]}
         
     
     ]

@@ -191,7 +191,7 @@ void ParserAbortAndIndex::enterInt8(const MetaField& field, std::int8_t value)
     }
 
     m_visitor->enterInt8(field, value);
-    checkIndex(field, value);
+    checkAbortAndIndex(field, value, levelState);
 }
 void ParserAbortAndIndex::enterUInt8(const MetaField& field, std::uint8_t value)
 {
@@ -202,7 +202,7 @@ void ParserAbortAndIndex::enterUInt8(const MetaField& field, std::uint8_t value)
         return;
     }
     m_visitor->enterUInt8(field, value);
-    checkIndex(field, value);
+    checkAbortAndIndex(field, value, levelState);
 }
 void ParserAbortAndIndex::enterInt16(const MetaField& field, std::int16_t value)
 {
@@ -214,7 +214,7 @@ void ParserAbortAndIndex::enterInt16(const MetaField& field, std::int16_t value)
     }
     
     m_visitor->enterInt16(field, value);
-    checkIndex(field, value);
+    checkAbortAndIndex(field, value, levelState);
 }
 void ParserAbortAndIndex::enterUInt16(const MetaField& field, std::uint16_t value)
 {
@@ -226,7 +226,7 @@ void ParserAbortAndIndex::enterUInt16(const MetaField& field, std::uint16_t valu
     }
     
     m_visitor->enterUInt16(field, value);
-    checkIndex(field, value);
+    checkAbortAndIndex(field, value, levelState);
 }
 void ParserAbortAndIndex::enterInt32(const MetaField& field, std::int32_t value)
 {
@@ -238,7 +238,7 @@ void ParserAbortAndIndex::enterInt32(const MetaField& field, std::int32_t value)
     }
     
     m_visitor->enterInt32(field, value);
-    checkIndex(field, value);
+    checkAbortAndIndex(field, value, levelState);
 }
 void ParserAbortAndIndex::enterUInt32(const MetaField& field, std::uint32_t value)
 {
@@ -250,7 +250,7 @@ void ParserAbortAndIndex::enterUInt32(const MetaField& field, std::uint32_t valu
     }
     
     m_visitor->enterUInt32(field, value);
-    checkIndex(field, value);
+    checkAbortAndIndex(field, value, levelState);
 }
 void ParserAbortAndIndex::enterInt64(const MetaField& field, std::int64_t value)
 {
@@ -262,7 +262,7 @@ void ParserAbortAndIndex::enterInt64(const MetaField& field, std::int64_t value)
     }
     
     m_visitor->enterInt64(field, value);
-    checkIndex(field, value);
+    checkAbortAndIndex(field, value, levelState);
 }
 void ParserAbortAndIndex::enterUInt64(const MetaField& field, std::uint64_t value)
 {
@@ -274,7 +274,7 @@ void ParserAbortAndIndex::enterUInt64(const MetaField& field, std::uint64_t valu
     }
     
     m_visitor->enterUInt64(field, value);
-    checkIndex(field, value);
+    checkAbortAndIndex(field, value, levelState);
 }
 void ParserAbortAndIndex::enterFloat(const MetaField& field, float value)
 {
@@ -319,20 +319,7 @@ void ParserAbortAndIndex::enterString(const MetaField& field, const char* value,
     {
         strValue = std::string(value, &value[size]);
     }
-    const std::string& valueAbort = field.getProperty(ABORTSTRUCT);
-    if (!valueAbort.empty())
-    {
-        std::vector<std::string> valuesAbort;
-        Utils::split(valueAbort, 0, valueAbort.size(), '|', valuesAbort);
-        if (std::find(valuesAbort.begin(), valuesAbort.end(), strValue) != valuesAbort.end())
-        {
-            levelState.abortStruct = ABORT_FIELD;
-        }
-    }
-    else
-    {
-        checkIndex(field, strValue);
-    }
+    checkAbortAndIndex(field, strValue, levelState);
 }
 void ParserAbortAndIndex::enterBytes(const MetaField& field, Bytes&& value)
 {
@@ -851,6 +838,45 @@ void ParserAbortAndIndex::checkIndex(const MetaField& field, const std::string& 
     }
 }
 
+void ParserAbortAndIndex::checkAbortAndIndex(const MetaField& field, const std::string& value, LevelState& levelState)
+{
+    // check abort
+    const std::string& valueAbort = field.getProperty(ABORTSTRUCT);
+    if (!valueAbort.empty())
+    {
+        std::vector<std::string> valuesAbort;
+        Utils::split(valueAbort, 0, valueAbort.size(), '|', valuesAbort);
+        if (std::find(valuesAbort.begin(), valuesAbort.end(), value) != valuesAbort.end())
+        {
+            levelState.abortStruct = ABORT_FIELD;
+        }
+    }
+    else
+    {
+        checkIndex(field, value);
+    }
+}
+
+void ParserAbortAndIndex::checkAbortAndIndex(const MetaField& field, std::int64_t value, LevelState& levelState)
+{
+    // check abort
+    std::string strValue;
+    const std::string& valueAbort = field.getProperty(ABORTSTRUCT);
+    if (!valueAbort.empty())
+    {
+        const std::string strValue = std::to_string(value);
+        std::vector<std::string> valuesAbort;
+        Utils::split(valueAbort, 0, valueAbort.size(), '|', valuesAbort);
+        if (std::find(valuesAbort.begin(), valuesAbort.end(), strValue) != valuesAbort.end())
+        {
+            levelState.abortStruct = ABORT_FIELD;
+        }
+    }
+    else
+    {
+        checkIndex(field, value);
+    }
+}
 
 
 }   // namespace finalmq
