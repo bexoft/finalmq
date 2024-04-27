@@ -224,6 +224,8 @@ private:
         m_typesToField.emplace("QLocale", MetaField{MetaTypeId::TYPE_STRING, "", "", "", 0, {}});
         m_typesToField.emplace("QPixmap", MetaField{ MetaTypeId::TYPE_BYTES, "", "", "", 0, {"png:true"} });
         m_typesToField.emplace("QSizePolicy", MetaField{ MetaTypeId::TYPE_UINT32, "", "", "", 0, {} });
+        m_typesToField.emplace("Qt::FocusPolicy", MetaField{ MetaTypeId::TYPE_UINT32, "", "", "", 0, {} });
+        m_typesToField.emplace("Qt::InputMethodHints", MetaField{ MetaTypeId::TYPE_UINT32, "", "", "", 0, {} });
 
         static const std::string KEY_QTTYPE = "qttype";
 

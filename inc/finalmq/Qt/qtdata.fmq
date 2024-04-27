@@ -133,8 +133,45 @@
             {"name":"PreferNoHinting",          "id":1,         "desc":""},
             {"name":"PreferVerticalHinting",    "id":2,         "desc":""},
             {"name":"PreferFullHinting",        "id":3,         "desc":""}
+        ]},
+        {"type":"FmqQCursorShape","attrs":["enumbits:8"],"desc":"","entries":[
+            {"name":"ArrowCursor",          "id":0,         "desc":""},
+            {"name":"UpArrowCursor",        "id":1,         "desc":""},
+            {"name":"CrossCursor",          "id":2,         "desc":""},
+            {"name":"WaitCursor",           "id":3,         "desc":""},
+            {"name":"IBeamCursor",          "id":4,         "desc":""},
+            {"name":"SizeVerCursor",        "id":5,         "desc":""},
+            {"name":"SizeHorCursor",        "id":6,         "desc":""},
+            {"name":"SizeBDiagCursor",      "id":7,         "desc":""},
+            {"name":"SizeFDiagCursor",      "id":8,         "desc":""},
+            {"name":"SizeAllCursor",        "id":9,         "desc":""},
+            {"name":"BlankCursor",          "id":10,         "desc":""},
+            {"name":"SplitVCursor",         "id":11,         "desc":""},
+            {"name":"SplitHCursor",         "id":12,         "desc":""},
+            {"name":"PointingHandCursor",   "id":13,         "desc":""},
+            {"name":"ForbiddenCursor",      "id":14,         "desc":""},
+            {"name":"WhatsThisCursor",      "id":15,         "desc":""},
+            {"name":"BusyCursor",           "id":16,         "desc":""},
+            {"name":"OpenHandCursor",       "id":17,         "desc":""},
+            {"name":"ClosedHandCursor",     "id":18,         "desc":""},
+            {"name":"DragCopyCursor",       "id":19,         "desc":""},
+            {"name":"DragMoveCursor",       "id":20,         "desc":""},
+            {"name":"DragLinkCursor",       "id":21,         "desc":""},
+            {"name":"BitmapCursor",         "id":24,         "desc":""},
+            {"name":"CustomCursor",         "id":25,         "desc":""}
+        ]},
+        {"type":"FmqQContextMenuPolicy","attrs":["enumbits:32,qttype:Qt::ContextMenuPolicy"],"desc":"","entries":[
+            {"name":"NoContextMenu",        "id":0,         "desc":""},
+            {"name":"DefaultContextMenu",   "id":1,         "desc":""},
+            {"name":"ActionsContextMenu",   "id":2,         "desc":""},
+            {"name":"CustomContextMenu",    "id":3,         "desc":""},
+            {"name":"PreventContextMenu",   "id":4,         "desc":""}
+        ]},
+        {"type":"FmqQLayoutDirection","attrs":["enumbits:32,qttype:Qt::LayoutDirection"],"desc":"","entries":[
+            {"name":"LeftToRight",          "id":0,         "desc":""},
+            {"name":"RightToLeft",          "id":1,         "desc":""},
+            {"name":"LayoutDirectionAuto",  "id":2,         "desc":""}
         ]}
-
 
     ],
 
@@ -369,8 +406,7 @@
         ]},
 
         {"type":"FmqQIcon","attrs":["qttype:QIcon"],"desc":"","fields":[
-            {"tid":"string",                                    "name":"iconEngineKey",  "attrs":["indexmode:mapping,:0,QPixmapIconEngine:1"],  "desc":"","flags":["METAFLAG_INDEX"]},
-            {"tid":"int8[]",                                    "name":"valueNone",             "desc":"desc","attrs":["fixedarray:0"],"flags":[]},
+            {"tid":"string",                                    "name":"iconEngineKey",  "attrs":["indexmode:mapping,QPixmapIconEngine:0"],  "desc":"","flags":["METAFLAG_INDEX"]},
             {"tid":"struct[]", "type":"FmqQPixmapIconEngine",   "name":"qPixmapIconEngine",     "desc":"","flags":[]}
         ]},
 
@@ -397,8 +433,26 @@
             {"tid":"enum",  "type":"FmqQFontHintingPreference", "name":"hintingPreference", "desc":"","flags":[]},
             {"tid":"uint8",                                     "name":"capital",           "desc":"","flags":[]},
             {"tid":"string[]",                                  "name":"families",          "desc":"","flags":[]}
-        ]}
+        ]},
         
+        {"type":"FmqQCursorBitmapCursorPixmap","desc":"","fields":[
+            {"tid":"bytes",                         "name":"pixmap",    "attrs":["png:true"],   "desc":"","flags":[]},
+            {"tid":"struct",    "type":"FmqQPoint", "name":"hotSpot",                           "desc":"","flags":[]}
+        ]},
+        {"type":"FmqQCursorBitmapCursorNoPixmap","desc":"","fields":[
+            {"tid":"bytes",                         "name":"bitmap",    "attrs":["png:true"],   "desc":"","flags":[]},
+            {"tid":"bytes",                         "name":"mask",      "attrs":["png:true"],   "desc":"","flags":[]},
+            {"tid":"struct",    "type":"FmqQPoint", "name":"hotSpot",                           "desc":"","flags":[]}
+        ]},
+        {"type":"FmqQCursorBitmapCursor","desc":"","fields":[
+            {"tid":"uint8",                                             "name":"isPixmap",                                  "desc":"","flags":["METAFLAG_INDEX"]},
+            {"tid":"struct",    "type":"FmqQCursorBitmapCursorNoPixmap","name":"nopixmap",                                  "desc":"","flags":[]},
+            {"tid":"struct",    "type":"FmqQCursorBitmapCursorPixmap",  "name":"pixmap",                                    "desc":"","flags":[]}
+        ]},
+        {"type":"FmqQCursor","attrs":["qttype:QCursor"],"desc":"","fields":[
+            {"tid":"enum",      "type":"FmqQCursorShape",       "name":"shape", "attrs":["indexmode:mapping,BitmapCursor:0"],"desc":"","flags":["METAFLAG_INDEX"]},
+            {"tid":"struct",    "type":"FmqQCursorBitmapCursor","name":"cursorBitmap",                                       "desc":"","flags":[]}
+        ]}
     
     ]
 }
