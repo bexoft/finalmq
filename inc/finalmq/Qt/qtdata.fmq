@@ -171,6 +171,27 @@
             {"name":"LeftToRight",          "id":0,         "desc":""},
             {"name":"RightToLeft",          "id":1,         "desc":""},
             {"name":"LayoutDirectionAuto",  "id":2,         "desc":""}
+        ]},
+        {"type":"FmqQFrameShadow","attrs":["enumbits:32,qttype:Shadow"],"desc":"","entries":[
+            {"name":"None",                 "id":0,         "desc":""},
+            {"name":"Plain",                "id":16,        "desc":""},
+            {"name":"Raised",               "id":32,        "desc":""},
+            {"name":"Sunken",               "id":48,        "desc":""}
+        ]},
+        {"type":"FmqQFrameShape","attrs":["enumbits:32,qttype:Shape"],"desc":"","entries":[
+            {"name":"NoFrame",              "id":0,         "desc":""},
+            {"name":"Box",                  "id":1,         "desc":""},
+            {"name":"Panel",                "id":2,         "desc":""},
+            {"name":"WinPanel",             "id":3,         "desc":""},
+            {"name":"HLine",                "id":4,         "desc":""},
+            {"name":"VLine",                "id":5,         "desc":""},
+            {"name":"StyledPanel",          "id":6,         "desc":""}
+        ]},
+        {"type":"FmqQTextFormat","attrs":["enumbits:32,qttype:Qt::TextFormat"],"desc":"","entries":[
+            {"name":"PlainText",            "id":0,         "desc":""},
+            {"name":"RichText",             "id":1,         "desc":""},
+            {"name":"AutoText",             "id":2,         "desc":""},
+            {"name":"MarkdownText",         "id":3,         "desc":""}
         ]}
 
     ],
