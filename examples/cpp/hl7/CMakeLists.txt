@@ -106,3 +106,60 @@ else()
 endif(FINALMQ_USE_SSL)
 
 
+
+set(HL7DEF_DICTIONARY ${FINALMQ_BINARY_DIR}/hl7-dictionary/dist/hl7dictionary.2.6.js)
+set(HL7DEF_FMQ ${CMAKE_CURRENT_BINARY_DIR}/hl7dictionary.2.6.js.fmq)
+set(HL7DEF_OPTIONS ${CMAKE_CURRENT_SOURCE_DIR}/hl7options2.json)
+add_custom_command(
+    COMMAND node ${CODEGENERATOR_HL7DEF} --input=${HL7DEF_DICTIONARY} --tables=${HL7DEF_TABLES} --options=${HL7DEF_OPTIONS} --outpath=${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${HL7DEF_DICTIONARY} ${HL7DEF_TABLES} ${HL7DEF_OPTIONS}
+    OUTPUT ${HL7DEF_FMQ}
+    COMMENT "Generating HL7 definition code from ${HL7DEF_DICTIONARY}"
+)
+
+set(HL7DEF_FMQ_CPP ${HL7DEF_FMQ}.cpp)
+set(HL7DEF_FMQ_H ${HL7DEF_FMQ}.h)
+add_custom_command(
+    COMMAND node ${CODEGENERATOR_CPP} --input=${HL7DEF_FMQ} --outpath=${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${HL7DEF_FMQ}
+    OUTPUT ${HL7DEF_FMQ_CPP} ${HL7DEF_FMQ_H}
+    COMMENT "Generating cpp code out of ${HL7DEF_FMQ}"
+)
+
+# SERVER 2
+
+add_executable(hl7_server2 ${HL7DEF_FMQ_CPP} hl7_server2.cpp)
+
+
+if (FINALMQ_USE_SSL)
+    if (WIN32)
+        target_link_libraries(hl7_server2 finalmq libssl libcrypto wsock32 ws2_32)
+    else()
+        target_link_libraries(hl7_server2 finalmq ssl )
+    endif()
+else()
+    if (WIN32)
+        target_link_libraries(hl7_server2 finalmq wsock32 ws2_32)
+    else()
+        target_link_libraries(hl7_server2 finalmq )
+    endif()
+endif(FINALMQ_USE_SSL)
+
+
+# Client 2
+
+add_executable(hl7_client2 ${HL7DEF_FMQ_CPP} hl7_client2.cpp)
+
+if (FINALMQ_USE_SSL)
+    if (WIN32)
+        target_link_libraries(hl7_client2 finalmq libssl libcrypto wsock32 ws2_32)
+    else()
+        target_link_libraries(hl7_client2 finalmq ssl )
+    endif()
+else()
+    if (WIN32)
+        target_link_libraries(hl7_client2 finalmq wsock32 ws2_32)
+    else()
+        target_link_libraries(hl7_client2 finalmq )
+    endif()
+endif(FINALMQ_USE_SSL)
