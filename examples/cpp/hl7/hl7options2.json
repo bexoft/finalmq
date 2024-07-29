@@ -1,0 +1,15 @@
+{
+  "filter": [
+    "ACK",
+    "ADT_A01",
+    "ADT_A02",
+    "ADT_A03",
+    "ADT_A04",
+    "ADT_A05",
+    "ADT_A06",
+    "ADT_A07",
+    "ORM_O01",
+    "OMI_O23",
+    "SSU_U03"
+  ]
+}
