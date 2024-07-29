@@ -48,7 +48,13 @@
 
 #if defined(WIN32) || defined(__MINGW32__)
 #include <winsock2.h>
+#if !defined(ssize_t)
+#if defined(_WIN64) && !defined(FINALMQ_WIN64_SSIZE_AS_32BIT)
 using ssize_t = std::int64_t;
+#else
+using ssize_t = std::int32_t;
+#endif
+#endif
 #define strtof32 strtof
 #define strtof64 strtod
 #define MSG_MORE MSG_PARTIAL
