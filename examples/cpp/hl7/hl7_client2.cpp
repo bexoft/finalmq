@@ -183,8 +183,7 @@ private:
 
 static finalmq::StructBasePtr create_ORM_O01()
 {
-    std::shared_ptr<hl7::ORM_O01> msgPtr = std::make_shared< hl7::ORM_O01>();
-    hl7::ORM_O01& msg = *msgPtr;
+    auto msgPtr = std::make_shared< hl7::ORM_O01>();
 
     // Date Time Now
     auto now = std::chrono::system_clock::now();
@@ -197,15 +196,15 @@ static finalmq::StructBasePtr create_ORM_O01()
     std::string dateStr = ssDate.str();
 
     // MSH
-    msg.msh.sendingApplication = hl7::HD("MyNamespace", "MyApplicationId", hl7::UniversalIdType());
-    msg.msh.sendingFacility = hl7::HD("MyNamespace", "MyFacilityId", hl7::UniversalIdType());
-    msg.msh.receivingApplication = hl7::HD("YourNamespace", "YourApplicationId", hl7::UniversalIdType());
-    msg.msh.receivingFacility = hl7::HD("YourNamespace", "YourFacilityId", hl7::UniversalIdType());
-    msg.msh.date_timeOfMessage = dateTimeStr;
-    msg.msh.messageControlId = "1234567890";
-    msg.msh.processingId.processingId = hl7::ProcessingId::Enum::Production;
-    msg.msh.versionId.versionId = hl7::VersionId::Enum::Release2_6;
-    msg.msh.characterSet = { "8859/1" };
+    msgPtr->msh.sendingApplication = hl7::HD("MyNamespace", "MyApplicationId", hl7::UniversalIdType());
+    msgPtr->msh.sendingFacility = hl7::HD("MyNamespace", "MyFacilityId", hl7::UniversalIdType());
+    msgPtr->msh.receivingApplication = hl7::HD("YourNamespace", "YourApplicationId", hl7::UniversalIdType());
+    msgPtr->msh.receivingFacility = hl7::HD("YourNamespace", "YourFacilityId", hl7::UniversalIdType());
+    msgPtr->msh.date_timeOfMessage = dateTimeStr;
+    msgPtr->msh.messageControlId = "1234567890";
+    msgPtr->msh.processingId.processingId = hl7::ProcessingId::Enum::Production;
+    msgPtr->msh.versionId.versionId = hl7::VersionId::Enum::Release2_6;
+    msgPtr->msh.characterSet = { "8859/1" };
 
     // Patient Start
     auto patient = std::make_shared<hl7::PATIENT_13>();
@@ -230,7 +229,7 @@ static finalmq::StructBasePtr create_ORM_O01()
     patientVisit->pv1.admitDate_time = dateStr;
     patient->patient_visit = patientVisit;
 
-    msg.patient = patient;
+    msgPtr->patient = patient;
 
     // Order Start
     hl7::ORDER_26 order;
@@ -282,7 +281,7 @@ static finalmq::StructBasePtr create_ORM_O01()
     orderDetail->observation = { observation1, observation2 };
 
     order.order_detail = orderDetail;
-    msg.order = { order };
+    msgPtr->order = { order };
 
     return msgPtr;
 }
