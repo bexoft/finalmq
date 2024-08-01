@@ -57,9 +57,11 @@ public:
         registerCommand<hl7::ORM_O01>([this] (const RequestContextPtr& requestContext, const std::shared_ptr<hl7::ORM_O01>& request) {
             assert(request);
 
+            hl7::ORM_O01 msg = *request;
+            std::cout << "Request received #" << msg.msh.messageControlId << std::endl;
+
             // prepare the reply
             hl7::ACK reply;
-            hl7::ORM_O01 msg = *request;
             reply.msh.messageControlId = msg.msh.messageControlId;
             reply.msh.versionId = request->msh.versionId;
             reply.msh.countryCode = "de";
