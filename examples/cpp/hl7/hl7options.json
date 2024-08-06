@@ -1,6 +1,6 @@
 {
-    "filter": [
-      "ACK", 
-      "SSU_U03"
-    ]
+  "filter": [
+    "ACK",
+    "ORM_O01"
+  ]
 }
