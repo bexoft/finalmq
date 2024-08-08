@@ -38,10 +38,15 @@
 
 using namespace finalmq;
 
-
+/// <summary>
+/// The entity server is a remote entity that can receive and send commands.
+/// </summary>
 class EntityServer : public RemoteEntity
 {
 public:
+    /// <summary>
+    /// Constructor. Registers the commands that can be received and processed.
+    /// </summary>
     EntityServer()
     {
         // register peer events to see when a remote entity connects or disconnects.
@@ -69,7 +74,10 @@ public:
 };
 
 
-
+/// <summary>
+/// Main entry point of the application.
+/// </summary>
+/// <returns>0</returns>
 int main()
 {
     // display log traces

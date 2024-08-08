@@ -27,7 +27,6 @@
 #include "finalmq/logger/Logger.h"
 #include "finalmq/variant/VariantValueStruct.h"
 #include "finalmq/protocols/ProtocolDelimiterX.h"
-
 // the definition of the messages is in the file hl7dictionary.2.6.js.fmq
 #include "hl7dictionary.2.6.js.fmq.h"
 
@@ -39,13 +38,17 @@
 // the modulename is needed for the logger streams (streamDebug, streamInfo, streamWarning, streamError, streamCritical, streamFatal)
 #define MODULENAME  "hl7_server"
 
-
 using namespace finalmq;
 
-
+/// <summary>
+/// EntityClient class to send HL7 messages to a server.
+/// </summary>
 class EntityClient : public RemoteEntity
 {
 public:
+    /// <summary>
+    /// Constructor of the EntityClient class. Registers the ACK command to receive acknowledgements.
+    /// </summary>
     EntityClient()
     {
         // RECEIVE ack
@@ -64,7 +67,10 @@ public:
         });
     }
 
-    // SEND
+    /// <summary>
+    /// Send an HL7 message to the server.
+    /// </summary>
+    /// <param name="msg"></param>
     void sendHl7Message(finalmq::StructBasePtr& msg)
     {
         hl7::MSH& msh = reinterpret_cast<hl7::ACK*>(msg.get())->msh;    // finalmq does not have a base class for HL7 Messages, yet, so I use the ACK to get MSH
@@ -81,6 +87,10 @@ public:
         sendEvent(m_peerId, *msg);
     }    
 
+    /// <summary>
+    /// Called when the client is connected to the server. Resends all unacknowledged messages.
+    /// </summary>
+    /// <param name="peerId"></param>
     void connected(PeerId peerId)
     {
         m_peerId = peerId;
@@ -109,6 +119,9 @@ public:
     std::mutex  m_mutex{};
 };
 
+/// <summary>
+/// HL7Client class to send HL7 messages to a server.
+/// </summary>
 class HL7Client
 {
 public:
@@ -152,6 +165,9 @@ public:
         doConnect(); // connect to the server
     }
 
+    /// <summary>
+    /// Connect to the server.
+    /// </summary>
     void doConnect()
     {
         SessionInfo sessionClient = entityContainer.connect("tcp://localhost:7000:delimiter_x:hl7", { {}, {},
@@ -165,6 +181,9 @@ public:
         m_entityClient->connected(peerId);
     }
 
+    /// <summary>
+    /// Destructor of the HL7Client class. Terminates the poller loop and joins the thread.
+    /// </summary>
     ~HL7Client()
     {
         // release the thread
@@ -178,9 +197,10 @@ private:
     std::shared_ptr<EntityClient> m_entityClient{};
 };
 
-
-
-
+/// <summary>
+/// Create an ORM_O01 message with some sample data.
+/// </summary>
+/// <returns>ORM_O01 message</returns>
 static finalmq::StructBasePtr create_ORM_O01()
 {
     auto msgPtr = std::make_shared< hl7::ORM_O01>();
@@ -232,10 +252,11 @@ static finalmq::StructBasePtr create_ORM_O01()
     msgPtr->patient = patient;
 
     // Order Start
-    hl7::ORDER_26 order;
+    msgPtr->order.resize(1);
+    hl7::ORDER_26& order = msgPtr->order[0];
 
     // ORC
-    hl7::ORC orc;
+    hl7::ORC& orc = order.orc;
     orc.orderControl = "NW";
     orc.placerOrderNumber.entityIdentifier = "ID00012324000111";
     orc.placerGroupNumber.entityIdentifier = "BCT";
@@ -248,8 +269,6 @@ static finalmq::StructBasePtr create_ORM_O01()
     orc.orderingProvider.resize(1);
     orc.orderingProvider[0].idNumber = "DocID";
     orc.enteringDevice.identifier = "BCT";
-    order.orc = orc;
-
 
     // OBR
     auto obr = std::make_shared<hl7::OBR>();
@@ -260,14 +279,15 @@ static finalmq::StructBasePtr create_ORM_O01()
     obr->placerField1 = "-";
     //obr->quantity_timing.resize(1);
     //obr->quantity_timing[0].startDate_time = dateTimeStr;
-    auto obrEtc = hl7::OBR_RQD_RQ1_RXO_ODS_ODT_1();
     auto orderDetail = std::make_shared<hl7::ORDER_DETAIL_1>();
+    orderDetail->obr_rqd_rq1_rxo_ods_odt.resize(1);
+    auto& obrEtc = orderDetail->obr_rqd_rq1_rxo_ods_odt[0];
     obrEtc.obr = obr;
-    orderDetail->obr_rqd_rq1_rxo_ods_odt = { obrEtc };
 
     // OBX
-    hl7::OBSERVATION_2 observation1;
-    hl7::OBSERVATION_2 observation2;
+    orderDetail->observation.resize(2);
+    hl7::OBSERVATION_2& observation1 = orderDetail->observation[0];
+    hl7::OBSERVATION_2& observation2 = orderDetail->observation[1];
     observation1.obx.setId_Obx = "1";
     observation1.obx.valueType = "TX";
     observation1.obx.observationIdentifier.identifier = "WEIGHT";
@@ -278,16 +298,16 @@ static finalmq::StructBasePtr create_ORM_O01()
     observation2.obx.observationIdentifier.identifier = "HEIGHT";
     observation2.obx.observationValue = { "165" };
     observation2.obx.units.identifier = "cm";
-    orderDetail->observation = { observation1, observation2 };
 
     order.order_detail = orderDetail;
-    msgPtr->order = { order };
 
     return msgPtr;
 }
 
-
-
+/// <summary>
+/// Program entry point. Create an instance of the HL7Client class and send 10 HL7 messages.
+/// </summary>
+/// <returns>0</returns>
 int main()
 {
     std::shared_ptr<EntityClient> entityClientPtr = std::make_shared<EntityClient>();
