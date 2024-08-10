@@ -34,9 +34,9 @@ set(CODEGENERATOR_CPP ${CODEGENERATOR}/cpp/cpp.js)
 # In hl7options.json there is a filter to use only the messages (trigger events) you need in
 # your project.
 
-set(HL7DEF_DICTIONARY ${FINALMQ_BINARY_DIR}/hl7-dictionary/dist/hl7dictionary.2.7.1.js)
+set(HL7DEF_DICTIONARY ${FINALMQ_BINARY_DIR}/hl7-dictionary/dist/hl7dictionary.2.6.js)
 set(HL7DEF_TABLES ${FINALMQ_BINARY_DIR}/hl7-dictionary/lib/tables.js)
-set(HL7DEF_FMQ ${CMAKE_CURRENT_BINARY_DIR}/hl7dictionary.2.7.1.js.fmq)
+set(HL7DEF_FMQ ${CMAKE_CURRENT_BINARY_DIR}/hl7dictionary.2.6.js.fmq)
 set(HL7DEF_OPTIONS ${CMAKE_CURRENT_SOURCE_DIR}/hl7options.json)
 add_custom_command(
     COMMAND node ${CODEGENERATOR_HL7DEF} --input=${HL7DEF_DICTIONARY} --tables=${HL7DEF_TABLES} --options=${HL7DEF_OPTIONS} --outpath=${CMAKE_CURRENT_BINARY_DIR}
@@ -104,5 +104,3 @@ else()
         target_link_libraries(hl7_client finalmq )
     endif()
 endif(FINALMQ_USE_SSL)
-
-
