@@ -860,7 +860,6 @@ void ParserAbortAndIndex::checkAbortAndIndex(const MetaField& field, const std::
 void ParserAbortAndIndex::checkAbortAndIndex(const MetaField& field, std::int64_t value, LevelState& levelState)
 {
     // check abort
-    std::string strValue;
     const std::string& valueAbort = field.getProperty(ABORTSTRUCT);
     if (!valueAbort.empty())
     {
