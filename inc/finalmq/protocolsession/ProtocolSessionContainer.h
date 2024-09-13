@@ -100,7 +100,6 @@ private:
     IProtocolSessionListPtr m_protocolSessionList{};
     std::unordered_map<std::string, ProtocolBindPtr> m_endpoint2Bind{};
     std::shared_ptr<IStreamConnectionContainer> m_streamConnectionContainer{};
-    int m_counterTimer = 0;
     IExecutorPtr m_executor{};
     IExecutorPtr m_executorPollerThread{};
     std::thread m_thread{};
