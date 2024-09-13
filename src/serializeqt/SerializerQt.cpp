@@ -125,14 +125,14 @@ void SerializerQt::Internal::enterStructNull(const MetaField& /*field*/)
 
 void SerializerQt::Internal::enterArrayStruct(const MetaField& field)
 {
-    m_levelState.push_back(LevelState());
-    LevelState& levelState = m_levelState.back();
-
     assert(field.typeId == MetaTypeId::TYPE_ARRAY_STRUCT);
     if (isWrappedByQVariant())
     {
         serializeQVariantHeader(field);
     }
+
+    m_levelState.push_back(LevelState());
+    LevelState& levelState = m_levelState.back();
 
     const std::string& fixedArray = field.getProperty(FIXED_ARRAY);
     if (fixedArray.empty())

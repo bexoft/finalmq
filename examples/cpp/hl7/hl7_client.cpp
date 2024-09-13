@@ -157,6 +157,8 @@ public:
             case ConnectionEvent::CONNECTIONEVENT_DISCONNECTED:
                 doConnect();    // do an automatic reconnect, in case the connection gets lost
                 break;
+            default:
+                break;
             }
         });
 
