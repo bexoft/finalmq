@@ -124,7 +124,7 @@ void ParserProcessDefaultValues::enterStruct(const MetaField& field)
         if (!m_stackArrayStructState.empty())
         {
             EntryArrayStructState& arrayStructState = m_stackArrayStructState.back();
-            if (arrayStructState.level == 0)
+            if ((arrayStructState.fixedSize != -1) && (arrayStructState.level == 0))
             {
                 if (arrayStructState.numberOfArrayEntries < arrayStructState.fixedSize)
                 {
@@ -401,12 +401,13 @@ void ParserProcessDefaultValues::enterArrayStruct(const MetaField& field)
     markAsDone(field);
     if (!m_skipDefaultValues)
     {
+        int fixedSize = -1;
         const std::string& fixedArray = field.getProperty(FIXED_ARRAY);
         if (!fixedArray.empty())
         {
-            const int fixedSize = atoi(fixedArray.c_str());
-            m_stackArrayStructState.push_back({ fixedSize, 0, 0 });
+            fixedSize = atoi(fixedArray.c_str());
         }
+        m_stackArrayStructState.push_back({ fixedSize, 0, 0 });
         m_visitor->enterArrayStruct(field);
     }
     else
@@ -420,6 +421,7 @@ void ParserProcessDefaultValues::enterArrayStruct(const MetaField& field)
         }
     }
 }
+
 void ParserProcessDefaultValues::exitArrayStruct(const MetaField& field)
 {
     if (m_blockVisitor)
@@ -433,11 +435,14 @@ void ParserProcessDefaultValues::exitArrayStruct(const MetaField& field)
         {
             const EntryArrayStructState& entry = m_stackArrayStructState.back();
             const int fixedSize = entry.fixedSize;
-            const int currentSize = entry.numberOfArrayEntries;
-            for (int i = currentSize; i < fixedSize; ++i)
+            if (fixedSize != -1)
             {
-                enterStruct(*field.fieldWithoutArray);
-                exitStruct(*field.fieldWithoutArray);
+                const int currentSize = entry.numberOfArrayEntries;
+                for (int i = currentSize; i < fixedSize; ++i)
+                {
+                    enterStruct(*field.fieldWithoutArray);
+                    exitStruct(*field.fieldWithoutArray);
+                }
             }
             m_stackArrayStructState.pop_back();
         }
