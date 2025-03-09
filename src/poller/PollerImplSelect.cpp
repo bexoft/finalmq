@@ -38,9 +38,6 @@
 
 namespace finalmq {
 
-static const int SOCKET_POLLIN  = 1;
-static const int SOCKET_POLLOUT = 2;
-
 
 PollerImplSelect::PollerImplSelect()
     : m_socketDescriptorsStable{}

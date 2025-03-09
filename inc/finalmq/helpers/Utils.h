@@ -30,12 +30,17 @@
 namespace finalmq {
 
 
-class SYMBOLEXP Utils
-{
-public:
-    static void split(const std::string& src, ssize_t indexBegin, ssize_t indexEnd, char delimiter, std::vector<std::string>& dest);
-    static std::string replaceAll(std::string str, const std::string& from, const std::string& to);
-    static int readAll(const std::string& filename, std::string& buffer);
-};
+	class SYMBOLEXP Utils
+	{
+	public:
+		static void split(const std::string& src, ssize_t indexBegin, ssize_t indexEnd, char delimiter, std::vector<std::string>& dest);
+		static std::string replaceAll(std::string str, const std::string& from, const std::string& to);
+		static int readAll(const std::string& filename, std::string& buffer);
+		static bool existsProcess(int pid);
+		static unsigned short crc16Calc(unsigned short crc16, unsigned char databyte);
+		static unsigned short crc16Calc(unsigned short crc16, unsigned char* buffer, int size);
+		static unsigned int crc32Calc(unsigned int crc32, unsigned char databyte);
+		static unsigned int crc32Calc(unsigned int crc32, unsigned char* buffer, int size);
+	};
 
 } // namespace finalmq

@@ -1,0 +1,136 @@
+{
+	"imports":[
+	],
+    "namespace":"finalmq.fmqprocess",
+    "enums": [
+        {"type":"StartMode","desc":"","entries":[
+            {"name":"STARTMODE_NONE",           "id":0,     "desc":""},
+            {"name":"STARTMODE_MANUAL",         "id":1,     "desc":""},
+            {"name":"STARTMODE_STARTUP",        "id":2,     "desc":""}
+        ]},
+        {"type":"WatchMode","desc":"","entries":[
+            {"name":"WATCHMODE_NONE",           "id":0,     "desc":""},
+            {"name":"WATCHMODE_POLL",           "id":1,     "desc":""}
+        ]},
+        {"type":"RecoverMode","desc":"","entries":[
+            {"name":"RECOVERMODE_NONE",                 "id":0,     "desc":""},
+            {"name":"RECOVERMODE_RESTART_PROCESS",      "id":1,     "desc":""},
+            {"name":"RECOVERMODE_RESTART_DEPENDANTS",   "id":2,     "desc":""},
+            {"name":"RECOVERMODE_RESTART_ALL",          "id":3,     "desc":""},
+            {"name":"RECOVERMODE_RESTART_SYSTEM",       "id":4,     "desc":""}
+        ]},
+        {"type":"ProcessState","desc":"","entries":[
+            {"name":"STATE_NONE",                   "id":0,     "desc":""},
+            {"name":"STATE_OFF",                    "id":1,     "desc":""},
+            {"name":"STATE_STARTWAITING",           "id":2,     "desc":""},
+            {"name":"STATE_STARTING",               "id":3,     "desc":""},
+            {"name":"STATE_ON",                     "id":4,     "desc":""},
+            {"name":"STATE_STOPPING",               "id":5,     "desc":""},
+            {"name":"STATE_ERROR_DEPENDENCY",       "id":6,     "desc":""},
+            {"name":"STATE_START_TIMEOUT",          "id":7,     "desc":""},
+            {"name":"STATE_ENDED",                  "id":8,     "desc":""},
+            {"name":"STATE_ERROR",                  "id":9,     "desc":""},
+            {"name":"STATE_ERROR_START",            "id":10,    "desc":""}
+        ]},
+        {"type":"ReportId","desc":"","entries":[
+            {"name":"REPORTID_NON",                 "id":0,     "desc":""},
+            {"name":"REPORTID_REBOOT",              "id":1,     "desc":""},
+            {"name":"REPORTID_FAIL",                "id":2,     "desc":""},
+            {"name":"REPORTID_STATECHANGE",         "id":3,     "desc":""},
+            {"name":"REPORTID_WATCHTHREADBLOCKED",  "id":4,     "desc":""},
+            {"name":"REPORTID_KILLPROCESS",         "id":5,     "desc":""},
+            {"name":"REPORTID_STARTTIMEOUT",        "id":6,     "desc":""},
+            {"name":"REPORTID_RECOVER",             "id":7,     "desc":""},
+            {"name":"REPORTID_SUPRESSRECOVER",      "id":8,     "desc":""}
+        ]}
+    ],
+
+    "structs":[
+        {"type":"EntityConfig","desc":"","fields":[
+            {"tid":"string",            "type":"",                  "name":"entityName",            "desc":""},
+            {"tid":"string",            "type":"",                  "name":"endpoint",              "desc":""},
+            {"tid":"enum",              "type":"WatchMode",         "name":"watchMode",             "desc":""}
+        ]},
+        {"type":"ProcessConfig","desc":"","fields":[
+            {"tid":"string",            "type":"",                  "name":"id",                    "desc":""},
+            {"tid":"struct[]",          "type":"EntityConfig",      "name":"entities",              "desc":""},
+            {"tid":"string[]",          "type":"",                  "name":"processDependencies",   "desc":""},
+            {"tid":"string[]",          "type":"",                  "name":"fileSyncAtStart",       "desc":""},
+            {"tid":"enum",              "type":"StartMode",         "name":"startMode",             "desc":""},
+            {"tid":"enum",              "type":"RecoverMode",       "name":"recoverMode",           "desc":""},
+            {"tid":"string",            "type":"",                  "name":"command",               "desc":""},
+            {"tid":"string[]",          "type":"",                  "name":"args",                  "desc":""},
+            {"tid":"string",            "type":"",                  "name":"workingdir",            "desc":""},
+            {"tid":"int32",             "type":"",                  "name":"startTimeout",          "desc":""},
+            {"tid":"int32",             "type":"",                  "name":"termTimeout",           "desc":""},
+            {"tid":"int32",             "type":"",                  "name":"watchInterval",         "desc":""}
+        ]},
+        {"type":"ProcessStatus","desc":"","fields":[
+            {"tid":"struct",            "type":"ProcessConfig",     "name":"config",                "desc":""},
+            {"tid":"enum",              "type":"ProcessState",      "name":"state",                 "desc":""},
+            {"tid":"int32",             "type":"",                  "name":"pid",                   "desc":""},
+            {"tid":"int64",             "type":"",                  "name":"timeRequest",           "desc":""},
+            {"tid":"int64",             "type":"",                  "name":"timeRunning",           "desc":""},
+            {"tid":"int64",             "type":"",                  "name":"timeDone",              "desc":""},
+            {"tid":"bool",              "type":"",                  "name":"startup",               "desc":""},
+            {"tid":"string",            "type":"",                  "name":"errorReason",           "desc":""}
+        ]},
+        {"type":"ReportEntry","desc":"","fields":[
+            {"tid":"int64",                                         "name":"timestamp",             "desc":""},
+            {"tid":"string",                                        "name":"processName",           "desc":""},
+            {"tid":"enum",              "type":"ReportId",          "name":"id",                    "desc":""},
+            {"tid":"int32",                                         "name":"pid",                   "desc":""},
+            {"tid":"enum",              "type":"RecoverMode",       "name":"recoverMode",           "desc":""},
+            {"tid":"enum",              "type":"ProcessState",      "name":"processState",          "desc":""},
+            {"tid":"string",                                        "name":"errorReason",           "desc":""}
+        ]},
+        {"type":"PersistData","desc":"","fields":[
+            {"tid":"bool",              "type":"",                  "name":"rebootAtStartupError",  "desc":""},
+            {"tid":"bool",              "type":"",                  "name":"recover",               "desc":""},
+            {"tid":"int32",             "type":"",                  "name":"pollEntityTimeinterval","desc":""},
+            {"tid":"int32",             "type":"",                  "name":"pollEntityTimeReaction","desc":""},
+            {"tid":"struct[]",          "type":"ProcessConfig",     "name":"config",                "desc":""}
+        ]},
+        {"type":"PersistReport","desc":"","fields":[
+            {"tid":"struct[]",          "type":"ReportEntry",       "name":"report",                "desc":""}
+        ]},
+
+        {"type":"AllProcessesReply","desc":"","fields":[
+            {"tid":"struct[]",          "type":"ProcessStatus",     "name":"processes",             "desc":""}
+        ]},
+        {"type":"InstallRequest","desc":"","fields":[
+            {"tid":"struct",            "type":"ProcessConfig",     "name":"process",               "desc":""}
+        ]},
+        {"type":"UninstallRequest","desc":"","fields":[
+            {"tid":"string",            "type":"",                  "name":"id",                    "desc":""}
+        ]},
+        {"type":"StartRequest","desc":"","fields":[
+            {"tid":"string",            "type":"",                  "name":"id",                    "desc":""}
+        ]},
+        {"type":"StopRequest","desc":"","fields":[
+            {"tid":"string",            "type":"",                  "name":"id",                    "desc":""}
+        ]},
+        {"type":"ReportReply","desc":"","fields":[
+            {"tid":"struct[]",          "type":"ReportEntry",       "name":"report",                "desc":""}
+        ]},
+        {"type":"ShutdownTimeReply","desc":"","fields":[
+            {"tid":"int64",             "type":"",                  "name":"timeShutdown",          "desc":""}
+        ]},
+        {"type":"PollEntityReply","desc":"","fields":[
+            {"tid":"string",             "type":"",                 "name":"errorReason",           "desc":""},
+            {"tid":"enum",               "type":"RecoverMode",      "name":"recoverMode",           "desc":""}
+        ]},
+        {"type":"WatchdogRequest","desc":"","fields":[
+            {"tid":"bool",               "type":"",                 "name":"ok",                    "desc":""}
+        ]},
+        {"type":"ProcessReportChangedRequest","desc":"","fields":[
+            {"tid":"struct[]",           "type":"ReportEntry",      "name":"entries",               "desc":""}
+        ]},
+        {"type":"ProcessStatusChangedRequest","desc":"","fields":[
+            {"tid":"struct[]",           "type":"ProcessStatus",    "name":"status" ,               "desc":""}
+        ]}
+
+    ]
+}
+
+

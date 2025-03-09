@@ -183,7 +183,7 @@ TEST_F(TestIntegrationStreamConnectionContainerSsl, testConnectBind)
                                             .WillOnce(Return(nullptr));
     EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
 
-    IStreamConnectionPtr connection = m_connectionContainer->connect("tcp://localhost:3333", m_mockClientCallback, {{true, SSL_VERIFY_NONE}, 1});
+    IStreamConnectionPtr connection = m_connectionContainer->connect("tcp://localhost:3333", m_mockClientCallback, {{true, SSL_VERIFY_NONE}, {1}});
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
@@ -204,7 +204,7 @@ TEST_F(TestIntegrationStreamConnectionContainerSsl, testReconnectExpires)
     EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(0);
     auto& expectDisconnected = EXPECT_CALL(*m_mockClientCallback, disconnected(_)).Times(1);
 
-    IStreamConnectionPtr connection = m_connectionContainer->connect("tcp://localhost:3333", m_mockClientCallback, {{true, SSL_VERIFY_NONE}, 1, 1});
+    IStreamConnectionPtr connection = m_connectionContainer->connect("tcp://localhost:3333", m_mockClientCallback, {{true, SSL_VERIFY_NONE}, {1, 1}});
     IMessagePtr message = std::make_shared<ProtocolMessage>(0);
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
@@ -331,7 +331,7 @@ TEST_F(TestIntegrationStreamConnectionContainerSsl, testSendLateConnectBind)
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
 
-    bool res2 = m_connectionContainer->connect("tcp://localhost:3333", connection, {{true, SSL_VERIFY_NONE}, 1});
+    bool res2 = m_connectionContainer->connect("tcp://localhost:3333", connection, {{true, SSL_VERIFY_NONE}, {1}});
     ASSERT_EQ(res2, true);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));

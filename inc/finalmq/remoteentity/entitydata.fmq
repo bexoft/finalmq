@@ -82,6 +82,10 @@
         {"type":"RawBytes","desc":"Send pure data for protocols with no meta info.","fields":[
             {"tid":"bytes",       "type":"",          "name":"data",     "desc":"The data","flags":[]}
         ]},
+        {"type":"PingEntity","desc":"","fields":[
+        ]},
+        {"type":"PingEntityReply","desc":"","fields":[
+        ]},
         {"type":"NoData","desc":"Use this type for the request if you register a command with a path and the rquest does not have any data","fields":[
         ]},
         {"type":"GeneralMessage","desc":"A general message holds the serializes data in protobuf format. it can be used, if type structs are not generated","fields":[

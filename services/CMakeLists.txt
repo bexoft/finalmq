@@ -1,6 +1,7 @@
 
 
 add_subdirectory(fmqreg)
+add_subdirectory(processserver)
 
 
 #if (FINALMQ_BUILD_FMQFCGI)

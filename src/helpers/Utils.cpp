@@ -27,78 +27,163 @@
 
 #include "finalmq/helpers/OperatingSystem.h"
 
+#if !defined(WIN32) && !defined(__MINGW32__) 
+#include <dirent.h>
+#include <sys/resource.h>
+#include <fcntl.h>
+#include <execinfo.h>
+#endif
+
+
 namespace finalmq
 {
-void Utils::split(const std::string& src, ssize_t indexBegin, ssize_t indexEnd, char delimiter, std::vector<std::string>& dest)
-{
-    while (indexBegin < indexEnd)
+    void Utils::split(const std::string& src, ssize_t indexBegin, ssize_t indexEnd, char delimiter, std::vector<std::string>& dest)
     {
-        size_t pos = src.find_first_of(delimiter, indexBegin);
-        if (pos == std::string::npos || static_cast<ssize_t>(pos) > indexEnd)
+        while (indexBegin < indexEnd)
         {
-            pos = indexEnd;
-        }
-        ssize_t len = pos - indexBegin;
-        assert(len >= 0);
-        dest.emplace_back(&src[indexBegin], len);
-        indexBegin += len + 1;
-    }
-}
-
-std::string Utils::replaceAll(std::string str, const std::string& from, const std::string& to)
-{
-    size_t start_pos = 0;
-    while ((start_pos = str.find(from, start_pos)) != std::string::npos)
-    {
-        str.replace(start_pos, from.length(), to);
-        start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
-    }
-    return str;
-}
-
-int Utils::readAll(const std::string& filename, std::string& buffer)
-{
-    struct stat s;
-    int res = OperatingSystem::instance().stat(filename.c_str(), &s);
-    if (res == 0)
-    {
-        int fd = OperatingSystem::instance().open(filename.c_str(), O_RDONLY
-#if defined(WIN32) || defined(__MINGW32__)
-                                                                        | O_BINARY
-#endif
-        );
-        if (fd >= 0)
-        {
-            int size = static_cast<int>(s.st_size);
-
-            buffer.resize(size);
-            char* buf = const_cast<char*>(buffer.data());
-
-            int readnum = 0;
-            do
+            size_t pos = src.find_first_of(delimiter, indexBegin);
+            if (pos == std::string::npos || static_cast<ssize_t>(pos) > indexEnd)
             {
-                res = OperatingSystem::instance().read(fd, buf, size);
-                if (res > 0)
-                {
-                    buf += res;
-                    size -= res;
-                    readnum += res;
-                }
-                else if (res == 0)
-                {
-                    // read less than size
-                    buffer.resize(readnum);
-                }
-            } while (size > 0 && res > 0);
-
-            OperatingSystem::instance().close(fd);
-        }
-        else
-        {
-            res = fd;
+                pos = indexEnd;
+            }
+            ssize_t len = pos - indexBegin;
+            assert(len >= 0);
+            dest.emplace_back(&src[indexBegin], len);
+            indexBegin += len + 1;
         }
     }
-    return res;
-}
+
+    std::string Utils::replaceAll(std::string str, const std::string& from, const std::string& to)
+    {
+        size_t start_pos = 0;
+        while ((start_pos = str.find(from, start_pos)) != std::string::npos)
+        {
+            str.replace(start_pos, from.length(), to);
+            start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+        }
+        return str;
+    }
+
+    int Utils::readAll(const std::string& filename, std::string& buffer)
+    {
+        struct stat s;
+        int res = OperatingSystem::instance().stat(filename.c_str(), &s);
+        if (res == 0)
+        {
+            int fd = OperatingSystem::instance().open(filename.c_str(), O_RDONLY
+#if defined(WIN32) || defined(__MINGW32__)
+                | O_BINARY
+#endif
+            );
+            if (fd >= 0)
+            {
+                int size = static_cast<int>(s.st_size);
+
+                buffer.resize(size);
+                char* buf = const_cast<char*>(buffer.data());
+
+                int readnum = 0;
+                do
+                {
+                    res = OperatingSystem::instance().read(fd, buf, size);
+                    if (res > 0)
+                    {
+                        buf += res;
+                        size -= res;
+                        readnum += res;
+                    }
+                    else if (res == 0)
+                    {
+                        // read less than size
+                        buffer.resize(readnum);
+                    }
+                } while (size > 0 && res > 0);
+
+                OperatingSystem::instance().close(fd);
+            }
+            else
+            {
+                res = fd;
+            }
+        }
+        return res;
+    }
+
+
+    bool Utils::existsProcess(int pid)
+    {
+        bool ret;
+#if defined(WIN32) || defined(__MINGW32__)
+        HANDLE handle = ::OpenProcess(PROCESS_QUERY_INFORMATION, false, pid);
+        ret = (handle != 0) ? true : false;
+        ::CloseHandle(handle);
+#elif defined(__QNX___)
+        char buf[30];
+        snprintf(buf, sizeof(buf), "/proc/%d", pid);
+        struct stat st;
+        ret = (stat(buf, &st) == 0);
+#else
+        ret = (getpriority(PRIO_PROCESS, pid) != -1) ? true : false;
+#endif
+        return ret;
+    }
+
+
+    unsigned short Utils::crc16Calc(unsigned short crc16, unsigned char databyte)
+    {
+#define CRC16POLY 0x1021 //crc16 ccitt
+        for (int i = 0; i < 8; ++i)
+        {
+            if (((crc16 & 0x80000000) ? 1 : 0) != (databyte & 1))
+            {
+                crc16 = (crc16 << 1) ^ CRC16POLY;
+            }
+            else
+            {
+                crc16 <<= 1;
+            }
+            databyte >>= 1;
+        }
+        return crc16;
+    }
+
+    unsigned short Utils::crc16Calc(unsigned short crc16, unsigned char* buffer, int size)
+    {
+        for (int i = 0; i < size; i++)
+        {
+            crc16 = crc16Calc(crc16, *buffer);
+            buffer++;
+        }
+        return crc16;
+    }
+
+    unsigned int Utils::crc32Calc(unsigned int crc32, unsigned char databyte)
+    {
+#define CRC32POLY 0x04C11DB7 //crc32
+        for (int i = 0; i < 8; i++)
+        {
+            if (((crc32 & 0x80000000) ? 1 : 0) != (databyte & 1))
+            {
+                crc32 = (crc32 << 1) ^ CRC32POLY;
+            }
+            else
+            {
+                crc32 <<= 1;
+            }
+            databyte >>= 1;
+        }
+        return crc32;
+    }
+
+    unsigned int Utils::crc32Calc(unsigned int crc32, unsigned char* buffer, int size)
+    {
+        for (int i = 0; i < size; i++)
+        {
+            crc32 = crc32Calc(crc32, *buffer);
+            buffer++;
+        }
+        return crc32;
+    }
+
 
 } // namespace finalmq

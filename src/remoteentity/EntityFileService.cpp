@@ -37,7 +37,7 @@ EntityFileServer::EntityFileServer(const std::string& baseDirectory)
     {
         m_baseDirectory += '/';
     }
-    registerCommand<ConnectEntity>([this](const RequestContextPtr& requestContext, const std::shared_ptr<ConnectEntity>& /*request*/) {
+    registerCommand<ConnectEntity>([](const RequestContextPtr& requestContext, const std::shared_ptr<ConnectEntity>& /*request*/) {
         requestContext->reply(Status::STATUS_ENTITY_NOT_FOUND);
     });
 

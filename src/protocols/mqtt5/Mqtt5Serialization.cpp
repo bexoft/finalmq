@@ -27,7 +27,6 @@
 
 namespace finalmq
 {
-static const ssize_t HEADERSIZE = 1;
 
 #define HEADER_Low4bits(header) (((header) >> 0) & 0x0f)
 #define HEADER_Dup(header) (((header) >> 3) & 0x01)
