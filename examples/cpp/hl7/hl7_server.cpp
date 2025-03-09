@@ -54,7 +54,7 @@ public:
             streamInfo << "peer event " << peerEvent.toString();
         });
 
-        registerCommand<hl7::ORM_O01>([this] (const RequestContextPtr& requestContext, const std::shared_ptr<hl7::ORM_O01>& request) {
+        registerCommand<hl7::ORM_O01>([] (const RequestContextPtr& requestContext, const std::shared_ptr<hl7::ORM_O01>& request) {
             assert(request);
 
             hl7::ORM_O01 msg = *request;
@@ -95,7 +95,7 @@ int main()
     EntityServer entityServer;
 
     // register lambda for connection events to see when a network node connects or disconnects.
-    entityContainer.registerConnectionEvent([&entityServer] (const SessionInfo& session, ConnectionEvent connectionEvent) {
+    entityContainer.registerConnectionEvent([] (const SessionInfo& session, ConnectionEvent connectionEvent) {
         const ConnectionData connectionData = session.getConnectionData();
         streamInfo << "connection event at " << connectionData.endpoint
                   << " remote: " << connectionData.endpointPeer

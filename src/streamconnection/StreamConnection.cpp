@@ -63,8 +63,7 @@ void StreamConnection::sendMessage(const IMessagePtr& msg)
                 m_poller->enableWrite(m_socketPrivate->getSocketDescriptor());
 #else
                 bool ex = false;
-                int i = 0;
-                for (auto it = payloads.begin(); it != payloads.end() && !ex; ++i)
+                for (auto it = payloads.begin(); it != payloads.end() && !ex; )
                 {
                     const BufferRef& payload = *it;
                     ++it;

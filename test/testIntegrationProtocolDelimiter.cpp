@@ -174,7 +174,7 @@ TEST_F(TestIntegrationProtocolDelimiterSessionContainer, testConnectBind)
     auto& expectConnected = EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(1);
     EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
 
-    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333:delimiter_long", m_mockClientCallback, { {},1 });
+    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333:delimiter_long", m_mockClientCallback, { {},{1} });
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 

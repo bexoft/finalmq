@@ -379,7 +379,10 @@ namespace finalmq
         {
             foreach (var t in m_threads)
             {
-                t.Join();
+                if (t.IsAlive)
+                {
+                    t.Join();
+                }
             }
         }
 

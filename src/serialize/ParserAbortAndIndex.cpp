@@ -330,7 +330,7 @@ void ParserAbortAndIndex::enterBytes(const MetaField& field, Bytes&& value)
         return;
     }
     
-    m_visitor->enterBytes(field, move(value));
+    m_visitor->enterBytes(field, std::move(value));
 }
 void ParserAbortAndIndex::enterBytes(const MetaField& field, const BytesElement* value, ssize_t size)
 {
@@ -444,7 +444,7 @@ void ParserAbortAndIndex::enterArrayBoolMove(const MetaField& field, std::vector
         return;
     }
     
-    m_visitor->enterArrayBoolMove(field, move(value));
+    m_visitor->enterArrayBoolMove(field, std::move(value));
 }
 void ParserAbortAndIndex::enterArrayBool(const MetaField& field, const std::vector<bool>& value)
 {
@@ -466,7 +466,7 @@ void ParserAbortAndIndex::enterArrayInt8(const MetaField& field, std::vector<std
         return;
     }
     
-    m_visitor->enterArrayInt8(field, move(value));
+    m_visitor->enterArrayInt8(field, std::move(value));
 }
 void ParserAbortAndIndex::enterArrayInt8(const MetaField& field, const std::int8_t* value, ssize_t size)
 {
@@ -488,7 +488,7 @@ void ParserAbortAndIndex::enterArrayInt16(const MetaField& field, std::vector<st
         return;
     }
     
-    m_visitor->enterArrayInt16(field, move(value));
+    m_visitor->enterArrayInt16(field, std::move(value));
 }
 void ParserAbortAndIndex::enterArrayInt16(const MetaField& field, const std::int16_t* value, ssize_t size)
 {
@@ -510,7 +510,7 @@ void ParserAbortAndIndex::enterArrayUInt16(const MetaField& field, std::vector<s
         return;
     }
     
-    m_visitor->enterArrayUInt16(field, move(value));
+    m_visitor->enterArrayUInt16(field, std::move(value));
 }
 void ParserAbortAndIndex::enterArrayUInt16(const MetaField& field, const std::uint16_t* value, ssize_t size)
 {
@@ -532,7 +532,7 @@ void ParserAbortAndIndex::enterArrayInt32(const MetaField& field, std::vector<st
         return;
     }
     
-    m_visitor->enterArrayInt32(field, move(value));
+    m_visitor->enterArrayInt32(field, std::move(value));
 }
 void ParserAbortAndIndex::enterArrayInt32(const MetaField& field, const std::int32_t* value, ssize_t size)
 {
@@ -554,7 +554,7 @@ void ParserAbortAndIndex::enterArrayUInt32(const MetaField& field, std::vector<s
         return;
     }
     
-    m_visitor->enterArrayUInt32(field, move(value));
+    m_visitor->enterArrayUInt32(field, std::move(value));
 }
 void ParserAbortAndIndex::enterArrayUInt32(const MetaField& field, const std::uint32_t* value, ssize_t size)
 {
@@ -576,7 +576,7 @@ void ParserAbortAndIndex::enterArrayInt64(const MetaField& field, std::vector<st
         return;
     }
     
-    m_visitor->enterArrayInt64(field, move(value));
+    m_visitor->enterArrayInt64(field, std::move(value));
 }
 void ParserAbortAndIndex::enterArrayInt64(const MetaField& field, const std::int64_t* value, ssize_t size)
 {
@@ -598,7 +598,7 @@ void ParserAbortAndIndex::enterArrayUInt64(const MetaField& field, std::vector<s
         return;
     }
     
-    m_visitor->enterArrayUInt64(field, move(value));
+    m_visitor->enterArrayUInt64(field, std::move(value));
 }
 void ParserAbortAndIndex::enterArrayUInt64(const MetaField& field, const std::uint64_t* value, ssize_t size)
 {
@@ -620,7 +620,7 @@ void ParserAbortAndIndex::enterArrayFloat(const MetaField& field, std::vector<fl
         return;
     }
     
-    m_visitor->enterArrayFloat(field, move(value));
+    m_visitor->enterArrayFloat(field, std::move(value));
 }
 void ParserAbortAndIndex::enterArrayFloat(const MetaField& field, const float* value, ssize_t size)
 {
@@ -642,7 +642,7 @@ void ParserAbortAndIndex::enterArrayDouble(const MetaField& field, std::vector<d
         return;
     }
     
-    m_visitor->enterArrayDouble(field, move(value));
+    m_visitor->enterArrayDouble(field, std::move(value));
 }
 void ParserAbortAndIndex::enterArrayDouble(const MetaField& field, const double* value, ssize_t size)
 {
@@ -664,7 +664,7 @@ void ParserAbortAndIndex::enterArrayStringMove(const MetaField& field, std::vect
         return;
     }
     
-    m_visitor->enterArrayStringMove(field, move(value));
+    m_visitor->enterArrayStringMove(field, std::move(value));
 }
 void ParserAbortAndIndex::enterArrayString(const MetaField& field, const std::vector<std::string>& value)
 {
@@ -686,7 +686,7 @@ void ParserAbortAndIndex::enterArrayBytesMove(const MetaField& field, std::vecto
         return;
     }
     
-    m_visitor->enterArrayBytesMove(field, move(value));
+    m_visitor->enterArrayBytesMove(field, std::move(value));
 }
 void ParserAbortAndIndex::enterArrayBytes(const MetaField& field, const std::vector<Bytes>& value)
 {
@@ -708,7 +708,7 @@ void ParserAbortAndIndex::enterArrayEnum(const MetaField& field, std::vector<std
         return;
     }
     
-    m_visitor->enterArrayEnum(field, move(value));
+    m_visitor->enterArrayEnum(field, std::move(value));
 }
 void ParserAbortAndIndex::enterArrayEnum(const MetaField& field, const std::int32_t* value, ssize_t size)
 {
@@ -730,7 +730,7 @@ void ParserAbortAndIndex::enterArrayEnumMove(const MetaField& field, std::vector
         return;
     }
     
-    m_visitor->enterArrayEnumMove(field, move(value));
+    m_visitor->enterArrayEnumMove(field, std::move(value));
 }
 void ParserAbortAndIndex::enterArrayEnum(const MetaField& field, const std::vector<std::string>& value)
 {

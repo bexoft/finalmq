@@ -32,9 +32,11 @@ namespace finalmq {
 class MockIOperatingSystem : public IOperatingSystem
 {
 public:
-    MOCK_METHOD(int, open, (const char* filename, int flags), (override));
+    MOCK_METHOD(int, open, (const char* filename, int flags, int sflags), (override));
     MOCK_METHOD(int, stat, (const char* filename, struct stat* buf), (override));
     MOCK_METHOD(int, fstat, (int fd, struct stat* buf), (override));
+    MOCK_METHOD(int, lseek, (int fd, long offset, int origin), (override));
+    MOCK_METHOD(int, unlink, (const char* filename), (override));
     MOCK_METHOD(int, close, (int fd), (override));
     MOCK_METHOD(int, closeSocket, (SOCKET fd), (override));
     MOCK_METHOD(SOCKET, socket, (int af, int type, int protocol), (override));

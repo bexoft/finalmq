@@ -94,7 +94,7 @@ void SerializerStruct::enterStruct(const MetaField& field)
         assert(variant);
         m_varValueToVariant = std::make_shared<VarValueToVariant>(*variant);
         m_visitor = &m_varValueToVariant->getVisitor();
-        m_varValueToVariant->setExitNotification([this, &field]() {
+        m_varValueToVariant->setExitNotification([this]() {
             assert(m_varValueToVariant);
             m_visitor = nullptr;
             m_varValueToVariant->convert();

@@ -65,16 +65,16 @@ using finalmq::IMessage;
 
 static const int LONGPOLL_RELEASE_INTERVAL = 20000;
 
-static const std::string KEY_REQUEST                = "request";
-static const std::string KEY_REPLY                  = "reply";
-static const std::string KEY_REMOVESESSION          = "removesession";
-static const std::string KEY_SETEXPIRATIONDURATION  = "setexpirationduration";
-static const std::string KEY_LONGPOLL               = "longpoll";
+static const std::string KEY_REQUEST = "request";
+static const std::string KEY_REPLY = "reply";
+static const std::string KEY_REMOVESESSION = "removesession";
+static const std::string KEY_SETEXPIRATIONDURATION = "setexpirationduration";
+static const std::string KEY_LONGPOLL = "longpoll";
 
 
-static const int CYCLETIME                  = 1000;
-static const int CHECK_RECONNECT_INTERVAL   = 1000;
-static const int RECONNECT_INTERVAL         = 5000;
+static const int CYCLETIME = 1000;
+static const int CHECK_RECONNECT_INTERVAL = 1000;
+static const int RECONNECT_INTERVAL = 5000;
 
 static const int DEFAULT_SESSION_EXPIRATION_DURATION = 5 * 60000;   // 5 minutes of inactivity will remove a session.
 
@@ -167,7 +167,7 @@ private:
     Request(const Request&) = delete;
     const Request& operator =(const Request&) = delete;
 
-    FCGX_Request*   m_request = nullptr;
+    FCGX_Request* m_request = nullptr;
 };
 typedef std::shared_ptr<Request>    RequestPtr;
 
@@ -176,10 +176,10 @@ struct SessionAndEntity
     struct EntityAndPeerId
     {
         IRemoteEntityPtr    entity;
-        PeerId              peerId{PEERID_INVALID};
+        PeerId              peerId{ PEERID_INVALID };
     };
     IProtocolSessionPtr             session;
-    EntityId                        entityId{ENTITYID_INVALID};
+    EntityId                        entityId{ ENTITYID_INVALID };
     std::string                     entityName;
     std::deque<EntityAndPeerId>     entities;
 };
@@ -195,7 +195,7 @@ public:
         streamInfo << "HTTP session created";
 
         // register peer events to see when a remote entity connects or disconnects.
-        registerPeerEvent([this] (PeerId peerId, PeerEvent peerEvent, bool incoming) {
+        registerPeerEvent([this](PeerId peerId, PeerEvent peerEvent, bool incoming) {
             if (peerEvent == PeerEvent::PEER_DISCONNECTED)
             {
                 std::unique_lock<std::mutex> lock(m_mutex);
@@ -208,9 +208,9 @@ public:
                     putRequestEntry(peerId, finalmq::CORRELATIONID_NONE, rawDataMessage);
                 }
             }
-        });
+            });
 
-        registerCommandFunction("*", [this] (RequestContextPtr& requestContext, const finalmq::StructBasePtr& structBase) {
+        registerCommandFunction("*", [this](RequestContextPtr& requestContext, const finalmq::StructBasePtr& structBase) {
             assert(structBase);
             std::unique_lock<std::mutex> lock(m_mutex);
             finalmq::CorrelationId correlationIdHttp = finalmq::CORRELATIONID_NONE;
@@ -221,7 +221,7 @@ public:
                 m_pendingEntityReplies[correlationIdHttp] = std::move(requestContext);
             }
             putRequestEntry(requestContext->peerId(), correlationIdHttp, *structBase);
-        });
+            });
     }
 
     ~HttpSession()
@@ -336,7 +336,7 @@ public:
         }
     }
 
-    
+
     bool getPeerId(const std::string& objectName, PeerId& peerId)
     {
         std::unique_lock<std::mutex> lock(m_mutex);
@@ -447,18 +447,21 @@ public:
 
     ~RequestManager()
     {
-        m_thread.join();
+        if (m_thread.joinable())
+        {
+            m_thread.join();
+        }
     }
 
     void init()
     {
-        m_entityContainer->init(CYCLETIME, CHECK_RECONNECT_INTERVAL, [this] () {
+        m_entityContainer->init(CYCLETIME, CHECK_RECONNECT_INTERVAL, [this]() {
             timeout();
-        }, nullptr, true);  // storeRawDataInReceiveStruct = true -> we would like to receive raw data
+            }, nullptr, true);  // storeRawDataInReceiveStruct = true -> we would like to receive raw data
 
-        m_thread = std::thread([this] () {
+        m_thread = std::thread([this]() {
             m_entityContainer->run();
-        });
+            });
     }
 
     void timeout()
@@ -495,7 +498,7 @@ public:
     {
         const char* src = str.first;
         char* dest = str.first;
-        char code[3] = {0};
+        char code[3] = { 0 };
         unsigned long c = 0;
 
         for (int i = 0; i < str.second; ++i)
@@ -530,12 +533,12 @@ public:
             finalmq::BufferRef query;
             if (str)
             {
-                query = {const_cast<char*>(querystring), str - querystring};
+                query = { const_cast<char*>(querystring), str - querystring };
                 querystring = str + 1;
             }
             else
             {
-                query = {const_cast<char*>(querystring), strlen(querystring)};
+                query = { const_cast<char*>(querystring), strlen(querystring) };
             }
             if (DECODE)
             {
@@ -547,11 +550,11 @@ public:
                 if (eq)
                 {
                     int posEq = eq - query.first;
-                    listQuery.emplace_back(std::string{query.first, eq}, finalmq::BufferRef{eq+1, query.second - posEq - 1});
+                    listQuery.emplace_back(std::string{ query.first, eq }, finalmq::BufferRef{ eq + 1, query.second - posEq - 1 });
                 }
                 else
                 {
-                    listQuery.emplace_back(std::string{query.first, query.first + query.second}, finalmq::BufferRef{nullptr, 0});
+                    listQuery.emplace_back(std::string{ query.first, query.first + query.second }, finalmq::BufferRef{ nullptr, 0 });
                 }
             }
         } while (str != nullptr);
@@ -593,7 +596,7 @@ public:
                 std::string cookie;
                 if (str)
                 {
-                    cookie = {cookies, str};
+                    cookie = { cookies, str };
                     cookies = str + 1;
                 }
                 else
@@ -721,8 +724,8 @@ public:
         char* strStartCommand = static_cast<char*>(memrchr(value.first, '/', ixEndHeader));
         if (strStartCommand != nullptr)
         {
-            objectName = {value.first, strStartCommand};
-            type = {strStartCommand + 1, value.first + ixEndHeader};
+            objectName = { value.first, strStartCommand };
+            type = { strStartCommand + 1, value.first + ixEndHeader };
         }
 
         return ixEndHeader;
@@ -748,12 +751,12 @@ public:
         }
         else
         {
-            sessionAndEntity.entities.push_back({entity, peerId});
+            sessionAndEntity.entities.push_back({ entity, peerId });
             lock.unlock();
 
             if (!found)
             {
-                m_fmqRegistryClient.getService(objectName, [this, objectName] (Status status, const std::shared_ptr<GetServiceReply>& reply) {
+                m_fmqRegistryClient.getService(objectName, [this, objectName](Status status, const std::shared_ptr<GetServiceReply>& reply) {
                     std::unique_lock<std::mutex> lock(m_mutex);
                     std::string endpoint;
                     auto it = m_objectName2sessionAndEntity.find(objectName);
@@ -802,7 +805,7 @@ public:
                             m_objectName2sessionAndEntity.erase(it);
                         }
                     }
-                });
+                    });
             }
         }
     }
@@ -866,7 +869,7 @@ public:
             }
             IMessage::Metainfo metainfo;
             requestPtr->headerToMetainfo(metainfo);
-            httpSession->sendRequest(peerId, std::move(metainfo), message, [this, requestPtr] (PeerId peerId, Status status, IMessage::Metainfo& metainfo, const std::shared_ptr<StructBase>& reply) {
+            httpSession->sendRequest(peerId, std::move(metainfo), message, [this, requestPtr](PeerId peerId, Status status, IMessage::Metainfo& metainfo, const std::shared_ptr<StructBase>& reply) {
                 assert(requestPtr);
                 Request& request = *requestPtr;
                 if (reply && reply->getRawContentType() != RemoteEntityFormatJson::CONTENT_TYPE)
@@ -884,7 +887,7 @@ public:
                 {
                     sendReply(request, "", status, nullptr, 0);
                 }
-            });
+                });
         }
     }
 
@@ -1063,9 +1066,9 @@ private:
 int main(void)
 {
     // display log traces
-    Logger::instance().registerConsumer([] (const LogContext& context, const char* text) {
+    Logger::instance().registerConsumer([](const LogContext& context, const char* text) {
         std::cerr << context.filename << "(" << context.line << ") " << text << std::endl;
-    });
+        });
 
     FCGX_Init();
     RequestManager requestManager;

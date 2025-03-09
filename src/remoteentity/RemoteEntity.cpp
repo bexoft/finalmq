@@ -487,6 +487,9 @@ RemoteEntity::RemoteEntity()
         PeerId peerId = requestContext->peerId();
         removePeer(peerId, Status::STATUS_PEER_DISCONNECTED);
     });
+    registerCommand<PingEntity>([](const RequestContextPtr& requestContext, const std::shared_ptr<PingEntity>& /*request*/) {
+        requestContext->reply(PingEntityReply());
+    });
 }
 
 RemoteEntity::~RemoteEntity()
