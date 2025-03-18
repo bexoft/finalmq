@@ -29,28 +29,10 @@
 #include <mutex>
 
 #include "finalmq/helpers/FmqDefines.h"
+#include "finalmq/interfaces/fmqlog.fmq.h"
 
 namespace finalmq
 {
-enum LogLevel
-{
-    LOG_NONE = 0,
-    LOG_DEBUG = 1,
-    LOG_INFO = 2,
-    LOG_WARNING = 3,
-    LOG_ERROR = 4,
-    LOG_CRITICAL = 5,
-    LOG_FATAL = 6,
-};
-
-struct LogContext
-{
-    LogLevel level = LOG_NONE;
-    const char* module = nullptr;
-    const char* method = nullptr;
-    const char* filename = nullptr;
-    int line = -1;
-};
 
 typedef std::function<void(const LogContext& context, const char* text)> FuncLogEvent;
 

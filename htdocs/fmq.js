@@ -334,21 +334,32 @@ class FmqSession
         var xmlhttp;
         xmlhttp = this._createRequest();
         xmlhttp.onreadystatechange=function()                                           
-        {                          
+        {       
 			// console.log('xmlhttp.readyState: ' + xmlhttp.readyState + ', xmlhttp.status: ' + xmlhttp.status + ', response: ' + xmlhttp.responseText);
             if (xmlhttp.readyState == 3 || xmlhttp.readyState == 4)
             {
                 var err = false;
                 if (xmlhttp.status == 200)
                 {
+                    var endOfString = xmlhttp.responseText.length;
+                    if (xmlhttp.readyState == 3)
+                    {
+                        endOfString = xmlhttp.responseText.lastIndexOf('\t\t');
+                        if (endOfString <= xmlhttp._this._pushSize)
+                        {
+                            // chunk not complete, yet
+                            return;
+                        }
+                        endOfString += 2;
+                    }
 					xmlhttp._this._updateSessionId(xmlhttp);
 					if (!err && xmlhttp._this._flagServerDisconnected)
 					{
 						xmlhttp._this._serverConnected();
 					}
 
-					var delta = xmlhttp.responseText.substring(xmlhttp._this._pushSize);
-					xmlhttp._this._pushSize = xmlhttp.responseText.length;
+					var delta = xmlhttp.responseText.substring(xmlhttp._this._pushSize, endOfString);
+					xmlhttp._this._pushSize = endOfString;
 
 					if (xmlhttp.readyState == 4)
 					{
@@ -356,56 +367,50 @@ class FmqSession
 						xmlhttp._this._serverPoll();
 					}
 
-                    var responses = delta.split(']\t');
+                    var responses = delta.split('\t\t');
                     for (var i = 0; i < responses.length; ++i)
                     {
                         var response = responses[i];
-						var ixStart = response.indexOf('[');
-						if (ixStart != -1)
-						{
-							response = response.substring(ixStart);
-							if (response.length > 0)
-							{
-                                var jsonHeaderParams = response.substring(1).split(',\t');
-								response += ']';
-								var command = xmlhttp._this._getParams(response);
-								var header = command[0];
-								var params = command[1];
-								params.fmqheader = header;
-                                params.fmqheaderjson = jsonHeaderParams[0];
-                                params.fmqparamsjson = '';
-                                if (jsonHeaderParams.length >= 2)
-                                {
-                                    params.fmqparamsjson = jsonHeaderParams[1];
-                                }
-                                params.httpstatus = xmlhttp.status;
-                                var path = header.path;
-                                if (!path || path == '')
-                                {
-                                    path = header.type;
-                                }
+                        if (response.length >= 2)
+                        {
+                            var jsonHeaderParams = response.substring(1, response.length-1).split(',\t');
+                            var command = xmlhttp._this._getParams(response);
+                            var header = command[0];
+                            var params = command[1];
+                            params.fmqheader = header;
+                            params.fmqheaderjson = jsonHeaderParams[0];
+                            params.fmqparamsjson = '';
+                            if (jsonHeaderParams.length >= 2)
+                            {
+                                params.fmqparamsjson = jsonHeaderParams[1];
+                            }
+                            params.httpstatus = xmlhttp.status;
+                            var path = header.path;
+                            if (!path || path == '')
+                            {
+                                path = header.type;
+                            }
 
-								var entity = xmlhttp._this._getEntity(header.srcid);
-								if (entity && entity[path])
-								{
-                                    var pathWithUnderscore = path;
-                                    pathWithUnderscore = pathWithUnderscore.replace(/\//g, '_');  // replace all '/' by '_'
-                                    pathWithUnderscore = pathWithUnderscore.replace(/\./g, '_');  // replace all '.' by '_'
-                                    pathWithUnderscore = pathWithUnderscore.replace(/\(/g, '_');  // replace all '(' by '_'
-                                    pathWithUnderscore = pathWithUnderscore.replace(/\)/g, '_');  // replace all ')' by '_'
-                                    pathWithUnderscore = pathWithUnderscore.replace(/\,/g, '_');  // replace all ',' by '_'
-									entity[pathWithUnderscore](header.corrid, params);
-								}
-								else if (entity && entity['allRequests'])
-                                {
-									entity['allRequests'](header.corrid, path, params);
-                                }
-                                else
-								{
-									xmlhttp._this.replyStatus(header.srcid, header.corrid, 'STATUS_REQUEST_NOT_FOUND');
-								}
-							}
-						}
+                            var entity = xmlhttp._this._getEntity(header.srcid);
+                            if (entity && entity[path])
+                            {
+                                var pathWithUnderscore = path;
+                                pathWithUnderscore = pathWithUnderscore.replace(/\//g, '_');  // replace all '/' by '_'
+                                pathWithUnderscore = pathWithUnderscore.replace(/\./g, '_');  // replace all '.' by '_'
+                                pathWithUnderscore = pathWithUnderscore.replace(/\(/g, '_');  // replace all '(' by '_'
+                                pathWithUnderscore = pathWithUnderscore.replace(/\)/g, '_');  // replace all ')' by '_'
+                                pathWithUnderscore = pathWithUnderscore.replace(/\,/g, '_');  // replace all ',' by '_'
+                                entity[pathWithUnderscore](header.corrid, params);
+                            }
+                            else if (entity && entity['allRequests'])
+                            {
+                                entity['allRequests'](header.corrid, path, params);
+                            }
+                            else
+                            {
+                                xmlhttp._this.replyStatus(header.srcid, header.corrid, 'STATUS_REQUEST_NOT_FOUND');
+                            }
+                        }
                     }
                 }
                 else

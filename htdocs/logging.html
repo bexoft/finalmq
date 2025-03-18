@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>Logging</title>
+        <meta http-equiv="Pragma" content="no-cache">
+        
+        <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+        <meta name="description" content="" />
+        <meta name="keywords" content="" />
+
+        <script type="text/javascript" src="fmq.js"></script>
+        <script type="text/javascript" src="logging.js"></script>
+                                                                                        
+        <script type="text/javascript" >
+
+        //////////////////////////////////////////////////////////////////////
+
+        </script>
+                                                                                        
+    </head>                                                                         
+
+    <body onLoad="loadPage()" onUnload="unloadPage()">                                                                          
+
+    <!-- ********************************************************* -->
+           
+		<div id="mainSimple">
+								   
+		   <h2>Log Entries</h2> 
+		   
+			<table cellspacing="0" cellpadding="4" border="0" width="100%" align="center">
+				<tr>
+					<td width="85%">
+						<iframe id="loggingframe" src="loggingtable.html" height="700" width="99%">
+						</iframe>
+					</td>
+				
+					<td style="vertical-align:top">
+						<button button class="button" onclick="g_fmqLoggingServer.clear()">Clear</button>
+						<br>
+						<button button class="button" onclick="g_fmqLoggingServer.stop()">Stop</button>
+						<br>
+						<button button class="button" onclick="g_fmqLoggingServer.start()">Start</button>
+						<br>
+						
+						<form width="15%">
+							<fieldset>
+								<br>
+								<input type="radio" name="priority" value="1" id="ID_FILTERTRACE" checked>TRACE
+								<br>
+								<input type="radio" name="priority" value="2" id="ID_FILTERDEBUG" checked>DEBUG
+								<br>
+								<input type="radio" name="priority" value="3" id="ID_FILTERINFO" >INFO
+								<br>
+								<input type="radio" name="priority" value="4" id="ID_FILTERNOTICE" >NOTICE
+								<br>
+								<input type="radio" name="priority" value="5" id="ID_FILTERWARN" >WARN
+								<br>
+								<input type="radio" name="priority" value="6" id="ID_FILTERERROR" >ERROR
+								<br>
+								<input type="radio" name="priority" value="7" id="ID_FILTERCRIT" >CRIT
+								<br>
+								<input type="radio" name="priority" value="8" id="ID_FILTERFATAL" >FATAL
+								<br/>
+								<label><b>Component</b></label>
+								<br/>
+								<input type="text" id="ID_FILTERCOMPONENT1" />
+								<br/>
+								<input type="text" id="ID_FILTERCOMPONENT2" />
+								<br/>
+								<label><b>Text</b></label>
+								<br/>
+								<input type="text" id="ID_FILTERTEXT1" />
+								<br/>
+								<input type="text" id="ID_FILTERTEXT2" />
+								<br/>
+							</fieldset>
+						</form>
+						
+						<button button class="button" onclick="g_fmqLoggingServer.applyFilter()">Apply</button>
+					</td>
+				</tr>
+			</table>
+		</div>
+    <!-- ********************************************************* -->
+    </body>
+</html>                                                                         

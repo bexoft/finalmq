@@ -29,11 +29,14 @@
 #include "finalmq/variant/VariantValues.h"
 #include "finalmq/protocols/ProtocolMqtt5Client.h"
 #include "finalmq/interfaces/fmqprocess.fmq.h"
+#include "finalmq/interfaces/fmqlog.fmq.h"
 
 // the definition of the messages are in the file helloworld.fmq
 #include "helloworld.fmq.h"
 
 #include <iostream>
+#include <iomanip>
+#include <sstream>
 
 // the modulename is needed for the logger streams (streamDebug, streamInfo, streamWarning, streamError, streamCritical, streamFatal)
 #define MODULENAME  "helloworld_server"
@@ -132,6 +135,16 @@ public:
 };
 
 
+static std::string currentISO8601TimeUTC()
+{
+    auto now = std::chrono::system_clock::now();
+    auto itt = std::chrono::system_clock::to_time_t(now);
+    std::ostringstream ss;
+    ss << std::put_time(gmtime(&itt), "%FT%TZ");
+    return ss.str();
+}
+
+
 //#define MULTITHREADED
 
 
@@ -168,6 +181,14 @@ int main()
     // note: multiple entities can be registered at a EntityContainer. Also an entity can be registered to multiple EntityContainers.
     EntityServer entityServer;
     entityContainer.registerEntity(&entityServer, "MyService");
+
+    SessionInfo sessionLog = entityContainer.connect("tcp://localhost:9200:headersize:protobuf");
+    PeerId peerIdLog = entityServer.connect(sessionLog, "LoggingServer", [](PeerId peerId, Status status) {
+        streamInfo << "Logging Server connect reply: " << status.toString();
+    });
+    Logger::instance().registerConsumer([&entityServer, peerIdLog](const LogContext& context, const char* text) {
+        entityServer.sendEvent(peerIdLog, "log", LogEntry(currentISO8601TimeUTC(), "HelloWorldServer", context, text));
+    });
 
     // register an entity for file download. The name "*" means that if an entity name, given by a client, is not found by name, 
     // then this entity will try to open a file inside the htdocs directory. An entity name can contain slashes ('/')

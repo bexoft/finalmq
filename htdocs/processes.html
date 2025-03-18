@@ -1,0 +1,85 @@
+<html>                                                                          
+<head>                                                                          
+
+<script type="text/javascript" src="fmq.js"></script>
+
+<script type="text/javascript" >
+
+//////////////////////////////////////////////////////////////////////
+
+var g_fmqSession = new FmqSession();
+var g_fmqProcessServer = null;
+
+function processTableEntry(processState)
+{
+    var tableEntry = '';
+    tableEntry += '<tr>';
+    tableEntry += '<td>' + processState.config.id + '</td>';
+    tableEntry += '<td>' + processState.pid + '</td>';
+    tableEntry += '<td>' + processState.state + '</td>';
+    tableEntry += '<td><button type="button" onclick="startProcess(\''+processState.config.id + '\')">Start</button></td>';
+    tableEntry += '<td><button type="button" onclick="stopProcess(\''+processState.config.id + '\')">Stop</button></td>';
+    tableEntry += '</tr>';
+    return tableEntry;
+}
+
+function startProcess(id)
+{
+    g_fmqProcessServer.requestReply('start', { id: id }, function(outparams) {
+    });
+}
+
+function stopProcess(id)
+{
+    g_fmqProcessServer.requestReply('stop', { id: id }, function(outparams) {
+    });
+}
+
+function getProcessList()
+{
+    g_fmqProcessServer.requestReply('processes', { }, function(outparams) {
+        var table = '<table cellspacing="0" cellpadding="4" border="1">';
+        table += '<tr>';
+        table += '<th>ID</th>';
+        table += '<th>pid</th>';
+        table += '<th>state</th>';
+        table += '</tr>';
+        for (i in outparams.processes)
+        {
+            table += processTableEntry(outparams.processes[i]);
+        }
+        table += '<tr/>';    
+        table += '</table>';    
+        document.getElementById("processlist").innerHTML=table;
+    });
+}
+
+function loadPage() {
+    g_fmqSession.createSession(function() {
+		g_fmqProcessServer = g_fmqSession.createEntity('ProcessServer');
+        getProcessList();
+        setInterval('getProcessList()',1000);
+    });
+}
+
+function unloadPage() {
+    g_fmqSession.removeSession();
+}
+
+
+
+</script>                                                                       
+                                                                                
+</head>                                                                         
+
+<body onLoad="loadPage()" onUnload="unloadPage()">                                                                          
+
+<h1>Processes</h1>
+
+
+<div id="processlist"></div>
+
+
+                                                                        
+</body>                                                                         
+</html>                                                                         
