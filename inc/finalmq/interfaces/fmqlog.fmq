@@ -1,0 +1,34 @@
+{
+	"imports":[
+	],
+    "namespace":"finalmq",
+    "enums": [
+        {"type":"LogLevel","desc":"","entries":[
+            {"name":"LOG_NONE",         "id":0,     "desc":""},
+            {"name":"LOG_TRACE",        "id":1,     "desc":""},
+            {"name":"LOG_DEBUG",        "id":2,     "desc":""},
+            {"name":"LOG_INFO",         "id":3,     "desc":""},
+            {"name":"LOG_NOTICE",       "id":4,     "desc":""},
+            {"name":"LOG_WARNING",      "id":5,     "desc":""},
+            {"name":"LOG_ERROR",        "id":6,     "desc":""},
+            {"name":"LOG_CRITICAL",     "id":7,     "desc":""},
+            {"name":"LOG_FATAL",        "id":8,     "desc":""}
+        ]}
+    ],
+
+    "structs":[
+        {"type":"LogContext","desc":"","fields":[
+            {"tid":"enum",              "type":"LogLevel",          "name":"level",                 "desc":""},
+            {"tid":"string",            "type":"",                  "name":"module",                "desc":""},
+            {"tid":"string",            "type":"",                  "name":"method",                "desc":""},
+            {"tid":"string",            "type":"",                  "name":"filename",              "desc":""},
+            {"tid":"int32",             "type":"",                  "name":"line",                  "desc":""}
+        ]},
+        {"type":"LogEntry","desc":"","fields":[
+            {"tid":"string",            "type":"",                  "name":"timestamp",             "desc":""},
+            {"tid":"string",            "type":"",                  "name":"component",             "desc":""},
+            {"tid":"struct",            "type":"LogContext",        "name":"context",               "desc":""},
+            {"tid":"string",            "type":"",                  "name":"text",                  "desc":""}
+        ]}
+    ]
+}

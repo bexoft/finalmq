@@ -137,12 +137,18 @@ add_custom_command(
     COMMENT "Generating cpp code out of fmqreg.fmq."
 )
 
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/interfaces)
 add_custom_command(
     COMMAND node ${CODEGENERATOR_CPP} --input=${CMAKE_CURRENT_SOURCE_DIR}/inc/finalmq/interfaces/fmqprocess.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/interfaces --exportmacro=EXPORT_finalmq
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/inc/finalmq/interfaces/fmqprocess.fmq
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/interfaces/fmqprocess.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/interfaces/fmqprocess.fmq.h
     COMMENT "Generating cpp code out of fmqprocess.fmq."
+)
+
+add_custom_command(
+    COMMAND node ${CODEGENERATOR_CPP} --input=${CMAKE_CURRENT_SOURCE_DIR}/inc/finalmq/interfaces/fmqlog.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/interfaces --exportmacro=EXPORT_finalmq
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/inc/finalmq/interfaces/fmqlog.fmq
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/interfaces/fmqlog.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/interfaces/fmqlog.fmq.h
+    COMMENT "Generating cpp code out of fmqlog.fmq."
 )
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/Qt)
@@ -189,6 +195,7 @@ SET(FINALMQ_LIBRARY_SOURCES ${SOURCES}
     ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/remoteentity/entitydata.fmq.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/interfaces/fmqreg.fmq.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/interfaces/fmqprocess.fmq.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/interfaces/fmqlog.fmq.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/Qt/qtdata.fmq.cpp)
 
 add_library(finalmq SHARED ${FINALMQ_LIBRARY_SOURCES})

@@ -1,6 +1,6 @@
 {
-	"imports":[
-	],
+    "imports":[
+    ],
     "namespace":"finalmq.fmqprocess",
     "enums": [
         {"type":"StartMode","desc":"","entries":[
@@ -62,8 +62,7 @@
             {"tid":"string[]",          "type":"",                  "name":"args",                  "desc":""},
             {"tid":"string",            "type":"",                  "name":"workingdir",            "desc":""},
             {"tid":"int32",             "type":"",                  "name":"startTimeout",          "desc":""},
-            {"tid":"int32",             "type":"",                  "name":"termTimeout",           "desc":""},
-            {"tid":"int32",             "type":"",                  "name":"watchInterval",         "desc":""}
+            {"tid":"int32",             "type":"",                  "name":"termTimeout",           "desc":""}
         ]},
         {"type":"ProcessStatus","desc":"","fields":[
             {"tid":"struct",            "type":"ProcessConfig",     "name":"config",                "desc":""},

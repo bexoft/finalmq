@@ -1,6 +1,6 @@
 {
-	"imports":[
-	],
+	  "imports":[
+    ],
     "namespace":"finalmq.fmqreg",
     "enums": [
         {"type":"SocketProtocol","desc":"","entries":[

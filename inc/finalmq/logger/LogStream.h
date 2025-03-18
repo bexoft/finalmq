@@ -36,8 +36,10 @@
 
 #define STREAM_BASIC(level)     static const finalmq::LogContext TOKENPASTE2(context, __LINE__){level, MODULENAME, METHODNAME, __FILE__, __LINE__}; finalmq::LogStream::getStream(TOKENPASTE2(context, __LINE__))
 
+#define streamTrace                 STREAM_BASIC(finalmq::LogLevel::LOG_TRACE)
 #define streamDebug                 STREAM_BASIC(finalmq::LogLevel::LOG_DEBUG)
 #define streamInfo                  STREAM_BASIC(finalmq::LogLevel::LOG_INFO)
+#define streamNotice                STREAM_BASIC(finalmq::LogLevel::LOG_NOTICE)
 #define streamWarning               STREAM_BASIC(finalmq::LogLevel::LOG_WARNING)
 #define streamError                 STREAM_BASIC(finalmq::LogLevel::LOG_ERROR)
 #define streamCritical              STREAM_BASIC(finalmq::LogLevel::LOG_CRITICAL)
