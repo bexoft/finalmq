@@ -53,7 +53,7 @@ struct ConnectionData
     std::string sockaddr{};
     bool incomingConnection = false;
     SOCKET sd = INVALID_SOCKET;
-    int reconnectInterval = 5000;
+    int reconnectInterval = 1000;
     int totalReconnectDuration = -1;
     std::chrono::time_point<std::chrono::steady_clock> startTime{};
     bool ssl = false;

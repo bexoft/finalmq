@@ -141,6 +141,12 @@ int Socket::connect(const sockaddr* addr, int addrlen)
 {
     assert(m_sd);
     int err = OperatingSystem::instance().connect(m_sd->getDescriptor(), addr, addrlen);
+#if !defined(WIN32) && !defined(__MINGW32__)
+    if ((err == -1) && (m_af == AF_UNIX) && (getLastError() == SOCKETERROR(ENOENT) || getLastError() == SOCKETERROR(ECONNREFUSED)))
+    {
+        err = 0;
+    }
+#endif
     err = handleError(err, "connect");
 #ifdef USE_OPENSSL
     if (m_sslContext && err == 0)

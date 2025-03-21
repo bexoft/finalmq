@@ -233,16 +233,19 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const IProtocolSession
 
         std::string pathWithoutFirstSlash = { &buffer[1], &buffer[ixCorrelationId] };
         pathWithoutFirstSlash.erase(pathWithoutFirstSlash.find_last_not_of(" \n\r\t") + 1);
+        size_t maxMatchLength = 0;
         const std::string* foundEntityName = nullptr;
         hybrid_ptr<IRemoteEntity> remoteEntity;
-        for (auto it = name2Entity.begin(); it != name2Entity.end() && !foundEntityName; ++it)
+        for (auto it = name2Entity.begin(); it != name2Entity.end(); ++it)
         {
             const std::string& prefix = it->first;
             if (prefix != WILDCARD &&
                 pathWithoutFirstSlash.size() >= prefix.size() &&
                 pathWithoutFirstSlash.compare(0, prefix.size(), prefix) == 0 &&
-                (pathWithoutFirstSlash.size() == prefix.size() || pathWithoutFirstSlash[prefix.size()] == '/'))
+                (pathWithoutFirstSlash.size() == prefix.size() || pathWithoutFirstSlash[prefix.size()] == '/') &&
+                prefix.size() > maxMatchLength)
             {
+                maxMatchLength = prefix.size();
                 foundEntityName = &prefix;
                 remoteEntity = it->second;
             }
