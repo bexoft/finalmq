@@ -74,7 +74,7 @@ static const std::string KEY_LONGPOLL = "longpoll";
 
 static const int CYCLETIME = 1000;
 static const int CHECK_RECONNECT_INTERVAL = 1000;
-static const int RECONNECT_INTERVAL = 5000;
+static const int RECONNECT_INTERVAL = 1000;
 
 static const int DEFAULT_SESSION_EXPIRATION_DURATION = 5 * 60000;   // 5 minutes of inactivity will remove a session.
 

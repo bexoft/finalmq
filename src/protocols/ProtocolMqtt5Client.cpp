@@ -395,7 +395,7 @@ void ProtocolMqtt5Client::disconnected(const IStreamConnectionPtr& /*connection*
     std::unique_lock<std::mutex> lock(m_mutex);
     auto callback = m_callback.lock();
     m_connection = nullptr;
-    m_timerReconnect.setTimeout(5000);
+    m_timerReconnect.setTimeout(1000);
     lock.unlock();
 
     if (callback)
