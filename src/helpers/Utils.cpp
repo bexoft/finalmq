@@ -136,18 +136,18 @@ namespace finalmq
         {
             if (((crc16 & 0x80000000) ? 1 : 0) != (databyte & 1))
             {
-                crc16 = (crc16 << 1) ^ CRC16POLY;
+                crc16 = static_cast<unsigned short>((crc16 << 1) ^ CRC16POLY);
             }
             else
             {
-                crc16 <<= 1;
+                crc16 = static_cast<unsigned short>(crc16 << 1);
             }
-            databyte >>= 1;
+            databyte = static_cast<unsigned short>(databyte >> 1);
         }
         return crc16;
     }
 
-    unsigned short Utils::crc16Calc(unsigned short crc16, unsigned char* buffer, int size)
+    unsigned short Utils::crc16Calc(unsigned short crc16, const unsigned char* buffer, int size)
     {
         for (int i = 0; i < size; i++)
         {
@@ -170,12 +170,12 @@ namespace finalmq
             {
                 crc32 <<= 1;
             }
-            databyte >>= 1;
+            databyte = static_cast<unsigned char>(databyte >> 1);
         }
         return crc32;
     }
 
-    unsigned int Utils::crc32Calc(unsigned int crc32, unsigned char* buffer, int size)
+    unsigned int Utils::crc32Calc(unsigned int crc32, const unsigned char* buffer, int size)
     {
         for (int i = 0; i < size; i++)
         {

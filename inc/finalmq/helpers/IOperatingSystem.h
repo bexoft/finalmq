@@ -36,7 +36,7 @@ namespace finalmq {
         virtual int open(const char* filename, int flags, int sflags = 0) = 0;
         virtual int stat(const char* filename, struct stat* buf) = 0;
         virtual int fstat(int fd, struct stat* buf) = 0;
-        virtual int lseek(int fd, long offset, int origin) = 0;
+        virtual off_t lseek(int fd, off_t offset, int origin) = 0;
         virtual int unlink(const char* filename) = 0;
         virtual int close(int fd) = 0;
         virtual int closeSocket(SOCKET fd) = 0;

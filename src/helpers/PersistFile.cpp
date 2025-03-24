@@ -49,23 +49,24 @@ static const char defaultChecksum[] = "\nxxxxxxxx";
 
 std::string PersistFile::calcChecksum(const char* buffer, int size)
 {
-	unsigned int crc = Utils::crc32Calc(0xffffffff, (unsigned char*)buffer, size);
+	unsigned int crc = Utils::crc32Calc(0xffffffff, reinterpret_cast<const unsigned char*>(buffer), size);
 	char buf[30];
 	snprintf(buf, sizeof(buf), "\n%08X", crc);
 	buf[sizeof(buf)-1] = 0;
-	assert((int)strlen(buf) == sizeOfChecksum);
+	assert(static_cast<int>(strlen(buf)) == sizeOfChecksum);
 	return buf;
 }
 
 ///////////////
 
 PersistFile::PersistFile()
+	: m_filename()
 {
 }
 
 PersistFile::PersistFile(const char* filename)
+	: m_filename(filename)
 {
-	init(filename);
 }
 
 void PersistFile::init(const char* filename)
@@ -98,17 +99,17 @@ bool PersistFile::write(const std::vector<char>& buffer, bool sync)
 	if (hasChanged)
 	{
 		// write to inactive file
-		File file;
-		int res = file.openForClearWrite(filenameInactive.c_str());
+		File file1;
+		int res = file1.openForClearWrite(filenameInactive.c_str());
 		if (res != -1)
 		{
 			std::string sumString = calcChecksum(buffer.data(), static_cast<int>(buffer.size()));
-			int size = static_cast<int>(buffer.size() + sumString.size());
-			std::vector<char> dest(size);
+			int size1 = static_cast<int>(buffer.size() + sumString.size());
+			std::vector<char> dest(size1);
 			memcpy(dest.data(), buffer.data(), buffer.size());
 			memcpy(&dest[buffer.size()], sumString.data(), sumString.size());
-			int sizeWritten = file.write(dest.data(), size);
-			if (sizeWritten == size)
+			int sizeWritten = file1.write(dest.data(), size1);
+			if (sizeWritten == size1)
 			{
 				ok = true;
 			}
@@ -116,10 +117,10 @@ bool PersistFile::write(const std::vector<char>& buffer, bool sync)
 			if (sync)
 			{
 #if !defined(WIN32) && !defined(__MINGW32__)
-				res1 = file.sync();
+				res1 = file1.sync();
 #endif
 			}
-			int res2 = file.close();
+			int res2 = file1.close();
 			if (ok && (res1 != 0 || res2 != 0))
 			{
 				ok = false;
@@ -129,17 +130,17 @@ bool PersistFile::write(const std::vector<char>& buffer, bool sync)
 			if (sync && ok)
 			{
 				ok = false;
-				int size = File::getFileSize(filenameInactive.c_str());
-				if (size == (int)buffer.size() + sizeOfChecksum)
+				int size2 = File::getFileSize(filenameInactive.c_str());
+				if (size2 == static_cast<int>(buffer.size()) + sizeOfChecksum)
 				{
 					std::vector<char> bufCheck;
-					bufCheck.resize(size);
-					File file;
-					res = file.openForRead(filenameInactive.c_str());
+					bufCheck.resize(size2);
+					File file2;
+					res = file2.openForRead(filenameInactive.c_str());
 					if (res != -1)
 					{
-						int sizeRead = file.read(bufCheck.data(), size);
-						if (sizeRead == size)
+						int sizeRead = file2.read(bufCheck.data(), size2);
+						if (sizeRead == size2)
 						{
 							if (memcmp(bufCheck.data(), buffer.data(), buffer.size()) == 0 &&
 								memcmp(&bufCheck[buffer.size()], sumString.c_str(), sumString.size()) == 0)
@@ -147,7 +148,7 @@ bool PersistFile::write(const std::vector<char>& buffer, bool sync)
 								ok = true;
 							}
 						}
-						file.close();
+						file2.close();
 					}
 				}
 			}
@@ -256,7 +257,7 @@ bool PersistFile::checkFile(const char* filename, std::vector<char>& buffer, boo
 	{
 		*hasChanged = true;
 	}
-	int sizeTotal = File::getFileSize(filename);
+	int sizeTotal = static_cast<int>(File::getFileSize(filename));
 	int sizeData = sizeTotal - sizeOfChecksum;
 	if (sizeData >= 0)
 	{

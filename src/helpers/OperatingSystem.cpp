@@ -60,7 +60,7 @@ namespace finalmq
         return ::fstat(fd, buf);
     }
 
-    int OperatingSystemImpl::lseek(int fd, long offset, int origin)
+    off_t OperatingSystemImpl::lseek(int fd, off_t offset, int origin)
     {
         return ::lseek(fd, offset, origin);
     }

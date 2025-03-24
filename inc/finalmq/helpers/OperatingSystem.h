@@ -71,7 +71,7 @@ namespace finalmq
         virtual int open(const char* filename, int flags, int sflags = 0) override;
         virtual int stat(const char* filename, struct stat* buf) override;
         virtual int fstat(int fd, struct ::stat* buf) override;
-        virtual int lseek(int fd, long offset, int origin) override;
+        virtual off_t lseek(int fd, off_t offset, int origin) override;
         virtual int unlink(const char* filename) override;
         virtual int close(int fd) override;
         virtual int closeSocket(SOCKET fd) override;

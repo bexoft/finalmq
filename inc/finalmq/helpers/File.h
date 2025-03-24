@@ -43,11 +43,11 @@ public:
 	int openForClearWrite(const char* filename);
 	int openForWrite(const char* filename);
 	int close();
-	int getFileSize();
+	off_t getFileSize();
 	time_t getFileTime();
 	int read(char* buffer, int size);
 	int write(char* buffer, int size);
-	int seek(int offset);
+	off_t seek(off_t offset);
 	int unlink();
 	int sync();
 
@@ -58,7 +58,7 @@ public:
 	static int write(const char* filename, int offset, char* buffer, int size, bool sync, unsigned char fillbyte = 0xff);
 
 	static int unlink(const char* filename);
-	static int getFileSize(const char* filename);
+	static off_t getFileSize(const char* filename);
 	static time_t getFileTime(const char* filename);
 	static bool doesFileExist(const char* filename);
 	static bool truncate(const char* filename, int size);
