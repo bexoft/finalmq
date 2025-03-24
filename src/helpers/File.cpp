@@ -36,6 +36,8 @@
 #if defined(WIN32)
 #include <direct.h>
 #include <io.h>
+#else
+#include <unistd.h>
 #endif
 
 
@@ -49,8 +51,9 @@ using namespace finalmq;
 
 
 
-File::File() :
-	m_fd(-1)
+File::File() 
+	: m_fd(-1)
+	, m_filename()
 {
 }
 
@@ -171,9 +174,9 @@ bool File::truncate(const char* filename, int size)
 	return ret;
 }
 
-int File::getFileSize()
+off_t File::getFileSize()
 {
-	int size = -1;
+	off_t size = -1;
 	if (m_fd >= 0)
 	{
 #if defined(WIN32) || defined(__MINGW32__)
@@ -234,7 +237,7 @@ int File::read(char* buffer, int size)
 			// read less than size
 			return readnum;
 		}
-		buffer = (char*)buffer + res;
+		buffer = buffer + res;
 		size -= res;
 		readnum += res;
 	} while (size > 0);
@@ -258,7 +261,7 @@ int File::write(char* buffer, int size)
 			// wrote less than size
 			return wrotenum;
 		}
-		buffer = (char*)buffer + res;
+		buffer = buffer + res;
 		size -= res;
 		wrotenum += res;
 	} while (size > 0);
@@ -273,7 +276,7 @@ int File::unlink()
 }
 
 
-int File::seek(int offset)
+off_t File::seek(off_t offset)
 {
 	return OperatingSystem::instance().lseek(m_fd, offset, SEEK_SET);
 }
@@ -300,9 +303,9 @@ int File::sync()
 #endif
 }
 
-int File::getFileSize(const char* filename)
+off_t File::getFileSize(const char* filename)
 {
-	int size = -1;
+	off_t size = -1;
 	struct stat st;
 	int res = stat(filename, &st);
 	if (res == 0)
@@ -338,7 +341,7 @@ int File::readAll(const char* filename, std::vector<char>& buffer)
 	int fd = file.openForRead(filename);
 	if (fd >= 0)
 	{
-		int num = file.getFileSize();
+		off_t num = file.getFileSize();
 		buffer.resize(num);
 		ret = file.read(buffer.data(), static_cast<int>(buffer.size()));
 		if (ret >= 0)
@@ -360,17 +363,17 @@ int File::readSection(const char* filename, std::vector<char>& buffer, int offse
 	int fd = file.openForRead(filename);
 	if (fd >= 0)
 	{
-		int sizeFile = file.getFileSize();
+		off_t sizeFile = file.getFileSize();
 		if (offset < sizeFile)
 		{
-			int off = 0;
+			off_t off = 0;
 			if (offset > 0)
 			{
 				off = file.seek(offset);
 			}
 			if (offset == off)
 			{
-				int num = sizeFile - offset;
+				off_t num = sizeFile - offset;
 				if (num > maxNum)
 				{
 					num = maxNum;
@@ -441,13 +444,14 @@ int File::write(const char* filename, int offset, char* buffer, int size, bool s
 	if (fd >= 0)
 	{
 		ret = 0;
-		int filesize = file.getFileSize();
+		off_t filesize = file.getFileSize();
 		if (offset > filesize)
 		{
-			int len = offset - filesize;
-			char* buffer = new char[len];
-			memset(buffer, fillbyte, len);
-			ret = file.write(buffer, len);
+			off_t len = offset - filesize;
+			std::vector<char> bufferFill;
+			bufferFill.resize(len);
+			memset(bufferFill.data(), fillbyte, len);
+			ret = file.write(bufferFill.data(), static_cast<int>(len));
 			if (ret == len)
 			{
 				ret = 0;
@@ -456,11 +460,10 @@ int File::write(const char* filename, int offset, char* buffer, int size, bool s
 			{
 				ret = -1;
 			}
-			delete[] buffer;
 		}
 		if (ret == 0)
 		{
-			ret = file.seek(offset);
+			ret = static_cast<int>(file.seek(offset));
 			if (ret == offset)
 			{
 				ret = file.write(buffer, size);

@@ -38,9 +38,9 @@ namespace finalmq {
 		static int readAll(const std::string& filename, std::string& buffer);
 		static bool existsProcess(int pid);
 		static unsigned short crc16Calc(unsigned short crc16, unsigned char databyte);
-		static unsigned short crc16Calc(unsigned short crc16, unsigned char* buffer, int size);
+		static unsigned short crc16Calc(unsigned short crc16, const unsigned char* buffer, int size);
 		static unsigned int crc32Calc(unsigned int crc32, unsigned char databyte);
-		static unsigned int crc32Calc(unsigned int crc32, unsigned char* buffer, int size);
+		static unsigned int crc32Calc(unsigned int crc32, const unsigned char* buffer, int size);
 	};
 
 } // namespace finalmq
