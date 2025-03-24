@@ -142,7 +142,7 @@ namespace finalmq
             {
                 crc16 = static_cast<unsigned short>(crc16 << 1);
             }
-            databyte = static_cast<unsigned short>(databyte >> 1);
+            databyte = static_cast<unsigned char>(databyte >> 1);
         }
         return crc16;
     }
