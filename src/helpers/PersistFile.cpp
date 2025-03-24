@@ -130,7 +130,7 @@ bool PersistFile::write(const std::vector<char>& buffer, bool sync)
 			if (sync && ok)
 			{
 				ok = false;
-				int size2 = File::getFileSize(filenameInactive.c_str());
+				int size2 = static_cast<int>(File::getFileSize(filenameInactive.c_str()));
 				if (size2 == static_cast<int>(buffer.size()) + sizeOfChecksum)
 				{
 					std::vector<char> bufCheck;
