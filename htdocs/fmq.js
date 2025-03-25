@@ -404,13 +404,13 @@ class FmqSession
                                     }
                                 }
 
-                                var pathMethodWithUnderscore = path.replace(/[\//.(),]g, '_');  // replace all '/.(),' by '_'
+                                var pathMethodWithUnderscore = pathMethod.replace(/[\//.(),]/g, '_');  // replace all '/.(),' by '_'
 
                                 if (entity[pathMethodWithUnderscore])
                                 {
                                     entity[pathMethodWithUnderscore](header.corrid, params);
                                 }
-                                else if (entity && entity['allRequests'])
+                                else if (entity['allRequests'])
                                 {
                                     entity['allRequests'](header.corrid, path, params);
                                 }
