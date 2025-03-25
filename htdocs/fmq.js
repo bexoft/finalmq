@@ -385,30 +385,39 @@ class FmqSession
                                 params.fmqparamsjson = jsonHeaderParams[1];
                             }
                             params.httpstatus = xmlhttp.status;
-                            var path = header.path;
-                            if (!path || path == '')
-                            {
-                                path = header.type;
-                            }
 
                             var entity = xmlhttp._this._getEntity(header.srcid);
-                            if (entity && entity[path])
+                            if (entity)
                             {
-                                var pathWithUnderscore = path;
-                                pathWithUnderscore = pathWithUnderscore.replace(/\//g, '_');  // replace all '/' by '_'
-                                pathWithUnderscore = pathWithUnderscore.replace(/\./g, '_');  // replace all '.' by '_'
-                                pathWithUnderscore = pathWithUnderscore.replace(/\(/g, '_');  // replace all '(' by '_'
-                                pathWithUnderscore = pathWithUnderscore.replace(/\)/g, '_');  // replace all ')' by '_'
-                                pathWithUnderscore = pathWithUnderscore.replace(/\,/g, '_');  // replace all ',' by '_'
-                                entity[pathWithUnderscore](header.corrid, params);
-                            }
-                            else if (entity && entity['allRequests'])
-                            {
-                                entity['allRequests'](header.corrid, path, params);
-                            }
-                            else
-                            {
-                                xmlhttp._this.replyStatus(header.srcid, header.corrid, 'STATUS_REQUEST_NOT_FOUND');
+                                var path = header.path;
+                                var pathMethod = path;
+                                if (!path || path == '')
+                                {
+                                    path = header.type;
+                                    pathMethod = path;
+                                }
+                                else
+                                {
+                                    if (path.startsWith('/' + entity._name))
+                                    {
+                                        pathMethod = path.substring(entity._name.length + 2);
+                                    }
+                                }
+
+                                var pathMethodWithUnderscore = path.replace(/[\//.(),]g, '_');  // replace all '/.(),' by '_'
+
+                                if (entity[pathMethodWithUnderscore])
+                                {
+                                    entity[pathMethodWithUnderscore](header.corrid, params);
+                                }
+                                else if (entity && entity['allRequests'])
+                                {
+                                    entity['allRequests'](header.corrid, path, params);
+                                }
+                                else
+                                {
+                                    xmlhttp._this.replyStatus(header.srcid, header.corrid, 'STATUS_REQUEST_NOT_FOUND');
+                                }
                             }
                         }
                     }
