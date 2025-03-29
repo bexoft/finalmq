@@ -39,7 +39,6 @@ JsonBuilder::JsonBuilder(IZeroCopyBuffer& buffer, int maxBlockSize)
     : m_zeroCopybuffer(buffer)
     , m_maxBlockSize(maxBlockSize)
 {
-
 }
 
 JsonBuilder::~JsonBuilder()

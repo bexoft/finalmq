@@ -37,11 +37,11 @@ class Variant;
 struct IVariantVisitor
 {
     virtual ~IVariantVisitor() {}
-    virtual void enterLeaf(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name) = 0;
-    virtual void enterStruct(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name) = 0;
-    virtual void exitStruct(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name) = 0;
-    virtual void enterList(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name) = 0;
-    virtual void exitList(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name) = 0;
+    virtual void enterLeaf(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name, bool parentIsStruct) = 0;
+    virtual void enterStruct(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name, bool parentIsStruct) = 0;
+    virtual void exitStruct(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name, bool parentIsStruct) = 0;
+    virtual void enterList(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name, bool parentIsStruct) = 0;
+    virtual void exitList(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name, bool parentIsStruct) = 0;
 };
 
 
@@ -56,12 +56,12 @@ struct IVariantValue
     virtual const Variant* getVariant(const std::string& name) const = 0;
     virtual std::shared_ptr<IVariantValue> clone() const = 0;
     virtual bool operator ==(const IVariantValue& rhs) const = 0;
-    virtual bool add(const std::string& name, const Variant& variant) = 0;
-    virtual bool add(const std::string& name, Variant&& variant) = 0;
-    virtual bool add(const Variant& variant) = 0;
-    virtual bool add(Variant&& variant) = 0;
+    virtual Variant* add(const std::string& name, const Variant& variant) = 0;
+    virtual Variant* add(const std::string& name, Variant&& variant) = 0;
+    virtual Variant* add(const Variant& variant) = 0;
+    virtual Variant* add(Variant&& variant) = 0;
     virtual ssize_t size() const = 0;
-    virtual void accept(IVariantVisitor& visitor, Variant& variant, ssize_t index, int level, ssize_t size, const std::string& name) = 0;
+    virtual void accept(IVariantVisitor& visitor, Variant& variant, ssize_t index, int level, ssize_t size, const std::string& name, bool parentIsStruct) = 0;
 };
 
 

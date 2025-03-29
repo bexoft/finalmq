@@ -55,7 +55,7 @@ void VariantToVarValue::convert()
 
 // IVariantVisitor
 
-void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int level, ssize_t /*size*/, const std::string& name)
+void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int level, ssize_t /*size*/, const std::string& name, bool /*parentIsStruct*/)
 {
     const Variant& variant = var;
 
@@ -348,7 +348,7 @@ void VariantToVarValue::enterLeaf(Variant& var, int type, ssize_t /*index*/, int
     }
 }
 
-void VariantToVarValue::enterStruct(Variant& /*variant*/, int type, ssize_t /*index*/, int level, ssize_t /*size*/, const std::string& name)
+void VariantToVarValue::enterStruct(Variant& /*variant*/, int type, ssize_t /*index*/, int level, ssize_t /*size*/, const std::string& name, bool /*parentIsStruct*/)
 {
     static const MetaField* fieldStruct = m_structVarValue->getFieldByName("valstruct");
     static const MetaField* fieldList = m_structVarValue->getFieldByName("vallist");
@@ -391,7 +391,7 @@ void VariantToVarValue::enterStruct(Variant& /*variant*/, int type, ssize_t /*in
     m_fieldStack.push_back(fieldWithoutArray);
 }
 
-void VariantToVarValue::exitStruct(Variant& /*variant*/, int type, ssize_t /*index*/, int level, ssize_t /*size*/, const std::string& /*name*/)
+void VariantToVarValue::exitStruct(Variant& /*variant*/, int type, ssize_t /*index*/, int level, ssize_t /*size*/, const std::string& /*name*/, bool /*parentIsStruct*/)
 {
     static const MetaField* fieldStruct = m_structVarValue->getFieldByName("valstruct");
     static const MetaField* fieldList = m_structVarValue->getFieldByName("vallist");
@@ -417,14 +417,14 @@ void VariantToVarValue::exitStruct(Variant& /*variant*/, int type, ssize_t /*ind
     }
 }
 
-void VariantToVarValue::enterList(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name)
+void VariantToVarValue::enterList(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name, bool parentIsStruct)
 {
-    enterStruct(variant, type, index, level, size, name);
+    enterStruct(variant, type, index, level, size, name, parentIsStruct);
 }
 
-void VariantToVarValue::exitList(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name)
+void VariantToVarValue::exitList(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name, bool parentIsStruct)
 {
-    exitStruct(variant, type, index, level, size, name);
+    exitStruct(variant, type, index, level, size, name, parentIsStruct);
 }
 
 

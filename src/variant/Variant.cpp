@@ -80,16 +80,16 @@ Variant& Variant::operator =(Variant&& rhs) noexcept
 }
 
 
-void Variant::accept(IVariantVisitor& visitor, ssize_t index, int level, ssize_t size, const std::string& name)
+void Variant::accept(IVariantVisitor& visitor, ssize_t index, int level, ssize_t size, const std::string& name, bool parentIsStruct)
 {
 
     if (m_value)
     {
-        m_value->accept(visitor, *this, index, level, size, name);
+        m_value->accept(visitor, *this, index, level, size, name, parentIsStruct);
     }
     else
     {
-       visitor.enterLeaf(*this, VARTYPE_NONE, index, level, size, name);
+       visitor.enterLeaf(*this, VARTYPE_NONE, index, level, size, name, parentIsStruct);
     }
 }
 
@@ -138,38 +138,38 @@ bool Variant::operator ==(const Variant& rhs) const
 
 
 
-bool Variant::add(const std::string& name, const Variant& variant)
+Variant* Variant::add(const std::string& name, const Variant& variant)
 {
     if (m_value)
     {
         return m_value->add(name, variant);
     }
-    return false;
+    return nullptr;
 }
-bool Variant::add(const std::string& name, Variant&& variant)
+Variant* Variant::add(const std::string& name, Variant&& variant)
 {
     if (m_value)
     {
         return m_value->add(name, std::move(variant));
     }
-    return false;
+    return nullptr;
 }
 
-bool Variant::add(const Variant& variant)
+Variant* Variant::add(const Variant& variant)
 {
     if (m_value)
     {
         return m_value->add(variant);
     }
-    return false;
+    return nullptr;
 }
-bool Variant::add(Variant&& variant)
+Variant* Variant::add(Variant&& variant)
 {
     if (m_value)
     {
         return m_value->add(std::move(variant));
     }
-    return false;
+    return nullptr;
 }
 
 ssize_t Variant::size() const

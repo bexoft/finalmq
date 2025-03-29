@@ -155,36 +155,64 @@ bool VariantValueStruct::operator ==(const IVariantValue& rhs) const
 
 
 
-bool VariantValueStruct::add(const std::string& name, const Variant& variant)
+Variant* VariantValueStruct::add(const std::string& name, const Variant& variant)
 {
     auto it = find(name);
     if (it == m_value->end())
     {
         m_value->emplace_back(name, variant);
-        return true;
+        return &m_value->back().second;
     }
-    return false;
+    else
+    {
+        it->second = variant;
+        return &it->second;
+    }
 }
 
-bool VariantValueStruct::add(const std::string& name, Variant&& variant)
+Variant* VariantValueStruct::add(const std::string& name, Variant&& variant)
 {
     auto it = find(name);
     if (it == m_value->end())
     {
         m_value->emplace_back(name, std::move(variant));
-        return true;
+        return &m_value->back().second;
     }
-    return false;
+    else
+    {
+        it->second = variant;
+        return &it->second;
+    }
 }
 
-bool VariantValueStruct::add(const Variant& /*variant*/)
+Variant* VariantValueStruct::add(const Variant& variant)
 {
-    return false;
+    auto it = find("");
+    if (it == m_value->end())
+    {
+        m_value->emplace_back("", variant);
+        return &m_value->back().second;
+    }
+    else
+    {
+        it->second = variant;
+        return &it->second;
+    }
 }
 
-bool VariantValueStruct::add(Variant&& /*variant*/)
+Variant* VariantValueStruct::add(Variant&& variant)
 {
-    return false;
+    auto it = find("");
+    if (it == m_value->end())
+    {
+        m_value->emplace_back("", std::move(variant));
+        return &m_value->back().second;
+    }
+    else
+    {
+        it->second = variant;
+        return &it->second;
+    }
 }
 
 ssize_t VariantValueStruct::size() const
@@ -192,20 +220,20 @@ ssize_t VariantValueStruct::size() const
     return m_value->size();
 }
 
-void VariantValueStruct::accept(IVariantVisitor& visitor, Variant& variant, ssize_t index, int level, ssize_t size, const std::string& name)
+void VariantValueStruct::accept(IVariantVisitor& visitor, Variant& variant, ssize_t index, int level, ssize_t size, const std::string& name, bool parentIsStruct)
 {
-    visitor.enterStruct(variant, VARTYPE_STRUCT, index, level, size, name);
+    visitor.enterStruct(variant, VARTYPE_STRUCT, index, level, size, name, parentIsStruct);
     level++;
     ssize_t i = 0;
     ssize_t subsize = m_value->size();
     for (auto it = m_value->begin(); it != m_value->end(); ++it)  //std::list<std::string, Variant>::iterator????
     {
         Variant& subVariant = it->second;
-        subVariant.accept(visitor, i, level, subsize, it->first);
+        subVariant.accept(visitor, i, level, subsize, it->first, true);
         i++;
     }
     --level;
-    visitor.exitStruct(variant, VARTYPE_STRUCT, index, level, size, name);
+    visitor.exitStruct(variant, VARTYPE_STRUCT, index, level, size, name, parentIsStruct);
 }
 
 }   // namespace finalmq

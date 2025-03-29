@@ -40,7 +40,7 @@ public:
 	LoggingServer()
 	{
 		// register peer events to see when a remote entity connects or disconnects.
-		registerPeerEvent([this](PeerId peerId, const SessionInfo& session, EntityId entityId, PeerEvent peerEvent, bool incoming) {
+        registerPeerEvent([](PeerId peerId, const SessionInfo& session, EntityId entityId, PeerEvent peerEvent, bool incoming) {
 			streamInfo << "peer event " << peerEvent.toString();
 		});
 

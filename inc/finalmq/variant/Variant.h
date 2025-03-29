@@ -152,17 +152,17 @@ public:
     Variant(Variant&& rhs) noexcept;
     Variant& operator=(Variant&& rhs) noexcept;
 
-    void accept(IVariantVisitor& visitor, ssize_t index = 0, int level = 0, ssize_t size = 0, const std::string& name = "");
+    void accept(IVariantVisitor& visitor, ssize_t index = 0, int level = 0, ssize_t size = 0, const std::string& name = "", bool parentIsStruct = false);
 
     Variant* getVariant(const std::string& name);
     const Variant* getVariant(const std::string& name) const;
 
     bool operator==(const Variant& rhs) const;
 
-    bool add(const std::string& name, const Variant& variant);
-    bool add(const std::string& name, Variant&& variant);
-    bool add(const Variant& variant);
-    bool add(Variant&& variant);
+    Variant* add(const std::string& name, const Variant& variant);
+    Variant* add(const std::string& name, Variant&& variant);
+    Variant* add(const Variant& variant);
+    Variant* add(Variant&& variant);
     ssize_t size() const;
 
     Variant& getOrCreate(const std::string& name);
