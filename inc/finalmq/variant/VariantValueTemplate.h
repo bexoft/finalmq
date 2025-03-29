@@ -107,30 +107,30 @@ private:
 #endif
     }
 
-    virtual bool add(const std::string& /*name*/, const Variant& /*variant*/) override
+    virtual Variant* add(const std::string& /*name*/, const Variant& /*variant*/) override
     {
-        return false;
+        return nullptr;
     }
-    virtual bool add(const std::string& /*name*/, Variant&& /*variant*/) override
+    virtual Variant* add(const std::string& /*name*/, Variant&& /*variant*/) override
     {
-        return false;
+        return nullptr;
     }
-    virtual bool add(const Variant& /*variant*/) override
+    virtual Variant* add(const Variant& /*variant*/) override
     {
-        return false;
+        return nullptr;
     }
-    virtual bool add(Variant&& /*variant*/) override
+    virtual Variant* add(Variant&& /*variant*/) override
     {
-        return false;
+        return nullptr;
     }
 
     virtual ssize_t size() const override
     {
         return 1;
     }
-    virtual void accept(IVariantVisitor& visitor, Variant& variant, ssize_t index, int level, ssize_t size, const std::string& name) override
+    virtual void accept(IVariantVisitor& visitor, Variant& variant, ssize_t index, int level, ssize_t size, const std::string& name, bool parentIsStruct) override
     {
-        visitor.enterLeaf(variant, VARTYPE, index, level, size, name);
+        visitor.enterLeaf(variant, VARTYPE, index, level, size, name, parentIsStruct);
     }
 
     typename MetaTypeIdInfo<VARTYPE>::Type m_value;

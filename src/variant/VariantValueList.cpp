@@ -153,24 +153,26 @@ bool VariantValueList::operator ==(const IVariantValue& rhs) const
 }
 
 
-bool VariantValueList::add(const std::string& /*name*/, const Variant& /*variant*/)
-{
-    return false;
-}
-bool VariantValueList::add(const std::string& /*name*/, Variant&& /*variant*/)
-{
-    return false;
-}
-
-bool VariantValueList::add(const Variant& variant)
+Variant* VariantValueList::add(const std::string& /*name*/, const Variant& variant)
 {
     m_value->emplace_back(variant);
-    return true;
+    return &m_value->back();
 }
-bool VariantValueList::add(Variant&& variant)
+Variant* VariantValueList::add(const std::string& /*name*/, Variant&& variant)
 {
     m_value->emplace_back(std::move(variant));
-    return true;
+    return &m_value->back();
+}
+
+Variant* VariantValueList::add(const Variant& variant)
+{
+    m_value->emplace_back(variant);
+    return &m_value->back();
+}
+Variant* VariantValueList::add(Variant&& variant)
+{
+    m_value->emplace_back(std::move(variant));
+    return &m_value->back();
 }
 
 ssize_t VariantValueList::size() const
@@ -178,20 +180,20 @@ ssize_t VariantValueList::size() const
     return m_value->size();
 }
 
-void VariantValueList::accept(IVariantVisitor& visitor, Variant& variant, ssize_t index, int level, ssize_t size, const std::string& name)
+void VariantValueList::accept(IVariantVisitor& visitor, Variant& variant, ssize_t index, int level, ssize_t size, const std::string& name, bool parentIsStruct)
 {
-    visitor.enterList(variant, VARTYPE_LIST, index, level, size, name);
+    visitor.enterList(variant, VARTYPE_LIST, index, level, size, name, parentIsStruct);
     ++level;
     size_t i = 0;
     ssize_t subsize = m_value->size();
     for (auto it = m_value->begin(); it != m_value->end(); ++it)
     {
         Variant& subVariant = *it;
-        subVariant.accept(visitor, i, level, subsize, "");
+        subVariant.accept(visitor, i, level, subsize, "", false);
         i++;
     }
     --level;
-    visitor.exitList(variant, VARTYPE_LIST, index, level, size, name);
+    visitor.exitList(variant, VARTYPE_LIST, index, level, size, name, parentIsStruct);
 }
 
 }   // namespace finalmq

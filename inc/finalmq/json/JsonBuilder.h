@@ -33,12 +33,6 @@ public:
     JsonBuilder(IZeroCopyBuffer& buffer, int maxBlockSize = 512);
     ~JsonBuilder();
 
-private:
-    JsonBuilder(const JsonBuilder&) = delete;
-    JsonBuilder(JsonBuilder&&) = delete;
-    const JsonBuilder& operator=(const JsonBuilder&) = delete;
-    const JsonBuilder& operator=(JsonBuilder&&) = delete;
-
     // IJsonParserVisitor
     virtual void syntaxError(const char* str, const char* message) override;
     virtual void enterNull() override;
@@ -57,6 +51,12 @@ private:
     virtual void enterKey(const char* key, ssize_t size) override;
     virtual void enterKey(std::string&& key) override;
     virtual void finished() override;
+
+private:
+    JsonBuilder(const JsonBuilder&) = delete;
+    JsonBuilder(JsonBuilder&&) = delete;
+    const JsonBuilder& operator=(const JsonBuilder&) = delete;
+    const JsonBuilder& operator=(JsonBuilder&&) = delete;
 
     void reserveSpace(ssize_t space);
     void resizeBuffer();

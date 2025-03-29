@@ -22,35 +22,34 @@
 
 #pragma once
 
-#include "finalmq/helpers/FmqDefines.h"
+#include "finalmq/json/JsonBuilder.h"
+#include "finalmq/variant/VariantValues.h"
 #include "finalmq/variant/Variant.h"
-#include "finalmq/serialize/IParserVisitor.h"
-#include "finalmq/serializevariant/VarValueToVariant.h"
 
 
-namespace finalmq {
-
-
-class SYMBOLEXP VariantToVarValue : private IVariantVisitor
+namespace finalmq
+{
+class SYMBOLEXP VariantToJson : public IVariantVisitor
 {
 public:
-    VariantToVarValue(const Variant& variant, IParserVisitor& visitor);
+    VariantToJson(IZeroCopyBuffer& buffer, int maxBlockSize = 512);
+    ~VariantToJson();
 
-    void convert();
+    void parse(const Variant& variant);
 
 private:
-    // IVariantVisitor
+    VariantToJson(const VariantToJson&) = delete;
+    VariantToJson(VariantToJson&&) = delete;
+    const VariantToJson& operator=(const VariantToJson&) = delete;
+    const VariantToJson& operator=(VariantToJson&&) = delete;
+
     virtual void enterLeaf(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name, bool parentIsStruct) override;
     virtual void enterStruct(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name, bool parentIsStruct) override;
     virtual void exitStruct(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name, bool parentIsStruct) override;
     virtual void enterList(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name, bool parentIsStruct) override;
     virtual void exitList(Variant& variant, int type, ssize_t index, int level, ssize_t size, const std::string& name, bool parentIsStruct) override;
 
-
-    Variant&                        m_variant;
-    IParserVisitor&                 m_visitor;
-    std::deque<const MetaField*>    m_fieldStack{};
-    static const MetaStruct*        m_structVarValue;
+    JsonBuilder m_jsonBuilder;
 };
 
-}   // namespace finalmq
+} // namespace finalmq

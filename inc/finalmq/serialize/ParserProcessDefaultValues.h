@@ -157,7 +157,7 @@ private:
     IParserVisitor* m_visitor{nullptr};
     const bool m_skipDefaultValues{true};
     const MetaStruct* m_struct{nullptr};
-    std::deque<std::vector<bool>> m_stackFieldsDone{};
+    std::deque<std::pair<std::string, std::vector<bool>>> m_stackFieldsDone{};
     int m_varValueActive{0};
     int m_blockVisitor{0};
     std::deque<EntrySkipDefault> m_stackSkipDefault{};

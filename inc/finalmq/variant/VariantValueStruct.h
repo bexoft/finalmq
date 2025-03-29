@@ -53,12 +53,12 @@ private:
     virtual const Variant* getVariant(const std::string& name) const override;
     virtual std::shared_ptr<IVariantValue> clone() const override;
     virtual bool operator ==(const IVariantValue& rhs) const override;
-    virtual bool add(const std::string& name, const Variant& variant) override;
-    virtual bool add(const std::string& name, Variant&& variant) override;
-    virtual bool add(const Variant& variant) override;
-    virtual bool add(Variant&& variant) override;
+    virtual Variant* add(const std::string& name, const Variant& variant) override;
+    virtual Variant* add(const std::string& name, Variant&& variant) override;
+    virtual Variant* add(const Variant& variant) override;
+    virtual Variant* add(Variant&& variant) override;
     virtual ssize_t size() const override;
-    virtual void accept(IVariantVisitor& visitor, Variant& variant, ssize_t index, int level, ssize_t size, const std::string& name) override;
+    virtual void accept(IVariantVisitor& visitor, Variant& variant, ssize_t index, int level, ssize_t size, const std::string& name, bool parentIsStruct) override;
 
 
     VariantStruct::iterator find(const std::string& name);
