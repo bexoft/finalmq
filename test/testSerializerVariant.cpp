@@ -548,6 +548,18 @@ TEST_F(TestSerializerVariant, testVariantStruct2)
 }
 
 
+TEST_F(TestSerializerVariant, testJson)
+{
+    static const Variant VALUE = VariantStruct{ {"a", static_cast<std::uint32_t>(3)} };
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestJson"));
+    m_serializer->enterJsonVariant(MetaField{ MetaTypeId::TYPE_JSON, "", "value", "", 0, {}, 0 }, VALUE);
+    m_serializer->finished();
+
+    Variant cmp = VariantStruct({ {"value", VALUE} });
+    ASSERT_EQ(m_root == cmp, true);
+}
+
 
 
 TEST_F(TestSerializerVariant, testArrayBool)

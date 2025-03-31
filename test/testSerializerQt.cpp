@@ -612,6 +612,41 @@ TEST_F(TestSerializerQt, testVariantString)
 }
 
 
+TEST_F(TestSerializerQt, testJson)
+{
+    static const std::string VALUE = "{\"a\":3}";
+
+    const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestJson", "value");
+    ASSERT_NE(fieldValue, nullptr);
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestJson"));
+    m_serializer->enterJsonString(*fieldValue, VALUE.data(), VALUE.size());
+    m_serializer->finished();
+
+    std::string data;
+    data.push_back(0);
+    data.push_back(0);
+    data.push_back(0);
+    data.push_back(7 * 2);
+    data.push_back(0);
+    data.push_back('{');
+    data.push_back(0);
+    data.push_back('\"');
+    data.push_back(0);
+    data.push_back('a');
+    data.push_back(0);
+    data.push_back('\"');
+    data.push_back(0);
+    data.push_back(':');
+    data.push_back(0);
+    data.push_back('3');
+    data.push_back(0);
+    data.push_back('}');
+
+    EXPECT_EQ(m_data, data);
+}
+
+
 
 TEST_F(TestSerializerQt, testArrayBool)
 {

@@ -306,6 +306,35 @@ void ParserConverter::enterEnum(const MetaField& field, const char* value, ssize
     }
 }
 
+void ParserConverter::enterJsonString(const MetaField& field, std::string&& value)
+{
+    if (field.typeId == MetaTypeId::TYPE_JSON)
+    {
+        m_visitor->enterJsonString(field, std::move(value));
+    }
+}
+void ParserConverter::enterJsonString(const MetaField& field, const char* value, ssize_t size)
+{
+    if (field.typeId == MetaTypeId::TYPE_JSON)
+    {
+        m_visitor->enterJsonString(field, value, size);
+    }
+}
+void ParserConverter::enterJsonVariant(const MetaField& field, const Variant& value)
+{
+    if (field.typeId == MetaTypeId::TYPE_JSON)
+    {
+        m_visitor->enterJsonVariant(field, value);
+    }
+}
+void ParserConverter::enterJsonVariantMove(const MetaField& field, Variant&& value)
+{
+    if (field.typeId == MetaTypeId::TYPE_JSON)
+    {
+        m_visitor->enterJsonVariantMove(field, std::move(value));
+    }
+}
+
 void ParserConverter::enterArrayBoolMove(const MetaField& field, std::vector<bool>&& value)
 {
     if (field.typeId == MetaTypeId::TYPE_ARRAY_BOOL)

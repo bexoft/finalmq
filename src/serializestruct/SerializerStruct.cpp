@@ -34,6 +34,7 @@
 #include "finalmq/variant/VariantValueList.h"
 #include "finalmq/variant/VariantValueStruct.h"
 #include "finalmq/variant/VariantValues.h"
+#include "finalmq/jsonvariant/JsonToVariant.h"
 
 namespace finalmq
 {
@@ -1597,6 +1598,101 @@ void SerializerStruct::enterEnum(const MetaField& field, const char* value, ssiz
     {
         convertString(*structBase, *fieldInfoDest, value, size);
     }
+}
+
+void SerializerStruct::enterJsonString(const MetaField& field, std::string&& value)
+{
+    if (m_visitor)
+    {
+        m_visitor->enterJsonString(field, std::move(value));
+        return;
+    }
+
+    enterJsonString(field, value.c_str(), value.size());
+}
+void SerializerStruct::enterJsonString(const MetaField& field, const char* value, ssize_t size)
+{
+    if (m_visitor)
+    {
+        m_visitor->enterJsonString(field, value, size);
+        return;
+    }
+
+    const FieldInfo* fieldInfoDest = getFieldInfoDest(field);
+    if (fieldInfoDest == nullptr)
+    {
+        return;
+    }
+    const MetaField* fieldDest = fieldInfoDest->getField();
+    if (fieldDest == nullptr)
+    {
+        return;
+    }
+    StructBase* structBase = m_current->structBase;
+    if (structBase == nullptr)
+    {
+        return;
+    }
+
+    Variant variant;
+    if (fieldDest->typeId == MetaTypeId::TYPE_JSON)
+    {
+        JsonToVariant jsonToVariant(variant);
+        jsonToVariant.parse(value, size);
+    }
+    setValue<Variant>(*structBase, *fieldInfoDest, std::move(variant));
+}
+void SerializerStruct::enterJsonVariant(const MetaField& field, const Variant& value)
+{
+    if (m_visitor)
+    {
+        m_visitor->enterJsonVariant(field, value);
+        return;
+    }
+
+    const FieldInfo* fieldInfoDest = getFieldInfoDest(field);
+    if (fieldInfoDest == nullptr)
+    {
+        return;
+    }
+    const MetaField* fieldDest = fieldInfoDest->getField();
+    if (fieldDest == nullptr)
+    {
+        return;
+    }
+    StructBase* structBase = m_current->structBase;
+    if (structBase == nullptr)
+    {
+        return;
+    }
+
+    setValue<Variant>(*structBase, *fieldInfoDest, value);
+}
+void SerializerStruct::enterJsonVariantMove(const MetaField& field, Variant&& value)
+{
+    if (m_visitor)
+    {
+        m_visitor->enterJsonVariantMove(field, std::move(value));
+        return;
+    }
+
+    const FieldInfo* fieldInfoDest = getFieldInfoDest(field);
+    if (fieldInfoDest == nullptr)
+    {
+        return;
+    }
+    const MetaField* fieldDest = fieldInfoDest->getField();
+    if (fieldDest == nullptr)
+    {
+        return;
+    }
+    StructBase* structBase = m_current->structBase;
+    if (structBase == nullptr)
+    {
+        return;
+    }
+
+    setValue<Variant>(*structBase, *fieldInfoDest, std::move(value));
 }
 
 void SerializerStruct::enterArrayBoolMove(const MetaField& field, std::vector<bool>&& value)

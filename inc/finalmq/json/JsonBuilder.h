@@ -33,6 +33,8 @@ public:
     JsonBuilder(IZeroCopyBuffer& buffer, int maxBlockSize = 512);
     ~JsonBuilder();
 
+    void putJson(const char* json, ssize_t size);
+
     // IJsonParserVisitor
     virtual void syntaxError(const char* str, const char* message) override;
     virtual void enterNull() override;

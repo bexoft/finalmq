@@ -403,50 +403,42 @@ TEST_F(TestParserQt, testDouble)
 
 TEST_F(TestParserQt, testString)
 {
-    static const std::string VALUE = "Hello World";
+    static const std::string VALUE = "{\"a\":3}";
 
-    const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestString", "value");
+    const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestJson", "value");
     ASSERT_NE(fieldValue, nullptr);
 
     std::string data;
     data.push_back(0);
     data.push_back(0);
     data.push_back(0);
-    data.push_back(11 * 2);
+    data.push_back(7 * 2);
     data.push_back(0);
-    data.push_back('H');
+    data.push_back('{');
     data.push_back(0);
-    data.push_back('e');
+    data.push_back('\"');
     data.push_back(0);
-    data.push_back('l');
+    data.push_back('a');
     data.push_back(0);
-    data.push_back('l');
+    data.push_back('\"');
     data.push_back(0);
-    data.push_back('o');
+    data.push_back(':');
     data.push_back(0);
-    data.push_back(' ');
+    data.push_back('3');
     data.push_back(0);
-    data.push_back('W');
-    data.push_back(0);
-    data.push_back('o');
-    data.push_back(0);
-    data.push_back('r');
-    data.push_back(0);
-    data.push_back('l');
-    data.push_back(0);
-    data.push_back('d');
+    data.push_back('}');
 
     MockIParserVisitor mockVisitor;
 
     {
         testing::InSequence seq;
         EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
-        EXPECT_CALL(mockVisitor, enterString(MatcherMetaField(*fieldValue), ArrayEq(VALUE.data(), VALUE.size()), VALUE.size())).Times(1);
+        EXPECT_CALL(mockVisitor, enterJsonString(MatcherMetaField(*fieldValue), ArrayEq(VALUE.data(), VALUE.size()), VALUE.size())).Times(1);
         EXPECT_CALL(mockVisitor, finished()).Times(1);
     }
 
     ParserQt parser(mockVisitor, data.data(), data.size());
-    bool res = parser.parseStruct("test.TestString");
+    bool res = parser.parseStruct("test.TestJson");
     EXPECT_EQ(res, true);
 }
 

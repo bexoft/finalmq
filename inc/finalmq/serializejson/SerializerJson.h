@@ -71,6 +71,10 @@ private:
         virtual void enterEnum(const MetaField& field, std::int32_t value) override;
         virtual void enterEnum(const MetaField& field, std::string&& value) override;
         virtual void enterEnum(const MetaField& field, const char* value, ssize_t size) override;
+        virtual void enterJsonString(const MetaField& field, std::string&& value) override;
+        virtual void enterJsonString(const MetaField& field, const char* value, ssize_t size) override;
+        virtual void enterJsonVariant(const MetaField& field, const Variant& value) override;
+        virtual void enterJsonVariantMove(const MetaField& field, Variant&& value) override;
 
         virtual void enterArrayBoolMove(const MetaField& field, std::vector<bool>&& value) override;
         virtual void enterArrayBool(const MetaField& field, const std::vector<bool>& value) override;
@@ -105,9 +109,9 @@ private:
 
         void handleDouble(double value);
 
-        std::unique_ptr<IJsonParserVisitor> m_uniqueJsonBuilder;
-        IJsonParserVisitor&                 m_jsonBuilder;
-        bool                                m_enumAsString = true;
+        std::unique_ptr<JsonBuilder>    m_uniqueJsonBuilder;
+        JsonBuilder&                    m_jsonBuilder;
+        bool                            m_enumAsString = true;
     };
 
     Internal                            m_internal;

@@ -63,6 +63,9 @@ private:
     virtual void enterKey(std::string&& key) override;
     virtual void finished() override;
 
+    void startOfJson();
+    void endOfJson();
+
     template<class T>
     void enterNumber(T value);
 
@@ -75,8 +78,8 @@ private:
     JsonParser m_parser;
 
     std::deque<const MetaField*> m_stack{};
-    const MetaStruct* m_structCurrent = nullptr;
-    const MetaField* m_fieldCurrent = nullptr;
+    const MetaStruct* m_structCurrent{ nullptr };
+    const MetaField* m_fieldCurrent{ nullptr };
 
     std::vector<bool> m_arrayBool{};
     std::vector<std::int8_t> m_arrayInt8{};
@@ -90,6 +93,9 @@ private:
     std::vector<double> m_arrayDouble{};
     std::vector<std::string> m_arrayString{};
     std::vector<Bytes> m_arrayBytes{};
+
+    int m_jsonTypeActive{ 0 };
+    const char* m_jsonStart{ nullptr };
 };
 
 } // namespace finalmq

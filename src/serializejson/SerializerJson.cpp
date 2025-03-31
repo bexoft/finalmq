@@ -28,9 +28,11 @@
 #include <assert.h>
 
 #include "finalmq/helpers/base64.h"
+#include "finalmq/helpers/ZeroCopyBuffer.h"
 #include "finalmq/metadata/MetaData.h"
 #include "finalmq/serialize/ParserAbortAndIndex.h"
 #include "finalmq/serialize/ParserProcessDefaultValues.h"
+#include "finalmq/jsonvariant/VariantToJson.h"
 
 namespace finalmq
 {
@@ -284,6 +286,31 @@ void SerializerJson::Internal::enterEnum(const MetaField& field, const char* val
         m_jsonBuilder.enterInt32(v);
     }
 }
+
+void SerializerJson::Internal::enterJsonString(const MetaField& field, std::string&& value)
+{
+    enterJsonString(field, value.c_str(), value.size());
+}
+void SerializerJson::Internal::enterJsonString(const MetaField& field, const char* value, ssize_t size)
+{
+    assert(field.typeId == MetaTypeId::TYPE_JSON);
+    setKey(field);
+    m_jsonBuilder.putJson(value, size);
+}
+void SerializerJson::Internal::enterJsonVariant(const MetaField& field, const Variant& value)
+{
+    ZeroCopyBuffer buffer;
+    VariantToJson variantToJson(buffer);
+    variantToJson.parse(value);
+    std::string json = buffer.getData();
+
+    enterJsonString(field, json.c_str(), json.size());
+}
+void SerializerJson::Internal::enterJsonVariantMove(const MetaField& field, Variant&& value)
+{
+    enterJsonVariant(field, value);
+}
+
 
 void SerializerJson::Internal::enterArrayBoolMove(const MetaField& field, std::vector<bool>&& value)
 {

@@ -50,6 +50,7 @@ enum MetaTypeId : std::int32_t
     TYPE_STRUCT     = 14,
     TYPE_ENUM       = 15,
     TYPE_VARIANT    = 16,
+    TYPE_JSON       = 17,
 
     OFFSET_ARRAY_FLAG       = 1024,
 
@@ -235,7 +236,7 @@ public:
 
 ////////////////////////////////////////////////////
 
-template <class TYPE>
+template <class TYPE, typename Enable = void>
 class MetaTypeInfo
 {
 };

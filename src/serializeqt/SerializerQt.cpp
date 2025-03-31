@@ -30,12 +30,14 @@
 
 #include "finalmq/helpers/ModulenameFinalmq.h"
 #include "finalmq/helpers/Utils.h"
+#include "finalmq/helpers/ZeroCopyBuffer.h"
 #include "finalmq/logger/LogStream.h"
 #include "finalmq/metadata/MetaData.h"
 #include "finalmq/serialize/ParserAbortAndIndex.h"
 #include "finalmq/serialize/ParserProcessDefaultValues.h"
 #include "finalmq/serialize/ParserProcessValuesInOrder.h"
 #include "finalmq/serializeqt/Qt.h"
+#include "finalmq/jsonvariant/VariantToJson.h"
 
 namespace finalmq
 {
@@ -287,7 +289,7 @@ static const std::string QT_CODE_BYTES = "bytes";
 
 void SerializerQt::Internal::enterString(const MetaField& field, std::string&& value)
 {
-    assert(field.typeId == MetaTypeId::TYPE_STRING);
+    assert(field.typeId == MetaTypeId::TYPE_STRING || field.typeId == MetaTypeId::TYPE_JSON);
     if (isWrappedByQVariant())
     {
         serializeQVariantHeader(field);
@@ -446,6 +448,28 @@ void SerializerQt::Internal::enterEnum(const MetaField& field, std::string&& val
 void SerializerQt::Internal::enterEnum(const MetaField& field, const char* value, ssize_t size)
 {
     enterEnum(field, std::string(value, size));
+}
+
+void SerializerQt::Internal::enterJsonString(const MetaField& field, std::string&& value)
+{
+    enterString(field, std::move(value));
+}
+void SerializerQt::Internal::enterJsonString(const MetaField& field, const char* value, ssize_t size)
+{
+    enterString(field, value, size);
+}
+void SerializerQt::Internal::enterJsonVariant(const MetaField& field, const Variant& value)
+{
+    ZeroCopyBuffer buffer;
+    VariantToJson variantToJson(buffer);
+    variantToJson.parse(value);
+    std::string json = buffer.getData();
+
+    enterString(field, value);
+}
+void SerializerQt::Internal::enterJsonVariantMove(const MetaField& field, Variant&& value)
+{
+    enterJsonVariant(field, value);
 }
 
 void SerializerQt::Internal::enterArrayBoolMove(const MetaField& field, std::vector<bool>&& value)

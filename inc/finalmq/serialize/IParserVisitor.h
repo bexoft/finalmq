@@ -24,10 +24,13 @@
 #pragma once
 
 #include "finalmq/metadata/MetaStruct.h"
+#include "finalmq/variant/Variant.h"
 
 
 
 namespace finalmq {
+
+class Variant;
 
 struct IParserVisitor
 {
@@ -62,6 +65,10 @@ struct IParserVisitor
     virtual void enterEnum(const MetaField& field, std::int32_t value) = 0;
     virtual void enterEnum(const MetaField& field, std::string&& value) = 0;
     virtual void enterEnum(const MetaField& field, const char* value, ssize_t size) = 0;
+    virtual void enterJsonString(const MetaField& field, std::string&& value) = 0;
+    virtual void enterJsonString(const MetaField& field, const char* value, ssize_t size) = 0;
+    virtual void enterJsonVariant(const MetaField& field, const Variant& value) = 0;
+    virtual void enterJsonVariantMove(const MetaField& field, Variant&& value) = 0;
 
     virtual void enterArrayBoolMove(const MetaField& field, std::vector<bool>&& value) = 0;
     virtual void enterArrayBool(const MetaField& field, const std::vector<bool>& value) = 0;

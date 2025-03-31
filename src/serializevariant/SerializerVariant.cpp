@@ -30,6 +30,7 @@
 #include "finalmq/variant/VariantValueList.h"
 #include "finalmq/variant/VariantValues.h"
 #include "finalmq/metadataserialize/variant.fmq.h"
+#include "finalmq/jsonvariant/JsonToVariant.h"
 
 #include <assert.h>
 #include <algorithm>
@@ -346,6 +347,31 @@ void SerializerVariant::Internal::enterEnum(const MetaField& field, const char* 
         add(field, v);
     }
 }
+
+
+void SerializerVariant::Internal::enterJsonString(const MetaField& field, std::string&& value)
+{
+    enterJsonString(field, value.c_str(), value.size());
+}
+void SerializerVariant::Internal::enterJsonString(const MetaField& field, const char* value, ssize_t size)
+{
+    Variant variant;
+    if (field.typeId == MetaTypeId::TYPE_JSON)
+    {
+        JsonToVariant jsonToVariant(variant);
+        jsonToVariant.parse(value, size);
+    }
+    add(field, std::move(variant));
+}
+void SerializerVariant::Internal::enterJsonVariant(const MetaField& field, const Variant& value)
+{
+    add(field, value);
+}
+void SerializerVariant::Internal::enterJsonVariantMove(const MetaField& field, Variant&& value)
+{
+    add(field, std::move(value));
+}
+
 
 void SerializerVariant::Internal::enterArrayBoolMove(const MetaField& field, std::vector<bool>&& value)
 {

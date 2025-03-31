@@ -24,6 +24,7 @@
 
 #include "finalmq/metadata/MetaStruct.h"
 #include "finalmq/serialize/IParserVisitor.h"
+#include "finalmq/variant/Variant.h"
 
 
 #include <string>

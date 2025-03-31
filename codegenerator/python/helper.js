@@ -44,6 +44,8 @@ module.exports = {
             case 'TYPE_ENUM': return type
             case 'variant':
             case 'TYPE_VARIANT': return '{}'
+            case 'json':
+            case 'TYPE_JSON': return "dict()"
             case 'bool[]':
             case 'TYPE_ARRAY_BOOL': return '[]'
             case 'int8[]':

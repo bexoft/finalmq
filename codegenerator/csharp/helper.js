@@ -27,6 +27,7 @@ module.exports = {
                     case 'struct': field.tid = 'TYPE_STRUCT'; break;
                     case 'enum': field.tid = 'TYPE_ENUM'; break;
                     case 'variant': field.tid = 'TYPE_VARIANT'; break;
+                    case 'json': field.tid = 'TYPE_JSON'; break;
                     case 'bool[]': field.tid = 'TYPE_ARRAY_BOOL'; break;
                     case 'int8[]': field.tid = 'TYPE_ARRAY_INT8'; break;
                     case 'int16[]': field.tid = 'TYPE_ARRAY_INT16'; break;
@@ -149,6 +150,8 @@ module.exports = {
             case 'TYPE_ENUM': return this.typeWithNamespace(data, type, '.')
             case 'variant':
             case 'TYPE_VARIANT': return 'finalmq.Variant'
+            case 'json':
+            case 'TYPE_JSON': return 'finalmq.Variant'
             case 'bool[]':
             case 'TYPE_ARRAY_BOOL': return 'bool[]'
             case 'int8[]':
@@ -231,6 +234,8 @@ module.exports = {
             case 'TYPE_ENUM': return 0;
             case 'variant':
             case 'TYPE_VARIANT': return 1;
+            case 'json':
+            case 'TYPE_JSON': return 1;
             case 'bool[]':
             case 'TYPE_ARRAY_BOOL': return 2;
             case 'int8[]':
@@ -308,6 +313,8 @@ module.exports = {
             case 'TYPE_ENUM': return 'new ' + this.tid2type(data, field) + '()'
             case 'variant':
             case 'TYPE_VARIANT': return 'new finalmq.Variant()'
+            case 'json':
+            case 'TYPE_JSON': return 'new finalmq.Variant()'
             case 'bool[]':
             case 'TYPE_ARRAY_BOOL': return 'Array.Empty<bool>()'
             case 'int8[]':

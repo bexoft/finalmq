@@ -20,7 +20,11 @@ namespace finalmq
         }
         public void ResetVarValueActive()
         {
-            m_varValueActive = 0;
+            if (m_varValueActive > 0)
+            {
+                m_stackFieldsDone.RemoveAt(m_stackFieldsDone.Count - 1);
+                m_varValueActive = 0;
+            }
         }
 
         // IParserVisitor

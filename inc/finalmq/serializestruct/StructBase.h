@@ -175,7 +175,7 @@ template<>
 class MetaTypeInfo<Variant>
 {
 public:
-    static const int TypeId = MetaTypeId::TYPE_STRUCT;
+    static const int TypeId = MetaTypeId::TYPE_JSON;
 };
 template<>
 class MetaTypeInfo<StructBase>
@@ -205,7 +205,7 @@ public:
         const MetaField* fieldDest = fieldInfo.getField();
         if (fieldDest)
         {
-            if ((fieldDest->typeId == MetaTypeInfo<T>::TypeId)
+            if (((fieldDest->typeId == MetaTypeInfo<T>::TypeId) || (fieldDest->typeId == MetaTypeId::TYPE_STRUCT && MetaTypeInfo<T>::TypeId == MetaTypeId::TYPE_JSON))
                || ((MetaTypeInfo<T>::TypeId == MetaTypeInfo<std::int32_t>::TypeId) && (fieldDest->typeId == MetaTypeId::TYPE_ENUM))
                || ((MetaTypeInfo<T>::TypeId == MetaTypeInfo<std::vector<std::int32_t>>::TypeId) && (fieldDest->typeId == MetaTypeId::TYPE_ARRAY_ENUM)))
             {

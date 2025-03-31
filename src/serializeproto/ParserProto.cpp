@@ -650,6 +650,17 @@ bool ParserProto::parseStructIntern(const MetaStruct& stru)
                         }
                     }
                     break;
+                    case MetaTypeId::TYPE_JSON:
+                    {
+                        const char* buffer = nullptr;
+                        ssize_t size = 0;
+                        bool ok = parseString(buffer, size);
+                        if (ok)
+                        {
+                            m_visitor.enterJsonString(*field, buffer, size);
+                        }
+                    }
+                    break;
                     case MetaTypeId::TYPE_ARRAY_BOOL:
                     {
                         std::vector<bool> array;

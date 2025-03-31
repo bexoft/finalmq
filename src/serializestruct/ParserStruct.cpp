@@ -141,6 +141,12 @@ void ParserStruct::processField(const StructBase& structBase, const FieldInfo& f
     case TYPE_ENUM:
         m_visitor.enterEnum(field, structBase.getValue<std::int32_t>(fieldInfo));
         break;
+    case TYPE_JSON:
+        {
+            const Variant& value = structBase.getValue<Variant>(fieldInfo);
+            m_visitor.enterJsonVariant(field, value);
+        }
+        break;
     case TYPE_ARRAY_BOOL:
         m_visitor.enterArrayBool(field, structBase.getValue<std::vector<bool>>(fieldInfo));
         break;

@@ -66,7 +66,7 @@ struct IVariantValue
 
 
 
-template<class T>
+template <class TYPE, typename Enable = void>
 class VariantValueTypeInfo
 {
 };
