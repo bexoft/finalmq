@@ -521,6 +521,17 @@ TEST_F(TestSerializerJson, testVariantStructDefault)
 }
 
 
+TEST_F(TestSerializerJson, testJson)
+{
+    static const std::string VALUE = "{\"a\":3}";
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestJson"));
+    m_serializer->enterJsonString({ MetaTypeId::TYPE_JSON, "", "value", "", 0 }, VALUE.data(), VALUE.size());
+    m_serializer->finished();
+
+    ASSERT_EQ(m_data, "{\"value\":{\"a\":3}}");
+}
+
 
 TEST_F(TestSerializerJson, testArrayBool)
 {

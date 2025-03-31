@@ -480,6 +480,22 @@ TEST_F(TestSerializerProto, testVariantStruct)
 }
 
 
+TEST_F(TestSerializerProto, testJson)
+{
+    static const std::string VALUE = "{\"a\":3}";
+
+    m_serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestJson"));
+    m_serializer->enterJsonString({ MetaTypeId::TYPE_JSON, "", "value", "", 0, {}, 0 }, VALUE.data(), VALUE.size());
+    m_serializer->finished();
+
+    fmq::test::TestJson message;
+    bool res = message.ParseFromString(m_data);
+    EXPECT_EQ(res, true);
+    EXPECT_EQ(message.value(), VALUE);
+}
+
+
+
 TEST_F(TestSerializerProto, testArrayBool)
 {
     static const bool VALUE1 = true;

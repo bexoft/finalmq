@@ -27,6 +27,7 @@ module.exports = {
                     case 'struct': field.tid = 'TYPE_STRUCT'; break;
                     case 'enum': field.tid = 'TYPE_ENUM'; break;
                     case 'variant': field.tid = 'TYPE_VARIANT'; break;
+                    case 'json': field.tid = 'TYPE_JSON'; break;
                     case 'bool[]': field.tid = 'TYPE_ARRAY_BOOL'; break;
                     case 'int8[]': field.tid = 'TYPE_ARRAY_INT8'; break;
                     case 'int16[]': field.tid = 'TYPE_ARRAY_INT16'; break;
@@ -129,6 +130,7 @@ module.exports = {
             case 'TYPE_STRUCT':         return this.typeWithNamespace(data, type, '.')
             case 'TYPE_ENUM':           return this.typeWithNamespace(data, type, '.')
             case 'TYPE_VARIANT':        return 'finalmq.variant.VarValue'
+            case 'TYPE_JSON':           return 'string'
             case 'TYPE_ARRAY_BOOL':     return 'repeated bool'
             case 'TYPE_ARRAY_INT8':     return 'repeated ' + ((this.isVarint(flags)) ? 'int32' : (this.isZigZag(flags)) ? 'sint32' : 'sfixed32')
             case 'TYPE_ARRAY_INT16':    return 'repeated ' + ((this.isVarint(flags)) ? 'int32' : (this.isZigZag(flags)) ? 'sint32' : 'sfixed32')

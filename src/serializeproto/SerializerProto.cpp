@@ -29,9 +29,11 @@
 
 #include "finalmq/helpers/FmqDefines.h"
 #include "finalmq/helpers/ModulenameFinalmq.h"
+#include "finalmq/helpers/ZeroCopyBuffer.h"
 #include "finalmq/logger/LogStream.h"
 #include "finalmq/metadata/MetaData.h"
 #include "finalmq/serialize/ParserAbortAndIndex.h"
+#include "finalmq/jsonvariant/VariantToJson.h"
 
 namespace finalmq
 {
@@ -621,6 +623,31 @@ void SerializerProto::Internal::enterEnum(const MetaField& field, const char* va
 {
     enterEnum(field, std::string(value, size));
 }
+
+void SerializerProto::Internal::enterJsonString(const MetaField& field, std::string&& value)
+{
+    int id = field.index + INDEX2ID;
+    serializeString<true>(id, value.c_str(), value.size());
+}
+void SerializerProto::Internal::enterJsonString(const MetaField& field, const char* value, ssize_t size)
+{
+    int id = field.index + INDEX2ID;
+    serializeString<true>(id, value, size);
+}
+void SerializerProto::Internal::enterJsonVariant(const MetaField& field, const Variant& value)
+{
+    ZeroCopyBuffer buffer;
+    VariantToJson variantToJson(buffer);
+    variantToJson.parse(value);
+    std::string json = buffer.getData();
+
+    enterJsonString(field, std::move(json));
+}
+void SerializerProto::Internal::enterJsonVariantMove(const MetaField& field, Variant&& value)
+{
+    enterJsonVariant(field, value);
+}
+
 
 void SerializerProto::Internal::enterArrayBoolMove(const MetaField& field, std::vector<bool>&& value)
 {

@@ -23,6 +23,8 @@
 
 #include "finalmq/serialize/ParserProcessValuesInOrder.h"
 #include "finalmq/metadata/MetaData.h"
+#include "finalmq/variant/Variant.h"
+
 
 #include <assert.h>
 #include <iostream>
@@ -317,6 +319,37 @@ void ParserProcessValuesInOrder::enterEnum(const MetaField& field, const char* v
         m_currentCalls->calls[(field.index + 1)] = [this, &field, v=std::string(value, size)]() mutable {m_visitor->enterEnum(field, std::move(v)); };
     }
 }
+
+void ParserProcessValuesInOrder::enterJsonString(const MetaField& field, std::string&& value)
+{
+    if ((m_currentCalls != nullptr) && ((field.index + 1) < static_cast<int>(m_currentCalls->calls.size())))
+    {
+        m_currentCalls->calls[(field.index + 1)] = [this, &field, value{ std::move(value) }]() mutable {m_visitor->enterJsonString(field, std::move(value)); };
+    }
+}
+void ParserProcessValuesInOrder::enterJsonString(const MetaField& field, const char* value, ssize_t size)
+{
+    if ((m_currentCalls != nullptr) && ((field.index + 1) < static_cast<int>(m_currentCalls->calls.size())))
+    {
+        std::string v(value, size);
+        m_currentCalls->calls[(field.index + 1)] = [this, &field, v{ std::move(v) }]() mutable {m_visitor->enterJsonString(field, std::move(v)); };
+    }
+}
+void ParserProcessValuesInOrder::enterJsonVariant(const MetaField& field, const Variant& value)
+{
+    if ((m_currentCalls != nullptr) && ((field.index + 1) < static_cast<int>(m_currentCalls->calls.size())))
+    {
+        m_currentCalls->calls[(field.index + 1)] = [this, &field, value]() mutable {m_visitor->enterJsonVariant(field, std::move(value)); };
+    }
+}
+void ParserProcessValuesInOrder::enterJsonVariantMove(const MetaField& field, Variant&& value)
+{
+    if ((m_currentCalls != nullptr) && ((field.index + 1) < static_cast<int>(m_currentCalls->calls.size())))
+    {
+        m_currentCalls->calls[(field.index + 1)] = [this, &field, value{ std::move(value) }]() mutable {m_visitor->enterJsonVariantMove(field, std::move(value)); };
+    }
+}
+
 
 void ParserProcessValuesInOrder::enterArrayBoolMove(const MetaField& field, std::vector<bool>&& value)
 {

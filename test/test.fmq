@@ -79,6 +79,9 @@
             {"tid":"TYPE_INT32","type":"","name":"valueInt32","desc":"desc","flags":[]},
             {"tid":"TYPE_VARIANT","type":"","name":"value2","desc":"desc","flags":[]}
         ]},
+        {"type":"TestJson","desc":"desc","fields":[
+            {"tid":"TYPE_JSON","type":"","name":"value","desc":"desc","flags":[]}
+        ]},
         {"type":"TestArrayBool","desc":"desc","fields":[
             {"tid":"TYPE_ARRAY_BOOL","type":"","name":"value","desc":"desc","flags":[]}
         ]},

@@ -69,6 +69,15 @@ void ParserJson::syntaxError(const char* /*str*/, const char* /*message*/)
 
 void ParserJson::enterNull()
 {
+    if (m_jsonTypeActive > 0)
+    {
+        if (m_jsonTypeActive == 1)
+        {
+            m_jsonTypeActive = 0;
+            endOfJson();
+        }
+        return;
+    }
     if (!m_fieldCurrent)
     {
         // unknown key
@@ -83,6 +92,15 @@ void ParserJson::enterNull()
 template<class T>
 void ParserJson::enterNumber(T value)
 {
+    if (m_jsonTypeActive > 0)
+    {
+        if (m_jsonTypeActive == 1)
+        {
+            m_jsonTypeActive = 0;
+            endOfJson();
+        }
+        return;
+    }
     if (!m_fieldCurrent)
     {
         // unknown key
@@ -278,6 +296,15 @@ double ParserJson::convert<double>(const char* value, ssize_t size)
 
 void ParserJson::enterString(const char* value, ssize_t size)
 {
+    if (m_jsonTypeActive > 0)
+    {
+        if (m_jsonTypeActive == 1)
+        {
+            m_jsonTypeActive = 0;
+            endOfJson();
+        }
+        return;
+    }
     if (!m_fieldCurrent)
     {
         // unknown key
@@ -455,6 +482,16 @@ void ParserJson::enterString(const char* value, ssize_t size)
 
 void ParserJson::enterString(std::string&& value)
 {
+    if (m_jsonTypeActive > 0)
+    {
+        if (m_jsonTypeActive == 1)
+        {
+            m_jsonTypeActive = 0;
+            endOfJson();
+        }
+        return;
+    }
+
     if (!m_fieldCurrent)
     {
         // unknown key
@@ -614,6 +651,12 @@ void ParserJson::enterString(std::string&& value)
 
 void ParserJson::enterArray()
 {
+    if (m_jsonTypeActive > 0)
+    {
+        ++m_jsonTypeActive;
+        return;
+    }
+
     if (m_fieldCurrent && (static_cast<int>(m_fieldCurrent->typeId) & static_cast<int>(MetaTypeId::OFFSET_ARRAY_FLAG)))
     {
         switch(m_fieldCurrent->typeId)
@@ -674,6 +717,17 @@ void ParserJson::enterArray()
 
 void ParserJson::exitArray()
 {
+    if (m_jsonTypeActive > 0)
+    {
+        --m_jsonTypeActive;
+        if (m_jsonTypeActive == 1)
+        {
+            m_jsonTypeActive = 0;
+            endOfJson();
+        }
+        return;
+    }
+
     if (!m_fieldCurrent)
     {
         // unknown key
@@ -780,6 +834,12 @@ void ParserJson::exitArray()
 
 void ParserJson::enterObject()
 {
+    if (m_jsonTypeActive > 0)
+    {
+        ++m_jsonTypeActive;
+        return;
+    }
+
     m_stack.emplace_back(m_fieldCurrent);
     m_structCurrent = nullptr;
     if (m_fieldCurrent && m_fieldCurrent->typeId == MetaTypeId::TYPE_STRUCT)
@@ -808,6 +868,17 @@ void ParserJson::enterObject()
 
 void ParserJson::exitObject()
 {
+    if (m_jsonTypeActive > 0)
+    {
+        --m_jsonTypeActive;
+        if (m_jsonTypeActive == 1)
+        {
+            m_jsonTypeActive = 0;
+            endOfJson();
+        }
+        return;
+    }
+
     m_structCurrent = nullptr;
     m_fieldCurrent = nullptr;
     if (!m_stack.empty())
@@ -844,12 +915,45 @@ void ParserJson::enterKey(const char* key, ssize_t size)
 
 void ParserJson::enterKey(std::string&& key)
 {
+    if (m_jsonTypeActive > 0)
+    {
+        return;
+    }
     m_fieldCurrent = nullptr;
     if (m_structCurrent)
     {
         m_fieldCurrent = m_structCurrent->getFieldByName(key);
+        if (m_fieldCurrent && (m_fieldCurrent->typeId == TYPE_JSON))
+        {
+            assert(m_jsonTypeActive == 0);
+            m_jsonTypeActive = 1;
+
+            startOfJson();
+        }
     }
 }
+
+void ParserJson::startOfJson()
+{
+    assert(m_jsonStart == nullptr);
+    m_jsonStart = m_parser.getCurrentPosition();
+}
+
+void ParserJson::endOfJson()
+{
+    assert(m_fieldCurrent != nullptr);
+    assert(m_jsonStart != nullptr);
+    const char* jsonEnd = m_parser.getCurrentPosition();
+    assert(jsonEnd != nullptr);
+    while ((*m_jsonStart != ':') && (m_jsonStart < jsonEnd))
+    {
+        ++m_jsonStart;
+    }
+    ++m_jsonStart;
+    const std::size_t size = jsonEnd - m_jsonStart;
+    m_visitor.enterJsonString(*m_fieldCurrent, m_jsonStart, size);
+}
+
 
 void ParserJson::finished()
 {

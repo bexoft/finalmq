@@ -163,6 +163,11 @@ void ParserVariant::processField(const Variant* sub, const MetaField* field)
             }
         }
         break;
+        case TYPE_JSON:
+        {
+            m_visitor.enterJsonVariant(*field, *sub);
+        }
+        break;
         case TYPE_ARRAY_BOOL:
         {
             const std::vector<bool>* value = *sub;

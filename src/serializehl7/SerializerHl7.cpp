@@ -25,6 +25,8 @@
 #include "finalmq/metadata/MetaData.h"
 #include "finalmq/helpers/base64.h"
 #include "finalmq/helpers/Utils.h"
+#include "finalmq/helpers/ZeroCopyBuffer.h"
+#include "finalmq/jsonvariant/VariantToJson.h"
 
 #include <assert.h>
 #include <algorithm>
@@ -311,6 +313,28 @@ void SerializerHl7::Internal::enterEnum(const MetaField& field, std::string&& va
 void SerializerHl7::Internal::enterEnum(const MetaField& field, const char* value, ssize_t size)
 {
     enterString(field, value, size);
+}
+
+void SerializerHl7::Internal::enterJsonString(const MetaField& field, std::string&& value)
+{
+    enterString(field, std::move(value));
+}
+void SerializerHl7::Internal::enterJsonString(const MetaField& field, const char* value, ssize_t size)
+{
+    enterString(field, value, size);
+}
+void SerializerHl7::Internal::enterJsonVariant(const MetaField& field, const Variant& value)
+{
+    ZeroCopyBuffer buffer;
+    VariantToJson variantToJson(buffer);
+    variantToJson.parse(value);
+    std::string json = buffer.getData();
+
+    enterJsonString(field, std::move(json));
+}
+void SerializerHl7::Internal::enterJsonVariantMove(const MetaField& field, Variant&& value)
+{
+    enterJsonVariant(field, value);
 }
 
 void SerializerHl7::Internal::enterArrayBoolMove(const MetaField& field, std::vector<bool>&& value)

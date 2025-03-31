@@ -21,6 +21,7 @@
 //SOFTWARE.
 
 #include "finalmq/serialize/ParserProcessDefaultValues.h"
+#include "finalmq/variant/Variant.h"
 
 #include <algorithm>
 #include <iostream>
@@ -759,6 +760,71 @@ void ParserProcessDefaultValues::enterEnum(const MetaField& field, std::string&&
 void ParserProcessDefaultValues::enterEnum(const MetaField& field, const char* value, ssize_t size)
 {
     enterEnum(field, std::string(value, size));
+}
+
+void ParserProcessDefaultValues::enterJsonString(const MetaField& field, std::string&& value)
+{
+    if (m_blockVisitor)
+    {
+        return;
+    }
+    markAsDone(field);
+    if (!value.empty() || !m_skipDefaultValues)
+    {
+        if (m_skipDefaultValues)
+        {
+            executeEnterStruct();
+        }
+        m_visitor->enterJsonString(field, std::move(value));
+    }
+}
+void ParserProcessDefaultValues::enterJsonString(const MetaField& field, const char* value, ssize_t size)
+{
+    if (m_blockVisitor)
+    {
+        return;
+    }
+    markAsDone(field);
+    if (size > 0 || !m_skipDefaultValues)
+    {
+        if (m_skipDefaultValues)
+        {
+            executeEnterStruct();
+        }
+        m_visitor->enterJsonString(field, value, size);
+    }
+}
+void ParserProcessDefaultValues::enterJsonVariant(const MetaField& field, const Variant& value)
+{
+    if (m_blockVisitor)
+    {
+        return;
+    }
+    markAsDone(field);
+    if ((value.getType() != VARTYPE_NONE) || !m_skipDefaultValues)
+    {
+        if (m_skipDefaultValues)
+        {
+            executeEnterStruct();
+        }
+        m_visitor->enterJsonVariant(field, value);
+    }
+}
+void ParserProcessDefaultValues::enterJsonVariantMove(const MetaField& field, Variant&& value)
+{
+    if (m_blockVisitor)
+    {
+        return;
+    }
+    markAsDone(field);
+    if ((value.getType() != VARTYPE_NONE) || !m_skipDefaultValues)
+    {
+        if (m_skipDefaultValues)
+        {
+            executeEnterStruct();
+        }
+        m_visitor->enterJsonVariantMove(field, std::move(value));
+    }
 }
 
 void ParserProcessDefaultValues::enterArrayBoolMove(const MetaField& field, std::vector<bool>&& value)

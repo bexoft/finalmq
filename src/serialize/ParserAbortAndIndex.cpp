@@ -435,6 +435,51 @@ void ParserAbortAndIndex::enterEnum(const MetaField& field, const char* value, s
     }
 }
 
+void ParserAbortAndIndex::enterJsonString(const MetaField& field, std::string&& value)
+{
+    assert(!m_levelState.empty());
+    LevelState& levelState = m_levelState.back();
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index))
+    {
+        return;
+    }
+
+    m_visitor->enterJsonString(field, std::move(value));
+}
+void ParserAbortAndIndex::enterJsonString(const MetaField& field, const char* value, ssize_t size)
+{
+    assert(!m_levelState.empty());
+    LevelState& levelState = m_levelState.back();
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index))
+    {
+        return;
+    }
+
+    m_visitor->enterJsonString(field, value, size);
+}
+void ParserAbortAndIndex::enterJsonVariant(const MetaField& field, const Variant& value)
+{
+    assert(!m_levelState.empty());
+    LevelState& levelState = m_levelState.back();
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index))
+    {
+        return;
+    }
+
+    m_visitor->enterJsonVariant(field, value);
+}
+void ParserAbortAndIndex::enterJsonVariantMove(const MetaField& field, Variant&& value)
+{
+    assert(!m_levelState.empty());
+    LevelState& levelState = m_levelState.back();
+    if ((levelState.abortStruct) || (levelState.index != INDEX_NOT_AVAILABLE && levelState.index != field.index && levelState.indexOfIndexField < field.index))
+    {
+        return;
+    }
+
+    m_visitor->enterJsonVariantMove(field, std::move(value));
+}
+
 void ParserAbortAndIndex::enterArrayBoolMove(const MetaField& field, std::vector<bool>&& value)
 {
     assert(!m_levelState.empty());

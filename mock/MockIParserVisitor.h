@@ -26,8 +26,34 @@
 #include "finalmq/serialize/IParserVisitor.h"
 
 #include "gmock/gmock.h"
+#include <type_traits>
 
 namespace finalmq {
+
+#if !defined(WIN32)
+
+// in linux int64_t and long long int are not equal
+// In the mock method: MOCK_METHOD(void, enterJson, (const MetaField& field, const Variant& value), (override));
+// long long int is needed, therefore the following specializations are needed.
+// But in case of int64_t == long long int, this code does not compile. In this case, remove it (like for WIN32).
+
+template<>
+class MetaTypeInfo<long long int, typename std::enable_if_t<!std::is_same<std::int64_t, long long int>::value>>
+{
+public:
+    static const int TypeId = 100000;
+};
+template<>
+class VariantValueTypeInfo<long long int, typename std::enable_if_t<!std::is_same<std::int64_t, long long int>::value>>
+{
+public:
+    typedef long long int T;
+    typedef VariantValueTemplate<100000> VariantValueType;
+    const static int VARTYPE = MetaTypeInfo<T>::TypeId;
+    typedef Convert<T> ConvertType;
+};
+#endif
+
 
 class MockIParserVisitor : public IParserVisitor
 {
@@ -61,6 +87,10 @@ public:
     MOCK_METHOD(void, enterEnum, (const MetaField& field, std::int32_t value), (override));
     MOCK_METHOD(void, enterEnum, (const MetaField& field, std::string&& value), (override));
     MOCK_METHOD(void, enterEnum, (const MetaField& field, const char* value, ssize_t size), (override));
+    MOCK_METHOD(void, enterJsonString, (const MetaField& field, std::string&& value), (override));
+    MOCK_METHOD(void, enterJsonString, (const MetaField& field, const char* value, ssize_t size), (override));
+    MOCK_METHOD(void, enterJsonVariant, (const MetaField& field, const Variant& value), (override));
+    MOCK_METHOD(void, enterJsonVariantMove, (const MetaField& field, Variant&& value), (override));
 
     MOCK_METHOD(void, enterArrayBoolMove, (const MetaField& field, std::vector<bool>&& value), (override));
     MOCK_METHOD(void, enterArrayBool, (const MetaField& field, const std::vector<bool>& value), (override));

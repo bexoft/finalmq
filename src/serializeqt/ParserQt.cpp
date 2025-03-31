@@ -467,6 +467,42 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                     }
                 }
                 break;
+            case MetaTypeId::TYPE_JSON:
+                if (wrappedByQVariant)
+                {
+                    ok = parseQVariantHeader(*field);
+                }
+                if (ok)
+                {
+                    const char* buffer = nullptr;
+                    ssize_t size = 0;
+                    std::string value;
+
+                    const std::string& code = field->getProperty(QT_CODE);
+                    if (code == QT_CODE_BYTES)
+                    {
+                        ok = parseArrayByte(*field, buffer, size);
+                        if (ok)
+                        {
+                            m_visitor.enterJsonString(*field, buffer, size);
+                        }
+                    }
+                    else
+                    {
+                        ok = parse(value, field);
+                        if (ok)
+                        {
+                            m_visitor.enterJsonString(*field, value.c_str(), value.size());
+                        }
+                    }
+
+                    if (buffer)
+                    {
+                        value = std::string(buffer, &buffer[size]);
+                    }
+                    checkAbortAndIndex(*field, value, index, indexOffset, abortStruct);
+                }
+                break;
             case MetaTypeId::TYPE_ARRAY_BOOL:
                 if (wrappedByQVariant)
                 {

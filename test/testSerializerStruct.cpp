@@ -674,6 +674,22 @@ TEST_F(TestSerializerStruct, testVariantStruct2)
 }
 
 
+TEST_F(TestSerializerStruct, testJson)
+{
+    static const Variant VALUE = VariantStruct{ {"a", static_cast<std::uint32_t>(3)} };
+
+    test::TestJson root;
+    std::unique_ptr<IParserVisitor> serializer = std::make_unique<SerializerStruct>(root);
+
+    serializer->startStruct(*MetaDataGlobal::instance().getStruct("test.TestJson"));
+    serializer->enterJsonVariant(MetaField{ MetaTypeId::TYPE_JSON, "", "value", "", 0, {}, 0 }, VALUE);
+    serializer->finished();
+
+    test::TestJson cmp;
+    cmp.value = VALUE;
+    ASSERT_EQ(root, cmp);
+}
+
 
 TEST_F(TestSerializerStruct, testArrayBool)
 {

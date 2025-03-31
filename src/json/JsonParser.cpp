@@ -42,10 +42,10 @@ char JsonParser::getChar(const char* str) const
     return ((str < m_end) ? *str : 0);
 }
 
-const char* JsonParser::parseWhiteSpace(const char* str)
+void JsonParser::parseWhiteSpace()
 {
     char c;
-    while ((c = this->getChar(str)) != 0)
+    while ((c = this->getChar(m_str)) != 0)
     {
         switch(c)
         {
@@ -53,14 +53,13 @@ const char* JsonParser::parseWhiteSpace(const char* str)
             case '\t':
             case '\n':
             case '\r':
-                str++;
+                m_str++;
                 break;
             default:
-                return str;
+                return;
                 break;
         }
     }
-    return str;
 }
 
 const char* JsonParser::parse(const char* str, ssize_t size)
@@ -74,144 +73,148 @@ const char* JsonParser::parse(const char* str, ssize_t size)
 
         m_end = str + size;
     }
-    const char* ret = parseValue(str);
+    m_str = str;
+    parseValue();
     m_visitor.finished();
-    return ret;
+    return m_str;
 }
 
-const char* JsonParser::parseValue(const char* str)
+const char* JsonParser::getCurrentPosition() const
 {
-    str = parseWhiteSpace(str);
-    char c = getChar(str);
+    return m_str;
+}
+
+
+void JsonParser::parseValue()
+{
+    parseWhiteSpace();
+    char c = getChar(m_str);
     if (c == 0)
     {
-        m_visitor.syntaxError(str, "value expected");
-        return nullptr;
+        m_visitor.syntaxError(m_str, "value expected");
+        m_str = nullptr;
+        return;
     }
     switch(c)
     {
         // string
         case '\"':
-            str = parseString(str, false);
+            parseString(false);
             break;
         // object
         case '{':
-            str = parseObject(str);
+            parseObject();
             break;
         case '[':
-            str = parseArray(str);
+            parseArray();
             break;
         case 'n':
-            str = parseNull(str);
+            parseNull();
             break;
         case 't':
-            str = parseTrue(str);
+            parseTrue();
             break;
         case 'f':
-            str = parseFalse(str);
+            parseFalse();
             break;
         default:
-            str = parseNumber(str);
+            parseNumber();
             break;
     }
-    if (str)
+    if (m_str)
     {
-        str = parseWhiteSpace(str);
-        return str;
+        parseWhiteSpace();
     }
-    return nullptr;
 }
 
-const char* JsonParser::cmpString(const char* str, const char* strCmp)
+void JsonParser::cmpString(const char* strCmp)
 {
     char c;
     while ((c = *strCmp))
     {
-        if (getChar(str) != c)
+        if (getChar(m_str) != c)
         {
             std::string message;
             message += c;
             message += " expected";
-            m_visitor.syntaxError(str, message.c_str());
-            return nullptr;
+            m_visitor.syntaxError(m_str, message.c_str());
+            m_str = nullptr;
+            return;
         }
-        str++;
+        m_str++;
         strCmp++;
     }
-
-    return str;
 }
 
-const char* JsonParser::parseNull(const char* str)
+void JsonParser::parseNull()
 {
-    str = cmpString(str, "null");
-    if (str)
+    cmpString("null");
+    if (m_str)
     {
         m_visitor.enterNull();
     }
-    return str;
 }
 
-const char* JsonParser::parseTrue(const char* str)
+void JsonParser::parseTrue()
 {
-    str = cmpString(str, "true");
-    if (str)
+    cmpString("true");
+    if (m_str)
     {
         m_visitor.enterBool(true);
     }
-    return str;
 }
 
-const char* JsonParser::parseFalse(const char* str)
+void JsonParser::parseFalse()
 {
-    str = cmpString(str, "false");
-    if (str)
+    cmpString("false");
+    if (m_str)
     {
         m_visitor.enterBool(false);
     }
-    return str;
 }
 
-const char* JsonParser::parseNumber(const char* str)
+void JsonParser::parseNumber()
 {
-    const char* first = str;
-    char c = getChar(str);
+    const char* first = m_str;
+    char c = getChar(m_str);
     bool isNegative = false;
     if (c == '-')
     {
         isNegative = true;
-        str++;
-        c = getChar(str);
+        m_str++;
+        c = getChar(m_str);
         if (c >= '0' && c <= '9')
         {
-            str++;
+            m_str++;
         }
         else
         {
-            m_visitor.syntaxError(str, "digit expected");
-            return nullptr;
+            m_visitor.syntaxError(m_str, "digit expected");
+            m_str = nullptr;
+            return;
         }
     }
     else if ((c >= '0' && c <= '9') || (c == '-'))
     {
-        str++;
+        m_str++;
     }
     else
     {
-        m_visitor.syntaxError(str, "digit expected");
-        return nullptr;
+        m_visitor.syntaxError(m_str, "digit expected");
+        m_str = nullptr;
+        return;
     }
 
     bool isFloat = false;
-    while ((c = getChar(str)) != 0)
+    while ((c = getChar(m_str)) != 0)
     {
         if ((c >= '0' && c <= '9') || (c == '+') || (c == '-'))
         {
-            str++;
+            m_str++;
         }
         else if ((c == '.') || (c == 'e') || (c == 'E'))
         {
-            str++;
+            m_str++;
             isFloat = true;
         }
         else
@@ -224,20 +227,22 @@ const char* JsonParser::parseNumber(const char* str)
     if (isFloat)
     {
         double value = strtof64(first, &res);
-        if (res != str)
+        if (res != m_str)
         {
             m_visitor.syntaxError(res, "wrong number format");
-            return nullptr;
+            m_str = nullptr;
+            return;
         }
         m_visitor.enterDouble(value);
     }
     else if (isNegative)
     {
         long long value = strtoll(first, &res, 10);
-        if (res != str)
+        if (res != m_str)
         {
             m_visitor.syntaxError(res, "wrong number format");
-            return nullptr;
+            m_str = nullptr;
+            return;
         }
         assert(value < 0);
         if (value >= INT_MIN)
@@ -252,10 +257,11 @@ const char* JsonParser::parseNumber(const char* str)
     else
     {
         unsigned long long value = strtoull(first, &res, 10);
-        if (res != str)
+        if (res != m_str)
         {
             m_visitor.syntaxError(res, "wrong number format");
-            return nullptr;
+            m_str = nullptr;
+            return;
         }
         if (value <= INT_MAX)
         {
@@ -268,9 +274,7 @@ const char* JsonParser::parseNumber(const char* str)
     }
 
     assert(res);
-    str = res;
-
-    return str;
+    m_str = res;
 }
 
 static std::int32_t getHexDigit(char c)
@@ -290,38 +294,38 @@ static std::int32_t getHexDigit(char c)
     return -1;
 }
 
-const char* JsonParser::parseUEscape(const char* str, std::uint32_t& value)
+void JsonParser::parseUEscape(std::uint32_t& value)
 {
     value = 0;
     for (int i = 0; i < 4; ++i)
     {
-        std::int32_t v = getHexDigit(getChar(str));
+        std::int32_t v = getHexDigit(getChar(m_str));
         if (v == -1)
         {
-            m_visitor.syntaxError(str, "invalid u escape");
-            return nullptr;
+            m_visitor.syntaxError(m_str, "invalid u escape");
+            m_str = nullptr;
+            return;
         }
         v <<= 12 - 4 * i;
         value += v;
-        str++;
+        m_str++;
     }
-    return str;
 }
 
-const char* JsonParser::parseString(const char* str, bool key)
+void JsonParser::parseString(bool key)
 {
     // skip '"'
-    str++;
+    m_str++;
 
-    const char* strBegin = str;
+    const char* strBegin = m_str;
 
     // try fast parse. it is fast when there is no escape character in the string
     char c;
-    while ((c = getChar(str)) != 0)
+    while ((c = getChar(m_str)) != 0)
     {
         if (c == '\"')
         {
-            ssize_t size = str - strBegin;
+            ssize_t size = m_str - strBegin;
             if (key)
             {
                 m_visitor.enterKey(strBegin, size);
@@ -330,25 +334,26 @@ const char* JsonParser::parseString(const char* str, bool key)
             {
                 m_visitor.enterString(strBegin, size);
             }
-            str++;
-            return str;
+            m_str++;
+            return;
         }
         else if (c == '\\')
         {
             break;
         }
-        str++;
+        m_str++;
     }
 
     if (c == 0)
     {
-        m_visitor.syntaxError(str, "'\"' expected");
-        return nullptr;
+        m_visitor.syntaxError(m_str, "'\"' expected");
+        m_str = nullptr;
+        return;
     }
 
     // fast parse was not possible, go ahead with escaping
-    std::string dest(strBegin, str);
-    while ((c = getChar(str)) != 0)
+    std::string dest(strBegin, m_str);
+    while ((c = getChar(m_str)) != 0)
     {
         if (c == '\"')
         {
@@ -360,13 +365,13 @@ const char* JsonParser::parseString(const char* str, bool key)
             {
                 m_visitor.enterString(std::move(dest));
             }
-            str++;
-            return str;
+            m_str++;
+            return;
         }
         else if (c == '\\')
         {
-            str++;
-            if ((c = getChar(str)) != 0)
+            m_str++;
+            if ((c = getChar(m_str)) != 0)
             {
                 switch(c)
                 {
@@ -392,47 +397,51 @@ const char* JsonParser::parseString(const char* str, bool key)
                         break;
                     case 'u':
                     {
-                        str++;
+                        m_str++;
                         std::uint32_t num = 0;
-                        str = parseUEscape(str, num);
-                        if (str == nullptr)
+                        parseUEscape(num);
+                        if (m_str == nullptr)
                         {
-                            return nullptr;
+                            return;
                         }
                         if (num >= 0xD800 && num <= 0xDBFF)
                         {
-                            if (getChar(str) != '\\')
+                            if (getChar(m_str) != '\\')
                             {
-                                m_visitor.syntaxError(str, "'\\' expected");
-                                return nullptr;
+                                m_visitor.syntaxError(m_str, "'\\' expected");
+                                m_str = nullptr;
+                                return;
                             }
-                            str++;
-                            if (getChar(str) != 'u')
+                            m_str++;
+                            if (getChar(m_str) != 'u')
                             {
-                                m_visitor.syntaxError(str, "'u' expected");
-                                return nullptr;
+                                m_visitor.syntaxError(m_str, "'u' expected");
+                                m_str = nullptr;
+                                return;
                             }
-                            str++;
+                            m_str++;
                             std::uint32_t num2 = 0;
-                            str = parseUEscape(str, num2);
-                            if (str == nullptr)
+                            parseUEscape(num2);
+                            if (m_str == nullptr)
                             {
-                                return nullptr;
+                                return;
                             }
                             if (num2 < 0xDC00 || num2 > 0xDFFF)
                             {
-                                m_visitor.syntaxError(str, "wrong utf16 value");
-                                return nullptr;
+                                m_visitor.syntaxError(m_str, "wrong utf16 value");
+                                m_str = nullptr;
+                                return;
                             }
                             //num += num2 << 16;
                             num = (((num - 0xD800) << 10) | (num2 - 0xDC00)) + 0x10000;
                         }
                         else if (num > 0xDBFF && num <= 0xDFFF)
                         {
-                            m_visitor.syntaxError(str, "wrong utf16 valueh");
-                            return nullptr;
+                            m_visitor.syntaxError(m_str, "wrong utf16 valueh");
+                            m_str = nullptr;
+                            return;
                         }
-                        str--;
+                        m_str--;
 
                         if (num <= 0x7F)
                         {
@@ -470,102 +479,106 @@ const char* JsonParser::parseString(const char* str, bool key)
         {
             dest += c;
         }
-        str++;
+        m_str++;
     }
-    m_visitor.syntaxError(str, "'\"' expected");
-    return nullptr;
+    m_visitor.syntaxError(m_str, "'\"' expected");
+    m_str = nullptr;
 }
 
-const char* JsonParser::parseArray(const char* str)
+void JsonParser::parseArray()
 {
     m_visitor.enterArray();
 
     // skip '['
-    str++;
+    m_str++;
 
-    while (getChar(str) != 0)
+    while (getChar(m_str) != 0)
     {
-        str = parseWhiteSpace(str);
-        if (getChar(str) == ']')
+        parseWhiteSpace();
+        if (getChar(m_str) == ']')
         {
-            str++;
+            m_str++;
             m_visitor.exitArray();
-            return str;
+            return;
         }
-        str = parseValue(str);
-        if (str == nullptr)
+        parseValue();
+        if (m_str == nullptr)
         {
-            return nullptr;
+            return;
         }
-        char c = getChar(str);
+        char c = getChar(m_str);
         if (c != ',' && c != ']')
         {
-            m_visitor.syntaxError(str, "',' or ']' expected");
-            return nullptr;
+            m_visitor.syntaxError(m_str, "',' or ']' expected");
+            m_str = nullptr;
+            return;
         }
         if (c == ',')
         {
-            str++;
+            m_str++;
         }
     }
-    m_visitor.syntaxError(str, "',' or ']' expected");
-    return nullptr;
+    m_visitor.syntaxError(m_str, "',' or ']' expected");
+    m_str = nullptr;
 }
 
-const char* JsonParser::parseObject(const char* str)
+void JsonParser::parseObject()
 {
     m_visitor.enterObject();
     // skip '{'
-    str++;
-    str = parseWhiteSpace(str);
+    m_str++;
+    parseWhiteSpace();
 
-    while (getChar(str) != 0)
+    while (getChar(m_str) != 0)
     {
-        str = parseWhiteSpace(str);
-        char c = getChar(str);
+        parseWhiteSpace();
+        char c = getChar(m_str);
         if (c == '}')
         {
-            str++;
+            m_str++;
             m_visitor.exitObject();
-            return str;
+            return;
         }
         if (c != '\"')
         {
-            m_visitor.syntaxError(str, "'\"' for key expected");
-            return nullptr;
+            m_visitor.syntaxError(m_str, "'\"' for key expected");
+            m_str = nullptr;
+            return;
         }
-        str = parseString(str, true);
-        if (str == nullptr)
+        parseString(true);
+        if (m_str == nullptr)
         {
-            return nullptr;
+            return;
         }
-        str = parseWhiteSpace(str);
+        parseWhiteSpace();
 
-        if (getChar(str) != ':')
+        if (getChar(m_str) != ':')
         {
-            m_visitor.syntaxError(str, "':' expected");
-            return nullptr;
+            m_visitor.syntaxError(m_str, "':' expected");
+            m_str = nullptr;
+            return;
         }
 
-        str++;
-        str = parseValue(str);
-        if (str == nullptr)
+        m_str++;
+        parseValue();
+        if (m_str == nullptr)
         {
-            return nullptr;
+            return;
         }
-        c = getChar(str);
+        c = getChar(m_str);
         if (c != ',' && c != '}')
         {
-            m_visitor.syntaxError(str, "',' or '}' expected");
-            return nullptr;
+            m_visitor.syntaxError(m_str, "',' or '}' expected");
+            m_str = nullptr;
+            return;
         }
         if (c == ',')
         {
-            str++;
+            m_str++;
         }
     }
-    m_visitor.syntaxError(str, "',' or '}' expected");
-    return nullptr;
+    m_visitor.syntaxError(m_str, "',' or '}' expected");
+    m_str = nullptr;
 }
 
 } // namespace finalmq

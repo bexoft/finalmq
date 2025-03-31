@@ -773,6 +773,29 @@ TEST_F(TestParserVariant, testVariantStruct)
 
 
 
+TEST_F(TestParserVariant, testJson)
+{
+    static const Variant VALUE = VariantStruct{ {"a", static_cast<std::uint32_t>(3)} };
+
+    const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestJson", "value");
+    ASSERT_NE(fieldValue, nullptr);
+
+    MockIParserVisitor mockVisitor;
+
+    {
+        testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
+        EXPECT_CALL(mockVisitor, enterJsonVariant(MatcherMetaField(*fieldValue), VALUE)).Times(1);
+        EXPECT_CALL(mockVisitor, finished()).Times(1);
+    }
+
+    Variant root = VariantStruct({ {"value", VALUE} });
+    ParserVariant parser(mockVisitor, root);
+    bool res = parser.parseStruct("test.TestJson");
+    EXPECT_EQ(res, true);
+}
+
+
 
 TEST_F(TestParserVariant, testArrayNoArray)
 {

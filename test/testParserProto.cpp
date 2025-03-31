@@ -627,6 +627,33 @@ TEST_F(TestParserProto, testEnumNotAvailable)
 }
 
 
+TEST_F(TestParserProto, testJson)
+{
+    static const std::string VALUE = "{\"a\":3}";
+
+    const MetaField* fieldValue = MetaDataGlobal::instance().getField("test.TestJson", "value");
+    ASSERT_NE(fieldValue, nullptr);
+
+    std::string data;
+
+    fmq::test::TestJson message;
+    message.set_value(VALUE);
+    message.SerializeToString(&data);
+
+    MockIParserVisitor mockVisitor;
+
+    {
+        testing::InSequence seq;
+        EXPECT_CALL(mockVisitor, startStruct(_)).Times(1);
+        EXPECT_CALL(mockVisitor, enterJsonString(MatcherMetaField(*fieldValue), ArrayEq(VALUE.data(), VALUE.size()), VALUE.size())).Times(1);
+        EXPECT_CALL(mockVisitor, finished()).Times(1);
+    }
+
+    ParserProto parser(mockVisitor, data.data(), data.size());
+    bool res = parser.parseStruct("test.TestJson");
+    EXPECT_EQ(res, true);
+}
+
 
 TEST_F(TestParserProto, testArrayBool)
 {

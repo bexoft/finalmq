@@ -87,6 +87,14 @@ void JsonBuilder::resizeBuffer()
 }
 
 
+void JsonBuilder::putJson(const char* json, ssize_t size)
+{
+    reserveSpace(size);
+    assert(m_buffer);
+    memcpy(m_buffer, json, size);
+    m_buffer += size;
+}
+
 
 // IJsonParserVisitor
 void JsonBuilder::syntaxError(const char* /*str*/, const char* /*message*/)
