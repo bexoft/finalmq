@@ -1,0 +1,38 @@
+{
+	"imports":[
+	],
+
+    "namespace":"finalmq",
+
+    "enums": [
+    ],
+
+    "structs":[
+        {"type":"SerializeCertificateData","desc":"","fields":[
+            {"tid":"bool",          "type":"",                          "name":"ssl",                   "desc":""},
+            {"tid":"int32",         "type":"",                          "name":"verifyMode",            "desc":""},
+            {"tid":"string",        "type":"",                          "name":"certificateFile",       "desc":""},
+            {"tid":"string",        "type":"",                          "name":"privateKeyFile",        "desc":""},
+            {"tid":"string",        "type":"",                          "name":"caFile",                "desc":""},
+            {"tid":"string",        "type":"",                          "name":"caPath",                "desc":""},
+            {"tid":"string",        "type":"",                          "name":"certificateChainFile",  "desc":""},
+            {"tid":"string",        "type":"",                          "name":"clientCaFile",          "desc":""}
+        ]},
+        {"type":"SerializeConnectConfig","desc":"","fields":[
+            {"tid":"int32",         "type":"",                          "name":"reconnectInterval",     "desc":""},
+            {"tid":"int32",         "type":"",                          "name":"totalReconnectDuration","desc":""}
+        ]},
+        {"type":"SerializeBindProperties","desc":"","fields":[
+            {"tid":"struct",        "type":"SerializeCertificateData",  "name":"certificateData",       "desc":""},
+            {"tid":"json",          "type":"",                          "name":"protocolData",          "desc":""},
+            {"tid":"json",          "type":"",                          "name":"formatData",            "desc":""}
+        ]},
+        {"type":"SerializeConnectProperties","desc":"","fields":[
+            {"tid":"struct",        "type":"SerializeCertificateData",  "name":"certificateData",       "desc":""},
+            {"tid":"struct",        "type":"SerializeConnectConfig",    "name":"config",                "desc":""},
+            {"tid":"json",          "type":"",                          "name":"protocolData",          "desc":""},
+            {"tid":"json",          "type":"",                          "name":"formatData",            "desc":""}
+        ]}
+    ]
+}
+

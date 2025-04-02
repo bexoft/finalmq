@@ -64,6 +64,10 @@ public:
     StreamConnectionContainer();
     ~StreamConnectionContainer();
 
+    static void getConnectPropertiesFromEndpoint(const std::string& endpoint, ConnectProperties& connectProperties);
+    static void getBindPropertiesFromEndpoint(const std::string& endpoint, BindProperties& bindProperties);
+
+
 private:
     // IStreamConnectionContainer
     virtual void init(int cycleTime = 100, FuncPollerLoopTimer funcTimer = {}, int checkReconnectInterval = 1000) override;

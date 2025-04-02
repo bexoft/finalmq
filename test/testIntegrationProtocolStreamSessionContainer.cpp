@@ -147,6 +147,24 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testConnectBind)
     EXPECT_EQ(m_sessionContainer->getSession(connection->getSessionId()), connection);
 }
 
+TEST_F(TestIntegrationProtocolStreamSessionContainer, testConnectBindConnectPropertiesJson)
+{
+    auto& expectConnected = EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(1);
+    EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
+
+    IProtocolSessionPtr connection = m_sessionContainer->connect("tcp://localhost:3333:stream{\"config\":{\"reconnectInterval\":1,\"totalReconnectDuration\":-1}}", m_mockClientCallback);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+
+    int res = m_sessionContainer->bind("tcp://*:3333:stream", m_mockServerCallback);
+    EXPECT_EQ(res, 0);
+
+    waitTillDone(expectConnected, 5000);
+
+    EXPECT_EQ(connection->getConnectionData().connectionState, ConnectionState::CONNECTIONSTATE_CONNECTED);
+    EXPECT_EQ(m_sessionContainer->getSession(connection->getSessionId()), connection);
+}
+
 
 TEST_F(TestIntegrationProtocolStreamSessionContainer, testSendConnectBind)
 {

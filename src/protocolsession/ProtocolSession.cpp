@@ -581,12 +581,22 @@ bool ProtocolSession::connect(const std::string& endpoint, const ConnectProperti
         return false;
     }
 
-    size_t ixEndpoint = endpoint.find_last_of(':');
+    std::string endpointToUse;
+    size_t ixEndOfEndpoint = endpoint.find('{');
+    if (ixEndOfEndpoint == std::string::npos)
+    {
+        endpointToUse = endpoint;
+    }
+    else
+    {
+        endpointToUse = endpoint.substr(0, ixEndOfEndpoint);
+    }
+    size_t ixEndpoint = endpointToUse.find_last_of(':');
     if (ixEndpoint == std::string::npos)
     {
         return false;
     }
-    std::string protocolName = endpoint.substr(ixEndpoint+1, endpoint.size() - (ixEndpoint + 1));
+    std::string protocolName = endpointToUse.substr(ixEndpoint+1, endpointToUse.size() - (ixEndpoint + 1));
     IProtocolFactoryPtr protocolFactory = ProtocolRegistry::instance().getProtocolFactory(protocolName);
     if (!protocolFactory)
     {
@@ -603,7 +613,7 @@ bool ProtocolSession::connect(const std::string& endpoint, const ConnectProperti
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         assert(m_protocol == nullptr);
-        m_endpointStreamConnection = endpoint.substr(0, ixEndpoint);
+        m_endpointStreamConnection = endpointToUse.substr(0, ixEndpoint);
         m_connectionProperties = connectionProperties;
         m_protocolData = m_connectionProperties.protocolData;
         m_formatData = m_connectionProperties.formatData;
@@ -627,7 +637,7 @@ bool ProtocolSession::connect(const std::string& endpoint, const ConnectProperti
 
         std::unique_lock<std::mutex> lock(m_mutex);
         assert(m_protocol == nullptr);
-        m_endpointStreamConnection = endpoint.substr(0, ixEndpoint);
+        m_endpointStreamConnection = endpointToUse.substr(0, ixEndpoint);
         m_connectionProperties = connectionProperties;
         m_protocolData = m_connectionProperties.protocolData;
         m_formatData = m_connectionProperties.formatData;
