@@ -159,6 +159,14 @@ add_custom_command(
     COMMENT "Generating cpp code out of qtdata.fmq."
 )
 
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/streamconnection)
+add_custom_command(
+    COMMAND node ${CODEGENERATOR_CPP} --input=${CMAKE_CURRENT_SOURCE_DIR}/inc/finalmq/streamconnection/streamconnection.fmq --outpath=${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/streamconnection --exportmacro=EXPORT_finalmq
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/inc/finalmq/streamconnection/streamconnection.fmq
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/streamconnection/streamconnection.fmq.cpp ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/streamconnection/streamconnection.fmq.h
+    COMMENT "Generating cpp code out of streamconnection.fmq."
+)
+
 
 #However, the file(GLOB...) allows for wildcard additions:
 file(GLOB SOURCES "src/*.cpp" "inc/finalmq/*.h"
@@ -197,7 +205,9 @@ SET(FINALMQ_LIBRARY_SOURCES ${SOURCES}
     ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/interfaces/fmqreg.fmq.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/interfaces/fmqprocess.fmq.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/interfaces/fmqlog.fmq.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/Qt/qtdata.fmq.cpp)
+    ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/Qt/qtdata.fmq.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq/streamconnection/streamconnection.fmq.cpp
+)
 
 add_library(finalmq SHARED ${FINALMQ_LIBRARY_SOURCES})
 

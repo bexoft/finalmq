@@ -23,8 +23,11 @@
 #include "finalmq/streamconnection/StreamConnectionContainer.h"
 
 #include "finalmq/helpers/Executor.h"
+#include "finalmq/serializestruct/SerializerStruct.h"
+#include "finalmq/serializejson/ParserJson.h"
 #include "finalmq/streamconnection/AddressHelpers.h"
 #include "finalmq/streamconnection/Socket.h"
+#include "finalmq/streamconnection/streamconnection.fmq.h"
 
 #if defined(WIN32) || defined(__MINGW32__) || defined(__QNX__)
 #include "finalmq/poller/PollerImplSelect.h"
@@ -140,17 +143,69 @@ void StreamConnectionContainer::init(int cycleTime, FuncPollerLoopTimer funcTime
     });
 }
 
+
+void StreamConnectionContainer::getConnectPropertiesFromEndpoint(const std::string& endpoint, ConnectProperties& connectProperties)
+{
+    std::string::size_type pos = endpoint.find_first_of('{');
+    if (pos != std::string::npos)
+    {
+        SerializeConnectProperties cp;
+        SerializerStruct serializer(cp);
+        ParserJson parser(serializer, endpoint.c_str() + pos, endpoint.size() - pos);
+        parser.parseStruct(SerializeConnectProperties::structInfo().getTypeName());
+
+        connectProperties.certificateData.ssl = cp.certificateData.ssl;
+        connectProperties.certificateData.verifyMode = cp.certificateData.verifyMode;
+        connectProperties.certificateData.certificateFile = cp.certificateData.certificateFile;
+        connectProperties.certificateData.privateKeyFile = cp.certificateData.privateKeyFile;
+        connectProperties.certificateData.caFile = cp.certificateData.caFile;
+        connectProperties.certificateData.caPath = cp.certificateData.caPath;
+        connectProperties.certificateData.certificateChainFile = cp.certificateData.certificateChainFile;
+        connectProperties.certificateData.clientCaFile = cp.certificateData.clientCaFile;
+        connectProperties.config.reconnectInterval = cp.config.reconnectInterval;
+        connectProperties.config.totalReconnectDuration = cp.config.totalReconnectDuration;
+        connectProperties.protocolData = cp.protocolData;
+        connectProperties.formatData = cp.formatData;
+    }
+}
+
+void StreamConnectionContainer::getBindPropertiesFromEndpoint(const std::string& endpoint, BindProperties& bindProperties)
+{
+    std::string::size_type pos = endpoint.find_first_of('{');
+    if (pos != std::string::npos)
+    {
+        SerializeBindProperties bp;
+        SerializerStruct serializer(bp);
+        ParserJson parser(serializer, endpoint.c_str() + pos, endpoint.size() - pos);
+
+        bindProperties.certificateData.ssl = bp.certificateData.ssl;
+        bindProperties.certificateData.verifyMode = bp.certificateData.verifyMode;
+        bindProperties.certificateData.certificateFile = bp.certificateData.certificateFile;
+        bindProperties.certificateData.privateKeyFile = bp.certificateData.privateKeyFile;
+        bindProperties.certificateData.caFile = bp.certificateData.caFile;
+        bindProperties.certificateData.caPath = bp.certificateData.caPath;
+        bindProperties.certificateData.certificateChainFile = bp.certificateData.certificateChainFile;
+        bindProperties.certificateData.clientCaFile = bp.certificateData.clientCaFile;
+        bindProperties.protocolData = bp.protocolData;
+        bindProperties.formatData = bp.formatData;
+    }
+}
+
+
 int StreamConnectionContainer::bind(const std::string& endpoint, hybrid_ptr<IStreamConnectionCallback> callbackDefault, const BindProperties& bindProperties)
 {
+    BindProperties bindPropertiesToUse = bindProperties;
+    getBindPropertiesFromEndpoint(endpoint, bindPropertiesToUse);
+
     ConnectionData connectionData = AddressHelpers::endpoint2ConnectionData(endpoint);
-    connectionData.ssl = bindProperties.certificateData.ssl;
+    connectionData.ssl = bindPropertiesToUse.certificateData.ssl;
     std::shared_ptr<Socket> socket = std::make_shared<Socket>();
 
     bool ok = false;
 #ifdef USE_OPENSSL
     if (connectionData.ssl)
     {
-        ok = socket->createSslServer(connectionData.af, connectionData.type, connectionData.protocol, bindProperties.certificateData);
+        ok = socket->createSslServer(connectionData.af, connectionData.type, connectionData.protocol, bindPropertiesToUse.certificateData);
     }
     else
 #endif
@@ -304,13 +359,16 @@ bool StreamConnectionContainer::connect(const std::string& endpoint, const IStre
         return false;
     }
 
+    ConnectProperties connectionPropertiesToUse = connectionProperties;
+    getConnectPropertiesFromEndpoint(endpoint, connectionPropertiesToUse);
+
     ConnectionData connectionData = AddressHelpers::endpoint2ConnectionData(endpoint);
     connectionData.connectionId = connection->getConnectionId();
     connectionData.incomingConnection = false;
-    connectionData.reconnectInterval = connectionProperties.config.reconnectInterval;
-    connectionData.totalReconnectDuration = connectionProperties.config.totalReconnectDuration;
+    connectionData.reconnectInterval = connectionPropertiesToUse.config.reconnectInterval;
+    connectionData.totalReconnectDuration = connectionPropertiesToUse.config.totalReconnectDuration;
     connectionData.startTime = std::chrono::steady_clock::now();
-    connectionData.ssl = connectionProperties.certificateData.ssl;
+    connectionData.ssl = connectionPropertiesToUse.certificateData.ssl;
     connectionData.connectionState = ConnectionState::CONNECTIONSTATE_CREATED;
     connection->updateConnectionData(connectionData);
     bool doAsyncGetHostByName = false;
@@ -320,7 +378,7 @@ bool StreamConnectionContainer::connect(const std::string& endpoint, const IStre
     {
         ret = true;
         std::string hostname = connectionData.hostname;
-        m_executorWorker->addAction([this, connectionData, connection, connectionProperties]() mutable {
+        m_executorWorker->addAction([this, connectionData, connection, connectionPropertiesToUse]() mutable {
             bool ok = false;
             struct in_addr addr1;
             struct hostent* hp = gethostbyname(connectionData.hostname.c_str());
@@ -337,7 +395,7 @@ bool StreamConnectionContainer::connect(const std::string& endpoint, const IStre
                 addrTcp.sin_addr.s_addr = addr1.s_addr;
                 addrTcp.sin_port = htons(static_cast<std::int16_t>(connectionData.port));
                 connectionData.sockaddr = std::string(reinterpret_cast<const char*>(&addrTcp), sizeof(sockaddr_in));
-                ok = createSocket(connection, connectionData, connectionProperties);
+                ok = createSocket(connection, connectionData, connectionPropertiesToUse);
                 if (ok)
                 {
                     ok = connection->connect();
@@ -352,7 +410,7 @@ bool StreamConnectionContainer::connect(const std::string& endpoint, const IStre
     else
     {
         connectionData.sockaddr = addr;
-        ret = createSocket(connection, connectionData, connectionProperties);
+        ret = createSocket(connection, connectionData, connectionPropertiesToUse);
         if (ret)
         {
             ret = connection->connect();

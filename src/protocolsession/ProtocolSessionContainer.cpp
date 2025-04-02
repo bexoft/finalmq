@@ -118,7 +118,18 @@ void ProtocolSessionContainer::init(const IExecutorPtr& executor, int cycleTime,
 
 static std::string endpointToStreamEndpoint(const std::string& endpoint, std::string* protocolName = nullptr)
 {
-    size_t ixEndpoint = endpoint.find_last_of(':');
+    std::string endpointToUse;
+    size_t ixEndOfEndpoint = endpoint.find('{');
+    if (ixEndOfEndpoint == std::string::npos)
+    {
+        endpointToUse = endpoint;
+    }
+    else
+    {
+        endpointToUse = endpoint.substr(0, ixEndOfEndpoint);
+    }
+
+    size_t ixEndpoint = endpointToUse.find_last_of(':');
     if (ixEndpoint == std::string::npos)
     {
         return "";
@@ -126,10 +137,10 @@ static std::string endpointToStreamEndpoint(const std::string& endpoint, std::st
 
     if (protocolName)
     {
-        *protocolName = endpoint.substr(ixEndpoint + 1, endpoint.size() - (ixEndpoint + 1));
+        *protocolName = endpointToUse.substr(ixEndpoint + 1, endpointToUse.size() - (ixEndpoint + 1));
     }
 
-    return endpoint.substr(0, ixEndpoint);
+    return endpointToUse.substr(0, ixEndpoint);
 }
 
 
@@ -148,16 +159,19 @@ int ProtocolSessionContainer::bind(const std::string& endpoint, hybrid_ptr<IProt
         return -1;
     }
 
+    BindProperties bindPropertiesToUse = bindProperties;
+    StreamConnectionContainer::getBindPropertiesFromEndpoint(endpoint, bindPropertiesToUse);
+
     int err = -1;
     std::unique_lock<std::mutex> lock(m_mutex);
     auto it = m_endpoint2Bind.find(endpoint);
     if (it == m_endpoint2Bind.end())
     {
-        ProtocolBindPtr bind = std::make_shared<ProtocolBind>(callback, m_executor, m_executorPollerThread, protocolFactory, m_protocolSessionList, bindProperties, contentType);
+        ProtocolBindPtr bind = std::make_shared<ProtocolBind>(callback, m_executor, m_executorPollerThread, protocolFactory, m_protocolSessionList, bindPropertiesToUse, contentType);
         m_endpoint2Bind[endpoint] = bind;
         lock.unlock();
 
-        err = m_streamConnectionContainer->bind(endpointStreamConnection, bind, bindProperties);
+        err = m_streamConnectionContainer->bind(endpointStreamConnection, bind, bindPropertiesToUse);
     }
     return err;
 }
@@ -176,21 +190,34 @@ void ProtocolSessionContainer::unbind(const std::string& endpoint)
 
 IProtocolSessionPtr ProtocolSessionContainer::connect(const std::string& endpoint, hybrid_ptr<IProtocolSessionCallback> callback, const ConnectProperties& connectProperties, int contentType)
 {
-    size_t ixEndpoint = endpoint.find_last_of(':');
+    std::string endpointToUse;
+    size_t ixEndOfEndpoint = endpoint.find('{');
+    if (ixEndOfEndpoint == std::string::npos)
+    {
+        endpointToUse = endpoint;
+    }
+    else
+    {
+        endpointToUse = endpoint.substr(0, ixEndOfEndpoint);
+    }
+    size_t ixEndpoint = endpointToUse.find_last_of(':');
     if (ixEndpoint == std::string::npos)
     {
         return nullptr;
     }
-    std::string protocolName = endpoint.substr(ixEndpoint + 1, endpoint.size() - (ixEndpoint + 1));
+    std::string protocolName = endpointToUse.substr(ixEndpoint + 1, endpointToUse.size() - (ixEndpoint + 1));
     IProtocolFactoryPtr protocolFactory = ProtocolRegistry::instance().getProtocolFactory(protocolName);
     if (!protocolFactory)
     {
         return nullptr;
     }
 
-    std::string endpointStreamConnection = endpoint.substr(0, ixEndpoint);
+    std::string endpointStreamConnection = endpointToUse.substr(0, ixEndpoint);
 
-    IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(callback, m_executor, m_executorPollerThread, protocolFactory, m_protocolSessionList, m_streamConnectionContainer, endpointStreamConnection, connectProperties, contentType);
+    ConnectProperties connectPropertiesToUse = connectProperties;
+    StreamConnectionContainer::getConnectPropertiesFromEndpoint(endpoint, connectPropertiesToUse);
+
+    IProtocolSessionPrivatePtr protocolSession = std::make_shared<ProtocolSession>(callback, m_executor, m_executorPollerThread, protocolFactory, m_protocolSessionList, m_streamConnectionContainer, endpointStreamConnection, connectPropertiesToUse, contentType);
     protocolSession->connect();
     return protocolSession;
 }
