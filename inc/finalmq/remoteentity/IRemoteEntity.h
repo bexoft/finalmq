@@ -123,7 +123,7 @@ namespace finalmq
 
     typedef std::function<void(PeerId peerId, Status status, const StructBasePtr& structBase)> FuncReply;
     typedef std::function<void(PeerId peerId, Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase)> FuncReplyMeta;
-    typedef std::function<void(RequestContextPtr& requestContext, const StructBasePtr& structBase)> FuncCommand;
+    typedef std::function<void(const RequestContextPtr& requestContext, const StructBasePtr& structBase)> FuncCommand;
     typedef std::function<void(PeerId peerId, const SessionInfo& sessionInfo, EntityId entityId, PeerEvent peerEvent, bool incoming)> FuncPeerEvent;
     typedef std::function<bool(CorrelationId correlationId, Status status, IMessage::Metainfo& metainfo, const StructBasePtr& structBase)> FuncReplyEvent; // return bool reply handled -> skip looking for reply lambda.
     typedef std::function<void(PeerId peerId, Status status)> FuncReplyConnect;

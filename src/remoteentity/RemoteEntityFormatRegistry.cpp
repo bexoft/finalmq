@@ -525,7 +525,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainf
 
     std::shared_ptr<StructBase> structBase;
 
-    if (header.type != RawBytes::structInfo().getTypeName())
+    if ((header.type != RawBytes::structInfo().getTypeName()) || (bufferRef.second == 0 && !data.empty()))
     {
         // special feature for the browser: json data can be written into the path
         if (bufferRef.second == 0 && !data.empty())

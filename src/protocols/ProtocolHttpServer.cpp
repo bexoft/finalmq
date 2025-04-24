@@ -842,18 +842,18 @@ void ProtocolHttpServer::sendMessage(IMessagePtr message)
             int fd = OperatingSystem::instance().open(file.c_str(), flags);
             if (fd != -1)
             {
-                int len = static_cast<int>(filesize);
+                ssize_t len = filesize;
                 int err = 0;
                 int lenReceived = 0;
                 bool ex = false;
                 while (!ex)
                 {
-                    int size = std::min(1024, len);
+                    ssize_t size = std::min(static_cast<ssize_t>(1024), len);
                     IMessagePtr messageData = std::make_shared<ProtocolMessage>(0);
                     char* buf = messageData->addSendPayload(size);
                     do
                     {
-                        err = OperatingSystem::instance().read(fd, buf, size);
+                        err = OperatingSystem::instance().read(fd, buf, static_cast<int>(size));
                     } while (err == -1 && OperatingSystem::instance().getLastError() == SOCKETERROR(EINTR));
 
                     if (err > 0)
@@ -881,7 +881,21 @@ void ProtocolHttpServer::sendMessage(IMessagePtr message)
                 }
                 if (lenReceived < filesize)
                 {
-                    pThis->m_connection->disconnect();
+                    ssize_t diff = filesize - lenReceived;
+                    ex = false;
+                    while (!ex)
+                    {
+                        ssize_t size = std::min(static_cast<ssize_t>(1024), diff);
+                        IMessagePtr messageData = std::make_shared<ProtocolMessage>(0);
+                        char* buf = messageData->addSendPayload(size);
+                        memset(buf, 0, size);
+                        pThis->m_connection->sendMessage(messageData);
+                        diff -= size;
+                        if (diff <= 0)
+                        {
+                            ex = true;
+                        }
+                    }
                 }
             }
             else

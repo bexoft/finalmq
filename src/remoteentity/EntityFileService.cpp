@@ -21,8 +21,14 @@
 //SOFTWARE.
 
 #include "finalmq/remoteentity/EntityFileService.h"
+#include "finalmq/helpers/File.h"
+#include "finalmq/remoteentity/entitydata.fmq.h"
 
 #include <fcntl.h>
+
+#ifndef WIN32
+#include <dirent.h>
+#endif
 
 
 namespace finalmq {
@@ -41,7 +47,162 @@ EntityFileServer::EntityFileServer(const std::string& baseDirectory)
         requestContext->reply(Status::STATUS_ENTITY_NOT_FOUND);
     });
 
-    registerCommandFunction("*tail*", "", [this](RequestContextPtr& requestContext, const StructBasePtr& /*structBase*/) {
+    registerCommand<RawBytes>("*tail*/$write", [this](const RequestContextPtr& requestContext, const std::shared_ptr<RawBytes>& request) {
+        if (request)
+        {
+            std::string* path = requestContext->getMetainfo("PATH_tail");
+            if (path && !path->empty())
+            {
+                std::string filename = m_baseDirectory + *path;
+                int res = File::clearWrite(filename.c_str(), request->data.data(), static_cast<int>(request->data.size()), false);
+                if (res >= 0)
+                {
+                    requestContext->reply(finalmq::Status::STATUS_OK);
+                }
+                else
+                {
+                    requestContext->reply(finalmq::Status::STATUS_REQUEST_PROCESSING_ERROR);
+                }
+            }
+        }
+    });
+
+    registerCommand<StringData>("*tail*/$writestr", [this](const RequestContextPtr& requestContext, const std::shared_ptr<StringData>& request) {
+        if (request)
+        {
+            std::string* path = requestContext->getMetainfo("PATH_tail");
+            if (path && !path->empty())
+            {
+                std::string filename = m_baseDirectory + *path;
+                int res = File::clearWrite(filename.c_str(), const_cast<char*>(request->data.c_str()), static_cast<int>(request->data.size()), false);
+                if (res >= 0)
+                {
+                    requestContext->reply(finalmq::Status::STATUS_OK);
+                }
+                else
+                {
+                    requestContext->reply(finalmq::Status::STATUS_REQUEST_PROCESSING_ERROR);
+                }
+            }
+        }
+    });
+
+    registerCommand<RawBytes>("*tail*/$append", [this](const RequestContextPtr& requestContext, const std::shared_ptr<RawBytes>& request) {
+        if (request)
+        {
+            std::string* path = requestContext->getMetainfo("PATH_tail");
+            if (path && !path->empty())
+            {
+                std::string filename = m_baseDirectory + *path;
+                int res = File::append(filename.c_str(), request->data.data(), static_cast<int>(request->data.size()), false);
+                if (res >= 0)
+                {
+                    requestContext->reply(finalmq::Status::STATUS_OK);
+                }
+                else
+                {
+                    requestContext->reply(finalmq::Status::STATUS_REQUEST_PROCESSING_ERROR);
+                }
+            }
+        }
+    });
+
+    registerCommand<StringData>("*tail*/$appendstr", [this](const RequestContextPtr& requestContext, const std::shared_ptr<StringData>& request) {
+        if (request)
+        {
+            std::string* path = requestContext->getMetainfo("PATH_tail");
+            if (path && !path->empty())
+            {
+                std::string filename = m_baseDirectory + *path;
+                int res = File::append(filename.c_str(), const_cast<char*>(request->data.c_str()), static_cast<int>(request->data.size()), false);
+                if (res >= 0)
+                {
+                    requestContext->reply(finalmq::Status::STATUS_OK);
+                }
+                else
+                {
+                    requestContext->reply(finalmq::Status::STATUS_REQUEST_PROCESSING_ERROR);
+                }
+            }
+        }
+    });
+
+    registerCommandFunction("*tail*/$ls", "", [this](const RequestContextPtr& requestContext, const StructBasePtr& /*structBase*/) {
+        std::string* path = requestContext->getMetainfo("PATH_tail");
+        if (path && !path->empty())
+        {
+            bool handeled = false;
+            FileLsReply reply;
+            std::string dirname = m_baseDirectory + *path;
+#ifdef WIN32
+            std::string dirPathWithAsterik = dirname;
+            dirPathWithAsterik += "\\*";
+            WIN32_FIND_DATA findFileData;
+            HANDLE hFind = ::FindFirstFile(dirPathWithAsterik.c_str(), &findFileData);
+            if (hFind != INVALID_HANDLE_VALUE)
+            {
+                handeled = true;
+                do
+                {
+                    if (findFileData.dwFileAttributes != FILE_ATTRIBUTE_DIRECTORY)
+                    {
+                        reply.entries.emplace_back(findFileData.dwFileAttributes, findFileData.cFileName);
+                    }
+                } while (::FindNextFile(hFind, &findFileData));
+            }
+            ::FindClose(hFind);
+#else
+            DIR* dir = opendir(dirname.c_str());
+            if (dir != nullptr)
+            {
+                handeled = true;
+                struct dirent* dp;
+                while ((dp = readdir(dir)) != nullptr)
+                {
+                    reply.entries.emplace_back(dp->d_type, dp->d_name);
+                }
+                closedir(dir); // close the handle (pointer)
+            }
+#endif
+            if (handeled)
+            {
+                requestContext->reply(reply);
+            }
+            else
+            {
+                requestContext->reply(Status::STATUS_REQUEST_PROCESSING_ERROR);
+            }
+        }
+    });
+
+    registerCommandFunction("*tail*/readstr", "", [this](const RequestContextPtr& requestContext, const StructBasePtr& /*structBase*/) {
+        bool handeled = false;
+        std::string* path = requestContext->getMetainfo("PATH_tail");
+        if (path && !path->empty())
+        {
+            StringData reply;
+            std::string filename = m_baseDirectory + *path;
+            std::vector<char> buffer;
+            int res = File::readAll(filename.c_str(), buffer);
+            if (res >= 0)
+            {
+                reply.data = std::string(buffer.data(), buffer.data() + buffer.size());
+                requestContext->reply(reply);
+            }
+            else
+            {
+                requestContext->reply(finalmq::Status::STATUS_REQUEST_PROCESSING_ERROR);
+            }
+        }
+
+        if (!handeled)
+        {
+            // not found
+            requestContext->reply(finalmq::Status::STATUS_ENTITY_NOT_FOUND);
+        }
+    });
+
+    registerCommandFunction("*tail*", "", [this](const RequestContextPtr& requestContext, const StructBasePtr& /*structBase*/) {
         bool handeled = false;
         std::string* path = requestContext->getMetainfo("PATH_tail");
         if (path && !path->empty())
@@ -57,9 +218,6 @@ EntityFileServer::EntityFileServer(const std::string& baseDirectory)
         }
     });
 }
-
-
-
 
 
 }   // namespace finalmq
