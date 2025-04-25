@@ -61,8 +61,8 @@ private:
     virtual void finished() override;
 
     Variant& m_variant;
-    std::deque<Variant*> m_stackVariant;
-    std::string m_key;
+    std::deque<Variant*> m_stackVariant{};
+    std::string m_key{};
 };
 
 }   // namespace finalmq

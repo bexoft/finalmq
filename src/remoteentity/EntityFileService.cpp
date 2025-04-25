@@ -175,7 +175,7 @@ EntityFileServer::EntityFileServer(const std::string& baseDirectory)
         }
     });
 
-    registerCommandFunction("*tail*/readstr", "", [this](const RequestContextPtr& requestContext, const StructBasePtr& /*structBase*/) {
+    registerCommandFunction("*tail*/$readstr", "", [this](const RequestContextPtr& requestContext, const StructBasePtr& /*structBase*/) {
         bool handeled = false;
         std::string* path = requestContext->getMetainfo("PATH_tail");
         if (path && !path->empty())
