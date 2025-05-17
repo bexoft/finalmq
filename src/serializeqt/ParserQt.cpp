@@ -129,8 +129,11 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
         const MetaField* field = stru.getFieldByIndex(i);
         assert(field);
 
-        switch(field->typeId)
+        try
         {
+
+            switch (field->typeId)
+            {
             case MetaTypeId::TYPE_NONE:
                 break;
             case MetaTypeId::TYPE_BOOL:
@@ -377,34 +380,34 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
                 }
                 break;
             case MetaTypeId::TYPE_STRUCT:
+            {
+                const MetaStruct* stru1 = MetaDataGlobal::instance().getStruct(field->typeName);
+                if (!stru1)
                 {
-                    const MetaStruct* stru1 = MetaDataGlobal::instance().getStruct(field->typeName);
-                    if (!stru1)
+                    m_visitor.notifyError(reinterpret_cast<const char*>(m_ptr), "typename not found");
+                    ok = false;
+                }
+                else
+                {
+                    if (wrappedByQVariant)
                     {
-                        m_visitor.notifyError(reinterpret_cast<const char*>(m_ptr), "typename not found");
-                        ok = false;
+                        // parse QVariant header, if qttype not QVariant
+                        const std::string& qttypeField = field->getProperty(KEY_QTTYPE);
+                        if ((!qttypeField.empty() && (qttypeField != QTTYPE_QVARIANT)) ||
+                            (qttypeField.empty() && (stru1->getProperty(KEY_QTTYPE) != QTTYPE_QVARIANT)))
+                        {
+                            ok = parseQVariantHeader(*field);
+                        }
                     }
-                    else
+                    if (ok)
                     {
-                        if (wrappedByQVariant)
-                        {
-                            // parse QVariant header, if qttype not QVariant
-                            const std::string& qttypeField = field->getProperty(KEY_QTTYPE);
-                            if ((!qttypeField.empty() && (qttypeField != QTTYPE_QVARIANT)) ||
-                                (qttypeField.empty() && (stru1->getProperty(KEY_QTTYPE) != QTTYPE_QVARIANT)))
-                            {
-                                ok = parseQVariantHeader(*field);
-                            }
-                        }
-                        if (ok)
-                        {
-                            m_visitor.enterStruct(*field);
-                            ok = parseStructIntern(*stru1, false);
-                            m_visitor.exitStruct(*field);
-                        }
+                        m_visitor.enterStruct(*field);
+                        ok = parseStructIntern(*stru1, false);
+                        m_visitor.exitStruct(*field);
                     }
                 }
-                break;
+            }
+            break;
             case MetaTypeId::TYPE_ENUM:
                 if (wrappedByQVariant)
                 {
@@ -754,16 +757,22 @@ bool ParserQt::parseStructIntern(const MetaStruct& stru, bool wrappedByQVariant)
             default:
                 assert(false);
                 break;
-        }
+            }
 
-        if ((index == INDEX_ABORTSTRUCT) || (index >= numberOfFields))
-        {
-            abortStruct = true;
-        }
+            if ((index == INDEX_ABORTSTRUCT) || (index >= numberOfFields))
+            {
+                abortStruct = true;
+            }
 
-        if (!ok)
+            if (!ok)
+            {
+                streamError << "ParserQt error inside struct " << stru.getTypeName() << " at " << field->name;
+            }
+        }
+        catch (std::exception& e)
         {
-            streamError << "ParserQt error inside struct " << stru.getTypeName() << " at " << field->name;
+            streamError << "exception inside struct " << stru.getTypeName() << " at " << field->name << " exception: " << e.what();
+            ok = false;
         }
     }
 
