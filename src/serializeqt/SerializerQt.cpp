@@ -1262,7 +1262,7 @@ void SerializerQt::Internal::serializeArrayBytesFixed(const std::vector<Bytes>& 
     }
     for (std::uint32_t i = size; i < sizeFixed; ++i)
     {
-        BytesElement empty;
+        BytesElement empty{};
         serializeArray(&empty, 0);
     }
 }
@@ -1280,7 +1280,7 @@ void SerializerQt::Internal::serializeArrayBytesFixed(const std::vector<std::str
     }
     for (std::uint32_t i = size; i < sizeFixed; ++i)
     {
-        BytesElement empty;
+        BytesElement empty{};
         serializeArray(&empty, 0);
     }
 }
