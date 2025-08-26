@@ -32,7 +32,7 @@ namespace finalmq {
 class SYMBOLEXP SocketDescriptor
 {
 public:
-    SocketDescriptor(SOCKET sd);
+    SocketDescriptor(SOCKET sd, bool isFile = false);
     ~SocketDescriptor();
 
 	inline SOCKET getDescriptor() const
@@ -41,7 +41,8 @@ public:
     }
 
 private:
-    SOCKET		m_sd = INVALID_SOCKET;
+    SOCKET		m_sd{INVALID_SOCKET};
+    bool        m_isFile{false};
 };
 
 typedef std::shared_ptr<SocketDescriptor> SocketDescriptorPtr;

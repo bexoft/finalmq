@@ -23,6 +23,7 @@
 #pragma once
 
 #include "finalmq/remoteentity/RemoteEntity.h"
+#include "finalmq/poller/Poller.h"
 
 
 namespace finalmq {
@@ -32,9 +33,23 @@ class SYMBOLEXP EntityFileServer : public RemoteEntity
 {
 public:
     EntityFileServer(const std::string& baseDirectory = ".");
+    ~EntityFileServer();
 
 private:
-    std::string         m_baseDirectory;
+    std::string                 m_baseDirectory;
+
+#ifndef WIN32
+    void removePolledFile(int fd);
+    void pollerLoop();
+    void terminatePollerLoop();
+    std::unordered_map<std::string, SocketDescriptorPtr>::iterator fd2entry(int fd);
+
+    std::unique_ptr<IPoller>    m_poller;
+    std::unordered_map<std::string, SocketDescriptorPtr> m_polledFiles;
+    std::atomic_bool            m_terminatePollerLoop{false};
+    std::thread                 m_threadPoller;
+    std::mutex                  m_mutexPoller;
+#endif
 };
 
 

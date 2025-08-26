@@ -26,6 +26,8 @@
 
 #include "finalmq/streamconnection/AddressHelpers.h"
 
+#define RELEASE_DISCONNECT 1
+
 namespace finalmq
 {
 StreamConnection::StreamConnection(const ConnectionData& connectionData, std::shared_ptr<Socket> socket, const IPollerPtr& poller, hybrid_ptr<IStreamConnectionCallback> callback)
