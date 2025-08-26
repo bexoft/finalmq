@@ -49,6 +49,11 @@
 
 #include <assert.h>
 
+#define RELEASE_DISCONNECT 1
+#define RELEASE_EXECUTEINPOLLERTHREAD 2
+#define RELEASE_TERMINATE 4
+
+
 namespace finalmq
 {
 std::atomic_int64_t StreamConnectionContainer::m_nextConnectionId{1};
@@ -70,7 +75,7 @@ StreamConnectionContainer::StreamConnectionContainer()
 StreamConnectionContainer::~StreamConnectionContainer()
 {
     m_executorWorker = nullptr;
-    terminatePollerLoop();
+    StreamConnectionContainer::terminatePollerLoop();
     if (m_threadTimer.joinable())
     {
         m_threadTimer.join();

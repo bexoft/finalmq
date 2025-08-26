@@ -29,8 +29,9 @@
 namespace finalmq {
 
 
-SocketDescriptor::SocketDescriptor(SOCKET sd)
+SocketDescriptor::SocketDescriptor(SOCKET sd, bool isFile)
     : m_sd(sd)
+    , m_isFile(isFile)
 {
 
 }
@@ -39,7 +40,14 @@ SocketDescriptor::~SocketDescriptor()
 {
     if (m_sd != INVALID_SOCKET)
     {
-        OperatingSystem::instance().closeSocket(m_sd);
+        if (!m_isFile)
+        {
+            OperatingSystem::instance().closeSocket(m_sd);
+        }
+        else
+        {
+            OperatingSystem::instance().close(m_sd);
+        }
     }
 }
 

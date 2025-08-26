@@ -28,6 +28,7 @@
 
 #ifndef WIN32
 #include <dirent.h>
+#include "finalmq/poller/PollerImplEpoll.h"
 #endif
 
 
@@ -38,6 +39,9 @@ namespace finalmq {
 
 EntityFileServer::EntityFileServer(const std::string& baseDirectory)
     : m_baseDirectory(baseDirectory)
+#ifndef WIN32
+    , m_poller(std::make_unique<PollerImplEpoll>())
+#endif
 {
     if (m_baseDirectory.empty() || m_baseDirectory[m_baseDirectory.size() - 1] != '/')
     {
@@ -61,8 +65,12 @@ EntityFileServer::EntityFileServer(const std::string& baseDirectory)
                 }
                 else
                 {
-                    requestContext->reply(finalmq::Status::STATUS_REQUEST_PROCESSING_ERROR);
+                    requestContext->reply(finalmq::Status::STATUS_ENTITY_NOT_FOUND);
                 }
+            }
+            else
+            {
+                requestContext->reply(finalmq::Status::STATUS_ENTITY_NOT_FOUND);
             }
         }
     });
@@ -81,8 +89,12 @@ EntityFileServer::EntityFileServer(const std::string& baseDirectory)
                 }
                 else
                 {
-                    requestContext->reply(finalmq::Status::STATUS_REQUEST_PROCESSING_ERROR);
+                    requestContext->reply(finalmq::Status::STATUS_ENTITY_NOT_FOUND);
                 }
+            }
+            else
+            {
+                requestContext->reply(finalmq::Status::STATUS_ENTITY_NOT_FOUND);
             }
         }
     });
@@ -101,8 +113,12 @@ EntityFileServer::EntityFileServer(const std::string& baseDirectory)
                 }
                 else
                 {
-                    requestContext->reply(finalmq::Status::STATUS_REQUEST_PROCESSING_ERROR);
+                    requestContext->reply(finalmq::Status::STATUS_ENTITY_NOT_FOUND);
                 }
+            }
+            else
+            {
+                requestContext->reply(finalmq::Status::STATUS_ENTITY_NOT_FOUND);
             }
         }
     });
@@ -121,8 +137,13 @@ EntityFileServer::EntityFileServer(const std::string& baseDirectory)
                 }
                 else
                 {
-                    requestContext->reply(finalmq::Status::STATUS_REQUEST_PROCESSING_ERROR);
+                    requestContext->reply(finalmq::Status::STATUS_ENTITY_NOT_FOUND);
                 }
+            }
+            else
+            {
+                // not found
+                requestContext->reply(finalmq::Status::STATUS_ENTITY_NOT_FOUND);
             }
         }
     });
@@ -170,18 +191,22 @@ EntityFileServer::EntityFileServer(const std::string& baseDirectory)
             }
             else
             {
-                requestContext->reply(Status::STATUS_REQUEST_PROCESSING_ERROR);
+                requestContext->reply(Status::STATUS_ENTITY_NOT_FOUND);
             }
+        }
+        else
+        {
+            // not found
+            requestContext->reply(finalmq::Status::STATUS_ENTITY_NOT_FOUND);
         }
     });
 
     registerCommandFunction("*tail*/$readstr", "", [this](const RequestContextPtr& requestContext, const StructBasePtr& /*structBase*/) {
-        bool handeled = false;
         std::string* path = requestContext->getMetainfo("PATH_tail");
         if (path && !path->empty())
         {
             StringData reply;
-            std::string filename = m_baseDirectory + *path;
+            const std::string filename = m_baseDirectory + *path;
             std::vector<char> buffer;
             int res = File::readAll(filename.c_str(), buffer);
             if (res >= 0)
@@ -191,11 +216,10 @@ EntityFileServer::EntityFileServer(const std::string& baseDirectory)
             }
             else
             {
-                requestContext->reply(finalmq::Status::STATUS_REQUEST_PROCESSING_ERROR);
+                requestContext->reply(finalmq::Status::STATUS_ENTITY_NOT_FOUND);
             }
         }
-
-        if (!handeled)
+        else
         {
             // not found
             requestContext->reply(finalmq::Status::STATUS_ENTITY_NOT_FOUND);
@@ -207,7 +231,7 @@ EntityFileServer::EntityFileServer(const std::string& baseDirectory)
         std::string* path = requestContext->getMetainfo("PATH_tail");
         if (path && !path->empty())
         {
-            std::string filename = m_baseDirectory + *path;
+            const std::string filename = m_baseDirectory + *path;
             handeled = requestContext->replyFile(filename);
         }
 
@@ -217,7 +241,169 @@ EntityFileServer::EntityFileServer(const std::string& baseDirectory)
             requestContext->reply(finalmq::Status::STATUS_ENTITY_NOT_FOUND);
         }
     });
+
+#ifndef WIN32
+    registerCommandFunction("*tail*/$poll", "", [this](const RequestContextPtr& requestContext, const StructBasePtr& /*structBase*/) {
+        std::string* path = requestContext->getMetainfo("PATH_tail");
+        if (path && !path->empty())
+        {
+            StringData reply;
+            const std::string filename = m_baseDirectory + *path;
+            int f = OperatingSystem::instance().open(filename.c_str(), O_RDONLY);
+            if (f != -1)
+            {
+                if (!m_threadPoller.joinable())
+                {
+                    m_threadPoller = std::thread([this](){
+                        pollerLoop();
+                    });
+                }
+
+                SocketDescriptorPtr fd = std::make_shared<SocketDescriptor>(f, true);
+                m_poller->addSocketEnableRead(fd);
+                std::unique_lock<std::mutex> locker(m_mutexPoller);
+                m_polledFiles[*path] = fd;
+                locker.unlock();
+                requestContext->reply(finalmq::Status::STATUS_OK);
+            }
+            else
+            {
+                // not found
+                requestContext->reply(finalmq::Status::STATUS_ENTITY_NOT_FOUND);
+            }
+        }
+        else
+        {
+            // not found
+            requestContext->reply(finalmq::Status::STATUS_ENTITY_NOT_FOUND);
+        }
+    });
+
+    registerCommandFunction("*tail*/$unpoll", "", [this](const RequestContextPtr& requestContext, const StructBasePtr& /*structBase*/) {
+        std::string* path = requestContext->getMetainfo("PATH_tail");
+        if (path && !path->empty())
+        {
+            auto it = m_polledFiles.find(*path);
+            if (it != m_polledFiles.end())
+            {
+                removePolledFile(it->second->getDescriptor());
+                requestContext->reply(finalmq::Status::STATUS_OK);
+            }
+            else
+            {
+                // not found
+                requestContext->reply(finalmq::Status::STATUS_ENTITY_NOT_FOUND);
+            }
+        }
+        else
+        {
+            // not found
+            requestContext->reply(finalmq::Status::STATUS_ENTITY_NOT_FOUND);
+        }
+    });
+
+#endif
 }
+
+EntityFileServer::~EntityFileServer()
+{
+#ifndef WIN32
+    terminatePollerLoop();
+    if (m_threadPoller.joinable())
+    {
+        m_threadPoller.join();
+    }
+#endif
+}
+
+#ifndef WIN32
+#define RELEASE_WAIT_TERMINATE 1
+
+void EntityFileServer::terminatePollerLoop()
+{
+    m_terminatePollerLoop = true;
+    m_poller->releaseWait(RELEASE_WAIT_TERMINATE);
+}
+
+void EntityFileServer::removePolledFile(int fd)
+{
+    std::unique_lock<std::mutex> locker(m_mutexPoller);
+    auto it = fd2entry(fd);
+    if (it != m_polledFiles.end())
+    {
+        m_poller->removeSocket(it->second);
+        m_polledFiles.erase(it);
+    }
+    locker.unlock();
+}
+
+std::unordered_map<std::string, SocketDescriptorPtr>::iterator EntityFileServer::fd2entry(int fd)
+{
+    for (auto it = m_polledFiles.begin(); it != m_polledFiles.end(); ++it)
+    {
+        if (it->second->getDescriptor() == fd)
+        {
+            return it;
+        }
+    }
+    return m_polledFiles.end();
+}
+
+void EntityFileServer::pollerLoop()
+{
+    while (!m_terminatePollerLoop)
+    {
+        const PollerResult& result = m_poller->wait(1000);
+
+        if (result.error)
+        {
+            // error of the poller
+            terminatePollerLoop();
+        }
+        else if ((result.releaseWait & RELEASE_WAIT_TERMINATE) != 0)
+        {
+        }
+        else if (result.timeout)
+        {
+        }
+        else
+        {
+            for (size_t i = 0; i < result.descriptorInfos.size(); ++i)
+            {
+                const DescriptorInfo& info = result.descriptorInfos[i];
+                if (info.disconnected)
+                {
+                    removePolledFile(info.sd);
+                }
+                else if (info.readable)
+                {
+                    Bytes buffer;
+                    buffer.resize(1024);
+                    int res = read(info.sd, buffer.data(), buffer.size());
+                    if (res > 0)
+                    {
+                        buffer.resize(res);
+                        std::string path;
+                        std::unique_lock<std::mutex> locker(m_mutexPoller);
+                        auto it = fd2entry(info.sd);
+                        if (it != m_polledFiles.end())
+                        {
+                            path = it->first;
+                        }
+                        locker.unlock();
+                        if (!path.empty())
+                        {
+                            sendEventToAllPeers(path, RawBytes{buffer});
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+#endif
+
+
 
 
 }   // namespace finalmq
