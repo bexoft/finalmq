@@ -37,6 +37,7 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include <future>
 
 // the modulename is needed for the logger streams (streamDebug, streamInfo, streamWarning, streamError, streamCritical, streamFatal)
 #define MODULENAME  "helloworld_server"
@@ -182,13 +183,16 @@ int main()
     EntityServer entityServer;
     entityContainer.registerEntity(&entityServer, "MyService");
 
-    SessionInfo sessionLog = entityContainer.connect("tcp://localhost:9200:headersize:protobuf");
-    PeerId peerIdLog = entityServer.connect(sessionLog, "LoggingServer", [](PeerId peerId, Status status) {
-        streamInfo << "Logging Server connect reply: " << status.toString();
-    });
-    Logger::instance().registerConsumer([&entityServer, peerIdLog](const LogContext& context, const char* text) {
-        entityServer.sendEvent(peerIdLog, "log", LogEntry(currentISO8601TimeUTC(), "HelloWorldServer", context, text));
-    });
+    // SessionInfo sessionLog = entityContainer.connect("tcp://localhost:9200:headersize:protobuf");
+    // PeerId peerIdLog = entityServer.connect(sessionLog, "LoggingServer", [](PeerId peerId, Status status) {
+    //     streamInfo << "Logging Server connect reply: " << status.toString();
+    // });
+    // ExecutorWorker<Executor> executorLogging(1);
+    // Logger::instance().registerConsumer([&executorLogging, &entityServer, peerIdLog](const LogContext& context, const char* text) {
+    //     executorLogging.addAction([&entityServer, peerIdLog, context, text = std::string(text)]() {
+    //         entityServer.sendEvent(peerIdLog, "log", LogEntry(currentISO8601TimeUTC(), "HelloWorldServer", context, text.c_str()));
+    //     });
+    // });
 
     // register an entity for file download. The name "*" means that if an entity name, given by a client, is not found by name, 
     // then this entity will try to open a file inside the htdocs directory. An entity name can contain slashes ('/')
