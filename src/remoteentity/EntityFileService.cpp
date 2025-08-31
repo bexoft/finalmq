@@ -28,7 +28,8 @@
 
 #ifndef WIN32
 #include <dirent.h>
-#include "finalmq/poller/PollerImplEpoll.h"
+#include "finalmq/poller/PollerImplSelect.h"
+//#include "finalmq/poller/PollerImplEpoll.h"
 #endif
 
 
@@ -40,16 +41,13 @@ namespace finalmq {
 EntityFileServer::EntityFileServer(const std::string& baseDirectory)
     : m_baseDirectory(baseDirectory)
 #ifndef WIN32
-    , m_poller(std::make_unique<PollerImplEpoll>())
+    , m_poller(std::make_unique<PollerImplSelect>())
 #endif
 {
     if (m_baseDirectory.empty() || m_baseDirectory[m_baseDirectory.size() - 1] != '/')
     {
         m_baseDirectory += '/';
     }
-    registerCommand<ConnectEntity>([](const RequestContextPtr& requestContext, const std::shared_ptr<ConnectEntity>& /*request*/) {
-        requestContext->reply(Status::STATUS_ENTITY_NOT_FOUND);
-    });
 
     registerCommand<RawBytes>("*tail*/$write", [this](const RequestContextPtr& requestContext, const std::shared_ptr<RawBytes>& request) {
         if (request)
@@ -226,22 +224,6 @@ EntityFileServer::EntityFileServer(const std::string& baseDirectory)
         }
     });
 
-    registerCommandFunction("*tail*", "", [this](const RequestContextPtr& requestContext, const StructBasePtr& /*structBase*/) {
-        bool handeled = false;
-        std::string* path = requestContext->getMetainfo("PATH_tail");
-        if (path && !path->empty())
-        {
-            const std::string filename = m_baseDirectory + *path;
-            handeled = requestContext->replyFile(filename);
-        }
-
-        if (!handeled)
-        {
-            // not found
-            requestContext->reply(finalmq::Status::STATUS_ENTITY_NOT_FOUND);
-        }
-    });
-
 #ifndef WIN32
     registerCommandFunction("*tail*/$poll", "", [this](const RequestContextPtr& requestContext, const StructBasePtr& /*structBase*/) {
         std::string* path = requestContext->getMetainfo("PATH_tail");
@@ -254,6 +236,7 @@ EntityFileServer::EntityFileServer(const std::string& baseDirectory)
             {
                 if (!m_threadPoller.joinable())
                 {
+                    m_poller->init();
                     m_threadPoller = std::thread([this](){
                         pollerLoop();
                     });
@@ -303,6 +286,23 @@ EntityFileServer::EntityFileServer(const std::string& baseDirectory)
     });
 
 #endif
+
+    registerCommandFunction("*tail*", "", [this](const RequestContextPtr& requestContext, const StructBasePtr& /*structBase*/) {
+        bool handeled = false;
+        std::string* path = requestContext->getMetainfo("PATH_tail");
+        if (path && !path->empty())
+        {
+            const std::string filename = m_baseDirectory + *path;
+            handeled = requestContext->replyFile(filename);
+        }
+
+        if (!handeled)
+        {
+            // not found
+            requestContext->reply(finalmq::Status::STATUS_ENTITY_NOT_FOUND);
+        }
+    });
+
 }
 
 EntityFileServer::~EntityFileServer()
@@ -379,6 +379,7 @@ void EntityFileServer::pollerLoop()
                 {
                     Bytes buffer;
                     buffer.resize(1024);
+                    lseek(info.sd, 0, SEEK_SET);
                     int res = read(info.sd, buffer.data(), buffer.size());
                     if (res > 0)
                     {

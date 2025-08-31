@@ -1034,14 +1034,14 @@ const RemoteEntity::Function* RemoteEntity::getFunction(const std::string& path,
 {
     std::unique_lock<std::mutex> lock(m_mutexFunctions);
 
-    auto it1 = m_funcCommandsStatic.find(path);
+    std::vector<std::string> pathEntries;
+    Utils::split(path, 0, path.size(), '/', pathEntries);
+
+    auto it1 = m_funcCommandsStatic.find(*pathEntries.rbegin());
     if (it1 != m_funcCommandsStatic.end())
     {
         return &it1->second;
     }
-
-    std::vector<std::string> pathEntries;
-    Utils::split(path, 0, path.size(), '/', pathEntries);
 
     if (!m_funcCommandsVar.empty())
     {
