@@ -74,7 +74,7 @@ if (FINALMQ_HAS_NOT_WEAK_FROM_THIS)
     SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DFINALMQ_HAS_NOT_WEAK_FROM_THIS" )
 endif(FINALMQ_HAS_NOT_WEAK_FROM_THIS)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 # this target needs to be set before digging into subdirectories
 add_custom_target( verify ${CMAKE_CURRENT_BINARY_DIR}/test/testfinalmq)

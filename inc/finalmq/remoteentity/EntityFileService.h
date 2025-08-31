@@ -32,23 +32,30 @@ namespace finalmq {
 class SYMBOLEXP EntityFileServer : public RemoteEntity
 {
 public:
-    EntityFileServer(const std::string& baseDirectory = ".");
+    EntityFileServer(const std::string& baseDirectory = ".", int pollSleepMs = 10);
     ~EntityFileServer();
 
 private:
     std::string                 m_baseDirectory;
 
 #ifndef WIN32
-    void removePolledFile(int fd);
     void pollerLoop();
     void terminatePollerLoop();
-    std::unordered_map<std::string, SocketDescriptorPtr>::iterator fd2entry(int fd);
+    void removePolledFile(const std::string& path);
+    void sendData(const std::string& path, const Bytes& data, bool sendAsString);
 
-    std::unique_ptr<IPoller>    m_poller;
-    std::unordered_map<std::string, SocketDescriptorPtr> m_polledFiles;
+    struct FileInformation
+    {
+        std::string filename{};
+        Bytes data{};
+        bool sendAsString{false};
+    };
+
+    std::unordered_map<std::string, FileInformation> m_polledFiles{};
+    int                         m_pollSleepMs{10};
     std::atomic_bool            m_terminatePollerLoop{false};
-    std::thread                 m_threadPoller;
-    std::mutex                  m_mutexPoller;
+    std::thread                 m_threadPoller{};
+    std::mutex                  m_mutexPoller{};
 #endif
 };
 
