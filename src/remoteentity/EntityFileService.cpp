@@ -240,20 +240,12 @@ EntityFileServer::EntityFileServer(const std::string& baseDirectory, int pollSle
 
                 if (std::filesystem::is_directory(filename))
                 {
+                    std::deque<std::string> fileList = EntityFileServer::findFilesRecursive(filename);
                     std::unique_lock<std::mutex> locker(m_mutexPoller);
-                    for (const std::filesystem::directory_entry& dir_entry : std::filesystem::recursive_directory_iterator(filename))
+                    for (const std::string& nameOfFile : fileList)
                     {
-                        const std::string p = dir_entry.path();
-                        if (!std::filesystem::is_directory(p))
-                        {
-                            const std::string nameOfFile = p;
-                            if (nameOfFile.size() >= filename.size())
-                            {
-                                std::cout << "nameOfFile: " << nameOfFile << std::endl;
-                                const std::string pathOfFile = nameOfFile.substr(filename.size(), nameOfFile.size() - filename.size());
-                                m_polledFiles[pathOfFile] = {nameOfFile, Bytes{}, sendAsString};
-                            }
-                        }
+                        const std::string pathOfFile = nameOfFile.substr(filename.size(), nameOfFile.size() - filename.size());
+                        m_polledFiles[pathOfFile] = {nameOfFile, Bytes{}, sendAsString};
                     }
                     locker.unlock();
                 }
@@ -294,19 +286,12 @@ EntityFileServer::EntityFileServer(const std::string& baseDirectory, int pollSle
             const std::string filename = m_baseDirectory + *path;
             if (std::filesystem::is_directory(filename))
             {
+                std::deque<std::string> fileList = EntityFileServer::findFilesRecursive(filename);
                 std::unique_lock<std::mutex> locker(m_mutexPoller);
-                for (const std::filesystem::directory_entry& dir_entry : std::filesystem::recursive_directory_iterator(filename))
+                for (const std::string& nameOfFile : fileList)
                 {
-                    const std::string p = dir_entry.path();
-                    if (!std::filesystem::is_directory(p))
-                    {
-                        const std::string nameOfFile = p;
-                        if (nameOfFile.size() >= filename.size())
-                        {
-                            const std::string pathOfFile = nameOfFile.substr(filename.size(), nameOfFile.size() - filename.size());
-                            removePolledFile(pathOfFile);
-                        }
-                    }
+                    const std::string pathOfFile = nameOfFile.substr(filename.size(), nameOfFile.size() - filename.size());
+                    removePolledFile(pathOfFile);
                 }
                 locker.unlock();
                 requestContext->reply(finalmq::Status::STATUS_OK);
@@ -365,7 +350,33 @@ EntityFileServer::~EntityFileServer()
     }
 }
 
+std::deque<std::string> EntityFileServer::findFilesRecursive(const std::string& filename)
+{
+    std::deque<std::string> fileList{};
+    for (std::filesystem::recursive_directory_iterator it(filename, std::filesystem::directory_options::follow_directory_symlink), end; it != end; ++it)
+    {
+        const std::filesystem::directory_entry& dir_entry = *it;
 
+        const std::string p = dir_entry.path();
+        if (!dir_entry.is_directory())
+        {
+            const std::string& nameOfFile = p;
+            fileList.push_back(nameOfFile);
+        }
+        else
+        {
+            if (dir_entry.is_symlink() && it.depth() > 0)
+            {
+                std::string target = std::filesystem::read_symlink(p);
+                if (target.find("../") == 0)
+                {
+                    it.disable_recursion_pending();
+                }
+            }
+        }
+    }
+    return fileList;
+}
 
 void EntityFileServer::terminatePollerLoop()
 {
