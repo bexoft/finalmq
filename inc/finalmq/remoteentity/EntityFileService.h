@@ -43,6 +43,7 @@ private:
     void terminatePollerLoop();
     void removePolledFile(const std::string& path);
     void sendData(const std::string& path, const Bytes& data, bool sendAsString);
+    static std::deque<std::string> findFilesRecursive(const std::string& filename);
 
     struct FileInformation
     {
