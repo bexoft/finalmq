@@ -314,7 +314,7 @@ EntityId RemoteEntityContainer::registerEntity(hybrid_ptr<IRemoteEntity> remoteE
 
     if (!name.empty())
     {
-        m_name2entity[name] = remoteEntity;
+        m_name2entity[name] = std::make_pair(entityId, remoteEntity);
     }
 
     m_entityId2entity[entityId] = remoteEntity;
@@ -353,13 +353,28 @@ void RemoteEntityContainer::unregisterEntity(EntityId entityId)
     std::unique_lock<std::mutex> lock(m_mutex);
     for (auto it = m_name2entity.begin(); it != m_name2entity.end(); ++it)
     {
-        auto remoteEntity = it->second.lock();
-        if (!remoteEntity || remoteEntity->getEntityId() == entityId)
+        const EntityId entryEntityId = it->second.first;
+        if (entryEntityId == entityId)
         {
             m_name2entity.erase(it);
+            break;
         }
     }
     m_entityId2entity.erase(entityId);
+    m_entityId2name.erase(entityId);
+}
+
+void RemoteEntityContainer::unregisterEntity(const std::string& entityName)
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    const auto it = m_name2entity.find(entityName);
+    if (it != m_name2entity.end())
+    {
+        const EntityId entryEntityId = it->second.first;
+        m_entityId2entity.erase(entryEntityId);
+        m_entityId2name.erase(entryEntityId);
+        m_name2entity.erase(it);
+    }
 }
 
 void RemoteEntityContainer::registerConnectionEvent(FuncConnectionEvent funcConnectionEvent)
@@ -489,7 +504,7 @@ void RemoteEntityContainer::disconnectedVirtualSession(const IProtocolSessionPtr
 struct ThreadLocalDataEntities
 {
     std::int64_t changeId = 0;
-    std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>> name2entityNoLock{};
+    std::unordered_map<std::string, std::pair<EntityId, hybrid_ptr<IRemoteEntity>>> name2entityNoLock{};
     std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>> entityId2entityNoLock{};
 };
 thread_local std::unordered_map<std::uint64_t, ThreadLocalDataEntities> t_threadLocalDataEntities;
@@ -500,7 +515,7 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
     assert(message);
 
     ThreadLocalDataEntities& threadLocalDataEntities = t_threadLocalDataEntities[m_containerId];
-    std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2entityNoLock = threadLocalDataEntities.name2entityNoLock;
+    std::unordered_map<std::string, std::pair<EntityId, hybrid_ptr<IRemoteEntity>>>& name2entityNoLock = threadLocalDataEntities.name2entityNoLock;
     std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>>& entityId2entityNoLock = threadLocalDataEntities.entityId2entityNoLock;
     std::int64_t changeId = m_entitiesChanged.load(std::memory_order_acquire);
     if (changeId != threadLocalDataEntities.changeId)
@@ -534,7 +549,7 @@ void RemoteEntityContainer::received(const IProtocolSessionPtr& session, const I
         }
         if (itName != name2entityNoLock.end())
         {
-            remoteEntity = itName->second;
+            remoteEntity = itName->second.second;
             foundEntity = true;
         }
     }

@@ -228,7 +228,7 @@ void RemoteEntityFormatHl7::serializeData(const IProtocolSessionPtr& session, IM
     }
 }
 
-std::shared_ptr<StructBase> RemoteEntityFormatHl7::parse(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& /*name2Entity*/, Header& header, int& formatStatus)
+std::shared_ptr<StructBase> RemoteEntityFormatHl7::parse(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, const std::unordered_map<std::string, std::pair<EntityId, hybrid_ptr<IRemoteEntity>>>& /*name2Entity*/, Header& header, int& formatStatus)
 {
     formatStatus = FORMATSTATUS_HEADER_PARSED_BY_FORMAT;
     char* buffer = bufferRef.first;

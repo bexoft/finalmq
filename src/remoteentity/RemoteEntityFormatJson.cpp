@@ -189,7 +189,7 @@ static const std::string FMQ_PATH = "fmq_path";
 
 
 
-std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus)
+std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, const std::unordered_map<std::string, std::pair<EntityId, hybrid_ptr<IRemoteEntity>>>& name2Entity, Header& header, int& formatStatus)
 {
     formatStatus = 0;
     char* buffer = bufferRef.first;
@@ -247,7 +247,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const IProtocolSession
             {
                 maxMatchLength = prefix.size();
                 foundEntityName = &prefix;
-                remoteEntity = it->second;
+                remoteEntity = it->second.second;
             }
         }
         if (foundEntityName)
@@ -265,7 +265,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const IProtocolSession
             auto it = name2Entity.find(header.destname);
             if (it != name2Entity.end())
             {
-                remoteEntity = it->second;
+                remoteEntity = it->second.second;
             }
         }
         auto entity = remoteEntity.lock();
@@ -297,14 +297,14 @@ std::shared_ptr<StructBase> RemoteEntityFormatJson::parse(const IProtocolSession
             auto it = name2Entity.find(header.destname);
             if (it != name2Entity.end())
             {
-                remoteEntity = it->second;
+                remoteEntity = it->second.second;
             }
             else
             {
                 it = name2Entity.find(WILDCARD);
                 if (it != name2Entity.end())
                 {
-                    remoteEntity = it->second;
+                    remoteEntity = it->second.second;
                 }
             }
             auto entity = remoteEntity.lock();

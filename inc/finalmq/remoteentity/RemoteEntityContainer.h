@@ -148,6 +148,12 @@ struct IRemoteEntityContainer
     virtual void unregisterEntity(EntityId entityId) = 0;
 
     /**
+     * @brief unregisterEntity unregisters an entity.
+     * @param entityName is the entity name that shall be unregistered.
+     */
+    virtual void unregisterEntity(const std::string& entityName) = 0;
+
+    /**
      * @brief registerConnectionEvent registers a function that will be called whenever a connection state has changed.
      * @param funcConnectionEvent is the callback function.
      */
@@ -194,6 +200,7 @@ public:
     virtual EntityId registerEntity(hybrid_ptr<IRemoteEntity> remoteEntity, std::string name = "") override;
     //    virtual void addPureDataPaths(std::vector<std::string>& paths) override;
     virtual void unregisterEntity(EntityId entityId) override;
+    virtual void unregisterEntity(const std::string& entityName) override;
     virtual void registerConnectionEvent(FuncConnectionEvent funcConnectionEvent) override;
 
     virtual std::vector<EntityId> getAllEntities() const override;
@@ -217,7 +224,7 @@ private:
     void subscribeSessions(std::string name);
 
     const std::unique_ptr<IProtocolSessionContainer> m_protocolSessionContainer{};
-    std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>> m_name2entity{};
+    std::unordered_map<std::string, std::pair<EntityId, hybrid_ptr<IRemoteEntity>>> m_name2entity{};
     std::unordered_map<EntityId, hybrid_ptr<IRemoteEntity>> m_entityId2entity{};
     std::unordered_map<EntityId, std::string> m_entityId2name{};
     std::shared_ptr<FuncConnectionEvent> m_funcConnectionEvent{};

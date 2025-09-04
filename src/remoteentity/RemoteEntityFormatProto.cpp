@@ -112,7 +112,7 @@ void RemoteEntityFormatProto::serializeData(const IProtocolSessionPtr& /*session
     *bufferSizePayload = static_cast<unsigned char>(uSizePayload >> 24);
 }
 
-std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus)
+std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, const std::unordered_map<std::string, std::pair<EntityId, hybrid_ptr<IRemoteEntity>>>& name2Entity, Header& header, int& formatStatus)
 {
     formatStatus = 0;
     char* buffer = bufferRef.first;
@@ -151,7 +151,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const IProtocolSessio
             auto it = name2Entity.find(header.destname);
             if (it != name2Entity.end())
             {
-                remoteEntity = it->second;
+                remoteEntity = it->second.second;
             }
             else
             {
@@ -159,7 +159,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatProto::parse(const IProtocolSessio
                 it = name2Entity.find(WILDCARD);
                 if (it != name2Entity.end())
                 {
-                    remoteEntity = it->second;
+                    remoteEntity = it->second.second;
                 }
             }
             auto entity = remoteEntity.lock();
