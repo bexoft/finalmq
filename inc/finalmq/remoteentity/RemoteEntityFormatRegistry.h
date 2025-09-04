@@ -46,7 +46,7 @@ struct IRemoteEntityFormat
 {
     virtual ~IRemoteEntityFormat()
     {}
-    virtual std::shared_ptr<StructBase> parse(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus) = 0;
+    virtual std::shared_ptr<StructBase> parse(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, const std::unordered_map<std::string, std::pair<EntityId, hybrid_ptr<IRemoteEntity>>>& name2Entity, Header& header, int& formatStatus) = 0;
     virtual std::shared_ptr<StructBase> parseData(const IProtocolSessionPtr& session, const BufferRef& bufferRef, bool storeRawData, std::string& type, int& formatStatus, const std::string& typeOfGeneralMessage) = 0;
     virtual void serialize(const IProtocolSessionPtr& session, IMessage& message, const Header& header, const StructBase* structBase = nullptr) = 0;
     virtual void serializeData(const IProtocolSessionPtr& session, IMessage& message, const StructBase* structBase = nullptr) = 0;
@@ -56,8 +56,8 @@ struct IRemoteEntityFormatRegistry
 {
     virtual ~IRemoteEntityFormatRegistry()
     {}
-    virtual std::shared_ptr<StructBase> parse(const IProtocolSessionPtr& session, IMessage& message, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus) = 0;
-    virtual std::shared_ptr<StructBase> parseHeaderInMetainfo(const IProtocolSessionPtr& session, IMessage& message, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus) = 0;
+    virtual std::shared_ptr<StructBase> parse(const IProtocolSessionPtr& session, IMessage& message, bool storeRawData, const std::unordered_map<std::string, std::pair<EntityId, hybrid_ptr<IRemoteEntity>>>& name2Entity, Header& header, int& formatStatus) = 0;
+    virtual std::shared_ptr<StructBase> parseHeaderInMetainfo(const IProtocolSessionPtr& session, IMessage& message, bool storeRawData, const std::unordered_map<std::string, std::pair<EntityId, hybrid_ptr<IRemoteEntity>>>& name2Entity, Header& header, int& formatStatus) = 0;
     virtual void send(const IProtocolSessionPtr& session, const std::string& virtualSessionId, Header& header, Variant&& echoData, const StructBase* structBase = nullptr, IMessage::Metainfo* metainfo = nullptr, Variant* controlData = nullptr) = 0;
 
     virtual void registerFormat(const std::string& contentTypeName, int contentType, const std::shared_ptr<IRemoteEntityFormat>& format) = 0;
@@ -68,8 +68,8 @@ struct IRemoteEntityFormatRegistry
 class RemoteEntityFormatRegistryImpl : public IRemoteEntityFormatRegistry
 {
 public:
-    virtual std::shared_ptr<StructBase> parse(const IProtocolSessionPtr& session, IMessage& message, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus) override;
-    virtual std::shared_ptr<StructBase> parseHeaderInMetainfo(const IProtocolSessionPtr& session, IMessage& message, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus) override;
+    virtual std::shared_ptr<StructBase> parse(const IProtocolSessionPtr& session, IMessage& message, bool storeRawData, const std::unordered_map<std::string, std::pair<EntityId, hybrid_ptr<IRemoteEntity>>>& name2Entity, Header& header, int& formatStatus) override;
+    virtual std::shared_ptr<StructBase> parseHeaderInMetainfo(const IProtocolSessionPtr& session, IMessage& message, bool storeRawData, const std::unordered_map<std::string, std::pair<EntityId, hybrid_ptr<IRemoteEntity>>>& name2Entity, Header& header, int& formatStatus) override;
     virtual void send(const IProtocolSessionPtr& session, const std::string& virtualSessionId, Header& header, Variant&& echoData, const StructBase* structBase = nullptr, IMessage::Metainfo* metainfo = nullptr, Variant* controlData = nullptr) override;
     virtual void registerFormat(const std::string& contentTypeName, int contentType, const std::shared_ptr<IRemoteEntityFormat>& format) override;
     virtual bool isRegistered(int contentType) const override;
@@ -77,7 +77,7 @@ public:
 
 private:
     void serializeHeaderToMetainfo(IMessage& message, const Header& header);
-    std::string parseMetainfo(IMessage& message, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, std::string& typeOfGeneralMessage);
+    std::string parseMetainfo(IMessage& message, const std::unordered_map<std::string, std::pair<EntityId, hybrid_ptr<IRemoteEntity>>>& name2Entity, Header& header, std::string& typeOfGeneralMessage);
     bool serialize(const IProtocolSessionPtr& session, IMessage& message, const Header& header, const StructBase* structBase = nullptr);
     bool serializeData(const IProtocolSessionPtr& session, IMessage& message, const StructBase* structBase);
 

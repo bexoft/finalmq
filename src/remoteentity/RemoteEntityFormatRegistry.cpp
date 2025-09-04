@@ -356,7 +356,7 @@ inline static bool isDestAndSubPathDefined(const Header& header)
     return (isDestinationDefined(header) && isSubPathDefined(header));
 }
 
-std::string RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, std::string& typeOfGeneralMessage)
+std::string RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, const std::unordered_map<std::string, std::pair<EntityId, hybrid_ptr<IRemoteEntity>>>& name2Entity, Header& header, std::string& typeOfGeneralMessage)
 {
     const IMessage::Metainfo& metainfo = message.getAllMetainfo();
     auto itPath = metainfo.find(FMQ_PATH);
@@ -461,7 +461,7 @@ std::string RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, con
             {
                 maxMatchLength = prefix.size();
                 foundEntityName = &prefix;
-                remoteEntity = it->second;
+                remoteEntity = it->second.second;
             }
         }
         if (foundEntityName)
@@ -479,7 +479,7 @@ std::string RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, con
             auto it = name2Entity.find(header.destname);
             if (it != name2Entity.end())
             {
-                remoteEntity = it->second;
+                remoteEntity = it->second.second;
             }
         }
     }
@@ -492,7 +492,7 @@ std::string RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, con
             auto it = name2Entity.find(header.destname);
             if (it != name2Entity.end())
             {
-                entity = it->second.lock();
+                entity = it->second.second.lock();
             }
         }
         if (entity)
@@ -515,7 +515,7 @@ std::string RemoteEntityFormatRegistryImpl::parseMetainfo(IMessage& message, con
     return data;
 }
 
-std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainfo(const IProtocolSessionPtr& session, IMessage& message, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus)
+std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainfo(const IProtocolSessionPtr& session, IMessage& message, bool storeRawData, const std::unordered_map<std::string, std::pair<EntityId, hybrid_ptr<IRemoteEntity>>>& name2Entity, Header& header, int& formatStatus)
 {
     std::string typeOfGeneralMessage;
     std::string data = parseMetainfo(message, name2Entity, header, typeOfGeneralMessage);
@@ -552,7 +552,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainf
     return structBase;
 }
 
-std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(const IProtocolSessionPtr& session, IMessage& message, bool storeRawData, const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity, Header& header, int& formatStatus)
+std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(const IProtocolSessionPtr& session, IMessage& message, bool storeRawData, const std::unordered_map<std::string, std::pair<EntityId, hybrid_ptr<IRemoteEntity>>>& name2Entity, Header& header, int& formatStatus)
 {
     formatStatus = 0;
     BufferRef bufferRef = message.getReceivePayload();
@@ -573,7 +573,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parse(const IProtoco
 
 //std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parsePureData(IMessage& message, Header& header)
 //{
-//    const std::unordered_map<std::string, hybrid_ptr<IRemoteEntity>>& name2Entity;
+//    const std::unordered_map<std::string, std::pair<EntityId, hybrid_ptr<IRemoteEntity>>>& name2Entity;
 //    parseMetainfo(message, name2Entity, header);
 //
 //    BufferRef bufferRef = message.getReceivePayload();
