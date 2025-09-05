@@ -1072,7 +1072,7 @@ void SerializerQt::Internal::serializeString(const std::string& value)
 {
     std::u16string u16 = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(value);
     assert(u16.size() <= value.size());
-    serializeArray(reinterpret_cast<std::int16_t*>(const_cast<char16_t*>(u16.data())), u16.size(), true);
+    serializeArray(reinterpret_cast<std::int16_t*>(u16.data()), u16.size(), true);
 }
 
 void SerializerQt::Internal::serializeString(const char* value, ssize_t size)
@@ -1084,7 +1084,7 @@ void SerializerQt::Internal::serializeStringFixed(const std::string& value, std:
 {
     std::u16string u16 = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(value);
     assert(u16.size() <= value.size());
-    serializeArrayFixed(reinterpret_cast<std::int16_t*>(const_cast<char16_t*>(u16.data())), u16.size(), sizeFixed);
+    serializeArrayFixed(reinterpret_cast<std::int16_t*>(u16.data()), u16.size(), sizeFixed);
 }
 
 void SerializerQt::Internal::serializeStringFixed(const char* value, ssize_t size, std::uint32_t sizeFixed)
