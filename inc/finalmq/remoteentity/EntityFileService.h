@@ -38,7 +38,6 @@ public:
 private:
     std::string                 m_baseDirectory;
 
-#ifndef WIN32
     void pollerLoop();
     void terminatePollerLoop();
     void removePolledFile(const std::string& path);
@@ -57,7 +56,6 @@ private:
     std::atomic_bool            m_terminatePollerLoop{false};
     std::thread                 m_threadPoller{};
     std::mutex                  m_mutexPoller{};
-#endif
 };
 
 

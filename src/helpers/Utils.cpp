@@ -80,7 +80,7 @@ namespace finalmq
                 int size = static_cast<int>(s.st_size);
 
                 buffer.resize(size);
-                char* buf = const_cast<char*>(buffer.data());
+                char* buf = buffer.data();
 
                 int readnum = 0;
                 do

@@ -357,17 +357,17 @@ std::deque<std::string> EntityFileServer::findFilesRecursive(const std::string& 
     {
         const std::filesystem::directory_entry& dir_entry = *it;
 
-        const std::string p = dir_entry.path();
+        const std::filesystem::path& p = dir_entry.path();
         if (!dir_entry.is_directory())
         {
-            const std::string& nameOfFile = p;
+            const std::string nameOfFile = p.string();
             fileList.push_back(nameOfFile);
         }
         else
         {
             if (dir_entry.is_symlink() && it.depth() > 0)
             {
-                std::string target = std::filesystem::read_symlink(p);
+                std::string target = std::filesystem::read_symlink(p).string();
                 if (target.find("../") == 0)
                 {
                     it.disable_recursion_pending();
