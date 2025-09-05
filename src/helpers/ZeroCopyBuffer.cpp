@@ -69,7 +69,7 @@ char* ZeroCopyBuffer::addBuffer(ssize_t size, ssize_t /*reserve*/)
     std::string str;
     str.resize(size);
     m_chunks.push_back(std::move(str));
-    return const_cast<char*>(m_chunks.back().data());
+    return m_chunks.back().data();
 }
 
 void ZeroCopyBuffer::downsizeLastBuffer(ssize_t newSize)
