@@ -166,7 +166,7 @@ bool ProtocolDelimiter::received(const IStreamConnectionPtr& /*connection*/, con
     m_receiveBuffer->resize(sizeDelimiterPrefix + bytesToRead);
     if (sizeDelimiterPrefix > 0)
     {
-        memcpy(m_receiveBuffer->data(), const_cast<char*>(receiveBufferOld->data() + indexStart), sizeDelimiterPrefix);
+        memcpy(m_receiveBuffer->data(), receiveBufferOld->data() + indexStart, sizeDelimiterPrefix);
     }
     int res = socket->receive(m_receiveBuffer->data() + sizeDelimiterPrefix, bytesToRead);
     if (res > 0)
