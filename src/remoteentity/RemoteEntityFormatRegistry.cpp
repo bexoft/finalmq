@@ -530,7 +530,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatRegistryImpl::parseHeaderInMetainf
         // special feature for the browser: json data can be written into the path
         if (bufferRef.second == 0 && !data.empty())
         {
-            bufferRef.first = const_cast<char*>(data.data());
+            bufferRef.first = data.data();
             bufferRef.second = data.size();
         }
 
