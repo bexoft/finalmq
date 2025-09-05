@@ -269,7 +269,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatHl7::parse(const IProtocolSessionP
     if (replaceNeeded)
     {
         replaceParser(buffer, sizeBuffer, lineend, bufferReplaced);
-        buffer = const_cast<char*>(bufferReplaced.data());
+        buffer = bufferReplaced.data();
         sizeBuffer = bufferReplaced.size();
     }
 
@@ -388,7 +388,7 @@ std::shared_ptr<StructBase> RemoteEntityFormatHl7::parseData(const IProtocolSess
         if (replaceNeeded)
         {
             replaceParser(buffer, sizeBuffer, lineend, bufferReplaced);
-            buffer = const_cast<char*>(bufferReplaced.data());
+            buffer = bufferReplaced.data();
             sizeBuffer = bufferReplaced.size();
         }
     }
