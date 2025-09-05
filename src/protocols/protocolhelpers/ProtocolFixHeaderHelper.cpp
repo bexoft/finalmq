@@ -72,7 +72,7 @@ bool ProtocolFixHeaderHelper::receiveHeader(const SocketPtr& socket, int& bytesT
     {
         sizeRead = bytesToRead;
     }
-    int res = socket->receive(const_cast<char*>(m_header.data() + m_sizeCurrent), static_cast<int>(sizeRead));
+    int res = socket->receive(m_header.data() + m_sizeCurrent, static_cast<int>(sizeRead));
     if (res > 0)
     {
         int bytesReceived = res;

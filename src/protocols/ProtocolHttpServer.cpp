@@ -1032,7 +1032,7 @@ bool ProtocolHttpServer::received(const IStreamConnectionPtr& /*connection*/, co
         int res = 0;
         do
         {
-            res = socket->receive(const_cast<char*>(m_receiveBuffer.data() + bytesReceived + m_sizeRemaining), static_cast<int>(bytesToRead - bytesReceived));
+            res = socket->receive((m_receiveBuffer.data() + bytesReceived + m_sizeRemaining), static_cast<int>(bytesToRead - bytesReceived));
             if (res > 0)
             {
                 bytesReceived += res;

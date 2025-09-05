@@ -97,13 +97,13 @@ char* ProtocolMessage::addBuffer(ssize_t size, ssize_t reserve)
     ssize_t sizeBuffer = sizeHeader + reserve + m_sizeTrailer;
     m_payloadBuffers.resize(m_payloadBuffers.size() + 1);
     m_payloadBuffers.back().resize(sizeBuffer);
-    m_sendBufferRefs.push_back({const_cast<char*>(m_payloadBuffers.back().data()), sizeBuffer});
-    m_sendPayloadRefs.push_back({const_cast<char*>(m_payloadBuffers.back().data() + sizeHeader), reserve});
+    m_sendBufferRefs.push_back({m_payloadBuffers.back().data(), sizeBuffer});
+    m_sendPayloadRefs.push_back({m_payloadBuffers.back().data() + sizeHeader, reserve});
     if (size < reserve)
     {
         downsizeLastBuffer(size);
     }
-    return const_cast<char*>(m_payloadBuffers.back().data() + sizeHeader);
+    return (m_payloadBuffers.back().data() + sizeHeader);
 }
 
 void ProtocolMessage::downsizeLastBuffer(ssize_t newSize)
@@ -294,7 +294,7 @@ char* ProtocolMessage::resizeReceiveBuffer(ssize_t size)
     if (static_cast<size_t>(size) > m_receiveBuffer->size())
     {
         m_receiveBuffer->resize(size);
-        m_receiveBufferRef.first = const_cast<char*>(m_receiveBuffer->data());
+        m_receiveBufferRef.first = m_receiveBuffer->data();
     }
     m_receiveBufferRef.second = size;
     return m_receiveBufferRef.first;
@@ -305,7 +305,7 @@ void ProtocolMessage::setReceiveBuffer(const std::shared_ptr<std::string>& recei
     assert(receiveBuffer != nullptr);
     assert(offset + size <= static_cast<ssize_t>(receiveBuffer->size()));
     m_receiveBuffer = receiveBuffer;
-    m_receiveBufferRef.first = const_cast<char*>(m_receiveBuffer->data()) + offset;
+    m_receiveBufferRef.first = m_receiveBuffer->data() + offset;
     m_receiveBufferRef.second = size;
 }
 
@@ -341,8 +341,8 @@ void ProtocolMessage::moveSendBuffers(std::list<std::string>&& payloadBuffers, c
     {
         m_payloadBuffers.emplace_back(std::move(*it));
         size_t size = itSize->second;
-        m_sendBufferRefs.emplace_back(const_cast<char*>(m_payloadBuffers.back().data()), size);
-        m_sendPayloadRefs.emplace_back(const_cast<char*>(m_payloadBuffers.back().data()), size);
+        m_sendBufferRefs.emplace_back(m_payloadBuffers.back().data(), size);
+        m_sendPayloadRefs.emplace_back(m_payloadBuffers.back().data(), size);
         m_offset = size;
         m_sizeLastBlock = size;
         m_sizeSendBufferTotal += size;
@@ -374,9 +374,9 @@ char* ProtocolMessage::addSendHeader(ssize_t size)
     }
     m_headerBuffers.resize(m_headerBuffers.size() + 1);
     m_headerBuffers.back().resize(size);
-    m_sendBufferRefs.insert(m_itSendBufferRefsPayloadBegin, {const_cast<char*>(m_headerBuffers.back().data()), m_headerBuffers.back().size()});
+    m_sendBufferRefs.insert(m_itSendBufferRefsPayloadBegin, {m_headerBuffers.back().data(), m_headerBuffers.back().size()});
     m_sizeSendBufferTotal += size;
-    return const_cast<char*>(m_headerBuffers.back().data());
+    return m_headerBuffers.back().data();
 }
 void ProtocolMessage::downsizeLastSendHeader(ssize_t newSize)
 {
