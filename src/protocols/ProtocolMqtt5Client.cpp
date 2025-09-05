@@ -141,7 +141,7 @@ static std::string getUuid()
     strUuid.resize(50); // 37 is the exact number
     uuid_t uuid;
     uuid_generate(uuid);
-    uuid_unparse(uuid, const_cast<char*>(strUuid.data()));
+    uuid_unparse(uuid, strUuid.data());
     std::string strUuidRet = strUuid.data();
     return strUuidRet;
 }
@@ -152,7 +152,7 @@ static std::string getUuid()
     strUuid.resize(50); // 37 is the exact number
     uuid_t uuid;
     uuid_generate(uuid);
-    uuid_unparse(uuid, const_cast<char*>(strUuid.data()));
+    uuid_unparse(uuid, strUuid.data());
     std::string strUuidRet = strUuid.data();
     return strUuidRet;
 }

@@ -166,9 +166,9 @@ bool ProtocolDelimiter::received(const IStreamConnectionPtr& /*connection*/, con
     m_receiveBuffer->resize(sizeDelimiterPrefix + bytesToRead);
     if (sizeDelimiterPrefix > 0)
     {
-        memcpy(const_cast<char*>(m_receiveBuffer->data()), const_cast<char*>(receiveBufferOld->data() + indexStart), sizeDelimiterPrefix);
+        memcpy(m_receiveBuffer->data(), const_cast<char*>(receiveBufferOld->data() + indexStart), sizeDelimiterPrefix);
     }
-    int res = socket->receive(const_cast<char*>(m_receiveBuffer->data()) + sizeDelimiterPrefix, bytesToRead);
+    int res = socket->receive(m_receiveBuffer->data() + sizeDelimiterPrefix, bytesToRead);
     if (res > 0)
     {
         auto callback = m_callback.lock();
@@ -214,12 +214,12 @@ bool ProtocolDelimiter::received(const IStreamConnectionPtr& /*connection*/, con
                         {
                             const auto& receiveBufferStore = m_receiveBuffers[n];
                             ssize_t sizeCopy = receiveBufferStore.indexEndMessage - receiveBufferStore.indexStartMessage;
-                            memcpy(const_cast<char*>(receiveBufferHelper->data()) + offset,
-                                   const_cast<char*>(receiveBufferStore.receiveBuffer->data()) + receiveBufferStore.indexStartMessage,
+                            memcpy(receiveBufferHelper->data() + offset,
+                                   receiveBufferStore.receiveBuffer->data() + receiveBufferStore.indexStartMessage,
                                    sizeCopy);
                             offset += sizeCopy;
                         }
-                        memcpy(const_cast<char*>(receiveBufferHelper->data()) + offset, const_cast<char*>(m_receiveBuffer->data()), sizeLast);
+                        memcpy(receiveBufferHelper->data() + offset, m_receiveBuffer->data(), sizeLast);
                         message->setReceiveBuffer(receiveBufferHelper, 0, m_receiveBuffersTotal);
                         m_receiveBuffersTotal = 0;
                         m_receiveBuffers.clear();
