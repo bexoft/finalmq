@@ -1,0 +1,11 @@
+prefix=@FINALMQ_PC_PREFIX@
+exec_prefix=${prefix}
+libdir=@FINALMQ_PC_LIBDIR@
+includedir=@FINALMQ_PC_INCLUDEDIR@
+
+Name: finalmq
+Description: Final Message Queue - A C++ messaging library
+Version: @FINALMQ_PC_VERSION@
+Libs: -L${libdir} -lfinalmq
+Libs.private: @FINALMQ_PC_LIBS_PRIVATE@
+Cflags: -I${includedir}

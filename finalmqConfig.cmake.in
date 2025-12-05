@@ -1,0 +1,25 @@
+@PACKAGE_INIT@
+
+# finalmq CMake configuration file
+
+include(CMakeFindDependencyMacro)
+
+# Find required dependencies
+if (NOT WIN32 AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "QNX")
+    # UUID is required on Unix systems (except QNX)
+    find_dependency(Threads REQUIRED)
+endif()
+
+if (@FINALMQ_USE_SSL@)
+    find_dependency(OpenSSL REQUIRED)
+endif()
+
+# Include the exported targets
+include("${CMAKE_CURRENT_LIST_DIR}/finalmqTargets.cmake")
+
+# Set variables for backward compatibility
+set(FINALMQ_INCLUDE_DIRS "@PACKAGE_CMAKE_INSTALL_INCLUDEDIR@")
+set(FINALMQ_LIBRARIES finalmq)
+set(FINALMQ_VERSION "@PROJECT_VERSION@")
+
+check_required_components(finalmq)

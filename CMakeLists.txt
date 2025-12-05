@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.11)
 
 
-project(finalmq)
+project(finalmq VERSION 0.0.3)
 
 option(FINALMQ_FETCH_HL7 "Fetches HL7" ON)
 option(FINALMQ_BUILD_EXAMPLES "Build examples" ON)
@@ -11,6 +11,15 @@ option(FINALMQ_BUILD_COVERAGE "Enable gcov" OFF)
 option(FINALMQ_BUILD_DOXYGEN "Enable doxygen" OFF)
 option(FINALMQ_HAS_NOT_WEAK_FROM_THIS "Has weak_from_this" OFF)
 option(FINALMQ_INSTALL "Enable installation" ON)
+
+# Installation directories
+include(GNUInstallDirs)
+
+# Set pkg-config variables
+set(FINALMQ_PC_PREFIX "${CMAKE_INSTALL_PREFIX}")
+set(FINALMQ_PC_LIBDIR "\${prefix}/${CMAKE_INSTALL_LIBDIR}")
+set(FINALMQ_PC_INCLUDEDIR "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
+set(FINALMQ_PC_VERSION "${PROJECT_VERSION}")
 
 if (WIN32)
     option(FINALMQ_USE_SSL "Build with openssl" OFF)    # avoid dependency to openssl for windows
@@ -219,9 +228,12 @@ SET(FINALMQ_LIBRARY_SOURCES ${SOURCES}
 
 add_library(finalmq SHARED ${FINALMQ_LIBRARY_SOURCES})
 
-target_include_directories(finalmq SYSTEM PUBLIC ${FINALMQ_SOURCE_DIR}/inc)
-target_include_directories(finalmq SYSTEM PUBLIC ${FINALMQ_BINARY_DIR}/inc)
-
+# Use generator expressions to handle different include dirs for build vs install
+target_include_directories(finalmq SYSTEM PUBLIC
+    $<BUILD_INTERFACE:${FINALMQ_SOURCE_DIR}/inc>
+    $<BUILD_INTERFACE:${FINALMQ_BINARY_DIR}/inc>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
 
 set_property(TARGET finalmq PROPERTY DISABLE_STATIC_ANALYSIS TRUE)
 
@@ -253,6 +265,44 @@ endif()
 
 target_link_libraries(finalmq ${LINKLIBS})
 
+# Set target properties for export
+set_target_properties(finalmq PROPERTIES
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION_MAJOR}
+)
+
+# Configure pkg-config file
+set(FINALMQ_PC_LIBS_PRIVATE "")
+if (UNIX AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "QNX")
+    set(FINALMQ_PC_LIBS_PRIVATE "-luuid -lpthread")
+endif()
+if (FINALMQ_USE_SSL)
+    set(FINALMQ_PC_LIBS_PRIVATE "${FINALMQ_PC_LIBS_PRIVATE} -lssl")
+endif()
+
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/finalmq.pc.in
+    ${CMAKE_CURRENT_BINARY_DIR}/finalmq.pc
+    @ONLY
+)
+
+# Configure CMake package config file
+include(CMakePackageConfigHelpers)
+
+set(FINALMQ_CMAKE_CONFIG_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/finalmq")
+
+configure_package_config_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/finalmqConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/finalmqConfig.cmake
+    INSTALL_DESTINATION ${FINALMQ_CMAKE_CONFIG_DESTINATION}
+    PATH_VARS CMAKE_INSTALL_INCLUDEDIR CMAKE_INSTALL_LIBDIR
+)
+
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/finalmqConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion
+)
 
 ###############################################################
 # INSTALL
@@ -261,10 +311,37 @@ target_link_libraries(finalmq ${LINKLIBS})
 if (FINALMQ_INSTALL)
     # Set the location for library installation
     # Use "sudo make install" to apply
-    install(TARGETS finalmq DESTINATION lib)
-    install(DIRECTORY inc/finalmq DESTINATION include FILES_MATCHING PATTERN "*.h")
-    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq DESTINATION include FILES_MATCHING PATTERN "*.h")
-    install(DIRECTORY ${CODEGENERATOR} DESTINATION lib/finalmq)
+    
+    # Install library and create export set
+    install(TARGETS finalmq
+        EXPORT finalmqTargets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+    
+    # Install headers
+    install(DIRECTORY inc/finalmq DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.h")
+    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/inc/finalmq DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.h")
+    
+    # Install codegenerator
+    install(DIRECTORY ${CODEGENERATOR} DESTINATION ${CMAKE_INSTALL_LIBDIR}/finalmq)
+    
+    # Install pkg-config file
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/finalmq.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+    
+    # Install CMake package configuration files
+    install(EXPORT finalmqTargets
+        FILE finalmqTargets.cmake
+        NAMESPACE finalmq::
+        DESTINATION ${FINALMQ_CMAKE_CONFIG_DESTINATION}
+    )
+    
+    install(FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/finalmqConfig.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/finalmqConfigVersion.cmake
+        DESTINATION ${FINALMQ_CMAKE_CONFIG_DESTINATION}
+    )
 endif()
 
 ###############################################################
