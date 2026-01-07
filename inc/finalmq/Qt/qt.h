@@ -22,9 +22,21 @@
 
 #pragma once
 
+//#define FINALMQ_QQUICK
+
+#include <QtWidgets/QApplication>
 #include <algorithm>
 #include <array>
+#include <iostream>
 #include <vector>
+
+#include <QBuffer>
+#include <QJsonDocument>
+#include <QLayout>
+#include <QMetaProperty>
+#include <QMouseEvent>
+#include <QPushButton>
+#include <QVariant>
 
 #include "finalmq/Qt/qtdata.fmq.h"
 #include "finalmq/helpers/Utils.h"
@@ -40,36 +52,13 @@
 #include "finalmq/serializeqt/SerializerQt.h"
 #include "finalmq/serializestruct/SerializerStruct.h"
 
-using finalmq::GeneralMessage;
-using finalmq::IRemoteEntityContainer;
-using finalmq::ParserProto;
-using finalmq::PeerEvent;
-using finalmq::PeerId;
-using finalmq::RemoteEntity;
-using finalmq::RemoteEntityContainer;
-using finalmq::RemoteEntityFormatJson;
-using finalmq::RemoteEntityFormatProto;
-using finalmq::RequestContextPtr;
-using finalmq::SerializerQt;
-using finalmq::SerializerStruct;
-using finalmq::Utils;
-using finalmq::ZeroCopyBuffer;
-using finalmq::qt::GetObjectTreeReply;
-using finalmq::qt::GetObjectTreeRequest;
-using finalmq::qt::ObjectData;
-
-#include <QtWidgets/QApplication>
-
-#include <QBuffer>
-#include <QJsonDocument>
-#include <QLayout>
-#include <QMetaProperty>
-#include <QPushButton>
-#include <QVariant>
-
 #ifdef FINALMQ_QQUICK
+#include <QQmlContext>
 #include <QQuickItem>
 #include <QQuickItemGrabResult>
+
+#include <finalmq/Qt/private/qquickevents_p_p.h>
+#include <finalmq/Qt/private/qquickmousearea_p.h>
 #endif
 
 namespace finalmq
@@ -93,15 +82,15 @@ static std::string parameterName(const std::string& name, int i)
     return name;
 }
 
-static bool isQVariantSerializable(int type)
+static bool isQVariantSerializable(const QVariant& value)
 {
-    switch(type)
+    switch(static_cast<QMetaType::Type>(value.type()))
     {
         case QMetaType::UnknownType:
         case QMetaType::Void:
         case QMetaType::VoidStar:
-        case QMetaType::QObjectStar:
         case QMetaType::QModelIndex:
+        case QMetaType::QObjectStar:
         case QMetaType::QPersistentModelIndex:
         case QMetaType::QJsonValue:
         case QMetaType::QJsonObject:
@@ -111,8 +100,19 @@ static bool isQVariantSerializable(int type)
         case QMetaType::QCborArray:
         case QMetaType::QCborMap:
             return false;
+
+        case QMetaType::QVariant:
+        {
+            QVariant v = value.value<QVariant>();
+            if(static_cast<QMetaType::Type>(v.type()) == QMetaType::QObjectStar)
+            {
+                return false;
+            }
+        }
+        default:
+            break;
     }
-    if(type >= QMetaType::User)
+    if(static_cast<QMetaType::Type>(value.type()) >= QMetaType::User)
     {
         return false;
     }
@@ -146,18 +146,23 @@ class ObjectHelper
 public:
     static QObject* findObject(const QString& objectName, QObjectList& roots)
     {
+        QString path = objectName;
+        if(!path.startsWith("**|"))
+        {
+            path = QString("**|") + path;
+        }
         for(int i = 0; i < roots.size(); ++i)
         {
-            QObject* obj = roots[i];
-            const QString& objname = obj->objectName();
-            if(objname == objectName)
+            QObject* root = roots[i];
+            const QString& name = root->objectName();
+            if(name == objectName)
+            {
+                return root;
+            }
+            QObject* obj = findObjectByPath(root, path);
+            if(obj)
             {
                 return obj;
-            }
-            QList<QObject*> list = obj->findChildren<QObject*>(objectName, Qt::FindChildrenRecursively);
-            if(!list.isEmpty())
-            {
-                return list[0];
             }
         }
 
@@ -165,21 +170,198 @@ public:
     }
 
 private:
-    static QObject* findObjectIntern(const QString& objectName, QObject* root)
+    static bool inherits(const QMetaObject* metaobject, const QString& className)
     {
-        if(root)
+        QString name = metaobject->className();
+        int ix = name.indexOf("_QMLTYPE_");
+        if(ix >= 0)
         {
-            const QString& objname1 = root->objectName();
-            if(objname1 == objectName)
+            name = name.left(ix);
+        }
+        if(name == className)
+        {
+            return true;
+        }
+        const QMetaObject* superClass = metaobject->superClass();
+        if(superClass)
+        {
+            return inherits(superClass, className);
+        }
+        return false;
+    }
+
+    // Helper function to compare exact strings
+    static bool matchExact(const QString& pattern, const QString& str)
+    {
+        return pattern == str;
+    }
+
+    // Function to parse property matching from a string (e.g., "?property1=value1&property2=value2")
+    static QMap<QString, QString> parseProperties(const QStringList& properties)
+    {
+        QMap<QString, QString> props;
+        for(const QString& pair : properties)
+        {
+            QStringList keyValue = pair.split("=", QString::SkipEmptyParts);
+            if(keyValue.size() == 2)
             {
-                return root;
-            }
-            QList<QObject*> list1 = root->findChildren<QObject*>(objectName, Qt::FindChildrenRecursively);
-            if(!list1.isEmpty())
-            {
-                return list1[0];
+                props.insert(keyValue[0], keyValue[1]);
             }
         }
+        return props;
+    }
+
+    // Recursive function to find the object by the given dot-separated path with wildcards and property matching
+    static QObject* findObjectByPath(QObject* parent, const QString& path)
+    {
+        // Base case: if the path is empty or the parent is null
+        if(path.isEmpty() || !parent)
+            return nullptr;
+
+        // Split the path into layers
+        QStringList layers = path.split("|", QString::SkipEmptyParts);
+        QString currentLayer = layers.first();
+        QString remainingPath = layers.mid(1).join("|");
+
+        // Check if the layer has properties (i.e., contains a ';')
+        QStringList properties = currentLayer.split(";");
+        QString layerName = properties.first();
+        QMap<QString, QString> props = parseProperties(properties.mid(1));
+
+        // If current layer is ** (match zero or more layers)
+        if(layerName == "**")
+        {
+            QObject* foundObject = findObjectByPath(parent, remainingPath);
+            if(foundObject)
+            {
+                return foundObject;
+            }
+            // Search all children and their descendants recursively
+            QList<QObject*> children = parent->children();
+            for(QObject* child : children)
+            {
+                // Additionally, recursively check deeper layers starting from this child
+                foundObject = findObjectByPath(child, path); // This allows ** to match multiple layers
+                if(foundObject)
+                {
+                    return foundObject;
+                }
+            }
+
+            // If no match found, return nullptr
+            return nullptr;
+        }
+
+        // If current layer is * (match exactly one layer)
+        if(layerName == "*")
+        {
+            // Search only the direct children
+            QList<QObject*> children = parent->children();
+            for(QObject* child : children)
+            {
+                // Check if the remaining path can be matched from this child
+                QObject* foundObject = findObjectByPath(child, remainingPath);
+                if(foundObject)
+                {
+                    return foundObject;
+                }
+            }
+
+            // If no match found, return nullptr
+            return nullptr;
+        }
+
+        // Normal matching case (no wildcard at this level)
+        QList<QObject*> children = parent->children();
+        for(QObject* child : children)
+        {
+            bool matches = false;
+
+            // Exact match on objectName (also used as QML id)
+            if(matchExact(layerName, child->objectName()))
+            {
+                matches = true;
+            }
+
+            // Match if class name is exact or any derived class
+            if(!matches && inherits(child->metaObject(), layerName))
+            {
+                matches = true;
+            }
+
+#ifdef FINALMQ_QQUICK
+            // Match QML id using the QML context (nameForObject)
+            if(!matches)
+            {
+                // if QQuickItem
+                QQuickItem* item = qobject_cast<QQuickItem*>(child);
+                if(item)
+                {
+                    QQmlContext* const context = qmlContext(item);
+                    if(context)
+                    {
+                        const QString id = context->nameForObject(item); // Returns the QML 'id'
+                        if(matchExact(layerName, id))
+                        {
+                            matches = true;
+                        }
+                    }
+                }
+            }
+#endif
+
+            // If this is a match, check for properties
+            if(matches && !properties.isEmpty())
+            {
+                // Check each property in the map
+                for(auto it = props.begin(); it != props.end(); ++it)
+                {
+                    // Compare property values (make sure property exists)
+                    auto name = it.key().toUtf8();
+                    auto property = child->property(name);
+                    bool matchLocal = false;
+                    if(property.isValid())
+                    {
+                        if(property.type() == QVariant::Type::Double)
+                        {
+                            const double value1 = property.value<double>();
+                            const double value2 = it.value().toDouble();
+                            if(qFuzzyCompare(value1, value2))
+                            {
+                                matchLocal = true;
+                            }
+                        }
+                        else if(property.toString() == it.value())
+                        {
+                            matchLocal = true;
+                        }
+                    }
+                    if(!matchLocal)
+                    {
+                        matches = false;
+                        break;
+                    }
+                }
+            }
+
+            if(matches)
+            {
+                // If no remaining path, return this object
+                if(remainingPath.isEmpty())
+                {
+                    return child;
+                }
+
+                // Otherwise, recursively search the child with the remaining path
+                QObject* foundObject = findObjectByPath(child, remainingPath);
+                if(foundObject)
+                {
+                    return foundObject;
+                }
+            }
+        }
+
+        // No matching object found, return nullptr
         return nullptr;
     }
 };
@@ -222,12 +404,12 @@ private:
         m_typesToField.emplace("QTime", MetaField{MetaTypeId::TYPE_UINT32, "", "", "", 0, {}});
         m_typesToField.emplace("QUrl", MetaField{MetaTypeId::TYPE_BYTES, "", "", "", 0, {"qttype:QUrl,qtcode:bytes"}});
         m_typesToField.emplace("QLocale", MetaField{MetaTypeId::TYPE_STRING, "", "", "", 0, {}});
-        m_typesToField.emplace("QPixmap", MetaField{ MetaTypeId::TYPE_BYTES, "", "", "", 0, {"png:true"} });
-        m_typesToField.emplace("QSizePolicy", MetaField{ MetaTypeId::TYPE_UINT32, "", "", "", 0, {} });
-        m_typesToField.emplace("Qt::FocusPolicy", MetaField{ MetaTypeId::TYPE_UINT32, "", "", "", 0, {} });
-        m_typesToField.emplace("Qt::InputMethodHints", MetaField{ MetaTypeId::TYPE_UINT32, "", "", "", 0, {} });
-        m_typesToField.emplace("Qt::Alignment", MetaField{ MetaTypeId::TYPE_UINT32, "", "", "", 0, {} });
-        m_typesToField.emplace("Qt::TextInteractionFlags", MetaField{ MetaTypeId::TYPE_UINT32, "", "", "", 0, {} });
+        m_typesToField.emplace("QPixmap", MetaField{MetaTypeId::TYPE_BYTES, "", "", "", 0, {"png:true"}});
+        m_typesToField.emplace("QSizePolicy", MetaField{MetaTypeId::TYPE_UINT32, "", "", "", 0, {}});
+        m_typesToField.emplace("Qt::FocusPolicy", MetaField{MetaTypeId::TYPE_UINT32, "", "", "", 0, {}});
+        m_typesToField.emplace("Qt::InputMethodHints", MetaField{MetaTypeId::TYPE_UINT32, "", "", "", 0, {}});
+        m_typesToField.emplace("Qt::Alignment", MetaField{MetaTypeId::TYPE_UINT32, "", "", "", 0, {}});
+        m_typesToField.emplace("Qt::TextInteractionFlags", MetaField{MetaTypeId::TYPE_UINT32, "", "", "", 0, {}});
 
         static const std::string KEY_QTTYPE = "qttype";
 
@@ -373,6 +555,15 @@ public:
 
             if(!metaMethod.isValid())
             {
+                ix = metaObject->indexOfSignal(methodName.c_str());
+                if(ix != -1)
+                {
+                    metaMethod = metaObject->method(ix);
+                }
+            }
+
+            if(!metaMethod.isValid())
+            {
                 if(methodName.compare(0, 4, "set_") == 0)
                 {
                     propertySet = true;
@@ -485,12 +676,13 @@ public:
                 {
                     for(int i = 0; i < argTypes.size(); ++i)
                     {
+                        QByteArray& argType = argTypes[i];
                         std::string name = parameterName(argNames[i].toStdString(), i);
                         if(i > 0)
                         {
                             typeName += '_';
                         }
-                        typeName += argTypes[i].toStdString();
+                        typeName += argType.toStdString();
                         typeName += '_';
                         typeName += name;
                     }
@@ -681,10 +873,6 @@ public:
 private:
     virtual void enterObject(QObject& object, int level) override
     {
-        if(object.objectName().isEmpty())
-        {
-            object.setObjectName(getNextObjectId());
-        }
         ObjectData* objectData = nullptr;
         if(level == 0)
         {
@@ -701,7 +889,6 @@ private:
 
         const QMetaObject* metaobject = object.metaObject();
 
-        fillProperties(metaobject, object, objectData);
         fillMethods(metaobject, objectData);
 
         fillClassChain(metaobject, objectData->classchain);
@@ -717,6 +904,27 @@ private:
             objectData->properties.push_back({"int", "bottom", std::to_string(rect.bottom()), false, ""});
             objectData->properties.push_back({"int", "enabled", std::to_string(layout->isEnabled()), false, ""});
         }
+
+        QString id;
+#ifdef FINALMQ_QQUICK
+        // if QQuickItem
+        QQuickItem* item = qobject_cast<QQuickItem*>(&object);
+        if(item)
+        {
+            QQmlContext* const context = qmlContext(item);
+            if(context)
+            {
+                id = context->nameForObject(item); // Returns the QML 'id'
+                objectData->properties.push_back({"QString", "id", "{\"v\":\"" + id.toStdString() + "\"}", false, ""});
+            }
+        }
+#endif
+        if(object.objectName().isEmpty())
+        {
+            object.setObjectName(getNextObjectId());
+        }
+
+        fillProperties(metaobject, object, objectData);
     }
 
     virtual void exitObject(QObject& /*object*/, int level) override
@@ -756,7 +964,7 @@ private:
                 {
                     QVariant value = metaproperty.read(&object);
 
-                    const bool ok = isQVariantSerializable(value.type());
+                    const bool ok = isQVariantSerializable(value);
                     if(!ok)
                     {
                         value = QString("!!! not serializable type: ") + QString::number(value.type());
@@ -874,38 +1082,85 @@ private:
         auto remoteEntity = m_remoteEntity.lock();
         if(remoteEntity)
         {
-            if (methodId == m_metaMethod.methodIndex())
+            if(methodId == m_metaMethod.methodIndex())
             {
-                QVariantList args;
                 const QList<QByteArray> parameterTypes = m_metaMethod.parameterTypes();
-                for (int i = 0; i < parameterTypes.size(); ++i)
+                if(parameterTypes.size() == 1 && parameterTypes[0] == "QQuickMouseEvent*")
                 {
-                    const QByteArray& typeName = parameterTypes[i];
+                    const QByteArray& typeName = parameterTypes[0];
                     int type = QMetaType::type(typeName);
-                    QVariant value(type, params[i + 1]);
-                    const bool ok = isQVariantSerializable(value.type());
-                    if (!ok)
+                    QVariant value(type, params[0 + 1]);
+                    QQuickMouseEvent* v = value.value<QQuickMouseEvent*>();
+                    assert(v);
+                    FmqQQuickMouseEvent event;
+                    event.x = v->x();
+                    event.y = v->y();
+                    event.button = static_cast<FmqQtMouseButton::Enum>(v->button());
+                    event.wasHeld = v->wasHeld();
+                    event.isClick = v->isClick();
+                    event.accepted = v->isAccepted();
+                    if(v->buttons() & Qt::MouseButton::LeftButton)
                     {
-                        value = QString("!!! not serializable type: ") + QString::number(value.type());
+                        event.buttons.push_back(FmqQtMouseButton::LeftButton);
                     }
-                    args.append(std::move(value));
+                    if(v->buttons() & Qt::MouseButton::RightButton)
+                    {
+                        event.buttons.push_back(FmqQtMouseButton::RightButton);
+                    }
+                    if(v->buttons() & Qt::MouseButton::MidButton)
+                    {
+                        event.buttons.push_back(FmqQtMouseButton::MiddleButton);
+                    }
+                    if(v->source() & Qt::MouseEventSource::MouseEventNotSynthesized)
+                    {
+                        event.source.push_back(FmqQtMouseEventSource::MouseEventNotSynthesized);
+                    }
+                    if(v->source() & Qt::MouseEventSource::MouseEventSynthesizedByQt)
+                    {
+                        event.source.push_back(FmqQtMouseEventSource::MouseEventSynthesizedByQt);
+                    }
+                    if(v->source() & Qt::MouseEventSource::MouseEventSynthesizedBySystem)
+                    {
+                        event.source.push_back(FmqQtMouseEventSource::MouseEventSynthesizedBySystem);
+                    }
+                    if(v->source() & Qt::MouseEventSource::MouseEventSynthesizedByApplication)
+                    {
+                        event.source.push_back(FmqQtMouseEventSource::MouseEventSynthesizedByApplication);
+                    }
+                    remoteEntity->sendEvent(m_peerId, m_path, event);
                 }
+                else
+                {
+                    QVariantList args;
+                    for(int i = 0; i < parameterTypes.size(); ++i)
+                    {
+                        const QByteArray& typeName = parameterTypes[i];
+                        int type = QMetaType::type(typeName);
+                        QVariant value(type, params[i + 1]);
+                        const bool ok = isQVariantSerializable(value);
+                        if(!ok)
+                        {
+                            value = QString("!!! not serializable type: ") + QString::number(value.type()) + QString(", ") + QString(m_typeName.c_str());
+                        }
+                        args.append(std::move(value));
+                    }
 
-                QByteArray bufferQt;
-                QDataStream streamParam(&bufferQt, QIODevice::WriteOnly);
-                streamParam << args;
+                    QByteArray bufferQt;
+                    QDataStream streamParam(&bufferQt, QIODevice::WriteOnly);
+                    streamParam << args;
 
-                ZeroCopyBuffer bufferProto;
-                SerializerProto serializerProto(bufferProto);
-                ParserQt parserQt(serializerProto, bufferQt.data(), bufferQt.size(), ParserQt::Mode::WRAPPED_BY_QVARIANTLIST);
-                parserQt.parseStruct(m_typeName);
+                    ZeroCopyBuffer bufferProto;
+                    SerializerProto serializerProto(bufferProto);
+                    ParserQt parserQt(serializerProto, bufferQt.data(), bufferQt.size(), ParserQt::Mode::WRAPPED_BY_QVARIANTLIST);
+                    parserQt.parseStruct(m_typeName);
 
-                GeneralMessage message;
+                    GeneralMessage message;
 
-                message.type = m_typeName;
-                bufferProto.copyData(message.data);
+                    message.type = m_typeName;
+                    bufferProto.copyData(message.data);
 
-                remoteEntity->sendEvent(m_peerId, m_path, message);
+                    remoteEntity->sendEvent(m_peerId, m_path, message);
+                }
             }
         }
         else
@@ -972,6 +1227,40 @@ public:
                 if(itPeer != m_connectObjects.end())
                 {
                     m_connectObjects.erase(itPeer);
+                }
+            }
+        });
+
+        registerCommand<FmqQMouseEvent>("{objectid}/mouseEvent", [this](const RequestContextPtr& requestContext, const std::shared_ptr<FmqQMouseEvent>& request) {
+            //bool found = false;
+
+            if(request == nullptr)
+            {
+                requestContext->reply(finalmq::Status::STATUS_ENTITY_NOT_FOUND);
+                return;
+            }
+
+            const std::string* objId = requestContext->getMetainfo("PATH_objectid");
+
+            if(objId)
+            {
+                QObject* obj = ObjectHelper::findObject(QString::fromUtf8(objId->c_str()), m_roots);
+                if(obj)
+                {
+                    const auto& mouse = *request;
+                    Qt::MouseButtons buttons;
+                    for(auto button : mouse.buttons)
+                    {
+                        buttons |= static_cast<Qt::MouseButton>(static_cast<int>(button));
+                    }
+                    Qt::KeyboardModifiers modifiers;
+                    for(auto modifier : mouse.modifiers)
+                    {
+                        modifiers |= static_cast<Qt::KeyboardModifier>(static_cast<int>(modifier));
+                    }
+
+                    QMouseEvent* mouseEvent = new QMouseEvent(static_cast<QMouseEvent::Type>(static_cast<int>(mouse.type)), QPointF(mouse.x, mouse.y), static_cast<Qt::MouseButton>(static_cast<int>(mouse.button)), buttons, modifiers);
+                    QCoreApplication::sendEvent(obj, mouseEvent);
                 }
             }
         });
@@ -1065,62 +1354,132 @@ public:
                             {
                                 found = true;
 
-                                ZeroCopyBuffer buffer;
-                                SerializerQt serializerQt(buffer, SerializerQt::Mode::WRAPPED_BY_QVARIANTLIST);
-                                ParserProto parserProto(serializerQt, request->data.data(), request->data.size());
-                                parserProto.parseStruct(request->type);
-
-                                QByteArray bufferByteArray;
-                                bufferByteArray.reserve(static_cast<int>(buffer.size()));
-                                const std::list<std::string>& chunks = buffer.chunks();
-                                for(const auto& chunk : chunks)
+#ifdef FINALMQ_QQUICK
+                                QQuickMouseArea* mouseArea = qobject_cast<QQuickMouseArea*>(obj);
+                                if(mouseArea && metaMethod.parameterCount() == 1 && metaMethod.parameterTypes()[0].toStdString() == "QQuickMouseEvent*")
                                 {
-                                    bufferByteArray.append(chunk.data(), static_cast<int>(chunk.size()));
+                                    FmqSignatureQQuickMouseEvent parameterMouseEvent;
+                                    SerializerStruct serializerStruct(parameterMouseEvent);
+                                    ParserProto parserProto(serializerStruct, request->data.data(), request->data.size());
+                                    parserProto.parseStruct(request->type);
+                                    FmqQQuickMouseEvent& mouse = parameterMouseEvent.mouse;
+                                    QQuickMouseEvent* mouseEventPtr = new QQuickMouseEvent;
+                                    QQuickMouseEvent& mouseEvent = *mouseEventPtr;
+                                    Qt::MouseButtons buttons;
+                                    for(auto button : mouse.buttons)
+                                    {
+                                        buttons |= static_cast<Qt::MouseButton>(static_cast<int>(button));
+                                    }
+                                    Qt::KeyboardModifiers modifiers;
+                                    for(auto modifier : mouse.modifiers)
+                                    {
+                                        modifiers |= static_cast<Qt::KeyboardModifier>(static_cast<int>(modifier));
+                                    }
+                                    Qt::MouseEventFlags flags;
+                                    for(auto flag : mouse.flags)
+                                    {
+                                        flags |= static_cast<Qt::MouseEventFlags>(static_cast<int>(flag));
+                                    }
+                                    mouseEvent.reset(mouse.x, mouse.y, static_cast<Qt::MouseButton>(static_cast<int>(mouse.button)), buttons, modifiers, mouse.isClick, mouse.wasHeld, flags);
+                                    mouseEvent.setAccepted(true);
+
+                                    if(*methodName == "positionChanged")
+                                    {
+                                        mouseArea->positionChanged(mouseEventPtr);
+                                    }
+                                    else if(*methodName == "mouseXChanged")
+                                    {
+                                        mouseArea->mouseXChanged(mouseEventPtr);
+                                    }
+                                    else if(*methodName == "mouseYChanged")
+                                    {
+                                        mouseArea->mouseYChanged(mouseEventPtr);
+                                    }
+                                    else if(*methodName == "pressed")
+                                    {
+                                        mouseArea->pressed(mouseEventPtr);
+                                    }
+                                    else if(*methodName == "pressAndHold")
+                                    {
+                                        mouseArea->pressAndHold(mouseEventPtr);
+                                    }
+                                    else if(*methodName == "released")
+                                    {
+                                        mouseArea->released(mouseEventPtr);
+                                    }
+                                    else if(*methodName == "clicked")
+                                    {
+                                        mouseArea->clicked(mouseEventPtr);
+                                    }
+                                    else if(*methodName == "doubleClicked")
+                                    {
+                                        mouseArea->doubleClicked(mouseEventPtr);
+                                    }
+                                    else
+                                    {
+                                        delete mouseEventPtr;
+                                    }
                                 }
-
-                                QVariantList parameters;
-                                QDataStream streamInParams(bufferByteArray);
-                                streamInParams >> parameters;
-
-                                std::array<QGenericArgument, 10> genericArguments;
-                                for(int i = 0; i < parameters.length(); ++i)
+                                else
+#endif
                                 {
-                                    const QVariant& parameter = parameters[i];
-                                    genericArguments[i] = QGenericArgument(parameter.typeName(), parameter.constData());
+                                    ZeroCopyBuffer buffer;
+                                    SerializerQt serializerQt(buffer, SerializerQt::Mode::WRAPPED_BY_QVARIANTLIST);
+                                    ParserProto parserProto(serializerQt, request->data.data(), request->data.size());
+                                    parserProto.parseStruct(request->type);
+
+                                    QByteArray bufferByteArray;
+                                    bufferByteArray.reserve(static_cast<int>(buffer.size()));
+                                    const std::list<std::string>& chunks = buffer.chunks();
+                                    for(const auto& chunk : chunks)
+                                    {
+                                        bufferByteArray.append(chunk.data(), static_cast<int>(chunk.size()));
+                                    }
+
+                                    QVariantList parameters;
+                                    QDataStream streamInParams(bufferByteArray);
+                                    streamInParams >> parameters;
+
+                                    std::array<QGenericArgument, 10> genericArguments;
+                                    for(int i = 0; i < parameters.length(); ++i)
+                                    {
+                                        const QVariant& parameter = parameters[i];
+                                        genericArguments[i] = QGenericArgument(parameter.typeName(), parameter.constData());
+                                    }
+
+                                    QVariant returnValue(QMetaType::type(metaMethod.typeName()),
+                                                         static_cast<void*>(NULL));
+
+                                    QGenericReturnArgument returnArgument(
+                                        metaMethod.typeName(),
+                                        const_cast<void*>(returnValue.constData()));
+                                    metaMethod.invoke(obj, returnArgument, genericArguments[0], genericArguments[1], genericArguments[2], genericArguments[3], genericArguments[4], genericArguments[5], genericArguments[6], genericArguments[7], genericArguments[8], genericArguments[9]);
+
+                                    const bool ok = isQVariantSerializable(returnValue);
+                                    if(!ok)
+                                    {
+                                        returnValue = QString("!!! not serializable type: ") + QString::number(returnValue.type());
+                                    }
+
+                                    QByteArray retQtBuffer;
+                                    QDataStream streamRetParam(&retQtBuffer, QIODevice::WriteOnly);
+                                    streamRetParam << returnValue;
+
+                                    std::string retTypeName = QtTypeHelper::getInstance().getReturnTypeName(metaMethod.typeName());
+
+                                    GeneralMessage replyMessage;
+                                    if(!retTypeName.empty())
+                                    {
+                                        ZeroCopyBuffer bufferRet;
+                                        SerializerProto serializerProto(bufferRet);
+                                        ParserQt parserQt(serializerProto, retQtBuffer.data(), retQtBuffer.size(), ParserQt::Mode::WRAPPED_BY_QVARIANT);
+                                        parserQt.parseStruct(retTypeName);
+
+                                        bufferRet.copyData(replyMessage.data);
+                                    }
+                                    replyMessage.type = retTypeName;
+                                    requestContext->reply(replyMessage);
                                 }
-
-                                QVariant returnValue(QMetaType::type(metaMethod.typeName()),
-                                                     static_cast<void*>(NULL));
-
-                                QGenericReturnArgument returnArgument(
-                                    metaMethod.typeName(),
-                                    const_cast<void*>(returnValue.constData()));
-                                metaMethod.invoke(obj, returnArgument, genericArguments[0], genericArguments[1], genericArguments[2], genericArguments[3], genericArguments[4], genericArguments[5], genericArguments[6], genericArguments[7], genericArguments[8], genericArguments[9]);
-
-                                const bool ok = isQVariantSerializable(returnValue.type());
-                                if(!ok)
-                                {
-                                    returnValue = QString("!!! not serializable type: ") + QString::number(returnValue.type());
-                                }
-
-                                QByteArray retQtBuffer;
-                                QDataStream streamRetParam(&retQtBuffer, QIODevice::WriteOnly);
-                                streamRetParam << returnValue;
-
-                                std::string retTypeName = QtTypeHelper::getInstance().getReturnTypeName(metaMethod.typeName());
-
-                                GeneralMessage replyMessage;
-                                if(!retTypeName.empty())
-                                {
-                                    ZeroCopyBuffer bufferRet;
-                                    SerializerProto serializerProto(bufferRet);
-                                    ParserQt parserQt(serializerProto, retQtBuffer.data(), retQtBuffer.size(), ParserQt::Mode::WRAPPED_BY_QVARIANT);
-                                    parserQt.parseStruct(retTypeName);
-
-                                    bufferRet.copyData(replyMessage.data);
-                                }
-                                replyMessage.type = retTypeName;
-                                requestContext->reply(replyMessage);
                             }
                         }
                         else if(metaProperty.isValid())
@@ -1224,7 +1583,7 @@ public:
                                 std::string retTypeName = QtTypeHelper::getInstance().getReturnTypeName(metaProperty.typeName());
                                 QVariant value = metaProperty.read(obj);
 
-                                const bool ok = isQVariantSerializable(value.type());
+                                const bool ok = isQVariantSerializable(value);
                                 if(!ok)
                                 {
                                     value = QString("!!! not serializable type: ") + QString::number(value.type());
