@@ -414,6 +414,7 @@ function rootObjects(obj, level, objectNameId)
         table += '<div id="'+ childName +'"></div>';
         table += '</td>';
         table += '</tr>';
+        fetchObject(childName)
     }
     table += '</table>';
 
@@ -429,7 +430,7 @@ function poll()
 
 function getObjectTree()
 {
-    g_fmqQtAccessService.requestReply('finalmq.qt.GetObjectTreeRequest', {levels:20}, function(outparams) {
+    g_fmqQtAccessService.requestReply('finalmq.qt.GetObjectTreeRequest', {levels:2}, function(outparams) {
         if (outparams.fmqheader.status == 'STATUS_OK')
         {
 			document.getElementById('_root_').innerHTML = '';

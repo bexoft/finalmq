@@ -192,6 +192,43 @@
             {"name":"RichText",             "id":1,         "desc":""},
             {"name":"AutoText",             "id":2,         "desc":""},
             {"name":"MarkdownText",         "id":3,         "desc":""}
+        ]},
+        {"type":"FmqQtMouseEventSource","desc":"","entries":[
+            {"name":"MouseEventNotSynthesized",              "id":0,         "desc":""},
+            {"name":"MouseEventSynthesizedBySystem",         "id":1,         "desc":""},
+            {"name":"MouseEventSynthesizedByQt",             "id":2,         "desc":""},
+            {"name":"MouseEventSynthesizedByApplication",    "id":3,         "desc":""}
+        ]},
+        {"type":"FmqQtMouseEventFlag","desc":"","entries":[
+            {"name":"MouseEventUnknown",                      "id":0,         "desc":""},
+            {"name":"MouseEventCreatedDoubleClick",           "id":1,         "desc":""},
+            {"name":"MouseEventFlagMask",                     "id":255,       "desc":""}
+        ]},
+        {"type":"FmqQtKeyboardModifier","desc":"","entries":[
+            {"name":"NoModifier",               "id":0,                "desc":""},
+            {"name":"ShiftModifier",            "id":33554432,         "desc":""},
+            {"name":"ControlModifier",          "id":67108864,         "desc":""},
+            {"name":"AltModifier",              "id":134217728,        "desc":""},
+            {"name":"MetaModifier",             "id":268435456,        "desc":""},
+            {"name":"KeypadModifier",           "id":536870912,        "desc":""},
+            {"name":"GroupSwitchModifier",      "id":1073741824,       "desc":""}
+        ]},
+        {"type":"FmqQtMouseButton","desc":"","entries":[
+            {"name":"NoButton",                 "id":0,        "desc":""},
+            {"name":"LeftButton",               "id":1,        "desc":""},
+            {"name":"RightButton",              "id":2,        "desc":""},
+            {"name":"MiddleButton",             "id":4,        "desc":""},
+            {"name":"BackButton",               "id":8,        "desc":""},
+            {"name":"ForwardButton",            "id":16,       "desc":""},
+            {"name":"TaskButton",               "id":32,       "desc":""}
+        ]},
+        {"type":"FmqQtEventType","desc":"","entries":[
+            {"name":"None",                     "id":0,        "desc":""},
+            {"name":"Timer",                    "id":1,        "desc":""},
+            {"name":"MouseButtonPress",         "id":2,        "desc":""},
+            {"name":"MouseButtonRelease",       "id":3,        "desc":""},
+            {"name":"MouseButtonDblClick",      "id":4,        "desc":""},
+            {"name":"MouseMove",                "id":5,        "desc":""}
         ]}
 
     ],
@@ -473,8 +510,33 @@
         {"type":"FmqQCursor","attrs":["qttype:QCursor"],"desc":"","fields":[
             {"tid":"enum",      "type":"FmqQCursorShape",       "name":"shape", "attrs":["indexmode:mapping,BitmapCursor:0"],"desc":"","flags":["METAFLAG_INDEX"]},
             {"tid":"struct",    "type":"FmqQCursorBitmapCursor","name":"cursorBitmap",                                       "desc":"","flags":[]}
-        ]}
+        ]},
+        
+        
+        {"type":"FmqQQuickMouseEvent","attrs":["qttype:QQuickMouseEvent*"],"desc":"","fields":[
+            {"tid":"double",                                      "name":"x",               "desc":""},
+            {"tid":"double",                                      "name":"y",               "desc":""},
+            {"tid":"enum",    "type":"FmqQtMouseButton",          "name":"button",          "desc":""},
+            {"tid":"enum[]",  "type":"FmqQtMouseButton",          "name":"buttons",         "desc":""},
+            {"tid":"enum[]",  "type":"FmqQtKeyboardModifier",     "name":"modifiers",       "desc":""},
+            {"tid":"enum[]",  "type":"FmqQtMouseEventSource",     "name":"source",          "desc":""},
+            {"tid":"bool",                                        "name":"wasHeld",         "desc":""},
+            {"tid":"bool",                                        "name":"isClick",         "desc":""},
+            {"tid":"bool",                                        "name":"accepted",        "desc":""},
+            {"tid":"enum[]",  "type":"FmqQtMouseEventFlag",       "name":"flags",           "desc":""}
+        ]},
+        {"type":"FmqSignatureQQuickMouseEvent","desc":"","fields":[
+            {"tid":"struct",  "type":"FmqQQuickMouseEvent",       "name":"mouse",           "desc":""}
+        ]},
     
+        {"type":"FmqQMouseEvent", "desc":"","fields":[
+            {"tid":"enum",    "type":"FmqQtEventType",            "name":"type",            "desc":""},
+            {"tid":"double",                                      "name":"x",               "desc":""},
+            {"tid":"double",                                      "name":"y",               "desc":""},
+            {"tid":"enum",    "type":"FmqQtMouseButton",          "name":"button",          "desc":""},
+            {"tid":"enum[]",  "type":"FmqQtMouseButton",          "name":"buttons",         "desc":""},
+            {"tid":"enum[]",  "type":"FmqQtKeyboardModifier",     "name":"modifiers",       "desc":""}
+        ]}
     ]
 }
 

@@ -23,7 +23,9 @@ function getProperty(properties, key)
 		var prop = properties[i];
 		if (prop.name == key)
 		{
-			return prop['value'];
+			json = prop['value'];
+                        value = JSON.parse(json);
+                        return value.v;
 		}
 	}
 	return null;
@@ -69,7 +71,7 @@ function iterateObjects(obj, level, idParent, parentWidget)
 		var visible = getProperty(obj.properties, 'visible');
 		nextParentWidget = obj;
 		
-		if (visible == 'true')
+		if (visible == true)
 		{
 			id = insertButton(idParent, x, y, width, height, getProperty(obj.properties, 'objectName'), showLayer);
 			insertText(id, obj.classchain[0], showLayer)
@@ -80,7 +82,7 @@ function iterateObjects(obj, level, idParent, parentWidget)
 			insertProperties(id, obj);
 		}
 	}
-	else if (isDerivedFrom(obj, 'QWidget'))
+	else if (isDerivedFrom(obj, 'QWidget') || isDerivedFrom(obj, 'QQuickItem'))
 	{
 		var x = getProperty(obj.properties, 'x');
 		var y = getProperty(obj.properties, 'y');
@@ -89,7 +91,7 @@ function iterateObjects(obj, level, idParent, parentWidget)
 		var visible = getProperty(obj.properties, 'visible');
 		nextParentWidget = obj;
 		
-		if (visible == 'true')
+		if (visible == true)
 		{
 			id = insertBox(idParent, x, y, width, height, showLayer);
 			insertText(id, obj.classchain[0], showLayer)
@@ -107,12 +109,12 @@ function iterateObjects(obj, level, idParent, parentWidget)
 	}
 	else if (isDerivedFrom(obj, 'QLayout'))
 	{
-		var visible = 'false';
+		var visible = false;
 		if (parentWidget)
 		{
 			visible = getProperty(parentWidget.properties, 'visible');
 		}
-		if (visible == 'true')
+		if (visible == true)
 		{
 			var x = getProperty(obj.properties, 'x');
 			var y = getProperty(obj.properties, 'y');
@@ -180,21 +182,21 @@ function poll()
 
 function getObjectTree()
 {
-    g_fmqQtService.requestReply('finalmq.qt.GetObjectTreeRequest', null, function(outparams) {
+    g_fmqQtService.requestReply('finalmq.qt.GetObjectTreeRequest', {levels:10}, function(outparams) {
         if (outparams.fmqheader.status == 'STATUS_OK')
         {
-			document.getElementById('root').innerHTML = '';
-            iterateObjects(outparams.root, 0, 'root', null);
+            document.getElementById('root').innerHTML = '';
+            iterateObjects(outparams.obj, 0, 'root', null);
         }
     });
 }
 
 function getScreenshot()
 {
-    g_fmqQtService.requestReply('finalmq.qt.GetScreenshotRequest', null, function(outparams) {
+    g_fmqQtService.requestReply('QQuickRootItem;visible=true/grabToImage', null, function(outparams) {
         if (outparams.fmqheader.status == 'STATUS_OK')
         {
-			document.getElementById('image').innerHTML = '<img style="position:absolute; left:'+outparams.x+'; top:'+outparams.y+'; width:'+outparams.width+'; height:'+outparams.height+';" src="data:image/png;base64,'+outparams.screen+'"></img>'
+            document.getElementById('image').innerHTML = '<img style="position:absolute; background-color:black; " src="data:image/png;base64,'+outparams.v+'"></img>'
         }
     });
 }
@@ -204,7 +206,6 @@ function pressButton(objectName)
 {
 	var inparams = {objectName:objectName};
     g_fmqQtService.requestReply('finalmq.qt.PressButtonRequest', inparams, function(outparams) {
-		var t=0;
 	});
 }
 
@@ -219,7 +220,7 @@ function fmqReady()
 function pageLoad()
 {
     g_fmqSession.createSession(function() {
-		g_fmqQtService = g_fmqSession.createEntity('QtService');
+        g_fmqQtService = g_fmqSession.createEntity('QtAccessService');
         fmqReady();
     });
 }
@@ -320,9 +321,9 @@ function handleCheckboxLayer(checkbox, layer)
 
 
 <div style="position:absolute; top:0; left:0; width:100%; height:100%;">
-	<div style="position:absolute; top:0; left:0; width:100%; height:100%;" id="image">
+	<div style="position:absolute; top:0; left:300; width:100%; height:100%; " id="image">
 	</div>
-	<div style="position:absolute; top:0; left:0; width:100%; height:100%;" id="root">
+	<div style="position:absolute; top:0; left:300; width:100%; height:100%;" id="root">
 	</div>
 	<table style="position:absolute; top:20%; left:0%;">
 	<tr>
