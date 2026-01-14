@@ -35,6 +35,10 @@
 #include <sys/un.h>
 #endif
 
+#if defined(WIN32)
+#include <ws2tcpip.h>
+#endif
+
 #ifdef __QNX__
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -144,6 +148,25 @@ ConnectionData AddressHelpers::endpoint2ConnectionData(const std::string& endpoi
     return connectionData;
 }
 
+bool AddressHelpers::getHostByName(const std::string& hostname, struct in_addr& ipAddress)
+{
+    struct addrinfo hints;
+    struct addrinfo* result = nullptr;
+
+    std::memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    const int status = getaddrinfo(hostname.c_str(), nullptr, &hints, &result);
+    if (status == 0 && result)
+    {
+        struct sockaddr_in* ipv4 = reinterpret_cast<struct sockaddr_in*>(result->ai_addr);
+        ipAddress.s_addr = ipv4->sin_addr.s_addr;
+        return true;
+    }
+    return false;
+}
+
+
 std::string AddressHelpers::makeSocketAddress(const std::string& hostname, int port, int af, bool asyncGetHostByName, bool& doAsyncGetHostByName)
 {
     const sockaddr* addr = nullptr;
@@ -172,8 +195,9 @@ std::string AddressHelpers::makeSocketAddress(const std::string& hostname, int p
             else
             {
                 addrlen = sizeof(addrTcp);
-                struct hostent* hp = gethostbyname(hname.c_str());
-                if (hp)
+                struct in_addr ipAddress;
+                const bool ok = getHostByName(hname, ipAddress);
+                if (ok)
                 {
                     memset(&addrTcp, 0, addrlen);
 #ifdef WIN32
@@ -181,7 +205,7 @@ std::string AddressHelpers::makeSocketAddress(const std::string& hostname, int p
 #else
                     addrTcp.sin_family = static_cast<in_port_t>(af);
 #endif
-                    addrTcp.sin_addr.s_addr = reinterpret_cast<struct in_addr*>(hp->h_addr)->s_addr;
+                    addrTcp.sin_addr.s_addr = ipAddress.s_addr;
                     addrTcp.sin_port = htons(static_cast<std::uint16_t>(port));
                     addr = reinterpret_cast<sockaddr*>(&addrTcp);
                 }

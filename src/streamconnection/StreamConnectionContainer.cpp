@@ -384,12 +384,10 @@ bool StreamConnectionContainer::connect(const std::string& endpoint, const IStre
         ret = true;
         std::string hostname = connectionData.hostname;
         m_executorWorker->addAction([this, connectionData, connection, connectionPropertiesToUse]() mutable {
-            bool ok = false;
-            struct in_addr addr1;
-            struct hostent* hp = gethostbyname(connectionData.hostname.c_str());
-            if (hp)
+            struct in_addr ipAddress;
+            bool ok = AddressHelpers::getHostByName(connectionData.hostname, ipAddress);
+            if (ok)
             {
-                addr1 = *(reinterpret_cast<struct in_addr*>(hp->h_addr));
                 struct sockaddr_in addrTcp;
                 memset(&addrTcp, 0, sizeof(sockaddr_in));
 #ifdef WIN32
@@ -397,7 +395,7 @@ bool StreamConnectionContainer::connect(const std::string& endpoint, const IStre
 #else
                 addrTcp.sin_family = static_cast<in_port_t>(connectionData.af);
 #endif
-                addrTcp.sin_addr.s_addr = addr1.s_addr;
+                addrTcp.sin_addr.s_addr = ipAddress.s_addr;
                 addrTcp.sin_port = htons(static_cast<std::int16_t>(connectionData.port));
                 connectionData.sockaddr = std::string(reinterpret_cast<const char*>(&addrTcp), sizeof(sockaddr_in));
                 ok = createSocket(connection, connectionData, connectionPropertiesToUse);
