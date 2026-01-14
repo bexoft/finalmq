@@ -161,6 +161,8 @@ bool AddressHelpers::getHostByName(const std::string& hostname, struct in_addr& 
     {
         struct sockaddr_in* ipv4 = reinterpret_cast<struct sockaddr_in*>(result->ai_addr);
         ipAddress.s_addr = ipv4->sin_addr.s_addr;
+        freeaddrinfo(result);
+        result = nullptr;
         return true;
     }
     return false;
