@@ -28,6 +28,7 @@
 #include <string>
 
 struct sockaddr;
+struct in_addr;
 
 namespace finalmq {
 
@@ -40,6 +41,7 @@ public:
     static ConnectionData endpoint2ConnectionData(const std::string& endpoint);
     static void addr2peer(sockaddr* addr, ConnectionData& connectionData);
     static std::string makeSocketAddress(const std::string& hostname, int port, int af, bool asyncGetHostByName, bool& doAsyncGetHostByName);
+    static bool getHostByName(const std::string& hostname, struct in_addr& ipAddress);
 };
 
 }   // namespace finalmq
