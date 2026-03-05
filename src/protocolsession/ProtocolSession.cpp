@@ -382,7 +382,7 @@ IProtocolPtr ProtocolSession::createRequestConnection()
         protocol->setCallback(shared_from_this());
         protocol->setConnection(connection);
 
-        m_connectionProperties.config.totalReconnectDuration = 0;   // only try once, do not make retries to connect (in case of SyncReqRep)
+        //m_connectionProperties.config.totalReconnectDuration = 0;   // only try once, do not make retries to connect (in case of SyncReqRep)
 
         bool res = m_streamConnectionContainer->connect(m_endpointStreamConnection, connection, m_connectionProperties);
         if (res)

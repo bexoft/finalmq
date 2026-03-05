@@ -95,7 +95,6 @@ private:
     IStreamConnectionPrivatePtr findConnectionBySdOnlyForPollerLoop(SOCKET sd);
     IStreamConnectionPrivatePtr findConnectionById(std::int64_t connectionId);
     bool createSocket(const IStreamConnectionPtr& streamConnection, ConnectionData& connectionData, const ConnectProperties& connectionProperties);
-    void removeConnection(const SocketDescriptorPtr& sd, std::int64_t connectionId);
     void disconnectIntern(const IStreamConnectionPrivatePtr& connectionDisconnect, const SocketDescriptorPtr& sd);
     IStreamConnectionPrivatePtr addConnection(const SocketPtr& socket, ConnectionData& connectionData, hybrid_ptr<IStreamConnectionCallback> callback);
     void handleConnectionEvents(const IStreamConnectionPrivatePtr& connection, const SocketPtr& socket, const DescriptorInfo& info);
@@ -109,6 +108,7 @@ private:
     std::unordered_map<std::int64_t, IStreamConnectionPrivatePtr> m_connectionId2Connection{};
     std::unordered_map<SOCKET, IStreamConnectionPrivatePtr> m_sd2Connection{};
     std::unordered_map<SOCKET, IStreamConnectionPrivatePtr> m_sd2ConnectionPollerLoop{};
+    std::vector<SocketDescriptorPtr> m_socketErase;
     std::atomic_flag m_connectionsStable{};
     static std::atomic_int64_t m_nextConnectionId;
     std::atomic_bool m_terminatePollerLoop{false};

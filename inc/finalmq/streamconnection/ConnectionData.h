@@ -25,18 +25,48 @@
 #include <chrono>
 #include <string>
 
+#include "OpenSsl.h"
 #include "finalmq/helpers/FmqDefines.h"
+#include "finalmq/variant/Variant.h"
 
 namespace finalmq
 {
 enum class ConnectionState
 {
     CONNECTIONSTATE_CREATED = 0,
-    CONNECTIONSTATE_CONNECTING = 1,
-    CONNECTIONSTATE_CONNECTING_FAILED = 2,
-    CONNECTIONSTATE_CONNECTED = 3,
-    CONNECTIONSTATE_DISCONNECTED = 4,
+    CONNECTIONSTATE_RECONNECT = 1,
+    CONNECTIONSTATE_CONNECTING = 2,
+    CONNECTIONSTATE_CONNECTING_FAILED = 3,
+    CONNECTIONSTATE_CONNECTED = 4,
+    CONNECTIONSTATE_DISCONNECTED = 5,
 };
+
+struct BindProperties
+{
+    CertificateData certificateData{};
+    Variant protocolData{};
+    Variant formatData{}; ///< data for the serialization format
+};
+
+struct ConnectConfig
+{
+    ConnectConfig(int r = 1000, int t = -1)
+        : reconnectInterval(r)
+        , totalReconnectDuration(t)
+    {
+    }
+    int reconnectInterval{1000};    ///< if the server is not available, you can pass a reconnection intervall in [ms]
+    int totalReconnectDuration{-1}; ///< if the server is not available, you can pass a duration in [ms] how long the reconnect shall happen. -1 means: try for ever.
+};
+
+struct ConnectProperties
+{
+    CertificateData certificateData{};
+    ConnectConfig config{};
+    Variant protocolData{};
+    Variant formatData{}; ///< data for the serialization format
+};
+
 
 struct ConnectionData
 {
@@ -58,6 +88,7 @@ struct ConnectionData
     std::chrono::time_point<std::chrono::steady_clock> startTime{};
     bool ssl = false;
     ConnectionState connectionState = ConnectionState::CONNECTIONSTATE_CREATED;
+    ConnectProperties connectionProperties{};
 };
 
 } // namespace finalmq

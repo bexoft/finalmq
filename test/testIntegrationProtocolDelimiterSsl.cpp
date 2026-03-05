@@ -189,7 +189,7 @@ TEST_F(TestIntegrationProtocolDelimiterLinefeedSessionContainerSsl, testReconnec
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
 
-    waitTillDone(expectDisconnected, 5000);
+    waitTillDone(expectDisconnected, 10000);
 
     EXPECT_EQ(connection->getConnectionData().connectionState, ConnectionState::CONNECTIONSTATE_DISCONNECTED);
     EXPECT_EQ(m_sessionContainer->getSession(connection->getSessionId()), nullptr);

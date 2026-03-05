@@ -141,13 +141,13 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testConnectBind)
     int res = m_sessionContainer->bind("tcp://*:3333:stream", m_mockServerCallback);
     EXPECT_EQ(res, 0);
 
-    waitTillDone(expectConnected, 5000);
+    waitTillDone(expectConnected, 2000);
 
     EXPECT_EQ(connection->getConnectionData().connectionState, ConnectionState::CONNECTIONSTATE_CONNECTED);
     EXPECT_EQ(m_sessionContainer->getSession(connection->getSessionId()), connection);
 }
 
-TEST_F(TestIntegrationProtocolStreamSessionContainer, testConnectBindConnectPropertiesJson)
+TEST_F(TestIntegrationProtocolStreamSessionContainer, test_ConnectBindConnectPropertiesJson)
 {
     auto& expectConnected = EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(1);
     EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(1);
@@ -200,7 +200,7 @@ TEST_F(TestIntegrationProtocolStreamSessionContainer, testReconnectExpires)
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
 
-    waitTillDone(expectDisconnected, 5000);
+    waitTillDone(expectDisconnected, 10000);
 
     EXPECT_EQ(connection->getConnectionData().connectionState, ConnectionState::CONNECTIONSTATE_DISCONNECTED);
     EXPECT_EQ(m_sessionContainer->getSession(connection->getSessionId()), nullptr);

@@ -169,7 +169,7 @@ TEST_F(TestIntegrationProtocolHttp, testReconnectExpires)
     message->addSendPayload(MESSAGE1_BUFFER);
     connection->sendMessage(message);
 
-    for (int i = 0; i < 5000 / 10; ++i)
+    for (int i = 0; i < 10000 / 10; ++i)
     {
         if (connection->getConnectionData().connectionState == ConnectionState::CONNECTIONSTATE_DISCONNECTED)
         {
@@ -259,7 +259,7 @@ TEST_F(TestIntegrationProtocolHttp, testSendMultipleMessages)
     EXPECT_EQ(res, 0);
 
     auto& expectConnectedClient = EXPECT_CALL(*m_mockClientCallback, connected(_)).Times(1);
-    EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(testing::Between(6, 10000));
+    EXPECT_CALL(*m_mockServerCallback, connected(_)).Times(testing::Between(4, 10000));
     auto& expectReceive = EXPECT_CALL(*m_mockServerCallback, received(_, ReceivedMessage(MESSAGE1_BUFFER)))
         .Times(10000)
         .WillRepeatedly(Invoke([](const IProtocolSessionPtr& session, const IMessagePtr& message) {

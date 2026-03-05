@@ -111,27 +111,30 @@ void PollerImplEpoll::addSocketEnableRead(const SocketDescriptorPtr& fd)
 
 void PollerImplEpoll::removeSocket(const SocketDescriptorPtr& fd)
 {
-    std::unique_lock<std::mutex> locker(m_mutex);
-    auto it = m_socketDescriptors.find(fd);
-    if (it != m_socketDescriptors.end())
+    if (fd)
     {
-        epoll_event ev; // to be compatible with linux versions before 2.6.9
-        ev.events = 0;
-        ev.data.fd = fd->getDescriptor();
-        int res = OperatingSystem::instance().epoll_ctl(m_fdEpoll, EPOLL_CTL_DEL, fd->getDescriptor(), &ev);
-        if (res == -1)
+        std::unique_lock<std::mutex> locker(m_mutex);
+        auto it = m_socketDescriptors.find(fd);
+        if (it != m_socketDescriptors.end())
         {
-            streamFatal << "epoll_ctl failed with errno: " << errno;
+            epoll_event ev; // to be compatible with linux versions before 2.6.9
+            ev.events = 0;
+            ev.data.fd = fd->getDescriptor();
+            int res = OperatingSystem::instance().epoll_ctl(m_fdEpoll, EPOLL_CTL_DEL, fd->getDescriptor(), &ev);
+            if (res == -1)
+            {
+                streamFatal << "epoll_ctl failed with errno: " << errno;
+            }
+            assert(res != -1);
+            m_socketDescriptors.erase(it);
+            sockedDescriptorHasChanged();
         }
-        assert(res != -1);
-        m_socketDescriptors.erase(it);
-        sockedDescriptorHasChanged();
+        else
+        {
+            // socket not added
+        }
+        locker.unlock();
     }
-    else
-    {
-        // socket not added
-    }
-    locker.unlock();
 }
 
 void PollerImplEpoll::enableRead(const SocketDescriptorPtr& fd)
