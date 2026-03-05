@@ -36,31 +36,10 @@
 #include "finalmq/helpers/hybrid_ptr.h"
 #include "finalmq/poller/Poller.h"
 #include "finalmq/streamconnection/IMessage.h"
-#include "finalmq/variant/Variant.h"
 
 namespace finalmq
 {
 
-struct BindProperties
-{
-    CertificateData certificateData{};
-    Variant protocolData{};
-    Variant formatData{}; ///< data for the serialization format
-};
-
-struct ConnectConfig
-{
-    int reconnectInterval = 1000;    ///< if the server is not available, you can pass a reconnection intervall in [ms]
-    int totalReconnectDuration = -1; ///< if the server is not available, you can pass a duration in [ms] how long the reconnect shall happen. -1 means: try for ever.
-};
-
-struct ConnectProperties
-{
-    CertificateData certificateData{};
-    ConnectConfig config{};
-    Variant protocolData{};
-    Variant formatData{}; ///< data for the serialization format
-};
 
 struct IStreamConnection;
 typedef std::shared_ptr<IStreamConnection> IStreamConnectionPtr;
@@ -90,6 +69,7 @@ struct IStreamConnectionPrivate : public IStreamConnection
 {
     virtual bool connect() = 0;
     virtual SocketPtr getSocketPrivate() = 0;
+    virtual void setSocket(const SocketPtr& socket) = 0;
     virtual bool sendPendingMessages() = 0;
     virtual bool checkEdgeConnected() = 0;
     virtual bool doReconnect() = 0;
@@ -122,6 +102,7 @@ private:
     // IStreamConnectionPrivate
     virtual bool connect() override;
     virtual SocketPtr getSocketPrivate() override;
+    virtual void setSocket(const SocketPtr& socket) override;
     virtual bool sendPendingMessages() override;
     virtual bool checkEdgeConnected() override;
     virtual bool doReconnect() override;

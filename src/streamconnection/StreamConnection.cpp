@@ -25,6 +25,7 @@
 #include <thread>
 
 #include "finalmq/streamconnection/AddressHelpers.h"
+#include "finalmq/helpers/ModulenameFinalmq.h"
 
 #define RELEASE_DISCONNECT 1
 
@@ -48,54 +49,51 @@ void StreamConnection::sendMessage(const IMessagePtr& msg)
         return;
     }
     std::unique_lock<std::mutex> lock(m_mutex);
-    if (m_socketPrivate)
+    ssize_t size = msg->getTotalSendBufferSize();
+    if (size > 0)
     {
-        ssize_t size = msg->getTotalSendBufferSize();
-        if (size > 0)
+        const auto& payloads = msg->getAllSendBuffers();
+        if (!m_pendingMessages.empty() || m_connectionData.connectionState != ConnectionState::CONNECTIONSTATE_CONNECTED)
         {
-            const auto& payloads = msg->getAllSendBuffers();
-            if (!m_pendingMessages.empty() || m_connectionData.connectionState != ConnectionState::CONNECTIONSTATE_CONNECTED)
-            {
-                m_pendingMessages.push_back({msg, payloads.begin(), 0});
-            }
-            else
-            {
+            m_pendingMessages.push_back({msg, payloads.begin(), 0});
+        }
+        else
+        {
 #if 0
-                m_pendingMessages.push_back({msg, payloads.begin(), 0});
-                m_poller->enableWrite(m_socketPrivate->getSocketDescriptor());
+            m_pendingMessages.push_back({msg, payloads.begin(), 0});
+            m_poller->enableWrite(m_socketPrivate->getSocketDescriptor());
 #else
-                bool ex = false;
-                for (auto it = payloads.begin(); it != payloads.end() && !ex; )
-                {
-                    const BufferRef& payload = *it;
-                    ++it;
+            bool ex = false;
+            for (auto it = payloads.begin(); it != payloads.end() && !ex; )
+            {
+                const BufferRef& payload = *it;
+                ++it;
 
 #ifdef __QNX__
-                    int flags = 0;
+                int flags = 0;
 #else
-                    bool last = (it == payloads.end());
-                    int flags = last ? 0 : MSG_MORE; // win32: MSG_PARTIAL
+                bool last = (it == payloads.end());
+                int flags = last ? 0 : MSG_MORE; // win32: MSG_PARTIAL
 #endif
 
 #if !defined WIN32
-                    flags |= MSG_NOSIGNAL; // no sigpipe
+                flags |= MSG_NOSIGNAL; // no sigpipe
 #endif
-                    int err = m_socketPrivate->send(payload.first, static_cast<int>(payload.second), flags);
-                    if (err != payload.second)
+                int err = m_socketPrivate->send(payload.first, static_cast<int>(payload.second), flags);
+                if (err != payload.second)
+                {
+                    if (err < 0)
                     {
-                        if (err < 0)
-                        {
-                            err = 0;
-                        }
-                        assert(err < payload.second);
-                        --it;
-                        m_pendingMessages.push_back({msg, it, err});
-                        m_poller->enableWrite(m_socketPrivate->getSocketDescriptor());
-                        ex = true;
+                        err = 0;
                     }
+                    assert(err < payload.second);
+                    --it;
+                    m_pendingMessages.push_back({msg, it, err});
+                    m_poller->enableWrite(m_socketPrivate->getSocketDescriptor());
+                    ex = true;
                 }
-#endif
             }
+#endif
         }
     }
     lock.unlock();
@@ -120,8 +118,17 @@ std::int64_t StreamConnection::getConnectionId() const
 
 SocketPtr StreamConnection::getSocketPrivate()
 {
-    // do not mutex lock here, because the removeSocket and getSocketPrivate will be called from same thread.
+    std::unique_lock<std::mutex> lock(m_mutex);
     return m_socketPrivate;
+}
+
+void StreamConnection::setSocket(const SocketPtr& socket)
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    assert(m_socket == nullptr);
+    assert(m_socketPrivate == nullptr);
+    m_socket = socket;
+    m_socketPrivate = socket;
 }
 
 SocketPtr StreamConnection::getSocket()
@@ -140,17 +147,24 @@ bool StreamConnection::connect()
 {
     bool connecting = false;
     std::unique_lock<std::mutex> lock(m_mutex);
-    if ((m_connectionData.connectionState == ConnectionState::CONNECTIONSTATE_CREATED || m_connectionData.connectionState == ConnectionState::CONNECTIONSTATE_CONNECTING_FAILED) && m_socketPrivate)
+    const int sockaddrSize = static_cast<int>(m_connectionData.sockaddr.size());
+    if ((m_connectionData.connectionState == ConnectionState::CONNECTIONSTATE_CREATED ||
+         m_connectionData.connectionState == ConnectionState::CONNECTIONSTATE_RECONNECT ||
+         m_connectionData.connectionState == ConnectionState::CONNECTIONSTATE_CONNECTING_FAILED) && m_socketPrivate && (sockaddrSize > 0))
     {
-        int ret = m_socketPrivate->connect(reinterpret_cast<const sockaddr*>(m_connectionData.sockaddr.c_str()), static_cast<int>(m_connectionData.sockaddr.size()));
+        m_connectionData.connectionState = ConnectionState::CONNECTIONSTATE_CONNECTING;
+        int ret = m_socketPrivate->connect(reinterpret_cast<const sockaddr*>(m_connectionData.sockaddr.c_str()), sockaddrSize);
         if (ret == 0)
         {
             connecting = true;
-            m_connectionData.connectionState = ConnectionState::CONNECTIONSTATE_CONNECTING;
             SocketDescriptorPtr sd = m_socketPrivate->getSocketDescriptor();
             assert(sd);
             m_poller->addSocketEnableRead(sd);
             m_poller->enableWrite(sd);
+        }
+        else
+        {
+            m_connectionData.connectionState = ConnectionState::CONNECTIONSTATE_CONNECTING_FAILED;
         }
     }
     return connecting;
@@ -222,7 +236,8 @@ bool StreamConnection::checkEdgeConnected()
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     bool edgeConnected = false;
-    if (m_connectionData.connectionState == ConnectionState::CONNECTIONSTATE_CONNECTING)
+    const auto state = m_connectionData.connectionState;
+    if (state == ConnectionState::CONNECTIONSTATE_CONNECTING)
     {
         m_connectionData.connectionState = ConnectionState::CONNECTIONSTATE_CONNECTED;
         edgeConnected = true;
@@ -233,7 +248,7 @@ bool StreamConnection::checkEdgeConnected()
 bool StreamConnection::doReconnect()
 {
     bool reconnecting = false;
-    if (!m_connectionData.incomingConnection && m_connectionData.connectionState == ConnectionState::CONNECTIONSTATE_CONNECTING_FAILED && m_connectionData.reconnectInterval >= 0)
+    if (!m_connectionData.incomingConnection && (m_connectionData.connectionState == ConnectionState::CONNECTIONSTATE_CONNECTING_FAILED) && m_connectionData.reconnectInterval >= 0)
     {
         std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
         std::chrono::duration<double> dur = now - m_lastReconnectTime;
@@ -241,7 +256,8 @@ bool StreamConnection::doReconnect()
         if (delta < 0 || delta >= m_connectionData.reconnectInterval)
         {
             m_lastReconnectTime = now;
-            reconnecting = connect();
+            streamInfo << "reconnect " << m_connectionData.endpoint;
+            reconnecting = true;
         }
     }
     return reconnecting;
@@ -262,22 +278,19 @@ bool StreamConnection::changeStateForDisconnect()
         }
         else
         {
-            assert(m_socketPrivate);
             m_connectionData.connectionState = ConnectionState::CONNECTIONSTATE_CONNECTING_FAILED;
-            m_poller->removeSocket(m_socketPrivate->getSocketDescriptor());
         }
     }
 
     if (m_disconnectFlag || (m_connectionData.connectionState == ConnectionState::CONNECTIONSTATE_CONNECTED) || reconnectExpired)
     {
         removeConnection = true;
-
-        assert(m_socketPrivate);
         m_connectionData.connectionState = ConnectionState::CONNECTIONSTATE_DISCONNECTED;
-        m_poller->removeSocket(m_socketPrivate->getSocketDescriptor());
-        m_socketPrivate = nullptr;
-        m_socket = nullptr;
     }
+
+    m_socketPrivate = nullptr;
+    m_socket = nullptr;
+
     return removeConnection;
 }
 

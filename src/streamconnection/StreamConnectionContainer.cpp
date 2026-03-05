@@ -28,6 +28,7 @@
 #include "finalmq/streamconnection/AddressHelpers.h"
 #include "finalmq/streamconnection/Socket.h"
 #include "finalmq/streamconnection/streamconnection.fmq.h"
+#include "finalmq/helpers/ModulenameFinalmq.h"
 
 #if defined(WIN32) || defined(__MINGW32__) || defined(__QNX__)
 #include "finalmq/poller/PollerImplSelect.h"
@@ -37,6 +38,7 @@
 
 #if !defined(WIN32) && !defined(__MINGW32__)
 #include <fcntl.h>
+#include <arpa/inet.h>
 
 #include <netinet/tcp.h>
 #include <sys/un.h>
@@ -52,6 +54,7 @@
 #define RELEASE_DISCONNECT 1
 #define RELEASE_EXECUTEINPOLLERTHREAD 2
 #define RELEASE_TERMINATE 4
+
 
 
 namespace finalmq
@@ -288,11 +291,11 @@ IStreamConnectionPtr StreamConnectionContainer::createConnection(hybrid_ptr<IStr
     connectionData.incomingConnection = false;
     connectionData.connectionState = ConnectionState::CONNECTIONSTATE_CREATED;
 
-    SocketPtr socket = std::make_shared<Socket>();
+    //SocketPtr socket = std::make_shared<Socket>();
 
     IStreamConnectionPrivatePtr connection;
 
-    connection = addConnection(socket, connectionData, callback);
+    connection = addConnection(nullptr, connectionData, callback);
     assert(connection);
 
     return connection;
@@ -300,11 +303,7 @@ IStreamConnectionPtr StreamConnectionContainer::createConnection(hybrid_ptr<IStr
 
 bool StreamConnectionContainer::createSocket(const IStreamConnectionPtr& streamConnection, ConnectionData& connectionData, const ConnectProperties& connectionProperties)
 {
-    SocketPtr socket = streamConnection->getSocket();
-    if (socket == nullptr)
-    {
-        return false;
-    }
+    SocketPtr socket = std::make_shared<Socket>();
 
     // the endpoint should not been set twice!
     assert(socket->getSocketDescriptor() == nullptr);
@@ -321,24 +320,24 @@ bool StreamConnectionContainer::createSocket(const IStreamConnectionPtr& streamC
         ret = socket->create(connectionData.af, connectionData.type, connectionData.protocol);
     }
 
-    (void)connectionProperties;
-
     if (ret)
     {
         SocketDescriptorPtr sd = socket->getSocketDescriptor();
         assert(sd);
         connectionData.sd = sd->getDescriptor();
-        AddressHelpers::addr2peer(reinterpret_cast<sockaddr*>(const_cast<char*>(connectionData.sockaddr.c_str())), connectionData);
 
-        IStreamConnectionPrivatePtr streamConnectionPrivate;
+        IStreamConnectionPrivatePtr streamConnectionPrivate;        
         std::unique_lock<std::mutex> lock(m_mutex);
         auto it = m_connectionId2Connection.find(connectionData.connectionId);
         if (it != m_connectionId2Connection.end())
         {
             streamConnectionPrivate = it->second;
             assert(streamConnectionPrivate);
+            streamConnectionPrivate->setSocket(socket);
             streamConnectionPrivate->updateConnectionData(connectionData);
-            m_sd2Connection[connectionData.sd] = it->second;
+            auto& entry = m_sd2Connection[connectionData.sd];
+            assert(entry == nullptr);
+            entry = it->second;
             m_connectionsStable.clear(std::memory_order_release);
         }
         else
@@ -367,56 +366,98 @@ bool StreamConnectionContainer::connect(const std::string& endpoint, const IStre
     ConnectProperties connectionPropertiesToUse = connectionProperties;
     getConnectPropertiesFromEndpoint(endpoint, connectionPropertiesToUse);
 
-    ConnectionData connectionData = AddressHelpers::endpoint2ConnectionData(endpoint);
-    connectionData.connectionId = connection->getConnectionId();
-    connectionData.incomingConnection = false;
-    connectionData.reconnectInterval = connectionPropertiesToUse.config.reconnectInterval;
-    connectionData.totalReconnectDuration = connectionPropertiesToUse.config.totalReconnectDuration;
-    connectionData.startTime = std::chrono::steady_clock::now();
-    connectionData.ssl = connectionPropertiesToUse.certificateData.ssl;
-    connectionData.connectionState = ConnectionState::CONNECTIONSTATE_CREATED;
-    connection->updateConnectionData(connectionData);
-    bool doAsyncGetHostByName = false;
-    std::string addr = AddressHelpers::makeSocketAddress(connectionData.hostname, connectionData.port, connectionData.af, true, doAsyncGetHostByName);
-    bool ret = false;
-    if (doAsyncGetHostByName)
+    ConnectionData connectionData = connection->getConnectionData();
+    if (connectionData.connectionState == ConnectionState::CONNECTIONSTATE_CREATED)
     {
-        ret = true;
-        std::string hostname = connectionData.hostname;
-        m_executorWorker->addAction([this, connectionData, connection, connectionPropertiesToUse]() mutable {
-            struct in_addr ipAddress;
-            bool ok = AddressHelpers::getHostByName(connectionData.hostname, ipAddress);
-            if (ok)
-            {
-                struct sockaddr_in addrTcp;
-                memset(&addrTcp, 0, sizeof(sockaddr_in));
-#ifdef WIN32
-                addrTcp.sin_family = static_cast<ADDRESS_FAMILY>(connectionData.af);
-#else
-                addrTcp.sin_family = static_cast<in_port_t>(connectionData.af);
-#endif
-                addrTcp.sin_addr.s_addr = ipAddress.s_addr;
-                addrTcp.sin_port = htons(static_cast<std::int16_t>(connectionData.port));
-                connectionData.sockaddr = std::string(reinterpret_cast<const char*>(&addrTcp), sizeof(sockaddr_in));
-                ok = createSocket(connection, connectionData, connectionPropertiesToUse);
-                if (ok)
-                {
-                    ok = connection->connect();
-                }
-            }
-            if (!ok)
-            {
-                connection->disconnect();
-            }
-        });
+        connectionData = AddressHelpers::endpoint2ConnectionData(endpoint);
+        connectionData.connectionId = connection->getConnectionId();
+        connectionData.incomingConnection = false;
+        connectionData.reconnectInterval = connectionPropertiesToUse.config.reconnectInterval;
+        connectionData.totalReconnectDuration = connectionPropertiesToUse.config.totalReconnectDuration;
+        connectionData.startTime = std::chrono::steady_clock::now();
+        connectionData.ssl = connectionPropertiesToUse.certificateData.ssl;
+        connectionData.connectionProperties = connectionPropertiesToUse;
     }
     else
     {
-        connectionData.sockaddr = addr;
-        ret = createSocket(connection, connectionData, connectionPropertiesToUse);
-        if (ret)
+        connectionData.connectionState = ConnectionState::CONNECTIONSTATE_RECONNECT;
+    }
+    connection->updateConnectionData(connectionData);
+
+    bool doAsyncGetHostByName = false;
+    std::string addr = connectionData.sockaddr;
+    if (addr.empty()) // don't do getHostByName for reconnect
+    {
+        addr = AddressHelpers::makeSocketAddress(connectionData.hostname, connectionData.port, connectionData.af, true, doAsyncGetHostByName);
+    }
+    bool ret = createSocket(connection, connectionData, connectionPropertiesToUse);
+    if (ret)
+    {
+        if (doAsyncGetHostByName)
         {
-            ret = connection->connect();
+            m_executorWorker->addAction([this, connectionData, connection, connectionPropertiesToUse]() mutable {
+                struct in_addr ipAddress;
+                bool ok = AddressHelpers::getHostByName(connectionData.hostname, ipAddress);
+                if (ok)
+                {
+                    struct sockaddr_in addrTcp;
+                    memset(&addrTcp, 0, sizeof(sockaddr_in));
+#ifdef WIN32
+                    addrTcp.sin_family = static_cast<ADDRESS_FAMILY>(connectionData.af);
+#else
+                    addrTcp.sin_family = static_cast<in_port_t>(connectionData.af);
+#endif
+                    addrTcp.sin_addr.s_addr = ipAddress.s_addr;
+                    addrTcp.sin_port = htons(static_cast<std::int16_t>(connectionData.port));
+                    connectionData.sockaddr = std::string(reinterpret_cast<const char*>(&addrTcp), sizeof(sockaddr_in));
+                    AddressHelpers::addr2peer(reinterpret_cast<sockaddr*>(const_cast<char*>(connectionData.sockaddr.c_str())), connectionData);
+                    IStreamConnectionPrivatePtr streamConnectionPrivate;
+                    std::unique_lock<std::mutex> lock(m_mutex);
+                    auto it = m_connectionId2Connection.find(connectionData.connectionId);
+                    if (it != m_connectionId2Connection.end())
+                    {
+                        streamConnectionPrivate = it->second;
+                        assert(streamConnectionPrivate);
+                        streamConnectionPrivate->updateConnectionData(connectionData);
+                    }
+                    else
+                    {
+                        ok = false;
+                    }
+                    lock.unlock();
+                    if (ok)
+                    {
+                        ok = connection->connect();
+                    }
+                }
+                if (!ok)
+                {
+                    connection->disconnect();
+                }
+            });
+        }
+        else
+        {
+            connectionData.sockaddr = addr;
+            AddressHelpers::addr2peer(reinterpret_cast<sockaddr*>(const_cast<char*>(connectionData.sockaddr.c_str())), connectionData);
+            IStreamConnectionPrivatePtr streamConnectionPrivate;
+            std::unique_lock<std::mutex> lock(m_mutex);
+            auto it = m_connectionId2Connection.find(connectionData.connectionId);
+            if (it != m_connectionId2Connection.end())
+            {
+                streamConnectionPrivate = it->second;
+                assert(streamConnectionPrivate);
+                streamConnectionPrivate->updateConnectionData(connectionData);
+            }
+            else
+            {
+                ret = false;
+            }
+            lock.unlock();
+            if (ret)
+            {
+                ret = connection->connect();
+            }
         }
     }
     if (!ret)
@@ -458,24 +499,24 @@ IStreamConnectionPtr StreamConnectionContainer::getConnection(std::int64_t conne
 
 //////////////
 
-void StreamConnectionContainer::removeConnection(const SocketDescriptorPtr& sd, std::int64_t connectionId)
-{
-    std::unique_lock<std::mutex> lock(m_mutex);
-    if (sd)
-    {
-        m_sd2Connection.erase(sd->getDescriptor());
-        m_connectionsStable.clear(std::memory_order_release);
-    }
-    m_connectionId2Connection.erase(connectionId);
-    lock.unlock();
-}
-
 void StreamConnectionContainer::disconnectIntern(const IStreamConnectionPrivatePtr& connectionDisconnect, const SocketDescriptorPtr& sd)
 {
     bool removeConn = connectionDisconnect->changeStateForDisconnect();
+    m_poller->removeSocket(sd);
+    std::unique_lock<std::mutex> lock(m_mutex);
+    if (sd)
+    {
+        m_socketErase.push_back(sd);
+        m_sd2Connection.erase(sd->getDescriptor());
+        m_connectionsStable.clear(std::memory_order_release);
+    }
     if (removeConn)
     {
-        removeConnection(sd, connectionDisconnect->getConnectionId());
+        m_connectionId2Connection.erase(connectionDisconnect->getConnectionId());
+    }
+    lock.unlock();
+    if (removeConn)
+    {
         connectionDisconnect->disconnected(connectionDisconnect);
     }
 }
@@ -776,7 +817,14 @@ void StreamConnectionContainer::doReconnect()
 
     for (const auto& connection : connections)
     {
-        connection->doReconnect();
+        IStreamConnectionPtr streamConnection = connection;
+        bool reconnecting = connection->doReconnect();
+        if (reconnecting)
+        {
+            //SocketPtr socket = streamConnection->getSocket();
+            //disconnectIntern(connection, socket ? socket->getSocketDescriptor() : SocketDescriptorPtr(nullptr));
+            connect(connection->getConnectionData().endpoint, streamConnection, connection->getConnectionData().connectionProperties);
+        }
     }
 }
 
@@ -805,12 +853,20 @@ void StreamConnectionContainer::pollerLoop()
     m_lastReconnectTime = std::chrono::steady_clock::now();
     while (!m_terminatePollerLoop)
     {
-        const PollerResult& result = m_poller->wait(1000);
-
-        if (m_connectionsStable.test_and_set(std::memory_order_acq_rel))
+        if (!m_connectionsStable.test_and_set(std::memory_order_acq_rel))
         {
             std::unique_lock<std::mutex> lock(m_mutex);
             m_sd2ConnectionPollerLoop = m_sd2Connection;
+            m_socketErase.clear();
+        }
+
+        const PollerResult& result = m_poller->wait(1000);
+
+        if (!m_connectionsStable.test_and_set(std::memory_order_acq_rel))
+        {
+            std::unique_lock<std::mutex> lock(m_mutex);
+            m_sd2ConnectionPollerLoop = m_sd2Connection;
+            m_socketErase.clear();
         }
 
         if (result.releaseWait)
@@ -842,13 +898,21 @@ void StreamConnectionContainer::pollerLoop()
                     // last chance to send pending messages
                     connectionDisconnect->sendPendingMessages();
                     SocketPtr socket = connectionDisconnect->getSocketPrivate();
+                    SocketDescriptorPtr sd;
                     if (socket)
                     {
-                        SocketDescriptorPtr sd = socket->getSocketDescriptor();
-                        disconnectIntern(connectionDisconnect, sd);
+                        sd = socket->getSocketDescriptor();
                     }
+                    disconnectIntern(connectionDisconnect, sd);
                 }
             }
+        }
+
+        if (!m_connectionsStable.test_and_set(std::memory_order_acq_rel))
+        {
+            std::unique_lock<std::mutex> lock(m_mutex);
+            m_sd2ConnectionPollerLoop = m_sd2Connection;
+            m_socketErase.clear();
         }
 
         if (result.error)
@@ -870,6 +934,7 @@ void StreamConnectionContainer::pollerLoop()
                     SocketPtr socket = connection->getSocketPrivate();
                     if (socket)
                     {
+                        assert(info.sd == socket->getSocketDescriptor()->getDescriptor()); // remove for performance
                         handleConnectionEvents(connection, socket, info);
                     }
                 }
