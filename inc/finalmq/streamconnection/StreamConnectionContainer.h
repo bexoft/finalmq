@@ -108,12 +108,12 @@ private:
     std::unordered_map<std::int64_t, IStreamConnectionPrivatePtr> m_connectionId2Connection{};
     std::unordered_map<SOCKET, IStreamConnectionPrivatePtr> m_sd2Connection{};
     std::unordered_map<SOCKET, IStreamConnectionPrivatePtr> m_sd2ConnectionPollerLoop{};
-    std::vector<SocketDescriptorPtr> m_socketErase;
+    std::vector<SocketDescriptorPtr> m_socketErase{};
     std::atomic_flag m_connectionsStable{};
     static std::atomic_int64_t m_nextConnectionId;
     std::atomic_bool m_terminatePollerLoop{false};
-    int m_cycleTime = 100;
-    int m_checkReconnectInterval = 1000;
+    int m_cycleTime{100};
+    int m_checkReconnectInterval{1000};
     FuncPollerLoopTimer m_funcTimer{};
     const IExecutorPtr m_executorPollerThread;
     std::unique_ptr<IExecutorWorker> m_executorWorker{};
